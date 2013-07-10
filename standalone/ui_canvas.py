@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'ui_canvas.ui'
 #
-# Created: Wed Jul 10 11:01:55 2013
-#      by: PyQt4 UI code generator 4.9.1
+# Created: Wed Jul 10 13:55:48 2013
+#      by: PyQt4 UI code generator 4.9.3
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -20,9 +20,6 @@ class Ui_MainWindow(object):
         MainWindow.resize(800, 600)
         self.centralwidget = QtGui.QWidget(MainWindow)
         self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
-        self.widget = QtGui.QWidget(self.centralwidget)
-        self.widget.setGeometry(QtCore.QRect(240, 129, 421, 361))
-        self.widget.setObjectName(_fromUtf8("widget"))
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 25))

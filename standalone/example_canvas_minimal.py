@@ -1,11 +1,10 @@
 import sys
 import uuid
 
-from qgis.core import QgsApplication
-from PyQt4 import QtGui, QtCore, Qt
+from PyQt4 import QtGui, QtCore
 from qgis.gui import QgsMapCanvas, QgsMapCanvasLayer
-from qgis.core import QgsVectorLayer, QgsMapLayerRegistry, QgsField, \
-    QgsGeometry, QgsFeature, QgsPoint, QgsRectangle
+from qgis.core import QgsApplication, QgsVectorLayer, QgsMapLayerRegistry, QgsField, \
+    QgsGeometry, QgsFeature, QgsPoint
 from ui_canvas import Ui_MainWindow
 
 
@@ -21,28 +20,21 @@ DATA = [
 
 
 class MainWindow(Ui_MainWindow, QtGui.QMainWindow):
-    def __init__(self, splash):
+    def __init__(self):
         QtGui.QMainWindow.__init__(self)
 
         # required by Qt4 to initialize the UI
         self.setupUi(self)
-        self.splash = splash
 
         # create map canvas
         self.canvas = QgsMapCanvas(self)
         self.canvas.setCanvasColor(QtGui.QColor(255, 255, 255))
         self.canvas.enableAntiAliasing(True)
-        self.canvas.show()
-        self.canvas.parentWin = self
-        self.srs = None
 
-        # lay our widgets out in the main window
+        # # lay our widgets out in the main window
         self.layout = QtGui.QVBoxLayout(self)
         self.layout.addWidget(self.canvas)
 
-        self.layers = []
-
-        # self.load_countries()
         self.create_layer(DATA)
 
     def create_layer(self, data):
@@ -65,24 +57,11 @@ class MainWindow(Ui_MainWindow, QtGui.QMainWindow):
             features.append(feat)
         provider.addFeatures(features)
         vlayer.commitChanges()
-        vlayer.updateExtents()
-        self.canvas.setExtent(vlayer.extent())
-        cl = QgsMapCanvasLayer(vlayer)
-        self.layers.insert(0, cl)
-        self.canvas.setLayerSet(self.layers)
-        vlayer.triggerRepaint()
 
-    def load_countries(self):
-        display_name = 'Population density'
-        uri = DATA_DIR + 'Countries.shp'
-        vlayer = QgsVectorLayer(uri, display_name, 'ogr')
-        QgsMapLayerRegistry.instance().addMapLayers([vlayer])
         vlayer.updateExtents()
         self.canvas.setExtent(vlayer.extent())
-        # set the map canvas layer set
         cl = QgsMapCanvasLayer(vlayer)
-        self.layers.insert(0, cl)
-        self.canvas.setLayerSet(self.layers)
+        self.canvas.setLayerSet([cl])
         vlayer.triggerRepaint()
 
 
@@ -93,22 +72,14 @@ def main(argv):
     app = QtGui.QApplication(argv, True)
 
     # Set the app style
-    mySplashPix = QtGui.QPixmap(QtCore.QString(DATA_DIR + '/OCEAN.png'))
-    mySplashPixScaled = mySplashPix.scaled(500, 300, Qt.Qt.KeepAspectRatio)
-    mySplash = QtGui.QSplashScreen(mySplashPixScaled)
-    mySplash.show()
 
     # initialize qgis libraries
     QgsApplication.setPrefixPath(QGIS_PREFIX, True)
     QgsApplication.initQgis()
 
     # create main window
-    wnd = MainWindow(mySplash)
+    wnd = MainWindow()
     wnd.show()
-
-    # Create signal for app finish
-    app.connect(
-        app, QtCore.SIGNAL('lastWindowClosed()'), app, QtCore.SLOT('quit()'))
 
     # Start the app up
     retval = app.exec_()
