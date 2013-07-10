@@ -9,8 +9,7 @@ from qgis.core import QgsApplication, QgsVectorLayer, QgsMapLayerRegistry, \
 from ui_mainwindowminimal import Ui_MainWindowMinimal
 
 
-# Path to local QGIS install; on Ubuntu it is /usr
-QGIS_PREFIX = os.environ['QGIS_PREFIX']
+QGIS_PREFIX_PATH = os.environ['QGIS_PREFIX_PATH']
 
 DATA = [
     (15, 15, 0.3),
@@ -68,7 +67,7 @@ def main(argv):
     # Set the app style
 
     # initialize qgis libraries
-    QgsApplication.setPrefixPath(QGIS_PREFIX, True)
+    QgsApplication.setPrefixPath(QGIS_PREFIX_PATH, True)
     QgsApplication.initQgis()
 
     # create main window
