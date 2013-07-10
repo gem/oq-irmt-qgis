@@ -1,17 +1,16 @@
+import os
 import sys
 import uuid
 
 from PyQt4 import QtGui, QtCore
-from qgis.gui import QgsMapCanvas, QgsMapCanvasLayer
-from qgis.core import QgsApplication, QgsVectorLayer, QgsMapLayerRegistry, QgsField, \
-    QgsGeometry, QgsFeature, QgsPoint
+from qgis.gui import QgsMapCanvasLayer
+from qgis.core import QgsApplication, QgsVectorLayer, QgsMapLayerRegistry, \
+    QgsField, QgsGeometry, QgsFeature, QgsPoint
 from ui_mainwindowminimal import Ui_MainWindowMinimal
 
 
-# Path to local QGIS install
-QGIS_PREFIX = '/usr/local/qgis-master'
-DATA_DIR = '/home/marco/dev/qgis-plugins/oq-eqcatalogue-tool/openquake/qgis/' \
-           'gemcatalogue/data/'
+# Path to local QGIS install; on Ubuntu it is /usr
+QGIS_PREFIX = os.environ['QGIS_PREFIX']
 
 DATA = [
     (15, 15, 0.3),
