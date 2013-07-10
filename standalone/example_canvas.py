@@ -3,10 +3,22 @@ import uuid
 
 from qgis.core import QgsApplication
 from PyQt4 import QtGui, QtCore
-from qgis.gui import QgsMapCanvas
+from qgis.gui import QgsMapCanvas, QgsMapCanvasLayer
 from qgis.core import QgsVectorLayer, QgsMapLayerRegistry, QgsField, \
-    QgsGeometry, QgsFeature, QgsPoint
+    QgsGeometry, QgsFeature, QgsPoint, QgsRectangle
 from ui_canvas import Ui_MainWindow
+
+
+
+# PyQt4 includes for python bindings to QT
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
+# QGIS bindings for mapping functions
+from qgis.core import *
+from qgis.gui import *
+
+# Path to local QGIS install
+qgis_prefix = "/usr/local/qgis-master"
 
 
 DATA = [
@@ -16,12 +28,53 @@ DATA = [
 
 
 class MainWindow(Ui_MainWindow, QtGui.QMainWindow):
-    def __init__(self):
-        QtGui.QMainWindow.__init__(self)
+    def __init__(self,splash):
+        QMainWindow.__init__(self)
+
+        # required by Qt4 to initialize the UI
         self.setupUi(self)
-        self.canvas = QgsMapCanvas()
-        self.canvas.setCanvasColor(QtGui.QColor(255, 255, 255))
+        self.splash = splash
+
+        # create map canvas
+        self.canvas = QgsMapCanvas(self)
+        self.canvas.setCanvasColor(QColor(255,255,255))
         self.canvas.enableAntiAliasing(True)
+        self.canvas.show()
+        self.canvas.parentWin = self
+        self.srs = None
+
+        # lay our widgets out in the main window
+        self.layout = QVBoxLayout(self.widget)
+        self.layout.addWidget(self.canvas)
+        # We need to initialize the window sizes
+
+        ## A place to store polygons we capture
+        #self.capturedPolygons = []
+        #self.capturedPolygonsPennies = []
+        #self.capturedPolygonsRub = []
+        #
+        ## Interview info to write in shapefile
+        #self.interviewInfo = []
+
+        self.layers = []
+
+        # Legend for displaying layers
+        # self.legend = Legend(self)
+        #
+        # # New Map Tools
+        # self.maptools = MapTools(self)
+        #
+        # # New Map Coords display in status bar
+        # self.mapcoords = MapCoords(self)
+
+        #Uncomment to run the pre-load of data
+        #self.loadBaseDataLayers()
+        # self.canvas.setExtent(QgsRectangle(-340000, -70000, -191000, 52500))
+        # self.canvas.updateScale()
+        self.load_countries()
+        self.create_layer(DATA)
+
+
 
     def create_layer(self, data):
         display_name = 'some-layer'
@@ -49,27 +102,56 @@ class MainWindow(Ui_MainWindow, QtGui.QMainWindow):
 
     def load_countries(self):
         display_name = 'Population density'
-        uri = '/home/michele/oq-eqcatalogue-tool/openquake/qgis/gemcatalogue/data/Countries.shp'
+        uri = '/home/marco/dev/qgis-plugins/oq-eqcatalogue-tool/openquake/qgis/gemcatalogue/data/Countries.shp'
         vlayer = QgsVectorLayer(uri, display_name, 'ogr')
         QgsMapLayerRegistry.instance().addMapLayers([vlayer])
+        vlayer.updateExtents()
+        self.canvas.setExtent(vlayer.extent())
+        # set the map canvas layer set
+        cl = QgsMapCanvasLayer(vlayer)
+        self.layers.insert(0,cl)
+        self.canvas.setLayerSet(self.layers)
+        vlayer.triggerRepaint()
 
 
-def main():
-    app = QtGui.QApplication(sys.argv, True)
-    # supply path to where is your qgis installed
-    QgsApplication.setPrefixPath("/usr", True)
-    # load providers
-    QgsApplication.initQgis()
-    # print QgsApplication.showSettings()
-    mw = MainWindow()
-    try:
-        # mw.create_layer(DATA)
-        mw.load_countries()
-        mw.show()
-        app.exec_()
-    finally:
-        QgsApplication.exitQgis()
+# Main entry to program.  Set up the main app and create a new window.
+def main(argv):
 
-if __name__ == '__main__':
-    main()
-    # launch with PYTHONPATH=/usr/share/qgis/python python example.py
+  # create Qt application
+  app = QApplication(argv,True)
+  #app = QgsApplication(argv,True)
+
+  # Set the app style
+
+  mySplashPix = QPixmap(QString("Data/OCEAN.png"))
+  mySplashPixScaled = mySplashPix.scaled(500,300,Qt.KeepAspectRatio)
+  mySplash = QSplashScreen(mySplashPixScaled)
+  mySplash.show()
+
+  # initialize qgis libraries
+  QgsApplication.setPrefixPath(qgis_prefix, True)
+  QgsApplication.initQgis()
+  #app.setPrefixPath(qgis_prefix, True)
+  #app.initQgis()
+
+  # create main window
+  wnd = MainWindow(mySplash)
+  wnd.show()
+
+  # Create signal for app finish
+  app.connect(app, SIGNAL("lastWindowClosed()"), app, SLOT("quit()"))
+
+  # Start the app up
+  retval = app.exec_()
+
+  # We got an exit signal so time to clean up
+  QgsApplication.exitQgis()
+  #app.exitQgis()
+
+  sys.exit(retval)
+
+
+if __name__ == "__main__":
+  main(sys.argv)
+
+
