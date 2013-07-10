@@ -6,6 +6,8 @@ from PyQt4 import QtGui, QtCore
 from qgis.gui import QgsMapCanvas
 from qgis.core import QgsVectorLayer, QgsMapLayerRegistry, QgsField, \
     QgsGeometry, QgsFeature, QgsPoint
+from ui_canvas import Ui_MainWindow
+
 
 DATA = [
     (15, 15, 0.3),
@@ -13,9 +15,10 @@ DATA = [
     (20, 15, 0.35)]
 
 
-class MainWindow(QtGui.QMainWindow):
+class MainWindow(Ui_MainWindow, QtGui.QMainWindow):
     def __init__(self):
         QtGui.QMainWindow.__init__(self)
+        self.setupUi(self)
         self.canvas = QgsMapCanvas()
         self.canvas.setCanvasColor(QtGui.QColor(255, 255, 255))
         self.canvas.enableAntiAliasing(True)
@@ -44,6 +47,12 @@ class MainWindow(QtGui.QMainWindow):
         self.canvas.setExtent(vlayer.extent())
         vlayer.triggerRepaint()
 
+    def load_countries(self):
+        display_name = 'Population density'
+        uri = '/home/michele/oq-eqcatalogue-tool/openquake/qgis/gemcatalogue/data/Countries.shp'
+        vlayer = QgsVectorLayer(uri, display_name, 'ogr')
+        QgsMapLayerRegistry.instance().addMapLayers([vlayer])
+
 
 def main():
     app = QtGui.QApplication(sys.argv, True)
@@ -54,7 +63,8 @@ def main():
     # print QgsApplication.showSettings()
     mw = MainWindow()
     try:
-        mw.create_layer(DATA)
+        # mw.create_layer(DATA)
+        mw.load_countries()
         mw.show()
         app.exec_()
     finally:

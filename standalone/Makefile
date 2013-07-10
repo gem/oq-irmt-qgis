@@ -1,4 +1,4 @@
-UI_FILES = ui_process_manager.py
+UI_FILES = ui_process_manager.py ui_canvas.py
 
 RESOURCE_FILES = # resources_rc.py
 
