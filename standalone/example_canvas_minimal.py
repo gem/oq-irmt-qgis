@@ -5,7 +5,7 @@ from PyQt4 import QtGui, QtCore
 from qgis.gui import QgsMapCanvas, QgsMapCanvasLayer
 from qgis.core import QgsApplication, QgsVectorLayer, QgsMapLayerRegistry, QgsField, \
     QgsGeometry, QgsFeature, QgsPoint
-from ui_canvas import Ui_MainWindow
+from ui_mainwindowminimal import Ui_MainWindowMinimal
 
 
 # Path to local QGIS install
@@ -19,21 +19,16 @@ DATA = [
     (20, 15, 0.35)]
 
 
-class MainWindow(Ui_MainWindow, QtGui.QMainWindow):
+class MainWindow(Ui_MainWindowMinimal, QtGui.QMainWindow):
     def __init__(self):
         QtGui.QMainWindow.__init__(self)
 
         # required by Qt4 to initialize the UI
         self.setupUi(self)
 
-        # create map canvas
-        self.canvas = QgsMapCanvas(self)
+        # map canvas is created in UI file
         self.canvas.setCanvasColor(QtGui.QColor(255, 255, 255))
         self.canvas.enableAntiAliasing(True)
-
-        # # lay our widgets out in the main window
-        self.layout = QtGui.QVBoxLayout(self)
-        self.layout.addWidget(self.canvas)
 
         self.create_layer(DATA)
 

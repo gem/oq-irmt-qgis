@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_canvas.ui'
+# Form implementation generated from reading ui file 'ui_mainwindow.ui'
 #
-# Created: Wed Jul 10 13:55:48 2013
+# Created: Wed Jul 10 14:21:08 2013
 #      by: PyQt4 UI code generator 4.9.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -20,6 +20,9 @@ class Ui_MainWindow(object):
         MainWindow.resize(800, 600)
         self.centralwidget = QtGui.QWidget(MainWindow)
         self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
+        self.canvas = QgsMapCanvas(self.centralwidget)
+        self.canvas.setGeometry(QtCore.QRect(99, 19, 681, 521))
+        self.canvas.setObjectName(_fromUtf8("canvas"))
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 25))
@@ -35,3 +38,4 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QtGui.QApplication.translate("MainWindow", "MainWindow", None, QtGui.QApplication.UnicodeUTF8))
 
+from qgis.gui import QgsMapCanvas

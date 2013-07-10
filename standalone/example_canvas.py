@@ -6,7 +6,7 @@ from PyQt4 import QtGui, QtCore, Qt
 from qgis.gui import QgsMapCanvas, QgsMapCanvasLayer
 from qgis.core import QgsVectorLayer, QgsMapLayerRegistry, QgsField, \
     QgsGeometry, QgsFeature, QgsPoint, QgsRectangle
-from ui_canvas import Ui_MainWindow
+from ui_mainwindow import Ui_MainWindow
 
 
 # Path to local QGIS install
@@ -28,8 +28,7 @@ class MainWindow(Ui_MainWindow, QtGui.QMainWindow):
         self.setupUi(self)
         self.splash = splash
 
-        # create map canvas
-        self.canvas = QgsMapCanvas(self)
+        # map canvas is created in UI file
         self.canvas.setCanvasColor(QtGui.QColor(255, 255, 255))
         self.canvas.enableAntiAliasing(True)
         self.canvas.show()
@@ -42,7 +41,7 @@ class MainWindow(Ui_MainWindow, QtGui.QMainWindow):
 
         self.layers = []
 
-        # self.load_countries()
+        self.load_countries()
         self.create_layer(DATA)
 
     def create_layer(self, data):
