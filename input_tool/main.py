@@ -1,3 +1,4 @@
+import os
 import sys
 import nodes
 from PyQt4 import QtGui, QtCore
@@ -11,6 +12,7 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
         print self.vSetsTbl
         for vset in vsets:
             print vset
+
 
 # Main entry to program.  Set up the main app and create a new window.
 def main(argv):
@@ -26,9 +28,10 @@ def main(argv):
     retval = app.exec_()
     sys.exit(retval)
 
-
-root, modeltype = nodes.parse_nrml('/home/michele/oq-nrmllib/examples',
-                                   'vulnerability-model-discrete.xml')
+from openquake import nrmllib
+SCHEMADIR = os.path.join(nrmllib.__path__[0], 'schema')
+XMLDIR = os.path.join(SCHEMADIR, '../../../examples')
+root, modeltype = nodes.parse_nrml(XMLDIR, 'vulnerability-model-discrete.xml')
 
 vsets = list(root)[1:]
 
