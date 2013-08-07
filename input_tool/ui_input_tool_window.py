@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_input_tool_window.ui'
 #
-# Created: Wed Aug  7 17:06:09 2013
+# Created: Wed Aug  7 17:46:46 2013
 #      by: PyQt4 UI code generator 4.9.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -33,6 +33,7 @@ class Ui_InputToolWindow(object):
         self.verticalLayout = QtGui.QVBoxLayout(self.vulnerability)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.vSetsTbl = QtGui.QTableWidget(self.vulnerability)
+        self.vSetsTbl.setAlternatingRowColors(True)
         self.vSetsTbl.setObjectName(_fromUtf8("vSetsTbl"))
         self.vSetsTbl.setColumnCount(4)
         self.vSetsTbl.setRowCount(0)
@@ -44,17 +45,23 @@ class Ui_InputToolWindow(object):
         self.vSetsTbl.setHorizontalHeaderItem(2, item)
         item = QtGui.QTableWidgetItem()
         self.vSetsTbl.setHorizontalHeaderItem(3, item)
+        self.vSetsTbl.horizontalHeader().setDefaultSectionSize(120)
+        self.vSetsTbl.horizontalHeader().setSortIndicatorShown(True)
+        self.vSetsTbl.horizontalHeader().setStretchLastSection(True)
         self.verticalLayout.addWidget(self.vSetsTbl)
         self.imtTbl = QtGui.QTableWidget(self.vulnerability)
+        self.imtTbl.setMaximumSize(QtCore.QSize(16777215, 30))
         self.imtTbl.setObjectName(_fromUtf8("imtTbl"))
         self.imtTbl.setColumnCount(0)
         self.imtTbl.setRowCount(1)
         item = QtGui.QTableWidgetItem()
         self.imtTbl.setVerticalHeaderItem(0, item)
+        self.imtTbl.verticalHeader().setStretchLastSection(True)
         self.verticalLayout.addWidget(self.imtTbl)
         self.horizontalLayout = QtGui.QHBoxLayout()
         self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
         self.vFnTbl = QtGui.QTableWidget(self.vulnerability)
+        self.vFnTbl.setAlternatingRowColors(True)
         self.vFnTbl.setObjectName(_fromUtf8("vFnTbl"))
         self.vFnTbl.setColumnCount(3)
         self.vFnTbl.setRowCount(0)
@@ -64,8 +71,11 @@ class Ui_InputToolWindow(object):
         self.vFnTbl.setHorizontalHeaderItem(1, item)
         item = QtGui.QTableWidgetItem()
         self.vFnTbl.setHorizontalHeaderItem(2, item)
+        self.vFnTbl.horizontalHeader().setSortIndicatorShown(True)
+        self.vFnTbl.horizontalHeader().setStretchLastSection(True)
         self.horizontalLayout.addWidget(self.vFnTbl)
         self.imlsTbl = QtGui.QTableWidget(self.vulnerability)
+        self.imlsTbl.setAlternatingRowColors(True)
         self.imlsTbl.setObjectName(_fromUtf8("imlsTbl"))
         self.imlsTbl.setColumnCount(3)
         self.imlsTbl.setRowCount(0)
@@ -75,6 +85,8 @@ class Ui_InputToolWindow(object):
         self.imlsTbl.setHorizontalHeaderItem(1, item)
         item = QtGui.QTableWidgetItem()
         self.imlsTbl.setHorizontalHeaderItem(2, item)
+        self.imlsTbl.horizontalHeader().setSortIndicatorShown(True)
+        self.imlsTbl.horizontalHeader().setStretchLastSection(True)
         self.horizontalLayout.addWidget(self.imlsTbl)
         self.verticalLayout.addLayout(self.horizontalLayout)
         self.tabwidget.addTab(self.vulnerability, _fromUtf8(""))
@@ -108,14 +120,14 @@ class Ui_InputToolWindow(object):
         QtCore.QMetaObject.connectSlotsByName(InputToolWindow)
 
     def retranslateUi(self, InputToolWindow):
-        InputToolWindow.setWindowTitle(QtGui.QApplication.translate("InputToolWindow", "MainWindow", None, QtGui.QApplication.UnicodeUTF8))
+        InputToolWindow.setWindowTitle(QtGui.QApplication.translate("InputToolWindow", "GEM input tool", None, QtGui.QApplication.UnicodeUTF8))
         self.tabwidget.setTabText(self.tabwidget.indexOf(self.exposure), QtGui.QApplication.translate("InputToolWindow", "Exposure Model", None, QtGui.QApplication.UnicodeUTF8))
         item = self.vSetsTbl.horizontalHeaderItem(0)
         item.setText(QtGui.QApplication.translate("InputToolWindow", "Set ID", None, QtGui.QApplication.UnicodeUTF8))
         item = self.vSetsTbl.horizontalHeaderItem(1)
         item.setText(QtGui.QApplication.translate("InputToolWindow", "Asset Category", None, QtGui.QApplication.UnicodeUTF8))
         item = self.vSetsTbl.horizontalHeaderItem(2)
-        item.setText(QtGui.QApplication.translate("InputToolWindow", "New Column", None, QtGui.QApplication.UnicodeUTF8))
+        item.setText(QtGui.QApplication.translate("InputToolWindow", "Loss Category", None, QtGui.QApplication.UnicodeUTF8))
         item = self.vSetsTbl.horizontalHeaderItem(3)
         item.setText(QtGui.QApplication.translate("InputToolWindow", "IMT", None, QtGui.QApplication.UnicodeUTF8))
         item = self.imtTbl.verticalHeaderItem(0)

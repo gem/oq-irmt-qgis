@@ -9,7 +9,23 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
     def __init__(self):
         QtGui.QMainWindow.__init__(self)
         self.setupUi(self)
-        print self.vSetsTbl
+        self.vSetsTbl.resizeColumnsToContents()
+        
+        self.data = [{'a':1, 'b':2, 'c':3, 'd':4},
+                     {'a':10, 'b':20, 'c':30, 'd':40}
+        ]
+        self.vSetsTbl.setRowCount(len(self.data))
+        
+        for row_index, row in enumerate(self.data):
+          column_index = 0
+          for column, content in row.iteritems():
+              print content
+              item = QtGui.QTableWidgetItem(str(content))
+              self.vSetsTbl.setItem(row_index, column_index, item)
+              column_index += 1
+              
+        self.vSetsTbl.setSortingEnabled(True)
+        
         for vset in vsets:
             print vset
 
