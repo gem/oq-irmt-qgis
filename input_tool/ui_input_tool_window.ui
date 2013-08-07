@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>InputToolWindow</class>
+ <widget class="QMainWindow" name="InputToolWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>964</width>
+    <height>816</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QTabWidget" name="tabwidget">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>951</width>
+      <height>751</height>
+     </rect>
+    </property>
+    <property name="currentIndex">
+     <number>1</number>
+    </property>
+    <widget class="QWidget" name="exposure">
+     <attribute name="title">
+      <string>Exposure Model</string>
+     </attribute>
+    </widget>
+    <widget class="QWidget" name="vulnerability">
+     <property name="minimumSize">
+      <size>
+       <width>947</width>
+       <height>718</height>
+      </size>
+     </property>
+     <attribute name="title">
+      <string>Vulnerability Functions</string>
+     </attribute>
+     <widget class="QWidget" name="verticalLayoutWidget">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>785</width>
+        <height>596</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout_4">
+           <item>
+            <widget class="QPushButton" name="addSetBtn">
+             <property name="text">
+              <string>Add Set</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="addFnBtn">
+             <property name="text">
+              <string>Add Fn</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="verticalSpacer">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QPushButton" name="removeSetBtn">
+             <property name="text">
+              <string>Remove Set</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="removeFnBtn">
+             <property name="text">
+              <string>Remove Fn</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout_5">
+           <item>
+            <widget class="QTableWidget" name="vSetsTbl">
+             <property name="minimumSize">
+              <size>
+               <width>672</width>
+               <height>0</height>
+              </size>
+             </property>
+             <column>
+              <property name="text">
+               <string>Set ID</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Asset Category</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Loss Category</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>IMT</string>
+              </property>
+             </column>
+            </widget>
+           </item>
+           <item>
+            <widget class="QTableWidget" name="ImtTbl">
+             <row>
+              <property name="text">
+               <string>IMT</string>
+              </property>
+             </row>
+            </widget>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_5">
+             <item>
+              <widget class="QTableWidget" name="vFnTbl">
+               <property name="sortingEnabled">
+                <bool>true</bool>
+               </property>
+               <column>
+                <property name="text">
+                 <string>Fn ID</string>
+                </property>
+               </column>
+               <column>
+                <property name="text">
+                 <string>Prob Dist</string>
+                </property>
+               </column>
+               <column>
+                <property name="text">
+                 <string>Category</string>
+                </property>
+               </column>
+              </widget>
+             </item>
+             <item>
+              <widget class="QTableWidget" name="tableWidget">
+               <property name="sortingEnabled">
+                <bool>true</bool>
+               </property>
+               <column>
+                <property name="text">
+                 <string>IML</string>
+                </property>
+               </column>
+               <column>
+                <property name="text">
+                 <string>Loss Ratio</string>
+                </property>
+               </column>
+               <column>
+                <property name="text">
+                 <string>Coeff Variation</string>
+                </property>
+               </column>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="fragility">
+     <attribute name="title">
+      <string>Fragility Functions</string>
+     </attribute>
+    </widget>
+    <widget class="QWidget" name="sitemodel">
+     <attribute name="title">
+      <string>Site Model</string>
+     </attribute>
+    </widget>
+    <widget class="QWidget" name="rupturemodel">
+     <attribute name="title">
+      <string>Rupture Model</string>
+     </attribute>
+    </widget>
+    <widget class="QWidget" name="config">
+     <attribute name="title">
+      <string>Config File</string>
+     </attribute>
+    </widget>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>964</width>
+     <height>25</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
