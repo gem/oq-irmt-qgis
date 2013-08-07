@@ -10,7 +10,7 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
         self.setupUi(self)
         print self.vSetsTbl
         for vset in vsets:
-            print vset.
+            print vset
 
 # Main entry to program.  Set up the main app and create a new window.
 def main(argv):
