@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'ui_input_tool_window.ui'
 #
-# Created: Thu Aug  8 15:39:02 2013
-#      by: PyQt4 UI code generator 4.9.3
+# Created: Thu Aug  8 15:49:19 2013
+#      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -71,14 +71,12 @@ class Ui_InputToolWindow(object):
         self.vFnTbl = QtGui.QTableWidget(self.vulnerabilityModel)
         self.vFnTbl.setAlternatingRowColors(True)
         self.vFnTbl.setObjectName(_fromUtf8("vFnTbl"))
-        self.vFnTbl.setColumnCount(3)
+        self.vFnTbl.setColumnCount(2)
         self.vFnTbl.setRowCount(0)
         item = QtGui.QTableWidgetItem()
         self.vFnTbl.setHorizontalHeaderItem(0, item)
         item = QtGui.QTableWidgetItem()
         self.vFnTbl.setHorizontalHeaderItem(1, item)
-        item = QtGui.QTableWidgetItem()
-        self.vFnTbl.setHorizontalHeaderItem(2, item)
         self.vFnTbl.horizontalHeader().setSortIndicatorShown(False)
         self.vFnTbl.horizontalHeader().setStretchLastSection(True)
         self.verticalLayout_2.addWidget(self.vFnTbl)
@@ -179,8 +177,6 @@ class Ui_InputToolWindow(object):
         item.setText(QtGui.QApplication.translate("InputToolWindow", "Fn ID", None, QtGui.QApplication.UnicodeUTF8))
         item = self.vFnTbl.horizontalHeaderItem(1)
         item.setText(QtGui.QApplication.translate("InputToolWindow", "Prob Dist", None, QtGui.QApplication.UnicodeUTF8))
-        item = self.vFnTbl.horizontalHeaderItem(2)
-        item.setText(QtGui.QApplication.translate("InputToolWindow", "Category", None, QtGui.QApplication.UnicodeUTF8))
         self.vFnAddBtn.setText(QtGui.QApplication.translate("InputToolWindow", "Add Row", None, QtGui.QApplication.UnicodeUTF8))
         self.vFnDelBtn.setText(QtGui.QApplication.translate("InputToolWindow", "Delete Rows", None, QtGui.QApplication.UnicodeUTF8))
         item = self.imlsTbl.horizontalHeaderItem(0)
