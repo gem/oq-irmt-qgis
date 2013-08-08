@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_input_tool_window.ui'
 #
-# Created: Thu Aug  8 10:48:17 2013
+# Created: Thu Aug  8 11:52:10 2013
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -17,7 +17,7 @@ except AttributeError:
 class Ui_InputToolWindow(object):
     def setupUi(self, InputToolWindow):
         InputToolWindow.setObjectName(_fromUtf8("InputToolWindow"))
-        InputToolWindow.resize(1011, 830)
+        InputToolWindow.resize(969, 830)
         self.centralwidget = QtGui.QWidget(InputToolWindow)
         self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
         self.gridLayout = QtGui.QGridLayout(self.centralwidget)
@@ -34,6 +34,8 @@ class Ui_InputToolWindow(object):
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.vSetsTbl = QtGui.QTableWidget(self.vulnerability)
         self.vSetsTbl.setAlternatingRowColors(True)
+        self.vSetsTbl.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
+        self.vSetsTbl.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
         self.vSetsTbl.setObjectName(_fromUtf8("vSetsTbl"))
         self.vSetsTbl.setColumnCount(4)
         self.vSetsTbl.setRowCount(0)
@@ -49,19 +51,12 @@ class Ui_InputToolWindow(object):
         self.vSetsTbl.horizontalHeader().setSortIndicatorShown(True)
         self.vSetsTbl.horizontalHeader().setStretchLastSection(True)
         self.verticalLayout.addWidget(self.vSetsTbl)
-        self.imtTbl = QtGui.QTableWidget(self.vulnerability)
-        self.imtTbl.setMaximumSize(QtCore.QSize(16777215, 30))
-        self.imtTbl.setObjectName(_fromUtf8("imtTbl"))
-        self.imtTbl.setColumnCount(0)
-        self.imtTbl.setRowCount(1)
-        item = QtGui.QTableWidgetItem()
-        self.imtTbl.setVerticalHeaderItem(0, item)
-        self.imtTbl.verticalHeader().setStretchLastSection(True)
-        self.verticalLayout.addWidget(self.imtTbl)
         self.horizontalLayout = QtGui.QHBoxLayout()
         self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
         self.vFnTbl = QtGui.QTableWidget(self.vulnerability)
         self.vFnTbl.setAlternatingRowColors(True)
+        self.vFnTbl.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
+        self.vFnTbl.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
         self.vFnTbl.setObjectName(_fromUtf8("vFnTbl"))
         self.vFnTbl.setColumnCount(2)
         self.vFnTbl.setRowCount(0)
@@ -103,7 +98,7 @@ class Ui_InputToolWindow(object):
         self.gridLayout.addWidget(self.tabwidget, 0, 0, 1, 1)
         InputToolWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(InputToolWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1011, 25))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 969, 25))
         self.menubar.setObjectName(_fromUtf8("menubar"))
         InputToolWindow.setMenuBar(self.menubar)
         self.statusbar = QtGui.QStatusBar(InputToolWindow)
@@ -127,8 +122,6 @@ class Ui_InputToolWindow(object):
         item = self.vSetsTbl.horizontalHeaderItem(2)
         item.setText(QtGui.QApplication.translate("InputToolWindow", "Loss Category", None, QtGui.QApplication.UnicodeUTF8))
         item = self.vSetsTbl.horizontalHeaderItem(3)
-        item.setText(QtGui.QApplication.translate("InputToolWindow", "IMT", None, QtGui.QApplication.UnicodeUTF8))
-        item = self.imtTbl.verticalHeaderItem(0)
         item.setText(QtGui.QApplication.translate("InputToolWindow", "IMT", None, QtGui.QApplication.UnicodeUTF8))
         item = self.vFnTbl.horizontalHeaderItem(0)
         item.setText(QtGui.QApplication.translate("InputToolWindow", "Fn ID", None, QtGui.QApplication.UnicodeUTF8))

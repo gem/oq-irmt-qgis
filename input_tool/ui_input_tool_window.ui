@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1011</width>
+    <width>969</width>
     <height>830</height>
    </rect>
   </property>
@@ -41,6 +41,12 @@
           <property name="alternatingRowColors">
            <bool>true</bool>
           </property>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::SingleSelection</enum>
+          </property>
+          <property name="selectionBehavior">
+           <enum>QAbstractItemView::SelectRows</enum>
+          </property>
           <attribute name="horizontalHeaderDefaultSectionSize">
            <number>120</number>
           </attribute>
@@ -73,29 +79,17 @@
          </widget>
         </item>
         <item>
-         <widget class="QTableWidget" name="imtTbl">
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>30</height>
-           </size>
-          </property>
-          <attribute name="verticalHeaderStretchLastSection">
-           <bool>true</bool>
-          </attribute>
-          <row>
-           <property name="text">
-            <string>IMT</string>
-           </property>
-          </row>
-         </widget>
-        </item>
-        <item>
          <layout class="QHBoxLayout" name="horizontalLayout">
           <item>
            <widget class="QTableWidget" name="vFnTbl">
             <property name="alternatingRowColors">
              <bool>true</bool>
+            </property>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::SingleSelection</enum>
+            </property>
+            <property name="selectionBehavior">
+             <enum>QAbstractItemView::SelectRows</enum>
             </property>
             <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
              <bool>true</bool>
@@ -176,7 +170,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1011</width>
+     <width>969</width>
      <height>25</height>
     </rect>
    </property>
