@@ -18,14 +18,14 @@
     <item row="1" column="0">
      <widget class="QTabWidget" name="tabwidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>4</number>
       </property>
-      <widget class="QWidget" name="exposure">
+      <widget class="QWidget" name="exposureModel">
        <attribute name="title">
         <string>Exposure Model</string>
        </attribute>
       </widget>
-      <widget class="QWidget" name="vulnerability">
+      <widget class="QWidget" name="vulnerabilityModel">
        <property name="minimumSize">
         <size>
          <width>947</width>
@@ -242,17 +242,17 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="fragility">
+      <widget class="QWidget" name="fragilityModel">
        <attribute name="title">
         <string>Fragility Functions</string>
        </attribute>
       </widget>
-      <widget class="QWidget" name="sitemodel">
+      <widget class="QWidget" name="siteModel">
        <attribute name="title">
         <string>Site Model</string>
        </attribute>
       </widget>
-      <widget class="QWidget" name="rupturemodel">
+      <widget class="QWidget" name="ruptureModel">
        <attribute name="title">
         <string>Rupture Model</string>
        </attribute>
