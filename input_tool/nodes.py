@@ -85,6 +85,27 @@ class Node(object):
     def to_xml(self):
         return ET.tostring(to_elem(self), pretty_print=True)
 
+    def __getitem__(self, i):
+        if isinstance(i, int):
+            return self._nodes[i]
+        else:  # assume a string
+            return self._attrib[i]
+
+    def __setitem__(self, i, value):
+        if isinstance(i, int):
+            self._nodes[i] = value
+        else:  # assume a string
+            self._attrib[i] = value
+
+    def __delitem__(self, i):
+        if isinstance(i, int):
+            del self._nodes[i]
+        else:  # assume a string
+            del self._attr[i]
+
+    def __len__(self):
+        return len(self._nodes)
+
 
 # inspired by https://gist.github.com/651801
 def to_elem(node):

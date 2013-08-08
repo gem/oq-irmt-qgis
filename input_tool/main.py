@@ -10,24 +10,22 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
         QtGui.QMainWindow.__init__(self)
         self.setupUi(self)
         self.vSetsTbl.resizeColumnsToContents()
-        
-        self.data = [{'a':1, 'b':2, 'c':3, 'd':4},
-                     {'a':10, 'b':20, 'c':30, 'd':40}
-        ]
-        self.vSetsTbl.setRowCount(len(self.data))
-        
-        for row_index, row in enumerate(self.data):
-          column_index = 0
-          for column, content in row.iteritems():
-              print content
-              item = QtGui.QTableWidgetItem(str(content))
-              self.vSetsTbl.setItem(row_index, column_index, item)
-              column_index += 1
-              
-        self.vSetsTbl.setSortingEnabled(True)
-        
+        self.data = []
         for vset in vsets:
-            print vset
+            self.data.append([vset['vulnerabilitySetID'],
+                              vset['assetCategory'],
+                              vset['lossCategory'],
+                              vset.IML['IMT'],
+                              ])
+
+        self.vSetsTbl.setRowCount(len(self.data))
+
+        for row_index, row in enumerate(self.data):
+            for col_index, content in enumerate(row):
+                item = QtGui.QTableWidgetItem(str(content))
+                self.vSetsTbl.setItem(row_index, col_index, item)
+
+        self.vSetsTbl.setSortingEnabled(True)
 
 
 # Main entry to program.  Set up the main app and create a new window.
