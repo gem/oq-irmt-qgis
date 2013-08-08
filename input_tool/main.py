@@ -3,6 +3,8 @@ import sys
 import nodes
 from PyQt4 import QtGui, QtCore
 from ui_input_tool_window import Ui_InputToolWindow
+from openquake import nrmllib
+SCHEMADIR = os.path.join(nrmllib.__path__[0], 'schema')
 
 
 def split_numbers(node):
@@ -27,39 +29,42 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
     def __init__(self):
         QtGui.QMainWindow.__init__(self)
         self.setupUi(self)
-        self.populate_table_widgets()
-        self.vSetsTbl.itemSelectionChanged.connect(self.populate_vFnTbl)
-        self.vFnTbl.itemSelectionChanged.connect(self.populate_imlsTbl)
-        self.vSetsTbl.cellChanged.connect(self.update_vSets)
-        self.vFnTbl.cellChanged.connect(self.update_vFn)
-        self.imlsTbl.cellChanged.connect(self.update_imls)
+        self.tabwidget.currentWidget().root = None
+
+        # menu actions
+        self.actionOpen.triggered.connect(self.load_file)
+
+    @property
+    def vsets(self):
+        root = self.tabwidget.currentWidget().root
+        return root.getnodes('discreteVulnerabilitySet')
 
     def update_vSets(self, row, col):
         text = unicode(self.vSetsTbl.item(row, col).text())
         attr = VSET[col]
         if attr == 'IMT':
-            vsets[row].IML[attr] = text
+            self.vsets[row].IML[attr] = text
         else:
-            vsets[row][attr] = text
+            self.vsets[row][attr] = text
 
     def update_vFn(self, row, col):
         text = unicode(self.vFnTbl.item(row, col).text())
         attr = VFN[col]
         current_vset = self.vSetsTbl.currentRow()
-        vsets[current_vset][row][attr] = text
+        self.vsets[current_vset][row][attr] = text
 
     def update_imls(self, row, col):
         text = unicode(self.imlsTbl.item(row, col).text())
         attr = IMLS[col]
         current_vset = self.vSetsTbl.currentRow()
         current_vfn = self.vFnTbl.currentRow()
-        vfn = vsets[current_vset][current_vfn + 1]
+        vfn = self.vsets[current_vset][current_vfn + 1]  # +1 to skip IML node
         if attr == 'lossRatio':
             set_list_item(vfn.lossRatio, row, text)
         elif attr == 'coefficientsVariation':
             set_list_item(vfn.coefficientsVariation, row, text)
         elif attr == 'imls':
-            set_list_item(vsets[current_vset].IML, row, text)
+            set_list_item(self.vsets[current_vset].IML, row, text)
 
     def populate_table_widget(self, widget, data):
         widget.clearContents()
@@ -73,7 +78,7 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
 
     def populate_table_widgets(self):
         data = []
-        for vset in vsets:
+        for vset in self.vsets:
             data.append([vset['vulnerabilitySetID'],
                          vset['assetCategory'],
                          vset['lossCategory'],
@@ -88,7 +93,7 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
     def populate_vFnTbl(self):
         row_index = self.vSetsTbl.currentRow()
         data = []
-        vset = vsets[row_index]
+        vset = self.vsets[row_index]
         vfs = vset.getnodes('discreteVulnerability')
 
         for vf in vfs:
@@ -103,15 +108,35 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
     def populate_imlsTbl(self):
         set_index = self.vSetsTbl.currentRow()
         vfn_index = self.vFnTbl.currentRow()
-        vset = vsets[set_index]
+        vset = self.vsets[set_index]
         imt = QtGui.QTableWidgetItem(vset.IML['IMT'])
         self.imlsTbl.setHorizontalHeaderItem(0, imt)
         imls = split_numbers(vset.IML)
-        vfn = vsets[set_index].getnodes('discreteVulnerability')[vfn_index]
+        vfn = self.vsets[set_index].getnodes(
+            'discreteVulnerability')[vfn_index]
         loss_ratios = split_numbers(vfn.lossRatio)
         coeff_vars = split_numbers(vfn.coefficientsVariation)
         data = zip(imls, loss_ratios, coeff_vars)
         self.populate_table_widget(self.imlsTbl, data)
+
+    def load_file(self):
+        XMLDIR = os.path.join(SCHEMADIR, '../../../examples')
+        fname = unicode(QtGui.QFileDialog.getOpenFileName(
+            self, 'Choose file',
+            XMLDIR,  # QtCore.QDir.homePath(),
+            "Model file (*.xml);;Config files (*.ini)"))
+        root, modeltype = nodes.parse_nrml(
+            os.path.dirname(fname), os.path.basename(fname))
+        tab = self.tabwidget.findChild(QtGui.QWidget, modeltype)
+        tab.root = root
+        self.tabwidget.setCurrentWidget(tab)
+
+        self.populate_table_widgets()
+        self.vSetsTbl.itemSelectionChanged.connect(self.populate_vFnTbl)
+        self.vFnTbl.itemSelectionChanged.connect(self.populate_imlsTbl)
+        self.vSetsTbl.cellChanged.connect(self.update_vSets)
+        self.vFnTbl.cellChanged.connect(self.update_vFn)
+        self.imlsTbl.cellChanged.connect(self.update_imls)
 
 
 def main(argv):
@@ -128,13 +153,6 @@ def main(argv):
     # Start the app up
     retval = app.exec_()
     sys.exit(retval)
-
-from openquake import nrmllib
-SCHEMADIR = os.path.join(nrmllib.__path__[0], 'schema')
-XMLDIR = os.path.join(SCHEMADIR, '../../../examples')
-root, modeltype = nodes.parse_nrml(XMLDIR, 'vulnerability-model-discrete.xml')
-
-vsets = list(root)[1:]
 
 if __name__ == '__main__':
     main(sys.argv)
