@@ -60,7 +60,6 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
             set_list_item(vfn.coefficientsVariation, row, text)
         elif attr == 'imls':
             set_list_item(vsets[current_vset].IML, row, text)
-        print vfn
 
     def populate_table_widget(self, widget, data):
         widget.clearContents()
@@ -119,7 +118,8 @@ def main(argv):
 
     # create Qt application
     app = QtGui.QApplication(argv, True)
-    # app.setStyleSheet('QTableWidget::item:selected{ background-color: red }')
+    app.setStyleSheet('QTableWidget::item:selected'
+                      '{ background-color: palette(highlight) }')
 
     # create main window
     wnd = MainWindow()

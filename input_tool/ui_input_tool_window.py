@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_input_tool_window.ui'
 #
-# Created: Thu Aug  8 11:52:10 2013
+# Created: Thu Aug  8 14:29:11 2013
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -78,7 +78,7 @@ class Ui_InputToolWindow(object):
         self.imlsTbl.setHorizontalHeaderItem(1, item)
         item = QtGui.QTableWidgetItem()
         self.imlsTbl.setHorizontalHeaderItem(2, item)
-        self.imlsTbl.horizontalHeader().setSortIndicatorShown(True)
+        self.imlsTbl.horizontalHeader().setSortIndicatorShown(False)
         self.imlsTbl.horizontalHeader().setStretchLastSection(True)
         self.horizontalLayout.addWidget(self.imlsTbl)
         self.verticalLayout.addLayout(self.horizontalLayout)
