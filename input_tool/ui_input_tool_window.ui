@@ -113,11 +113,6 @@
               <string>Prob Dist</string>
              </property>
             </column>
-            <column>
-             <property name="text">
-              <string>Category</string>
-             </property>
-            </column>
            </widget>
           </item>
           <item>
