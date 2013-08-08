@@ -18,7 +18,7 @@
     <item row="1" column="0">
      <widget class="QTabWidget" name="tabwidget">
       <property name="currentIndex">
-       <number>4</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="exposureModel">
        <attribute name="title">
@@ -280,7 +280,7 @@
      <string>File</string>
     </property>
     <addaction name="actionOpen"/>
-    <addaction name="action_Save"/>
+    <addaction name="actionSave"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
@@ -301,7 +301,7 @@
     <string>&amp;Open</string>
    </property>
   </action>
-  <action name="action_Save">
+  <action name="actionSave">
    <property name="text">
     <string>&amp;Save</string>
    </property>

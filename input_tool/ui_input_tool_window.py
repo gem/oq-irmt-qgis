@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_input_tool_window.ui'
 #
-# Created: Thu Aug  8 15:10:50 2013
+# Created: Thu Aug  8 15:39:02 2013
 #      by: PyQt4 UI code generator 4.9.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -152,14 +152,14 @@ class Ui_InputToolWindow(object):
         InputToolWindow.addToolBar(QtCore.Qt.TopToolBarArea, self.toolBar)
         self.actionOpen = QtGui.QAction(InputToolWindow)
         self.actionOpen.setObjectName(_fromUtf8("actionOpen"))
-        self.action_Save = QtGui.QAction(InputToolWindow)
-        self.action_Save.setObjectName(_fromUtf8("action_Save"))
+        self.actionSave = QtGui.QAction(InputToolWindow)
+        self.actionSave.setObjectName(_fromUtf8("actionSave"))
         self.menuFile.addAction(self.actionOpen)
-        self.menuFile.addAction(self.action_Save)
+        self.menuFile.addAction(self.actionSave)
         self.menubar.addAction(self.menuFile.menuAction())
 
         self.retranslateUi(InputToolWindow)
-        self.tabwidget.setCurrentIndex(4)
+        self.tabwidget.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(InputToolWindow)
 
     def retranslateUi(self, InputToolWindow):
@@ -199,5 +199,5 @@ class Ui_InputToolWindow(object):
         self.menuFile.setTitle(QtGui.QApplication.translate("InputToolWindow", "File", None, QtGui.QApplication.UnicodeUTF8))
         self.toolBar.setWindowTitle(QtGui.QApplication.translate("InputToolWindow", "toolBar", None, QtGui.QApplication.UnicodeUTF8))
         self.actionOpen.setText(QtGui.QApplication.translate("InputToolWindow", "&Open", None, QtGui.QApplication.UnicodeUTF8))
-        self.action_Save.setText(QtGui.QApplication.translate("InputToolWindow", "&Save", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionSave.setText(QtGui.QApplication.translate("InputToolWindow", "&Save", None, QtGui.QApplication.UnicodeUTF8))
 
