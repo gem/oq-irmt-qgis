@@ -138,6 +138,15 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
         self.vFnTbl.cellChanged.connect(self.update_vFn)
         self.imlsTbl.cellChanged.connect(self.update_imls)
 
+        self.vSetsAddBtn.clicked.connect(self.vSetsAdd)
+        self.vSetsDelBtn.clicked.connect(self.vSetsDel)
+
+    def vSetsAdd(self):
+        self.vSetsTbl.insertRow(self.vSetsTbl.rowCount())
+
+    def vSetsDel(self):
+        self.vSetsTbl.removeRow(self.vSetsTbl.currentRow())
+
 
 def main(argv):
 
