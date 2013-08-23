@@ -105,7 +105,6 @@ class CatalogueMap(object):
                 olplugin.olLayerTypeRegistry))
         ol_gphyslayertype = olplugin.olLayerTypeRegistry.getById(4)
         olplugin.addLayer(ol_gphyslayertype)
-        canvas.refresh()
         return QgsMapCanvasLayer(olplugin.layer)
 
     def filter(self, field, value, comparator=cmp):
@@ -201,6 +200,7 @@ class CatalogueRenderer(QgsFeatureRendererV2):
         self.syms = [defaultPoint]
         self.cluster_index_idx = catalogue.field_idx('Cluster_Index')
         self.cluster_flag_idx = catalogue.field_idx('Cluster_Flag')
+        self.comp_flag_idx = catalogue.field_idx('Completeness_Flag')
         self.catalogue = catalogue
 
     def symbolForFeature(self, feature):
@@ -210,7 +210,8 @@ class CatalogueRenderer(QgsFeatureRendererV2):
         index = int(attrs[self.cluster_index_idx].toPyObject())
         index = index * 2
         if len(self.syms) > index:
-            if attrs[self.cluster_flag_idx].toPyObject():
+            if (attrs[self.cluster_flag_idx].toPyObject() or
+                attrs[self.comp_flag_idx].toPyObject()):
                 index = index - 1
         else:
             index = 0
@@ -243,7 +244,7 @@ class CatalogueRenderer(QgsFeatureRendererV2):
             s.stopRender(context)
 
     def usedAttributes(self):
-        return ['id', 'Cluster_Index', 'Cluster_Flag']
+        return ['id', 'Cluster_Index', 'Cluster_Flag', 'Completeness_Flag']
 
     def clone(self):
         return CatalogueRenderer(self.catalogue)

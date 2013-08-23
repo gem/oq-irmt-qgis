@@ -1,4 +1,4 @@
-import csv
+import numpy
 
 # XXX the order of imports is important for pylint
 from PyQt4 import QtGui
@@ -76,9 +76,23 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
                 self.mapWidget, self.catalogue_model)
         else:
             self.catalogue_map.change_catalogue_model(self.catalogue_model)
-        self.chartWidget.axes.hist(
+        self.declusteringChart.axes.hist(
             self.catalogue_model.catalogue.data['magnitude'])
-        self.chartWidget.draw()
+        self.declusteringChart.axes.set_xlabel('Magnitude',
+                                               dict(fontsize=13))
+        self.declusteringChart.axes.set_ylabel(
+            'Occurrences', dict(fontsize=13))
+        self.declusteringChart.draw()
+
+        self.completenessChart.axes.plot(
+            self.catalogue_model.catalogue.get_decimal_time(),
+            self.catalogue_model.catalogue.data['magnitude'])
+        self.completenessChart.axes.set_xlabel('Time',
+                                               dict(fontsize=13))
+        self.completenessChart.axes.set_ylabel(
+            'Magnitude', dict(fontsize=13))
+
+        self.completenessChart.draw()
 
     def setupActions(self):
         # menu actions
@@ -122,8 +136,11 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
             self.declusterButton, SIGNAL("clicked()"),
             self.decluster)
         QObject.connect(
-            self.purgeCatalogue, SIGNAL("clicked()"),
+            self.declusteringPurgeButton, SIGNAL("clicked()"),
             self.purge_decluster)
+        QObject.connect(
+            self.completenessButton, SIGNAL("clicked()"),
+            self.completeness)
 
         # table view actions
         QObject.connect(
@@ -140,15 +157,9 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         return wrapped
 
     def save_catalogue(self):
-        filename = QtGui.QFileDialog.getSaveFileName(
-            self, "Save Catalogue", "", "*.csv")
-        with file(filename, 'w') as f:
-            writer = csv.writer(f)
-            keys = ['eventID', 'longitude', 'latitude', 'depth', 'magnitude',
-                    'year', 'month', 'day', 'hour', 'minute', 'second']
-            writer.writerow(keys)
-            for row in self.catalogue_model.catalogue.load_to_array(keys):
-                writer.writerow(row)
+        self.catalogue_model.save(
+            QtGui.QFileDialog.getSaveFileName(
+                self, "Save Catalogue", "", "*.csv"))
 
     def decluster(self):
         if self.catalogue_model is None:
@@ -156,9 +167,9 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
                   "seismicity tools")
 
         self.catalogue_model.decluster(
-            self.methodComboBox_2.currentIndex(),
-            self.timeWindowFunctionCombo.currentIndex(),
-            self.TimeWindowInput.text())
+            self.declusteringMethodComboBox.currentIndex(),
+            self.declusteringTimeWindowFunctionCombo.currentIndex(),
+            self.declusteringTimeWindowInput.text())
 
         self.catalogue_map.update_catalogue_layer(
             ['Cluster_Index', 'Cluster_Flag'])
@@ -169,14 +180,73 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
                   "seismicity tools")
 
         self.catalogue_model.decluster(
-            self.methodComboBox_2.currentIndex(),
-            self.timeWindowFunctionCombo.currentIndex(),
-            self.TimeWindowInput.text())
+            self.declusteringMethodComboBox.currentIndex(),
+            self.declusteringTimeWindowFunctionCombo.currentIndex(),
+            self.declusteringTimeWindowInput.text())
 
         self.catalogue_model.purge_decluster()
 
+        self.outputTableView.setModel(self.catalogue_model.item_model)
         self.catalogue_map.change_catalogue_model(
             self.catalogue_model)
+
+    def completeness(self):
+        if self.catalogue_model is None:
+            alert("Load a catalogue before starting using the "
+                  "seismicity tools")
+
+        model = self.catalogue_model.completeness(
+            self.completenessMagnitudeBinInput.text(),
+            self.completenessTimeBinInput.text(),
+            self.completenessIncrementLockInput.currentIndex())
+
+        if model is None:
+            return
+
+        self.catalogue_map.update_catalogue_layer(['Completeness_Flag'])
+
+        # FIXME(lp). refactor with plot_stepp_1972.py in hmtk
+        valid_markers = ['*', '+', '1', '2', '3', '4', '8', '<', '>', 'D', 'H',
+                         '^', '_', 'd', 'h', 'o', 'p', 's', 'v', 'x', '|']
+
+        legend_list = [(str(model.magnitude_bin[iloc] + 0.01) + ' - ' +
+                        str(model.magnitude_bin[iloc + 1]))
+                       for iloc in range(0, len(model.magnitude_bin) - 1)]
+        rgb_list, marker_vals = [], []
+        # Get marker from valid list
+        while len(valid_markers) < len(model.magnitude_bin):
+            valid_markers.append(valid_markers)
+        marker_sampler = numpy.arange(0, len(valid_markers), 1)
+        numpy.random.shuffle(marker_sampler)
+        # Get colour for each bin
+        for value in range(0, len(model.magnitude_bin) - 1):
+            rgb_samp = numpy.random.uniform(0., 1., 3)
+            rgb_list.append((rgb_samp[0], rgb_samp[1], rgb_samp[2]))
+            marker_vals.append(valid_markers[marker_sampler[value]])
+        # Plot observed Sigma lambda
+        for iloc in range(0, len(model.magnitude_bin) - 1):
+            self.completenessChart.axes.loglog(
+                model.time_values, model.sigma[:, iloc],
+                linestyle='None', marker=marker_vals[iloc],
+                color=rgb_list[iloc])
+
+        self.completenessChart.axes.legend(legend_list)
+        # Plot expected Poisson rate
+        for iloc in range(0, len(model.magnitude_bin) - 1):
+            self.completenessChart.axes.loglog(
+                model.time_values, model.model_line[:, iloc],
+                linestyle='-', marker='None', color=rgb_list[iloc])
+            xmarker = model.end_year - model.completeness_table[iloc, 0]
+            id0 = model.model_line[:, iloc] > 0.
+            ymarker = 10.0 ** numpy.interp(
+                numpy.log10(xmarker), numpy.log10(model.time_values[id0]),
+                numpy.log10(model.model_line[id0, iloc]))
+            self.completenessChart.axes.loglog(xmarker, ymarker, 'ks')
+        self.completenessChart.axes.set_xlabel('Time (years)',
+                                               dict(fontsize=13))
+        self.completenessChart.axes.set_ylabel(
+            '$\sigma_{\lambda} = \sqrt{\lambda} / \sqrt{T}$', dict(fontsize=13))
+        self.completenessChart.draw()
 
     def cellClicked(self, modelIndex):
         catalogue = self.catalogue_model.catalogue
@@ -200,4 +270,4 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
                 int(float(self.catalogue_model.at(modelIndex))))
         else:
             self.catalogue_map.select(
-                self.catalogue_model.eventIdAt(modelIndex))
+                self.catalogue_model.event_at(modelIndex))
