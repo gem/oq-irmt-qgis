@@ -1,0 +1,680 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>HMTKWindow</class>
+ <widget class="QMainWindow" name="HMTKWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>823</width>
+    <height>686</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>HMTKWindow</string>
+  </property>
+  <widget class="QWidget" name="centralWidget">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <widget class="QStackedWidget" name="stackedFormWidget">
+      <property name="currentIndex">
+       <number>1</number>
+      </property>
+      <widget class="QWidget" name="stackedWidgetDeclustering">
+       <layout class="QGridLayout" name="gridLayout_2">
+        <item row="0" column="0">
+         <widget class="QGroupBox" name="declusteringGroupBox">
+          <property name="title">
+           <string>Declustering</string>
+          </property>
+          <widget class="QWidget" name="layoutWidget">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>40</y>
+             <width>349</width>
+             <height>84</height>
+            </rect>
+           </property>
+           <layout class="QFormLayout" name="declusteringForm">
+            <property name="fieldGrowthPolicy">
+             <enum>QFormLayout::FieldsStayAtSizeHint</enum>
+            </property>
+            <item row="1" column="0">
+             <widget class="QLabel" name="timeWindowFunctionLabel">
+              <property name="text">
+               <string>Time window function</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QComboBox" name="timeWindowFunctionCombo">
+              <item>
+               <property name="text">
+                <string/>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Uhrhammer</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Gardner Knopoff</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="TimeWindowLabel">
+              <property name="text">
+               <string>Time window</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QLineEdit" name="TimeWindowInput">
+              <property name="inputMethodHints">
+               <set>Qt::ImhDigitsOnly</set>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="methodLabel_3">
+              <property name="text">
+               <string>Method</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QComboBox" name="methodComboBox_2">
+              <item>
+               <property name="text">
+                <string/>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Gardner Knopoff Type 1</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Afteran</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QPushButton" name="purgeCatalogue">
+           <property name="geometry">
+            <rect>
+             <x>210</x>
+             <y>150</y>
+             <width>146</width>
+             <height>32</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>Purge Catalogue</string>
+           </property>
+          </widget>
+          <widget class="QPushButton" name="declusterButton">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>150</y>
+             <width>114</width>
+             <height>32</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>Decluster</string>
+           </property>
+          </widget>
+          <widget class="FigureCanvasQTAggWidget" name="chartWidget" native="true">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>320</y>
+             <width>371</width>
+             <height>300</height>
+            </rect>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>300</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>16777215</height>
+            </size>
+           </property>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="stackedWidgetCompleteness">
+       <layout class="QGridLayout" name="gridLayout_3">
+        <item row="0" column="0">
+         <widget class="QGroupBox" name="completenessGroupBox">
+          <property name="title">
+           <string>Completeness</string>
+          </property>
+          <widget class="QWidget" name="layoutWidget_2">
+           <property name="geometry">
+            <rect>
+             <x>30</x>
+             <y>50</y>
+             <width>251</width>
+             <height>86</height>
+            </rect>
+           </property>
+           <layout class="QFormLayout" name="completenessForm">
+            <property name="fieldGrowthPolicy">
+             <enum>QFormLayout::FieldsStayAtSizeHint</enum>
+            </property>
+            <item row="0" column="0">
+             <widget class="QLabel" name="magnitudeBinLabel">
+              <property name="text">
+               <string>Magnitude Bin</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLineEdit" name="magnitudeBinInput"/>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="timeBinLabel">
+              <property name="text">
+               <string>Time Bin</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLineEdit" name="timeBinInput"/>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="incrementLockLabel">
+              <property name="text">
+               <string>Increment Lock</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QComboBox" name="incrementLockInput">
+              <item>
+               <property name="text">
+                <string>True</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>False</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="stackedWidgetRecurrenceModel">
+       <layout class="QGridLayout" name="gridLayout_4">
+        <item row="0" column="0">
+         <widget class="QGroupBox" name="recurrenceModelGroupBox">
+          <property name="title">
+           <string>Recurrence Model</string>
+          </property>
+          <widget class="QWidget" name="layoutWidget_3">
+           <property name="geometry">
+            <rect>
+             <x>20</x>
+             <y>50</y>
+             <width>328</width>
+             <height>250</height>
+            </rect>
+           </property>
+           <layout class="QFormLayout" name="recurrenceModelForm">
+            <property name="fieldGrowthPolicy">
+             <enum>QFormLayout::FieldsStayAtSizeHint</enum>
+            </property>
+            <item row="0" column="0">
+             <widget class="QLabel" name="methodLabel_2">
+              <property name="text">
+               <string>Method</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QComboBox" name="methodInput">
+              <item>
+               <property name="text">
+                <string>Maximum Likelihood</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Kijko and Smit</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Weichert</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="magnitudeIntervalLabel">
+              <property name="text">
+               <string>Magnitude Interval</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLineEdit" name="magnitudeIntervalInput"/>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="averageTypeLabel">
+              <property name="text">
+               <string>Average Type</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QComboBox" name="averageTypeInput">
+              <item>
+               <property name="text">
+                <string>Average</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>None (Kijko and Smit)</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="referenceMagnitudeLabel">
+              <property name="text">
+               <string>Reference Magnitude</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QLineEdit" name="referenceMagnitudeInput"/>
+            </item>
+            <item row="4" column="0">
+             <widget class="QLabel" name="bValueLabel_3">
+              <property name="text">
+               <string>b value (Weichert)</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="QLineEdit" name="bValueInput"/>
+            </item>
+            <item row="5" column="0">
+             <widget class="QLabel" name="toleranceLabel_2">
+              <property name="text">
+               <string>tolerance (Weichert)</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="1">
+             <widget class="QLineEdit" name="toleranceInput"/>
+            </item>
+            <item row="6" column="0">
+             <widget class="QLabel" name="maxIterationLabel">
+              <property name="text">
+               <string>max iteration</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="1">
+             <widget class="QLineEdit" name="maxIterationInput"/>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="stackedWidgetMaxMagnitude">
+       <layout class="QGridLayout" name="gridLayout_5">
+        <item row="0" column="0">
+         <widget class="QGroupBox" name="maxMagnitudeGroupBox">
+          <property name="title">
+           <string>Maximum Magnitude</string>
+          </property>
+          <widget class="QWidget" name="layoutWidget_4">
+           <property name="geometry">
+            <rect>
+             <x>20</x>
+             <y>40</y>
+             <width>352</width>
+             <height>214</height>
+            </rect>
+           </property>
+           <layout class="QFormLayout" name="maxMagnitudeForm">
+            <item row="1" column="0">
+             <widget class="QLabel" name="maxMagnitudeLabel">
+              <property name="text">
+               <string>Max Magnitude</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLineEdit" name="maxMagnitudeInput"/>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="inputMaximumMagnitudeUncertaintyLabel">
+              <property name="text">
+               <string>Max Mag. Uncertainty</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QLineEdit" name="inputMaximumMagnitudeUncertaintyLineEdit"/>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="bValueLabel">
+              <property name="text">
+               <string>b value</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QLineEdit" name="bValueLineEdit"/>
+            </item>
+            <item row="4" column="0">
+             <widget class="QLabel" name="inputMinimumMagnitudeLabel">
+              <property name="text">
+               <string>Min Magnitude</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="QLineEdit" name="inputMinimumMagnitudeLineEdit"/>
+            </item>
+            <item row="5" column="0">
+             <widget class="QLabel" name="toleranceLabel">
+              <property name="text">
+               <string>tolerance</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="1">
+             <widget class="QLineEdit" name="toleranceLineEdit"/>
+            </item>
+            <item row="6" column="0">
+             <widget class="QLabel" name="maximumIterationsLabel">
+              <property name="text">
+               <string>Max iterations</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="1">
+             <widget class="QLineEdit" name="maximumIterationsLineEdit"/>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="methodLabel">
+              <property name="text">
+               <string>Method</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QComboBox" name="methodComboBox">
+              <item>
+               <property name="text">
+                <string/>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Kijko Sellevol (Fixed b)</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Kijko et al. (Uncertain b)</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Non Parametric Gaussian</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="stackedWidgetSmoothedSeismicity">
+       <layout class="QGridLayout" name="gridLayout_6">
+        <item row="0" column="0">
+         <widget class="QGroupBox" name="smoothedSeismicityGroupBox">
+          <property name="title">
+           <string>Smoothed Seismicity</string>
+          </property>
+          <widget class="QWidget" name="layoutWidget_5">
+           <property name="geometry">
+            <rect>
+             <x>20</x>
+             <y>30</y>
+             <width>234</width>
+             <height>88</height>
+            </rect>
+           </property>
+           <layout class="QFormLayout" name="smoothedSeismicityFormLayout">
+            <property name="fieldGrowthPolicy">
+             <enum>QFormLayout::FieldsStayAtSizeHint</enum>
+            </property>
+            <item row="0" column="0">
+             <widget class="QLabel" name="gridSpacingLabel">
+              <property name="text">
+               <string>grid spacing</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLineEdit" name="gridSpacingInput"/>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="threeDDistancesLabel">
+              <property name="text">
+               <string>3d distances</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLineEdit" name="threeDistancesLineEdit"/>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="bValueLabel_2">
+              <property name="text">
+               <string>b value</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QLineEdit" name="bValueLineEdit_2"/>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+    <item>
+     <layout class="QVBoxLayout" name="outputVerticalLayout">
+      <item>
+       <widget class="QgsMapCanvas" name="mapWidget" native="true">
+        <property name="minimumSize">
+         <size>
+          <width>300</width>
+          <height>300</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QTableView" name="outputTableView">
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
+        <property name="selectionMode">
+         <enum>QAbstractItemView::SingleSelection</enum>
+        </property>
+        <property name="sortingEnabled">
+         <bool>true</bool>
+        </property>
+        <attribute name="verticalHeaderVisible">
+         <bool>false</bool>
+        </attribute>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>823</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <widget class="QMenu" name="menuExport">
+     <property name="title">
+      <string>Export</string>
+     </property>
+    </widget>
+    <addaction name="actionLoad_catalogue"/>
+    <addaction name="actionSave_catalogue"/>
+    <addaction name="menuExport"/>
+   </widget>
+   <widget class="QMenu" name="menuTools">
+    <property name="title">
+     <string>Tools</string>
+    </property>
+    <addaction name="actionDeclustering"/>
+    <addaction name="actionCompleteness"/>
+    <addaction name="actionRecurrenceModel"/>
+    <addaction name="actionMaximumMagnitude"/>
+    <addaction name="actionSmoothedSeismicity"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuTools"/>
+  </widget>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+  </widget>
+  <action name="actionLoad_catalogue">
+   <property name="text">
+    <string>Load catalogue</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
+  </action>
+  <action name="actionDeclustering">
+   <property name="text">
+    <string>Declustering</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+1</string>
+   </property>
+  </action>
+  <action name="actionRecurrenceModel">
+   <property name="text">
+    <string>Recurrence Model</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+2</string>
+   </property>
+  </action>
+  <action name="actionCompleteness">
+   <property name="text">
+    <string>Completeness</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+3</string>
+   </property>
+  </action>
+  <action name="actionMaximumMagnitude">
+   <property name="text">
+    <string>Maximum Magnitude</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+4</string>
+   </property>
+  </action>
+  <action name="actionSmoothedSeismicity">
+   <property name="text">
+    <string>Smoothed Seismicity</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+5</string>
+   </property>
+  </action>
+  <action name="actionSave_catalogue">
+   <property name="text">
+    <string>Save catalogue</string>
+   </property>
+  </action>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>QgsMapCanvas</class>
+   <extends>QWidget</extends>
+   <header>qgis.gui</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>FigureCanvasQTAggWidget</class>
+   <extends>QWidget</extends>
+   <header>widgets</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>
