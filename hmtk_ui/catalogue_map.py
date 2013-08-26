@@ -12,6 +12,8 @@ from openlayers_plugin.openlayers_plugin import (
 
 import numpy
 
+import utils
+
 
 class CatalogueMap(object):
     def __init__(self, canvas, catalogue_model):
@@ -31,6 +33,8 @@ class CatalogueMap(object):
         layer = self.load_catalogue(catalogue_model.catalogue)
         base_map = self.load_basemap()
         self.canvas.setLayerSet([layer, base_map])
+        self.canvas.refresh()
+        self.canvas.zoomByFactor(1.1)
 
     def load_catalogue(self, catalogue):
         vl = self.catalogue_layer
@@ -41,6 +45,7 @@ class CatalogueMap(object):
         self.catalogue_layer = vl
         self.canvas.setLayerSet([layer])
         self.canvas.setExtent(vl.extent())
+        self.canvas.refresh()
 
         return layer
 
@@ -97,14 +102,18 @@ class CatalogueMap(object):
 
         iface = IFace()
         olplugin = OpenlayersPlugin(iface)
-        olplugin._OpenlayersPlugin__setCoordRSGoogle()
-        QgsPluginLayerRegistry.instance().addPluginLayerType(
-            OpenlayersPluginLayerType(
-                iface, olplugin.setReferenceLayer,
-                olplugin._OpenlayersPlugin__coordRSGoogle,
-                olplugin.olLayerTypeRegistry))
+
+        if not olplugin._OpenlayersPlugin__setCoordRSGoogle():
+            utils.alert("Error in setting coordinate system")
+        oltype = OpenlayersPluginLayerType(
+            iface, olplugin.setReferenceLayer,
+            olplugin._OpenlayersPlugin__coordRSGoogle,
+            olplugin.olLayerTypeRegistry)
+        QgsPluginLayerRegistry.instance().addPluginLayerType(oltype)
         ol_gphyslayertype = olplugin.olLayerTypeRegistry.getById(4)
         olplugin.addLayer(ol_gphyslayertype)
+        if not olplugin.layer.isValid():
+            utils.alert("Failed to load basemap")
         return QgsMapCanvasLayer(olplugin.layer)
 
     def filter(self, field, value, comparator=cmp):
@@ -197,6 +206,10 @@ class CatalogueRenderer(QgsFeatureRendererV2):
         QgsFeatureRendererV2.__init__(self, "CatalogueRenderer")
         defaultPoint = QgsSymbolV2.defaultSymbol(QGis.Point)
         defaultPoint.setColor(QtGui.QColor(0, 0, 0))
+
+        self.uncompletePoint = QgsSymbolV2.defaultSymbol(QGis.Point)
+        self.uncompletePoint.setColor(QtGui.QColor(200, 200, 200))
+
         self.syms = [defaultPoint]
         self.cluster_index_idx = catalogue.field_idx('Cluster_Index')
         self.cluster_flag_idx = catalogue.field_idx('Cluster_Flag')
@@ -207,16 +220,21 @@ class CatalogueRenderer(QgsFeatureRendererV2):
         attrs = feature.attributeMap()
         if not attrs.keys():
             return
-        index = int(attrs[self.cluster_index_idx].toPyObject())
-        index = index * 2
-        if len(self.syms) > index:
-            if (attrs[self.cluster_flag_idx].toPyObject() or
-                attrs[self.comp_flag_idx].toPyObject()):
-                index = index - 1
+        if self.catalogue.magnitude_table is not None:
+            if attrs[self.comp_flag_idx].toPyObject():
+                return self.uncompletePoint
+            else:
+                return self.syms[0]
         else:
-            index = 0
+            index = int(attrs[self.cluster_index_idx].toPyObject())
+            index = index * 2
+            if len(self.syms) > index:
+                if attrs[self.cluster_flag_idx].toPyObject():
+                    index = index - 1
+            else:
+                index = 0
 
-        return self.syms[index]
+            return self.syms[index]
 
     def update_syms(self, catalogue):
         cluster_nr = int(max(catalogue.data['Cluster_Index']))

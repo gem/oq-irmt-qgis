@@ -2,7 +2,7 @@ import numpy
 
 # XXX the order of imports is important for pylint
 from PyQt4 import QtGui
-from PyQt4.QtCore import (QObject, SIGNAL, Qt, QString)
+from PyQt4.QtCore import (QObject, SIGNAL, Qt, QString, pyqtSlot)
 
 from qgis.core import QgsVectorFileWriter
 from qgis.gui import QgsMapToolPan, QgsMapToolZoom
@@ -46,12 +46,12 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         actionZoomOut.setCheckable(True)
         actionPan.setCheckable(True)
 
-        self.connect(actionZoomIn, SIGNAL("triggered()"),
-                     lambda: self.mapWidget.setMapTool(self.toolZoomIn))
-        self.connect(actionZoomOut, SIGNAL("triggered()"),
-                     lambda: self.mapWidget.setMapTool(self.toolZoomOut))
-        self.connect(actionPan, SIGNAL("triggered()"),
-                     lambda: self.mapWidget.setMapTool(self.toolPan))
+        actionZoomIn.triggered.connect(
+            lambda: self.mapWidget.setMapTool(self.toolZoomIn))
+        actionZoomOut.triggered.connect(
+            lambda: self.mapWidget.setMapTool(self.toolZoomOut))
+        actionPan.triggered.connect(
+            lambda: self.mapWidget.setMapTool(self.toolPan))
         self.toolBar.addAction(actionZoomIn)
         self.toolBar.addAction(actionZoomOut)
         self.toolBar.addAction(actionPan)
@@ -66,6 +66,7 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         self.toolZoomOut = QgsMapToolZoom(self.mapWidget, True)
         self.toolZoomOut.setAction(actionZoomOut)
 
+    @pyqtSlot(name='on_actionLoad_catalogue_triggered')
     def load_catalogue(self):
         self.catalogue_model = CatalogueModel.from_csv_file(
             QtGui.QFileDialog.getOpenFileName(
@@ -76,43 +77,35 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
                 self.mapWidget, self.catalogue_model)
         else:
             self.catalogue_map.change_catalogue_model(self.catalogue_model)
-        self.declusteringChart.axes.hist(
-            self.catalogue_model.catalogue.data['magnitude'])
-        self.declusteringChart.axes.set_xlabel('Magnitude',
-                                               dict(fontsize=13))
-        self.declusteringChart.axes.set_ylabel(
-            'Occurrences', dict(fontsize=13))
-        self.declusteringChart.draw()
 
-        self.completenessChart.axes.plot(
+        self.completenessChart.axes.hist(
+            self.catalogue_model.catalogue.data['magnitude'])
+        self.completenessChart.axes.set_xlabel(
+            'Magnitude', dict(fontsize=13))
+        self.completenessChart.axes.set_ylabel(
+            'Occurrences', dict(fontsize=13))
+        self.completenessChart.draw()
+
+        self.declusteringChart.axes.plot(
             self.catalogue_model.catalogue.get_decimal_time(),
             self.catalogue_model.catalogue.data['magnitude'])
-        self.completenessChart.axes.set_xlabel('Time',
-                                               dict(fontsize=13))
-        self.completenessChart.axes.set_ylabel(
+        self.declusteringChart.axes.set_xlabel(
+            'Time', dict(fontsize=13))
+        self.declusteringChart.axes.set_ylabel(
             'Magnitude', dict(fontsize=13))
-
-        self.completenessChart.draw()
+        self.declusteringChart.draw()
 
     def setupActions(self):
         # menu actions
-        QObject.connect(
-            self.actionLoad_catalogue, SIGNAL("triggered()"),
-            self.load_catalogue)
-        QObject.connect(
-            self.actionDeclustering, SIGNAL("triggered()"),
+        self.actionDeclustering.triggered.connect(
             lambda: self.stackedFormWidget.setCurrentIndex(0))
-        QObject.connect(
-            self.actionCompleteness, SIGNAL("triggered()"),
+        self.actionCompleteness.triggered.connect(
             lambda: self.stackedFormWidget.setCurrentIndex(1))
-        QObject.connect(
-            self.actionRecurrenceModel, SIGNAL("triggered()"),
+        self.actionRecurrenceModel.triggered.connect(
             lambda: self.stackedFormWidget.setCurrentIndex(2))
-        QObject.connect(
-            self.actionMaximumMagnitude, SIGNAL("triggered()"),
+        self.actionMaximumMagnitude.triggered.connect(
             lambda: self.stackedFormWidget.setCurrentIndex(3))
-        QObject.connect(
-            self.actionSmoothedSeismicity, SIGNAL("triggered()"),
+        self.actionSmoothedSeismicity.triggered.connect(
             lambda: self.stackedFormWidget.setCurrentIndex(4))
 
         # menu export actions
@@ -123,24 +116,7 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
                 QtGui.QApplication.translate(
                     "HMTKWindow", fmt, None, QtGui.QApplication.UnicodeUTF8))
             self.menuExport.addAction(action)
-            QObject.connect(
-                action, SIGNAL("triggered()"),
-                self.save_as(flt, fmt))
-
-        QObject.connect(
-            self.actionSave_catalogue, SIGNAL("triggered()"),
-            self.save_catalogue)
-
-        # form actions
-        QObject.connect(
-            self.declusterButton, SIGNAL("clicked()"),
-            self.decluster)
-        QObject.connect(
-            self.declusteringPurgeButton, SIGNAL("clicked()"),
-            self.purge_decluster)
-        QObject.connect(
-            self.completenessButton, SIGNAL("clicked()"),
-            self.completeness)
+            action.triggered.connect(self.save_as(flt, fmt))
 
         # table view actions
         QObject.connect(
@@ -156,11 +132,13 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
                 "CP1250", None, fmt)
         return wrapped
 
+    @pyqtSlot(name="on_actionSave_catalogue_triggered")
     def save_catalogue(self):
         self.catalogue_model.save(
             QtGui.QFileDialog.getSaveFileName(
                 self, "Save Catalogue", "", "*.csv"))
 
+    @pyqtSlot(name="on_declusterButton_clicked")
     def decluster(self):
         if self.catalogue_model is None:
             alert("Load a catalogue before starting using the "
@@ -174,6 +152,7 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         self.catalogue_map.update_catalogue_layer(
             ['Cluster_Index', 'Cluster_Flag'])
 
+    @pyqtSlot(name="on_declusteringPurgeButton_clicked")
     def purge_decluster(self):
         if self.catalogue_model is None:
             alert("Load a catalogue before starting using the "
@@ -190,6 +169,7 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         self.catalogue_map.change_catalogue_model(
             self.catalogue_model)
 
+    @pyqtSlot(name="on_completenessButton_triggered")
     def completeness(self):
         if self.catalogue_model is None:
             alert("Load a catalogue before starting using the "

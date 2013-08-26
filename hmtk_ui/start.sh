@@ -7,6 +7,7 @@ if [ -d /Applications/QGIS.app/ ]; then
 else
     echo "GNU/Linux detected"
     export QGIS_PREFIX_PATH=/usr/
+    export PYTHONPATH=${QGIS_PREFIX_PATH}/share/qgis/python:${PYTHONPATH}
 fi
 
 export PYTHONPATH=$PYTHONPATH:~/.qgis/python/plugins/

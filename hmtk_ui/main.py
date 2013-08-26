@@ -35,7 +35,10 @@ def main(argv):
     app.connect(app, SIGNAL("lastWindowClosed()"), app, SLOT("quit()"))
 
     # Start the app up
-    sys.exit(app.exec_())
+    ret = app.exec_()
+
+    QgsApplication.exitQgis()
+    sys.exit(ret)
 
 
 if __name__ == "__main__":
