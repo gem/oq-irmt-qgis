@@ -169,7 +169,7 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         self.catalogue_map.change_catalogue_model(
             self.catalogue_model)
 
-    @pyqtSlot(name="on_completenessButton_triggered")
+    @pyqtSlot(name="on_completenessButton_clicked")
     def completeness(self):
         if self.catalogue_model is None:
             alert("Load a catalogue before starting using the "
