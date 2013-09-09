@@ -22,23 +22,30 @@ class CatalogueModel(object):
             self.catalogue.get_number_events())
         catalogue.data['Completeness_Flag'] = numpy.zeros(
             self.catalogue.get_number_events())
-        self.item_model = QtGui.QStandardItemModel(
+
+        self.observer = observer
+        self.item_model = self.populate_item_model(self.catalogue)
+
+    def populate_item_model(self, catalogue):
+        """
+        Populate the item model with the data from event catalogue
+        """
+        item_model = QtGui.QStandardItemModel(
             catalogue.get_number_events(),
             len(catalogue.data),
-            observer)
-        self.populate_item_model()
+            self.observer)
 
-    def populate_item_model(self):
-        keys = sorted(self.catalogue.data.keys())
+        keys = sorted(catalogue.data.keys())
 
         for j, key in enumerate(keys):
-            self.item_model.setHorizontalHeaderItem(
+            item_model.setHorizontalHeaderItem(
                 j, QtGui.QStandardItem(key))
-            for i in range(self.catalogue.get_number_events()):
-                event_data = self.catalogue.data[key]
+            for i in range(catalogue.get_number_events()):
+                event_data = catalogue.data[key]
                 if len(event_data):
-                    self.item_model.setItem(
+                    item_model.setItem(
                         i, j, QtGui.QStandardItem(str(event_data[i])))
+        return item_model
 
     def at(self, modelIndex):
         return self.item_model.data(modelIndex).toPyObject()
@@ -91,9 +98,9 @@ class CatalogueModel(object):
         return True
 
     def purge_decluster(self):
-        if self.catalogue.purge_catalogue(
-                self.catalogue.data['Cluster_Flag'] == 0):
-            self.populate_item_model()
+        self.catalogue.purge_catalogue(
+            self.catalogue.data['Cluster_Flag'] == 0)
+        self.item_model = self.populate_item_model(self.catalogue)
 
     def completeness(self, magnitude_bin, time_bin, increment_lock):
         try:

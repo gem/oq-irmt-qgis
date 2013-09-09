@@ -158,16 +158,16 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
             alert("Load a catalogue before starting using the "
                   "seismicity tools")
 
-        self.catalogue_model.decluster(
+        ret = self.catalogue_model.decluster(
             self.declusteringMethodComboBox.currentIndex(),
             self.declusteringTimeWindowFunctionCombo.currentIndex(),
             self.declusteringTimeWindowInput.text())
 
-        self.catalogue_model.purge_decluster()
-
-        self.outputTableView.setModel(self.catalogue_model.item_model)
-        self.catalogue_map.change_catalogue_model(
-            self.catalogue_model)
+        if ret:
+            self.catalogue_model.purge_decluster()
+            self.outputTableView.setModel(self.catalogue_model.item_model)
+            self.catalogue_map.change_catalogue_model(
+                self.catalogue_model)
 
     @pyqtSlot(name="on_completenessButton_clicked")
     def completeness(self):
