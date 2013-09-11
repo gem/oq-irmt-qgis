@@ -1,5 +1,6 @@
 import os
 import sys
+import imp
 
 from PyQt4 import QtGui
 from PyQt4.QtCore import (SIGNAL, SLOT)
@@ -9,9 +10,15 @@ from qgis.core import QgsApplication
 from main_window import MainWindow
 from utils import excepthook
 
+PLUGIN_FILE = os.path.expanduser("~/hmtk-plugin.py")
+
 
 # Main entry to program.  Sets up the main app and create a new window.
 def main(argv):
+    # load plugins
+    if os.path.exists(PLUGIN_FILE):
+        imp.load_source('hmtk.plugin', PLUGIN_FILE)
+
     # create Qt application
     app = QtGui.QApplication(argv, True)
 

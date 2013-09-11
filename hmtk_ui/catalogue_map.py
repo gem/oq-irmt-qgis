@@ -220,7 +220,7 @@ class CatalogueRenderer(QgsFeatureRendererV2):
         attrs = feature.attributeMap()
         if not attrs.keys():
             return
-        if self.catalogue.magnitude_table is not None:
+        if self.catalogue.completeness_table is not None:
             if attrs[self.comp_flag_idx].toPyObject():
                 return self.uncompletePoint
             else:

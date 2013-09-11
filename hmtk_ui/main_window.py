@@ -9,9 +9,15 @@ from qgis.gui import QgsMapToolPan, QgsMapToolZoom
 
 from hmtkwindow import Ui_HMTKWindow
 
+from hmtk.seismicity import (
+    DECLUSTERER_METHODS, COMPLETENESS_METHODS, OCCURRENCE_METHODS,
+    MAX_MAGNITUDE_METHODS, SMOOTHED_SEISMICITY_METHODS)
+
+
 from utils import alert
 from catalogue_model import CatalogueModel
 from catalogue_map import CatalogueMap
+from widgets import add_form, add_fields, get_config, CompletenessDialog
 
 
 class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
@@ -20,6 +26,12 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
 
         self.catalogue_model = None
         self.catalogue_map = None
+
+        self.forms = {}
+        self.form_fields = {}
+        self.form_completeness = {}
+
+        self.method_selectors = {}
 
         self.toolZoomIn = None
         self.toolZoomOut = None
@@ -31,8 +43,42 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         # custom slots connections
         self.setupActions()
 
-    def setupUi(self, _window):
+    def setupUi(self, _):
         super(MainWindow, self).setupUi(self)
+
+        # setup dynamic forms
+        # declustering
+        GROUPS = (("declustering",
+                   self.declusteringGroupBox, self.declusteringFormLayout,
+                   DECLUSTERER_METHODS,
+                   [self.declusterButton, self.declusteringPurgeButton]),
+                  ("completeness",
+                   self.completenessGroupBox, self.completenessFormLayout,
+                   COMPLETENESS_METHODS,
+                   [self.completenessButton, self.completenessPurgeButton]),
+                  ("recurrence_model",
+                   self.recurrenceModelGroupBox,
+                   self.recurrenceModelFormLayout,
+                   OCCURRENCE_METHODS,
+                   [self.recurrenceModelButton]),
+                  ("max_magnitude",
+                   self.maxMagnitudeGroupBox, self.maxMagnitudeFormLayout,
+                   MAX_MAGNITUDE_METHODS,
+                   [self.maxMagnitudeButton]),
+                  ("smoothed_seismicity",
+                   self.smoothedSeismicityGroupBox,
+                   self.smoothedSeismicityFormLayout,
+                   SMOOTHED_SEISMICITY_METHODS,
+                   [self.smoothedSeismicityButton]))
+        for name, box, layout, registry, buttons in GROUPS:
+            form, combo_box = add_form(box, registry, "declustering")
+            self.method_selectors[name] = combo_box
+            combo_box.currentIndexChanged.connect(
+                self.select_method_fn(buttons, name, registry))
+            self.forms[name] = form
+            layout.insertLayout(0, form)
+            for b in buttons:
+                b.hide()
 
         # setup toolbar
         self.mapWidget.setCanvasColor(Qt.white)
@@ -66,6 +112,58 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         self.toolZoomOut = QgsMapToolZoom(self.mapWidget, True)
         self.toolZoomOut.setAction(actionZoomOut)
 
+    def select_method_fn(self, buttons, name, registry):
+        def on_select(index):
+            if not index:
+                for b in buttons:
+                    b.hide()
+                return
+            else:
+                for b in buttons:
+                    b.show()
+            form = self.forms[name]
+            method = registry.values()[index - 1]
+            self.form_fields[name] = add_fields(
+                form, name, method.fields, method.completeness)
+
+            if 'completeness' in self.form_fields[name]:
+                inp = self.form_fields[name]['completeness']
+                inp.activated.connect(self.get_completeness_function(name))
+        return on_select
+
+    def get_completeness_function(self, name):
+        self.form_completeness[name] = numpy.array(
+            [[numpy.min(self.catalogue_model.catalogue.data['year']),
+              numpy.min(self.catalogue_model.catalogue.data['magnitude'])]])
+
+        def on_select(index):
+            if index == 0:
+                self.form_completeness[name] = numpy.array(
+                    [[numpy.min(
+                        self.catalogue_model.catalogue.data['year']),
+                      numpy.min(
+                          self.catalogue_model.catalogue.data['magnitude'])]])
+            elif index == 1:
+                if self.catalogue_model.completeness_table is None:
+                    alert("""You have not computed yet a completeness table.
+Go to the Completeness tab or select another option""")
+                else:
+                    self.form_completeness[name] = (
+                        self.catalogue_model.completeness_table)
+            elif index == 2:
+                threshold, ok = QtGui.QInputDialog.getDouble(
+                    self, 'Input Dialog', 'Enter the threshold value:')
+                if ok:
+                    self.form_completeness[name] = numpy.array(
+                        [[numpy.min(
+                            self.catalogue_model.catalogue.data['year']),
+                            threshold]])
+            elif index == 3:
+                dlg = CompletenessDialog()
+                if dlg.exec_():
+                    self.form_completeness[name] = dlg.get_table()
+        return on_select
+
     @pyqtSlot(name='on_actionLoad_catalogue_triggered')
     def load_catalogue(self):
         self.catalogue_model = CatalogueModel.from_csv_file(
@@ -78,22 +176,10 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         else:
             self.catalogue_map.change_catalogue_model(self.catalogue_model)
 
-        self.completenessChart.axes.hist(
-            self.catalogue_model.catalogue.data['magnitude'])
-        self.completenessChart.axes.set_xlabel(
-            'Magnitude', dict(fontsize=13))
-        self.completenessChart.axes.set_ylabel(
-            'Occurrences', dict(fontsize=13))
-        self.completenessChart.draw()
-
-        self.declusteringChart.axes.plot(
-            self.catalogue_model.catalogue.get_decimal_time(),
-            self.catalogue_model.catalogue.data['magnitude'])
-        self.declusteringChart.axes.set_xlabel(
-            'Time', dict(fontsize=13))
-        self.declusteringChart.axes.set_ylabel(
-            'Magnitude', dict(fontsize=13))
-        self.declusteringChart.draw()
+        self.declusteringChart.draw_occurrences(self.catalogue_model.catalogue)
+        self.completenessChart.draw_timeline(self.catalogue_model.catalogue)
+        self.recurrenceModelChart.draw_seismicity_rate(
+            self.catalogue_model.catalogue, None)
 
     def setupActions(self):
         # menu actions
@@ -140,93 +226,96 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
 
     @pyqtSlot(name="on_declusterButton_clicked")
     def decluster(self):
-        if self.catalogue_model is None:
-            alert("Load a catalogue before starting using the "
-                  "seismicity tools")
-
-        self.catalogue_model.decluster(
-            self.declusteringMethodComboBox.currentIndex(),
-            self.declusteringTimeWindowFunctionCombo.currentIndex(),
-            self.declusteringTimeWindowInput.text())
+        method = DECLUSTERER_METHODS.values()[
+            self.method_selectors['declustering'].currentIndex() - 1]
+        try:
+            config = get_config(method, self.form_fields["declustering"])
+        except ValueError as e:
+            alert(str(e))
+            return
+        ret = self.catalogue_model.decluster(method, config)
 
         self.catalogue_map.update_catalogue_layer(
             ['Cluster_Index', 'Cluster_Flag'])
 
+        # TODO. compute a new catalogue and draw new occurrences
+        self.declusteringChart.draw_occurrences(self.catalogue_model.catalogue)
+        return ret
+
     @pyqtSlot(name="on_declusteringPurgeButton_clicked")
     def purge_decluster(self):
-        if self.catalogue_model is None:
-            alert("Load a catalogue before starting using the "
-                  "seismicity tools")
-
-        ret = self.catalogue_model.decluster(
-            self.declusteringMethodComboBox.currentIndex(),
-            self.declusteringTimeWindowFunctionCombo.currentIndex(),
-            self.declusteringTimeWindowInput.text())
-
-        if ret:
+        if self.decluster():
             self.catalogue_model.purge_decluster()
             self.outputTableView.setModel(self.catalogue_model.item_model)
-            self.catalogue_map.change_catalogue_model(
-                self.catalogue_model)
+            self.catalogue_map.change_catalogue_model(self.catalogue_model)
+            self.declusteringChart.draw_occurrences(
+                self.catalogue_model.catalogue)
+            self.completenessChart.draw_timeline(
+                self.catalogue_model.catalogue)
+
+    @pyqtSlot(name="on_completenessPurgeButton_clicked")
+    def purge_completeness(self):
+        if self.completeness():
+            self.catalogue_model.purge_completeness()
+            self.outputTableView.setModel(self.catalogue_model.item_model)
+            self.catalogue_map.change_catalogue_model(self.catalogue_model)
+            self.declusteringChart.draw_occurrences(
+                self.catalogue_model.catalogue)
+            self.completenessChart.draw_timeline(
+                self.catalogue_model.catalogue)
 
     @pyqtSlot(name="on_completenessButton_clicked")
     def completeness(self):
-        if self.catalogue_model is None:
-            alert("Load a catalogue before starting using the "
-                  "seismicity tools")
+        method = COMPLETENESS_METHODS.values()[
+            self.method_selectors['completeness'].currentIndex() - 1]
 
-        model = self.catalogue_model.completeness(
-            self.completenessMagnitudeBinInput.text(),
-            self.completenessTimeBinInput.text(),
-            self.completenessIncrementLockInput.currentIndex())
-
-        if model is None:
+        try:
+            config = get_config(method, self.form_fields["completeness"])
+        except ValueError as e:
+            alert(str(e))
             return
 
+        model = self.catalogue_model.completeness(method, config)
         self.catalogue_map.update_catalogue_layer(['Completeness_Flag'])
 
-        # FIXME(lp). refactor with plot_stepp_1972.py in hmtk
-        valid_markers = ['*', '+', '1', '2', '3', '4', '8', '<', '>', 'D', 'H',
-                         '^', '_', 'd', 'h', 'o', 'p', 's', 'v', 'x', '|']
+        if model is not None:
+            self.completenessChart.draw_completeness(model)
+        return True
 
-        legend_list = [(str(model.magnitude_bin[iloc] + 0.01) + ' - ' +
-                        str(model.magnitude_bin[iloc + 1]))
-                       for iloc in range(0, len(model.magnitude_bin) - 1)]
-        rgb_list, marker_vals = [], []
-        # Get marker from valid list
-        while len(valid_markers) < len(model.magnitude_bin):
-            valid_markers.append(valid_markers)
-        marker_sampler = numpy.arange(0, len(valid_markers), 1)
-        numpy.random.shuffle(marker_sampler)
-        # Get colour for each bin
-        for value in range(0, len(model.magnitude_bin) - 1):
-            rgb_samp = numpy.random.uniform(0., 1., 3)
-            rgb_list.append((rgb_samp[0], rgb_samp[1], rgb_samp[2]))
-            marker_vals.append(valid_markers[marker_sampler[value]])
-        # Plot observed Sigma lambda
-        for iloc in range(0, len(model.magnitude_bin) - 1):
-            self.completenessChart.axes.loglog(
-                model.time_values, model.sigma[:, iloc],
-                linestyle='None', marker=marker_vals[iloc],
-                color=rgb_list[iloc])
+    @pyqtSlot(name="on_recurrenceModelButton_clicked")
+    def recurrence_model(self):
+        method = OCCURRENCE_METHODS.values()[
+            self.method_selectors['recurrence_model'].currentIndex() - 1]
 
-        self.completenessChart.axes.legend(legend_list)
-        # Plot expected Poisson rate
-        for iloc in range(0, len(model.magnitude_bin) - 1):
-            self.completenessChart.axes.loglog(
-                model.time_values, model.model_line[:, iloc],
-                linestyle='-', marker='None', color=rgb_list[iloc])
-            xmarker = model.end_year - model.completeness_table[iloc, 0]
-            id0 = model.model_line[:, iloc] > 0.
-            ymarker = 10.0 ** numpy.interp(
-                numpy.log10(xmarker), numpy.log10(model.time_values[id0]),
-                numpy.log10(model.model_line[id0, iloc]))
-            self.completenessChart.axes.loglog(xmarker, ymarker, 'ks')
-        self.completenessChart.axes.set_xlabel('Time (years)',
-                                               dict(fontsize=13))
-        self.completenessChart.axes.set_ylabel(
-            '$\sigma_{\lambda} = \sqrt{\lambda} / \sqrt{T}$', dict(fontsize=13))
-        self.completenessChart.draw()
+        try:
+            config = get_config(method, self.form_fields["recurrence_model"])
+        except ValueError as e:
+            alert(str(e))
+            return
+
+        ret = method(self.catalogue_model.catalogue.data, config,
+                     self.form_completeness["recurrence_model"])
+        alert(str(ret))
+
+        if len(ret) == 4:
+            self.recurrenceModelChart.draw_seismicity_rate(
+                self.catalogue_model.catalogue,
+                config.get('reference_magnitude', None), *ret)
+
+    @pyqtSlot(name="on_smoothedSeismicityButton_clicked")
+    def smoothed_seismicity(self):
+        method = SMOOTHED_SEISMICITY_METHODS.values()[
+            self.method_selectors['smoothed_seismicity'].currentIndex() - 1]
+
+        try:
+            config = get_config(
+                method, self.form_fields["smoothed_seismicity"])
+        except ValueError as e:
+            alert(str(e))
+            return
+
+        print method(self.catalogue_model.catalogue, config,
+                     self.form_completeness["smoothed_seismicity"])
 
     def cellClicked(self, modelIndex):
         catalogue = self.catalogue_model.catalogue
