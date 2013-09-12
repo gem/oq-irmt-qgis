@@ -124,7 +124,8 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
             form = self.forms[name]
             method = registry.values()[index - 1]
             self.form_fields[name] = add_fields(
-                form, name, method.fields, method.completeness)
+                form, self.catalogue_model.catalogue,
+                name, method.fields, method.completeness)
 
             if 'completeness' in self.form_fields[name]:
                 inp = self.form_fields[name]['completeness']
@@ -229,7 +230,10 @@ Go to the Completeness tab or select another option""")
         method = DECLUSTERER_METHODS.values()[
             self.method_selectors['declustering'].currentIndex() - 1]
         try:
-            config = get_config(method, self.form_fields["declustering"])
+            config = get_config(
+                method,
+                self.catalogue_model.catalogue,
+                self.form_fields["declustering"])
         except ValueError as e:
             alert(str(e))
             return
@@ -270,7 +274,10 @@ Go to the Completeness tab or select another option""")
             self.method_selectors['completeness'].currentIndex() - 1]
 
         try:
-            config = get_config(method, self.form_fields["completeness"])
+            config = get_config(
+                method,
+                self.catalogue_model.catalogue,
+                self.form_fields["completeness"])
         except ValueError as e:
             alert(str(e))
             return
@@ -288,12 +295,14 @@ Go to the Completeness tab or select another option""")
             self.method_selectors['recurrence_model'].currentIndex() - 1]
 
         try:
-            config = get_config(method, self.form_fields["recurrence_model"])
+            config = get_config(method,
+                                self.catalogue_model.catalogue,
+                                self.form_fields["recurrence_model"])
         except ValueError as e:
             alert(str(e))
             return
 
-        ret = method(self.catalogue_model.catalogue.data, config,
+        ret = method(self.catalogue_model.catalogue, config,
                      self.form_completeness["recurrence_model"])
         alert(str(ret))
 
@@ -302,6 +311,22 @@ Go to the Completeness tab or select another option""")
                 self.catalogue_model.catalogue,
                 config.get('reference_magnitude', None), *ret)
 
+    @pyqtSlot(name="on_maxMagnitudeButton_clicked")
+    def max_magnitude(self):
+        method = MAX_MAGNITUDE_METHODS.values()[
+            self.method_selectors['max_magnitude'].currentIndex() - 1]
+
+        try:
+            config = get_config(method,
+                                self.catalogue_model.catalogue,
+                                self.form_fields["max_magnitude"])
+        except ValueError as e:
+            alert(str(e))
+            return
+
+        ret = method(self.catalogue_model.catalogue, config)
+        alert(str(ret))
+
     @pyqtSlot(name="on_smoothedSeismicityButton_clicked")
     def smoothed_seismicity(self):
         method = SMOOTHED_SEISMICITY_METHODS.values()[
@@ -309,11 +334,14 @@ Go to the Completeness tab or select another option""")
 
         try:
             config = get_config(
-                method, self.form_fields["smoothed_seismicity"])
+                method,
+                self.catalogue_model.catalogue,
+                self.form_fields["smoothed_seismicity"])
         except ValueError as e:
             alert(str(e))
             return
 
+        print self.catalogue_model.catalogue.data, config, self.form_completeness["smoothed_seismicity"]
         print method(self.catalogue_model.catalogue, config,
                      self.form_completeness["smoothed_seismicity"])
 

@@ -1,13 +1,15 @@
 from PyQt4 import QtGui, QtCore
 
 from plot_occurrence_model import GutenbergRichterModel, plotSeismicityRates
-from completeness_dialog import Ui_Dialog
+import completeness_dialog
+import grid_dialog
 import numpy
 
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 
 from hmtk.registry import Registry
+from hmtk.seismicity.smoothing.smoothed_seismicity import Grid
 from utils import alert
 
 
@@ -123,7 +125,31 @@ def add_form(parent, registry, name):
     return form, combo_box
 
 
-def add_fields(form, name, fields, completeness):
+class GridInputWidget(QtGui.QPushButton):
+    def __init__(self, catalogue, fields):
+        QtGui.QPushButton.__init__(self, "Grid Editor")
+        self.grid = None
+        self.catalogue = catalogue
+        self.fields = fields
+        self.clicked.connect(self.on_click)
+        self.grid_dialog = GridDialog()
+
+    def on_click(self):
+        try:
+            ll = float(self.fields['Length_Limit'].text())
+            bw = float(self.fields['BandWidth'].text())
+            dilate = ll * bw
+        except ValueError:
+            dilate = 0
+
+        self.grid_dialog.set_grid(
+            Grid.make_from_catalogue(
+                self.catalogue, 0.1, dilate))
+        if self.grid_dialog.exec_():
+            self.grid = self.grid_dialog.get_table()
+
+
+def add_fields(form, catalogue, name, fields, completeness):
     # remove old elements
     while form.count() > 2:
         item = form.takeAt(2)
@@ -132,6 +158,7 @@ def add_fields(form, name, fields, completeness):
             widget.deleteLater()
 
     inp_fields = {}
+
     for i, (field_name, field_spec) in enumerate(fields.items(), 1):
         label = QtGui.QLabel()
         label.setObjectName("%s_%s_label" % (name, field_name))
@@ -140,16 +167,22 @@ def add_fields(form, name, fields, completeness):
         form.setWidget(i, QtGui.QFormLayout.LabelRole, label)
 
         if not isinstance(field_spec, type):
+            if isinstance(field_spec, type(lambda x: x)):
+                field_spec = field_spec(catalogue)
             field_type = type(field_spec)
             value = field_spec
         else:
             field_type = field_spec
             value = None
 
-        if field_type in [float, int]:
+        if field_type in [float, numpy.float64, int]:
             inp = QtGui.QLineEdit()
             inp.setInputMethodHints(QtCore.Qt.ImhDigitsOnly)
+            if value is not None:
+                inp.setText(str(value))
         elif field_type == list:
+            # in this case, the field value specify the allowed
+            # choices
             if value is None:
                 inp = QtGui.QLineEdit()
             else:
@@ -160,9 +193,10 @@ def add_fields(form, name, fields, completeness):
                 for j, tag in enumerate(value, 1):
                     inp.addItem(tag)
                     inp.setItemText(j, tag)
-
         elif field_type == Registry:
             assert value is not None
+            # in this case, the field value specify the allowed
+            # choices
 
             inp = QtGui.QComboBox()
             inp.addItem("")
@@ -180,6 +214,8 @@ def add_fields(form, name, fields, completeness):
             for j, tag in enumerate(value, 1):
                 inp.addItem(tag)
                 inp.setItemText(j, tag)
+        elif field_type == Grid:
+            inp = GridInputWidget(catalogue, inp_fields)
         else:
             raise RuntimeError("type not recognized %s" % field_type)
 
@@ -215,20 +251,27 @@ def add_fields(form, name, fields, completeness):
     return inp_fields
 
 
-def get_config(method, fields):
+def get_config(method, catalogue, fields):
     config = {}
 
     for f, field_spec in method.fields.items():
         if not isinstance(field_spec, type):
+            if isinstance(field_spec, type(lambda x: x)):
+                field_spec = field_spec(catalogue)
             field_type = type(field_spec)
             default = field_spec
         else:
             field_type = field_spec
             default = None
 
-        if field_type in [int, float]:
+        if field_type in [float, numpy.float64]:
             try:
                 value = float(fields[f].text())
+            except ValueError:
+                value = None
+        elif field_type == int:
+            try:
+                value = int(fields[f].text())
             except ValueError:
                 value = None
         elif field_type == list:
@@ -276,7 +319,7 @@ def get_config(method, fields):
     return config
 
 
-class CompletenessDialog(QtGui.QDialog, Ui_Dialog):
+class CompletenessDialog(QtGui.QDialog, completeness_dialog.Ui_Dialog):
     def __init__(self, parent=None):
         super(CompletenessDialog, self).__init__(parent)
         self.setupUi(self)
@@ -315,3 +358,42 @@ class CompletenessDialog(QtGui.QDialog, Ui_Dialog):
 This might cause instability (E.g. in Weichert)""")
 
         return ret
+
+
+class GridDialog(QtGui.QDialog, grid_dialog.Ui_Dialog):
+    def __init__(self, parent=None):
+        super(GridDialog, self).__init__(parent)
+        self.setupUi(self)
+        self.dilateByButton.clicked.connect(self.dilate_by)
+
+    def dilate_by(self):
+        width, ok = QtGui.QInputDialog.getDouble(
+            self, 'Input Dialog', 'Dilate by:')
+        if ok:
+            self.set_grid(self.get_grid().dilate(width))
+
+    def get_grid(self):
+        table = self.tableWidget
+
+        ret = []
+
+        for row in range(table.rowCount()):
+            data = [table.item(row, 0).data(0).toString(),
+                    table.item(row, 1).data(0).toString(),
+                    table.item(row, 2).data(0).toString()]
+
+            ret.extend([float(d) for d in data])
+
+        return Grid.make_from_list(ret)
+
+    def set_grid(self, grid):
+        table = self.tableWidget
+
+        for i in range(9):
+            item = table.item(i / 3, i % 3)
+
+            if item is None:
+                item = QtGui.QTableWidgetItem()
+                table.setItem(i / 3, i % 3, item)
+
+            item.setData(0, QtCore.QVariant(str(grid.as_list()[i])))
