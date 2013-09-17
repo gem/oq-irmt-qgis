@@ -4,3 +4,5 @@
 *.rdb
 
 .\#*
+
+.ropeproject

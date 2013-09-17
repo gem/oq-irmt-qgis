@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'hmtk_ui/grid_dialog.ui'
 #
-# Created: Thu Sep 12 16:47:29 2013
+# Created: Thu Sep 12 18:23:20 2013
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -17,11 +17,13 @@ except AttributeError:
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName(_fromUtf8("Dialog"))
-        Dialog.resize(476, 208)
+        Dialog.resize(476, 290)
         self.gridLayout = QtGui.QGridLayout(Dialog)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
         self.tableWidget = QtGui.QTableWidget(Dialog)
         self.tableWidget.setEditTriggers(QtGui.QAbstractItemView.AllEditTriggers)
+        self.tableWidget.setWordWrap(False)
+        self.tableWidget.setCornerButtonEnabled(False)
         self.tableWidget.setObjectName(_fromUtf8("tableWidget"))
         self.tableWidget.setColumnCount(3)
         self.tableWidget.setRowCount(3)

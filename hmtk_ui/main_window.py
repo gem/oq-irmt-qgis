@@ -1,11 +1,8 @@
-import numpy
-
-# XXX the order of imports is important for pylint
 from PyQt4 import QtGui
-from PyQt4.QtCore import (QObject, SIGNAL, Qt, QString, pyqtSlot)
+from PyQt4.QtCore import QObject, SIGNAL, Qt, QString, pyqtSlot
 
 from qgis.core import QgsVectorFileWriter
-from qgis.gui import QgsMapToolPan, QgsMapToolZoom
+from qgis.gui import QgsMapToolPan, QgsMapToolZoom, QgsMapToolEmitPoint
 
 from hmtkwindow import Ui_HMTKWindow
 
@@ -15,27 +12,32 @@ from hmtk.seismicity import (
 
 
 from utils import alert
+from tab import Tab
 from catalogue_model import CatalogueModel
 from catalogue_map import CatalogueMap
-from widgets import add_form, add_fields, get_config, CompletenessDialog
+from widgets import CompletenessDialog
 
 
 class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
+    """
+    :attr catalogue_model:
+        a CatalogueModel instance holding the catalogue model (
+        events, completeness, model for supporting tables)
+    :attr catalogue_map:
+        a CatalogueMap (which holds the state of the map)
+
+    :attr tabs:
+        a set of `Tab` instances
+    """
+
     def __init__(self):
         super(MainWindow, self).__init__()
 
         self.catalogue_model = None
         self.catalogue_map = None
 
-        self.forms = {}
-        self.form_fields = {}
-        self.form_completeness = {}
-
-        self.method_selectors = {}
-
-        self.toolZoomIn = None
-        self.toolZoomOut = None
-        self.toolPan = None
+        # to be set in setupUi
+        self.tabs = None
 
         # set up User Interface (widgets, layout...)
         self.setupUi(self)
@@ -47,129 +49,136 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         super(MainWindow, self).setupUi(self)
 
         # setup dynamic forms
-        # declustering
-        GROUPS = (("declustering",
-                   self.declusteringGroupBox, self.declusteringFormLayout,
-                   DECLUSTERER_METHODS,
-                   [self.declusterButton, self.declusteringPurgeButton]),
-                  ("completeness",
-                   self.completenessGroupBox, self.completenessFormLayout,
-                   COMPLETENESS_METHODS,
-                   [self.completenessButton, self.completenessPurgeButton]),
-                  ("recurrence_model",
-                   self.recurrenceModelGroupBox,
-                   self.recurrenceModelFormLayout,
-                   OCCURRENCE_METHODS,
-                   [self.recurrenceModelButton]),
-                  ("max_magnitude",
-                   self.maxMagnitudeGroupBox, self.maxMagnitudeFormLayout,
-                   MAX_MAGNITUDE_METHODS,
-                   [self.maxMagnitudeButton]),
-                  ("smoothed_seismicity",
-                   self.smoothedSeismicityGroupBox,
-                   self.smoothedSeismicityFormLayout,
-                   SMOOTHED_SEISMICITY_METHODS,
-                   [self.smoothedSeismicityButton]))
-        for name, box, layout, registry, buttons in GROUPS:
-            form, combo_box = add_form(box, registry, "declustering")
-            self.method_selectors[name] = combo_box
-            combo_box.currentIndexChanged.connect(
-                self.select_method_fn(buttons, name, registry))
-            self.forms[name] = form
-            layout.insertLayout(0, form)
-            for b in buttons:
-                b.hide()
+        self.tabs = (
+            Tab("declustering",
+                self.declusteringFormLayout,
+                DECLUSTERER_METHODS,
+                [self.declusterButton, self.declusteringPurgeButton]),
+            Tab("completeness",
+                self.completenessFormLayout,
+                COMPLETENESS_METHODS,
+                [self.completenessButton, self.completenessPurgeButton]),
+            Tab("recurrence_model",
+                self.recurrenceModelFormLayout,
+                OCCURRENCE_METHODS,
+                [self.recurrenceModelButton]),
+            Tab("max_magnitude",
+                self.maxMagnitudeFormLayout,
+                MAX_MAGNITUDE_METHODS,
+                [self.maxMagnitudeButton]),
+            Tab("smoothed_seismicity",
+                self.smoothedSeismicityFormLayout,
+                SMOOTHED_SEISMICITY_METHODS,
+                [self.smoothedSeismicityButton]))
 
-        # setup toolbar
+        for tab in self.tabs:
+            tab.setup_form(self.on_method_select)
+
+        # setup Map
         self.mapWidget.setCanvasColor(Qt.white)
         self.mapWidget.enableAntiAliasing(True)
         self.mapWidget.show()
 
+        # setup toolbar
         actionZoomIn = QtGui.QAction(QString("Zoom in"), self)
         actionZoomOut = QtGui.QAction(QString("Zoom out"), self)
         actionPan = QtGui.QAction(QString("Pan"), self)
+        actionIdentify = QtGui.QAction(QString("Info"), self)
         actionZoomIn.setCheckable(True)
         actionZoomOut.setCheckable(True)
         actionPan.setCheckable(True)
+        actionIdentify.setCheckable(True)
+
+        # create the map tools
+        toolPan = QgsMapToolPan(self.mapWidget)
+        toolPan.setAction(actionPan)
+        # false = in
+        toolZoomIn = QgsMapToolZoom(self.mapWidget, False)
+        toolZoomIn.setAction(actionZoomIn)
+        # true = out
+        toolZoomOut = QgsMapToolZoom(self.mapWidget, True)
+        toolZoomOut.setAction(actionZoomOut)
+
+        toolIdentify = QgsMapToolEmitPoint(self.mapWidget)
+        toolIdentify.setAction(actionIdentify)
+        toolIdentify.canvasClicked.connect(
+            lambda point, button: self.catalogue_map.show_tip(point))
 
         actionZoomIn.triggered.connect(
-            lambda: self.mapWidget.setMapTool(self.toolZoomIn))
+            lambda: self.mapWidget.setMapTool(toolZoomIn))
         actionZoomOut.triggered.connect(
-            lambda: self.mapWidget.setMapTool(self.toolZoomOut))
+            lambda: self.mapWidget.setMapTool(toolZoomOut))
         actionPan.triggered.connect(
-            lambda: self.mapWidget.setMapTool(self.toolPan))
+            lambda: self.mapWidget.setMapTool(toolPan))
+        actionIdentify.triggered.connect(
+            lambda: self.mapWidget.setMapTool(toolIdentify))
+
         self.toolBar.addAction(actionZoomIn)
         self.toolBar.addAction(actionZoomOut)
         self.toolBar.addAction(actionPan)
+        self.toolBar.addAction(actionIdentify)
 
-        # create the map tools
-        self.toolPan = QgsMapToolPan(self.mapWidget)
-        self.toolPan.setAction(actionPan)
-        # false = in
-        self.toolZoomIn = QgsMapToolZoom(self.mapWidget, False)
-        self.toolZoomIn.setAction(actionZoomIn)
-        # true = out
-        self.toolZoomOut = QgsMapToolZoom(self.mapWidget, True)
-        self.toolZoomOut.setAction(actionZoomOut)
+    def current_tab(self):
+        """
+        :returns: the current `Tab` selected
+        """
+        return self.tabs[self.stackedFormWidget.currentIndex()]
 
-    def select_method_fn(self, buttons, name, registry):
-        def on_select(index):
-            if not index:
-                for b in buttons:
-                    b.hide()
-                return
-            else:
-                for b in buttons:
-                    b.show()
-            form = self.forms[name]
-            method = registry.values()[index - 1]
-            self.form_fields[name] = add_fields(
-                form, self.catalogue_model.catalogue,
-                name, method.fields, method.completeness)
+    def on_method_select(self, index):
+        """
+        When a method is selected we: show/Hide action `buttons`;
+        update the form for the tab `name` with the method fields
 
-            if 'completeness' in self.form_fields[name]:
-                inp = self.form_fields[name]['completeness']
-                inp.activated.connect(self.get_completeness_function(name))
-        return on_select
+        :param int index: the ordinal of the method selected
+        """
+        tab = self.current_tab()
 
-    def get_completeness_function(self, name):
-        self.form_completeness[name] = numpy.array(
-            [[numpy.min(self.catalogue_model.catalogue.data['year']),
-              numpy.min(self.catalogue_model.catalogue.data['magnitude'])]])
+        if not index:
+            tab.hide_action_buttons()
+            tab.clear_form()
+        else:
+            tab.show_action_buttons()
+            tab.update_form(
+                self.catalogue_model.catalogue,
+                self.on_completeness_select)
 
-        def on_select(index):
-            if index == 0:
-                self.form_completeness[name] = numpy.array(
-                    [[numpy.min(
-                        self.catalogue_model.catalogue.data['year']),
-                      numpy.min(
-                          self.catalogue_model.catalogue.data['magnitude'])]])
-            elif index == 1:
-                if self.catalogue_model.completeness_table is None:
-                    alert("""You have not computed yet a completeness table.
-Go to the Completeness tab or select another option""")
-                else:
-                    self.form_completeness[name] = (
-                        self.catalogue_model.completeness_table)
-            elif index == 2:
-                threshold, ok = QtGui.QInputDialog.getDouble(
-                    self, 'Input Dialog', 'Enter the threshold value:')
-                if ok:
-                    self.form_completeness[name] = numpy.array(
-                        [[numpy.min(
-                            self.catalogue_model.catalogue.data['year']),
-                            threshold]])
-            elif index == 3:
-                dlg = CompletenessDialog()
-                if dlg.exec_():
-                    self.form_completeness[name] = dlg.get_table()
-        return on_select
+    def on_completeness_select(self, index):
+        """
+        Select Completeness table callback
+        """
+        # Use the whole catalogue
+        if index == 0:
+            self.catalogue_model.completeness_table = (
+                self.catalogue_model.default_completeness(
+                    self.catalogue_model.catalogue))
+
+        # Use the computed one in the completeness table
+        elif index == 1:
+            self.catalogue_model.completeness_table = (
+                self.catalogue_model.last_computed_completeness_table)
+
+        # Input a completeness table based on a completeness threshold
+        elif index == 2:
+            threshold, ok = QtGui.QInputDialog.getDouble(
+                self, 'Input Dialog', 'Enter the threshold value:')
+            if ok:
+                self.catalogue_model.completeness_table = (
+                    self.catalogue_model.completeness_from_threshold(
+                        threshold))
+        # Input a custom completeness table by opening a table editor
+        elif index == 3:
+            dlg = CompletenessDialog()
+            if dlg.exec_():
+                self.catalogue_model.completeness_table = dlg.get_table()
 
     @pyqtSlot(name='on_actionLoad_catalogue_triggered')
     def load_catalogue(self):
+        """
+        Open a file dialog, load a catalogue from a csv file,
+        setup the maps and the charts
+        """
         self.catalogue_model = CatalogueModel.from_csv_file(
-            QtGui.QFileDialog.getOpenFileName(
-                self, 'Open Catalogue', ''), self)
+            QtGui.QFileDialog.getOpenFileName(self, 'Open Catalogue', ''))
         self.outputTableView.setModel(self.catalogue_model.item_model)
         if self.catalogue_map is None:
             self.catalogue_map = CatalogueMap(
@@ -183,6 +192,9 @@ Go to the Completeness tab or select another option""")
             self.catalogue_model.catalogue, None)
 
     def setupActions(self):
+        """
+        Connect menu, table and form actions to the proper slots
+        """
         # menu actions
         self.actionDeclustering.triggered.connect(
             lambda: self.stackedFormWidget.setCurrentIndex(0))
@@ -211,6 +223,10 @@ Go to the Completeness tab or select another option""")
             SIGNAL("clicked(QModelIndex)"), self.cellClicked)
 
     def save_as(self, flt, fmt):
+        """
+        :returns:
+            a callback function to be used as an action for save menu item
+        """
         def wrapped():
             QgsVectorFileWriter.writeAsVectorFormat(
                 self.mapWidget.layer(0),
@@ -221,35 +237,46 @@ Go to the Completeness tab or select another option""")
 
     @pyqtSlot(name="on_actionSave_catalogue_triggered")
     def save_catalogue(self):
+        """
+        Open a file dialog to save the current catalogue in csv format
+        """
         self.catalogue_model.save(
             QtGui.QFileDialog.getSaveFileName(
                 self, "Save Catalogue", "", "*.csv"))
 
-    @pyqtSlot(name="on_declusterButton_clicked")
-    def decluster(self):
-        method = DECLUSTERER_METHODS.values()[
-            self.method_selectors['declustering'].currentIndex() - 1]
+    def _apply_method(self, name):
+        method = self.current_tab().method()
         try:
-            config = get_config(
-                method,
-                self.catalogue_model.catalogue,
-                self.form_fields["declustering"])
+            config = self.current_tab().get_config()
         except ValueError as e:
             alert(str(e))
             return
-        ret = self.catalogue_model.decluster(method, config)
+        return getattr(self.catalogue_model, name)(method, config)
 
+    @pyqtSlot(name="on_declusterButton_clicked")
+    def decluster(self):
+        """
+        Apply current selected declustering algorithm, then update the
+        map
+        """
+        success = self._apply_method("declustering")
+        self.outputTableView.setModel(self.catalogue_model.item_model)
         self.catalogue_map.update_catalogue_layer(
             ['Cluster_Index', 'Cluster_Flag'])
 
         # TODO. compute a new catalogue and draw new occurrences
-        self.declusteringChart.draw_occurrences(self.catalogue_model.catalogue)
-        return ret
+
+        return success
 
     @pyqtSlot(name="on_declusteringPurgeButton_clicked")
     def purge_decluster(self):
+        """
+        Apply current selected declustering algorithm and purge the
+        catalogue. Update the map, the table and the charts
+        """
         if self.decluster():
             self.catalogue_model.purge_decluster()
+
             self.outputTableView.setModel(self.catalogue_model.item_model)
             self.catalogue_map.change_catalogue_model(self.catalogue_model)
             self.declusteringChart.draw_occurrences(
@@ -259,6 +286,10 @@ Go to the Completeness tab or select another option""")
 
     @pyqtSlot(name="on_completenessPurgeButton_clicked")
     def purge_completeness(self):
+        """
+        Apply current selected completeness algorithm and purge the
+        catalogue. Update the map, the table and the charts
+        """
         if self.completeness():
             self.catalogue_model.purge_completeness()
             self.outputTableView.setModel(self.catalogue_model.item_model)
@@ -270,82 +301,65 @@ Go to the Completeness tab or select another option""")
 
     @pyqtSlot(name="on_completenessButton_clicked")
     def completeness(self):
-        method = COMPLETENESS_METHODS.values()[
-            self.method_selectors['completeness'].currentIndex() - 1]
-
-        try:
-            config = get_config(
-                method,
-                self.catalogue_model.catalogue,
-                self.form_fields["completeness"])
-        except ValueError as e:
-            alert(str(e))
-            return
-
-        model = self.catalogue_model.completeness(method, config)
-        self.catalogue_map.update_catalogue_layer(['Completeness_Flag'])
+        """
+        Apply current selected completeness algorithm, then update the
+        map and the chart if needed
+        """
+        model = self._apply_method("completeness")
 
         if model is not None:
+            self.catalogue_map.update_catalogue_layer(['Completeness_Flag'])
             self.completenessChart.draw_completeness(model)
-        return True
+            return True
 
     @pyqtSlot(name="on_recurrenceModelButton_clicked")
     def recurrence_model(self):
-        method = OCCURRENCE_METHODS.values()[
-            self.method_selectors['recurrence_model'].currentIndex() - 1]
+        """
+        Apply the selected method for recurrence model analysis, open
+        a popup with the returned values, and draw the results in a
+        chart
+        """
+        params = self._apply_method("recurrence_model")
+        alert(str(params))
 
-        try:
-            config = get_config(method,
-                                self.catalogue_model.catalogue,
-                                self.form_fields["recurrence_model"])
-        except ValueError as e:
-            alert(str(e))
-            return
-
-        ret = method(self.catalogue_model.catalogue, config,
-                     self.form_completeness["recurrence_model"])
-        alert(str(ret))
-
-        if len(ret) == 4:
+        if len(params) == 5:
             self.recurrenceModelChart.draw_seismicity_rate(
-                self.catalogue_model.catalogue,
-                config.get('reference_magnitude', None), *ret)
+                self.catalogue_model.catalogue, *params)
 
     @pyqtSlot(name="on_maxMagnitudeButton_clicked")
     def max_magnitude(self):
-        method = MAX_MAGNITUDE_METHODS.values()[
-            self.method_selectors['max_magnitude'].currentIndex() - 1]
+        """
+        Apply the selected method for maximum magnitude estimation, open
+        a popup with the returned values
+        """
 
-        try:
-            config = get_config(method,
-                                self.catalogue_model.catalogue,
-                                self.form_fields["max_magnitude"])
-        except ValueError as e:
-            alert(str(e))
-            return
-
-        ret = method(self.catalogue_model.catalogue, config)
-        alert(str(ret))
+        mmax_params = self._apply_method("max_magnitude")
+        alert(str(mmax_params))
 
     @pyqtSlot(name="on_smoothedSeismicityButton_clicked")
     def smoothed_seismicity(self):
-        method = SMOOTHED_SEISMICITY_METHODS.values()[
-            self.method_selectors['smoothed_seismicity'].currentIndex() - 1]
-
-        try:
-            config = get_config(
-                method,
-                self.catalogue_model.catalogue,
-                self.form_fields["smoothed_seismicity"])
-        except ValueError as e:
-            alert(str(e))
-            return
-
-        print self.catalogue_model.catalogue.data, config, self.form_completeness["smoothed_seismicity"]
-        print method(self.catalogue_model.catalogue, config,
-                     self.form_completeness["smoothed_seismicity"])
+        """
+        Apply the smoothing kernel selected method and update the map
+        accordingly
+        """
+        smoothed_matrix = self._apply_method("smoothed_seismicity")
+        self.catalogue_map.set_raster(smoothed_matrix)
 
     def cellClicked(self, modelIndex):
+        """
+        Callback when a cell in the catalogue table is clicked.
+
+        if the selected cell identifies a cluster (i.e. the selected
+        cell is in the column "Cluster_Index"), then we filter the map
+        such that only the features of that cluster are visible.
+
+        if the selected cell identifies a cluster flag (i.e. the
+        selected cell is in the column "Cluster_Flag"), then we filter
+        the map such that only the features with that flag are visible.
+
+        Otherwise, we filter the map by showing only the selected
+        feature at cell row
+        """
         catalogue = self.catalogue_model.catalogue
 
         if self.catalogue_model.field_idx(

@@ -9,9 +9,10 @@ from hmtk.parsers.catalogue import csv_catalogue_parser as csv
 
 
 class CatalogueModel(object):
-    def __init__(self, catalogue, observer):
+    def __init__(self, catalogue):
         self.catalogue = catalogue
-        self.completeness_table = None
+        self.completeness_table = self.default_completeness(catalogue)
+        self.last_computed_completeness_table = None
 
         catalogue.data['Cluster_Index'] = numpy.zeros(
             catalogue.get_number_events())
@@ -20,23 +21,46 @@ class CatalogueModel(object):
         catalogue.data['Completeness_Flag'] = numpy.zeros(
             self.catalogue.get_number_events())
 
-        self.observer = observer
-        self.item_model = self.populate_item_model(self.catalogue)
+        self.item_model = self.populate_item_model(catalogue)
+
+    def catalogue_keys(self, catalogue=None):
+        cat = catalogue or self.catalogue
+        all_keys = [k for k in cat.data.keys()
+                    if not (isinstance(cat.data[k], numpy.ndarray) and
+                            (cat.data[k] == numpy.nan).all()) and
+                       not (isinstance(cat.data[k], list) and
+                            not cat.data[k])]
+
+        orders = [
+            'eventID', 'Agency',
+            'year', 'month', 'day', 'hour', 'minute', 'second',
+            'latitude', 'longitude', 'depth',
+            'magnitude',
+            'Cluster_Index', 'Cluster_Flag', 'Completeness_Flag']
+        orders = dict(zip(reversed(orders), range(len(orders))))
+
+        return sorted(all_keys, key=lambda k: -orders.get(k, -1))
+
+    def default_completeness(self, catalogue):
+        return numpy.array(
+            [[numpy.min(catalogue.data['year']),
+              numpy.min(catalogue.data['magnitude'])]])
+
+    def completeness_from_threshold(self, threshold):
+        return numpy.array(
+            [[numpy.min(self.catalogue.data['year']), threshold]])
 
     def populate_item_model(self, catalogue):
         """
         Populate the item model with the data from event catalogue
         """
-        item_model = QtGui.QStandardItemModel(
-            catalogue.get_number_events(),
-            len(catalogue.data),
-            self.observer)
+        keys = self.catalogue_keys(catalogue)
 
-        keys = sorted(catalogue.data.keys())
+        item_model = QtGui.QStandardItemModel(
+            catalogue.get_number_events(), len(keys))
 
         for j, key in enumerate(keys):
-            item_model.setHorizontalHeaderItem(
-                j, QtGui.QStandardItem(key))
+            item_model.setHorizontalHeaderItem(j, QtGui.QStandardItem(key))
             for i in range(catalogue.get_number_events()):
                 event_data = catalogue.data[key]
                 if len(event_data):
@@ -54,10 +78,10 @@ class CatalogueModel(object):
                     modelIndex.row(), self.field_idx('eventID'))).toPyObject())
 
     @classmethod
-    def from_csv_file(cls, fname, observer):
-        return cls(csv.CsvCatalogueParser(fname).read_file(), observer)
+    def from_csv_file(cls, fname):
+        return cls(csv.CsvCatalogueParser(fname).read_file())
 
-    def decluster(self, method, config):
+    def declustering(self, method, config):
         cluster_index, cluster_flag = method(self.catalogue, config)
         self.catalogue.data['Cluster_Index'] = cluster_index
         self.catalogue.data['Cluster_Flag'] = cluster_flag
@@ -88,6 +112,7 @@ class CatalogueModel(object):
 
     def completeness(self, method, config):
         self.completeness_table = method(self.catalogue, config)
+        self.last_computed_completeness_table = self.completeness_table
 
         # FIXME(lp). Refactor with Catalogue#catalogue_mt_filter
         flag = numpy.zeros(self.catalogue.get_number_events(), dtype=int)
@@ -109,14 +134,44 @@ class CatalogueModel(object):
                     index, QtGui.QColor(200, 200, 200), Qt.BackgroundRole)
         return getattr(method, 'model', None)
 
+    def recurrence_model(self, method, config):
+        rec_params = method(self.catalogue, config, self.completeness_table)
+        return (config.get('reference_magnitude', None), ) + rec_params
+
+    def max_magnitude(self, method, config):
+        return method(self.catalogue, config)
+
+    def smoothed_seismicity(self, method, config):
+        print config, self.completeness_table
+        return method(self.catalogue, config, self.completeness_table)
+
     def field_idx(self, field):
-        return sorted(self.catalogue.data.keys()).index(field)
+        return self.catalogue_keys().index(field)
 
     def cluster_color(self, cluster):
-        r = cluster % 255
-        g = (cluster + 85) % 255
-        b = (cluster + 170) % 255
-        return QtGui.QColor(r, g, b)
+        max_cluster = numpy.max(self.catalogue.data['Cluster_Index'])
+        min_cluster = numpy.min(self.catalogue.data['Cluster_Index'])
+        breaks = numpy.linspace(min_cluster, max_cluster, 4)
+        cluster_range = max_cluster - min_cluster
+
+        if max_cluster == min_cluster:
+            return QtGui.QColor(0, 0, 0)
+
+        case = numpy.searchsorted(breaks, cluster)
+        if case <= 1:
+            r = 0
+            g = 255. / cluster_range * (cluster - breaks[0]) * 3.
+            b = 255.
+        elif case == 2:
+            r = 255. / cluster_range * (cluster - breaks[1]) * 3.
+            g = 255.
+            b = 255. - 255. / cluster_range * (cluster - breaks[1]) * 3.
+        elif case >= 3:
+            r = 255.
+            g = 255. - 255. / cluster_range * (cluster - breaks[2]) * 3.
+            b = 0
+
+        return QtGui.QColor(int(r), int(g), int(b))
 
     def save(self, filename):
         writer = csv.CsvCatalogueWriter(tempfile.mktemp())

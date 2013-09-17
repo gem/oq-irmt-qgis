@@ -38,13 +38,17 @@ def main(argv):
         wnd.raise_()
 
     wnd.load_catalogue()
+
     # Connect signal for app finish
-    app.connect(app, SIGNAL("lastWindowClosed()"), app, SLOT("quit()"))
+    def on_quit():
+        QgsApplication.exitQgis()
+        app.quit()
+
+    app.lastWindowClosed.connect(on_quit)
 
     # Start the app up
     ret = app.exec_()
 
-    QgsApplication.exitQgis()
     sys.exit(ret)
 
 

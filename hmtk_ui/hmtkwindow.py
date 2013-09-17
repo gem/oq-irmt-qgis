@@ -206,7 +206,7 @@ class Ui_HMTKWindow(object):
         self.menuBar.addAction(self.menuTools.menuAction())
 
         self.retranslateUi(HMTKWindow)
-        self.stackedFormWidget.setCurrentIndex(4)
+        self.stackedFormWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(HMTKWindow)
 
     def retranslateUi(self, HMTKWindow):
