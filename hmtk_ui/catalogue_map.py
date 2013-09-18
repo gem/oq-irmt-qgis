@@ -234,16 +234,17 @@ class CatalogueMap(object):
         else:
             msg_lines = ["No Event found"]
 
-        src = self.basemap_layer.layer().crs()
-        dst = QgsCoordinateReferenceSystem(4326)
-        trans = QgsCoordinateTransform(src, dst)
-        point = trans.transform(point)
+        if self.raster_layer is not None:
+            src = self.basemap_layer.layer().crs()
+            dst = QgsCoordinateReferenceSystem(4326)
+            trans = QgsCoordinateTransform(src, dst)
+            point = trans.transform(point)
 
-        ret, raster_data = self.raster_layer.layer().identify(point)
+            ret, raster_data = self.raster_layer.layer().identify(point)
 
-        if ret:
-            for k, v in raster_data.items():
-                msg_lines.append("Smoothed=%s" % str(v))
+            if ret:
+                for k, v in raster_data.items():
+                    msg_lines.append("Smoothed=%s" % str(v))
 
         utils.alert('\n'.join(msg_lines))
 
@@ -357,7 +358,6 @@ def create_raster_layer(matrix):
     out_srs.ImportFromEPSG(4326)
     dataset.SetProjection(out_srs.ExportToWkt())
 
-    print gridded_vals
     out_band = dataset.GetRasterBand(1)
     out_band.WriteArray(gridded_vals)
     out_band.SetNoDataValue(0)
