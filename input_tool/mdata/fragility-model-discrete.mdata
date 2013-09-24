@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<fragilityModel
+format="discrete"
+>
+    <description>
+        Fragility model for Pavia (discrete)
+    </description>
+    <limitStates>
+        minor moderate severe collapse
+    </limitStates>
+    <ffs
+    noDamageLimit="5"
+    >
+        <taxonomy>
+            RC/DMRF-D/LR
+        </taxonomy>
+        <IML IMT="MMI" imlUnit="g"/>
+    </ffs>
+</fragilityModel>
