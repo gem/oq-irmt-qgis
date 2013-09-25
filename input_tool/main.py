@@ -55,6 +55,10 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
         return root.getnodes('discreteVulnerabilitySet')
 
     def update_vSets(self, row, col):
+        try:
+            self.vsets[row]
+        except IndexError:
+            return
         text = unicode(self.vSetsTbl.item(row, col).text())
         attr = VSET[col]
         if attr == 'IMT':
@@ -169,8 +173,11 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
         widget.insertRow(widget.rowCount())
 
     def rowDel(self, widget):
-        for item in widget.selectedItems():
-            widget.removeRow(item.row())
+        # selectedIndexes() returns both empty and non empty items
+        row_ids = set(item.row() for item in widget.selectedIndexes())
+        print row_ids
+        for row_id in sorted(row_ids, reverse=True):
+            widget.removeRow(row_id)
 
 
 def main(argv):

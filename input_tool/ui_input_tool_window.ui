@@ -48,6 +48,9 @@
           <property name="alternatingRowColors">
            <bool>true</bool>
           </property>
+          <property name="selectionBehavior">
+           <enum>QAbstractItemView::SelectRows</enum>
+          </property>
           <attribute name="horizontalHeaderDefaultSectionSize">
            <number>120</number>
           </attribute>
@@ -119,6 +122,9 @@
               <property name="alternatingRowColors">
                <bool>true</bool>
               </property>
+              <property name="selectionBehavior">
+               <enum>QAbstractItemView::SelectRows</enum>
+              </property>
               <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
                <bool>false</bool>
               </attribute>
@@ -176,6 +182,9 @@
              <widget class="QTableWidget" name="imlsTbl">
               <property name="alternatingRowColors">
                <bool>true</bool>
+              </property>
+              <property name="selectionBehavior">
+               <enum>QAbstractItemView::SelectRows</enum>
               </property>
               <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
                <bool>false</bool>

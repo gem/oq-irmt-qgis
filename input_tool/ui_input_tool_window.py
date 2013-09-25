@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_input_tool_window.ui'
 #
-# Created: Thu Aug  8 15:49:19 2013
+# Created: Wed Sep 25 11:44:17 2013
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -38,6 +38,7 @@ class Ui_InputToolWindow(object):
         self.verticalLayout.addWidget(self.fileNameLbl)
         self.vSetsTbl = QtGui.QTableWidget(self.vulnerabilityModel)
         self.vSetsTbl.setAlternatingRowColors(True)
+        self.vSetsTbl.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
         self.vSetsTbl.setObjectName(_fromUtf8("vSetsTbl"))
         self.vSetsTbl.setColumnCount(4)
         self.vSetsTbl.setRowCount(0)
@@ -70,6 +71,7 @@ class Ui_InputToolWindow(object):
         self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
         self.vFnTbl = QtGui.QTableWidget(self.vulnerabilityModel)
         self.vFnTbl.setAlternatingRowColors(True)
+        self.vFnTbl.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
         self.vFnTbl.setObjectName(_fromUtf8("vFnTbl"))
         self.vFnTbl.setColumnCount(2)
         self.vFnTbl.setRowCount(0)
@@ -96,6 +98,7 @@ class Ui_InputToolWindow(object):
         self.verticalLayout_3.setObjectName(_fromUtf8("verticalLayout_3"))
         self.imlsTbl = QtGui.QTableWidget(self.vulnerabilityModel)
         self.imlsTbl.setAlternatingRowColors(True)
+        self.imlsTbl.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
         self.imlsTbl.setObjectName(_fromUtf8("imlsTbl"))
         self.imlsTbl.setColumnCount(3)
         self.imlsTbl.setRowCount(0)
