@@ -169,7 +169,8 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
         widget.insertRow(widget.rowCount())
 
     def rowDel(self, widget):
-        widget.removeRow(widget.currentRow())
+        for item in widget.selectedItems():
+            widget.removeRow(item.row())
 
 
 def main(argv):
