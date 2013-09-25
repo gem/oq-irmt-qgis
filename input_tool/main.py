@@ -31,6 +31,21 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
         self.setupUi(self)
         self.tabwidget.currentWidget().root = None
 
+        # table widgets
+        self.vSetsTbl.itemSelectionChanged.connect(self.populate_vFnTbl)
+        self.vFnTbl.itemSelectionChanged.connect(self.populate_imlsTbl)
+        self.vSetsTbl.cellChanged.connect(self.update_vSets)
+        self.vFnTbl.cellChanged.connect(self.update_vFn)
+        self.imlsTbl.cellChanged.connect(self.update_imls)
+
+        # add/del buttons
+        self.vSetsAddBtn.clicked.connect(lambda: self.rowAdd(self.vSetsTbl))
+        self.vSetsDelBtn.clicked.connect(lambda: self.rowDel(self.vSetsTbl))
+        self.vFnAddBtn.clicked.connect(lambda: self.rowAdd(self.vFnTbl))
+        self.vFnDelBtn.clicked.connect(lambda: self.rowDel(self.vFnTbl))
+        self.imlsAddBtn.clicked.connect(lambda: self.rowAdd(self.imlsTbl))
+        self.imlsDelBtn.clicked.connect(lambda: self.rowDel(self.imlsTbl))
+
         # menu actions
         self.actionOpen.triggered.connect(self.load_file)
 
@@ -93,7 +108,13 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
     def populate_vFnTbl(self):
         row_index = self.vSetsTbl.currentRow()
         data = []
-        vset = self.vsets[row_index]
+        try:
+            vset = self.vsets[row_index]
+        except IndexError:  # trying to access a non-populated row
+            self.vFnTbl.clearContents()
+            self.vFnTbl.setRowCount(1)
+            return
+
         vfs = vset.getnodes('discreteVulnerability')
 
         for vf in vfs:
@@ -108,12 +129,23 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
     def populate_imlsTbl(self):
         set_index = self.vSetsTbl.currentRow()
         vfn_index = self.vFnTbl.currentRow()
-        vset = self.vsets[set_index]
+        try:
+            vset = self.vsets[set_index]
+        except IndexError:  # trying to access a non-populated row
+            self.imlsTbl.clearContents()
+            self.imlsTbl.setRowCount(1)
+            return
+
         imt = QtGui.QTableWidgetItem(vset.IML['IMT'])
         self.imlsTbl.setHorizontalHeaderItem(0, imt)
         imls = split_numbers(vset.IML)
-        vfn = self.vsets[set_index].getnodes(
-            'discreteVulnerability')[vfn_index]
+        vfns = self.vsets[set_index].getnodes('discreteVulnerability')
+        try:
+            vfn = vfns[vfn_index]
+        except IndexError:
+            self.imlsTbl.clearContents()
+            self.imlsTbl.setRowCount(1)
+            return
         loss_ratios = split_numbers(vfn.lossRatio)
         coeff_vars = split_numbers(vfn.coefficientsVariation)
         data = zip(imls, loss_ratios, coeff_vars)
@@ -132,20 +164,12 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
         self.tabwidget.setCurrentWidget(tab)
 
         self.populate_table_widgets()
-        self.vSetsTbl.itemSelectionChanged.connect(self.populate_vFnTbl)
-        self.vFnTbl.itemSelectionChanged.connect(self.populate_imlsTbl)
-        self.vSetsTbl.cellChanged.connect(self.update_vSets)
-        self.vFnTbl.cellChanged.connect(self.update_vFn)
-        self.imlsTbl.cellChanged.connect(self.update_imls)
 
-        self.vSetsAddBtn.clicked.connect(self.vSetsAdd)
-        self.vSetsDelBtn.clicked.connect(self.vSetsDel)
+    def rowAdd(self, widget):
+        widget.insertRow(widget.rowCount())
 
-    def vSetsAdd(self):
-        self.vSetsTbl.insertRow(self.vSetsTbl.rowCount())
-
-    def vSetsDel(self):
-        self.vSetsTbl.removeRow(self.vSetsTbl.currentRow())
+    def rowDel(self, widget):
+        widget.removeRow(widget.currentRow())
 
 
 def main(argv):
