@@ -39,7 +39,7 @@
         <item>
          <widget class="QLabel" name="fileNameLbl">
           <property name="text">
-           <string/>
+           <string>&lt;input filename&gt;</string>
           </property>
          </widget>
         </item>

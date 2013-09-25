@@ -4,7 +4,34 @@ import nodes
 from PyQt4 import QtGui, QtCore
 from ui_input_tool_window import Ui_InputToolWindow
 from openquake import nrmllib
+
 SCHEMADIR = os.path.join(nrmllib.__path__[0], 'schema')
+
+
+class Validator(QtGui.QValidator):
+    def __init__(self, validator):
+        self.validator = validator
+        self.n_invalid = 0
+
+    def validate(self, value):
+        try:
+            self.validator(value)
+        except ValueError:
+            return QtGui.QValidator.Invalid
+        else:
+            return QtGui.QValidator.Acceptable
+
+    def validate_cell(self, item):
+        text = unicode(item.text())
+        valid = self.validate(text)
+        if not valid:
+            item.setBackground(QtCore.Qt.red)
+            self.n_invalid += 1
+        elif item.background() == QtCore.Qt.red:
+            item.setBackground(QtCore.Qt.white)
+            self.n_invalid -= 1
+            print self.n_invalid
+        return valid
 
 
 def split_numbers(node):
@@ -26,8 +53,9 @@ IMLS = dict(enumerate('imls lossRatio coefficientsVariation'.split()))
 
 
 class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
-    def __init__(self):
+    def __init__(self, inputdir):
         QtGui.QMainWindow.__init__(self)
+        self.inputdir = inputdir
         self.setupUi(self)
         self.tabwidget.currentWidget().root = None
 
@@ -47,7 +75,17 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
         self.imlsDelBtn.clicked.connect(lambda: self.rowDel(self.imlsTbl))
 
         # menu actions
-        self.actionOpen.triggered.connect(self.load_file)
+        self.actionOpen.triggered.connect(self.open_file)
+        self.actionSave.triggered.connect(self.save_file)
+
+        ## HARD-CODED FOR THE MOMENT
+        root, modeltype = nodes.parse_nrml(
+            inputdir, 'vulnerability-model-discrete.xml')
+        self.fileNameLbl.setText('vulnerability-model-discrete.xml')
+        tab = self.tabwidget.findChild(QtGui.QWidget, modeltype)
+        tab.root = root
+        self.tabwidget.setCurrentWidget(tab)
+        self.populate_table_widgets()
 
     @property
     def vsets(self):
@@ -73,7 +111,12 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
         self.vsets[current_vset][row][attr] = text
 
     def update_imls(self, row, col):
-        text = unicode(self.imlsTbl.item(row, col).text())
+        item = self.imlsTbl.item(row, col)
+        text = unicode(item.text())
+        valid = self.imlsTbl.floatvalidator.validate_cell(item)
+        if not valid:
+            return
+
         attr = IMLS[col]
         current_vset = self.vSetsTbl.currentRow()
         current_vfn = self.vFnTbl.currentRow()
@@ -94,6 +137,8 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
             for col_index, content in enumerate(row):
                 item = QtGui.QTableWidgetItem(content)
                 widget.setItem(row_index, col_index, item)
+                if widget.objectName == 'imlsTbl':
+                    widget.floatvalidator.validate_cell(item)
 
     def populate_table_widgets(self):
         data = []
@@ -131,6 +176,9 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
             self.populate_imlsTbl()
 
     def populate_imlsTbl(self):
+
+        self.imlsTbl.floatvalidator = Validator(float)
+
         set_index = self.vSetsTbl.currentRow()
         vfn_index = self.vFnTbl.currentRow()
         try:
@@ -143,7 +191,7 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
         imt = QtGui.QTableWidgetItem(vset.IML['IMT'])
         self.imlsTbl.setHorizontalHeaderItem(0, imt)
         imls = split_numbers(vset.IML)
-        vfns = self.vsets[set_index].getnodes('discreteVulnerability')
+        vfns = vset.getnodes('discreteVulnerability')
         try:
             vfn = vfns[vfn_index]
         except IndexError:
@@ -155,19 +203,26 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
         data = zip(imls, loss_ratios, coeff_vars)
         self.populate_table_widget(self.imlsTbl, data)
 
-    def load_file(self):
-        XMLDIR = os.path.join(SCHEMADIR, '../../../examples')
+    def open_file(self):
         fname = unicode(QtGui.QFileDialog.getOpenFileName(
             self, 'Choose file',
-            XMLDIR,  # QtCore.QDir.homePath(),
+            self.inputdir,  # QtCore.QDir.homePath(),
             "Model file (*.xml);;Config files (*.ini)"))
+        self.fileNameLbl.setText(fname)
         root, modeltype = nodes.parse_nrml(
             os.path.dirname(fname), os.path.basename(fname))
         tab = self.tabwidget.findChild(QtGui.QWidget, modeltype)
         tab.root = root
         self.tabwidget.setCurrentWidget(tab)
-
         self.populate_table_widgets()
+        # print validate_ex()
+
+    def save_file(self):
+        fname = self.fileNameLbl.text()
+        if self.imlsTbl.floatvalidator.n_invalid:
+            print 'Cannot save: there are invalid entries'
+        else:
+            print 'Saving', fname
 
     def rowAdd(self, widget):
         widget.insertRow(widget.rowCount())
@@ -175,20 +230,39 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
     def rowDel(self, widget):
         # selectedIndexes() returns both empty and non empty items
         row_ids = set(item.row() for item in widget.selectedIndexes())
-        print row_ids
         for row_id in sorted(row_ids, reverse=True):
             widget.removeRow(row_id)
 
 
+# a quick test showing that Qt cannot understand nrml.xsd :-(
+def validate_ex():
+    from PyQt4.QtCore import QUrl
+    from PyQt4.QtXmlPatterns import QXmlSchema, QXmlSchemaValidator
+    qurl = QUrl(
+        'file:///home/michele/oq-nrmllib/openquake/nrmllib/schema/nrml.xsd')
+    schema = QXmlSchema()
+    schema.load(qurl)
+    if schema.isValid():
+        v = QXmlSchemaValidator(schema)
+        print v.validate(QUrl('file:///home/michele/oq-nrmllib/examples/'
+                              'vulnerability-model-discrete.xml'))
+    else:
+        print 'schema invalid'
+
+
 def main(argv):
+    if not argv[1:]:
+        sys.exit('Please give the input directory')
 
     # create Qt application
     app = QtGui.QApplication(argv, True)
-    app.setStyleSheet('QTableWidget::item:selected'
-                      '{ background-color: palette(highlight) }')
+    app.setStyleSheet('''
+QTableWidget::item:selected
+{ background-color: palette(highlight)}
+''')
 
     # create main window
-    wnd = MainWindow()
+    wnd = MainWindow(argv[1])
     wnd.show()
 
     # Start the app up
