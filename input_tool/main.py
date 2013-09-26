@@ -1,16 +1,16 @@
 import os
 import sys
-import nodes
 from PyQt4 import QtGui, QtCore
 from ui_input_tool_window import Ui_InputToolWindow
 from openquake import nrmllib
+from openquake.nrmllib.node import node_from_nrml, node_copy, Node
 
 SCHEMADIR = os.path.join(nrmllib.__path__[0], 'schema')
 
 
 # hackish
 def is_valid(item):
-    return item.background() != QtCore.Qt.red
+    return item and item.background() != QtCore.Qt.red
 
 
 def getdata(widget, rowrange, colrange, ignore_invalid=False):
@@ -50,13 +50,13 @@ class Validator(QtGui.QValidator):
 
 
 def split_numbers(node):
-    return node._value.split()
+    return node.text.split()
 
 
 def set_list_item(node, i, value):
-    numbers = node._value.split()
+    numbers = node.text.split()
     numbers[i] = value
-    node._value = ' '.join(numbers)
+    node.text = ' '.join(numbers)
 
 VSET = dict(enumerate('vulnerabilitySetID assetCategory lossCategory IMT'
                       .split()))
@@ -65,6 +65,16 @@ VFN = dict(enumerate('vulnerabilityFunctionID probabilisticDistribution'
                      .split()))
 
 IMLS = dict(enumerate('imls lossRatio coefficientsVariation'.split()))
+
+
+DVSET_NODE = Node('discreteVulnerabilitySet', dict(
+    assetCategory="population",
+    lossCategory="fatalities",
+    vulnerabilitySetID="XXX"))
+
+VFN_NODE = Node('discreteVulnerability', dict(
+    probabilisticDistribution="LN",
+    vulnerabilityFunctionID="XX"))
 
 
 class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
@@ -97,18 +107,21 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
         self.actionSave.triggered.connect(self.save_file)
 
         ## HARD-CODED FOR THE MOMENT
-        root, modeltype = nodes.parse_nrml(
-            inputdir, 'vulnerability-model-discrete.xml')
+        root = node_from_nrml(
+            os.path.join(inputdir, 'vulnerability-model-discrete.xml'))[0]
         self.fileNameLbl.setText('vulnerability-model-discrete.xml')
-        tab = self.tabwidget.findChild(QtGui.QWidget, modeltype)
+        tab = self.tabwidget.findChild(QtGui.QWidget, root.tag)
         tab.root = root
         self.tabwidget.setCurrentWidget(tab)
         self.populate_table_widgets()
 
     @property
+    def root(self):
+        return self.tabwidget.currentWidget().root
+
+    @property
     def vsets(self):
-        root = self.tabwidget.currentWidget().root
-        return root.getnodes('discreteVulnerabilitySet')
+        return list(self.root.getnodes('discreteVulnerabilitySet'))
 
     def update_vSets(self, row, col):
         try:
@@ -157,7 +170,7 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
                 widget.setItem(row_index, col_index, item)
                 if widget.objectName == 'imlsTbl':
                     widget.floatvalidator.validate_cell(item)
-
+        # widget.sortByColumn(0, QtCore.Qt.AscendingOrder)
         widget.resizeColumnsToContents()
 
     def populate_table_widgets(self):
@@ -184,7 +197,7 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
             self.vFnTbl.setRowCount(1)
             return
 
-        vfs = vset.getnodes('discreteVulnerability')
+        vfs = list(vset.getnodes('discreteVulnerability'))
 
         for vf in vfs:
             data.append([vf['vulnerabilityFunctionID'],
@@ -211,7 +224,7 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
         imt = QtGui.QTableWidgetItem(vset.IML['IMT'])
         self.imlsTbl.setHorizontalHeaderItem(0, imt)
         imls = split_numbers(vset.IML)
-        vfns = vset.getnodes('discreteVulnerability')
+        vfns = list(vset.getnodes('discreteVulnerability'))
         try:
             vfn = vfns[vfn_index]
         except IndexError:
@@ -229,9 +242,8 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
             self.inputdir,  # QtCore.QDir.homePath(),
             "Model file (*.xml);;Config files (*.ini)"))
         self.fileNameLbl.setText(fname)
-        root, modeltype = nodes.parse_nrml(
-            os.path.dirname(fname), os.path.basename(fname))
-        tab = self.tabwidget.findChild(QtGui.QWidget, modeltype)
+        root = node_from_nrml(fname)
+        tab = self.tabwidget.findChild(QtGui.QWidget, root.tag)
         tab.root = root
         self.tabwidget.setCurrentWidget(tab)
         self.populate_table_widgets()
@@ -271,7 +283,17 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
         self.populate_table_widget(widget, data + rows)
 
     def rowAdd(self, widget):
-        widget.insertRow(widget.rowCount())
+        if widget.objectName == 'vSetsTbl':
+            self.root.append(node_copy(DVSET_NODE))
+        elif widget.objectName == 'vFnTbl':
+            row_index = self.vSetsTbl.currentRow()
+            vset = self.vsets[row_index]
+            vset.append(node_copy(VFN_NODE))
+        lastrow = widget.rowCount()
+        widget.insertRow(lastrow)
+        for i in range(widget.columnCount()):
+            item = QtGui.QTableWidgetItem('XXX')
+            widget.setItem(lastrow + 1, i, item)
 
     def rowDel(self, widget):
         # selectedIndexes() returns both empty and non empty items

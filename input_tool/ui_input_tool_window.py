@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_input_tool_window.ui'
 #
-# Created: Wed Sep 25 16:34:06 2013
+# Created: Thu Sep 26 11:34:26 2013
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -50,7 +50,7 @@ class Ui_InputToolWindow(object):
         item = QtGui.QTableWidgetItem()
         self.vSetsTbl.setHorizontalHeaderItem(3, item)
         self.vSetsTbl.horizontalHeader().setDefaultSectionSize(120)
-        self.vSetsTbl.horizontalHeader().setSortIndicatorShown(True)
+        self.vSetsTbl.horizontalHeader().setSortIndicatorShown(False)
         self.vSetsTbl.horizontalHeader().setStretchLastSection(True)
         self.verticalLayout.addWidget(self.vSetsTbl)
         self.horizontalLayout_3 = QtGui.QHBoxLayout()
@@ -78,7 +78,7 @@ class Ui_InputToolWindow(object):
         self.vFnTbl.setHorizontalHeaderItem(0, item)
         item = QtGui.QTableWidgetItem()
         self.vFnTbl.setHorizontalHeaderItem(1, item)
-        self.vFnTbl.horizontalHeader().setSortIndicatorShown(True)
+        self.vFnTbl.horizontalHeader().setSortIndicatorShown(False)
         self.vFnTbl.horizontalHeader().setStretchLastSection(True)
         self.verticalLayout_2.addWidget(self.vFnTbl)
         self.horizontalLayout_2 = QtGui.QHBoxLayout()
@@ -107,7 +107,7 @@ class Ui_InputToolWindow(object):
         self.imlsTbl.setHorizontalHeaderItem(1, item)
         item = QtGui.QTableWidgetItem()
         self.imlsTbl.setHorizontalHeaderItem(2, item)
-        self.imlsTbl.horizontalHeader().setSortIndicatorShown(True)
+        self.imlsTbl.horizontalHeader().setSortIndicatorShown(False)
         self.imlsTbl.horizontalHeader().setStretchLastSection(True)
         self.verticalLayout_3.addWidget(self.imlsTbl)
         self.horizontalLayout_5 = QtGui.QHBoxLayout()
@@ -172,7 +172,7 @@ class Ui_InputToolWindow(object):
         InputToolWindow.setWindowTitle(QtGui.QApplication.translate("InputToolWindow", "GEM input tool", None, QtGui.QApplication.UnicodeUTF8))
         self.tabwidget.setTabText(self.tabwidget.indexOf(self.exposureModel), QtGui.QApplication.translate("InputToolWindow", "Exposure Model", None, QtGui.QApplication.UnicodeUTF8))
         self.fileNameLbl.setText(QtGui.QApplication.translate("InputToolWindow", "<input filename>", None, QtGui.QApplication.UnicodeUTF8))
-        self.vSetsTbl.setSortingEnabled(True)
+        self.vSetsTbl.setSortingEnabled(False)
         item = self.vSetsTbl.horizontalHeaderItem(0)
         item.setText(QtGui.QApplication.translate("InputToolWindow", "Set ID", None, QtGui.QApplication.UnicodeUTF8))
         item = self.vSetsTbl.horizontalHeaderItem(1)
@@ -183,14 +183,14 @@ class Ui_InputToolWindow(object):
         item.setText(QtGui.QApplication.translate("InputToolWindow", "IMT", None, QtGui.QApplication.UnicodeUTF8))
         self.vSetsAddBtn.setText(QtGui.QApplication.translate("InputToolWindow", "Add Row", None, QtGui.QApplication.UnicodeUTF8))
         self.vSetsDelBtn.setText(QtGui.QApplication.translate("InputToolWindow", "Delete Rows", None, QtGui.QApplication.UnicodeUTF8))
-        self.vFnTbl.setSortingEnabled(True)
+        self.vFnTbl.setSortingEnabled(False)
         item = self.vFnTbl.horizontalHeaderItem(0)
         item.setText(QtGui.QApplication.translate("InputToolWindow", "Fn ID", None, QtGui.QApplication.UnicodeUTF8))
         item = self.vFnTbl.horizontalHeaderItem(1)
         item.setText(QtGui.QApplication.translate("InputToolWindow", "Prob Dist", None, QtGui.QApplication.UnicodeUTF8))
         self.vFnAddBtn.setText(QtGui.QApplication.translate("InputToolWindow", "Add Row", None, QtGui.QApplication.UnicodeUTF8))
         self.vFnDelBtn.setText(QtGui.QApplication.translate("InputToolWindow", "Delete Rows", None, QtGui.QApplication.UnicodeUTF8))
-        self.imlsTbl.setSortingEnabled(True)
+        self.imlsTbl.setSortingEnabled(False)
         item = self.imlsTbl.horizontalHeaderItem(0)
         item.setText(QtGui.QApplication.translate("InputToolWindow", "IML", None, QtGui.QApplication.UnicodeUTF8))
         item = self.imlsTbl.horizontalHeaderItem(1)
