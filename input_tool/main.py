@@ -8,10 +8,28 @@ from openquake import nrmllib
 SCHEMADIR = os.path.join(nrmllib.__path__[0], 'schema')
 
 
+# hackish
+def is_valid(item):
+    return item.background() != QtCore.Qt.red
+
+
+def getdata(widget, rowrange, colrange, ignore_invalid=False):
+    data = []
+    for r in rowrange:
+        row = []
+        for c in colrange:
+            item = widget.item(r, c)
+            if not ignore_invalid and not is_valid(item):
+                raise ValueError(
+                    'row=%d, col=%d, val=%s' % (r, c, item.text()))
+            row.append(unicode(item.text()))
+        data.append(row)
+    return data
+
+
 class Validator(QtGui.QValidator):
     def __init__(self, validator):
         self.validator = validator
-        self.n_invalid = 0
 
     def validate(self, value):
         try:
@@ -26,11 +44,8 @@ class Validator(QtGui.QValidator):
         valid = self.validate(text)
         if not valid:
             item.setBackground(QtCore.Qt.red)
-            self.n_invalid += 1
-        elif item.background() == QtCore.Qt.red:
+        elif not is_valid(item):
             item.setBackground(QtCore.Qt.white)
-            self.n_invalid -= 1
-            print self.n_invalid
         return valid
 
 
@@ -74,6 +89,9 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
         self.imlsAddBtn.clicked.connect(lambda: self.rowAdd(self.imlsTbl))
         self.imlsDelBtn.clicked.connect(lambda: self.rowDel(self.imlsTbl))
 
+        self.actionCopy.triggered.connect(self.copy)
+        self.actionPaste.triggered.connect(self.paste)
+
         # menu actions
         self.actionOpen.triggered.connect(self.open_file)
         self.actionSave.triggered.connect(self.save_file)
@@ -108,6 +126,7 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
         text = unicode(self.vFnTbl.item(row, col).text())
         attr = VFN[col]
         current_vset = self.vSetsTbl.currentRow()
+
         self.vsets[current_vset][row][attr] = text
 
     def update_imls(self, row, col):
@@ -130,7 +149,6 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
 
     def populate_table_widget(self, widget, data):
         widget.clearContents()
-        widget.resizeColumnsToContents()
         widget.setRowCount(len(data))
 
         for row_index, row in enumerate(data):
@@ -139,6 +157,8 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
                 widget.setItem(row_index, col_index, item)
                 if widget.objectName == 'imlsTbl':
                     widget.floatvalidator.validate_cell(item)
+
+        widget.resizeColumnsToContents()
 
     def populate_table_widgets(self):
         data = []
@@ -223,6 +243,32 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
             print 'Cannot save: there are invalid entries'
         else:
             print 'Saving', fname
+
+    def copy(self):
+        widget = QtGui.QApplication.focusWidget()
+        if not isinstance(widget, QtGui.QTableWidget):
+            return
+        select_range = widget.selectedRanges()[0]
+        r1, r2 = select_range.topRow(), select_range.bottomRow()
+        c1, c2 = select_range.leftColumn(), select_range.rightColumn()
+        rows = getdata(widget, range(r1, r2 + 1), range(c1, c2 + 1))
+        QtGui.QApplication.clipboard().setText(
+            '\n'.join('\t'.join(row) for row in rows))
+
+    def paste(self):
+        widget = QtGui.QApplication.focusWidget()
+        if not isinstance(widget, QtGui.QTableWidget):
+            return
+        lines = QtGui.QApplication.clipboard().text().split('\n')
+        rows = [line.split('\t') for line in lines]
+        if not rows:
+            return
+        ncolumns = widget.columnCount()
+        data = getdata(widget, range(widget.rowCount()), range(ncolumns))
+        for row in rows:
+            assert len(row) <= ncolumns, 'Got %d columns, expected %d' % (
+                len(row), ncolumns)
+        self.populate_table_widget(widget, data + rows)
 
     def rowAdd(self, widget):
         widget.insertRow(widget.rowCount())
