@@ -71,10 +71,13 @@ DVSET_NODE = Node('discreteVulnerabilitySet', dict(
     assetCategory="population",
     lossCategory="fatalities",
     vulnerabilitySetID="XXX"))
+DVSET_NODE.append(Node('IML', text=''))
 
 VFN_NODE = Node('discreteVulnerability', dict(
     probabilisticDistribution="LN",
     vulnerabilityFunctionID="XX"))
+VFN_NODE.append(Node('lossRatio', text=''))
+VFN_NODE.append(Node('coefficientsVariation', text=''))
 
 
 class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
@@ -139,8 +142,8 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
         text = unicode(self.vFnTbl.item(row, col).text())
         attr = VFN[col]
         current_vset = self.vSetsTbl.currentRow()
-
-        self.vsets[current_vset][row][attr] = text
+        self.vsets[current_vset][row + 1][attr] = text
+        # +1 because of the description node
 
     def update_imls(self, row, col):
         item = self.imlsTbl.item(row, col)
@@ -170,6 +173,8 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
                 widget.setItem(row_index, col_index, item)
                 if widget.objectName == 'imlsTbl':
                     widget.floatvalidator.validate_cell(item)
+        # this will work only if the setText are replaced by
+        # setData(QtCore.Qt.DisplayRole, value) in the items
         # widget.sortByColumn(0, QtCore.Qt.AscendingOrder)
         widget.resizeColumnsToContents()
 
@@ -203,15 +208,15 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
             data.append([vf['vulnerabilityFunctionID'],
                          vf['probabilisticDistribution'],
                          ])
+            #if vf['vulnerabilityFunctionID'] == 'PK':
+            #    import pdb; pdb.set_trace()
         self.populate_table_widget(self.vFnTbl, data)
         if data:
             self.vFnTbl.selectRow(0)
             self.populate_imlsTbl()
 
     def populate_imlsTbl(self):
-
         self.imlsTbl.floatvalidator = Validator(float)
-
         set_index = self.vSetsTbl.currentRow()
         vfn_index = self.vFnTbl.currentRow()
         try:
@@ -229,7 +234,7 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
             vfn = vfns[vfn_index]
         except IndexError:
             self.imlsTbl.clearContents()
-            self.imlsTbl.setRowCount(1)
+            #self.imlsTbl.setRowCount(1)
             return
         loss_ratios = split_numbers(vfn.lossRatio)
         coeff_vars = split_numbers(vfn.coefficientsVariation)
@@ -283,9 +288,9 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
         self.populate_table_widget(widget, data + rows)
 
     def rowAdd(self, widget):
-        if widget.objectName == 'vSetsTbl':
+        if widget.objectName() == 'vSetsTbl':
             self.root.append(node_copy(DVSET_NODE))
-        elif widget.objectName == 'vFnTbl':
+        elif widget.objectName() == 'vFnTbl':
             row_index = self.vSetsTbl.currentRow()
             vset = self.vsets[row_index]
             vset.append(node_copy(VFN_NODE))
@@ -293,7 +298,7 @@ class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
         widget.insertRow(lastrow)
         for i in range(widget.columnCount()):
             item = QtGui.QTableWidgetItem('XXX')
-            widget.setItem(lastrow + 1, i, item)
+            widget.setItem(lastrow, i, item)
 
     def rowDel(self, widget):
         # selectedIndexes() returns both empty and non empty items

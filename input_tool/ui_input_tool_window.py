@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_input_tool_window.ui'
 #
-# Created: Thu Sep 26 11:34:26 2013
+# Created: Thu Sep 26 15:30:56 2013
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -172,6 +172,7 @@ class Ui_InputToolWindow(object):
         InputToolWindow.setWindowTitle(QtGui.QApplication.translate("InputToolWindow", "GEM input tool", None, QtGui.QApplication.UnicodeUTF8))
         self.tabwidget.setTabText(self.tabwidget.indexOf(self.exposureModel), QtGui.QApplication.translate("InputToolWindow", "Exposure Model", None, QtGui.QApplication.UnicodeUTF8))
         self.fileNameLbl.setText(QtGui.QApplication.translate("InputToolWindow", "<input filename>", None, QtGui.QApplication.UnicodeUTF8))
+        self.vSetsTbl.setToolTip(QtGui.QApplication.translate("InputToolWindow", "<html><head/><body><p>Intensity Measure Type</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
         self.vSetsTbl.setSortingEnabled(False)
         item = self.vSetsTbl.horizontalHeaderItem(0)
         item.setText(QtGui.QApplication.translate("InputToolWindow", "Set ID", None, QtGui.QApplication.UnicodeUTF8))
