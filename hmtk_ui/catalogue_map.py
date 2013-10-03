@@ -9,10 +9,11 @@ from PyQt4.QtCore import QVariant, QFileInfo
 from osgeo import gdal, osr
 
 from qgis.core import (
-    QgsVectorLayer, QgsRasterLayer, QgsField, QgsFeature, QgsGeometry,
-    QgsPoint, QgsMapLayerRegistry, QgsPluginLayerRegistry,
-    QgsFeatureRendererV2, QgsSymbolV2, QGis, QgsRectangle,
-    QgsCoordinateReferenceSystem, QgsCoordinateTransform)
+    QgsVectorLayer, QgsRasterLayer, QgsField,
+    QgsFields, QgsFeature, QgsGeometry, QgsPoint, QgsMapLayerRegistry,
+    QgsPluginLayerRegistry, QgsFeatureRendererV2, QgsSymbolV2, QGis,
+    QgsRectangle, QgsCoordinateReferenceSystem,
+    QgsCoordinateTransform, QgsFeatureRequest)
 from qgis.gui import QgsMapCanvasLayer
 
 from openlayers_plugin.openlayers_plugin import (
@@ -40,6 +41,9 @@ class CatalogueMap(object):
         layer = self.load_catalogue()
         self.basemap_layer = self.load_basemap()
         self.canvas.setLayerSet([layer, self.basemap_layer])
+
+        self.canvas.setExtent(
+            QgsRectangle(-20037508.34, -20037508.34, 20037508.34, 20037508.34))
         self.canvas.refresh()
         self.canvas.zoomByFactor(1.1)
 
@@ -85,21 +89,26 @@ class CatalogueMap(object):
         pr.addAttributes(fields)
 
         features = []
+
+        qgs_fields = QgsFields()
+        for f in fields:
+            qgs_fields.append(f)
+
         for i in range(catalogue.get_number_events()):
             fet = QgsFeature(int(catalogue.data['eventID'][i]))
-            event_values = {}
-
-            for j, key in enumerate(self.catalogue_model.catalogue_keys()):
-                event_data = catalogue.data[key]
-                if len(event_data):
-                    event_values[j] = QVariant(event_data[i])
-                else:
-                    event_values[j] = QVariant("NA")
+            fet.setFields(qgs_fields)
 
             x = catalogue.data['longitude'][i]
             y = catalogue.data['latitude'][i]
             fet.setGeometry(QgsGeometry.fromPoint(QgsPoint(x, y)))
-            fet.setAttributeMap(event_values)
+
+            for key in self.catalogue_model.catalogue_keys():
+                event_data = catalogue.data[key]
+                if len(event_data):
+                    fet[key] = event_data[i]
+                else:
+                    fet[key] = "NA"
+            fet['Cluster_Index'] = 3.
             features.append(fet)
         pr.addFeatures(features)
         vl.commitChanges()
@@ -126,6 +135,7 @@ class CatalogueMap(object):
         iface = IFace()
         olplugin = OpenlayersPlugin(iface)
 
+        # hacked from #OpenlayersPlugin#initGui
         if not olplugin._OpenlayersPlugin__setCoordRSGoogle():
             utils.alert("Error in setting coordinate system")
         oltype = OpenlayersPluginLayerType(
@@ -133,10 +143,14 @@ class CatalogueMap(object):
             olplugin._OpenlayersPlugin__coordRSGoogle,
             olplugin.olLayerTypeRegistry)
         QgsPluginLayerRegistry.instance().addPluginLayerType(oltype)
+
+        # 4 is OpenStreetMap
         ol_gphyslayertype = olplugin.olLayerTypeRegistry.getById(4)
         olplugin.addLayer(ol_gphyslayertype)
+
         if not olplugin.layer.isValid():
             utils.alert("Failed to load basemap")
+
         return QgsMapCanvasLayer(olplugin.layer)
 
     def filter(self, field, value, comparator=cmp):
@@ -171,11 +185,7 @@ class CatalogueMap(object):
         layer.startEditing()
 
         if layer.featureCount():
-            feat = QgsFeature()
-            provider = layer.dataProvider()
-            allAttrs = provider.attributeIndexes()
-            provider.select(allAttrs)
-            while provider.nextFeature(feat):
+            for feat in layer.getFeatures():
                 layer.deleteFeature(feat.id())
         layer.commitChanges()
 
@@ -194,18 +204,15 @@ class CatalogueMap(object):
         """
         layer = self.catalogue_layer
         layer.startEditing()
-        provider = layer.dataProvider()
-        feat = QgsFeature()
-        allAttrs = provider.attributeIndexes()
-        provider.select(allAttrs)
-        i = 0
-        while provider.nextFeature(feat):
-            attrs = {}
+
+        for feature in layer.getFeatures():
+            # FIXME: potentially slow
+            idx = self.catalogue_model.catalogue.data[
+                'eventID'].tolist().index(feature.id())
             for attr in attr_names:
-                attrs[self.catalogue_model.field_idx(attr)] = QVariant(
-                    self.catalogue_model.catalogue.data[attr][i])
-            provider.changeAttributeValues({feat.id(): attrs})
-            i = i + 1
+                feature[attr] = self.catalogue_model.catalogue.data[
+                    attr][idx]
+            layer.updateFeature(feature)
         layer.commitChanges()
         layer.rendererV2().update_syms(self.catalogue_model.catalogue)
         layer.triggerRepaint()
@@ -222,15 +229,15 @@ class CatalogueMap(object):
         r = self.canvas.mapRenderer().mapToLayerCoordinates(
             self.catalogue_layer, r)
 
-        feat = QgsFeature()
-        self.catalogue_layer.select([0], r, True, True)
-        self.catalogue_layer.nextFeature(feat)
+        features = self.catalogue_layer.getFeatures(
+            QgsFeatureRequest().setFilterRect(r))
 
-        if feat.id():
+        if features:
+            # assume the first one is the closest
+            feat = features[0]
             msg_lines = ["Event Found"]
-            keys = self.catalogue_model.catalogue_keys()
-            for k, v in feat.attributeMap().items():
-                msg_lines.append("%s=%s" % (keys[k], v.toPyObject()))
+            for k in self.catalogue_model.catalogue_keys():
+                msg_lines.append("%s=%s" % (k, feat[k]))
         else:
             msg_lines = ["No Event found"]
 
@@ -248,17 +255,6 @@ class CatalogueMap(object):
 
         utils.alert('\n'.join(msg_lines))
 
-    def dump(self, layer):
-        provider = layer.dataProvider()
-        feat = QgsFeature()
-        allAttrs = provider.attributeIndexes()
-        provider.select(allAttrs)
-        while provider.nextFeature(feat):
-            for k, v in feat.attributeMap().items():
-                if k == 1 or k == 2:
-                    print "Feature: %s" % feat.id()
-                    print k, v.toPyObject()
-
 
 class CatalogueRenderer(QgsFeatureRendererV2):
     SymbolKey = collections.namedtuple(
@@ -270,20 +266,12 @@ class CatalogueRenderer(QgsFeatureRendererV2):
         self.default_point.setColor(QtGui.QColor(0, 0, 0))
 
         self.syms = {self.SymbolKey(0, 0, True): self.default_point}
-
-        self.cluster_index_idx = catalogue.field_idx('Cluster_Index')
-        self.cluster_flag_idx = catalogue.field_idx('Cluster_Flag')
-        self.comp_flag_idx = catalogue.field_idx('Completeness_Flag')
         self.catalogue = catalogue
 
     def symbolForFeature(self, feature):
-        attrs = feature.attributeMap()
-        if not attrs.keys():
-            return
-
-        cluster_index = int(attrs[self.cluster_index_idx].toPyObject())
-        cluster_flag = int(attrs[self.cluster_flag_idx].toPyObject())
-        comp_flag = not bool(attrs[self.comp_flag_idx].toPyObject())
+        cluster_index = feature["Cluster_Index"]
+        cluster_flag = feature["Cluster_Flag"]
+        comp_flag = not bool(feature["Completeness_Flag"])
 
         return self.syms.get(
             self.SymbolKey(cluster_index, cluster_flag, comp_flag),
@@ -297,7 +285,7 @@ class CatalogueRenderer(QgsFeatureRendererV2):
                 point = QgsSymbolV2.defaultSymbol(QGis.Point)
                 point.setColor(self.catalogue.cluster_color(cluster_index))
                 point.setSize(1)
-                point.setAlpha(1 - 0.25 * cluster_flag)
+                #point.setAlpha(1 - 0.25 * cluster_flag)
                 self.syms[
                     self.SymbolKey(cluster_index, cluster_flag, False)] = (
                         point)
@@ -305,7 +293,7 @@ class CatalogueRenderer(QgsFeatureRendererV2):
                 point = QgsSymbolV2.defaultSymbol(QGis.Point)
                 point.setColor(self.catalogue.cluster_color(cluster_index))
                 point.setSize(2)
-                point.setAlpha(1 - 0.25 * cluster_flag)
+                #point.setAlpha(1 - 0.25 * cluster_flag)
                 self.syms[
                     self.SymbolKey(cluster_index, cluster_flag, True)] = (
                         point)

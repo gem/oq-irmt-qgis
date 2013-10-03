@@ -1,5 +1,5 @@
 from PyQt4 import QtGui
-from PyQt4.QtCore import QObject, SIGNAL, Qt, QString, pyqtSlot
+from PyQt4.QtCore import QObject, SIGNAL, Qt, pyqtSlot
 
 from qgis.core import QgsVectorFileWriter
 from qgis.gui import QgsMapToolPan, QgsMapToolZoom, QgsMapToolEmitPoint
@@ -80,10 +80,10 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         self.mapWidget.show()
 
         # setup toolbar
-        actionZoomIn = QtGui.QAction(QString("Zoom in"), self)
-        actionZoomOut = QtGui.QAction(QString("Zoom out"), self)
-        actionPan = QtGui.QAction(QString("Pan"), self)
-        actionIdentify = QtGui.QAction(QString("Info"), self)
+        actionZoomIn = QtGui.QAction("Zoom in", self)
+        actionZoomOut = QtGui.QAction("Zoom out", self)
+        actionPan = QtGui.QAction("Pan", self)
+        actionIdentify = QtGui.QAction("Info", self)
         actionZoomIn.setCheckable(True)
         actionZoomOut.setCheckable(True)
         actionPan.setCheckable(True)

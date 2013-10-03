@@ -1,9 +1,13 @@
 import os
 import sys
 import imp
+import sip
+
+for api in ['QString', 'QDate', 'QDateTime', 'QTextStream',
+            'QTime', 'QUrl', 'QVariant']:
+    sip.setapi(api, 2)
 
 from PyQt4 import QtGui
-from PyQt4.QtCore import (SIGNAL, SLOT)
 
 from qgis.core import QgsApplication
 
@@ -15,11 +19,18 @@ PLUGIN_FILE = os.path.expanduser("~/hmtk-plugin.py")
 
 # Main entry to program.  Sets up the main app and create a new window.
 def main(argv):
+
     # load plugins
     if os.path.exists(PLUGIN_FILE):
         imp.load_source('hmtk.plugin', PLUGIN_FILE)
 
     # create Qt application
+
+    # Claim to be QGIS2 so that used plugins that tries to access
+    # QSettings will get the QGIS2 settings
+    QtGui.QApplication.setOrganizationDomain('qgis.org')
+    QtGui.QApplication.setApplicationName('QGIS2')
+
     app = QtGui.QApplication(argv, True)
 
     # setup QGIS
@@ -28,7 +39,7 @@ def main(argv):
 
     # Install a custom exception hook that prints exception into a
     # MessageBox
-    sys.excepthook = excepthook
+    #sys.excepthook = excepthook
 
     # create main window
     wnd = MainWindow()  # classname
