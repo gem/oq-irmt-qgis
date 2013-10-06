@@ -9,16 +9,18 @@ from openquake.nrmllib.node import node_from_nrml
 from openquake.nrmllib.converter import Converter
 
 
-class MainWindow(QtGui.QDialog):
+def tr(name):
+    return QtGui.QApplication.translate(
+        name, name, None, QtGui.QApplication.UnicodeUTF8)
+
+
+class Dialog(QtGui.QDialog):
     def __init__(self, table):
-        QtGui.QMainWindow.__init__(self)
-        tableLabel = QtGui.QLabel("Behold, some data, in a table:")
-        self.customTable = CustomTableView(table)
-        layout = QtGui.QVBoxLayout()
-        layout.addWidget(tableLabel)
-        layout.addWidget(self.customTable)
-        self.setLayout(layout)
-        self.setWindowTitle("Copy and Paste Example")
+        QtGui.QDialog.__init__(self)
+        self.customTable = CustomTableView(table, self)
+        self.customTable.show()
+        self.customTable.tableView.resizeColumnsToContents()
+        self.setWindowTitle(tr("CustomTableView Example"))
 
 
 def main(argv):
@@ -32,9 +34,8 @@ QTableWidget::item:selected
 ''')
     node = node_from_nrml(sys.argv[1])[0]
     tbl = Converter.node_to_tables(node)
-    mw = MainWindow(tbl['DiscreteVulnerabilitySet'])
+    mw = Dialog(tbl['DiscreteVulnerabilitySet'])
     mw.show()
-    # tableView.resizeColumnsToContents() has no effect
     sys.exit(app.exec_())
 
 if __name__ == '__main__':
