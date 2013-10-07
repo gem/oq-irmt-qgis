@@ -1,4 +1,4 @@
-from PyQt4 import QtGui, QtCore
+from PyQt4 import QtGui
 
 from plot_occurrence_model import GutenbergRichterModel, plotSeismicityRates
 import completeness_dialog
@@ -92,7 +92,8 @@ class FigureCanvasQTAggWidget(FigureCanvasQTAgg):
             self.axes.loglog(xmarker, ymarker, 'ks')
         self.axes.set_xlabel('Time (years)', dict(fontsize=13))
         self.axes.set_ylabel(
-            '$\sigma_{\lambda} = \sqrt{\lambda} / \sqrt{T}$', dict(fontsize=13))
+            '$\sigma_{\lambda} = \sqrt{\lambda} / \sqrt{T}$',
+            dict(fontsize=13))
         self.draw()
 
 
@@ -114,8 +115,7 @@ class GridInputWidget(QtGui.QPushButton):
             dilate = 0
 
         self.grid_dialog.set_grid(
-            Grid.make_from_catalogue(
-                self.catalogue, 1, dilate))
+            Grid.make_from_catalogue(self.catalogue, 1, dilate))
         if self.grid_dialog.exec_():
             self.grid = self.grid_dialog.get_grid()
 
@@ -139,8 +139,7 @@ class CompletenessDialog(QtGui.QDialog, completeness_dialog.Ui_Dialog):
         ret = []
 
         for row in range(table.rowCount()):
-            data = [table.item(row, 0).data(0).toString(),
-                    table.item(row, 1).data(0).toString()]
+            data = [table.item(row, 0).data(0), table.item(row, 1).data(0)]
 
             if not data[0]:
                 break
@@ -181,9 +180,9 @@ class GridDialog(QtGui.QDialog, grid_dialog.Ui_Dialog):
         ret = []
 
         for row in range(table.rowCount()):
-            data = [table.item(row, 0).data(0).toString(),
-                    table.item(row, 1).data(0).toString(),
-                    table.item(row, 2).data(0).toString()]
+            data = [table.item(row, 0).data(0),
+                    table.item(row, 1).data(0),
+                    table.item(row, 2).data(0)]
 
             ret.extend([float(d) for d in data])
 
@@ -199,4 +198,4 @@ class GridDialog(QtGui.QDialog, grid_dialog.Ui_Dialog):
                 item = QtGui.QTableWidgetItem()
                 table.setItem(i / 3, i % 3, item)
 
-            item.setData(0, QtCore.QVariant(str(grid.as_list()[i])))
+            item.setData(0, str(grid.as_list()[i]))

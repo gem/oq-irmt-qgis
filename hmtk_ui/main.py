@@ -39,7 +39,7 @@ def main(argv):
 
     # Install a custom exception hook that prints exception into a
     # MessageBox
-    #sys.excepthook = excepthook
+    sys.excepthook = excepthook
 
     # create main window
     wnd = MainWindow()  # classname

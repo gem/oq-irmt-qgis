@@ -80,10 +80,11 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         self.mapWidget.show()
 
         # setup toolbar
-        actionZoomIn = QtGui.QAction("Zoom in", self)
-        actionZoomOut = QtGui.QAction("Zoom out", self)
-        actionPan = QtGui.QAction("Pan", self)
-        actionIdentify = QtGui.QAction("Info", self)
+        group = QtGui.QActionGroup(self)
+        actionZoomIn = QtGui.QAction("Zoom in", group)
+        actionZoomOut = QtGui.QAction("Zoom out", group)
+        actionPan = QtGui.QAction("Pan", group)
+        actionIdentify = QtGui.QAction("Info", group)
         actionZoomIn.setCheckable(True)
         actionZoomOut.setCheckable(True)
         actionPan.setCheckable(True)
