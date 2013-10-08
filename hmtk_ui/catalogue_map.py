@@ -354,7 +354,6 @@ def create_raster_layer(matrix):
     driver = gdal.GetDriverByName("GTiff")
 
     filename = tempfile.mktemp(prefix="hmtk", suffix=".tif")
-    filename = "/Users/matley/prova.tif"
 
     # sort the data by lon, lat
     gridded_data = numpy.array(
