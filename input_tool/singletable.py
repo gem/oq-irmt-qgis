@@ -18,6 +18,8 @@ class Dialog(QtGui.QDialog):
     def __init__(self, table):
         QtGui.QDialog.__init__(self)
         self.customTable = CustomTableView(table, self)
+        self.customTable.showOnCondition(
+            lambda rec: rec['vulnerabilitySetID'] == 'PAGER')
         self.customTable.show()
         self.customTable.tableView.resizeColumnsToContents()
         self.setWindowTitle(tr("CustomTableView Example"))
@@ -34,7 +36,7 @@ QTableWidget::item:selected
 ''')
     node = node_from_nrml(sys.argv[1])[0]
     tbl = Converter.node_to_tables(node)
-    mw = Dialog(tbl['DiscreteVulnerabilitySet'])
+    mw = Dialog(tbl['DiscreteVulnerability'])
     mw.show()
     sys.exit(app.exec_())
 

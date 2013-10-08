@@ -30,6 +30,9 @@ class CustomTableModel(QtCore.QAbstractTableModel):
             flag |= QtCore.Qt.ItemIsEditable
         return flag
 
+    def primaryKey(self, index):
+        return self.table[index.row()].pkey
+
     def data(self, index, role=QtCore.Qt.DisplayRole):
         if role in (QtCore.Qt.DisplayRole, QtCore.Qt.EditRole):
             row = index.row()
@@ -85,6 +88,9 @@ class CustomTableModel(QtCore.QAbstractTableModel):
         finally:
             self.endRemoveRows()
 
+    def name(self):
+        return self.table.recordtype.__name__
+
 
 class CustomTableView(QtGui.QWidget):
     """
@@ -105,6 +111,8 @@ class CustomTableView(QtGui.QWidget):
 
     def removeRows(self):
         row_ids = set(item.row() for item in self.tableView.selectedIndexes())
+        if not row_ids:
+            return
         self.tableModel.removeRows(min(row_ids), len(row_ids))
         # TODO: notification on errors
 
@@ -112,13 +120,15 @@ class CustomTableView(QtGui.QWidget):
         self.tableView = QtGui.QTableView(self.parent)
         self.tableView.setModel(self.tableModel)
         self.tableView.horizontalHeader().setStretchLastSection(True)
+        self.tableView.setSizePolicy(  # ignored :-(
+            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
         self.tableView.setSelectionBehavior(
             QtGui.QAbstractItemView.SelectRows)
         #self.tableView.setSelectionMode(
         #    QtGui.QAbstractItemView.SingleSelection)
         self.tableView.setAlternatingRowColors(True)
 
-        self.tableLabel = QtGui.QLabel(tr("Behold, some data, in a table:"))
+        self.tableLabel = QtGui.QLabel(self.tableModel.name())
 
         self.layout = QtGui.QVBoxLayout()
         self.layout.addWidget(self.tableLabel)
@@ -136,8 +146,16 @@ class CustomTableView(QtGui.QWidget):
 
         self.setLayout(self.layout)
 
+    def showOnCondition(self, cond):
+        for row in range(self.tableModel.rowCount()):
+            if cond(self.tableModel.table[row]):
+                self.tableView.showRow(row)
+            else:
+                self.tableView.hideRow(row)
+
     def show(self):
-        self.tableView.resizeColumnsToContents()  # has not effect :-(
+        self.tableView.resizeRowsToContents()  # has no effect :-(
+        self.tableView.resizeColumnsToContents()  # has no effect :-(
         QtGui.QWidget.show(self)
 
     def keyPressEvent(self, event):
@@ -160,3 +178,43 @@ class CustomTableView(QtGui.QWidget):
                 r.append(self.tableModel.data(idx))
             text.append('\t'.join(r))
         QtGui.QApplication.clipboard().setText('\n'.join(text))
+
+
+class TripleTableWidget(QtGui.QWidget):
+
+    def __init__(self, t1, t2, t3, parent=None):
+        QtGui.QWidget.__init__(self, parent)
+        self.tv1 = CustomTableView(t1, parent)
+        self.tv2 = CustomTableView(t2, parent)
+        self.tv3 = CustomTableView(t3, parent)
+        self.setupUi()
+        self.tv1.tableView.clicked.connect(self.show_tv2)
+        self.tv2.tableView.clicked.connect(self.show_tv3)
+
+        # hide
+        self.tv2.tableView.hideColumn(0)
+        self.tv3.tableView.hideColumn(0)
+        self.tv3.tableView.hideColumn(1)
+        self.show_tv2(QtCore.QModelIndex().sibling(0, 0))
+        self.show_tv3(QtCore.QModelIndex().sibling(0, 0))
+
+    def show_tv2(self, row):
+        vset, = self.tv1.tableModel.primaryKey(row)
+        self.tv2.showOnCondition(lambda rec: rec[0] == vset)
+        self.show_tv3(QtCore.QModelIndex().sibling(0, 0))
+
+    def show_tv3(self, row):
+        k0, k1 = self.tv2.tableModel.primaryKey(row)
+
+        def cond(rec):
+            return (rec[0] == k0 and rec[1] == k1)
+        self.tv3.showOnCondition(cond)
+
+    def setupUi(self):
+        layout = QtGui.QVBoxLayout()
+        hlayout = QtGui.QHBoxLayout()
+        hlayout.addWidget(self.tv1)
+        hlayout.addWidget(self.tv2)
+        layout.addLayout(hlayout)
+        layout.addWidget(self.tv3)
+        self.setLayout(layout)
