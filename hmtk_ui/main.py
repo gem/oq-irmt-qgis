@@ -7,7 +7,7 @@ for api in ['QString', 'QDate', 'QDateTime', 'QTextStream',
             'QTime', 'QUrl', 'QVariant']:
     sip.setapi(api, 2)
 
-from PyQt4 import QtGui
+from PyQt4 import QtGui, QtCore
 
 from qgis.core import QgsApplication
 
@@ -28,8 +28,11 @@ def main(argv):
 
     # Claim to be QGIS2 so that used plugins that tries to access
     # QSettings will get the QGIS2 settings
-    QtGui.QApplication.setOrganizationDomain('qgis.org')
     QtGui.QApplication.setApplicationName('QGIS2')
+    QtGui.QApplication.setOrganizationDomain('qgis.org')
+
+    if QtCore.QSettings().value('locale/userLocale') is None:
+        QtGui.QApplication.setOrganizationDomain('QGIS')
 
     app = QtGui.QApplication(argv, True)
 
