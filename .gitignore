@@ -2,7 +2,7 @@
 *~
 /*/.idea/*
 *.rdb
-
+*.db
 .\#*
 
 .ropeproject

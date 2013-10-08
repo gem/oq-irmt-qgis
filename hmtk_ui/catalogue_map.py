@@ -14,7 +14,8 @@ from qgis.core import (
     QgsMapLayerRegistry, QgsPluginLayerRegistry,
     QgsFeatureRendererV2, QgsSymbolV2, QGis,
     QgsRectangle, QgsCoordinateReferenceSystem,
-    QgsCoordinateTransform, QgsFeatureRequest)
+    QgsCoordinateTransform, QgsFeatureRequest,
+    QgsRasterShader, QgsColorRampShader, QgsStyleV2)
 from qgis.gui import QgsMapCanvasLayer
 
 from openlayers_plugin.openlayers_plugin import (
@@ -322,7 +323,6 @@ class CatalogueRenderer(QgsFeatureRendererV2):
                 point = QgsSymbolV2.defaultSymbol(QGis.Point)
                 point.setColor(self.catalogue.cluster_color(cluster_index))
                 point.setSize(1)
-                #point.setAlpha(1 - 0.25 * cluster_flag)
                 self.syms[
                     self.SymbolKey(cluster_index, cluster_flag, False)] = (
                         point)
@@ -330,7 +330,6 @@ class CatalogueRenderer(QgsFeatureRendererV2):
                 point = QgsSymbolV2.defaultSymbol(QGis.Point)
                 point.setColor(self.catalogue.cluster_color(cluster_index))
                 point.setSize(2)
-                #point.setAlpha(1 - 0.25 * cluster_flag)
                 self.syms[
                     self.SymbolKey(cluster_index, cluster_flag, True)] = (
                         point)
@@ -393,6 +392,35 @@ def create_raster_layer(matrix):
     fileInfo = QFileInfo(filename)
     baseName = fileInfo.baseName()
     layer = QgsRasterLayer(filename, baseName)
+
+    stat = layer.dataProvider().bandStatistics(1)
+
+    minVal = stat.minimumValue
+    maxVal = stat.maximumValue
+    numberOfEntries = 20
+
+    colorRamp = QgsStyleV2().defaultStyle().colorRamp("Spectral")
+    currentValue = float(minVal)
+    intervalDiff = float(maxVal - minVal) / float(numberOfEntries - 1)
+
+    colorRampItems = []
+    for i in xrange(numberOfEntries):
+        item = QgsColorRampShader.ColorRampItem()
+        item.value = currentValue
+        item.label = unicode(currentValue)
+        currentValue += intervalDiff
+        item.color = colorRamp.color(float(i) / float(numberOfEntries))
+        colorRampItems.append(item)
+
+    rasterShader = QgsRasterShader()
+    colorRampShader = QgsColorRampShader()
+
+    colorRampShader.setColorRampItemList(colorRampItems)
+    colorRampShader.setColorRampType(QgsColorRampShader.INTERPOLATED)
+    rasterShader.setRasterShaderFunction(colorRampShader)
+
+    layer.setDrawingStyle('SingleBandPseudoColor')
+    layer.renderer().setShader(rasterShader)
 
     QgsMapLayerRegistry.instance().addMapLayer(layer)
 
