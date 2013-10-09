@@ -10,7 +10,6 @@ from hmtk.seismicity import (
     DECLUSTERER_METHODS, COMPLETENESS_METHODS, OCCURRENCE_METHODS,
     MAX_MAGNITUDE_METHODS, SMOOTHED_SEISMICITY_METHODS)
 
-
 from openquake.nrmllib.hazard.parsers import SourceModelParser
 
 from utils import alert
@@ -204,8 +203,8 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
             QtGui.QFileDialog.getOpenFileName(
                 self, 'Open Source Model (NRML 4)', '.xml'))
 
-        for s in parser.parse():
-            self.catalogue_map.add_source_layer(s)
+        self.catalogue_map.add_source_layers(
+            [s for s in parser.parse(validate=False)])
 
     def setupActions(self):
         """

@@ -73,6 +73,7 @@ class CatalogueMap(object):
 
         # initialized later
         self.raster_layer = None
+        self.source_layers = []
 
         # Initialize Map
         self.reset_map()
@@ -84,9 +85,14 @@ class CatalogueMap(object):
         """
         Reset the map by loading the catalogue and the basemap layers
         """
-        self.canvas.setLayerSet([
-            QgsMapCanvasLayer(self.catalogue_layer),
-            QgsMapCanvasLayer(self.ol_plugin.layer)])
+        catalogue = [QgsMapCanvasLayer(self.catalogue_layer)]
+        if self.raster_layer:
+            catalogue.append(QgsMapCanvasLayer(self.raster_layer))
+
+        self.canvas.setLayerSet(
+            catalogue +
+            [QgsMapCanvasLayer(s) for s in self.source_layers] +
+            [QgsMapCanvasLayer(self.ol_plugin.layer)])
         self.canvas.refresh()
 
     def populate_catalogue_layer(self, catalogue):
@@ -293,20 +299,34 @@ class CatalogueMap(object):
         self.canvas.refresh()
         self.canvas.zoomByFactor(1.01)
 
-    def add_source_layer(self, source):
-        SOURCE_LAYER_BUILDERS = {
-            'PointSource': create_point_source_layer,
-            'AreaSource': create_area_source_layer,
-            'SimpleFaultSource': create_simple_fault_source_layer,
-            'ComplexFaultSource': create_complex_fault_source_layer}
+    def add_source_layers(self, sources):
+        geometries = {
+            'PointSource': 'Point',
+            'AreaSource': 'Polygon',
+            'SimpleFaultSource': 'LineString',
+            'ComplexFaultSource': 'MultiPolygon'}
 
-        self.source_layers.append(SOURCE_LAYER_BUILDERS[
-            source.__class__.__name__](self.canvas))
+        source_dict = collections.defaultdict(list)
 
-        self.canvas.setLayerSet(
-            [QgsMapCanvasLayer(self.catalogue_layer),
-             QgsMapCanvasLayer(self.raster_layer),
-             QgsMapCanvasLayer(self.ol_plugin.layer)])
+        for s in sources:
+            source_dict[s.__class__.__name__].append(s)
+
+        for stype, sources in source_dict.items():
+            layer = QgsVectorLayer(
+                '%s?crs=epsg:4326' % geometries[stype], stype, 'memory')
+            QgsMapLayerRegistry.instance().addMapLayer(layer)
+            pr = layer.dataProvider()
+
+            features = []
+            for source in sources:
+                fet = QgsFeature()
+                fet.setGeometry(QgsGeometry.fromWkt(source.geometry.wkt))
+                features.append(fet)
+            pr.addFeatures(features)
+            layer.updateExtents()
+            self.source_layers.append(layer)
+
+        self.reset_map()
 
 
 class CatalogueRenderer(QgsFeatureRendererV2):
@@ -448,19 +468,3 @@ def make_inmemory_layer(name, renderer):
 
     layer.setRendererV2(renderer)
     return layer
-
-
-def create_point_source_layer(canvas):
-    pass
-
-
-def  create_area_source_layer(canvas):
-    pass
-
-
-def create_simple_fault_source_layer(canvas):
-    pass
-
-
-def create_complex_fault_source_layer(canvas):
-    pass
