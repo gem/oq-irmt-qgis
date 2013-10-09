@@ -11,6 +11,8 @@ from hmtk.seismicity import (
     MAX_MAGNITUDE_METHODS, SMOOTHED_SEISMICITY_METHODS)
 
 
+from openquake.nrmllib.hazard.parsers import SourceModelParser
+
 from utils import alert
 from tab import Tab
 from catalogue_model import CatalogueModel
@@ -172,7 +174,7 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
             if dlg.exec_():
                 self.catalogue_model.completeness_table = dlg.get_table()
 
-    @pyqtSlot(name='on_actionLoad_catalogue_triggered')
+    @pyqtSlot(name='on_actionLoadCatalogue_triggered')
     def load_catalogue(self):
         """
         Open a file dialog, load a catalogue from a csv file,
@@ -191,6 +193,19 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         self.completenessChart.draw_timeline(self.catalogue_model.catalogue)
         self.recurrenceModelChart.draw_seismicity_rate(
             self.catalogue_model.catalogue, None)
+
+    @pyqtSlot(name='on_actionLoadSourceNRML_triggered')
+    def load_fault_source(self):
+        """
+        Open a file dialog, load a source model from a nrml file,
+        draw the source on the map
+        """
+        parser = SourceModelParser(
+            QtGui.QFileDialog.getOpenFileName(
+                self, 'Open Source Model (NRML 4)', '.xml'))
+
+        for s in parser.parse():
+            self.catalogue_map.add_source_layer(s)
 
     def setupActions(self):
         """

@@ -51,7 +51,7 @@ def main(argv):
     if sys.platform == "darwin":
         wnd.raise_()
 
-    wnd.load_catalogue()
+    # wnd.load_catalogue()
 
     # Connect signal for app finish
     def on_quit():

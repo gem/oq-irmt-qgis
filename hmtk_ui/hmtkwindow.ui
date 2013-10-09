@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1220</width>
+    <width>1218</width>
     <height>756</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>HMTKWindow</string>
+   <string>Hazard Modeller's Toolkit</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QHBoxLayout" name="horizontalLayout">
@@ -297,7 +297,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1220</width>
+     <width>1218</width>
      <height>22</height>
     </rect>
    </property>
@@ -310,7 +310,14 @@
       <string>Export</string>
      </property>
     </widget>
-    <addaction name="actionLoad_catalogue"/>
+    <widget class="QMenu" name="menuLoad_catalogue">
+     <property name="title">
+      <string>Load</string>
+     </property>
+     <addaction name="actionLoadCatalogue"/>
+     <addaction name="actionLoadSourceNRML"/>
+    </widget>
+    <addaction name="menuLoad_catalogue"/>
     <addaction name="actionSave_catalogue"/>
     <addaction name="menuExport"/>
    </widget>
@@ -338,14 +345,6 @@
     <bool>false</bool>
    </attribute>
   </widget>
-  <action name="actionLoad_catalogue">
-   <property name="text">
-    <string>Load catalogue</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+O</string>
-   </property>
-  </action>
   <action name="actionDeclustering">
    <property name="text">
     <string>Declustering</string>
@@ -389,6 +388,16 @@
   <action name="actionSave_catalogue">
    <property name="text">
     <string>Save catalogue</string>
+   </property>
+  </action>
+  <action name="actionLoadCatalogue">
+   <property name="text">
+    <string>Catalogue</string>
+   </property>
+  </action>
+  <action name="actionLoadSourceNRML">
+   <property name="text">
+    <string>Source Model (NRML)</string>
    </property>
   </action>
  </widget>

@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'hmtk_ui/hmtkwindow.ui'
+# Form implementation generated from reading ui file 'hmtkwindow.ui'
 #
-# Created: Tue Sep 10 18:17:07 2013
-#      by: PyQt4 UI code generator 4.9.4
+# Created: Tue Oct  8 14:59:04 2013
+#      by: PyQt4 UI code generator 4.10.3
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,17 +12,27 @@ from PyQt4 import QtCore, QtGui
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
-    _fromUtf8 = lambda s: s
+    def _fromUtf8(s):
+        return s
+
+try:
+    _encoding = QtGui.QApplication.UnicodeUTF8
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig, _encoding)
+except AttributeError:
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig)
 
 class Ui_HMTKWindow(object):
     def setupUi(self, HMTKWindow):
         HMTKWindow.setObjectName(_fromUtf8("HMTKWindow"))
-        HMTKWindow.resize(1220, 756)
+        HMTKWindow.resize(1218, 756)
         self.centralWidget = QtGui.QWidget(HMTKWindow)
         self.centralWidget.setObjectName(_fromUtf8("centralWidget"))
         self.horizontalLayout = QtGui.QHBoxLayout(self.centralWidget)
         self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
         self.stackedFormWidget = QtGui.QStackedWidget(self.centralWidget)
+        self.stackedFormWidget.setMaximumSize(QtCore.QSize(500, 16777215))
         self.stackedFormWidget.setObjectName(_fromUtf8("stackedFormWidget"))
         self.stackedWidgetDeclustering = QtGui.QWidget()
         self.stackedWidgetDeclustering.setObjectName(_fromUtf8("stackedWidgetDeclustering"))
@@ -168,20 +178,20 @@ class Ui_HMTKWindow(object):
         self.horizontalLayout.addLayout(self.outputVerticalLayout)
         HMTKWindow.setCentralWidget(self.centralWidget)
         self.menuBar = QtGui.QMenuBar(HMTKWindow)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1220, 22))
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1218, 22))
         self.menuBar.setObjectName(_fromUtf8("menuBar"))
         self.menuFile = QtGui.QMenu(self.menuBar)
         self.menuFile.setObjectName(_fromUtf8("menuFile"))
         self.menuExport = QtGui.QMenu(self.menuFile)
         self.menuExport.setObjectName(_fromUtf8("menuExport"))
+        self.menuLoad_catalogue = QtGui.QMenu(self.menuFile)
+        self.menuLoad_catalogue.setObjectName(_fromUtf8("menuLoad_catalogue"))
         self.menuTools = QtGui.QMenu(self.menuBar)
         self.menuTools.setObjectName(_fromUtf8("menuTools"))
         HMTKWindow.setMenuBar(self.menuBar)
         self.toolBar = QtGui.QToolBar(HMTKWindow)
         self.toolBar.setObjectName(_fromUtf8("toolBar"))
         HMTKWindow.addToolBar(QtCore.Qt.TopToolBarArea, self.toolBar)
-        self.actionLoad_catalogue = QtGui.QAction(HMTKWindow)
-        self.actionLoad_catalogue.setObjectName(_fromUtf8("actionLoad_catalogue"))
         self.actionDeclustering = QtGui.QAction(HMTKWindow)
         self.actionDeclustering.setObjectName(_fromUtf8("actionDeclustering"))
         self.actionRecurrenceModel = QtGui.QAction(HMTKWindow)
@@ -194,7 +204,13 @@ class Ui_HMTKWindow(object):
         self.actionSmoothedSeismicity.setObjectName(_fromUtf8("actionSmoothedSeismicity"))
         self.actionSave_catalogue = QtGui.QAction(HMTKWindow)
         self.actionSave_catalogue.setObjectName(_fromUtf8("actionSave_catalogue"))
-        self.menuFile.addAction(self.actionLoad_catalogue)
+        self.actionLoadCatalogue = QtGui.QAction(HMTKWindow)
+        self.actionLoadCatalogue.setObjectName(_fromUtf8("actionLoadCatalogue"))
+        self.actionLoadSourceNRML = QtGui.QAction(HMTKWindow)
+        self.actionLoadSourceNRML.setObjectName(_fromUtf8("actionLoadSourceNRML"))
+        self.menuLoad_catalogue.addAction(self.actionLoadCatalogue)
+        self.menuLoad_catalogue.addAction(self.actionLoadSourceNRML)
+        self.menuFile.addAction(self.menuLoad_catalogue.menuAction())
         self.menuFile.addAction(self.actionSave_catalogue)
         self.menuFile.addAction(self.menuExport.menuAction())
         self.menuTools.addAction(self.actionDeclustering)
@@ -210,36 +226,37 @@ class Ui_HMTKWindow(object):
         QtCore.QMetaObject.connectSlotsByName(HMTKWindow)
 
     def retranslateUi(self, HMTKWindow):
-        HMTKWindow.setWindowTitle(QtGui.QApplication.translate("HMTKWindow", "HMTKWindow", None, QtGui.QApplication.UnicodeUTF8))
-        self.declusteringGroupBox.setTitle(QtGui.QApplication.translate("HMTKWindow", "Declustering", None, QtGui.QApplication.UnicodeUTF8))
-        self.declusterButton.setText(QtGui.QApplication.translate("HMTKWindow", "Decluster", None, QtGui.QApplication.UnicodeUTF8))
-        self.declusteringPurgeButton.setText(QtGui.QApplication.translate("HMTKWindow", "Purge Catalogue", None, QtGui.QApplication.UnicodeUTF8))
-        self.completenessGroupBox.setTitle(QtGui.QApplication.translate("HMTKWindow", "Completeness", None, QtGui.QApplication.UnicodeUTF8))
-        self.completenessButton.setText(QtGui.QApplication.translate("HMTKWindow", "Run Analysis", None, QtGui.QApplication.UnicodeUTF8))
-        self.completenessPurgeButton.setText(QtGui.QApplication.translate("HMTKWindow", "Purge Catalogue", None, QtGui.QApplication.UnicodeUTF8))
-        self.recurrenceModelGroupBox.setTitle(QtGui.QApplication.translate("HMTKWindow", "Recurrence Model", None, QtGui.QApplication.UnicodeUTF8))
-        self.recurrenceModelButton.setText(QtGui.QApplication.translate("HMTKWindow", "Run Analysis", None, QtGui.QApplication.UnicodeUTF8))
-        self.maxMagnitudeGroupBox.setTitle(QtGui.QApplication.translate("HMTKWindow", "Maximum Magnitude", None, QtGui.QApplication.UnicodeUTF8))
-        self.maxMagnitudeButton.setText(QtGui.QApplication.translate("HMTKWindow", "Run Analysis", None, QtGui.QApplication.UnicodeUTF8))
-        self.smoothedSeismicityGroupBox.setTitle(QtGui.QApplication.translate("HMTKWindow", "Smoothed Seismicity", None, QtGui.QApplication.UnicodeUTF8))
-        self.smoothedSeismicityButton.setText(QtGui.QApplication.translate("HMTKWindow", "Run Analysis", None, QtGui.QApplication.UnicodeUTF8))
-        self.menuFile.setTitle(QtGui.QApplication.translate("HMTKWindow", "File", None, QtGui.QApplication.UnicodeUTF8))
-        self.menuExport.setTitle(QtGui.QApplication.translate("HMTKWindow", "Export", None, QtGui.QApplication.UnicodeUTF8))
-        self.menuTools.setTitle(QtGui.QApplication.translate("HMTKWindow", "Tools", None, QtGui.QApplication.UnicodeUTF8))
-        self.toolBar.setWindowTitle(QtGui.QApplication.translate("HMTKWindow", "toolBar", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionLoad_catalogue.setText(QtGui.QApplication.translate("HMTKWindow", "Load catalogue", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionLoad_catalogue.setShortcut(QtGui.QApplication.translate("HMTKWindow", "Ctrl+O", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionDeclustering.setText(QtGui.QApplication.translate("HMTKWindow", "Declustering", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionDeclustering.setShortcut(QtGui.QApplication.translate("HMTKWindow", "Ctrl+1", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionRecurrenceModel.setText(QtGui.QApplication.translate("HMTKWindow", "Recurrence Model", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionRecurrenceModel.setShortcut(QtGui.QApplication.translate("HMTKWindow", "Ctrl+3", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionCompleteness.setText(QtGui.QApplication.translate("HMTKWindow", "Completeness", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionCompleteness.setShortcut(QtGui.QApplication.translate("HMTKWindow", "Ctrl+2", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionMaximumMagnitude.setText(QtGui.QApplication.translate("HMTKWindow", "Maximum Magnitude", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionMaximumMagnitude.setShortcut(QtGui.QApplication.translate("HMTKWindow", "Ctrl+4", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionSmoothedSeismicity.setText(QtGui.QApplication.translate("HMTKWindow", "Smoothed Seismicity", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionSmoothedSeismicity.setShortcut(QtGui.QApplication.translate("HMTKWindow", "Ctrl+5", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionSave_catalogue.setText(QtGui.QApplication.translate("HMTKWindow", "Save catalogue", None, QtGui.QApplication.UnicodeUTF8))
+        HMTKWindow.setWindowTitle(_translate("HMTKWindow", "Hazard Modeller\'s Toolkit", None))
+        self.declusteringGroupBox.setTitle(_translate("HMTKWindow", "Declustering", None))
+        self.declusterButton.setText(_translate("HMTKWindow", "Decluster", None))
+        self.declusteringPurgeButton.setText(_translate("HMTKWindow", "Purge Catalogue", None))
+        self.completenessGroupBox.setTitle(_translate("HMTKWindow", "Completeness", None))
+        self.completenessButton.setText(_translate("HMTKWindow", "Run Analysis", None))
+        self.completenessPurgeButton.setText(_translate("HMTKWindow", "Purge Catalogue", None))
+        self.recurrenceModelGroupBox.setTitle(_translate("HMTKWindow", "Recurrence Model", None))
+        self.recurrenceModelButton.setText(_translate("HMTKWindow", "Run Analysis", None))
+        self.maxMagnitudeGroupBox.setTitle(_translate("HMTKWindow", "Maximum Magnitude", None))
+        self.maxMagnitudeButton.setText(_translate("HMTKWindow", "Run Analysis", None))
+        self.smoothedSeismicityGroupBox.setTitle(_translate("HMTKWindow", "Smoothed Seismicity", None))
+        self.smoothedSeismicityButton.setText(_translate("HMTKWindow", "Run Analysis", None))
+        self.menuFile.setTitle(_translate("HMTKWindow", "File", None))
+        self.menuExport.setTitle(_translate("HMTKWindow", "Export", None))
+        self.menuLoad_catalogue.setTitle(_translate("HMTKWindow", "Load", None))
+        self.menuTools.setTitle(_translate("HMTKWindow", "Tools", None))
+        self.toolBar.setWindowTitle(_translate("HMTKWindow", "toolBar", None))
+        self.actionDeclustering.setText(_translate("HMTKWindow", "Declustering", None))
+        self.actionDeclustering.setShortcut(_translate("HMTKWindow", "Ctrl+1", None))
+        self.actionRecurrenceModel.setText(_translate("HMTKWindow", "Recurrence Model", None))
+        self.actionRecurrenceModel.setShortcut(_translate("HMTKWindow", "Ctrl+3", None))
+        self.actionCompleteness.setText(_translate("HMTKWindow", "Completeness", None))
+        self.actionCompleteness.setShortcut(_translate("HMTKWindow", "Ctrl+2", None))
+        self.actionMaximumMagnitude.setText(_translate("HMTKWindow", "Maximum Magnitude", None))
+        self.actionMaximumMagnitude.setShortcut(_translate("HMTKWindow", "Ctrl+4", None))
+        self.actionSmoothedSeismicity.setText(_translate("HMTKWindow", "Smoothed Seismicity", None))
+        self.actionSmoothedSeismicity.setShortcut(_translate("HMTKWindow", "Ctrl+5", None))
+        self.actionSave_catalogue.setText(_translate("HMTKWindow", "Save catalogue", None))
+        self.actionLoadCatalogue.setText(_translate("HMTKWindow", "Catalogue", None))
+        self.actionLoadSourceNRML.setText(_translate("HMTKWindow", "Source Model (NRML)", None))
 
 from widgets import FigureCanvasQTAggWidget
 from qgis.gui import QgsMapCanvas

@@ -293,6 +293,21 @@ class CatalogueMap(object):
         self.canvas.refresh()
         self.canvas.zoomByFactor(1.01)
 
+    def add_source_layer(self, source):
+        SOURCE_LAYER_BUILDERS = {
+            'PointSource': create_point_source_layer,
+            'AreaSource': create_area_source_layer,
+            'SimpleFaultSource': create_simple_fault_source_layer,
+            'ComplexFaultSource': create_complex_fault_source_layer}
+
+        self.source_layers.append(SOURCE_LAYER_BUILDERS[
+            source.__class__.__name__](self.canvas))
+
+        self.canvas.setLayerSet(
+            [QgsMapCanvasLayer(self.catalogue_layer),
+             QgsMapCanvasLayer(self.raster_layer),
+             QgsMapCanvasLayer(self.ol_plugin.layer)])
+
 
 class CatalogueRenderer(QgsFeatureRendererV2):
     SymbolKey = collections.namedtuple(
@@ -433,3 +448,19 @@ def make_inmemory_layer(name, renderer):
 
     layer.setRendererV2(renderer)
     return layer
+
+
+def create_point_source_layer(canvas):
+    pass
+
+
+def  create_area_source_layer(canvas):
+    pass
+
+
+def create_simple_fault_source_layer(canvas):
+    pass
+
+
+def create_complex_fault_source_layer(canvas):
+    pass
