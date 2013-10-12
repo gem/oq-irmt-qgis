@@ -1,5 +1,3 @@
-# TODO. table tab, result table, source/catalog from platform, reload/load plugins, undo (backup on files)
-
 import os
 import sys
 import imp
@@ -10,6 +8,7 @@ for api in ['QString', 'QDate', 'QDateTime', 'QTextStream',
     sip.setapi(api, 2)
 
 from PyQt4 import QtGui, QtCore
+import images_rc
 
 from qgis.core import QgsApplication
 

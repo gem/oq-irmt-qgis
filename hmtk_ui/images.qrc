@@ -1,8 +1,0 @@
-<RCC>
-  <qresource prefix="/images">
-    <file alias="mActionIdentify.svg">images/mActionIdentify.svg</file>
-    <file alias="mActionPan.svg">images/mActionPan.svg</file>
-    <file alias="mActionZoomIn.svg">images/mActionZoomIn.svg</file>
-    <file alias="mActionZoomOut.svg">images/mActionZoomOut.svg</file>
-  </qresource>
-</RCC>

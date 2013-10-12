@@ -1,0 +1,8 @@
+<RCC>
+  <qresource>
+    <file>zoomIn.png</file>
+    <file>identify.png</file>
+    <file>pan.png</file>
+    <file>zoomOut.png</file>
+  </qresource>
+</RCC>

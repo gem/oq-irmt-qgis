@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'hmtkwindow.ui'
 #
-# Created: Sat Oct 12 05:36:22 2013
+# Created: Sat Oct 12 17:17:03 2013
 #      by: PyQt4 UI code generator 4.10.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -271,26 +271,26 @@ class Ui_HMTKWindow(object):
         self.actionZoomIn = QtGui.QAction(HMTKWindow)
         self.actionZoomIn.setCheckable(True)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(_fromUtf8("images/mActionZoomIn.svg")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(_fromUtf8(":/zoomIn.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.actionZoomIn.setIcon(icon)
         self.actionZoomIn.setObjectName(_fromUtf8("actionZoomIn"))
         self.actionZoomOut = QtGui.QAction(HMTKWindow)
         self.actionZoomOut.setCheckable(True)
         icon1 = QtGui.QIcon()
-        icon1.addPixmap(QtGui.QPixmap(_fromUtf8(":/images/mActionZoomOut.svg")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon1.addPixmap(QtGui.QPixmap(_fromUtf8(":/zoomOut.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.actionZoomOut.setIcon(icon1)
         self.actionZoomOut.setObjectName(_fromUtf8("actionZoomOut"))
         self.actionPan = QtGui.QAction(HMTKWindow)
         self.actionPan.setCheckable(True)
         self.actionPan.setChecked(True)
         icon2 = QtGui.QIcon()
-        icon2.addPixmap(QtGui.QPixmap(_fromUtf8(":/images/mActionPan.svg")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon2.addPixmap(QtGui.QPixmap(_fromUtf8(":/pan.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.actionPan.setIcon(icon2)
         self.actionPan.setObjectName(_fromUtf8("actionPan"))
         self.actionIdentify = QtGui.QAction(HMTKWindow)
         self.actionIdentify.setCheckable(True)
         icon3 = QtGui.QIcon()
-        icon3.addPixmap(QtGui.QPixmap(_fromUtf8(":/images/mActionIdentify.svg")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon3.addPixmap(QtGui.QPixmap(_fromUtf8(":/identify.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.actionIdentify.setIcon(icon3)
         self.actionIdentify.setObjectName(_fromUtf8("actionIdentify"))
         self.actionUndo = QtGui.QAction(HMTKWindow)

@@ -617,8 +617,8 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset>
-     <normaloff>images/mActionZoomIn.svg</normaloff>images/mActionZoomIn.svg</iconset>
+    <iconset resource="images/images.qrc">
+     <normaloff>:/zoomIn.png</normaloff>:/zoomIn.png</iconset>
    </property>
    <property name="text">
     <string>Zoom In</string>
@@ -632,8 +632,8 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="images.qrc">
-     <normaloff>:/images/mActionZoomOut.svg</normaloff>:/images/mActionZoomOut.svg</iconset>
+    <iconset resource="images/images.qrc">
+     <normaloff>:/zoomOut.png</normaloff>:/zoomOut.png</iconset>
    </property>
    <property name="text">
     <string>Zoom out</string>
@@ -653,8 +653,8 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="images.qrc">
-     <normaloff>:/images/mActionPan.svg</normaloff>:/images/mActionPan.svg</iconset>
+    <iconset resource="images/images.qrc">
+     <normaloff>:/pan.png</normaloff>:/pan.png</iconset>
    </property>
    <property name="text">
     <string>Pan</string>
@@ -668,8 +668,8 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="images.qrc">
-     <normaloff>:/images/mActionIdentify.svg</normaloff>:/images/mActionIdentify.svg</iconset>
+    <iconset resource="images/images.qrc">
+     <normaloff>:/identify.png</normaloff>:/identify.png</iconset>
    </property>
    <property name="text">
     <string>Identify</string>
@@ -721,7 +721,7 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="images.qrc"/>
+  <include location="images/images.qrc"/>
  </resources>
  <connections/>
 </ui>
