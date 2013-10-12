@@ -41,6 +41,8 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         self.catalogue_model = None
         self.catalogue_map = None
 
+        self.states = []
+
         # to be set in setupUi
         self.tabs = None
 
@@ -49,6 +51,16 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
 
         # custom slots connections
         self.setupActions()
+
+    def push_state(self, state):
+        self.states.append(state)
+
+    @pyqtSlot(name="on_actionUndo_triggered")
+    def undo(self):
+        if self.states:
+            self.change_model(self.states.pop())
+        else:
+            alert("Can not undo. History empty")
 
     def setupUi(self, _):
         super(MainWindow, self).setupUi(self)
@@ -185,6 +197,8 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         self.change_model(CatalogueModel.from_csv_file(csv_file))
 
     def change_model(self, model):
+        if self.catalogue_model:
+            self.push_state(self.catalogue_model)
         self.catalogue_model = model
         self.outputTableView.setModel(self.catalogue_model.item_model)
         if self.catalogue_map is None:

@@ -483,7 +483,7 @@
    </widget>
    <widget class="QMenu" name="menuTools">
     <property name="title">
-     <string>View</string>
+     <string>Tools</string>
     </property>
     <addaction name="actionDeclustering"/>
     <addaction name="actionCompleteness"/>
@@ -524,7 +524,7 @@
     </size>
    </property>
    <property name="toolButtonStyle">
-    <enum>Qt::ToolButtonIconOnly</enum>
+    <enum>Qt::ToolButtonTextBesideIcon</enum>
    </property>
    <property name="floatable">
     <bool>false</bool>
@@ -617,8 +617,8 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="images.qrc">
-     <normaloff>:/images/mActionZoomIn.svg</normaloff>:/images/mActionZoomIn.svg</iconset>
+    <iconset>
+     <normaloff>images/mActionZoomIn.svg</normaloff>images/mActionZoomIn.svg</iconset>
    </property>
    <property name="text">
     <string>Zoom In</string>

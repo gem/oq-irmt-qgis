@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'hmtkwindow.ui'
 #
-# Created: Sat Oct 12 05:19:15 2013
+# Created: Sat Oct 12 05:36:22 2013
 #      by: PyQt4 UI code generator 4.10.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -241,7 +241,7 @@ class Ui_HMTKWindow(object):
         self.toolBar.setMovable(False)
         self.toolBar.setAllowedAreas(QtCore.Qt.TopToolBarArea)
         self.toolBar.setIconSize(QtCore.QSize(24, 24))
-        self.toolBar.setToolButtonStyle(QtCore.Qt.ToolButtonIconOnly)
+        self.toolBar.setToolButtonStyle(QtCore.Qt.ToolButtonTextBesideIcon)
         self.toolBar.setFloatable(False)
         self.toolBar.setObjectName(_fromUtf8("toolBar"))
         HMTKWindow.addToolBar(QtCore.Qt.TopToolBarArea, self.toolBar)
@@ -271,7 +271,7 @@ class Ui_HMTKWindow(object):
         self.actionZoomIn = QtGui.QAction(HMTKWindow)
         self.actionZoomIn.setCheckable(True)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(_fromUtf8(":/images/mActionZoomIn.svg")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(_fromUtf8("images/mActionZoomIn.svg")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.actionZoomIn.setIcon(icon)
         self.actionZoomIn.setObjectName(_fromUtf8("actionZoomIn"))
         self.actionZoomOut = QtGui.QAction(HMTKWindow)
@@ -373,7 +373,7 @@ class Ui_HMTKWindow(object):
         self.menuExport.setTitle(_translate("HMTKWindow", "Export", None))
         self.menuLoad_catalogue.setTitle(_translate("HMTKWindow", "Load", None))
         self.menuPlatform.setTitle(_translate("HMTKWindow", "Platform", None))
-        self.menuTools.setTitle(_translate("HMTKWindow", "View", None))
+        self.menuTools.setTitle(_translate("HMTKWindow", "Tools", None))
         self.menuEdit.setTitle(_translate("HMTKWindow", "Edit", None))
         self.toolBar.setWindowTitle(_translate("HMTKWindow", "toolBar", None))
         self.actionDeclustering.setText(_translate("HMTKWindow", "Declustering", None))
