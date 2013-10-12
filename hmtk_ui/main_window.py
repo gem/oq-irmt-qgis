@@ -1,3 +1,5 @@
+import numpy
+
 from PyQt4 import QtGui
 from PyQt4.QtCore import QObject, SIGNAL, Qt, pyqtSlot
 
@@ -9,14 +11,16 @@ from hmtkwindow import Ui_HMTKWindow
 from hmtk.seismicity import (
     DECLUSTERER_METHODS, COMPLETENESS_METHODS, OCCURRENCE_METHODS,
     MAX_MAGNITUDE_METHODS, SMOOTHED_SEISMICITY_METHODS)
+from hmtk.seismicity.catalogue import Catalogue
 
 from openquake.nrmllib.hazard.parsers import SourceModelParser
 
 from utils import alert
 from tab import Tab
+from selectors import SELECTORS
 from catalogue_model import CatalogueModel
 from catalogue_map import CatalogueMap
-from widgets import CompletenessDialog
+from widgets import CompletenessDialog, WaitCursor
 
 
 class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
@@ -82,43 +86,36 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
 
         # setup toolbar
         group = QtGui.QActionGroup(self)
-        actionZoomIn = QtGui.QAction("Zoom in", group)
-        actionZoomOut = QtGui.QAction("Zoom out", group)
-        actionPan = QtGui.QAction("Pan", group)
-        actionIdentify = QtGui.QAction("Info", group)
-        actionZoomIn.setCheckable(True)
-        actionZoomOut.setCheckable(True)
-        actionPan.setCheckable(True)
-        actionIdentify.setCheckable(True)
+        group.addAction(self.actionZoomIn)
+        group.addAction(self.actionZoomOut)
+        group.addAction(self.actionPan)
+        group.addAction(self.actionIdentify)
 
         # create the map tools
         toolPan = QgsMapToolPan(self.mapWidget)
-        toolPan.setAction(actionPan)
+        toolPan.setAction(self.actionPan)
         # false = in
         toolZoomIn = QgsMapToolZoom(self.mapWidget, False)
-        toolZoomIn.setAction(actionZoomIn)
+        toolZoomIn.setAction(self.actionZoomIn)
         # true = out
         toolZoomOut = QgsMapToolZoom(self.mapWidget, True)
-        toolZoomOut.setAction(actionZoomOut)
+        toolZoomOut.setAction(self.actionZoomOut)
 
         toolIdentify = QgsMapToolEmitPoint(self.mapWidget)
-        toolIdentify.setAction(actionIdentify)
+        toolIdentify.setAction(self.actionIdentify)
         toolIdentify.canvasClicked.connect(
             lambda point, button: self.catalogue_map.show_tip(point))
 
-        actionZoomIn.triggered.connect(
+        self.actionZoomIn.triggered.connect(
             lambda: self.mapWidget.setMapTool(toolZoomIn))
-        actionZoomOut.triggered.connect(
+        self.actionZoomOut.triggered.connect(
             lambda: self.mapWidget.setMapTool(toolZoomOut))
-        actionPan.triggered.connect(
+        self.actionPan.triggered.connect(
             lambda: self.mapWidget.setMapTool(toolPan))
-        actionIdentify.triggered.connect(
+        self.actionIdentify.triggered.connect(
             lambda: self.mapWidget.setMapTool(toolIdentify))
 
-        self.toolBar.addAction(actionZoomIn)
-        self.toolBar.addAction(actionZoomOut)
-        self.toolBar.addAction(actionPan)
-        self.toolBar.addAction(actionIdentify)
+        self.mapWidget.setMapTool(toolPan)
 
     def current_tab(self):
         """
@@ -179,8 +176,16 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         Open a file dialog, load a catalogue from a csv file,
         setup the maps and the charts
         """
-        self.catalogue_model = CatalogueModel.from_csv_file(
-            QtGui.QFileDialog.getOpenFileName(self, 'Open Catalogue', ''))
+        csv_file = QtGui.QFileDialog.getOpenFileName(
+            self, 'Open Catalogue', '')
+
+        if not csv_file:
+            return
+
+        self.change_model(CatalogueModel.from_csv_file(csv_file))
+
+    def change_model(self, model):
+        self.catalogue_model = model
         self.outputTableView.setModel(self.catalogue_model.item_model)
         if self.catalogue_map is None:
             self.catalogue_map = CatalogueMap(
@@ -205,6 +210,70 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
 
         self.catalogue_map.add_source_layers(
             [s for s in parser.parse(validate=False)])
+
+    @pyqtSlot(name="on_unionButton_clicked")
+    def add_to_selection(self):
+        SELECTORS[self.selectorComboBox.currentIndex() - 1](self, True)
+
+    @pyqtSlot(name="on_intersectButton_clicked")
+    def intersect_with_selection(self):
+        SELECTORS[self.selectorComboBox.currentIndex() - 1](self, False)
+
+    def update_selection(self):
+        initial = catalogue = self.catalogue_model.catalogue
+
+        if not self.selectorList.count():
+            self.catalogue_map.select([])
+        else:
+            for i in range(self.selectorList.count()):
+                selector = self.selectorList.item(i)
+                if selector.union:
+                    union_data = selector.apply(initial).data
+                    if initial != catalogue:
+                        union_data['eventID'] = numpy.append(
+                            union_data['eventID'], catalogue.data['eventID'])
+                        union_data['year'] = numpy.append(
+                            union_data['year'], catalogue.data['year'])
+                    catalogue = Catalogue.make_from_dict(union_data)
+                else:
+                    catalogue = selector.apply(catalogue)
+            self.catalogue_map.select(catalogue.data['eventID'])
+
+        if self.invertSelectionCheckBox.isChecked():
+            self.catalogue_map.catalogue_layer.invertSelection()
+
+        features_num = len(
+            self.catalogue_map.catalogue_layer.selectedFeatures())
+        if not features_num:
+            self.selectorSummaryLabel.setText("No event selected")
+        elif features_num == initial.get_number_events():
+            self.selectorSummaryLabel.setText("All events selected")
+        else:
+            self.selectorSummaryLabel.setText(
+                "%d events selected" % features_num)
+
+        return catalogue
+
+    @pyqtSlot(name="on_purgeUnselectedEventsButton_clicked")
+    def remove_unselected_events(self):
+        catalogue = self.update_selection()
+
+        if not QtGui.QMessageBox.information(
+                self, "Remove unselected events", "Are you sure?", "Yes"):
+            self.change_model(CatalogueModel(catalogue))
+
+            for _ in range(self.selectorList.count()):
+                self.selectorList.takeItem(self.selectorList.item(0))
+
+    @pyqtSlot(name="on_removeFromRuleListButton_clicked")
+    def remove_selector(self):
+        for item in self.selectorList.selectedItems():
+            self.selectorList.takeItem(self.selectorList.row(item))
+        self.update_selection()
+
+    @pyqtSlot(name="on_invertSelectionCheckBox_stateChanged")
+    def invert_selection(self, _state):
+        self.catalogue_map.catalogue_layer.invertSelection()
 
     def setupActions(self):
         """
@@ -237,6 +306,11 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
             self.outputTableView,
             SIGNAL("clicked(QModelIndex)"), self.cellClicked)
 
+        # Invert selection
+        QObject.connect(
+            self.invertSelectionCheckBox,
+            SIGNAL("stateChanged(int)"), self.invert_selection)
+
     def save_as(self, flt, fmt):
         """
         :returns:
@@ -260,13 +334,14 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
                 self, "Save Catalogue", "", "*.csv"))
 
     def _apply_method(self, name):
-        method = self.current_tab().method()
-        try:
-            config = self.current_tab().get_config()
-        except ValueError as e:
-            alert(str(e))
-            return
-        return getattr(self.catalogue_model, name)(method, config)
+        with WaitCursor():
+            method = self.current_tab().method()
+            try:
+                config = self.current_tab().get_config()
+            except ValueError as e:
+                alert(str(e))
+                return
+            return getattr(self.catalogue_model, name)(method, config)
 
     @pyqtSlot(name="on_declusterButton_clicked")
     def decluster(self):
@@ -396,4 +471,4 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
                 int(float(self.catalogue_model.at(modelIndex))))
         else:
             self.catalogue_map.select(
-                self.catalogue_model.event_at(modelIndex))
+                [self.catalogue_model.event_at(modelIndex)])

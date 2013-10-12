@@ -1,3 +1,5 @@
+# TODO. table tab, result table, source/catalog from platform, reload/load plugins, undo (backup on files)
+
 import os
 import sys
 import imp

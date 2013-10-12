@@ -3,6 +3,9 @@ import tempfile
 
 import numpy
 
+from openquake.hazardlib import geo
+from shapely import wkt
+
 from PyQt4 import QtGui
 from PyQt4.QtCore import QVariant, QFileInfo
 
@@ -195,17 +198,19 @@ class CatalogueMap(object):
         using a custom comparator function `cmp`
         """
         # Select all the features that fulfill the given condition
-        self.catalogue_layer.removeSelection()
-        catalogue = self.catalogue_model.catalogue
-        for i, fid in enumerate(catalogue.data['eventID']):
-            if not comparator(catalogue.data[field][i], value):
-                self.catalogue_layer.select(self.event_feature_ids[fid])
+        selected_features = self.catalogue_layer.selectedFeatures()
+        features = []
 
+        catalogue = self.catalogue_model.catalogue
+        for i, event_id in enumerate(catalogue.data['eventID']):
+            if not comparator(catalogue.data[field][i], value):
+                features.append(event_id)
+        self.catalogue_layer.select(features)
         self.canvas.panToSelected(self.catalogue_layer)
         self.canvas.zoomToSelected(self.catalogue_layer)
-        self.canvas.zoomByFactor(1.3)
-
+        self.canvas.zoomByFactor(1.1)
         self.catalogue_layer.removeSelection()
+        self.catalogue_layer.select([f.id() for f in selected_features])
 
     def clear_features(self, layer):
         """
@@ -216,17 +221,14 @@ class CatalogueMap(object):
             layer.deleteFeature(feat.id())
         layer.commitChanges()
 
-    def select(self, event_id):
+    def select(self, event_ids):
         """
-        Select a single feature with Feature ID `fid` and center the
-        map on it
+        Select features with Feature ID `fids` and center the map on
+        them
         """
-        fid = self.event_feature_ids[event_id]
+        fids = [self.event_feature_ids[event_id] for event_id in event_ids]
         self.catalogue_layer.removeSelection()
-        self.catalogue_layer.select(fid)
-        self.canvas.panToSelected(self.catalogue_layer)
-        self.canvas.zoomToSelected(self.catalogue_layer)
-        self.canvas.zoomByFactor(1.2)
+        self.catalogue_layer.select(fids)
 
     def update_catalogue_layer(self, attr_names):
         """
@@ -261,13 +263,13 @@ class CatalogueMap(object):
         features = self.catalogue_layer.getFeatures(
             QgsFeatureRequest().setFilterRect(r))
 
-        if features:
-            # assume the first one is the closest
+        # assume the first one is the closest
+        try:
             feat = features.next()
             msg_lines = ["Event Found"]
             for k in self.catalogue_model.catalogue_keys():
                 msg_lines.append("%s=%s" % (k, feat[k]))
-        else:
+        except StopIteration:
             msg_lines = ["No Event found"]
 
         if self.raster_layer is not None:
@@ -290,21 +292,24 @@ class CatalogueMap(object):
             QgsMapLayerRegistry.instance().removeMapLayer(
                 self.raster_layer.id())
         self.raster_layer = layer
-
-        self.canvas.setLayerSet(
-            [QgsMapCanvasLayer(self.catalogue_layer),
-             QgsMapCanvasLayer(self.raster_layer),
-             QgsMapCanvasLayer(self.ol_plugin.layer)])
         layer.reload()
-        self.canvas.refresh()
-        self.canvas.zoomByFactor(1.01)
+        self.refresh_map()
 
     def add_source_layers(self, sources):
+        """
+        :param list sources:
+            a list of nrmllib Source Models (e.g. AreaSource)
+        """
+        source_type = collections.namedtuple(
+            'SourceType', 'layer_type transform')
+
         geometries = {
-            'PointSource': 'Point',
-            'AreaSource': 'Polygon',
-            'SimpleFaultSource': 'LineString',
-            'ComplexFaultSource': 'MultiPolygon'}
+            'PointSource': source_type('Point', lambda x: x.geometry.wkt),
+            'AreaSource': source_type('Polygon', lambda x: x.geometry.wkt),
+            'SimpleFaultSource': source_type(
+                'Polygon', simple_surface_from_source),
+            'ComplexFaultSource': source_type(
+                'MultiPolygon', lambda _: NotImplementedError)}
 
         source_dict = collections.defaultdict(list)
 
@@ -313,14 +318,16 @@ class CatalogueMap(object):
 
         for stype, sources in source_dict.items():
             layer = QgsVectorLayer(
-                '%s?crs=epsg:4326' % geometries[stype], stype, 'memory')
+                '%s?crs=epsg:4326' % geometries[stype].layer_type,
+                stype, 'memory')
             QgsMapLayerRegistry.instance().addMapLayer(layer)
             pr = layer.dataProvider()
 
             features = []
             for source in sources:
                 fet = QgsFeature()
-                fet.setGeometry(QgsGeometry.fromWkt(source.geometry.wkt))
+                fet.setGeometry(QgsGeometry.fromWkt(
+                    geometries[stype].transform(source)))
                 features.append(fet)
             pr.addFeatures(features)
             layer.updateExtents()
@@ -432,19 +439,19 @@ def create_raster_layer(matrix):
 
     minVal = stat.minimumValue
     maxVal = stat.maximumValue
-    numberOfEntries = 20
+    entries_nr = 20
 
     colorRamp = QgsStyleV2().defaultStyle().colorRamp("Spectral")
     currentValue = float(minVal)
-    intervalDiff = float(maxVal - minVal) / float(numberOfEntries - 1)
+    intervalDiff = float(maxVal - minVal) / float(entries_nr - 1)
 
     colorRampItems = []
-    for i in xrange(numberOfEntries):
+    for i in reversed(xrange(entries_nr)):
         item = QgsColorRampShader.ColorRampItem()
         item.value = currentValue
         item.label = unicode(currentValue)
         currentValue += intervalDiff
-        item.color = colorRamp.color(float(i) / float(numberOfEntries))
+        item.color = colorRamp.color(float(i) / float(entries_nr))
         colorRampItems.append(item)
 
     rasterShader = QgsRasterShader()
@@ -468,3 +475,12 @@ def make_inmemory_layer(name, renderer):
 
     layer.setRendererV2(renderer)
     return layer
+
+
+def simple_surface_from_source(source):
+    return geo.surface.SimpleFaultSurface.surface_projection_from_fault_data(
+        geo.Line([geo.Point(x[0], x[1])
+                  for x in wkt.loads(source.geometry.wkt).coords]),
+        upper_seismogenic_depth=source.geometry.upper_seismo_depth,
+        lower_seismogenic_depth=source.geometry.lower_seismo_depth,
+        dip=source.geometry.dip).wkt

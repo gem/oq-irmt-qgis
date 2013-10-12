@@ -1,4 +1,5 @@
 from PyQt4 import QtGui
+from PyQt4.QtCore import Qt
 
 from plot_occurrence_model import GutenbergRichterModel, plotSeismicityRates
 import completeness_dialog
@@ -199,3 +200,11 @@ class GridDialog(QtGui.QDialog, grid_dialog.Ui_Dialog):
                 table.setItem(i / 3, i % 3, item)
 
             item.setData(0, str(grid.as_list()[i]))
+
+
+class WaitCursor(object):
+    def __enter__(self, *args, **kwargs):
+        QtGui.QApplication.setOverrideCursor(Qt.WaitCursor)
+
+    def __exit__(self, *args, **kwargs):
+        QtGui.QApplication.restoreOverrideCursor()
