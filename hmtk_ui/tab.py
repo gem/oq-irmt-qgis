@@ -145,7 +145,9 @@ class Tab(object):
 
     def get_config(self):
         """
-        Get a config object filled with values got from the form
+        Get a config object filled with values got from the form.
+
+        If a value from the form is missing it raises ValueError
         """
         config = {}
 
