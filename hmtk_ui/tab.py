@@ -185,6 +185,15 @@ FIELD_REGISTRY = Registry()
 
 
 class Field(object):
+    """
+    a Field object models a form field meant to be used for input
+    parameters of catalogue functions (i.e. hmtk functions registered
+    in a hmtk.Registry).
+
+    Derived classes must implement #create_widget (that builds a Qt
+    Widget), and #get_value (which extracts the value from the Qt
+    Widget)
+    """
     def __init__(self, field_name, tab, catalogue):
         self.field_name = field_name
         self.tab = tab
@@ -195,6 +204,14 @@ class Field(object):
 
     @staticmethod
     def type_value(field_spec, catalogue):
+        """
+        :param field_spec:
+           a field_spec as registered in a hmtk registry.
+        :returns:
+           a tuple with a field_type object (a `type` instance, or a list)
+           and a value (which represents a default value or a list of possible
+           choices).
+        """
         if not isinstance(field_spec, type):
             if isinstance(field_spec, type(lambda x: x)):
                 field_spec = field_spec(catalogue)
@@ -214,6 +231,9 @@ class Field(object):
     def _create_widget(self, value):
         raise NotImplementedError
 
+    def get_value(self):
+        raise NotImplementedError
+
 
 @FIELD_REGISTRY.add(float)
 @FIELD_REGISTRY.add(numpy.float64)
@@ -226,9 +246,9 @@ class FloatField(Field):
         return inp
 
     def get_value(self):
-        try:
+        if self.widget_text():
             value = float(self.widget.text())
-        except ValueError:
+        else:
             value = None
 
         return value
@@ -237,9 +257,9 @@ class FloatField(Field):
 @FIELD_REGISTRY.add(int)
 class IntField(FloatField):
     def get_value(self):
-        try:
+        if self.widget_text():
             value = int(self.widget.text())
-        except ValueError:
+        else:
             value = None
 
         return value
