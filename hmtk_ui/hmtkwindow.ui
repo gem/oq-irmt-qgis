@@ -356,7 +356,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="invertSelectionCheckBox">
+              <widget class="QPushButton" name="invertSelectionButton">
                <property name="text">
                 <string>Invert Selection</string>
                </property>
@@ -480,6 +480,7 @@
     <addaction name="menuExport"/>
     <addaction name="separator"/>
     <addaction name="menuPlatform"/>
+    <addaction name="actionReload_plugin"/>
    </widget>
    <widget class="QMenu" name="menuTools">
     <property name="title">
@@ -498,10 +499,48 @@
     <property name="title">
      <string>Edit</string>
     </property>
+    <widget class="QMenu" name="menuSelect">
+     <property name="title">
+      <string>Select events</string>
+     </property>
+     <addaction name="actionWithin_a_polygon"/>
+     <addaction name="actionWithin_Joyner_Boore_distance_of_source"/>
+     <addaction name="actionWithin_Rupture_distance"/>
+     <addaction name="actionWithin_a_Square_centered_on"/>
+     <addaction name="actionWithin_distance_from_point"/>
+     <addaction name="actionWithin_Joyner_Boore_distance_from_point"/>
+     <addaction name="actionTime_between"/>
+     <addaction name="actionField_between"/>
+    </widget>
     <addaction name="actionUndo"/>
+    <addaction name="menuSelect"/>
+    <addaction name="actionInvert_selection"/>
+    <addaction name="actionDelete_unselected_events"/>
+   </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string>View</string>
+    </property>
+    <widget class="QMenu" name="menuStyle_Events">
+     <property name="title">
+      <string>Style Events</string>
+     </property>
+     <addaction name="actionBy_cluster_event_type"/>
+     <addaction name="actionBy_depth_magnitude"/>
+    </widget>
+    <widget class="QMenu" name="menuStyle_Sources">
+     <property name="title">
+      <string>Style Sources</string>
+     </property>
+     <addaction name="actionBy_maximum_magnitude"/>
+     <addaction name="actionBy_b_value"/>
+    </widget>
+    <addaction name="menuStyle_Events"/>
+    <addaction name="menuStyle_Sources"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
+   <addaction name="menuView"/>
    <addaction name="menuTools"/>
   </widget>
   <widget class="QToolBar" name="toolBar">
@@ -683,7 +722,7 @@
   </action>
   <action name="actionUndo">
    <property name="text">
-    <string>Undo</string>
+    <string>Undo model change</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+Z</string>
@@ -702,6 +741,81 @@
   <action name="actionView_Fault_Sources">
    <property name="text">
     <string>View Fault Sources</string>
+   </property>
+  </action>
+  <action name="actionDelete_unselected_events">
+   <property name="text">
+    <string>Delete unselected events</string>
+   </property>
+  </action>
+  <action name="actionWithin_a_polygon">
+   <property name="text">
+    <string>within a polyhedra</string>
+   </property>
+  </action>
+  <action name="actionWithin_Joyner_Boore_distance_of_source">
+   <property name="text">
+    <string>within Joyner-Boore distance of source</string>
+   </property>
+  </action>
+  <action name="actionWithin_Rupture_distance">
+   <property name="text">
+    <string>within Rupture distance</string>
+   </property>
+  </action>
+  <action name="actionWithin_a_Square_centered_on">
+   <property name="text">
+    <string>within a Square centered on</string>
+   </property>
+  </action>
+  <action name="actionWithin_distance_from_point">
+   <property name="text">
+    <string>within distance from point</string>
+   </property>
+  </action>
+  <action name="actionWithin_Joyner_Boore_distance_from_point">
+   <property name="text">
+    <string>within Joyner Boore distance from point</string>
+   </property>
+  </action>
+  <action name="actionTime_between">
+   <property name="text">
+    <string>Time between</string>
+   </property>
+  </action>
+  <action name="actionField_between">
+   <property name="text">
+    <string>Field between</string>
+   </property>
+  </action>
+  <action name="actionInvert_selection">
+   <property name="text">
+    <string>Invert selection</string>
+   </property>
+  </action>
+  <action name="actionReload_plugin">
+   <property name="text">
+    <string>Reload plugins</string>
+   </property>
+  </action>
+  <action name="actionBy_cluster_event_type">
+   <property name="text">
+    <string>by cluster / event type</string>
+   </property>
+  </action>
+  <action name="actionBy_depth_magnitude">
+   <property name="text">
+    <string>by depth/magnitude</string>
+   </property>
+  </action>
+  <action name="actionBy_maximum_magnitude">
+   <property name="text">
+    <string>by maximum magnitude</string>
+   </property>
+  </action>
+  <action name="actionBy_b_value">
+   <property name="text">
+    <string>by b-value</string>
    </property>
   </action>
  </widget>

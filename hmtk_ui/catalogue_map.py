@@ -18,7 +18,8 @@ from qgis.core import (
     QgsFeatureRendererV2, QgsSymbolV2, QGis,
     QgsRectangle, QgsCoordinateReferenceSystem,
     QgsCoordinateTransform, QgsFeatureRequest,
-    QgsRasterShader, QgsColorRampShader, QgsStyleV2)
+    QgsRasterShader, QgsColorRampShader, QgsStyleV2,
+    QgsFillSymbolV2, QgsSingleSymbolRendererV2)
 from qgis.gui import QgsMapCanvasLayer
 
 from openlayers_plugin.openlayers_plugin import (
@@ -331,6 +332,13 @@ class CatalogueMap(object):
                 features.append(fet)
             pr.addFeatures(features)
             layer.updateExtents()
+
+            symbol = QgsFillSymbolV2.createSimple(
+                {'style': 'diagonal_x',
+                 'color': '0,0,0,255',
+                 'style_border':'solid'})
+            layer.setRendererV2(QgsSingleSymbolRendererV2(symbol))
+
             self.source_layers.append(layer)
 
         self.reset_map()
