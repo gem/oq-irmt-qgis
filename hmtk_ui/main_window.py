@@ -72,7 +72,7 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
                 [self.smoothedSeismicityButton]))
 
         for tab in self.tabs:
-            tab.setup_form(self.on_method_select)
+            tab.setup_form(self.on_algorithm_select)
 
         # setup Map
         self.mapWidget.setCanvasColor(Qt.white)
@@ -125,12 +125,12 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         """
         return self.tabs[self.stackedFormWidget.currentIndex()]
 
-    def on_method_select(self, index):
+    def on_algorithm_select(self, index):
         """
-        When a method is selected we: show/Hide action `buttons`;
-        update the form for the tab `name` with the method fields
+        When a algorithm is selected we: show/Hide action `buttons`;
+        update the form for the tab `name` with the algorithm fields
 
-        :param int index: the ordinal of the method selected
+        :param int index: the ordinal of the algorithm selected
         """
         tab = self.current_tab()
 
@@ -245,14 +245,14 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
             QtGui.QFileDialog.getSaveFileName(
                 self, "Save Catalogue", "", "*.csv"))
 
-    def _apply_method(self, name):
-        method = self.current_tab().method()
+    def _apply_algorithm(self, name):
+        algorithm = self.current_tab().algorithm()
         try:
             config = self.current_tab().get_config()
         except ValueError as e:
             alert(str(e))
             return
-        return getattr(self.catalogue_model, name)(method, config)
+        return getattr(self.catalogue_model, name)(algorithm, config)
 
     @pyqtSlot(name="on_declusterButton_clicked")
     def decluster(self):
@@ -260,7 +260,7 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         Apply current selected declustering algorithm, then update the
         map
         """
-        success = self._apply_method("declustering")
+        success = self._apply_algorithm("declustering")
         self.outputTableView.setModel(self.catalogue_model.item_model)
         self.catalogue_map.update_catalogue_layer(
             ['Cluster_Index', 'Cluster_Flag'])
@@ -306,7 +306,7 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         Apply current selected completeness algorithm, then update the
         map and the chart if needed
         """
-        model = self._apply_method("completeness")
+        model = self._apply_algorithm("completeness")
 
         if model is not None:
             self.catalogue_map.update_catalogue_layer(['Completeness_Flag'])
@@ -316,13 +316,16 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
     @pyqtSlot(name="on_recurrenceModelButton_clicked")
     def recurrence_model(self):
         """
-        Apply the selected method for recurrence model analysis, open
+        Apply the selected algorithm for recurrence model analysis, open
         a popup with the returned values, and draw the results in a
         chart
         """
-        params = self._apply_method("recurrence_model")
+        params = self._apply_algorithm("recurrence_model")
         alert(str(params))
 
+        # the algorithm for performing recurrence model analysis returns
+        # either 3 values, either 5. In the latter case we have the
+        # parameter value to plot the seismicity rate chart.
         if len(params) == 5:
             self.recurrenceModelChart.draw_seismicity_rate(
                 self.catalogue_model.catalogue, *params)
@@ -330,20 +333,20 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
     @pyqtSlot(name="on_maxMagnitudeButton_clicked")
     def max_magnitude(self):
         """
-        Apply the selected method for maximum magnitude estimation, open
+        Apply the selected algorithm for maximum magnitude estimation, open
         a popup with the returned values
         """
 
-        mmax_params = self._apply_method("max_magnitude")
+        mmax_params = self._apply_algorithm("max_magnitude")
         alert(str(mmax_params))
 
     @pyqtSlot(name="on_smoothedSeismicityButton_clicked")
     def smoothed_seismicity(self):
         """
-        Apply the smoothing kernel selected method and update the map
+        Apply the smoothing kernel selected algorithm and update the map
         accordingly
         """
-        smoothed_matrix = self._apply_method("smoothed_seismicity")
+        smoothed_matrix = self._apply_algorithm("smoothed_seismicity")
         self.catalogue_map.set_raster(smoothed_matrix)
 
     def cellClicked(self, modelIndex):

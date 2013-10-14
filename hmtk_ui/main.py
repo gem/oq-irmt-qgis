@@ -14,7 +14,11 @@ from qgis.core import QgsApplication
 from main_window import MainWindow
 from utils import excepthook
 
-PLUGIN_FILE = os.path.expanduser("~/hmtk-plugin.py")
+
+# A plugin file is a python source coded loaded at init time meant to
+# register new hmtk algorithms to the hmtk registries.
+PLUGIN_FILE = os.environ.get('HMTK_PLUGIN_FILE',
+                             os.path.expanduser("~/hmtk-plugin.py"))
 
 
 # Main entry to program.  Sets up the main app and create a new window.

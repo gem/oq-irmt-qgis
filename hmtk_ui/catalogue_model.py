@@ -81,8 +81,8 @@ class CatalogueModel(object):
     def from_csv_file(cls, fname):
         return cls(csv.CsvCatalogueParser(fname).read_file())
 
-    def declustering(self, method, config):
-        cluster_index, cluster_flag = method(self.catalogue, config)
+    def declustering(self, algorithm, config):
+        cluster_index, cluster_flag = algorithm(self.catalogue, config)
         self.catalogue.data['Cluster_Index'] = cluster_index
         self.catalogue.data['Cluster_Flag'] = cluster_flag
 
@@ -108,8 +108,8 @@ class CatalogueModel(object):
             self.catalogue.data['Completeness_Flag'] == 0)
         self.item_model = self.populate_item_model(self.catalogue)
 
-    def completeness(self, method, config):
-        self.completeness_table = method(self.catalogue, config)
+    def completeness(self, algorithm, config):
+        self.completeness_table = algorithm(self.catalogue, config)
         self.last_computed_completeness_table = self.completeness_table
 
         # FIXME(lp). Refactor with Catalogue#catalogue_mt_filter
@@ -130,18 +130,17 @@ class CatalogueModel(object):
             if flag[i]:
                 self.item_model.setData(
                     index, QtGui.QColor(200, 200, 200), Qt.BackgroundRole)
-        return getattr(method, 'model', None)
+        return getattr(algorithm, 'model', None)
 
-    def recurrence_model(self, method, config):
-        rec_params = method(self.catalogue, config, self.completeness_table)
+    def recurrence_model(self, algorithm, config):
+        rec_params = algorithm(self.catalogue, config, self.completeness_table)
         return (config.get('reference_magnitude', None), ) + rec_params
 
-    def max_magnitude(self, method, config):
-        return method(self.catalogue, config)
+    def max_magnitude(self, algorithm, config):
+        return algorithm(self.catalogue, config)
 
-    def smoothed_seismicity(self, method, config):
-        print config, self.completeness_table
-        return method(self.catalogue, config, self.completeness_table)
+    def smoothed_seismicity(self, algorithm, config):
+        return algorithm(self.catalogue, config, self.completeness_table)
 
     def field_idx(self, field):
         return self.catalogue_keys().index(field)

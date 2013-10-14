@@ -242,18 +242,18 @@ class CatalogueMap(object):
         self.canvas.refresh()
 
     def show_tip(self, point):
-        r = QgsRectangle()
+        rectangle = QgsRectangle()
         radius = self.canvas.extent().width() / 100 * 5  # 5% of the map width
-        r.setXMinimum(point.x() - radius)
-        r.setYMinimum(point.y() - radius)
-        r.setXMaximum(point.x() + radius)
-        r.setYMaximum(point.y() + radius)
+        rectangle.setXMinimum(point.x() - radius)
+        rectangle.setYMinimum(point.y() - radius)
+        rectangle.setXMaximum(point.x() + radius)
+        rectangle.setYMaximum(point.y() + radius)
 
-        r = self.canvas.mapRenderer().mapToLayerCoordinates(
-            self.catalogue_layer, r)
+        layer_rectangle = self.canvas.mapRenderer().mapToLayerCoordinates(
+            self.catalogue_layer, rectangle)
 
         features = self.catalogue_layer.getFeatures(
-            QgsFeatureRequest().setFilterRect(r))
+            QgsFeatureRequest().setFilterRect(layer_rectangle))
 
         if features:
             # assume the first one is the closest
