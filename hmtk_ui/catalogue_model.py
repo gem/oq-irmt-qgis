@@ -142,7 +142,6 @@ class CatalogueModel(object):
         return method(self.catalogue, config)
 
     def smoothed_seismicity(self, method, config):
-        print config, self.completeness_table
         return method(self.catalogue, config, self.completeness_table)
 
     def field_idx(self, field):
