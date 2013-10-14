@@ -322,6 +322,9 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         params = self._apply_method("recurrence_model")
         alert(str(params))
 
+        # the method for performing recurrence model analysis returns
+        # either 3 values, either 5. In the latter case we have the
+        # parameter value to plot the seismicity rate chart.
         if len(params) == 5:
             self.recurrenceModelChart.draw_seismicity_rate(
                 self.catalogue_model.catalogue, *params)
