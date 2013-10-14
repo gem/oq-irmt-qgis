@@ -13,8 +13,8 @@ class Tab(object):
     This class is responsible to model a tab frame with the following
     structure:
 
-    1) a method selector got from a `registry`
-    2) a set of input fields, where fields depend on the selected method
+    1) a algorithm selector got from a `registry`
+    2) a set of input fields, where fields depend on the selected algorithm
     3) one or more action buttons
 
     :attr str name: the form name. E.g. declustering
@@ -30,25 +30,25 @@ class Tab(object):
 
         # to be set in setup_form
         self.form = None
-        self.method_combo = None
+        self.algorithm_combo = None
 
         # to be set in update_form
         self.param_fields = None
 
-    def method(self):
+    def algorithm(self):
         """
-        :returns: the current method selected (a callable)
+        :returns: the current algorithm selected (a callable)
         """
         # we decrease by one the index as we assume that the first
-        # choice in the combo box is the "No method selected"
-        return self.registry.values()[self.method_combo.currentIndex() - 1]
+        # choice in the combo box is the "No algorithm selected"
+        return self.registry.values()[self.algorithm_combo.currentIndex() - 1]
 
-    def setup_form(self, method_select_cb):
+    def setup_form(self, algorithm_select_cb):
         """
-        Setup the form with a combo box for selecting the method
+        Setup the form with a combo box for selecting the algorithm
 
-        :param method_select_cb:
-            a callback to be called when a method is selected
+        :param algorithm_select_cb:
+            a callback to be called when a algorithm is selected
         """
 
         # create the form layout
@@ -56,19 +56,19 @@ class Tab(object):
         self.form.setFieldGrowthPolicy(QtGui.QFormLayout.FieldsStayAtSizeHint)
         self.form.setObjectName("%s_form" % self.name)
 
-        # create the combo box for the methods
-        label = self._create_label("method")
+        # create the combo box for the algorithms
+        label = self._create_label("algorithm")
         self.form.setWidget(0, QtGui.QFormLayout.LabelRole, label)
 
-        self.method_combo = create_combo("method", self.name, self.registry)
-        self.form.setWidget(0, QtGui.QFormLayout.FieldRole, self.method_combo)
+        self.algorithm_combo = create_combo("algorithm", self.name, self.registry)
+        self.form.setWidget(0, QtGui.QFormLayout.FieldRole, self.algorithm_combo)
 
         self.layout.insertLayout(0, self.form)
 
         # hide action buttons
         self.hide_action_buttons()
 
-        self.method_combo.currentIndexChanged.connect(method_select_cb)
+        self.algorithm_combo.currentIndexChanged.connect(algorithm_select_cb)
 
     def _create_label(self, name):
         """
@@ -102,8 +102,8 @@ class Tab(object):
 
     def update_form(self, catalogue, completeness_cb):
         """
-        Once that a method has been selected, we reset the form, by
-        populating it with fields taken from `registry`. If the method
+        Once that a algorithm has been selected, we reset the form, by
+        populating it with fields taken from `registry`. If the algorithm
         takes in input a positional argument of type completeness, then
         we add a proper combo box to the bottom of the form.
 
@@ -111,13 +111,13 @@ class Tab(object):
             a hmtk.seismicity.catalogue.Catalogue instance (used to
             get default values)
         :param completeness_cv:
-            a callback to be called when a method to select a completeness
+            a callback to be called when a algorithm to select a completeness
             table is chosen
         """
         self.clear_form()
 
-        method = self.method()
-        for i, (field_name, field_spec) in enumerate(method.fields.items(), 1):
+        algorithm = self.algorithm()
+        for i, (field_name, field_spec) in enumerate(algorithm.fields.items(), 1):
             label = self._create_label(field_name)
             self.form.setWidget(i, QtGui.QFormLayout.LabelRole, label)
 
@@ -127,7 +127,7 @@ class Tab(object):
                 i, QtGui.QFormLayout.FieldRole, field.create_widget(value))
             self.param_fields[field_name] = field
 
-        if method.completeness:
+        if algorithm.completeness:
             pos = len(self.param_fields) + 1
 
             label = self._create_label("completeness")
@@ -151,7 +151,7 @@ class Tab(object):
         """
         config = {}
 
-        for f in self.method().fields:
+        for f in self.algorithm().fields:
             value = self.param_fields[f].get_value()
 
             if value is None:
@@ -175,7 +175,7 @@ def create_combo(field_name, prefix_name, choices, no_opt=True):
     if no_opt:
         combo_box.addItem("")
 
-    # add each method as options for the combo box
+    # add each algorithm as options for the combo box
     for i, name in enumerate(choices, 1):
         combo_box.addItem(name)
         combo_box.setItemText(i, QtGui.QApplication.translate(
@@ -248,7 +248,7 @@ class FloatField(Field):
         return inp
 
     def get_value(self):
-        if self.widget_text():
+        if self.widget.text():
             value = float(self.widget.text())
         else:
             value = None
@@ -259,7 +259,7 @@ class FloatField(Field):
 @FIELD_REGISTRY.add(int)
 class IntField(FloatField):
     def get_value(self):
-        if self.widget_text():
+        if self.widget.text():
             value = int(self.widget.text())
         else:
             value = None
