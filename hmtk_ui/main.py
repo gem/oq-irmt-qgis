@@ -1,5 +1,6 @@
 import os
 import sys
+import imp
 
 from PyQt4 import QtGui
 from PyQt4.QtCore import (SIGNAL, SLOT)
@@ -10,8 +11,18 @@ from main_window import MainWindow
 from utils import excepthook
 
 
+# A plugin file is a python source coded loaded at init time meant to
+# register new hmtk algorithms to the hmtk registries.
+PLUGIN_FILE = os.environ.get('HMTK_PLUGIN_FILE',
+                             os.path.expanduser("~/hmtk-plugin.py"))
+
+
 # Main entry to program.  Sets up the main app and create a new window.
 def main(argv):
+    # load plugins
+    if os.path.exists(PLUGIN_FILE):
+        imp.load_source('hmtk.plugin', PLUGIN_FILE)
+
     # create Qt application
     app = QtGui.QApplication(argv, True)
 
@@ -31,13 +42,17 @@ def main(argv):
         wnd.raise_()
 
     wnd.load_catalogue()
+
     # Connect signal for app finish
-    app.connect(app, SIGNAL("lastWindowClosed()"), app, SLOT("quit()"))
+    def on_quit():
+        QgsApplication.exitQgis()
+        app.quit()
+
+    app.lastWindowClosed.connect(on_quit)
 
     # Start the app up
     ret = app.exec_()
 
-    QgsApplication.exitQgis()
     sys.exit(ret)
 
 
