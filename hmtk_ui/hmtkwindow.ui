@@ -30,7 +30,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>6</number>
+       <number>0</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideNone</enum>
@@ -310,133 +310,16 @@
        </widget>
       </item>
       <item>
-       <widget class="QGroupBox" name="selectionTool">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
+       <widget class="QTableWidget" name="outputTable">
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
         </property>
-        <property name="minimumSize">
-         <size>
-          <width>470</width>
-          <height>200</height>
-         </size>
+        <property name="selectionMode">
+         <enum>QAbstractItemView::NoSelection</enum>
         </property>
-        <property name="title">
-         <string>Select Events</string>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectColumns</enum>
         </property>
-        <layout class="QVBoxLayout" name="selectionToolLayout">
-         <item>
-          <layout class="QHBoxLayout" name="selectorLayout">
-           <item>
-            <widget class="QListWidget" name="selectorList"/>
-           </item>
-           <item>
-            <layout class="QVBoxLayout" name="selectorFormLayout">
-             <item>
-              <widget class="QLabel" name="selectorSummaryLabel">
-               <property name="text">
-                <string>All events selected</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="removeFromRuleListButton">
-               <property name="text">
-                <string>Remove from List</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="purgeUnselectedEventsButton">
-               <property name="text">
-                <string>Delete unselected events</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="invertSelectionButton">
-               <property name="text">
-                <string>Invert Selection</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-          </layout>
-         </item>
-         <item>
-          <layout class="QHBoxLayout" name="selectorFormLayout">
-           <item>
-            <widget class="QComboBox" name="selectorComboBox">
-             <property name="editable">
-              <bool>false</bool>
-             </property>
-             <item>
-              <property name="text">
-               <string/>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Within Polyhedra</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Within J/B distance of source</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Within Rupture distance</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Within a square centered on</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Within a distance from</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>J/B within from point</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Time between</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Field between</string>
-              </property>
-             </item>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="unionButton">
-             <property name="text">
-              <string>Union</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="intersectButton">
-             <property name="text">
-              <string>Intersect</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-        </layout>
        </widget>
       </item>
      </layout>
@@ -514,8 +397,9 @@
     </widget>
     <addaction name="actionUndo"/>
     <addaction name="menuSelect"/>
-    <addaction name="actionInvert_selection"/>
     <addaction name="actionDelete_unselected_events"/>
+    <addaction name="actionInvertSelection"/>
+    <addaction name="actionUnselectAall"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
@@ -538,10 +422,28 @@
     <addaction name="menuStyle_Events"/>
     <addaction name="menuStyle_Sources"/>
    </widget>
+   <widget class="QMenu" name="menuWindow">
+    <property name="title">
+     <string>Window</string>
+    </property>
+    <addaction name="actionMain_window"/>
+    <addaction name="actionSelection_editor"/>
+   </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="actionManual"/>
+    <addaction name="actionHazard_Modeller_s_Toolkit_Tutorial"/>
+    <addaction name="separator"/>
+    <addaction name="actionVisit_GEM_website"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuView"/>
    <addaction name="menuTools"/>
+   <addaction name="menuWindow"/>
+   <addaction name="menuHelp"/>
   </widget>
   <widget class="QToolBar" name="toolBar">
    <property name="windowTitle">
@@ -788,11 +690,6 @@
     <string>Field between</string>
    </property>
   </action>
-  <action name="actionInvert_selection">
-   <property name="text">
-    <string>Invert selection</string>
-   </property>
-  </action>
   <action name="actionReload_plugin">
    <property name="text">
     <string>Reload plugins</string>
@@ -816,6 +713,41 @@
   <action name="actionBy_b_value">
    <property name="text">
     <string>by b-value</string>
+   </property>
+  </action>
+  <action name="actionInvertSelection">
+   <property name="text">
+    <string>Invert selection</string>
+   </property>
+  </action>
+  <action name="actionUnselectAall">
+   <property name="text">
+    <string>Unselect all</string>
+   </property>
+  </action>
+  <action name="actionManual">
+   <property name="text">
+    <string>Manual</string>
+   </property>
+  </action>
+  <action name="actionHazard_Modeller_s_Toolkit_Tutorial">
+   <property name="text">
+    <string>Hazard Modeller's Toolkit Tutorial</string>
+   </property>
+  </action>
+  <action name="actionVisit_GEM_website">
+   <property name="text">
+    <string>Visit GEM website</string>
+   </property>
+  </action>
+  <action name="actionMain_window">
+   <property name="text">
+    <string>Main window</string>
+   </property>
+  </action>
+  <action name="actionSelection_editor">
+   <property name="text">
+    <string>Selection editor</string>
    </property>
   </action>
  </widget>

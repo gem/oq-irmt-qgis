@@ -7,11 +7,8 @@ from PyQt4 import QtGui
 from PyQt4 import QtCore
 
 from qgis.core import (
-    QGis, QgsGeometry, QgsCoordinateTransform, QgsFeatureRequest,
-    QgsCoordinateReferenceSystem)
+    QGis, QgsGeometry, QgsCoordinateTransform, QgsCoordinateReferenceSystem)
 from qgis.gui import QgsMapTool, QgsRubberBand
-
-from widgets import WaitCursor
 
 
 class AbortSelection(Exception):
@@ -51,6 +48,11 @@ class PolygonTool(QgsMapTool, SelectionTool):
             self.rubber_band = QgsRubberBand(canvas, QGis.Polygon)
             self.rubber_band.setColor(QtGui.QColor(0, 0, 0, 100))
 
+        if e.modifiers() & QtCore.Qt.ShiftModifier:
+            self.selector.union = False
+        else:
+            self.selector.union = True
+
         if e.button() == QtCore.Qt.LeftButton:
             self.rubber_band.addPoint(self.toMapCoordinates(e.pos()))
         else:
@@ -71,7 +73,9 @@ class PolygonTool(QgsMapTool, SelectionTool):
 
     def run(self):
         self.selector.window.statusBar.showMessage(
-            "Draw a polygon on the map", 4000)
+            "Draw a polygon on the map. Left Click adds point. "
+            "Right click marks end. Press Shift to intersect with selection",
+            8000)
         self.selector.window.mapWidget.setMapTool(self)
 
     def deactivate(self):
@@ -95,7 +99,7 @@ class FloatDialog(QtGui.QDialog, SelectionTool):
         self.input_fields = dict()
 
         # to be set in #run
-        self.layout
+        self.layout = None
         self.button_box = None
         self.form = None
 
@@ -133,10 +137,23 @@ class FloatDialog(QtGui.QDialog, SelectionTool):
             raise AbortSelection
 
 
+class Invert(QtGui.QListWidgetItem):
+    def __init__(self, window):
+        super(Invert, self).__init__("Invert selection")
+        self.union = False
+        window.selectorList.addItem(self)
+        window.update_selection()
+
+    def apply(self, catalogue, initial_catalogue):
+        return CatalogueSelector(initial_catalogue, True).select_catalogue(
+            [x not in catalogue.data['eventID']
+             for x in initial_catalogue.data['eventID']])
+
+
 class WithinPolyhedra(QtGui.QListWidgetItem):
-    def __init__(self, window, union=True):
+    def __init__(self, window):
         super(WithinPolyhedra, self).__init__("Within polyhedra")
-        self.union = union
+        self.union = True
         self.window = window
         self.tools = iter(
             [PolygonTool(self, "polygon"),
@@ -151,14 +168,19 @@ class WithinPolyhedra(QtGui.QListWidgetItem):
     def add(self):
         points = zip(self.values['polygon'].lons, self.values['polygon'].lats)
         points = ", ".join(["%.4f %.4f" % (x, y) for x, y in points])
-        self.setText("Within poly %s %s %s %s" % (
+        if self.union:
+            text = "Add"
+        else:
+            text = "Intersect"
+        self.setText("%s within poly %s %s %s %s" % (
+            text,
             points,
             self.values['distance'],
             self.values['upper_depth'], self.values['lower_depth']))
-        self.window.selectorList.addItem(self)
+        self.window.selection_editor.selectorList.addItem(self)
         self.window.update_selection()
 
-    def apply(self, catalogue):
+    def apply(self, catalogue, _initial_catalogue):
         return CatalogueSelector(catalogue, True).within_polygon(
             self.values['polygon'],
             self.values['distance'],
@@ -166,4 +188,4 @@ class WithinPolyhedra(QtGui.QListWidgetItem):
             lower_depth=self.values['lower_depth'])
 
 
-SELECTORS = [WithinPolyhedra]
+SELECTORS = [Invert, WithinPolyhedra]

@@ -20,7 +20,7 @@ from tab import Tab
 from selectors import SELECTORS
 from catalogue_model import CatalogueModel
 from catalogue_map import CatalogueMap
-from widgets import CompletenessDialog, WaitCursor
+from widgets import CompletenessDialog, WaitCursor, SelectionDialog
 
 
 class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
@@ -45,6 +45,7 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
 
         # to be set in setupUi
         self.tabs = None
+        self.selection_editor = None
 
         # set up User Interface (widgets, layout...)
         self.setupUi(self)
@@ -62,9 +63,14 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         else:
             alert("Can not undo. History empty")
 
+    @pyqtSlot(name="on_actionSelection_editor_triggered")
+    def show_selection_editor(self):
+        self.selection_editor.exec_()
+
     def setupUi(self, _):
         super(MainWindow, self).setupUi(self)
 
+        self.selection_editor = SelectionDialog(self)
         # setup dynamic forms
         self.tabs = (
             Tab("declustering",
@@ -225,13 +231,8 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         self.catalogue_map.add_source_layers(
             [s for s in parser.parse(validate=False)])
 
-    @pyqtSlot(name="on_unionButton_clicked")
-    def add_to_selection(self):
-        SELECTORS[self.selectorComboBox.currentIndex() - 1](self, True)
-
-    @pyqtSlot(name="on_intersectButton_clicked")
-    def intersect_with_selection(self):
-        SELECTORS[self.selectorComboBox.currentIndex() - 1](self, False)
+    def add_to_selection(self, idx):
+        SELECTORS[idx](self)
 
     def update_selection(self):
         initial = catalogue = self.catalogue_model.catalogue
@@ -239,10 +240,10 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         if not self.selectorList.count():
             self.catalogue_map.select([])
         else:
-            for i in range(self.selectorList.count()):
-                selector = self.selectorList.item(i)
+            for i in range(self.selection_editor.selectorList.count()):
+                selector = self.selection_editor.selectorList.item(i)
                 if selector.union:
-                    union_data = selector.apply(initial).data
+                    union_data = selector.apply(initial, initial).data
                     if initial != catalogue:
                         union_data['eventID'] = numpy.append(
                             union_data['eventID'], catalogue.data['eventID'])
@@ -250,11 +251,8 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
                             union_data['year'], catalogue.data['year'])
                     catalogue = Catalogue.make_from_dict(union_data)
                 else:
-                    catalogue = selector.apply(catalogue)
+                    catalogue = selector.apply(catalogue, initial)
             self.catalogue_map.select(catalogue.data['eventID'])
-
-        if self.invertSelectionCheckBox.isChecked():
-            self.catalogue_map.catalogue_layer.invertSelection()
 
         features_num = len(
             self.catalogue_map.catalogue_layer.selectedFeatures())
@@ -277,17 +275,13 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
             self.change_model(CatalogueModel(catalogue))
 
             for _ in range(self.selectorList.count()):
-                self.selectorList.takeItem(self.selectorList.item(0))
+                self.selectorList.takeItem(0)
 
     @pyqtSlot(name="on_removeFromRuleListButton_clicked")
     def remove_selector(self):
         for item in self.selectorList.selectedItems():
             self.selectorList.takeItem(self.selectorList.row(item))
         self.update_selection()
-
-    @pyqtSlot(name="on_invertSelectionCheckBox_stateChanged")
-    def invert_selection(self, _state):
-        self.catalogue_map.catalogue_layer.invertSelection()
 
     def setupActions(self):
         """
@@ -320,10 +314,27 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
             self.outputTableView,
             SIGNAL("clicked(QModelIndex)"), self.cellClicked)
 
-        # Invert selection
-        QObject.connect(
-            self.invertSelectionCheckBox,
-            SIGNAL("stateChanged(int)"), self.invert_selection)
+        # Selection management
+        self.actionDelete_unselected_events.triggered.connect(
+            self.remove_unselected_events)
+        self.actionInvertSelection.triggered.connect(
+            lambda: self.add_to_selection(0))
+        self.actionWithin_a_polygon.triggered.connect(
+            lambda: self.add_to_selection(1))
+        self.actionWithin_Joyner_Boore_distance_of_source.triggered.connect(
+            lambda: self.add_to_selection(2))
+        self.actionWithin_Rupture_distance.triggered.connect(
+            lambda: self.add_to_selection(3))
+        self.actionWithin_a_Square_centered_on.triggered.connect(
+            lambda: self.add_to_selection(4))
+        self.actionWithin_distance_from_point.triggered.connect(
+            lambda: self.add_to_selection(5))
+        self.actionWithin_Joyner_Boore_distance_from_point.triggered.connect(
+            lambda: self.add_to_selection(6))
+        self.actionTime_between.triggered.connect(
+            lambda: self.add_to_selection(7))
+        self.actionField_between.triggered.connect(
+            lambda: self.add_to_selection(8))
 
     def save_as(self, flt, fmt):
         """

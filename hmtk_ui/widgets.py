@@ -4,6 +4,7 @@ from PyQt4.QtCore import Qt
 from plot_occurrence_model import GutenbergRichterModel, plotSeismicityRates
 import completeness_dialog
 import grid_dialog
+import selection_dialog
 import numpy
 
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
@@ -208,3 +209,18 @@ class WaitCursor(object):
 
     def __exit__(self, *args, **kwargs):
         QtGui.QApplication.restoreOverrideCursor()
+
+
+class SelectionDialog(QtGui.QDialog, selection_dialog.Ui_Dialog):
+    def __init__(self, parent=None):
+        super(SelectionDialog, self).__init__(parent)
+        self.setupUi(self)
+        self.invertSelectionButton.clicked.connect(
+            lambda: parent.add_to_selection(
+                self.selectorComboBox.currentIndex()))
+        self.selectButton.clicked.connect(
+            lambda: parent.add_to_selection(
+                self.selectorComboBox.currentIndex()))
+
+    def set_data(self, labels, array):
+        pass
