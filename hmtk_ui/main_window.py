@@ -63,7 +63,7 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         else:
             alert("Can not undo. History empty")
 
-    @pyqtSlot(name="on_actionSelection_editor_triggered")
+    @pyqtSlot(name="on_actionSelectionEditor_triggered")
     def show_selection_editor(self):
         self.selection_editor.exec_()
 
@@ -206,7 +206,7 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         if self.catalogue_model:
             self.push_state(self.catalogue_model)
         self.catalogue_model = model
-        self.outputTableView.setModel(self.catalogue_model.item_model)
+        self.catalogueTableView.setModel(self.catalogue_model.item_model)
         if self.catalogue_map is None:
             self.catalogue_map = CatalogueMap(
                 self.mapWidget, self.catalogue_model)
@@ -237,7 +237,7 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
     def update_selection(self):
         initial = catalogue = self.catalogue_model.catalogue
 
-        if not self.selectorList.count():
+        if not self.selection_editor.selectorList.count():
             self.catalogue_map.select([])
         else:
             for i in range(self.selection_editor.selectorList.count()):
@@ -274,13 +274,14 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
                 self, "Remove unselected events", "Are you sure?", "Yes"):
             self.change_model(CatalogueModel(catalogue))
 
-            for _ in range(self.selectorList.count()):
-                self.selectorList.takeItem(0)
+            for _ in range(self.selection_editor.selectorList.count()):
+                self.selection_editor.selectorList.takeItem(0)
 
     @pyqtSlot(name="on_removeFromRuleListButton_clicked")
     def remove_selector(self):
-        for item in self.selectorList.selectedItems():
-            self.selectorList.takeItem(self.selectorList.row(item))
+        for item in self.selection_editor.selectorList.selectedItems():
+            self.selection_editor.selectorList.takeItem(
+                self.selection_editor.selectorList.row(item))
         self.update_selection()
 
     def setupActions(self):
@@ -298,6 +299,10 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
             lambda: self.stackedFormWidget.setCurrentIndex(3))
         self.actionSmoothedSeismicity.triggered.connect(
             lambda: self.stackedFormWidget.setCurrentIndex(4))
+        self.actionCatalogueAnalysis.triggered.connect(
+            lambda: self.stackedFormWidget.setCurrentIndex(5))
+        self.actionEventsInspector.triggered.connect(
+            lambda: self.stackedFormWidget.setCurrentIndex(6))
 
         # menu export actions
         filters_formats = QgsVectorFileWriter.supportedFiltersAndFormats()
@@ -311,29 +316,29 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
 
         # table view actions
         QObject.connect(
-            self.outputTableView,
+            self.catalogueTableView,
             SIGNAL("clicked(QModelIndex)"), self.cellClicked)
 
         # Selection management
-        self.actionDelete_unselected_events.triggered.connect(
+        self.actionDeleteUnselectedEvents.triggered.connect(
             self.remove_unselected_events)
         self.actionInvertSelection.triggered.connect(
             lambda: self.add_to_selection(0))
-        self.actionWithin_a_polygon.triggered.connect(
+        self.actionWithinPolyhedra.triggered.connect(
             lambda: self.add_to_selection(1))
-        self.actionWithin_Joyner_Boore_distance_of_source.triggered.connect(
+        self.actionWithinJoynerBooreSource.triggered.connect(
             lambda: self.add_to_selection(2))
-        self.actionWithin_Rupture_distance.triggered.connect(
+        self.actionWithinRuptureDistance.triggered.connect(
             lambda: self.add_to_selection(3))
-        self.actionWithin_a_Square_centered_on.triggered.connect(
+        self.actionWithinSquare.triggered.connect(
             lambda: self.add_to_selection(4))
-        self.actionWithin_distance_from_point.triggered.connect(
+        self.actionWithinDistance.triggered.connect(
             lambda: self.add_to_selection(5))
-        self.actionWithin_Joyner_Boore_distance_from_point.triggered.connect(
+        self.actionWithinJoynerBoorePoint.triggered.connect(
             lambda: self.add_to_selection(6))
-        self.actionTime_between.triggered.connect(
+        self.actionTimeBetween.triggered.connect(
             lambda: self.add_to_selection(7))
-        self.actionField_between.triggered.connect(
+        self.actionFieldBetween.triggered.connect(
             lambda: self.add_to_selection(8))
 
     def save_as(self, flt, fmt):
@@ -349,7 +354,7 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
                 "CP1250", None, fmt)
         return wrapped
 
-    @pyqtSlot(name="on_actionSave_catalogue_triggered")
+    @pyqtSlot(name="on_actionSaveCatalogue_triggered")
     def save_catalogue(self):
         """
         Open a file dialog to save the current catalogue in csv format
@@ -375,7 +380,7 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         map
         """
         success = self._apply_algorithm("declustering")
-        self.outputTableView.setModel(self.catalogue_model.item_model)
+        self.catalogueTableView.setModel(self.catalogue_model.item_model)
         self.catalogue_map.update_catalogue_layer(
             ['Cluster_Index', 'Cluster_Flag'])
 
@@ -392,7 +397,7 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         if self.decluster():
             self.catalogue_model.purge_decluster()
 
-            self.outputTableView.setModel(self.catalogue_model.item_model)
+            self.catalogueTableView.setModel(self.catalogue_model.item_model)
             self.catalogue_map.change_catalogue_model(self.catalogue_model)
             self.declusteringChart.draw_occurrences(
                 self.catalogue_model.catalogue)
@@ -407,7 +412,7 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         """
         if self.completeness():
             self.catalogue_model.purge_completeness()
-            self.outputTableView.setModel(self.catalogue_model.item_model)
+            self.catalogueTableView.setModel(self.catalogue_model.item_model)
             self.catalogue_map.change_catalogue_model(self.catalogue_model)
             self.declusteringChart.draw_occurrences(
                 self.catalogue_model.catalogue)

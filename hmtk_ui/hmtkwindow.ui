@@ -263,7 +263,7 @@
         <string>Catalogue Analysis</string>
        </attribute>
       </widget>
-      <widget class="QWidget" name="stackedFormWidgetPage8">
+      <widget class="QWidget" name="stackedFormWidgetPage7">
        <attribute name="title">
         <string>Events</string>
        </attribute>
@@ -272,7 +272,7 @@
        </attribute>
        <layout class="QGridLayout" name="gridLayout_7">
         <item row="0" column="0">
-         <widget class="QTableView" name="outputTableView">
+         <widget class="QTableView" name="catalogueTableView">
           <property name="editTriggers">
            <set>QAbstractItemView::NoEditTriggers</set>
           </property>
@@ -310,7 +310,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QTableWidget" name="outputTable">
+       <widget class="QTableWidget" name="resultsTable">
         <property name="editTriggers">
          <set>QAbstractItemView::NoEditTriggers</set>
         </property>
@@ -355,15 +355,15 @@
      <property name="title">
       <string>Platform</string>
      </property>
-     <addaction name="actionView_Catalogue_on_platform"/>
-     <addaction name="actionUpload_models"/>
+     <addaction name="actionPlatformViewCatalogue"/>
+     <addaction name="actionPlatformUploadModels"/>
     </widget>
     <addaction name="menuLoad_catalogue"/>
-    <addaction name="actionSave_catalogue"/>
+    <addaction name="actionSaveCatalogue"/>
     <addaction name="menuExport"/>
     <addaction name="separator"/>
     <addaction name="menuPlatform"/>
-    <addaction name="actionReload_plugin"/>
+    <addaction name="actionReloadPlugin"/>
    </widget>
    <widget class="QMenu" name="menuTools">
     <property name="title">
@@ -386,20 +386,20 @@
      <property name="title">
       <string>Select events</string>
      </property>
-     <addaction name="actionWithin_a_polygon"/>
-     <addaction name="actionWithin_Joyner_Boore_distance_of_source"/>
-     <addaction name="actionWithin_Rupture_distance"/>
-     <addaction name="actionWithin_a_Square_centered_on"/>
-     <addaction name="actionWithin_distance_from_point"/>
-     <addaction name="actionWithin_Joyner_Boore_distance_from_point"/>
-     <addaction name="actionTime_between"/>
-     <addaction name="actionField_between"/>
+     <addaction name="actionWithinPolyhedra"/>
+     <addaction name="actionWithinJoynerBooreSource"/>
+     <addaction name="actionWithinRuptureDistance"/>
+     <addaction name="actionWithinSquare"/>
+     <addaction name="actionWithinDistance"/>
+     <addaction name="actionWithinJoynerBoorePoint"/>
+     <addaction name="actionTimeBetween"/>
+     <addaction name="actionFieldBetween"/>
     </widget>
     <addaction name="actionUndo"/>
-    <addaction name="menuSelect"/>
-    <addaction name="actionDelete_unselected_events"/>
-    <addaction name="actionInvertSelection"/>
     <addaction name="actionUnselectAall"/>
+    <addaction name="menuSelect"/>
+    <addaction name="actionInvertSelection"/>
+    <addaction name="actionDeleteUnselectedEvents"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
@@ -409,40 +409,33 @@
      <property name="title">
       <string>Style Events</string>
      </property>
-     <addaction name="actionBy_cluster_event_type"/>
-     <addaction name="actionBy_depth_magnitude"/>
+     <addaction name="actionCatalogueStyleByDepthMagnitude"/>
+     <addaction name="actionCatalogueStyleByCluster"/>
+     <addaction name="actionCatalogueStyleByCompleteness"/>
     </widget>
     <widget class="QMenu" name="menuStyle_Sources">
      <property name="title">
       <string>Style Sources</string>
      </property>
-     <addaction name="actionBy_maximum_magnitude"/>
-     <addaction name="actionBy_b_value"/>
     </widget>
     <addaction name="menuStyle_Events"/>
     <addaction name="menuStyle_Sources"/>
-   </widget>
-   <widget class="QMenu" name="menuWindow">
-    <property name="title">
-     <string>Window</string>
-    </property>
-    <addaction name="actionMain_window"/>
-    <addaction name="actionSelection_editor"/>
+    <addaction name="separator"/>
+    <addaction name="actionSelectionEditor"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
      <string>Help</string>
     </property>
     <addaction name="actionManual"/>
-    <addaction name="actionHazard_Modeller_s_Toolkit_Tutorial"/>
+    <addaction name="actionTutorial"/>
     <addaction name="separator"/>
-    <addaction name="actionVisit_GEM_website"/>
+    <addaction name="actionVisitGEMWebsite"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuView"/>
    <addaction name="menuTools"/>
-   <addaction name="menuWindow"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QToolBar" name="toolBar">
@@ -522,7 +515,7 @@
     <string>Ctrl+5</string>
    </property>
   </action>
-  <action name="actionSave_catalogue">
+  <action name="actionSaveCatalogue">
    <property name="text">
     <string>Save catalogue</string>
    </property>
@@ -630,89 +623,74 @@
     <string>Ctrl+Z</string>
    </property>
   </action>
-  <action name="actionView_Catalogue_on_platform">
+  <action name="actionPlatformViewCatalogue">
    <property name="text">
     <string>Share</string>
    </property>
   </action>
-  <action name="actionUpload_models">
+  <action name="actionPlatformUploadModels">
    <property name="text">
     <string>Import</string>
    </property>
   </action>
-  <action name="actionView_Fault_Sources">
-   <property name="text">
-    <string>View Fault Sources</string>
-   </property>
-  </action>
-  <action name="actionDelete_unselected_events">
+  <action name="actionDeleteUnselectedEvents">
    <property name="text">
     <string>Delete unselected events</string>
    </property>
   </action>
-  <action name="actionWithin_a_polygon">
+  <action name="actionWithinPolyhedra">
    <property name="text">
     <string>within a polyhedra</string>
    </property>
   </action>
-  <action name="actionWithin_Joyner_Boore_distance_of_source">
+  <action name="actionWithinJoynerBooreSource">
    <property name="text">
     <string>within Joyner-Boore distance of source</string>
    </property>
   </action>
-  <action name="actionWithin_Rupture_distance">
+  <action name="actionWithinRuptureDistance">
    <property name="text">
     <string>within Rupture distance</string>
    </property>
   </action>
-  <action name="actionWithin_a_Square_centered_on">
+  <action name="actionWithinSquare">
    <property name="text">
     <string>within a Square centered on</string>
    </property>
   </action>
-  <action name="actionWithin_distance_from_point">
+  <action name="actionWithinDistance">
    <property name="text">
     <string>within distance from point</string>
    </property>
   </action>
-  <action name="actionWithin_Joyner_Boore_distance_from_point">
+  <action name="actionWithinJoynerBoorePoint">
    <property name="text">
     <string>within Joyner Boore distance from point</string>
    </property>
   </action>
-  <action name="actionTime_between">
+  <action name="actionTimeBetween">
    <property name="text">
     <string>Time between</string>
    </property>
   </action>
-  <action name="actionField_between">
+  <action name="actionFieldBetween">
    <property name="text">
     <string>Field between</string>
    </property>
   </action>
-  <action name="actionReload_plugin">
+  <action name="actionReloadPlugin">
    <property name="text">
     <string>Reload plugins</string>
    </property>
   </action>
-  <action name="actionBy_cluster_event_type">
+  <action name="actionCatalogueStyleByCluster">
    <property name="text">
     <string>by cluster / event type</string>
    </property>
   </action>
-  <action name="actionBy_depth_magnitude">
+  <action name="actionCatalogueStyleByDepthMagnitude">
    <property name="text">
-    <string>by depth/magnitude</string>
-   </property>
-  </action>
-  <action name="actionBy_maximum_magnitude">
-   <property name="text">
-    <string>by maximum magnitude</string>
-   </property>
-  </action>
-  <action name="actionBy_b_value">
-   <property name="text">
-    <string>by b-value</string>
+    <string>by depth / magnitude</string>
    </property>
   </action>
   <action name="actionInvertSelection">
@@ -730,24 +708,24 @@
     <string>Manual</string>
    </property>
   </action>
-  <action name="actionHazard_Modeller_s_Toolkit_Tutorial">
+  <action name="actionTutorial">
    <property name="text">
     <string>Hazard Modeller's Toolkit Tutorial</string>
    </property>
   </action>
-  <action name="actionVisit_GEM_website">
+  <action name="actionVisitGEMWebsite">
    <property name="text">
     <string>Visit GEM website</string>
    </property>
   </action>
-  <action name="actionMain_window">
-   <property name="text">
-    <string>Main window</string>
-   </property>
-  </action>
-  <action name="actionSelection_editor">
+  <action name="actionSelectionEditor">
    <property name="text">
     <string>Selection editor</string>
+   </property>
+  </action>
+  <action name="actionCatalogueStyleByCompleteness">
+   <property name="text">
+    <string>by completeness</string>
    </property>
   </action>
  </widget>
