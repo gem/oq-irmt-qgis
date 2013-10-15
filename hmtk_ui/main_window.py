@@ -30,8 +30,13 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         events, completeness, model for supporting tables)
     :attr catalogue_map:
         a CatalogueMap (which holds the state of the map)
+    :attr list states:
+        a stack of CatalogueModel instances used for undoing application
+        state changes
 
-    :attr tabs:
+    :attr QtDialog selection_editor:
+        a dialog with the selection tools
+    :attr list tabs:
         a set of `Tab` instances
     """
 
@@ -50,27 +55,31 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         # set up User Interface (widgets, layout...)
         self.setupUi(self)
 
-        # custom slots connections
+        # bind menu actions
         self.setupActions()
 
     def push_state(self, state):
         self.states.append(state)
 
-    @pyqtSlot(name="on_actionUndo_triggered")
     def undo(self):
         if self.states:
             self.change_model(self.states.pop())
         else:
             alert("Can not undo. History empty")
 
-    @pyqtSlot(name="on_actionSelectionEditor_triggered")
-    def show_selection_editor(self):
-        self.selection_editor.exec_()
-
     def setupUi(self, _):
+        """
+        Add to the UI the following elements:
+
+        1) the selection editor
+        2) the tabs with the dynamic forms
+        3) the map
+        4) the toolbar with the map tools
+        """
         super(MainWindow, self).setupUi(self)
 
         self.selection_editor = SelectionDialog(self)
+
         # setup dynamic forms
         self.tabs = (
             Tab("declustering",
@@ -135,6 +144,8 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
 
         self.mapWidget.setMapTool(toolPan)
 
+        self.stackedFormWidget.setCurrentIndex(0)
+
     def current_tab(self):
         """
         :returns: the current `Tab` selected
@@ -188,7 +199,6 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
             if dlg.exec_():
                 self.catalogue_model.completeness_table = dlg.get_table()
 
-    @pyqtSlot(name='on_actionLoadCatalogue_triggered')
     def load_catalogue(self):
         """
         Open a file dialog, load a catalogue from a csv file,
@@ -218,7 +228,6 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         self.recurrenceModelChart.draw_seismicity_rate(
             self.catalogue_model.catalogue, None)
 
-    @pyqtSlot(name='on_actionLoadSourceNRML_triggered')
     def load_fault_source(self):
         """
         Open a file dialog, load a source model from a nrml file,
@@ -304,7 +313,11 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         self.actionEventsInspector.triggered.connect(
             lambda: self.stackedFormWidget.setCurrentIndex(6))
 
-        # menu export actions
+        # menu import/export actions
+        self.actionLoadCatalogue.triggered.connect(self.load_catalogue)
+        self.actionSaveCatalogue.triggered.connect(self.save_catalogue)
+        self.actionLoadSourceNRML.triggered.connect(self.load_fault_source)
+
         filters_formats = QgsVectorFileWriter.supportedFiltersAndFormats()
         for flt, fmt in filters_formats.items():
             action = QtGui.QAction(self)
@@ -322,6 +335,8 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         # Selection management
         self.actionDeleteUnselectedEvents.triggered.connect(
             self.remove_unselected_events)
+        self.actionUndo.triggered.connect(self.undo)
+
         self.actionInvertSelection.triggered.connect(
             lambda: self.add_to_selection(0))
         self.actionWithinPolyhedra.triggered.connect(
@@ -340,6 +355,8 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
             lambda: self.add_to_selection(7))
         self.actionFieldBetween.triggered.connect(
             lambda: self.add_to_selection(8))
+        self.actionSelectionEditor.triggered.connect(
+            self.selection_editor.exec_)
 
     def save_as(self, flt, fmt):
         """
@@ -354,7 +371,6 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
                 "CP1250", None, fmt)
         return wrapped
 
-    @pyqtSlot(name="on_actionSaveCatalogue_triggered")
     def save_catalogue(self):
         """
         Open a file dialog to save the current catalogue in csv format
