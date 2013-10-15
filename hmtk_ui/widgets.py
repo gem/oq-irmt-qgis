@@ -222,5 +222,40 @@ class SelectionDialog(QtGui.QDialog, selection_dialog.Ui_Dialog):
             lambda: parent.add_to_selection(
                 self.selectorComboBox.currentIndex()))
 
-    def set_data(self, labels, array):
-        pass
+
+class ResultsTable(QtGui.QTableWidget):
+    def __init__(self, *args, **kwargs):
+        super(ResultsTable, self).__init__(*args, **kwargs)
+        self.callback = None
+
+    def set_data(self, rows, hlabels, vlabels=None, callback=None):
+        if self.callback is not None:
+            self.itemClicked.disconnect(self.callback)
+        self.callback = callback
+
+        self.clear()
+        self.setRowCount(0)
+        self.setColumnCount(0)
+
+        for i, row in enumerate(rows):
+            self.insertRow(i)
+
+            if vlabels is not None:
+                self.verticalHeader().show()
+                if i < len(vlabels):
+                    self.setVerticalHeaderItem(
+                        i, QtGui.QTableWidgetItem(vlabels[i]))
+                else:
+                    self.setVerticalHeaderItem(
+                        i, QtGui.QTableWidgetItem(str(i)))
+            else:
+                self.verticalHeader().hide()
+
+            for j, data in enumerate(row):
+                if not i:
+                    self.insertColumn(j)
+                    self.setHorizontalHeaderItem(
+                        j, QtGui.QTableWidgetItem(hlabels[j]))
+                self.setItem(i, j, QtGui.QTableWidgetItem(str(data)))
+        if callback is not None:
+            self.itemClicked.connect(callback)

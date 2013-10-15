@@ -1,3 +1,4 @@
+import collections
 import numpy
 
 from PyQt4 import QtGui
@@ -358,6 +359,8 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         self.actionSelectionEditor.triggered.connect(
             self.selection_editor.exec_)
 
+        self.stackedFormWidget.currentChanged.connect(self.change_tab)
+
     def save_as(self, flt, fmt):
         """
         :returns:
@@ -399,9 +402,7 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         self.catalogueTableView.setModel(self.catalogue_model.item_model)
         self.catalogue_map.update_catalogue_layer(
             ['Cluster_Index', 'Cluster_Flag'])
-
-        # TODO. compute a new catalogue and draw new occurrences
-
+        self.add_declustering_output()
         return success
 
     @pyqtSlot(name="on_declusteringPurgeButton_clicked")
@@ -446,6 +447,7 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         if model is not None:
             self.catalogue_map.update_catalogue_layer(['Completeness_Flag'])
             self.completenessChart.draw_completeness(model)
+            self.add_completeness_output()
             return True
 
     @pyqtSlot(name="on_recurrenceModelButton_clicked")
@@ -456,7 +458,6 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         chart
         """
         params = self._apply_algorithm("recurrence_model")
-        alert(str(params))
 
         # the algorithm for performing recurrence model analysis returns
         # either 3 values, either 5. In the latter case we have the
@@ -464,6 +465,9 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         if len(params) == 5:
             self.recurrenceModelChart.draw_seismicity_rate(
                 self.catalogue_model.catalogue, *params)
+
+        self.catalogue_model.recurrence_model_output = params
+        self.add_recurrence_model_output()
 
     @pyqtSlot(name="on_maxMagnitudeButton_clicked")
     def max_magnitude(self):
@@ -473,7 +477,8 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         """
 
         mmax_params = self._apply_algorithm("max_magnitude")
-        alert(str(mmax_params))
+        self.catalogue_model.maximum_magnitude_output = mmax_params
+        self.add_maximum_magnitude_output()
 
     @pyqtSlot(name="on_smoothedSeismicityButton_clicked")
     def smoothed_seismicity(self):
@@ -482,42 +487,106 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         accordingly
         """
         smoothed_matrix = self._apply_algorithm("smoothed_seismicity")
+        self.catalogue_model.smoothed_seismicity_output = smoothed_matrix
         self.catalogue_map.set_raster(smoothed_matrix)
+        self.add_smoothed_seismicity_output()
 
     def cellClicked(self, modelIndex):
         """
-        Callback when a cell in the catalogue table is clicked.
-
-        if the selected cell identifies a cluster (i.e. the selected
-        cell is in the column "Cluster_Index"), then we filter the map
-        such that only the features of that cluster are visible.
-
-        if the selected cell identifies a cluster flag (i.e. the
-        selected cell is in the column "Cluster_Flag"), then we filter
-        the map such that only the features with that flag are visible.
-
-        Otherwise, we filter the map by showing only the selected
-        feature at cell row
+        Callback when a cell in the catalogue table is clicked. Filter
+        the map by showing only the selected feature at cell row.
         """
-        catalogue = self.catalogue_model.catalogue
+        self.catalogue_map.select([self.catalogue_model.event_at(modelIndex)])
 
-        if self.catalogue_model.field_idx(
-                'Cluster_Index') == modelIndex.column():
-            # user clicked on the column with cluster data
-            cluster = int(float(self.catalogue_model.at(modelIndex)))
-            if not cluster or not catalogue.data['Cluster_Index'].any():
-                print "no cluster to select"
-                return
-            self.catalogue_map.filter('Cluster_Index', cluster)
-        elif self.catalogue_model.field_idx(
-                'Cluster_Flag') == modelIndex.column():
-            # user clicked on the column with cluster flags
-            if not catalogue.data['Cluster_Flag'].any():
-                print "catalogue not declustered"
-                return
-            self.catalogue_map.filter(
-                'Cluster_Flag',
-                int(float(self.catalogue_model.at(modelIndex))))
-        else:
-            self.catalogue_map.select(
-                [self.catalogue_model.event_at(modelIndex)])
+    def change_tab(self, index):
+        if index == 0:
+            self.add_declustering_output()
+        elif index == 1:
+            self.add_completeness_output()
+        elif index == 2:
+            self.add_recurrence_model_output()
+        elif index == 3:
+            self.add_maximum_magnitude_output()
+        elif index == 4:
+            self.add_smoothed_seismicity_output()
+
+    def add_declustering_output(self):
+        cat = self.catalogue_model.catalogue
+        events = cat.load_to_array(
+            ['Cluster_Index', 'Cluster_Flag', 'eventID']).astype(numpy.int32)
+
+        clustered = events[events[:, 0] != 0]
+        clusters = dict()
+
+        Cluster = collections.namedtuple(
+            'Cluster',
+            'id mainshocks foreshocks aftershocks')
+
+        for cluster_index, flag, event_id in clustered:
+            if cluster_index not in clusters:
+                if flag == 0:
+                    cluster = Cluster(cluster_index, [event_id], [], [])
+                elif flag == -1:
+                    cluster = Cluster(cluster_index, [], [event_id], [])
+                elif flag == 1:
+                    cluster = Cluster(cluster_index, [], [], [event_id])
+                else:
+                    raise RuntimeError("Invalid cluster flag %s" % flag)
+                clusters[cluster_index] = cluster
+            else:
+                cluster = clusters[cluster_index]
+                if flag == 0:
+                    cluster.mainshocks.append(event_id)
+                elif flag == -1:
+                    cluster.foreshocks.append(event_id)
+                elif flag == 1:
+                    cluster.aftershocks.append(event_id)
+                else:
+                    raise RuntimeError("Invalid cluster flag %s" % flag)
+
+        groups = sorted(clusters.values(), key=(
+            lambda cluster: sum([len(g) for g in cluster[1:]])))
+        self.resultsTable.set_data(
+            [[numpy.argwhere(cat.data['Cluster_Index'] != 0).size,
+              numpy.argwhere(cat.data['Cluster_Index'] == 0).size,
+              numpy.argwhere(cat.data['Cluster_Flag'] == -1).size,
+              numpy.argwhere(cat.data['Cluster_Flag'] == 1).size]] + groups,
+            ["Clusters", "Main shocks", "Foreshocks", "Aftershocks"],
+            ["Totals"],
+            lambda item: self.catalogue_map.center_on(
+                'Cluster_Index', int(
+                    self.resultsTable.item(item.row(), 0).data(0))))
+        for row, (cluster_idx, _, _, _) in enumerate(groups, 1):
+            self.resultsTable.item(row, 0).setData(
+                Qt.ForegroundRole,
+                self.catalogue_model.cluster_color(cluster_idx))
+
+    def add_completeness_output(self):
+        self.resultsTable.set_data(
+            self.catalogue_model.completeness_table,
+            ["Year", "Magnitude"])
+
+    def add_recurrence_model_output(self):
+        # see #recurrence_model
+        if self.catalogue_model.recurrence_model_output is not None:
+            if len(self.catalogue_model.recurrence_model_output) == 3:
+                self.resultsTable.set_data(
+                    [self.catalogue_model.recurrence_model_output],
+                    ["Reference Magnitude", "b value", "sigma b"])
+            elif len(self.catalogue_model.recurrence_model_output) == 5:
+                self.resultsTable.set_data(
+                    [self.catalogue_model.recurrence_model_output],
+                    ["Reference Magnitude", "b value", "sigma b"
+                     "a value", "sigma a"])
+
+    def add_maximum_magnitude_output(self):
+        if self.catalogue_model.maximum_magnitude_output is not None:
+            self.resultsTable.set_data(
+                [self.catalogue_model.maximum_magnitude_output],
+                ["Maximum Magnitude", "Standard deviation"])
+
+    def add_smoothed_seismicity_output(self):
+        if self.catalogue_model.smoothed_seismicity_output is not None:
+            self.resultsTable.set_data(
+                self.catalogue_model.smoothed_seismicity_output,
+                ["Longitude", "Latitude", "Depth", "Observed", "Smoothed"])

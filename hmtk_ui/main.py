@@ -8,11 +8,10 @@ import imp
 import sip
 
 for api in ['QString', 'QDate', 'QDateTime', 'QTextStream',
-            'QTime', 'QUrl', 'QVariant']:
+            'QTime', 'QUrl', 'QVariant', 'QStringList']:
     sip.setapi(api, 2)
 
 from PyQt4 import QtGui, QtCore
-import images_rc
 
 from qgis.core import QgsApplication
 

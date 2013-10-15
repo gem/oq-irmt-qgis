@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'hmtkwindow.ui'
 #
-# Created: Tue Oct 15 12:44:17 2013
+# Created: Tue Oct 15 17:14:22 2013
 #      by: PyQt4 UI code generator 4.10.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -163,10 +163,10 @@ class Ui_HMTKWindow(object):
         self.mapWidget.setMaximumSize(QtCore.QSize(16777215, 600))
         self.mapWidget.setObjectName(_fromUtf8("mapWidget"))
         self.outputVerticalLayout.addWidget(self.mapWidget)
-        self.resultsTable = QtGui.QTableWidget(self.centralWidget)
+        self.resultsTable = ResultsTable(self.centralWidget)
         self.resultsTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
-        self.resultsTable.setSelectionMode(QtGui.QAbstractItemView.NoSelection)
-        self.resultsTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectColumns)
+        self.resultsTable.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
+        self.resultsTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
         self.resultsTable.setObjectName(_fromUtf8("resultsTable"))
         self.resultsTable.setColumnCount(0)
         self.resultsTable.setRowCount(0)
@@ -442,6 +442,6 @@ class Ui_HMTKWindow(object):
         self.actionSelectionEditor.setText(_translate("HMTKWindow", "Selection editor", None))
         self.actionCatalogueStyleByCompleteness.setText(_translate("HMTKWindow", "by completeness", None))
 
-from widgets import FigureCanvasQTAggWidget
+from widgets import FigureCanvasQTAggWidget, ResultsTable
 from qgis.gui import QgsMapCanvas
 import images_rc

@@ -193,7 +193,7 @@ class CatalogueMap(object):
 
         return olplugin
 
-    def filter(self, field, value, comparator=cmp):
+    def center_on(self, field, value, comparator=cmp):
         """
         Pan and zoom to the features with `field` equal to `value` by
         using a custom comparator function `cmp`
@@ -204,9 +204,10 @@ class CatalogueMap(object):
 
         catalogue = self.catalogue_model.catalogue
         for i, event_id in enumerate(catalogue.data['eventID']):
-            if not comparator(catalogue.data[field][i], value):
+            expected = catalogue.data[field][i]
+            if not comparator(expected, value):
                 features.append(event_id)
-        self.catalogue_layer.select(features)
+        self.select(features)
         self.canvas.panToSelected(self.catalogue_layer)
         self.canvas.zoomToSelected(self.catalogue_layer)
         self.canvas.zoomByFactor(1.1)
@@ -294,7 +295,7 @@ class CatalogueMap(object):
                 self.raster_layer.id())
         self.raster_layer = layer
         layer.reload()
-        self.refresh_map()
+        self.reset_map()
 
     def add_source_layers(self, sources):
         """

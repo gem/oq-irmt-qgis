@@ -12,6 +12,10 @@ class CatalogueModel(object):
     def __init__(self, catalogue):
         self.catalogue = catalogue
         self.completeness_table = self.default_completeness(catalogue)
+        self.recurrence_model_output = None
+        self.maximum_magnitude_output = None
+        self.smoothed_seismicity_output = None
+
         self.last_computed_completeness_table = None
 
         catalogue.data['Cluster_Index'] = numpy.zeros(
@@ -67,9 +71,6 @@ class CatalogueModel(object):
                     item_model.setItem(
                         i, j, QtGui.QStandardItem(str(event_data[i])))
         return item_model
-
-    def at(self, modelIndex):
-        return self.item_model.data(modelIndex)
 
     def event_at(self, modelIndex):
         return int(
@@ -134,7 +135,7 @@ class CatalogueModel(object):
 
     def recurrence_model(self, algorithm, config):
         rec_params = algorithm(self.catalogue, config, self.completeness_table)
-        return (config.get('reference_magnitude', None), ) + rec_params
+        return (config.get('reference_magnitude', None),) + rec_params
 
     def max_magnitude(self, algorithm, config):
         return algorithm(self.catalogue, config)
