@@ -13,14 +13,13 @@ class CatalogueDepthMagnitudeRenderer(QgsGraduatedSymbolRendererV2):
     """
 
     @classmethod
-    def create(cls, layer, catalogue):
+    def create_renderer(cls, layer, catalogue):
         symbol = QgsSymbolV2.defaultSymbol(layer.geometryType())
         ramp = QgsVectorGradientColorRampV2.create(
-            dict(color1='255,0,0,255', color2='0,0,255,255',
-                 stops='0.25;yellow:0.50;blue:0.75;green'))
+            dict())
         #symbol.setSize(4. / catalogue.data['magnitude'].max())
 
-        renderer = cls.createRenderer(
+        renderer = QgsGraduatedSymbolRendererV2.createRenderer(
             layer, "depth", 5,
             QgsGraduatedSymbolRendererV2.Quantile, symbol, ramp)
 
@@ -29,7 +28,7 @@ class CatalogueDepthMagnitudeRenderer(QgsGraduatedSymbolRendererV2):
         return renderer
 
 
-class CatalogueCompletenessRenderer(QgsFeatureRendererV2):
+class CatalogueCompletenessRenderer(QgsGraduatedSymbolRendererV2):
     """
     Render events depending on their completeness attributes
     """

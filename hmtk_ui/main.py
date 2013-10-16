@@ -12,6 +12,7 @@ from PyQt4 import QtGui, QtCore
 from qgis.core import QgsApplication
 
 from main_window import MainWindow
+from catalogue_model import CatalogueModel
 from utils import excepthook
 
 
@@ -55,7 +56,10 @@ def main(argv):
     if sys.platform == "darwin":
         wnd.raise_()
 
-    wnd.load_catalogue()
+    if len(argv) > 1:
+        wnd.change_model(CatalogueModel.from_csv_file(argv[1]))
+    else:
+        wnd.load_catalogue()
 
     # Connect signal for app finish
     def on_quit():

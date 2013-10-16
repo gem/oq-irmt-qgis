@@ -104,7 +104,7 @@ class CatalogueMap(object):
         layer = self.catalogue_layer
 
         if style == "depth-magnitude":
-            renderer = styles.CatalogueDepthMagnitudeRenderer.create(
+            renderer = styles.CatalogueDepthMagnitudeRenderer.create_renderer(
                 layer, self.catalogue_model.catalogue)
         elif style == "completeness":
             renderer = styles.CatalogueCompletenessRenderer.create(
