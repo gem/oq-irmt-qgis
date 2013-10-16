@@ -9,6 +9,7 @@ from shapely import wkt
 from PyQt4.QtCore import QVariant, QFileInfo
 
 from osgeo import gdal, osr
+import math
 
 from qgis.core import (
     QgsVectorLayer, QgsRasterLayer, QgsRaster,
@@ -59,6 +60,7 @@ class CatalogueMap(object):
         self.canvas = canvas
         self.catalogue_model = catalogue_model
         self.event_feature_ids = None
+        self.point_size_field = 'point_size'
 
         self.catalogue_layer = make_inmemory_layer("catalogue")
         self.populate_catalogue_layer(catalogue_model.catalogue)
@@ -103,7 +105,7 @@ class CatalogueMap(object):
 
         if style == "depth-magnitude":
             renderer = styles.CatalogueDepthMagnitudeRenderer.create_renderer(
-                layer, self.catalogue_model.catalogue)
+                layer, self.catalogue_model.catalogue, self.point_size_field)
         elif style == "completeness":
             renderer = styles.CatalogueCompletenessRenderer.create(
                 self.catalogue_model.catalogue)
@@ -134,6 +136,8 @@ class CatalogueMap(object):
                 fields.append(QgsField(key, QVariant.Double))
             else:
                 fields.append(QgsField(key, QVariant.String))
+
+        fields.append(QgsField(self.point_size_field, QVariant.Double))
         pr.addAttributes(fields)
 
         qgs_fields = QgsFields()
@@ -157,6 +161,8 @@ class CatalogueMap(object):
                         fet[key] = float(event_data[i])
                     else:
                         fet[key] = str(event_data[i])
+            fet[self.point_size_field] = self.magnitude_to_display_size(
+                fet['magnitude'])
             features.append(fet)
         pr.addFeatures(features)
         vl.commitChanges()
@@ -167,6 +173,10 @@ class CatalogueMap(object):
         # Set the canvas extent to avoid projection problems and to
         # pan to the loaded events
         vl.updateExtents()
+
+    @staticmethod
+    def magnitude_to_display_size(x):
+        return math.exp(x)/10
 
     def change_catalogue_model(self, catalogue_model):
         """
