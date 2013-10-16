@@ -150,6 +150,10 @@ class Invert(QtGui.QListWidgetItem):
              for x in initial_catalogue.data['eventID']])
 
 
+class WithinJBSource(QtGui.QListWidgetItem):
+    pass
+
+
 class WithinPolyhedra(QtGui.QListWidgetItem):
     def __init__(self, window):
         super(WithinPolyhedra, self).__init__("Within polyhedra")
@@ -188,4 +192,4 @@ class WithinPolyhedra(QtGui.QListWidgetItem):
             lower_depth=self.values['lower_depth'])
 
 
-SELECTORS = [Invert, WithinPolyhedra]
+SELECTORS = [Invert, WithinPolyhedra, WithinJBSource]

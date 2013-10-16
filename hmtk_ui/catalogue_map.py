@@ -14,7 +14,7 @@ from qgis.core import (
     QgsVectorLayer, QgsRasterLayer, QgsRaster,
     QgsField, QgsFields, QgsFeature, QgsGeometry, QgsPoint,
     QgsMapLayerRegistry, QgsPluginLayerRegistry,
-    QgsFeatureRendererV2, QgsRectangle, QgsCoordinateReferenceSystem,
+    QgsRectangle, QgsCoordinateReferenceSystem,
     QgsCoordinateTransform, QgsFeatureRequest,
     QgsRasterShader, QgsColorRampShader, QgsStyleV2,
     QgsFillSymbolV2, QgsSingleSymbolRendererV2)
@@ -62,6 +62,7 @@ class CatalogueMap(object):
 
         self.catalogue_layer = make_inmemory_layer("catalogue")
         self.populate_catalogue_layer(catalogue_model.catalogue)
+        self.set_catalogue_style("depth-magnitude")
 
         # FIXME: QGIS require to set FIRST the vector layer to get the
         # proper projection transformation
@@ -80,9 +81,6 @@ class CatalogueMap(object):
         # Initialize Map
         self.reset_map()
 
-        self.catalogue_layer.setRendererV2(
-            self.catalogue_style("depth-magnitude"))
-
         # This zoom is required to initialize the map canvas
         self.canvas.zoomByFactor(1.1)
 
@@ -100,7 +98,7 @@ class CatalogueMap(object):
             [QgsMapCanvasLayer(self.ol_plugin.layer)])
         self.canvas.refresh()
 
-    def catalogue_style(self, style):
+    def set_catalogue_style(self, style):
         layer = self.catalogue_layer
 
         if style == "depth-magnitude":
@@ -114,7 +112,9 @@ class CatalogueMap(object):
                 self.catalogue_model.catalogue)
         else:
             raise NotImplementedError("Unsupported style %s" % style)
-        return renderer
+
+        print renderer.dump()
+        layer.setRendererV2(renderer)
 
     def populate_catalogue_layer(self, catalogue):
         """
@@ -150,20 +150,19 @@ class CatalogueMap(object):
             y = catalogue.data['latitude'][i]
             fet.setGeometry(QgsGeometry.fromPoint(QgsPoint(x, y)))
 
-            for key in self.catalogue_model.catalogue_keys():
+            for key in catalogue.data:
                 event_data = catalogue.data[key]
                 if len(event_data):
-                    fet[key] = event_data[i]
-                else:
-                    fet[key] = "NA"
+                    if isinstance(catalogue.data[key], numpy.ndarray):
+                        fet[key] = float(event_data[i])
+                    else:
+                        fet[key] = str(event_data[i])
             features.append(fet)
         pr.addFeatures(features)
         vl.commitChanges()
 
-        assert vl.featureCount() > 0
-        self.event_feature_ids = dict()
-        for f in vl.getFeatures():
-            self.event_feature_ids[f['eventID']] = f.id()
+        self.event_feature_ids = dict([
+            (f['eventID'], f.id()) for f in vl.getFeatures()])
 
         # Set the canvas extent to avoid projection problems and to
         # pan to the loaded events
