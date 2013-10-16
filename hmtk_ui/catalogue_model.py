@@ -3,7 +3,7 @@ import tempfile
 import numpy
 
 from PyQt4 import QtGui
-from PyQt4.QtCore import (QVariant, Qt)
+from PyQt4.QtCore import Qt
 
 from hmtk.parsers.catalogue import csv_catalogue_parser as csv
 
@@ -69,13 +69,13 @@ class CatalogueModel(object):
         return item_model
 
     def at(self, modelIndex):
-        return self.item_model.data(modelIndex).toPyObject()
+        return self.item_model.data(modelIndex)
 
     def event_at(self, modelIndex):
         return int(
             self.item_model.data(
                 self.item_model.index(
-                    modelIndex.row(), self.field_idx('eventID'))).toPyObject())
+                    modelIndex.row(), self.field_idx('eventID'))))
 
     @classmethod
     def from_csv_file(cls, fname):
@@ -91,13 +91,11 @@ class CatalogueModel(object):
 
         for i in range(self.catalogue.get_number_events()):
             index = self.item_model.index(i, cluster_index_idx)
-            self.item_model.setData(
-                index, QVariant(str(cluster_index[i])))
+            self.item_model.setData(index, str(cluster_index[i]))
             self.item_model.setData(
                 index, self.cluster_color(cluster_index[i]), Qt.ForegroundRole)
             index = self.item_model.index(i, cluster_flag_idx)
-            self.item_model.setData(
-                index, QVariant(str(cluster_flag[i])))
+            self.item_model.setData(index, str(cluster_flag[i]))
         return True
 
     def purge_decluster(self):
@@ -127,7 +125,7 @@ class CatalogueModel(object):
 
         for i in range(self.catalogue.get_number_events()):
             index = self.item_model.index(i, comp_flag_idx)
-            self.item_model.setData(index, QVariant(str(flag[i])))
+            self.item_model.setData(index, str(flag[i]))
 
             if flag[i]:
                 self.item_model.setData(
