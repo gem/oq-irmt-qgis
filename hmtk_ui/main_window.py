@@ -59,8 +59,6 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         # bind menu actions
         self.setupActions()
 
-        self._renderer = None
-
     def push_state(self, state):
         self.states.append(state)
 
@@ -245,12 +243,9 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
             [s for s in parser.parse(validate=False)])
 
     def add_to_selection(self, idx):
-        self._renderer = self.catalogue_map.catalogue_layer.rendererV2()
-        self.set_catalogue_style('default')
         SELECTORS[idx](self)
 
     def update_selection(self):
-        self.catalogue_map.catalogue_layer.setRenderer(self._renderer)
         initial = catalogue = self.catalogue_model.catalogue
 
         if not self.selection_editor.selectorList.count():

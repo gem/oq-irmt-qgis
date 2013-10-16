@@ -77,7 +77,29 @@ class CatalogueCompletenessRenderer(QgsFeatureRendererV2):
 class CatalogueDefaultRenderer(QgsFeatureRendererV2):
     @classmethod
     def make(cls, _catalogue_map):
-        return cls("CatalogueDefaultRenderer")
+        return cls()
+
+    def __init__(self):
+        QgsFeatureRendererV2.__init__(self, "CatalogueDefaultRenderer")
+        self.sym = QgsSymbolV2.defaultSymbol(QGis.Point)
+
+    def symbolForFeature(self, _feature):
+        return self.sym
+
+    def update_syms(self, _catalogue):
+        pass
+
+    def startRender(self, context, _vlayer):
+        self.sym.startRender(context)
+
+    def stopRender(self, context):
+        self.sym.stopRender(context)
+
+    def usedAttributes(self):
+        return []
+
+    def clone(self):
+        return CatalogueDefaultRenderer()
 
 
 class CatalogueClusterRenderer(QgsFeatureRendererV2):
