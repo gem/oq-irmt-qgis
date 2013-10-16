@@ -16,14 +16,13 @@ class CatalogueDepthMagnitudeRenderer(QgsGraduatedSymbolRendererV2):
     def create_renderer(cls, layer, catalogue):
         symbol = QgsSymbolV2.defaultSymbol(layer.geometryType())
         ramp = QgsVectorGradientColorRampV2.create(
-            dict(color1='red', color2='blue',
-                 stops="0.25;yellow:0.5;green:0.75;cyan"))
+            dict(color1='red', color2='blue'))
         # number of color classes = 8
         renderer = cls.createRenderer(
             layer, "depth", 8,
             QgsGraduatedSymbolRendererV2.Quantile, symbol, ramp)
 
-        renderer.setSizeScaleField("magnitude")
+        renderer.setSizeScaleField("depth")
 
         return renderer
 
