@@ -25,6 +25,17 @@ class CatalogueDepthMagnitudeRenderer(QgsGraduatedSymbolRendererV2):
 
         renderer.setSizeScaleField("magnitude")
 
+        pr = layer.dataProvider()
+
+        for i in range(24):
+            minimum = pr.minimumValue(i)
+            maximum = pr.maximumValue(i)
+            rdict = dict([(val, idx)
+                          for idx, val
+                          in pr.fieldNameMap().items()])
+            print (i, rdict[i], minimum, maximum,
+                   layer.pendingFields().fieldOrigin(i))
+
         return renderer
 
 
