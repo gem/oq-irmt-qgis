@@ -6,7 +6,6 @@ import numpy
 from openquake.hazardlib import geo
 from shapely import wkt
 
-from PyQt4 import QtGui
 from PyQt4.QtCore import QVariant, QFileInfo
 
 from osgeo import gdal, osr
@@ -15,8 +14,7 @@ from qgis.core import (
     QgsVectorLayer, QgsRasterLayer, QgsRaster,
     QgsField, QgsFields, QgsFeature, QgsGeometry, QgsPoint,
     QgsMapLayerRegistry, QgsPluginLayerRegistry,
-    QgsFeatureRendererV2, QgsSymbolV2, QGis,
-    QgsRectangle, QgsCoordinateReferenceSystem,
+    QgsFeatureRendererV2, QgsRectangle, QgsCoordinateReferenceSystem,
     QgsCoordinateTransform, QgsFeatureRequest,
     QgsRasterShader, QgsColorRampShader, QgsStyleV2,
     QgsFillSymbolV2, QgsSingleSymbolRendererV2)
@@ -26,6 +24,7 @@ from openlayers_plugin.openlayers_plugin import (
     OpenlayersPlugin, OpenlayersPluginLayerType)
 
 import utils
+import styles
 
 
 class CatalogueMap(object):
@@ -61,8 +60,7 @@ class CatalogueMap(object):
         self.catalogue_model = catalogue_model
         self.event_feature_ids = None
 
-        self.catalogue_layer = make_inmemory_layer(
-            "catalogue", CatalogueRenderer(catalogue_model))
+        self.catalogue_layer = make_inmemory_layer("catalogue")
         self.populate_catalogue_layer(catalogue_model.catalogue)
 
         # FIXME: QGIS require to set FIRST the vector layer to get the
@@ -82,6 +80,9 @@ class CatalogueMap(object):
         # Initialize Map
         self.reset_map()
 
+        self.catalogue_layer.setRendererV2(
+            self.catalogue_style("depth-magnitude"))
+
         # This zoom is required to initialize the map canvas
         self.canvas.zoomByFactor(1.1)
 
@@ -98,6 +99,22 @@ class CatalogueMap(object):
             [QgsMapCanvasLayer(s) for s in self.source_layers] +
             [QgsMapCanvasLayer(self.ol_plugin.layer)])
         self.canvas.refresh()
+
+    def catalogue_style(self, style):
+        layer = self.catalogue_layer
+
+        if style == "depth-magnitude":
+            renderer = styles.CatalogueDepthMagnitudeRenderer.create(
+                layer, self.catalogue_model.catalogue)
+        elif style == "completeness":
+            renderer = styles.CatalogueCompletenessRenderer.create(
+                self.catalogue_model.catalogue)
+        elif style == "cluster":
+            renderer = styles.CatalogueClusterRenderer(
+                self.catalogue_model.catalogue)
+        else:
+            raise NotImplementedError("Unsupported style %s" % style)
+        return renderer
 
     def populate_catalogue_layer(self, catalogue):
         """
@@ -336,68 +353,13 @@ class CatalogueMap(object):
 
             symbol = QgsFillSymbolV2.createSimple(
                 {'style': 'diagonal_x',
-                 'color': '0,0,0,255',
-                 'style_border':'solid'})
+                 'color': '50,100,150,125',
+                 'style_border': 'solid'})
             layer.setRendererV2(QgsSingleSymbolRendererV2(symbol))
 
             self.source_layers.append(layer)
 
         self.reset_map()
-
-
-class CatalogueRenderer(QgsFeatureRendererV2):
-    SymbolKey = collections.namedtuple(
-        'SymbolKey', 'cluster_index, cluster_flag, completeness_flag')
-
-    def __init__(self, catalogue):
-        QgsFeatureRendererV2.__init__(self, "CatalogueRenderer")
-        self.default_point = QgsSymbolV2.defaultSymbol(QGis.Point)
-        self.default_point.setColor(QtGui.QColor(0, 0, 0))
-
-        self.syms = {self.SymbolKey(0, 0, True): self.default_point}
-        self.catalogue = catalogue
-
-    def symbolForFeature(self, feature):
-        cluster_index = feature["Cluster_Index"]
-        cluster_flag = feature["Cluster_Flag"]
-        comp_flag = not bool(feature["Completeness_Flag"])
-
-        return self.syms.get(
-            self.SymbolKey(cluster_index, cluster_flag, comp_flag),
-            self.default_point)
-
-    def update_syms(self, catalogue):
-        self.syms = {}
-
-        for cluster_flag in set(catalogue.data['Cluster_Flag'].tolist()):
-            for cluster_index in set(catalogue.data['Cluster_Index'].tolist()):
-                point = QgsSymbolV2.defaultSymbol(QGis.Point)
-                point.setColor(self.catalogue.cluster_color(cluster_index))
-                point.setSize(1)
-                self.syms[
-                    self.SymbolKey(cluster_index, cluster_flag, False)] = (
-                        point)
-
-                point = QgsSymbolV2.defaultSymbol(QGis.Point)
-                point.setColor(self.catalogue.cluster_color(cluster_index))
-                point.setSize(2)
-                self.syms[
-                    self.SymbolKey(cluster_index, cluster_flag, True)] = (
-                        point)
-
-    def startRender(self, context, _vlayer):
-        for s in self.syms.values():
-            s.startRender(context)
-
-    def stopRender(self, context):
-        for s in self.syms.values():
-            s.stopRender(context)
-
-    def usedAttributes(self):
-        return ['id', 'Cluster_Index', 'Cluster_Flag', 'Completeness_Flag']
-
-    def clone(self):
-        return CatalogueRenderer(self.catalogue)
 
 
 def create_raster_layer(matrix):
@@ -478,11 +440,9 @@ def create_raster_layer(matrix):
     return layer
 
 
-def make_inmemory_layer(name, renderer):
+def make_inmemory_layer(name):
     layer = QgsVectorLayer('Point?crs=epsg:4326', name, 'memory')
     QgsMapLayerRegistry.instance().addMapLayer(layer)
-
-    layer.setRendererV2(renderer)
     return layer
 
 

@@ -106,6 +106,7 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
 
         for tab in self.tabs:
             tab.setup_form(self.on_algorithm_select)
+        self.stackedFormWidget.currentChanged.connect(self.change_tab)
 
         # setup Map
         self.mapWidget.setCanvasColor(Qt.white)
@@ -359,7 +360,13 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         self.actionSelectionEditor.triggered.connect(
             self.selection_editor.exec_)
 
-        self.stackedFormWidget.currentChanged.connect(self.change_tab)
+        # Style actions
+        self.actionCatalogueStyleByCluster.triggered.connect(
+            lambda: self.catalogue_map.set_catalogue_style("cluster"))
+        self.actionCatalogueStyleByDepthMagnitude.triggered.connect(
+            lambda: self.catalogue_map.set_catalogue_style("depth-magnitude"))
+        self.actionCatalogueStyleByCompleteness.triggered.connect(
+            lambda: self.catalogue_map.set_catalogue_style("completeness"))
 
     def save_as(self, flt, fmt):
         """

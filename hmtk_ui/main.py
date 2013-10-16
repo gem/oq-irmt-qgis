@@ -1,7 +1,3 @@
-# TODO: reload plugins, list clusters in tables (not 0), selection
-# tool in menu/toolbar/tool options, graduated renderer for fault
-# sources and events
-
 import os
 import sys
 import imp
