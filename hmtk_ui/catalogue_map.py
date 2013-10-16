@@ -62,7 +62,7 @@ class CatalogueMap(object):
 
         self.catalogue_layer = make_inmemory_layer("catalogue")
         self.populate_catalogue_layer(catalogue_model.catalogue)
-        self.set_catalogue_style("depth-magnitude")
+        self.set_catalogue_style("cluster")
 
         # FIXME: QGIS require to set FIRST the vector layer to get the
         # proper projection transformation
@@ -88,10 +88,10 @@ class CatalogueMap(object):
         """
         Reset the map by loading the catalogue and the basemap layers
         """
-        catalogue = [QgsMapCanvasLayer(self.catalogue_layer)]
+        catalogue = []
         if self.raster_layer:
             catalogue.append(QgsMapCanvasLayer(self.raster_layer))
-
+        catalogue.append(QgsMapCanvasLayer(self.catalogue_layer))
         self.canvas.setLayerSet(
             catalogue +
             [QgsMapCanvasLayer(s) for s in self.source_layers] +
@@ -102,19 +102,18 @@ class CatalogueMap(object):
         layer = self.catalogue_layer
 
         if style == "depth-magnitude":
-            renderer = styles.CatalogueDepthMagnitudeRenderer.create_renderer(
-                layer, self.catalogue_model.catalogue)
+            renderer = styles.CatalogueDepthMagnitudeRenderer
         elif style == "completeness":
-            renderer = styles.CatalogueCompletenessRenderer.create(
-                self.catalogue_model.catalogue)
+            renderer = styles.CatalogueCompletenessRenderer
         elif style == "cluster":
-            renderer = styles.CatalogueClusterRenderer(
-                self.catalogue_model.catalogue)
+            renderer = styles.CatalogueClusterRenderer
+        elif style == "default":
+            renderer = styles.CatalogueDefaultRenderer
         else:
             raise NotImplementedError("Unsupported style %s" % style)
 
-        print renderer.dump()
-        layer.setRendererV2(renderer)
+        layer.setRendererV2(renderer.make(self))
+        layer.triggerRepaint()
 
     def populate_catalogue_layer(self, catalogue):
         """
@@ -129,8 +128,14 @@ class CatalogueMap(object):
 
         # Set field types (the schema of the vector layer)
         fields = []
-        for key in catalogue.data:
-            if isinstance(catalogue.data[key], numpy.ndarray):
+        mock_attributes = ["_magnitude"]
+
+        for key in catalogue.data.keys() + mock_attributes:
+            if key in mock_attributes:
+                key_norm = key[1:]
+            else:
+                key_norm = key
+            if isinstance(key_norm, numpy.ndarray):
                 fields.append(QgsField(key, QVariant.Double))
             else:
                 fields.append(QgsField(key, QVariant.String))
@@ -157,6 +162,7 @@ class CatalogueMap(object):
                         fet[key] = float(event_data[i])
                     else:
                         fet[key] = str(event_data[i])
+            fet['_magnitude'] = fet['magnitude'] ** 2
             features.append(fet)
         pr.addFeatures(features)
         vl.commitChanges()
@@ -422,6 +428,7 @@ def create_raster_layer(matrix):
         item.label = unicode(currentValue)
         currentValue += intervalDiff
         item.color = colorRamp.color(float(i) / float(entries_nr))
+        item.color.setAlphaF(0.75)
         colorRampItems.append(item)
 
     rasterShader = QgsRasterShader()

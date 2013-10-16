@@ -59,6 +59,8 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         # bind menu actions
         self.setupActions()
 
+        self._renderer = None
+
     def push_state(self, state):
         self.states.append(state)
 
@@ -243,9 +245,12 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
             [s for s in parser.parse(validate=False)])
 
     def add_to_selection(self, idx):
+        self._renderer = self.catalogue_map.catalogue_layer.rendererV2()
+        self.set_catalogue_style('default')
         SELECTORS[idx](self)
 
     def update_selection(self):
+        self.catalogue_map.catalogue_layer.setRenderer(self._renderer)
         initial = catalogue = self.catalogue_model.catalogue
 
         if not self.selection_editor.selectorList.count():
@@ -268,11 +273,13 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         features_num = len(
             self.catalogue_map.catalogue_layer.selectedFeatures())
         if not features_num:
-            self.selectorSummaryLabel.setText("No event selected")
+            self.selection_editor.selectorSummaryLabel.setText(
+                "No event selected")
         elif features_num == initial.get_number_events():
-            self.selectorSummaryLabel.setText("All events selected")
+            self.selection_editor.selectorSummaryLabel.setText(
+                "All events selected")
         else:
-            self.selectorSummaryLabel.setText(
+            self.selection_editor.selectorSummaryLabel.setText(
                 "%d events selected" % features_num)
 
         return catalogue
@@ -410,6 +417,7 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         self.catalogue_map.update_catalogue_layer(
             ['Cluster_Index', 'Cluster_Flag'])
         self.add_declustering_output()
+        self.catalogue_map.set_catalogue_style("cluster")
         return success
 
     @pyqtSlot(name="on_declusteringPurgeButton_clicked")
@@ -455,6 +463,7 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
             self.catalogue_map.update_catalogue_layer(['Completeness_Flag'])
             self.completenessChart.draw_completeness(model)
             self.add_completeness_output()
+            self.catalogue_map.set_catalogue_style("completeness")
             return True
 
     @pyqtSlot(name="on_recurrenceModelButton_clicked")
@@ -507,15 +516,22 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
 
     def change_tab(self, index):
         if index == 0:
+            self.catalogue_map.set_catalogue_style("cluster")
             self.add_declustering_output()
         elif index == 1:
+            self.catalogue_map.set_catalogue_style("completeness")
             self.add_completeness_output()
         elif index == 2:
+            self.catalogue_map.set_catalogue_style("depth-magnitude")
             self.add_recurrence_model_output()
         elif index == 3:
+            self.catalogue_map.set_catalogue_style("depth-magnitude")
             self.add_maximum_magnitude_output()
         elif index == 4:
+            self.catalogue_map.set_catalogue_style("default")
             self.add_smoothed_seismicity_output()
+        else:
+            self.catalogue_map.set_catalogue_style("depth-magnitude")
 
     def add_declustering_output(self):
         cat = self.catalogue_model.catalogue
@@ -583,7 +599,7 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
             elif len(self.catalogue_model.recurrence_model_output) == 5:
                 self.resultsTable.set_data(
                     [self.catalogue_model.recurrence_model_output],
-                    ["Reference Magnitude", "b value", "sigma b"
+                    ["Reference Magnitude", "b value", "sigma b",
                      "a value", "sigma a"])
 
     def add_maximum_magnitude_output(self):
