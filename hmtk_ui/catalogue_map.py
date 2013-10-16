@@ -9,6 +9,7 @@ from shapely import wkt
 from PyQt4.QtCore import QVariant, QFileInfo
 
 from osgeo import gdal, osr
+import math
 
 from qgis.core import (
     QgsVectorLayer, QgsRasterLayer, QgsRaster,
@@ -139,6 +140,7 @@ class CatalogueMap(object):
                 fields.append(QgsField(key, QVariant.Double))
             else:
                 fields.append(QgsField(key, QVariant.String))
+
         pr.addAttributes(fields)
 
         qgs_fields = QgsFields()
@@ -173,6 +175,10 @@ class CatalogueMap(object):
         # Set the canvas extent to avoid projection problems and to
         # pan to the loaded events
         vl.updateExtents()
+
+    @staticmethod
+    def magnitude_to_display_size(x):
+        return math.exp(x)/10
 
     def change_catalogue_model(self, catalogue_model):
         """

@@ -21,7 +21,6 @@ class CatalogueDepthMagnitudeRenderer(QgsGraduatedSymbolRendererV2):
                  stops="0.25;yellow:0.5;green:0.75;cyan"))
 
         symbol.setSize(0.2)
-
         # number of color classes = 8
         renderer = cls.createRenderer(
             layer, "depth", 8,
@@ -30,6 +29,7 @@ class CatalogueDepthMagnitudeRenderer(QgsGraduatedSymbolRendererV2):
         renderer.setSizeScaleField("_magnitude")
         renderer.setScaleMethod(QgsSymbolV2.ScaleDiameter)
         renderer.update_syms = lambda x: x
+
         return renderer
 
 
