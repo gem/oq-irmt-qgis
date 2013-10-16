@@ -22,7 +22,7 @@ class CatalogueDepthMagnitudeRenderer(QgsGraduatedSymbolRendererV2):
             layer, "depth", 8,
             QgsGraduatedSymbolRendererV2.Quantile, symbol, ramp)
 
-        renderer.setSizeScaleField("depth")
+        renderer.setSizeScaleField("magnitude")
 
         return renderer
 
