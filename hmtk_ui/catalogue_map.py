@@ -1,58 +1,106 @@
+import collections
+import tempfile
+
+import numpy
+
 from PyQt4 import QtGui
-from PyQt4.QtCore import (QVariant,)
+from PyQt4.QtCore import QVariant, QFileInfo
+
+from osgeo import gdal, osr
 
 from qgis.core import (
-    QgsVectorLayer, QgsField, QgsFeature, QgsGeometry,
-    QgsPoint, QgsMapLayerRegistry, QgsPluginLayerRegistry,
-    QgsFeatureRendererV2, QgsSymbolV2, QGis)
+    QgsVectorLayer, QgsRasterLayer, QgsRaster,
+    QgsField, QgsFields, QgsFeature, QgsGeometry, QgsPoint,
+    QgsMapLayerRegistry, QgsPluginLayerRegistry,
+    QgsFeatureRendererV2, QgsSymbolV2, QGis,
+    QgsRectangle, QgsCoordinateReferenceSystem,
+    QgsCoordinateTransform, QgsFeatureRequest,
+    QgsRasterShader, QgsColorRampShader, QgsStyleV2)
 from qgis.gui import QgsMapCanvasLayer
 
 from openlayers_plugin.openlayers_plugin import (
     OpenlayersPlugin, OpenlayersPluginLayerType)
 
-import numpy
-
 import utils
 
 
 class CatalogueMap(object):
+    """
+    Model a map suitable to hold information about a seismic event catalogue
+
+    :attr canvas:
+       a :class:`QgsMapCanvas` instance that hold the QGIS map
+
+    :attr catalogue_model:
+       a :class:`hmtk_ui.catalogue_model.CatalogueModel` instance holding
+       the event catalogue
+
+    :attr catalogue_layer:
+       a :class:`QgsVectorLayer` instance holding map features related to
+       a catalogue model
+
+    :attr ol_plugin:
+       a instance of the QGIS OpenLayer plugin
+
+    :attr raster_layer:
+       A QGIS raster layer used to display smoothed seismicity data
+
+    :attr dict event_feature_ids:
+       A dict of QgsFeatureIDs keyed by eventID string
+    """
     def __init__(self, canvas, catalogue_model):
+        """
+        Create and initialize a layer for catalogue events, an empty
+        temporary layer and the basemap openlayer-based layer.
+        """
         self.canvas = canvas
         self.catalogue_model = catalogue_model
+        self.event_feature_ids = None
 
-        self.catalogue_layer = QgsVectorLayer(
-            'Point?crs=epsg:4326', "catalogue", 'memory')
+        self.catalogue_layer = make_inmemory_layer(
+            "catalogue", CatalogueRenderer(catalogue_model))
+        self.populate_catalogue_layer(catalogue_model.catalogue)
 
-        QgsMapLayerRegistry.instance().addMapLayer(self.catalogue_layer)
-        self.selection_layer = QgsVectorLayer(
-            'Point?crs=epsg:4326', "selection", 'memory')
-        QgsMapLayerRegistry.instance().addMapLayer(self.selection_layer)
-        self.selection_layer.setRendererV2(CatalogueRenderer(
-            self.catalogue_model))
+        # FIXME: QGIS require to set FIRST the vector layer to get the
+        # proper projection transformation
+        self.canvas.setLayerSet([QgsMapCanvasLayer(self.catalogue_layer)])
+        self.canvas.setExtent(self.catalogue_layer.extent())
 
-        layer = self.load_catalogue(catalogue_model.catalogue)
-        base_map = self.load_basemap()
-        self.canvas.setLayerSet([layer, base_map])
-        self.canvas.refresh()
+        # we keep a reference of the OpenLayer Plugin (instead of a
+        # layer) such that the underlying basemap layer data is not
+        # garbage collected
+        self.ol_plugin = self.load_basemap()
+
+        # initialized later
+        self.raster_layer = None
+
+        # Initialize Map
+        self.reset_map()
+
+        # This zoom is required to initialize the map canvas
         self.canvas.zoomByFactor(1.1)
 
-    def load_catalogue(self, catalogue):
-        vl = self.catalogue_layer
-        self.populate_layer(vl, catalogue)
-        layer = QgsMapCanvasLayer(vl)
-        vl.setRendererV2(CatalogueRenderer(self.catalogue_model))
-        vl.updateExtents()
-        self.catalogue_layer = vl
-        self.canvas.setLayerSet([layer])
-        self.canvas.setExtent(vl.extent())
+    def reset_map(self):
+        """
+        Reset the map by loading the catalogue and the basemap layers
+        """
+        self.canvas.setLayerSet([
+            QgsMapCanvasLayer(self.catalogue_layer),
+            QgsMapCanvasLayer(self.ol_plugin.layer)])
         self.canvas.refresh()
 
-        return layer
+    def populate_catalogue_layer(self, catalogue):
+        """
+        Populate the catalogue vector layer with data got from `catalogue`
 
-    def populate_layer(self, vl, catalogue):
+        :param catalogue:
+            a :class:`hmtk.seismicity.catalogue.Catalogue` instance
+        """
+        vl = self.catalogue_layer
         pr = vl.dataProvider()
         vl.startEditing()
 
+        # Set field types (the schema of the vector layer)
         fields = []
         for key in catalogue.data:
             if isinstance(catalogue.data[key], numpy.ndarray):
@@ -61,39 +109,53 @@ class CatalogueMap(object):
                 fields.append(QgsField(key, QVariant.String))
         pr.addAttributes(fields)
 
+        qgs_fields = QgsFields()
+        for f in fields:
+            qgs_fields.append(f)
+
+        # Create the features
         features = []
         for i in range(catalogue.get_number_events()):
-            fet = QgsFeature(int(catalogue.data['eventID'][i]))
-            event_values = {}
-
-            for j, key in enumerate(sorted(catalogue.data.keys())):
-                event_data = catalogue.data[key]
-                if len(event_data):
-                    event_values[j] = QVariant(event_data[i])
-                else:
-                    event_values[j] = QVariant("NA")
+            fet = QgsFeature()
+            fet.setFields(qgs_fields)
 
             x = catalogue.data['longitude'][i]
             y = catalogue.data['latitude'][i]
             fet.setGeometry(QgsGeometry.fromPoint(QgsPoint(x, y)))
-            fet.setAttributeMap(event_values)
+
+            for key in self.catalogue_model.catalogue_keys():
+                event_data = catalogue.data[key]
+                if len(event_data):
+                    fet[key] = event_data[i]
+                else:
+                    fet[key] = "NA"
             features.append(fet)
         pr.addFeatures(features)
         vl.commitChanges()
 
-    def change_catalogue_model(self, catalogue_model):
-        vl = self.catalogue_layer
-        self.clear_features(vl)
-        self.catalogue_model = catalogue_model
-        self.populate_layer(vl, catalogue_model.catalogue)
+        assert vl.featureCount() > 0
+        self.event_feature_ids = dict()
+        for f in vl.getFeatures():
+            self.event_feature_ids[f['eventID']] = f.id()
+
+        # Set the canvas extent to avoid projection problems and to
+        # pan to the loaded events
         vl.updateExtents()
-        self.canvas.setLayerSet(
-            [QgsMapCanvasLayer(vl),
-             QgsMapCanvasLayer(self.basemap_layer)])
-        self.canvas.refresh()
-        # TODO. recenter map
+
+    def change_catalogue_model(self, catalogue_model):
+        """
+        Load a new catalogue model (replace the old one)
+        """
+        self.catalogue_model = catalogue_model
+        self.clear_features(self.catalogue_layer)
+        self.populate_catalogue_layer(catalogue_model.catalogue)
+        self.reset_map()
 
     def load_basemap(self):
+        """
+        Initialize the QGIS OpenLayer plugin and load the basemap
+        layer
+        """
         canvas = self.canvas
 
         class IFace(object):
@@ -103,6 +165,7 @@ class CatalogueMap(object):
         iface = IFace()
         olplugin = OpenlayersPlugin(iface)
 
+        # hacked from #OpenlayersPlugin#initGui
         if not olplugin._OpenlayersPlugin__setCoordRSGoogle():
             utils.alert("Error in setting coordinate system")
         oltype = OpenlayersPluginLayerType(
@@ -110,155 +173,173 @@ class CatalogueMap(object):
             olplugin._OpenlayersPlugin__coordRSGoogle,
             olplugin.olLayerTypeRegistry)
         QgsPluginLayerRegistry.instance().addPluginLayerType(oltype)
+
+        # 4 is OpenStreetMap
         ol_gphyslayertype = olplugin.olLayerTypeRegistry.getById(4)
         olplugin.addLayer(ol_gphyslayertype)
+
         if not olplugin.layer.isValid():
             utils.alert("Failed to load basemap")
-        return QgsMapCanvasLayer(olplugin.layer)
+
+        return olplugin
 
     def filter(self, field, value, comparator=cmp):
-        layer = self.catalogue_layer
-
-        fids = layer.selectedFeaturesIds()
-        for fid in fids:
-            layer.deselect(fid)
-
+        """
+        Pan and zoom to the features with `field` equal to `value` by
+        using a custom comparator function `cmp`
+        """
+        # Select all the features that fulfill the given condition
+        self.catalogue_layer.removeSelection()
         catalogue = self.catalogue_model.catalogue
         for i, fid in enumerate(catalogue.data['eventID']):
             if not comparator(catalogue.data[field][i], value):
-                layer.select(fid)
+                self.catalogue_layer.select(self.event_feature_ids[fid])
 
-        l = self.make_selection_layer()
+        self.canvas.panToSelected(self.catalogue_layer)
+        self.canvas.zoomToSelected(self.catalogue_layer)
+        self.canvas.zoomByFactor(1.3)
 
-        self.canvas.setLayerSet([l, QgsMapCanvasLayer(self.basemap_layer)])
-        self.canvas.panToSelected(layer)
-
-    def make_selection_layer(self):
-        layer = self.catalogue_layer
-        selection = self.selection_layer
-        self.clear_features(selection)
-        selection.startEditing()
-        selection.addFeatures(layer.selectedFeatures())
-        selection.commitChanges()
-        selection.rendererV2().update_syms(self.catalogue_model.catalogue)
-
-        print "select layer count %d" % selection.featureCount()
-        return QgsMapCanvasLayer(selection)
+        self.catalogue_layer.removeSelection()
 
     def clear_features(self, layer):
+        """
+        Delete all the features from `layer`
+        """
         layer.startEditing()
-
-        if layer.featureCount():
-            feat = QgsFeature()
-            provider = layer.dataProvider()
-            allAttrs = provider.attributeIndexes()
-            provider.select(allAttrs)
-            while provider.nextFeature(feat):
-                layer.deleteFeature(feat.id())
+        for feat in layer.getFeatures():
+            layer.deleteFeature(feat.id())
         layer.commitChanges()
 
-        assert layer.featureCount() == 0
-
-    @property
-    def basemap_layer(self):
-        return self.canvas.layer(1)
-
-    def select(self, fid):
-        self.canvas.setLayerSet(
-            [QgsMapCanvasLayer(self.catalogue_layer),
-             QgsMapCanvasLayer(self.basemap_layer)])
+    def select(self, event_id):
+        """
+        Select a single feature with Feature ID `fid` and center the
+        map on it
+        """
+        fid = self.event_feature_ids[event_id]
+        self.catalogue_layer.removeSelection()
         self.catalogue_layer.select(fid)
         self.canvas.panToSelected(self.catalogue_layer)
+        self.canvas.zoomToSelected(self.catalogue_layer)
+        self.canvas.zoomByFactor(1.2)
 
     def update_catalogue_layer(self, attr_names):
+        """
+        Update layer as in catalogue columns `attr_names` are changed
+        """
         layer = self.catalogue_layer
         layer.startEditing()
-        provider = layer.dataProvider()
-        feat = QgsFeature()
-        allAttrs = provider.attributeIndexes()
-        provider.select(allAttrs)
-        i = 0
-        while provider.nextFeature(feat):
-            attrs = {}
+
+        for i, event_id in enumerate(
+                self.catalogue_model.catalogue.data['eventID']):
+            feature = self.catalogue_layer.getFeatures(
+                QgsFeatureRequest(self.event_feature_ids[event_id])).next()
             for attr in attr_names:
-                attrs[self.catalogue_model.field_idx(attr)] = QVariant(
-                    self.catalogue_model.catalogue.data[attr][i])
-            provider.changeAttributeValues({feat.id(): attrs})
-            i = i + 1
+                feature[attr] = self.catalogue_model.catalogue.data[attr][i]
+            layer.updateFeature(feature)
         layer.commitChanges()
         layer.rendererV2().update_syms(self.catalogue_model.catalogue)
         layer.triggerRepaint()
+        self.canvas.refresh()
 
-    def dump(self, layer):
-        provider = layer.dataProvider()
-        feat = QgsFeature()
-        allAttrs = provider.attributeIndexes()
-        provider.select(allAttrs)
-        while provider.nextFeature(feat):
-            for k, v in feat.attributeMap().items():
-                if k == 1 or k == 2:
-                    print "Feature: %s" % feat.id()
-                    print k, v.toPyObject()
+    def show_tip(self, point):
+        rectangle = QgsRectangle()
+        radius = self.canvas.extent().width() / 100 * 5  # 5% of the map width
+        rectangle.setXMinimum(point.x() - radius)
+        rectangle.setYMinimum(point.y() - radius)
+        rectangle.setXMaximum(point.x() + radius)
+        rectangle.setYMaximum(point.y() + radius)
+
+        layer_rectangle = self.canvas.mapRenderer().mapToLayerCoordinates(
+            self.catalogue_layer, rectangle)
+
+        features = self.catalogue_layer.getFeatures(
+            QgsFeatureRequest().setFilterRect(layer_rectangle))
+
+        if features:
+            # assume the first one is the closest
+            feat = features.next()
+            msg_lines = ["Event Found"]
+            for k in self.catalogue_model.catalogue_keys():
+                msg_lines.append("%s=%s" % (k, feat[k]))
+        else:
+            msg_lines = ["No Event found"]
+
+        if self.raster_layer is not None:
+            src = self.ol_plugin.layer.crs()
+            dst = QgsCoordinateReferenceSystem(4326)
+            trans = QgsCoordinateTransform(src, dst)
+            point = trans.transform(point)
+
+            raster_data = self.raster_layer.dataProvider().identify(
+                point, QgsRaster.IdentifyFormatValue)
+
+            for k, v in raster_data.results().items():
+                msg_lines.append("Smoothed=%s" % str(v))
+
+        utils.alert('\n'.join(msg_lines))
+
+    def set_raster(self, matrix):
+        layer = create_raster_layer(matrix)
+        if self.raster_layer is not None:
+            QgsMapLayerRegistry.instance().removeMapLayer(
+                self.raster_layer.id())
+        self.raster_layer = layer
+
+        self.canvas.setLayerSet(
+            [QgsMapCanvasLayer(self.catalogue_layer),
+             QgsMapCanvasLayer(self.raster_layer),
+             QgsMapCanvasLayer(self.ol_plugin.layer)])
+        layer.reload()
+        self.canvas.refresh()
+        self.canvas.zoomByFactor(1.01)
 
 
 class CatalogueRenderer(QgsFeatureRendererV2):
+    SymbolKey = collections.namedtuple(
+        'SymbolKey', 'cluster_index, cluster_flag, completeness_flag')
+
     def __init__(self, catalogue):
         QgsFeatureRendererV2.__init__(self, "CatalogueRenderer")
-        defaultPoint = QgsSymbolV2.defaultSymbol(QGis.Point)
-        defaultPoint.setColor(QtGui.QColor(0, 0, 0))
+        self.default_point = QgsSymbolV2.defaultSymbol(QGis.Point)
+        self.default_point.setColor(QtGui.QColor(0, 0, 0))
 
-        self.uncompletePoint = QgsSymbolV2.defaultSymbol(QGis.Point)
-        self.uncompletePoint.setColor(QtGui.QColor(200, 200, 200))
-
-        self.syms = [defaultPoint]
-        self.cluster_index_idx = catalogue.field_idx('Cluster_Index')
-        self.cluster_flag_idx = catalogue.field_idx('Cluster_Flag')
-        self.comp_flag_idx = catalogue.field_idx('Completeness_Flag')
+        self.syms = {self.SymbolKey(0, 0, True): self.default_point}
         self.catalogue = catalogue
 
     def symbolForFeature(self, feature):
-        attrs = feature.attributeMap()
-        if not attrs.keys():
-            return
-        if self.catalogue.magnitude_table is not None:
-            if attrs[self.comp_flag_idx].toPyObject():
-                return self.uncompletePoint
-            else:
-                return self.syms[0]
-        else:
-            index = int(attrs[self.cluster_index_idx].toPyObject())
-            index = index * 2
-            if len(self.syms) > index:
-                if attrs[self.cluster_flag_idx].toPyObject():
-                    index = index - 1
-            else:
-                index = 0
+        cluster_index = feature["Cluster_Index"]
+        cluster_flag = feature["Cluster_Flag"]
+        comp_flag = not bool(feature["Completeness_Flag"])
 
-            return self.syms[index]
+        return self.syms.get(
+            self.SymbolKey(cluster_index, cluster_flag, comp_flag),
+            self.default_point)
 
     def update_syms(self, catalogue):
-        cluster_nr = int(max(catalogue.data['Cluster_Index']))
+        self.syms = {}
 
-        self.syms = [self.syms[0]]
+        for cluster_flag in set(catalogue.data['Cluster_Flag'].tolist()):
+            for cluster_index in set(catalogue.data['Cluster_Index'].tolist()):
+                point = QgsSymbolV2.defaultSymbol(QGis.Point)
+                point.setColor(self.catalogue.cluster_color(cluster_index))
+                point.setSize(1)
+                self.syms[
+                    self.SymbolKey(cluster_index, cluster_flag, False)] = (
+                        point)
 
-        for cluster in range(cluster_nr):
-            point = QgsSymbolV2.defaultSymbol(QGis.Point)
-            point.setColor(self.catalogue.cluster_color(cluster))
-            point.setSize(2)
-            point.setAlpha(0.75)
-            self.syms.append(point)
-
-            point = QgsSymbolV2.defaultSymbol(QGis.Point)
-            point.setColor(self.catalogue.cluster_color(cluster))
-            point.setSize(3)
-            self.syms.append(point)
+                point = QgsSymbolV2.defaultSymbol(QGis.Point)
+                point.setColor(self.catalogue.cluster_color(cluster_index))
+                point.setSize(2)
+                self.syms[
+                    self.SymbolKey(cluster_index, cluster_flag, True)] = (
+                        point)
 
     def startRender(self, context, _vlayer):
-        for s in self.syms:
+        for s in self.syms.values():
             s.startRender(context)
 
     def stopRender(self, context):
-        for s in self.syms:
+        for s in self.syms.values():
             s.stopRender(context)
 
     def usedAttributes(self):
@@ -266,3 +347,89 @@ class CatalogueRenderer(QgsFeatureRendererV2):
 
     def clone(self):
         return CatalogueRenderer(self.catalogue)
+
+
+def create_raster_layer(matrix):
+    driver = gdal.GetDriverByName("GTiff")
+
+    filename = tempfile.mktemp(prefix="hmtk", suffix=".tif")
+
+    # sort the data by lon, lat
+    gridded_data = numpy.array(
+        sorted(matrix, key=lambda row: (90 + row[1]) * 180 + (180 + row[0])))
+
+    # extract it into separate vars
+    lons, lats, vals = (
+        gridded_data[:, 0], gridded_data[:, 1], gridded_data[:, 3])
+
+    ncols = lons[lons == lons[0]].size
+    nrows = lats[lats == lats[0]].size
+
+    # put values in a grid
+    gridded_vals = vals.reshape((nrows, ncols))
+
+    dataset = driver.Create(filename, ncols, nrows, 1, gdal.GDT_Float32)
+
+    dataset.SetGeoTransform((
+        min(lons),
+        (max(lons) - min(lons)) / ncols,
+        0,
+        max(lats),
+        0,
+        -(max(lats) - min(lats)) / nrows))
+
+    out_srs = osr.SpatialReference()
+    out_srs.ImportFromEPSG(4326)
+    dataset.SetProjection(out_srs.ExportToWkt())
+
+    out_band = dataset.GetRasterBand(1)
+    out_band.WriteArray(gridded_vals)
+    out_band.SetNoDataValue(0)
+    out_band.FlushCache()
+    out_band = None
+    dataset = None
+
+    fileInfo = QFileInfo(filename)
+    baseName = fileInfo.baseName()
+    layer = QgsRasterLayer(filename, baseName)
+
+    stat = layer.dataProvider().bandStatistics(1)
+
+    minVal = stat.minimumValue
+    maxVal = stat.maximumValue
+    numberOfEntries = 20
+
+    colorRamp = QgsStyleV2().defaultStyle().colorRamp("Spectral")
+    currentValue = float(minVal)
+    intervalDiff = float(maxVal - minVal) / float(numberOfEntries - 1)
+
+    colorRampItems = []
+    for i in xrange(numberOfEntries):
+        item = QgsColorRampShader.ColorRampItem()
+        item.value = currentValue
+        item.label = unicode(currentValue)
+        currentValue += intervalDiff
+        item.color = colorRamp.color(float(i) / float(numberOfEntries))
+        colorRampItems.append(item)
+
+    rasterShader = QgsRasterShader()
+    colorRampShader = QgsColorRampShader()
+
+    colorRampShader.setColorRampItemList(colorRampItems)
+    colorRampShader.setColorRampType(QgsColorRampShader.INTERPOLATED)
+    rasterShader.setRasterShaderFunction(colorRampShader)
+
+    layer.setDrawingStyle('SingleBandPseudoColor')
+    layer.renderer().setShader(rasterShader)
+
+    QgsMapLayerRegistry.instance().addMapLayer(layer)
+
+    return layer
+
+
+def make_inmemory_layer(name, renderer):
+    layer = QgsVectorLayer('Point?crs=epsg:4326', name, 'memory')
+    QgsMapLayerRegistry.instance().addMapLayer(layer)
+
+    layer.setRendererV2(renderer)
+    return layer
