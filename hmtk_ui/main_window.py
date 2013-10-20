@@ -17,6 +17,7 @@ from hmtk.seismicity.catalogue import Catalogue
 
 from openquake.nrmllib.hazard.parsers import SourceModelParser
 
+from histogram import CATALOGUE_ANALYSIS_METHODS
 from utils import alert
 from tab import Tab
 from selectors import SELECTORS, Invert
@@ -107,7 +108,11 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
             Tab("smoothed_seismicity",
                 self.smoothedSeismicityFormLayout,
                 SMOOTHED_SEISMICITY_METHODS,
-                [self.smoothedSeismicityButton]))
+                [self.smoothedSeismicityButton]),
+            Tab("histogram",
+                self.catalogueAnalysisFormLayout,
+                CATALOGUE_ANALYSIS_METHODS,
+                [self.catalogueAnalysisButton]))
 
         for tab in self.tabs:
             tab.setup_form(self.on_algorithm_select)
@@ -237,8 +242,6 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         else:
             self.catalogue_map.change_catalogue_model(self.catalogue_model)
 
-        self.declusteringChart.draw_occurrences(
-            self.catalogue_model.catalogue)
         self.completenessChart.draw_timeline(
             self.catalogue_model.catalogue)
         self.recurrenceModelChart.draw_seismicity_rate(
@@ -413,6 +416,24 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
             return
         return getattr(self.catalogue_model, name)(algorithm, config)
 
+    @pyqtSlot(name="on_catalogueAnalysisButton_clicked")
+    def histogram(self):
+        histogram_data = self._apply_algorithm("histogram")
+
+        self.catalogue_model.histogram_output = histogram_data
+
+        if len(histogram_data) == 2:
+            bins, histogram = histogram_data
+            self.catalogueAnalysisChart.draw_1d_histogram(histogram, bins)
+        elif len(histogram_data) == 3:
+            x_bins, y_bins, histogram = histogram_data
+            self.catalogueAnalysisChart.draw_2d_histogram(
+                histogram, x_bins, y_bins)
+        else:
+            raise RuntimeError("Can't draw histogram %s" % histogram_data)
+
+        self.add_histogram_output()
+
     @pyqtSlot(name="on_declusterButton_clicked")
     def decluster(self):
         """
@@ -438,8 +459,6 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
 
             self.catalogueTableView.setModel(self.catalogue_model.item_model)
             self.catalogue_map.change_catalogue_model(self.catalogue_model)
-            self.declusteringChart.draw_occurrences(
-                self.catalogue_model.catalogue)
             self.completenessChart.draw_timeline(
                 self.catalogue_model.catalogue)
 
@@ -453,8 +472,6 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
             self.catalogue_model.purge_completeness()
             self.catalogueTableView.setModel(self.catalogue_model.item_model)
             self.catalogue_map.change_catalogue_model(self.catalogue_model)
-            self.declusteringChart.draw_occurrences(
-                self.catalogue_model.catalogue)
             self.completenessChart.draw_timeline(
                 self.catalogue_model.catalogue)
 
@@ -522,6 +539,8 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         self.catalogue_map.select([self.catalogue_model.event_at(modelIndex)])
 
     def change_tab(self, index):
+        if self.catalogue_map is None:
+            return
         if index == 0:
             self.catalogue_map.set_catalogue_style("cluster")
             self.add_declustering_output()
@@ -537,6 +556,9 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         elif index == 4:
             self.catalogue_map.set_catalogue_style("default")
             self.add_smoothed_seismicity_output()
+        elif index == 5:
+            self.catalogue_map.set_catalogue_style("depth-magnitude")
+            self.add_histogram_output()
         else:
             self.catalogue_map.set_catalogue_style("depth-magnitude")
 
@@ -595,6 +617,23 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         self.resultsTable.set_data(
             self.catalogue_model.completeness_table,
             ["Year", "Magnitude"])
+
+    def add_histogram_output(self):
+        if self.catalogue_model.histogram_output is None:
+            return
+        elif len(self.catalogue_model.histogram_output) == 2:
+            self.resultsTable.set_data(
+                zip(*self.catalogue_model.histogram_output),
+                ["Bin", "Count"])
+        elif len(self.catalogue_model.histogram_output) == 3:
+            self.resultsTable.set_data(
+                self.catalogue_model.histogram_output[2],
+                map(str, self.catalogue_model.histogram_output[0][:-1]),
+                map(str, self.catalogue_model.histogram_output[1][:-1]))
+        else:
+            raise RuntimeError(
+                "Can't update resultsTable for %s" % (
+                    self.catalogue_model.histogram_output))
 
     def add_recurrence_model_output(self):
         # see #recurrence_model

@@ -262,7 +262,7 @@
        <attribute name="toolTip">
         <string>Catalogue Analysis</string>
        </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout">
+       <layout class="QVBoxLayout" name="catalogueAnalysisFormLayout">
         <item>
          <widget class="QPushButton" name="catalogueAnalysisButton">
           <property name="text">

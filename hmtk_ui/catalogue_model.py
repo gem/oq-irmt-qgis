@@ -15,6 +15,7 @@ class CatalogueModel(object):
         self.recurrence_model_output = None
         self.maximum_magnitude_output = None
         self.smoothed_seismicity_output = None
+        self.histogram_output = None
 
         self.last_computed_completeness_table = None
 
@@ -142,6 +143,9 @@ class CatalogueModel(object):
 
     def smoothed_seismicity(self, algorithm, config):
         return algorithm(self.catalogue, config, self.completeness_table)
+
+    def histogram(self, algorithm, config):
+        return algorithm(self.catalogue, config)
 
     def field_idx(self, field):
         return self.catalogue_keys().index(field)

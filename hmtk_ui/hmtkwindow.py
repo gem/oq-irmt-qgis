@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'hmtkwindow.ui'
 #
-# Created: Sun Oct 20 21:11:47 2013
+# Created: Sun Oct 20 23:01:27 2013
 #      by: PyQt4 UI code generator 4.10.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -142,14 +142,14 @@ class Ui_HMTKWindow(object):
         self.stackedFormWidget.addTab(self.stackedFormWidgetPage5, _fromUtf8(""))
         self.stackedFormWidgetPage6 = QtGui.QWidget()
         self.stackedFormWidgetPage6.setObjectName(_fromUtf8("stackedFormWidgetPage6"))
-        self.verticalLayout = QtGui.QVBoxLayout(self.stackedFormWidgetPage6)
-        self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
+        self.catalogueAnalysisFormLayout = QtGui.QVBoxLayout(self.stackedFormWidgetPage6)
+        self.catalogueAnalysisFormLayout.setObjectName(_fromUtf8("catalogueAnalysisFormLayout"))
         self.catalogueAnalysisButton = QtGui.QPushButton(self.stackedFormWidgetPage6)
         self.catalogueAnalysisButton.setObjectName(_fromUtf8("catalogueAnalysisButton"))
-        self.verticalLayout.addWidget(self.catalogueAnalysisButton)
+        self.catalogueAnalysisFormLayout.addWidget(self.catalogueAnalysisButton)
         self.catalogueAnalysisChart = FigureCanvasQTAggWidget(self.stackedFormWidgetPage6)
         self.catalogueAnalysisChart.setObjectName(_fromUtf8("catalogueAnalysisChart"))
-        self.verticalLayout.addWidget(self.catalogueAnalysisChart)
+        self.catalogueAnalysisFormLayout.addWidget(self.catalogueAnalysisChart)
         self.stackedFormWidget.addTab(self.stackedFormWidgetPage6, _fromUtf8(""))
         self.stackedFormWidgetPage7 = QtGui.QWidget()
         self.stackedFormWidgetPage7.setObjectName(_fromUtf8("stackedFormWidgetPage7"))

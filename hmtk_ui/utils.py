@@ -1,3 +1,4 @@
+import itertools
 import time
 import cStringIO
 import traceback

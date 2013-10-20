@@ -55,6 +55,21 @@ class FigureCanvasQTAggWidget(FigureCanvasQTAgg):
         self.axes.set_ylabel('Magnitude', dict(fontsize=13))
         self.draw()
 
+    def draw_1d_histogram(self, hist, bins):
+        self.axes.cla()
+        w = (bins[-1] - bins[0]) / len(bins)
+        self.axes.bar(bins[:-1], hist, width=w)
+        self.axes.set_xticks(bins)
+        self.draw()
+
+    def draw_2d_histogram(self, hist, x_bins, y_bins):
+        self.axes.cla()
+        extent = [x_bins[0], x_bins[-2], y_bins[0], y_bins[-2]]
+        self.axes.imshow(
+            hist.T, extent=extent, interpolation='nearest', origin='lower',
+            aspect="auto")
+        self.draw()
+
     def draw_completeness(self, model):
         self.axes.cla()
         # FIXME(lp). refactor with plot_stepp_1972.py in hmtk
