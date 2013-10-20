@@ -30,7 +30,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>5</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideNone</enum>
@@ -262,6 +262,18 @@
        <attribute name="toolTip">
         <string>Catalogue Analysis</string>
        </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <item>
+         <widget class="QPushButton" name="catalogueAnalysisButton">
+          <property name="text">
+           <string>Compute Histogram</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="FigureCanvasQTAggWidget" name="catalogueAnalysisChart" native="true"/>
+        </item>
+       </layout>
       </widget>
       <widget class="QWidget" name="stackedFormWidgetPage7">
        <attribute name="title">
@@ -364,6 +376,7 @@
     <addaction name="separator"/>
     <addaction name="menuPlatform"/>
     <addaction name="actionReloadPlugin"/>
+    <addaction name="actionOfflineMode"/>
    </widget>
    <widget class="QMenu" name="menuTools">
     <property name="title">
@@ -386,19 +399,20 @@
      <property name="title">
       <string>Select events</string>
      </property>
-     <addaction name="actionWithinPolyhedra"/>
+     <addaction name="actionWithinPolygon"/>
      <addaction name="actionWithinJoynerBooreSource"/>
      <addaction name="actionWithinRuptureDistance"/>
      <addaction name="actionWithinSquare"/>
      <addaction name="actionWithinDistance"/>
-     <addaction name="actionWithinJoynerBoorePoint"/>
      <addaction name="actionTimeBetween"/>
      <addaction name="actionFieldBetween"/>
     </widget>
     <addaction name="actionUndo"/>
-    <addaction name="actionUnselectAall"/>
     <addaction name="menuSelect"/>
+    <addaction name="actionIntersectWithSelection"/>
+    <addaction name="actionUnselectAall"/>
     <addaction name="actionInvertSelection"/>
+    <addaction name="separator"/>
     <addaction name="actionDeleteUnselectedEvents"/>
    </widget>
    <widget class="QMenu" name="menuView">
@@ -409,14 +423,17 @@
      <property name="title">
       <string>Style Events</string>
      </property>
+     <addaction name="actionCatalogueStyleDefault"/>
      <addaction name="actionCatalogueStyleByDepthMagnitude"/>
      <addaction name="actionCatalogueStyleByCluster"/>
      <addaction name="actionCatalogueStyleByCompleteness"/>
+     <addaction name="actionCatalogueToggleLabels"/>
     </widget>
     <widget class="QMenu" name="menuStyle_Sources">
      <property name="title">
       <string>Style Sources</string>
      </property>
+     <addaction name="actionSourcesToggleLabels"/>
     </widget>
     <addaction name="menuStyle_Events"/>
     <addaction name="menuStyle_Sources"/>
@@ -638,29 +655,29 @@
     <string>Delete unselected events</string>
    </property>
   </action>
-  <action name="actionWithinPolyhedra">
+  <action name="actionWithinPolygon">
    <property name="text">
-    <string>within a polyhedra</string>
+    <string>Within Polygon</string>
    </property>
   </action>
   <action name="actionWithinJoynerBooreSource">
    <property name="text">
-    <string>within Joyner-Boore distance of source</string>
+    <string>Within Joyner-Boore Distance of source</string>
    </property>
   </action>
   <action name="actionWithinRuptureDistance">
    <property name="text">
-    <string>within Rupture distance</string>
+    <string>Within Rupture distance</string>
    </property>
   </action>
   <action name="actionWithinSquare">
    <property name="text">
-    <string>within a Square centered on</string>
+    <string>Within Square centered on point</string>
    </property>
   </action>
   <action name="actionWithinDistance">
    <property name="text">
-    <string>within distance from point</string>
+    <string>Within distance from point</string>
    </property>
   </action>
   <action name="actionWithinJoynerBoorePoint">
@@ -685,12 +702,27 @@
   </action>
   <action name="actionCatalogueStyleByCluster">
    <property name="text">
-    <string>by cluster / event type</string>
+    <string>By Cluster Index and Cluster Flag</string>
+   </property>
+  </action>
+  <action name="actionCatalogueStyleDefault">
+   <property name="text">
+    <string>Default</string>
+   </property>
+  </action>
+  <action name="actionCatalogueToggleLabels">
+   <property name="text">
+    <string>Toggle Labels</string>
+   </property>
+  </action>
+  <action name="actionSourcesToggleLabels">
+   <property name="text">
+    <string>Toggle labels</string>
    </property>
   </action>
   <action name="actionCatalogueStyleByDepthMagnitude">
    <property name="text">
-    <string>by depth / magnitude</string>
+    <string>By Depth and Magnitude</string>
    </property>
   </action>
   <action name="actionInvertSelection">
@@ -725,7 +757,26 @@
   </action>
   <action name="actionCatalogueStyleByCompleteness">
    <property name="text">
-    <string>by completeness</string>
+    <string>By Completeness</string>
+   </property>
+  </action>
+  <action name="actionIntersectWithSelection">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Intersect with selection</string>
+   </property>
+  </action>
+  <action name="actionOfflineMode">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Offline Mode</string>
    </property>
   </action>
  </widget>

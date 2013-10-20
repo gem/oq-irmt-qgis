@@ -17,4 +17,4 @@ fi
 
 export PYTHONPATH=$PYTHONPATH:~/.qgis2/python/plugins/
 
-python `dirname $0`/main.py $1
+python `dirname $0`/main.py $1 $2

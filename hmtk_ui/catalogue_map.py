@@ -4,6 +4,11 @@ import tempfile
 import numpy
 
 from openquake.hazardlib import geo
+from openquake.hazardlib import mfd
+from openquake.hazardlib import scalerel
+from openquake.hazardlib import source
+
+from openquake.nrmllib import models as nrml_models
 from shapely import wkt
 
 from PyQt4.QtCore import QVariant, QFileInfo
@@ -18,7 +23,7 @@ from qgis.core import (
     QgsRectangle, QgsCoordinateReferenceSystem,
     QgsCoordinateTransform, QgsFeatureRequest,
     QgsRasterShader, QgsColorRampShader, QgsStyleV2,
-    QgsFillSymbolV2, QgsSingleSymbolRendererV2)
+    QgsFillSymbolV2, QgsSingleSymbolRendererV2, QgsLabel)
 from qgis.gui import QgsMapCanvasLayer
 
 from openlayers_plugin.openlayers_plugin import (
@@ -60,12 +65,13 @@ class CatalogueMap(object):
         self.canvas = canvas
         self.catalogue_model = catalogue_model
         self.event_feature_ids = None
+        self.sources = dict()
 
         self.catalogue_layer = make_inmemory_layer("catalogue")
         self.populate_catalogue_layer(catalogue_model.catalogue)
         self.set_catalogue_style("cluster")
 
-        # FIXME: QGIS require to set FIRST the vector layer to get the
+        # XXX: QGIS require to set FIRST the vector layer to get the
         # proper projection transformation
         self.canvas.setLayerSet([QgsMapCanvasLayer(self.catalogue_layer)])
         self.canvas.setExtent(self.catalogue_layer.extent())
@@ -77,7 +83,7 @@ class CatalogueMap(object):
 
         # initialized later
         self.raster_layer = None
-        self.source_layers = []
+        self.source_layers = dict()
 
         # Initialize Map
         self.reset_map()
@@ -95,7 +101,7 @@ class CatalogueMap(object):
         catalogue.append(QgsMapCanvasLayer(self.catalogue_layer))
         self.canvas.setLayerSet(
             catalogue +
-            [QgsMapCanvasLayer(s) for s in self.source_layers] +
+            [QgsMapCanvasLayer(s) for s in self.source_layers.values()] +
             [QgsMapCanvasLayer(self.ol_plugin.layer)])
         self.canvas.refresh()
 
@@ -328,18 +334,22 @@ class CatalogueMap(object):
     def add_source_layers(self, sources):
         """
         :param list sources:
-            a list of nrmllib Source Models (e.g. AreaSource)
+            a list of nrmllib Source Models (e.g. SimpleFaultSource)
         """
         source_type = collections.namedtuple(
-            'SourceType', 'layer_type transform')
+            'SourceType', 'layer_type transform color')
 
         geometries = {
-            'PointSource': source_type('Point', lambda x: x.geometry.wkt),
-            'AreaSource': source_type('Polygon', lambda x: x.geometry.wkt),
+            'PointSource': source_type(
+                'Point', lambda x: x.geometry.wkt, "255,255,255,185"),
+            'AreaSource': source_type(
+                'Polygon', lambda x: x.geometry.wkt, '0,255,255,185'),
             'SimpleFaultSource': source_type(
-                'Polygon', simple_surface_from_source),
+                'Polygon',
+                lambda x: simple_surface_from_source(x).wkt,
+                '100,100,100,185'),
             'ComplexFaultSource': source_type(
-                'MultiPolygon', lambda _: NotImplementedError)}
+                'MultiPolygon', lambda _: NotImplementedError, '50,50,50,185')}
 
         source_dict = collections.defaultdict(list)
 
@@ -348,28 +358,57 @@ class CatalogueMap(object):
 
         for stype, sources in source_dict.items():
             layer = QgsVectorLayer(
-                '%s?crs=epsg:4326' % geometries[stype].layer_type,
+                '%s?crs=epsg:4326' % (
+                    geometries[stype].layer_type),
                 stype, 'memory')
             QgsMapLayerRegistry.instance().addMapLayer(layer)
             pr = layer.dataProvider()
+            layer.startEditing()
+
+            fields = [QgsField("source_id", QVariant.String)]
+            pr.addAttributes(fields)
+
+            qgs_fields = QgsFields()
+            for field in fields:
+                qgs_fields.append(field)
 
             features = []
-            for source in sources:
+            for src in sources:
                 fet = QgsFeature()
+                fet.setFields(qgs_fields)
+                fet['source_id'] = src.id
+                if stype == 'SimpleFaultSource':
+                    self.sources[src.id] = _nrml_to_hazardlib(src, 1.)
                 fet.setGeometry(QgsGeometry.fromWkt(
-                    geometries[stype].transform(source)))
+                    geometries[stype].transform(src)))
                 features.append(fet)
             pr.addFeatures(features)
+            layer.commitChanges()
             layer.updateExtents()
 
             symbol = QgsFillSymbolV2.createSimple(
                 {'style': 'diagonal_x',
-                 'color': '50,100,150,125',
+                 'color': geometries[stype].color,
                  'style_border': 'solid'})
             layer.setRendererV2(QgsSingleSymbolRendererV2(symbol))
 
-            self.source_layers.append(layer)
+            self.source_layers[stype] = layer
 
+        self.reset_map()
+
+    def toggle_catalogue_labels(self):
+        label = self.catalogue_layer.label()
+        label.setLabelField(
+            QgsLabel.Text, self.catalogue_layer.fieldNameIndex("eventID"))
+        self.catalogue_layer.enableLabels(
+            not self.catalogue_layer.hasLabelsEnabled())
+        self.reset_map()
+
+    def toggle_sources_labels(self):
+        for layer in self.source_layers.values():
+            label = layer.label()
+            label.setLabelField(QgsLabel.Text, layer.fieldNameIndex("eventID"))
+            layer.enableLabels(not layer.hasLabelsEnabled())
         self.reset_map()
 
 
@@ -458,10 +497,25 @@ def make_inmemory_layer(name):
     return layer
 
 
-def simple_surface_from_source(source):
+def simple_surface_from_source(src):
     return geo.surface.SimpleFaultSurface.surface_projection_from_fault_data(
         geo.Line([geo.Point(x[0], x[1])
-                  for x in wkt.loads(source.geometry.wkt).coords]),
-        upper_seismogenic_depth=source.geometry.upper_seismo_depth,
-        lower_seismogenic_depth=source.geometry.lower_seismo_depth,
-        dip=source.geometry.dip).wkt
+                  for x in wkt.loads(src.geometry.wkt).coords]),
+        upper_seismogenic_depth=src.geometry.upper_seismo_depth,
+        lower_seismogenic_depth=src.geometry.lower_seismo_depth,
+        dip=src.geometry.dip)
+
+
+def _nrml_to_hazardlib(src, mesh_spacing=1.):
+    """
+    Convert a NRML source object into the HazardLib representation.
+    """
+    if not isinstance(src, nrml_models.SimpleFaultSource):
+        raise NotImplementedError
+
+    return geo.surface.SimpleFaultSurface.from_fault_data(
+        geo.Line([geo.Point(*x) for x in wkt.loads(src.geometry.wkt).coords]),
+        src.geometry.upper_seismo_depth,
+        src.geometry.lower_seismo_depth,
+        src.geometry.dip,
+        mesh_spacing)

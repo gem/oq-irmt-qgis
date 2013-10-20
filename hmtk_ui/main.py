@@ -58,6 +58,9 @@ def main(argv):
 
     if len(argv) > 1:
         wnd.change_model(CatalogueModel.from_csv_file(argv[1]))
+
+        if len(argv) > 2:
+            wnd.load_fault_source(argv[2])
     else:
         wnd.load_catalogue()
 

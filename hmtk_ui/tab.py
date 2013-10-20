@@ -117,7 +117,8 @@ class Tab(object):
         self.clear_form()
 
         algorithm = self.algorithm()
-        for i, (field_name, field_spec) in enumerate(algorithm.fields.items(), 1):
+        for i, (field_name, field_spec) in enumerate(
+                algorithm.fields.items(), 1):
             label = self._create_label(field_name)
             self.form.setWidget(i, QtGui.QFormLayout.LabelRole, label)
 

@@ -1,3 +1,5 @@
+from decorator import decorator
+
 from PyQt4 import QtGui
 from PyQt4.QtCore import Qt
 
@@ -209,6 +211,15 @@ class WaitCursor(object):
 
     def __exit__(self, *args, **kwargs):
         QtGui.QApplication.restoreOverrideCursor()
+
+    @classmethod
+    def as_decorator(cls, func, *args, **kwargs):
+        with cls():
+            return func(*args, **kwargs)
+
+
+def wait_cursor(func):
+    return decorator(WaitCursor.as_decorator, func)
 
 
 class SelectionDialog(QtGui.QDialog, selection_dialog.Ui_Dialog):

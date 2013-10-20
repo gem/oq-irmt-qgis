@@ -5,7 +5,8 @@ from PyQt4 import QtGui
 from PyQt4.QtCore import QObject, SIGNAL, Qt, pyqtSlot
 
 from qgis.core import QgsVectorFileWriter
-from qgis.gui import QgsMapToolPan, QgsMapToolZoom, QgsMapToolEmitPoint
+from qgis.gui import (
+    QgsMapToolPan, QgsMapToolZoom, QgsMapToolEmitPoint, QgsMessageBar)
 
 from hmtkwindow import Ui_HMTKWindow
 
@@ -18,10 +19,10 @@ from openquake.nrmllib.hazard.parsers import SourceModelParser
 
 from utils import alert
 from tab import Tab
-from selectors import SELECTORS
+from selectors import SELECTORS, Invert
 from catalogue_model import CatalogueModel
 from catalogue_map import CatalogueMap
-from widgets import CompletenessDialog, WaitCursor, SelectionDialog
+from widgets import CompletenessDialog, wait_cursor, SelectionDialog
 
 
 class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
@@ -57,16 +58,19 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         self.setupUi(self)
 
         # bind menu actions
-        self.setupActions()
+        self.setup_actions()
 
     def push_state(self, state):
+        if not self.states:
+            self.actionUndo.setEnabled(True)
         self.states.append(state)
 
     def undo(self):
         if self.states:
             self.change_model(self.states.pop())
-        else:
-            alert("Can not undo. History empty")
+
+            if not self.states:
+                self.actionUndo.setDisabled(True)
 
     def setupUi(self, _):
         """
@@ -80,6 +84,7 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         super(MainWindow, self).setupUi(self)
 
         self.selection_editor = SelectionDialog(self)
+        self.actionUndo.setDisabled(True)
 
         # setup dynamic forms
         self.tabs = (
@@ -112,6 +117,8 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         self.mapWidget.setCanvasColor(Qt.white)
         self.mapWidget.enableAntiAliasing(True)
         self.mapWidget.show()
+        #self.message_bar = QgsMessageBar(self.centralWidget)
+        #self.outputVerticalLayout.insertWidget(0, self.message_bar)
 
         # setup toolbar
         group = QtGui.QActionGroup(self)
@@ -214,6 +221,7 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
 
         self.change_model(CatalogueModel.from_csv_file(csv_file))
 
+    @wait_cursor
     def change_model(self, model):
         if self.catalogue_model:
             self.push_state(self.catalogue_model)
@@ -222,25 +230,27 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         if self.catalogue_map is None:
             self.catalogue_map = CatalogueMap(
                 self.mapWidget, self.catalogue_model)
+            self.actionCatalogueToggleLabels.triggered.connect(
+                self.catalogue_map.toggle_catalogue_labels)
+            self.actionSourcesToggleLabels.triggered.connect(
+                self.catalogue_map.toggle_sources_labels)
         else:
             self.catalogue_map.change_catalogue_model(self.catalogue_model)
 
-        self.declusteringChart.draw_occurrences(self.catalogue_model.catalogue)
-        self.completenessChart.draw_timeline(self.catalogue_model.catalogue)
+        self.declusteringChart.draw_occurrences(
+            self.catalogue_model.catalogue)
+        self.completenessChart.draw_timeline(
+            self.catalogue_model.catalogue)
         self.recurrenceModelChart.draw_seismicity_rate(
             self.catalogue_model.catalogue, None)
 
-    def load_fault_source(self):
+    @wait_cursor
+    def load_fault_source(self, fname):
         """
         Open a file dialog, load a source model from a nrml file,
         draw the source on the map
         """
-        parser = SourceModelParser(
-            QtGui.QFileDialog.getOpenFileName(
-                self, 'Open Source Model (NRML 4)', '.xml'))
-
-        self.catalogue_map.add_source_layers(
-            [s for s in parser.parse(validate=False)])
+        self.catalogue_map.add_source_layers(SourceModelParser(fname).parse())
 
     def add_to_selection(self, idx):
         SELECTORS[idx](self)
@@ -253,7 +263,8 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         else:
             for i in range(self.selection_editor.selectorList.count()):
                 selector = self.selection_editor.selectorList.item(i)
-                if selector.union:
+                if (not self.intersect_with_selection or
+                    isinstance(selector, Invert)):
                     union_data = selector.apply(initial, initial).data
                     if initial != catalogue:
                         union_data['eventID'] = numpy.append(
@@ -297,7 +308,7 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
                 self.selection_editor.selectorList.row(item))
         self.update_selection()
 
-    def setupActions(self):
+    def setup_actions(self):
         """
         Connect menu, table and form actions to the proper slots
         """
@@ -320,7 +331,10 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         # menu import/export actions
         self.actionLoadCatalogue.triggered.connect(self.load_catalogue)
         self.actionSaveCatalogue.triggered.connect(self.save_catalogue)
-        self.actionLoadSourceNRML.triggered.connect(self.load_fault_source)
+        self.actionLoadSourceNRML.triggered.connect(
+            lambda: self.load_fault_source(
+                QtGui.QFileDialog.getOpenFileName(
+                    self, 'Open Source Model (NRML 4)', '.xml')))
 
         filters_formats = QgsVectorFileWriter.supportedFiltersAndFormats()
         for flt, fmt in filters_formats.items():
@@ -343,7 +357,7 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
 
         self.actionInvertSelection.triggered.connect(
             lambda: self.add_to_selection(0))
-        self.actionWithinPolyhedra.triggered.connect(
+        self.actionWithinPolygon.triggered.connect(
             lambda: self.add_to_selection(1))
         self.actionWithinJoynerBooreSource.triggered.connect(
             lambda: self.add_to_selection(2))
@@ -353,12 +367,10 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
             lambda: self.add_to_selection(4))
         self.actionWithinDistance.triggered.connect(
             lambda: self.add_to_selection(5))
-        self.actionWithinJoynerBoorePoint.triggered.connect(
-            lambda: self.add_to_selection(6))
         self.actionTimeBetween.triggered.connect(
-            lambda: self.add_to_selection(7))
+            lambda: self.add_to_selection(6))
         self.actionFieldBetween.triggered.connect(
-            lambda: self.add_to_selection(8))
+            lambda: self.add_to_selection(7))
         self.actionSelectionEditor.triggered.connect(
             self.selection_editor.exec_)
 
@@ -391,15 +403,15 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
             QtGui.QFileDialog.getSaveFileName(
                 self, "Save Catalogue", "", "*.csv"))
 
+    @wait_cursor
     def _apply_algorithm(self, name):
-        with WaitCursor():
-            algorithm = self.current_tab().algorithm()
-            try:
-                config = self.current_tab().get_config()
-            except ValueError as e:
-                alert(str(e))
-                return
-            return getattr(self.catalogue_model, name)(algorithm, config)
+        algorithm = self.current_tab().algorithm()
+        try:
+            config = self.current_tab().get_config()
+        except ValueError as e:
+            alert(str(e))
+            return
+        return getattr(self.catalogue_model, name)(algorithm, config)
 
     @pyqtSlot(name="on_declusterButton_clicked")
     def decluster(self):
@@ -608,3 +620,7 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
             self.resultsTable.set_data(
                 self.catalogue_model.smoothed_seismicity_output,
                 ["Longitude", "Latitude", "Depth", "Observed", "Smoothed"])
+
+    @property
+    def intersect_with_selection(self):
+        return self.actionIntersectWithSelection.isChecked()
