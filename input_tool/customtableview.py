@@ -1,5 +1,3 @@
-import sip
-sip.setapi("QString", 2)  # this is needed for value.toPyObject() in setData
 from PyQt4 import QtCore, QtGui
 
 
@@ -16,6 +14,7 @@ class CustomTableModel(QtCore.QAbstractTableModel):
     def __init__(self, table, parent=None):
         QtCore.QAbstractTableModel.__init__(self, parent)
         self.table = table
+        
 
     def rowCount(self, parent=None):
         return len(self.table)
@@ -43,12 +42,15 @@ class CustomTableModel(QtCore.QAbstractTableModel):
         if role == QtCore.Qt.EditRole:
             row = index.row()
             column = index.column()
-            value = value.toPyObject().encode('utf-8')
+            value = value.toString().encode('utf-8')
             record = self.table[row]
             try:
                 record[column] = value
-            except ValueError:
-                # TODO: add some notification
+            except ValueError as e:
+                print e
+                # notification?
+                #QtGui.QMessageBox.warning(
+                #    self, "validation error", str(e)).exec_()
                 return False
             else:
                 self.dataChanged.emit(index, index)
@@ -120,14 +122,16 @@ class CustomTableView(QtGui.QWidget):
         self.tableView = QtGui.QTableView(self.parent)
         self.tableView.setModel(self.tableModel)
         self.tableView.horizontalHeader().setStretchLastSection(True)
-        self.tableView.setSizePolicy(  # ignored :-(
-            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        #self.tableView.setSizePolicy(  # ignored :-(
+        #    QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
         self.tableView.setSelectionBehavior(
             QtGui.QAbstractItemView.SelectRows)
         #self.tableView.setSelectionMode(
         #    QtGui.QAbstractItemView.SingleSelection)
         self.tableView.setAlternatingRowColors(True)
-
+        self.tableView.setSizePolicy(
+            QtGui.QSizePolicy.MinimumExpanding,
+            QtGui.QSizePolicy.MinimumExpanding)
         self.tableLabel = QtGui.QLabel(self.tableModel.name())
 
         self.layout = QtGui.QVBoxLayout()
@@ -143,8 +147,8 @@ class CustomTableView(QtGui.QWidget):
         buttonLayout.addWidget(self.addBtn)
         buttonLayout.addWidget(self.delBtn)
         self.layout.addLayout(buttonLayout)
-
         self.setLayout(self.layout)
+        #self.layout.activate()
 
     def showOnCondition(self, cond):
         for row in range(self.tableModel.rowCount()):
@@ -218,3 +222,7 @@ class TripleTableWidget(QtGui.QWidget):
         layout.addLayout(hlayout)
         layout.addWidget(self.tv3)
         self.setLayout(layout)
+
+        self.setSizePolicy(
+            QtGui.QSizePolicy.MinimumExpanding,
+            QtGui.QSizePolicy.MinimumExpanding)
