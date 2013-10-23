@@ -11,10 +11,14 @@ class CustomTableModel(QtCore.QAbstractTableModel):
     Wrapper for table objects consistent with the API defined in
     nrmllib.record.Table.
     """
+
+    # can not be in init.
+    # see http://stackoverflow.com/questions/2970312/#2971426
+    validationFailed = QtCore.pyqtSignal(QtCore.QModelIndex, ValueError)
+
     def __init__(self, table, parent=None):
         QtCore.QAbstractTableModel.__init__(self, parent)
         self.table = table
-        
 
     def rowCount(self, parent=None):
         return len(self.table)
@@ -51,6 +55,7 @@ class CustomTableModel(QtCore.QAbstractTableModel):
                 # notification?
                 #QtGui.QMessageBox.warning(
                 #    self, "validation error", str(e)).exec_()
+                self.validationFailed.emit(index, e)
                 return False
             else:
                 self.dataChanged.emit(index, index)
@@ -106,6 +111,11 @@ class CustomTableView(QtGui.QWidget):
 
         self.addBtn.clicked.connect(self.appendRow)
         self.delBtn.clicked.connect(self.removeRows)
+        self.tableModel.validationFailed.connect(self.showValidationError)
+
+    @QtCore.pyqtSlot(QtCore.QModelIndex, ValueError)
+    def showValidationError(self, index, error):
+        print 'VALIDATION ERROR at %s: %s' % (index, error)
 
     def appendRow(self):
         self.tableModel.insertRows(self.tableModel.rowCount(), 1)
