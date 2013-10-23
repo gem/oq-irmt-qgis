@@ -1,4 +1,5 @@
 from PyQt4 import QtCore, QtGui
+from message_bar import MessageBar
 
 
 def tr(name):
@@ -111,11 +112,6 @@ class CustomTableView(QtGui.QWidget):
 
         self.addBtn.clicked.connect(self.appendRow)
         self.delBtn.clicked.connect(self.removeRows)
-        self.tableModel.validationFailed.connect(self.showValidationError)
-
-    @QtCore.pyqtSlot(QtCore.QModelIndex, ValueError)
-    def showValidationError(self, index, error):
-        print 'VALIDATION ERROR at %s: %s' % (index, error)
 
     def appendRow(self):
         self.tableModel.insertRows(self.tableModel.rowCount(), 1)
@@ -201,9 +197,13 @@ class TripleTableWidget(QtGui.QWidget):
         self.tv1 = CustomTableView(t1, parent)
         self.tv2 = CustomTableView(t2, parent)
         self.tv3 = CustomTableView(t3, parent)
+        self.message_bar = MessageBar(self)
         self.setupUi()
         self.tv1.tableView.clicked.connect(self.show_tv2)
         self.tv2.tableView.clicked.connect(self.show_tv3)
+
+        # connect errors
+        self.tv1.tableModel.validationFailed.connect(self.show_validation_error)
 
         # hide
         self.tv2.tableView.hideColumn(0)
@@ -211,6 +211,15 @@ class TripleTableWidget(QtGui.QWidget):
         self.tv3.tableView.hideColumn(1)
         self.show_tv2(QtCore.QModelIndex().sibling(0, 0))
         self.show_tv3(QtCore.QModelIndex().sibling(0, 0))
+
+    @QtCore.pyqtSlot(QtCore.QModelIndex, ValueError)
+    def show_validation_error(self, index, error):
+        message = 'VALIDATION ERROR at %s: %s' % (index, error)
+        print message
+        self.show_message(message)
+
+    def show_message(self, message):
+        self.message_bar.show_message(message)
 
     def show_tv2(self, row):
         vset, = self.tv1.tableModel.primaryKey(row)
