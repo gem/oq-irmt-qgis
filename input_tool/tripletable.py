@@ -10,6 +10,8 @@ from openquake.nrmllib.converter import Converter
 
 
 class Dialog(QtGui.QDialog):
+    # left for reference, since I (MB) think that the main window of an
+    # application is better modelled with a QMainWindow
     def __init__(self, t1, t2, t3):
         QtGui.QDialog.__init__(self)
         self.tt = TripleTableWidget(t1, t2, t3, self)
@@ -17,6 +19,14 @@ class Dialog(QtGui.QDialog):
         # this was the missing call where you set the layout of the tritable
         # widget to the dialog
         self.setLayout(self.tt.layout())
+
+
+class MainWindow(QtGui.QMainWindow):
+    def __init__(self, t1, t2, t3):
+        QtGui.QMainWindow.__init__(self)
+        self.tt = TripleTableWidget(t1, t2, t3, self)
+        self.setWindowTitle(tr("TripleTableWidget Example"))
+        self.setCentralWidget(self.tt)
 
 
 def main(argv):
@@ -30,7 +40,7 @@ QTableWidget::item:selected
 ''')
     node = node_from_nrml(sys.argv[1])[0]
     tables = Converter.node_to_tables(node)
-    mw = Dialog(*tables)
+    mw = MainWindow(*tables)
     mw.show()
     sys.exit(app.exec_())
 
