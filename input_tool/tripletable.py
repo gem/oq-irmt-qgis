@@ -13,13 +13,10 @@ class Dialog(QtGui.QDialog):
     def __init__(self, t1, t2, t3):
         QtGui.QDialog.__init__(self)
         self.tt = TripleTableWidget(t1, t2, t3, self)
-        self.adjustSize()
-        self.setMinimumSize(self.tt.sizeHint())
-        self.resize(self.tt.sizeHint())
-        #sp = self.tt.sizePolicy()
-        #self.setSizePolicy(  # ignored :-(
-        #    QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
         self.setWindowTitle(tr("TripleTableWidget Example"))
+        # this was the missing call where you set the layout of the tritable
+        # widget to the dialog
+        self.setLayout(self.tt.layout())
 
 
 def main(argv):
