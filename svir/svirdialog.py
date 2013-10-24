@@ -43,37 +43,42 @@ class SvirDialog(QDialog):
         self.ui.setupUi(self)
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
         self.ok_button.setDisabled(True)
+        self.loss_map_is_vectorial = True
 
     def open_file_dialog(self, dialog_type):
         print 'here'
         if dialog_type == 'loss_map':
             text = self.tr('Select loss map')
-            filters = self.tr('Loss maps (*.shp);; All files (*.*)')
+            filters = self.tr('Vector loss maps (*.shp);; Raster loss maps (*.*)')
         elif dialog_type == 'aggregation_layer':
             text = self.tr('Select aggregation layer')
             filters = self.tr('Aggregation layers (*.shp);; All files (*.*)')
         else:
             raise RuntimeError
 
-        return QFileDialog.getOpenFileName(self,
-                                               text,
-                                               os.path.expanduser('~'),
-                                               filters)
+        dialog = QFileDialog(self, text, os.path.expanduser('~'), filters)
+        dialog.setFileMode(QFileDialog.ExistingFile)
+        if dialog.exec_():
+            file_name = dialog.selectedFiles()[0]
+            file_type = dialog.selectedNameFilter()
+        return file_name, file_type
 
     @pyqtSlot()
-    def on_input_layer_tbn_clicked(self):
-        file_loss_map = self.open_file_dialog('loss_map')
-        self.ui.input_layer_le.setText(file_loss_map)
+    def on_loss_layer_tbn_clicked(self):
+        file_loss_map, file_loss_map_type = self.open_file_dialog('loss_map')
+        self.ui.loss_layer_le.setText(file_loss_map)
+        if file_loss_map_type != 'Vector loss maps (*.shp)':
+            self.loss_map_is_vectorial = False
         self.enable_ok_button()
 
     @pyqtSlot()
     def on_aggregation_layer_tbn_clicked(self):
-        file_aggregation_layer = self.open_file_dialog('aggregation_layer')
+        file_aggregation_layer, _ = self.open_file_dialog('aggregation_layer')
         self.ui.aggregation_layer_le.setText(file_aggregation_layer)
         self.enable_ok_button()
 
     def enable_ok_button(self):
-        if (os.path.isfile(self.ui.input_layer_le.text())
+        if (os.path.isfile(self.ui.loss_layer_le.text())
                 and os.path.isfile(self.ui.aggregation_layer_le.text())):
             self.ok_button.setEnabled(True)
         else:

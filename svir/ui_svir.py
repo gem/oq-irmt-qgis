@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_svir.ui'
 #
-# Created: Thu Oct 24 14:43:04 2013
+# Created: Thu Oct 24 15:58:24 2013
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -22,15 +22,15 @@ class Ui_SvirDialog(object):
         self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
         self.gridLayout = QtGui.QGridLayout()
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
-        self.input_layer_tbn = QtGui.QToolButton(SvirDialog)
-        self.input_layer_tbn.setObjectName(_fromUtf8("input_layer_tbn"))
-        self.gridLayout.addWidget(self.input_layer_tbn, 0, 2, 1, 1)
-        self.input_layer_lbl = QtGui.QLabel(SvirDialog)
-        self.input_layer_lbl.setObjectName(_fromUtf8("input_layer_lbl"))
-        self.gridLayout.addWidget(self.input_layer_lbl, 0, 0, 1, 1)
-        self.input_layer_le = QtGui.QLineEdit(SvirDialog)
-        self.input_layer_le.setObjectName(_fromUtf8("input_layer_le"))
-        self.gridLayout.addWidget(self.input_layer_le, 0, 1, 1, 1)
+        self.loss_layer_tbn = QtGui.QToolButton(SvirDialog)
+        self.loss_layer_tbn.setObjectName(_fromUtf8("loss_layer_tbn"))
+        self.gridLayout.addWidget(self.loss_layer_tbn, 0, 2, 1, 1)
+        self.loss_layer_lbl = QtGui.QLabel(SvirDialog)
+        self.loss_layer_lbl.setObjectName(_fromUtf8("loss_layer_lbl"))
+        self.gridLayout.addWidget(self.loss_layer_lbl, 0, 0, 1, 1)
+        self.loss_layer_le = QtGui.QLineEdit(SvirDialog)
+        self.loss_layer_le.setObjectName(_fromUtf8("loss_layer_le"))
+        self.gridLayout.addWidget(self.loss_layer_le, 0, 1, 1, 1)
         self.aggregation_layer_lbl = QtGui.QLabel(SvirDialog)
         self.aggregation_layer_lbl.setObjectName(_fromUtf8("aggregation_layer_lbl"))
         self.gridLayout.addWidget(self.aggregation_layer_lbl, 1, 0, 1, 1)
@@ -54,8 +54,8 @@ class Ui_SvirDialog(object):
 
     def retranslateUi(self, SvirDialog):
         SvirDialog.setWindowTitle(QtGui.QApplication.translate("SvirDialog", "Svir", None, QtGui.QApplication.UnicodeUTF8))
-        self.input_layer_tbn.setText(QtGui.QApplication.translate("SvirDialog", "...", None, QtGui.QApplication.UnicodeUTF8))
-        self.input_layer_lbl.setText(QtGui.QApplication.translate("SvirDialog", "Input Layer", None, QtGui.QApplication.UnicodeUTF8))
+        self.loss_layer_tbn.setText(QtGui.QApplication.translate("SvirDialog", "...", None, QtGui.QApplication.UnicodeUTF8))
+        self.loss_layer_lbl.setText(QtGui.QApplication.translate("SvirDialog", "Input Layer", None, QtGui.QApplication.UnicodeUTF8))
         self.aggregation_layer_lbl.setText(QtGui.QApplication.translate("SvirDialog", "Aggregation Layer", None, QtGui.QApplication.UnicodeUTF8))
         self.aggregation_layer_tbn.setText(QtGui.QApplication.translate("SvirDialog", "...", None, QtGui.QApplication.UnicodeUTF8))
 
