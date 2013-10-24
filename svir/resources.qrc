@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/plugins/svir" >
+        <file alias="icon.png">resources/icon.png</file>
+    </qresource>
+</RCC>
