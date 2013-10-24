@@ -8,6 +8,7 @@ from PyQt4.QtCore import Qt
 from hmtk.parsers.catalogue import csv_catalogue_parser as csv
 
 
+### TODO. We might need a Singleton version of this
 class CatalogueModel(object):
     def __init__(self, catalogue):
         self.catalogue = catalogue

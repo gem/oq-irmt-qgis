@@ -1,7 +1,7 @@
 from decorator import decorator
 
 from PyQt4 import QtGui
-from PyQt4.QtCore import Qt
+from PyQt4.QtCore import Qt, pyqtSlot
 
 from plot_occurrence_model import GutenbergRichterModel, plotSeismicityRates
 import completeness_dialog
@@ -17,7 +17,7 @@ from utils import alert
 
 
 class FigureCanvasQTAggWidget(FigureCanvasQTAgg):
-    def __init__(self, parent=None, width=3, height=3, dpi=100):
+    def __init__(self, parent=None, width=4, height=4, dpi=100):
         self.fig = Figure(figsize=(width, height), dpi=dpi)
         self.axes = self.fig.add_subplot(111)
         FigureCanvasQTAgg.__init__(self, self.fig)
@@ -28,12 +28,6 @@ class FigureCanvasQTAggWidget(FigureCanvasQTAgg):
 
     def get_default_filetype(self):
         return "png"
-
-    def draw_occurrences(self, catalogue):
-        self.axes.hist(catalogue.data['magnitude'], color="w")
-        self.axes.set_xlabel('Magnitude', dict(fontsize=13))
-        self.axes.set_ylabel('Occurrences', dict(fontsize=13))
-        self.draw()
 
     def draw_seismicity_rate(self, catalogue, mag, *args):
         self.axes.cla()
@@ -49,12 +43,6 @@ class FigureCanvasQTAggWidget(FigureCanvasQTAgg):
         plotSeismicityRates(catalogue).plot(self.axes, model=model)
         self.draw()
 
-    def draw_timeline(self, cat):
-        self.axes.plot(cat.get_decimal_time(), cat.data['magnitude'])
-        self.axes.set_xlabel('Time', dict(fontsize=13))
-        self.axes.set_ylabel('Magnitude', dict(fontsize=13))
-        self.draw()
-
     def draw_1d_histogram(self, hist, bins):
         self.axes.cla()
         w = (bins[-1] - bins[0]) / len(bins)
@@ -68,6 +56,23 @@ class FigureCanvasQTAggWidget(FigureCanvasQTAgg):
         self.axes.imshow(
             hist.T, extent=extent, interpolation='nearest', origin='lower',
             aspect="auto")
+        self.draw()
+
+    def draw_declustering_pie(self, cluster_indexes, cluster_flags):
+        self.axes.cla()
+        mainshocks_mask = numpy.logical_and(
+            cluster_indexes != 0, cluster_flags == 0)
+        mainshocks_nr = numpy.argwhere(mainshocks_mask == 1).size
+        not_clustered = numpy.argwhere(cluster_indexes == 0).size
+
+        self.axes.pie(
+            [not_clustered,
+             mainshocks_nr,
+             numpy.argwhere(cluster_flags == -1).size,
+             numpy.argwhere(cluster_flags == 1).size],
+            labels=["Unclustered", "Main shocks",
+                    "Foreshocks", "Aftershocks"],
+            radius=0.65)
         self.draw()
 
     def draw_completeness(self, model):
@@ -238,15 +243,24 @@ def wait_cursor(func):
 
 
 class SelectionDialog(QtGui.QDialog, selection_dialog.Ui_Dialog):
-    def __init__(self, parent=None):
-        super(SelectionDialog, self).__init__(parent)
+    def __init__(self, window=None):
+        super(SelectionDialog, self).__init__(window)
         self.setupUi(self)
+        self.window = window
         self.invertSelectionButton.clicked.connect(
-            lambda: parent.add_to_selection(
+            lambda: self.window.add_to_selection(
                 self.selectorComboBox.currentIndex()))
         self.selectButton.clicked.connect(
-            lambda: parent.add_to_selection(
+            lambda: self.window.add_to_selection(
                 self.selectorComboBox.currentIndex()))
+        self.removeFromRuleListButton.clicked.connect(self.remove_selector)
+        self.purgeUnselectedEventsButton.clicked.connect(
+            self.window.remove_unselected_events)
+
+    def remove_selector(self):
+        for item in self.selectorList.selectedItems():
+            self.selectorList.takeItem(self.selectorList.row(item))
+        self.window.update_selection()
 
 
 class ResultsTable(QtGui.QTableWidget):
@@ -285,3 +299,19 @@ class ResultsTable(QtGui.QTableWidget):
                 self.setItem(i, j, QtGui.QTableWidgetItem(str(data)))
         if callback is not None:
             self.itemClicked.connect(callback)
+
+
+class CatalogueView(QtGui.QTableView):
+    def __init__(self, *args, **kwargs):
+        super(CatalogueView, self).__init__(*args, **kwargs)
+        self.catalogue_map = None
+        self.catalogue_model = None
+        self.clicked.connect(self.on_cell_clicked)
+
+    @pyqtSlot("QModelIndex")
+    def on_cell_clicked(self, modelIndex):
+        """
+        Callback when a cell in the catalogue table is clicked. Filter
+        the map by showing only the selected feature at cell row.
+        """
+        self.catalogue_map.select([self.catalogue_model.event_at(modelIndex)])

@@ -2,7 +2,7 @@ import collections
 import numpy
 
 from PyQt4 import QtGui
-from PyQt4.QtCore import QObject, SIGNAL, Qt, pyqtSlot
+from PyQt4.QtCore import Qt, pyqtSlot
 
 from qgis.core import QgsVectorFileWriter
 from qgis.gui import (
@@ -16,6 +16,7 @@ from hmtk.seismicity import (
 from hmtk.seismicity.catalogue import Catalogue
 
 from openquake.nrmllib.hazard.parsers import SourceModelParser
+
 
 from histogram import CATALOGUE_ANALYSIS_METHODS
 from utils import alert
@@ -166,6 +167,7 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         """
         return self.tabs[self.stackedFormWidget.currentIndex()]
 
+    # TODO: refactor. Use signal algorithmChanged
     def on_algorithm_select(self, index):
         """
         When a algorithm is selected we: show/Hide action `buttons`;
@@ -184,6 +186,7 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
                 self.catalogue_model.catalogue,
                 self.on_completeness_select)
 
+    # TODO. use signal changeCompletenessMethod
     def on_completeness_select(self, index):
         """
         Select Completeness table callback
@@ -226,11 +229,14 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
 
         self.change_model(CatalogueModel.from_csv_file(csv_file))
 
+    # FIXME. all the behaviors below should be handled with signals
+    # TODO. Move this into a new singleton "Project" class
     @wait_cursor
     def change_model(self, model):
         if self.catalogue_model:
             self.push_state(self.catalogue_model)
         self.catalogue_model = model
+        self.catalogueTableView.catalogue_model = model
         self.catalogueTableView.setModel(self.catalogue_model.item_model)
         if self.catalogue_map is None:
             self.catalogue_map = CatalogueMap(
@@ -239,11 +245,10 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
                 self.catalogue_map.toggle_catalogue_labels)
             self.actionSourcesToggleLabels.triggered.connect(
                 self.catalogue_map.toggle_sources_labels)
+            self.catalogueTableView.catalogue_map = self.catalogue_map
         else:
             self.catalogue_map.change_catalogue_model(self.catalogue_model)
 
-        self.completenessChart.draw_timeline(
-            self.catalogue_model.catalogue)
         self.recurrenceModelChart.draw_seismicity_rate(
             self.catalogue_model.catalogue, None)
 
@@ -255,10 +260,15 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         """
         self.catalogue_map.add_source_layers(SourceModelParser(fname).parse())
 
+    # TODO. move to widgets.SelectionDialog
     def add_to_selection(self, idx):
         SELECTORS[idx](self)
 
+    # TODO. move to widgets.SelectionDialog
     def update_selection(self):
+        """
+        :returns: a catalogue holding the selection
+        """
         initial = catalogue = self.catalogue_model.catalogue
 
         if not self.selection_editor.selectorList.count():
@@ -266,7 +276,7 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         else:
             for i in range(self.selection_editor.selectorList.count()):
                 selector = self.selection_editor.selectorList.item(i)
-                if (not self.intersect_with_selection or
+                if (not self.intersect_with_selection and not
                     isinstance(selector, Invert)):
                     union_data = selector.apply(initial, initial).data
                     if initial != catalogue:
@@ -293,23 +303,17 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
 
         return catalogue
 
-    @pyqtSlot(name="on_purgeUnselectedEventsButton_clicked")
+    # TODO. move to widgets.SelectionDialog
     def remove_unselected_events(self):
+        # get the selected catalogue
         catalogue = self.update_selection()
 
-        if not QtGui.QMessageBox.information(
-                self, "Remove unselected events", "Are you sure?", "Yes"):
+        if QtGui.QMessageBox.question(
+                self, "Remove unselected events", "Are you sure?",
+                QtGui.QDialogButtonBox.Yes, QtGui.QDialogButtonBox.No):
             self.change_model(CatalogueModel(catalogue))
-
             for _ in range(self.selection_editor.selectorList.count()):
                 self.selection_editor.selectorList.takeItem(0)
-
-    @pyqtSlot(name="on_removeFromRuleListButton_clicked")
-    def remove_selector(self):
-        for item in self.selection_editor.selectorList.selectedItems():
-            self.selection_editor.selectorList.takeItem(
-                self.selection_editor.selectorList.row(item))
-        self.update_selection()
 
     def setup_actions(self):
         """
@@ -348,11 +352,6 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
             self.menuExport.addAction(action)
             action.triggered.connect(self.save_as(flt, fmt))
 
-        # table view actions
-        QObject.connect(
-            self.catalogueTableView,
-            SIGNAL("clicked(QModelIndex)"), self.cellClicked)
-
         # Selection management
         self.actionDeleteUnselectedEvents.triggered.connect(
             self.remove_unselected_events)
@@ -385,6 +384,9 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         self.actionCatalogueStyleByCompleteness.triggered.connect(
             lambda: self.catalogue_map.set_catalogue_style("completeness"))
 
+        self.actionLoadOSMBaseMap.triggered.connect(
+            lambda: self.catalogue_map.set_osm())
+
     def save_as(self, flt, fmt):
         """
         :returns:
@@ -406,6 +408,7 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
             QtGui.QFileDialog.getSaveFileName(
                 self, "Save Catalogue", "", "*.csv"))
 
+    # XXX. Maybe move to tabs.Tab
     @wait_cursor
     def _apply_algorithm(self, name):
         algorithm = self.current_tab().algorithm()
@@ -416,6 +419,7 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
             return
         return getattr(self.catalogue_model, name)(algorithm, config)
 
+    # TODO. Remove it. Connect output widgets to signal algorithmRun
     @pyqtSlot(name="on_catalogueAnalysisButton_clicked")
     def histogram(self):
         histogram_data = self._apply_algorithm("histogram")
@@ -446,6 +450,9 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
             ['Cluster_Index', 'Cluster_Flag'])
         self.add_declustering_output()
         self.catalogue_map.set_catalogue_style("cluster")
+        self.declusteringChart.draw_declustering_pie(
+            self.catalogue_model.catalogue.data['Cluster_Index'],
+            self.catalogue_model.catalogue.data['Cluster_Flag'])
         return success
 
     @pyqtSlot(name="on_declusteringPurgeButton_clicked")
@@ -459,8 +466,6 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
 
             self.catalogueTableView.setModel(self.catalogue_model.item_model)
             self.catalogue_map.change_catalogue_model(self.catalogue_model)
-            self.completenessChart.draw_timeline(
-                self.catalogue_model.catalogue)
 
     @pyqtSlot(name="on_completenessPurgeButton_clicked")
     def purge_completeness(self):
@@ -472,8 +477,6 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
             self.catalogue_model.purge_completeness()
             self.catalogueTableView.setModel(self.catalogue_model.item_model)
             self.catalogue_map.change_catalogue_model(self.catalogue_model)
-            self.completenessChart.draw_timeline(
-                self.catalogue_model.catalogue)
 
     @pyqtSlot(name="on_completenessButton_clicked")
     def completeness(self):
@@ -530,13 +533,6 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         self.catalogue_model.smoothed_seismicity_output = smoothed_matrix
         self.catalogue_map.set_raster(smoothed_matrix)
         self.add_smoothed_seismicity_output()
-
-    def cellClicked(self, modelIndex):
-        """
-        Callback when a cell in the catalogue table is clicked. Filter
-        the map by showing only the selected feature at cell row.
-        """
-        self.catalogue_map.select([self.catalogue_model.event_at(modelIndex)])
 
     def change_tab(self, index):
         if self.catalogue_map is None:
@@ -628,8 +624,10 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         elif len(self.catalogue_model.histogram_output) == 3:
             self.resultsTable.set_data(
                 self.catalogue_model.histogram_output[2],
-                map(str, self.catalogue_model.histogram_output[0][:-1]),
-                map(str, self.catalogue_model.histogram_output[1][:-1]))
+                [str(x)
+                 for x in self.catalogue_model.histogram_output[0][:-1]],
+                [str(x)
+                 for x in self.catalogue_model.histogram_output[1][:-1]])
         else:
             raise RuntimeError(
                 "Can't update resultsTable for %s" % (
@@ -640,13 +638,13 @@ class MainWindow(QtGui.QMainWindow, Ui_HMTKWindow):
         if self.catalogue_model.recurrence_model_output is not None:
             if len(self.catalogue_model.recurrence_model_output) == 3:
                 self.resultsTable.set_data(
-                    [self.catalogue_model.recurrence_model_output],
-                    ["Reference Magnitude", "b value", "sigma b"])
+                    [self.catalogue_model.recurrence_model_output[1:]],
+                    ["b value", "sigma b"])
             elif len(self.catalogue_model.recurrence_model_output) == 5:
                 self.resultsTable.set_data(
                     [self.catalogue_model.recurrence_model_output],
                     ["Reference Magnitude", "b value", "sigma b",
-                     "a value", "sigma a"])
+                     "rate", "sigma rate"])
 
     def add_maximum_magnitude_output(self):
         if self.catalogue_model.maximum_magnitude_output is not None:

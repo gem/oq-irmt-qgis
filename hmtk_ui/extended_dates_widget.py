@@ -384,10 +384,10 @@ class ExtendedDatesWidget(QGroupBox):
 
     def _make_cw(self):
         cw = QCalendarWidget()
-        cw.setWindowFlags(cw.windowFlags() |
-                          Qt.Tool |
-                          Qt.FramelessWindowHint |
-                          Qt.WindowStaysOnTopHint)
+        # cw.setWindowFlags(cw.windowFlags() |
+        #                   Qt.Tool |
+        #                   Qt.FramelessWindowHint |
+        #                   Qt.WindowStaysOnTopHint)
         cw.activated.connect(lambda: self._close_cw(cw))
         return cw
 

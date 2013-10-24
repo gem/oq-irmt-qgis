@@ -60,5 +60,5 @@ def magnitude_time_distribution(
     y_bins = numpy.linspace(catalogue.get_decimal_time().min(),
                             catalogue.get_decimal_time().max(),
                             time_bins_nr + 1)
-    return catalogue.get_magnitude_time_distribution(
+    return x_bins, y_bins, catalogue.get_magnitude_time_distribution(
         x_bins, y_bins, normalisation, bootstrap)

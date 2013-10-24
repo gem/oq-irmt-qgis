@@ -74,9 +74,16 @@ class SelectionTool(object):
 
     @property
     def map2layer(self):
-        return QgsCoordinateTransform(
-            self.catalogue_map.ol_plugin.layer.crs(),
-            QgsCoordinateReferenceSystem(4326))
+        # If the OSM layer has been correctly loaded deal with CRS
+        # Transform
+        if getattr(self.catalogue_map.ol_plugin, 'layer', None):
+            return QgsCoordinateTransform(
+                self.catalogue_map.ol_plugin.layer.crs(),
+                QgsCoordinateReferenceSystem(4326))
+        else:
+            return QgsCoordinateTransform(
+                QgsCoordinateReferenceSystem(4326),
+                QgsCoordinateReferenceSystem(4326))
 
     def _rubber_band_to_poly(self, rubber_band):
         geometry = rubber_band.asGeometry()
@@ -490,15 +497,17 @@ class DateBetweenTool(QtGui.QDialog, SelectionTool):
         self.button_box.accepted.connect(self.accept)
         self.button_box.rejected.connect(self.reject)
         self.layout.insertWidget(1, self.button_box)
+        self.show()
 
-        if self.exec_():
-            start = self.field.get_from_min_datetime().toPyDateTime()
-            end = self.field.get_from_max_datetime().toPyDateTime()
-            self.set_filter_params({
-                self.start_field_name: start, self.end_field_name: end})
-            self.next_tools()
-        else:
-            raise AbortSelection
+    def accept(self):
+        start = self.field.get_from_min_datetime().toPyDateTime()
+        end = self.field.get_from_max_datetime().toPyDateTime()
+        self.set_filter_params({
+            self.start_field_name: start, self.end_field_name: end})
+        self.next_tools()
+
+    def reject(self):
+        pass
 
 
 class Selector(object):

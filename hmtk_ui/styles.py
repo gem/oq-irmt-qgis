@@ -4,6 +4,7 @@ from PyQt4 import QtGui
 from qgis.core import (
     QGis,
     QgsSymbolV2, QgsGraduatedSymbolRendererV2,
+    QgsMarkerSymbolV2,
     QgsFeatureRendererV2, QgsVectorGradientColorRampV2)
 
 
@@ -17,10 +18,9 @@ class CatalogueDepthMagnitudeRenderer(QgsGraduatedSymbolRendererV2):
         layer = catalogue_map.catalogue_layer
         symbol = QgsSymbolV2.defaultSymbol(layer.geometryType())
         ramp = QgsVectorGradientColorRampV2.create(
-            dict(color1='red', color2='blue',
-                 stops="0.25;yellow:0.5;green:0.75;cyan"))
+            dict(color1='white', color2='blue'))
 
-        symbol.setSize(0.2)
+        symbol.setSize(0.15)
         # number of color classes = 8
         renderer = cls.createRenderer(
             layer, "depth", 8,
@@ -48,12 +48,11 @@ class CatalogueCompletenessRenderer(QgsFeatureRendererV2):
     def __init__(self):
         QgsFeatureRendererV2.__init__(self, "CatalogueCompletenessRenderer")
         complete = QgsSymbolV2.defaultSymbol(QGis.Point)
-        uncomplete = QgsSymbolV2.defaultSymbol(QGis.Point)
-
-        complete.setSize(4)
-        uncomplete.setSize(2)
+        uncomplete = QgsMarkerSymbolV2.createSimple(
+            {'color': 'blue', 'name': 'triangle'})
+        uncomplete.setSize(3)
+        complete.setSize(1.5)
         complete.setColor(QtGui.QColor(255, 0, 0, 125))
-        uncomplete.setColor(QtGui.QColor("blue"))
         self.syms = [complete, uncomplete]
 
     def symbolForFeature(self, feature):
@@ -127,14 +126,25 @@ class CatalogueClusterRenderer(QgsFeatureRendererV2):
 
         for flag in set(catalogue.data['Cluster_Flag'].tolist()):
             for index in set(catalogue.data['Cluster_Index'].tolist()):
-                point = QgsSymbolV2.defaultSymbol(QGis.Point)
+
+                # main shock
+                point = QgsMarkerSymbolV2.createSimple(
+                    {'color': 'blue', 'name': 'square'})
 
                 if index:  # belongs to a cluster
                     color = self.catalogue_model.cluster_color(index)
-                    # main shocks = 5, non-poissonan = 3
-                    point.setSize(3 + 2 * (1 - abs(flag)))
+
+                    # non poissonian
+                    if flag:
+                        point = QgsMarkerSymbolV2.createSimple(
+                            {'color': 'blue', 'name': 'triangle'})
                     color.setAlpha(125 + 125 * abs(flag))
+                    point.setSize(3)
                     point.setColor(color)
+                else:
+                    point = QgsSymbolV2.defaultSymbol(QGis.Point)
+                    point.setColor(QtGui.QColor("0,0,0,125"))
+                    point.setSize(1.5)
                 self.syms[self.Cluster(index, flag)] = point
 
     def startRender(self, context, _vlayer):

@@ -1,3 +1,4 @@
+import os
 import collections
 import tempfile
 
@@ -51,6 +52,9 @@ class CatalogueMap(object):
     :attr ol_plugin:
        a instance of the QGIS OpenLayer plugin
 
+    :attr basemap_layer:
+       a Layer used to show the base map
+
     :attr raster_layer:
        A QGIS raster layer used to display smoothed seismicity data
 
@@ -76,10 +80,8 @@ class CatalogueMap(object):
         self.canvas.setLayerSet([QgsMapCanvasLayer(self.catalogue_layer)])
         self.canvas.setExtent(self.catalogue_layer.extent())
 
-        # we keep a reference of the OpenLayer Plugin (instead of a
-        # layer) such that the underlying basemap layer data is not
-        # garbage collected
-        self.ol_plugin = self.load_basemap()
+        self.basemap_layer = self.load_basemap()
+        self.ol_plugin = self.load_osm_plugin()
 
         # initialized later
         self.raster_layer = None
@@ -88,8 +90,16 @@ class CatalogueMap(object):
         # Initialize Map
         self.reset_map()
 
-        # This zoom is required to initialize the map canvas
-        self.canvas.zoomByFactor(1.1)
+    def load_basemap(self):
+        layer_path = os.path.join(
+            os.path.dirname(__file__),
+            "data", "Countries.shp")
+        layer = QgsVectorLayer(
+            layer_path, "World Countries", "ogr")
+        if not layer.isValid():
+            raise RuntimeError("Basemap layer is not valid!!!")
+        QgsMapLayerRegistry.instance().addMapLayer(layer)
+        return layer
 
     def reset_map(self):
         """
@@ -102,7 +112,7 @@ class CatalogueMap(object):
         self.canvas.setLayerSet(
             catalogue +
             [QgsMapCanvasLayer(s) for s in self.source_layers.values()] +
-            [QgsMapCanvasLayer(self.ol_plugin.layer)])
+            [QgsMapCanvasLayer(self.basemap_layer)])
         self.canvas.refresh()
 
     def set_catalogue_style(self, style):
@@ -195,7 +205,7 @@ class CatalogueMap(object):
         self.populate_catalogue_layer(catalogue_model.catalogue)
         self.reset_map()
 
-    def load_basemap(self):
+    def load_osm_plugin(self):
         """
         Initialize the QGIS OpenLayer plugin and load the basemap
         layer
@@ -218,6 +228,9 @@ class CatalogueMap(object):
             olplugin.olLayerTypeRegistry)
         QgsPluginLayerRegistry.instance().addPluginLayerType(oltype)
 
+        return olplugin
+
+    def load_osm(self, olplugin):
         # 4 is OpenStreetMap
         ol_gphyslayertype = olplugin.olLayerTypeRegistry.getById(4)
         olplugin.addLayer(ol_gphyslayertype)
@@ -225,7 +238,17 @@ class CatalogueMap(object):
         if not olplugin.layer.isValid():
             utils.alert("Failed to load basemap")
 
-        return olplugin
+        return olplugin.layer
+
+    def set_osm(self):
+        # we keep a reference of the OpenLayer Plugin (instead of a
+        # layer) such that the underlying basemap layer data is not
+        # garbage collected
+        self.basemap_layer = self.load_osm(self.ol_plugin)
+        self.reset_map()
+
+        # This zoom is required to initialize the map canvas
+        self.canvas.zoomByFactor(1.1)
 
     def center_on(self, field, value, comparator=cmp):
         """
@@ -309,7 +332,7 @@ class CatalogueMap(object):
             msg_lines = ["No Event found"]
 
         if self.raster_layer is not None:
-            src = self.ol_plugin.layer.crs()
+            src = self.basemap_layer.crs()
             dst = QgsCoordinateReferenceSystem(4326)
             trans = QgsCoordinateTransform(src, dst)
             point = trans.transform(point)
@@ -347,7 +370,7 @@ class CatalogueMap(object):
             'SimpleFaultSource': source_type(
                 'Polygon',
                 lambda x: simple_surface_from_source(x).wkt,
-                '100,100,100,185'),
+                '0,50,255,185'),
             'ComplexFaultSource': source_type(
                 'MultiPolygon', lambda _: NotImplementedError, '50,50,50,185')}
 
@@ -398,6 +421,8 @@ class CatalogueMap(object):
 
     def toggle_catalogue_labels(self):
         label = self.catalogue_layer.label()
+        attributes = label.labelAttributes()
+        attributes.setOffset(0, 15, 1)
         label.setLabelField(
             QgsLabel.Text, self.catalogue_layer.fieldNameIndex("eventID"))
         self.catalogue_layer.enableLabels(
@@ -429,7 +454,7 @@ def create_raster_layer(matrix):
     nrows = lats[lats == lats[0]].size
 
     # put values in a grid
-    gridded_vals = vals.reshape((nrows, ncols))
+    gridded_vals = vals.reshape((ncols, nrows)).T
 
     dataset = driver.Create(filename, ncols, nrows, 1, gdal.GDT_Float32)
 

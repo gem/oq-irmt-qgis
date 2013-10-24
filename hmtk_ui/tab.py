@@ -184,6 +184,19 @@ def create_combo(field_name, prefix_name, choices, no_opt=True):
     return combo_box
 
 
+def create_checkbox(field_name, prefix_name):
+    """
+    Utility to create a combo box from `choices`
+
+    :param choices: an iterable over strings used as option names
+    :param bool no_opt: True if an empty option should be inserted
+    """
+    box = QtGui.QCheckBox()
+    box.setObjectName("%s_%s_check" % (field_name, prefix_name))
+
+    return box
+
+
 FIELD_REGISTRY = Registry()
 
 
@@ -311,17 +324,10 @@ class RegistryField(ChoiceField):
 @FIELD_REGISTRY.add(bool)
 class BooleanField(Field):
     def _create_widget(self, _value):
-        return create_combo(self.field_name, self.tab.name, ["True", "False"])
+        return create_checkbox(self.field_name, self.tab.name)
 
     def get_value(self):
-        idx = self.widget.currentIndex()
-        if idx == 0:
-            value = None
-        elif idx == 1:
-            value = True
-        elif idx == 2:
-            value = False
-        return value
+        return self.widget.isChecked()
 
 
 @FIELD_REGISTRY.add(Grid)

@@ -30,7 +30,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>5</number>
+       <number>6</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideNone</enum>
@@ -147,6 +147,13 @@
        </attribute>
        <layout class="QVBoxLayout" name="recurrenceModelFormLayout">
         <item>
+         <widget class="QPushButton" name="recurrenceModelButton">
+          <property name="text">
+           <string>Run Analysis</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="FigureCanvasQTAggWidget" name="recurrenceModelChart" native="true">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -168,13 +175,6 @@
           </property>
          </widget>
         </item>
-        <item>
-         <widget class="QPushButton" name="recurrenceModelButton">
-          <property name="text">
-           <string>Run Analysis</string>
-          </property>
-         </widget>
-        </item>
        </layout>
       </widget>
       <widget class="QWidget" name="stackedFormWidgetPage4">
@@ -185,6 +185,13 @@
         <string>Maximum Magnitude</string>
        </attribute>
        <layout class="QVBoxLayout" name="maxMagnitudeFormLayout">
+        <item>
+         <widget class="QPushButton" name="maxMagnitudeButton">
+          <property name="text">
+           <string>Run Analysis</string>
+          </property>
+         </widget>
+        </item>
         <item>
          <widget class="FigureCanvasQTAggWidget" name="maxMagnitudeChart" native="true">
           <property name="sizePolicy">
@@ -207,13 +214,6 @@
           </property>
          </widget>
         </item>
-        <item>
-         <widget class="QPushButton" name="maxMagnitudeButton">
-          <property name="text">
-           <string>Run Analysis</string>
-          </property>
-         </widget>
-        </item>
        </layout>
       </widget>
       <widget class="QWidget" name="stackedFormWidgetPage5">
@@ -224,6 +224,13 @@
         <string>Smoothed Seismicity</string>
        </attribute>
        <layout class="QVBoxLayout" name="smoothedSeismicityFormLayout">
+        <item>
+         <widget class="QPushButton" name="smoothedSeismicityButton">
+          <property name="text">
+           <string>Run Analysis</string>
+          </property>
+         </widget>
+        </item>
         <item>
          <widget class="FigureCanvasQTAggWidget" name="smoothedSeismicityChart" native="true">
           <property name="sizePolicy">
@@ -243,13 +250,6 @@
             <width>16777215</width>
             <height>16777215</height>
            </size>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="smoothedSeismicityButton">
-          <property name="text">
-           <string>Run Analysis</string>
           </property>
          </widget>
         </item>
@@ -284,7 +284,7 @@
        </attribute>
        <layout class="QGridLayout" name="gridLayout_7">
         <item row="0" column="0">
-         <widget class="QTableView" name="catalogueTableView">
+         <widget class="CatalogueView" name="catalogueTableView">
           <property name="editTriggers">
            <set>QAbstractItemView::NoEditTriggers</set>
           </property>
@@ -319,6 +319,7 @@
           <height>600</height>
          </size>
         </property>
+        <zorder>stackedFormWidget</zorder>
        </widget>
       </item>
       <item>
@@ -356,7 +357,7 @@
       <string>Export</string>
      </property>
     </widget>
-    <widget class="QMenu" name="menuLoad_catalogue">
+    <widget class="QMenu" name="menuLoad">
      <property name="title">
       <string>Load</string>
      </property>
@@ -370,13 +371,13 @@
      <addaction name="actionPlatformViewCatalogue"/>
      <addaction name="actionPlatformUploadModels"/>
     </widget>
-    <addaction name="menuLoad_catalogue"/>
+    <addaction name="menuLoad"/>
     <addaction name="actionSaveCatalogue"/>
     <addaction name="menuExport"/>
     <addaction name="separator"/>
     <addaction name="menuPlatform"/>
     <addaction name="actionReloadPlugin"/>
-    <addaction name="actionOfflineMode"/>
+    <addaction name="actionLoadOSMBaseMap"/>
    </widget>
    <widget class="QMenu" name="menuTools">
     <property name="title">
@@ -771,12 +772,12 @@
     <string>Intersect with selection</string>
    </property>
   </action>
-  <action name="actionOfflineMode">
+  <action name="actionLoadOSMBaseMap">
    <property name="checkable">
-    <bool>true</bool>
+    <bool>false</bool>
    </property>
    <property name="text">
-    <string>Offline Mode</string>
+    <string>Load OSM base map</string>
    </property>
   </action>
  </widget>
@@ -797,6 +798,11 @@
   <customwidget>
    <class>ResultsTable</class>
    <extends>QTableWidget</extends>
+   <header>widgets</header>
+  </customwidget>
+  <customwidget>
+   <class>CatalogueView</class>
+   <extends>QTableView</extends>
    <header>widgets</header>
   </customwidget>
  </customwidgets>
