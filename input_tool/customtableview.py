@@ -38,10 +38,12 @@ class CustomTableModel(QtCore.QAbstractTableModel):
         return self.table[index.row()].pkey
 
     def data(self, index, role=QtCore.Qt.DisplayRole):
+        record = self.table[index.row()]
+        column = index.column()
         if role in (QtCore.Qt.DisplayRole, QtCore.Qt.EditRole):
-            row = index.row()
-            column = index.column()
-            return self.table[row][column]
+            return record[column]
+        elif role == QtCore.Qt.BackgroundRole and not record.is_valid(column):
+            return QtGui.QBrush(QtCore.Qt.red)
 
     def setData(self, index, value, role=QtCore.Qt.EditRole):
         if role == QtCore.Qt.EditRole:
@@ -197,13 +199,23 @@ class TripleTableWidget(QtGui.QWidget):
         self.tv1 = CustomTableView(t1, parent)
         self.tv2 = CustomTableView(t2, parent)
         self.tv3 = CustomTableView(t3, parent)
-        self.message_bar = MessageBar(self)
+        self.message_bar = MessageBar('*** Prova ***', self)
         self.setupUi()
         self.tv1.tableView.clicked.connect(self.show_tv2)
         self.tv2.tableView.clicked.connect(self.show_tv3)
 
         # connect errors
-        self.tv1.tableModel.validationFailed.connect(self.show_validation_error)
+        self.tv1.tableModel.validationFailed.connect(
+            lambda index, error:
+            self.show_validation_error(self.tv1, index, error))
+
+        self.tv2.tableModel.validationFailed.connect(
+            lambda index, error:
+            self.show_validation_error(self.tv2, index, error))
+
+        self.tv3.tableModel.validationFailed.connect(
+            lambda index, error:
+            self.show_validation_error(self.tv3, index, error))
 
         # hide
         self.tv2.tableView.hideColumn(0)
@@ -213,9 +225,10 @@ class TripleTableWidget(QtGui.QWidget):
         self.show_tv3(QtCore.QModelIndex().sibling(0, 0))
 
     @QtCore.pyqtSlot(QtCore.QModelIndex, ValueError)
-    def show_validation_error(self, index, error):
-        message = 'VALIDATION ERROR at %s: %s' % (index, error)
-        print message
+    def show_validation_error(self, table_view, index, error):
+        record = table_view.tableModel.table[index.row()]
+        fieldname = record.fields[index.column()].name
+        message = '%s: %s' % (fieldname, error)
         self.show_message(message)
 
     def show_message(self, message):
@@ -236,6 +249,7 @@ class TripleTableWidget(QtGui.QWidget):
     def setupUi(self):
         layout = QtGui.QVBoxLayout()
         hlayout = QtGui.QHBoxLayout()
+        layout.addWidget(self.message_bar)
         hlayout.addWidget(self.tv1)
         hlayout.addWidget(self.tv2)
         layout.addLayout(hlayout)
