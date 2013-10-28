@@ -76,15 +76,17 @@ class Svir:
         # Create the dialog (after translation) and keep reference
         self.dlg = SvirDialog()
 
-        self.loss_layer = None
         self.loss_layer_is_vector = True
+        self.loss_layer = None
         self.aggregation_layer = None
 
     def initGui(self):
         # Create action that will start plugin configuration
+        # PAOLO: test_action should probably be renamed into something
+        # more meaningful
         self.test_action = QAction(
             QIcon(":/plugins/svir/icon.png"),
-            u"Test", self.iface.mainWindow())
+            u"Load data", self.iface.mainWindow())
         # connect the action to the run method
         self.test_action.triggered.connect(self.run)
 
@@ -94,9 +96,7 @@ class Svir:
 
     def unload(self):
         # Remove the plugin menu item and icon
-        self.iface.removePluginMenu(
-            u"&OpenQuake Social Vulnerability and Integrated Risk",
-            self.test_action)
+        self.iface.removePluginMenu(u"&SVIR", self.test_action)
         self.iface.removeToolBarIcon(self.test_action)
 
     # run method that performs all the real work
@@ -116,27 +116,28 @@ class Svir:
     def load_layers(self, aggregation_layer_path,
                     loss_layer_path,
                     loss_layer_is_vector):
-
+        # Load loss layer
         if loss_layer_is_vector:
             self.loss_layer = QgsVectorLayer(loss_layer_path,
                                              self.tr('Loss layer'), 'ogr')
         else:
             self.loss_layer = QgsRasterLayer(loss_layer_path,
                                              self.tr('Loss layer'))
-
+        # Add loss layer to registry
         if self.loss_layer.isValid():
             QgsMapLayerRegistry.instance().addMapLayer(self.loss_layer)
         else:
             raise RuntimeError('Loss layer invalid')
-
+        # Load aggregation layer
         self.aggregation_layer = QgsVectorLayer(aggregation_layer_path,
                                                 self.tr('Aggregation layer'),
                                                 'ogr')
+        # Add aggregation layer to registry
         if self.aggregation_layer.isValid():
             QgsMapLayerRegistry.instance().addMapLayer(self.aggregation_layer)
         else:
             raise RuntimeError('Aggregation layer invalid')
-
+        # Zoom depending on the aggregation layer's extent
         self.canvas.setExtent(self.aggregation_layer.extent())
 
     def calculate_stats(self):
@@ -146,6 +147,7 @@ class Svir:
             self.calculate_raster_stats()
 
     def calculate_vector_stats(self):
+        # TODO: Implement statistics also for vector loss maps
         raise NotImplementedError('vector loss maps not supported yet')
 
     def calculate_raster_stats(self):

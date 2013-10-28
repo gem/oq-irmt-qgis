@@ -36,26 +36,41 @@ from ui_svir import Ui_SvirDialog
 
 
 class SvirDialog(QDialog):
+    """
+    Modal dialog allowing to select a loss (raster or vector) layer
+    and an aggregation vector layer. When both are selected and are
+    valid files, they can be loaded by clicking OK
+    """
     def __init__(self):
         QDialog.__init__(self)
         # Set up the user interface from Designer.
         self.ui = Ui_SvirDialog()
         self.ui.setupUi(self)
+        # Disable ok_button until loss and aggregation layers are selected
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
         self.ok_button.setDisabled(True)
-        self.loss_map_is_vectorial = True
+        self.loss_map_is_vector = True
 
     def open_file_dialog(self, dialog_type):
-        print 'here'
+        """
+        Open a file dialog to select the data file to be loaded
+        :param string dialog_type:
+            Valid types are 'loss_map' or 'aggregation_layer'
+        :returns:
+            file_name
+            file_type:
+                e.g. "Vector loss maps (*.shp)"
+        """
         if dialog_type == 'loss_map':
             text = self.tr('Select loss map')
-            filters = self.tr('Vector loss maps (*.shp);; Raster loss maps (*.*)')
+            # FIXME: What should be the format of the raster maps?
+            filters = self.tr('Vector loss maps (*.shp);; '
+                              'Raster loss maps (*.*)')
         elif dialog_type == 'aggregation_layer':
             text = self.tr('Select aggregation layer')
             filters = self.tr('Aggregation layers (*.shp);; All files (*.*)')
         else:
-            raise RuntimeError
-
+            raise RuntimeError('Invalid dialog_type: {}'.format(dialog_type))
         dialog = QFileDialog(self, text, os.path.expanduser('~'), filters)
         dialog.setFileMode(QFileDialog.ExistingFile)
         if dialog.exec_():
@@ -68,16 +83,16 @@ class SvirDialog(QDialog):
         file_loss_map, file_loss_map_type = self.open_file_dialog('loss_map')
         self.ui.loss_layer_le.setText(file_loss_map)
         if file_loss_map_type != 'Vector loss maps (*.shp)':
-            self.loss_map_is_vectorial = False
-        self.enable_ok_button()
+            self.loss_map_is_vector = False
+        self.enable_ok_button_if_both_layers_are_specified()
 
     @pyqtSlot()
     def on_aggregation_layer_tbn_clicked(self):
         file_aggregation_layer, _ = self.open_file_dialog('aggregation_layer')
         self.ui.aggregation_layer_le.setText(file_aggregation_layer)
-        self.enable_ok_button()
+        self.enable_ok_button_if_both_layers_are_specified()
 
-    def enable_ok_button(self):
+    def enable_ok_button_if_both_layers_are_specified(self):
         if (os.path.isfile(self.ui.loss_layer_le.text())
                 and os.path.isfile(self.ui.aggregation_layer_le.text())):
             self.ok_button.setEnabled(True)
