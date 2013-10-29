@@ -199,18 +199,6 @@ class Svir:
         # because change of extent in provider is not propagated to the layer
         self.aggregation_loss_layer.updateExtents()
 
-        ## show some stats
-        #print "fields:", len(pr.fields())
-        #print "features:", pr.featureCount()
-        #e = self.aggregation_loss_layer.extent()
-        #print "extent:", e.xMinimum(), e.yMinimum(), e.xMaximum(), e.yMaximum()
-        #
-        ## iterate over features
-        #f = QgsFeature()
-        #features = self.aggregation_loss_layer.getFeatures()
-        #for f in features:
-        #    print "F:", f.id(), f.attributes() #, f.geometry().asPolygon()
-
         # Add aggregation loss layer to registry
         #if self.aggregation_loss_layer.isValid():
         if self.aggregation_loss_layer.isValid():
@@ -227,28 +215,23 @@ class Svir:
 
     def calculate_vector_stats(self):
         # get points from loss layer
-        loss_points = self.loss_layer.getFeatures()
+        loss_features = self.loss_layer.getFeatures()
         # get regions from aggregation loss layer
-        regions = self.aggregation_loss_layer.getFeatures()
+        region_features = self.aggregation_loss_layer.getFeatures()
         dp = self.aggregation_loss_layer.dataProvider()
         caps = dp.capabilities()
         # For each region, check if loss points are inside the region and,
         # if so, increase attributes count and sum
-        for region in regions:
-            region_geom = region.geometry()
-            for loss in loss_points:
-                loss_geom = loss.geometry()
-                # TODO: To be implemented
-                #if geom.type() == QGis.Point:
-                #    x = geom.asPoint()
-                #    print x
-                #else:
-                #    raise NotImplementedError('Only point loss values are '
-                #                              'supported')
-                #print geom
-                #attrs = loss.attributes()
-                #print attrs
-
+        for region_feature in region_features:
+            region_geometry = region_feature.geometry()
+            for loss_feature in loss_features:
+                point_geometry = loss_feature.geometry()
+                print region_geometry.asPolygon()[0][0:3], \
+                    point_geometry.asPoint()
+                if region_geometry.contains(point_geometry):
+                    # FIXME: Strangely it never enters here
+                    print 'Here'
+                    # TODO: Increase attributes count and sum for the region
 
     def calculate_raster_stats(self):
         zonal_statistics = QgsZonalStatistics(
