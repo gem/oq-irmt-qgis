@@ -30,7 +30,8 @@ import os.path
 from PyQt4.QtCore import (QSettings,
                           QTranslator,
                           QCoreApplication,
-                          qVersion)
+                          qVersion,
+                          QVariant)
 
 from PyQt4.QtGui import (QApplication,
                          QAction,
@@ -40,7 +41,14 @@ from PyQt4.QtGui import (QApplication,
 
 from qgis.core import (QgsVectorLayer,
                        QgsMapLayerRegistry,
-                       QgsRasterLayer)
+                       QgsRasterLayer,
+                       QgsField,
+                       QgsVectorDataProvider,
+                       QgsFeature,
+                       QgsGeometry,
+                       QgsPoint,
+                       QGis,
+                       QgsFields)
 from qgis.analysis import QgsZonalStatistics
 
 import resources_rc
@@ -77,8 +85,12 @@ class Svir:
         self.dlg = SvirDialog()
 
         self.loss_layer_is_vector = True
+        # Input layer containing loss data
         self.loss_layer = None
+        # Input layer specifying regions for aggregation
         self.aggregation_layer = None
+        # Output layer containing aggregated loss data
+        self.aggregation_loss_layer = None
 
     def initGui(self):
         # Create action that will start plugin configuration
@@ -111,6 +123,7 @@ class Svir:
             self.load_layers(self.dlg.ui.aggregation_layer_le.text(),
                              self.dlg.ui.loss_layer_le.text(),
                              self.loss_layer_is_vector)
+            self.create_aggregation_loss_layer()
             self.calculate_stats()
 
     def load_layers(self, aggregation_layer_path,
@@ -119,10 +132,10 @@ class Svir:
         # Load loss layer
         if loss_layer_is_vector:
             self.loss_layer = QgsVectorLayer(loss_layer_path,
-                                             self.tr('Loss layer'), 'ogr')
+                                             self.tr('Loss map'), 'ogr')
         else:
             self.loss_layer = QgsRasterLayer(loss_layer_path,
-                                             self.tr('Loss layer'))
+                                             self.tr('Loss map'))
         # Add loss layer to registry
         if self.loss_layer.isValid():
             QgsMapLayerRegistry.instance().addMapLayer(self.loss_layer)
@@ -130,7 +143,7 @@ class Svir:
             raise RuntimeError('Loss layer invalid')
         # Load aggregation layer
         self.aggregation_layer = QgsVectorLayer(aggregation_layer_path,
-                                                self.tr('Aggregation layer'),
+                                                self.tr('Regions'),
                                                 'ogr')
         # Add aggregation layer to registry
         if self.aggregation_layer.isValid():
@@ -140,6 +153,72 @@ class Svir:
         # Zoom depending on the aggregation layer's extent
         self.canvas.setExtent(self.aggregation_layer.extent())
 
+    def create_aggregation_loss_layer(self):
+        """
+        Create a new aggregation loss layer which contains the polygons from
+        the aggregation layer. Two new attributes (count and sum) are
+        initialized to 0 and will represent the count of loss points in a
+        region and the sum of loss values for the same region.
+        """
+        # create layer
+        self.aggregation_loss_layer = QgsVectorLayer("Polygon",
+                                                     "Aggregated Losses",
+                                                     "memory")
+        pr = self.aggregation_loss_layer.dataProvider()
+
+        # Begin layer initialization
+        self.aggregation_loss_layer.beginEditCommand("Layer initialization")
+
+        # add count and sum fields for aggregate statistics
+        pr.addAttributes(
+            [QgsField("count", QVariant.Int),
+             QgsField("sum",  QVariant.Double)])
+
+        # copy regions from aggregation layer
+        for region in self.aggregation_layer.getFeatures():
+            feat = QgsFeature()
+            # copy the polygon from the input aggregation layer
+            feat.setGeometry(QgsGeometry(region.geometry()))
+            # Define the count and sum fields to initialize to 0
+            fields = QgsFields()
+            fields.append(QgsField(QgsField("count", QVariant.Int)))
+            fields.append(QgsField(QgsField("sum", QVariant.Double)))
+            # Add fields to the new feature
+            feat.setFields(fields)
+            feat['count'] = 0
+            feat['sum'] = 0.0
+            # Add the new feature to the layer
+            pr.addFeatures([feat])
+            # Update the layer including the new feature
+            self.aggregation_loss_layer.updateFeature(feat)
+
+        # End layer initialization
+        self.aggregation_loss_layer.endEditCommand()
+
+        # update layer's extent when new features have been added
+        # because change of extent in provider is not propagated to the layer
+        self.aggregation_loss_layer.updateExtents()
+
+        ## show some stats
+        #print "fields:", len(pr.fields())
+        #print "features:", pr.featureCount()
+        #e = self.aggregation_loss_layer.extent()
+        #print "extent:", e.xMinimum(), e.yMinimum(), e.xMaximum(), e.yMaximum()
+        #
+        ## iterate over features
+        #f = QgsFeature()
+        #features = self.aggregation_loss_layer.getFeatures()
+        #for f in features:
+        #    print "F:", f.id(), f.attributes() #, f.geometry().asPolygon()
+
+        # Add aggregation loss layer to registry
+        #if self.aggregation_loss_layer.isValid():
+        if self.aggregation_loss_layer.isValid():
+            QgsMapLayerRegistry.instance().addMapLayer(
+                self.aggregation_loss_layer)
+        else:
+            raise RuntimeError('Aggregation loss layer invalid')
+
     def calculate_stats(self):
         if self.loss_layer_is_vector:
             self.calculate_vector_stats()
@@ -147,8 +226,29 @@ class Svir:
             self.calculate_raster_stats()
 
     def calculate_vector_stats(self):
-        # TODO: Implement statistics also for vector loss maps
-        raise NotImplementedError('vector loss maps not supported yet')
+        # get points from loss layer
+        loss_points = self.loss_layer.getFeatures()
+        # get regions from aggregation loss layer
+        regions = self.aggregation_loss_layer.getFeatures()
+        dp = self.aggregation_loss_layer.dataProvider()
+        caps = dp.capabilities()
+        # For each region, check if loss points are inside the region and,
+        # if so, increase attributes count and sum
+        for region in regions:
+            region_geom = region.geometry()
+            for loss in loss_points:
+                loss_geom = loss.geometry()
+                # TODO: To be implemented
+                #if geom.type() == QGis.Point:
+                #    x = geom.asPoint()
+                #    print x
+                #else:
+                #    raise NotImplementedError('Only point loss values are '
+                #                              'supported')
+                #print geom
+                #attrs = loss.attributes()
+                #print attrs
+
 
     def calculate_raster_stats(self):
         zonal_statistics = QgsZonalStatistics(
