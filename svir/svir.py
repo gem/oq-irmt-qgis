@@ -48,13 +48,15 @@ from qgis.core import (QgsVectorLayer,
                        QgsGeometry,
                        QgsPoint,
                        QGis,
-                       QgsFields)
+                       QgsFields, QgsSpatialIndex, QgsFeatureRequest)
 from qgis.analysis import QgsZonalStatistics
 
 import resources_rc
 
 # Import the code for the dialog
 from svirdialog import SvirDialog
+
+LOSS_ATTRIBUTE_NAME = "RSCORE"  # "loss"
 
 
 class Svir:
@@ -167,6 +169,7 @@ class Svir:
         pr = self.aggregation_loss_layer.dataProvider()
 
         # Begin layer initialization
+        self.aggregation_loss_layer.startEditing()
         self.aggregation_loss_layer.beginEditCommand("Layer initialization")
 
         # add count and sum fields for aggregate statistics
@@ -194,6 +197,7 @@ class Svir:
 
         # End layer initialization
         self.aggregation_loss_layer.endEditCommand()
+        self.aggregation_loss_layer.commitChanges()
 
         # update layer's extent when new features have been added
         # because change of extent in provider is not propagated to the layer
@@ -218,19 +222,45 @@ class Svir:
         loss_features = self.loss_layer.getFeatures()
         # get regions from aggregation loss layer
         region_features = self.aggregation_loss_layer.getFeatures()
-        dp = self.aggregation_loss_layer.dataProvider()
-        caps = dp.capabilities()
 
-        # For each region, check if loss points are inside the region and,
-        # if so, increase attributes count and sum
+        # create spatial index
+        spatial_index = QgsSpatialIndex()
+        for loss_feature in loss_features:
+            spatial_index.insertFeature(loss_feature)
+        loss_features.rewind()      # reset iterator
+
+        # Begin updating count and sum attributes
+        self.aggregation_loss_layer.startEditing()
+        self.aggregation_loss_layer.beginEditCommand(
+            "Edit count and sum attributes")
+
         for region_feature in region_features:
+            points_count = 0
+            loss_sum = 0
+            has_intersections = False
             region_geometry = region_feature.geometry()
-            for loss_feature in loss_features:
-                point_geometry = loss_feature.geometry()
-                intersect = region_geometry.contains(point_geometry)
-                if intersect:
-                    print "Here"
-            loss_features.rewind()
+            # Find points within the bounding box of the region
+            points = spatial_index.intersects(region_geometry.boundingBox())
+            if len(points) > 0:
+                has_intersections = True
+            if has_intersections:
+                # For points that are within the bounding box of the region
+                for point_id in points:
+                    # Get the point feature by the point's id
+                    request = QgsFeatureRequest().setFilterFid(point_id)
+                    point_feature = self.loss_layer.getFeatures(request).next()
+                    point_geometry = QgsGeometry(point_feature.geometry())
+                    if region_geometry.contains(point_geometry):
+                        points_count += 1
+                        point_loss = point_feature[LOSS_ATTRIBUTE_NAME]
+                        loss_sum += point_loss
+                region_feature['count'] = points_count
+                region_feature['sum'] = loss_sum
+                self.aggregation_loss_layer.updateFeature(region_feature)
+
+        # End updating count and sum attributes
+        self.aggregation_loss_layer.endEditCommand()
+        self.aggregation_loss_layer.commitChanges()
 
     def calculate_raster_stats(self):
         zonal_statistics = QgsZonalStatistics(
