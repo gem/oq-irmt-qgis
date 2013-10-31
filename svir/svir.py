@@ -43,12 +43,12 @@ from qgis.core import (QgsVectorLayer,
                        QgsMapLayerRegistry,
                        QgsRasterLayer,
                        QgsField,
-                       QgsVectorDataProvider,
                        QgsFeature,
                        QgsGeometry,
-                       QgsPoint,
-                       QGis,
-                       QgsFields, QgsSpatialIndex, QgsFeatureRequest)
+                       QgsFields,
+                       QgsSpatialIndex,
+                       QgsFeatureRequest)
+
 from qgis.analysis import QgsZonalStatistics
 
 import resources_rc
@@ -56,6 +56,7 @@ import resources_rc
 # Import the code for the dialog
 from svirdialog import SvirDialog
 
+# Name of the attribute, in the input loss data layer, containing loss info
 LOSS_ATTRIBUTE_NAME = "RSCORE"  # "loss"
 
 
@@ -90,28 +91,27 @@ class Svir:
         # Input layer containing loss data
         self.loss_layer = None
         # Input layer specifying regions for aggregation
-        self.aggregation_layer = None
+        self.regions_layer = None
         # Output layer containing aggregated loss data
-        self.aggregation_loss_layer = None
+        self.aggregation_layer = None
+        self.initial_action = None
 
     def initGui(self):
         # Create action that will start plugin configuration
-        # PAOLO: test_action should probably be renamed into something
-        # more meaningful
-        self.test_action = QAction(
+        self.initial_action = QAction(
             QIcon(":/plugins/svir/icon.png"),
             u"Load data", self.iface.mainWindow())
         # connect the action to the run method
-        self.test_action.triggered.connect(self.run)
+        self.initial_action.triggered.connect(self.run)
 
         # Add toolbar button and menu item
-        self.iface.addToolBarIcon(self.test_action)
-        self.iface.addPluginToMenu(u"&SVIR", self.test_action)
+        self.iface.addToolBarIcon(self.initial_action)
+        self.iface.addPluginToMenu(u"&SVIR", self.initial_action)
 
     def unload(self):
         # Remove the plugin menu item and icon
-        self.iface.removePluginMenu(u"&SVIR", self.test_action)
-        self.iface.removeToolBarIcon(self.test_action)
+        self.iface.removePluginMenu(u"&SVIR", self.initial_action)
+        self.iface.removeToolBarIcon(self.initial_action)
 
     # run method that performs all the real work
     def run(self):
@@ -122,10 +122,11 @@ class Svir:
         # See if OK was pressed
         if result == 1:
             self.loss_layer_is_vector = self.dlg.loss_map_is_vector
-            self.load_layers(self.dlg.ui.aggregation_layer_le.text(),
+            self.load_layers(self.dlg.ui.regions_layer_le.text(),
                              self.dlg.ui.loss_layer_le.text(),
                              self.loss_layer_is_vector)
-            self.create_aggregation_loss_layer()
+            # New aggregation layer is created if loss_layer_is_vector
+            # ( layer's creation is called by calculate_stats() )
             self.calculate_stats()
 
     def load_layers(self, aggregation_layer_path,
@@ -144,33 +145,32 @@ class Svir:
         else:
             raise RuntimeError('Loss layer invalid')
         # Load aggregation layer
-        self.aggregation_layer = QgsVectorLayer(aggregation_layer_path,
-                                                self.tr('Regions'),
-                                                'ogr')
+        self.regions_layer = QgsVectorLayer(aggregation_layer_path,
+                                            self.tr('Regions'), 'ogr')
         # Add aggregation layer to registry
-        if self.aggregation_layer.isValid():
-            QgsMapLayerRegistry.instance().addMapLayer(self.aggregation_layer)
+        if self.regions_layer.isValid():
+            QgsMapLayerRegistry.instance().addMapLayer(self.regions_layer)
         else:
             raise RuntimeError('Aggregation layer invalid')
         # Zoom depending on the aggregation layer's extent
-        self.canvas.setExtent(self.aggregation_layer.extent())
+        self.canvas.setExtent(self.regions_layer.extent())
 
-    def create_aggregation_loss_layer(self):
+    def create_aggregation_layer(self):
         """
-        Create a new aggregation loss layer which contains the polygons from
-        the aggregation layer. Two new attributes (count and sum) are
+        Create a new aggregation layer which contains the polygons from
+        the regions layer. Two new attributes (count and sum) are
         initialized to 0 and will represent the count of loss points in a
         region and the sum of loss values for the same region.
         """
         # create layer
-        self.aggregation_loss_layer = QgsVectorLayer("Polygon",
-                                                     "Aggregated Losses",
-                                                     "memory")
-        pr = self.aggregation_loss_layer.dataProvider()
+        self.aggregation_layer = QgsVectorLayer("Polygon",
+                                                "Aggregated Losses",
+                                                "memory")
+        pr = self.aggregation_layer.dataProvider()
 
         # Begin layer initialization
-        self.aggregation_loss_layer.startEditing()
-        self.aggregation_loss_layer.beginEditCommand("Layer initialization")
+        self.aggregation_layer.startEditing()
+        self.aggregation_layer.beginEditCommand("Layer initialization")
 
         # add count and sum fields for aggregate statistics
         pr.addAttributes(
@@ -178,7 +178,7 @@ class Svir:
              QgsField("sum",  QVariant.Double)])
 
         # copy regions from aggregation layer
-        for region in self.aggregation_layer.getFeatures():
+        for region in self.regions_layer.getFeatures():
             feat = QgsFeature()
             # copy the polygon from the input aggregation layer
             feat.setGeometry(QgsGeometry(region.geometry()))
@@ -193,26 +193,26 @@ class Svir:
             # Add the new feature to the layer
             pr.addFeatures([feat])
             # Update the layer including the new feature
-            self.aggregation_loss_layer.updateFeature(feat)
+            self.aggregation_layer.updateFeature(feat)
 
         # End layer initialization
-        self.aggregation_loss_layer.endEditCommand()
-        self.aggregation_loss_layer.commitChanges()
+        self.aggregation_layer.endEditCommand()
+        self.aggregation_layer.commitChanges()
 
         # update layer's extent when new features have been added
         # because change of extent in provider is not propagated to the layer
-        self.aggregation_loss_layer.updateExtents()
+        self.aggregation_layer.updateExtents()
 
-        # Add aggregation loss layer to registry
-        #if self.aggregation_loss_layer.isValid():
-        if self.aggregation_loss_layer.isValid():
-            QgsMapLayerRegistry.instance().addMapLayer(
-                self.aggregation_loss_layer)
+        # Add aggregation layer to registry
+        if self.aggregation_layer.isValid():
+            QgsMapLayerRegistry.instance().addMapLayer(self.aggregation_layer)
         else:
-            raise RuntimeError('Aggregation loss layer invalid')
+            raise RuntimeError('Aggregation layer invalid')
 
     def calculate_stats(self):
         if self.loss_layer_is_vector:
+            # First create a new aggregation layer, then compute statistics
+            self.create_aggregation_layer()
             self.calculate_vector_stats()
         else:
             self.calculate_raster_stats()
@@ -220,8 +220,8 @@ class Svir:
     def calculate_vector_stats(self):
         # get points from loss layer
         loss_features = self.loss_layer.getFeatures()
-        # get regions from aggregation loss layer
-        region_features = self.aggregation_loss_layer.getFeatures()
+        # get regions from aggregation layer
+        region_features = self.aggregation_layer.getFeatures()
 
         # create spatial index
         spatial_index = QgsSpatialIndex()
@@ -230,8 +230,8 @@ class Svir:
         loss_features.rewind()      # reset iterator
 
         # Begin updating count and sum attributes
-        self.aggregation_loss_layer.startEditing()
-        self.aggregation_loss_layer.beginEditCommand(
+        self.aggregation_layer.startEditing()
+        self.aggregation_layer.beginEditCommand(
             "Edit count and sum attributes")
 
         for region_feature in region_features:
@@ -256,15 +256,15 @@ class Svir:
                         loss_sum += point_loss
                 region_feature['count'] = points_count
                 region_feature['sum'] = loss_sum
-                self.aggregation_loss_layer.updateFeature(region_feature)
+                self.aggregation_layer.updateFeature(region_feature)
 
         # End updating count and sum attributes
-        self.aggregation_loss_layer.endEditCommand()
-        self.aggregation_loss_layer.commitChanges()
+        self.aggregation_layer.endEditCommand()
+        self.aggregation_layer.commitChanges()
 
     def calculate_raster_stats(self):
         zonal_statistics = QgsZonalStatistics(
-            self.aggregation_layer,
+            self.regions_layer,
             self.loss_layer.dataProvider().dataSourceUri())
         progress_dialog = QProgressDialog(
             self.tr('Calculating zonal statistics'),

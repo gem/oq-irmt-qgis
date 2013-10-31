@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>309</width>
-    <height>113</height>
+    <width>491</width>
+    <height>187</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -26,7 +26,7 @@
      <item row="0" column="0">
       <widget class="QLabel" name="loss_layer_lbl">
        <property name="text">
-        <string>Input Layer</string>
+        <string>Loss layer</string>
        </property>
       </widget>
      </item>
@@ -34,17 +34,17 @@
       <widget class="QLineEdit" name="loss_layer_le"/>
      </item>
      <item row="1" column="0">
-      <widget class="QLabel" name="aggregation_layer_lbl">
+      <widget class="QLabel" name="regions_layer_lbl">
        <property name="text">
-        <string>Aggregation Layer</string>
+        <string>Regions layer</string>
        </property>
       </widget>
      </item>
      <item row="1" column="1">
-      <widget class="QLineEdit" name="aggregation_layer_le"/>
+      <widget class="QLineEdit" name="regions_layer_le"/>
      </item>
      <item row="1" column="2">
-      <widget class="QToolButton" name="aggregation_layer_tbn">
+      <widget class="QToolButton" name="regions_layer_tbn">
        <property name="text">
         <string>...</string>
        </property>
