@@ -220,18 +220,17 @@ class Svir:
         region_features = self.aggregation_loss_layer.getFeatures()
         dp = self.aggregation_loss_layer.dataProvider()
         caps = dp.capabilities()
+
         # For each region, check if loss points are inside the region and,
         # if so, increase attributes count and sum
         for region_feature in region_features:
             region_geometry = region_feature.geometry()
             for loss_feature in loss_features:
                 point_geometry = loss_feature.geometry()
-                print region_geometry.asPolygon()[0][0:3], \
-                    point_geometry.asPoint()
-                if region_geometry.contains(point_geometry):
-                    # FIXME: Strangely it never enters here
-                    print 'Here'
-                    # TODO: Increase attributes count and sum for the region
+                intersect = region_geometry.contains(point_geometry)
+                if intersect:
+                    print "Here"
+            loss_features.rewind()
 
     def calculate_raster_stats(self):
         zonal_statistics = QgsZonalStatistics(
