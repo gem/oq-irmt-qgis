@@ -29,7 +29,8 @@ tags=Social Vulnerability, Integrated Risk
 homepage=https://github.com/gem/qt-experiments
 tracker=https://github.com/gem/qt-experiments/issues
 repository=https://github.com/gem/qt-experiments
-icon=resources/icon.png
+start_plugin_icon=resources/start_plugin_icon.png
+purge_empty_regions_icon=resources/purge_empty_regions_icon.png
 # experimental flag
 experimental=True
 

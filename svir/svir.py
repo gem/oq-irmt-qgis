@@ -104,7 +104,7 @@ class Svir:
     def initGui(self):
         # Create action that will start plugin configuration
         self.initial_action = QAction(
-            QIcon(":/plugins/svir/icon.png"),
+            QIcon(":/plugins/svir/start_plugin_icon.png"),
             u"Load data", self.iface.mainWindow())
         # connect the action to the run method
         self.initial_action.triggered.connect(self.run)
@@ -139,7 +139,7 @@ class Svir:
             # for purging empty regions
             # Create action
             self.purge_empty_regions_action = QAction(
-                QIcon(":/plugins/svir/icon.png"),
+                QIcon(":/plugins/svir/purge_empty_regions_icon.png"),
                 u"Purge empty regions",
                 self.iface.mainWindow())
             # Connect the action to the purge_empty_regions method

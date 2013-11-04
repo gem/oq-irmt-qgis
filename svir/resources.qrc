@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/plugins/svir" >
-        <file alias="icon.png">resources/icon.png</file>
+        <file alias="start_plugin_icon.png">resources/start_plugin_icon.png</file>
+        <file alias="purge_empty_regions_icon.png">resources/purge_empty_regions_icon.png</file>
     </qresource>
 </RCC>
