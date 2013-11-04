@@ -125,8 +125,7 @@ class Svir:
             self.load_layers(self.dlg.ui.regions_layer_le.text(),
                              self.dlg.ui.loss_layer_le.text(),
                              self.loss_layer_is_vector)
-            # New aggregation layer is created if loss_layer_is_vector
-            # ( layer's creation is called by calculate_stats() )
+            self.create_aggregation_layer()
             self.calculate_stats()
 
     def load_layers(self, aggregation_layer_path,
@@ -211,8 +210,6 @@ class Svir:
 
     def calculate_stats(self):
         if self.loss_layer_is_vector:
-            # First create a new aggregation layer, then compute statistics
-            self.create_aggregation_layer()
             self.calculate_vector_stats()
         else:
             self.calculate_raster_stats()
@@ -264,7 +261,7 @@ class Svir:
 
     def calculate_raster_stats(self):
         zonal_statistics = QgsZonalStatistics(
-            self.regions_layer,
+            self.aggregation_layer,
             self.loss_layer.dataProvider().dataSourceUri())
         progress_dialog = QProgressDialog(
             self.tr('Calculating zonal statistics'),
