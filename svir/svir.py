@@ -144,13 +144,14 @@ class Svir:
                 self.iface.mainWindow())
             # Connect the action to the purge_empty_regions method
             self.purge_empty_regions_action.triggered.connect(
-                self.purge_empty_regions)
+                self.create_new_aggregation_layer_with_no_empty_regions)
             # Add toolbar button and menu item
             self.iface.addToolBarIcon(self.purge_empty_regions_action)
             self.iface.addPluginToMenu(u"&SVIR",
                                        self.purge_empty_regions_action)
             msg = 'Select "Purge empty regions" from SVIR plugin menu ' \
-                  'to remove regions containing no loss points'
+                  'to create a new aggregation layer with the regions ' \
+                  'containing at least one loss point'
             self.iface.messageBar().pushMessage(self.tr("Info"),
                                             self.tr(msg),
                                             level=QgsMessageBar.INFO)
@@ -205,7 +206,7 @@ class Svir:
              QgsField("count", QVariant.Int),
              QgsField("sum",  QVariant.Double)])
 
-        # copy regions from aggregation layer
+        # copy regions from regions layer
         for region_feature in self.regions_layer.getFeatures():
             feat = QgsFeature()
             # copy the polygon from the input aggregation layer
@@ -321,35 +322,55 @@ class Svir:
                 self.tr('You aborted aggregation, '
                         'so there are no data for analysis. Exiting...'))
 
-    def purge_empty_regions(self):
-        region_features = self.aggregation_layer.getFeatures()
-        pr = self.aggregation_layer.dataProvider()
+    def create_new_aggregation_layer_with_no_empty_regions(self):
+        """
+        Create a new aggregation layer containing all the regions of the
+        aggregation layer that contain at least one loss point
+        """
+        # create layer
+        self.purged_layer = QgsVectorLayer(
+            "Polygon",
+            "Aggregated Losses (no empty regions)",
+            "memory")
+        pr = self.purged_layer.dataProvider()
         caps = pr.capabilities()
-        # Begin purging empty regions
-        self.aggregation_layer.startEditing()
-        self.aggregation_layer.beginEditCommand(
-            "Purge empty regions")
-        problems_purging = False
-        for region_feature in region_features:
-            if region_feature['count'] == 0:
-                if caps & QgsVectorDataProvider.DeleteFeatures:
-                    deletion_is_ok = pr.deleteFeatures([region_feature.id()])
-                    if not deletion_is_ok:
-                        problems_purging = True
-        if problems_purging:
-            msg = "Problems occurred while attempting to purge empty regions!"
-            self.iface.messageBar().pushMessage(self.tr("Error"),
-                                    self.tr(msg),
-                                    level=QgsMessageBar.CRITICAL)
-        else:
-            msg = "Empty regions have been successfully purged. " \
-                  "Hide and show aggregation layer to display the result."
-            self.iface.messageBar().pushMessage(self.tr("Success"),
-                                    self.tr(msg),
-                                    level=QgsMessageBar.INFO)
-        # End updating count and sum attributes
-        self.aggregation_layer.endEditCommand()
-        self.aggregation_layer.commitChanges()
+
+        # Begin layer initialization
+        self.purged_layer.startEditing()
+        self.purged_layer.beginEditCommand("Layer initialization")
+
+        # add count and sum fields for aggregating statistics
+        pr.addAttributes(
+            [QgsField(REGION_ID_ATTRIBUTE_NAME, QVariant.String),
+             QgsField("count", QVariant.Int),
+             QgsField("sum",  QVariant.Double)])
+
+        # copy regions from aggregation layer
+        for region_feature in self.aggregation_layer.getFeatures():
+            # copy only regions which contain at least one loss point
+            if region_feature['count'] >= 1:
+                feat = region_feature
+                # Add the new feature to the layer
+                if caps & QgsVectorDataProvider.AddFeatures:
+                    pr.addFeatures([feat])
+                # Update the layer including the new feature
+                self.aggregation_layer.updateFeature(feat)
+
+        # End layer initialization
+        self.purged_layer.endEditCommand()
+        self.purged_layer.commitChanges()
+
         # update layer's extent when new features have been added
         # because change of extent in provider is not propagated to the layer
-        self.aggregation_layer.updateExtents()
+        self.purged_layer.updateExtents()
+
+        # Add purged layer to registry
+        if self.purged_layer.isValid():
+            QgsMapLayerRegistry.instance().addMapLayer(self.purged_layer)
+            msg = "Regions containing at least one loss point have been " \
+                  "copied into a new aggregation layer."
+            self.iface.messageBar().pushMessage(self.tr("Info"),
+                                    self.tr(msg),
+                                    level=QgsMessageBar.INFO)
+        else:
+            raise RuntimeError('Purged layer invalid')
