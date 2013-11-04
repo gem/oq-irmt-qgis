@@ -49,6 +49,8 @@ from qgis.core import (QgsVectorLayer,
                        QgsSpatialIndex,
                        QgsFeatureRequest)
 
+from qgis.gui import QgsMessageBar
+
 from qgis.analysis import QgsZonalStatistics
 
 import resources_rc
@@ -231,24 +233,31 @@ class Svir:
         self.aggregation_layer.beginEditCommand(
             "Edit count and sum attributes")
 
+        # check if there are no loss points contained in any of the regions
+        # and later display a warning if that occurs
+        no_loss_points_in_any_region = True
         for region_feature in region_features:
             points_count = 0
             loss_sum = 0
             has_intersections = False
             region_geometry = region_feature.geometry()
-            # Find points within the bounding box of the region
-            points = spatial_index.intersects(region_geometry.boundingBox())
-            if len(points) > 0:
+            # Find ids of points within the bounding box of the region
+            point_ids = spatial_index.intersects(region_geometry.boundingBox())
+            if len(point_ids) > 0:
                 has_intersections = True
             if has_intersections:
                 # For points that are within the bounding box of the region
-                for point_id in points:
+                for point_id in point_ids:
                     # Get the point feature by the point's id
                     request = QgsFeatureRequest().setFilterFid(point_id)
                     point_feature = self.loss_layer.getFeatures(request).next()
                     point_geometry = QgsGeometry(point_feature.geometry())
+                    # check if the point is actually inside the region and
+                    # it is not only contained by its bounding box
                     if region_geometry.contains(point_geometry):
                         points_count += 1
+                        # we have found at least one loss point inside a region
+                        no_loss_points_in_any_region = False
                         point_loss = point_feature[LOSS_ATTRIBUTE_NAME]
                         loss_sum += point_loss
                 region_feature['count'] = points_count
@@ -258,6 +267,13 @@ class Svir:
         # End updating count and sum attributes
         self.aggregation_layer.endEditCommand()
         self.aggregation_layer.commitChanges()
+        # display a warning in case none of the loss points are inside
+        # any of the regions
+        if no_loss_points_in_any_region:
+            msg = "None of the loss points are contained by any of the regions!"
+            self.iface.messageBar().pushMessage(self.tr("Warning"),
+                                                self.tr(msg),
+                                                level=QgsMessageBar.INFO)
 
     def calculate_raster_stats(self):
         zonal_statistics = QgsZonalStatistics(
