@@ -37,9 +37,10 @@ from ui_svir import Ui_SvirDialog
 
 class SvirDialog(QDialog):
     """
-    Modal dialog allowing to select a loss (raster or vector) layer
-    and an regions vector layer. When both are selected and are
-    valid files, they can be loaded by clicking OK
+    Modal dialog allowing to select a raster or vector layer
+    containing loss data points and a vector layer containing polygons
+    that define the regions for which data need to be aggregated. When
+    both are selected and are valid files, they can be loaded by clicking OK
     """
     def __init__(self):
         QDialog.__init__(self)
@@ -59,7 +60,7 @@ class SvirDialog(QDialog):
         :returns:
             file_name
             file_type:
-                e.g. "Vector loss maps (*.shp)"
+                e.g. "Geojson vector loss maps (*.geojson)"
         """
         if dialog_type == 'loss_map':
             text = self.tr('Select loss map')

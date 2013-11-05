@@ -105,7 +105,7 @@ class Svir:
         # Create action that will start plugin configuration
         self.initial_action = QAction(
             QIcon(":/plugins/svir/start_plugin_icon.png"),
-            u"Load data", self.iface.mainWindow())
+            u"Aggregate loss by region", self.iface.mainWindow())
         # connect the action to the run method
         self.initial_action.triggered.connect(self.run)
 
