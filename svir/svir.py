@@ -98,6 +98,8 @@ class Svir:
         self.regions_layer = None
         # Output layer containing aggregated loss data
         self.aggregation_layer = None
+        # Output layer containing aggregated loss data for non-empty regions
+        self.purged_layer = None
         self.initial_action = None
         self.purge_empty_regions_action = None
 
@@ -219,7 +221,8 @@ class Svir:
             fields.append(QgsField(QgsField("sum", QVariant.Double)))
             # Add fields to the new feature
             feat.setFields(fields)
-            feat[REGION_ID_ATTRIBUTE_NAME] = region_feature[REGION_ID_ATTRIBUTE_NAME]
+            feat[REGION_ID_ATTRIBUTE_NAME] = region_feature[
+                REGION_ID_ATTRIBUTE_NAME]
             feat['count'] = 0
             feat['sum'] = 0.0
             # Add the new feature to the layer
@@ -370,7 +373,7 @@ class Svir:
             msg = "Regions containing at least one loss point have been " \
                   "copied into a new aggregation layer."
             self.iface.messageBar().pushMessage(self.tr("Info"),
-                                    self.tr(msg),
-                                    level=QgsMessageBar.INFO)
+                                                self.tr(msg),
+                                                level=QgsMessageBar.INFO)
         else:
             raise RuntimeError('Purged layer invalid')
