@@ -43,7 +43,7 @@ class CustomTableModel(QtCore.QAbstractTableModel):
         if role in (QtCore.Qt.DisplayRole, QtCore.Qt.EditRole):
             return record[column]
         elif role == QtCore.Qt.BackgroundRole and not record.is_valid(column):
-            return QtGui.QBrush(QtCore.Qt.red)
+            return QtGui.QBrush(QtGui.QColor('#ff5050'))
 
     def setData(self, index, value, role=QtCore.Qt.EditRole):
         if role == QtCore.Qt.EditRole:
@@ -54,10 +54,6 @@ class CustomTableModel(QtCore.QAbstractTableModel):
             try:
                 record[column] = value
             except ValueError as e:
-                print e
-                # notification?
-                #QtGui.QMessageBox.warning(
-                #    self, "validation error", str(e)).exec_()
                 self.validationFailed.emit(index, e)
                 return False
             else:
@@ -117,7 +113,6 @@ class CustomTableView(QtGui.QWidget):
 
     def appendRow(self):
         self.tableModel.insertRows(self.tableModel.rowCount(), 1)
-        # TODO: notification on errors
 
     def removeRows(self):
         row_ids = set(item.row() for item in self.tableView.selectedIndexes())
@@ -126,16 +121,23 @@ class CustomTableView(QtGui.QWidget):
         self.tableModel.removeRows(min(row_ids), len(row_ids))
         # TODO: notification on errors
 
+    def currentRow(self):
+        """The row currently selected, or 0"""
+        indexes = self.tableView.selectedIndexes()
+        if not indexes:
+            return 0
+        return indexes[-1].row()
+
     def setupUi(self):
         self.tableView = QtGui.QTableView(self.parent)
         self.tableView.setModel(self.tableModel)
         self.tableView.horizontalHeader().setStretchLastSection(True)
-        #self.tableView.setSizePolicy(  # ignored :-(
-        #    QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        self.tableView.horizontalHeader().setResizeMode(
+            QtGui.QHeaderView.ResizeToContents)
+        self.tableView.setMinimumSize(420, 200)
+
         self.tableView.setSelectionBehavior(
             QtGui.QAbstractItemView.SelectRows)
-        #self.tableView.setSelectionMode(
-        #    QtGui.QAbstractItemView.SingleSelection)
         self.tableView.setAlternatingRowColors(True)
         self.tableView.setSizePolicy(
             QtGui.QSizePolicy.MinimumExpanding,
@@ -156,7 +158,6 @@ class CustomTableView(QtGui.QWidget):
         buttonLayout.addWidget(self.delBtn)
         self.layout.addLayout(buttonLayout)
         self.setLayout(self.layout)
-        #self.layout.activate()
 
     def showOnCondition(self, cond):
         for row in range(self.tableModel.rowCount()):
@@ -166,8 +167,8 @@ class CustomTableView(QtGui.QWidget):
                 self.tableView.hideRow(row)
 
     def show(self):
-        self.tableView.resizeRowsToContents()  # has no effect :-(
-        self.tableView.resizeColumnsToContents()  # has no effect :-(
+        #self.tableView.resizeRowsToContents()  # has no effect :-(
+        #self.tableView.resizeColumnsToContents()  # has no effect :-(
         QtGui.QWidget.show(self)
 
     def keyPressEvent(self, event):
@@ -194,12 +195,12 @@ class CustomTableView(QtGui.QWidget):
 
 class TripleTableWidget(QtGui.QWidget):
 
-    def __init__(self, t1, t2, t3, parent=None):
+    def __init__(self, t1, t2, t3, message, parent=None):
         QtGui.QWidget.__init__(self, parent)
         self.tv1 = CustomTableView(t1, parent)
         self.tv2 = CustomTableView(t2, parent)
         self.tv3 = CustomTableView(t3, parent)
-        self.message_bar = MessageBar('*** Prova ***', self)
+        self.message_bar = MessageBar(message, self)
         self.setupUi()
         self.tv1.tableView.clicked.connect(self.show_tv2)
         self.tv2.tableView.clicked.connect(self.show_tv3)
@@ -237,7 +238,9 @@ class TripleTableWidget(QtGui.QWidget):
     def show_tv2(self, row):
         vset, = self.tv1.tableModel.primaryKey(row)
         self.tv2.showOnCondition(lambda rec: rec[0] == vset)
-        self.show_tv3(QtCore.QModelIndex().sibling(0, 0))
+        # table 3 should disappear if a row in table 2 is
+        # not selected
+        self.tv3.showOnCondition(lambda rec: False)
 
     def show_tv3(self, row):
         k0, k1 = self.tv2.tableModel.primaryKey(row)
@@ -245,6 +248,7 @@ class TripleTableWidget(QtGui.QWidget):
         def cond(rec):
             return (rec[0] == k0 and rec[1] == k1)
         self.tv3.showOnCondition(cond)
+        #print self.tv2.currentRow()
 
     def setupUi(self):
         layout = QtGui.QVBoxLayout()

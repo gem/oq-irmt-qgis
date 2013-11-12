@@ -22,9 +22,9 @@ class Dialog(QtGui.QDialog):
 
 
 class MainWindow(QtGui.QMainWindow):
-    def __init__(self, t1, t2, t3):
+    def __init__(self, t1, t2, t3, message):
         QtGui.QMainWindow.__init__(self)
-        self.tt = TripleTableWidget(t1, t2, t3, self)
+        self.tt = TripleTableWidget(t1, t2, t3, message, self)
         self.setWindowTitle(tr("TripleTableWidget Example"))
         self.setCentralWidget(self.tt)
 
@@ -38,9 +38,10 @@ def main(argv):
 QTableWidget::item:selected
 { background-color: palette(highlight)}
 ''')
-    node = node_from_nrml(sys.argv[1])[0]
+    fname = sys.argv[1]
+    node = node_from_nrml(fname)[0]
     tables = Converter.node_to_tables(node)
-    mw = MainWindow(*tables)
+    mw = MainWindow(*tables, message=fname)
     mw.show()
     sys.exit(app.exec_())
 
