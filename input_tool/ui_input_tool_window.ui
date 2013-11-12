@@ -39,14 +39,23 @@
         <item>
          <widget class="QLabel" name="fileNameLbl">
           <property name="text">
-           <string/>
+           <string>&lt;input filename&gt;</string>
           </property>
          </widget>
         </item>
         <item>
          <widget class="QTableWidget" name="vSetsTbl">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Intensity Measure Type&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
           <property name="alternatingRowColors">
            <bool>true</bool>
+          </property>
+          <property name="selectionBehavior">
+           <enum>QAbstractItemView::SelectRows</enum>
+          </property>
+          <property name="sortingEnabled">
+           <bool>false</bool>
           </property>
           <attribute name="horizontalHeaderDefaultSectionSize">
            <number>120</number>
@@ -119,6 +128,12 @@
               <property name="alternatingRowColors">
                <bool>true</bool>
               </property>
+              <property name="selectionBehavior">
+               <enum>QAbstractItemView::SelectRows</enum>
+              </property>
+              <property name="sortingEnabled">
+               <bool>false</bool>
+              </property>
               <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
                <bool>false</bool>
               </attribute>
@@ -176,6 +191,12 @@
              <widget class="QTableWidget" name="imlsTbl">
               <property name="alternatingRowColors">
                <bool>true</bool>
+              </property>
+              <property name="selectionBehavior">
+               <enum>QAbstractItemView::SelectRows</enum>
+              </property>
+              <property name="sortingEnabled">
+               <bool>false</bool>
               </property>
               <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
                <bool>false</bool>
@@ -276,6 +297,8 @@
     </property>
     <addaction name="actionOpen"/>
     <addaction name="actionSave"/>
+    <addaction name="actionCopy"/>
+    <addaction name="actionPaste"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
@@ -295,10 +318,32 @@
    <property name="text">
     <string>&amp;Open</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
   </action>
   <action name="actionSave">
    <property name="text">
     <string>&amp;Save</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="actionCopy">
+   <property name="text">
+    <string>&amp;Copy</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+C</string>
+   </property>
+  </action>
+  <action name="actionPaste">
+   <property name="text">
+    <string>&amp;Paste</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+V</string>
    </property>
   </action>
  </widget>

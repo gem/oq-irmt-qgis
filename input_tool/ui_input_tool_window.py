@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_input_tool_window.ui'
 #
-# Created: Thu Aug  8 15:49:19 2013
+# Created: Thu Sep 26 15:30:56 2013
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -33,11 +33,11 @@ class Ui_InputToolWindow(object):
         self.verticalLayout = QtGui.QVBoxLayout(self.vulnerabilityModel)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.fileNameLbl = QtGui.QLabel(self.vulnerabilityModel)
-        self.fileNameLbl.setText(_fromUtf8(""))
         self.fileNameLbl.setObjectName(_fromUtf8("fileNameLbl"))
         self.verticalLayout.addWidget(self.fileNameLbl)
         self.vSetsTbl = QtGui.QTableWidget(self.vulnerabilityModel)
         self.vSetsTbl.setAlternatingRowColors(True)
+        self.vSetsTbl.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
         self.vSetsTbl.setObjectName(_fromUtf8("vSetsTbl"))
         self.vSetsTbl.setColumnCount(4)
         self.vSetsTbl.setRowCount(0)
@@ -70,6 +70,7 @@ class Ui_InputToolWindow(object):
         self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
         self.vFnTbl = QtGui.QTableWidget(self.vulnerabilityModel)
         self.vFnTbl.setAlternatingRowColors(True)
+        self.vFnTbl.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
         self.vFnTbl.setObjectName(_fromUtf8("vFnTbl"))
         self.vFnTbl.setColumnCount(2)
         self.vFnTbl.setRowCount(0)
@@ -96,6 +97,7 @@ class Ui_InputToolWindow(object):
         self.verticalLayout_3.setObjectName(_fromUtf8("verticalLayout_3"))
         self.imlsTbl = QtGui.QTableWidget(self.vulnerabilityModel)
         self.imlsTbl.setAlternatingRowColors(True)
+        self.imlsTbl.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
         self.imlsTbl.setObjectName(_fromUtf8("imlsTbl"))
         self.imlsTbl.setColumnCount(3)
         self.imlsTbl.setRowCount(0)
@@ -152,8 +154,14 @@ class Ui_InputToolWindow(object):
         self.actionOpen.setObjectName(_fromUtf8("actionOpen"))
         self.actionSave = QtGui.QAction(InputToolWindow)
         self.actionSave.setObjectName(_fromUtf8("actionSave"))
+        self.actionCopy = QtGui.QAction(InputToolWindow)
+        self.actionCopy.setObjectName(_fromUtf8("actionCopy"))
+        self.actionPaste = QtGui.QAction(InputToolWindow)
+        self.actionPaste.setObjectName(_fromUtf8("actionPaste"))
         self.menuFile.addAction(self.actionOpen)
         self.menuFile.addAction(self.actionSave)
+        self.menuFile.addAction(self.actionCopy)
+        self.menuFile.addAction(self.actionPaste)
         self.menubar.addAction(self.menuFile.menuAction())
 
         self.retranslateUi(InputToolWindow)
@@ -163,6 +171,9 @@ class Ui_InputToolWindow(object):
     def retranslateUi(self, InputToolWindow):
         InputToolWindow.setWindowTitle(QtGui.QApplication.translate("InputToolWindow", "GEM input tool", None, QtGui.QApplication.UnicodeUTF8))
         self.tabwidget.setTabText(self.tabwidget.indexOf(self.exposureModel), QtGui.QApplication.translate("InputToolWindow", "Exposure Model", None, QtGui.QApplication.UnicodeUTF8))
+        self.fileNameLbl.setText(QtGui.QApplication.translate("InputToolWindow", "<input filename>", None, QtGui.QApplication.UnicodeUTF8))
+        self.vSetsTbl.setToolTip(QtGui.QApplication.translate("InputToolWindow", "<html><head/><body><p>Intensity Measure Type</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
+        self.vSetsTbl.setSortingEnabled(False)
         item = self.vSetsTbl.horizontalHeaderItem(0)
         item.setText(QtGui.QApplication.translate("InputToolWindow", "Set ID", None, QtGui.QApplication.UnicodeUTF8))
         item = self.vSetsTbl.horizontalHeaderItem(1)
@@ -173,12 +184,14 @@ class Ui_InputToolWindow(object):
         item.setText(QtGui.QApplication.translate("InputToolWindow", "IMT", None, QtGui.QApplication.UnicodeUTF8))
         self.vSetsAddBtn.setText(QtGui.QApplication.translate("InputToolWindow", "Add Row", None, QtGui.QApplication.UnicodeUTF8))
         self.vSetsDelBtn.setText(QtGui.QApplication.translate("InputToolWindow", "Delete Rows", None, QtGui.QApplication.UnicodeUTF8))
+        self.vFnTbl.setSortingEnabled(False)
         item = self.vFnTbl.horizontalHeaderItem(0)
         item.setText(QtGui.QApplication.translate("InputToolWindow", "Fn ID", None, QtGui.QApplication.UnicodeUTF8))
         item = self.vFnTbl.horizontalHeaderItem(1)
         item.setText(QtGui.QApplication.translate("InputToolWindow", "Prob Dist", None, QtGui.QApplication.UnicodeUTF8))
         self.vFnAddBtn.setText(QtGui.QApplication.translate("InputToolWindow", "Add Row", None, QtGui.QApplication.UnicodeUTF8))
         self.vFnDelBtn.setText(QtGui.QApplication.translate("InputToolWindow", "Delete Rows", None, QtGui.QApplication.UnicodeUTF8))
+        self.imlsTbl.setSortingEnabled(False)
         item = self.imlsTbl.horizontalHeaderItem(0)
         item.setText(QtGui.QApplication.translate("InputToolWindow", "IML", None, QtGui.QApplication.UnicodeUTF8))
         item = self.imlsTbl.horizontalHeaderItem(1)
@@ -195,5 +208,11 @@ class Ui_InputToolWindow(object):
         self.menuFile.setTitle(QtGui.QApplication.translate("InputToolWindow", "File", None, QtGui.QApplication.UnicodeUTF8))
         self.toolBar.setWindowTitle(QtGui.QApplication.translate("InputToolWindow", "toolBar", None, QtGui.QApplication.UnicodeUTF8))
         self.actionOpen.setText(QtGui.QApplication.translate("InputToolWindow", "&Open", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionOpen.setShortcut(QtGui.QApplication.translate("InputToolWindow", "Ctrl+O", None, QtGui.QApplication.UnicodeUTF8))
         self.actionSave.setText(QtGui.QApplication.translate("InputToolWindow", "&Save", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionSave.setShortcut(QtGui.QApplication.translate("InputToolWindow", "Ctrl+S", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionCopy.setText(QtGui.QApplication.translate("InputToolWindow", "&Copy", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionCopy.setShortcut(QtGui.QApplication.translate("InputToolWindow", "Ctrl+C", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionPaste.setText(QtGui.QApplication.translate("InputToolWindow", "&Paste", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionPaste.setShortcut(QtGui.QApplication.translate("InputToolWindow", "Ctrl+V", None, QtGui.QApplication.UnicodeUTF8))
 
