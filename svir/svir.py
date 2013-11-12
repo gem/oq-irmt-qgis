@@ -233,8 +233,19 @@ class Svir:
              QgsField("count", QVariant.Int),
              QgsField("sum", QVariant.Double)])
 
+        # to show the overall progress, cycling through regions
+        tot_regions = len(list(self.regions_layer.getFeatures()))
+        current_region = 0
+        msg = self.tr("Step 1 of 5: initializing aggregation layer...")
+        progress_message_bar = self.iface.messageBar().createMessage(msg)
+        progress = QProgressBar()
+        progress_message_bar.layout().addWidget(progress)
+        self.iface.messageBar().pushWidget(progress_message_bar,
+                                           self.iface.messageBar().INFO)
         # copy regions from regions layer
         for region_feature in self.regions_layer.getFeatures():
+            progress_perc = current_region / float(tot_regions) * 100
+            progress.setValue(progress_perc)
             if DEBUG:
                 print "Copying feature ", region_feature.id(), "from regions_layer"
             feat = QgsFeature()
@@ -259,6 +270,7 @@ class Svir:
             self.aggregation_layer.updateFeature(feat)
             if DEBUG:
                 print "done"
+            current_region += 1
 
         # End layer initialization
         self.aggregation_layer.endEditCommand()
@@ -288,18 +300,30 @@ class Svir:
         # get regions from aggregation layer
         region_features = self.aggregation_layer.getFeatures()
 
+        # to show the overall progress, cycling through points
+        tot_points = len(list(self.loss_layer.getFeatures()))
+        current_point = 0
+        msg = self.tr("Step 2 of 5: creating spatial index for loss points...")
+        progress_message_bar = self.iface.messageBar().createMessage(msg)
+        progress = QProgressBar()
+        progress_message_bar.layout().addWidget(progress)
+        self.iface.messageBar().pushWidget(progress_message_bar,
+                                           self.iface.messageBar().INFO)
         # create spatial index
         if DEBUG:
             print "Creating spatial index for loss points..."
             t_start = time()
         spatial_index = QgsSpatialIndex()
         for loss_feature in loss_features:
+            progress_perc = current_point / float(tot_points) * 100
+            progress.setValue(progress_perc)
             spatial_index.insertFeature(loss_feature)
+            current_point += 1
         loss_features.rewind()      # reset iterator
         if DEBUG:
             t_stop = time()
             print "Completed in %f" % (t_stop - t_start)
-
+        self.iface.messageBar().clearWidgets()
         # Begin updating count and sum attributes
         if DEBUG:
             print "Starting to count points in regions"
@@ -309,7 +333,7 @@ class Svir:
         # to show the overall progress, cycling through regions
         tot_regions = len(list(self.aggregation_layer.getFeatures()))
         current_region = 0
-        msg = self.tr("Aggregating points by region...")
+        msg = self.tr("Step 3 of 5: aggregating points by region...")
         progress_message_bar = self.iface.messageBar().createMessage(msg)
         progress = QProgressBar()
         progress_message_bar.layout().addWidget(progress)
@@ -478,7 +502,7 @@ class Svir:
         # to show the overall progress, cycling through regions
         tot_regions = len(list(self.aggregation_layer.getFeatures()))
         current_region = 0
-        msg = self.tr("Populating svir layer with loss values...")
+        msg = self.tr("Step 4 of 5: populating SVIR layer with loss values...")
         progress_message_bar = self.iface.messageBar().createMessage(msg)
         progress = QProgressBar()
         progress_message_bar.layout().addWidget(progress)
@@ -535,7 +559,7 @@ class Svir:
         # to show the overall progress, cycling through regions
         tot_regions = len(list(self.svir_layer.getFeatures()))
         current_region = 0
-        msg = self.tr("Calculating SVIR statistics...")
+        msg = self.tr("Step 5 of 5: calculating SVIR statistics...")
         progress_message_bar = self.iface.messageBar().createMessage(msg)
         progress = QProgressBar()
         progress_message_bar.layout().addWidget(progress)
