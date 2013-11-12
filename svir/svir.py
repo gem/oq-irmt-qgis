@@ -25,7 +25,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
+from PyQt4 import Qt
 import os.path
+import uuid
 
 from PyQt4.QtCore import (QSettings,
                           QTranslator,
@@ -37,7 +39,8 @@ from PyQt4.QtGui import (QApplication,
                          QAction,
                          QIcon,
                          QProgressDialog,
-                         QMessageBox)
+                         QMessageBox,
+                         QProgressBar)
 
 from qgis.core import (QgsVectorLayer,
                        QgsMapLayerRegistry,
@@ -48,7 +51,9 @@ from qgis.core import (QgsVectorLayer,
                        QgsFields,
                        QgsSpatialIndex,
                        QgsFeatureRequest,
-                       QgsVectorDataProvider)
+                       QgsVectorDataProvider,
+                       QgsMapLayer,
+                       QGis)
 
 from qgis.gui import QgsMessageBar
 
@@ -59,13 +64,15 @@ import resources_rc
 # Import the code for the dialog
 from svirdialog import SvirDialog
 
+from time import time
+
 # Name of the attribute, in the input loss data layer, containing loss info
-LOSS_ATTRIBUTE_NAME = "RSCORE"  # "loss"
-REGION_ID_ATTRIBUTE_NAME = "STFID"
+LOSS_ATTRIBUTE_NAME = "TOTLOSS"  # "POP2010"  # "RSCORE"  # "loss"
+REGION_ID_ATTRIBUTE_NAME = "MCODE"  # "ISO"  # "STFID"
+DEBUG = False
 
 
 class Svir:
-
     @staticmethod
     def tr(message):
         return QApplication.translate('Svir', message)
@@ -100,7 +107,14 @@ class Svir:
         self.aggregation_layer = None
         # Output layer containing aggregated loss data for non-empty regions
         self.purged_layer = None
+        # Input layer containing social vulnerability data
+        self.social_vulnerability_layer = None
+        # Output layer containing joined data and final svir computations
+        self.svir_layer = None
+        # Action to activate the modal dialog to load loss data and regions
         self.initial_action = None
+        # Action to activate building a new layer with loss data
+        # aggregated by region, excluding regions containing no loss points
         self.purge_empty_regions_action = None
 
     def initGui(self):
@@ -137,26 +151,35 @@ class Svir:
                              self.loss_layer_is_vector)
             self.create_aggregation_layer()
             self.calculate_stats()
-            # Create and enable toolbar button and menu item
-            # for purging empty regions
-            # Create action
-            self.purge_empty_regions_action = QAction(
-                QIcon(":/plugins/svir/purge_empty_regions_icon.png"),
-                u"Purge empty regions",
-                self.iface.mainWindow())
-            # Connect the action to the purge_empty_regions method
-            self.purge_empty_regions_action.triggered.connect(
-                self.create_new_aggregation_layer_with_no_empty_regions)
-            # Add toolbar button and menu item
-            self.iface.addToolBarIcon(self.purge_empty_regions_action)
-            self.iface.addPluginToMenu(u"&SVIR",
-                                       self.purge_empty_regions_action)
-            msg = 'Select "Purge empty regions" from SVIR plugin menu ' \
-                  'to create a new aggregation layer with the regions ' \
-                  'containing at least one loss point'
-            self.iface.messageBar().pushMessage(self.tr("Info"),
-                                            self.tr(msg),
-                                            level=QgsMessageBar.INFO)
+            ## Create and enable toolbar button and menu item
+            ## for purging empty regions
+            ## Create action
+            #self.purge_empty_regions_action = QAction(
+            #    QIcon(":/plugins/svir/purge_empty_regions_icon.png"),
+            #    u"Purge empty regions",
+            #    self.iface.mainWindow())
+            ## Connect the action to the purge_empty_regions method
+            #self.purge_empty_regions_action.triggered.connect(
+            #    self.create_new_aggregation_layer_with_no_empty_regions)
+            ## Add toolbar button and menu item
+            #self.iface.addToolBarIcon(self.purge_empty_regions_action)
+            #self.iface.addPluginToMenu(u"&SVIR",
+            #                           self.purge_empty_regions_action)
+            #msg = 'Select "Purge empty regions" from SVIR plugin menu ' \
+            #      'to create a new aggregation layer with the regions ' \
+            #      'containing at least one loss point'
+            #self.iface.messageBar().pushMessage(self.tr("Info"),
+            #                                    self.tr(msg),
+            #                                    level=QgsMessageBar.INFO)
+            # FIXME: Same layer to get regions and social vulnerability data
+            #social_vulnerability_layer_path = "/home/paolo/prove/mappe/Chris/varie/Integrated Risk Example_Portugal/Aggregated_Social_Vulnerability.shp"
+            #self.load_social_vulnerability_layer(
+            #    social_vulnerability_layer_path)
+            # Create social vulnerability layer, duplicating regions layer
+            self.social_vulnerability_layer = self.create_memory_layer(
+                self.regions_layer, "Social vulnerability map")
+            self.create_svir_layer()
+            self.calculate_svir_statistics()
 
     def load_layers(self, aggregation_layer_path,
                     loss_layer_path,
@@ -169,19 +192,19 @@ class Svir:
             QgsMapLayerRegistry.instance().addMapLayer(self.regions_layer)
         else:
             raise RuntimeError('Aggregation layer invalid')
-        # Load loss layer
+            # Load loss layer
         if loss_layer_is_vector:
             self.loss_layer = QgsVectorLayer(loss_layer_path,
                                              self.tr('Loss map'), 'ogr')
         else:
             self.loss_layer = QgsRasterLayer(loss_layer_path,
                                              self.tr('Loss map'))
-        # Add loss layer to registry
+            # Add loss layer to registry
         if self.loss_layer.isValid():
             QgsMapLayerRegistry.instance().addMapLayer(self.loss_layer)
         else:
             raise RuntimeError('Loss layer invalid')
-        # Zoom depending on the regions layer's extent
+            # Zoom depending on the regions layer's extent
         self.canvas.setExtent(self.regions_layer.extent())
 
     def create_aggregation_layer(self):
@@ -191,6 +214,8 @@ class Svir:
         initialized to 0 and will represent the count of loss points in a
         region and the sum of loss values for the same region.
         """
+        if DEBUG:
+            print "Creating and initializing aggregation layer"
         # create layer
         self.aggregation_layer = QgsVectorLayer("Polygon",
                                                 "Aggregated Losses",
@@ -206,17 +231,19 @@ class Svir:
         pr.addAttributes(
             [QgsField(REGION_ID_ATTRIBUTE_NAME, QVariant.String),
              QgsField("count", QVariant.Int),
-             QgsField("sum",  QVariant.Double)])
+             QgsField("sum", QVariant.Double)])
 
         # copy regions from regions layer
         for region_feature in self.regions_layer.getFeatures():
+            if DEBUG:
+                print "Copying feature ", region_feature.id(), "from regions_layer"
             feat = QgsFeature()
             # copy the polygon from the input aggregation layer
             feat.setGeometry(QgsGeometry(region_feature.geometry()))
             # Define the count and sum fields to initialize to 0
             fields = QgsFields()
             fields.append(QgsField(QgsField(REGION_ID_ATTRIBUTE_NAME,
-                                             QVariant.String)))
+                                            QVariant.String)))
             fields.append(QgsField(QgsField("count", QVariant.Int)))
             fields.append(QgsField(QgsField("sum", QVariant.Double)))
             # Add fields to the new feature
@@ -228,8 +255,10 @@ class Svir:
             # Add the new feature to the layer
             if caps & QgsVectorDataProvider.AddFeatures:
                 pr.addFeatures([feat])
-            # Update the layer including the new feature
+                # Update the layer including the new feature
             self.aggregation_layer.updateFeature(feat)
+            if DEBUG:
+                print "done"
 
         # End layer initialization
         self.aggregation_layer.endEditCommand()
@@ -239,6 +268,8 @@ class Svir:
         # because change of extent in provider is not propagated to the layer
         self.aggregation_layer.updateExtents()
 
+        if DEBUG:
+            print "Adding aggregation layer to registry"
         # Add aggregation layer to registry
         if self.aggregation_layer.isValid():
             QgsMapLayerRegistry.instance().addMapLayer(self.aggregation_layer)
@@ -258,36 +289,75 @@ class Svir:
         region_features = self.aggregation_layer.getFeatures()
 
         # create spatial index
+        if DEBUG:
+            print "Creating spatial index for loss points..."
+            t_start = time()
         spatial_index = QgsSpatialIndex()
         for loss_feature in loss_features:
             spatial_index.insertFeature(loss_feature)
         loss_features.rewind()      # reset iterator
+        if DEBUG:
+            t_stop = time()
+            print "Completed in %f" % (t_stop - t_start)
 
         # Begin updating count and sum attributes
+        if DEBUG:
+            print "Starting to count points in regions"
         self.aggregation_layer.startEditing()
         self.aggregation_layer.beginEditCommand(
             "Edit count and sum attributes")
-
+        # to show the overall progress, cycling through regions
+        tot_regions = len(list(self.aggregation_layer.getFeatures()))
+        current_region = 0
+        msg = self.tr("Aggregating points by region...")
+        progress_message_bar = self.iface.messageBar().createMessage(msg)
+        progress = QProgressBar()
+        progress_message_bar.layout().addWidget(progress)
+        self.iface.messageBar().pushWidget(progress_message_bar,
+                                           self.iface.messageBar().INFO)
         # check if there are no loss points contained in any of the regions
         # and later display a warning if that occurs
         no_loss_points_in_any_region = True
         for region_feature in region_features:
+            progress_perc = current_region / float(tot_regions) * 100
+            progress.setValue(progress_perc)
+            if DEBUG:
+                print "*" * 50
+                print "*" * 50
+                print progress, "% - Region:", region_feature.id(), "on", tot_regions
+                print "*" * 50
+                print "*" * 50
+                t_region_start = time()
+            current_region += 1
             points_count = 0
             loss_sum = 0
-            has_intersections = False
             region_geometry = region_feature.geometry()
             # Find ids of points within the bounding box of the region
+            if DEBUG:
+                print "Find ids of points within the region's bounding box..."
+                t_start = time()
             point_ids = spatial_index.intersects(region_geometry.boundingBox())
-            if len(point_ids) > 0:
-                has_intersections = True
-            if has_intersections:
+            if DEBUG:
+                t_stop = time()
+                print "Completed in %f" % (t_stop - t_start)
+            if len(point_ids) > 0:  # at least one point in bounding box
                 # For points that are within the bounding box of the region
                 for point_id in point_ids:
-                    # Get the point feature by the point's id
+                    if DEBUG:
+                        print "Checking if point", point_id, \
+                            "is actually inside the region"
+                        print "Retrieving point geometry..."
+                        t_start = time()
+                        # Get the point feature by the point's id
                     request = QgsFeatureRequest().setFilterFid(point_id)
                     point_feature = self.loss_layer.getFeatures(request).next()
                     point_geometry = QgsGeometry(point_feature.geometry())
-                    # check if the point is actually inside the region and
+                    if DEBUG:
+                        t_stop = time()
+                        print "Completed in %f" % (t_stop - t_start)
+                        print "Check if region geometry contains the point..."
+                        t_start = time()
+                        # check if the point is actually inside the region and
                     # it is not only contained by its bounding box
                     if region_geometry.contains(point_geometry):
                         points_count += 1
@@ -295,12 +365,25 @@ class Svir:
                         no_loss_points_in_any_region = False
                         point_loss = point_feature[LOSS_ATTRIBUTE_NAME]
                         loss_sum += point_loss
+                    if DEBUG:
+                        t_stop = time()
+                        print "Completed in %f" % (t_stop - t_start)
+                if DEBUG:
+                    print "Updating count and sum for the region..."
+                    t_start = time()
                 region_feature['count'] = points_count
                 region_feature['sum'] = loss_sum
                 self.aggregation_layer.updateFeature(region_feature)
-        # End updating count and sum attributes
+                # End updating count and sum attributes
+                if DEBUG:
+                    t_stop = time()
+                    print "Completed in %f" % (t_stop - t_start)
+                    t_region_stop = time()
+                    print "Region completed in %f" % (t_region_stop - t_region_start)
+                    #raw_input("Press Enter to continue...")
         self.aggregation_layer.endEditCommand()
         self.aggregation_layer.commitChanges()
+        self.iface.messageBar().clearWidgets()
         # display a warning in case none of the loss points are inside
         # any of the regions
         if no_loss_points_in_any_region:
@@ -346,7 +429,7 @@ class Svir:
         pr.addAttributes(
             [QgsField(REGION_ID_ATTRIBUTE_NAME, QVariant.String),
              QgsField("count", QVariant.Int),
-             QgsField("sum",  QVariant.Double)])
+             QgsField("sum", QVariant.Double)])
 
         # copy regions from aggregation layer
         for region_feature in self.aggregation_layer.getFeatures():
@@ -356,7 +439,7 @@ class Svir:
                 # Add the new feature to the layer
                 if caps & QgsVectorDataProvider.AddFeatures:
                     pr.addFeatures([feat])
-                # Update the layer including the new feature
+                    # Update the layer including the new feature
                 self.aggregation_layer.updateFeature(feat)
 
         # End layer initialization
@@ -377,3 +460,175 @@ class Svir:
                                                 level=QgsMessageBar.INFO)
         else:
             raise RuntimeError('Purged layer invalid')
+
+    def load_social_vulnerability_layer(self, social_vulnerability_layer_path):
+        # Load social vulnerability layer
+        self.social_vulnerability_layer = QgsVectorLayer(
+            social_vulnerability_layer_path,
+            self.tr('Social vulnerability'),
+            'ogr')
+        # Add social vulnerability layer to registry
+        if self.social_vulnerability_layer.isValid():
+            QgsMapLayerRegistry.instance().addMapLayer(
+                self.social_vulnerability_layer)
+        else:
+            raise RuntimeError('Social vulnerability layer invalid')
+
+    def populate_svir_layer_with_loss_values(self):
+        # to show the overall progress, cycling through regions
+        tot_regions = len(list(self.aggregation_layer.getFeatures()))
+        current_region = 0
+        msg = self.tr("Populating svir layer with loss values...")
+        progress_message_bar = self.iface.messageBar().createMessage(msg)
+        progress = QProgressBar()
+        progress_message_bar.layout().addWidget(progress)
+        self.iface.messageBar().pushWidget(progress_message_bar,
+                                           self.iface.messageBar().INFO)
+        # Begin populating "loss" attribute with data from aggregation_layer
+        self.svir_layer.startEditing()
+        self.svir_layer.beginEditCommand("Add loss values")
+        for svir_feat in self.svir_layer.getFeatures():
+            progress_percent = current_region / float(tot_regions) * 100
+            progress.setValue(progress_percent)
+            current_region += 1
+            for aggr_feat in self.aggregation_layer.getFeatures():
+                if svir_feat[REGION_ID_ATTRIBUTE_NAME] == aggr_feat[REGION_ID_ATTRIBUTE_NAME]:
+                    svir_feat['TOTLOSS'] = aggr_feat['sum']
+                    self.svir_layer.updateFeature(svir_feat)
+        # End adding loss attribute
+        self.svir_layer.endEditCommand()
+        self.svir_layer.commitChanges()
+        # update layer's extent when new features have been added
+        # because change of extent in provider is not propagated to the layer
+        self.svir_layer.updateExtents()
+        self.iface.messageBar().clearWidgets()
+
+    def create_svir_layer(self):
+        """
+        Create a new layer joining (by region id) social vulnerability
+        and loss data
+        """
+        # Create new svir layer, duplicating social vulnerability layer
+        self.svir_layer = self.create_memory_layer(
+            self.social_vulnerability_layer, "SVIR map")
+        # Add "loss" attribute to svir_layer
+        self.add_attributes_to_layer(self.svir_layer,
+                                     [QgsField('TOTLOSS', QVariant.Double)])
+        # Populate "loss" attribute with data from aggregation_layer
+        self.populate_svir_layer_with_loss_values()
+        # Add svir layer to registry
+        if self.svir_layer.isValid():
+            QgsMapLayerRegistry.instance().addMapLayer(self.svir_layer)
+        else:
+            raise RuntimeError('SVIR layer invalid')
+
+    def calculate_svir_statistics(self):
+        # add attributes:
+        # RISKPLUS = TOTRISK + TOTSVI
+        # RISKMULT = TOTRISK * TOTSVI
+        # RISK1F   = TOTRISK * (1 + TOTSVI)
+        self.add_attributes_to_layer(self.svir_layer,
+                                     [QgsField('RISKPLUS', QVariant.Double),
+                                      QgsField('RISKMULT', QVariant.Double),
+                                      QgsField('RISK1F', QVariant.Double)])
+        # for each region, calculate the value of the output attributes
+        # to show the overall progress, cycling through regions
+        tot_regions = len(list(self.svir_layer.getFeatures()))
+        current_region = 0
+        msg = self.tr("Calculating SVIR statistics...")
+        progress_message_bar = self.iface.messageBar().createMessage(msg)
+        progress = QProgressBar()
+        progress_message_bar.layout().addWidget(progress)
+        self.iface.messageBar().pushWidget(progress_message_bar,
+                                           self.iface.messageBar().INFO)
+        # Begin calculating RISKPLUS
+        self.svir_layer.startEditing()
+        self.svir_layer.beginEditCommand("Calculate RISKPLUS values")
+        for svir_feat in self.svir_layer.getFeatures():
+            progress_percent = current_region / float(tot_regions) * 100
+            progress.setValue(progress_percent)
+            current_region += 1
+            svir_feat['RISKPLUS'] = svir_feat['TOTLOSS'] + svir_feat["TOTSVI"]
+            svir_feat['RISKMULT'] = svir_feat['TOTLOSS'] * svir_feat["TOTSVI"]
+            svir_feat['RISK1F'] = svir_feat['TOTLOSS']*(1+svir_feat["TOTSVI"])
+            self.svir_layer.updateFeature(svir_feat)
+        # End adding loss attribute
+        self.svir_layer.endEditCommand()
+        self.svir_layer.commitChanges()
+        # update layer's extent when new features have been added
+        # because change of extent in provider is not propagated to the layer
+        self.svir_layer.updateExtents()
+        self.iface.messageBar().clearWidgets()
+
+    def add_attributes_to_layer(self, layer, attribute_list):
+        layer.startEditing()
+        layer.beginEditCommand("Add attributes")
+        # add attributes
+        layer_pr = layer.dataProvider()
+        layer_pr.addAttributes(attribute_list)
+        # End adding attributes
+        layer.endEditCommand()
+        layer.commitChanges()
+        # update layer's extent when new features have been added
+        # because change of extent in provider is not propagated to the layer
+        layer.updateExtents()
+
+    def create_memory_layer(self, layer, new_name='', add_to_registry=False):
+        """
+        FIXME: TAKEN BY INASAFE PLUGIN.
+        IT WOULD BE USEFUL TO PUT IT INTO A SEPARATE MODULE,
+        BECAUSE MANY DIFFERENT PLUGINS MIGHT NEED IT
+
+        Return a memory copy of a layer
+
+        :param layer: QgsVectorLayer that shall be copied to memory.
+        :type layer: QgsVectorLayer
+
+        :param new_name: The name of the copied layer.
+        :type new_name: str
+
+        :returns: An in-memory copy of a layer.
+        :rtype: QgsMapLayer
+        """
+        if new_name is '':
+            new_name = layer.name() + ' TMP'
+
+        if layer.type() == QgsMapLayer.VectorLayer:
+            v_type = layer.geometryType()
+            if v_type == QGis.Point:
+                type_str = 'Point'
+            elif v_type == QGis.Line:
+                type_str = 'Line'
+            elif v_type == QGis.Polygon:
+                type_str = 'Polygon'
+            else:
+                raise RuntimeError('Layer is whether Point nor '
+                                   'Line nor Polygon')
+        else:
+            raise RuntimeError('Layer is not a VectorLayer')
+
+        crs = layer.crs().authid().lower()
+        my_uuid = str(uuid.uuid4())
+        uri = '%s?crs=%s&index=yes&uuid=%s' % (type_str, crs, my_uuid)
+        mem_layer = QgsVectorLayer(uri, new_name, 'memory')
+        mem_provider = mem_layer.dataProvider()
+
+        provider = layer.dataProvider()
+        v_fields = provider.fields()
+
+        fields = []
+        for i in v_fields:
+            fields.append(i)
+
+        mem_provider.addAttributes(fields)
+
+        for ft in provider.getFeatures():
+            mem_provider.addFeatures([ft])
+
+        if add_to_registry:
+            if mem_layer.isValid():
+                QgsMapLayerRegistry.instance().addMapLayer(mem_layer)
+            else:
+                raise RuntimeError('Layer invalid')
+
+        return mem_layer

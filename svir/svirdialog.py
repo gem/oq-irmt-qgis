@@ -70,7 +70,8 @@ class SvirDialog(QDialog):
                               'Raster loss maps (*.*)')
         elif dialog_type == 'regions_layer':
             text = self.tr('Select regions layer')
-            filters = self.tr('Vector shapefiles (*.shp);; All files (*.*)')
+            filters = self.tr('Vector shapefiles (*.shp);; SQLite (*.sqlite);;'
+                              ' All files (*.*)')
         else:
             raise RuntimeError('Invalid dialog_type: {}'.format(dialog_type))
         dialog = QFileDialog(self, text, os.path.expanduser('~'), filters)
