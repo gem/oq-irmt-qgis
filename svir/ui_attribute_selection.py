@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_attribute_selection.ui'
 #
-# Created: Wed Nov 13 17:27:21 2013
+# Created: Thu Nov 14 15:53:20 2013
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -45,10 +45,10 @@ class Ui_AttributeSelctionDialog(object):
         self.formLayout.setWidget(3, QtGui.QFormLayout.FieldRole, self.reg_id_attr_name_loss_cbox)
         self.reg_id_attr_name_region_lbl = QtGui.QLabel(self.formLayoutWidget)
         self.reg_id_attr_name_region_lbl.setObjectName(_fromUtf8("reg_id_attr_name_region_lbl"))
-        self.formLayout.setWidget(6, QtGui.QFormLayout.LabelRole, self.reg_id_attr_name_region_lbl)
+        self.formLayout.setWidget(7, QtGui.QFormLayout.LabelRole, self.reg_id_attr_name_region_lbl)
         self.reg_id_attr_name_region_cbox = QtGui.QComboBox(self.formLayoutWidget)
         self.reg_id_attr_name_region_cbox.setObjectName(_fromUtf8("reg_id_attr_name_region_cbox"))
-        self.formLayout.setWidget(6, QtGui.QFormLayout.FieldRole, self.reg_id_attr_name_region_cbox)
+        self.formLayout.setWidget(7, QtGui.QFormLayout.FieldRole, self.reg_id_attr_name_region_cbox)
         self.regions_layer_lbl = QtGui.QLabel(self.formLayoutWidget)
         self.regions_layer_lbl.setObjectName(_fromUtf8("regions_layer_lbl"))
         self.formLayout.setWidget(5, QtGui.QFormLayout.FieldRole, self.regions_layer_lbl)
@@ -57,6 +57,12 @@ class Ui_AttributeSelctionDialog(object):
         self.formLayout.setWidget(1, QtGui.QFormLayout.FieldRole, self.loss_layer_lbl)
         spacerItem = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
         self.formLayout.setItem(4, QtGui.QFormLayout.FieldRole, spacerItem)
+        self.svi_attr_name_cbox = QtGui.QComboBox(self.formLayoutWidget)
+        self.svi_attr_name_cbox.setObjectName(_fromUtf8("svi_attr_name_cbox"))
+        self.formLayout.setWidget(6, QtGui.QFormLayout.FieldRole, self.svi_attr_name_cbox)
+        self.svi_attr_name_lbl = QtGui.QLabel(self.formLayoutWidget)
+        self.svi_attr_name_lbl.setObjectName(_fromUtf8("svi_attr_name_lbl"))
+        self.formLayout.setWidget(6, QtGui.QFormLayout.LabelRole, self.svi_attr_name_lbl)
 
         self.retranslateUi(AttributeSelctionDialog)
         QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), AttributeSelctionDialog.accept)
@@ -69,5 +75,6 @@ class Ui_AttributeSelctionDialog(object):
         self.reg_id_attr_name_loss_lbl.setText(QtGui.QApplication.translate("AttributeSelctionDialog", "Region ID attribute name", None, QtGui.QApplication.UnicodeUTF8))
         self.reg_id_attr_name_region_lbl.setText(QtGui.QApplication.translate("AttributeSelctionDialog", "Region ID attriubute name", None, QtGui.QApplication.UnicodeUTF8))
         self.regions_layer_lbl.setText(QtGui.QApplication.translate("AttributeSelctionDialog", "Regions layer", None, QtGui.QApplication.UnicodeUTF8))
-        self.loss_layer_lbl.setText(QtGui.QApplication.translate("AttributeSelctionDialog", "Loss layer", None, QtGui.QApplication.UnicodeUTF8))
+        self.loss_layer_lbl.setText(QtGui.QApplication.translate("AttributeSelctionDialog", "Losses layer", None, QtGui.QApplication.UnicodeUTF8))
+        self.svi_attr_name_lbl.setText(QtGui.QApplication.translate("AttributeSelctionDialog", "SVI attribute name", None, QtGui.QApplication.UnicodeUTF8))
 

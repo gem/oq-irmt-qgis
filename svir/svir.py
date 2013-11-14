@@ -68,8 +68,10 @@ from time import time
 
 # Default names of the attributes, in the input loss data layer and in the
 # regions data layer, containing loss info and region ids for aggregation
-DEFAULT_LOSS_ATTRIBUTE_NAME = "TOTLOSS"
-DEFAULT_REGION_ID_ATTRIBUTE_NAME = "MCODE"
+DEFAULT_LOSS_ATTR_NAME = "TOTLOSS"
+DEFAULT_REGION_ID_ATTR_NAME = "MCODE"
+DEFAULT_SVI_ATTR_NAME = "TOTSVI"
+AGGR_LOSS_ATTR_NAME = "TOTLOSS"
 DEBUG = False
 
 
@@ -209,6 +211,7 @@ class Svir:
         self.loss_attr_name = None
         self.reg_id_in_losses_attr_name = None
         self.reg_id_in_regions_attr_name = None
+        self.svi_attr_name = None
 
     def initGui(self):
         # Create action that will start plugin configuration
@@ -229,6 +232,7 @@ class Svir:
         self.iface.removePluginMenu(u"&SVIR",
                                     self.purge_empty_regions_action)
         self.iface.removeToolBarIcon(self.purge_empty_regions_action)
+        self.iface.messageBar().clearWidgets()
 
     # run method that performs all the real work
     def run(self):
@@ -238,37 +242,26 @@ class Svir:
         result = self.dlg.exec_()
         # See if OK was pressed
         if result == 1:
+            # check if loss layer is raster or vector (aggregating by region
+            # is different in the two cases)
             self.loss_layer_is_vector = self.dlg.loss_map_is_vector
             self.load_layers(self.dlg.ui.regions_layer_le.text(),
                              self.dlg.ui.loss_layer_le.text(),
                              self.loss_layer_is_vector)
+
             # Open dialog to ask the user to specify attributes
             # * loss from loss_layer
             # * region_id from loss_layer
+            # * svi from regions_layer
             # * region_id from regions_layer
             self.attribute_selection()
+
             self.create_aggregation_layer()
+            # aggregate losses by region (calculate count of points in the
+            # region and sum of loss values for the same region)
             self.calculate_stats()
-            ## Create and enable toolbar button and menu item
-            ## for purging empty regions
-            ## Create action
-            #self.purge_empty_regions_action = QAction(
-            #    QIcon(":/plugins/svir/purge_empty_regions_icon.png"),
-            #    u"Purge empty regions",
-            #    self.iface.mainWindow())
-            ## Connect the action to the purge_empty_regions method
-            #self.purge_empty_regions_action.triggered.connect(
-            #    self.create_new_aggregation_layer_with_no_empty_regions)
-            ## Add toolbar button and menu item
-            #self.iface.addToolBarIcon(self.purge_empty_regions_action)
-            #self.iface.addPluginToMenu(u"&SVIR",
-            #                           self.purge_empty_regions_action)
-            #msg = 'Select "Purge empty regions" from SVIR plugin menu ' \
-            #      'to create a new aggregation layer with the regions ' \
-            #      'containing at least one loss point'
-            #self.iface.messageBar().pushMessage(self.tr("Info"),
-            #                                    self.tr(msg),
-            #                                    level=QgsMessageBar.INFO)
+
+            self.enable_purging_empty_regions()
 
             # TODO: Check if it's good to use the same layer to get
             #       regions and social vulnerability data
@@ -278,6 +271,28 @@ class Svir:
             self.standardize_losses()  # it's still a placeholder
             self.create_svir_layer()
             self.calculate_svir_statistics()
+
+    def enable_purging_empty_regions(self):
+        # Create and enable toolbar button and menu item
+        # for purging empty regions
+        # Create action
+        self.purge_empty_regions_action = QAction(
+            QIcon(":/plugins/svir/purge_empty_regions_icon.png"),
+            u"Purge empty regions",
+            self.iface.mainWindow())
+        # Connect the action to the purge_empty_regions method
+        self.purge_empty_regions_action.triggered.connect(
+            self.create_new_aggregation_layer_with_no_empty_regions)
+        # Add toolbar button and menu item
+        self.iface.addToolBarIcon(self.purge_empty_regions_action)
+        self.iface.addPluginToMenu(u"&SVIR",
+                                   self.purge_empty_regions_action)
+        msg = 'Select "Purge empty regions" from SVIR plugin menu ' \
+              'to create a new aggregation layer with the regions ' \
+              'containing at least one loss point'
+        self.iface.messageBar().pushMessage(self.tr("Info"),
+                                            self.tr(msg),
+                                            level=QgsMessageBar.INFO)
 
     def load_layers(self, aggregation_layer_path,
                     loss_layer_path,
@@ -311,6 +326,7 @@ class Svir:
         to select what are the attribute names for
         * loss values (from loss layer)
         * region id (from loss layer)
+        * social vulnerability index (from regions layer)
         * region id (from regions layer)
         """
         dlg = AttributeSelectionDialog()
@@ -324,18 +340,25 @@ class Svir:
         regions_fields = list(regions_dp.fields())
         for field in regions_fields:
             dlg.ui.reg_id_attr_name_region_cbox.addItem(field.name())
-        # if the user presses OK
+            dlg.ui.svi_attr_name_cbox.addItem(field.name())
+            # if the user presses OK
         if dlg.exec_():
             # retrieve attribute names from combobox selections
-            self.loss_attr_name = loss_fields[dlg.ui.loss_attr_name_cbox.currentIndex()].name()
-            self.reg_id_in_losses_attr_name = loss_fields[dlg.ui.reg_id_attr_name_loss_cbox.currentIndex()].name()
-            self.reg_id_in_regions_attr_name = regions_fields[dlg.ui.reg_id_attr_name_region_cbox.currentIndex()].name()
+            self.loss_attr_name = loss_fields[
+                dlg.ui.loss_attr_name_cbox.currentIndex()].name()
+            self.reg_id_in_losses_attr_name = loss_fields[
+                dlg.ui.reg_id_attr_name_loss_cbox.currentIndex()].name()
+            self.svi_attr_name = regions_fields[
+                dlg.ui.svi_attr_name_cbox.currentIndex()].name()
+            self.reg_id_in_regions_attr_name = regions_fields[
+                dlg.ui.reg_id_attr_name_region_cbox.currentIndex()].name()
         else:
             # TODO: is it good to use default values, or should we stop here?
             # use default values if CANCEL is pressed
-            self.loss_attr_name = DEFAULT_LOSS_ATTRIBUTE_NAME
-            self.reg_id_in_losses_attr_name = DEFAULT_REGION_ID_ATTRIBUTE_NAME
-            self.reg_id_in_regions_attr_name = DEFAULT_REGION_ID_ATTRIBUTE_NAME
+            self.loss_attr_name = DEFAULT_LOSS_ATTR_NAME
+            self.reg_id_in_losses_attr_name = DEFAULT_REGION_ID_ATTR_NAME
+            self.svi_attr_name = DEFAULT_SVI_ATTR_NAME
+            self.reg_id_in_regions_attr_name = DEFAULT_REGION_ID_ATTR_NAME
 
     def create_aggregation_layer(self):
         """
@@ -348,7 +371,7 @@ class Svir:
             print "Creating and initializing aggregation layer"
             # create layer
         self.aggregation_layer = QgsVectorLayer("Polygon",
-                                                "Aggregated Losses",
+                                                self.tr("Aggregated Losses"),
                                                 "memory")
         pr = self.aggregation_layer.dataProvider()
         caps = pr.capabilities()
@@ -559,6 +582,8 @@ class Svir:
             0,
             0)
         zonal_statistics.calculateStatistics(progress_dialog)
+        # TODO: This is not giving any warning in case no loss points are
+        #       contained by any of the regions
         if progress_dialog.wasCanceled():
             QMessageBox.error(
                 self, self.tr('ZonalStats: Error'),
@@ -573,7 +598,7 @@ class Svir:
         # create layer
         self.purged_layer = QgsVectorLayer(
             "Polygon",
-            "Aggregated Losses (no empty regions)",
+            self.tr("Aggregated Losses (no empty regions)"),
             "memory")
         pr = self.purged_layer.dataProvider()
         caps = pr.capabilities()
@@ -656,9 +681,14 @@ class Svir:
             for aggr_feat in self.aggregation_layer.getFeatures():
                 if svir_feat[self.reg_id_in_regions_attr_name] == \
                         aggr_feat[self.reg_id_in_losses_attr_name]:
-                    svir_feat['TOTLOSS'] = aggr_feat['sum']
+                    svir_feat[AGGR_LOSS_ATTR_NAME] = aggr_feat['sum']
                     self.svir_layer.updateFeature(svir_feat)
-            # End populating loss attribute
+                    # TODO: if there's no loss value available for that region,
+                    #       remove the feature from svir layer (because it is
+                    #       meaningless to compare social vulnerability index
+                    #       with missing loss data) OR write a Null or
+                    #       similar to the loss field
+                    # End populating loss attribute
         self.svir_layer.endEditCommand()
         self.svir_layer.commitChanges()
         # update layer's extent when new features have been added
@@ -682,10 +712,11 @@ class Svir:
         """
         # Create new svir layer, duplicating social vulnerability layer
         self.svir_layer = self.create_memory_layer(
-            self.social_vulnerability_layer, "SVIR map")
+            self.social_vulnerability_layer, self.tr("SVIR map"))
         # Add "loss" attribute to svir_layer
         self.add_attributes_to_layer(self.svir_layer,
-                                     [QgsField('TOTLOSS', QVariant.Double)])
+                                     [QgsField(AGGR_LOSS_ATTR_NAME,
+                                               QVariant.Double)])
         # Populate "loss" attribute with data from aggregation_layer
         self.populate_svir_layer_with_loss_values()
         # Add svir layer to registry
@@ -724,10 +755,12 @@ class Svir:
             progress_percent = current_region / float(tot_regions) * 100
             progress.setValue(progress_percent)
             current_region += 1
-            svir_feat['RISKPLUS'] = svir_feat['TOTLOSS'] + svir_feat["TOTSVI"]
-            svir_feat['RISKMULT'] = svir_feat['TOTLOSS'] * svir_feat["TOTSVI"]
-            svir_feat['RISK1F'] = svir_feat['TOTLOSS'] * (
-                1 + svir_feat["TOTSVI"])
+            svir_feat['RISKPLUS'] = svir_feat[AGGR_LOSS_ATTR_NAME] + \
+                                    svir_feat[self.svi_attr_name]
+            svir_feat['RISKMULT'] = svir_feat[AGGR_LOSS_ATTR_NAME] * \
+                                    svir_feat[self.svi_attr_name]
+            svir_feat['RISK1F'] = svir_feat[AGGR_LOSS_ATTR_NAME] * \
+                                  (1 + svir_feat[self.svi_attr_name])
             self.svir_layer.updateFeature(svir_feat)
             # End calculating common SVIR statistics
         self.svir_layer.endEditCommand()
