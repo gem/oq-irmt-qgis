@@ -21,7 +21,7 @@ QGISDIR=.qgis2
 # Makefile for a PyQGIS plugin 
 
 # translation
-SOURCES = svir.py ui_svir.py __init__.py svirdialog.py
+SOURCES = svir.py ui_svir.py __init__.py svirdialog.py attribute_selection_dialog.py
 #TRANSLATIONS = i18n/svir_en.ts
 TRANSLATIONS = 
 
@@ -29,11 +29,11 @@ TRANSLATIONS =
 
 PLUGINNAME = svir
 
-PY_FILES = svir.py svirdialog.py __init__.py
+PY_FILES = svir.py svirdialog.py __init__.py attribute_selection_dialog.py
 
 EXTRAS = resources/start_plugin_icon.png resources/purge_empty_regions_icon.png metadata.txt
 
-UI_FILES = ui_svir.py
+UI_FILES = ui_svir.py ui_attribute_selection.py
 
 RESOURCE_FILES = resources_rc.py
 

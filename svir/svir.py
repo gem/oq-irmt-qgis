@@ -25,7 +25,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
-from PyQt4 import Qt
 import os.path
 import uuid
 
@@ -63,12 +62,14 @@ import resources_rc
 
 # Import the code for the dialog
 from svirdialog import SvirDialog
+from attribute_selection_dialog import AttributeSelectionDialog
 
 from time import time
 
-# Name of the attribute, in the input loss data layer, containing loss info
-LOSS_ATTRIBUTE_NAME = "TOTLOSS"  # "POP2010"  # "RSCORE"  # "loss"
-REGION_ID_ATTRIBUTE_NAME = "MCODE"  # "ISO"  # "STFID"
+# Default names of the attributes, in the input loss data layer and in the
+# regions data layer, containing loss info and region ids for aggregation
+DEFAULT_LOSS_ATTRIBUTE_NAME = "TOTLOSS"
+DEFAULT_REGION_ID_ATTRIBUTE_NAME = "MCODE"
 DEBUG = False
 
 
@@ -76,6 +77,95 @@ class Svir:
     @staticmethod
     def tr(message):
         return QApplication.translate('Svir', message)
+
+    @staticmethod
+    def add_attributes_to_layer(layer, attribute_list):
+        """
+        Add attributes to a layer
+
+        :param layer: QgsVectorLayer that needs to be modified
+        :type layer: QgsVectorLayer
+
+        :param attribute_list: list of QgsField to add to the layer
+        :type attribute_list: list of QgsField
+        """
+        layer.startEditing()
+        layer.beginEditCommand("Add attributes")
+        # add attributes
+        layer_pr = layer.dataProvider()
+        layer_pr.addAttributes(attribute_list)
+        # End adding attributes
+        layer.endEditCommand()
+        layer.commitChanges()
+        # update layer's extent when new features have been added
+        # because change of extent in provider is not propagated to the layer
+        layer.updateExtents()
+
+    @staticmethod
+    def create_memory_layer(layer, new_name='', add_to_registry=False):
+        """
+        TODO: TAKEN FROM INASAFE PLUGIN AND SLIGHTLY MODIFIED.
+              IT WOULD BE USEFUL TO PUT IT INTO A SEPARATE MODULE,
+              BECAUSE MANY DIFFERENT PLUGINS MIGHT NEED IT
+
+        Return a memory copy of a layer
+
+        :param layer: QgsVectorLayer that shall be copied to memory.
+        :type layer: QgsVectorLayer
+
+        :param new_name: The name of the copied layer.
+        :type new_name: str
+
+        :param add_to_registry: if True, the new layer will be added to
+        the QgsMapRegistry
+        :type: bool
+
+        :returns: An in-memory copy of a layer.
+        :rtype: QgsMapLayer
+
+        """
+        if new_name is '':
+            new_name = layer.name() + ' TMP'
+
+        if layer.type() == QgsMapLayer.VectorLayer:
+            v_type = layer.geometryType()
+            if v_type == QGis.Point:
+                type_str = 'Point'
+            elif v_type == QGis.Line:
+                type_str = 'Line'
+            elif v_type == QGis.Polygon:
+                type_str = 'Polygon'
+            else:
+                raise RuntimeError('Layer is whether Point nor '
+                                   'Line nor Polygon')
+        else:
+            raise RuntimeError('Layer is not a VectorLayer')
+
+        crs = layer.crs().authid().lower()
+        my_uuid = str(uuid.uuid4())
+        uri = '%s?crs=%s&index=yes&uuid=%s' % (type_str, crs, my_uuid)
+        mem_layer = QgsVectorLayer(uri, new_name, 'memory')
+        mem_provider = mem_layer.dataProvider()
+
+        provider = layer.dataProvider()
+        v_fields = provider.fields()
+
+        fields = []
+        for i in v_fields:
+            fields.append(i)
+
+        mem_provider.addAttributes(fields)
+
+        for ft in provider.getFeatures():
+            mem_provider.addFeatures([ft])
+
+        if add_to_registry:
+            if mem_layer.isValid():
+                QgsMapLayerRegistry.instance().addMapLayer(mem_layer)
+            else:
+                raise RuntimeError('Layer invalid')
+
+        return mem_layer
 
     def __init__(self, iface):
         # Save reference to the QGIS interface
@@ -116,6 +206,9 @@ class Svir:
         # Action to activate building a new layer with loss data
         # aggregated by region, excluding regions containing no loss points
         self.purge_empty_regions_action = None
+        self.loss_attr_name = None
+        self.reg_id_in_losses_attr_name = None
+        self.reg_id_in_regions_attr_name = None
 
     def initGui(self):
         # Create action that will start plugin configuration
@@ -149,6 +242,11 @@ class Svir:
             self.load_layers(self.dlg.ui.regions_layer_le.text(),
                              self.dlg.ui.loss_layer_le.text(),
                              self.loss_layer_is_vector)
+            # Open dialog to ask the user to specify attributes
+            # * loss from loss_layer
+            # * region_id from loss_layer
+            # * region_id from regions_layer
+            self.attribute_selection()
             self.create_aggregation_layer()
             self.calculate_stats()
             ## Create and enable toolbar button and menu item
@@ -171,13 +269,13 @@ class Svir:
             #self.iface.messageBar().pushMessage(self.tr("Info"),
             #                                    self.tr(msg),
             #                                    level=QgsMessageBar.INFO)
-            # FIXME: Same layer to get regions and social vulnerability data
-            #social_vulnerability_layer_path = "/home/paolo/prove/mappe/Chris/varie/Integrated Risk Example_Portugal/Aggregated_Social_Vulnerability.shp"
-            #self.load_social_vulnerability_layer(
-            #    social_vulnerability_layer_path)
-            # Create social vulnerability layer, duplicating regions layer
+
+            # TODO: Check if it's good to use the same layer to get
+            #       regions and social vulnerability data
             self.social_vulnerability_layer = self.create_memory_layer(
                 self.regions_layer, "Social vulnerability map")
+            # TODO: standardize loss data before inserting it in the svir layer
+            self.standardize_losses()  # it's still a placeholder
             self.create_svir_layer()
             self.calculate_svir_statistics()
 
@@ -207,6 +305,38 @@ class Svir:
             # Zoom depending on the regions layer's extent
         self.canvas.setExtent(self.regions_layer.extent())
 
+    def attribute_selection(self):
+        """
+        Open a modal dialog containing 3 combo boxes, allowing the user
+        to select what are the attribute names for
+        * loss values (from loss layer)
+        * region id (from loss layer)
+        * region id (from regions layer)
+        """
+        dlg = AttributeSelectionDialog()
+        # populate combo boxes with field names taken by layers
+        loss_dp = self.loss_layer.dataProvider()
+        loss_fields = list(loss_dp.fields())
+        for field in loss_fields:
+            dlg.ui.loss_attr_name_cbox.addItem(field.name())
+            dlg.ui.reg_id_attr_name_loss_cbox.addItem(field.name())
+        regions_dp = self.regions_layer.dataProvider()
+        regions_fields = list(regions_dp.fields())
+        for field in regions_fields:
+            dlg.ui.reg_id_attr_name_region_cbox.addItem(field.name())
+        # if the user presses OK
+        if dlg.exec_():
+            # retrieve attribute names from combobox selections
+            self.loss_attr_name = loss_fields[dlg.ui.loss_attr_name_cbox.currentIndex()].name()
+            self.reg_id_in_losses_attr_name = loss_fields[dlg.ui.reg_id_attr_name_loss_cbox.currentIndex()].name()
+            self.reg_id_in_regions_attr_name = regions_fields[dlg.ui.reg_id_attr_name_region_cbox.currentIndex()].name()
+        else:
+            # TODO: is it good to use default values, or should we stop here?
+            # use default values if CANCEL is pressed
+            self.loss_attr_name = DEFAULT_LOSS_ATTRIBUTE_NAME
+            self.reg_id_in_losses_attr_name = DEFAULT_REGION_ID_ATTRIBUTE_NAME
+            self.reg_id_in_regions_attr_name = DEFAULT_REGION_ID_ATTRIBUTE_NAME
+
     def create_aggregation_layer(self):
         """
         Create a new aggregation layer which contains the polygons from
@@ -216,7 +346,7 @@ class Svir:
         """
         if DEBUG:
             print "Creating and initializing aggregation layer"
-        # create layer
+            # create layer
         self.aggregation_layer = QgsVectorLayer("Polygon",
                                                 "Aggregated Losses",
                                                 "memory")
@@ -229,7 +359,7 @@ class Svir:
 
         # add count and sum fields for aggregating statistics
         pr.addAttributes(
-            [QgsField(REGION_ID_ATTRIBUTE_NAME, QVariant.String),
+            [QgsField(self.reg_id_in_losses_attr_name, QVariant.String),
              QgsField("count", QVariant.Int),
              QgsField("sum", QVariant.Double)])
 
@@ -247,20 +377,21 @@ class Svir:
             progress_perc = current_region / float(tot_regions) * 100
             progress.setValue(progress_perc)
             if DEBUG:
-                print "Copying feature ", region_feature.id(), "from regions_layer"
+                print "Copying feature ", region_feature.id(), \
+                    "from regions_layer"
             feat = QgsFeature()
             # copy the polygon from the input aggregation layer
             feat.setGeometry(QgsGeometry(region_feature.geometry()))
             # Define the count and sum fields to initialize to 0
             fields = QgsFields()
-            fields.append(QgsField(QgsField(REGION_ID_ATTRIBUTE_NAME,
+            fields.append(QgsField(QgsField(self.reg_id_in_losses_attr_name,
                                             QVariant.String)))
             fields.append(QgsField(QgsField("count", QVariant.Int)))
             fields.append(QgsField(QgsField("sum", QVariant.Double)))
             # Add fields to the new feature
             feat.setFields(fields)
-            feat[REGION_ID_ATTRIBUTE_NAME] = region_feature[
-                REGION_ID_ATTRIBUTE_NAME]
+            feat[self.reg_id_in_losses_attr_name] = region_feature[
+                self.reg_id_in_regions_attr_name]
             feat['count'] = 0
             feat['sum'] = 0.0
             # Add the new feature to the layer
@@ -282,7 +413,7 @@ class Svir:
 
         if DEBUG:
             print "Adding aggregation layer to registry"
-        # Add aggregation layer to registry
+            # Add aggregation layer to registry
         if self.aggregation_layer.isValid():
             QgsMapLayerRegistry.instance().addMapLayer(self.aggregation_layer)
         else:
@@ -348,7 +479,8 @@ class Svir:
             if DEBUG:
                 print "*" * 50
                 print "*" * 50
-                print progress, "% - Region:", region_feature.id(), "on", tot_regions
+                print progress, "% - Region:", region_feature.id(), \
+                    "on", tot_regions
                 print "*" * 50
                 print "*" * 50
                 t_region_start = time()
@@ -387,7 +519,7 @@ class Svir:
                         points_count += 1
                         # we have found at least one loss point inside a region
                         no_loss_points_in_any_region = False
-                        point_loss = point_feature[LOSS_ATTRIBUTE_NAME]
+                        point_loss = point_feature[self.loss_attr_name]
                         loss_sum += point_loss
                     if DEBUG:
                         t_stop = time()
@@ -403,7 +535,8 @@ class Svir:
                     t_stop = time()
                     print "Completed in %f" % (t_stop - t_start)
                     t_region_stop = time()
-                    print "Region completed in %f" % (t_region_stop - t_region_start)
+                    print "Region completed in %f" % (
+                        t_region_stop - t_region_start)
                     #raw_input("Press Enter to continue...")
         self.aggregation_layer.endEditCommand()
         self.aggregation_layer.commitChanges()
@@ -451,7 +584,7 @@ class Svir:
 
         # add count and sum fields for aggregating statistics
         pr.addAttributes(
-            [QgsField(REGION_ID_ATTRIBUTE_NAME, QVariant.String),
+            [QgsField(self.reg_id_in_losses_attr_name, QVariant.String),
              QgsField("count", QVariant.Int),
              QgsField("sum", QVariant.Double)])
 
@@ -499,6 +632,11 @@ class Svir:
             raise RuntimeError('Social vulnerability layer invalid')
 
     def populate_svir_layer_with_loss_values(self):
+        """
+        Copy loss values from the aggregation layer to the svir layer
+        which already contains social vulnerability related attributes
+        taken from the regions layer.
+        """
         # to show the overall progress, cycling through regions
         tot_regions = len(list(self.aggregation_layer.getFeatures()))
         current_region = 0
@@ -516,16 +654,26 @@ class Svir:
             progress.setValue(progress_percent)
             current_region += 1
             for aggr_feat in self.aggregation_layer.getFeatures():
-                if svir_feat[REGION_ID_ATTRIBUTE_NAME] == aggr_feat[REGION_ID_ATTRIBUTE_NAME]:
+                if svir_feat[self.reg_id_in_regions_attr_name] == \
+                        aggr_feat[self.reg_id_in_losses_attr_name]:
                     svir_feat['TOTLOSS'] = aggr_feat['sum']
                     self.svir_layer.updateFeature(svir_feat)
-        # End adding loss attribute
+            # End populating loss attribute
         self.svir_layer.endEditCommand()
         self.svir_layer.commitChanges()
         # update layer's extent when new features have been added
         # because change of extent in provider is not propagated to the layer
         self.svir_layer.updateExtents()
         self.iface.messageBar().clearWidgets()
+
+    def standardize_losses(self):
+        """
+        Allow the user to select between a list of standardization algorithms,
+        in order to make the loss data comparable with the social vulnerability
+        index
+        """
+        # TODO: still not implemented
+        pass
 
     def create_svir_layer(self):
         """
@@ -547,6 +695,10 @@ class Svir:
             raise RuntimeError('SVIR layer invalid')
 
     def calculate_svir_statistics(self):
+        """
+        Calculate some common indices, combining total risk (in terms of
+        losses) and social vulnerability index
+        """
         # add attributes:
         # RISKPLUS = TOTRISK + TOTSVI
         # RISKMULT = TOTRISK * TOTSVI
@@ -565,94 +717,22 @@ class Svir:
         progress_message_bar.layout().addWidget(progress)
         self.iface.messageBar().pushWidget(progress_message_bar,
                                            self.iface.messageBar().INFO)
-        # Begin calculating RISKPLUS
+        # Begin calculating common SVIR statistics
         self.svir_layer.startEditing()
-        self.svir_layer.beginEditCommand("Calculate RISKPLUS values")
+        self.svir_layer.beginEditCommand("Calculate common SVIR statistics")
         for svir_feat in self.svir_layer.getFeatures():
             progress_percent = current_region / float(tot_regions) * 100
             progress.setValue(progress_percent)
             current_region += 1
             svir_feat['RISKPLUS'] = svir_feat['TOTLOSS'] + svir_feat["TOTSVI"]
             svir_feat['RISKMULT'] = svir_feat['TOTLOSS'] * svir_feat["TOTSVI"]
-            svir_feat['RISK1F'] = svir_feat['TOTLOSS']*(1+svir_feat["TOTSVI"])
+            svir_feat['RISK1F'] = svir_feat['TOTLOSS'] * (
+                1 + svir_feat["TOTSVI"])
             self.svir_layer.updateFeature(svir_feat)
-        # End adding loss attribute
+            # End calculating common SVIR statistics
         self.svir_layer.endEditCommand()
         self.svir_layer.commitChanges()
         # update layer's extent when new features have been added
         # because change of extent in provider is not propagated to the layer
         self.svir_layer.updateExtents()
         self.iface.messageBar().clearWidgets()
-
-    def add_attributes_to_layer(self, layer, attribute_list):
-        layer.startEditing()
-        layer.beginEditCommand("Add attributes")
-        # add attributes
-        layer_pr = layer.dataProvider()
-        layer_pr.addAttributes(attribute_list)
-        # End adding attributes
-        layer.endEditCommand()
-        layer.commitChanges()
-        # update layer's extent when new features have been added
-        # because change of extent in provider is not propagated to the layer
-        layer.updateExtents()
-
-    def create_memory_layer(self, layer, new_name='', add_to_registry=False):
-        """
-        FIXME: TAKEN BY INASAFE PLUGIN.
-        IT WOULD BE USEFUL TO PUT IT INTO A SEPARATE MODULE,
-        BECAUSE MANY DIFFERENT PLUGINS MIGHT NEED IT
-
-        Return a memory copy of a layer
-
-        :param layer: QgsVectorLayer that shall be copied to memory.
-        :type layer: QgsVectorLayer
-
-        :param new_name: The name of the copied layer.
-        :type new_name: str
-
-        :returns: An in-memory copy of a layer.
-        :rtype: QgsMapLayer
-        """
-        if new_name is '':
-            new_name = layer.name() + ' TMP'
-
-        if layer.type() == QgsMapLayer.VectorLayer:
-            v_type = layer.geometryType()
-            if v_type == QGis.Point:
-                type_str = 'Point'
-            elif v_type == QGis.Line:
-                type_str = 'Line'
-            elif v_type == QGis.Polygon:
-                type_str = 'Polygon'
-            else:
-                raise RuntimeError('Layer is whether Point nor '
-                                   'Line nor Polygon')
-        else:
-            raise RuntimeError('Layer is not a VectorLayer')
-
-        crs = layer.crs().authid().lower()
-        my_uuid = str(uuid.uuid4())
-        uri = '%s?crs=%s&index=yes&uuid=%s' % (type_str, crs, my_uuid)
-        mem_layer = QgsVectorLayer(uri, new_name, 'memory')
-        mem_provider = mem_layer.dataProvider()
-
-        provider = layer.dataProvider()
-        v_fields = provider.fields()
-
-        fields = []
-        for i in v_fields:
-            fields.append(i)
-
-        mem_provider.addAttributes(fields)
-
-        for ft in provider.getFeatures():
-            mem_provider.addFeatures([ft])
-
-        if add_to_registry:
-            if mem_layer.isValid():
-                QgsMapLayerRegistry.instance().addMapLayer(mem_layer)
-            else:
-                raise RuntimeError('Layer invalid')
-
-        return mem_layer
