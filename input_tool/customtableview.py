@@ -30,7 +30,8 @@ class CustomTableModel(QtCore.QAbstractTableModel):
     def flags(self, index):
         flag = QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
         field = self.table.recordtype.fields[index.column()]
-        if not field.key:  # primary key fields are not editable
+        keyfields = self.table.recordtype.pkey.names
+        if field.name not in keyfields:  # primary key fields are not editable
             flag |= QtCore.Qt.ItemIsEditable
         return flag
 
