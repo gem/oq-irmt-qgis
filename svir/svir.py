@@ -61,6 +61,7 @@ from qgis.analysis import QgsZonalStatistics
 import resources_rc
 
 # Import the code for the dialog
+from select_layers_to_join_dialog import SelectLayersToJoinDialog
 from svirdialog import SvirDialog
 from attribute_selection_dialog import AttributeSelectionDialog
 
@@ -212,6 +213,8 @@ class Svir:
         self.reg_id_in_losses_attr_name = None
         self.reg_id_in_regions_attr_name = None
         self.svi_attr_name = None
+        self.loss_layer_to_join = None
+        self.svi_layer_to_join = None
 
     def initGui(self):
         # Create action that will start plugin configuration
@@ -269,6 +272,9 @@ class Svir:
                 self.regions_layer, "Social vulnerability map")
             # TODO: standardize loss data before inserting it in the svir layer
             self.standardize_losses()  # it's still a placeholder
+            # TODO: let the user select a loss layer and a svi layer to join
+            self.select_layers_to_join()
+
             self.create_svir_layer()
             self.calculate_svir_statistics()
 
@@ -359,6 +365,26 @@ class Svir:
             self.reg_id_in_losses_attr_name = DEFAULT_REGION_ID_ATTR_NAME
             self.svi_attr_name = DEFAULT_SVI_ATTR_NAME
             self.reg_id_in_regions_attr_name = DEFAULT_REGION_ID_ATTR_NAME
+
+    def select_layers_to_join(self):
+        """
+        Open a modal dialog containing 2 combo boxes, allowing the user
+        to select a layer containing loss data and one containing SVI data.
+        The two layers will be joined (later) by region id
+        """
+        dlg = SelectLayersToJoinDialog()
+        reg = QgsMapLayerRegistry.instance()
+        layer_list = list(reg.mapLayers())
+        dlg.ui.loss_layer_cbox.addItems(layer_list)
+        dlg.ui.svi_layer_cbox.addItems(layer_list)
+        if dlg.exec_():
+            self.loss_layer_to_join = reg.mapLayers().get(
+                dlg.ui.loss_layer_cbox.currentIndex())
+            self.svi_layer_to_join = reg.mapLayers().get(
+                dlg.ui.svi_layer_cbox.currentIndex())
+        else:
+            # TODO: what happens if the user presses CANCEL?
+            pass
 
     def create_aggregation_layer(self):
         """
@@ -603,6 +629,15 @@ class Svir:
         pr = self.purged_layer.dataProvider()
         caps = pr.capabilities()
 
+        # to show the overall progress, cycling through regions
+        tot_regions = len(list(self.aggregation_layer.getFeatures()))
+        current_region = 0
+        msg = self.tr("Purging regions containing no loss data points...")
+        progress_message_bar = self.iface.messageBar().createMessage(msg)
+        progress = QProgressBar()
+        progress_message_bar.layout().addWidget(progress)
+        self.iface.messageBar().pushWidget(progress_message_bar,
+                                           self.iface.messageBar().INFO)
         # Begin layer initialization
         self.purged_layer.startEditing()
         self.purged_layer.beginEditCommand("Layer initialization")
@@ -615,6 +650,9 @@ class Svir:
 
         # copy regions from aggregation layer
         for region_feature in self.aggregation_layer.getFeatures():
+            progress_perc = current_region / float(tot_regions) * 100
+            progress.setValue(progress_perc)
+            current_region += 1
             # copy only regions which contain at least one loss point
             if region_feature['count'] >= 1:
                 feat = region_feature
@@ -642,19 +680,20 @@ class Svir:
                                                 level=QgsMessageBar.INFO)
         else:
             raise RuntimeError('Purged layer invalid')
+        self.iface.messageBar().clearWidgets()
 
-    def load_social_vulnerability_layer(self, social_vulnerability_layer_path):
-        # Load social vulnerability layer
-        self.social_vulnerability_layer = QgsVectorLayer(
-            social_vulnerability_layer_path,
-            self.tr('Social vulnerability'),
-            'ogr')
-        # Add social vulnerability layer to registry
-        if self.social_vulnerability_layer.isValid():
-            QgsMapLayerRegistry.instance().addMapLayer(
-                self.social_vulnerability_layer)
-        else:
-            raise RuntimeError('Social vulnerability layer invalid')
+    #def load_social_vulnerability_layer(self, social_vulnerability_layer_path):
+    #    # Load social vulnerability layer
+    #    self.social_vulnerability_layer = QgsVectorLayer(
+    #        social_vulnerability_layer_path,
+    #        self.tr('Social vulnerability'),
+    #        'ogr')
+    #    # Add social vulnerability layer to registry
+    #    if self.social_vulnerability_layer.isValid():
+    #        QgsMapLayerRegistry.instance().addMapLayer(
+    #            self.social_vulnerability_layer)
+    #    else:
+    #        raise RuntimeError('Social vulnerability layer invalid')
 
     def populate_svir_layer_with_loss_values(self):
         """
@@ -663,7 +702,7 @@ class Svir:
         taken from the regions layer.
         """
         # to show the overall progress, cycling through regions
-        tot_regions = len(list(self.aggregation_layer.getFeatures()))
+        tot_regions = len(list(self.loss_layer_to_join.getFeatures()))
         current_region = 0
         msg = self.tr("Step 4 of 5: populating SVIR layer with loss values...")
         progress_message_bar = self.iface.messageBar().createMessage(msg)
@@ -678,17 +717,22 @@ class Svir:
             progress_percent = current_region / float(tot_regions) * 100
             progress.setValue(progress_percent)
             current_region += 1
-            for aggr_feat in self.aggregation_layer.getFeatures():
+            match_found = False
+            for aggr_feat in self.loss_layer_to_join.getFeatures():
                 if svir_feat[self.reg_id_in_regions_attr_name] == \
                         aggr_feat[self.reg_id_in_losses_attr_name]:
                     svir_feat[AGGR_LOSS_ATTR_NAME] = aggr_feat['sum']
                     self.svir_layer.updateFeature(svir_feat)
-                    # TODO: if there's no loss value available for that region,
-                    #       remove the feature from svir layer (because it is
-                    #       meaningless to compare social vulnerability index
-                    #       with missing loss data) OR write a Null or
-                    #       similar to the loss field
-                    # End populating loss attribute
+                    match_found = True
+            # TODO: Check if this is the desired behavior, i.e., if we actually
+            #       want to remove from svir_layer the regions that contain no
+            #       loss values
+            if not match_found:
+                caps = self.svir_layer.dataProvider().capabilities()
+                if caps & QgsVectorDataProvider.DeleteFeatures:
+                    res = self.svir_layer.dataProvider().deleteFeatures(
+                        [aggr_feat.id()])
+        # End populating loss attribute
         self.svir_layer.endEditCommand()
         self.svir_layer.commitChanges()
         # update layer's extent when new features have been added
