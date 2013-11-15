@@ -1,12 +1,13 @@
+import os
 import sys
 import sip
 sip.setapi("QString", 2)
 
-from PyQt4 import QtGui
+from PyQt4 import QtCore, QtGui
 from customtableview import TripleTableWidget, tr
 
-from openquake.nrmllib.node import node_from_nrml
-from openquake.nrmllib.converter import Converter
+from openquake.nrmllib.node import node_from_nrml, node_to_nrml
+from openquake.nrmllib.record import TableSet
 
 
 class Dialog(QtGui.QDialog):
@@ -22,11 +23,64 @@ class Dialog(QtGui.QDialog):
 
 
 class MainWindow(QtGui.QMainWindow):
-    def __init__(self, t1, t2, t3, message):
+    def __init__(self, nrmlfile):
         QtGui.QMainWindow.__init__(self)
-        self.tt = TripleTableWidget(t1, t2, t3, message, self)
+        self.nrmlfile = nrmlfile
+        node = node_from_nrml(nrmlfile)[0]
+        self.tableset = TableSet.from_node(node)
+        self.ttw = TripleTableWidget(self.tableset, nrmlfile, self)
         self.setWindowTitle(tr("TripleTableWidget Example"))
-        self.setCentralWidget(self.tt)
+        self.setCentralWidget(self.ttw)
+        self.setupMenu()
+
+        # menu actions
+        self.actionOpen.triggered.connect(self.open_nrml)
+        self.actionSave.triggered.connect(self.save_nrml)
+
+    def setupMenu(self):
+        self.menubar = QtGui.QMenuBar(self)
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1011, 25))
+        self.menubar.setObjectName("menubar")
+        self.menuFile = QtGui.QMenu(self.menubar)
+        self.menuFile.setObjectName("menuFile")
+        self.setMenuBar(self.menubar)
+        self.actionOpen = QtGui.QAction(self)
+        self.actionOpen.setObjectName("actionOpen")
+        self.actionSave = QtGui.QAction(self)
+        self.actionSave.setObjectName("actionSave")
+        self.actionCopy = QtGui.QAction(self)
+        self.actionCopy.setObjectName("actionCopy")
+        self.actionPaste = QtGui.QAction(self)
+        self.actionPaste.setObjectName("actionPaste")
+        self.menuFile.addAction(self.actionOpen)
+        self.menuFile.addAction(self.actionSave)
+        self.menuFile.addAction(self.actionCopy)
+        self.menuFile.addAction(self.actionPaste)
+        self.menubar.addAction(self.menuFile.menuAction())
+        self.menuFile.setTitle(tr("InputToolWindow"))
+
+        # retranslateUi
+        self.menuFile.setTitle(tr("File"))
+        self.actionOpen.setText(tr("&Open"))
+        self.actionOpen.setShortcut(tr("Ctrl+O"))
+        self.actionSave.setText(tr("&Save"))
+        self.actionSave.setShortcut(tr("Ctrl+S"))
+        self.actionCopy.setText(tr("&Copy"))
+        self.actionCopy.setShortcut(tr("Ctrl+C"))
+        self.actionPaste.setText(tr("&Paste"))
+        self.actionPaste.setShortcut(tr("Ctrl+V"))
+
+    def open_nrml(self):
+        pass
+
+    def save_nrml(self):
+        """
+        Save the current content of the tableset in NRML format
+        """
+        # make a copy of the original file for safety reasons
+        os.rename(self.nrmlfile, self.nrmlfile + '~')
+        with open(self.nrmlfile, 'w') as f:
+            node_to_nrml(self.tableset.to_node(), f)
 
 
 def main(argv):
@@ -39,9 +93,7 @@ QTableWidget::item:selected
 { background-color: palette(highlight)}
 ''')
     fname = sys.argv[1]
-    node = node_from_nrml(fname)[0]
-    tables = Converter.node_to_tables(node)
-    mw = MainWindow(*tables, message=fname)
+    mw = MainWindow(fname)
     mw.show()
     sys.exit(app.exec_())
 

@@ -2,24 +2,28 @@ from PyQt4 import QtCore, QtGui
 from message_bar import MessageBar
 
 
-def tr(name):
+def tr(basename, name=None):
+    """Shortcut for QtGui.QApplication.translate"""
+    if name is None:
+        name = basename
     return QtGui.QApplication.translate(
-        name, name, None, QtGui.QApplication.UnicodeUTF8)
+        basename, name, None, QtGui.QApplication.UnicodeUTF8)
 
 
 class CustomTableModel(QtCore.QAbstractTableModel):
     """
     Wrapper for table objects consistent with the API defined in
-    nrmllib.record.Table.
+    nrmllib.record.Table and nrmllib.record.TableSet
     """
 
-    # can not be in init.
-    # see http://stackoverflow.com/questions/2970312/#2971426
+    # the signal below can not be in init, see
+    # http://stackoverflow.com/questions/2970312/#2971426
     validationFailed = QtCore.pyqtSignal(QtCore.QModelIndex, ValueError)
 
-    def __init__(self, table, parent=None):
+    def __init__(self, table, getdefault, parent=None):
         QtCore.QAbstractTableModel.__init__(self, parent)
         self.table = table
+        self.getdefault = getdefault
 
     def rowCount(self, parent=None):
         return len(self.table)
@@ -28,11 +32,8 @@ class CustomTableModel(QtCore.QAbstractTableModel):
         return len(self.table.recordtype)
 
     def flags(self, index):
-        flag = QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
-        field = self.table.recordtype.fields[index.column()]
-        keyfields = self.table.recordtype.pkey.names
-        if field.name not in keyfields:  # primary key fields are not editable
-            flag |= QtCore.Qt.ItemIsEditable
+        flag = (QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable |
+                QtCore.Qt.ItemIsEditable)
         return flag
 
     def primaryKey(self, index):
@@ -70,10 +71,16 @@ class CustomTableModel(QtCore.QAbstractTableModel):
                 return section
 
     def insertRows(self, position, nrows, parent=QtCore.QModelIndex()):
+        try:
+            default = self.getdefault()
+        except AttributeError:
+            # this happens if no record is selected in the GUI
+            # 'NoneType' object has no attribute 'pkey'
+            return False
         self.beginInsertRows(parent, position, position + nrows - 1)
         try:
             for i in range(nrows):
-                self.table.insert(position, self.table.recordtype())
+                self.table.insert(position, default)
         except KeyError:  # duplicate key
             return False
         else:
@@ -103,9 +110,9 @@ class CustomTableView(QtGui.QWidget):
     """
     Wrapper for CustomTableModel.
     """
-    def __init__(self, table, parent=None):
+    def __init__(self, table, getdefault, parent=None):
         QtGui.QWidget.__init__(self, parent)
-        self.tableModel = CustomTableModel(table)
+        self.tableModel = CustomTableModel(table, getdefault)
         self.parent = parent
         self.setupUi()
 
@@ -122,12 +129,13 @@ class CustomTableView(QtGui.QWidget):
         self.tableModel.removeRows(min(row_ids), len(row_ids))
         # TODO: notification on errors
 
-    def currentRow(self):
-        """The row currently selected, or 0"""
+    def current_record(self):
+        """The record currently selected, or None"""
         indexes = self.tableView.selectedIndexes()
         if not indexes:
-            return 0
-        return indexes[-1].row()
+            return
+        row_idx = indexes[-1].row()
+        return self.tableModel.table[row_idx]
 
     def setupUi(self):
         self.tableView = QtGui.QTableView(self.parent)
@@ -167,11 +175,6 @@ class CustomTableView(QtGui.QWidget):
             else:
                 self.tableView.hideRow(row)
 
-    def show(self):
-        #self.tableView.resizeRowsToContents()  # has no effect :-(
-        #self.tableView.resizeColumnsToContents()  # has no effect :-(
-        QtGui.QWidget.show(self)
-
     def keyPressEvent(self, event):
         if event.matches(QtGui.QKeySequence.Copy):
             self.copy()
@@ -196,35 +199,54 @@ class CustomTableView(QtGui.QWidget):
 
 class TripleTableWidget(QtGui.QWidget):
 
-    def __init__(self, t1, t2, t3, message, parent=None):
+    def __init__(self, tableset, nrmlfile, parent=None):
         QtGui.QWidget.__init__(self, parent)
-        self.tv1 = CustomTableView(t1, parent)
-        self.tv2 = CustomTableView(t2, parent)
-        self.tv3 = CustomTableView(t3, parent)
-        self.message_bar = MessageBar(message, self)
+        self.tableset = tableset
+        self.nrmlfile = nrmlfile
+        self.message_bar = MessageBar(nrmlfile, self)
+        self.tv = [CustomTableView(table, self.getdefault(table), parent)
+                   for table in tableset.tables]
         self.setupUi()
-        self.tv1.tableView.clicked.connect(self.show_tv2)
-        self.tv2.tableView.clicked.connect(self.show_tv3)
+
+        # connect clicked
+        self.tv[0].tableView.clicked.connect(self.show_tv1)
+        self.tv[1].tableView.clicked.connect(self.show_tv2)
 
         # connect errors
-        self.tv1.tableModel.validationFailed.connect(
-            lambda index, error:
-            self.show_validation_error(self.tv1, index, error))
-
-        self.tv2.tableModel.validationFailed.connect(
-            lambda index, error:
-            self.show_validation_error(self.tv2, index, error))
-
-        self.tv3.tableModel.validationFailed.connect(
-            lambda index, error:
-            self.show_validation_error(self.tv3, index, error))
+        for tv in self.tv:
+            tv.tableModel.validationFailed.connect(
+                lambda idx, err: self.show_validation_error(tv, idx, err))
 
         # hide
-        self.tv2.tableView.hideColumn(0)
-        self.tv3.tableView.hideColumn(0)
-        self.tv3.tableView.hideColumn(1)
+        self.tv[1].tableView.hideColumn(0)
+        self.tv[2].tableView.hideColumn(0)
+        self.tv[2].tableView.hideColumn(1)
+        self.show_tv1(QtCore.QModelIndex().sibling(0, 0))
         self.show_tv2(QtCore.QModelIndex().sibling(0, 0))
-        self.show_tv3(QtCore.QModelIndex().sibling(0, 0))
+
+    def getdefault(self, table):
+        def _getdefault():
+            if table.ordinal == 0:
+                args = ()
+            elif table.ordinal == 1:
+                args = self.tv[0].current_record().pkey
+            else:
+                args = self.tv[1].current_record().pkey
+            return table.recordtype(*args)
+        return _getdefault
+
+    def setupUi(self):
+        layout = QtGui.QVBoxLayout()
+        hlayout = QtGui.QHBoxLayout()
+        layout.addWidget(self.message_bar)
+        hlayout.addWidget(self.tv[0])
+        hlayout.addWidget(self.tv[1])
+        layout.addLayout(hlayout)
+        layout.addWidget(self.tv[2])
+        self.setLayout(layout)
+        self.setSizePolicy(
+            QtGui.QSizePolicy.MinimumExpanding,
+            QtGui.QSizePolicy.MinimumExpanding)
 
     @QtCore.pyqtSlot(QtCore.QModelIndex, ValueError)
     def show_validation_error(self, table_view, index, error):
@@ -236,31 +258,16 @@ class TripleTableWidget(QtGui.QWidget):
     def show_message(self, message):
         self.message_bar.show_message(message)
 
-    def show_tv2(self, row):
-        vset, = self.tv1.tableModel.primaryKey(row)
-        self.tv2.showOnCondition(lambda rec: rec[0] == vset)
-        # table 3 should disappear if a row in table 2 is
-        # not selected
-        self.tv3.showOnCondition(lambda rec: False)
+    def show_tv1(self, row):
+        vset, = self.tv[0].tableModel.primaryKey(row)
+        self.tv[1].showOnCondition(lambda rec: rec[0] == vset)
+        # table 2 should disappear if a row in table 1 is not selected
+        self.tv[2].showOnCondition(lambda rec: False)
 
-    def show_tv3(self, row):
-        k0, k1 = self.tv2.tableModel.primaryKey(row)
+    def show_tv2(self, row):
+        k0, k1 = self.tv[1].tableModel.primaryKey(row)
 
         def cond(rec):
             return (rec[0] == k0 and rec[1] == k1)
-        self.tv3.showOnCondition(cond)
-        #print self.tv2.currentRow()
-
-    def setupUi(self):
-        layout = QtGui.QVBoxLayout()
-        hlayout = QtGui.QHBoxLayout()
-        layout.addWidget(self.message_bar)
-        hlayout.addWidget(self.tv1)
-        hlayout.addWidget(self.tv2)
-        layout.addLayout(hlayout)
-        layout.addWidget(self.tv3)
-        self.setLayout(layout)
-
-        self.setSizePolicy(
-            QtGui.QSizePolicy.MinimumExpanding,
-            QtGui.QSizePolicy.MinimumExpanding)
+        self.tv[2].showOnCondition(cond)
+        #print self.tv1.current_record()
