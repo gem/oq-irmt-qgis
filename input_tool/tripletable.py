@@ -4,7 +4,7 @@ import sip
 sip.setapi("QString", 2)
 
 from PyQt4 import QtCore, QtGui
-from customtableview import TripleTableWidget, tr
+from customtableview import CustomTableView, TripleTableWidget, tr
 
 from openquake.nrmllib.node import node_from_nrml, node_to_nrml
 from openquake.nrmllib.record import TableSet
@@ -17,7 +17,7 @@ class Dialog(QtGui.QDialog):
         QtGui.QDialog.__init__(self)
         self.tt = TripleTableWidget(t1, t2, t3, self)
         self.setWindowTitle(tr("TripleTableWidget Example"))
-        # this was the missing call where you set the layout of the tritable
+        # this was the missing call where you set the layout of the tripletable
         # widget to the dialog
         self.setLayout(self.tt.layout())
 
@@ -25,21 +25,28 @@ class Dialog(QtGui.QDialog):
 class MainWindow(QtGui.QMainWindow):
     def __init__(self, nrmlfile):
         QtGui.QMainWindow.__init__(self)
-        self.nrmlfile = nrmlfile
-        node = node_from_nrml(nrmlfile)[0]
-        self.tableset = TableSet.from_node(node)
-        self.ttw = TripleTableWidget(self.tableset, nrmlfile, self)
-        self.setWindowTitle(tr("TripleTableWidget Example"))
-        self.setCentralWidget(self.ttw)
+        self.set_central_widget(nrmlfile)
+        self.setWindowTitle(tr("Input Tool Window"))
         self.setupMenu()
 
         # menu actions
         self.actionOpen.triggered.connect(self.open_nrml)
         self.actionSave.triggered.connect(self.save_nrml)
+        self.actionCopy.triggered.connect(self.copy)
+        self.actionPaste.triggered.connect(self.paste)
+
+    def set_central_widget(self, nrmlfile):
+        self.nrmlfile = nrmlfile
+        node = node_from_nrml(nrmlfile)[0]
+        self.tableset = TableSet.from_node(node)
+        if len(self.tableset.tables) != 3:
+            # only models with three tables are implemented
+            raise NotImplementedError(node.tag)
+        self.widget = TripleTableWidget(self.tableset, nrmlfile, self)
+        self.setCentralWidget(self.widget)
 
     def setupMenu(self):
         self.menubar = QtGui.QMenuBar(self)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1011, 25))
         self.menubar.setObjectName("menubar")
         self.menuFile = QtGui.QMenu(self.menubar)
         self.menuFile.setObjectName("menuFile")
@@ -52,10 +59,16 @@ class MainWindow(QtGui.QMainWindow):
         self.actionCopy.setObjectName("actionCopy")
         self.actionPaste = QtGui.QAction(self)
         self.actionPaste.setObjectName("actionPaste")
+        self.actionUndo = QtGui.QAction(self)
+        self.actionUndo.setObjectName("actionUndo")
+        self.actionQuit = QtGui.QAction(self)
+        self.actionQuit.setObjectName("actionQuit")
         self.menuFile.addAction(self.actionOpen)
         self.menuFile.addAction(self.actionSave)
         self.menuFile.addAction(self.actionCopy)
         self.menuFile.addAction(self.actionPaste)
+        self.menuFile.addAction(self.actionUndo)
+        self.menuFile.addAction(self.actionQuit)
         self.menubar.addAction(self.menuFile.menuAction())
         self.menuFile.setTitle(tr("InputToolWindow"))
 
@@ -69,18 +82,51 @@ class MainWindow(QtGui.QMainWindow):
         self.actionCopy.setShortcut(tr("Ctrl+C"))
         self.actionPaste.setText(tr("&Paste"))
         self.actionPaste.setShortcut(tr("Ctrl+V"))
+        self.actionUndo.setText(tr("&Undo"))
+        self.actionUndo.setShortcut(tr("Ctrl+U"))
+        self.actionQuit.setText(tr("&Quit"))
+        self.actionQuit.setShortcut(tr("Ctrl+Q"))
+
+    def copy(self):
+        widget = QtGui.QApplication.focusWidget()
+        if not isinstance(widget, QtGui.QTableView):
+            return
+        currsel = widget.parent().current_selection()
+        QtGui.QApplication.clipboard().setText(currsel)
+
+    def paste(self):
+        widget = QtGui.QApplication.focusWidget()
+        if not isinstance(widget, QtGui.QTableView):
+            return
+        widget = widget.parent()  # CustomTableView
+        lines = QtGui.QApplication.clipboard().text().split('\n')
+        rows = [line.split('\t') for line in lines]
+        if not rows:
+            return
+        ncolumns = len(widget.table.recordtype) - widget.table.ordinal
+        for row in rows:
+            assert len(row) <= ncolumns, 'Got %d columns, expected %d' % (
+                len(row), ncolumns)
+        indexes = widget.appendRows(len(rows))
+        for index, row in zip(indexes, rows):
+            widget.tableModel.set_row(index, row)
 
     def open_nrml(self):
-        pass
+        nrmlfile = unicode(QtGui.QFileDialog.getOpenFileName(
+            self, 'Choose file',
+            QtCore.QDir.homePath(),
+            "Model file (*.xml);;Config files (*.ini)"))
+        self.set_central_widget(nrmlfile)
 
+    # TODO: save on a different file
     def save_nrml(self):
         """
         Save the current content of the tableset in NRML format
         """
-        # make a copy of the original file for safety reasons
-        os.rename(self.nrmlfile, self.nrmlfile + '~')
-        with open(self.nrmlfile, 'w') as f:
+        with open(self.nrmlfile + '~', 'w') as f:
             node_to_nrml(self.tableset.to_node(), f)
+        # only if there were no errors override the original file
+        os.rename(self.nrmlfile + '~', self.nrmlfile)
 
 
 def main(argv):
@@ -92,8 +138,7 @@ def main(argv):
 QTableWidget::item:selected
 { background-color: palette(highlight)}
 ''')
-    fname = sys.argv[1]
-    mw = MainWindow(fname)
+    mw = MainWindow(sys.argv[1])
     mw.show()
     sys.exit(app.exec_())
 
