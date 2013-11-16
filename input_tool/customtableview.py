@@ -1,6 +1,7 @@
 from PyQt4 import QtCore, QtGui
 from message_bar import MessageBar
 
+
 def tr(basename, name=None):
     """Shortcut for QtGui.QApplication.translate"""
     if name is None:
@@ -18,7 +19,7 @@ class CustomTableModel(QtCore.QAbstractTableModel):
 
     # the signal below can not be in init, see
     # http://stackoverflow.com/questions/2970312/#2971426
-    validationFailed = QtCore.pyqtSignal(QtCore.QModelIndex, ValueError)
+    validationFailed = QtCore.pyqtSignal(QtCore.QModelIndex, Exception)
 
     def __init__(self, table, getdefault, parent=None):
         # getdefault is a callable taking the table object
@@ -67,10 +68,11 @@ class CustomTableModel(QtCore.QAbstractTableModel):
         return False
 
     def set_row(self, i, row):
-        self.table[i].row[self.table.ordinal:] = row
-        ##index = QtCore.QModelIndex().sibling(i, 0)
-        ##self.dataChanged.emit(index, index)
-        print self.table[i]
+        try:
+            rec = self.table[i]
+        except IndexError:
+            return
+        rec.row[self.table.ordinal:] = row
 
     def headerData(self, section, orientation, role):
         if role == QtCore.Qt.DisplayRole:
@@ -83,16 +85,23 @@ class CustomTableModel(QtCore.QAbstractTableModel):
 
     def insertRows(self, position, nrows, parent=QtCore.QModelIndex()):
         try:
-            default = self.table.recordtype(*self.getdefault(self.table))
+            default = self.getdefault(self.table)
         except TypeError as e:
             # this happens if no record is selected in the GUI
-            print e
             return False
         self.beginInsertRows(parent, position, position + nrows - 1)
-        for i in range(nrows):
-            self.table._records.insert(position, default)
-        self.endInsertRows()
-        return True
+        try:
+            for i in range(nrows):
+                rec = self.table.recordtype(*default + ['dummy%d' % i])
+                self.table.insert(position, rec)
+        except Exception as e:
+            self.validationFailed.emit(parent.sibling(i, 0), e)
+            err = True
+        else:
+            err = False
+        finally:
+            self.endInsertRows()
+        return err
 
     def removeRows(self, position, nrows, parent=QtCore.QModelIndex()):
         # delete rows in the underlying table in reverse order
@@ -195,6 +204,7 @@ class CustomTableView(QtGui.QWidget):
             else:
                 self.tableView.hideRow(row)
 
+
 class TripleTableWidget(QtGui.QWidget):
 
     def __init__(self, tableset, nrmlfile, parent=None):
@@ -246,7 +256,7 @@ class TripleTableWidget(QtGui.QWidget):
             QtGui.QSizePolicy.MinimumExpanding,
             QtGui.QSizePolicy.MinimumExpanding)
 
-    @QtCore.pyqtSlot(QtCore.QModelIndex, ValueError)
+    @QtCore.pyqtSlot(QtCore.QModelIndex, Exception)
     def show_validation_error(self, table_view, index, error):
         record = table_view.tableModel.table[index.row()]
         fieldname = record.fields[index.column()].name
