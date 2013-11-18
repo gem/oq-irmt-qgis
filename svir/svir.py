@@ -73,7 +73,7 @@ from trace_time_manager import TraceTimeManager
 DEFAULT_LOSS_ATTR_NAME = "TOTLOSS"
 DEFAULT_REGION_ID_ATTR_NAME = "MCODE"
 DEFAULT_SVI_ATTR_NAME = "TOTSVI"
-AGGR_LOSS_ATTR_NAME = "TOTLOSS"
+AGGR_LOSS_ATTR_NAME = "AGGR_LOSS"
 DEBUG = False
 
 
@@ -389,10 +389,10 @@ class Svir:
         dlg.ui.loss_layer_cbox.addItems(layer_list)
         dlg.ui.svi_layer_cbox.addItems(layer_list)
         if dlg.exec_():
-            self.loss_layer_to_join = reg.mapLayers().get(
-                dlg.ui.loss_layer_cbox.currentIndex())
-            self.svi_layer_to_join = reg.mapLayers().get(
-                dlg.ui.svi_layer_cbox.currentIndex())
+            self.loss_layer_to_join = reg.mapLayers().values()[
+                dlg.ui.loss_layer_cbox.currentIndex()]
+            self.svi_layer_to_join = reg.mapLayers().values()[
+                dlg.ui.svi_layer_cbox.currentIndex()]
         else:
             # TODO: what happens if the user presses CANCEL?
             pass
@@ -651,7 +651,6 @@ class Svir:
                                                 level=QgsMessageBar.INFO)
         else:
             raise RuntimeError('Purged layer invalid')
-        self.iface.messageBar().clearWidgets()
 
     #def load_social_vulnerability_layer(self, social_vulnerability_layer_path):
     #    # Load social vulnerability layer
