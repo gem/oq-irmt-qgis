@@ -7,7 +7,7 @@ sip.setapi("QString", 2)
 from PyQt4 import QtCore, QtGui
 from customtableview import TripleTableWidget, tr
 
-from openquake.nrmllib.node import node_from_nrml, node_to_nrml
+from openquake.nrmllib.node import node_from_xml, node_to_nrml
 from openquake.nrmllib.record import TableSet
 
 
@@ -31,6 +31,7 @@ class MainWindow(QtGui.QMainWindow):
         self.setupMenu()
 
         # menu actions
+        self.actionNewVM.triggered.connect(self.new_vulnerability_model)
         self.actionOpen.triggered.connect(self.open_nrml)
         self.actionSave.triggered.connect(self.save_nrml)
         self.actionWrite.triggered.connect(self.write_nrml)
@@ -40,7 +41,7 @@ class MainWindow(QtGui.QMainWindow):
 
     def set_central_widget(self, nrmlfile):
         self.nrmlfile = nrmlfile
-        node = node_from_nrml(nrmlfile)[0]
+        node = node_from_xml(nrmlfile)[0]
         self.tableset = TableSet.from_node(node)
         if len(self.tableset.tables) != 3:
             # only models with three tables are implemented
@@ -54,6 +55,8 @@ class MainWindow(QtGui.QMainWindow):
         self.menuFile = QtGui.QMenu(self.menubar)
         self.menuFile.setObjectName("menuFile")
         self.setMenuBar(self.menubar)
+        self.actionNewVM = QtGui.QAction(self)
+        self.actionNewVM.setObjectName("actionNewVM")
         self.actionOpen = QtGui.QAction(self)
         self.actionOpen.setObjectName("actionOpen")
         self.actionSave = QtGui.QAction(self)
@@ -68,6 +71,7 @@ class MainWindow(QtGui.QMainWindow):
         self.actionUndo.setObjectName("actionUndo")
         self.actionQuit = QtGui.QAction(self)
         self.actionQuit.setObjectName("actionQuit")
+        self.menuFile.addAction(self.actionNewVM)
         self.menuFile.addAction(self.actionOpen)
         self.menuFile.addAction(self.actionSave)
         self.menuFile.addAction(self.actionWrite)
@@ -80,6 +84,8 @@ class MainWindow(QtGui.QMainWindow):
 
         # retranslateUi
         self.menuFile.setTitle(tr("File"))
+        self.actionNewVM.setText(tr("&NewVM"))
+        self.actionNewVM.setShortcut(tr("Ctrl+N"))
         self.actionOpen.setText(tr("&Open"))
         self.actionOpen.setShortcut(tr("Ctrl+O"))
         self.actionSave.setText(tr("&Save"))
@@ -126,10 +132,18 @@ class MainWindow(QtGui.QMainWindow):
             "Model file (*.xml);;Config files (*.ini)"))
         self.set_central_widget(nrmlfile)
 
+    def new_vulnerability_model(self):
+        empty = '''<?xml version='1.0' encoding='utf-8'?>
+        <nrml xmlns="http://openquake.org/xmlns/nrml/0.4">
+        <vulnerabilityModel/>
+        </nrml>'''
+        open('vulnerability-model.xml', 'w').write(empty)
+        self.set_central_widget('vulnerability-model.xml')
+
     def save(self, nrmlfile):
         try:
             node = self.tableset.to_node()
-        except Exception as e:
+        except Exception:
             # TODO: improve
             traceback.print_exc()
             return
