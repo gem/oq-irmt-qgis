@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_select_layers_to_join.ui'
 #
-# Created: Thu Nov 14 17:25:31 2013
+# Created: Mon Nov 18 17:54:31 2013
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -34,15 +34,15 @@ class Ui_SelectLayersToJoinDialog(object):
         self.loss_layer_cbox = QtGui.QComboBox(self.formLayoutWidget)
         self.loss_layer_cbox.setObjectName(_fromUtf8("loss_layer_cbox"))
         self.formLayout.setWidget(1, QtGui.QFormLayout.FieldRole, self.loss_layer_cbox)
-        self.svi_layer_cbox = QtGui.QComboBox(self.formLayoutWidget)
-        self.svi_layer_cbox.setObjectName(_fromUtf8("svi_layer_cbox"))
-        self.formLayout.setWidget(3, QtGui.QFormLayout.FieldRole, self.svi_layer_cbox)
+        self.zonal_layer_cbox = QtGui.QComboBox(self.formLayoutWidget)
+        self.zonal_layer_cbox.setObjectName(_fromUtf8("zonal_layer_cbox"))
+        self.formLayout.setWidget(3, QtGui.QFormLayout.FieldRole, self.zonal_layer_cbox)
         self.loss_layer_lbl = QtGui.QLabel(self.formLayoutWidget)
         self.loss_layer_lbl.setObjectName(_fromUtf8("loss_layer_lbl"))
         self.formLayout.setWidget(1, QtGui.QFormLayout.LabelRole, self.loss_layer_lbl)
-        self.svi_layer_lbl = QtGui.QLabel(self.formLayoutWidget)
-        self.svi_layer_lbl.setObjectName(_fromUtf8("svi_layer_lbl"))
-        self.formLayout.setWidget(3, QtGui.QFormLayout.LabelRole, self.svi_layer_lbl)
+        self.zonal_layer_lbl = QtGui.QLabel(self.formLayoutWidget)
+        self.zonal_layer_lbl.setObjectName(_fromUtf8("zonal_layer_lbl"))
+        self.formLayout.setWidget(3, QtGui.QFormLayout.LabelRole, self.zonal_layer_lbl)
         spacerItem = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
         self.formLayout.setItem(2, QtGui.QFormLayout.FieldRole, spacerItem)
 
@@ -54,5 +54,5 @@ class Ui_SelectLayersToJoinDialog(object):
     def retranslateUi(self, SelectLayersToJoinDialog):
         SelectLayersToJoinDialog.setWindowTitle(QtGui.QApplication.translate("SelectLayersToJoinDialog", "Select layers to join", None, QtGui.QApplication.UnicodeUTF8))
         self.loss_layer_lbl.setText(QtGui.QApplication.translate("SelectLayersToJoinDialog", "Layer containing loss data", None, QtGui.QApplication.UnicodeUTF8))
-        self.svi_layer_lbl.setText(QtGui.QApplication.translate("SelectLayersToJoinDialog", "Layer containing SVI data", None, QtGui.QApplication.UnicodeUTF8))
+        self.zonal_layer_lbl.setText(QtGui.QApplication.translate("SelectLayersToJoinDialog", "Layer containing zonal data", None, QtGui.QApplication.UnicodeUTF8))
 
