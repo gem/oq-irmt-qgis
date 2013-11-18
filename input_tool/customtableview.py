@@ -1,6 +1,12 @@
 from PyQt4 import QtCore, QtGui
 from message_bar import MessageBar
 
+try:
+    from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
+    from matplotlib.figure import Figure
+except ImportError:
+    Figure = None
+
 
 def tr(basename, name=None):
     """Shortcut for QtGui.QApplication.translate"""
@@ -243,14 +249,31 @@ class TripleTableWidget(QtGui.QWidget):
             return []
         return self.tv[ordinal - 1].current_record()[:ordinal]
 
+    def plot(self, records, label):
+        xs = [float(rec[2]) for rec in records]
+        ys = [float(rec[3]) for rec in records]
+        self.axes.clear()
+        self.axes.grid(True)
+        self.axes.plot(xs, ys, label=label)
+        self.axes.legend(loc='upper left')
+        self.canvas.draw()
+
     def setupUi(self):
+        self.fig = Figure()
+        self.axes = self.fig.add_subplot(111)
+        self.canvas = FigureCanvasQTAgg(self.fig)
+        self.canvas.setParent(self)
+
         layout = QtGui.QVBoxLayout()
-        hlayout = QtGui.QHBoxLayout()
+        hlayout1 = QtGui.QHBoxLayout()
+        hlayout2 = QtGui.QHBoxLayout()
         layout.addWidget(self.message_bar)
-        hlayout.addWidget(self.tv[0])
-        hlayout.addWidget(self.tv[1])
-        layout.addLayout(hlayout)
-        layout.addWidget(self.tv[2])
+        hlayout1.addWidget(self.tv[0])
+        hlayout1.addWidget(self.tv[1])
+        layout.addLayout(hlayout1)
+        hlayout2.addWidget(self.tv[2])
+        hlayout2.addWidget(self.canvas)
+        layout.addLayout(hlayout2)
         self.setLayout(layout)
         self.setSizePolicy(
             QtGui.QSizePolicy.MinimumExpanding,
@@ -269,12 +292,14 @@ class TripleTableWidget(QtGui.QWidget):
         self.tv[1].showOnCondition(lambda rec: rec[0] == k0)
         # table 2 must disappear because no row in table 1 is selected
         self.tv[2].showOnCondition(lambda rec: False)
+        self.plot([], '')
 
     def show_tv2(self, row):
         # show only the rows in table 2 corresponding to k0 and k1
         k0, k1 = self.tv[1].tableModel.primaryKey(row)
         self.tv[2].showOnCondition(lambda rec: rec[0] == k0 and rec[1] == k1)
-
+        self.plot([rec for rec in self.tableset.tables[2]
+                   if rec[0] == k0 and rec[1] == k1], '%s-%s' % (k0, k1))
 
 # Note: the copy functionality can be implemented also as follows:
 #
