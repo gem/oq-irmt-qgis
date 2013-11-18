@@ -73,7 +73,7 @@ DEFAULT_LOSS_ATTR_NAME = "TOTLOSS"
 DEFAULT_REGION_ID_ATTR_NAME = "MCODE"
 DEFAULT_SVI_ATTR_NAME = "TOTSVI"
 AGGR_LOSS_ATTR_NAME = "TOTLOSS"
-DEBUG = True
+DEBUG = False
 
 
 class Svir:
@@ -394,7 +394,7 @@ class Svir:
 
             # add count and sum fields for aggregating statistics
             pr.addAttributes(
-                [QgsField(self.reg_id_in_losses_attr_name, QVariant.String),
+                [QgsField(self.reg_id_in_regions_attr_name, QVariant.String),
                  QgsField("count", QVariant.Int),
                  QgsField("sum", QVariant.Double)])
 
@@ -415,14 +415,14 @@ class Svir:
                 # Define the count and sum fields to initialize to 0
                 fields = QgsFields()
                 fields.append(
-                    QgsField(self.reg_id_in_losses_attr_name, QVariant.String))
+                    QgsField(self.reg_id_in_regions_attr_name, QVariant.String))
                 fields.append(
                     QgsField("count", QVariant.Int))
                 fields.append(
                     QgsField("sum", QVariant.Double))
                 # Add fields to the new feature
                 feat.setFields(fields)
-                feat[self.reg_id_in_losses_attr_name] = region_feature[
+                feat[self.reg_id_in_regions_attr_name] = region_feature[
                     self.reg_id_in_regions_attr_name]
                 feat['count'] = 0
                 feat['sum'] = 0.0
@@ -595,7 +595,7 @@ class Svir:
                                  DEBUG):
             # add count and sum fields for aggregating statistics
             pr.addAttributes(
-                [QgsField(self.reg_id_in_losses_attr_name, QVariant.String),
+                [QgsField(self.reg_id_in_regions_attr_name, QVariant.String),
                  QgsField("count", QVariant.Int),
                  QgsField("sum", QVariant.Double)])
 
@@ -662,7 +662,7 @@ class Svir:
                 progress.setValue(progress_percent)
                 for aggr_feat in self.aggregation_layer.getFeatures():
                     if svir_feat[self.reg_id_in_regions_attr_name] == \
-                            aggr_feat[self.reg_id_in_losses_attr_name]:
+                            aggr_feat[self.reg_id_in_regions_attr_name]:
                         svir_feat[AGGR_LOSS_ATTR_NAME] = aggr_feat['sum']
                         self.svir_layer.updateFeature(svir_feat)
                         # TODO: if there's no loss value available for that
