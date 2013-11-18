@@ -328,6 +328,10 @@ class Svir:
         #         on this!)
 
         dlg = AttributeSelectionDialog()
+        # if the loss layer does not contain an attribute specifying the ids of
+        # regions, the user must not be forced to select such attribute, so we
+        # add an "empty" option to the combobox
+        dlg.ui.reg_id_attr_name_loss_cbox.addItem(self.tr("No region ids"))
         # populate combo boxes with field names taken by layers
         loss_dp = self.loss_layer.dataProvider()
         loss_fields = list(loss_dp.fields())
@@ -346,8 +350,15 @@ class Svir:
             # retrieve attribute names from combobox selections
             self.loss_attr_name = loss_fields[
                 dlg.ui.loss_attr_name_cbox.currentIndex()].name()
-            self.reg_id_in_losses_attr_name = loss_fields[
-                dlg.ui.reg_id_attr_name_loss_cbox.currentIndex()].name()
+            # if the loss file does not contain an attribute specifying the
+            # region id for each point, or if the regions are not compatible
+            # with those specified by the layer containing svi data
+            if dlg.ui.reg_id_attr_name_loss_cbox.currentIndex() == 0:
+                self.reg_id_in_losses_attr_name = None
+            else:
+                # currentIndex() - 1 because index 0 is for "No region ids"
+                self.reg_id_in_losses_attr_name = loss_fields[
+                    dlg.ui.reg_id_attr_name_loss_cbox.currentIndex()-1].name()
             self.svi_attr_name = regions_fields[
                 dlg.ui.svi_attr_name_cbox.currentIndex()].name()
             self.reg_id_in_regions_attr_name = regions_fields[
@@ -575,6 +586,10 @@ class Svir:
         pr = self.purged_layer.dataProvider()
         caps = pr.capabilities()
 
+        tot_regions = len(list(self.aggregation_layer.getFeatures()))
+        msg = self.tr("Purging regions containing no loss points...")
+        progress = self.create_progress_message_bar(msg)
+
         with LayerEditingManager(self.purged_layer,
                                  "Purged layer initialization",
                                  DEBUG):
@@ -585,7 +600,10 @@ class Svir:
                  QgsField("sum", QVariant.Double)])
 
             # copy regions from aggregation layer
-            for region_feature in self.aggregation_layer.getFeatures():
+            for current_region, region_feature in enumerate(
+                    self.aggregation_layer.getFeatures()):
+                progress_percent = current_region / float(tot_regions) * 100
+                progress.setValue(progress_percent)
                 # copy only regions which contain at least one loss point
                 if region_feature['count'] >= 1:
                     feat = region_feature
@@ -594,6 +612,8 @@ class Svir:
                         pr.addFeatures([feat])
                         # Update the layer including the new feature
                     self.aggregation_layer.updateFeature(feat)
+
+        self.clear_progress_message_bar()
 
         # Add purged layer to registry
         if self.purged_layer.isValid():
