@@ -65,7 +65,8 @@ from select_layers_to_join_dialog import SelectLayersToJoinDialog
 from svirdialog import SvirDialog
 from attribute_selection_dialog import AttributeSelectionDialog
 
-from time import time
+from layer_editing_manager import LayerEditingManager
+from trace_time_manager import TraceTimeManager
 
 # Default names of the attributes, in the input loss data layer and in the
 # regions data layer, containing loss info and region ids for aggregation
@@ -92,20 +93,13 @@ class Svir:
         :param attribute_list: list of QgsField to add to the layer
         :type attribute_list: list of QgsField
         """
-        layer.startEditing()
-        layer.beginEditCommand("Add attributes")
-        # add attributes
-        layer_pr = layer.dataProvider()
-        layer_pr.addAttributes(attribute_list)
-        # End adding attributes
-        layer.endEditCommand()
-        layer.commitChanges()
-        # update layer's extent when new features have been added
-        # because change of extent in provider is not propagated to the layer
-        layer.updateExtents()
+        with LayerEditingManager(layer, 'Add attributes', DEBUG):
+            # add attributes
+            layer_pr = layer.dataProvider()
+            layer_pr.addAttributes(attribute_list)
 
     @staticmethod
-    def create_memory_layer(layer, new_name='', add_to_registry=False):
+    def create_memory_copy_of_layer(layer, new_name='', add_to_registry=False):
         """
         TODO: TAKEN FROM INASAFE PLUGIN AND SLIGHTLY MODIFIED.
               IT WOULD BE USEFUL TO PUT IT INTO A SEPARATE MODULE,
@@ -235,7 +229,7 @@ class Svir:
         self.iface.removePluginMenu(u"&SVIR",
                                     self.purge_empty_regions_action)
         self.iface.removeToolBarIcon(self.purge_empty_regions_action)
-        self.iface.messageBar().clearWidgets()
+        self.clear_progress_message_bar()
 
     # run method that performs all the real work
     def run(self):
@@ -268,7 +262,7 @@ class Svir:
 
             # TODO: Check if it's good to use the same layer to get
             #       regions and social vulnerability data
-            self.social_vulnerability_layer = self.create_memory_layer(
+            self.social_vulnerability_layer = self.create_memory_copy_of_layer(
                 self.regions_layer, "Social vulnerability map")
             # TODO: standardize loss data before inserting it in the svir layer
             self.standardize_losses()  # it's still a placeholder
@@ -335,7 +329,15 @@ class Svir:
         * social vulnerability index (from regions layer)
         * region id (from regions layer)
         """
+        # FIXME: Loss layer might not have a region_id attribute!
+        #        (we need to aggregate data in different ways, depending
+        #         on this!)
+
         dlg = AttributeSelectionDialog()
+        # if the loss layer does not contain an attribute specifying the ids of
+        # regions, the user must not be forced to select such attribute, so we
+        # add an "empty" option to the combobox
+        dlg.ui.reg_id_attr_name_loss_cbox.addItem(self.tr("No region ids"))
         # populate combo boxes with field names taken by layers
         loss_dp = self.loss_layer.dataProvider()
         loss_fields = list(loss_dp.fields())
@@ -347,13 +349,22 @@ class Svir:
         for field in regions_fields:
             dlg.ui.reg_id_attr_name_region_cbox.addItem(field.name())
             dlg.ui.svi_attr_name_cbox.addItem(field.name())
-            # if the user presses OK
+        # TODO: pre-select default attribute names in the dropdown (if present)
+
+        # if the user presses OK
         if dlg.exec_():
             # retrieve attribute names from combobox selections
             self.loss_attr_name = loss_fields[
                 dlg.ui.loss_attr_name_cbox.currentIndex()].name()
-            self.reg_id_in_losses_attr_name = loss_fields[
-                dlg.ui.reg_id_attr_name_loss_cbox.currentIndex()].name()
+            # if the loss file does not contain an attribute specifying the
+            # region id for each point, or if the regions are not compatible
+            # with those specified by the layer containing svi data
+            if dlg.ui.reg_id_attr_name_loss_cbox.currentIndex() == 0:
+                self.reg_id_in_losses_attr_name = None
+            else:
+                # currentIndex() - 1 because index 0 is for "No region ids"
+                self.reg_id_in_losses_attr_name = loss_fields[
+                    dlg.ui.reg_id_attr_name_loss_cbox.currentIndex()-1].name()
             self.svi_attr_name = regions_fields[
                 dlg.ui.svi_attr_name_cbox.currentIndex()].name()
             self.reg_id_in_regions_attr_name = regions_fields[
@@ -395,74 +406,59 @@ class Svir:
         """
         if DEBUG:
             print "Creating and initializing aggregation layer"
-            # create layer
+
+        # create layer
         self.aggregation_layer = QgsVectorLayer("Polygon",
                                                 self.tr("Aggregated Losses"),
                                                 "memory")
         pr = self.aggregation_layer.dataProvider()
         caps = pr.capabilities()
 
-        # Begin layer initialization
-        self.aggregation_layer.startEditing()
-        self.aggregation_layer.beginEditCommand("Layer initialization")
+        with LayerEditingManager(self.aggregation_layer,
+                                 "Layer initialization",
+                                 DEBUG):
 
-        # add count and sum fields for aggregating statistics
-        pr.addAttributes(
-            [QgsField(self.reg_id_in_losses_attr_name, QVariant.String),
-             QgsField("count", QVariant.Int),
-             QgsField("sum", QVariant.Double)])
+            # add count and sum fields for aggregating statistics
+            pr.addAttributes(
+                [QgsField(self.reg_id_in_regions_attr_name, QVariant.String),
+                 QgsField("count", QVariant.Int),
+                 QgsField("sum", QVariant.Double)])
 
-        # to show the overall progress, cycling through regions
-        tot_regions = len(list(self.regions_layer.getFeatures()))
-        current_region = 0
-        msg = self.tr("Step 1 of 5: initializing aggregation layer...")
-        progress_message_bar = self.iface.messageBar().createMessage(msg)
-        progress = QProgressBar()
-        progress_message_bar.layout().addWidget(progress)
-        self.iface.messageBar().pushWidget(progress_message_bar,
-                                           self.iface.messageBar().INFO)
-        # copy regions from regions layer
-        for region_feature in self.regions_layer.getFeatures():
-            progress_perc = current_region / float(tot_regions) * 100
-            progress.setValue(progress_perc)
-            if DEBUG:
-                print "Copying feature ", region_feature.id(), \
-                    "from regions_layer"
-            feat = QgsFeature()
-            # copy the polygon from the input aggregation layer
-            feat.setGeometry(QgsGeometry(region_feature.geometry()))
-            # Define the count and sum fields to initialize to 0
-            fields = QgsFields()
-            fields.append(QgsField(QgsField(self.reg_id_in_losses_attr_name,
-                                            QVariant.String)))
-            fields.append(QgsField(QgsField("count", QVariant.Int)))
-            fields.append(QgsField(QgsField("sum", QVariant.Double)))
-            # Add fields to the new feature
-            feat.setFields(fields)
-            feat[self.reg_id_in_losses_attr_name] = region_feature[
-                self.reg_id_in_regions_attr_name]
-            feat['count'] = 0
-            feat['sum'] = 0.0
-            # Add the new feature to the layer
-            if caps & QgsVectorDataProvider.AddFeatures:
-                pr.addFeatures([feat])
-                # Update the layer including the new feature
-            self.aggregation_layer.updateFeature(feat)
-            if DEBUG:
-                print "done"
-            current_region += 1
+            # to show the overall progress, cycling through regions
+            tot_regions = len(list(self.regions_layer.getFeatures()))
+            msg = self.tr("Step 1 of 5: initializing aggregation layer...")
+            progress = self.create_progress_message_bar(msg)
 
-        # End layer initialization
-        self.aggregation_layer.endEditCommand()
-        self.aggregation_layer.commitChanges()
+            # copy regions from regions layer
+            for current_region, region_feature in enumerate(
+                    self.regions_layer.getFeatures()):
+                progress_perc = current_region / float(tot_regions) * 100
+                progress.setValue(progress_perc)
 
-        # update layer's extent when new features have been added
-        # because change of extent in provider is not propagated to the layer
-        self.aggregation_layer.updateExtents()
+                feat = QgsFeature()
+                # copy the polygon from the input aggregation layer
+                feat.setGeometry(QgsGeometry(region_feature.geometry()))
+                # Define the count and sum fields to initialize to 0
+                fields = QgsFields()
+                fields.append(
+                    QgsField(self.reg_id_in_regions_attr_name, QVariant.String))
+                fields.append(
+                    QgsField("count", QVariant.Int))
+                fields.append(
+                    QgsField("sum", QVariant.Double))
+                # Add fields to the new feature
+                feat.setFields(fields)
+                feat[self.reg_id_in_regions_attr_name] = region_feature[
+                    self.reg_id_in_regions_attr_name]
+                feat['count'] = 0
+                feat['sum'] = 0.0
+                # Add the new feature to the layer
+                if caps & QgsVectorDataProvider.AddFeatures:
+                    pr.addFeatures([feat])
+                    # Update the layer including the new feature
+                self.aggregation_layer.updateFeature(feat)
 
-        if DEBUG:
-            print "Adding aggregation layer to registry"
-            # Add aggregation layer to registry
+        # Add aggregation layer to registry
         if self.aggregation_layer.isValid():
             QgsMapLayerRegistry.instance().addMapLayer(self.aggregation_layer)
         else:
@@ -475,121 +471,103 @@ class Svir:
             self.calculate_raster_stats()
 
     def calculate_vector_stats(self):
-        # get points from loss layer
-        loss_features = self.loss_layer.getFeatures()
-        # get regions from aggregation layer
-        region_features = self.aggregation_layer.getFeatures()
-
+        # TODO: If we know the region id of each point in the loss map, we
+        #       don't need to use geometries while aggregating, and we can
+        #       simply count by region id!
+        #       We need to implement this as well
+        """
+        On the hypothesis that we don't know what is the region in which
+        each point was collected,
+        * we create a spatial index of the loss points
+        * for each region (in the layer containing regionally-aggregated SVI
+            * we identify points that are inside the region's bounding box
+            * we check if each of these points is actually inside the
+              region's geometry; if it is:
+                * add 1 to the count of points in the region
+                * add the loss value to the total loss of the region
+        Notes:
+        * self.loss_layer contains the not aggregated loss points
+        * self.regions_layer contains the region geometries
+        * self.aggregation_layer is the new layer with losses aggregated by
+            region
+        """
         # to show the overall progress, cycling through points
         tot_points = len(list(self.loss_layer.getFeatures()))
-        current_point = 0
         msg = self.tr("Step 2 of 5: creating spatial index for loss points...")
-        progress_message_bar = self.iface.messageBar().createMessage(msg)
-        progress = QProgressBar()
-        progress_message_bar.layout().addWidget(progress)
-        self.iface.messageBar().pushWidget(progress_message_bar,
-                                           self.iface.messageBar().INFO)
+        progress = self.create_progress_message_bar(msg)
+
         # create spatial index
-        if DEBUG:
-            print "Creating spatial index for loss points..."
-            t_start = time()
-        spatial_index = QgsSpatialIndex()
-        for loss_feature in loss_features:
-            progress_perc = current_point / float(tot_points) * 100
-            progress.setValue(progress_perc)
-            spatial_index.insertFeature(loss_feature)
-            current_point += 1
-        loss_features.rewind()      # reset iterator
-        if DEBUG:
-            t_stop = time()
-            print "Completed in %f" % (t_stop - t_start)
-        self.iface.messageBar().clearWidgets()
-        # Begin updating count and sum attributes
-        if DEBUG:
-            print "Starting to count points in regions"
-        self.aggregation_layer.startEditing()
-        self.aggregation_layer.beginEditCommand(
-            "Edit count and sum attributes")
-        # to show the overall progress, cycling through regions
-        tot_regions = len(list(self.aggregation_layer.getFeatures()))
-        current_region = 0
-        msg = self.tr("Step 3 of 5: aggregating points by region...")
-        progress_message_bar = self.iface.messageBar().createMessage(msg)
-        progress = QProgressBar()
-        progress_message_bar.layout().addWidget(progress)
-        self.iface.messageBar().pushWidget(progress_message_bar,
-                                           self.iface.messageBar().INFO)
-        # check if there are no loss points contained in any of the regions
-        # and later display a warning if that occurs
-        no_loss_points_in_any_region = True
-        for region_feature in region_features:
-            progress_perc = current_region / float(tot_regions) * 100
-            progress.setValue(progress_perc)
-            if DEBUG:
-                print "*" * 50
-                print "*" * 50
-                print progress, "% - Region:", region_feature.id(), \
-                    "on", tot_regions
-                print "*" * 50
-                print "*" * 50
-                t_region_start = time()
-            current_region += 1
-            points_count = 0
-            loss_sum = 0
-            region_geometry = region_feature.geometry()
-            # Find ids of points within the bounding box of the region
-            if DEBUG:
-                print "Find ids of points within the region's bounding box..."
-                t_start = time()
-            point_ids = spatial_index.intersects(region_geometry.boundingBox())
-            if DEBUG:
-                t_stop = time()
-                print "Completed in %f" % (t_stop - t_start)
-            if len(point_ids) > 0:  # at least one point in bounding box
-                # For points that are within the bounding box of the region
-                for point_id in point_ids:
-                    if DEBUG:
-                        print "Checking if point", point_id, \
-                            "is actually inside the region"
-                        print "Retrieving point geometry..."
-                        t_start = time()
-                        # Get the point feature by the point's id
-                    request = QgsFeatureRequest().setFilterFid(point_id)
-                    point_feature = self.loss_layer.getFeatures(request).next()
-                    point_geometry = QgsGeometry(point_feature.geometry())
-                    if DEBUG:
-                        t_stop = time()
-                        print "Completed in %f" % (t_stop - t_start)
-                        print "Check if region geometry contains the point..."
-                        t_start = time()
-                        # check if the point is actually inside the region and
-                    # it is not only contained by its bounding box
-                    if region_geometry.contains(point_geometry):
-                        points_count += 1
-                        # we have found at least one loss point inside a region
-                        no_loss_points_in_any_region = False
-                        point_loss = point_feature[self.loss_attr_name]
-                        loss_sum += point_loss
-                    if DEBUG:
-                        t_stop = time()
-                        print "Completed in %f" % (t_stop - t_start)
-                if DEBUG:
-                    print "Updating count and sum for the region..."
-                    t_start = time()
-                region_feature['count'] = points_count
-                region_feature['sum'] = loss_sum
-                self.aggregation_layer.updateFeature(region_feature)
-                # End updating count and sum attributes
-                if DEBUG:
-                    t_stop = time()
-                    print "Completed in %f" % (t_stop - t_start)
-                    t_region_stop = time()
-                    print "Region completed in %f" % (
-                        t_region_stop - t_region_start)
-                    #raw_input("Press Enter to continue...")
-        self.aggregation_layer.endEditCommand()
-        self.aggregation_layer.commitChanges()
-        self.iface.messageBar().clearWidgets()
+        with TraceTimeManager("Creating spatial index for loss points...",
+                              DEBUG):
+            spatial_index = QgsSpatialIndex()
+            for current_point, loss_feature in enumerate(
+                    self.loss_layer.getFeatures()):
+                progress_perc = current_point / float(tot_points) * 100
+                progress.setValue(progress_perc)
+                spatial_index.insertFeature(loss_feature)
+
+        self.clear_progress_message_bar()
+
+        with LayerEditingManager(self.aggregation_layer,
+                                 "Calculate count and sum attributes",
+                                 DEBUG):
+            # to show the overall progress, cycling through regions
+            # Note that regions from region layer were copied earlier into the
+            # aggregation layer
+            tot_regions = len(list(self.aggregation_layer.getFeatures()))
+            msg = self.tr("Step 3 of 5: aggregating points by region...")
+            progress = self.create_progress_message_bar(msg)
+
+            # check if there are no loss points contained in any of the regions
+            # and later display a warning if that occurs
+            no_loss_points_in_any_region = True
+            # We cycle through regions in the aggregation_layer, because the
+            # aggregation layer contains the regions copied from the regions
+            # layer, plus it contains the attributes count and sum to populate
+            for current_region, region_feature in enumerate(
+                    self.aggregation_layer.getFeatures()):
+                progress_perc = current_region / float(tot_regions) * 100
+                progress.setValue(progress_perc)
+                msg = "{0}% - Region: {1} on {2}".format(progress_perc,
+                                                         region_feature.id(),
+                                                         tot_regions)
+                with TraceTimeManager(msg, DEBUG):
+                    points_count = 0
+                    loss_sum = 0
+                    region_geometry = region_feature.geometry()
+                    # Find ids of points within the bounding box of the region
+                    point_ids = spatial_index.intersects(
+                        region_geometry.boundingBox())
+                    # check if the points inside the bounding box of the region
+                    # are actually inside the region's geometry
+                    for point_id in point_ids:
+                        msg = "Checking if point {0} is actually inside " \
+                              "the region".format(point_id)
+                        with TraceTimeManager(msg, DEBUG):
+                            # Get the point feature by the point's id
+                            request = QgsFeatureRequest().setFilterFid(
+                                point_id)
+                            point_feature = self.loss_layer.getFeatures(
+                                request).next()
+                            point_geometry = QgsGeometry(
+                                point_feature.geometry())
+                            # check if the point is actually inside the region
+                            # and it is not only contained by its bounding box
+                            if region_geometry.contains(point_geometry):
+                                points_count += 1
+                                # we have found at least one loss point inside
+                                # a region
+                                no_loss_points_in_any_region = False
+                                point_loss = point_feature[self.loss_attr_name]
+                                loss_sum += point_loss
+                    msg = "Updating count and sum for the region..."
+                    with TraceTimeManager(msg, DEBUG):
+                        region_feature['count'] = points_count
+                        region_feature['sum'] = loss_sum
+                        self.aggregation_layer.updateFeature(region_feature)
+                        # End updating count and sum attributes
+                #raw_input("Press Enter to continue...")
+        self.clear_progress_message_bar()
         # display a warning in case none of the loss points are inside
         # any of the regions
         if no_loss_points_in_any_region:
@@ -599,6 +577,11 @@ class Svir:
                                                 level=QgsMessageBar.INFO)
 
     def calculate_raster_stats(self):
+        """
+        In case the layer containing loss data is raster, use
+        QgsZonalStatistics to calculate count, sum and average loss
+        values for each region
+        """
         zonal_statistics = QgsZonalStatistics(
             self.aggregation_layer,
             self.loss_layer.dataProvider().dataSourceUri())
@@ -629,46 +612,34 @@ class Svir:
         pr = self.purged_layer.dataProvider()
         caps = pr.capabilities()
 
-        # to show the overall progress, cycling through regions
         tot_regions = len(list(self.aggregation_layer.getFeatures()))
-        current_region = 0
-        msg = self.tr("Purging regions containing no loss data points...")
-        progress_message_bar = self.iface.messageBar().createMessage(msg)
-        progress = QProgressBar()
-        progress_message_bar.layout().addWidget(progress)
-        self.iface.messageBar().pushWidget(progress_message_bar,
-                                           self.iface.messageBar().INFO)
-        # Begin layer initialization
-        self.purged_layer.startEditing()
-        self.purged_layer.beginEditCommand("Layer initialization")
+        msg = self.tr("Purging regions containing no loss points...")
+        progress = self.create_progress_message_bar(msg)
 
-        # add count and sum fields for aggregating statistics
-        pr.addAttributes(
-            [QgsField(self.reg_id_in_losses_attr_name, QVariant.String),
-             QgsField("count", QVariant.Int),
-             QgsField("sum", QVariant.Double)])
+        with LayerEditingManager(self.purged_layer,
+                                 "Purged layer initialization",
+                                 DEBUG):
+            # add count and sum fields for aggregating statistics
+            pr.addAttributes(
+                [QgsField(self.reg_id_in_regions_attr_name, QVariant.String),
+                 QgsField("count", QVariant.Int),
+                 QgsField("sum", QVariant.Double)])
 
-        # copy regions from aggregation layer
-        for region_feature in self.aggregation_layer.getFeatures():
-            progress_perc = current_region / float(tot_regions) * 100
-            progress.setValue(progress_perc)
-            current_region += 1
-            # copy only regions which contain at least one loss point
-            if region_feature['count'] >= 1:
-                feat = region_feature
-                # Add the new feature to the layer
-                if caps & QgsVectorDataProvider.AddFeatures:
-                    pr.addFeatures([feat])
-                    # Update the layer including the new feature
-                self.aggregation_layer.updateFeature(feat)
+            # copy regions from aggregation layer
+            for current_region, region_feature in enumerate(
+                    self.aggregation_layer.getFeatures()):
+                progress_percent = current_region / float(tot_regions) * 100
+                progress.setValue(progress_percent)
+                # copy only regions which contain at least one loss point
+                if region_feature['count'] >= 1:
+                    feat = region_feature
+                    # Add the new feature to the layer
+                    if caps & QgsVectorDataProvider.AddFeatures:
+                        pr.addFeatures([feat])
+                        # Update the layer including the new feature
+                    self.aggregation_layer.updateFeature(feat)
 
-        # End layer initialization
-        self.purged_layer.endEditCommand()
-        self.purged_layer.commitChanges()
-
-        # update layer's extent when new features have been added
-        # because change of extent in provider is not propagated to the layer
-        self.purged_layer.updateExtents()
+        self.clear_progress_message_bar()
 
         # Add purged layer to registry
         if self.purged_layer.isValid():
@@ -702,28 +673,27 @@ class Svir:
         taken from the regions layer.
         """
         # to show the overall progress, cycling through regions
-        tot_regions = len(list(self.loss_layer_to_join.getFeatures()))
-        current_region = 0
+        tot_regions = len(list(self.aggregation_layer.getFeatures()))
         msg = self.tr("Step 4 of 5: populating SVIR layer with loss values...")
-        progress_message_bar = self.iface.messageBar().createMessage(msg)
-        progress = QProgressBar()
-        progress_message_bar.layout().addWidget(progress)
-        self.iface.messageBar().pushWidget(progress_message_bar,
-                                           self.iface.messageBar().INFO)
-        # Begin populating "loss" attribute with data from aggregation_layer
-        self.svir_layer.startEditing()
-        self.svir_layer.beginEditCommand("Add loss values")
-        for svir_feat in self.svir_layer.getFeatures():
-            progress_percent = current_region / float(tot_regions) * 100
-            progress.setValue(progress_percent)
-            current_region += 1
-            match_found = False
-            for aggr_feat in self.loss_layer_to_join.getFeatures():
-                if svir_feat[self.reg_id_in_regions_attr_name] == \
-                        aggr_feat[self.reg_id_in_losses_attr_name]:
-                    svir_feat[AGGR_LOSS_ATTR_NAME] = aggr_feat['sum']
-                    self.svir_layer.updateFeature(svir_feat)
-                    match_found = True
+        progress = self.create_progress_message_bar(msg)
+
+        with LayerEditingManager(self.svir_layer,
+                                 "Add loss values to svir_layer",
+                                 DEBUG):
+            # Begin populating "loss" attribute with data from the
+            # aggregation_layer selected by the user (possibly purged from
+            # regions containing no loss data
+            for current_region, svir_feat in enumerate(
+                    self.svir_layer.getFeatures()):
+                progress_percent = current_region / float(tot_regions) * 100
+                progress.setValue(progress_percent)
+                match_found = False
+                for aggr_feat in self.loss_layer_to_join.getFeatures():
+                    if svir_feat[self.reg_id_in_regions_attr_name] == \
+                            aggr_feat[self.reg_id_in_regions_attr_name]:
+                        svir_feat[AGGR_LOSS_ATTR_NAME] = aggr_feat['sum']
+                        self.svir_layer.updateFeature(svir_feat)
+                        match_found = True
             # TODO: Check if this is the desired behavior, i.e., if we actually
             #       want to remove from svir_layer the regions that contain no
             #       loss values
@@ -732,13 +702,7 @@ class Svir:
                 if caps & QgsVectorDataProvider.DeleteFeatures:
                     res = self.svir_layer.dataProvider().deleteFeatures(
                         [aggr_feat.id()])
-        # End populating loss attribute
-        self.svir_layer.endEditCommand()
-        self.svir_layer.commitChanges()
-        # update layer's extent when new features have been added
-        # because change of extent in provider is not propagated to the layer
-        self.svir_layer.updateExtents()
-        self.iface.messageBar().clearWidgets()
+        self.clear_progress_message_bar()
 
     def standardize_losses(self):
         """
@@ -755,7 +719,7 @@ class Svir:
         and loss data
         """
         # Create new svir layer, duplicating social vulnerability layer
-        self.svir_layer = self.create_memory_layer(
+        self.svir_layer = self.create_memory_copy_of_layer(
             self.social_vulnerability_layer, self.tr("SVIR map"))
         # Add "loss" attribute to svir_layer
         self.add_attributes_to_layer(self.svir_layer,
@@ -785,31 +749,45 @@ class Svir:
         # for each region, calculate the value of the output attributes
         # to show the overall progress, cycling through regions
         tot_regions = len(list(self.svir_layer.getFeatures()))
-        current_region = 0
         msg = self.tr("Step 5 of 5: calculating SVIR statistics...")
+        progress = self.create_progress_message_bar(msg)
+
+        with LayerEditingManager(self.svir_layer,
+                                 "Calculate common SVIR statistics",
+                                 DEBUG):
+            for current_region, svir_feat in enumerate(
+                    self.svir_layer.getFeatures()):
+                progress_percent = current_region / float(tot_regions) * 100
+                progress.setValue(progress_percent)
+                svir_feat['RISKPLUS'] = (svir_feat[AGGR_LOSS_ATTR_NAME] +
+                                         svir_feat[self.svi_attr_name])
+                svir_feat['RISKMULT'] = (svir_feat[AGGR_LOSS_ATTR_NAME] *
+                                         svir_feat[self.svi_attr_name])
+                svir_feat['RISK1F'] = (svir_feat[AGGR_LOSS_ATTR_NAME] *
+                                       (1 + svir_feat[self.svi_attr_name]))
+                self.svir_layer.updateFeature(svir_feat)
+
+        self.clear_progress_message_bar()
+
+    def create_progress_message_bar(self, msg):
+        """
+        Use the messageBar of QGIS to display a message describing what's going
+        on (typically during a time-consuming task), and a bar showing the
+        progress of the process.
+
+        :param msg: Message to be displayed, describing the current task
+        :type: str
+
+        :returns: progress object on which we can set the percentage of
+        completion of the task through progress.setValue(percentage)
+        :rtype: QProgressBar
+        """
         progress_message_bar = self.iface.messageBar().createMessage(msg)
         progress = QProgressBar()
         progress_message_bar.layout().addWidget(progress)
         self.iface.messageBar().pushWidget(progress_message_bar,
                                            self.iface.messageBar().INFO)
-        # Begin calculating common SVIR statistics
-        self.svir_layer.startEditing()
-        self.svir_layer.beginEditCommand("Calculate common SVIR statistics")
-        for svir_feat in self.svir_layer.getFeatures():
-            progress_percent = current_region / float(tot_regions) * 100
-            progress.setValue(progress_percent)
-            current_region += 1
-            svir_feat['RISKPLUS'] = svir_feat[AGGR_LOSS_ATTR_NAME] + \
-                                    svir_feat[self.svi_attr_name]
-            svir_feat['RISKMULT'] = svir_feat[AGGR_LOSS_ATTR_NAME] * \
-                                    svir_feat[self.svi_attr_name]
-            svir_feat['RISK1F'] = svir_feat[AGGR_LOSS_ATTR_NAME] * \
-                                  (1 + svir_feat[self.svi_attr_name])
-            self.svir_layer.updateFeature(svir_feat)
-            # End calculating common SVIR statistics
-        self.svir_layer.endEditCommand()
-        self.svir_layer.commitChanges()
-        # update layer's extent when new features have been added
-        # because change of extent in provider is not propagated to the layer
-        self.svir_layer.updateExtents()
+        return progress
+
+    def clear_progress_message_bar(self):
         self.iface.messageBar().clearWidgets()
