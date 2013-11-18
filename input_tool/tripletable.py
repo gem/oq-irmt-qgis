@@ -33,6 +33,7 @@ class MainWindow(QtGui.QMainWindow):
         self.actionOpen.triggered.connect(self.open_nrml)
         self.actionSave.triggered.connect(self.save_nrml)
         self.actionWrite.triggered.connect(self.write_nrml)
+        self.actionQuit.triggered.connect(self.quit)
         self.actionCopy.triggered.connect(self.copy)
         self.actionPaste.triggered.connect(self.paste)
 
@@ -141,6 +142,10 @@ class MainWindow(QtGui.QMainWindow):
             self, 'Save NRML', '', 'XML (*.xml)')
         with open(nrmlfile, 'w') as f:
             node_to_nrml(self.tableset.to_node(), f)
+
+    def quit(self):
+        # TODO: we should check if something has changed before quitting
+        QtGui.QApplication.quit()
 
 
 def main(argv):
