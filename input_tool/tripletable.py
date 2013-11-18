@@ -4,7 +4,7 @@ import sip
 sip.setapi("QString", 2)
 
 from PyQt4 import QtCore, QtGui
-from customtableview import CustomTableView, TripleTableWidget, tr
+from customtableview import TripleTableWidget, tr
 
 from openquake.nrmllib.node import node_from_nrml, node_to_nrml
 from openquake.nrmllib.record import TableSet
@@ -32,6 +32,7 @@ class MainWindow(QtGui.QMainWindow):
         # menu actions
         self.actionOpen.triggered.connect(self.open_nrml)
         self.actionSave.triggered.connect(self.save_nrml)
+        self.actionWrite.triggered.connect(self.write_nrml)
         self.actionCopy.triggered.connect(self.copy)
         self.actionPaste.triggered.connect(self.paste)
 
@@ -55,6 +56,8 @@ class MainWindow(QtGui.QMainWindow):
         self.actionOpen.setObjectName("actionOpen")
         self.actionSave = QtGui.QAction(self)
         self.actionSave.setObjectName("actionSave")
+        self.actionWrite = QtGui.QAction(self)
+        self.actionWrite.setObjectName("actionWrite")
         self.actionCopy = QtGui.QAction(self)
         self.actionCopy.setObjectName("actionCopy")
         self.actionPaste = QtGui.QAction(self)
@@ -65,6 +68,7 @@ class MainWindow(QtGui.QMainWindow):
         self.actionQuit.setObjectName("actionQuit")
         self.menuFile.addAction(self.actionOpen)
         self.menuFile.addAction(self.actionSave)
+        self.menuFile.addAction(self.actionWrite)
         self.menuFile.addAction(self.actionCopy)
         self.menuFile.addAction(self.actionPaste)
         self.menuFile.addAction(self.actionUndo)
@@ -78,6 +82,8 @@ class MainWindow(QtGui.QMainWindow):
         self.actionOpen.setShortcut(tr("Ctrl+O"))
         self.actionSave.setText(tr("&Save"))
         self.actionSave.setShortcut(tr("Ctrl+S"))
+        self.actionWrite.setText(tr("&Write"))
+        self.actionWrite.setShortcut(tr("Ctrl+W"))
         self.actionCopy.setText(tr("&Copy"))
         self.actionCopy.setShortcut(tr("Ctrl+C"))
         self.actionPaste.setText(tr("&Paste"))
@@ -118,7 +124,6 @@ class MainWindow(QtGui.QMainWindow):
             "Model file (*.xml);;Config files (*.ini)"))
         self.set_central_widget(nrmlfile)
 
-    # TODO: save on a different file
     def save_nrml(self):
         """
         Save the current content of the tableset in NRML format
@@ -127,6 +132,15 @@ class MainWindow(QtGui.QMainWindow):
             node_to_nrml(self.tableset.to_node(), f)
         # only if there were no errors override the original file
         os.rename(self.nrmlfile + '~', self.nrmlfile)
+
+    def write_nrml(self):
+        """
+        Save the current content of the tableset in NRML format
+        """
+        nrmlfile = QtGui.QFileDialog.getSaveFileName(
+            self, 'Save NRML', '', 'XML (*.xml)')
+        with open(nrmlfile, 'w') as f:
+            node_to_nrml(self.tableset.to_node(), f)
 
 
 def main(argv):
