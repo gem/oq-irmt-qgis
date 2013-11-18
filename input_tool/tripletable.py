@@ -1,6 +1,7 @@
 import os
 import sys
 import sip
+import traceback
 sip.setapi("QString", 2)
 
 from PyQt4 import QtCore, QtGui
@@ -125,23 +126,32 @@ class MainWindow(QtGui.QMainWindow):
             "Model file (*.xml);;Config files (*.ini)"))
         self.set_central_widget(nrmlfile)
 
+    def save(self, nrmlfile):
+        try:
+            node = self.tableset.to_node()
+        except Exception as e:
+            # TODO: improve
+            traceback.print_exc()
+            return
+        # save to a temporary file
+        with open(nrmlfile + '~', 'w') as f:
+            node_to_nrml(node, f)
+        # only if there are no errors rename the file
+        os.rename(nrmlfile + '~', nrmlfile)
+
     def save_nrml(self):
         """
         Save the current content of the tableset in NRML format
         """
-        with open(self.nrmlfile + '~', 'w') as f:
-            node_to_nrml(self.tableset.to_node(), f)
-        # only if there were no errors override the original file
-        os.rename(self.nrmlfile + '~', self.nrmlfile)
+        self.save(self.nrmlfile)
 
     def write_nrml(self):
         """
         Save the current content of the tableset in NRML format
         """
-        nrmlfile = QtGui.QFileDialog.getSaveFileName(
+        self.nrmlfile = QtGui.QFileDialog.getSaveFileName(
             self, 'Save NRML', '', 'XML (*.xml)')
-        with open(nrmlfile, 'w') as f:
-            node_to_nrml(self.tableset.to_node(), f)
+        self.save(self.nrmlfile)
 
     def quit(self):
         # TODO: we should check if something has changed before quitting

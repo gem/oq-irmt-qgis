@@ -86,7 +86,7 @@ class CustomTableModel(QtCore.QAbstractTableModel):
                 return self.table.recordtype.fieldnames[section]
             else:  # vertical header
                 # comment this if you do not want to display the row ids
-                return section
+                # return section
                 return
 
     def insertRows(self, position, nrows, parent=QtCore.QModelIndex()):
