@@ -720,19 +720,6 @@ class Svir:
         else:
             raise RuntimeError('Purged layer invalid')
 
-    #def load_social_vulnerability_layer(self, social_vulnerability_layer_path):
-    #    # Load social vulnerability layer
-    #    self.social_vulnerability_layer = QgsVectorLayer(
-    #        social_vulnerability_layer_path,
-    #        self.tr('Social vulnerability'),
-    #        'ogr')
-    #    # Add social vulnerability layer to registry
-    #    if self.social_vulnerability_layer.isValid():
-    #        QgsMapLayerRegistry.instance().addMapLayer(
-    #            self.social_vulnerability_layer)
-    #    else:
-    #        raise RuntimeError('Social vulnerability layer invalid')
-
     def populate_svir_layer_with_loss_values(self):
         """
         Copy loss values from the aggregation layer to the svir layer
