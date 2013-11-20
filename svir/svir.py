@@ -284,10 +284,6 @@ class Svir:
             # Create menu item and toolbar button to activate join procedure
             self.enable_joining_svi_with_aggr_losses()
 
-            # Create menu item and toolbar button to activate calculation
-            # of common svir statistics
-            self.enable_calculating_svir_stats()
-
     def enable_purging_empty_zones(self):
         """
         Create and enable toolbar button and menu item
@@ -361,13 +357,16 @@ class Svir:
     def join_svi_with_aggr_losses(self):
         if self.select_layers_to_join():
             self.create_svir_layer()
+            # Create menu item and toolbar button to activate calculation
+            # of common svir statistics
+            self.enable_calculating_svir_stats()
 
     def load_layers(self, aggregation_layer_path,
                     loss_layer_path,
                     loss_layer_is_vector):
         # Load aggregation layer
         self.zonal_layer = QgsVectorLayer(aggregation_layer_path,
-                                            self.tr('Zones'), 'ogr')
+                                            self.tr('Zonal data'), 'ogr')
         # Add aggregation layer to registry
         if self.zonal_layer.isValid():
             QgsMapLayerRegistry.instance().addMapLayer(self.zonal_layer)
