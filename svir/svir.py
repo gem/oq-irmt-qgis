@@ -539,10 +539,33 @@ class Svir:
             raise RuntimeError('Aggregation layer invalid')
 
     def calculate_stats(self):
+        """
+        A loss_layer containing loss data points needs to be already loaded,
+        and it can be a raster or vector layer.
+        Another layer (zonal_layer) needs to be previously loaded as well,
+        containing social vulnerability data aggregated by zone.
+        This method calls other methods of the class in order to produce
+        a new aggregation_layer containing, for each feature (zone):
+        * a zone id attribute, that can be taken from the zonal_layer or from
+          the loss_layer, if the latter contains an attribute specifying the
+          zone id for each point (CAUTION! The user needs to check if the zones
+          defined in the loss_layer correspond to those defined in the
+          zonal_layer!)
+        * a "count" attribute, specifying how many loss points are inside the
+          zone
+        * a "sum" attribute, summing the loss values for all the points that
+          are inside the zone
+        """
         if self.loss_layer_is_vector:
+            # check if the user specified that the loss_layer contains an
+            # attribute specifying what's the zone id for each loss point
             if self.zone_id_in_losses_attr_name:
+                # then we can aggregate by zone id, instead of doing a
+                # geo-spatial analysis to see in which zone each point is
                 self.calculate_vector_stats_aggregating_by_zone_id()
             else:
+                # otherwise we need to acquire the zones' geometries from the
+                # zonal layer and check if loss points are inside those zones
                 self.calculate_vector_stats_using_geometries()
         else:
             self.calculate_raster_stats()
@@ -564,7 +587,7 @@ class Svir:
                 progress.setValue(progress_perc)
                 zone_id = point_feat[self.zone_id_in_losses_attr_name]
                 loss_value = point_feat[self.loss_attr_name]
-                if zone_stats.has_key(zone_id):
+                if zone_id in zone_stats:
                     # increment the count by one and add the loss value
                     # to the sum
                     to_add = numpy.array([1, loss_value])
@@ -592,6 +615,7 @@ class Svir:
                     # zone id as key to get the values from the corresponding
                     # numpy array
                     points_count, loss_sum = zone_stats[zone_id]
+                    # without casting to int and to float, it wouldn't work
                     zone_feat['count'] = int(points_count)
                     zone_feat['sum'] = float(loss_sum)
                     self.aggregation_layer.updateFeature(zone_feat)
