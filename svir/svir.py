@@ -40,6 +40,7 @@ from PyQt4.QtGui import (QApplication,
                          QProgressDialog,
                          QMessageBox,
                          QProgressBar)
+import numpy
 
 from qgis.core import (QgsVectorLayer,
                        QgsMapLayerRegistry,
@@ -207,12 +208,17 @@ class Svir:
         self.join_svi_with_losses_action = None
         # Action to calculate some common statistics combining SVI and loss
         self.calculate_svir_statistics_action = None
-
+        # Name of the attribute containing loss values (in loss_layer)
         self.loss_attr_name = None
+        # Name of the (optional) attribute containing zone id (in loss_layer)
         self.zone_id_in_losses_attr_name = None
+        # Name of the attribute containing zone id (in zonal_layer)
         self.zone_id_in_zones_attr_name = None
+        # Name of the attribute containing, e.g., SVI values
         self.zonal_attr_name = None
+        # It can be, e.g., the aggregation_layer or the purged_layer
         self.loss_layer_to_join = None
+        # Most likely, it will be the zonal layer
         self.zonal_layer_to_join = None
 
     def initGui(self):
@@ -533,16 +539,89 @@ class Svir:
             raise RuntimeError('Aggregation layer invalid')
 
     def calculate_stats(self):
+        """
+        A loss_layer containing loss data points needs to be already loaded,
+        and it can be a raster or vector layer.
+        Another layer (zonal_layer) needs to be previously loaded as well,
+        containing social vulnerability data aggregated by zone.
+        This method calls other methods of the class in order to produce
+        a new aggregation_layer containing, for each feature (zone):
+        * a zone id attribute, that can be taken from the zonal_layer or from
+          the loss_layer, if the latter contains an attribute specifying the
+          zone id for each point (CAUTION! The user needs to check if the zones
+          defined in the loss_layer correspond to those defined in the
+          zonal_layer!)
+        * a "count" attribute, specifying how many loss points are inside the
+          zone
+        * a "sum" attribute, summing the loss values for all the points that
+          are inside the zone
+        """
         if self.loss_layer_is_vector:
-            self.calculate_vector_stats()
+            # check if the user specified that the loss_layer contains an
+            # attribute specifying what's the zone id for each loss point
+            if self.zone_id_in_losses_attr_name:
+                # then we can aggregate by zone id, instead of doing a
+                # geo-spatial analysis to see in which zone each point is
+                self.calculate_vector_stats_aggregating_by_zone_id()
+            else:
+                # otherwise we need to acquire the zones' geometries from the
+                # zonal layer and check if loss points are inside those zones
+                self.calculate_vector_stats_using_geometries()
         else:
             self.calculate_raster_stats()
 
-    def calculate_vector_stats(self):
-        # TODO: If we know the zone id of each point in the loss map, we
-        #       don't need to use geometries while aggregating, and we can
-        #       simply count by zone id!
-        #       We need to implement this as well
+    def calculate_vector_stats_aggregating_by_zone_id(self):
+        """
+        If we know the zone id of each point in the loss map, we
+        don't need to use geometries while aggregating, and we can
+        simply count by zone id
+        """
+        tot_points = len(list(self.loss_layer.getFeatures()))
+        msg = self.tr("Step 2 of 3: aggregating losses by zone id...")
+        progress = self.create_progress_message_bar(msg)
+        with TraceTimeManager(msg, DEBUG):
+            zone_stats = {}
+            for current_point, point_feat in enumerate(
+                    self.loss_layer.getFeatures()):
+                progress_perc = current_point / float(tot_points) * 100
+                progress.setValue(progress_perc)
+                zone_id = point_feat[self.zone_id_in_losses_attr_name]
+                loss_value = point_feat[self.loss_attr_name]
+                if zone_id in zone_stats:
+                    # increment the count by one and add the loss value
+                    # to the sum
+                    to_add = numpy.array([1, loss_value])
+                    zone_stats[zone_id] += to_add
+                else:
+                    # initialize stats for the new zone found
+                    zone_stats[zone_id] = numpy.array([1, loss_value])
+        self.clear_progress_message_bar()
+
+        msg = self.tr("Step 3 of 3: writing counts and sums on "
+                      "aggregation_layer...")
+        with TraceTimeManager(msg, DEBUG):
+            tot_zones = len(list(self.aggregation_layer.getFeatures()))
+            progress = self.create_progress_message_bar(msg)
+            with LayerEditingManager(self.aggregation_layer,
+                                     msg,
+                                     DEBUG):
+                for current_zone, zone_feat in enumerate(
+                        self.aggregation_layer.getFeatures()):
+                    progress_perc = current_zone / float(tot_zones) * 100
+                    progress.setValue(progress_perc)
+                    # get the id of the current zone
+                    zone_id = zone_feat[self.zone_id_in_zones_attr_name]
+                    # retrieve count and sum from the dictionary, using the
+                    # zone id as key to get the values from the corresponding
+                    # numpy array
+                    points_count, loss_sum = zone_stats[zone_id]
+                    # without casting to int and to float, it wouldn't work
+                    zone_feat['count'] = int(points_count)
+                    zone_feat['sum'] = float(loss_sum)
+                    self.aggregation_layer.updateFeature(zone_feat)
+        self.clear_progress_message_bar()
+
+    def calculate_vector_stats_using_geometries(self):
         """
         On the hypothesis that we don't know what is the zone in which
         each point was collected,
@@ -597,8 +676,8 @@ class Svir:
                 progress_perc = current_zone / float(tot_zones) * 100
                 progress.setValue(progress_perc)
                 msg = "{0}% - Zone: {1} on {2}".format(progress_perc,
-                                                         zone_feature.id(),
-                                                         tot_zones)
+                                                       zone_feature.id(),
+                                                       tot_zones)
                 with TraceTimeManager(msg, DEBUG):
                     points_count = 0
                     loss_sum = 0
@@ -748,14 +827,14 @@ class Svir:
                         svir_feat[AGGR_LOSS_ATTR_NAME] = aggr_feat['sum']
                         self.svir_layer.updateFeature(svir_feat)
                         match_found = True
-            # TODO: Check if this is the desired behavior, i.e., if we actually
-            #       want to remove from svir_layer the zones that contain no
-            #       loss values
-            if not match_found:
-                caps = self.svir_layer.dataProvider().capabilities()
-                if caps & QgsVectorDataProvider.DeleteFeatures:
-                    res = self.svir_layer.dataProvider().deleteFeatures(
-                        [aggr_feat.id()])
+                # TODO: Check if this is the desired behavior, i.e., if we actually
+                #       want to remove from svir_layer the zones that contain no
+                #       loss values
+                if not match_found:
+                    caps = self.svir_layer.dataProvider().capabilities()
+                    if caps & QgsVectorDataProvider.DeleteFeatures:
+                        res = self.svir_layer.dataProvider().deleteFeatures(
+                            [svir_feat.id()])
         self.clear_progress_message_bar()
 
     def standardize_losses(self):
