@@ -39,7 +39,7 @@ class SvirDialog(QDialog):
     """
     Modal dialog allowing to select a raster or vector layer
     containing loss data points and a vector layer containing polygons
-    that define the regions for which data need to be aggregated. When
+    that define the zones for which data need to be aggregated. When
     both are selected and are valid files, they can be loaded by clicking OK
     """
     def __init__(self):
@@ -47,7 +47,7 @@ class SvirDialog(QDialog):
         # Set up the user interface from Designer.
         self.ui = Ui_SvirDialog()
         self.ui.setupUi(self)
-        # Disable ok_button until loss and regions layers are selected
+        # Disable ok_button until loss and zonal layers are selected
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
         self.ok_button.setDisabled(True)
         self.loss_map_is_vector = True
@@ -56,7 +56,7 @@ class SvirDialog(QDialog):
         """
         Open a file dialog to select the data file to be loaded
         :param string dialog_type:
-            Valid types are 'loss_map' or 'regions_layer'
+            Valid types are 'loss_map' or 'zonal_layer'
         :returns:
             file_name
             file_type:
@@ -68,8 +68,8 @@ class SvirDialog(QDialog):
             filters = self.tr('Geojson vector loss maps (*.geojson);; '
                               'Shapefile vector loss maps (*.shp);; '
                               'Raster loss maps (*.*)')
-        elif dialog_type == 'regions_layer':
-            text = self.tr('Select regions layer')
+        elif dialog_type == 'zonal_layer':
+            text = self.tr('Select zonal layer')
             filters = self.tr('Vector shapefiles (*.shp);; SQLite (*.sqlite);;'
                               ' All files (*.*)')
         else:
@@ -90,14 +90,14 @@ class SvirDialog(QDialog):
         self.enable_ok_button_if_both_layers_are_specified()
 
     @pyqtSlot()
-    def on_regions_layer_tbn_clicked(self):
-        file_regions_layer, _ = self.open_file_dialog('regions_layer')
-        self.ui.regions_layer_le.setText(file_regions_layer)
+    def on_zonal_layer_tbn_clicked(self):
+        file_zonal_layer, _ = self.open_file_dialog('zonal_layer')
+        self.ui.zonal_layer_le.setText(file_zonal_layer)
         self.enable_ok_button_if_both_layers_are_specified()
 
     def enable_ok_button_if_both_layers_are_specified(self):
         if (os.path.isfile(self.ui.loss_layer_le.text())
-                and os.path.isfile(self.ui.regions_layer_le.text())):
+                and os.path.isfile(self.ui.zonal_layer_le.text())):
             self.ok_button.setEnabled(True)
         else:
             self.ok_button.setEnabled(False)
