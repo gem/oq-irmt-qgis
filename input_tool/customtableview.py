@@ -229,7 +229,7 @@ class TripleTableWidget(QtGui.QWidget):
         # connect errors
         for tv in self.tv:
             tv.tableModel.validationFailed.connect(
-                lambda idx, err: self.show_validation_error(tv, idx, err))
+                lambda idx, err, tv=tv: self.show_validation_error(tv, idx, err))
 
         # hide primary key columns
         self.tv[1].tableView.hideColumn(0)
@@ -307,23 +307,3 @@ class TripleTableWidget(QtGui.QWidget):
         self.tv[2].showOnCondition(lambda rec: rec[0] == k0 and rec[1] == k1)
         self.plot([rec for rec in self.tableset.tables[2]
                    if rec[0] == k0 and rec[1] == k1], '%s-%s' % (k0, k1))
-
-# Note: the copy functionality can be implemented also as follows:
-#
-# def keyPressEvent(self, event):
-#     if event.matches(QtGui.QKeySequence.Copy):
-#         selection = self.tableView.selectionModel()
-#         row_indexes = selection.selectedRows()
-#         if not row_indexes:  # no row selected
-#             return
-#         text = []
-#         for row_idx in row_indexes:
-#             row = row_idx.row()
-#             r = []
-#             for col in range(self.tableModel.columnCount()):
-#                 idx = row_idx.sibling(row, col)
-#                 r.append(self.tableModel.data(idx))
-#             text.append('\t'.join(r))
-#         QtGui.QApplication.clipboard().setText('\n'.join(text))
-#     else:
-#         QtGui.QTableView.keyPressEvent(self.tableView, event)

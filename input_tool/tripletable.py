@@ -11,18 +11,6 @@ from openquake.nrmllib.node import node_from_xml, node_to_nrml
 from openquake.nrmllib.record import TableSet
 
 
-class Dialog(QtGui.QDialog):
-    # left for reference, since I (MB) think that the main window of an
-    # application is better modelled with a QMainWindow
-    def __init__(self, t1, t2, t3):
-        QtGui.QDialog.__init__(self)
-        self.tt = TripleTableWidget(t1, t2, t3, self)
-        self.setWindowTitle(tr("TripleTableWidget Example"))
-        # this was the missing call where you set the layout of the tripletable
-        # widget to the dialog
-        self.setLayout(self.tt.layout())
-
-
 class MainWindow(QtGui.QMainWindow):
     def __init__(self, nrmlfile):
         QtGui.QMainWindow.__init__(self)
