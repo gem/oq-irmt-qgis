@@ -474,9 +474,9 @@ class Svir:
     def create_aggregation_layer(self):
         """
         Create a new aggregation layer which contains the polygons from
-        the zonal layer. Two new attributes (count and sum) are
-        initialized to 0 and will represent the count of loss points in a
-        zone and the sum of loss values for the same zone.
+        the zonal layer. Two new attributes (count and sum) will represent
+        the count of loss points in a zone and the sum of loss values for
+        the same zone.
         """
         if DEBUG:
             print "Creating and initializing aggregation layer"
@@ -524,13 +524,9 @@ class Svir:
                 feat.setFields(fields)
                 feat[self.zone_id_in_zones_attr_name] = zone_feature[
                     self.zone_id_in_zones_attr_name]
-                feat['count'] = 0
-                feat['sum'] = 0.0
                 # Add the new feature to the layer
                 if caps & QgsVectorDataProvider.AddFeatures:
                     pr.addFeatures([feat])
-                    # Update the layer including the new feature
-                self.aggregation_layer.updateFeature(feat)
 
         # Add aggregation layer to registry
         if self.aggregation_layer.isValid():
@@ -605,6 +601,8 @@ class Svir:
             with LayerEditingManager(self.aggregation_layer,
                                      msg,
                                      DEBUG):
+                count_index = self.aggregation_layer.fieldNameIndex('count')
+                sum_index = self.aggregation_layer.fieldNameIndex('sum')
                 for current_zone, zone_feat in enumerate(
                         self.aggregation_layer.getFeatures()):
                     progress_perc = current_zone / float(tot_zones) * 100
@@ -616,9 +614,11 @@ class Svir:
                     # numpy array
                     points_count, loss_sum = zone_stats[zone_id]
                     # without casting to int and to float, it wouldn't work
-                    zone_feat['count'] = int(points_count)
-                    zone_feat['sum'] = float(loss_sum)
-                    self.aggregation_layer.updateFeature(zone_feat)
+                    fid = zone_feat.id()
+                    self.aggregation_layer.changeAttributeValue(
+                        fid, count_index, int(points_count))
+                    self.aggregation_layer.changeAttributeValue(
+                        fid, sum_index, float(loss_sum))
         self.clear_progress_message_bar()
 
     def calculate_vector_stats_using_geometries(self):
@@ -668,6 +668,10 @@ class Svir:
             # check if there are no loss points contained in any of the zones
             # and later display a warning if that occurs
             no_loss_points_in_any_zone = True
+
+            count_index = self.aggregation_layer.fieldNameIndex('count')
+            sum_index = self.aggregation_layer.fieldNameIndex('sum')
+
             # We cycle through zones in the aggregation_layer, because the
             # aggregation layer contains the zones copied from the zonal
             # layer, plus it contains the attributes count and sum to populate
@@ -709,11 +713,11 @@ class Svir:
                                 loss_sum += point_loss
                     msg = "Updating count and sum for the zone..."
                     with TraceTimeManager(msg, DEBUG):
-                        zone_feature['count'] = points_count
-                        zone_feature['sum'] = loss_sum
-                        self.aggregation_layer.updateFeature(zone_feature)
-                        # End updating count and sum attributes
-                #raw_input("Press Enter to continue...")
+                        fid = zone_feature.id()
+                        self.aggregation_layer.changeAttributeValue(
+                            fid, count_index, points_count)
+                        self.aggregation_layer.changeAttributeValue(
+                            fid, sum_index, loss_sum)
         self.clear_progress_message_bar()
         # display a warning in case none of the loss points are inside
         # any of the zones
@@ -783,8 +787,6 @@ class Svir:
                     # Add the new feature to the layer
                     if caps & QgsVectorDataProvider.AddFeatures:
                         pr.addFeatures([feat])
-                        # Update the layer including the new feature
-                    self.aggregation_layer.updateFeature(feat)
 
         self.clear_progress_message_bar()
 
@@ -813,23 +815,28 @@ class Svir:
         with LayerEditingManager(self.svir_layer,
                                  "Add loss values to svir_layer",
                                  DEBUG):
+
+            aggr_loss_index = self.svir_layer.fieldNameIndex(
+                AGGR_LOSS_ATTR_NAME)
+
             # Begin populating "loss" attribute with data from the
             # aggregation_layer selected by the user (possibly purged from
             # zones containing no loss data
             for current_zone, svir_feat in enumerate(
                     self.svir_layer.getFeatures()):
+                svir_feat_id = svir_feat.id()
                 progress_percent = current_zone / float(tot_zones) * 100
                 progress.setValue(progress_percent)
                 match_found = False
                 for aggr_feat in self.loss_layer_to_join.getFeatures():
                     if svir_feat[self.zone_id_in_zones_attr_name] == \
                             aggr_feat[self.zone_id_in_zones_attr_name]:
-                        svir_feat[AGGR_LOSS_ATTR_NAME] = aggr_feat['sum']
-                        self.svir_layer.updateFeature(svir_feat)
+                        self.svir_layer.changeAttributeValue(
+                            svir_feat_id, aggr_loss_index, aggr_feat['sum'])
                         match_found = True
-                # TODO: Check if this is the desired behavior, i.e., if we actually
-                #       want to remove from svir_layer the zones that contain no
-                #       loss values
+                # TODO: Check if this is the desired behavior, i.e., if we
+                #       actually want to remove from svir_layer the zones that
+                #       contain no loss values
                 if not match_found:
                     caps = self.svir_layer.dataProvider().capabilities()
                     if caps & QgsVectorDataProvider.DeleteFeatures:
@@ -888,17 +895,30 @@ class Svir:
         with LayerEditingManager(self.svir_layer,
                                  "Calculate common SVIR statistics",
                                  DEBUG):
+            riskplus_idx = self.svir_layer.fieldNameIndex('RISKPLUS')
+            riskmult_idx = self.svir_layer.fieldNameIndex('RISKMULT')
+            risk1f_idx = self.svir_layer.fieldNameIndex('RISK1F')
+
             for current_zone, svir_feat in enumerate(
                     self.svir_layer.getFeatures()):
+                svir_feat_id = svir_feat.id()
                 progress_percent = current_zone / float(tot_zones) * 100
                 progress.setValue(progress_percent)
-                svir_feat['RISKPLUS'] = (svir_feat[AGGR_LOSS_ATTR_NAME] +
-                                         svir_feat[self.zonal_attr_name])
-                svir_feat['RISKMULT'] = (svir_feat[AGGR_LOSS_ATTR_NAME] *
-                                         svir_feat[self.zonal_attr_name])
-                svir_feat['RISK1F'] = (svir_feat[AGGR_LOSS_ATTR_NAME] *
-                                       (1 + svir_feat[self.zonal_attr_name]))
-                self.svir_layer.updateFeature(svir_feat)
+                self.svir_layer.changeAttributeValue(
+                    svir_feat_id,
+                    riskplus_idx,
+                    (svir_feat[AGGR_LOSS_ATTR_NAME] +
+                     svir_feat[self.zonal_attr_name]))
+                self.svir_layer.changeAttributeValue(
+                    svir_feat_id,
+                    riskmult_idx,
+                    (svir_feat[AGGR_LOSS_ATTR_NAME] *
+                     svir_feat[self.zonal_attr_name]))
+                self.svir_layer.changeAttributeValue(
+                    svir_feat_id,
+                    risk1f_idx,
+                    (svir_feat[AGGR_LOSS_ATTR_NAME] *
+                     (1 + svir_feat[self.zonal_attr_name])))
 
         self.clear_progress_message_bar()
 

@@ -31,7 +31,7 @@ PLUGINNAME = svir
 
 PY_FILES = svir.py svirdialog.py __init__.py attribute_selection_dialog.py select_layers_to_join.py
 
-EXTRAS = resources/start_plugin_icon.png resources/purge_empty_regions_icon.png metadata.txt
+EXTRAS = resources/start_plugin_icon.png metadata.txt
 
 UI_FILES = ui_svir.py ui_attribute_selection.py ui_select_layers_to_join.py
 
