@@ -834,9 +834,9 @@ class Svir:
                         self.svir_layer.changeAttributeValue(
                             svir_feat_id, aggr_loss_index, aggr_feat['sum'])
                         match_found = True
-                # TODO: Check if this is the desired behavior, i.e., if we actually
-                #       want to remove from svir_layer the zones that contain no
-                #       loss values
+                # TODO: Check if this is the desired behavior, i.e., if we
+                #       actually want to remove from svir_layer the zones that
+                #       contain no loss values
                 if not match_found:
                     caps = self.svir_layer.dataProvider().capabilities()
                     if caps & QgsVectorDataProvider.DeleteFeatures:
