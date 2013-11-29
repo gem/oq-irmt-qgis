@@ -60,9 +60,8 @@ class Utils(object):
     @staticmethod
     def duplicate_in_memory(layer, new_name='', add_to_registry=False):
         """
-        TODO: TAKEN FROM INASAFE PLUGIN AND SLIGHTLY MODIFIED.
-              IT WOULD BE USEFUL TO PUT IT INTO A SEPARATE MODULE,
-              BECAUSE MANY DIFFERENT PLUGINS MIGHT NEED IT
+        TODO: If this will be included in the processing QGIS core plugin, we
+        will import and use that, and this method will be removed.
 
         Return a memory copy of a layer
 
