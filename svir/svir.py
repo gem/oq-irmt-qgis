@@ -383,7 +383,7 @@ class Svir:
         """
         dlg = SelectLayersToJoinDialog()
         reg = QgsMapLayerRegistry.instance()
-        layer_list = list(reg.mapLayers())
+        layer_list = [layer.name() for layer in reg.mapLayers().values()]
         dlg.ui.loss_layer_cbox.addItems(layer_list)
         dlg.ui.zonal_layer_cbox.addItems(layer_list)
         if dlg.exec_():
