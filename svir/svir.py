@@ -35,8 +35,7 @@ from PyQt4.QtCore import (QSettings,
                           qVersion,
                           QVariant)
 
-from PyQt4.QtGui import (QApplication,
-                         QAction,
+from PyQt4.QtGui import (QAction,
                          QIcon,
                          QProgressDialog,
                          QMessageBox,
@@ -51,9 +50,7 @@ from qgis.core import (QgsVectorLayer,
                        QgsFields,
                        QgsSpatialIndex,
                        QgsFeatureRequest,
-                       QgsVectorDataProvider,
-                       QgsMapLayer,
-                       QGis)
+                       QgsVectorDataProvider)
 
 from qgis.gui import QgsMessageBar
 
@@ -69,7 +66,10 @@ from attribute_selection_dialog import AttributeSelectionDialog
 from layer_editing_manager import LayerEditingManager
 from trace_time_manager import TraceTimeManager
 
-from utils import Utils
+from utils import (tr,
+                   add_attributes_to_layer,
+                   duplicate_in_memory,
+                   DEBUG)
 
 
 # Default names of the attributes, in the input loss data layer and in the
@@ -78,7 +78,6 @@ DEFAULT_LOSS_ATTR_NAME = "TOTLOSS"
 DEFAULT_REGION_ID_ATTR_NAME = "MCODE"
 DEFAULT_SVI_ATTR_NAME = "TOTSVI"
 AGGR_LOSS_ATTR_NAME = "AGGR_LOSS"
-DEBUG = False
 
 
 class Svir:
@@ -197,7 +196,7 @@ class Svir:
 
             # TODO: Check if it's good to use the same layer to get
             #       zones and social vulnerability data
-            self.social_vulnerability_layer = Utils.duplicate_in_memory(
+            self.social_vulnerability_layer = duplicate_in_memory(
                 self.zonal_layer, "Social vulnerability map")
 
             # TODO: standardize loss data before inserting it in the svir layer
@@ -226,8 +225,8 @@ class Svir:
         msg = 'Select "Purge empty zones" from SVIR plugin menu ' \
               'to create a new aggregation layer with the zones ' \
               'containing at least one loss point'
-        self.iface.messageBar().pushMessage(Utils.tr("Info"),
-                                            Utils.tr(msg),
+        self.iface.messageBar().pushMessage(tr("Info"),
+                                            tr(msg),
                                             level=QgsMessageBar.INFO)
 
     def enable_joining_svi_with_aggr_losses(self):
@@ -249,8 +248,8 @@ class Svir:
                                    self.join_svi_with_losses_action)
         msg = 'Select "Join SVI with loss data" from SVIR plugin menu ' \
               'to join SVI and loss data (both aggregated by zone)'
-        self.iface.messageBar().pushMessage(Utils.tr("Info"),
-                                            Utils.tr(msg),
+        self.iface.messageBar().pushMessage(tr("Info"),
+                                            tr(msg),
                                             level=QgsMessageBar.INFO)
 
     def enable_calculating_svir_stats(self):
@@ -272,8 +271,8 @@ class Svir:
                                    self.calculate_svir_statistics_action)
         msg = 'Select "Calculate common SVIR statistics" from SVIR plugin ' \
               'menu to calculate RISKPLUS, RISKMULT and RISK1F statistics'
-        self.iface.messageBar().pushMessage(Utils.tr("Info"),
-                                            Utils.tr(msg),
+        self.iface.messageBar().pushMessage(tr("Info"),
+                                            tr(msg),
                                             level=QgsMessageBar.INFO)
 
     def join_svi_with_aggr_losses(self):
@@ -284,8 +283,8 @@ class Svir:
             self.enable_calculating_svir_stats()
         else:
             msg = 'The new layer containing SVIR data has not been built.'
-            self.iface.messageBar().pushMessage(Utils.tr("Warning"),
-                                                Utils.tr(msg),
+            self.iface.messageBar().pushMessage(tr("Warning"),
+                                                tr(msg),
                                                 level=QgsMessageBar.WARNING)
 
     def load_layers(self, aggregation_layer_path,
@@ -293,7 +292,7 @@ class Svir:
                     loss_layer_is_vector):
         # Load aggregation layer
         self.zonal_layer = QgsVectorLayer(aggregation_layer_path,
-                                          Utils.tr('Zonal data'), 'ogr')
+                                          tr('Zonal data'), 'ogr')
         # Add aggregation layer to registry
         if self.zonal_layer.isValid():
             QgsMapLayerRegistry.instance().addMapLayer(self.zonal_layer)
@@ -302,10 +301,10 @@ class Svir:
             # Load loss layer
         if loss_layer_is_vector:
             self.loss_layer = QgsVectorLayer(loss_layer_path,
-                                             Utils.tr('Loss map'), 'ogr')
+                                             tr('Loss map'), 'ogr')
         else:
             self.loss_layer = QgsRasterLayer(loss_layer_path,
-                                             Utils.tr('Loss map'))
+                                             tr('Loss map'))
             # Add loss layer to registry
         if self.loss_layer.isValid():
             QgsMapLayerRegistry.instance().addMapLayer(self.loss_layer)
@@ -328,7 +327,7 @@ class Svir:
         # zones, the user must not be forced to select such attribute, so we
         # add an "empty" option to the combobox
         dlg.ui.zone_id_attr_name_loss_cbox.addItem(
-            Utils.tr("Use zonal geometries"))
+            tr("Use zonal geometries"))
         # populate combo boxes with field names taken by layers
         loss_dp = self.loss_layer.dataProvider()
         loss_fields = list(loss_dp.fields())
@@ -372,8 +371,8 @@ class Svir:
                 self.zone_id_in_losses_attr_name,
                 self.zonal_attr_name,
                 self.zone_id_in_zones_attr_name)
-            self.iface.messageBar().pushMessage(Utils.tr("Warning"),
-                                                Utils.tr(msg),
+            self.iface.messageBar().pushMessage(tr("Warning"),
+                                                tr(msg),
                                                 level=QgsMessageBar.WARNING)
 
     def select_layers_to_join(self):
@@ -407,10 +406,17 @@ class Svir:
         if DEBUG:
             print "Creating and initializing aggregation layer"
 
+        # get crs from the zonal layer containing geometries
+        crs = self.zonal_layer.crs().authid().lower()
+        # add a unique identifier
+        my_uuid = str(uuid.uuid4())
+        # specify polygon layer type and use indexing
+        uri = 'Polygon?crs=%s&index=yes&uuid=%s' % (crs, my_uuid)
         # create layer
-        self.aggregation_layer = QgsVectorLayer("Polygon",
-                                                Utils.tr("Aggregated Losses"),
-                                                "memory")
+        self.aggregation_layer = QgsVectorLayer(uri,
+                                                tr('Aggregated Losses'),
+                                                'memory')
+
         pr = self.aggregation_layer.dataProvider()
         caps = pr.capabilities()
 
@@ -426,7 +432,7 @@ class Svir:
 
             # to show the overall progress, cycling through zones
             tot_zones = len(list(self.zonal_layer.getFeatures()))
-            msg = Utils.tr("Step 1 of 3: initializing aggregation layer...")
+            msg = tr("Step 1 of 3: initializing aggregation layer...")
             progress = self.create_progress_message_bar(msg)
 
             # copy zones from zonal layer
@@ -499,7 +505,7 @@ class Svir:
         simply count by zone id
         """
         tot_points = len(list(self.loss_layer.getFeatures()))
-        msg = Utils.tr("Step 2 of 3: aggregating losses by zone id...")
+        msg = tr("Step 2 of 3: aggregating losses by zone id...")
         progress = self.create_progress_message_bar(msg)
         with TraceTimeManager(msg, DEBUG):
             zone_stats = {}
@@ -519,7 +525,7 @@ class Svir:
                     zone_stats[zone_id] = numpy.array([1, loss_value])
         self.clear_progress_message_bar()
 
-        msg = Utils.tr("Step 3 of 3: writing counts and sums on "
+        msg = tr("Step 3 of 3: writing counts and sums on "
                        "aggregation_layer...")
         with TraceTimeManager(msg, DEBUG):
             tot_zones = len(list(self.aggregation_layer.getFeatures()))
@@ -566,7 +572,7 @@ class Svir:
         """
         # to show the overall progress, cycling through points
         tot_points = len(list(self.loss_layer.getFeatures()))
-        msg = Utils.tr(
+        msg = tr(
             "Step 2 of 3: creating spatial index for loss points...")
         progress = self.create_progress_message_bar(msg)
 
@@ -589,7 +595,7 @@ class Svir:
             # Note that zones from zone layer were copied earlier into the
             # aggregation layer
             tot_zones = len(list(self.aggregation_layer.getFeatures()))
-            msg = Utils.tr("Step 3 of 3: aggregating points by zone...")
+            msg = tr("Step 3 of 3: aggregating points by zone...")
             progress = self.create_progress_message_bar(msg)
 
             # check if there are no loss points contained in any of the zones
@@ -650,8 +656,8 @@ class Svir:
         # any of the zones
         if no_loss_points_in_any_zone:
             msg = "No loss points are contained by any of the zones!"
-            self.iface.messageBar().pushMessage(Utils.tr("Warning"),
-                                                Utils.tr(msg),
+            self.iface.messageBar().pushMessage(tr("Warning"),
+                                                tr(msg),
                                                 level=QgsMessageBar.INFO)
 
     def calculate_raster_stats(self):
@@ -664,8 +670,8 @@ class Svir:
             self.aggregation_layer,
             self.loss_layer.dataProvider().dataSourceUri())
         progress_dialog = QProgressDialog(
-            Utils.tr('Calculating zonal statistics'),
-            Utils.tr('Abort...'),
+            tr('Calculating zonal statistics'),
+            tr('Abort...'),
             0,
             0)
         zonal_statistics.calculateStatistics(progress_dialog)
@@ -673,25 +679,33 @@ class Svir:
         #       contained by any of the zones
         if progress_dialog.wasCanceled():
             QMessageBox.error(
-                self, Utils.tr('ZonalStats: Error'),
-                Utils.tr('You aborted aggregation, '
-                         'so there are no data for analysis. Exiting...'))
+                self, tr('ZonalStats: Error'),
+                tr('You aborted aggregation, so there are '
+                   'no data for analysis. Exiting...'))
 
     def create_new_aggregation_layer_with_no_empty_zones(self):
         """
         Create a new aggregation layer containing all the zones of the
         aggregation layer that contain at least one loss point
         """
+
+        # get crs from the aggregation layer containing geometries
+        crs = self.aggregation_layer.crs().authid().lower()
+        # add a unique identifier
+        my_uuid = str(uuid.uuid4())
+        # specify polygon layer type and use indexing
+        uri = 'Polygon?crs=%s&index=yes&uuid=%s' % (crs, my_uuid)
         # create layer
         self.purged_layer = QgsVectorLayer(
-            "Polygon",
-            Utils.tr("Aggregated Losses (no empty zones)"),
-            "memory")
+            uri,
+            tr('Aggregated Losses (no empty zones)'),
+            'memory')
+
         pr = self.purged_layer.dataProvider()
         caps = pr.capabilities()
 
         tot_zones = len(list(self.aggregation_layer.getFeatures()))
-        msg = Utils.tr("Purging zones containing no loss points...")
+        msg = tr("Purging zones containing no loss points...")
         progress = self.create_progress_message_bar(msg)
 
         with LayerEditingManager(self.purged_layer,
@@ -722,8 +736,8 @@ class Svir:
             QgsMapLayerRegistry.instance().addMapLayer(self.purged_layer)
             msg = "Zones containing at least one loss point have been " \
                   "copied into a new aggregation layer."
-            self.iface.messageBar().pushMessage(Utils.tr("Info"),
-                                                Utils.tr(msg),
+            self.iface.messageBar().pushMessage(tr("Info"),
+                                                tr(msg),
                                                 level=QgsMessageBar.INFO)
         else:
             raise RuntimeError('Purged layer invalid')
@@ -736,7 +750,7 @@ class Svir:
         """
         # to show the overall progress, cycling through zones
         tot_zones = len(list(self.aggregation_layer.getFeatures()))
-        msg = Utils.tr("Populating SVIR layer with loss values...")
+        msg = tr("Populating SVIR layer with loss values...")
         progress = self.create_progress_message_bar(msg)
 
         with LayerEditingManager(self.svir_layer,
@@ -786,12 +800,11 @@ class Svir:
         and loss data
         """
         # Create new svir layer, duplicating social vulnerability layer
-        self.svir_layer = Utils.duplicate_in_memory(
-            self.social_vulnerability_layer, Utils.tr("SVIR map"))
+        self.svir_layer = duplicate_in_memory(
+            self.social_vulnerability_layer, tr("SVIR map"))
         # Add "loss" attribute to svir_layer
-        Utils.add_attributes_to_layer(self.svir_layer,
-                                      [QgsField(AGGR_LOSS_ATTR_NAME,
-                                                QVariant.Double)])
+        add_attributes_to_layer(
+            self.svir_layer, [QgsField(AGGR_LOSS_ATTR_NAME, QVariant.Double)])
         # Populate "loss" attribute with data from aggregation_layer
         self.populate_svir_layer_with_loss_values()
         # Add svir layer to registry
@@ -809,14 +822,14 @@ class Svir:
         # RISKPLUS = TOTRISK + TOTSVI
         # RISKMULT = TOTRISK * TOTSVI
         # RISK1F   = TOTRISK * (1 + TOTSVI)
-        Utils.add_attributes_to_layer(self.svir_layer,
+        add_attributes_to_layer(self.svir_layer,
                                      [QgsField('RISKPLUS', QVariant.Double),
                                       QgsField('RISKMULT', QVariant.Double),
                                       QgsField('RISK1F', QVariant.Double)])
         # for each zone, calculate the value of the output attributes
         # to show the overall progress, cycling through zones
         tot_zones = len(list(self.svir_layer.getFeatures()))
-        msg = Utils.tr("Calculating some common SVIR indices...")
+        msg = tr("Calculating some common SVIR indices...")
         progress = self.create_progress_message_bar(msg)
 
         with LayerEditingManager(self.svir_layer,
