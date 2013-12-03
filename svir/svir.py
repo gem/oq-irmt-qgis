@@ -68,6 +68,7 @@ from attribute_selection_dialog import AttributeSelectionDialog
 
 from layer_editing_manager import LayerEditingManager
 from trace_time_manager import TraceTimeManager
+from normalization import Normalization
 
 # Default names of the attributes, in the input loss data layer and in the
 # zonal data layer, containing loss info and zone ids for aggregation
@@ -285,7 +286,7 @@ class Svir:
                 self.zonal_layer, "Social vulnerability map")
 
             # TODO: standardize loss data before inserting it in the svir layer
-            self.standardize_losses()  # it's still a placeholder
+            self.normalize_losses()  # it's still a placeholder
 
             # Create menu item and toolbar button to activate join procedure
             self.enable_joining_svi_with_aggr_losses()
@@ -844,9 +845,9 @@ class Svir:
                             [svir_feat.id()])
         self.clear_progress_message_bar()
 
-    def standardize_losses(self):
+    def normalize_losses(self):
         """
-        Allow the user to select between a list of standardization algorithms,
+        Allow the user to select between a list of normalization algorithms,
         in order to make the loss data comparable with the social vulnerability
         index
         """
