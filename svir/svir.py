@@ -58,17 +58,19 @@ from qgis.core import (QgsVectorLayer,
 from qgis.gui import QgsMessageBar
 
 from qgis.analysis import QgsZonalStatistics
+from normalization_algs import NORMALIZATION_ALGS
+from process_layer import ProcessLayer
 
 import resources_rc
 
 # Import the code for the dialog
-from select_layers_to_join_dialog import SelectLayersToJoinDialog
 from svirdialog import SvirDialog
+from select_layers_to_join_dialog import SelectLayersToJoinDialog
 from attribute_selection_dialog import AttributeSelectionDialog
+from normalization_dialog import NormalizationDialog
 
 from layer_editing_manager import LayerEditingManager
 from trace_time_manager import TraceTimeManager
-from normalization import Normalization
 
 # Default names of the attributes, in the input loss data layer and in the
 # zonal data layer, containing loss info and zone ids for aggregation
@@ -202,6 +204,9 @@ class Svir:
         self.svir_layer = None
         # Action to activate the modal dialog to load loss data and zones
         self.initial_action = None
+        # Action to activate the modal dialog to select a layer and one of its
+        # attributes, in order to normalize that attribute
+        self.normalize_attribute_action = None
         # Action to activate building a new layer with loss data
         # aggregated by zone, excluding zones containing no loss points
         self.purge_empty_zones_action = None
@@ -234,10 +239,25 @@ class Svir:
         self.iface.addToolBarIcon(self.initial_action)
         self.iface.addPluginToMenu(u"&SVIR", self.initial_action)
 
+        # Create action for standardization/normalization
+        self.normalize_attribute_action = QAction(
+            QIcon(":/plugins/svir/start_plugin_icon.png"),
+            u"Normalize attribute",
+            self.iface.mainWindow())
+        # Connect the action to the normalize_attribute method
+        self.normalize_attribute_action.triggered.connect(
+            self.normalize_attribute)
+        # Add toolbar button and menu item
+        self.iface.addToolBarIcon(self.normalize_attribute_action)
+        self.iface.addPluginToMenu(u"&SVIR",
+                                   self.normalize_attribute_action)
+
     def unload(self):
         # Remove the plugin menu item and icon
         self.iface.removePluginMenu(u"&SVIR", self.initial_action)
         self.iface.removeToolBarIcon(self.initial_action)
+        self.iface.removePluginMenu(u"&SVIR", self.normalize_attribute_action)
+        self.iface.removeToolBarIcon(self.normalize_attribute_action)
         self.iface.removePluginMenu(u"&SVIR",
                                     self.purge_empty_zones_action)
         self.iface.removeToolBarIcon(self.purge_empty_zones_action)
@@ -284,9 +304,6 @@ class Svir:
             #       zones and social vulnerability data
             self.social_vulnerability_layer = self.create_memory_copy_of_layer(
                 self.zonal_layer, "Social vulnerability map")
-
-            # TODO: standardize loss data before inserting it in the svir layer
-            self.normalize_losses()  # it's still a placeholder
 
             # Create menu item and toolbar button to activate join procedure
             self.enable_joining_svi_with_aggr_losses()
@@ -450,6 +467,29 @@ class Svir:
             self.zone_id_in_losses_attr_name = DEFAULT_REGION_ID_ATTR_NAME
             self.zonal_attr_name = DEFAULT_SVI_ATTR_NAME
             self.zone_id_in_zones_attr_name = DEFAULT_REGION_ID_ATTR_NAME
+
+    def normalize_attribute(self):
+        dlg = NormalizationDialog()
+        reg = QgsMapLayerRegistry.instance()
+        layer_list = list(reg.mapLayers())
+        dlg.ui.layer_cbx.addItems(layer_list)
+        alg_list = NORMALIZATION_ALGS.keys()
+        dlg.ui.algorithm_cbx.addItems(alg_list)
+        if dlg.exec_():
+            layer = reg.mapLayers().values()[
+                dlg.ui.layer_cbx.currentIndex()]
+            attribute_name = dlg.ui.attrib_cbx.currentText()
+            algorithm = NORMALIZATION_ALGS.values()[
+                dlg.ui.algorithm_cbx.currentIndex()]
+            algorithm_name = NORMALIZATION_ALGS.keys()[
+                dlg.ui.algorithm_cbx.currentIndex()]
+            method = dlg.ui.variant_cbx.currentText()
+            mem_layer_name = layer.name() + "_" + algorithm_name
+            mem_layer = ProcessLayer(layer).duplicate_in_memory(mem_layer_name,
+                                                                True)
+            ProcessLayer(mem_layer).normalize_attribute(attribute_name,
+                                                        algorithm_name,
+                                                        method)
 
     def select_layers_to_join(self):
         """
@@ -844,15 +884,6 @@ class Svir:
                         res = self.svir_layer.dataProvider().deleteFeatures(
                             [svir_feat.id()])
         self.clear_progress_message_bar()
-
-    def normalize_losses(self):
-        """
-        Allow the user to select between a list of normalization algorithms,
-        in order to make the loss data comparable with the social vulnerability
-        index
-        """
-        # TODO: still not implemented
-        pass
 
     def create_svir_layer(self):
         """
