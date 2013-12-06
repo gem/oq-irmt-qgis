@@ -1,3 +1,5 @@
+import traceback
+from contextlib import contextmanager
 from PyQt4 import QtCore, QtGui
 from message_bar import MessageBar
 
@@ -16,6 +18,27 @@ def tr(basename, name=None):
         basename, name, None, QtGui.QApplication.UnicodeUTF8)
 
 
+@contextmanager
+def messagebox(widget=None):
+    try:
+        yield
+    except Exception:
+        tb_str = traceback.format_exc()
+        QtGui.QMessageBox.critical(widget, 'Invalid model', tb_str)
+        raise
+
+
+class _ItemModel(QtCore.QAbstractItemModel):
+    def index(self, row, column):
+        return QtCore.QAbstractItemModel.createIndex(self, row, column)
+
+index = _ItemModel().index
+
+
+class NoRecordSelected(Exception):
+    pass
+
+
 class CustomTableModel(QtCore.QAbstractTableModel):
     """
     Wrapper for table objects consistent with the API defined in
@@ -27,10 +50,10 @@ class CustomTableModel(QtCore.QAbstractTableModel):
     # http://stackoverflow.com/questions/2970312/#2971426
     validationFailed = QtCore.pyqtSignal(QtCore.QModelIndex, Exception)
 
-    def __init__(self, table, getdefault, parent=None):
+    def __init__(self, table, getdefault):
         # getdefault is a callable taking the table object
         # and returning a default record (or raising an error)
-        QtCore.QAbstractTableModel.__init__(self, parent)
+        QtCore.QAbstractTableModel.__init__(self)
         self.table = table
         self.getdefault = getdefault
 
@@ -50,12 +73,14 @@ class CustomTableModel(QtCore.QAbstractTableModel):
 
     # this method is called several times with different roles by Qt
     def data(self, index, role=QtCore.Qt.DisplayRole):
-        record = self.table[index.row()]
-        column = index.column()
-        if role in (QtCore.Qt.DisplayRole, QtCore.Qt.EditRole):
-            return record[column]
-        elif role == QtCore.Qt.BackgroundRole and not record.is_valid(column):
-            return QtGui.QBrush(self.RED)
+        with messagebox():
+            record = self.table[index.row()]
+            column = index.column()
+            if role in (QtCore.Qt.DisplayRole, QtCore.Qt.EditRole):
+                return record[column]
+            elif (role == QtCore.Qt.BackgroundRole and not
+                  record.is_valid(column)):
+                return QtGui.QBrush(self.RED)
 
     def setData(self, index, value, role=QtCore.Qt.EditRole):
         if role == QtCore.Qt.EditRole:
@@ -74,11 +99,10 @@ class CustomTableModel(QtCore.QAbstractTableModel):
         return False
 
     def set_row(self, i, row):
-        try:
+        """Set the i-th record of the table to the given row"""
+        with messagebox():
             rec = self.table[i]
-        except IndexError:
-            return
-        rec.row[self.table.ordinal:] = row
+            rec.row[self.table.ordinal:] = row
 
     def headerData(self, section, orientation, role):
         if role == QtCore.Qt.DisplayRole:
@@ -92,16 +116,17 @@ class CustomTableModel(QtCore.QAbstractTableModel):
     def insertRows(self, position, nrows, parent=QtCore.QModelIndex()):
         try:
             default = self.getdefault(self.table)
-        except TypeError as e:
-            # this happens if no record is selected in the GUI
+        except NoRecordSelected:
+            self.validationFailed.emit(
+                index(0, 0), NoRecordSelected('no record selected'))
             return False
-        self.beginInsertRows(parent, position, position + nrows - 1)
         try:
+            self.beginInsertRows(parent, position, position + nrows - 1)
             for i in range(nrows):
                 rec = self.table.recordtype(*default + ['dummy%d' % i])
                 self.table.insert(position, rec)
         except Exception as e:
-            self.validationFailed.emit(parent.sibling(i, 0), e)
+            self.validationFailed.emit(index(i, 0), e)
             err = True
         else:
             err = False
@@ -113,10 +138,10 @@ class CustomTableModel(QtCore.QAbstractTableModel):
         # delete rows in the underlying table in reverse order
         self.beginRemoveRows(parent, position, position + nrows - 1)
         try:
-            for i in range(position + nrows - 1, position, -1):
-                del self.table[i]
-        except Exception as e:
-            print e  # TODO: improve this
+            with messagebox():
+                for i in range(position + nrows - 1, position - 1, -1):
+                    del self.table[i]
+        except:
             return False
         else:
             return True
@@ -136,7 +161,7 @@ class CustomTableView(QtGui.QWidget):
         self.table = table
         self.getdefault = getdefault
         self.tableModel = CustomTableModel(table, getdefault)
-        self.parent = parent
+        self.tableView = QtGui.QTableView(self)
         self.setupUi()
 
         self.addBtn.clicked.connect(lambda: self.appendRows(1))
@@ -152,13 +177,12 @@ class CustomTableView(QtGui.QWidget):
         if not row_ids:
             return
         self.tableModel.removeRows(min(row_ids), len(row_ids))
-        # TODO: notification on errors, for instance foreign key violations
 
     def current_record(self):
-        """The record currently selected, or None"""
+        """Return the record currently selected"""
         indexes = self.tableView.selectedIndexes()
         if not indexes:
-            return
+            raise NoRecordSelected
         row_idx = indexes[-1].row()
         return self.tableModel.table[row_idx]
 
@@ -172,7 +196,6 @@ class CustomTableView(QtGui.QWidget):
         return '\n'.join(sel)
 
     def setupUi(self):
-        self.tableView = QtGui.QTableView(self)
         self.tableView.setModel(self.tableModel)
         self.tableView.horizontalHeader().setStretchLastSection(True)
         self.tableView.horizontalHeader().setResizeMode(
@@ -218,7 +241,7 @@ class TripleTableWidget(QtGui.QWidget):
         self.tableset = tableset
         self.nrmlfile = nrmlfile
         self.message_bar = MessageBar(nrmlfile, self)
-        self.tv = [CustomTableView(table, self.getdefault, parent)
+        self.tv = [CustomTableView(table, self.getdefault, self)
                    for table in tableset.tables]
         self.setupUi()
 
@@ -229,7 +252,8 @@ class TripleTableWidget(QtGui.QWidget):
         # connect errors
         for tv in self.tv:
             tv.tableModel.validationFailed.connect(
-                lambda idx, err, tv=tv: self.show_validation_error(tv, idx, err))
+                lambda idx, err, tv=tv:
+                self.show_validation_error(tv, idx, err))
 
         # hide primary key columns
         self.tv[1].tableView.hideColumn(0)
@@ -237,8 +261,8 @@ class TripleTableWidget(QtGui.QWidget):
         self.tv[2].tableView.hideColumn(1)
 
         # display table 1 and table 2 as if rows 0 and 0 where selected
-        self.show_tv1(QtCore.QModelIndex().sibling(0, 0))
-        self.show_tv2(QtCore.QModelIndex().sibling(0, 0))
+        self.show_tv1(index(0, 0))
+        self.show_tv2(index(0, 0))
 
     def getdefault(self, table):
         # return the primary key tuple partially filled, depending on
