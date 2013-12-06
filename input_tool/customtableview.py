@@ -42,7 +42,7 @@ class NoRecordSelected(Exception):
 class CustomTableModel(QtCore.QAbstractTableModel):
     """
     Wrapper for table objects consistent with the API defined in
-    nrmllib.record.Table.
+    common.record.Table.
     """
     RED = QtGui.QColor('#ff5050')
 
@@ -53,6 +53,7 @@ class CustomTableModel(QtCore.QAbstractTableModel):
     def __init__(self, table, getdefault):
         # getdefault is a callable taking the table object
         # and returning a default record (or raising an error)
+        # it is used only in insertRows
         QtCore.QAbstractTableModel.__init__(self)
         self.table = table
         self.getdefault = getdefault
@@ -75,11 +76,11 @@ class CustomTableModel(QtCore.QAbstractTableModel):
     def data(self, index, role=QtCore.Qt.DisplayRole):
         with messagebox():
             record = self.table[index.row()]
-            column = index.column()
+            column_i = index.column()
             if role in (QtCore.Qt.DisplayRole, QtCore.Qt.EditRole):
-                return record[column]
+                return record[column_i]
             elif (role == QtCore.Qt.BackgroundRole and not
-                  record.is_valid(column)):
+                  record.is_valid(column_i)):
                 return QtGui.QBrush(self.RED)
 
     def setData(self, index, value, role=QtCore.Qt.EditRole):
@@ -102,6 +103,10 @@ class CustomTableModel(QtCore.QAbstractTableModel):
         """Set the i-th record of the table to the given row"""
         with messagebox():
             rec = self.table[i]
+            # NB: the ordinal of the table specifies the number of fields in
+            # the primary key: 0 for ordinal=0, 1 for ordinal=1, and 2
+            # for ordinal=2; row is a list with N - ordinal elements, where
+            # N is the total number of fields in the record
             rec.row[self.table.ordinal:] = row
 
     def headerData(self, section, orientation, role):
@@ -154,9 +159,11 @@ class CustomTableModel(QtCore.QAbstractTableModel):
 
 class CustomTableView(QtGui.QWidget):
     """
-    Wrapper for CustomTableModel.
+    Wrapper for CustomTableModel. `getdefault` is used to generate
+    a default record when adding a new row. If it is None, it is
+    not possible to add/remove rows.
     """
-    def __init__(self, table, getdefault, parent=None):
+    def __init__(self, table, getdefault=None, parent=None):
         QtGui.QWidget.__init__(self, parent)
         self.table = table
         self.getdefault = getdefault
@@ -164,8 +171,9 @@ class CustomTableView(QtGui.QWidget):
         self.tableView = QtGui.QTableView(self)
         self.setupUi()
 
-        self.addBtn.clicked.connect(lambda: self.appendRows(1))
-        self.delBtn.clicked.connect(self.removeRows)
+        if self.getdefault:
+            self.addBtn.clicked.connect(lambda: self.appendRows(1))
+            self.delBtn.clicked.connect(self.removeRows)
 
     def appendRows(self, nrows):
         start = self.tableModel.rowCount()
@@ -213,17 +221,19 @@ class CustomTableView(QtGui.QWidget):
         self.layout = QtGui.QVBoxLayout()
         self.layout.addWidget(self.tableLabel)
         self.layout.addWidget(self.tableView)
-        self.addBtn = QtGui.QPushButton(self.tableView)
-        self.addBtn.setObjectName('addBtn')
-        self.addBtn.setText(tr('Add Row'))
-        self.delBtn = QtGui.QPushButton(self.tableView)
-        self.addBtn.setObjectName('delBtn')
-        self.delBtn.setText(tr('Delete Rows'))
-        buttonLayout = QtGui.QHBoxLayout()
-        buttonLayout.addWidget(self.addBtn)
-        buttonLayout.addWidget(self.delBtn)
-        self.layout.addLayout(buttonLayout)
         self.setLayout(self.layout)
+
+        if self.getdefault:  # define add/del buttons
+            self.addBtn = QtGui.QPushButton(self.tableView)
+            self.addBtn.setObjectName('addBtn')
+            self.addBtn.setText(tr('Add Row'))
+            self.delBtn = QtGui.QPushButton(self.tableView)
+            self.addBtn.setObjectName('delBtn')
+            self.delBtn.setText(tr('Delete Rows'))
+            buttonLayout = QtGui.QHBoxLayout()
+            buttonLayout.addWidget(self.addBtn)
+            buttonLayout.addWidget(self.delBtn)
+            self.layout.addLayout(buttonLayout)
 
     def showOnCondition(self, cond):
         # display only the rows satisfying the condition
@@ -267,16 +277,18 @@ class TripleTableWidget(QtGui.QWidget):
     def getdefault(self, table):
         # return the primary key tuple partially filled, depending on
         # the currently selected rows
-        # raise a TypeError if nothing is selected
         ordinal = table.ordinal
         if not ordinal:  # top left table
             return []
         return self.tv[ordinal - 1].current_record()[:ordinal]
 
     def plot(self, records, label):
-        if Figure:  # matplotlib is available
-            xs = [float(rec[2]) for rec in records]
-            ys = [float(rec[3]) for rec in records]
+        can_plot = (Figure and records
+                    and hasattr(records[0], 'x')
+                    and hasattr(records[0], 'y'))
+        if can_plot:
+            xs = [rec.x for rec in records]
+            ys = [rec.y for rec in records]
             self.axes.clear()
             self.axes.grid(True)
             self.axes.plot(xs, ys, label=label)
