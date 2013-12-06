@@ -143,10 +143,10 @@ class CustomTableModel(QtCore.QAbstractTableModel):
         # delete rows in the underlying table in reverse order
         self.beginRemoveRows(parent, position, position + nrows - 1)
         try:
-            for i in range(position + nrows - 1, position - 1, -1):
-                del self.table[i]
-        except Exception as e:
-            print e  # TODO: improve this
+            with messagebox():
+                for i in range(position + nrows - 1, position - 1, -1):
+                    del self.table[i]
+        except:
             return False
         else:
             return True
