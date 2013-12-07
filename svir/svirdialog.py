@@ -76,6 +76,8 @@ class SvirDialog(QDialog):
             raise RuntimeError('Invalid dialog_type: {}'.format(dialog_type))
         dialog = QFileDialog(self, text, os.path.expanduser('~'), filters)
         dialog.setFileMode(QFileDialog.ExistingFile)
+        file_name = None
+        file_type = None
         if dialog.exec_():
             file_name = dialog.selectedFiles()[0]
             file_type = dialog.selectedNameFilter()
