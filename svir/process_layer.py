@@ -36,7 +36,8 @@ from layer_editing_manager import LayerEditingManager
 
 from normalization_algs import NORMALIZATION_ALGS
 
-DEBUG = False
+from utils import DEBUG
+
 
 class ProcessLayer():
 
