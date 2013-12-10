@@ -343,3 +343,18 @@ class TripleTableWidget(QtGui.QWidget):
         self.tv[2].showOnCondition(lambda rec: rec[0] == k0 and rec[1] == k1)
         self.plot([rec for rec in self.tableset.tables[2]
                    if rec[0] == k0 and rec[1] == k1], '%s-%s' % (k0, k1))
+
+
+# NB: the names of the widgets are related to the names of the Converter
+# subclasses in openquake.common.converter
+
+class VulnerabilityWidget(TripleTableWidget):
+    pass
+
+
+class FragilityContinuousWidget(TripleTableWidget):
+    pass
+
+
+class FragilityDiscreteWidget(TripleTableWidget):
+    pass
