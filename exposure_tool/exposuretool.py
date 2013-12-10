@@ -27,10 +27,11 @@ from extentSelector import ExtentSelector
 
 
 class Dock(QtGui.QDockWidget):
-    def __init__(self, iface, canvas, parent=None):
+    def __init__(self, iface, parent=None):
         QtGui.QWidget.__init__(self, parent)
         self.iface = iface
-        self.extentSelector = ExtentSelector(canvas)
+        self.canvas = self.iface.mapCanvas()
+        self.extentSelector = ExtentSelector(self.canvas)
         self.extentSelector.tool.rectangleCreated.connect(self.polygonCreated)
         self.setupUi()
 
@@ -145,9 +146,9 @@ class ExposureTool(QtGui.QWidget):
                 QCoreApplication.installTranslator(self.translator)
 
         self.data_dir = os.path.join(os.path.dirname(__file__), 'data')
-        self.canvas = self.iface.mapCanvas()
-        self.dock = Dock(self.iface, self.canvas)
+        self.dock = Dock(self.iface)
         self.dock.setVisible(True)
+        self.iface.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.dock)
 
     def initGui(self):
         self.get_platform_settings = QtGui.QAction(
