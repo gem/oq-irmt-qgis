@@ -31,9 +31,9 @@ class ExposureDownloader(object):
             fd, fname = tempfile.mkstemp(suffix='.csv')
             os.close(fd)
             with open(fname, 'w') as csv:
-                csv.write(result.text)
-            print 'Downloaded %d lines into %s' % (
-                result.text.count('\n'), fname)
-            return fname
+                csv.write(result.content)
+            msg = 'Downloaded %d lines into %s' % (
+                result.content.count('\n'), fname)
+            return fname, msg
         else:
-            raise ExposureDownloadError(result.text)
+            raise ExposureDownloadError(result.content)

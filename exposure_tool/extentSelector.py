@@ -18,17 +18,17 @@
 
 # Adapted from extentSelector.py by Giuseppe Sucameli
 
-from PyQt4.QtCore import *
-from qgis.core import *
-from qgis.gui import *
+from PyQt4 import QtCore
+from qgis import core
+from qgis import gui
 
 
-class ExtentSelector(QObject):
-    selectionStopped = pyqtSignal()
-    selectionStarted = pyqtSignal()
+class ExtentSelector(QtCore.QObject):
+    selectionStopped = QtCore.pyqtSignal()
+    selectionStarted = QtCore.pyqtSignal()
 
     def __init__(self, canvas, parent=None):
-        QObject.__init__(self, parent)
+        QtCore.QObject.__init__(self, parent)
         self.canvas = canvas
         self.isStarted = False
         self.tool = RectangleMapTool(canvas)
@@ -56,16 +56,16 @@ class ExtentSelector(QObject):
         return self.tool.rectangle()
 
 
-class RectangleMapTool(QgsMapToolEmitPoint):
-    rectangleCreated = pyqtSignal()
+class RectangleMapTool(gui.QgsMapToolEmitPoint):
+    rectangleCreated = QtCore.pyqtSignal()
 
     def __init__(self, canvas):
         self.canvas = canvas
-        QgsMapToolEmitPoint.__init__(self, self.canvas)
+        gui.QgsMapToolEmitPoint.__init__(self, self.canvas)
 
-        self.rubberBand = QgsRubberBand(self.canvas, QGis.Polygon)
+        self.rubberBand = gui.QgsRubberBand(self.canvas, core.QGis.Polygon)
         # QGis.Polygon shades the region covered by the rubber band
-        self.rubberBand.setColor(Qt.red)
+        self.rubberBand.setColor(QtCore.Qt.red)
         self.rubberBand.setWidth(1)
 
         self.reset()
@@ -73,7 +73,7 @@ class RectangleMapTool(QgsMapToolEmitPoint):
     def reset(self):
         self.startPoint = self.endPoint = None
         self.isEmittingPoint = False
-        self.rubberBand.reset(QGis.Polygon)
+        self.rubberBand.reset(core.QGis.Polygon)
 
     def canvasPressEvent(self, e):
         self.startPoint = self.toMapCoordinates(e.pos())
@@ -93,14 +93,14 @@ class RectangleMapTool(QgsMapToolEmitPoint):
         self.showRect(self.startPoint, self.endPoint)
 
     def showRect(self, startPoint, endPoint):
-        self.rubberBand.reset(QGis.Polygon)
+        self.rubberBand.reset(core.QGis.Polygon)
         if startPoint.x() == endPoint.x() or startPoint.y() == endPoint.y():
             return
 
-        point1 = QgsPoint(startPoint.x(), startPoint.y())
-        point2 = QgsPoint(startPoint.x(), endPoint.y())
-        point3 = QgsPoint(endPoint.x(), endPoint.y())
-        point4 = QgsPoint(endPoint.x(), startPoint.y())
+        point1 = core.QgsPoint(startPoint.x(), startPoint.y())
+        point2 = core.QgsPoint(startPoint.x(), endPoint.y())
+        point3 = core.QgsPoint(endPoint.x(), endPoint.y())
+        point4 = core.QgsPoint(endPoint.x(), startPoint.y())
 
         self.rubberBand.addPoint(point1, False)
         self.rubberBand.addPoint(point2, False)
@@ -113,4 +113,4 @@ class RectangleMapTool(QgsMapToolEmitPoint):
                 or self.startPoint.x() == self.endPoint.x() \
                 or self.startPoint.y() == self.endPoint.y():
             return None
-        return QgsRectangle(self.startPoint, self.endPoint)
+        return core.QgsRectangle(self.startPoint, self.endPoint)

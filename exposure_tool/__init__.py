@@ -18,40 +18,6 @@
 This script initializes the plugin, making it known to QGIS.
 """
 
-from qgis.core import QgsMessageLog
-
-
-def name():
-    return "exposure_tool"
-
-
-def description():
-    return "download exposure tool"
-
-
-def version():
-    return "Version 0.1"
-
-
-def icon():
-    return "icon.png"
-
-
-def qgisMinimumVersion():
-    return "2.0"
-
-
-def author():
-    return "GEM Foundation"
-
-
-def email():
-    return "devops@openquake.org"
-
-
-def log_msg(msg):
-    QgsMessageLog.logMessage(msg, name())
-
 
 def classFactory(iface):
     from exposuretool import ExposureTool

@@ -17,13 +17,15 @@
 import os
 # Import the PyQt and QGIS libraries
 from PyQt4 import QtCore, QtGui
-from qgis.core import *
+from qgis.core import (QgsCoordinateTransform, QgsCoordinateReferenceSystem,
+                       QgsVectorLayer, QgsMapLayerRegistry)
 # Initialize Qt resources from file resources.py, used for side-effects
 import resources_rc
 # Import the code for the dialog
 from download_exposure import ExposureDownloader, ExposureDownloadError
 from platform_settings import PlatformSettingsDialog
 from extentSelector import ExtentSelector
+from qgis.core import QgsMessageLog
 
 
 class Dock(QtGui.QDockWidget):
@@ -45,6 +47,7 @@ class Dock(QtGui.QDockWidget):
         self.downloadBtn = QtGui.QPushButton(self)
         self.downloadBtn.setObjectName('downloadBtn')
         self.downloadBtn.setText('Download')
+        self.downloadBtn.setEnabled(False)
 
         self.clearBtn = QtGui.QPushButton(self)
         self.clearBtn.setObjectName('clearBtn')
@@ -92,7 +95,8 @@ class Dock(QtGui.QDockWidget):
         self.downloadBtn.setEnabled(False)
 
     def polygonCreated(self):
-        self.downloadBtn.setEnabled(True)
+        if self.selectedExtent() is not None:
+            self.downloadBtn.setEnabled(True)
 
     def selectedExtent(self):
         return self.extentSelector.getExtent()
@@ -111,11 +115,12 @@ class Dock(QtGui.QDockWidget):
             ed = ExposureDownloader(hostname)
             ed.login(username, password)
             try:
-                fname = ed.download(lat_min, lon_min, lat_max, lon_max)
+                fname, msg = ed.download(lat_min, lon_min, lat_max, lon_max)
             except ExposureDownloadError as e:
                 QtGui.QMessageBox.warning(
                     self, 'Exposure Download Error', str(e))
                 return
+            QgsMessageLog.logMessage(msg, 'GEM Exposure Downloader')
             # don't remove the file, otherwise there will concurrency problems
             uri = 'file://%s?delimiter=%s&xField=%s&yField=%s&crs=epsg:4326&' \
                 'skipLines=25&trimFields=yes' % (fname, ',', 'lon', 'lat')
@@ -129,9 +134,8 @@ class ExposureTool(QtGui.QWidget):
     def __init__(self, iface, parent=None):
         QtGui.QWidget.__init__(self, parent)
         self.iface = iface
-        self.plugin_dir = QtCore.QFileInfo(
-            QgsApplication.qgisUserDbFilePath()
-        ).path() + "/python/plugins/download_exposure"
+        self.plugin_dir = os.path.dirname(__file__)
+
         localePath = ""
         locale = str(QtCore.QSettings().value("locale/userLocale"))[0:2]
         if QtCore.QFileInfo(self.plugin_dir).exists():
@@ -139,13 +143,13 @@ class ExposureTool(QtGui.QWidget):
                           locale + ".qm")
 
         if QtCore.QFileInfo(localePath).exists():
-            self.translator = QTranslator()
+            self.translator = QtCore.QTranslator()
             self.translator.load(localePath)
 
-            if qVersion() > '4.3.3':
-                QCoreApplication.installTranslator(self.translator)
+            if QtCore.qVersion() > '4.3.3':
+                QtCore.QCoreApplication.installTranslator(self.translator)
 
-        self.data_dir = os.path.join(os.path.dirname(__file__), 'data')
+        self.data_dir = os.path.join(self.plugin_dir, 'data')
         self.dock = Dock(self.iface)
         self.dock.setVisible(True)
         self.iface.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.dock)
@@ -158,7 +162,7 @@ class ExposureTool(QtGui.QWidget):
 
         # Add toolbar button and menu item
         self.iface.addPluginToMenu(
-            u"&download_exposure", self.get_platform_settings)
+            u"&GEM Exposure Downloader", self.get_platform_settings)
 
         # display world map
         QtCore.QObject.connect(
