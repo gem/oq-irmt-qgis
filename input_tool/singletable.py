@@ -6,7 +6,7 @@ from PyQt4 import QtGui, QtCore
 from customtableview import CustomTableView
 
 from openquake.nrmllib.node import node_from_nrml
-from openquake.nrmllib.converter import Converter
+from openquake.common.converter import Converter
 
 
 def tr(name):

@@ -7,7 +7,7 @@ from PyQt4 import QtCore, QtGui
 from customtableview import TripleTableWidget, tr, messagebox
 
 from openquake.nrmllib.node import node_from_xml, node_to_nrml
-from openquake.nrmllib.record import TableSet
+from openquake.common.converter import Converter
 
 
 class MainWindow(QtGui.QMainWindow):
@@ -21,8 +21,8 @@ class MainWindow(QtGui.QMainWindow):
         self.nrmlfile = nrmlfile
         with messagebox(self):
             node = node_from_xml(nrmlfile)[0]
-            self.tableset = TableSet.from_node(node)
-        if len(self.tableset.tables) != 3:
+            self.tableset = Converter.from_node(node).tableset
+        if len(self.tableset) != 3:
             # only models with three tables are implemented
             raise NotImplementedError(node.tag)
         self.widget = TripleTableWidget(self.tableset, nrmlfile, self)
