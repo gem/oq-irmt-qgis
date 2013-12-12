@@ -67,7 +67,7 @@ class RectangleMapTool(gui.QgsMapToolEmitPoint):
         # QGis.Polygon shades the region covered by the rubber band
         self.rubberBand.setColor(QtCore.Qt.red)
         self.rubberBand.setWidth(1)
-
+        self.rubberBand.setBrushStyle(QtCore.Qt.Dense7Pattern)
         self.reset()
 
     def reset(self):
