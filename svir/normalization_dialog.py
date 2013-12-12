@@ -33,14 +33,16 @@ from qgis.core import QgsMapLayerRegistry
 from ui_normalization import Ui_NormalizationDialog
 from normalization_algs import RANK_METHODS
 
+
 class NormalizationDialog(QDialog):
     """
     Modal dialog giving to the user the possibility to select
     a layer and an attribute of the same layer, and then a normalization
     algorithm.
     """
-    def __init__(self):
+    def __init__(self, iface):
         QDialog.__init__(self)
+        self.iface = iface
         # Set up the user interface from Designer.
         self.ui = Ui_NormalizationDialog()
         self.ui.setupUi(self)
@@ -50,6 +52,10 @@ class NormalizationDialog(QDialog):
             self.reload_variant_cbx)
         if self.ui.algorithm_cbx.currentText() == 'RANK':
             self.reload_variant_cbx()
+
+    @pyqtSlot()
+    def on_calc_btn_clicked(self):
+        self.iface.actionOpenFieldCalculator().trigger()
 
     def reload_attrib_cbx(self):
         # reset combo box

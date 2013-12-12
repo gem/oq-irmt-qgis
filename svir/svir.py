@@ -394,7 +394,7 @@ class Svir:
                                                 level=QgsMessageBar.WARNING)
 
     def normalize_attribute(self):
-        dlg = NormalizationDialog()
+        dlg = NormalizationDialog(self.iface)
         reg = QgsMapLayerRegistry.instance()
         layer_list = list(reg.mapLayers())
         dlg.ui.layer_cbx.addItems(layer_list)
