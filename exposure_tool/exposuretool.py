@@ -37,6 +37,18 @@ class Dock(QtGui.QDockWidget):
         self.extentSelector.tool.rectangleCreated.connect(self.polygonCreated)
         self.setupUi()
 
+    def get_credentials(self):
+        qs = QtCore.QSettings()
+        hostname = qs.value('download_exposure/hostname', '')
+        username = qs.value('download_exposure/username', '')
+        password = qs.value('download_exposure/password', '')
+        if not (hostname and username and password):
+            PlatformSettingsDialog(self.iface).exec_()
+            hostname = qs.value('download_exposure/hostname', '')
+            username = qs.value('download_exposure/username', '')
+            password = qs.value('download_exposure/password', '')
+        return hostname, username, password
+
     def setupUi(self):
         self.resize(200, 200)
         self.setWindowTitle('Exposure')
@@ -72,20 +84,14 @@ class Dock(QtGui.QDockWidget):
 
     @QtCore.pyqtSlot()
     def on_downloadBtn_clicked(self):
-        qs = QtCore.QSettings()
-        hostname = qs.value('download_exposure/hostname', '')
-        username = qs.value('download_exposure/username', '')
-        password = qs.value('download_exposure/password', '')
-        if not (hostname and username and password):
-            dialog = PlatformSettingsDialog(self.iface)
-            if dialog.exec_():
-                self.show_exposure(hostname, username, password)
-        else:
-            self.show_exposure(hostname, username, password)
+        hostname, username, password = self.get_credentials()
+        self.show_exposure(hostname, username, password)
         self.extentSelector.stop()
+        self.downloadBtn.setEnabled(False)
 
     @QtCore.pyqtSlot()
     def on_drawBtn_clicked(self):
+        self.get_credentials()  # opens PlatformSettingsDialog if no password
         self.extentSelector.start()
         self.extentSelector.getExtent()
 
@@ -102,12 +108,17 @@ class Dock(QtGui.QDockWidget):
         return self.extentSelector.getExtent()
 
     def show_exposure(self, hostname, username, password):
+        selected_extent = self.selectedExtent()
+        if selected_extent is None:
+            QtGui.QMessageBox.warning(
+                self, 'Exposure Download Error', 'No region selected')
+            return
         self.enableBusyCursor()
         try:
             crs = self.iface.mapCanvas().mapRenderer().destinationCrs()
             xform = QgsCoordinateTransform(
                 crs, QgsCoordinateReferenceSystem(4326))
-            extent = xform.transform(self.selectedExtent())
+            extent = xform.transform(selected_extent)
             lon_min, lon_max = extent.xMinimum(), extent.xMaximum()
             lat_min, lat_max = extent.yMinimum(), extent.yMaximum()
 
