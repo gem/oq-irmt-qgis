@@ -171,8 +171,9 @@ class CustomTableView(QtGui.QWidget):
         self.tableView = QtGui.QTableView(self)
         self.setupUi()
 
-        if self.getdefault:
+        if table.attr['addBtn']:
             self.addBtn.clicked.connect(lambda: self.appendRows(1))
+        if table.attr['delBtn']:
             self.delBtn.clicked.connect(self.removeRows)
 
     def appendRows(self, nrows):
@@ -223,17 +224,20 @@ class CustomTableView(QtGui.QWidget):
         self.layout.addWidget(self.tableView)
         self.setLayout(self.layout)
 
-        if self.getdefault:  # define add/del buttons
+        if self.table.attr['addBtn']:  # define add/del buttons
             self.addBtn = QtGui.QPushButton(self.tableView)
             self.addBtn.setObjectName('addBtn')
             self.addBtn.setText(tr('Add Row'))
+        if self.table.attr['delBtn']:
             self.delBtn = QtGui.QPushButton(self.tableView)
             self.addBtn.setObjectName('delBtn')
             self.delBtn.setText(tr('Delete Rows'))
-            buttonLayout = QtGui.QHBoxLayout()
+        buttonLayout = QtGui.QHBoxLayout()
+        if self.table.attr['addBtn']:
             buttonLayout.addWidget(self.addBtn)
+        if self.table.attr['delBtn']:
             buttonLayout.addWidget(self.delBtn)
-            self.layout.addLayout(buttonLayout)
+        self.layout.addLayout(buttonLayout)
 
     def showOnCondition(self, cond):
         # display only the rows satisfying the condition
@@ -245,21 +249,33 @@ class CustomTableView(QtGui.QWidget):
 
 
 class TripleTableWidget(QtGui.QWidget):
+    table_attrs = [
+        {'addBtn': 1, 'delBtn': 1},
+        {'addBtn': 1, 'delBtn': 1},
+        {'addBtn': 1, 'delBtn': 1},
+    ]
 
     def __init__(self, tableset, nrmlfile, parent=None):
         QtGui.QWidget.__init__(self, parent)
         self.tableset = tableset
         self.nrmlfile = nrmlfile
         self.message_bar = MessageBar(nrmlfile, self)
-        self.tv = [CustomTableView(table, self.getdefault, self)
-                   for table in tableset.tables]
+        self.init_tv()  # this goes before setupUi
         self.setupUi()
 
-        # connect clicked
+    def init_tv(self):
+        self.tv = []
+        n_attrs = len(self.table_attrs)
+        n_tables = len(self.tableset.tables)
+        if n_attrs != n_tables:
+            raise RuntimeError('There are %d tables but %d table attributes!' %
+                               (n_tables, n_attrs))
+        for attr, table in zip(self.table_attrs, self.tableset.tables):
+            table.attr = attr
+            self.tv.append(CustomTableView(table, self.getdefault, self))
+        # signals
         self.tv[0].tableView.clicked.connect(self.show_tv1)
         self.tv[1].tableView.clicked.connect(self.show_tv2)
-
-        # connect errors
         for tv in self.tv:
             tv.tableModel.validationFailed.connect(
                 lambda idx, err, tv=tv:
@@ -269,10 +285,6 @@ class TripleTableWidget(QtGui.QWidget):
         self.tv[1].tableView.hideColumn(0)
         self.tv[2].tableView.hideColumn(0)
         self.tv[2].tableView.hideColumn(1)
-
-        # display table 1 and table 2 as if rows 0 and 0 where selected
-        self.show_tv1(index(0, 0))
-        self.show_tv2(index(0, 0))
 
     def getdefault(self, table):
         # return the primary key tuple partially filled, depending on
@@ -316,6 +328,10 @@ class TripleTableWidget(QtGui.QWidget):
             QtGui.QSizePolicy.MinimumExpanding,
             QtGui.QSizePolicy.MinimumExpanding)
 
+        # display table 1 and table 2 as if rows 0 and 0 where selected
+        self.show_tv1(index(0, 0))
+        self.show_tv2(index(0, 0))
+
     @QtCore.pyqtSlot(QtCore.QModelIndex, Exception)
     def show_validation_error(self, table_view, index, error):
         record = table_view.tableModel.table[index.row()]
@@ -353,8 +369,32 @@ class VulnerabilityWidget(TripleTableWidget):
 
 
 class FragilityContinuousWidget(TripleTableWidget):
-    pass
+
+    def show_tv1(self, index):
+        self.tv[2].showOnCondition(lambda rec: False)
+        self.plot([], '')
+
+    def show_tv2(self, index):
+        # show only the rows in table 2 corresponding to k0 and k1
+        try:
+            ls, = self.tv[0].tableModel.primaryKey(index)
+            fi, = self.tv[1].tableModel.primaryKey(index)
+        except IndexError:  # empty table, nothing to show
+            return
+        self.tv[2].showOnCondition(lambda rec: rec[0] == ls and rec[1] == fi)
+        self.plot([rec for rec in self.tableset.tables[2]
+                   if rec[0] == ls and rec[1] == fi], '%s-%s' % (ls, fi))
+
+    def getdefault(self, table):
+        # return the primary key tuple partially filled, depending on
+        # the currently selected rows
+        ordinal = table.ordinal
+        if ordinal in (0, 1):  # top tables
+            return []
+        limit_state = self.tv[0].current_record()[0]
+        ffs_ordinal = self.tv[1].current_record()[0]
+        return [limit_state, ffs_ordinal]
 
 
-class FragilityDiscreteWidget(TripleTableWidget):
+class FragilityDiscreteWidget(FragilityContinuousWidget):
     pass

@@ -23,6 +23,7 @@ class MainWindow(QtGui.QMainWindow):
         with messagebox(self):
             node = node_from_xml(nrmlfile)[0]
             converter = Converter.from_node(node)
+        self.tableset = converter.tableset
         widgetname = converter.__class__.__name__ + 'Widget'
         widgetclass = getattr(customtableview, widgetname)
         self.widget = widgetclass(converter.tableset, nrmlfile, self)
