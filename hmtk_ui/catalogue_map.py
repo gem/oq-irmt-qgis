@@ -1,27 +1,37 @@
+import os
 import collections
 import tempfile
 
 import numpy
 
-from PyQt4 import QtGui
+from openquake.hazardlib import geo
+from openquake.hazardlib import mfd
+from openquake.hazardlib import scalerel
+from openquake.hazardlib import source
+
+from openquake.nrmllib import models as nrml_models
+from shapely import wkt
+
 from PyQt4.QtCore import QVariant, QFileInfo
 
 from osgeo import gdal, osr
+import math
 
 from qgis.core import (
     QgsVectorLayer, QgsRasterLayer, QgsRaster,
     QgsField, QgsFields, QgsFeature, QgsGeometry, QgsPoint,
     QgsMapLayerRegistry, QgsPluginLayerRegistry,
-    QgsFeatureRendererV2, QgsSymbolV2, QGis,
     QgsRectangle, QgsCoordinateReferenceSystem,
     QgsCoordinateTransform, QgsFeatureRequest,
-    QgsRasterShader, QgsColorRampShader, QgsStyleV2)
+    QgsRasterShader, QgsColorRampShader, QgsStyleV2,
+    QgsFillSymbolV2, QgsSingleSymbolRendererV2, QgsLabel)
 from qgis.gui import QgsMapCanvasLayer
 
 from openlayers_plugin.openlayers_plugin import (
     OpenlayersPlugin, OpenlayersPluginLayerType)
 
 import utils
+import styles
 
 
 class CatalogueMap(object):
@@ -42,6 +52,9 @@ class CatalogueMap(object):
     :attr ol_plugin:
        a instance of the QGIS OpenLayer plugin
 
+    :attr basemap_layer:
+       a Layer used to show the base map
+
     :attr raster_layer:
        A QGIS raster layer used to display smoothed seismicity data
 
@@ -56,38 +69,68 @@ class CatalogueMap(object):
         self.canvas = canvas
         self.catalogue_model = catalogue_model
         self.event_feature_ids = None
+        self.sources = dict()
 
-        self.catalogue_layer = make_inmemory_layer(
-            "catalogue", CatalogueRenderer(catalogue_model))
+        self.catalogue_layer = make_inmemory_layer("catalogue")
         self.populate_catalogue_layer(catalogue_model.catalogue)
+        self.set_catalogue_style("cluster")
 
-        # FIXME: QGIS require to set FIRST the vector layer to get the
+        # XXX: QGIS require to set FIRST the vector layer to get the
         # proper projection transformation
         self.canvas.setLayerSet([QgsMapCanvasLayer(self.catalogue_layer)])
         self.canvas.setExtent(self.catalogue_layer.extent())
 
-        # we keep a reference of the OpenLayer Plugin (instead of a
-        # layer) such that the underlying basemap layer data is not
-        # garbage collected
-        self.ol_plugin = self.load_basemap()
+        self.basemap_layer = self.load_basemap()
+        self.ol_plugin = self.load_osm_plugin()
 
         # initialized later
         self.raster_layer = None
+        self.source_layers = dict()
 
         # Initialize Map
         self.reset_map()
 
-        # This zoom is required to initialize the map canvas
-        self.canvas.zoomByFactor(1.1)
+    def load_basemap(self):
+        layer_path = os.path.join(
+            os.path.dirname(__file__),
+            "data", "Countries.shp")
+        layer = QgsVectorLayer(
+            layer_path, "World Countries", "ogr")
+        if not layer.isValid():
+            raise RuntimeError("Basemap layer is not valid!!!")
+        QgsMapLayerRegistry.instance().addMapLayer(layer)
+        return layer
 
     def reset_map(self):
         """
         Reset the map by loading the catalogue and the basemap layers
         """
-        self.canvas.setLayerSet([
-            QgsMapCanvasLayer(self.catalogue_layer),
-            QgsMapCanvasLayer(self.ol_plugin.layer)])
+        catalogue = []
+        if self.raster_layer:
+            catalogue.append(QgsMapCanvasLayer(self.raster_layer))
+        catalogue.append(QgsMapCanvasLayer(self.catalogue_layer))
+        self.canvas.setLayerSet(
+            catalogue +
+            [QgsMapCanvasLayer(s) for s in self.source_layers.values()] +
+            [QgsMapCanvasLayer(self.basemap_layer)])
         self.canvas.refresh()
+
+    def set_catalogue_style(self, style):
+        layer = self.catalogue_layer
+
+        if style == "depth-magnitude":
+            renderer = styles.CatalogueDepthMagnitudeRenderer
+        elif style == "completeness":
+            renderer = styles.CatalogueCompletenessRenderer
+        elif style == "cluster":
+            renderer = styles.CatalogueClusterRenderer
+        elif style == "default":
+            renderer = styles.CatalogueDefaultRenderer
+        else:
+            raise NotImplementedError("Unsupported style %s" % style)
+
+        layer.setRendererV2(renderer.make(self))
+        layer.triggerRepaint()
 
     def populate_catalogue_layer(self, catalogue):
         """
@@ -102,11 +145,18 @@ class CatalogueMap(object):
 
         # Set field types (the schema of the vector layer)
         fields = []
-        for key in catalogue.data:
-            if isinstance(catalogue.data[key], numpy.ndarray):
+        mock_attributes = ["_magnitude"]
+
+        for key in catalogue.data.keys() + mock_attributes:
+            if key in mock_attributes:
+                key_norm = key[1:]
+            else:
+                key_norm = key
+            if isinstance(key_norm, numpy.ndarray):
                 fields.append(QgsField(key, QVariant.Double))
             else:
                 fields.append(QgsField(key, QVariant.String))
+
         pr.addAttributes(fields)
 
         qgs_fields = QgsFields()
@@ -123,24 +173,28 @@ class CatalogueMap(object):
             y = catalogue.data['latitude'][i]
             fet.setGeometry(QgsGeometry.fromPoint(QgsPoint(x, y)))
 
-            for key in self.catalogue_model.catalogue_keys():
+            for key in catalogue.data:
                 event_data = catalogue.data[key]
                 if len(event_data):
-                    fet[key] = event_data[i]
-                else:
-                    fet[key] = "NA"
+                    if isinstance(catalogue.data[key], numpy.ndarray):
+                        fet[key] = float(event_data[i])
+                    else:
+                        fet[key] = str(event_data[i])
+            fet['_magnitude'] = fet['magnitude'] ** 2
             features.append(fet)
         pr.addFeatures(features)
         vl.commitChanges()
 
-        assert vl.featureCount() > 0
-        self.event_feature_ids = dict()
-        for f in vl.getFeatures():
-            self.event_feature_ids[f['eventID']] = f.id()
+        self.event_feature_ids = dict([
+            (f['eventID'], f.id()) for f in vl.getFeatures()])
 
         # Set the canvas extent to avoid projection problems and to
         # pan to the loaded events
         vl.updateExtents()
+
+    @staticmethod
+    def magnitude_to_display_size(x):
+        return math.exp(x)/10
 
     def change_catalogue_model(self, catalogue_model):
         """
@@ -151,7 +205,7 @@ class CatalogueMap(object):
         self.populate_catalogue_layer(catalogue_model.catalogue)
         self.reset_map()
 
-    def load_basemap(self):
+    def load_osm_plugin(self):
         """
         Initialize the QGIS OpenLayer plugin and load the basemap
         layer
@@ -174,6 +228,9 @@ class CatalogueMap(object):
             olplugin.olLayerTypeRegistry)
         QgsPluginLayerRegistry.instance().addPluginLayerType(oltype)
 
+        return olplugin
+
+    def load_osm(self, olplugin):
         # 4 is OpenStreetMap
         ol_gphyslayertype = olplugin.olLayerTypeRegistry.getById(4)
         olplugin.addLayer(ol_gphyslayertype)
@@ -181,25 +238,38 @@ class CatalogueMap(object):
         if not olplugin.layer.isValid():
             utils.alert("Failed to load basemap")
 
-        return olplugin
+        return olplugin.layer
 
-    def filter(self, field, value, comparator=cmp):
+    def set_osm(self):
+        # we keep a reference of the OpenLayer Plugin (instead of a
+        # layer) such that the underlying basemap layer data is not
+        # garbage collected
+        self.basemap_layer = self.load_osm(self.ol_plugin)
+        self.reset_map()
+
+        # This zoom is required to initialize the map canvas
+        self.canvas.zoomByFactor(1.1)
+
+    def center_on(self, field, value, comparator=cmp):
         """
         Pan and zoom to the features with `field` equal to `value` by
         using a custom comparator function `cmp`
         """
         # Select all the features that fulfill the given condition
-        self.catalogue_layer.removeSelection()
-        catalogue = self.catalogue_model.catalogue
-        for i, fid in enumerate(catalogue.data['eventID']):
-            if not comparator(catalogue.data[field][i], value):
-                self.catalogue_layer.select(self.event_feature_ids[fid])
+        selected_features = self.catalogue_layer.selectedFeatures()
+        features = []
 
+        catalogue = self.catalogue_model.catalogue
+        for i, event_id in enumerate(catalogue.data['eventID']):
+            expected = catalogue.data[field][i]
+            if not comparator(expected, value):
+                features.append(event_id)
+        self.select(features)
         self.canvas.panToSelected(self.catalogue_layer)
         self.canvas.zoomToSelected(self.catalogue_layer)
-        self.canvas.zoomByFactor(1.3)
-
+        self.canvas.zoomByFactor(1.1)
         self.catalogue_layer.removeSelection()
+        self.catalogue_layer.select([f.id() for f in selected_features])
 
     def clear_features(self, layer):
         """
@@ -210,17 +280,14 @@ class CatalogueMap(object):
             layer.deleteFeature(feat.id())
         layer.commitChanges()
 
-    def select(self, event_id):
+    def select(self, event_ids):
         """
-        Select a single feature with Feature ID `fid` and center the
-        map on it
+        Select features with Feature ID `fids` and center the map on
+        them
         """
-        fid = self.event_feature_ids[event_id]
+        fids = [self.event_feature_ids[event_id] for event_id in event_ids]
         self.catalogue_layer.removeSelection()
-        self.catalogue_layer.select(fid)
-        self.canvas.panToSelected(self.catalogue_layer)
-        self.canvas.zoomToSelected(self.catalogue_layer)
-        self.canvas.zoomByFactor(1.2)
+        self.catalogue_layer.select(fids)
 
     def update_catalogue_layer(self, attr_names):
         """
@@ -255,17 +322,17 @@ class CatalogueMap(object):
         features = self.catalogue_layer.getFeatures(
             QgsFeatureRequest().setFilterRect(layer_rectangle))
 
-        if features:
-            # assume the first one is the closest
+        # assume the first one is the closest
+        try:
             feat = features.next()
             msg_lines = ["Event Found"]
             for k in self.catalogue_model.catalogue_keys():
                 msg_lines.append("%s=%s" % (k, feat[k]))
-        else:
+        except StopIteration:
             msg_lines = ["No Event found"]
 
         if self.raster_layer is not None:
-            src = self.ol_plugin.layer.crs()
+            src = self.basemap_layer.crs()
             dst = QgsCoordinateReferenceSystem(4326)
             trans = QgsCoordinateTransform(src, dst)
             point = trans.transform(point)
@@ -284,69 +351,90 @@ class CatalogueMap(object):
             QgsMapLayerRegistry.instance().removeMapLayer(
                 self.raster_layer.id())
         self.raster_layer = layer
-
-        self.canvas.setLayerSet(
-            [QgsMapCanvasLayer(self.catalogue_layer),
-             QgsMapCanvasLayer(self.raster_layer),
-             QgsMapCanvasLayer(self.ol_plugin.layer)])
         layer.reload()
-        self.canvas.refresh()
-        self.canvas.zoomByFactor(1.01)
+        self.reset_map()
 
+    def add_source_layers(self, sources):
+        """
+        :param list sources:
+            a list of nrmllib Source Models (e.g. SimpleFaultSource)
+        """
+        source_type = collections.namedtuple(
+            'SourceType', 'layer_type transform color')
 
-class CatalogueRenderer(QgsFeatureRendererV2):
-    SymbolKey = collections.namedtuple(
-        'SymbolKey', 'cluster_index, cluster_flag, completeness_flag')
+        geometries = {
+            'PointSource': source_type(
+                'Point', lambda x: x.geometry.wkt, "255,255,255,185"),
+            'AreaSource': source_type(
+                'Polygon', lambda x: x.geometry.wkt, '0,255,255,185'),
+            'SimpleFaultSource': source_type(
+                'Polygon',
+                lambda x: simple_surface_from_source(x).wkt,
+                '0,50,255,185'),
+            'ComplexFaultSource': source_type(
+                'MultiPolygon', lambda _: NotImplementedError, '50,50,50,185')}
 
-    def __init__(self, catalogue):
-        QgsFeatureRendererV2.__init__(self, "CatalogueRenderer")
-        self.default_point = QgsSymbolV2.defaultSymbol(QGis.Point)
-        self.default_point.setColor(QtGui.QColor(0, 0, 0))
+        source_dict = collections.defaultdict(list)
 
-        self.syms = {self.SymbolKey(0, 0, True): self.default_point}
-        self.catalogue = catalogue
+        for s in sources:
+            source_dict[s.__class__.__name__].append(s)
 
-    def symbolForFeature(self, feature):
-        cluster_index = feature["Cluster_Index"]
-        cluster_flag = feature["Cluster_Flag"]
-        comp_flag = not bool(feature["Completeness_Flag"])
+        for stype, sources in source_dict.items():
+            layer = QgsVectorLayer(
+                '%s?crs=epsg:4326' % (
+                    geometries[stype].layer_type),
+                stype, 'memory')
+            QgsMapLayerRegistry.instance().addMapLayer(layer)
+            pr = layer.dataProvider()
+            layer.startEditing()
 
-        return self.syms.get(
-            self.SymbolKey(cluster_index, cluster_flag, comp_flag),
-            self.default_point)
+            fields = [QgsField("source_id", QVariant.String)]
+            pr.addAttributes(fields)
 
-    def update_syms(self, catalogue):
-        self.syms = {}
+            qgs_fields = QgsFields()
+            for field in fields:
+                qgs_fields.append(field)
 
-        for cluster_flag in set(catalogue.data['Cluster_Flag'].tolist()):
-            for cluster_index in set(catalogue.data['Cluster_Index'].tolist()):
-                point = QgsSymbolV2.defaultSymbol(QGis.Point)
-                point.setColor(self.catalogue.cluster_color(cluster_index))
-                point.setSize(1)
-                self.syms[
-                    self.SymbolKey(cluster_index, cluster_flag, False)] = (
-                        point)
+            features = []
+            for src in sources:
+                fet = QgsFeature()
+                fet.setFields(qgs_fields)
+                fet['source_id'] = src.id
+                if stype == 'SimpleFaultSource':
+                    self.sources[src.id] = _nrml_to_hazardlib(src, 1.)
+                fet.setGeometry(QgsGeometry.fromWkt(
+                    geometries[stype].transform(src)))
+                features.append(fet)
+            pr.addFeatures(features)
+            layer.commitChanges()
+            layer.updateExtents()
 
-                point = QgsSymbolV2.defaultSymbol(QGis.Point)
-                point.setColor(self.catalogue.cluster_color(cluster_index))
-                point.setSize(2)
-                self.syms[
-                    self.SymbolKey(cluster_index, cluster_flag, True)] = (
-                        point)
+            symbol = QgsFillSymbolV2.createSimple(
+                {'style': 'diagonal_x',
+                 'color': geometries[stype].color,
+                 'style_border': 'solid'})
+            layer.setRendererV2(QgsSingleSymbolRendererV2(symbol))
 
-    def startRender(self, context, _vlayer):
-        for s in self.syms.values():
-            s.startRender(context)
+            self.source_layers[stype] = layer
 
-    def stopRender(self, context):
-        for s in self.syms.values():
-            s.stopRender(context)
+        self.reset_map()
 
-    def usedAttributes(self):
-        return ['id', 'Cluster_Index', 'Cluster_Flag', 'Completeness_Flag']
+    def toggle_catalogue_labels(self):
+        label = self.catalogue_layer.label()
+        attributes = label.labelAttributes()
+        attributes.setOffset(0, 15, 1)
+        label.setLabelField(
+            QgsLabel.Text, self.catalogue_layer.fieldNameIndex("eventID"))
+        self.catalogue_layer.enableLabels(
+            not self.catalogue_layer.hasLabelsEnabled())
+        self.reset_map()
 
-    def clone(self):
-        return CatalogueRenderer(self.catalogue)
+    def toggle_sources_labels(self):
+        for layer in self.source_layers.values():
+            label = layer.label()
+            label.setLabelField(QgsLabel.Text, layer.fieldNameIndex("eventID"))
+            layer.enableLabels(not layer.hasLabelsEnabled())
+        self.reset_map()
 
 
 def create_raster_layer(matrix):
@@ -366,7 +454,7 @@ def create_raster_layer(matrix):
     nrows = lats[lats == lats[0]].size
 
     # put values in a grid
-    gridded_vals = vals.reshape((nrows, ncols))
+    gridded_vals = vals.reshape((ncols, nrows)).T
 
     dataset = driver.Create(filename, ncols, nrows, 1, gdal.GDT_Float32)
 
@@ -397,19 +485,20 @@ def create_raster_layer(matrix):
 
     minVal = stat.minimumValue
     maxVal = stat.maximumValue
-    numberOfEntries = 20
+    entries_nr = 20
 
     colorRamp = QgsStyleV2().defaultStyle().colorRamp("Spectral")
     currentValue = float(minVal)
-    intervalDiff = float(maxVal - minVal) / float(numberOfEntries - 1)
+    intervalDiff = float(maxVal - minVal) / float(entries_nr - 1)
 
     colorRampItems = []
-    for i in xrange(numberOfEntries):
+    for i in reversed(xrange(entries_nr)):
         item = QgsColorRampShader.ColorRampItem()
         item.value = currentValue
         item.label = unicode(currentValue)
         currentValue += intervalDiff
-        item.color = colorRamp.color(float(i) / float(numberOfEntries))
+        item.color = colorRamp.color(float(i) / float(entries_nr))
+        item.color.setAlphaF(0.75)
         colorRampItems.append(item)
 
     rasterShader = QgsRasterShader()
@@ -427,9 +516,31 @@ def create_raster_layer(matrix):
     return layer
 
 
-def make_inmemory_layer(name, renderer):
+def make_inmemory_layer(name):
     layer = QgsVectorLayer('Point?crs=epsg:4326', name, 'memory')
     QgsMapLayerRegistry.instance().addMapLayer(layer)
-
-    layer.setRendererV2(renderer)
     return layer
+
+
+def simple_surface_from_source(src):
+    return geo.surface.SimpleFaultSurface.surface_projection_from_fault_data(
+        geo.Line([geo.Point(x[0], x[1])
+                  for x in wkt.loads(src.geometry.wkt).coords]),
+        upper_seismogenic_depth=src.geometry.upper_seismo_depth,
+        lower_seismogenic_depth=src.geometry.lower_seismo_depth,
+        dip=src.geometry.dip)
+
+
+def _nrml_to_hazardlib(src, mesh_spacing=1.):
+    """
+    Convert a NRML source object into the HazardLib representation.
+    """
+    if not isinstance(src, nrml_models.SimpleFaultSource):
+        raise NotImplementedError
+
+    return geo.surface.SimpleFaultSurface.from_fault_data(
+        geo.Line([geo.Point(*x) for x in wkt.loads(src.geometry.wkt).coords]),
+        src.geometry.upper_seismo_depth,
+        src.geometry.lower_seismo_depth,
+        src.geometry.dip,
+        mesh_spacing)

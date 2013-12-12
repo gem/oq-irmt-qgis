@@ -4,7 +4,7 @@ import imp
 import sip
 
 for api in ['QString', 'QDate', 'QDateTime', 'QTextStream',
-            'QTime', 'QUrl', 'QVariant']:
+            'QTime', 'QUrl', 'QVariant', 'QStringList']:
     sip.setapi(api, 2)
 
 from PyQt4 import QtGui, QtCore
@@ -12,6 +12,7 @@ from PyQt4 import QtGui, QtCore
 from qgis.core import QgsApplication
 
 from main_window import MainWindow
+from catalogue_model import CatalogueModel
 from utils import excepthook
 
 
@@ -55,7 +56,13 @@ def main(argv):
     if sys.platform == "darwin":
         wnd.raise_()
 
-    wnd.load_catalogue()
+    if len(argv) > 1:
+        wnd.change_model(CatalogueModel.from_csv_file(argv[1]))
+
+        if len(argv) > 2:
+            wnd.load_fault_source(argv[2])
+    else:
+        wnd.load_catalogue()
 
     # Connect signal for app finish
     def on_quit():

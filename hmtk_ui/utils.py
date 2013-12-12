@@ -1,3 +1,4 @@
+import itertools
 import time
 import cStringIO
 import traceback
@@ -7,7 +8,7 @@ from PyQt4 import QtGui
 
 def excepthook(excType, excValue, tracebackobj):
     separator = '-' * 80
-    notice = "An unhandled exception occurred. Error: "
+    notice = "An unhandled exception occurred. Error:"
     timeString = time.strftime("%Y-%m-%d, %H:%M:%S")
 
     tbinfofile = cStringIO.StringIO()

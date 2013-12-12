@@ -4,5 +4,6 @@
 *.rdb
 *.db
 .\#*
-
+.DS_Store
+sample_data
 .ropeproject
