@@ -8,9 +8,8 @@ perform the following steps:
 1. install QGIS 2.0+ by following the instructions in the QGIS page
    (NB: in Ubuntu do not use ubuntugis unstable, use the debian packages)
 
-2. install the requests Python library
-
-   # apt-get install python-request
+2. install the requests Python library:
+   apt-get install python-requests
 
 3. clone the qt-experiments repository:
    git clone https://github.com/gem/qt-experiments
