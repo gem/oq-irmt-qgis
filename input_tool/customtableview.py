@@ -2,6 +2,7 @@ import traceback
 from contextlib import contextmanager
 from PyQt4 import QtCore, QtGui
 from message_bar import MessageBar
+from openquake.common.record import Record, Table, Unique, Field
 
 try:
     from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
@@ -65,8 +66,9 @@ class CustomTableModel(QtCore.QAbstractTableModel):
         return len(self.table.recordtype)
 
     def flags(self, index):
-        flag = (QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable |
-                QtCore.Qt.ItemIsEditable)
+        flag = QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+        if index.column() != self.table.attr.get('readonly_column'):
+            flag |= QtCore.Qt.ItemIsEditable
         return flag
 
     def primaryKey(self, index):
@@ -171,9 +173,9 @@ class CustomTableView(QtGui.QWidget):
         self.tableView = QtGui.QTableView(self)
         self.setupUi()
 
-        if table.attr['addBtn']:
+        if table.attr.get('addBtn'):
             self.addBtn.clicked.connect(lambda: self.appendRows(1))
-        if table.attr['delBtn']:
+        if table.attr.get('delBtn'):
             self.delBtn.clicked.connect(self.removeRows)
 
     def appendRows(self, nrows):
@@ -224,18 +226,18 @@ class CustomTableView(QtGui.QWidget):
         self.layout.addWidget(self.tableView)
         self.setLayout(self.layout)
 
-        if self.table.attr['addBtn']:  # define add/del buttons
+        if self.table.attr.get('addBtn'):  # define add/del buttons
             self.addBtn = QtGui.QPushButton(self.tableView)
             self.addBtn.setObjectName('addBtn')
             self.addBtn.setText(tr('Add Row'))
-        if self.table.attr['delBtn']:
+        if self.table.attr.get('delBtn'):
             self.delBtn = QtGui.QPushButton(self.tableView)
             self.addBtn.setObjectName('delBtn')
             self.delBtn.setText(tr('Delete Rows'))
         buttonLayout = QtGui.QHBoxLayout()
-        if self.table.attr['addBtn']:
+        if self.table.attr.get('addBtn'):
             buttonLayout.addWidget(self.addBtn)
-        if self.table.attr['delBtn']:
+        if self.table.attr.get('delBtn'):
             buttonLayout.addWidget(self.delBtn)
         self.layout.addLayout(buttonLayout)
 
@@ -246,6 +248,68 @@ class CustomTableView(QtGui.QWidget):
                 self.tableView.showRow(row)
             else:
                 self.tableView.hideRow(row)
+
+
+class NameValue(Record):
+    pkey = Unique('attr_name')
+    attr_name = Field(str)
+    attr_value = Field(str)
+
+
+class NameValueView(QtGui.QWidget):
+    """
+    Wrapper around a table with a single record
+    """
+    def __init__(self, orig_table, parent=None):
+        QtGui.QWidget.__init__(self, parent)
+        assert len(orig_table) == 1, len(orig_table)
+
+        orig_record = orig_table[0]
+        fieldnames = orig_record.__class__.fieldnames
+        self.name = orig_record.__class__.__name__
+        recs = [NameValue(n, v) for n, v in zip(fieldnames, orig_record)]
+        self.table = Table(NameValue, recs)
+        self.table.attr['readonly_column'] = 0
+        self.tableModel = CustomTableModel(self.table, None)
+        self.tableView = QtGui.QTableView(self)
+        self.setupUi()
+
+    def current_record(self):
+        """Return the record currently selected"""
+        indexes = self.tableView.selectedIndexes()
+        if not indexes:
+            raise NoRecordSelected
+        row_idx = indexes[-1].row()
+        return self.tableModel.table[row_idx]
+
+    def current_selection(self):
+        """The currently selected rows, as tab-separated string of lines"""
+        row_ids = set(item.row() for item in self.tableView.selectedIndexes())
+        sel = []
+        for row_id in row_ids:
+            row = self.table[row_id]
+            sel.append('\t'.join(row))
+        return '\n'.join(sel)
+
+    def setupUi(self):
+        self.tableView.setModel(self.tableModel)
+        self.tableView.horizontalHeader().setStretchLastSection(True)
+        self.tableView.horizontalHeader().setResizeMode(
+            QtGui.QHeaderView.ResizeToContents)
+        self.tableView.setMinimumSize(420, 270)
+
+        self.tableView.setSelectionBehavior(
+            QtGui.QAbstractItemView.SelectRows)
+        self.tableView.setAlternatingRowColors(True)
+        self.tableView.setSizePolicy(
+            QtGui.QSizePolicy.MinimumExpanding,
+            QtGui.QSizePolicy.MinimumExpanding)
+        self.tableLabel = QtGui.QLabel(self.name)
+
+        self.layout = QtGui.QVBoxLayout()
+        self.layout.addWidget(self.tableLabel)
+        self.layout.addWidget(self.tableView)
+        self.setLayout(self.layout)
 
 
 class TripleTableWidget(QtGui.QWidget):
@@ -271,7 +335,7 @@ class TripleTableWidget(QtGui.QWidget):
             raise RuntimeError('There are %d tables but %d table attributes!' %
                                (n_tables, n_attrs))
         for attr, table in zip(self.table_attrs, self.tableset.tables):
-            table.attr = attr
+            table.attr.update(attr)
             self.tv.append(CustomTableView(table, self.getdefault, self))
         # signals
         self.tv[0].tableView.clicked.connect(self.show_tv1)
@@ -398,3 +462,76 @@ class FragilityContinuousWidget(TripleTableWidget):
 
 class FragilityDiscreteWidget(FragilityContinuousWidget):
     pass
+
+
+# the exposure tableset contains 6 tables:
+# Location, Exposure, CostType, Cost, Occupancy, Asset
+class ExposureWidget(QtGui.QWidget):
+    table_attrs = [
+        {'addBtn': 0, 'delBtn': 0, 'viewclass': NameValueView},
+        {'addBtn': 1, 'delBtn': 1, 'viewclass': CustomTableView},
+        {'addBtn': 1, 'delBtn': 1, 'viewclass': CustomTableView},
+        {'addBtn': 1, 'delBtn': 1, 'viewclass': CustomTableView},
+        {'addBtn': 1, 'delBtn': 1, 'viewclass': CustomTableView},
+        {'addBtn': 1, 'delBtn': 1, 'viewclass': CustomTableView},
+    ]
+
+    def __init__(self, tableset, nrmlfile, parent=None):
+        QtGui.QWidget.__init__(self, parent)
+        self.tableset = tableset
+        self.nrmlfile = nrmlfile
+        self.message_bar = MessageBar(nrmlfile, self)
+        self.tables = [tableset.tableExposure,
+                       tableset.tableCostType,
+                       tableset.tableLocation,
+                       tableset.tableAsset,
+                       tableset.tableCost,
+                       tableset.tableOccupancy]
+        self.tv = []
+        for table, attr in zip(self.tables, self.table_attrs):
+            table.attr.update(attr)
+            tv = attr['viewclass'](table)
+            tv.tableModel.validationFailed.connect(
+                lambda idx, err, tv=tv:
+                self.show_validation_error(tv, idx, err))
+            self.tv.append(tv)
+        self.setupUi()
+
+        self.tv[3].tableView.clicked.connect(self.show_tv45)
+
+    def setupUi(self):
+        layout = QtGui.QVBoxLayout()
+        hlayout1 = QtGui.QHBoxLayout()
+        hlayout2 = QtGui.QHBoxLayout()
+        layout.addWidget(self.message_bar)
+        hlayout1.addWidget(self.tv[0])
+        hlayout1.addWidget(self.tv[1])
+        hlayout1.addWidget(self.tv[2])
+        layout.addLayout(hlayout1)
+        hlayout2.addWidget(self.tv[3])
+        hlayout2.addWidget(self.tv[4])
+        hlayout2.addWidget(self.tv[5])
+        layout.addLayout(hlayout2)
+        self.setLayout(layout)
+        self.setSizePolicy(
+            QtGui.QSizePolicy.MinimumExpanding,
+            QtGui.QSizePolicy.MinimumExpanding)
+
+        self.show_tv45(index(0, 0))
+
+    @QtCore.pyqtSlot(QtCore.QModelIndex, Exception)
+    def show_validation_error(self, table_view, index, error):
+        record = table_view.tableModel.table[index.row()]
+        fieldname = record.fields[index.column()].name
+        message = '%s: %s' % (fieldname, error)
+        self.message_bar.show_message(message)
+
+    def show_tv45(self, row):
+        try:
+            k0, = self.tv[3].tableModel.primaryKey(row)
+        except IndexError:  # empty table, nothing to show
+            return
+        # show only the rows in table 4 corresponding to k0
+        self.tv[4].showOnCondition(lambda rec: rec[0] == k0)
+        # show only the rows in table 5 corresponding to k0
+        self.tv[5].showOnCondition(lambda rec: rec[0] == k0)
