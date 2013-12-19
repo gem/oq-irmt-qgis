@@ -1,8 +1,12 @@
+from decorator import decorator
+
 from PyQt4 import QtGui
+from PyQt4.QtCore import Qt, pyqtSlot
 
 from plot_occurrence_model import GutenbergRichterModel, plotSeismicityRates
 import completeness_dialog
 import grid_dialog
+import selection_dialog
 import numpy
 
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
@@ -13,7 +17,7 @@ from utils import alert
 
 
 class FigureCanvasQTAggWidget(FigureCanvasQTAgg):
-    def __init__(self, parent=None, width=3, height=3, dpi=100):
+    def __init__(self, parent=None, width=4, height=4, dpi=100):
         self.fig = Figure(figsize=(width, height), dpi=dpi)
         self.axes = self.fig.add_subplot(111)
         FigureCanvasQTAgg.__init__(self, self.fig)
@@ -24,12 +28,6 @@ class FigureCanvasQTAggWidget(FigureCanvasQTAgg):
 
     def get_default_filetype(self):
         return "png"
-
-    def draw_occurrences(self, catalogue):
-        self.axes.hist(catalogue.data['magnitude'], color="w")
-        self.axes.set_xlabel('Magnitude', dict(fontsize=13))
-        self.axes.set_ylabel('Occurrences', dict(fontsize=13))
-        self.draw()
 
     def draw_seismicity_rate(self, catalogue, mag, *args):
         self.axes.cla()
@@ -45,10 +43,36 @@ class FigureCanvasQTAggWidget(FigureCanvasQTAgg):
         plotSeismicityRates(catalogue).plot(self.axes, model=model)
         self.draw()
 
-    def draw_timeline(self, cat):
-        self.axes.plot(cat.get_decimal_time(), cat.data['magnitude'])
-        self.axes.set_xlabel('Time', dict(fontsize=13))
-        self.axes.set_ylabel('Magnitude', dict(fontsize=13))
+    def draw_1d_histogram(self, hist, bins):
+        self.axes.cla()
+        w = (bins[-1] - bins[0]) / len(bins)
+        self.axes.bar(bins[:-1], hist, width=w)
+        self.axes.set_xticks(bins)
+        self.draw()
+
+    def draw_2d_histogram(self, hist, x_bins, y_bins):
+        self.axes.cla()
+        extent = [x_bins[0], x_bins[-2], y_bins[0], y_bins[-2]]
+        self.axes.imshow(
+            hist.T, extent=extent, interpolation='nearest', origin='lower',
+            aspect="auto")
+        self.draw()
+
+    def draw_declustering_pie(self, cluster_indexes, cluster_flags):
+        self.axes.cla()
+        mainshocks_mask = numpy.logical_and(
+            cluster_indexes != 0, cluster_flags == 0)
+        mainshocks_nr = numpy.argwhere(mainshocks_mask == 1).size
+        not_clustered = numpy.argwhere(cluster_indexes == 0).size
+
+        self.axes.pie(
+            [not_clustered,
+             mainshocks_nr,
+             numpy.argwhere(cluster_flags == -1).size,
+             numpy.argwhere(cluster_flags == 1).size],
+            labels=["Unclustered", "Main shocks",
+                    "Foreshocks", "Aftershocks"],
+            radius=0.65)
         self.draw()
 
     def draw_completeness(self, model):
@@ -199,3 +223,95 @@ class GridDialog(QtGui.QDialog, grid_dialog.Ui_Dialog):
                 table.setItem(i / 3, i % 3, item)
 
             item.setData(0, str(grid.as_list()[i]))
+
+
+class WaitCursor(object):
+    def __enter__(self, *args, **kwargs):
+        QtGui.QApplication.setOverrideCursor(Qt.WaitCursor)
+
+    def __exit__(self, *args, **kwargs):
+        QtGui.QApplication.restoreOverrideCursor()
+
+    @classmethod
+    def as_decorator(cls, func, *args, **kwargs):
+        with cls():
+            return func(*args, **kwargs)
+
+
+def wait_cursor(func):
+    return decorator(WaitCursor.as_decorator, func)
+
+
+class SelectionDialog(QtGui.QDialog, selection_dialog.Ui_Dialog):
+    def __init__(self, window=None):
+        super(SelectionDialog, self).__init__(window)
+        self.setupUi(self)
+        self.window = window
+        self.invertSelectionButton.clicked.connect(
+            lambda: self.window.add_to_selection(
+                self.selectorComboBox.currentIndex()))
+        self.selectButton.clicked.connect(
+            lambda: self.window.add_to_selection(
+                self.selectorComboBox.currentIndex()))
+        self.removeFromRuleListButton.clicked.connect(self.remove_selector)
+        self.purgeUnselectedEventsButton.clicked.connect(
+            self.window.remove_unselected_events)
+
+    def remove_selector(self):
+        for item in self.selectorList.selectedItems():
+            self.selectorList.takeItem(self.selectorList.row(item))
+        self.window.update_selection()
+
+
+class ResultsTable(QtGui.QTableWidget):
+    def __init__(self, *args, **kwargs):
+        super(ResultsTable, self).__init__(*args, **kwargs)
+        self.callback = None
+
+    def set_data(self, rows, hlabels, vlabels=None, callback=None):
+        if self.callback is not None:
+            self.itemClicked.disconnect(self.callback)
+        self.callback = callback
+
+        self.clear()
+        self.setRowCount(0)
+        self.setColumnCount(0)
+
+        for i, row in enumerate(rows):
+            self.insertRow(i)
+
+            if vlabels is not None:
+                self.verticalHeader().show()
+                if i < len(vlabels):
+                    self.setVerticalHeaderItem(
+                        i, QtGui.QTableWidgetItem(vlabels[i]))
+                else:
+                    self.setVerticalHeaderItem(
+                        i, QtGui.QTableWidgetItem(str(i)))
+            else:
+                self.verticalHeader().hide()
+
+            for j, data in enumerate(row):
+                if not i:
+                    self.insertColumn(j)
+                    self.setHorizontalHeaderItem(
+                        j, QtGui.QTableWidgetItem(hlabels[j]))
+                self.setItem(i, j, QtGui.QTableWidgetItem(str(data)))
+        if callback is not None:
+            self.itemClicked.connect(callback)
+
+
+class CatalogueView(QtGui.QTableView):
+    def __init__(self, *args, **kwargs):
+        super(CatalogueView, self).__init__(*args, **kwargs)
+        self.catalogue_map = None
+        self.catalogue_model = None
+        self.clicked.connect(self.on_cell_clicked)
+
+    @pyqtSlot("QModelIndex")
+    def on_cell_clicked(self, modelIndex):
+        """
+        Callback when a cell in the catalogue table is clicked. Filter
+        the map by showing only the selected feature at cell row.
+        """
+        self.catalogue_map.select([self.catalogue_model.event_at(modelIndex)])
