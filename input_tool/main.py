@@ -1,7 +1,12 @@
 import os
 import sys
 import sip
-#sip.setapi("QString", 2)
+
+try:
+    sip.setapi("QString", 2)
+except ValueError:  # API 'QString' has already been set to version 1
+
+    pass
 
 from PyQt4 import QtCore, QtGui
 import customtableview
@@ -12,11 +17,20 @@ from openquake.common.converter import Converter
 
 
 class MainWindow(QtGui.QMainWindow):
-    def __init__(self, nrmlfile):
+    MENU_NEW = '''\
+VM,VulnerabilityModel,Ctrl+Shift+V,new_vulnerability_model
+FMD,FragilityModelDiscrete,Ctrl+Shift+F,new_fragility_model_discrete
+FMC,FragilityModelContinuous,Ctrl+Alt+F,new_fragility_model_continuous
+EMP,ExposureModelPopulation,Ctrl+Shift+P,new_exposure_model_population
+EMP,ExposureModelBuildings,Ctrl+Alt+P,new_exposure_model_buildings
+'''
+
+    def __init__(self, nrmlfile=None):
         QtGui.QMainWindow.__init__(self)
-        self.set_central_widget(nrmlfile)
         self.setWindowTitle(tr("Input Tool Window"))
         self.setupMenu()
+        if nrmlfile:
+            self.set_central_widget(nrmlfile)
 
     def set_central_widget(self, nrmlfile):
         self.nrmlfile = nrmlfile
@@ -28,22 +42,28 @@ class MainWindow(QtGui.QMainWindow):
         self.widget = widgetclass(converter.tableset, nrmlfile, self)
         self.setCentralWidget(self.widget)
 
+    def setupMenuNew(self):
+        self.menuNew = QtGui.QMenu(self.menuFile)
+        self.menuNew.setObjectName("menuNew")
+        rows = [line.split(',') for line in self.MENU_NEW.splitlines()]
+        for abbrev, name, shortcut, method in rows:
+            action_name = 'actionNew' + abbrev
+            action = QtGui.QAction(self)
+            action.setObjectName(action_name)
+            setattr(self, action_name, action)
+            action.setText(tr(name))
+            action.setShortcut(tr(shortcut))
+            self.menuNew.addAction(action)
+            action.triggered.connect(getattr(self, method))
+
     def setupMenu(self):
         self.menubar = QtGui.QMenuBar(self)
         self.menubar.setObjectName("menubar")
         self.menuFile = QtGui.QMenu(self.menubar)
         self.menuFile.setObjectName("menuFile")
         self.setMenuBar(self.menubar)
+        self.setupMenuNew()
 
-        self.menuNew = QtGui.QMenu(self.menuFile)
-        self.menuNew.setObjectName("menuNew")
-
-        self.actionNewVM = QtGui.QAction(self)
-        self.actionNewVM.setObjectName("actionNewVM")
-        self.actionNewFM = QtGui.QAction(self)
-        self.actionNewFM.setObjectName("actionNewFM")
-        self.actionNewEM = QtGui.QAction(self)
-        self.actionNewEM.setObjectName("actionNewEM")
         self.actionOpen = QtGui.QAction(self)
         self.actionOpen.setObjectName("actionOpen")
         self.actionSave = QtGui.QAction(self)
@@ -71,23 +91,12 @@ class MainWindow(QtGui.QMainWindow):
         self.menuFile.addAction(self.actionReload)
         self.menuFile.addAction(self.actionQuit)
 
-        self.menuNew.addAction(self.actionNewVM)
-        self.menuNew.addAction(self.actionNewFM)
-        self.menuNew.addAction(self.actionNewEM)
-
         self.menubar.addMenu(self.menuFile)
         self.menuFile.setTitle(tr("InputToolWindow"))
 
-        # retranslateUi
         self.menuNew.setTitle(tr("New"))
 
         self.menuFile.setTitle(tr("File"))
-        self.actionNewVM.setText(tr("&VulnerabilityModel"))
-        self.actionNewVM.setShortcut(tr("Ctrl+Shift+V"))
-        self.actionNewFM.setText(tr("&FragilityModel"))
-        self.actionNewFM.setShortcut(tr("Ctrl+Shift+F"))
-        self.actionNewEM.setText(tr("&ExposureModel"))
-        self.actionNewEM.setShortcut(tr("Ctrl+Shift+E"))
         self.actionOpen.setText(tr("&Open"))
         self.actionOpen.setShortcut(tr("Ctrl+O"))
         self.actionSave.setText(tr("&Save"))
@@ -106,9 +115,6 @@ class MainWindow(QtGui.QMainWindow):
         self.actionQuit.setShortcut(tr("Ctrl+Q"))
 
         # menu actions
-        self.actionNewVM.triggered.connect(self.new_vulnerability_model)
-        self.actionNewFM.triggered.connect(self.new_fragility_model)
-        self.actionNewEM.triggered.connect(self.new_exposure_model)
         self.actionOpen.triggered.connect(self.open_nrml)
         self.actionSave.triggered.connect(self.save_nrml)
         self.actionWrite.triggered.connect(self.write_nrml)
@@ -159,21 +165,93 @@ class MainWindow(QtGui.QMainWindow):
         open('vulnerability-model.xml', 'w').write(empty)
         self.set_central_widget('vulnerability-model.xml')
 
-    def new_fragility_model(self):
+    def new_fragility_model_discrete(self):
         empty = '''<?xml version='1.0' encoding='utf-8'?>
         <nrml xmlns="http://openquake.org/xmlns/nrml/0.4">
-        <fragilityModel/>
+        <fragilityModel format="discrete">
+        <description>New fragility model</description>
+        <limitStates> </limitStates>
+        <ffs>
+           <taxonomy> </taxonomy>
+           <IML IMT="" imlUnit=""> </IML>
+           <ffd><poEs/></ffd>
+        </ffs>
+        </fragilityModel>
         </nrml>'''
-        open('fragility-model.xml', 'w').write(empty)
-        self.set_central_widget('fragility-model.xml')
+        open('fragility-model-discrete.xml', 'w').write(empty)
+        self.set_central_widget('fragility-model-discrete.xml')
 
-    def new_exposure_model(self):
+    def new_fragility_model_continuous(self):
         empty = '''<?xml version='1.0' encoding='utf-8'?>
         <nrml xmlns="http://openquake.org/xmlns/nrml/0.4">
-        <exposureModel/>
+        <fragilityModel format="continuous">
+        <description>New fragility model</description>
+        <limitStates> </limitStates>
+        <ffs>
+           <taxonomy> </taxonomy>
+           <IML IMT="" imlUnit="" minIML="" maxIML=""> </IML>
+           <ffc><params/></ffc>
+        </ffs>
+        </fragilityModel>
         </nrml>'''
-        open('exposure-model.xml', 'w').write(empty)
-        self.set_central_widget('exposure-model.xml')
+        open('fragility-model-continuous.xml', 'w').write(empty)
+        self.set_central_widget('fragility-model-continuous.xml')
+
+    def new_exposure_model_buildings(self):
+        empty = '''<?xml version='1.0' encoding='utf-8'?>
+        <nrml xmlns="http://openquake.org/xmlns/nrml/0.4">
+        <exposureModel category="buildings"
+         id="my_exposure_model"
+         taxonomySource="UNKNOWN">
+        <description>New exposure model</description>
+        <conversions>
+            <area type="per_asset" unit="square meters"/>
+            <costTypes>
+                <costType name="structural" retrofittedType=""
+                 retrofittedUnit="" type="" unit=""/>
+            </costTypes>
+            <deductible isAbsolute="false"/>
+            <insuranceLimit isAbsolute="false"/>
+        </conversions>
+        <assets>
+           <asset id="" number="" taxonomy="">
+           <location lat="" lon="" />
+           <costs>
+            <cost deductible="" insuranceLimit=""
+                  type="structural" value=""/>
+           </costs>
+           <occupancies>
+             <occupancy occupants="" period=""/>
+           </occupancies>
+           </asset>
+        </assets>
+        </exposureModel>
+        </nrml>'''
+        open('exposure-model-buildings.xml', 'w').write(empty)
+        self.set_central_widget('exposure-model-buildings.xml')
+
+    def new_exposure_model_population(self):
+        empty = '''<?xml version='1.0' encoding='utf-8'?>
+        <nrml xmlns="http://openquake.org/xmlns/nrml/0.4">
+        <exposureModel category="population"
+         id="my_exposure_model"
+         taxonomySource="UNKNOWN">
+        <description>New exposure model</description>
+        <conversions>
+            <area type="per_asset" unit="square meters"/>
+        </conversions>
+        <assets>
+           <asset id="" number="" taxonomy="">
+           <location lat="" lon="" />
+           <occupancies>
+             <occupancy occupants="" period=""/>
+           </occupancies>
+           </asset>
+        </assets>
+        </exposureModel>
+        </nrml>'''
+        open('exposure-model-population.xml', 'w').write(empty)
+        self.set_central_widget('exposure-model-population.xml')
 
     def full_check(self):
         with messagebox(self):
@@ -211,15 +289,12 @@ class MainWindow(QtGui.QMainWindow):
 
 
 def main(argv):
-    if not argv[1:]:
-        sys.exit('Please give the input NRML file')
-
     app = QtGui.QApplication(argv, True)
     app.setStyleSheet('''
 QTableWidget::item:selected
 { background-color: palette(highlight)}
 ''')
-    mw = MainWindow(sys.argv[1])
+    mw = MainWindow(sys.argv[1] if sys.argv[1:] else None)
     mw.show()
     sys.exit(app.exec_())
 

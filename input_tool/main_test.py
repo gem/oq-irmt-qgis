@@ -69,3 +69,15 @@ class ExamplesTestCase(unittest.TestCase):
             if fname.endswith('.xml'):
                 nrmlfile = os.path.join(EXAMPLES, fname)
                 MainWindow(nrmlfile).save_nrml()
+
+
+class NewModelTestCase(unittest.TestCase):
+    """Check the "New model" functionality"""
+
+    def test_all(self):
+        mw = MainWindow()
+        mw.new_vulnerability_model()
+        mw.new_fragility_model_continuous()
+        mw.new_fragility_model_discrete()
+        mw.new_exposure_model_population()
+        mw.new_exposure_model_buildings()
