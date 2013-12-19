@@ -263,7 +263,7 @@ class NameValueView(QtGui.QWidget):
     """
     Wrapper around a table with a single record
     """
-    def __init__(self, orig_table, parent=None):
+    def __init__(self, orig_table, dummy=None, parent=None):
         QtGui.QWidget.__init__(self, parent)
         assert len(orig_table) == 1, len(orig_table)
 
@@ -497,7 +497,7 @@ class ExposureWidget(QtGui.QWidget):
         self.tv = collections.OrderedDict()
         for table, attr in zip(self.tables, self.table_attrs):
             table.attr.update(attr)
-            tv = attr['viewclass'](table)
+            tv = attr['viewclass'](table, self.getdefault)
             if len(table) == 0:  # hide empty tables
                 tv.hide()
             tv.tableModel.validationFailed.connect(
@@ -528,6 +528,10 @@ class ExposureWidget(QtGui.QWidget):
         self.setSizePolicy(
             QtGui.QSizePolicy.MinimumExpanding,
             QtGui.QSizePolicy.MinimumExpanding)
+
+        self.tv['tableAsset'].tableView.hideColumn(0)
+        self.tv['tableCost'].tableView.hideColumn(0)
+        self.tv['tableOccupancy'].tableView.hideColumn(0)
 
         self.show_asset(index(0, 0))
         self.show_cost_occupancy(index(0, 0))
@@ -563,3 +567,11 @@ class ExposureWidget(QtGui.QWidget):
         # show only the rows corresponding to asset_ref
         self.tv['tableOccupancy'].showOnCondition(
             lambda rec: rec['asset_ref'] == asset_ref)
+
+    def getdefault(self, table):
+        if table.name == 'tableAsset':
+            return self.tv['tableLocation'].current_record()[:1]
+        elif table.name in ('tableCost', 'tableOccupancy'):
+            return [self.tv['tableAsset'].current_record()[1]]
+        else:
+            return []

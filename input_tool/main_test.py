@@ -8,6 +8,7 @@ from openquake.nrmllib.node import node_from_xml
 from openquake.common.converter import Converter
 
 from customtableview import TripleTableWidget, NoRecordSelected, index
+from main import MainWindow
 
 
 EXAMPLES = os.path.join(os.path.dirname(__file__), 'examples')
@@ -58,3 +59,13 @@ class TripleTableTestCase(unittest.TestCase):
         for row in first3:
             self.tm2.table.insert(0, row)
         self.assertEqual(len(self.tm2.table), 750)  # 750 records
+
+
+class ExamplesTestCase(unittest.TestCase):
+    """Check the validity of the example files"""
+
+    def test_all(self):
+        for fname in os.listdir(EXAMPLES):
+            if fname.endswith('.xml'):
+                nrmlfile = os.path.join(EXAMPLES, fname)
+                MainWindow(nrmlfile).save_nrml()

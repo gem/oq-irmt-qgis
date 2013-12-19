@@ -1,13 +1,13 @@
 import os
 import sys
 import sip
-sip.setapi("QString", 2)
+#sip.setapi("QString", 2)
 
 from PyQt4 import QtCore, QtGui
 import customtableview
 from customtableview import tr, messagebox
 
-from openquake.nrmllib.node import node_from_xml, node_to_nrml
+from openquake.nrmllib.node import node_to_nrml
 from openquake.common.converter import Converter
 
 
@@ -21,8 +21,7 @@ class MainWindow(QtGui.QMainWindow):
     def set_central_widget(self, nrmlfile):
         self.nrmlfile = nrmlfile
         with messagebox(self):
-            node = node_from_xml(nrmlfile)[0]
-            converter = Converter.from_node(node)
+            converter = Converter.from_nrml(nrmlfile)
         self.tableset = converter.tableset
         widgetname = converter.__class__.__name__ + 'Widget'
         widgetclass = getattr(customtableview, widgetname)
@@ -178,7 +177,7 @@ class MainWindow(QtGui.QMainWindow):
 
     def full_check(self):
         with messagebox(self):
-            self.tableset.to_node()
+            return self.tableset.to_node()
 
     def save(self, nrmlfile):
         try:
@@ -186,7 +185,7 @@ class MainWindow(QtGui.QMainWindow):
         except:
             return
         # save to a temporary file
-        with open(nrmlfile + '~', 'w') as f:
+        with open(nrmlfile + '~', 'w+') as f:
             node_to_nrml(node, f)
         # only if there are no errors rename the file
         os.rename(nrmlfile + '~', nrmlfile)
