@@ -31,7 +31,7 @@ from PyQt4.QtGui import QDialog
 from qgis.core import QgsMapLayerRegistry
 
 from ui_normalization import Ui_NormalizationDialog
-from normalization_algs import RANK_METHODS
+from normalization_algs import RANK_VARIANTS
 
 
 class NormalizationDialog(QDialog):
@@ -73,4 +73,4 @@ class NormalizationDialog(QDialog):
     def reload_variant_cbx(self):
         self.ui.variant_cbx.clear()
         if self.ui.algorithm_cbx.currentText() == 'RANK':
-            self.ui.variant_cbx.addItems(RANK_METHODS)
+            self.ui.variant_cbx.addItems(RANK_VARIANTS)

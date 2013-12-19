@@ -404,17 +404,15 @@ class Svir:
             layer = reg.mapLayers().values()[
                 dlg.ui.layer_cbx.currentIndex()]
             attribute_name = dlg.ui.attrib_cbx.currentText()
-            algorithm = NORMALIZATION_ALGS.values()[
-                dlg.ui.algorithm_cbx.currentIndex()]
             algorithm_name = NORMALIZATION_ALGS.keys()[
                 dlg.ui.algorithm_cbx.currentIndex()]
-            method = dlg.ui.variant_cbx.currentText()
+            variant = dlg.ui.variant_cbx.currentText()
             mem_layer_name = layer.name() + "_" + algorithm_name
             mem_layer = ProcessLayer(layer).duplicate_in_memory(mem_layer_name,
                                                                 True)
             ProcessLayer(mem_layer).normalize_attribute(attribute_name,
                                                         algorithm_name,
-                                                        method)
+                                                        variant)
 
     def select_layers_to_join(self):
         """

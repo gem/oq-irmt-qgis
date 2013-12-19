@@ -34,7 +34,8 @@ from qgis.core import (QgsMapLayer,
                        QgsField)
 from layer_editing_manager import LayerEditingManager
 
-from normalization_algs import NORMALIZATION_ALGS
+from normalization_algs import (NORMALIZATION_ALGS,
+                                normalize)
 
 from utils import DEBUG
 
@@ -56,7 +57,7 @@ class ProcessLayer():
             layer_pr = self.layer.dataProvider()
             layer_pr.addAttributes(attribute_list)
 
-    def normalize_attribute(self, input_attr_name, algorithm_name, method):
+    def normalize_attribute(self, input_attr_name, algorithm_name, variant=""):
         """
         Use one of the available normalization algorithms to normalize an
         attribute of the layer, and add a new attribute with the
@@ -95,7 +96,7 @@ class ProcessLayer():
         algorithm = NORMALIZATION_ALGS[algorithm_name]
 
         # normalize the values in the dictionary with the chosen algorithm
-        normalized_dict = algorithm(initial_dict).normalize(method)
+        normalized_dict = normalize(initial_dict, algorithm, variant)
 
         with LayerEditingManager(self.layer, 'Write normalized values', DEBUG):
             for feat in self.layer.getFeatures():
