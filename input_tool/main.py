@@ -1,346 +1,228 @@
 import os
 import sys
-from PyQt4 import QtGui, QtCore
-from ui_input_tool_window import Ui_InputToolWindow
-from openquake import nrmllib
-from openquake.nrmllib.node import node_from_nrml, node_copy, Node
+import sip
+sip.setapi("QString", 2)
 
-SCHEMADIR = os.path.join(nrmllib.__path__[0], 'schema')
+from PyQt4 import QtCore, QtGui
+import customtableview
+from customtableview import tr, messagebox
 
-
-# hackish
-def is_valid(item):
-    return item and item.background() != QtCore.Qt.red
+from openquake.nrmllib.node import node_from_xml, node_to_nrml
+from openquake.common.converter import Converter
 
 
-def getdata(widget, rowrange, colrange, ignore_invalid=False):
-    data = []
-    for r in rowrange:
-        row = []
-        for c in colrange:
-            item = widget.item(r, c)
-            if not ignore_invalid and not is_valid(item):
-                raise ValueError(
-                    'row=%d, col=%d, val=%s' % (r, c, item.text()))
-            row.append(unicode(item.text()))
-        data.append(row)
-    return data
-
-
-class Validator(QtGui.QValidator):
-    def __init__(self, validator):
-        self.validator = validator
-
-    def validate(self, value):
-        try:
-            self.validator(value)
-        except ValueError:
-            return QtGui.QValidator.Invalid
-        else:
-            return QtGui.QValidator.Acceptable
-
-    def validate_cell(self, item):
-        text = unicode(item.text())
-        valid = self.validate(text)
-        if not valid:
-            item.setBackground(QtCore.Qt.red)
-        elif not is_valid(item):
-            item.setBackground(QtCore.Qt.white)
-        return valid
-
-
-def split_numbers(node):
-    return node.text.split()
-
-
-def set_list_item(node, i, value):
-    numbers = node.text.split()
-    numbers[i] = value
-    node.text = ' '.join(numbers)
-
-VSET = dict(enumerate('vulnerabilitySetID assetCategory lossCategory IMT'
-                      .split()))
-
-VFN = dict(enumerate('vulnerabilityFunctionID probabilisticDistribution'
-                     .split()))
-
-IMLS = dict(enumerate('imls lossRatio coefficientsVariation'.split()))
-
-
-DVSET_NODE = Node('discreteVulnerabilitySet', dict(
-    assetCategory="population",
-    lossCategory="fatalities",
-    vulnerabilitySetID="XXX"))
-DVSET_NODE.append(Node('IML', text=''))
-
-VFN_NODE = Node('discreteVulnerability', dict(
-    probabilisticDistribution="LN",
-    vulnerabilityFunctionID="XX"))
-VFN_NODE.append(Node('lossRatio', text=''))
-VFN_NODE.append(Node('coefficientsVariation', text=''))
-
-
-class MainWindow(Ui_InputToolWindow, QtGui.QMainWindow):
-    def __init__(self, inputdir):
+class MainWindow(QtGui.QMainWindow):
+    def __init__(self, nrmlfile):
         QtGui.QMainWindow.__init__(self)
-        self.inputdir = inputdir
-        self.setupUi(self)
-        self.tabwidget.currentWidget().root = None
+        self.set_central_widget(nrmlfile)
+        self.setWindowTitle(tr("Input Tool Window"))
+        self.setupMenu()
 
-        # table widgets
-        self.vSetsTbl.itemSelectionChanged.connect(self.populate_vFnTbl)
-        self.vFnTbl.itemSelectionChanged.connect(self.populate_imlsTbl)
-        self.vSetsTbl.cellChanged.connect(self.update_vSets)
-        self.vFnTbl.cellChanged.connect(self.update_vFn)
-        self.imlsTbl.cellChanged.connect(self.update_imls)
+    def set_central_widget(self, nrmlfile):
+        self.nrmlfile = nrmlfile
+        with messagebox(self):
+            node = node_from_xml(nrmlfile)[0]
+            converter = Converter.from_node(node)
+        self.tableset = converter.tableset
+        widgetname = converter.__class__.__name__ + 'Widget'
+        widgetclass = getattr(customtableview, widgetname)
+        self.widget = widgetclass(converter.tableset, nrmlfile, self)
+        self.setCentralWidget(self.widget)
 
-        # add/del buttons
-        self.vSetsAddBtn.clicked.connect(lambda: self.rowAdd(self.vSetsTbl))
-        self.vSetsDelBtn.clicked.connect(lambda: self.rowDel(self.vSetsTbl))
-        self.vFnAddBtn.clicked.connect(lambda: self.rowAdd(self.vFnTbl))
-        self.vFnDelBtn.clicked.connect(lambda: self.rowDel(self.vFnTbl))
-        self.imlsAddBtn.clicked.connect(lambda: self.rowAdd(self.imlsTbl))
-        self.imlsDelBtn.clicked.connect(lambda: self.rowDel(self.imlsTbl))
+    def setupMenu(self):
+        self.menubar = QtGui.QMenuBar(self)
+        self.menubar.setObjectName("menubar")
+        self.menuFile = QtGui.QMenu(self.menubar)
+        self.menuFile.setObjectName("menuFile")
+        self.setMenuBar(self.menubar)
 
-        self.actionCopy.triggered.connect(self.copy)
-        self.actionPaste.triggered.connect(self.paste)
+        self.menuNew = QtGui.QMenu(self.menuFile)
+        self.menuNew.setObjectName("menuNew")
+
+        self.actionNewVM = QtGui.QAction(self)
+        self.actionNewVM.setObjectName("actionNewVM")
+        self.actionNewFM = QtGui.QAction(self)
+        self.actionNewFM.setObjectName("actionNewFM")
+        self.actionNewEM = QtGui.QAction(self)
+        self.actionNewEM.setObjectName("actionNewEM")
+        self.actionOpen = QtGui.QAction(self)
+        self.actionOpen.setObjectName("actionOpen")
+        self.actionSave = QtGui.QAction(self)
+        self.actionSave.setObjectName("actionSave")
+        self.actionWrite = QtGui.QAction(self)
+        self.actionWrite.setObjectName("actionWrite")
+        self.actionFullCheck = QtGui.QAction(self)
+        self.actionFullCheck.setObjectName("actionFullCheck")
+        self.actionCopy = QtGui.QAction(self)
+        self.actionCopy.setObjectName("actionCopy")
+        self.actionPaste = QtGui.QAction(self)
+        self.actionPaste.setObjectName("actionPaste")
+        self.actionReload = QtGui.QAction(self)
+        self.actionReload.setObjectName("actionReload")
+        self.actionQuit = QtGui.QAction(self)
+        self.actionQuit.setObjectName("actionQuit")
+
+        self.menuFile.addMenu(self.menuNew)
+        self.menuFile.addAction(self.actionOpen)
+        self.menuFile.addAction(self.actionSave)
+        self.menuFile.addAction(self.actionWrite)
+        self.menuFile.addAction(self.actionCopy)
+        self.menuFile.addAction(self.actionFullCheck)
+        self.menuFile.addAction(self.actionPaste)
+        self.menuFile.addAction(self.actionReload)
+        self.menuFile.addAction(self.actionQuit)
+
+        self.menuNew.addAction(self.actionNewVM)
+        self.menuNew.addAction(self.actionNewFM)
+        self.menuNew.addAction(self.actionNewEM)
+
+        self.menubar.addMenu(self.menuFile)
+        self.menuFile.setTitle(tr("InputToolWindow"))
+
+        # retranslateUi
+        self.menuNew.setTitle(tr("New"))
+
+        self.menuFile.setTitle(tr("File"))
+        self.actionNewVM.setText(tr("&VulnerabilityModel"))
+        self.actionNewVM.setShortcut(tr("Ctrl+Shift+V"))
+        self.actionNewFM.setText(tr("&FragilityModel"))
+        self.actionNewFM.setShortcut(tr("Ctrl+Shift+F"))
+        self.actionNewEM.setText(tr("&ExposureModel"))
+        self.actionNewEM.setShortcut(tr("Ctrl+Shift+E"))
+        self.actionOpen.setText(tr("&Open"))
+        self.actionOpen.setShortcut(tr("Ctrl+O"))
+        self.actionSave.setText(tr("&Save"))
+        self.actionSave.setShortcut(tr("Ctrl+S"))
+        self.actionWrite.setText(tr("&Save As"))
+        self.actionWrite.setShortcut(tr("Ctrl+Shift+S"))
+        self.actionCopy.setText(tr("&Copy"))
+        self.actionCopy.setShortcut(tr("Ctrl+C"))
+        self.actionFullCheck.setText(tr("&FullCheck"))
+        self.actionFullCheck.setShortcut(tr("Ctrl+F"))
+        self.actionPaste.setText(tr("&Paste"))
+        self.actionPaste.setShortcut(tr("Ctrl+V"))
+        self.actionReload.setText(tr("&Reload"))
+        self.actionReload.setShortcut(tr("Ctrl+R"))
+        self.actionQuit.setText(tr("&Quit"))
+        self.actionQuit.setShortcut(tr("Ctrl+Q"))
 
         # menu actions
-        self.actionOpen.triggered.connect(self.open_file)
-        self.actionSave.triggered.connect(self.save_file)
-
-        ## HARD-CODED FOR THE MOMENT
-        root = node_from_nrml(
-            os.path.join(inputdir, 'vulnerability-model-discrete.xml'))[0]
-        self.fileNameLbl.setText('vulnerability-model-discrete.xml')
-        tab = self.tabwidget.findChild(QtGui.QWidget, root.tag)
-        tab.root = root
-        self.tabwidget.setCurrentWidget(tab)
-        self.populate_table_widgets()
-
-    @property
-    def root(self):
-        return self.tabwidget.currentWidget().root
-
-    @property
-    def vsets(self):
-        return list(self.root.getnodes('discreteVulnerabilitySet'))
-
-    def update_vSets(self, row, col):
-        try:
-            self.vsets[row]
-        except IndexError:
-            return
-        text = unicode(self.vSetsTbl.item(row, col).text())
-        attr = VSET[col]
-        if attr == 'IMT':
-            self.vsets[row].IML[attr] = text
-        else:
-            self.vsets[row][attr] = text
-
-    def update_vFn(self, row, col):
-        text = unicode(self.vFnTbl.item(row, col).text())
-        attr = VFN[col]
-        current_vset = self.vSetsTbl.currentRow()
-        self.vsets[current_vset][row + 1][attr] = text
-        # +1 because of the description node
-
-    def update_imls(self, row, col):
-        item = self.imlsTbl.item(row, col)
-        text = unicode(item.text())
-        valid = self.imlsTbl.floatvalidator.validate_cell(item)
-        if not valid:
-            return
-
-        attr = IMLS[col]
-        current_vset = self.vSetsTbl.currentRow()
-        current_vfn = self.vFnTbl.currentRow()
-        vfn = self.vsets[current_vset][current_vfn + 1]  # +1 to skip IML node
-        if attr == 'lossRatio':
-            set_list_item(vfn.lossRatio, row, text)
-        elif attr == 'coefficientsVariation':
-            set_list_item(vfn.coefficientsVariation, row, text)
-        elif attr == 'imls':
-            set_list_item(self.vsets[current_vset].IML, row, text)
-
-    def populate_table_widget(self, widget, data):
-        widget.clearContents()
-        widget.setRowCount(len(data))
-
-        for row_index, row in enumerate(data):
-            for col_index, content in enumerate(row):
-                item = QtGui.QTableWidgetItem(content)
-                widget.setItem(row_index, col_index, item)
-                if widget.objectName == 'imlsTbl':
-                    widget.floatvalidator.validate_cell(item)
-        # this will work only if the setText are replaced by
-        # setData(QtCore.Qt.DisplayRole, value) in the items
-        # widget.sortByColumn(0, QtCore.Qt.AscendingOrder)
-        widget.resizeColumnsToContents()
-
-    def populate_table_widgets(self):
-        data = []
-        for vset in self.vsets:
-            data.append([vset['vulnerabilitySetID'],
-                         vset['assetCategory'],
-                         vset['lossCategory'],
-                         vset.IML['IMT'],
-                         ])
-        self.populate_table_widget(self.vSetsTbl, data)
-
-        if data:
-            self.vSetsTbl.selectRow(0)
-            self.populate_vFnTbl()
-
-    def populate_vFnTbl(self):
-        row_index = self.vSetsTbl.currentRow()
-        data = []
-        try:
-            vset = self.vsets[row_index]
-        except IndexError:  # trying to access a non-populated row
-            self.vFnTbl.clearContents()
-            self.vFnTbl.setRowCount(1)
-            return
-
-        vfs = list(vset.getnodes('discreteVulnerability'))
-
-        for vf in vfs:
-            data.append([vf['vulnerabilityFunctionID'],
-                         vf['probabilisticDistribution'],
-                         ])
-            #if vf['vulnerabilityFunctionID'] == 'PK':
-            #    import pdb; pdb.set_trace()
-        self.populate_table_widget(self.vFnTbl, data)
-        if data:
-            self.vFnTbl.selectRow(0)
-            self.populate_imlsTbl()
-
-    def populate_imlsTbl(self):
-        self.imlsTbl.floatvalidator = Validator(float)
-        set_index = self.vSetsTbl.currentRow()
-        vfn_index = self.vFnTbl.currentRow()
-        try:
-            vset = self.vsets[set_index]
-        except IndexError:  # trying to access a non-populated row
-            self.imlsTbl.clearContents()
-            self.imlsTbl.setRowCount(1)
-            return
-
-        imt = QtGui.QTableWidgetItem(vset.IML['IMT'])
-        self.imlsTbl.setHorizontalHeaderItem(0, imt)
-        imls = split_numbers(vset.IML)
-        vfns = list(vset.getnodes('discreteVulnerability'))
-        try:
-            vfn = vfns[vfn_index]
-        except IndexError:
-            self.imlsTbl.clearContents()
-            #self.imlsTbl.setRowCount(1)
-            return
-        loss_ratios = split_numbers(vfn.lossRatio)
-        coeff_vars = split_numbers(vfn.coefficientsVariation)
-        data = zip(imls, loss_ratios, coeff_vars)
-        self.populate_table_widget(self.imlsTbl, data)
-
-    def open_file(self):
-        fname = unicode(QtGui.QFileDialog.getOpenFileName(
-            self, 'Choose file',
-            self.inputdir,  # QtCore.QDir.homePath(),
-            "Model file (*.xml);;Config files (*.ini)"))
-        self.fileNameLbl.setText(fname)
-        root = node_from_nrml(fname)
-        tab = self.tabwidget.findChild(QtGui.QWidget, root.tag)
-        tab.root = root
-        self.tabwidget.setCurrentWidget(tab)
-        self.populate_table_widgets()
-        # print validate_ex()
-
-    def save_file(self):
-        fname = self.fileNameLbl.text()
-        if self.imlsTbl.floatvalidator.n_invalid:
-            print 'Cannot save: there are invalid entries'
-        else:
-            print 'Saving', fname
+        self.actionNewVM.triggered.connect(self.new_vulnerability_model)
+        self.actionNewFM.triggered.connect(self.new_fragility_model)
+        self.actionNewEM.triggered.connect(self.new_exposure_model)
+        self.actionOpen.triggered.connect(self.open_nrml)
+        self.actionSave.triggered.connect(self.save_nrml)
+        self.actionWrite.triggered.connect(self.write_nrml)
+        self.actionQuit.triggered.connect(self.quit)
+        self.actionCopy.triggered.connect(self.copy)
+        self.actionPaste.triggered.connect(self.paste)
+        self.actionFullCheck.triggered.connect(self.full_check)
+        self.actionReload.triggered.connect(
+            lambda: self.set_central_widget(self.nrmlfile))
 
     def copy(self):
         widget = QtGui.QApplication.focusWidget()
-        if not isinstance(widget, QtGui.QTableWidget):
+        if not isinstance(widget, QtGui.QTableView):
             return
-        select_range = widget.selectedRanges()[0]
-        r1, r2 = select_range.topRow(), select_range.bottomRow()
-        c1, c2 = select_range.leftColumn(), select_range.rightColumn()
-        rows = getdata(widget, range(r1, r2 + 1), range(c1, c2 + 1))
-        QtGui.QApplication.clipboard().setText(
-            '\n'.join('\t'.join(row) for row in rows))
+        currsel = widget.parent().current_selection()
+        QtGui.QApplication.clipboard().setText(currsel)
 
     def paste(self):
         widget = QtGui.QApplication.focusWidget()
-        if not isinstance(widget, QtGui.QTableWidget):
+        if not isinstance(widget, QtGui.QTableView):
             return
+        widget = widget.parent()  # CustomTableView
         lines = QtGui.QApplication.clipboard().text().split('\n')
         rows = [line.split('\t') for line in lines]
         if not rows:
             return
-        ncolumns = widget.columnCount()
-        data = getdata(widget, range(widget.rowCount()), range(ncolumns))
-        for row in rows:
-            assert len(row) <= ncolumns, 'Got %d columns, expected %d' % (
-                len(row), ncolumns)
-        self.populate_table_widget(widget, data + rows)
+        ncolumns = len(widget.table.recordtype) - widget.table.ordinal
+        with messagebox(self):
+            for row in rows:
+                assert len(row) <= ncolumns, 'Got %d columns, expected %d' % (
+                    len(row), ncolumns)
+            indexes = widget.appendRows(len(rows))
+            for index, row in zip(indexes, rows):
+                widget.tableModel.set_row(index, row)
 
-    def rowAdd(self, widget):
-        if widget.objectName() == 'vSetsTbl':
-            self.root.append(node_copy(DVSET_NODE))
-        elif widget.objectName() == 'vFnTbl':
-            row_index = self.vSetsTbl.currentRow()
-            vset = self.vsets[row_index]
-            vset.append(node_copy(VFN_NODE))
-        lastrow = widget.rowCount()
-        widget.insertRow(lastrow)
-        for i in range(widget.columnCount()):
-            item = QtGui.QTableWidgetItem('XXX')
-            widget.setItem(lastrow, i, item)
+    def open_nrml(self):
+        nrmlfile = unicode(QtGui.QFileDialog.getOpenFileName(
+            self, 'Choose file',
+            QtCore.QDir.homePath(),
+            "Model file (*.xml);;Config files (*.ini)"))
+        self.set_central_widget(nrmlfile)
 
-    def rowDel(self, widget):
-        # selectedIndexes() returns both empty and non empty items
-        row_ids = set(item.row() for item in widget.selectedIndexes())
-        for row_id in sorted(row_ids, reverse=True):
-            widget.removeRow(row_id)
+    def new_vulnerability_model(self):
+        empty = '''<?xml version='1.0' encoding='utf-8'?>
+        <nrml xmlns="http://openquake.org/xmlns/nrml/0.4">
+        <vulnerabilityModel/>
+        </nrml>'''
+        open('vulnerability-model.xml', 'w').write(empty)
+        self.set_central_widget('vulnerability-model.xml')
 
+    def new_fragility_model(self):
+        empty = '''<?xml version='1.0' encoding='utf-8'?>
+        <nrml xmlns="http://openquake.org/xmlns/nrml/0.4">
+        <fragilityModel/>
+        </nrml>'''
+        open('fragility-model.xml', 'w').write(empty)
+        self.set_central_widget('fragility-model.xml')
 
-# a quick test showing that Qt cannot understand nrml.xsd :-(
-def validate_ex():
-    from PyQt4.QtCore import QUrl
-    from PyQt4.QtXmlPatterns import QXmlSchema, QXmlSchemaValidator
-    qurl = QUrl(
-        'file:///home/michele/oq-nrmllib/openquake/nrmllib/schema/nrml.xsd')
-    schema = QXmlSchema()
-    schema.load(qurl)
-    if schema.isValid():
-        v = QXmlSchemaValidator(schema)
-        print v.validate(QUrl('file:///home/michele/oq-nrmllib/examples/'
-                              'vulnerability-model-discrete.xml'))
-    else:
-        print 'schema invalid'
+    def new_exposure_model(self):
+        empty = '''<?xml version='1.0' encoding='utf-8'?>
+        <nrml xmlns="http://openquake.org/xmlns/nrml/0.4">
+        <exposureModel/>
+        </nrml>'''
+        open('exposure-model.xml', 'w').write(empty)
+        self.set_central_widget('exposure-model.xml')
+
+    def full_check(self):
+        with messagebox(self):
+            self.tableset.to_node()
+
+    def save(self, nrmlfile):
+        try:
+            node = self.full_check()
+        except:
+            return
+        # save to a temporary file
+        with open(nrmlfile + '~', 'w') as f:
+            node_to_nrml(node, f)
+        # only if there are no errors rename the file
+        os.rename(nrmlfile + '~', nrmlfile)
+
+    def save_nrml(self):
+        """
+        Save the current content of the tableset in NRML format
+        """
+        self.save(self.nrmlfile)
+
+    def write_nrml(self):
+        """
+        Save the current content of the tableset in NRML format
+        """
+        self.nrmlfile = QtGui.QFileDialog.getSaveFileName(
+            self, 'Save NRML', '', 'XML (*.xml)')
+        if self.nrmlfile:  # can be the empty string if nothing is selected
+            self.save(self.nrmlfile)
+
+    def quit(self):
+        # TODO: we should check if something has changed before quitting
+        QtGui.QApplication.quit()
 
 
 def main(argv):
     if not argv[1:]:
-        sys.exit('Please give the input directory')
+        sys.exit('Please give the input NRML file')
 
-    # create Qt application
     app = QtGui.QApplication(argv, True)
     app.setStyleSheet('''
 QTableWidget::item:selected
 { background-color: palette(highlight)}
 ''')
-
-    # create main window
-    wnd = MainWindow(argv[1])
-    wnd.show()
-
-    # Start the app up
-    retval = app.exec_()
-    sys.exit(retval)
+    mw = MainWindow(sys.argv[1])
+    mw.show()
+    sys.exit(app.exec_())
 
 if __name__ == '__main__':
     main(sys.argv)

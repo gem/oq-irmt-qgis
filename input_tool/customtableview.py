@@ -1,4 +1,5 @@
 import traceback
+import collections
 from contextlib import contextmanager
 from PyQt4 import QtCore, QtGui
 from message_bar import MessageBar
@@ -219,7 +220,9 @@ class CustomTableView(QtGui.QWidget):
         self.tableView.setSizePolicy(
             QtGui.QSizePolicy.MinimumExpanding,
             QtGui.QSizePolicy.MinimumExpanding)
-        self.tableLabel = QtGui.QLabel(self.tableModel.name())
+        label = '%s (%d rows)' % (
+            self.tableModel.name(), self.tableModel.rowCount())
+        self.tableLabel = QtGui.QLabel(label)
 
         self.layout = QtGui.QVBoxLayout()
         self.layout.addWidget(self.tableLabel)
@@ -434,6 +437,10 @@ class VulnerabilityWidget(TripleTableWidget):
 
 class FragilityContinuousWidget(TripleTableWidget):
 
+    def __init__(self, tableset, nrmlfile, parent=None):
+        # ignore the first table in the tableset
+        TripleTableWidget.__init__(self, tableset[1:], nrmlfile, parent)
+
     def show_tv1(self, index):
         self.tv[2].showOnCondition(lambda rec: False)
         self.plot([], '')
@@ -465,7 +472,7 @@ class FragilityDiscreteWidget(FragilityContinuousWidget):
 
 
 # the exposure tableset contains 6 tables:
-# Location, Exposure, CostType, Cost, Occupancy, Asset
+# Exposure, CostType, Location, Asset, Cost, Occupancy
 class ExposureWidget(QtGui.QWidget):
     table_attrs = [
         {'addBtn': 0, 'delBtn': 0, 'viewclass': NameValueView},
@@ -487,37 +494,43 @@ class ExposureWidget(QtGui.QWidget):
                        tableset.tableAsset,
                        tableset.tableCost,
                        tableset.tableOccupancy]
-        self.tv = []
+        self.tv = collections.OrderedDict()
         for table, attr in zip(self.tables, self.table_attrs):
             table.attr.update(attr)
             tv = attr['viewclass'](table)
+            if len(table) == 0:  # hide empty tables
+                tv.hide()
             tv.tableModel.validationFailed.connect(
                 lambda idx, err, tv=tv:
                 self.show_validation_error(tv, idx, err))
-            self.tv.append(tv)
+            self.tv[table.name] = tv
         self.setupUi()
 
-        self.tv[3].tableView.clicked.connect(self.show_tv45)
+        self.tv['tableLocation'].tableView.clicked.connect(
+            self.show_asset)
+        self.tv['tableAsset'].tableView.clicked.connect(
+            self.show_cost_occupancy)
 
     def setupUi(self):
         layout = QtGui.QVBoxLayout()
         hlayout1 = QtGui.QHBoxLayout()
         hlayout2 = QtGui.QHBoxLayout()
         layout.addWidget(self.message_bar)
-        hlayout1.addWidget(self.tv[0])
-        hlayout1.addWidget(self.tv[1])
-        hlayout1.addWidget(self.tv[2])
+        hlayout1.addWidget(self.tv['tableExposure'])
+        hlayout1.addWidget(self.tv['tableCostType'])
+        hlayout1.addWidget(self.tv['tableLocation'])
         layout.addLayout(hlayout1)
-        hlayout2.addWidget(self.tv[3])
-        hlayout2.addWidget(self.tv[4])
-        hlayout2.addWidget(self.tv[5])
+        hlayout2.addWidget(self.tv['tableAsset'])
+        hlayout2.addWidget(self.tv['tableCost'])
+        hlayout2.addWidget(self.tv['tableOccupancy'])
         layout.addLayout(hlayout2)
         self.setLayout(layout)
         self.setSizePolicy(
             QtGui.QSizePolicy.MinimumExpanding,
             QtGui.QSizePolicy.MinimumExpanding)
 
-        self.show_tv45(index(0, 0))
+        self.show_asset(index(0, 0))
+        self.show_cost_occupancy(index(0, 0))
 
     @QtCore.pyqtSlot(QtCore.QModelIndex, Exception)
     def show_validation_error(self, table_view, index, error):
@@ -526,12 +539,27 @@ class ExposureWidget(QtGui.QWidget):
         message = '%s: %s' % (fieldname, error)
         self.message_bar.show_message(message)
 
-    def show_tv45(self, row):
+    def show_asset(self, row):
+        # show only the assets at the given location
         try:
-            k0, = self.tv[3].tableModel.primaryKey(row)
+            loc_id, = self.tv['tableLocation'].tableModel.primaryKey(row)
         except IndexError:  # empty table, nothing to show
             return
-        # show only the rows in table 4 corresponding to k0
-        self.tv[4].showOnCondition(lambda rec: rec[0] == k0)
-        # show only the rows in table 5 corresponding to k0
-        self.tv[5].showOnCondition(lambda rec: rec[0] == k0)
+        self.tv['tableAsset'].showOnCondition(
+            lambda rec: rec['location_id'] == loc_id)
+
+        # reset Cost and Occupancy
+        self.tv['tableCost'].showOnCondition(lambda rec: False)
+        self.tv['tableOccupancy'].showOnCondition(lambda rec: False)
+
+    def show_cost_occupancy(self, row):
+        try:
+            asset_ref, = self.tv['tableAsset'].tableModel.primaryKey(row)
+        except IndexError:  # empty table, nothing to show
+            return
+        # show only the rows corresponding to asset_ref
+        self.tv['tableCost'].showOnCondition(
+            lambda rec: rec['asset_ref'] == asset_ref)
+        # show only the rows corresponding to asset_ref
+        self.tv['tableOccupancy'].showOnCondition(
+            lambda rec: rec['asset_ref'] == asset_ref)
