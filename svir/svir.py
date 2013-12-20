@@ -219,8 +219,7 @@ class Svir:
             #       zones and social vulnerability data
             sv_layer_name = tr("Social vulnerability map")
             self.social_vulnerability_layer = ProcessLayer(
-                self.zonal_layer).duplicate_in_memory(sv_layer_name,
-                                                      True)
+                self.zonal_layer).duplicate_in_memory(sv_layer_name, False)
 
             # Create menu item and toolbar button to activate join procedure
             self.enable_joining_svi_with_aggr_losses()
@@ -531,47 +530,57 @@ class Svir:
             if self.zone_id_in_losses_attr_name:
                 # then we can aggregate by zone id, instead of doing a
                 # geo-spatial analysis to see in which zone each point is
-                self.calculate_vector_stats_aggregating_by_zone_id()
+                self.calculate_vector_stats_aggregating_by_zone_id(
+                    self.loss_layer)
             else:
                 # otherwise we need to acquire the zones' geometries from the
                 # zonal layer and check if loss points are inside those zones
                 alg_name = 'saga:clippointswithpolygons'
+                # FIXME: this check doesn't work! Even if SAGA is not properly
+                # installed, the process continues and gives no visible result
                 if p.Processing.getAlgorithm(alg_name) is None:
-                    print 'Missing SAGA'
+                    print 'Missing SAGA (impossible to use it to aggregate ' \
+                          'points by zone)'
                     self.calculate_vector_stats_using_geometries()
                 else:
-                    print "found SAGA"
+                    # using SAGA to find out in which zone each point is
                     res = p.runalg(alg_name,
                                    self.loss_layer,
                                    self.zonal_layer,
-                                   'ISO',
+                                   self.zone_id_in_zones_attr_name,
                                    0,
                                    None)
-                    # run and load the generated layer.
-                    # To know the layer we need to pass a path we know
-                    # p.runandload(alg_name, points, regions, 'ISO', 0, output_file )
+                    # FIXME: this check doesn't work either! The process
+                    # continues, but with no visible results
                     if res is None:
-                        print "res is None"
                         print 'SAGA ERROR'
                     else:
-                        output_layer = QgsVectorLayer(res['CLIPS'], 'SAGA results', 'ogr')
-                        QgsMapLayerRegistry.instance().addMapLayer(output_layer)
+                        loss_layer_plus_zones = QgsVectorLayer(
+                            res['CLIPS'],
+                            'Points labeled by zone',
+                            'ogr')
+                        # TODO: Good for debugging, but to be removed
+                        QgsMapLayerRegistry.instance().addMapLayer(
+                            loss_layer_plus_zones)
+                        self.calculate_vector_stats_aggregating_by_zone_id(
+                            loss_layer_plus_zones)
+
         else:
             self.calculate_raster_stats()
 
-    def calculate_vector_stats_aggregating_by_zone_id(self):
+    def calculate_vector_stats_aggregating_by_zone_id(self, loss_layer):
         """
         If we know the zone id of each point in the loss map, we
         don't need to use geometries while aggregating, and we can
         simply count by zone id
         """
-        tot_points = len(list(self.loss_layer.getFeatures()))
+        tot_points = len(list(loss_layer.getFeatures()))
         msg = tr("Step 2 of 3: aggregating losses by zone id...")
         progress = self.create_progress_message_bar(msg)
         with TraceTimeManager(msg, DEBUG):
             zone_stats = {}
             for current_point, point_feat in enumerate(
-                    self.loss_layer.getFeatures()):
+                    loss_layer.getFeatures()):
                 progress_perc = current_point / float(tot_points) * 100
                 progress.setValue(progress_perc)
                 zone_id = point_feat[self.zone_id_in_losses_attr_name]
