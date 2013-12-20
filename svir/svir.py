@@ -55,6 +55,8 @@ from qgis.core import (QgsVectorLayer,
 from qgis.gui import QgsMessageBar
 
 from qgis.analysis import QgsZonalStatistics
+import processing as p
+
 from normalization_algs import NORMALIZATION_ALGS
 from process_layer import ProcessLayer
 
@@ -533,7 +535,27 @@ class Svir:
             else:
                 # otherwise we need to acquire the zones' geometries from the
                 # zonal layer and check if loss points are inside those zones
-                self.calculate_vector_stats_using_geometries()
+                alg_name = 'saga:clippointswithpolygons'
+                if p.Processing.getAlgorithm(alg_name) is None:
+                    print 'Missing SAGA'
+                    self.calculate_vector_stats_using_geometries()
+                else:
+                    print "found SAGA"
+                    res = p.runalg(alg_name,
+                                   self.loss_layer,
+                                   self.zonal_layer,
+                                   'ISO',
+                                   0,
+                                   None)
+                    # run and load the generated layer.
+                    # To know the layer we need to pass a path we know
+                    # p.runandload(alg_name, points, regions, 'ISO', 0, output_file )
+                    if res is None:
+                        print "res is None"
+                        print 'SAGA ERROR'
+                    else:
+                        output_layer = QgsVectorLayer(res['CLIPS'], 'SAGA results', 'ogr')
+                        QgsMapLayerRegistry.instance().addMapLayer(output_layer)
         else:
             self.calculate_raster_stats()
 
