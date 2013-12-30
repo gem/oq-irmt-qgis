@@ -74,14 +74,6 @@ from trace_time_manager import TraceTimeManager
 from utils import (tr,
                    DEBUG)
 
-
-# Default names of the attributes, in the input loss data layer and in the
-# zonal data layer, containing loss info and zone ids for aggregation
-# TODO: Good for debugging, but to be removed, forcing the user to always
-# specify attribute names
-DEFAULT_LOSS_ATTR_NAME = "TOTLOSS"
-DEFAULT_REGION_ID_ATTR_NAME = "MCODE"
-DEFAULT_SVI_ATTR_NAME = "TOTSVI"
 AGGR_LOSS_ATTR_NAME = "AGGR_LOSS"
 
 
@@ -111,24 +103,21 @@ class Svir:
         self.loss_layer_is_vector = True
         # Input layer containing loss data
         self.loss_layer = None
-        # Input layer specifying zones for aggregation
+        # Input layer specifying zones for aggregation and containing social
+        # vulnerability data already aggregated by zone
         self.zonal_layer = None
         # Output layer containing aggregated loss data
         self.aggregation_layer = None
         # Output layer containing aggregated loss data for non-empty zones
         self.purged_layer = None
-        # Input layer containing social vulnerability data
-        self.social_vulnerability_layer = None
         # Output layer containing joined data and final svir computations
         self.svir_layer = None
         # keep a list of the menu items, in order to easily unload them later
         self.registered_actions = []
-
         # Action to join SVI with loss data (both aggregated by zone)
         self.join_svi_with_losses_action = None
         # Action to calculate some common statistics combining SVI and loss
         self.calculate_svir_statistics_action = None
-
         # Name of the attribute containing loss values (in loss_layer)
         self.loss_attr_name = None
         # Name of the (optional) attribute containing zone id (in loss_layer)
@@ -159,6 +148,15 @@ class Svir:
         self.add_menu_item(":/plugins/svir/start_plugin_icon.png",
                            u"&Normalize attribute",
                            self.normalize_attribute)
+        # Action for joining SVI with loss data (both aggregated by zone)
+        self.add_menu_item(":/plugins/svir/start_plugin_icon.png",
+                           u"Join SVI with loss data",
+                           self.join_svi_with_aggr_losses)
+        # Action for calculating RISKPLUS, RISKMULT and RISK1F statistics
+        self.add_menu_item(
+            ":/plugins/svir/start_plugin_icon.png",
+            u"Calculate RISKPLUS, RISKMULT and RISK1F statistics",
+            self.calculate_svir_statistics)
 
     def unload(self):
         # Remove the plugin menu items and toolbar icons
@@ -195,69 +193,21 @@ class Svir:
             if self.dlg.ui.purge_chk.isChecked():
                 self.create_new_aggregation_layer_with_no_empty_zones()
 
-            # TODO: Check if it's good to use the same layer to get
-            #       zones and social vulnerability data
-            sv_layer_name = tr("Social vulnerability map")
-            self.social_vulnerability_layer = ProcessLayer(
-                self.zonal_layer).duplicate_in_memory(sv_layer_name, False)
-
-            # Create menu item and toolbar button to activate join procedure
-            self.enable_joining_svi_with_aggr_losses()
-
-    def enable_joining_svi_with_aggr_losses(self):
-        """
-        Create and enable toolbar button and menu item
-        for joining SVI with loss data (both aggregated by zone)
-        """
-        # Create action
-        self.join_svi_with_losses_action = QAction(
-            QIcon(":/plugins/svir/start_plugin_icon.png"),
-            u"Join SVI with loss data",
-            self.iface.mainWindow())
-        # Connect the action to the join_svi_with_aggr_losses method
-        self.join_svi_with_losses_action.triggered.connect(
-            self.join_svi_with_aggr_losses)
-        # Add toolbar button and menu item
-        self.iface.addToolBarIcon(self.join_svi_with_losses_action)
-        self.iface.addPluginToMenu(u"&SVIR",
-                                   self.join_svi_with_losses_action)
-        msg = 'Select "Join SVI with loss data" from SVIR plugin menu ' \
-              'to join SVI and loss data (both aggregated by zone)'
-        self.iface.messageBar().pushMessage(tr("Info"),
-                                            tr(msg),
-                                            level=QgsMessageBar.INFO)
-        self.registered_actions.append(self.join_svi_with_losses_action)
-
-    def enable_calculating_svir_stats(self):
-        """
-        Create and enable toolbar button and menu item
-        for calculating common SVIR statistics
-        """
-        # Create action
-        self.calculate_svir_statistics_action = QAction(
-            QIcon(":/plugins/svir/start_plugin_icon.png"),
-            u"Calculate common SVIR statistics",
-            self.iface.mainWindow())
-        # Connect the action to the calculate_svir_statistics method
-        self.calculate_svir_statistics_action.triggered.connect(
-            self.calculate_svir_statistics)
-        # Add toolbar button and menu item
-        self.iface.addToolBarIcon(self.calculate_svir_statistics_action)
-        self.iface.addPluginToMenu(u"&SVIR",
-                                   self.calculate_svir_statistics_action)
-        msg = 'Select "Calculate common SVIR statistics" from SVIR plugin ' \
-              'menu to calculate RISKPLUS, RISKMULT and RISK1F statistics'
-        self.iface.messageBar().pushMessage(tr("Info"),
-                                            tr(msg),
-                                            level=QgsMessageBar.INFO)
-        self.registered_actions.append(self.calculate_svir_statistics_action)
+            msg = 'Select "Join SVI with loss data" from SVIR plugin menu ' \
+                  'to join SVI and loss data (both aggregated by zone)'
+            self.iface.messageBar().pushMessage(tr("Info"),
+                                                tr(msg),
+                                                level=QgsMessageBar.INFO)
 
     def join_svi_with_aggr_losses(self):
         if self.select_layers_to_join():
             self.create_svir_layer()
-            # Create menu item and toolbar button to activate calculation
-            # of common svir statistics
-            self.enable_calculating_svir_stats()
+            msg = 'Select "Calculate common SVIR statistics" from SVIR ' \
+                  'plugin menu to calculate RISKPLUS, RISKMULT and RISK1F ' \
+                  'statistics'
+            self.iface.messageBar().pushMessage(tr("Info"),
+                                                tr(msg),
+                                                level=QgsMessageBar.INFO)
         else:
             msg = 'The new layer containing SVIR data has not been built.'
             self.iface.messageBar().pushMessage(tr("Warning"),
@@ -833,7 +783,7 @@ class Svir:
         # Create new svir layer, duplicating social vulnerability layer
         layer_name = tr("SVIR map")
         self.svir_layer = ProcessLayer(
-            self.social_vulnerability_layer).duplicate_in_memory(layer_name,
+            self.zonal_layer).duplicate_in_memory(layer_name,
                                                                  True)
         # Add "loss" attribute to svir_layer
         ProcessLayer(self.svir_layer).add_attributes(
