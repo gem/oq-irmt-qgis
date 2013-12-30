@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_svir.ui'
 #
-# Created: Mon Nov 18 17:49:40 2013
+# Created: Mon Dec 30 16:12:41 2013
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -17,7 +17,7 @@ except AttributeError:
 class Ui_SvirDialog(object):
     def setupUi(self, SvirDialog):
         SvirDialog.setObjectName(_fromUtf8("SvirDialog"))
-        SvirDialog.resize(491, 187)
+        SvirDialog.resize(523, 233)
         self.verticalLayout_2 = QtGui.QVBoxLayout(SvirDialog)
         self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
         self.gridLayout = QtGui.QGridLayout()
@@ -40,6 +40,9 @@ class Ui_SvirDialog(object):
         self.zonal_layer_tbn = QtGui.QToolButton(SvirDialog)
         self.zonal_layer_tbn.setObjectName(_fromUtf8("zonal_layer_tbn"))
         self.gridLayout.addWidget(self.zonal_layer_tbn, 1, 2, 1, 1)
+        self.purge_chk = QtGui.QCheckBox(SvirDialog)
+        self.purge_chk.setObjectName(_fromUtf8("purge_chk"))
+        self.gridLayout.addWidget(self.purge_chk, 2, 1, 1, 1)
         self.verticalLayout_2.addLayout(self.gridLayout)
         self.buttonBox = QtGui.QDialogButtonBox(SvirDialog)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
@@ -58,4 +61,5 @@ class Ui_SvirDialog(object):
         self.loss_layer_lbl.setText(QtGui.QApplication.translate("SvirDialog", "Loss layer", None, QtGui.QApplication.UnicodeUTF8))
         self.zonal_layer_lbl.setText(QtGui.QApplication.translate("SvirDialog", "Zonal layer", None, QtGui.QApplication.UnicodeUTF8))
         self.zonal_layer_tbn.setText(QtGui.QApplication.translate("SvirDialog", "...", None, QtGui.QApplication.UnicodeUTF8))
+        self.purge_chk.setText(QtGui.QApplication.translate("SvirDialog", "Purge zones containing no loss points", None, QtGui.QApplication.UnicodeUTF8))
 

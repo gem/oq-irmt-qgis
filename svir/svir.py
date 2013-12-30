@@ -77,6 +77,8 @@ from utils import (tr,
 
 # Default names of the attributes, in the input loss data layer and in the
 # zonal data layer, containing loss info and zone ids for aggregation
+# TODO: Good for debugging, but to be removed, forcing the user to always
+# specify attribute names
 DEFAULT_LOSS_ATTR_NAME = "TOTLOSS"
 DEFAULT_REGION_ID_ATTR_NAME = "MCODE"
 DEFAULT_SVI_ATTR_NAME = "TOTSVI"
@@ -119,18 +121,14 @@ class Svir:
         self.social_vulnerability_layer = None
         # Output layer containing joined data and final svir computations
         self.svir_layer = None
-        # Action to activate the modal dialog to load loss data and zones
-        self.initial_action = None
-        # Action to activate the modal dialog to select a layer and one of its
-        # attributes, in order to normalize that attribute
-        self.normalize_attribute_action = None
-        # Action to activate building a new layer with loss data
-        # aggregated by zone, excluding zones containing no loss points
-        self.purge_empty_zones_action = None
+        # keep a list of the menu items, in order to easily unload them later
+        self.registered_actions = []
+
         # Action to join SVI with loss data (both aggregated by zone)
         self.join_svi_with_losses_action = None
         # Action to calculate some common statistics combining SVI and loss
         self.calculate_svir_statistics_action = None
+
         # Name of the attribute containing loss values (in loss_layer)
         self.loss_attr_name = None
         # Name of the (optional) attribute containing zone id (in loss_layer)
@@ -144,46 +142,29 @@ class Svir:
         # Most likely, it will be the zonal layer
         self.zonal_layer_to_join = None
 
+    def add_menu_item(self, icon_path, label, corresponding_method):
+        action = QAction(QIcon(icon_path), label, self.iface.mainWindow())
+        action.triggered.connect(corresponding_method)
+        self.iface.addToolBarIcon(action)
+        self.iface.addPluginToMenu(u"&SVIR", action)
+        self.registered_actions.append(action)
+
     def initGui(self):
-        # Create action that will start plugin configuration
-        self.initial_action = QAction(
-            QIcon(":/plugins/svir/start_plugin_icon.png"),
-            u"Aggregate loss by zone", self.iface.mainWindow())
-        # connect the action to the run method
-        self.initial_action.triggered.connect(self.run)
-
-        # Add toolbar button and menu item
-        self.iface.addToolBarIcon(self.initial_action)
-        self.iface.addPluginToMenu(u"&SVIR", self.initial_action)
-
-        # Create action for standardization/normalization
-        self.normalize_attribute_action = QAction(
-            QIcon(":/plugins/svir/start_plugin_icon.png"),
-            u"Normalize attribute",
-            self.iface.mainWindow())
-        # Connect the action to the normalize_attribute method
-        self.normalize_attribute_action.triggered.connect(
-            self.normalize_attribute)
-        # Add toolbar button and menu item
-        self.iface.addToolBarIcon(self.normalize_attribute_action)
-        self.iface.addPluginToMenu(u"&SVIR",
-                                   self.normalize_attribute_action)
+        # Action to activate the modal dialog to load loss data and zones
+        self.add_menu_item(":/plugins/svir/start_plugin_icon.png",
+                           u"&Aggregate loss by zone",
+                           self.run)
+        # Action to activate the modal dialog to select a layer and one of its
+        # attributes, in order to normalize that attribute
+        self.add_menu_item(":/plugins/svir/start_plugin_icon.png",
+                           u"&Normalize attribute",
+                           self.normalize_attribute)
 
     def unload(self):
-        # Remove the plugin menu item and icon
-        self.iface.removePluginMenu(u"&SVIR", self.initial_action)
-        self.iface.removeToolBarIcon(self.initial_action)
-        self.iface.removePluginMenu(u"&SVIR", self.normalize_attribute_action)
-        self.iface.removeToolBarIcon(self.normalize_attribute_action)
-        self.iface.removePluginMenu(u"&SVIR",
-                                    self.purge_empty_zones_action)
-        self.iface.removeToolBarIcon(self.purge_empty_zones_action)
-        self.iface.removePluginMenu(u"&SVIR",
-                                    self.join_svi_with_losses_action)
-        self.iface.removeToolBarIcon(self.join_svi_with_losses_action)
-        self.iface.removePluginMenu(u"&SVIR",
-                                    self.calculate_svir_statistics_action)
-        self.iface.removeToolBarIcon(self.calculate_svir_statistics_action)
+        # Remove the plugin menu items and toolbar icons
+        for action in self.registered_actions:
+            self.iface.removePluginMenu(u"&SVIR", action)
+            self.iface.removeToolBarIcon(action)
         self.clear_progress_message_bar()
 
     # run method that performs all the real work
@@ -211,9 +192,8 @@ class Svir:
             # zone and sum of loss values for the same zone)
             self.calculate_stats()
 
-            # Create and enable toolbar button and menu item for
-            # purging empty zones
-            self.enable_purging_empty_zones()
+            if self.dlg.ui.purge_chk.isChecked():
+                self.create_new_aggregation_layer_with_no_empty_zones()
 
             # TODO: Check if it's good to use the same layer to get
             #       zones and social vulnerability data
@@ -223,30 +203,6 @@ class Svir:
 
             # Create menu item and toolbar button to activate join procedure
             self.enable_joining_svi_with_aggr_losses()
-
-    def enable_purging_empty_zones(self):
-        """
-        Create and enable toolbar button and menu item
-        for purging empty zones
-        """
-        # Create action
-        self.purge_empty_zones_action = QAction(
-            QIcon(":/plugins/svir/purge_empty_zones_icon.png"),
-            u"Purge empty zones",
-            self.iface.mainWindow())
-        # Connect the action to the purge_empty_zones method
-        self.purge_empty_zones_action.triggered.connect(
-            self.create_new_aggregation_layer_with_no_empty_zones)
-        # Add toolbar button and menu item
-        self.iface.addToolBarIcon(self.purge_empty_zones_action)
-        self.iface.addPluginToMenu(u"&SVIR",
-                                   self.purge_empty_zones_action)
-        msg = 'Select "Purge empty zones" from SVIR plugin menu ' \
-              'to create a new aggregation layer with the zones ' \
-              'containing at least one loss point'
-        self.iface.messageBar().pushMessage(tr("Info"),
-                                            tr(msg),
-                                            level=QgsMessageBar.INFO)
 
     def enable_joining_svi_with_aggr_losses(self):
         """
@@ -270,6 +226,7 @@ class Svir:
         self.iface.messageBar().pushMessage(tr("Info"),
                                             tr(msg),
                                             level=QgsMessageBar.INFO)
+        self.registered_actions.append(self.join_svi_with_losses_action)
 
     def enable_calculating_svir_stats(self):
         """
@@ -293,6 +250,7 @@ class Svir:
         self.iface.messageBar().pushMessage(tr("Info"),
                                             tr(msg),
                                             level=QgsMessageBar.INFO)
+        self.registered_actions.append(self.calculate_svir_statistics_action)
 
     def join_svi_with_aggr_losses(self):
         if self.select_layers_to_join():
@@ -559,9 +517,9 @@ class Svir:
                             res['CLIPS'],
                             'Points labeled by zone',
                             'ogr')
-                        # TODO: Good for debugging, but to be removed
-                        QgsMapLayerRegistry.instance().addMapLayer(
-                            loss_layer_plus_zones)
+                        if DEBUG:
+                            QgsMapLayerRegistry.instance().addMapLayer(
+                                loss_layer_plus_zones)
                         self.calculate_vector_stats_aggregating_by_zone_id(
                             loss_layer_plus_zones)
 
