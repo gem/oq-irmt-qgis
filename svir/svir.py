@@ -618,10 +618,15 @@ class Svir:
                     progress.setValue(progress_perc)
                     # get the id of the current zone
                     zone_id = zone_feat[self.zone_id_in_zones_attr_name]
+                    # initialize points_count and loss_sum to zero, and update
+                    # them afterwards only if the zone contains at least one
+                    # loss point
+                    points_count, loss_sum = (0, 0.0)
                     # retrieve count and sum from the dictionary, using the
                     # zone id as key to get the values from the corresponding
-                    # numpy array
-                    points_count, loss_sum = zone_stats[zone_id]
+                    # numpy array (otherwise, keep zero values)
+                    if zone_id in zone_stats:
+                        points_count, loss_sum = zone_stats[zone_id]
                     # without casting to int and to float, it wouldn't work
                     fid = zone_feat.id()
                     self.aggregation_layer.changeAttributeValue(
