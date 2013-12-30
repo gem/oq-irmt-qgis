@@ -583,7 +583,14 @@ class Svir:
                     loss_layer.getFeatures()):
                 progress_perc = current_point / float(tot_points) * 100
                 progress.setValue(progress_perc)
-                zone_id = point_feat[self.zone_id_in_losses_attr_name]
+                # if the user picked an attribute from the loss layer, to be
+                # used as zone id, use that; otherwise, use the attribute
+                # copied from the zonal layer
+                if self.zone_id_in_losses_attr_name:
+                    zone_id_attr_name = self.zone_id_in_losses_attr_name
+                else:
+                    zone_id_attr_name = self.zone_id_in_zones_attr_name
+                zone_id = point_feat[zone_id_attr_name]
                 loss_value = point_feat[self.loss_attr_name]
                 if zone_id in zone_stats:
                     # increment the count by one and add the loss value
