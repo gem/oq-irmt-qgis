@@ -396,6 +396,13 @@ class Svir:
         dlg = SelectLayersToJoinDialog()
         reg = QgsMapLayerRegistry.instance()
         layer_list = [layer.name() for layer in reg.mapLayers().values()]
+        if len(layer_list) < 2:
+            msg = 'At least two layers must be available for joining'
+            self.iface.messageBar().pushMessage(
+                tr("Error"),
+                tr(msg),
+                level=QgsMessageBar.CRITICAL)
+            return False
         dlg.ui.loss_layer_cbox.addItems(layer_list)
         dlg.ui.zonal_layer_cbox.addItems(layer_list)
         if dlg.exec_():
