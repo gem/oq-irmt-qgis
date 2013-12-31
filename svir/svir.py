@@ -62,7 +62,6 @@ from process_layer import ProcessLayer
 
 import resources_rc
 
-# Import the code for the dialog
 from svirdialog import SvirDialog
 from select_layers_to_join_dialog import SelectLayersToJoinDialog
 from attribute_selection_dialog import AttributeSelectionDialog
@@ -258,15 +257,44 @@ class Svir:
         # populate combo boxes with field names taken by layers
         loss_dp = self.loss_layer.dataProvider()
         loss_fields = list(loss_dp.fields())
-        for field in loss_fields:
+        # Preselect reasonable attribute names from the dropdown list
+        presel_loss_attr_index = None
+        presel_zone_id_attr_index_loss = None
+        presel_zonal_attr_index = None
+        presel_zone_id_attr_index_zone = None
+        for cbx_index, field in enumerate(loss_fields):
             dlg.ui.loss_attr_name_cbox.addItem(field.name())
             dlg.ui.zone_id_attr_name_loss_cbox.addItem(field.name())
+            # FIXME: typeName is empty for user-defined fields which typeName
+            # has not been explicitly set (potential mismatch between type and
+            # typeName!). Same thing happens below for zonal fields. Therefore
+            # we are using the type ids, which in this case are 2 or 6 for
+            # numbers and 10 for strings
+            if field.type() in [2, 6]:
+                presel_loss_attr_index = cbx_index
+            elif field.type() == 10:
+                # +1 because cbx_index 0 is for "use zonal geometries"
+                presel_zone_id_attr_index_loss = cbx_index + 1
         zonal_dp = self.zonal_layer.dataProvider()
         zonal_fields = list(zonal_dp.fields())
-        for field in zonal_fields:
+        for cbx_index, field in enumerate(zonal_fields):
             dlg.ui.zone_id_attr_name_zone_cbox.addItem(field.name())
             dlg.ui.zonal_attr_name_cbox.addItem(field.name())
-        # TODO: pre-select default attribute names in the dropdown (if present)
+            if field.type() in [2, 6]:
+                presel_zonal_attr_index = cbx_index
+            elif field.type() == 10:
+                presel_zone_id_attr_index_zone = cbx_index
+        # Possibly pre-select attribute names in the dropdown:
+        if presel_loss_attr_index:
+            dlg.ui.loss_attr_name_cbox.setCurrentIndex(presel_loss_attr_index)
+        if presel_zone_id_attr_index_loss:
+            dlg.ui.zone_id_attr_name_loss_cbox.setCurrentIndex(
+                presel_zone_id_attr_index_loss)
+        if presel_zonal_attr_index:
+            dlg.ui.zonal_attr_name_cbox.setCurrentIndex(presel_zonal_attr_index)
+        if presel_zone_id_attr_index_zone:
+            dlg.ui.zone_id_attr_name_zone_cbox.setCurrentIndex(
+                presel_zone_id_attr_index_zone)
 
         # if the user presses OK
         if dlg.exec_():
@@ -287,20 +315,8 @@ class Svir:
             self.zone_id_in_zones_attr_name = zonal_fields[
                 dlg.ui.zone_id_attr_name_zone_cbox.currentIndex()].name()
         else:
-            # TODO: is it good to use default values, or should we stop here?
-            # use default values if CANCEL is pressed
-            self.loss_attr_name = DEFAULT_LOSS_ATTR_NAME
-            self.zone_id_in_losses_attr_name = DEFAULT_REGION_ID_ATTR_NAME
-            self.zonal_attr_name = DEFAULT_SVI_ATTR_NAME
-            self.zone_id_in_zones_attr_name = DEFAULT_REGION_ID_ATTR_NAME
-            msg = 'Using default attributes: {0}, {1}, {2}, {3}'.format(
-                self.loss_attr_name,
-                self.zone_id_in_losses_attr_name,
-                self.zonal_attr_name,
-                self.zone_id_in_zones_attr_name)
-            self.iface.messageBar().pushMessage(tr("Warning"),
-                                                tr(msg),
-                                                level=QgsMessageBar.WARNING)
+            # FIXME: Properly abort plugin's execution
+            raise RuntimeError("Operation canceled by the user")
 
     def normalize_attribute(self):
         dlg = NormalizationDialog(self.iface)
