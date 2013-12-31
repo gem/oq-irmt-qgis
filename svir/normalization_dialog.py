@@ -27,7 +27,8 @@
 """
 from PyQt4 import QtCore
 from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QDialog
+from PyQt4.QtGui import (QDialog,
+                         QDialogButtonBox)
 from qgis.core import QgsMapLayerRegistry
 
 from ui_normalization import Ui_NormalizationDialog
@@ -52,6 +53,7 @@ class NormalizationDialog(QDialog):
             self.reload_variant_cbx)
         if self.ui.algorithm_cbx.currentText() == 'RANK':
             self.reload_variant_cbx()
+        self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
 
     @pyqtSlot()
     def on_calc_btn_clicked(self):
@@ -67,8 +69,20 @@ class NormalizationDialog(QDialog):
         # populate combo boxes with field names taken by layers
         dp = layer.dataProvider()
         fields = list(dp.fields())
+        no_numeric_fields = True
         for field in fields:
-            self.ui.attrib_cbx.addItem(field.name())
+            # add numeric fields only
+            # FIXME: typeName is empty for user-defined fields which typeName
+            # has not been explicitly set (potential mismatch between type and
+            # typeName!). Same thing happens below for zonal fields. Therefore
+            # we are using the type ids, which in this case are 2 or 6 for
+            if field.type() in [2, 6]:
+                self.ui.attrib_cbx.addItem(field.name())
+                no_numeric_fields = False
+        if no_numeric_fields:
+            self.ok_button.setEnabled(False)
+        else:
+            self.ok_button.setEnabled(True)
 
     def reload_variant_cbx(self):
         self.ui.variant_cbx.clear()

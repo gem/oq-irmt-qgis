@@ -211,11 +211,6 @@ class Svir:
             self.iface.messageBar().pushMessage(tr("Info"),
                                                 tr(msg),
                                                 level=QgsMessageBar.INFO)
-        else:
-            msg = 'The new layer containing SVIR data has not been built.'
-            self.iface.messageBar().pushMessage(tr("Warning"),
-                                                tr(msg),
-                                                level=QgsMessageBar.WARNING)
 
     def load_layers(self, zonal_layer_path,
                     loss_layer_path,
@@ -227,14 +222,14 @@ class Svir:
             if not self.zonal_layer.geometryType() == QGis.Polygon:
                 msg = 'Zonal layer must contain zone polygons'
                 self.iface.messageBar().pushMessage(
-                    tr("Critical"),
+                    tr("Error"),
                     tr(msg),
                     level=QgsMessageBar.CRITICAL)
                 return False
         else:
             msg = 'Zonal layer must be a VectorLayer'
             self.iface.messageBar().pushMessage(
-                tr("Critical"),
+                tr("Error"),
                 tr(msg),
                 level=QgsMessageBar.CRITICAL)
             return False
@@ -244,7 +239,7 @@ class Svir:
         else:
             msg = 'Invalid zonal layer'
             self.iface.messageBar().pushMessage(
-                tr("Critical"),
+                tr("Error"),
                 tr(msg),
                 level=QgsMessageBar.CRITICAL)
             return False
@@ -256,14 +251,14 @@ class Svir:
                 if not self.loss_layer.geometryType() == QGis.Point:
                     msg = 'Loss layer must contain points'
                     self.iface.messageBar().pushMessage(
-                        tr("Critical"),
+                        tr("Error"),
                         tr(msg),
                         level=QgsMessageBar.CRITICAL)
                     return False
             else:
                 msg = 'Loss layer is not a VectorLayer'
                 self.iface.messageBar().pushMessage(
-                    tr("Critical"),
+                    tr("Error"),
                     tr(msg),
                     level=QgsMessageBar.CRITICAL)
                 return False
@@ -277,7 +272,7 @@ class Svir:
         else:
             msg = 'Invalid loss layer'
             self.iface.messageBar().pushMessage(
-                tr("Critical"),
+                tr("Error"),
                 tr(msg),
                 level=QgsMessageBar.CRITICAL)
             return False
@@ -368,6 +363,13 @@ class Svir:
         dlg = NormalizationDialog(self.iface)
         reg = QgsMapLayerRegistry.instance()
         layer_list = list(reg.mapLayers())
+        if not layer_list:
+            msg = 'No layer available for normalization'
+            self.iface.messageBar().pushMessage(
+                tr("Error"),
+                tr(msg),
+                level=QgsMessageBar.CRITICAL)
+            return
         dlg.ui.layer_cbx.addItems(layer_list)
         alg_list = NORMALIZATION_ALGS.keys()
         dlg.ui.algorithm_cbx.addItems(alg_list)
@@ -403,7 +405,6 @@ class Svir:
                 dlg.ui.zonal_layer_cbox.currentIndex()]
             return True
         else:
-            # TODO: what happens if the user presses CANCEL?
             return False
 
     def create_aggregation_layer(self):
