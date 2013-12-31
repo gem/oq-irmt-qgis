@@ -133,6 +133,12 @@ class Svir:
         self.zonal_layer_to_join = None
 
     def add_menu_item(self, icon_path, label, corresponding_method):
+        """
+        Add an item to the SVIR plugin menu and a corresponding toolbar icon
+        @param icon_path: Path of the icon associated to the action
+        @param label: Name of the action, visible to the user
+        @param corresponding_method: Method called when the action is triggered
+        """
         action = QAction(QIcon(icon_path), label, self.iface.mainWindow())
         action.triggered.connect(corresponding_method)
         self.iface.addToolBarIcon(action)
@@ -203,6 +209,10 @@ class Svir:
                                                 level=QgsMessageBar.INFO)
 
     def join_svi_with_aggr_losses(self):
+        """
+        SVI data and aggregated losses are joined in order to obtain a layer
+        containing, for each zone, an aggregated SVI and an aggregated loss
+        """
         if self.select_layers_to_join():
             self.create_svir_layer()
             msg = 'Select "Calculate common SVIR statistics" from SVIR ' \
@@ -215,6 +225,14 @@ class Svir:
     def load_layers(self, zonal_layer_path,
                     loss_layer_path,
                     loss_layer_is_vector):
+        """
+        Initial loading of the layers containing regional data and losses
+        @param zonal_layer_path: Path of the layer containing zonal data
+        (e.g. SVI aggregated by zone) and zonal geometries.
+        @param loss_layer_path: Path of the layer containing loss points
+        @param loss_layer_is_vector: True if loss layer is a vector layer,
+        or False if it is a raster layer
+        """
         # Load zonal layer
         self.zonal_layer = QgsVectorLayer(zonal_layer_path,
                                           tr('Zonal data'), 'ogr')
@@ -360,6 +378,11 @@ class Svir:
             return False
 
     def normalize_attribute(self):
+        """
+        A modal dialog is displayed to the user, for the selection of a layer,
+        one of its attributes, a normalization algorithm and a variant of the
+        algorithm
+        """
         dlg = NormalizationDialog(self.iface)
         reg = QgsMapLayerRegistry.instance()
         layer_list = list(reg.mapLayers())
