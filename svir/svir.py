@@ -50,7 +50,9 @@ from qgis.core import (QgsVectorLayer,
                        QgsFields,
                        QgsSpatialIndex,
                        QgsFeatureRequest,
-                       QgsVectorDataProvider)
+                       QgsVectorDataProvider,
+                       QgsMapLayer,
+                       QGis)
 
 from qgis.gui import QgsMessageBar
 
@@ -173,9 +175,10 @@ class Svir:
             # check if loss layer is raster or vector (aggregating by zone
             # is different in the two cases)
             self.loss_layer_is_vector = self.dlg.loss_map_is_vector
-            self.load_layers(self.dlg.ui.zonal_layer_le.text(),
-                             self.dlg.ui.loss_layer_le.text(),
-                             self.loss_layer_is_vector)
+            if not self.load_layers(self.dlg.ui.zonal_layer_le.text(),
+                                    self.dlg.ui.loss_layer_le.text(),
+                                    self.loss_layer_is_vector):
+                return
 
             # Open dialog to ask the user to specify attributes
             # * loss from loss_layer
@@ -214,31 +217,73 @@ class Svir:
                                                 tr(msg),
                                                 level=QgsMessageBar.WARNING)
 
-    def load_layers(self, aggregation_layer_path,
+    def load_layers(self, zonal_layer_path,
                     loss_layer_path,
                     loss_layer_is_vector):
-        # Load aggregation layer
-        self.zonal_layer = QgsVectorLayer(aggregation_layer_path,
+        # Load zonal layer
+        self.zonal_layer = QgsVectorLayer(zonal_layer_path,
                                           tr('Zonal data'), 'ogr')
-        # Add aggregation layer to registry
+        if self.zonal_layer.type() == QgsMapLayer.VectorLayer:
+            if not self.zonal_layer.geometryType() == QGis.Polygon:
+                msg = 'Zonal layer must contain zone polygons'
+                self.iface.messageBar().pushMessage(
+                    tr("Critical"),
+                    tr(msg),
+                    level=QgsMessageBar.CRITICAL)
+                return False
+        else:
+            msg = 'Zonal layer must be a VectorLayer'
+            self.iface.messageBar().pushMessage(
+                tr("Critical"),
+                tr(msg),
+                level=QgsMessageBar.CRITICAL)
+            return False
+        # Add zonal layer to registry
         if self.zonal_layer.isValid():
             QgsMapLayerRegistry.instance().addMapLayer(self.zonal_layer)
         else:
-            raise RuntimeError('Aggregation layer invalid')
+            msg = 'Invalid zonal layer'
+            self.iface.messageBar().pushMessage(
+                tr("Critical"),
+                tr(msg),
+                level=QgsMessageBar.CRITICAL)
+            return False
             # Load loss layer
         if loss_layer_is_vector:
             self.loss_layer = QgsVectorLayer(loss_layer_path,
                                              tr('Loss map'), 'ogr')
+            if self.loss_layer.type() == QgsMapLayer.VectorLayer:
+                if not self.loss_layer.geometryType() == QGis.Point:
+                    msg = 'Loss layer must contain points'
+                    self.iface.messageBar().pushMessage(
+                        tr("Critical"),
+                        tr(msg),
+                        level=QgsMessageBar.CRITICAL)
+                    return False
+            else:
+                msg = 'Loss layer is not a VectorLayer'
+                self.iface.messageBar().pushMessage(
+                    tr("Critical"),
+                    tr(msg),
+                    level=QgsMessageBar.CRITICAL)
+                return False
         else:
             self.loss_layer = QgsRasterLayer(loss_layer_path,
                                              tr('Loss map'))
-            # Add loss layer to registry
+
+        # Add loss layer to registry
         if self.loss_layer.isValid():
             QgsMapLayerRegistry.instance().addMapLayer(self.loss_layer)
         else:
-            raise RuntimeError('Loss layer invalid')
+            msg = 'Invalid loss layer'
+            self.iface.messageBar().pushMessage(
+                tr("Critical"),
+                tr(msg),
+                level=QgsMessageBar.CRITICAL)
+            return False
             # Zoom depending on the zonal layer's extent
         self.canvas.setExtent(self.zonal_layer.extent())
+        return True
 
     def attribute_selection(self):
         """
