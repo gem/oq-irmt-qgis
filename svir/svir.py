@@ -894,6 +894,13 @@ class Svir:
         Calculate some common indices, combining total risk (in terms of
         losses) and social vulnerability index
         """
+        # Check if svir_layer has been created, otherwise return
+        if not self.svir_layer:
+            msg = "The layer containing SVIR data has not been created yet"
+            self.iface.messageBar().pushMessage(tr("Error"),
+                                                tr(msg),
+                                                level=QgsMessageBar.CRITICAL)
+            return
         # add attributes:
         # RISKPLUS = TOTRISK + TOTSVI
         # RISKMULT = TOTRISK * TOTSVI
