@@ -182,7 +182,8 @@ class Svir:
             # * zone_id from loss_layer
             # * svi from zonal_layer
             # * zone_id from zonal_layer
-            self.attribute_selection()
+            if not self.attribute_selection():
+                return
 
             self.create_aggregation_layer()
             # aggregate losses by zone (calculate count of points in the
@@ -314,9 +315,9 @@ class Svir:
                 dlg.ui.zonal_attr_name_cbox.currentIndex()].name()
             self.zone_id_in_zones_attr_name = zonal_fields[
                 dlg.ui.zone_id_attr_name_zone_cbox.currentIndex()].name()
+            return True
         else:
-            # FIXME: Properly abort plugin's execution
-            raise RuntimeError("Operation canceled by the user")
+            return False
 
     def normalize_attribute(self):
         dlg = NormalizationDialog(self.iface)
