@@ -155,11 +155,11 @@ class Svir:
         self.add_menu_item(":/plugins/svir/start_plugin_icon.png",
                            u"Collect SVI and loss data by zone",
                            self.join_svi_with_aggr_losses)
-        # Action for calculating RISKPLUS, RISKMULT and RISK1F statistics
+        # Action for calculating RISKPLUS, RISKMULT and RISK1F indices
         self.add_menu_item(
             ":/plugins/svir/start_plugin_icon.png",
-            u"Calculate RISKPLUS, RISKMULT and RISK1F statistics",
-            self.calculate_svir_statistics)
+            u"Calculate RISKPLUS, RISKMULT and RISK1F indices",
+            self.calculate_svir_indices)
 
     def unload(self):
         # Remove the plugin menu items and toolbar icons
@@ -211,9 +211,9 @@ class Svir:
         """
         if self.select_layers_to_join():
             self.create_svir_layer()
-            msg = 'Select "Calculate common SVIR statistics" from SVIR ' \
+            msg = 'Select "Calculate common SVIR indices" from SVIR ' \
                   'plugin menu to calculate RISKPLUS, RISKMULT and RISK1F ' \
-                  'statistics'
+                  'indices'
             self.iface.messageBar().pushMessage(tr("Info"),
                                                 tr(msg),
                                                 level=QgsMessageBar.INFO)
@@ -884,7 +884,7 @@ class Svir:
         else:
             raise RuntimeError('SVIR layer invalid')
 
-    def calculate_svir_statistics(self):
+    def calculate_svir_indices(self):
         """
         Calculate some common indices, combining total risk (in terms of
         losses) and social vulnerability index
@@ -911,7 +911,7 @@ class Svir:
         progress = self.create_progress_message_bar(msg)
 
         with LayerEditingManager(self.svir_layer,
-                                 tr("Calculate common SVIR statistics"),
+                                 tr("Calculate some common SVIR indices"),
                                  DEBUG):
             riskplus_idx = self.svir_layer.fieldNameIndex('RISKPLUS')
             riskmult_idx = self.svir_layer.fieldNameIndex('RISKMULT')
