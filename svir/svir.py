@@ -115,10 +115,6 @@ class Svir:
         self.svir_layer = None
         # keep a list of the menu items, in order to easily unload them later
         self.registered_actions = []
-        # Action to join SVI with loss data (both aggregated by zone)
-        self.join_svi_with_losses_action = None
-        # Action to calculate some common statistics combining SVI and loss
-        self.calculate_svir_statistics_action = None
         # Name of the attribute containing loss values (in loss_layer)
         self.loss_attr_name = None
         # Name of the (optional) attribute containing zone id (in loss_layer)
@@ -157,7 +153,7 @@ class Svir:
                            self.normalize_attribute)
         # Action for joining SVI with loss data (both aggregated by zone)
         self.add_menu_item(":/plugins/svir/start_plugin_icon.png",
-                           u"Join SVI with loss data",
+                           u"Collect SVI and loss data by zone",
                            self.join_svi_with_aggr_losses)
         # Action for calculating RISKPLUS, RISKMULT and RISK1F statistics
         self.add_menu_item(
@@ -832,7 +828,7 @@ class Svir:
         taken from the zonal layer.
         """
         # to show the overall progress, cycling through zones
-        tot_zones = len(list(self.aggregation_layer.getFeatures()))
+        tot_zones = len(list(self.loss_layer_to_join.getFeatures()))
         msg = tr("Populating SVIR layer with loss values...")
         progress = self.create_progress_message_bar(msg)
 
@@ -876,8 +872,7 @@ class Svir:
         # Create new svir layer, duplicating social vulnerability layer
         layer_name = tr("SVIR map")
         self.svir_layer = ProcessLayer(
-            self.zonal_layer).duplicate_in_memory(layer_name,
-                                                                 True)
+            self.zonal_layer_to_join).duplicate_in_memory(layer_name, True)
         # Add "loss" attribute to svir_layer
         ProcessLayer(self.svir_layer).add_attributes(
             [QgsField(AGGR_LOSS_ATTR_NAME, QVariant.Double)])
