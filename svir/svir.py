@@ -128,6 +128,8 @@ class Svir:
         self.loss_layer_to_join = None
         # Most likely, it will be the zonal layer
         self.zonal_layer_to_join = None
+        # Attribute containing aggregated losses, that will be joined with SVI
+        self.aggr_loss_attr_to_join = None
 
     def add_menu_item(self, icon_path, label, corresponding_method):
         """
@@ -412,6 +414,8 @@ class Svir:
         if dlg.exec_():
             self.loss_layer_to_join = reg.mapLayers().values()[
                 dlg.ui.loss_layer_cbox.currentIndex()]
+            self.aggr_loss_attr_to_join = \
+                dlg.ui.aggr_loss_attr_cbox.currentText()
             self.zonal_layer_to_join = reg.mapLayers().values()[
                 dlg.ui.zonal_layer_cbox.currentIndex()]
             return True
@@ -826,7 +830,7 @@ class Svir:
 
             # Begin populating "loss" attribute with data from the
             # aggregation_layer selected by the user (possibly purged from
-            # zones containing no loss data
+            # zones containing no loss data)
             for current_zone, svir_feat in enumerate(
                     self.svir_layer.getFeatures()):
                 svir_feat_id = svir_feat.id()
@@ -837,7 +841,9 @@ class Svir:
                     if (svir_feat[self.zone_id_in_zones_attr_name] ==
                             aggr_feat[self.zone_id_in_zones_attr_name]):
                         self.svir_layer.changeAttributeValue(
-                            svir_feat_id, aggr_loss_index, aggr_feat['sum'])
+                            svir_feat_id,
+                            aggr_loss_index,
+                            aggr_feat[self.aggr_loss_attr_to_join])
                         match_found = True
                 # TODO: Check if this is the desired behavior, i.e., if we
                 #       actually want to remove from svir_layer the zones that
@@ -858,7 +864,7 @@ class Svir:
         layer_name = tr("SVIR map")
         self.svir_layer = ProcessLayer(
             self.zonal_layer_to_join).duplicate_in_memory(layer_name, True)
-        # Add "loss" attribute to svir_layer
+        # Add aggregated loss attribute to svir_layer
         ProcessLayer(self.svir_layer).add_attributes(
             [QgsField(AGGR_LOSS_ATTR_NAME, QVariant.Double)])
         # Populate "loss" attribute with data from aggregation_layer

@@ -59,20 +59,18 @@ class SelectAttrsForStatsDialog(QDialog):
         # populate combo boxes with field names taken by layers
         dp = layer.dataProvider()
         fields = list(dp.fields())
-        #no_numeric_fields = True
+        no_numeric_fields = True
         for field in fields:
             # add numeric fields only
             # FIXME: typeName is empty for user-defined fields which typeName
             # has not been explicitly set (potential mismatch between type and
             # typeName!). Same thing happens below for zonal fields. Therefore
             # we are using the type ids, which in this case are 2 or 6 for
-            #if field.type() in [2, 6]:
-
-            # FIXME: The attributes taken from the aggregated losses layer are not listed. Very strange!
-            self.ui.svi_attr_cbx.addItem(field.name())
-            self.ui.aggr_loss_attr_cbx.addItem(field.name())
-            #no_numeric_fields = False
-        #if no_numeric_fields:
-        #    self.ok_button.setEnabled(False)
-        #else:
-        #    self.ok_button.setEnabled(True)
+            if field.type() in [2, 6]:
+                self.ui.svi_attr_cbx.addItem(field.name())
+                self.ui.aggr_loss_attr_cbx.addItem(field.name())
+            no_numeric_fields = False
+        if no_numeric_fields:
+            self.ok_button.setEnabled(False)
+        else:
+            self.ok_button.setEnabled(True)
