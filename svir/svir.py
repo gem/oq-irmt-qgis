@@ -76,8 +76,6 @@ from trace_time_manager import TraceTimeManager
 from utils import (tr,
                    DEBUG)
 
-AGGR_LOSS_ATTR_NAME = "AGGR_LOSS"
-
 
 class Svir:
 
@@ -826,7 +824,7 @@ class Svir:
                                  DEBUG):
 
             aggr_loss_index = self.svir_layer.fieldNameIndex(
-                AGGR_LOSS_ATTR_NAME)
+                self.aggr_loss_attr_to_join)
 
             # Begin populating "loss" attribute with data from the
             # aggregation_layer selected by the user (possibly purged from
@@ -866,7 +864,7 @@ class Svir:
             self.zonal_layer_to_join).duplicate_in_memory(layer_name, True)
         # Add aggregated loss attribute to svir_layer
         ProcessLayer(self.svir_layer).add_attributes(
-            [QgsField(AGGR_LOSS_ATTR_NAME, QVariant.Double)])
+            [QgsField(self.aggr_loss_attr_to_join, QVariant.Double)])
         # Populate "loss" attribute with data from aggregation_layer
         self.populate_svir_layer_with_loss_values()
         # Add svir layer to registry
