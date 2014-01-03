@@ -313,63 +313,47 @@ class Svir:
         # populate combo boxes with field names taken by layers
         loss_dp = self.loss_layer.dataProvider()
         loss_fields = list(loss_dp.fields())
-        # Preselect reasonable attribute names from the dropdown list
-        presel_loss_attr_index = None
-        presel_zone_id_attr_index_loss = None
-        presel_zonal_attr_index = None
-        presel_zone_id_attr_index_zone = None
-        for cbx_index, field in enumerate(loss_fields):
-            dlg.ui.loss_attr_name_cbox.addItem(field.name())
-            dlg.ui.zone_id_attr_name_loss_cbox.addItem(field.name())
-            # FIXME: typeName is empty for user-defined fields which typeName
-            # has not been explicitly set (potential mismatch between type and
-            # typeName!). Same thing happens below for zonal fields. Therefore
-            # we are using the type ids, which in this case are 2 or 6 for
-            # numbers and 10 for strings
+        # Load in the comboboxes only the names of the attributes compatible
+        # with the following analyses: only numeric for losses and only
+        # string for zone ids
+        # FIXME: typeName is empty for user-defined fields which typeName
+        # has not been explicitly set (potential mismatch between type and
+        # typeName!). Same thing happens below for zonal fields. Therefore
+        # we are using the type ids, which in this case are 2 or 6 for
+        # numbers and 10 for strings
+        for field in loss_fields:
+            # Accept only numeric fields to contain loss data
             if field.type() in [2, 6]:
-                presel_loss_attr_index = cbx_index
+                dlg.ui.loss_attr_name_cbox.addItem(field.name())
+            # Accept only string fields to contain zone ids
             elif field.type() == 10:
-                # +1 because cbx_index 0 is for "use zonal geometries"
-                presel_zone_id_attr_index_loss = cbx_index + 1
+                dlg.ui.zone_id_attr_name_loss_cbox.addItem(field.name())
+            else:
+                raise TypeError("Unknown field type %d" % field.type())
         zonal_dp = self.zonal_layer.dataProvider()
         zonal_fields = list(zonal_dp.fields())
-        for cbx_index, field in enumerate(zonal_fields):
-            dlg.ui.zone_id_attr_name_zone_cbox.addItem(field.name())
-            dlg.ui.zonal_attr_name_cbox.addItem(field.name())
+        for field in zonal_fields:
+            # Accept only numeric fields to contain loss data
             if field.type() in [2, 6]:
-                presel_zonal_attr_index = cbx_index
+                dlg.ui.zonal_attr_name_cbox.addItem(field.name())
+            # Accept only string fields to contain zone ids
             elif field.type() == 10:
-                presel_zone_id_attr_index_zone = cbx_index
-        # Possibly pre-select attribute names in the dropdown:
-        if presel_loss_attr_index:
-            dlg.ui.loss_attr_name_cbox.setCurrentIndex(presel_loss_attr_index)
-        if presel_zone_id_attr_index_loss:
-            dlg.ui.zone_id_attr_name_loss_cbox.setCurrentIndex(
-                presel_zone_id_attr_index_loss)
-        if presel_zonal_attr_index:
-            dlg.ui.zonal_attr_name_cbox.setCurrentIndex(presel_zonal_attr_index)
-        if presel_zone_id_attr_index_zone:
-            dlg.ui.zone_id_attr_name_zone_cbox.setCurrentIndex(
-                presel_zone_id_attr_index_zone)
-
+                dlg.ui.zone_id_attr_name_zone_cbox.addItem(field.name())
+            else:
+                raise TypeError("Unknown field type %d" % field.type())
         # if the user presses OK
         if dlg.exec_():
             # retrieve attribute names from combobox selections
-            self.loss_attr_name = loss_fields[
-                dlg.ui.loss_attr_name_cbox.currentIndex()].name()
-            # if the loss file does not contain an attribute specifying the
-            # zone id for each point, or if the zones are not compatible
-            # with those specified by the layer containing svi data
+            self.loss_attr_name = dlg.ui.loss_attr_name_cbox.currentText()
+            # index 0 is for "use zonal geometries" (no zone id available)
             if dlg.ui.zone_id_attr_name_loss_cbox.currentIndex() == 0:
                 self.zone_id_in_losses_attr_name = None
             else:
-                # currentIndex() - 1 because index 0 is for "No zone ids"
-                self.zone_id_in_losses_attr_name = loss_fields[
-                    dlg.ui.zone_id_attr_name_loss_cbox.currentIndex()-1].name()
-            self.zonal_attr_name = zonal_fields[
-                dlg.ui.zonal_attr_name_cbox.currentIndex()].name()
-            self.zone_id_in_zones_attr_name = zonal_fields[
-                dlg.ui.zone_id_attr_name_zone_cbox.currentIndex()].name()
+                self.zone_id_in_losses_attr_name = \
+                    dlg.ui.zone_id_attr_name_loss_cbox.currentText()
+            self.zonal_attr_name = dlg.ui.zonal_attr_name_cbox.currentText()
+            self.zone_id_in_zones_attr_name = \
+                dlg.ui.zone_id_attr_name_zone_cbox.currentText()
             return True
         else:
             return False
