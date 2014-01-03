@@ -25,13 +25,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
-import uuid
 from PyQt4.QtGui import QApplication
-from qgis.core import (QgsMapLayerRegistry,
-                       QgsVectorLayer,
-                       QGis,
-                       QgsMapLayer)
-from layer_editing_manager import LayerEditingManager
 
 DEBUG = False
 
