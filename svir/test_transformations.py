@@ -29,46 +29,51 @@
 from normalization_algs import NORMALIZATION_ALGS
 import unittest
 
-class DataTransformationTestCase(unittest.TestCase):
+class RankTestCase(unittest.TestCase):
 
     def setUp(self):
+        self.alg = NORMALIZATION_ALGS["RANK"]
         self.input_list = [2, 0, 2, 1, 2, 3, 2]
 
-    def test_rank_direct(self):
-        alg = NORMALIZATION_ALGS["RANK"]
-
-        rank_list = alg(self.input_list, variant_name="AVERAGE", inverse=False)
+    def test_rank_direct_average(self):
+        rank_list = self.alg(self.input_list, variant_name="AVERAGE", inverse=False)
         self.assertEqual(rank_list, [4.5, 1, 4.5, 2, 4.5, 7, 4.5])
 
-        rank_list = alg(self.input_list, variant_name="MIN", inverse=False)
+    def test_rank_direct_min(self):
+        rank_list = self.alg(self.input_list, variant_name="MIN", inverse=False)
         self.assertEqual(rank_list, [3, 1, 3, 2, 3, 7, 3])
 
-        rank_list = alg(self.input_list, variant_name="MAX", inverse=False)
+    def test_rank_direct_max(self):
+        rank_list = self.alg(self.input_list, variant_name="MAX", inverse=False)
         self.assertEqual(rank_list, [6, 1, 6, 2, 6, 7, 6])
 
-        rank_list = alg(self.input_list, variant_name="DENSE", inverse=False)
+    def test_rank_direct_dense(self):
+        rank_list = self.alg(self.input_list, variant_name="DENSE", inverse=False)
         self.assertEqual(rank_list, [3, 1, 3, 2, 3, 4, 3])
 
-        rank_list = alg(self.input_list, variant_name="ORDINAL", inverse=False)
+    def test_rank_direct_ordinal(self):
+        rank_list = self.alg(self.input_list, variant_name="ORDINAL", inverse=False)
         self.assertEqual(rank_list, [3, 1, 4, 2, 5, 7, 6])
 
-    def test_rank_inverse(self):
-        alg = NORMALIZATION_ALGS["RANK"]
-
-        rank_list = alg(self.input_list, variant_name="AVERAGE", inverse=True)
+    def test_rank_inverse_average(self):
+        rank_list = self.alg(self.input_list, variant_name="AVERAGE", inverse=True)
         self.assertEqual(rank_list, [3.5, 7, 3.5, 6, 3.5, 1, 3.5])
 
-        # rank_list = alg(self.input_list, variant_name="MIN", inverse=True)
-        # self.assertEqual(rank_list, [2, 7, 2, 6, 2, 1, 2])
-        #
-        # rank_list = alg(self.input_list, variant_name="MAX", inverse=True)
-        # self.assertEqual(rank_list, [5, 7, 5, 6, 5, 1, 5])
-        #
-        # rank_list = alg(self.input_list, variant_name="DENSE", inverse=True)
-        # self.assertEqual(rank_list, [2, 4, 2, 3, 2, 1, 2])
-        #
-        # rank_list = alg(self.input_list, variant_name="ORDINAL", inverse=True)
-        # self.assertEqual(rank_list, [2, 7, 3, 6, 4, 1, 5])
+    def test_rank_inverse_min(self):
+        rank_list = self.alg(self.input_list, variant_name="MIN", inverse=True)
+        self.assertEqual(rank_list, [2, 7, 2, 6, 2, 1, 2])
+
+    def test_rank_inverse_max(self):
+        rank_list = self.alg(self.input_list, variant_name="MAX", inverse=True)
+        self.assertEqual(rank_list, [5, 7, 5, 6, 5, 1, 5])
+
+    def test_rank_inverse_dense(self):
+        rank_list = self.alg(self.input_list, variant_name="DENSE", inverse=True)
+        self.assertEqual(rank_list, [2, 4, 2, 3, 2, 1, 2])
+
+    def test_rank_inverse_ordinal(self):
+        rank_list = self.alg(self.input_list, variant_name="ORDINAL", inverse=True)
+        self.assertEqual(rank_list, [2, 7, 3, 6, 4, 1, 5])
 
     def test_z_score_direct(self):
         pass

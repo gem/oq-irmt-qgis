@@ -26,7 +26,6 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 from numpy import mean, std, argwhere, amax, amin
-from scipy.stats import rankdata
 from register import Register
 
 NORMALIZATION_ALGS = Register()
@@ -53,51 +52,32 @@ def rank(input_list, variant_name="AVERAGE", inverse=False):
         # obtain a value above the maximum value contained in input_list,
         # so it will never be picked as the minimum element of the list
         above_max_input = max(input_list) + 1
-        if variant_name == "ORDINAL":
-            curr_idx = 1
-            while curr_idx <= len(input_list):
-                bottom_indices = argwhere(
-                    input_copy == amin(input_copy)).flatten().tolist()
-                for j in bottom_indices:
-                    rank_list[j] = curr_idx
+        curr_idx = 1
+        while curr_idx <= len(input_list):
+            # get the list of indices of the min elements of input_copy
+            bottom_indices = argwhere(
+                input_copy == amin(input_copy)).flatten().tolist()
+            bottom_amount = len(bottom_indices)
+            for idx in bottom_indices:
+                if variant_name == "AVERAGE":
+                    rank_list[idx] = (2 * curr_idx + bottom_amount - 1) / 2.0
+                elif variant_name == "MIN":
+                    rank_list[idx] = curr_idx
+                elif variant_name == "MAX":
+                    rank_list[idx] = curr_idx + bottom_amount - 1
+                elif variant_name == "DENSE":
+                    rank_list[idx] = curr_idx - previous_ties
+                elif variant_name == "ORDINAL":
+                    rank_list[idx] = curr_idx
                     curr_idx += 1
-                    input_copy[j] = above_max_input
-        else:
-            curr_idx = 1
-            while curr_idx <= len(input_list):
-                # get the list of indices of the min elements of input_copy
-                bottom_indices = argwhere(
-                    input_copy == amin(input_copy)).flatten().tolist()
-                bottom_amount = len(bottom_indices)
-                if bottom_amount == 1:  # no ties
-                    bottom_index = bottom_indices.pop()
-                    if variant_name == "DENSE":
-                        rank_list[bottom_index] = curr_idx - previous_ties
-                    else:
-                        rank_list[bottom_index] = curr_idx
-                    curr_idx += 1
-                    # change value instead of removing the item, in order to
-                    # avoid modifying the indices of the other elements.
-                    # Set to a value above the max, so it does not disturb
-                    # while searching the min in the following iterations
-                    input_copy[bottom_index] = above_max_input
-                else:  # arbitrary number of ties
-                    for idx in bottom_indices:
-                        if variant_name == "AVERAGE":
-                            rank_list[idx] = \
-                                (2 * curr_idx + bottom_amount - 1) / 2.0
-                        elif variant_name == "MIN":
-                            rank_list[idx] = curr_idx
-                        elif variant_name == "MAX":
-                            rank_list[idx] = curr_idx + bottom_amount - 1
-                        elif variant_name == "DENSE":
-                            rank_list[idx] = curr_idx - previous_ties
-                        else:
-                            raise NotImplementedError(
-                                "%s variant not implemented" % variant_name)
-                        input_copy[idx] = above_max_input
-                    curr_idx += bottom_amount
-                    previous_ties += bottom_amount - 1
+                else:
+                    raise NotImplementedError(
+                        "%s variant not implemented" % variant_name)
+                input_copy[idx] = above_max_input
+            if variant_name != "ORDINAL":
+                curr_idx += bottom_amount
+            previous_ties += bottom_amount - 1
+            # import pdb; pdb.set_trace()
 
     else:  # inverse
         above_max_input = max(input_list) + 1
@@ -106,23 +86,16 @@ def rank(input_list, variant_name="AVERAGE", inverse=False):
             bottom_indices = argwhere(
                 input_copy == amin(input_copy)).flatten().tolist()
             bottom_amount = len(bottom_indices)
-            #print "top_amount = ", top_amount
-            if bottom_amount == 1:  # no ties
-                bottom_index = bottom_indices.pop()
-                rank_list[bottom_index] = curr_idx
-                curr_idx -= 1
-                input_copy[bottom_index] = above_max_input
-            else:  # arbitrary number of ties
-                if variant_name == "AVERAGE":
-                    for idx in bottom_indices:
-                        #print "curr_idx = ", curr_idx
-                        rank_list[idx] = \
-                            (2 * curr_idx + 1 - bottom_amount) / 2.0
-                        input_copy[idx] = above_max_input
-                    curr_idx -= bottom_amount
-                else:
-                    raise NotImplementedError(
-                        "%s ranking variant not implemented" % variant_name)
+            if variant_name == "AVERAGE":
+                for idx in bottom_indices:
+                    #print "curr_idx = ", curr_idx
+                    rank_list[idx] = \
+                        (2 * curr_idx + 1 - bottom_amount) / 2.0
+                    input_copy[idx] = above_max_input
+                curr_idx -= bottom_amount
+            else:
+                raise NotImplementedError(
+                    "%s ranking variant not implemented" % variant_name)
     return rank_list
 
 @NORMALIZATION_ALGS.add('Z_SCORE')
@@ -156,81 +129,3 @@ def min_max(input_list, variant_name="", inverse=False):
         output_list = map(
             lambda x: (x - list_min) / list_range, input_list)
     return output_list
-
-def rank_simple(vector, inverse=False):
-    if inverse:
-        return [(len(vector)-1)-x for x in sorted(
-            range(len(vector)), key=vector.__getitem__)]
-    else:
-        return sorted(range(len(vector)), key=vector.__getitem__)
-
-
-def rank_data(input_list, variant_name="", inverse=False):
-    """
-    Assign ranks to data, dealing with ties appropriately. Ranks begin at 1.
-    The variant_name argument determines how to cope with equal values.
-    """
-    # TODO: To be refactored and properly documented
-    n = len(input_list)
-    # list of ranks of the initial values
-    ivec = rank_simple(input_list, inverse)
-    # input_list sorted by rank
-    # svec = [input_list[rank] for rank in ivec]
-    svec = sorted(input_list)
-    sumranks = 0
-    dupcount = 0
-    newarray = [0]*n
-    for i in xrange(n):
-        sumranks += i
-        dupcount += 1
-        if i==n-1 or svec[i] != svec[i+1]:
-            averank = sumranks / float(dupcount) + 1
-            for j in xrange(i-dupcount+1, i+1):
-                newarray[ivec[j]] = averank
-            sumranks = 0
-            dupcount = 0
-    return newarray
-
-def rank_scipy(input_list, variant_name="", inverse=False):
-    """
-    Assign ranks to data, dealing with ties appropriately. Ranks begin at 1.
-    The variant_name argument determines how to cope with equal values.
-    """
-    # FIXME: obsolete version of rankdata doesn't accept method parameter
-    # after updating scipy, we could use:
-    # rankdata(input_list, variant_name)
-    output_list = list(rankdata(input_list))
-    return output_list
-
-if __name__ == "__main__":
-    #print "TEST FUNCTION rank_data"
-    #l = [3, 1, 4, 5, 3, 2]
-    #print "l =", l
-    #print "rank_data(l) ->", rank_data(l)
-    #assert rank_data(l) == [3.5, 1.0, 5.0, 6.0, 3.5, 2.0]
-    #print "rank_data(l, inverse=True) ->", rank_data(l, inverse=True)
-    #assert rank_data(l, inverse=True) == [3.5, 6.0, 2.0, 1.0, 3.5, 5.0]
-    print "TEST FUNCTION my_rank"
-    print "*" * 20
-    l = [2, 0, 2, 1, 2, 3, 2]
-    print "l = ", l
-    #ranks = my_rank(l, variant_name="AVERAGE", inverse=False)
-    #print "r = ", ranks
-    #ranks = my_rank(l, variant_name="AVERAGE", inverse=True)
-    print "AVERAGE"
-    print "r = ", my_rank(l, variant_name="AVERAGE", inverse=False)
-    print "MIN"
-    print "r = ", my_rank(l, variant_name="MIN", inverse=False)
-    print "MAX"
-    print "r = ", my_rank(l, variant_name="MAX", inverse=False)
-    print "DENSE"
-    print "r = ", my_rank(l, variant_name="DENSE", inverse=False)
-    print "ORDINAL"
-    print "r = ", my_rank(l, variant_name="ORDINAL", inverse=False)
-
-    print "*" * 20
-    print "TEST FUNCTION z_score"
-    print "*" * 20
-    print "l = ", l
-    print "r = ", z_score(l)
-    print "r_inverse = ", z_score(l, inverse=True)
