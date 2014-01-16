@@ -384,14 +384,14 @@ class Svir:
             algorithm_name = NORMALIZATION_ALGS.keys()[
                 dlg.ui.algorithm_cbx.currentIndex()]
             variant = dlg.ui.variant_cbx.currentText()
-            revert = dlg.ui.revert_ckb.isChecked()
+            inverse = dlg.ui.inverse_ckb.isChecked()
             mem_layer_name = layer.name() + "_" + algorithm_name
             mem_layer = ProcessLayer(layer).duplicate_in_memory(mem_layer_name,
                                                                 True)
             ProcessLayer(mem_layer).normalize_attribute(attribute_name,
                                                         algorithm_name,
                                                         variant,
-                                                        revert)
+                                                        inverse)
 
     def select_layers_to_join(self):
         """

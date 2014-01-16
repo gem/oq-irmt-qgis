@@ -29,7 +29,7 @@ from numpy import mean, std, argwhere, amax, amin
 from register import Register
 
 NORMALIZATION_ALGS = Register()
-RANK_VARIANTS = ['average', 'min', 'max', 'dense', 'ordinal']  # still unused
+RANK_VARIANTS = ['AVERAGE', 'MIN', 'MAX', 'DENSE', 'ORDINAL']
 
 
 def normalize(features_dict, algorithm, variant_name="", inverse=False):
@@ -39,8 +39,7 @@ def normalize(features_dict, algorithm, variant_name="", inverse=False):
     """
     ids = features_dict.keys()
     values = features_dict.values()
-    if variant_name:
-        normalized_list = algorithm(values, variant_name, inverse)
+    normalized_list = algorithm(values, variant_name, inverse)
     return dict(zip(ids, normalized_list))
 
 @NORMALIZATION_ALGS.add('RANK')
@@ -117,11 +116,12 @@ def z_score(input_list, variant_name="", inverse=False):
     """
     mean_val = mean(input_list)
     stddev_val = std(input_list)
+    input_copy = input_list[:]
     if inverse:
         # multiply each input_list element by -1
-        input_list[:] = [-x for x in input_list]
+        input_copy[:] = [-x for x in input_list]
     output_list = [
-        1.0 * (num - mean_val) / stddev_val for num in input_list]
+        1.0 * (num - mean_val) / stddev_val for num in input_copy]
     return output_list
 
 @NORMALIZATION_ALGS.add('MIN_MAX')

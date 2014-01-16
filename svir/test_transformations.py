@@ -29,6 +29,7 @@
 from normalization_algs import NORMALIZATION_ALGS
 import unittest
 
+
 class RankTestCase(unittest.TestCase):
 
     def setUp(self):
@@ -75,17 +76,60 @@ class RankTestCase(unittest.TestCase):
         rank_list = self.alg(self.input_list, variant_name="ORDINAL", inverse=True)
         self.assertEqual(rank_list, [2, 7, 3, 6, 4, 1, 5])
 
-    def test_z_score_direct(self):
-        pass
 
-    def test_z_score_inverse(self):
-        pass
+class MinMaxTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.alg = NORMALIZATION_ALGS["MIN_MAX"]
+        self.input_list = [2, 0, 2, 1, 2, 3, 2]
 
     def test_min_max_direct(self):
-        pass
+        rank_list = self.alg(self.input_list, inverse=False)
+        self.assertEqual(rank_list,  [0.6666666666666666,
+                                      0.0,
+                                      0.6666666666666666,
+                                      0.3333333333333333,
+                                      0.6666666666666666,
+                                      1.0,
+                                      0.6666666666666666])
 
     def test_min_max_inverse(self):
-        pass
+        rank_list = self.alg(self.input_list, inverse=True)
+        self.assertEqual(rank_list, [0.33333333333333337,
+                                     1.0,
+                                     0.33333333333333337,
+                                     0.6666666666666667,
+                                     0.33333333333333337,
+                                     0.0,
+                                     0.33333333333333337])
+
+
+class ZScoreTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.alg = NORMALIZATION_ALGS["Z_SCORE"]
+        self.input_list = [2, 0, 2, 1, 2, 3, 2]
+
+    def test_z_score_direct(self):
+        rank_list = self.alg(self.input_list, inverse=False)
+        self.assertEqual(rank_list, [0.3244428422615252,
+                                     -1.9466570535691505,
+                                     0.3244428422615252,
+                                     -0.81110710565381261,
+                                     0.3244428422615252,
+                                     1.459992790176863,
+                                     0.3244428422615252])
+
+    def test_z_score_inverse(self):
+        rank_list = self.alg(self.input_list, inverse=True)
+        self.assertEqual(rank_list, [-4.2177569493998259,
+                                     -1.9466570535691505,
+                                     -4.2177569493998259,
+                                     -3.0822070014844885,
+                                     -4.2177569493998259,
+                                     -5.3533068973151643,
+                                     -4.2177569493998259])
+
 
 if __name__ == '__main__':
     unittest.main()
