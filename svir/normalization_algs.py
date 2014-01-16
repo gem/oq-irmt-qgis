@@ -46,56 +46,68 @@ def normalize(features_dict, algorithm, variant_name="", inverse=False):
 @NORMALIZATION_ALGS.add('RANK')
 def rank(input_list, variant_name="AVERAGE", inverse=False):
     input_copy = input_list[:]
-    rank_list = [0]*len(input_list)
+    len_input_list = len(input_list)
+    rank_list = [0]*len_input_list
     previous_ties = 0
     if not inverse:
         # obtain a value above the maximum value contained in input_list,
         # so it will never be picked as the minimum element of the list
         above_max_input = max(input_list) + 1
         curr_idx = 1
-        while curr_idx <= len(input_list):
+        while curr_idx <= len_input_list:
             # get the list of indices of the min elements of input_copy
             bottom_indices = argwhere(
                 input_copy == amin(input_copy)).flatten().tolist()
             bottom_amount = len(bottom_indices)
-            for idx in bottom_indices:
+            for bottom_idx in bottom_indices:
                 if variant_name == "AVERAGE":
-                    rank_list[idx] = (2 * curr_idx + bottom_amount - 1) / 2.0
+                    rank_list[bottom_idx] = \
+                        (2 * curr_idx + bottom_amount - 1) / 2.0
                 elif variant_name == "MIN":
-                    rank_list[idx] = curr_idx
+                    rank_list[bottom_idx] = curr_idx
                 elif variant_name == "MAX":
-                    rank_list[idx] = curr_idx + bottom_amount - 1
+                    rank_list[bottom_idx] = curr_idx + bottom_amount - 1
                 elif variant_name == "DENSE":
-                    rank_list[idx] = curr_idx - previous_ties
+                    rank_list[bottom_idx] = curr_idx - previous_ties
                 elif variant_name == "ORDINAL":
-                    rank_list[idx] = curr_idx
+                    rank_list[bottom_idx] = curr_idx
                     curr_idx += 1
                 else:
                     raise NotImplementedError(
                         "%s variant not implemented" % variant_name)
-                input_copy[idx] = above_max_input
+                input_copy[bottom_idx] = above_max_input
             if variant_name != "ORDINAL":
                 curr_idx += bottom_amount
             previous_ties += bottom_amount - 1
-            # import pdb; pdb.set_trace()
 
     else:  # inverse
-        above_max_input = max(input_list) + 1
-        curr_idx = len(input_list)
+        below_min_input = min(input_list) - 1
+        curr_idx = len_input_list
         while curr_idx > 0:
-            bottom_indices = argwhere(
-                input_copy == amin(input_copy)).flatten().tolist()
-            bottom_amount = len(bottom_indices)
-            if variant_name == "AVERAGE":
-                for idx in bottom_indices:
-                    #print "curr_idx = ", curr_idx
-                    rank_list[idx] = \
-                        (2 * curr_idx + 1 - bottom_amount) / 2.0
-                    input_copy[idx] = above_max_input
-                curr_idx -= bottom_amount
-            else:
-                raise NotImplementedError(
-                    "%s ranking variant not implemented" % variant_name)
+            top_indices = argwhere(
+                input_copy == amax(input_copy)).flatten().tolist()
+            top_amount = len(top_indices)
+            for top_idx in top_indices:
+                if variant_name == "AVERAGE":
+                    rank_list[top_idx] = \
+                        len_input_list - (2 * curr_idx - top_amount - 1) / 2.0
+                elif variant_name == "MIN":
+                    rank_list[top_idx] = len_input_list - curr_idx + 1
+                elif variant_name == "MAX":
+                    rank_list[top_idx] = len_input_list - curr_idx + top_amount
+                elif variant_name == "DENSE":
+                    rank_list[top_idx] = \
+                        len_input_list - curr_idx - previous_ties + 1
+                elif variant_name == "ORDINAL":
+                    rank_list[top_idx] = len_input_list - curr_idx + 1
+                    curr_idx -= 1
+                else:
+                    raise NotImplementedError(
+                        "%s variant not implemented" % variant_name)
+                input_copy[top_idx] = below_min_input
+            if variant_name != "ORDINAL":
+                curr_idx -= top_amount
+            previous_ties += top_amount - 1
     return rank_list
 
 @NORMALIZATION_ALGS.add('Z_SCORE')
