@@ -114,6 +114,8 @@ def z_score(input_list, variant_name="", inverse=False):
     """
     Normalized(e_i) = (e_i - mean(e)) / std(e)
     """
+    if variant_name:
+        raise NotImplementedError("%s variant not implemented" % variant_name)
     mean_val = mean(input_list)
     stddev_val = std(input_list)
     input_copy = input_list[:]
@@ -129,6 +131,8 @@ def min_max(input_list, variant_name="", inverse=False):
     """
     Normalized(e_i) = (e_i - min(e)) / (max(e) - min(e))
     """
+    if variant_name:
+        raise NotImplementedError("%s variant not implemented" % variant_name)
     list_min = min(input_list)
     list_max = max(input_list)
     # Get the range of the list
