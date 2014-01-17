@@ -75,7 +75,7 @@ class ProcessLayer():
             raise AttributeError
 
         # build the name of the output normalized attribute
-        new_attr_name = input_attr_name + '__' + algorithm_name
+        new_attr_name = algorithm_name
         self.add_attributes([QgsField(new_attr_name, QVariant.Double)])
 
         # get the id of the new attribute
