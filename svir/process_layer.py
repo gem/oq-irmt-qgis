@@ -64,27 +64,15 @@ class ProcessLayer():
         normalized data, named as something like 'attr_name__algorithm', e.g.,
         'TOTLOSS__MIN_MAX'
         """
-        pr = self.layer.dataProvider()
-
         # get the id of the attribute named input_attr_name
-        input_attr_id = None
-        for field_id, field in enumerate(pr.fields()):
-            if field.name() == input_attr_name:
-                input_attr_id = field_id
-        if not input_attr_id:
-            raise AttributeError
+        input_attr_id = self.find_attribute_id(input_attr_name)
 
         # build the name of the output normalized attribute
         new_attr_name = algorithm_name
         self.add_attributes([QgsField(new_attr_name, QVariant.Double)])
 
         # get the id of the new attribute
-        new_attr_id = None
-        for field_id, field in enumerate(pr.fields()):
-            if field.name() == new_attr_name:
-                new_attr_id = field_id
-        if not input_attr_id:
-            raise AttributeError
+        new_attr_id = self.find_attribute_id(new_attr_name)
 
         # a dict will contain all the values for the chosen input attribute,
         # keeping as key, for each value, the id of the corresponding feature
@@ -103,6 +91,22 @@ class ProcessLayer():
                 feat_id = feat.id()
                 self.layer.changeAttributeValue(
                     feat_id, new_attr_id, float(normalized_dict[feat_id]))
+
+    def find_attribute_id(self, attribute_name):
+        """
+        Get the id of the attribute called attribute_name
+        @param attribute_name: name of the attribute
+        @return: id of the attribute, or raise AttributeError
+        exception if not found
+        """
+        attribute_id = None
+        pr = self.layer.dataProvider()
+        for field_id, field in enumerate(pr.fields()):
+            if field.name() == attribute_name:
+                attribute_id = field_id
+        if not attribute_id:
+            raise AttributeError
+        return attribute_id
 
     def duplicate_in_memory(self, new_name='', add_to_registry=False):
         """
