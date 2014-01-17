@@ -25,7 +25,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
-from numpy import mean, std, argwhere, amax, amin
+from numpy import mean, std, argwhere, amax, amin, log10
 from register import Register
 
 NORMALIZATION_ALGS = Register()
@@ -144,4 +144,17 @@ def min_max(input_list, variant_name="", inverse=False):
     else:
         output_list = map(
             lambda x: (x - list_min) / list_range, input_list)
+    return output_list
+
+@NORMALIZATION_ALGS.add('LOG10')
+def log10(input_list, variant_name="", inverse=False):
+    if variant_name:
+        raise NotImplementedError("%s variant not implemented" % variant_name)
+    if inverse:
+        raise NotImplementedError(
+            "Inverse transformation for log10 is not implemented")
+    if any(n < 0 for n in input_list):
+        raise ValueError("log10 transformation can not be performed if "
+                         "the field contains negative values")
+    output_list = log10(input_list)
     return output_list
