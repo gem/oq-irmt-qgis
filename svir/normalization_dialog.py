@@ -61,6 +61,9 @@ class NormalizationDialog(QDialog):
         layer = QgsMapLayerRegistry.instance().mapLayers().values()[
             self.ui.layer_cbx.currentIndex()]
         self.iface.setActiveLayer(layer)
+
+        #TODO find a way to commit changes on OK click
+        layer.startEditing()
         self.iface.actionOpenFieldCalculator().trigger()
 
     def reload_attrib_cbx(self):
