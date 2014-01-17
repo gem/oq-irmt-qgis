@@ -57,6 +57,7 @@ class NormalizationDialog(QDialog):
 
     @pyqtSlot()
     def on_calc_btn_clicked(self):
+        self.close()
         layer = QgsMapLayerRegistry.instance().mapLayers().values()[
             self.ui.layer_cbx.currentIndex()]
         self.iface.setActiveLayer(layer)
