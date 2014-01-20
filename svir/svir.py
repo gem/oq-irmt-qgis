@@ -55,20 +55,21 @@ from qgis.core import (QgsVectorLayer,
 from qgis.gui import QgsMessageBar
 
 from qgis.analysis import QgsZonalStatistics
+from normalization_algs import NORMALIZATION_ALGS
+from process_layer import ProcessLayer
 
 import resources_rc
 
 # Import the code for the dialog
-from select_layers_to_join_dialog import SelectLayersToJoinDialog
 from svirdialog import SvirDialog
+from select_layers_to_join_dialog import SelectLayersToJoinDialog
 from attribute_selection_dialog import AttributeSelectionDialog
+from normalization_dialog import NormalizationDialog
 
 from layer_editing_manager import LayerEditingManager
 from trace_time_manager import TraceTimeManager
 
 from utils import (tr,
-                   add_attributes_to_layer,
-                   duplicate_in_memory,
                    DEBUG)
 
 
@@ -118,6 +119,9 @@ class Svir:
         self.svir_layer = None
         # Action to activate the modal dialog to load loss data and zones
         self.initial_action = None
+        # Action to activate the modal dialog to select a layer and one of its
+        # attributes, in order to normalize that attribute
+        self.normalize_attribute_action = None
         # Action to activate building a new layer with loss data
         # aggregated by zone, excluding zones containing no loss points
         self.purge_empty_zones_action = None
@@ -150,10 +154,25 @@ class Svir:
         self.iface.addToolBarIcon(self.initial_action)
         self.iface.addPluginToMenu(u"&SVIR", self.initial_action)
 
+        # Create action for standardization/normalization
+        self.normalize_attribute_action = QAction(
+            QIcon(":/plugins/svir/start_plugin_icon.png"),
+            u"Normalize attribute",
+            self.iface.mainWindow())
+        # Connect the action to the normalize_attribute method
+        self.normalize_attribute_action.triggered.connect(
+            self.normalize_attribute)
+        # Add toolbar button and menu item
+        self.iface.addToolBarIcon(self.normalize_attribute_action)
+        self.iface.addPluginToMenu(u"&SVIR",
+                                   self.normalize_attribute_action)
+
     def unload(self):
         # Remove the plugin menu item and icon
         self.iface.removePluginMenu(u"&SVIR", self.initial_action)
         self.iface.removeToolBarIcon(self.initial_action)
+        self.iface.removePluginMenu(u"&SVIR", self.normalize_attribute_action)
+        self.iface.removeToolBarIcon(self.normalize_attribute_action)
         self.iface.removePluginMenu(u"&SVIR",
                                     self.purge_empty_zones_action)
         self.iface.removeToolBarIcon(self.purge_empty_zones_action)
@@ -196,11 +215,10 @@ class Svir:
 
             # TODO: Check if it's good to use the same layer to get
             #       zones and social vulnerability data
-            self.social_vulnerability_layer = duplicate_in_memory(
-                self.zonal_layer, "Social vulnerability map")
-
-            # TODO: standardize loss data before inserting it in the svir layer
-            self.standardize_losses()  # it's still a placeholder
+            sv_layer_name = tr("Social vulnerability map")
+            self.social_vulnerability_layer = ProcessLayer(
+                self.zonal_layer).duplicate_in_memory(sv_layer_name,
+                                                      True)
 
             # Create menu item and toolbar button to activate join procedure
             self.enable_joining_svi_with_aggr_losses()
@@ -375,6 +393,26 @@ class Svir:
                                                 tr(msg),
                                                 level=QgsMessageBar.WARNING)
 
+    def normalize_attribute(self):
+        dlg = NormalizationDialog(self.iface)
+        reg = QgsMapLayerRegistry.instance()
+        layer_list = list(reg.mapLayers())
+        dlg.ui.layer_cbx.addItems(layer_list)
+        alg_list = NORMALIZATION_ALGS.keys()
+        dlg.ui.algorithm_cbx.addItems(alg_list)
+        if dlg.exec_():
+            layer = reg.mapLayers().values()[
+                dlg.ui.layer_cbx.currentIndex()]
+            attribute_name = dlg.ui.attrib_cbx.currentText()
+            algorithm_name = dlg.ui.algorithm_cbx.currentText()
+            variant = dlg.ui.variant_cbx.currentText()
+            mem_layer_name = layer.name() + "_" + algorithm_name
+            mem_layer = ProcessLayer(layer).duplicate_in_memory(mem_layer_name,
+                                                                True)
+            ProcessLayer(mem_layer).normalize_attribute(attribute_name,
+                                                        algorithm_name,
+                                                        variant)
+
     def select_layers_to_join(self):
         """
         Open a modal dialog containing 2 combo boxes, allowing the user
@@ -525,8 +563,8 @@ class Svir:
                     zone_stats[zone_id] = numpy.array([1, loss_value])
         self.clear_progress_message_bar()
 
-        msg = tr("Step 3 of 3: writing counts and sums on "
-                       "aggregation_layer...")
+        msg = tr(
+            "Step 3 of 3: writing counts and sums on aggregation_layer...")
         with TraceTimeManager(msg, DEBUG):
             tot_zones = len(list(self.aggregation_layer.getFeatures()))
             progress = self.create_progress_message_bar(msg)
@@ -577,7 +615,7 @@ class Svir:
         progress = self.create_progress_message_bar(msg)
 
         # create spatial index
-        with TraceTimeManager("Creating spatial index for loss points...",
+        with TraceTimeManager(tr("Creating spatial index for loss points..."),
                               DEBUG):
             spatial_index = QgsSpatialIndex()
             for current_point, loss_feature in enumerate(
@@ -589,7 +627,7 @@ class Svir:
         self.clear_progress_message_bar()
 
         with LayerEditingManager(self.aggregation_layer,
-                                 "Calculate count and sum attributes",
+                                 tr("Calculate count and sum attributes"),
                                  DEBUG):
             # to show the overall progress, cycling through zones
             # Note that zones from zone layer were copied earlier into the
@@ -645,7 +683,7 @@ class Svir:
                                 point_loss = point_feature[self.loss_attr_name]
                                 loss_sum += point_loss
                     msg = "Updating count and sum for the zone..."
-                    with TraceTimeManager(msg, DEBUG):
+                    with TraceTimeManager(tr(msg), DEBUG):
                         fid = zone_feature.id()
                         self.aggregation_layer.changeAttributeValue(
                             fid, count_index, points_count)
@@ -709,7 +747,7 @@ class Svir:
         progress = self.create_progress_message_bar(msg)
 
         with LayerEditingManager(self.purged_layer,
-                                 "Purged layer initialization",
+                                 tr("Purged layer initialization"),
                                  DEBUG):
             # add count and sum fields for aggregating statistics
             pr.addAttributes(
@@ -754,7 +792,7 @@ class Svir:
         progress = self.create_progress_message_bar(msg)
 
         with LayerEditingManager(self.svir_layer,
-                                 "Add loss values to svir_layer",
+                                 tr("Add loss values to svir_layer"),
                                  DEBUG):
 
             aggr_loss_index = self.svir_layer.fieldNameIndex(
@@ -785,26 +823,19 @@ class Svir:
                             [svir_feat.id()])
         self.clear_progress_message_bar()
 
-    def standardize_losses(self):
-        """
-        Allow the user to select between a list of standardization algorithms,
-        in order to make the loss data comparable with the social vulnerability
-        index
-        """
-        # TODO: still not implemented
-        pass
-
     def create_svir_layer(self):
         """
         Create a new layer joining (by zone id) social vulnerability
         and loss data
         """
         # Create new svir layer, duplicating social vulnerability layer
-        self.svir_layer = duplicate_in_memory(
-            self.social_vulnerability_layer, tr("SVIR map"))
+        layer_name = tr("SVIR map")
+        self.svir_layer = ProcessLayer(
+            self.social_vulnerability_layer).duplicate_in_memory(layer_name,
+                                                                 True)
         # Add "loss" attribute to svir_layer
-        add_attributes_to_layer(
-            self.svir_layer, [QgsField(AGGR_LOSS_ATTR_NAME, QVariant.Double)])
+        ProcessLayer(self.svir_layer).add_attributes(
+            [QgsField(AGGR_LOSS_ATTR_NAME, QVariant.Double)])
         # Populate "loss" attribute with data from aggregation_layer
         self.populate_svir_layer_with_loss_values()
         # Add svir layer to registry
@@ -822,10 +853,10 @@ class Svir:
         # RISKPLUS = TOTRISK + TOTSVI
         # RISKMULT = TOTRISK * TOTSVI
         # RISK1F   = TOTRISK * (1 + TOTSVI)
-        add_attributes_to_layer(self.svir_layer,
-                                     [QgsField('RISKPLUS', QVariant.Double),
-                                      QgsField('RISKMULT', QVariant.Double),
-                                      QgsField('RISK1F', QVariant.Double)])
+        ProcessLayer(self.svir_layer).add_attributes(
+            [QgsField('RISKPLUS', QVariant.Double),
+             QgsField('RISKMULT', QVariant.Double),
+             QgsField('RISK1F', QVariant.Double)])
         # for each zone, calculate the value of the output attributes
         # to show the overall progress, cycling through zones
         tot_zones = len(list(self.svir_layer.getFeatures()))
@@ -833,7 +864,7 @@ class Svir:
         progress = self.create_progress_message_bar(msg)
 
         with LayerEditingManager(self.svir_layer,
-                                 "Calculate common SVIR statistics",
+                                 tr("Calculate common SVIR statistics"),
                                  DEBUG):
             riskplus_idx = self.svir_layer.fieldNameIndex('RISKPLUS')
             riskmult_idx = self.svir_layer.fieldNameIndex('RISKMULT')
