@@ -50,11 +50,15 @@ from qgis.core import (QgsVectorLayer,
                        QgsFields,
                        QgsSpatialIndex,
                        QgsFeatureRequest,
-                       QgsVectorDataProvider)
+                       QgsVectorDataProvider,
+                       QgsMessageLog)
 
 from qgis.gui import QgsMessageBar
 
 from qgis.analysis import QgsZonalStatistics
+import processing as p
+from processing.saga.SagaUtils import SagaUtils
+
 from normalization_algs import NORMALIZATION_ALGS
 from process_layer import ProcessLayer
 
@@ -217,8 +221,7 @@ class Svir:
             #       zones and social vulnerability data
             sv_layer_name = tr("Social vulnerability map")
             self.social_vulnerability_layer = ProcessLayer(
-                self.zonal_layer).duplicate_in_memory(sv_layer_name,
-                                                      True)
+                self.zonal_layer).duplicate_in_memory(sv_layer_name, False)
 
             # Create menu item and toolbar button to activate join procedure
             self.enable_joining_svi_with_aggr_losses()
@@ -528,30 +531,70 @@ class Svir:
             if self.zone_id_in_losses_attr_name:
                 # then we can aggregate by zone id, instead of doing a
                 # geo-spatial analysis to see in which zone each point is
-                self.calculate_vector_stats_aggregating_by_zone_id()
+                self.calculate_vector_stats_aggregating_by_zone_id(
+                    self.loss_layer)
             else:
                 # otherwise we need to acquire the zones' geometries from the
                 # zonal layer and check if loss points are inside those zones
-                self.calculate_vector_stats_using_geometries()
+                alg_name = 'saga:clippointswithpolygons'
+                msg = SagaUtils.checkSagaIsInstalled()
+                if msg is not None:
+                    msg += tr(" In order to cope with complex geometries, "
+                              "a working installation of SAGA is recommended.")
+                    QgsMessageLog.logMessage(msg)
+                    self.calculate_vector_stats_using_geometries()
+                else:
+                    # using SAGA to find out in which zone each point is
+                    res = p.runalg(alg_name,
+                                   self.loss_layer,
+                                   self.zonal_layer,
+                                   self.zone_id_in_zones_attr_name,
+                                   0,
+                                   None)
+                    if res is None:
+                        msg = "An error occurred while attempting to " \
+                              "compute zonal statistics with SAGA"
+                        self.iface.messageBar().pushMessage(
+                            tr("Error"),
+                            tr(msg),
+                            level=QgsMessageBar.CRITICAL)
+                    else:
+                        loss_layer_plus_zones = QgsVectorLayer(
+                            res['CLIPS'],
+                            'Points labeled by zone',
+                            'ogr')
+                        if DEBUG:
+                            QgsMapLayerRegistry.instance().addMapLayer(
+                                loss_layer_plus_zones)
+                        self.calculate_vector_stats_aggregating_by_zone_id(
+                            loss_layer_plus_zones)
+
         else:
             self.calculate_raster_stats()
 
-    def calculate_vector_stats_aggregating_by_zone_id(self):
+    def calculate_vector_stats_aggregating_by_zone_id(self, loss_layer):
         """
         If we know the zone id of each point in the loss map, we
         don't need to use geometries while aggregating, and we can
         simply count by zone id
         """
-        tot_points = len(list(self.loss_layer.getFeatures()))
+        tot_points = len(list(loss_layer.getFeatures()))
         msg = tr("Step 2 of 3: aggregating losses by zone id...")
         progress = self.create_progress_message_bar(msg)
         with TraceTimeManager(msg, DEBUG):
             zone_stats = {}
             for current_point, point_feat in enumerate(
-                    self.loss_layer.getFeatures()):
+                    loss_layer.getFeatures()):
                 progress_perc = current_point / float(tot_points) * 100
                 progress.setValue(progress_perc)
-                zone_id = point_feat[self.zone_id_in_losses_attr_name]
+                # if the user picked an attribute from the loss layer, to be
+                # used as zone id, use that; otherwise, use the attribute
+                # copied from the zonal layer
+                if self.zone_id_in_losses_attr_name:
+                    zone_id_attr_name = self.zone_id_in_losses_attr_name
+                else:
+                    zone_id_attr_name = self.zone_id_in_zones_attr_name
+                zone_id = point_feat[zone_id_attr_name]
                 loss_value = point_feat[self.loss_attr_name]
                 if zone_id in zone_stats:
                     # increment the count by one and add the loss value
@@ -579,10 +622,15 @@ class Svir:
                     progress.setValue(progress_perc)
                     # get the id of the current zone
                     zone_id = zone_feat[self.zone_id_in_zones_attr_name]
+                    # initialize points_count and loss_sum to zero, and update
+                    # them afterwards only if the zone contains at least one
+                    # loss point
+                    points_count, loss_sum = (0, 0.0)
                     # retrieve count and sum from the dictionary, using the
                     # zone id as key to get the values from the corresponding
-                    # numpy array
-                    points_count, loss_sum = zone_stats[zone_id]
+                    # numpy array (otherwise, keep zero values)
+                    if zone_id in zone_stats:
+                        points_count, loss_sum = zone_stats[zone_id]
                     # without casting to int and to float, it wouldn't work
                     fid = zone_feat.id()
                     self.aggregation_layer.changeAttributeValue(
