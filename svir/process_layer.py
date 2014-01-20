@@ -127,16 +127,21 @@ class ProcessLayer():
             new_name = self.layer.name() + ' TMP'
 
         if self.layer.type() == QgsMapLayer.VectorLayer:
-            v_type = self.layer.geometryType()
-            if v_type == QGis.Point:
-                type_str = 'Point'
-            elif v_type == QGis.Line:
-                type_str = 'Line'
-            elif v_type == QGis.Polygon:
-                type_str = 'Polygon'
+            v_type = self.layer.wkbType()
+            if v_type == QGis.WKBPoint:
+                type_str = "point"
+            elif v_type == QGis.WKBLineString:
+                type_str = "linestring"
+            elif v_type == QGis.WKBPolygon:
+                type_str = "polygon"
+            elif v_type == QGis.WKBMultiPoint:
+                type_str = "multipoint"
+            elif v_type == QGis.WKBMultiLineString:
+                type_str = "multilinestring"
+            elif v_type == QGis.WKBMultiPolygon:
+                type_str = "multipolygon"
             else:
-                raise RuntimeError('Layer is whether Point nor '
-                                   'Line nor Polygon')
+                raise TypeError('Layer type %s can not be accepted' % v_type)
         else:
             raise RuntimeError('Layer is not a VectorLayer')
 
