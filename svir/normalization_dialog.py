@@ -47,6 +47,7 @@ class NormalizationDialog(QDialog):
         # Set up the user interface from Designer.
         self.ui = Ui_NormalizationDialog()
         self.ui.setupUi(self)
+        self.use_advanced = False
         self.ui.layer_cbx.currentIndexChanged['QString'].connect(
             self.reload_attrib_cbx)
         self.ui.algorithm_cbx.currentIndexChanged['QString'].connect(
@@ -62,7 +63,13 @@ class NormalizationDialog(QDialog):
             self.ui.layer_cbx.currentIndex()]
         self.iface.setActiveLayer(layer)
 
-        #TODO find a way to commit changes on OK click
+        # layer is put in editing mode. If the user clicks on ok, the field
+        # calculator will update the layers attributes.
+        # if the user clicks cancel, the field calculator does nothing.
+        # the layer stays in editing mode with the use_advanced flag set.
+        # the calling code should take care of doing layer.commitChanges()
+        # if the flag is set to true.
+        self.use_advanced = True
         layer.startEditing()
         self.iface.actionOpenFieldCalculator().trigger()
 

@@ -390,6 +390,11 @@ class Svir:
             ProcessLayer(mem_layer).normalize_attribute(attribute_name,
                                                         algorithm_name,
                                                         variant)
+        elif dlg.use_advanced:
+            layer = reg.mapLayers().values()[
+                dlg.ui.layer_cbx.currentIndex()]
+            layer.commitChanges()
+            layer.triggerRepaint()
 
     def select_layers_to_join(self):
         """
