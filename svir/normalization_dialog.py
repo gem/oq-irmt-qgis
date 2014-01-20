@@ -32,7 +32,8 @@ from PyQt4.QtGui import (QDialog,
 from qgis.core import QgsMapLayerRegistry
 
 from ui_normalization import Ui_NormalizationDialog
-from normalization_algs import RANK_VARIANTS
+from normalization_algs import (RANK_VARIANTS,
+                                QUADRATIC_VARIANTS)
 
 
 class NormalizationDialog(QDialog):
@@ -51,7 +52,7 @@ class NormalizationDialog(QDialog):
             self.reload_attrib_cbx)
         self.ui.algorithm_cbx.currentIndexChanged['QString'].connect(
             self.reload_variant_cbx)
-        if self.ui.algorithm_cbx.currentText() == 'RANK':
+        if self.ui.algorithm_cbx.currentText() in ['RANK', 'QUADRATIC']:
             self.reload_variant_cbx()
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
 
@@ -88,3 +89,5 @@ class NormalizationDialog(QDialog):
         self.ui.variant_cbx.clear()
         if self.ui.algorithm_cbx.currentText() == 'RANK':
             self.ui.variant_cbx.addItems(RANK_VARIANTS)
+        elif self.ui.algorithm_cbx.currentText() == 'QUADRATIC':
+            self.ui.variant_cbx.addItems(QUADRATIC_VARIANTS)

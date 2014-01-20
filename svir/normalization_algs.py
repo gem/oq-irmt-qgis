@@ -30,6 +30,7 @@ from register import Register
 
 NORMALIZATION_ALGS = Register()
 RANK_VARIANTS = ['AVERAGE', 'MIN', 'MAX', 'DENSE', 'ORDINAL']
+QUADRATIC_VARIANTS = ['INCREASING', 'DECREASING']
 
 
 def normalize(features_dict, algorithm, variant_name="", inverse=False):
@@ -41,6 +42,7 @@ def normalize(features_dict, algorithm, variant_name="", inverse=False):
     values = features_dict.values()
     normalized_list = algorithm(values, variant_name, inverse)
     return dict(zip(ids, normalized_list))
+
 
 @NORMALIZATION_ALGS.add('RANK')
 def rank(input_list, variant_name="AVERAGE", inverse=False):
@@ -109,6 +111,7 @@ def rank(input_list, variant_name="AVERAGE", inverse=False):
             previous_ties += top_amount - 1
     return rank_list
 
+
 @NORMALIZATION_ALGS.add('Z_SCORE')
 def z_score(input_list, variant_name="", inverse=False):
     """
@@ -125,6 +128,7 @@ def z_score(input_list, variant_name="", inverse=False):
     output_list = [
         1.0 * (num - mean_val) / stddev_val for num in input_copy]
     return output_list
+
 
 @NORMALIZATION_ALGS.add('MIN_MAX')
 def min_max(input_list, variant_name="", inverse=False):
@@ -146,6 +150,7 @@ def min_max(input_list, variant_name="", inverse=False):
             lambda x: (x - list_min) / list_range, input_list)
     return output_list
 
+
 @NORMALIZATION_ALGS.add('LOG10')
 def log10(input_list, variant_name="", inverse=False):
     if variant_name:
@@ -158,3 +163,22 @@ def log10(input_list, variant_name="", inverse=False):
                          "the field contains negative values")
     output_list = log10(input_list)
     return output_list
+
+
+@NORMALIZATION_ALGS.add('QUADRATIC')
+def quadratic(input_list, variant_name="", inverse=False):
+    min_input = min(input_list)
+    max_input = max(input_list)
+    squared_range = (max_input - min_input)**2
+    if variant_name == "INCREASING":
+        output_list = map(
+            lambda x: (x - min_input)**2 / squared_range, input_list)
+    elif variant_name == "DECREASING":
+        output_list = map(
+            lambda x: (max_input-(x-min_input)**2)/squared_range, input_list)
+    else:
+        raise NotImplementedError("%s variant not implemented" % variant_name)
+    if inverse:
+        output_list[:] = [1 - x for x in output_list]
+    return output_list
+
