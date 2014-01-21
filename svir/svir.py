@@ -52,12 +52,14 @@ from qgis.core import (QgsVectorLayer,
                        QgsFeatureRequest,
                        QgsVectorDataProvider,
                        QgsMapLayer,
-                       QGis)
+                       QGis,
+                       QgsMessageLog)
 
 from qgis.gui import QgsMessageBar
 
 from qgis.analysis import QgsZonalStatistics
 import processing as p
+from processing.saga.SagaUtils import SagaUtils
 
 from normalization_algs import NORMALIZATION_ALGS
 from process_layer import ProcessLayer
@@ -381,8 +383,7 @@ class Svir:
             layer = reg.mapLayers().values()[
                 dlg.ui.layer_cbx.currentIndex()]
             attribute_name = dlg.ui.attrib_cbx.currentText()
-            algorithm_name = NORMALIZATION_ALGS.keys()[
-                dlg.ui.algorithm_cbx.currentIndex()]
+            algorithm_name = dlg.ui.algorithm_cbx.currentText()
             variant = dlg.ui.variant_cbx.currentText()
             mem_layer_name = layer.name() + "_" + algorithm_name
             mem_layer = ProcessLayer(layer).duplicate_in_memory(mem_layer_name,
@@ -525,11 +526,11 @@ class Svir:
                 # otherwise we need to acquire the zones' geometries from the
                 # zonal layer and check if loss points are inside those zones
                 alg_name = 'saga:clippointswithpolygons'
-                # FIXME: this check doesn't work! Even if SAGA is not properly
-                # installed, the process continues and gives no visible result
-                if p.Processing.getAlgorithm(alg_name) is None:
-                    print 'Missing SAGA (impossible to use it to aggregate ' \
-                          'points by zone)'
+                msg = SagaUtils.checkSagaIsInstalled()
+                if msg is not None:
+                    msg += tr(" In order to cope with complex geometries, "
+                              "a working installation of SAGA is recommended.")
+                    QgsMessageLog.logMessage(msg)
                     self.calculate_vector_stats_using_geometries()
                 else:
                     # using SAGA to find out in which zone each point is
@@ -539,10 +540,13 @@ class Svir:
                                    self.zone_id_in_zones_attr_name,
                                    0,
                                    None)
-                    # FIXME: this check doesn't work either! The process
-                    # continues, but with no visible results
                     if res is None:
-                        print 'SAGA ERROR'
+                        msg = "An error occurred while attempting to " \
+                              "compute zonal statistics with SAGA"
+                        self.iface.messageBar().pushMessage(
+                            tr("Error"),
+                            tr(msg),
+                            level=QgsMessageBar.CRITICAL)
                     else:
                         loss_layer_plus_zones = QgsVectorLayer(
                             res['CLIPS'],

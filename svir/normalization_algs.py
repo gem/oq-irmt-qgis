@@ -46,6 +46,7 @@ def normalize(features_dict, algorithm, variant_name=""):
         normalized_list = algorithm(values)
     return dict(zip(ids, normalized_list))
 
+
 @NORMALIZATION_ALGS.add('RANK')
 def rank(input_list, variant_name):
     """
@@ -55,8 +56,12 @@ def rank(input_list, variant_name):
     # FIXME: obsolete version of rankdata doesn't accept method parameter
     # after updating scipy, we could use:
     # rankdata(input_list, variant_name)
+    if variant_name:
+        raise NotImplementedError(
+            "%s variant not implemented yet" % variant_name)
     output_list = list(rankdata(input_list))
     return output_list
+
 
 @NORMALIZATION_ALGS.add('Z_SCORE')
 def z_score(input_list):
@@ -68,6 +73,7 @@ def z_score(input_list):
     output_list = [
         1.0 * (num - mean_val) / stddev_val for num in input_list]
     return output_list
+
 
 @NORMALIZATION_ALGS.add('MIN_MAX')
 def min_max(input_list):

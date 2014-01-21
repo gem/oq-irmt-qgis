@@ -47,11 +47,6 @@ class NormalizationDialog(QDialog):
         # Set up the user interface from Designer.
         self.ui = Ui_NormalizationDialog()
         self.ui.setupUi(self)
-        self.use_advanced = False
-        self.ui.layer_cbx.currentIndexChanged['QString'].connect(
-            self.reload_attrib_cbx)
-        self.ui.algorithm_cbx.currentIndexChanged['QString'].connect(
-            self.reload_variant_cbx)
         if self.ui.algorithm_cbx.currentText() == 'RANK':
             self.reload_variant_cbx()
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
@@ -72,6 +67,14 @@ class NormalizationDialog(QDialog):
         self.use_advanced = True
         layer.startEditing()
         self.iface.actionOpenFieldCalculator().trigger()
+
+    @pyqtSlot(str)
+    def on_layer_cbx_currentIndexChanged(self):
+        self.reload_attrib_cbx()
+
+    @pyqtSlot(str)
+    def on_algorithm_cbx_currentIndexChanged(self):
+        self.reload_variant_cbx()
 
     def reload_attrib_cbx(self):
         # reset combo box
