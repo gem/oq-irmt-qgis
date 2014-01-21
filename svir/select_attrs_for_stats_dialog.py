@@ -73,8 +73,5 @@ class SelectAttrsForStatsDialog(QDialog):
             if field.type() in [2, 6]:
                 self.ui.svi_attr_cbx.addItem(field.name())
                 self.ui.aggr_loss_attr_cbx.addItem(field.name())
-            no_numeric_fields = False
-        if no_numeric_fields:
-            self.ok_button.setEnabled(False)
-        else:
-            self.ok_button.setEnabled(True)
+                no_numeric_fields = False
+        self.ok_button.setDisabled(no_numeric_fields)

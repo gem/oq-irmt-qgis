@@ -69,5 +69,5 @@ class SelectLayersToJoinDialog(QDialog):
             # numbers and 10 for strings
             if field.type() in [2, 6]:
                 self.ui.aggr_loss_attr_cbox.addItem(field.name())
-            no_numeric_fields = False
+                no_numeric_fields = False
         self.ok_button.setDisabled(no_numeric_fields)
