@@ -475,7 +475,7 @@ class FragilityDiscreteWidget(FragilityContinuousWidget):
 # Exposure, CostType, Location, Asset, Cost, Occupancy
 class ExposureWidget(QtGui.QWidget):
     table_attrs = [
-        {'addBtn': 0, 'delBtn': 0, 'viewclass': NameValueView},
+        {'addBtn': 0, 'delBtn': 0, 'viewclass': CustomTableView},
         {'addBtn': 1, 'delBtn': 1, 'viewclass': CustomTableView},
         {'addBtn': 1, 'delBtn': 1, 'viewclass': CustomTableView},
         {'addBtn': 1, 'delBtn': 1, 'viewclass': CustomTableView},

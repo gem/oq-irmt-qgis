@@ -257,16 +257,17 @@ EMP,ExposureModelBuildings,Ctrl+Alt+P,new_exposure_model_buildings
         with messagebox(self):
             return self.tableset.to_node()
 
-    def save(self, nrmlfile):
+    def save(self, nrmlfile):  # save on current file
         try:
             node = self.full_check()
         except:
             return
-        # save to a temporary file
-        with open(nrmlfile + '~', 'w+') as f:
-            node_to_nrml(node, f)
-        # only if there are no errors rename the file
-        os.rename(nrmlfile + '~', nrmlfile)
+        with messagebox(self):
+            # save to a temporary file
+            with open(nrmlfile + '~', 'w+') as f:
+                node_to_nrml(node, f)
+            # only if there are no errors rename the file
+            os.rename(nrmlfile + '~', nrmlfile)
 
     def save_nrml(self):
         """
@@ -274,7 +275,7 @@ EMP,ExposureModelBuildings,Ctrl+Alt+P,new_exposure_model_buildings
         """
         self.save(self.nrmlfile)
 
-    def write_nrml(self):
+    def write_nrml(self):  # save as
         """
         Save the current content of the tableset in NRML format
         """
