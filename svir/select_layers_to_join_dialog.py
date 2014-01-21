@@ -25,6 +25,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
+from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import QDialog, QDialogButtonBox
 from qgis.core import QgsMapLayerRegistry
 
@@ -43,8 +44,10 @@ class SelectLayersToJoinDialog(QDialog):
         self.ui = Ui_SelectLayersToJoinDialog()
         self.ui.setupUi(self)
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
-        self.ui.loss_layer_cbox.currentIndexChanged['QString'].connect(
-            self.reload_aggr_loss_attrib_cbx)
+
+    @pyqtSlot(str)
+    def on_loss_layer_cbox_currentIndexChanged(self):
+        self.reload_aggr_loss_attrib_cbx()
 
     def reload_aggr_loss_attrib_cbx(self):
         # reset combo box
@@ -63,10 +66,8 @@ class SelectLayersToJoinDialog(QDialog):
             # has not been explicitly set (potential mismatch between type and
             # typeName!). Same thing happens below for zonal fields. Therefore
             # we are using the type ids, which in this case are 2 or 6 for
+            # numbers and 10 for strings
             if field.type() in [2, 6]:
                 self.ui.aggr_loss_attr_cbox.addItem(field.name())
             no_numeric_fields = False
-        if no_numeric_fields:
-            self.ok_button.setEnabled(False)
-        else:
-            self.ok_button.setEnabled(True)
+        self.ok_button.setDisabled(no_numeric_fields)

@@ -90,13 +90,11 @@ class NormalizationDialog(QDialog):
             # has not been explicitly set (potential mismatch between type and
             # typeName!). Same thing happens below for zonal fields. Therefore
             # we are using the type ids, which in this case are 2 or 6 for
+            # numbers and 10 for strings
             if field.type() in [2, 6]:
                 self.ui.attrib_cbx.addItem(field.name())
                 no_numeric_fields = False
-        if no_numeric_fields:
-            self.ok_button.setEnabled(False)
-        else:
-            self.ok_button.setEnabled(True)
+        self.ok_button.setDisabled(no_numeric_fields)
 
     def reload_variant_cbx(self):
         self.ui.variant_cbx.clear()

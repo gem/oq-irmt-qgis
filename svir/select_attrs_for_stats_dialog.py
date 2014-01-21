@@ -25,6 +25,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
+from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox)
 from qgis.core import QgsMapLayerRegistry
@@ -45,8 +46,10 @@ class SelectAttrsForStatsDialog(QDialog):
         self.ui = Ui_SelectAttrsForStatsDialog()
         self.ui.setupUi(self)
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
-        self.ui.layer_cbx.currentIndexChanged['QString'].connect(
-            self.reload_attribs_cbx)
+
+    @pyqtSlot(str)
+    def on_layer_cbx_currentIndexChanged(self):
+        self.reload_attribs_cbx()
 
     def reload_attribs_cbx(self):
         # reset combo boxes
@@ -66,6 +69,7 @@ class SelectAttrsForStatsDialog(QDialog):
             # has not been explicitly set (potential mismatch between type and
             # typeName!). Same thing happens below for zonal fields. Therefore
             # we are using the type ids, which in this case are 2 or 6 for
+            # numbers and 10 for strings
             if field.type() in [2, 6]:
                 self.ui.svi_attr_cbx.addItem(field.name())
                 self.ui.aggr_loss_attr_cbx.addItem(field.name())
