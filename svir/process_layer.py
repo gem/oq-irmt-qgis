@@ -69,7 +69,8 @@ class ProcessLayer():
         input_attr_id = self.find_attribute_id(input_attr_name)
 
         # build the name of the output normalized attribute
-        new_attr_name = algorithm_name
+        # WARNING! Shape files support max 10 chars for attribute names
+        new_attr_name = algorithm_name[:10]
         self.add_attributes([QgsField(new_attr_name, QVariant.Double)])
 
         # get the id of the new attribute
