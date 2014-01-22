@@ -3,7 +3,9 @@ import collections
 from contextlib import contextmanager
 from PyQt4 import QtCore, QtGui
 from message_bar import MessageBar
-from openquake.common.record import Record, Table, Unique, Field
+from openquake.common.record import Record, Table, TableSet, Unique, Field
+from openquake.risklib.scientific import LogNormalDistribution
+from numpy import linspace
 
 try:
     from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
@@ -361,17 +363,21 @@ class TripleTableWidget(QtGui.QWidget):
             return []
         return self.tv[ordinal - 1].current_record()[:ordinal]
 
-    def plot(self, records, label):
-        can_plot = (Figure and records
-                    and hasattr(records[0], 'x')
-                    and hasattr(records[0], 'y'))
+    def plot(self, records, x_field, y_field, label):
+        can_plot = Figure and records
         if can_plot:
-            xs = [rec.x for rec in records]
-            ys = [rec.y for rec in records]
+            xs = [rec[x_field] for rec in records]
+            ys = [rec[y_field] for rec in records]
             self.axes.clear()
             self.axes.grid(True)
             self.axes.plot(xs, ys, label=label)
             self.axes.legend(loc='upper left')
+            self.canvas.draw()
+
+    def reset_plot(self):
+        if Figure:
+            self.axes.clear()
+            self.axes.grid(True)
             self.canvas.draw()
 
     def setupUi(self):
@@ -406,26 +412,27 @@ class TripleTableWidget(QtGui.QWidget):
         message = '%s: %s' % (fieldname, error)
         self.message_bar.show_message(message)
 
-    def show_tv1(self, row):
+    def show_tv1(self, index):
         try:
-            k0, = self.tv[0].tableModel.primaryKey(row)
+            k0, = self.tv[0].tableModel.primaryKey(index)
         except IndexError:  # empty table, nothing to show
             return
         # show only the rows in table 1 corresponding to k0
         self.tv[1].showOnCondition(lambda rec: rec[0] == k0)
-        # table 2 must disappear because no row in table 1 is selected
+        # table 2 must disappear because no index in table 1 is selected
         self.tv[2].showOnCondition(lambda rec: False)
-        self.plot([], '')
+        self.reset_plot()
 
-    def show_tv2(self, row):
+    def show_tv2(self, index):
         # show only the rows in table 2 corresponding to k0 and k1
         try:
-            k0, k1 = self.tv[1].tableModel.primaryKey(row)
+            k0, k1 = self.tv[1].tableModel.primaryKey(index)
         except IndexError:  # empty table, nothing to show
             return
         self.tv[2].showOnCondition(lambda rec: rec[0] == k0 and rec[1] == k1)
         self.plot([rec for rec in self.tableset.tables[2]
-                   if rec[0] == k0 and rec[1] == k1], '%s-%s' % (k0, k1))
+                   if rec[0] == k0 and rec[1] == k1],
+                  'IML', 'lossRatio', '%s-%s' % (k0, k1))
 
 
 # NB: the names of the widgets are related to the names of the Converter
@@ -435,29 +442,36 @@ class VulnerabilityWidget(TripleTableWidget):
     pass
 
 
-class FragilityContinuousWidget(TripleTableWidget):
+class FragilityDiscreteWidget(TripleTableWidget):
 
     def __init__(self, tableset, nrmlfile, parent=None):
-        # ignore the first table in the tableset
-        TripleTableWidget.__init__(self, tableset[1:], nrmlfile, parent)
+        tset = TableSet(tableset.convertertype,
+                        [tableset.tableFFLimitStateDiscrete,
+                         tableset.tableFFSetDiscrete,
+                         tableset.tableFFDataDiscrete])
+        TripleTableWidget.__init__(self, tset, nrmlfile, parent)
+        self.index_tv0 = 0
 
     def show_tv1(self, index):
-        ffsetcontinuous = self.tv[1]
-        type_idx = ffsetcontinuous.table.recordtype.get_field_index('type')
-        self.tv[1].tableView.hideColumn(type_idx)
         self.tv[2].showOnCondition(lambda rec: False)
-        self.plot([], '')
+        self.reset_plot()
+        self.index_tv0 = index
 
     def show_tv2(self, index):
         # show only the rows in table 2 corresponding to k0 and k1
         try:
-            ls, = self.tv[0].tableModel.primaryKey(index)
-            fi, = self.tv[1].tableModel.primaryKey(index)
+            # limit state
+            ls, = self.tv[0].tableModel.primaryKey(self.index_tv0)
+            fi, = self.tv[1].tableModel.primaryKey(index)  #
         except IndexError:  # empty table, nothing to show
             return
         self.tv[2].showOnCondition(lambda rec: rec[0] == ls and rec[1] == fi)
-        self.plot([rec for rec in self.tableset.tables[2]
-                   if rec[0] == ls and rec[1] == fi], '%s-%s' % (ls, fi))
+        self.plot_([rec for rec in self.tableset.tables[2]
+                   if rec[0] == ls and rec[1] == fi],
+                   '%s-%s' % (ls, fi), ls, fi)
+
+    def plot_(self, records, label, ls, fi):
+        self.plot(records, 'iml', 'poe', label)
 
     def getdefault(self, table):
         # return the primary key tuple partially filled, depending on
@@ -470,9 +484,22 @@ class FragilityContinuousWidget(TripleTableWidget):
         return [limit_state, ffs_ordinal]
 
 
-class FragilityDiscreteWidget(FragilityContinuousWidget):
-    pass
+class FragilityContinuousWidget(FragilityDiscreteWidget):
+    def __init__(self, tableset, nrmlfile, parent=None):
+        TripleTableWidget.__init__(self, tableset[1:], nrmlfile, parent)
+        ffsetcontinuous = self.tv[1]
+        type_idx = ffsetcontinuous.table.recordtype.get_field_index('type')
+        self.tv[1].tableView.hideColumn(type_idx)
 
+    def plot_(self, records, label, ls, fi):
+        mean = records[0].value
+        stddev = records[1].value
+        ffc = self.tv[1].table[int(fi) - 1]
+        x_range = linspace(ffc.minIML,
+                           ffc.maxIML, num=100)
+        y_range = LogNormalDistribution().survival(x_range, mean, stddev)
+        points = [dict(x=x, y=y) for x, y in zip(x_range, y_range)]
+        self.plot(points, 'x', 'y', label)
 
 # the exposure tableset contains 6 tables:
 # Exposure, CostType, Location, Asset, Cost, Occupancy
