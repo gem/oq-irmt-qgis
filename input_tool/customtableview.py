@@ -7,6 +7,10 @@ from openquake.common.record import Record, Table, TableSet, Unique, Field
 from openquake.risklib.scientific import LogNormalDistribution
 from numpy import linspace
 
+LEFT = 0
+RIGHT = 1
+DOWN = 2
+
 try:
     from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
     from matplotlib.figure import Figure
@@ -333,27 +337,30 @@ class TripleTableWidget(QtGui.QWidget):
         self.setupUi()
 
     def init_tv(self):
-        self.tv = []
+        self.tv = collections.OrderedDict()
         n_attrs = len(self.table_attrs)
         n_tables = len(self.tableset.tables)
         if n_attrs != n_tables:
             raise RuntimeError('There are %d tables but %d table attributes!' %
                                (n_tables, n_attrs))
-        for attr, table in zip(self.table_attrs, self.tableset.tables):
+        for i, (attr, table) in enumerate(
+                zip(self.table_attrs, self.tableset.tables)):
             table.attr.update(attr)
-            self.tv.append(CustomTableView(table, self.getdefault, self))
+            self.tv[table.name] = CustomTableView(table, self.getdefault, self)
+            self.tv[i] = self.tv[table.name]
+
         # signals
-        self.tv[0].tableView.clicked.connect(self.show_tv1)
-        self.tv[1].tableView.clicked.connect(self.show_tv2)
-        for tv in self.tv:
+        self.tv[LEFT].tableView.clicked.connect(self.show_tv1)
+        self.tv[RIGHT].tableView.clicked.connect(self.show_tv2)
+        for tv in self.tv.values():
             tv.tableModel.validationFailed.connect(
                 lambda idx, err, tv=tv:
                 self.show_validation_error(tv, idx, err))
 
         # hide primary key columns
-        self.tv[1].tableView.hideColumn(0)
-        self.tv[2].tableView.hideColumn(0)
-        self.tv[2].tableView.hideColumn(1)
+        self.tv[RIGHT].tableView.hideColumn(0)
+        self.tv[DOWN].tableView.hideColumn(0)
+        self.tv[DOWN].tableView.hideColumn(1)
 
     def getdefault(self, table):
         # return the primary key tuple partially filled, depending on
@@ -385,10 +392,10 @@ class TripleTableWidget(QtGui.QWidget):
         hlayout1 = QtGui.QHBoxLayout()
         hlayout2 = QtGui.QHBoxLayout()
         layout.addWidget(self.message_bar)
-        hlayout1.addWidget(self.tv[0])
-        hlayout1.addWidget(self.tv[1])
+        hlayout1.addWidget(self.tv[LEFT])
+        hlayout1.addWidget(self.tv[RIGHT])
         layout.addLayout(hlayout1)
-        hlayout2.addWidget(self.tv[2])
+        hlayout2.addWidget(self.tv[DOWN])
         if Figure:  # matplotlib is available
             self.fig = Figure()
             self.axes = self.fig.add_subplot(111)
@@ -414,22 +421,23 @@ class TripleTableWidget(QtGui.QWidget):
 
     def show_tv1(self, index):
         try:
-            k0, = self.tv[0].tableModel.primaryKey(index)
+            k0, = self.tv[LEFT].tableModel.primaryKey(index)
         except IndexError:  # empty table, nothing to show
             return
         # show only the rows in table 1 corresponding to k0
-        self.tv[1].showOnCondition(lambda rec: rec[0] == k0)
+        self.tv[RIGHT].showOnCondition(lambda rec: rec[0] == k0)
         # table 2 must disappear because no index in table 1 is selected
-        self.tv[2].showOnCondition(lambda rec: False)
+        self.tv[DOWN].showOnCondition(lambda rec: False)
         self.reset_plot()
 
     def show_tv2(self, index):
         # show only the rows in table 2 corresponding to k0 and k1
         try:
-            k0, k1 = self.tv[1].tableModel.primaryKey(index)
+            k0, k1 = self.tv[RIGHT].tableModel.primaryKey(index)
         except IndexError:  # empty table, nothing to show
             return
-        self.tv[2].showOnCondition(lambda rec: rec[0] == k0 and rec[1] == k1)
+        self.tv[DOWN].showOnCondition(
+            lambda rec: rec[0] == k0 and rec[1] == k1)
         self.plot([rec for rec in self.tableset.tables[2]
                    if rec[0] == k0 and rec[1] == k1],
                   'IML', 'lossRatio', '%s-%s' % (k0, k1))
@@ -442,18 +450,10 @@ class VulnerabilityWidget(TripleTableWidget):
     pass
 
 
-class FragilityDiscreteWidget(TripleTableWidget):
-
-    def __init__(self, tableset, nrmlfile, parent=None):
-        tset = TableSet(tableset.convertertype,
-                        [tableset.tableFFLimitStateDiscrete,
-                         tableset.tableFFSetDiscrete,
-                         tableset.tableFFDataDiscrete])
-        TripleTableWidget.__init__(self, tset, nrmlfile, parent)
-        self.index_tv0 = 0
+class FragilityWidget(TripleTableWidget):
 
     def show_tv1(self, index):
-        self.tv[2].showOnCondition(lambda rec: False)
+        self.tv[DOWN].showOnCondition(lambda rec: False)
         self.reset_plot()
         self.index_tv0 = index
 
@@ -461,11 +461,14 @@ class FragilityDiscreteWidget(TripleTableWidget):
         # show only the rows in table 2 corresponding to k0 and k1
         try:
             # limit state
-            ls, = self.tv[0].tableModel.primaryKey(self.index_tv0)
-            fi, = self.tv[1].tableModel.primaryKey(index)  #
+            ls, = self.tv[LEFT].tableModel.primaryKey(
+                self.index_tv0)
+            fi, = self.tv[RIGHT].tableModel.primaryKey(
+                index)  #
         except IndexError:  # empty table, nothing to show
             return
-        self.tv[2].showOnCondition(lambda rec: rec[0] == ls and rec[1] == fi)
+        self.tv[DOWN].showOnCondition(
+            lambda rec: rec[0] == ls and rec[1] == fi)
         self.plot_([rec for rec in self.tableset.tables[2]
                    if rec[0] == ls and rec[1] == fi],
                    '%s-%s' % (ls, fi), ls, fi)
@@ -479,27 +482,42 @@ class FragilityDiscreteWidget(TripleTableWidget):
         ordinal = table.ordinal
         if ordinal in (0, 1):  # top tables
             return []
-        limit_state = self.tv[0].current_record()[0]
-        ffs_ordinal = self.tv[1].current_record()[0]
+        limit_state = self.tv[LEFT].current_record()[0]
+        ffs_ordinal = self.tv[RIGHT].current_record()[0]
         return [limit_state, ffs_ordinal]
 
 
-class FragilityContinuousWidget(FragilityDiscreteWidget):
+class FragilityDiscreteWidget(FragilityWidget):
     def __init__(self, tableset, nrmlfile, parent=None):
-        TripleTableWidget.__init__(self, tableset[1:], nrmlfile, parent)
-        ffsetcontinuous = self.tv[1]
-        type_idx = ffsetcontinuous.table.recordtype.get_field_index('type')
-        self.tv[1].tableView.hideColumn(type_idx)
+        tset = TableSet(tableset.convertertype,
+                        [tableset.tableFFLimitStateDiscrete,
+                         tableset.tableFFSetDiscrete,
+                         tableset.tableFFDataDiscrete])
+        TripleTableWidget.__init__(self, tset, nrmlfile, parent)
+        self.index_tv0 = 0
+
+
+class FragilityContinuousWidget(FragilityWidget):
+    def __init__(self, tableset, nrmlfile, parent=None):
+        tset = TableSet(tableset.convertertype,
+                        [tableset.tableFFLimitStateContinuous,
+                         tableset.tableFFSetContinuous,
+                         tableset.tableFFDataContinuous])
+        TripleTableWidget.__init__(self, tset, nrmlfile, parent)
+        type_idx = tableset.tableFFSetContinuous.recordtype.get_field_index(
+            'type')
+        self.tv['tableFFSetContinuous'].tableView.hideColumn(type_idx)
 
     def plot_(self, records, label, ls, fi):
         mean = records[0].value
         stddev = records[1].value
-        ffc = self.tv[1].table[int(fi) - 1]
+        ffc = self.tableset.tableFFSetContinuous[int(fi) - 1]
         x_range = linspace(ffc.minIML,
                            ffc.maxIML, num=100)
         y_range = LogNormalDistribution().survival(x_range, mean, stddev)
         points = [dict(x=x, y=y) for x, y in zip(x_range, y_range)]
         self.plot(points, 'x', 'y', label)
+
 
 # the exposure tableset contains 6 tables:
 # Exposure, CostType, Location, Asset, Cost, Occupancy
@@ -524,7 +542,7 @@ class ExposureWidget(QtGui.QWidget):
                        tableset.tableAsset,
                        tableset.tableCost,
                        tableset.tableOccupancy]
-        self.tv_dict = collections.OrderedDict()
+        self.tv = collections.OrderedDict()
         for table, attr in zip(self.tables, self.table_attrs):
             table.attr.update(attr)
             tv = attr['viewclass'](table, self.getdefault)
@@ -533,12 +551,12 @@ class ExposureWidget(QtGui.QWidget):
             tv.tableModel.validationFailed.connect(
                 lambda idx, err, tv=tv:
                 self.show_validation_error(tv, idx, err))
-            self.tv_dict[table.name] = tv
+            self.tv[table.name] = tv
         self.setupUi()
 
-        self.tv_dict['tableLocation'].tableView.clicked.connect(
+        self.tv['tableLocation'].tableView.clicked.connect(
             self.show_asset)
-        self.tv_dict['tableAsset'].tableView.clicked.connect(
+        self.tv['tableAsset'].tableView.clicked.connect(
             self.show_cost_occupancy)
 
     def setupUi(self):
@@ -546,22 +564,22 @@ class ExposureWidget(QtGui.QWidget):
         hlayout1 = QtGui.QHBoxLayout()
         hlayout2 = QtGui.QHBoxLayout()
         layout.addWidget(self.message_bar)
-        hlayout1.addWidget(self.tv_dict['tableExposure'])
-        hlayout1.addWidget(self.tv_dict['tableCostType'])
-        hlayout1.addWidget(self.tv_dict['tableLocation'])
+        hlayout1.addWidget(self.tv['tableExposure'])
+        hlayout1.addWidget(self.tv['tableCostType'])
+        hlayout1.addWidget(self.tv['tableLocation'])
         layout.addLayout(hlayout1)
-        hlayout2.addWidget(self.tv_dict['tableAsset'])
-        hlayout2.addWidget(self.tv_dict['tableCost'])
-        hlayout2.addWidget(self.tv_dict['tableOccupancy'])
+        hlayout2.addWidget(self.tv['tableAsset'])
+        hlayout2.addWidget(self.tv['tableCost'])
+        hlayout2.addWidget(self.tv['tableOccupancy'])
         layout.addLayout(hlayout2)
         self.setLayout(layout)
         self.setSizePolicy(
             QtGui.QSizePolicy.MinimumExpanding,
             QtGui.QSizePolicy.MinimumExpanding)
 
-        self.tv_dict['tableAsset'].tableView.hideColumn(0)
-        self.tv_dict['tableCost'].tableView.hideColumn(0)
-        self.tv_dict['tableOccupancy'].tableView.hideColumn(0)
+        self.tv['tableAsset'].tableView.hideColumn(0)
+        self.tv['tableCost'].tableView.hideColumn(0)
+        self.tv['tableOccupancy'].tableView.hideColumn(0)
 
         self.show_asset(index(0, 0))
         self.show_cost_occupancy(index(0, 0))
@@ -576,32 +594,32 @@ class ExposureWidget(QtGui.QWidget):
     def show_asset(self, row):
         # show only the assets at the given location
         try:
-            loc_id, = self.tv_dict['tableLocation'].tableModel.primaryKey(row)
+            loc_id, = self.tv['tableLocation'].tableModel.primaryKey(row)
         except IndexError:  # empty table, nothing to show
             return
-        self.tv_dict['tableAsset'].showOnCondition(
+        self.tv['tableAsset'].showOnCondition(
             lambda rec: rec['location_id'] == loc_id)
 
         # reset Cost and Occupancy
-        self.tv_dict['tableCost'].showOnCondition(lambda rec: False)
-        self.tv_dict['tableOccupancy'].showOnCondition(lambda rec: False)
+        self.tv['tableCost'].showOnCondition(lambda rec: False)
+        self.tv['tableOccupancy'].showOnCondition(lambda rec: False)
 
     def show_cost_occupancy(self, row):
         try:
-            asset_ref, = self.tv_dict['tableAsset'].tableModel.primaryKey(row)
+            asset_ref, = self.tv['tableAsset'].tableModel.primaryKey(row)
         except IndexError:  # empty table, nothing to show
             return
         # show only the rows corresponding to asset_ref
-        self.tv_dict['tableCost'].showOnCondition(
+        self.tv['tableCost'].showOnCondition(
             lambda rec: rec['asset_ref'] == asset_ref)
         # show only the rows corresponding to asset_ref
-        self.tv_dict['tableOccupancy'].showOnCondition(
+        self.tv['tableOccupancy'].showOnCondition(
             lambda rec: rec['asset_ref'] == asset_ref)
 
     def getdefault(self, table):
         if table.name == 'tableAsset':
-            return self.tv_dict['tableLocation'].current_record()[:1]
+            return self.tv['tableLocation'].current_record()[:1]
         elif table.name in ('tableCost', 'tableOccupancy'):
-            return [self.tv_dict['tableAsset'].current_record()[1]]
+            return [self.tv['tableAsset'].current_record()[1]]
         else:
             return []
