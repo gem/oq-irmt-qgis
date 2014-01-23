@@ -350,8 +350,8 @@ class TripleTableWidget(QtGui.QWidget):
             self.tv[i] = self.tv[table.name]
 
         # signals
-        self.tv[LEFT].tableView.clicked.connect(self.show_tv1)
-        self.tv[RIGHT].tableView.clicked.connect(self.show_tv2)
+        self.tv[LEFT].tableView.clicked.connect(self.show_right)
+        self.tv[RIGHT].tableView.clicked.connect(self.show_down)
         for tv in self.tv.values():
             tv.tableModel.validationFailed.connect(
                 lambda idx, err, tv=tv:
@@ -409,8 +409,8 @@ class TripleTableWidget(QtGui.QWidget):
             QtGui.QSizePolicy.MinimumExpanding)
 
         # display table 1 and table 2 as if rows 0 and 0 where selected
-        self.show_tv1(index(0, 0))
-        self.show_tv2(index(0, 0))
+        self.show_right(index(0, 0))
+        self.show_down(index(0, 0))
 
     @QtCore.pyqtSlot(QtCore.QModelIndex, Exception)
     def show_validation_error(self, table_view, index, error):
@@ -419,7 +419,7 @@ class TripleTableWidget(QtGui.QWidget):
         message = '%s: %s' % (fieldname, error)
         self.message_bar.show_message(message)
 
-    def show_tv1(self, index):
+    def show_right(self, index):
         try:
             k0, = self.tv[LEFT].tableModel.primaryKey(index)
         except IndexError:  # empty table, nothing to show
@@ -430,7 +430,7 @@ class TripleTableWidget(QtGui.QWidget):
         self.tv[DOWN].showOnCondition(lambda rec: False)
         self.reset_plot()
 
-    def show_tv2(self, index):
+    def show_down(self, index):
         # show only the rows in table 2 corresponding to k0 and k1
         try:
             k0, k1 = self.tv[RIGHT].tableModel.primaryKey(index)
@@ -452,12 +452,12 @@ class VulnerabilityWidget(TripleTableWidget):
 
 class FragilityWidget(TripleTableWidget):
 
-    def show_tv1(self, index):
+    def show_right(self, index):
         self.tv[DOWN].showOnCondition(lambda rec: False)
         self.reset_plot()
         self.index_tv0 = index
 
-    def show_tv2(self, index):
+    def show_down(self, index):
         # show only the rows in table 2 corresponding to k0 and k1
         try:
             # limit state
@@ -469,7 +469,7 @@ class FragilityWidget(TripleTableWidget):
             return
         self.tv[DOWN].showOnCondition(
             lambda rec: rec[0] == ls and rec[1] == fi)
-        self.plot_([rec for rec in self.tableset.tables[2]
+        self.plot_([rec for rec in self.tableset.tables[DOWN]
                    if rec[0] == ls and rec[1] == fi],
                    '%s-%s' % (ls, fi), ls, fi)
 
