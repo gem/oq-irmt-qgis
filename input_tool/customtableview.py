@@ -580,6 +580,7 @@ class ExposureWidget(QtGui.QWidget):
         self.tv['tableAsset'].tableView.hideColumn(0)
         self.tv['tableCost'].tableView.hideColumn(0)
         self.tv['tableOccupancy'].tableView.hideColumn(0)
+        self.tv['tableLocation'].tableView.hideColumn(0)
 
         self.show_asset(index(0, 0))
         self.show_cost_occupancy(index(0, 0))
