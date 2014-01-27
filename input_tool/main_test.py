@@ -8,7 +8,7 @@ from openquake.nrmllib.node import node_from_xml
 from openquake.common.converter import Converter
 
 from customtableview import TripleTableWidget, NoRecordSelected, index
-from main import MainWindow
+from __main__ import MainWindow
 
 
 EXAMPLES = os.path.join(os.path.dirname(__file__), 'examples')
