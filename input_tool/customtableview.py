@@ -1,3 +1,4 @@
+import copy
 import traceback
 import collections
 from contextlib import contextmanager
@@ -97,13 +98,14 @@ class CustomTableModel(QtCore.QAbstractTableModel):
             row = index.row()
             column = index.column()
             value = value.toString().encode('utf-8')
-            record = self.table[row]
+            record = copy.deepcopy(self.table[row])
             try:
                 record[column] = value
             except ValueError as e:
                 self.validationFailed.emit(index, e)
                 return False
             else:
+                self.table[row] = record
                 self.dataChanged.emit(index, index)
                 return True
         return False
@@ -133,7 +135,7 @@ class CustomTableModel(QtCore.QAbstractTableModel):
         except NoRecordSelected:
             self.validationFailed.emit(
                 index(0, 0), NoRecordSelected('no record selected'))
-            return False
+            return True
         try:
             self.beginInsertRows(parent, position, position + nrows - 1)
             for i in range(nrows):
@@ -187,8 +189,11 @@ class CustomTableView(QtGui.QWidget):
 
     def appendRows(self, nrows):
         start = self.tableModel.rowCount()
-        self.tableModel.insertRows(start, nrows)
-        return range(start, start + nrows)
+        err = self.tableModel.insertRows(start, nrows)
+        if err:
+            return []
+        else:
+            return range(start, start + nrows)
 
     def removeRows(self):
         row_ids = set(item.row() for item in self.tableView.selectedIndexes())
