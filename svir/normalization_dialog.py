@@ -50,6 +50,7 @@ class NormalizationDialog(QDialog):
         if self.ui.algorithm_cbx.currentText() == 'RANK':
             self.reload_variant_cbx()
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
+        self.use_advanced = False
 
     @pyqtSlot()
     def on_calc_btn_clicked(self):
