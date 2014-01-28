@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>SelectLayersToJoinDialog</class>
- <widget class="QDialog" name="SelectLayersToJoinDialog">
+ <class>SelectAttrsForStatsDialog</class>
+ <widget class="QDialog" name="SelectAttrsForStatsDialog">
   <property name="windowModality">
-   <enum>Qt::WindowModal</enum>
+   <enum>Qt::ApplicationModal</enum>
   </property>
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>671</width>
-    <height>171</height>
+    <width>535</width>
+    <height>198</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Select layers to join</string>
+   <string>Select attributes for statistical computations</string>
   </property>
   <property name="modal">
    <bool>true</bool>
@@ -22,38 +22,35 @@
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
     <layout class="QFormLayout" name="formLayout">
-     <property name="fieldGrowthPolicy">
-      <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
-     </property>
-     <item row="1" column="0">
-      <widget class="QLabel" name="loss_layer_lbl">
+     <item row="2" column="1">
+      <widget class="QComboBox" name="svi_attr_cbx"/>
+     </item>
+     <item row="3" column="1">
+      <widget class="QComboBox" name="aggr_loss_attr_cbx"/>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="svi_attr_lbl">
        <property name="text">
-        <string>Layer containing loss data</string>
+        <string>SVI attribute name</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="aggr_loss_attr_lbl">
+       <property name="text">
+        <string>Aggregated loss attribute name</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="layer_lbl">
+       <property name="text">
+        <string>Layer</string>
        </property>
       </widget>
      </item>
      <item row="1" column="1">
-      <widget class="QComboBox" name="loss_layer_cbox"/>
-     </item>
-     <item row="3" column="0">
-      <widget class="QLabel" name="zonal_layer_lbl">
-       <property name="text">
-        <string>Layer containing zonal data</string>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="1">
-      <widget class="QComboBox" name="zonal_layer_cbox"/>
-     </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="aggr_loss_attr_lbl">
-       <property name="text">
-        <string>Attribute for aggregated losses</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="1">
-      <widget class="QComboBox" name="aggr_loss_attr_cbox"/>
+      <widget class="QComboBox" name="layer_cbx"/>
      </item>
     </layout>
    </item>
@@ -74,7 +71,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>SelectLayersToJoinDialog</receiver>
+   <receiver>SelectAttrsForStatsDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -90,7 +87,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>SelectLayersToJoinDialog</receiver>
+   <receiver>SelectAttrsForStatsDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

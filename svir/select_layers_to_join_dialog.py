@@ -25,9 +25,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
-from PyQt4.QtGui import QDialog
+from PyQt4.QtCore import pyqtSlot
+from PyQt4.QtGui import QDialog, QDialogButtonBox
+from qgis.core import QgsMapLayerRegistry
 
 from ui_select_layers_to_join import Ui_SelectLayersToJoinDialog
+from globals import NUMERIC_FIELD_TYPES
 
 
 class SelectLayersToJoinDialog(QDialog):
@@ -41,3 +44,26 @@ class SelectLayersToJoinDialog(QDialog):
         # Set up the user interface from Designer.
         self.ui = Ui_SelectLayersToJoinDialog()
         self.ui.setupUi(self)
+        self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
+
+    @pyqtSlot(str)
+    def on_loss_layer_cbox_currentIndexChanged(self):
+        self.reload_aggr_loss_attrib_cbx()
+
+    def reload_aggr_loss_attrib_cbx(self):
+        # reset combo box
+        self.ui.aggr_loss_attr_cbox.clear()
+        # populate attribute combo box with the list of attributes of the
+        # layer specified in the loss_layer combo box
+        layer = QgsMapLayerRegistry.instance().mapLayers().values()[
+            self.ui.loss_layer_cbox.currentIndex()]
+        # populate combo boxes with field names taken by layers
+        dp = layer.dataProvider()
+        fields = list(dp.fields())
+        no_numeric_fields = True
+        for field in fields:
+            # add numeric fields only
+            if field.typeName() in NUMERIC_FIELD_TYPES:
+                self.ui.aggr_loss_attr_cbox.addItem(field.name())
+                no_numeric_fields = False
+        self.ok_button.setDisabled(no_numeric_fields)

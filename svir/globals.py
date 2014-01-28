@@ -26,19 +26,11 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-class LayerEditingManager(object):
-    def __init__(self, layer, message, debug=False):
-        self.layer = layer
-        self.message = message
-        self.debug = debug
+DEBUG = False
 
-    def __enter__(self):
-        self.layer.startEditing()
-        if self.debug:
-            print "BEGIN", self.message
+INT_FIELD_TYPE_NAME = "integer"
+DOUBLE_FIELD_TYPE_NAME = "Real"
 
-    def __exit__(self, type, value, traceback):
-        self.layer.commitChanges()
-        self.layer.updateExtents()
-        if self.debug:
-            print "END", self.message
+NUMERIC_FIELD_TYPES = (INT_FIELD_TYPE_NAME, DOUBLE_FIELD_TYPE_NAME)
+
+STRING_FIELD_TYPE_NAME = "String"

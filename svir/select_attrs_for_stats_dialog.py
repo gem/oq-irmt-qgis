@@ -25,64 +25,39 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
-from PyQt4 import QtCore
 from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox)
 from qgis.core import QgsMapLayerRegistry
 
-from ui_normalization import Ui_NormalizationDialog
-from normalization_algs import RANK_VARIANTS
+from ui_select_attrs_for_stats import Ui_SelectAttrsForStatsDialog
 
 from globals import NUMERIC_FIELD_TYPES
 
-class NormalizationDialog(QDialog):
+class SelectAttrsForStatsDialog(QDialog):
     """
     Modal dialog giving to the user the possibility to select
-    a layer and an attribute of the same layer, and then a normalization
-    algorithm.
+    a layer containing SVI and aggregated losses, and to pick
+    the attributes containing such data in order to perform some
+    common statistics on them
     """
-    def __init__(self, iface):
+    def __init__(self):
         QDialog.__init__(self)
-        self.iface = iface
         # Set up the user interface from Designer.
-        self.ui = Ui_NormalizationDialog()
+        self.ui = Ui_SelectAttrsForStatsDialog()
         self.ui.setupUi(self)
-        if self.ui.algorithm_cbx.currentText() == 'RANK':
-            self.reload_variant_cbx()
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
-        self.use_advanced = False
-
-    @pyqtSlot()
-    def on_calc_btn_clicked(self):
-        self.close()
-        layer = QgsMapLayerRegistry.instance().mapLayers().values()[
-            self.ui.layer_cbx.currentIndex()]
-        self.iface.setActiveLayer(layer)
-
-        # layer is put in editing mode. If the user clicks on ok, the field
-        # calculator will update the layers attributes.
-        # if the user clicks cancel, the field calculator does nothing.
-        # the layer stays in editing mode with the use_advanced flag set.
-        # the calling code should take care of doing layer.commitChanges()
-        # if the flag is set to true.
-        self.use_advanced = True
-        layer.startEditing()
-        self.iface.actionOpenFieldCalculator().trigger()
 
     @pyqtSlot(str)
     def on_layer_cbx_currentIndexChanged(self):
-        self.reload_attrib_cbx()
+        self.reload_attribs_cbx()
 
-    @pyqtSlot(str)
-    def on_algorithm_cbx_currentIndexChanged(self):
-        self.reload_variant_cbx()
-
-    def reload_attrib_cbx(self):
-        # reset combo box
-        self.ui.attrib_cbx.clear()
-        # populate attribute combo box with the list of attributes of the
-        # layer specified in the other combo box
+    def reload_attribs_cbx(self):
+        # reset combo boxes
+        self.ui.svi_attr_cbx.clear()
+        self.ui.aggr_loss_attr_cbx.clear()
+        # populate attribute combo boxes with the list of attributes of the
+        # layer specified in the layer combo box
         layer = QgsMapLayerRegistry.instance().mapLayers().values()[
             self.ui.layer_cbx.currentIndex()]
         # populate combo boxes with field names taken by layers
@@ -92,11 +67,7 @@ class NormalizationDialog(QDialog):
         for field in fields:
             # add numeric fields only
             if field.typeName() in NUMERIC_FIELD_TYPES:
-                self.ui.attrib_cbx.addItem(field.name())
+                self.ui.svi_attr_cbx.addItem(field.name())
+                self.ui.aggr_loss_attr_cbx.addItem(field.name())
                 no_numeric_fields = False
         self.ok_button.setDisabled(no_numeric_fields)
-
-    def reload_variant_cbx(self):
-        self.ui.variant_cbx.clear()
-        if self.ui.algorithm_cbx.currentText() == 'RANK':
-            self.ui.variant_cbx.addItems(RANK_VARIANTS)
