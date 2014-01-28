@@ -34,6 +34,7 @@ from qgis.core import QgsMapLayerRegistry
 from ui_normalization import Ui_NormalizationDialog
 from normalization_algs import RANK_VARIANTS
 
+from globals import NUMERIC_FIELD_TYPES
 
 class NormalizationDialog(QDialog):
     """
@@ -90,12 +91,7 @@ class NormalizationDialog(QDialog):
         no_numeric_fields = True
         for field in fields:
             # add numeric fields only
-            # FIXME: typeName is empty for user-defined fields which typeName
-            # has not been explicitly set (potential mismatch between type and
-            # typeName!). Same thing happens below for zonal fields. Therefore
-            # we are using the type ids, which in this case are 2 or 6 for
-            # numbers and 10 for strings
-            if field.type() in [2, 6]:
+            if field.typeName() in NUMERIC_FIELD_TYPES:
                 self.ui.attrib_cbx.addItem(field.name())
                 no_numeric_fields = False
         self.ok_button.setDisabled(no_numeric_fields)

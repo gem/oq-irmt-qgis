@@ -37,7 +37,7 @@ from layer_editing_manager import LayerEditingManager
 from normalization_algs import (NORMALIZATION_ALGS,
                                 normalize)
 
-from utils import DEBUG
+from globals import DEBUG, DOUBLE_FIELD_TYPE_NAME
 
 
 class ProcessLayer():
@@ -71,7 +71,9 @@ class ProcessLayer():
         # build the name of the output normalized attribute
         # WARNING! Shape files support max 10 chars for attribute names
         new_attr_name = algorithm_name[:10]
-        self.add_attributes([QgsField(new_attr_name, QVariant.Double)])
+        field = QgsField(new_attr_name, QVariant.Double)
+        field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
+        self.add_attributes([field])
 
         # get the id of the new attribute
         new_attr_id = self.find_attribute_id(new_attr_name)

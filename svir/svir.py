@@ -75,8 +75,12 @@ from select_attrs_for_stats_dialog import SelectAttrsForStatsDialog
 from layer_editing_manager import LayerEditingManager
 from trace_time_manager import TraceTimeManager
 
-from utils import (tr,
-                   DEBUG)
+from utils import tr
+from globals import (INT_FIELD_TYPE_NAME,
+                     DOUBLE_FIELD_TYPE_NAME,
+                     NUMERIC_FIELD_TYPES,
+                     STRING_FIELD_TYPE_NAME,
+                     DEBUG)
 
 
 class Svir:
@@ -156,7 +160,7 @@ class Svir:
                            self.normalize_attribute)
         # Action for joining SVI with loss data (both aggregated by zone)
         self.add_menu_item(":/plugins/svir/start_plugin_icon.png",
-                           u"Collect SVI and loss data by zone",
+                           u"Merge SVI and loss data by zone",
                            self.join_svi_with_aggr_losses)
         # Action for calculating RISKPLUS, RISKMULT and RISK1F indices
         self.add_menu_item(
@@ -201,15 +205,16 @@ class Svir:
             if self.dlg.ui.purge_chk.isChecked():
                 self.create_new_aggregation_layer_with_no_empty_zones()
 
-            msg = 'Select "Join SVI with loss data" from SVIR plugin menu ' \
-                  'to join SVI and loss data (both aggregated by zone)'
+            msg = 'Select "Merge SVI with loss data" from SVIR plugin menu ' \
+                  'to create a new layer containing both SVI and loss data ' \
+                  'aggregated by zone)'
             self.iface.messageBar().pushMessage(tr("Info"),
                                                 tr(msg),
                                                 level=QgsMessageBar.INFO)
 
     def join_svi_with_aggr_losses(self):
         """
-        SVI data and aggregated losses are joined in order to obtain a layer
+        SVI data and aggregated losses are merged in order to obtain a layer
         containing, for each zone, an aggregated SVI and an aggregated loss
         """
         if self.select_layers_to_join():
@@ -325,10 +330,10 @@ class Svir:
         # numbers and 10 for strings
         for field in loss_fields:
             # Accept only numeric fields to contain loss data
-            if field.type() in [2, 6]:
+            if field.typeName() in NUMERIC_FIELD_TYPES:
                 dlg.ui.loss_attr_name_cbox.addItem(field.name())
             # Accept only string fields to contain zone ids
-            elif field.type() == 10:
+            elif field.typeName() == STRING_FIELD_TYPE_NAME:
                 dlg.ui.zone_id_attr_name_loss_cbox.addItem(field.name())
             else:
                 raise TypeError("Unknown field type %d" % field.type())
@@ -336,10 +341,10 @@ class Svir:
         zonal_fields = list(zonal_dp.fields())
         for field in zonal_fields:
             # Accept only numeric fields to contain loss data
-            if field.type() in [2, 6]:
+            if field.typeName() in NUMERIC_FIELD_TYPES:
                 dlg.ui.zonal_attr_name_cbox.addItem(field.name())
             # Accept only string fields to contain zone ids
-            elif field.type() == 10:
+            elif field.typeName() == STRING_FIELD_TYPE_NAME:
                 dlg.ui.zone_id_attr_name_zone_cbox.addItem(field.name())
             else:
                 raise TypeError("Unknown field type %d" % field.type())
@@ -401,13 +406,13 @@ class Svir:
         """
         Open a modal dialog containing 2 combo boxes, allowing the user
         to select a layer containing loss data and one containing SVI data.
-        The two layers will be joined (later) by zone id
+        The two layers will be merged (later) by zone id
         """
         dlg = SelectLayersToJoinDialog()
         reg = QgsMapLayerRegistry.instance()
         layer_list = [layer.name() for layer in reg.mapLayers().values()]
         if len(layer_list) < 2:
-            msg = 'At least two layers must be available for joining'
+            msg = 'At least two layers must be available for merging!'
             self.iface.messageBar().pushMessage(
                 tr("Error"),
                 tr(msg),
@@ -455,10 +460,14 @@ class Svir:
                                  DEBUG):
 
             # add count and sum fields for aggregating statistics
-            pr.addAttributes(
-                [QgsField(self.zone_id_in_zones_attr_name, QVariant.String),
-                 QgsField("count", QVariant.Int),
-                 QgsField("sum", QVariant.Double)])
+            zone_field = QgsField(self.zone_id_in_zones_attr_name,
+                                  QVariant.String)
+            zone_field.setTypeName(STRING_FIELD_TYPE_NAME)
+            count_field = QgsField("count", QVariant.Int)
+            count_field.setTypeName(INT_FIELD_TYPE_NAME)
+            sum_field = QgsField("sum", QVariant.Double)
+            sum_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
+            pr.addAttributes([zone_field, count_field, sum_field])
 
             # to show the overall progress, cycling through zones
             tot_zones = len(list(self.zonal_layer.getFeatures()))
@@ -476,12 +485,9 @@ class Svir:
                 feat.setGeometry(QgsGeometry(zone_feature.geometry()))
                 # Define the count and sum fields to initialize to 0
                 fields = QgsFields()
-                fields.append(
-                    QgsField(self.zone_id_in_zones_attr_name, QVariant.String))
-                fields.append(
-                    QgsField("count", QVariant.Int))
-                fields.append(
-                    QgsField("sum", QVariant.Double))
+                fields.append(zone_field)
+                fields.append(count_field)
+                fields.append(sum_field)
                 # Add fields to the new feature
                 feat.setFields(fields)
                 feat[self.zone_id_in_zones_attr_name] = zone_feature[
@@ -787,10 +793,14 @@ class Svir:
                                  tr("Purged layer initialization"),
                                  DEBUG):
             # add count and sum fields for aggregating statistics
-            pr.addAttributes(
-                [QgsField(self.zone_id_in_zones_attr_name, QVariant.String),
-                 QgsField("count", QVariant.Int),
-                 QgsField("sum", QVariant.Double)])
+            zone_field = QgsField(self.zone_id_in_zones_attr_name,
+                                  QVariant.String)
+            zone_field.setTypeName(STRING_FIELD_TYPE_NAME)
+            count_field = QgsField("count", QVariant.Int)
+            count_field.setTypeName(INT_FIELD_TYPE_NAME)
+            sum_field = QgsField("sum", QVariant.Double)
+            sum_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
+            pr.addAttributes([zone_field, count_field, sum_field])
 
             # copy zones from aggregation layer
             for current_zone, zone_feature in enumerate(
@@ -864,7 +874,7 @@ class Svir:
 
     def create_svir_layer(self):
         """
-        Create a new layer joining (by zone id) social vulnerability
+        Create a new layer merging (by zone id) social vulnerability
         and loss data
         """
         # Create new svir layer, duplicating social vulnerability layer
@@ -872,8 +882,9 @@ class Svir:
         self.svir_layer = ProcessLayer(
             self.zonal_layer_to_join).duplicate_in_memory(layer_name, True)
         # Add aggregated loss attribute to svir_layer
-        ProcessLayer(self.svir_layer).add_attributes(
-            [QgsField(self.aggr_loss_attr_to_join, QVariant.Double)])
+        field = QgsField(self.aggr_loss_attr_to_join, QVariant.Double)
+        field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
+        ProcessLayer(self.svir_layer).add_attributes([field])
         # Populate "loss" attribute with data from aggregation_layer
         self.populate_svir_layer_with_loss_values()
         # Add svir layer to registry
@@ -907,10 +918,14 @@ class Svir:
             # RISKPLUS = TOTRISK + TOTSVI
             # RISKMULT = TOTRISK * TOTSVI
             # RISK1F   = TOTRISK * (1 + TOTSVI)
+            riskplus_field = QgsField('RISKPLUS', QVariant.Double)
+            riskplus_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
+            riskmult_field = QgsField('RISKMULT', QVariant.Double)
+            riskmult_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
+            risk1f_field = QgsField('RISK1F', QVariant.Double)
+            risk1f_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
             ProcessLayer(layer).add_attributes(
-                [QgsField('RISKPLUS', QVariant.Double),
-                 QgsField('RISKMULT', QVariant.Double),
-                 QgsField('RISK1F', QVariant.Double)])
+                [riskplus_field, riskmult_field, risk1f_field])
             # for each zone, calculate the value of the output attributes
             # to show the overall progress, cycling through zones
             tot_zones = len(list(layer.getFeatures()))

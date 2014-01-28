@@ -27,9 +27,7 @@
 """
 from PyQt4.QtGui import QApplication
 
-DEBUG = False
 
-    
 def tr(message):
     return QApplication.translate('Svir', message)
 
