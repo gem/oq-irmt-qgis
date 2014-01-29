@@ -100,3 +100,5 @@ class NormalizationDialog(QDialog):
         self.ui.variant_cbx.clear()
         if self.ui.algorithm_cbx.currentText() == 'RANK':
             self.ui.variant_cbx.addItems(RANK_VARIANTS)
+        else:
+            self.ui.variant_cbx.setDisabled(True)
