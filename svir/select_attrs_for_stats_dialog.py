@@ -30,7 +30,7 @@ from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox)
 from qgis.core import QgsMapLayerRegistry
 
-from ui_select_attrs_for_stats import Ui_SelectAttrsForStatsDialog
+from ui.ui_select_attrs_for_stats import Ui_SelectAttrsForStatsDialog
 
 from globals import NUMERIC_FIELD_TYPES
 

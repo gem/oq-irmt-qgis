@@ -72,10 +72,9 @@ from attribute_selection_dialog import AttributeSelectionDialog
 from normalization_dialog import NormalizationDialog
 from select_attrs_for_stats_dialog import SelectAttrsForStatsDialog
 
-from layer_editing_manager import LayerEditingManager
-from trace_time_manager import TraceTimeManager
+from utils import LayerEditingManager
 
-from utils import tr
+from utils import tr, TraceTimeManager
 from globals import (INT_FIELD_TYPE_NAME,
                      DOUBLE_FIELD_TYPE_NAME,
                      NUMERIC_FIELD_TYPES,

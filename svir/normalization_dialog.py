@@ -25,13 +25,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
-from PyQt4 import QtCore
 from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox)
 from qgis.core import QgsMapLayerRegistry
 
-from ui_normalization import Ui_NormalizationDialog
+from ui.ui_normalization import Ui_NormalizationDialog
 from normalization_algs import RANK_VARIANTS
 
 from globals import NUMERIC_FIELD_TYPES

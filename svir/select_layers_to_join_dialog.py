@@ -29,7 +29,7 @@ from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import QDialog, QDialogButtonBox
 from qgis.core import QgsMapLayerRegistry
 
-from ui_select_layers_to_join import Ui_SelectLayersToJoinDialog
+from ui.ui_select_layers_to_join import Ui_SelectLayersToJoinDialog
 from globals import NUMERIC_FIELD_TYPES, STRING_FIELD_TYPE_NAME
 
 

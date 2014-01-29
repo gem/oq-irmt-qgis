@@ -21,7 +21,7 @@ QGISDIR=.qgis2
 # Makefile for a PyQGIS plugin 
 
 # translation
-SOURCES = svir.py ui_svir.py __init__.py svirdialog.py attribute_selection_dialog.py select_layers_to_join_dialog.py normalization_dialog.py select_attrs_for_stats_dialog.py
+SOURCES = svir.py ui/ui_svir.py __init__.py svirdialog.py attribute_selection_dialog.py select_layers_to_join_dialog.py normalization_dialog.py select_attrs_for_stats_dialog.py
 #TRANSLATIONS = i18n/svir_en.ts
 TRANSLATIONS = 
 
@@ -33,7 +33,7 @@ PY_FILES = svir.py svirdialog.py __init__.py attribute_selection_dialog.py selec
 
 EXTRAS = resources/start_plugin_icon.png metadata.txt
 
-UI_FILES = ui_svir.py ui_attribute_selection.py ui_select_layers_to_join.py ui_normalization.py ui_select_attrs_for_stats.py
+UI_FILES = ui/ui_svir.py ui/ui_attribute_selection.py ui/ui_select_layers_to_join.py ui/ui_normalization.py ui/ui_select_attrs_for_stats.py
 
 RESOURCE_FILES = resources_rc.py
 

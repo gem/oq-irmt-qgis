@@ -27,7 +27,6 @@
 """
 
 # create the dialog for zoom to point
-import os
 from PyQt4.QtCore import pyqtSlot, QDir
 from PyQt4.QtGui import (QFileDialog,
                          QDialog,
@@ -35,7 +34,7 @@ from PyQt4.QtGui import (QFileDialog,
 from qgis.core import QgsVectorLayer, QGis, QgsRasterLayer, QgsMapLayerRegistry
 from qgis.gui import QgsMessageBar
 from process_layer import ProcessLayer
-from ui_svir import Ui_SvirDialog
+from ui.ui_svir import Ui_SvirDialog
 from utils import tr
 
 class SvirDialog(QDialog):

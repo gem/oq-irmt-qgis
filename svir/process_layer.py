@@ -32,7 +32,7 @@ from qgis.core import (QgsMapLayer,
                        QgsVectorLayer,
                        QgsMapLayerRegistry,
                        QgsField)
-from layer_editing_manager import LayerEditingManager
+from utils import LayerEditingManager
 
 from normalization_algs import (NORMALIZATION_ALGS,
                                 normalize)
