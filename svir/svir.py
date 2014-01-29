@@ -103,9 +103,6 @@ class Svir:
             if qVersion() > '4.3.3':
                 QCoreApplication.installTranslator(self.translator)
 
-        # Create the dialog (after translation) and keep reference
-        self.dlg = SvirDialog()
-
         self.loss_layer_is_vector = True
         # Input layer containing loss data
         self.loss_layer = None
@@ -177,17 +174,23 @@ class Svir:
 
     # run method that performs all the real work
     def run(self):
+        # Create the dialog (after translation) and keep reference
+        dlg = SvirDialog(self.iface)
         # Run the dialog event loop
-        result = self.dlg.exec_()
         # See if OK was pressed
-        if result == 1:
+        if dlg.exec_():
+            loss_layer_id = dlg.ui.loss_layer_cbx.itemData(
+                dlg.ui.loss_layer_cbx.currentIndex())
+            self.loss_layer = QgsMapLayerRegistry.instance().mapLayer(
+                loss_layer_id)
+            zonal_layer_id = dlg.ui.zonal_layer_cbx.itemData(
+                dlg.ui.zonal_layer_cbx.currentIndex())
+            self.zonal_layer = QgsMapLayerRegistry.instance().mapLayer(
+                zonal_layer_id)
+
             # check if loss layer is raster or vector (aggregating by zone
             # is different in the two cases)
-            self.loss_layer_is_vector = self.dlg.loss_map_is_vector
-            if not self.load_layers(self.dlg.ui.zonal_layer_le.text(),
-                                    self.dlg.ui.loss_layer_le.text(),
-                                    self.loss_layer_is_vector):
-                return
+            self.loss_layer_is_vector = dlg.loss_layer_is_vector
 
             # Open dialog to ask the user to specify attributes
             # * loss from loss_layer
@@ -202,7 +205,7 @@ class Svir:
             # zone and sum of loss values for the same zone)
             self.calculate_stats()
 
-            if self.dlg.ui.purge_chk.isChecked():
+            if dlg.ui.purge_chk.isChecked():
                 self.create_new_aggregation_layer_with_no_empty_zones()
 
             msg = 'Select "Merge SVI with loss data" from SVIR plugin menu ' \
@@ -225,82 +228,6 @@ class Svir:
             self.iface.messageBar().pushMessage(tr("Info"),
                                                 tr(msg),
                                                 level=QgsMessageBar.INFO)
-
-    def load_layers(self, zonal_layer_path,
-                    loss_layer_path,
-                    loss_layer_is_vector):
-        """
-        Initial loading of the layers containing regional data and losses
-        @param zonal_layer_path: Path of the layer containing zonal data
-        (e.g. SVI aggregated by zone) and zonal geometries.
-        @param loss_layer_path: Path of the layer containing loss points
-        @param loss_layer_is_vector: True if loss layer is a vector layer,
-        or False if it is a raster layer
-        """
-        # Load zonal layer
-        self.zonal_layer = QgsVectorLayer(zonal_layer_path,
-                                          tr('Zonal data'), 'ogr')
-        if self.zonal_layer.type() == QgsMapLayer.VectorLayer:
-            if not self.zonal_layer.geometryType() == QGis.Polygon:
-                msg = 'Zonal layer must contain zone polygons'
-                self.iface.messageBar().pushMessage(
-                    tr("Error"),
-                    tr(msg),
-                    level=QgsMessageBar.CRITICAL)
-                return False
-        else:
-            msg = 'Zonal layer must be a VectorLayer'
-            self.iface.messageBar().pushMessage(
-                tr("Error"),
-                tr(msg),
-                level=QgsMessageBar.CRITICAL)
-            return False
-        # Add zonal layer to registry
-        if self.zonal_layer.isValid():
-            QgsMapLayerRegistry.instance().addMapLayer(self.zonal_layer)
-        else:
-            msg = 'Invalid zonal layer'
-            self.iface.messageBar().pushMessage(
-                tr("Error"),
-                tr(msg),
-                level=QgsMessageBar.CRITICAL)
-            return False
-            # Load loss layer
-        if loss_layer_is_vector:
-            self.loss_layer = QgsVectorLayer(loss_layer_path,
-                                             tr('Loss map'), 'ogr')
-            if self.loss_layer.type() == QgsMapLayer.VectorLayer:
-                if not self.loss_layer.geometryType() == QGis.Point:
-                    msg = 'Loss layer must contain points'
-                    self.iface.messageBar().pushMessage(
-                        tr("Error"),
-                        tr(msg),
-                        level=QgsMessageBar.CRITICAL)
-                    return False
-            else:
-                msg = 'Loss layer is not a VectorLayer'
-                self.iface.messageBar().pushMessage(
-                    tr("Error"),
-                    tr(msg),
-                    level=QgsMessageBar.CRITICAL)
-                return False
-        else:
-            self.loss_layer = QgsRasterLayer(loss_layer_path,
-                                             tr('Loss map'))
-
-        # Add loss layer to registry
-        if self.loss_layer.isValid():
-            QgsMapLayerRegistry.instance().addMapLayer(self.loss_layer)
-        else:
-            msg = 'Invalid loss layer'
-            self.iface.messageBar().pushMessage(
-                tr("Error"),
-                tr(msg),
-                level=QgsMessageBar.CRITICAL)
-            return False
-            # Zoom depending on the zonal layer's extent
-        self.canvas.setExtent(self.zonal_layer.extent())
-        return True
 
     def attribute_selection(self):
         """
