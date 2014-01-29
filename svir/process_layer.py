@@ -175,7 +175,7 @@ class ProcessLayer():
 
         return mem_layer
 
-    def is_type(self, type_list):
+    def is_type_in(self, type_list):
         """
         @param type_list: we want to check if the type of the layer is
         included in this list

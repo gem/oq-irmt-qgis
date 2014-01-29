@@ -93,7 +93,7 @@ class SvirDialog(QDialog):
     @pyqtSlot()
     def on_loss_layer_tbn_clicked(self):
         layer = self.open_file_dialog('loss_layer')
-        if layer and ProcessLayer(layer).is_type(["point", "multipoint"]):
+        if layer and ProcessLayer(layer).is_type_in(["point", "multipoint"]):
             cbx = self.ui.loss_layer_cbx
             cbx.addItem(layer.name())
             last_index = cbx.count() - 1
@@ -104,7 +104,7 @@ class SvirDialog(QDialog):
     @pyqtSlot()
     def on_zonal_layer_tbn_clicked(self):
         layer = self.open_file_dialog('zonal_layer')
-        if layer and ProcessLayer(layer).is_type(["polygon", "multipolygon"]):
+        if layer and ProcessLayer(layer).is_type_in(["polygon", "multipolygon"]):
             cbx = self.ui.zonal_layer_cbx
             cbx.addItem(layer.name())
             last_index = cbx.count() - 1
@@ -115,11 +115,11 @@ class SvirDialog(QDialog):
     def populate_cbx(self):
         for key, layer in QgsMapLayerRegistry.instance().mapLayers().iteritems():
             # populate loss cbx only with layers containing points
-            if ProcessLayer(layer).is_type(["point", "multipoint"]):
+            if ProcessLayer(layer).is_type_in(["point", "multipoint"]):
                 self.ui.loss_layer_cbx.addItem(layer.name())
                 self.ui.loss_layer_cbx.setItemData(
                     self.ui.loss_layer_cbx.count()-1, layer.id())
-            if ProcessLayer(layer).is_type(["polygon", "multipolygon"]):
+            if ProcessLayer(layer).is_type_in(["polygon", "multipolygon"]):
                 self.ui.zonal_layer_cbx.addItem(layer.name())
                 self.ui.zonal_layer_cbx.setItemData(
                     self.ui.zonal_layer_cbx.count()-1, layer.id())

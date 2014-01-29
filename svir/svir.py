@@ -213,7 +213,7 @@ class Svir:
             self.iface.messageBar().pushMessage(tr("Info"),
                                                 tr(msg),
                                                 level=QgsMessageBar.INFO,
-                                                duration=5)
+                                                duration=8)
 
     def join_svi_with_aggr_losses(self):
         """
@@ -228,7 +228,7 @@ class Svir:
             self.iface.messageBar().pushMessage(tr("Info"),
                                                 tr(msg),
                                                 level=QgsMessageBar.INFO,
-                                                duration=5)
+                                                duration=8)
 
     def attribute_selection(self):
         """
@@ -330,7 +330,7 @@ class Svir:
                     tr("Info"),
                     tr(msg),
                     level=QgsMessageBar.INFO,
-                    duration=5)
+                    duration=8)
 
     def select_layers_to_join(self):
         """
@@ -672,7 +672,7 @@ class Svir:
             self.iface.messageBar().pushMessage(tr("Warning"),
                                                 tr(msg),
                                                 level=QgsMessageBar.INFO,
-                                                duration=5)
+                                                duration=8)
 
     def calculate_raster_stats(self):
         """
@@ -757,7 +757,7 @@ class Svir:
             self.iface.messageBar().pushMessage(tr("Info"),
                                                 tr(msg),
                                                 level=QgsMessageBar.INFO,
-                                                duration=5)
+                                                duration=8)
         else:
             raise RuntimeError('Purged layer invalid')
 
