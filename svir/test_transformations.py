@@ -131,5 +131,29 @@ class ZScoreTestCase(unittest.TestCase):
                                      -4.2177569493998259])
 
 
+class Log10TestCase(unittest.TestCase):
+
+    def setUp(self):
+        pass
+
+    def test_log10_direct(self):
+        pass
+
+    def test_log10_inverse(self):
+        pass
+
+
+class QuadraticTestCase(unittest.TestCase):
+
+    def setUp(self):
+        pass
+
+    def test_quadratic_direct(self):
+        pass
+
+    def test_quadratic_inverse(self):
+        pass
+
+
 if __name__ == '__main__':
     unittest.main()

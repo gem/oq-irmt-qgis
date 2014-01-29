@@ -113,7 +113,7 @@ def rank(input_list, variant_name="AVERAGE", inverse=False):
 
 
 @NORMALIZATION_ALGS.add('Z_SCORE')
-def z_score(input_list, variant_name="", inverse=False):
+def z_score(input_list, variant_name=None, inverse=False):
     """
     Normalized(e_i) = (e_i - mean(e)) / std(e)
     """
@@ -131,7 +131,7 @@ def z_score(input_list, variant_name="", inverse=False):
 
 
 @NORMALIZATION_ALGS.add('MIN_MAX')
-def min_max(input_list, variant_name="", inverse=False):
+def min_max(input_list, variant_name=None, inverse=False):
     """
     Normalized(e_i) = (e_i - min(e)) / (max(e) - min(e))
     """
@@ -152,7 +152,7 @@ def min_max(input_list, variant_name="", inverse=False):
 
 
 @NORMALIZATION_ALGS.add('LOG10')
-def log10(input_list, variant_name="", inverse=False):
+def log10_(input_list, variant_name=None, inverse=False):
     if variant_name:
         raise NotImplementedError("%s variant not implemented" % variant_name)
     if inverse:
@@ -166,16 +166,17 @@ def log10(input_list, variant_name="", inverse=False):
 
 
 @NORMALIZATION_ALGS.add('QUADRATIC')
-def quadratic(input_list, variant_name="", inverse=False):
-    min_input = min(input_list)
+def quadratic(input_list, variant_name=None, inverse=False):
+    bottom = 0
     max_input = max(input_list)
-    squared_range = (max_input - min_input)**2
+    squared_range = (max_input - bottom)**2
     if variant_name == "INCREASING":
         output_list = map(
-            lambda x: (x - min_input)**2 / squared_range, input_list)
+            lambda x: (x - bottom)**2 / squared_range, input_list)
     elif variant_name == "DECREASING":
         output_list = map(
-            lambda x: (max_input-(x-min_input)**2)/squared_range, input_list)
+            lambda x: (max_input-(x-bottom))**2 / squared_range, input_list)
+
     else:
         raise NotImplementedError("%s variant not implemented" % variant_name)
     if inverse:
