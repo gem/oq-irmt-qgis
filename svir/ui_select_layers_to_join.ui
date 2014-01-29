@@ -14,7 +14,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Select layers to join</string>
+   <string>Select layers to merge</string>
   </property>
   <property name="modal">
    <bool>true</bool>
@@ -54,6 +54,16 @@
      </item>
      <item row="2" column="1">
       <widget class="QComboBox" name="aggr_loss_attr_cbox"/>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Merge by attribute</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QComboBox" name="merge_attr_cbx"/>
      </item>
     </layout>
    </item>

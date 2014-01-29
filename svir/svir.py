@@ -213,7 +213,8 @@ class Svir:
                   'aggregated by zone)'
             self.iface.messageBar().pushMessage(tr("Info"),
                                                 tr(msg),
-                                                level=QgsMessageBar.INFO)
+                                                level=QgsMessageBar.INFO,
+                                                duration=5)
 
     def join_svi_with_aggr_losses(self):
         """
@@ -227,7 +228,8 @@ class Svir:
                   'indices'
             self.iface.messageBar().pushMessage(tr("Info"),
                                                 tr(msg),
-                                                level=QgsMessageBar.INFO)
+                                                level=QgsMessageBar.INFO,
+                                                duration=5)
 
     def attribute_selection(self):
         """
@@ -323,12 +325,18 @@ class Svir:
                 dlg.ui.layer_cbx.currentIndex()]
             layer.commitChanges()
             layer.triggerRepaint()
+            msg = 'Calculation performed on layer %s' % layer.name()
+            self.iface.messageBar().pushMessage(
+                tr("Info"),
+                tr(msg),
+                level=QgsMessageBar.INFO,
+                duration=5)
 
     def select_layers_to_join(self):
         """
-        Open a modal dialog containing 2 combo boxes, allowing the user
-        to select a layer containing loss data and one containing SVI data.
-        The two layers will be merged (later) by zone id
+        Open a modal dialog allowing the user to select a layer containing
+        loss data and one containing SVI data, the aggregated loss attribute
+        and the zone id that we want to use for merging.
         """
         dlg = SelectLayersToJoinDialog()
         reg = QgsMapLayerRegistry.instance()
@@ -349,6 +357,8 @@ class Svir:
                 dlg.ui.aggr_loss_attr_cbox.currentText()
             self.zonal_layer_to_join = reg.mapLayers().values()[
                 dlg.ui.zonal_layer_cbox.currentIndex()]
+            self.zone_id_in_zones_attr_name = \
+                dlg.ui.merge_attr_cbx.currentText()
             return True
         else:
             return False
@@ -661,7 +671,8 @@ class Svir:
             msg = "No loss points are contained by any of the zones!"
             self.iface.messageBar().pushMessage(tr("Warning"),
                                                 tr(msg),
-                                                level=QgsMessageBar.INFO)
+                                                level=QgsMessageBar.INFO,
+                                                duration=5)
 
     def calculate_raster_stats(self):
         """
@@ -745,7 +756,8 @@ class Svir:
                   "copied into a new aggregation layer."
             self.iface.messageBar().pushMessage(tr("Info"),
                                                 tr(msg),
-                                                level=QgsMessageBar.INFO)
+                                                level=QgsMessageBar.INFO,
+                                                duration=5)
         else:
             raise RuntimeError('Purged layer invalid')
 
