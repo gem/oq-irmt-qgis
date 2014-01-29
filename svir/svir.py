@@ -250,11 +250,6 @@ class Svir:
         # Load in the comboboxes only the names of the attributes compatible
         # with the following analyses: only numeric for losses and only
         # string for zone ids
-        # FIXME: typeName is empty for user-defined fields which typeName
-        # has not been explicitly set (potential mismatch between type and
-        # typeName!). Same thing happens below for zonal fields. Therefore
-        # we are using the type ids, which in this case are 2 or 6 for
-        # numbers and 10 for strings
         for field in loss_fields:
             # Accept only numeric fields to contain loss data
             if field.typeName() in NUMERIC_FIELD_TYPES:

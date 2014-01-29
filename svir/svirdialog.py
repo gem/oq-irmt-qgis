@@ -34,6 +34,7 @@ from PyQt4.QtGui import (QFileDialog,
                          QDialogButtonBox)
 from qgis.core import QgsVectorLayer, QGis, QgsRasterLayer, QgsMapLayerRegistry
 from qgis.gui import QgsMessageBar
+from process_layer import ProcessLayer
 from ui_svir import Ui_SvirDialog
 from utils import tr
 
@@ -77,7 +78,7 @@ class SvirDialog(QDialog):
             raise RuntimeError('Invalid dialog_type: {}'.format(dialog_type))
         file_name, file_type = QFileDialog.getOpenFileNameAndFilter(
             self, text, QDir.homePath(), filters)
-        if file_name is not None:
+        if file_name:
             if dialog_type == 'zonal_layer':
                 layer = self.load_zonal_layer(file_name)
             elif dialog_type == 'loss_layer':
@@ -93,7 +94,7 @@ class SvirDialog(QDialog):
     @pyqtSlot()
     def on_loss_layer_tbn_clicked(self):
         layer = self.open_file_dialog('loss_layer')
-        if layer:
+        if layer and ProcessLayer(layer).is_type(["point", "multipoint"]):
             cbx = self.ui.loss_layer_cbx
             cbx.addItem(layer.name())
             last_index = cbx.count() - 1
@@ -104,7 +105,7 @@ class SvirDialog(QDialog):
     @pyqtSlot()
     def on_zonal_layer_tbn_clicked(self):
         layer = self.open_file_dialog('zonal_layer')
-        if layer:
+        if layer and ProcessLayer(layer).is_type(["polygon", "multipolygon"]):
             cbx = self.ui.zonal_layer_cbx
             cbx.addItem(layer.name())
             last_index = cbx.count() - 1
@@ -114,12 +115,15 @@ class SvirDialog(QDialog):
 
     def populate_cbx(self):
         for key, layer in QgsMapLayerRegistry.instance().mapLayers().iteritems():
-            self.ui.loss_layer_cbx.addItem(layer.name())
-            self.ui.loss_layer_cbx.setItemData(
-                self.ui.loss_layer_cbx.count()-1, layer.id())
-            self.ui.zonal_layer_cbx.addItem(layer.name())
-            self.ui.zonal_layer_cbx.setItemData(
-                self.ui.zonal_layer_cbx.count()-1, layer.id())
+            # populate loss cbx only with layers containing points
+            if ProcessLayer(layer).is_type(["point", "multipoint"]):
+                self.ui.loss_layer_cbx.addItem(layer.name())
+                self.ui.loss_layer_cbx.setItemData(
+                    self.ui.loss_layer_cbx.count()-1, layer.id())
+            if ProcessLayer(layer).is_type(["polygon", "multipolygon"]):
+                self.ui.zonal_layer_cbx.addItem(layer.name())
+                self.ui.zonal_layer_cbx.setItemData(
+                    self.ui.zonal_layer_cbx.count()-1, layer.id())
         self.enable_ok_button_if_both_layers_are_specified()
 
     def enable_ok_button_if_both_layers_are_specified(self):
