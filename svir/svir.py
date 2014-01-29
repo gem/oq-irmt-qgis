@@ -323,14 +323,15 @@ class Svir:
         elif dlg.use_advanced:
             layer = reg.mapLayers().values()[
                 dlg.ui.layer_cbx.currentIndex()]
-            layer.commitChanges()
-            layer.triggerRepaint()
-            msg = 'Calculation performed on layer %s' % layer.name()
-            self.iface.messageBar().pushMessage(
-                tr("Info"),
-                tr(msg),
-                level=QgsMessageBar.INFO,
-                duration=5)
+            if layer.isModified():
+                layer.commitChanges()
+                layer.triggerRepaint()
+                msg = 'Calculation performed on layer %s' % layer.name()
+                self.iface.messageBar().pushMessage(
+                    tr("Info"),
+                    tr(msg),
+                    level=QgsMessageBar.INFO,
+                    duration=5)
 
     def select_layers_to_join(self):
         """
