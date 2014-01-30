@@ -37,43 +37,53 @@ class RankTestCase(unittest.TestCase):
         self.input_list = [2, 0, 2, 1, 2, 3, 2]
 
     def test_rank_direct_average(self):
-        rank_list = self.alg(self.input_list, variant_name="AVERAGE", inverse=False)
+        rank_list = self.alg(
+            self.input_list, variant_name="AVERAGE", inverse=False)
         self.assertEqual(rank_list, [4.5, 1, 4.5, 2, 4.5, 7, 4.5])
 
     def test_rank_direct_min(self):
-        rank_list = self.alg(self.input_list, variant_name="MIN", inverse=False)
+        rank_list = self.alg(
+            self.input_list, variant_name="MIN", inverse=False)
         self.assertEqual(rank_list, [3, 1, 3, 2, 3, 7, 3])
 
     def test_rank_direct_max(self):
-        rank_list = self.alg(self.input_list, variant_name="MAX", inverse=False)
+        rank_list = self.alg(
+            self.input_list, variant_name="MAX", inverse=False)
         self.assertEqual(rank_list, [6, 1, 6, 2, 6, 7, 6])
 
     def test_rank_direct_dense(self):
-        rank_list = self.alg(self.input_list, variant_name="DENSE", inverse=False)
+        rank_list = self.alg(
+            self.input_list, variant_name="DENSE", inverse=False)
         self.assertEqual(rank_list, [3, 1, 3, 2, 3, 4, 3])
 
     def test_rank_direct_ordinal(self):
-        rank_list = self.alg(self.input_list, variant_name="ORDINAL", inverse=False)
+        rank_list = self.alg(
+            self.input_list, variant_name="ORDINAL", inverse=False)
         self.assertEqual(rank_list, [3, 1, 4, 2, 5, 7, 6])
 
     def test_rank_inverse_average(self):
-        rank_list = self.alg(self.input_list, variant_name="AVERAGE", inverse=True)
+        rank_list = self.alg(
+            self.input_list, variant_name="AVERAGE", inverse=True)
         self.assertEqual(rank_list, [3.5, 7, 3.5, 6, 3.5, 1, 3.5])
 
     def test_rank_inverse_min(self):
-        rank_list = self.alg(self.input_list, variant_name="MIN", inverse=True)
+        rank_list = self.alg(
+            self.input_list, variant_name="MIN", inverse=True)
         self.assertEqual(rank_list, [2, 7, 2, 6, 2, 1, 2])
 
     def test_rank_inverse_max(self):
-        rank_list = self.alg(self.input_list, variant_name="MAX", inverse=True)
+        rank_list = self.alg(
+            self.input_list, variant_name="MAX", inverse=True)
         self.assertEqual(rank_list, [5, 7, 5, 6, 5, 1, 5])
 
     def test_rank_inverse_dense(self):
-        rank_list = self.alg(self.input_list, variant_name="DENSE", inverse=True)
+        rank_list = self.alg(
+            self.input_list, variant_name="DENSE", inverse=True)
         self.assertEqual(rank_list, [2, 4, 2, 3, 2, 1, 2])
 
     def test_rank_inverse_ordinal(self):
-        rank_list = self.alg(self.input_list, variant_name="ORDINAL", inverse=True)
+        rank_list = self.alg(
+            self.input_list, variant_name="ORDINAL", inverse=True)
         self.assertEqual(rank_list, [2, 7, 3, 6, 4, 1, 5])
 
 
@@ -84,24 +94,24 @@ class MinMaxTestCase(unittest.TestCase):
         self.input_list = [2, 0, 2, 1, 2, 3, 2]
 
     def test_min_max_direct(self):
-        rank_list = self.alg(self.input_list, inverse=False)
-        self.assertEqual(rank_list,  [0.6666666666666666,
-                                      0.0,
-                                      0.6666666666666666,
-                                      0.3333333333333333,
-                                      0.6666666666666666,
-                                      1.0,
-                                      0.6666666666666666])
+        min_max_list = self.alg(self.input_list, inverse=False)
+        self.assertEqual(min_max_list, [0.6666666666666666,
+                                        0.0,
+                                        0.6666666666666666,
+                                        0.3333333333333333,
+                                        0.6666666666666666,
+                                        1.0,
+                                        0.6666666666666666])
 
     def test_min_max_inverse(self):
-        rank_list = self.alg(self.input_list, inverse=True)
-        self.assertEqual(rank_list, [0.33333333333333337,
-                                     1.0,
-                                     0.33333333333333337,
-                                     0.6666666666666667,
-                                     0.33333333333333337,
-                                     0.0,
-                                     0.33333333333333337])
+        min_max_list = self.alg(self.input_list, inverse=True)
+        self.assertEqual(min_max_list, [0.33333333333333337,
+                                        1.0,
+                                        0.33333333333333337,
+                                        0.6666666666666667,
+                                        0.33333333333333337,
+                                        0.0,
+                                        0.33333333333333337])
 
 
 class ZScoreTestCase(unittest.TestCase):
@@ -111,30 +121,31 @@ class ZScoreTestCase(unittest.TestCase):
         self.input_list = [2, 0, 2, 1, 2, 3, 2]
 
     def test_z_score_direct(self):
-        rank_list = self.alg(self.input_list, inverse=False)
-        self.assertEqual(rank_list, [0.3244428422615252,
-                                     -1.9466570535691505,
-                                     0.3244428422615252,
-                                     -0.81110710565381261,
-                                     0.3244428422615252,
-                                     1.459992790176863,
-                                     0.3244428422615252])
+        z_score_list = self.alg(self.input_list, inverse=False)
+        self.assertEqual(z_score_list, [0.3244428422615252,
+                                        -1.9466570535691505,
+                                        0.3244428422615252,
+                                        -0.81110710565381261,
+                                        0.3244428422615252,
+                                        1.459992790176863,
+                                        0.3244428422615252])
 
     def test_z_score_inverse(self):
-        rank_list = self.alg(self.input_list, inverse=True)
-        self.assertEqual(rank_list, [-4.2177569493998259,
-                                     -1.9466570535691505,
-                                     -4.2177569493998259,
-                                     -3.0822070014844885,
-                                     -4.2177569493998259,
-                                     -5.3533068973151643,
-                                     -4.2177569493998259])
+        z_score_list = self.alg(self.input_list, inverse=True)
+        self.assertEqual(z_score_list, [-4.2177569493998259,
+                                        -1.9466570535691505,
+                                        -4.2177569493998259,
+                                        -3.0822070014844885,
+                                        -4.2177569493998259,
+                                        -5.3533068973151643,
+                                        -4.2177569493998259])
 
 
 class Log10TestCase(unittest.TestCase):
 
     def setUp(self):
-        pass
+        self.alg = NORMALIZATION_ALGS["LOG10"]
+        self.input_list = [2, 0, 2, 1, 2, 3, 2]
 
     def test_log10_direct(self):
         pass
@@ -146,13 +157,37 @@ class Log10TestCase(unittest.TestCase):
 class QuadraticTestCase(unittest.TestCase):
 
     def setUp(self):
-        pass
+        self.alg = NORMALIZATION_ALGS["QUADRATIC"]
+        self.input_list = [80089,
+                           83696,
+                           249586,
+                           121421,
+                           120813]
 
-    def test_quadratic_direct(self):
-        pass
+    def test_quadratic_direct_increasing(self):
+        quadratic_list = self.alg(
+            self.input_list, variant_name="INCREASING", inverse=False)
+        self.assertEqual(quadratic_list, [0.102969,
+                                          0.112452,
+                                          1.000000,
+                                          0.236672,
+                                          0.234308])
 
-    def test_quadratic_inverse(self):
-        pass
+    def test_quadratic_direct_decreasing(self):
+        quadratic_list = self.alg(
+            self.input_list, variant_name="DECREASING", inverse=False)
+        self.assertEqual(quadratic_list, [])
+
+    def test_quadratic_inverse_increasing(self):
+        quadratic_list = self.alg(
+            self.input_list, variant_name="INCREASING", inverse=True)
+        self.assertEqual(quadratic_list, [0.897032,
+                                          ])
+
+    def test_quadratic_inverse_decreasing(self):
+        quadratic_list = self.alg(
+            self.input_list, variant_name="DECREASING", inverse=True)
+        self.assertEqual(quadratic_list, [])
 
 
 if __name__ == '__main__':
