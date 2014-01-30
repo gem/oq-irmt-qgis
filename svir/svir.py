@@ -115,7 +115,7 @@ class Svir:
         # Output layer containing joined data and final svir computations
         self.svir_layer = None
         # keep a list of the menu items, in order to easily unload them later
-        self.registered_actions = []
+        self.registered_actions = dict()
         # Name of the attribute containing loss values (in loss_layer)
         self.loss_attr_name = None
         # Name of the (optional) attribute containing zone id (in loss_layer)
@@ -132,6 +132,7 @@ class Svir:
         self.aggr_loss_attr_to_join = None
 
     def add_menu_item(self,
+                      action_name,
                       icon_path,
                       label,
                       corresponding_method,
@@ -142,30 +143,36 @@ class Svir:
         @param label: Name of the action, visible to the user
         @param corresponding_method: Method called when the action is triggered
         """
+        if action_name in self.registered_actions:
+            raise NameError("Action %s already registered" % action_name)
         action = QAction(QIcon(icon_path), label, self.iface.mainWindow())
         action.setEnabled(enable)
         action.triggered.connect(corresponding_method)
         self.iface.addToolBarIcon(action)
         self.iface.addPluginToMenu(u"&SVIR", action)
-        self.registered_actions.append(action)
+        self.registered_actions[action_name] = action
 
     def initGui(self):
         # Action to activate the modal dialog to load loss data and zones
-        self.add_menu_item(":/plugins/svir/start_plugin_icon.png",
+        self.add_menu_item("aggregate_losses",
+                           ":/plugins/svir/start_plugin_icon.png",
                            u"&Aggregate loss by zone",
                            self.run,
                            enable=True)
         # Action to activate the modal dialog to select a layer and one of its
         # attributes, in order to normalize that attribute
-        self.add_menu_item(":/plugins/svir/start_plugin_icon.png",
+        self.add_menu_item("normalize_attribute",
+                           ":/plugins/svir/start_plugin_icon.png",
                            u"&Normalize attribute",
                            self.normalize_attribute)
         # Action for joining SVI with loss data (both aggregated by zone)
-        self.add_menu_item(":/plugins/svir/start_plugin_icon.png",
+        self.add_menu_item("merge_svi_and_losses",
+                           ":/plugins/svir/start_plugin_icon.png",
                            u"Merge SVI and loss data by zone",
                            self.join_svi_with_aggr_losses)
         # Action for calculating RISKPLUS, RISKMULT and RISK1F indices
         self.add_menu_item(
+            "calculate_svir_stats",
             ":/plugins/svir/start_plugin_icon.png",
             u"Calculate RISKPLUS, RISKMULT and RISK1F indices",
             self.calculate_svir_indices)
@@ -178,11 +185,22 @@ class Svir:
 
     def update_actions_status(self):
         # Check if actions can be enabled
-        pass
+        reg = QgsMapLayerRegistry.instance()
+        layer_count = len(list(reg.mapLayers()))
+        # Enable/disable "normalize" action
+        self.registered_actions["normalize_attribute"].setDisabled(
+            layer_count == 0)
+        # Enable/disable "merge SVI and aggregated losses" action
+        self.registered_actions["merge_svi_and_losses"].setDisabled(
+            layer_count < 2)
+        # Enable/disable "calculate common SVIR statistics" action
+        self.registered_actions["calculate_svir_stats"].setDisabled(
+            layer_count == 0)
 
     def unload(self):
         # Remove the plugin menu items and toolbar icons
-        for action in self.registered_actions:
+        for action_name in self.registered_actions:
+            action = self.registered_actions[action_name]
             self.iface.removePluginMenu(u"&SVIR", action)
             self.iface.removeToolBarIcon(action)
         self.clear_progress_message_bar()
