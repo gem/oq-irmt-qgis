@@ -131,7 +131,11 @@ class Svir:
         # Attribute containing aggregated losses, that will be joined with SVI
         self.aggr_loss_attr_to_join = None
 
-    def add_menu_item(self, icon_path, label, corresponding_method):
+    def add_menu_item(self,
+                      icon_path,
+                      label,
+                      corresponding_method,
+                      enable=False):
         """
         Add an item to the SVIR plugin menu and a corresponding toolbar icon
         @param icon_path: Path of the icon associated to the action
@@ -139,6 +143,7 @@ class Svir:
         @param corresponding_method: Method called when the action is triggered
         """
         action = QAction(QIcon(icon_path), label, self.iface.mainWindow())
+        action.setEnabled(enable)
         action.triggered.connect(corresponding_method)
         self.iface.addToolBarIcon(action)
         self.iface.addPluginToMenu(u"&SVIR", action)
@@ -148,7 +153,8 @@ class Svir:
         # Action to activate the modal dialog to load loss data and zones
         self.add_menu_item(":/plugins/svir/start_plugin_icon.png",
                            u"&Aggregate loss by zone",
-                           self.run)
+                           self.run,
+                           enable=True)
         # Action to activate the modal dialog to select a layer and one of its
         # attributes, in order to normalize that attribute
         self.add_menu_item(":/plugins/svir/start_plugin_icon.png",
@@ -164,12 +170,26 @@ class Svir:
             u"Calculate RISKPLUS, RISKMULT and RISK1F indices",
             self.calculate_svir_indices)
 
+        QgsMapLayerRegistry.instance().layersAdded.connect(
+            self.update_actions_status)
+
+        QgsMapLayerRegistry.instance().layersRemoved.connect(
+            self.update_actions_status)
+
+    def update_actions_status(self):
+        # Check if actions can be enabled
+        pass
+
     def unload(self):
         # Remove the plugin menu items and toolbar icons
         for action in self.registered_actions:
             self.iface.removePluginMenu(u"&SVIR", action)
             self.iface.removeToolBarIcon(action)
         self.clear_progress_message_bar()
+        QgsMapLayerRegistry.instance().layersAdded.disconnect(
+            self.update_actions_status)
+        QgsMapLayerRegistry.instance().layersRemoved.disconnect(
+            self.update_actions_status)
 
     # run method that performs all the real work
     def run(self):
