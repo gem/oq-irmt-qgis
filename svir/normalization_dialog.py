@@ -54,6 +54,8 @@ class NormalizationDialog(QDialog):
             self.reload_variant_cbx)
         if self.ui.algorithm_cbx.currentText() in ['RANK', 'QUADRATIC']:
             self.reload_variant_cbx()
+        self.ui.inverse_ckb.setDisabled(
+            self.ui.algorithm_cbx.currentText() in ['LOG10'])
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
 
     @pyqtSlot()
@@ -91,3 +93,5 @@ class NormalizationDialog(QDialog):
             self.ui.variant_cbx.addItems(RANK_VARIANTS)
         elif self.ui.algorithm_cbx.currentText() == 'QUADRATIC':
             self.ui.variant_cbx.addItems(QUADRATIC_VARIANTS)
+        self.ui.inverse_ckb.setDisabled(
+            self.ui.algorithm_cbx.currentText() in ['LOG10'])

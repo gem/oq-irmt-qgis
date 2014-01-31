@@ -144,7 +144,7 @@ def min_max(input_list, variant_name=None, inverse=False):
     # Normalize
     if inverse:
         output_list = map(
-            lambda x: 1 - ((x - list_min) / list_range), input_list)
+            lambda x: 1.0 - ((x - list_min) / list_range), input_list)
     else:
         output_list = map(
             lambda x: (x - list_min) / list_range, input_list)
@@ -173,7 +173,7 @@ def log10_(input_list, variant_name=None, inverse=False):
                          "the field contains negative values")
     input_copy = []
     for input_value in input_list:
-        corrected_value = input_value if input_value > 0 else 1
+        corrected_value = input_value if input_value > 0 else 1.0
         input_copy.append(corrected_value)
     output_list = list(log10(input_copy))
     return output_list
@@ -204,6 +204,6 @@ def simple_quadratic(input_list, variant_name="INCREASING", inverse=False):
     else:
         raise NotImplementedError("%s variant not implemented" % variant_name)
     if inverse:
-        output_list[:] = [1 - x for x in output_list]
+        output_list[:] = [1.0 - x for x in output_list]
     return output_list
 
