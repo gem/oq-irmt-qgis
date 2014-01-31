@@ -145,13 +145,44 @@ class Log10TestCase(unittest.TestCase):
 
     def setUp(self):
         self.alg = NORMALIZATION_ALGS["LOG10"]
-        self.input_list = [2, 0, 2, 1, 2, 3, 2]
 
-    def test_log10_direct(self):
-        pass
+    def test_log10_all_positive_values(self):
+        input_list = [101249,
+                      94082,
+                      94062,
+                      158661,
+                      174568]
+        log10_list = self.alg(input_list)
+        expected_list = [5.005391,
+                         4.973507,
+                         4.973414,
+                         5.200470,
+                         5.241965]
+        for i in range(len(input_list)):
+            self.assertAlmostEqual(log10_list[i], expected_list[i], places=6)
 
-    def test_log10_inverse(self):
-        pass
+    def test_log10_with_negative_values(self):
+        input_list = [101249,
+                      94082,
+                      -94062,
+                      -158661,
+                      174568]
+        self.assertRaises(ValueError, self.alg, input_list)
+
+    def test_log10_with_zeros(self):
+        input_list = [101249,
+                      94082,
+                      0,
+                      0,
+                      174568]
+        log10_list = self.alg(input_list)
+        expected_list = [5.005391,
+                         4.973507,
+                         0,
+                         0,
+                         5.241965]
+        for i in range(len(input_list)):
+            self.assertAlmostEqual(log10_list[i], expected_list[i], places=6)
 
 
 class QuadraticTestCase(unittest.TestCase):
@@ -167,28 +198,50 @@ class QuadraticTestCase(unittest.TestCase):
     def test_quadratic_direct_increasing(self):
         quadratic_list = self.alg(
             self.input_list, variant_name="INCREASING", inverse=False)
-        self.assertEqual(quadratic_list, [0.102969,
-                                          0.112452,
-                                          1.000000,
-                                          0.236672,
-                                          0.234308])
+        expected_list = [0.102969,
+                         0.112452,
+                         1.000000,
+                         0.236672,
+                         0.234308]
+        for i in range(len(self.input_list)):
+            self.assertAlmostEqual(
+                quadratic_list[i], expected_list[i], places=4)
 
     def test_quadratic_direct_decreasing(self):
         quadratic_list = self.alg(
             self.input_list, variant_name="DECREASING", inverse=False)
-        self.assertEqual(quadratic_list, [])
+        expected_list = [0.461194,
+                         0.441774,
+                         0.000000,
+                         0.263693,
+                         0.266201]
+        for i in range(len(self.input_list)):
+            self.assertAlmostEqual(
+                quadratic_list[i], expected_list[i], places=4)
 
     def test_quadratic_inverse_increasing(self):
         quadratic_list = self.alg(
             self.input_list, variant_name="INCREASING", inverse=True)
-        self.assertEqual(quadratic_list, [0.897032,
-                                          ])
+        expected_list = [0.897032,
+                         0.887548,
+                         0.000000,
+                         0.763328,
+                         0.765692]
+        for i in range(len(self.input_list)):
+            self.assertAlmostEqual(
+                quadratic_list[i], expected_list[i], places=4)
 
     def test_quadratic_inverse_decreasing(self):
         quadratic_list = self.alg(
             self.input_list, variant_name="DECREASING", inverse=True)
-        self.assertEqual(quadratic_list, [])
-
+        expected_list = [0.538806,
+                         0.558266,
+                         1.000000,
+                         0.736307,
+                         0.733799]
+        for i in range(len(self.input_list)):
+            self.assertAlmostEqual(
+                quadratic_list[i], expected_list[i], places=4)
 
 if __name__ == '__main__':
     unittest.main()

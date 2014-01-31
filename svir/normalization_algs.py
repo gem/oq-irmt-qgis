@@ -153,7 +153,17 @@ def min_max(input_list, variant_name=None, inverse=False):
 
 @NORMALIZATION_ALGS.add('LOG10')
 def log10_(input_list, variant_name=None, inverse=False):
+    """
+    Accept only input_list containing positive (or zero) values
+    In case of zeros, set those values to 1 (this differs from the built-in
+    QGIS log10 function available in the field calculator, which returns None
+    in case of zeros)
+    Then use numpy.log10 function to perform the log10 transformation on the
+    list of values
+    """
     if variant_name:
+        # TODO: Perhaps it would be better to use the variant to let the user
+        #       choose if setting input zeros to one or not
         raise NotImplementedError("%s variant not implemented" % variant_name)
     if inverse:
         raise NotImplementedError(
@@ -161,14 +171,28 @@ def log10_(input_list, variant_name=None, inverse=False):
     if any(n < 0 for n in input_list):
         raise ValueError("log10 transformation can not be performed if "
                          "the field contains negative values")
-    output_list = log10(input_list)
+    input_copy = []
+    for input_value in input_list:
+        corrected_value = input_value if input_value > 0 else 1
+        input_copy.append(corrected_value)
+    output_list = list(log10(input_copy))
     return output_list
 
 
 @NORMALIZATION_ALGS.add('QUADRATIC')
-def quadratic(input_list, variant_name=None, inverse=False):
-    bottom = 0
+def simple_quadratic(input_list, variant_name="INCREASING", inverse=False):
+    """
+    Simple quadratic transformation (bottom = 0)
+    quadratic(e_i) = (e_i - bottom)^2 / (max(e) - bottom)^2
+    ==>
+    simple_quadratic(e_i) = e_i^2 / max(e)^2
+    """
+    bottom = 0.0
     max_input = max(input_list)
+    if max_input - bottom == 0:
+        raise ZeroDivisionError("It is impossible to perform the "
+                                "transformation if the maximum "
+                                "input value is 0")
     squared_range = (max_input - bottom)**2
     if variant_name == "INCREASING":
         output_list = map(
