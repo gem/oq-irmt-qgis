@@ -6,60 +6,70 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>523</width>
-    <height>233</height>
+    <width>530</width>
+    <height>161</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Svir</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_2">
-   <item>
-    <layout class="QGridLayout" name="gridLayout">
-     <item row="0" column="2">
+  <layout class="QFormLayout" name="formLayout">
+   <property name="fieldGrowthPolicy">
+    <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+   </property>
+   <item row="0" column="0">
+    <widget class="QLabel" name="loss_layer_lbl">
+     <property name="text">
+      <string>Loss layer</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <item>
+      <widget class="QComboBox" name="loss_layer_cbx"/>
+     </item>
+     <item>
       <widget class="QToolButton" name="loss_layer_tbn">
        <property name="text">
         <string>...</string>
        </property>
       </widget>
      </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="loss_layer_lbl">
-       <property name="text">
-        <string>Loss layer</string>
-       </property>
-      </widget>
+    </layout>
+   </item>
+   <item row="1" column="1">
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <widget class="QComboBox" name="zonal_layer_cbx"/>
      </item>
-     <item row="0" column="1">
-      <widget class="QLineEdit" name="loss_layer_le"/>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="zonal_layer_lbl">
-       <property name="text">
-        <string>Zonal layer</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="QLineEdit" name="zonal_layer_le"/>
-     </item>
-     <item row="1" column="2">
+     <item>
       <widget class="QToolButton" name="zonal_layer_tbn">
        <property name="text">
         <string>...</string>
        </property>
       </widget>
      </item>
-     <item row="2" column="1">
-      <widget class="QCheckBox" name="purge_chk">
-       <property name="text">
-        <string>Purge zones containing no loss points</string>
-       </property>
-      </widget>
-     </item>
     </layout>
    </item>
-   <item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="zonal_layer_lbl">
+     <property name="text">
+      <string>Zonal layer</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1">
+    <widget class="QCheckBox" name="purge_chk">
+     <property name="text">
+      <string>Purge zones containing no loss points</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="1">
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>

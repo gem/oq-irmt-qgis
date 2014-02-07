@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_select_layers_to_join.ui'
 #
-# Created: Fri Jan  3 16:26:43 2014
+# Created: Wed Jan 29 10:55:13 2014
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -43,6 +43,12 @@ class Ui_SelectLayersToJoinDialog(object):
         self.aggr_loss_attr_cbox = QtGui.QComboBox(SelectLayersToJoinDialog)
         self.aggr_loss_attr_cbox.setObjectName(_fromUtf8("aggr_loss_attr_cbox"))
         self.formLayout.setWidget(2, QtGui.QFormLayout.FieldRole, self.aggr_loss_attr_cbox)
+        self.label = QtGui.QLabel(SelectLayersToJoinDialog)
+        self.label.setObjectName(_fromUtf8("label"))
+        self.formLayout.setWidget(4, QtGui.QFormLayout.LabelRole, self.label)
+        self.merge_attr_cbx = QtGui.QComboBox(SelectLayersToJoinDialog)
+        self.merge_attr_cbx.setObjectName(_fromUtf8("merge_attr_cbx"))
+        self.formLayout.setWidget(4, QtGui.QFormLayout.FieldRole, self.merge_attr_cbx)
         self.gridLayout.addLayout(self.formLayout, 0, 0, 1, 1)
         self.buttonBox = QtGui.QDialogButtonBox(SelectLayersToJoinDialog)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
@@ -56,8 +62,9 @@ class Ui_SelectLayersToJoinDialog(object):
         QtCore.QMetaObject.connectSlotsByName(SelectLayersToJoinDialog)
 
     def retranslateUi(self, SelectLayersToJoinDialog):
-        SelectLayersToJoinDialog.setWindowTitle(QtGui.QApplication.translate("SelectLayersToJoinDialog", "Select layers to join", None, QtGui.QApplication.UnicodeUTF8))
+        SelectLayersToJoinDialog.setWindowTitle(QtGui.QApplication.translate("SelectLayersToJoinDialog", "Select layers to merge", None, QtGui.QApplication.UnicodeUTF8))
         self.loss_layer_lbl.setText(QtGui.QApplication.translate("SelectLayersToJoinDialog", "Layer containing loss data", None, QtGui.QApplication.UnicodeUTF8))
         self.zonal_layer_lbl.setText(QtGui.QApplication.translate("SelectLayersToJoinDialog", "Layer containing zonal data", None, QtGui.QApplication.UnicodeUTF8))
         self.aggr_loss_attr_lbl.setText(QtGui.QApplication.translate("SelectLayersToJoinDialog", "Attribute for aggregated losses", None, QtGui.QApplication.UnicodeUTF8))
+        self.label.setText(QtGui.QApplication.translate("SelectLayersToJoinDialog", "Merge by attribute", None, QtGui.QApplication.UnicodeUTF8))
 

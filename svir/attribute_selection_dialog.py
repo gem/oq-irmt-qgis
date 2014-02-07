@@ -27,7 +27,7 @@
 """
 from PyQt4.QtGui import QDialog
 
-from ui_attribute_selection import Ui_AttributeSelctionDialog
+from ui.ui_attribute_selection import Ui_AttributeSelctionDialog
 
 
 class AttributeSelectionDialog(QDialog):

@@ -29,8 +29,8 @@ from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import QDialog, QDialogButtonBox
 from qgis.core import QgsMapLayerRegistry
 
-from ui_select_layers_to_join import Ui_SelectLayersToJoinDialog
-from globals import NUMERIC_FIELD_TYPES
+from ui.ui_select_layers_to_join import Ui_SelectLayersToJoinDialog
+from globals import NUMERIC_FIELD_TYPES, STRING_FIELD_TYPE_NAME
 
 
 class SelectLayersToJoinDialog(QDialog):
@@ -48,12 +48,12 @@ class SelectLayersToJoinDialog(QDialog):
 
     @pyqtSlot(str)
     def on_loss_layer_cbox_currentIndexChanged(self):
-        self.reload_aggr_loss_attrib_cbx()
+        self.reload_aggr_loss_attrib_and_merge_attr_cbx()
 
-    def reload_aggr_loss_attrib_cbx(self):
-        # reset combo box
+    def reload_aggr_loss_attrib_and_merge_attr_cbx(self):
         self.ui.aggr_loss_attr_cbox.clear()
-        # populate attribute combo box with the list of attributes of the
+        self.ui.merge_attr_cbx.clear()
+        # populate attribute combo boxes with the list of attributes of the
         # layer specified in the loss_layer combo box
         layer = QgsMapLayerRegistry.instance().mapLayers().values()[
             self.ui.loss_layer_cbox.currentIndex()]
@@ -61,9 +61,15 @@ class SelectLayersToJoinDialog(QDialog):
         dp = layer.dataProvider()
         fields = list(dp.fields())
         no_numeric_fields = True
+        no_string_fields = True
         for field in fields:
-            # add numeric fields only
+            # add to loss attribute cbx numeric fields only
             if field.typeName() in NUMERIC_FIELD_TYPES:
                 self.ui.aggr_loss_attr_cbox.addItem(field.name())
                 no_numeric_fields = False
+            # add to merge attribute cbx string fields only
+            if field.typeName() == STRING_FIELD_TYPE_NAME:
+                self.ui.merge_attr_cbx.addItem(field.name())
+                no_string_fields = False
         self.ok_button.setDisabled(no_numeric_fields)
+        self.ok_button.setDisabled(no_string_fields)

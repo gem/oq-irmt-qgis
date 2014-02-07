@@ -27,7 +27,7 @@
 """
 from numpy import mean, std
 from scipy.stats import rankdata
-from register import Register
+from utils import Register
 
 NORMALIZATION_ALGS = Register()
 RANK_VARIANTS = ['average', 'min', 'max', 'dense', 'ordinal']  # still unused

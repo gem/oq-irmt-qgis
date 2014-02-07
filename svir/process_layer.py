@@ -32,7 +32,7 @@ from qgis.core import (QgsMapLayer,
                        QgsVectorLayer,
                        QgsMapLayerRegistry,
                        QgsField)
-from layer_editing_manager import LayerEditingManager
+from utils import LayerEditingManager
 
 from normalization_algs import (NORMALIZATION_ALGS,
                                 normalize)
@@ -174,3 +174,29 @@ class ProcessLayer():
                 raise RuntimeError('Layer invalid')
 
         return mem_layer
+
+    def is_type_in(self, type_list):
+        """
+        @param type_list: we want to check if the type of the layer is
+        included in this list
+        @return: True if the layer is a VectorLayer and its type is in the list
+        """
+        if self.layer.type() == QgsMapLayer.VectorLayer:
+            v_type = self.layer.wkbType()
+            if v_type == QGis.WKBPoint:
+                type_str = "point"
+            elif v_type == QGis.WKBLineString:
+                type_str = "linestring"
+            elif v_type == QGis.WKBPolygon:
+                type_str = "polygon"
+            elif v_type == QGis.WKBMultiPoint:
+                type_str = "multipoint"
+            elif v_type == QGis.WKBMultiLineString:
+                type_str = "multilinestring"
+            elif v_type == QGis.WKBMultiPolygon:
+                type_str = "multipolygon"
+            else:
+                raise TypeError('Layer type %s can not be accepted' % v_type)
+            return type_str in type_list
+        else:
+            return False
