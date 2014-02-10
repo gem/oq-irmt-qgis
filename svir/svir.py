@@ -52,12 +52,14 @@ from qgis.core import (QgsVectorLayer,
                        QgsFeatureRequest,
                        QgsVectorDataProvider,
                        QgsMapLayer,
-                       QGis)
+                       QGis,
+                       QgsMessageLog)
 
 from qgis.gui import QgsMessageBar
 
 from qgis.analysis import QgsZonalStatistics
 import processing as p
+from processing.saga.SagaUtils import SagaUtils
 
 from normalization_algs import NORMALIZATION_ALGS
 from process_layer import ProcessLayer
@@ -70,11 +72,14 @@ from attribute_selection_dialog import AttributeSelectionDialog
 from normalization_dialog import NormalizationDialog
 from select_attrs_for_stats_dialog import SelectAttrsForStatsDialog
 
-from layer_editing_manager import LayerEditingManager
-from trace_time_manager import TraceTimeManager
+from utils import LayerEditingManager
 
-from utils import (tr,
-                   DEBUG)
+from utils import tr, TraceTimeManager
+from globals import (INT_FIELD_TYPE_NAME,
+                     DOUBLE_FIELD_TYPE_NAME,
+                     NUMERIC_FIELD_TYPES,
+                     STRING_FIELD_TYPE_NAME,
+                     DEBUG)
 
 
 class Svir:
@@ -97,9 +102,6 @@ class Svir:
             if qVersion() > '4.3.3':
                 QCoreApplication.installTranslator(self.translator)
 
-        # Create the dialog (after translation) and keep reference
-        self.dlg = SvirDialog()
-
         self.loss_layer_is_vector = True
         # Input layer containing loss data
         self.loss_layer = None
@@ -113,7 +115,7 @@ class Svir:
         # Output layer containing joined data and final svir computations
         self.svir_layer = None
         # keep a list of the menu items, in order to easily unload them later
-        self.registered_actions = []
+        self.registered_actions = dict()
         # Name of the attribute containing loss values (in loss_layer)
         self.loss_attr_name = None
         # Name of the (optional) attribute containing zone id (in loss_layer)
@@ -129,59 +131,103 @@ class Svir:
         # Attribute containing aggregated losses, that will be joined with SVI
         self.aggr_loss_attr_to_join = None
 
-    def add_menu_item(self, icon_path, label, corresponding_method):
+    def add_menu_item(self,
+                      action_name,
+                      icon_path,
+                      label,
+                      corresponding_method,
+                      enable=False):
         """
         Add an item to the SVIR plugin menu and a corresponding toolbar icon
         @param icon_path: Path of the icon associated to the action
         @param label: Name of the action, visible to the user
         @param corresponding_method: Method called when the action is triggered
         """
+        if action_name in self.registered_actions:
+            raise NameError("Action %s already registered" % action_name)
         action = QAction(QIcon(icon_path), label, self.iface.mainWindow())
+        action.setEnabled(enable)
         action.triggered.connect(corresponding_method)
         self.iface.addToolBarIcon(action)
         self.iface.addPluginToMenu(u"&SVIR", action)
-        self.registered_actions.append(action)
+        self.registered_actions[action_name] = action
 
     def initGui(self):
         # Action to activate the modal dialog to load loss data and zones
-        self.add_menu_item(":/plugins/svir/start_plugin_icon.png",
+        self.add_menu_item("aggregate_losses",
+                           ":/plugins/svir/start_plugin_icon.png",
                            u"&Aggregate loss by zone",
-                           self.run)
+                           self.run,
+                           enable=True)
         # Action to activate the modal dialog to select a layer and one of its
         # attributes, in order to normalize that attribute
-        self.add_menu_item(":/plugins/svir/start_plugin_icon.png",
+        self.add_menu_item("normalize_attribute",
+                           ":/plugins/svir/start_plugin_icon.png",
                            u"&Normalize attribute",
                            self.normalize_attribute)
         # Action for joining SVI with loss data (both aggregated by zone)
-        self.add_menu_item(":/plugins/svir/start_plugin_icon.png",
-                           u"Collect SVI and loss data by zone",
+        self.add_menu_item("merge_svi_and_losses",
+                           ":/plugins/svir/start_plugin_icon.png",
+                           u"Merge SVI and loss data by zone",
                            self.join_svi_with_aggr_losses)
         # Action for calculating RISKPLUS, RISKMULT and RISK1F indices
         self.add_menu_item(
+            "calculate_svir_stats",
             ":/plugins/svir/start_plugin_icon.png",
             u"Calculate RISKPLUS, RISKMULT and RISK1F indices",
             self.calculate_svir_indices)
 
+        QgsMapLayerRegistry.instance().layersAdded.connect(
+            self.update_actions_status)
+
+        QgsMapLayerRegistry.instance().layersRemoved.connect(
+            self.update_actions_status)
+
+    def update_actions_status(self):
+        # Check if actions can be enabled
+        reg = QgsMapLayerRegistry.instance()
+        layer_count = len(list(reg.mapLayers()))
+        # Enable/disable "normalize" action
+        self.registered_actions["normalize_attribute"].setDisabled(
+            layer_count == 0)
+        # Enable/disable "merge SVI and aggregated losses" action
+        self.registered_actions["merge_svi_and_losses"].setDisabled(
+            layer_count < 2)
+        # Enable/disable "calculate common SVIR statistics" action
+        self.registered_actions["calculate_svir_stats"].setDisabled(
+            layer_count == 0)
+
     def unload(self):
         # Remove the plugin menu items and toolbar icons
-        for action in self.registered_actions:
+        for action_name in self.registered_actions:
+            action = self.registered_actions[action_name]
             self.iface.removePluginMenu(u"&SVIR", action)
             self.iface.removeToolBarIcon(action)
         self.clear_progress_message_bar()
+        QgsMapLayerRegistry.instance().layersAdded.disconnect(
+            self.update_actions_status)
+        QgsMapLayerRegistry.instance().layersRemoved.disconnect(
+            self.update_actions_status)
 
     # run method that performs all the real work
     def run(self):
+        # Create the dialog (after translation) and keep reference
+        dlg = SvirDialog(self.iface)
         # Run the dialog event loop
-        result = self.dlg.exec_()
         # See if OK was pressed
-        if result == 1:
+        if dlg.exec_():
+            loss_layer_id = dlg.ui.loss_layer_cbx.itemData(
+                dlg.ui.loss_layer_cbx.currentIndex())
+            self.loss_layer = QgsMapLayerRegistry.instance().mapLayer(
+                loss_layer_id)
+            zonal_layer_id = dlg.ui.zonal_layer_cbx.itemData(
+                dlg.ui.zonal_layer_cbx.currentIndex())
+            self.zonal_layer = QgsMapLayerRegistry.instance().mapLayer(
+                zonal_layer_id)
+
             # check if loss layer is raster or vector (aggregating by zone
             # is different in the two cases)
-            self.loss_layer_is_vector = self.dlg.loss_map_is_vector
-            if not self.load_layers(self.dlg.ui.zonal_layer_le.text(),
-                                    self.dlg.ui.loss_layer_le.text(),
-                                    self.loss_layer_is_vector):
-                return
+            self.loss_layer_is_vector = dlg.loss_layer_is_vector
 
             # Open dialog to ask the user to specify attributes
             # * loss from loss_layer
@@ -196,18 +242,20 @@ class Svir:
             # zone and sum of loss values for the same zone)
             self.calculate_stats()
 
-            if self.dlg.ui.purge_chk.isChecked():
+            if dlg.ui.purge_chk.isChecked():
                 self.create_new_aggregation_layer_with_no_empty_zones()
 
-            msg = 'Select "Join SVI with loss data" from SVIR plugin menu ' \
-                  'to join SVI and loss data (both aggregated by zone)'
+            msg = 'Select "Merge SVI with loss data" from SVIR plugin menu ' \
+                  'to create a new layer containing both SVI and loss data ' \
+                  'aggregated by zone)'
             self.iface.messageBar().pushMessage(tr("Info"),
                                                 tr(msg),
-                                                level=QgsMessageBar.INFO)
+                                                level=QgsMessageBar.INFO,
+                                                duration=8)
 
     def join_svi_with_aggr_losses(self):
         """
-        SVI data and aggregated losses are joined in order to obtain a layer
+        SVI data and aggregated losses are merged in order to obtain a layer
         containing, for each zone, an aggregated SVI and an aggregated loss
         """
         if self.select_layers_to_join():
@@ -217,83 +265,8 @@ class Svir:
                   'indices'
             self.iface.messageBar().pushMessage(tr("Info"),
                                                 tr(msg),
-                                                level=QgsMessageBar.INFO)
-
-    def load_layers(self, zonal_layer_path,
-                    loss_layer_path,
-                    loss_layer_is_vector):
-        """
-        Initial loading of the layers containing regional data and losses
-        @param zonal_layer_path: Path of the layer containing zonal data
-        (e.g. SVI aggregated by zone) and zonal geometries.
-        @param loss_layer_path: Path of the layer containing loss points
-        @param loss_layer_is_vector: True if loss layer is a vector layer,
-        or False if it is a raster layer
-        """
-        # Load zonal layer
-        self.zonal_layer = QgsVectorLayer(zonal_layer_path,
-                                          tr('Zonal data'), 'ogr')
-        if self.zonal_layer.type() == QgsMapLayer.VectorLayer:
-            if not self.zonal_layer.geometryType() == QGis.Polygon:
-                msg = 'Zonal layer must contain zone polygons'
-                self.iface.messageBar().pushMessage(
-                    tr("Error"),
-                    tr(msg),
-                    level=QgsMessageBar.CRITICAL)
-                return False
-        else:
-            msg = 'Zonal layer must be a VectorLayer'
-            self.iface.messageBar().pushMessage(
-                tr("Error"),
-                tr(msg),
-                level=QgsMessageBar.CRITICAL)
-            return False
-        # Add zonal layer to registry
-        if self.zonal_layer.isValid():
-            QgsMapLayerRegistry.instance().addMapLayer(self.zonal_layer)
-        else:
-            msg = 'Invalid zonal layer'
-            self.iface.messageBar().pushMessage(
-                tr("Error"),
-                tr(msg),
-                level=QgsMessageBar.CRITICAL)
-            return False
-            # Load loss layer
-        if loss_layer_is_vector:
-            self.loss_layer = QgsVectorLayer(loss_layer_path,
-                                             tr('Loss map'), 'ogr')
-            if self.loss_layer.type() == QgsMapLayer.VectorLayer:
-                if not self.loss_layer.geometryType() == QGis.Point:
-                    msg = 'Loss layer must contain points'
-                    self.iface.messageBar().pushMessage(
-                        tr("Error"),
-                        tr(msg),
-                        level=QgsMessageBar.CRITICAL)
-                    return False
-            else:
-                msg = 'Loss layer is not a VectorLayer'
-                self.iface.messageBar().pushMessage(
-                    tr("Error"),
-                    tr(msg),
-                    level=QgsMessageBar.CRITICAL)
-                return False
-        else:
-            self.loss_layer = QgsRasterLayer(loss_layer_path,
-                                             tr('Loss map'))
-
-        # Add loss layer to registry
-        if self.loss_layer.isValid():
-            QgsMapLayerRegistry.instance().addMapLayer(self.loss_layer)
-        else:
-            msg = 'Invalid loss layer'
-            self.iface.messageBar().pushMessage(
-                tr("Error"),
-                tr(msg),
-                level=QgsMessageBar.CRITICAL)
-            return False
-            # Zoom depending on the zonal layer's extent
-        self.canvas.setExtent(self.zonal_layer.extent())
-        return True
+                                                level=QgsMessageBar.INFO,
+                                                duration=8)
 
     def attribute_selection(self):
         """
@@ -316,17 +289,12 @@ class Svir:
         # Load in the comboboxes only the names of the attributes compatible
         # with the following analyses: only numeric for losses and only
         # string for zone ids
-        # FIXME: typeName is empty for user-defined fields which typeName
-        # has not been explicitly set (potential mismatch between type and
-        # typeName!). Same thing happens below for zonal fields. Therefore
-        # we are using the type ids, which in this case are 2 or 6 for
-        # numbers and 10 for strings
         for field in loss_fields:
             # Accept only numeric fields to contain loss data
-            if field.type() in [2, 6]:
+            if field.typeName() in NUMERIC_FIELD_TYPES:
                 dlg.ui.loss_attr_name_cbox.addItem(field.name())
             # Accept only string fields to contain zone ids
-            elif field.type() == 10:
+            elif field.typeName() == STRING_FIELD_TYPE_NAME:
                 dlg.ui.zone_id_attr_name_loss_cbox.addItem(field.name())
             else:
                 raise TypeError("Unknown field type %d" % field.type())
@@ -334,10 +302,10 @@ class Svir:
         zonal_fields = list(zonal_dp.fields())
         for field in zonal_fields:
             # Accept only numeric fields to contain loss data
-            if field.type() in [2, 6]:
+            if field.typeName() in NUMERIC_FIELD_TYPES:
                 dlg.ui.zonal_attr_name_cbox.addItem(field.name())
             # Accept only string fields to contain zone ids
-            elif field.type() == 10:
+            elif field.typeName() == STRING_FIELD_TYPE_NAME:
                 dlg.ui.zone_id_attr_name_zone_cbox.addItem(field.name())
             else:
                 raise TypeError("Unknown field type %d" % field.type())
@@ -381,8 +349,7 @@ class Svir:
             layer = reg.mapLayers().values()[
                 dlg.ui.layer_cbx.currentIndex()]
             attribute_name = dlg.ui.attrib_cbx.currentText()
-            algorithm_name = NORMALIZATION_ALGS.keys()[
-                dlg.ui.algorithm_cbx.currentIndex()]
+            algorithm_name = dlg.ui.algorithm_cbx.currentText()
             variant = dlg.ui.variant_cbx.currentText()
             inverse = dlg.ui.inverse_ckb.isChecked()
             mem_layer_name = layer.name() + "_" + algorithm_name
@@ -392,18 +359,30 @@ class Svir:
                                                         algorithm_name,
                                                         variant,
                                                         inverse)
+        elif dlg.use_advanced:
+            layer = reg.mapLayers().values()[
+                dlg.ui.layer_cbx.currentIndex()]
+            if layer.isModified():
+                layer.commitChanges()
+                layer.triggerRepaint()
+                msg = 'Calculation performed on layer %s' % layer.name()
+                self.iface.messageBar().pushMessage(
+                    tr("Info"),
+                    tr(msg),
+                    level=QgsMessageBar.INFO,
+                    duration=8)
 
     def select_layers_to_join(self):
         """
-        Open a modal dialog containing 2 combo boxes, allowing the user
-        to select a layer containing loss data and one containing SVI data.
-        The two layers will be joined (later) by zone id
+        Open a modal dialog allowing the user to select a layer containing
+        loss data and one containing SVI data, the aggregated loss attribute
+        and the zone id that we want to use for merging.
         """
         dlg = SelectLayersToJoinDialog()
         reg = QgsMapLayerRegistry.instance()
         layer_list = [layer.name() for layer in reg.mapLayers().values()]
         if len(layer_list) < 2:
-            msg = 'At least two layers must be available for joining'
+            msg = 'At least two layers must be available for merging!'
             self.iface.messageBar().pushMessage(
                 tr("Error"),
                 tr(msg),
@@ -418,6 +397,8 @@ class Svir:
                 dlg.ui.aggr_loss_attr_cbox.currentText()
             self.zonal_layer_to_join = reg.mapLayers().values()[
                 dlg.ui.zonal_layer_cbox.currentIndex()]
+            self.zone_id_in_zones_attr_name = \
+                dlg.ui.merge_attr_cbx.currentText()
             return True
         else:
             return False
@@ -451,10 +432,14 @@ class Svir:
                                  DEBUG):
 
             # add count and sum fields for aggregating statistics
-            pr.addAttributes(
-                [QgsField(self.zone_id_in_zones_attr_name, QVariant.String),
-                 QgsField("count", QVariant.Int),
-                 QgsField("sum", QVariant.Double)])
+            zone_field = QgsField(self.zone_id_in_zones_attr_name,
+                                  QVariant.String)
+            zone_field.setTypeName(STRING_FIELD_TYPE_NAME)
+            count_field = QgsField("count", QVariant.Int)
+            count_field.setTypeName(INT_FIELD_TYPE_NAME)
+            sum_field = QgsField("sum", QVariant.Double)
+            sum_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
+            pr.addAttributes([zone_field, count_field, sum_field])
 
             # to show the overall progress, cycling through zones
             tot_zones = len(list(self.zonal_layer.getFeatures()))
@@ -472,12 +457,9 @@ class Svir:
                 feat.setGeometry(QgsGeometry(zone_feature.geometry()))
                 # Define the count and sum fields to initialize to 0
                 fields = QgsFields()
-                fields.append(
-                    QgsField(self.zone_id_in_zones_attr_name, QVariant.String))
-                fields.append(
-                    QgsField("count", QVariant.Int))
-                fields.append(
-                    QgsField("sum", QVariant.Double))
+                fields.append(zone_field)
+                fields.append(count_field)
+                fields.append(sum_field)
                 # Add fields to the new feature
                 feat.setFields(fields)
                 feat[self.zone_id_in_zones_attr_name] = zone_feature[
@@ -522,11 +504,11 @@ class Svir:
                 # otherwise we need to acquire the zones' geometries from the
                 # zonal layer and check if loss points are inside those zones
                 alg_name = 'saga:clippointswithpolygons'
-                # FIXME: this check doesn't work! Even if SAGA is not properly
-                # installed, the process continues and gives no visible result
-                if p.Processing.getAlgorithm(alg_name) is None:
-                    print 'Missing SAGA (impossible to use it to aggregate ' \
-                          'points by zone)'
+                msg = SagaUtils.checkSagaIsInstalled()
+                if msg is not None:
+                    msg += tr(" In order to cope with complex geometries, "
+                              "a working installation of SAGA is recommended.")
+                    QgsMessageLog.logMessage(msg)
                     self.calculate_vector_stats_using_geometries()
                 else:
                     # using SAGA to find out in which zone each point is
@@ -536,10 +518,13 @@ class Svir:
                                    self.zone_id_in_zones_attr_name,
                                    0,
                                    None)
-                    # FIXME: this check doesn't work either! The process
-                    # continues, but with no visible results
                     if res is None:
-                        print 'SAGA ERROR'
+                        msg = "An error occurred while attempting to " \
+                              "compute zonal statistics with SAGA"
+                        self.iface.messageBar().pushMessage(
+                            tr("Error"),
+                            tr(msg),
+                            level=QgsMessageBar.CRITICAL)
                     else:
                         loss_layer_plus_zones = QgsVectorLayer(
                             res['CLIPS'],
@@ -726,7 +711,8 @@ class Svir:
             msg = "No loss points are contained by any of the zones!"
             self.iface.messageBar().pushMessage(tr("Warning"),
                                                 tr(msg),
-                                                level=QgsMessageBar.INFO)
+                                                level=QgsMessageBar.INFO,
+                                                duration=8)
 
     def calculate_raster_stats(self):
         """
@@ -780,10 +766,14 @@ class Svir:
                                  tr("Purged layer initialization"),
                                  DEBUG):
             # add count and sum fields for aggregating statistics
-            pr.addAttributes(
-                [QgsField(self.zone_id_in_zones_attr_name, QVariant.String),
-                 QgsField("count", QVariant.Int),
-                 QgsField("sum", QVariant.Double)])
+            zone_field = QgsField(self.zone_id_in_zones_attr_name,
+                                  QVariant.String)
+            zone_field.setTypeName(STRING_FIELD_TYPE_NAME)
+            count_field = QgsField("count", QVariant.Int)
+            count_field.setTypeName(INT_FIELD_TYPE_NAME)
+            sum_field = QgsField("sum", QVariant.Double)
+            sum_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
+            pr.addAttributes([zone_field, count_field, sum_field])
 
             # copy zones from aggregation layer
             for current_zone, zone_feature in enumerate(
@@ -806,7 +796,8 @@ class Svir:
                   "copied into a new aggregation layer."
             self.iface.messageBar().pushMessage(tr("Info"),
                                                 tr(msg),
-                                                level=QgsMessageBar.INFO)
+                                                level=QgsMessageBar.INFO,
+                                                duration=8)
         else:
             raise RuntimeError('Purged layer invalid')
 
@@ -857,7 +848,7 @@ class Svir:
 
     def create_svir_layer(self):
         """
-        Create a new layer joining (by zone id) social vulnerability
+        Create a new layer merging (by zone id) social vulnerability
         and loss data
         """
         # Create new svir layer, duplicating social vulnerability layer
@@ -865,8 +856,9 @@ class Svir:
         self.svir_layer = ProcessLayer(
             self.zonal_layer_to_join).duplicate_in_memory(layer_name, True)
         # Add aggregated loss attribute to svir_layer
-        ProcessLayer(self.svir_layer).add_attributes(
-            [QgsField(self.aggr_loss_attr_to_join, QVariant.Double)])
+        field = QgsField(self.aggr_loss_attr_to_join, QVariant.Double)
+        field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
+        ProcessLayer(self.svir_layer).add_attributes([field])
         # Populate "loss" attribute with data from aggregation_layer
         self.populate_svir_layer_with_loss_values()
         # Add svir layer to registry
@@ -900,10 +892,14 @@ class Svir:
             # RISKPLUS = TOTRISK + TOTSVI
             # RISKMULT = TOTRISK * TOTSVI
             # RISK1F   = TOTRISK * (1 + TOTSVI)
+            riskplus_field = QgsField('RISKPLUS', QVariant.Double)
+            riskplus_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
+            riskmult_field = QgsField('RISKMULT', QVariant.Double)
+            riskmult_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
+            risk1f_field = QgsField('RISK1F', QVariant.Double)
+            risk1f_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
             ProcessLayer(layer).add_attributes(
-                [QgsField('RISKPLUS', QVariant.Double),
-                 QgsField('RISKMULT', QVariant.Double),
-                 QgsField('RISK1F', QVariant.Double)])
+                [riskplus_field, riskmult_field, risk1f_field])
             # for each zone, calculate the value of the output attributes
             # to show the overall progress, cycling through zones
             tot_zones = len(list(layer.getFeatures()))

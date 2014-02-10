@@ -32,12 +32,12 @@ from qgis.core import (QgsMapLayer,
                        QgsVectorLayer,
                        QgsMapLayerRegistry,
                        QgsField)
-from layer_editing_manager import LayerEditingManager
+from utils import LayerEditingManager
 
 from normalization_algs import (NORMALIZATION_ALGS,
                                 normalize)
 
-from utils import DEBUG
+from globals import DEBUG, DOUBLE_FIELD_TYPE_NAME
 
 
 class ProcessLayer():
@@ -55,6 +55,7 @@ class ProcessLayer():
         with LayerEditingManager(self.layer, 'Add attributes', DEBUG):
             # add attributes
             layer_pr = self.layer.dataProvider()
+            # TODO: Check that the attributes to be added are not already taken
             layer_pr.addAttributes(attribute_list)
 
     def normalize_attribute(self,
@@ -68,27 +69,18 @@ class ProcessLayer():
         normalized data, named as something like 'attr_name__algorithm', e.g.,
         'TOTLOSS__MIN_MAX'
         """
-        pr = self.layer.dataProvider()
-
         # get the id of the attribute named input_attr_name
-        input_attr_id = None
-        for field_id, field in enumerate(pr.fields()):
-            if field.name() == input_attr_name:
-                input_attr_id = field_id
-        if not input_attr_id:
-            raise AttributeError
+        input_attr_id = self.find_attribute_id(input_attr_name)
 
         # build the name of the output normalized attribute
-        new_attr_name = input_attr_name + '__' + algorithm_name
-        self.add_attributes([QgsField(new_attr_name, QVariant.Double)])
+        # WARNING! Shape files support max 10 chars for attribute names
+        new_attr_name = algorithm_name[:10]
+        field = QgsField(new_attr_name, QVariant.Double)
+        field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
+        self.add_attributes([field])
 
         # get the id of the new attribute
-        new_attr_id = None
-        for field_id, field in enumerate(pr.fields()):
-            if field.name() == new_attr_name:
-                new_attr_id = field_id
-        if not input_attr_id:
-            raise AttributeError
+        new_attr_id = self.find_attribute_id(new_attr_name)
 
         # a dict will contain all the values for the chosen input attribute,
         # keeping as key, for each value, the id of the corresponding feature
@@ -107,6 +99,22 @@ class ProcessLayer():
                 feat_id = feat.id()
                 self.layer.changeAttributeValue(
                     feat_id, new_attr_id, float(normalized_dict[feat_id]))
+
+    def find_attribute_id(self, attribute_name):
+        """
+        Get the id of the attribute called attribute_name
+        @param attribute_name: name of the attribute
+        @return: id of the attribute, or raise AttributeError
+        exception if not found
+        """
+        attribute_id = None
+        pr = self.layer.dataProvider()
+        for field_id, field in enumerate(pr.fields()):
+            if field.name() == attribute_name:
+                attribute_id = field_id
+        if not attribute_id:
+            raise AttributeError
+        return attribute_id
 
     def duplicate_in_memory(self, new_name='', add_to_registry=False):
         """
@@ -127,16 +135,21 @@ class ProcessLayer():
             new_name = self.layer.name() + ' TMP'
 
         if self.layer.type() == QgsMapLayer.VectorLayer:
-            v_type = self.layer.geometryType()
-            if v_type == QGis.Point:
-                type_str = 'Point'
-            elif v_type == QGis.Line:
-                type_str = 'Line'
-            elif v_type == QGis.Polygon:
-                type_str = 'Polygon'
+            v_type = self.layer.wkbType()
+            if v_type == QGis.WKBPoint:
+                type_str = "point"
+            elif v_type == QGis.WKBLineString:
+                type_str = "linestring"
+            elif v_type == QGis.WKBPolygon:
+                type_str = "polygon"
+            elif v_type == QGis.WKBMultiPoint:
+                type_str = "multipoint"
+            elif v_type == QGis.WKBMultiLineString:
+                type_str = "multilinestring"
+            elif v_type == QGis.WKBMultiPolygon:
+                type_str = "multipolygon"
             else:
-                raise RuntimeError('Layer is whether Point nor '
-                                   'Line nor Polygon')
+                raise TypeError('Layer type %s can not be accepted' % v_type)
         else:
             raise RuntimeError('Layer is not a VectorLayer')
 
@@ -165,3 +178,29 @@ class ProcessLayer():
                 raise RuntimeError('Layer invalid')
 
         return mem_layer
+
+    def is_type_in(self, type_list):
+        """
+        @param type_list: we want to check if the type of the layer is
+        included in this list
+        @return: True if the layer is a VectorLayer and its type is in the list
+        """
+        if self.layer.type() == QgsMapLayer.VectorLayer:
+            v_type = self.layer.wkbType()
+            if v_type == QGis.WKBPoint:
+                type_str = "point"
+            elif v_type == QGis.WKBLineString:
+                type_str = "linestring"
+            elif v_type == QGis.WKBPolygon:
+                type_str = "polygon"
+            elif v_type == QGis.WKBMultiPoint:
+                type_str = "multipoint"
+            elif v_type == QGis.WKBMultiLineString:
+                type_str = "multilinestring"
+            elif v_type == QGis.WKBMultiPolygon:
+                type_str = "multipolygon"
+            else:
+                raise TypeError('Layer type %s can not be accepted' % v_type)
+            return type_str in type_list
+        else:
+            return False

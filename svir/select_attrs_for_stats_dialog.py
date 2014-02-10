@@ -25,12 +25,14 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
+from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox)
 from qgis.core import QgsMapLayerRegistry
 
-from ui_select_attrs_for_stats import Ui_SelectAttrsForStatsDialog
+from ui.ui_select_attrs_for_stats import Ui_SelectAttrsForStatsDialog
 
+from globals import NUMERIC_FIELD_TYPES
 
 class SelectAttrsForStatsDialog(QDialog):
     """
@@ -45,8 +47,10 @@ class SelectAttrsForStatsDialog(QDialog):
         self.ui = Ui_SelectAttrsForStatsDialog()
         self.ui.setupUi(self)
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
-        self.ui.layer_cbx.currentIndexChanged['QString'].connect(
-            self.reload_attribs_cbx)
+
+    @pyqtSlot(str)
+    def on_layer_cbx_currentIndexChanged(self):
+        self.reload_attribs_cbx()
 
     def reload_attribs_cbx(self):
         # reset combo boxes
@@ -62,15 +66,8 @@ class SelectAttrsForStatsDialog(QDialog):
         no_numeric_fields = True
         for field in fields:
             # add numeric fields only
-            # FIXME: typeName is empty for user-defined fields which typeName
-            # has not been explicitly set (potential mismatch between type and
-            # typeName!). Same thing happens below for zonal fields. Therefore
-            # we are using the type ids, which in this case are 2 or 6 for
-            if field.type() in [2, 6]:
+            if field.typeName() in NUMERIC_FIELD_TYPES:
                 self.ui.svi_attr_cbx.addItem(field.name())
                 self.ui.aggr_loss_attr_cbx.addItem(field.name())
-            no_numeric_fields = False
-        if no_numeric_fields:
-            self.ok_button.setEnabled(False)
-        else:
-            self.ok_button.setEnabled(True)
+                no_numeric_fields = False
+        self.ok_button.setDisabled(no_numeric_fields)

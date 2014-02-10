@@ -2,7 +2,6 @@
 
 # Form implementation generated from reading ui file 'ui_normalization.ui'
 #
-# Created: Thu Jan  9 13:05:24 2014
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!

@@ -25,19 +25,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
-from PyQt4.QtGui import QDialog
 
-from ui.ui_attribute_selection import Ui_AttributeSelctionDialog
+DEBUG = False
 
+INT_FIELD_TYPE_NAME = "integer"
+DOUBLE_FIELD_TYPE_NAME = "Real"
 
-class AttributeSelectionDialog(QDialog):
-    """
-    Modal dialog giving to the user the possibility to select
-    what are the attributes, in the loss layer and in the region layer,
-    that contain the loss data and the region id
-    """
-    def __init__(self):
-        QDialog.__init__(self)
-        # Set up the user interface from Designer.
-        self.ui = Ui_AttributeSelctionDialog()
-        self.ui.setupUi(self)
+NUMERIC_FIELD_TYPES = (INT_FIELD_TYPE_NAME, DOUBLE_FIELD_TYPE_NAME)
+
+STRING_FIELD_TYPE_NAME = "String"

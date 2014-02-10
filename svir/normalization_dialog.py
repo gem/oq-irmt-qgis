@@ -30,10 +30,11 @@ from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox)
 from qgis.core import QgsMapLayerRegistry
 
-from ui_normalization import Ui_NormalizationDialog
+from ui.ui_normalization import Ui_NormalizationDialog
 from normalization_algs import (RANK_VARIANTS,
                                 QUADRATIC_VARIANTS)
 
+from globals import NUMERIC_FIELD_TYPES
 
 class NormalizationDialog(QDialog):
     """
@@ -47,19 +48,37 @@ class NormalizationDialog(QDialog):
         # Set up the user interface from Designer.
         self.ui = Ui_NormalizationDialog()
         self.ui.setupUi(self)
-        self.ui.layer_cbx.currentIndexChanged['QString'].connect(
-            self.reload_attrib_cbx)
-        self.ui.algorithm_cbx.currentIndexChanged['QString'].connect(
-            self.reload_variant_cbx)
         if self.ui.algorithm_cbx.currentText() in ['RANK', 'QUADRATIC']:
             self.reload_variant_cbx()
         self.ui.inverse_ckb.setDisabled(
             self.ui.algorithm_cbx.currentText() in ['LOG10'])
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
+        self.use_advanced = False
 
     @pyqtSlot()
     def on_calc_btn_clicked(self):
+        self.close()
+        layer = QgsMapLayerRegistry.instance().mapLayers().values()[
+            self.ui.layer_cbx.currentIndex()]
+        self.iface.setActiveLayer(layer)
+
+        # layer is put in editing mode. If the user clicks on ok, the field
+        # calculator will update the layers attributes.
+        # if the user clicks cancel, the field calculator does nothing.
+        # the layer stays in editing mode with the use_advanced flag set.
+        # the calling code should take care of doing layer.commitChanges()
+        # if the flag is set to true.
+        self.use_advanced = True
+        layer.startEditing()
         self.iface.actionOpenFieldCalculator().trigger()
+
+    @pyqtSlot(str)
+    def on_layer_cbx_currentIndexChanged(self):
+        self.reload_attrib_cbx()
+
+    @pyqtSlot(str)
+    def on_algorithm_cbx_currentIndexChanged(self):
+        self.reload_variant_cbx()
 
     def reload_attrib_cbx(self):
         # reset combo box
@@ -74,17 +93,10 @@ class NormalizationDialog(QDialog):
         no_numeric_fields = True
         for field in fields:
             # add numeric fields only
-            # FIXME: typeName is empty for user-defined fields which typeName
-            # has not been explicitly set (potential mismatch between type and
-            # typeName!). Same thing happens below for zonal fields. Therefore
-            # we are using the type ids, which in this case are 2 or 6 for
-            if field.type() in [2, 6]:
+            if field.typeName() in NUMERIC_FIELD_TYPES:
                 self.ui.attrib_cbx.addItem(field.name())
                 no_numeric_fields = False
-        if no_numeric_fields:
-            self.ok_button.setEnabled(False)
-        else:
-            self.ok_button.setEnabled(True)
+        self.ok_button.setDisabled(no_numeric_fields)
 
     def reload_variant_cbx(self):
         self.ui.variant_cbx.clear()
@@ -92,6 +104,8 @@ class NormalizationDialog(QDialog):
             self.ui.variant_cbx.addItems(RANK_VARIANTS)
         elif self.ui.algorithm_cbx.currentText() == 'QUADRATIC':
             self.ui.variant_cbx.addItems(QUADRATIC_VARIANTS)
+        else:
+            self.ui.variant_cbx.setDisabled(True)
         self.ui.inverse_ckb.setDisabled(
             self.ui.algorithm_cbx.currentText() in ['LOG10'])
 

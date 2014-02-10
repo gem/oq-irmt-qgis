@@ -25,11 +25,64 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
+import collections
+from time import time
 from PyQt4.QtGui import QApplication
 
-DEBUG = False
 
-    
 def tr(message):
     return QApplication.translate('Svir', message)
 
+
+class Register(collections.OrderedDict):
+    """
+    Useful to keep (in a single point) a register of available variants of
+    something, e.g. a set of different normalization/standardization algorithms
+    """
+    def add(self, tag):
+        """
+        Add a new variant to the OrderedDict
+        For instance, if we add a class implementing a specific normalization
+        algorithm, the register will keep track of a new item having as key the
+        name of the algorithm and as value the class implementing the algorithm
+        """
+        def dec(obj):
+            self[tag] = obj
+            return obj
+        return dec
+
+
+class TraceTimeManager(object):
+    def __init__(self, message, debug=False):
+        self.debug = debug
+        self.message = message
+        self.t_start = None
+        self.t_stop = None
+
+    def __enter__(self):
+        if self.debug:
+            print self.message
+            self.t_start = time()
+
+    def __exit__(self, type, value, traceback):
+        if self.debug:
+            self.t_stop = time()
+            print "Completed in %f" % (self.t_stop - self.t_start)
+
+
+class LayerEditingManager(object):
+    def __init__(self, layer, message, debug=False):
+        self.layer = layer
+        self.message = message
+        self.debug = debug
+
+    def __enter__(self):
+        self.layer.startEditing()
+        if self.debug:
+            print "BEGIN", self.message
+
+    def __exit__(self, type, value, traceback):
+        self.layer.commitChanges()
+        self.layer.updateExtents()
+        if self.debug:
+            print "END", self.message
