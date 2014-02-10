@@ -94,3 +94,4 @@ class NormalizationDialog(QDialog):
             self.ui.variant_cbx.addItems(QUADRATIC_VARIANTS)
         self.ui.inverse_ckb.setDisabled(
             self.ui.algorithm_cbx.currentText() in ['LOG10'])
+

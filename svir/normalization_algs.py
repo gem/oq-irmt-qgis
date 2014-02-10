@@ -253,3 +253,4 @@ def simple_quadratic(input_list, variant_name="INCREASING", inverse=False):
     if inverse:
         output_list[:] = [1.0 - x for x in output_list]
     return output_list
+
