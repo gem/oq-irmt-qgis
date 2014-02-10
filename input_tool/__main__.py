@@ -138,7 +138,7 @@ EMP,ExposureModelBuildings,Ctrl+Alt+P,new_exposure_model_buildings
             return
         widget = widget.parent()  # CustomTableView
         lines = QtGui.QApplication.clipboard().text().split('\n')
-        rows = [line.split('\t') for line in lines if line]
+        rows = [line.split('\t') for line in lines]
         if not rows:
             return
         ncolumns = len(widget.table.recordtype) - widget.table.ordinal

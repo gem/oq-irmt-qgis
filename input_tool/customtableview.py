@@ -327,7 +327,11 @@ class NameValueView(QtGui.QWidget):
 
 
 class TripleTableWidget(QtGui.QWidget):
-    table_attrs = {}
+    table_attrs = [
+        {'addBtn': 1, 'delBtn': 1},
+        {'addBtn': 1, 'delBtn': 1},
+        {'addBtn': 1, 'delBtn': 1},
+    ]
 
     def __init__(self, tableset, nrmlfile, parent=None):
         QtGui.QWidget.__init__(self, parent)
@@ -344,8 +348,8 @@ class TripleTableWidget(QtGui.QWidget):
         if n_attrs != n_tables:
             raise RuntimeError('There are %d tables but %d table attributes!' %
                                (n_tables, n_attrs))
-        for i, (tablename, attr) in enumerate(self.table_attrs.items()):
-            table = getattr(self.tableset, tablename)
+        for i, (attr, table) in enumerate(
+                zip(self.table_attrs, self.tableset.tables)):
             table.attr.update(attr)
             self.tv[table.name] = CustomTableView(table, self.getdefault, self)
             self.tv[i] = self.tv[table.name]
@@ -448,11 +452,7 @@ class TripleTableWidget(QtGui.QWidget):
 # subclasses in openquake.common.converter
 
 class VulnerabilityWidget(TripleTableWidget):
-    table_attrs = collections.OrderedDict(
-        tableDiscreteVulnerabilitySet={'addBtn': 1, 'delBtn': 1},
-        tableDiscreteVulnerability={'addBtn': 1, 'delBtn': 1},
-        tableDiscreteVulnerabilityData={'addBtn': 1, 'delBtn': 1},
-    )
+    pass
 
 
 class FragilityWidget(TripleTableWidget):
