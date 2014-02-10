@@ -2,7 +2,7 @@ import sys
 import sip
 sip.setapi("QString", 2)
 
-from PyQt4 import QtGui, QtCore
+from PyQt4 import QtGui
 from customtableview import CustomTableView
 
 from openquake.nrmllib.node import node_from_nrml
