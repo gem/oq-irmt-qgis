@@ -2,7 +2,6 @@
 
 # Form implementation generated from reading ui file 'ui_normalization.ui'
 #
-# Created: Tue Jan 28 14:02:37 2014
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -18,7 +17,7 @@ class Ui_NormalizationDialog(object):
     def setupUi(self, NormalizationDialog):
         NormalizationDialog.setObjectName(_fromUtf8("NormalizationDialog"))
         NormalizationDialog.setWindowModality(QtCore.Qt.ApplicationModal)
-        NormalizationDialog.resize(400, 206)
+        NormalizationDialog.resize(400, 207)
         NormalizationDialog.setModal(True)
         self.gridLayout = QtGui.QGridLayout(NormalizationDialog)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
@@ -48,6 +47,9 @@ class Ui_NormalizationDialog(object):
         self.variant_cbx = QtGui.QComboBox(NormalizationDialog)
         self.variant_cbx.setObjectName(_fromUtf8("variant_cbx"))
         self.formLayout.setWidget(3, QtGui.QFormLayout.FieldRole, self.variant_cbx)
+        self.inverse_ckb = QtGui.QCheckBox(NormalizationDialog)
+        self.inverse_ckb.setObjectName(_fromUtf8("inverse_ckb"))
+        self.formLayout.setWidget(4, QtGui.QFormLayout.LabelRole, self.inverse_ckb)
         self.gridLayout.addLayout(self.formLayout, 0, 0, 1, 2)
         self.calc_btn = QtGui.QPushButton(NormalizationDialog)
         self.calc_btn.setObjectName(_fromUtf8("calc_btn"))
@@ -69,5 +71,6 @@ class Ui_NormalizationDialog(object):
         self.attrib_lbl.setText(QtGui.QApplication.translate("NormalizationDialog", "Attribute", None, QtGui.QApplication.UnicodeUTF8))
         self.algorithm_lbl.setText(QtGui.QApplication.translate("NormalizationDialog", "Algorithm", None, QtGui.QApplication.UnicodeUTF8))
         self.variant_lbl.setText(QtGui.QApplication.translate("NormalizationDialog", "Variant", None, QtGui.QApplication.UnicodeUTF8))
+        self.inverse_ckb.setText(QtGui.QApplication.translate("NormalizationDialog", "Inverse", None, QtGui.QApplication.UnicodeUTF8))
         self.calc_btn.setText(QtGui.QApplication.translate("NormalizationDialog", "Advanced Calculator", None, QtGui.QApplication.UnicodeUTF8))
 

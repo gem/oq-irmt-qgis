@@ -31,7 +31,8 @@ from PyQt4.QtGui import (QDialog,
 from qgis.core import QgsMapLayerRegistry
 
 from ui.ui_normalization import Ui_NormalizationDialog
-from normalization_algs import RANK_VARIANTS
+from normalization_algs import (RANK_VARIANTS,
+                                QUADRATIC_VARIANTS)
 
 from globals import NUMERIC_FIELD_TYPES
 
@@ -47,8 +48,10 @@ class NormalizationDialog(QDialog):
         # Set up the user interface from Designer.
         self.ui = Ui_NormalizationDialog()
         self.ui.setupUi(self)
-        if self.ui.algorithm_cbx.currentText() == 'RANK':
+        if self.ui.algorithm_cbx.currentText() in ['RANK', 'QUADRATIC']:
             self.reload_variant_cbx()
+        self.ui.inverse_ckb.setDisabled(
+            self.ui.algorithm_cbx.currentText() in ['LOG10'])
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
         self.use_advanced = False
 
@@ -99,5 +102,10 @@ class NormalizationDialog(QDialog):
         self.ui.variant_cbx.clear()
         if self.ui.algorithm_cbx.currentText() == 'RANK':
             self.ui.variant_cbx.addItems(RANK_VARIANTS)
+        elif self.ui.algorithm_cbx.currentText() == 'QUADRATIC':
+            self.ui.variant_cbx.addItems(QUADRATIC_VARIANTS)
         else:
             self.ui.variant_cbx.setDisabled(True)
+        self.ui.inverse_ckb.setDisabled(
+            self.ui.algorithm_cbx.currentText() in ['LOG10'])
+
