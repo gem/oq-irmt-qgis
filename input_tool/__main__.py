@@ -9,8 +9,8 @@ except ValueError:  # API 'QString' has already been set to version 1
     pass
 
 from PyQt4 import QtCore, QtGui
-import customtableview
-from customtableview import tr, messagebox
+from input_tool import customtableview
+from input_tool.customtableview import tr, messagebox
 
 from openquake.nrmllib.node import node_to_nrml
 from openquake.common.converter import Converter
