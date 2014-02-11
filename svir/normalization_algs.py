@@ -26,7 +26,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 from numpy import mean, std, argwhere, amax, amin, log10
-from register import Register
+from utils import Register
 
 NORMALIZATION_ALGS = Register()
 RANK_VARIANTS = ['AVERAGE', 'MIN', 'MAX', 'DENSE', 'ORDINAL']
