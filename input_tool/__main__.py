@@ -5,7 +5,6 @@ import sip
 try:
     sip.setapi("QString", 2)
 except ValueError:  # API 'QString' has already been set to version 1
-
     pass
 
 from PyQt4 import QtCore, QtGui
@@ -136,8 +135,10 @@ EMP,ExposureModelBuildings,Ctrl+Alt+P,new_exposure_model_buildings
         widget = QtGui.QApplication.focusWidget()
         if not isinstance(widget, QtGui.QTableView):
             return
-        widget = widget.parent()  # CustomTableView
-        lines = QtGui.QApplication.clipboard().text().split('\n')
+        self.paste_text(widget.parent(), QtGui.QApplication.clipboard().text())
+
+    def paste_text(self, widget, text):
+        lines = text.split('\n')
         rows = [line.split('\t') for line in lines if line.strip()]
         if not rows:
             return
@@ -150,6 +151,7 @@ EMP,ExposureModelBuildings,Ctrl+Alt+P,new_exposure_model_buildings
             indexes = widget.appendRows(len(rows))
             for index, row in zip(indexes, rows):
                 widget.tableModel.set_row(index, row)
+        return indexes
 
     def open_nrml(self):
         nrmlfile = unicode(QtGui.QFileDialog.getOpenFileName(

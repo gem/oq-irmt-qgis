@@ -7,8 +7,9 @@ from PyQt4 import QtCore, QtGui, QtTest
 from openquake.nrmllib.node import node_from_xml
 from openquake.common.converter import Converter
 
-from customtableview import TripleTableWidget, NoRecordSelected, index
-from __main__ import MainWindow
+from input_tool.customtableview import \
+    TripleTableWidget, NoRecordSelected, index
+from input_tool.__main__ import MainWindow
 
 
 EXAMPLES = os.path.join(os.path.dirname(__file__), 'examples')
@@ -81,3 +82,25 @@ class NewModelTestCase(unittest.TestCase):
         mw.new_fragility_model_discrete()
         mw.new_exposure_model_population()
         mw.new_exposure_model_buildings()
+
+
+class PasteTestCase(unittest.TestCase):
+    def test_paste_vulnerability(self):
+        mw = MainWindow(os.path.join(EXAMPLES, 'vm.xml'))
+
+        dvs = mw.widget.tv['tableDiscreteVulnerabilitySet']
+        added = mw.paste_text(dvs, '2\t3\t4')
+        self.assertEqual(added, [8])
+        print [str(dvs.table[i]) for i in added]
+
+        dvs.tableView.setCurrentIndex(index(0, 0))
+        added = mw.paste_text(dvs, '2\t3')
+        self.assertEqual(added, [])
+
+        dv = mw.widget.tv['tableDiscreteVulnerability']
+        added = mw.paste_text(dv, '2\t3\t4')
+        self.assertEqual(added, [8])
+
+        #dvd = mw.widget.tv['tableDiscreteVulnerabilityData']
+        #added = mw.paste_text(dvd, '2\t3\t4')
+        #self.assertEqual(added, [8])
