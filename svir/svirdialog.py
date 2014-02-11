@@ -37,6 +37,7 @@ from process_layer import ProcessLayer
 from ui.ui_svir import Ui_SvirDialog
 from utils import tr
 
+
 class SvirDialog(QDialog):
     """
     Modal dialog allowing to select a raster or vector layer
@@ -104,7 +105,8 @@ class SvirDialog(QDialog):
     @pyqtSlot()
     def on_zonal_layer_tbn_clicked(self):
         layer = self.open_file_dialog('zonal_layer')
-        if layer and ProcessLayer(layer).is_type_in(["polygon", "multipolygon"]):
+        if layer and ProcessLayer(layer).is_type_in(
+                ["polygon", "multipolygon"]):
             cbx = self.ui.zonal_layer_cbx
             cbx.addItem(layer.name())
             last_index = cbx.count() - 1
@@ -113,7 +115,8 @@ class SvirDialog(QDialog):
         self.enable_ok_button_if_both_layers_are_specified()
 
     def populate_cbx(self):
-        for key, layer in QgsMapLayerRegistry.instance().mapLayers().iteritems():
+        for key, layer in \
+                QgsMapLayerRegistry.instance().mapLayers().iteritems():
             # populate loss cbx only with layers containing points
             if ProcessLayer(layer).is_type_in(["point", "multipoint"]):
                 self.ui.loss_layer_cbx.addItem(layer.name())
@@ -135,8 +138,7 @@ class SvirDialog(QDialog):
     def load_loss_layer(self, loss_layer_path):
         # Load loss layer
         if self.loss_layer_is_vector:
-            loss_layer = QgsVectorLayer(loss_layer_path,
-                                             tr('Loss map'), 'ogr')
+            loss_layer = QgsVectorLayer(loss_layer_path, tr('Loss map'), 'ogr')
             if not loss_layer.geometryType() == QGis.Point:
                 msg = 'Loss map must contain points'
                 self.iface.messageBar().pushMessage(
@@ -145,8 +147,7 @@ class SvirDialog(QDialog):
                     level=QgsMessageBar.CRITICAL)
                 return False
         else:
-            loss_layer = QgsRasterLayer(loss_layer_path,
-                                             tr('Loss map'))
+            loss_layer = QgsRasterLayer(loss_layer_path, tr('Loss map'))
         # Add loss layer to registry
         if loss_layer.isValid():
             QgsMapLayerRegistry.instance().addMapLayer(loss_layer)
@@ -162,8 +163,7 @@ class SvirDialog(QDialog):
 
     def load_zonal_layer(self, zonal_layer_path):
         # Load zonal layer
-        zonal_layer = QgsVectorLayer(zonal_layer_path,
-                                          tr('Zonal data'), 'ogr')
+        zonal_layer = QgsVectorLayer(zonal_layer_path, tr('Zonal data'), 'ogr')
         if not zonal_layer.geometryType() == QGis.Polygon:
             msg = 'Zonal layer must contain zone polygons'
             self.iface.messageBar().pushMessage(

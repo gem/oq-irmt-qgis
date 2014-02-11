@@ -43,7 +43,6 @@ from PyQt4.QtGui import (QAction,
 
 from qgis.core import (QgsVectorLayer,
                        QgsMapLayerRegistry,
-                       QgsRasterLayer,
                        QgsField,
                        QgsFeature,
                        QgsGeometry,
@@ -51,8 +50,6 @@ from qgis.core import (QgsVectorLayer,
                        QgsSpatialIndex,
                        QgsFeatureRequest,
                        QgsVectorDataProvider,
-                       QgsMapLayer,
-                       QGis,
                        QgsMessageLog)
 
 from qgis.gui import QgsMessageBar
@@ -842,7 +839,7 @@ class Svir:
                 if not match_found:
                     caps = self.svir_layer.dataProvider().capabilities()
                     if caps & QgsVectorDataProvider.DeleteFeatures:
-                        res = self.svir_layer.dataProvider().deleteFeatures(
+                        self.svir_layer.dataProvider().deleteFeatures(
                             [svir_feat.id()])
         self.clear_progress_message_bar()
 

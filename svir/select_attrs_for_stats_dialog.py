@@ -34,6 +34,7 @@ from ui.ui_select_attrs_for_stats import Ui_SelectAttrsForStatsDialog
 
 from globals import NUMERIC_FIELD_TYPES
 
+
 class SelectAttrsForStatsDialog(QDialog):
     """
     Modal dialog giving to the user the possibility to select

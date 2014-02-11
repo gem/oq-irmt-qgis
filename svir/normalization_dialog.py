@@ -36,6 +36,7 @@ from normalization_algs import (RANK_VARIANTS,
 
 from globals import NUMERIC_FIELD_TYPES
 
+
 class NormalizationDialog(QDialog):
     """
     Modal dialog giving to the user the possibility to select
@@ -108,4 +109,3 @@ class NormalizationDialog(QDialog):
             self.ui.variant_cbx.setDisabled(True)
         self.ui.inverse_ckb.setDisabled(
             self.ui.algorithm_cbx.currentText() in ['LOG10'])
-

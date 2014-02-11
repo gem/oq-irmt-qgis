@@ -26,6 +26,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+
 def classFactory(iface):
     # load Svir class from file Svir
     from svir import Svir
