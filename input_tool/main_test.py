@@ -5,7 +5,7 @@ import unittest
 from PyQt4 import QtCore, QtGui, QtTest
 
 from openquake.nrmllib.node import node_from_xml
-from openquake.common.converter import Converter
+from openquake.commonlib.converter import Converter
 
 from input_tool.customtableview import \
     TripleTableWidget, NoRecordSelected, index

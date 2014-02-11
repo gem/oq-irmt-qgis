@@ -4,7 +4,7 @@ import collections
 from contextlib import contextmanager
 from PyQt4 import QtCore, QtGui
 from message_bar import MessageBar
-from openquake.common.record import Record, Table, TableSet, Unique, Field
+from openquake.commonlib.record import Record, Table, TableSet, Unique, Field
 from openquake.risklib.scientific import LogNormalDistribution
 from numpy import linspace
 
@@ -51,7 +51,7 @@ class NoRecordSelected(Exception):
 class CustomTableModel(QtCore.QAbstractTableModel):
     """
     Wrapper for table objects consistent with the API defined in
-    common.record.Table.
+    commonlib.record.Table.
     """
     RED = QtGui.QColor('#ff5050')
 
@@ -449,7 +449,7 @@ class TripleTableWidget(QtGui.QWidget):
 
 
 # NB: the names of the widgets are related to the names of the Converter
-# subclasses in openquake.common.converter
+# subclasses in openquake.commonlib.converter
 
 class VulnerabilityWidget(TripleTableWidget):
     pass

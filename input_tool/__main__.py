@@ -12,7 +12,7 @@ from input_tool import customtableview
 from input_tool.customtableview import tr, messagebox
 
 from openquake.nrmllib.node import node_to_nrml
-from openquake.common.converter import Converter
+from openquake.commonlib.converter import Converter
 
 
 class MainWindow(QtGui.QMainWindow):
