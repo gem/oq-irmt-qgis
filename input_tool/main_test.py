@@ -5,7 +5,7 @@ import unittest
 from PyQt4 import QtCore, QtGui, QtTest
 
 from openquake.nrmllib.node import node_from_xml
-from openquake.common.converter import Converter
+from openquake.commonlib.converter import Converter
 
 from input_tool.customtableview import \
     TripleTableWidget, NoRecordSelected, index
@@ -88,19 +88,28 @@ class PasteTestCase(unittest.TestCase):
     def test_paste_vulnerability(self):
         mw = MainWindow(os.path.join(EXAMPLES, 'vm.xml'))
 
+        # 4 columns for 4 columns
         dvs = mw.widget.tv['tableDiscreteVulnerabilitySet']
-        added = mw.paste_text(dvs, '2\t3\t4')
-        self.assertEqual(added, [8])
-        print [str(dvs.table[i]) for i in added]
+        added = mw.paste_text(dvs, '2\t3\t4\t5')
+        self.assertEqual([str(dvs.table[i]) for i in added], ['2,3,4,5'])
 
+        # 2 columns instead of 4
         dvs.tableView.setCurrentIndex(index(0, 0))
         added = mw.paste_text(dvs, '2\t3')
         self.assertEqual(added, [])
 
+        # 2 columns for 2 columns
         dv = mw.widget.tv['tableDiscreteVulnerability']
-        added = mw.paste_text(dv, '2\t3\t4')
-        self.assertEqual(added, [8])
+        added = mw.paste_text(dv, '2\t3')
+        self.assertEqual([str(dv.table[i]) for i in added], ['vm1,2,3'])
 
-        #dvd = mw.widget.tv['tableDiscreteVulnerabilityData']
-        #added = mw.paste_text(dvd, '2\t3\t4')
-        #self.assertEqual(added, [8])
+        # 3 columns instead of 2
+        with self.assertRaises(ValueError):
+            mw.paste_text(dv, '2\t3\t4')  # got 3 columns expected 2
+
+        # 3 columns for 3 columns
+        dv.tableView.setCurrentIndex(index(0, 0))
+        dvd = mw.widget.tv['tableDiscreteVulnerabilityData']
+        added = mw.paste_text(dvd, '2\t3\t4')
+        self.assertEqual([str(dvd.table[i]) for i in added],
+                         ['vm1,M1_LR_C,2,3,4'])

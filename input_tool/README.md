@@ -4,8 +4,8 @@ INSTALLATION
 In order to installs the Input Tool GUI one needs to perform the following
 steps:
 
-1. clone the oq-common repository
-   git clone https://github.com/gem/oq-common
+1. clone the oq-commonlib repository
+   git clone https://github.com/gem/oq-commonlib
 2. clone the oq-nrmllib repository
    git clone https://github.com/gem/oq-nrmllib
 2. clone the qt-experiments repository

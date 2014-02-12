@@ -12,7 +12,7 @@ from input_tool import customtableview
 from input_tool.customtableview import tr, messagebox
 
 from openquake.nrmllib.node import node_to_nrml
-from openquake.common.converter import Converter
+from openquake.commonlib.converter import Converter
 
 
 class MainWindow(QtGui.QMainWindow):
@@ -135,7 +135,9 @@ EMP,ExposureModelBuildings,Ctrl+Alt+P,new_exposure_model_buildings
         widget = QtGui.QApplication.focusWidget()
         if not isinstance(widget, QtGui.QTableView):
             return
-        self.paste_text(widget.parent(), QtGui.QApplication.clipboard().text())
+        text = QtGui.QApplication.clipboard().text()
+        with messagebox(self):
+            self.paste_text(widget.parent(), text)
 
     def paste_text(self, widget, text):
         lines = text.split('\n')
@@ -144,13 +146,13 @@ EMP,ExposureModelBuildings,Ctrl+Alt+P,new_exposure_model_buildings
             return
         defaultcolumns = widget.getdefault(widget.table)
         ncolumns = len(widget.table.recordtype) - len(defaultcolumns)
-        with messagebox(self):
-            for row in rows:
-                assert len(row) <= ncolumns, 'Got %d columns, expected %d' % (
-                    len(row), ncolumns)
-            indexes = widget.appendRows(len(rows))
-            for index, row in zip(indexes, rows):
-                widget.tableModel.set_row(index, row)
+        for row in rows:
+            if len(row) > ncolumns:
+                raise ValueError('Got %d columns, expected %d' % (
+                                 len(row), ncolumns))
+        indexes = widget.appendRows(len(rows))
+        for index, row in zip(indexes, rows):
+            widget.tableModel.set_row(index, row)
         return indexes
 
     def open_nrml(self):
