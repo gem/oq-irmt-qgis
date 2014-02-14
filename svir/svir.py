@@ -68,6 +68,7 @@ from select_layers_to_join_dialog import SelectLayersToJoinDialog
 from attribute_selection_dialog import AttributeSelectionDialog
 from normalization_dialog import NormalizationDialog
 from select_attrs_for_stats_dialog import SelectAttrsForStatsDialog
+from select_sv_indices_dialog import SelectSvIndicesDialog
 
 from utils import LayerEditingManager
 
@@ -150,6 +151,13 @@ class Svir:
         self.registered_actions[action_name] = action
 
     def initGui(self):
+        # Action to activate the modal dialog to import social vulnerability
+        # data from the platform
+        self.add_menu_item("import_sv_indices",
+                           ":/plugins/svir/start_plugin_icon.png",
+                           u"&Import social vulnerability data",
+                           self.import_sv_indices,
+                           enable=True)
         # Action to activate the modal dialog to load loss data and zones
         self.add_menu_item("aggregate_losses",
                            ":/plugins/svir/start_plugin_icon.png",
@@ -249,6 +257,17 @@ class Svir:
                                                 tr(msg),
                                                 level=QgsMessageBar.INFO,
                                                 duration=8)
+
+    def import_sv_indices(self):
+        """
+        Open a modal dialog to select social vulnerability indices to download
+        from the openquake platform
+        """
+        dlg = SelectSvIndicesDialog(self.iface)
+        if dlg.exec_():
+            pass
+        else:
+            pass
 
     def join_svi_with_aggr_losses(self):
         """
