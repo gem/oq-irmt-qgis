@@ -155,7 +155,7 @@ class Svir:
         # data from the platform
         self.add_menu_item("import_sv_indices",
                            ":/plugins/svir/start_plugin_icon.png",
-                           u"&Import social vulnerability data",
+                           u"&Import social vulnerability indices",
                            self.import_sv_indices,
                            enable=True)
         # Action to activate the modal dialog to load loss data and zones
@@ -265,8 +265,10 @@ class Svir:
         """
         dlg = SelectSvIndicesDialog(self.iface)
         if dlg.exec_():
+            # TODO Implement me
             pass
         else:
+            # TODO Implement me
             pass
 
     def join_svi_with_aggr_losses(self):

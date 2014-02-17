@@ -47,7 +47,7 @@ class SelectSvIndicesDialog(QDialog):
         self.ui = Ui_SelectSvIndicesDialog()
         self.ui.setupUi(self)
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
-        self.get_credentials()
+        self.hostname, self.username, self.password = self.get_credentials()
         self.fill_themes()
 
     @pyqtSlot(str)
@@ -65,12 +65,15 @@ class SelectSvIndicesDialog(QDialog):
     @pyqtSlot(str)
     def fill_themes(self):
         # load list of themes from the platform
-        host = ""
-        downloader = SvDownloader(host)
+        sv_downloader = SvDownloader(self.hostname)
+        sv_downloader.login(self.username, self.password)
         try:
-            filename, msg = downloader.download()
-        except SvDownloadError:
-            raise
+            filename, msg = sv_downloader.download()
+        except SvDownloadError as e:
+            # TODO: use QGIS bar to display error
+            print "Unable to download social vulnerability themes: %s" % e
+            return
+        # FIXME: Remove DEBUG prints
         print "filename:", filename
         print "msg:", msg
 
@@ -100,12 +103,13 @@ class SelectSvIndicesDialog(QDialog):
 
     def get_credentials(self):
         qs = QSettings()
-        hostname = qs.value('import_sv_data/hostname', '')
-        username = qs.value('import_sv_data/username', '')
-        password = qs.value('import_sv_data/password', '')
-        if not (hostname and username and password):
+        hostname = qs.value('platform_settings/hostname', '')
+        username = qs.value('platform_settings/username', '')
+        password = qs.value('platform_settings/password', '')
+        # FIXME: forcing the user to specify settings every time
+        if True or not (hostname and username and password):
             PlatformSettingsDialog(self.iface).exec_()
-            hostname = qs.value('import_sv_data/hostname', '')
-            username = qs.value('import_sv_data/username', '')
-            password = qs.value('import_sv_data/password', '')
+            hostname = qs.value('platform_settings/hostname', '')
+            username = qs.value('platform_settings/username', '')
+            password = qs.value('platform_settings/password', '')
         return hostname, username, password

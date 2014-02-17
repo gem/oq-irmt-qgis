@@ -18,11 +18,11 @@ class PlatformSettingsDialog(QtGui.QDialog, Ui_PlatformSettingsDialog):
         """
         mySettings = QtCore.QSettings()
         self.usernameEdit.setText(
-            mySettings.value('download_sv/username', ''))
+            mySettings.value('platform_settings/username', ''))
         self.passwordEdit.setText(
-            mySettings.value('download_sv/password', ''))
+            mySettings.value('platform_settings/password', ''))
         self.hostnameEdit.setText(
-            mySettings.value('download_sv/hostname',
+            mySettings.value('platform_settings/hostname',
                              'https://platform.openquake.org'))
 
     def saveState(self):
@@ -30,11 +30,11 @@ class PlatformSettingsDialog(QtGui.QDialog, Ui_PlatformSettingsDialog):
         Store the options into the user's stored session info.
         """
         mySettings = QtCore.QSettings()
-        mySettings.setValue('download_sv/hostname',
+        mySettings.setValue('platform_settings/hostname',
                             self.hostnameEdit.text())
-        mySettings.setValue('download_sv/username',
+        mySettings.setValue('platform_settings/username',
                             self.usernameEdit.text())
-        mySettings.setValue('download_sv/password',
+        mySettings.setValue('platform_settings/password',
                             self.passwordEdit.text())
 
     def accept(self):
