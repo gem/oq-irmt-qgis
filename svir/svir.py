@@ -69,6 +69,7 @@ from attribute_selection_dialog import AttributeSelectionDialog
 from normalization_dialog import NormalizationDialog
 from select_attrs_for_stats_dialog import SelectAttrsForStatsDialog
 from select_sv_indices_dialog import SelectSvIndicesDialog
+from platform_settings_dialog import PlatformSettingsDialog
 
 from utils import LayerEditingManager
 
@@ -151,6 +152,13 @@ class Svir:
         self.registered_actions[action_name] = action
 
     def initGui(self):
+        # Action to activate the modal dialog to set up settings for the
+        # connection with the platform
+        self.add_menu_item("platform_settings",
+                           ":/plugins/svir/start_plugin_icon.png",
+                           u"&Openquake platform connection settings",
+                           self.platform_settings,
+                           enable=True)
         # Action to activate the modal dialog to import social vulnerability
         # data from the platform
         self.add_menu_item("import_sv_indices",
@@ -270,6 +278,9 @@ class Svir:
         else:
             # TODO Implement me
             pass
+
+    def platform_settings(self):
+        PlatformSettingsDialog(self.iface).exec_()
 
     def join_svi_with_aggr_losses(self):
         """

@@ -141,8 +141,7 @@ class SelectSvIndicesDialog(QDialog):
         hostname = qs.value('platform_settings/hostname', '')
         username = qs.value('platform_settings/username', '')
         password = qs.value('platform_settings/password', '')
-        # FIXME: forcing the user to specify settings every time
-        if True or not (hostname and username and password):
+        if not (hostname and username and password):
             PlatformSettingsDialog(self.iface).exec_()
             hostname = qs.value('platform_settings/hostname', '')
             username = qs.value('platform_settings/username', '')
