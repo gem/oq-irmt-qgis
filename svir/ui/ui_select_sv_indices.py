@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_select_sv_indices.ui'
 #
-# Created: Fri Feb 14 11:44:30 2014
+# Created: Tue Feb 18 16:27:06 2014
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -48,12 +48,15 @@ class Ui_SelectSvIndicesDialog(object):
         self.name_cbx = QtGui.QComboBox(SelectSvIndicesDialog)
         self.name_cbx.setObjectName(_fromUtf8("name_cbx"))
         self.formLayout.setWidget(3, QtGui.QFormLayout.FieldRole, self.name_cbx)
-        self.listWidget = QtGui.QListWidget(SelectSvIndicesDialog)
-        self.listWidget.setObjectName(_fromUtf8("listWidget"))
-        self.formLayout.setWidget(5, QtGui.QFormLayout.FieldRole, self.listWidget)
+        self.selected_names_lst = QtGui.QListWidget(SelectSvIndicesDialog)
+        self.selected_names_lst.setObjectName(_fromUtf8("selected_names_lst"))
+        self.formLayout.setWidget(5, QtGui.QFormLayout.FieldRole, self.selected_names_lst)
         self.add_name_btn = QtGui.QPushButton(SelectSvIndicesDialog)
         self.add_name_btn.setObjectName(_fromUtf8("add_name_btn"))
-        self.formLayout.setWidget(5, QtGui.QFormLayout.LabelRole, self.add_name_btn)
+        self.formLayout.setWidget(4, QtGui.QFormLayout.FieldRole, self.add_name_btn)
+        self.remove_name_btn = QtGui.QPushButton(SelectSvIndicesDialog)
+        self.remove_name_btn.setObjectName(_fromUtf8("remove_name_btn"))
+        self.formLayout.setWidget(6, QtGui.QFormLayout.FieldRole, self.remove_name_btn)
         self.gridLayout.addLayout(self.formLayout, 0, 0, 1, 1)
         self.buttonBox = QtGui.QDialogButtonBox(SelectSvIndicesDialog)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
@@ -73,4 +76,5 @@ class Ui_SelectSvIndicesDialog(object):
         self.tag_lbl.setText(QtGui.QApplication.translate("SelectSvIndicesDialog", "Tag", None, QtGui.QApplication.UnicodeUTF8))
         self.name_lbl.setText(QtGui.QApplication.translate("SelectSvIndicesDialog", "Name", None, QtGui.QApplication.UnicodeUTF8))
         self.add_name_btn.setText(QtGui.QApplication.translate("SelectSvIndicesDialog", "Add name", None, QtGui.QApplication.UnicodeUTF8))
+        self.remove_name_btn.setText(QtGui.QApplication.translate("SelectSvIndicesDialog", "Remove selected name", None, QtGui.QApplication.UnicodeUTF8))
 

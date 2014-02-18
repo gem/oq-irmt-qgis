@@ -63,12 +63,19 @@
       <widget class="QComboBox" name="name_cbx"/>
      </item>
      <item row="5" column="1">
-      <widget class="QListWidget" name="listWidget"/>
+      <widget class="QListWidget" name="selected_names_lst"/>
      </item>
-     <item row="5" column="0">
+     <item row="4" column="1">
       <widget class="QPushButton" name="add_name_btn">
        <property name="text">
         <string>Add name</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="1">
+      <widget class="QPushButton" name="remove_name_btn">
+       <property name="text">
+        <string>Remove selected name</string>
        </property>
       </widget>
      </item>

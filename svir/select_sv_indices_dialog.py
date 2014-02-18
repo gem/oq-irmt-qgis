@@ -25,21 +25,13 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
-from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtCore import QSettings
+from PyQt4.QtCore import pyqtSlot, QSettings
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox)
 from platform_settings_dialog import PlatformSettingsDialog
 
 from ui.ui_select_sv_indices import Ui_SelectSvIndicesDialog
 from import_sv_data import SvDownloader, SvDownloadError
-
-# FIXME: Delete the following two
-PLATFORM_API_ROOT = "/exposure"
-PLATFORM_API = dict(themes=PLATFORM_API_ROOT + "/export_sv_themes",
-                    subthemes=PLATFORM_API_ROOT + "/export_sv_subthemes",
-                    tags=PLATFORM_API_ROOT + "/export_sv_tags",
-                    names=PLATFORM_API_ROOT + "/export_sv_names")
 
 
 class SelectSvIndicesDialog(QDialog):
@@ -78,11 +70,21 @@ class SelectSvIndicesDialog(QDialog):
         tag = self.ui.tag_cbx.currentText()
         self.fill_names(theme, subtheme, tag)
 
-    @pyqtSlot(str)
+    @pyqtSlot()
+    def on_add_name_btn_clicked(self):
+        name = self.ui.name_cbx.currentText()
+        if name:
+            self.ui.selected_names_lst.addItem(name)
+
+    @pyqtSlot()
+    def on_remove_name_btn_clicked(self):
+        row = self.ui.selected_names_lst.currentRow()
+        if row:
+            self.ui.selected_names_lst.takeItem(row)
+
     def fill_themes(self):
         self.ui.theme_cbx.clear()
         # load list of themes from the platform
-        #sv_downloader = SvDownloader(self.hostname, PLATFORM_API['themes'])
         try:
             themes = self.sv_downloader.get_items()
             self.ui.theme_cbx.addItems(themes)
