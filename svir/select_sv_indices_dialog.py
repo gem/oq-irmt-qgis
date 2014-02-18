@@ -34,6 +34,7 @@ from platform_settings_dialog import PlatformSettingsDialog
 from ui.ui_select_sv_indices import Ui_SelectSvIndicesDialog
 from import_sv_data import SvDownloader, SvDownloadError
 
+# FIXME: Delete the following two
 PLATFORM_API_ROOT = "/exposure"
 PLATFORM_API = dict(themes=PLATFORM_API_ROOT + "/export_sv_themes",
                     subthemes=PLATFORM_API_ROOT + "/export_sv_subthemes",
@@ -54,55 +55,86 @@ class SelectSvIndicesDialog(QDialog):
         self.ui.setupUi(self)
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
         self.hostname, self.username, self.password = self.get_credentials()
+        # login to platform, to be able to retrieve sv indices
+        self.sv_downloader = SvDownloader(self.hostname)
+        self.sv_downloader.login(self.username, self.password)
         self.fill_themes()
 
     @pyqtSlot(str)
     def on_theme_cbx_currentIndexChanged(self):
-        self.fill_subthemes()
+        theme = self.ui.theme_cbx.currentText()
+        self.fill_subthemes(theme)
 
     @pyqtSlot(str)
     def on_subtheme_cbx_currentIndexChanged(self):
-        self.fill_tags()
+        theme = self.ui.theme_cbx.currentText()
+        subtheme = self.ui.subtheme_cbx.currentText()
+        self.fill_tags(theme, subtheme)
 
     @pyqtSlot(str)
     def on_tag_cbx_currentIndexChanged(self):
-        self.fill_names()
+        theme = self.ui.theme_cbx.currentText()
+        subtheme = self.ui.subtheme_cbx.currentText()
+        tag = self.ui.tag_cbx.currentText()
+        self.fill_names(theme, subtheme, tag)
 
     @pyqtSlot(str)
     def fill_themes(self):
+        self.ui.theme_cbx.clear()
         # load list of themes from the platform
-        sv_downloader = SvDownloader(self.hostname, PLATFORM_API['themes'])
-        sv_downloader.login(self.username, self.password)
+        #sv_downloader = SvDownloader(self.hostname, PLATFORM_API['themes'])
         try:
-            themes = sv_downloader.get_items()
+            themes = self.sv_downloader.get_items()
             self.ui.theme_cbx.addItems(themes)
         except SvDownloadError as e:
             # TODO: use QGIS bar to display error
             print "Unable to download social vulnerability themes: %s" % e
             return
-        # clear the subsequent combo boxes
+        # populate the subsequent combo boxes accordingly with the currently
+        # selected item
+        current_theme = self.ui.theme_cbx.currentText()
+        self.fill_subthemes(current_theme)
+
+    def fill_subthemes(self, theme):
         self.ui.subtheme_cbx.clear()
-        self.ui.tag_cbx.clear()
-        self.ui.name_cbx.clear()
-
-    def fill_subthemes(self):
         # load list of subthemes from the platform
-        pass
+        try:
+            subthemes = self.sv_downloader.get_items(theme)
+            self.ui.subtheme_cbx.addItems(subthemes)
+        except SvDownloadError as e:
+            # TODO: use QGIS bar to display error
+            print "Unable to download social vulnerability subthemes: %s" % e
+            return
+        # populate the subsequent combo boxes accordingly with the currently
+        # selected item
+        current_subtheme = self.ui.subtheme_cbx.currentText()
+        self.fill_tags(theme, current_subtheme)
 
-        # clear the subsequent combo boxes
+    def fill_tags(self, theme, subtheme):
         self.ui.tag_cbx.clear()
-        self.ui.name_cbx.clear()
-
-    def fill_tags(self):
         # load list of tags from the platform
-        pass
+        try:
+            tags = self.sv_downloader.get_items(theme, subtheme)
+            self.ui.tag_cbx.addItems(tags)
+        except SvDownloadError as e:
+            # TODO: use QGIS bar to display error
+            print "Unable to download social vulnerability tags: %s" % e
+            return
+        # populate the subsequent combo boxes accordingly with the currently
+        # selected item
+        current_tag = self.ui.tag_cbx.currentText()
+        self.fill_names(theme, subtheme, current_tag)
 
-        # clear the subsequent combo box
+    def fill_names(self, theme, subtheme, tag):
         self.ui.name_cbx.clear()
-
-    def fill_names(self):
         # load list of social vulnerability variable names from the platform
-        pass
+        try:
+            names = self.sv_downloader.get_items(theme, subtheme, tag)
+            self.ui.name_cbx.addItems(names)
+        except SvDownloadError as e:
+            # TODO: use QGIS bar to display error
+            print "Unable to download social vulnerability names: %s" % e
+            return
 
     def get_credentials(self):
         qs = QSettings()
