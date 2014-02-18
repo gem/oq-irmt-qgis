@@ -34,6 +34,12 @@ from platform_settings_dialog import PlatformSettingsDialog
 from ui.ui_select_sv_indices import Ui_SelectSvIndicesDialog
 from import_sv_data import SvDownloader, SvDownloadError
 
+PLATFORM_API_ROOT = "/exposure"
+PLATFORM_API = dict(themes=PLATFORM_API_ROOT + "/export_sv_themes",
+                    subthemes=PLATFORM_API_ROOT + "/export_sv_subthemes",
+                    tags=PLATFORM_API_ROOT + "/export_sv_tags",
+                    names=PLATFORM_API_ROOT + "/export_sv_names")
+
 
 class SelectSvIndicesDialog(QDialog):
     """
@@ -65,18 +71,15 @@ class SelectSvIndicesDialog(QDialog):
     @pyqtSlot(str)
     def fill_themes(self):
         # load list of themes from the platform
-        sv_downloader = SvDownloader(self.hostname)
+        sv_downloader = SvDownloader(self.hostname, PLATFORM_API['themes'])
         sv_downloader.login(self.username, self.password)
         try:
-            filename, msg = sv_downloader.download()
+            themes = sv_downloader.get_items()
+            self.ui.theme_cbx.addItems(themes)
         except SvDownloadError as e:
             # TODO: use QGIS bar to display error
             print "Unable to download social vulnerability themes: %s" % e
             return
-        # FIXME: Remove DEBUG prints
-        print "filename:", filename
-        print "msg:", msg
-
         # clear the subsequent combo boxes
         self.ui.subtheme_cbx.clear()
         self.ui.tag_cbx.clear()
