@@ -25,6 +25,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
+from PyQt4 import QtCore
 from PyQt4.QtCore import pyqtSlot, QSettings
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox)
@@ -74,13 +75,20 @@ class SelectSvIndicesDialog(QDialog):
     def on_add_name_btn_clicked(self):
         name = self.ui.name_cbx.currentText()
         if name:
-            self.ui.selected_names_lst.addItem(name)
+            duplicates = self.ui.selected_names_lst.findItems(
+                name, QtCore.Qt.MatchFixedString)
+            if len(duplicates) == 0:
+                self.ui.selected_names_lst.addItem(name)
 
     @pyqtSlot()
     def on_remove_name_btn_clicked(self):
         row = self.ui.selected_names_lst.currentRow()
-        if row:
+        if row is not None:
             self.ui.selected_names_lst.takeItem(row)
+
+    @pyqtSlot()
+    def on_clear_btn_clicked(self):
+        self.ui.selected_names_lst.clear()
 
     def fill_themes(self):
         self.ui.theme_cbx.clear()
