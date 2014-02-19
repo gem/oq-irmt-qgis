@@ -47,6 +47,7 @@ class SelectSvIndicesDialog(QDialog):
         self.ui = Ui_SelectSvIndicesDialog()
         self.ui.setupUi(self)
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
+        self.set_ok_button()
         self.hostname, self.username, self.password = self.get_credentials()
         # login to platform, to be able to retrieve sv indices
         self.sv_downloader = SvDownloader(self.hostname)
@@ -79,16 +80,22 @@ class SelectSvIndicesDialog(QDialog):
                 name, QtCore.Qt.MatchFixedString)
             if len(duplicates) == 0:
                 self.ui.selected_names_lst.addItem(name)
+                self.set_ok_button()
 
     @pyqtSlot()
     def on_remove_name_btn_clicked(self):
         row = self.ui.selected_names_lst.currentRow()
         if row is not None:
             self.ui.selected_names_lst.takeItem(row)
+            self.set_ok_button()
 
     @pyqtSlot()
     def on_clear_btn_clicked(self):
         self.ui.selected_names_lst.clear()
+        self.set_ok_button()
+
+    def set_ok_button(self):
+        self.ok_button.setEnabled(self.ui.selected_names_lst.count() > 0)
 
     def fill_themes(self):
         self.ui.theme_cbx.clear()

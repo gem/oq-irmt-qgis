@@ -36,5 +36,6 @@ class SvDownloader(object):
         items = []
         result = self.sess.get(self._page, params=params)
         if result.status_code == 200:
-            items = [l for l in result.content.splitlines() if l[0] != "#"]
+            items = [l for l in result.content.splitlines()
+                     if l and l[0] != "#"]
         return items
