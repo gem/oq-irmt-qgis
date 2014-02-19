@@ -71,9 +71,12 @@ from select_attrs_for_stats_dialog import SelectAttrsForStatsDialog
 from select_sv_indices_dialog import SelectSvIndicesDialog
 from platform_settings_dialog import PlatformSettingsDialog
 
-from utils import LayerEditingManager
+from import_sv_data import SvDownloader
 
-from utils import tr, TraceTimeManager
+from utils import (LayerEditingManager,
+                   tr,
+                   get_credentials,
+                   TraceTimeManager)
 from globals import (INT_FIELD_TYPE_NAME,
                      DOUBLE_FIELD_TYPE_NAME,
                      NUMERIC_FIELD_TYPES,
@@ -273,8 +276,21 @@ class Svir:
         """
         dlg = SelectSvIndicesDialog(self.iface)
         if dlg.exec_():
-            # TODO Implement me
-            pass
+            # Retrieve the indices selected by the user
+            indices_list = []
+            while dlg.ui.selected_names_lst.count() > 0:
+                item = dlg.ui.selected_names_lst.takeItem(0)
+                item_text = item.text()
+                sv_idx = item_text.split(",")[0]
+                sv_idx = str(sv_idx).replace('"', '')
+                indices_list.append(sv_idx)
+            indices_string = ", ".join(indices_list)
+            hostname, username, password = get_credentials(self.iface)
+            # login to platform, to be able to retrieve sv indices
+            sv_downloader = SvDownloader(hostname)
+            sv_downloader.login(username, password)
+            fname, msg = sv_downloader.get_data_by_indices(indices_string)
+            print msg
         else:
             # TODO Implement me
             pass

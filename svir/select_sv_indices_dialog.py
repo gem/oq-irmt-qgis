@@ -26,13 +26,13 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 from PyQt4 import QtCore
-from PyQt4.QtCore import pyqtSlot, QSettings
+from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox)
-from platform_settings_dialog import PlatformSettingsDialog
 
 from ui.ui_select_sv_indices import Ui_SelectSvIndicesDialog
 from import_sv_data import SvDownloader, SvDownloadError
+from utils import get_credentials
 
 
 class SelectSvIndicesDialog(QDialog):
@@ -42,13 +42,12 @@ class SelectSvIndicesDialog(QDialog):
     """
     def __init__(self, iface):
         QDialog.__init__(self)
-        self.iface = iface
         # Set up the user interface from Designer.
         self.ui = Ui_SelectSvIndicesDialog()
         self.ui.setupUi(self)
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
         self.set_ok_button()
-        self.hostname, self.username, self.password = self.get_credentials()
+        self.hostname, self.username, self.password = get_credentials(iface)
         # login to platform, to be able to retrieve sv indices
         self.sv_downloader = SvDownloader(self.hostname)
         self.sv_downloader.login(self.username, self.password)
@@ -152,15 +151,3 @@ class SelectSvIndicesDialog(QDialog):
             # TODO: use QGIS bar to display error
             print "Unable to download social vulnerability names: %s" % e
             return
-
-    def get_credentials(self):
-        qs = QSettings()
-        hostname = qs.value('platform_settings/hostname', '')
-        username = qs.value('platform_settings/username', '')
-        password = qs.value('platform_settings/password', '')
-        if not (hostname and username and password):
-            PlatformSettingsDialog(self.iface).exec_()
-            hostname = qs.value('platform_settings/hostname', '')
-            username = qs.value('platform_settings/username', '')
-            password = qs.value('platform_settings/password', '')
-        return hostname, username, password

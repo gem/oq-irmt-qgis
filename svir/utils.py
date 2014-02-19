@@ -27,11 +27,26 @@
 """
 import collections
 from time import time
+from PyQt4.QtCore import QSettings
 from PyQt4.QtGui import QApplication
+from platform_settings_dialog import PlatformSettingsDialog
 
 
 def tr(message):
     return QApplication.translate('Svir', message)
+
+
+def get_credentials(iface):
+    qs = QSettings()
+    hostname = qs.value('platform_settings/hostname', '')
+    username = qs.value('platform_settings/username', '')
+    password = qs.value('platform_settings/password', '')
+    if not (hostname and username and password):
+        PlatformSettingsDialog(iface).exec_()
+        hostname = qs.value('platform_settings/hostname', '')
+        username = qs.value('platform_settings/username', '')
+        password = qs.value('platform_settings/password', '')
+    return hostname, username, password
 
 
 class Register(collections.OrderedDict):
