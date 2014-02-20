@@ -3,8 +3,8 @@ import tempfile
 import requests
 
 # FIXME Change exposure to sv when app is ready on platform
-PLATFORM_EXPORT_SV_ITEMS = "/exposure/export_sv_items"
-PLATFORM_EXPORT_SV_DATA_BY_INDICES = "/exposure/export_sv_data_by_indices"
+PLATFORM_EXPORT_SV_ITEMS = "/svir/export_sv_items"
+PLATFORM_EXPORT_SV_DATA_BY_INDICES = "/svir/export_sv_data_by_indices"
 
 
 class SvDownloadError(Exception):
