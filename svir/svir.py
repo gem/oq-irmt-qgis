@@ -71,7 +71,7 @@ from select_attrs_for_stats_dialog import SelectAttrsForStatsDialog
 from select_sv_indices_dialog import SelectSvIndicesDialog
 from platform_settings_dialog import PlatformSettingsDialog
 
-from import_sv_data import SvDownloader
+from import_sv_data import SvDownloader, SvDownloadError
 
 from utils import (LayerEditingManager,
                    tr,
@@ -289,8 +289,28 @@ class Svir:
             # login to platform, to be able to retrieve sv indices
             sv_downloader = SvDownloader(hostname)
             sv_downloader.login(username, password)
-            fname, msg = sv_downloader.get_data_by_indices(indices_string)
+            try:
+                fname, msg = sv_downloader.get_data_by_indices(indices_string)
+            except SvDownloadError as e:
+                QMessageBox.warning(
+                    self, 'Download Error', str(e))
+                return
+            display_msg = tr("Social vulnerability data loaded in a new layer")
+            self.iface.messageBar().pushMessage(tr("Info"),
+                                                tr(display_msg),
+                                                level=QgsMessageBar.INFO,
+                                                duration=8)
+            QgsMessageLog.logMessage(msg,
+                                     'GEM Social Vulnerability Downloader')
+            # FIXME Delete print
             print msg
+            # don't remove the file, otherwise there will concurrency problems
+            uri = 'file://%s?delimiter=%s&crs=epsg:4326&' \
+                'skipLines=25&trimFields=yes' % (fname, ',')
+            vlayer = QgsVectorLayer(uri,
+                                    'social_vulnerability_export',
+                                    'delimitedtext')
+            QgsMapLayerRegistry.instance().addMapLayer(vlayer)
         else:
             # TODO Implement me
             pass
