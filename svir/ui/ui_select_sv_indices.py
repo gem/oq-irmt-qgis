@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_select_sv_indices.ui'
 #
-# Created: Tue Feb 18 17:00:59 2014
+# Created: Thu Feb 20 15:47:55 2014
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -79,6 +79,6 @@ class Ui_SelectSvIndicesDialog(object):
         self.tag_lbl.setText(QtGui.QApplication.translate("SelectSvIndicesDialog", "Tag", None, QtGui.QApplication.UnicodeUTF8))
         self.name_lbl.setText(QtGui.QApplication.translate("SelectSvIndicesDialog", "Name", None, QtGui.QApplication.UnicodeUTF8))
         self.add_name_btn.setText(QtGui.QApplication.translate("SelectSvIndicesDialog", "Add name", None, QtGui.QApplication.UnicodeUTF8))
-        self.remove_name_btn.setText(QtGui.QApplication.translate("SelectSvIndicesDialog", "Remove selected name", None, QtGui.QApplication.UnicodeUTF8))
+        self.remove_name_btn.setText(QtGui.QApplication.translate("SelectSvIndicesDialog", "Remove selected names", None, QtGui.QApplication.UnicodeUTF8))
         self.clear_btn.setText(QtGui.QApplication.translate("SelectSvIndicesDialog", "Clear", None, QtGui.QApplication.UnicodeUTF8))
 

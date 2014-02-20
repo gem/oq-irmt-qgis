@@ -70,6 +70,7 @@ from normalization_dialog import NormalizationDialog
 from select_attrs_for_stats_dialog import SelectAttrsForStatsDialog
 from select_sv_indices_dialog import SelectSvIndicesDialog
 from platform_settings_dialog import PlatformSettingsDialog
+from choose_sv_data_source_dialog import ChooseSvDataSourceDialog
 
 from import_sv_data import SvDownloader, SvDownloadError
 
@@ -164,10 +165,10 @@ class Svir:
                            enable=True)
         # Action to activate the modal dialog to import social vulnerability
         # data from the platform
-        self.add_menu_item("import_sv_indices",
+        self.add_menu_item("choose_sv_data_source",
                            ":/plugins/svir/start_plugin_icon.png",
-                           u"&Import social vulnerability indices",
-                           self.import_sv_indices,
+                           u"&Choose social vulnerability data source",
+                           self.choose_sv_data_source,
                            enable=True)
         # Action to activate the modal dialog to load loss data and zones
         self.add_menu_item("aggregate_losses",
@@ -269,6 +270,21 @@ class Svir:
                                                 level=QgsMessageBar.INFO,
                                                 duration=8)
 
+    def choose_sv_data_source(self):
+        """
+        Open a modal dialog to select if the user wants to load social
+        vulnerability data from one of the available layers or throught the
+        OpenQuake Platform
+        """
+        dlg = ChooseSvDataSourceDialog()
+        if dlg.exec_():
+            if dlg.ui.platform_rbn.isChecked():
+                self.import_sv_indices()
+            if dlg.ui.layer_rbn.isChecked():
+                self.run()
+            else:
+                raise
+
     def import_sv_indices(self):
         """
         Open a modal dialog to select social vulnerability indices to download
@@ -302,8 +318,6 @@ class Svir:
                                                 duration=8)
             QgsMessageLog.logMessage(msg,
                                      'GEM Social Vulnerability Downloader')
-            # FIXME Delete print
-            print msg
             # don't remove the file, otherwise there will concurrency problems
             uri = 'file://%s?delimiter=%s&crs=epsg:4326&' \
                 'skipLines=25&trimFields=yes' % (fname, ',')
