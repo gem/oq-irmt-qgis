@@ -29,11 +29,14 @@ from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox)
 from qgis.core import QgsMapLayerRegistry
+from qgis.gui import QgsMessageBar
 
 from ui.ui_normalization import Ui_NormalizationDialog
 from normalization_algs import (RANK_VARIANTS,
-                                QUADRATIC_VARIANTS)
+                                QUADRATIC_VARIANTS,
+                                NORMALIZATION_ALGS)
 
+from utils import tr
 from globals import NUMERIC_FIELD_TYPES
 
 
@@ -49,12 +52,35 @@ class NormalizationDialog(QDialog):
         # Set up the user interface from Designer.
         self.ui = Ui_NormalizationDialog()
         self.ui.setupUi(self)
+        self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
+        self.use_advanced = False
+        reg = QgsMapLayerRegistry.instance()
+        layer_list = []
+        active_layer = None
+        active_layer_id = None
+        if iface.activeLayer():  # it's possible that no layer is active
+            active_layer = iface.activeLayer()
+            active_layer_id = active_layer.id()
+        for idx, layer in enumerate(reg.mapLayers().values()):
+            layer_list.append(layer.name())
+            if layer.id() == active_layer_id:
+                active_layer_index = idx
+        if not layer_list:
+            msg = 'No layer available for normalization'
+            self.iface.messageBar().pushMessage(
+                tr("Error"),
+                tr(msg),
+                level=QgsMessageBar.CRITICAL)
+            return
+        self.ui.layer_cbx.addItems(layer_list)
+        if active_layer:
+            self.ui.layer_cbx.setCurrentIndex(active_layer_index)
+        alg_list = NORMALIZATION_ALGS.keys()
+        self.ui.algorithm_cbx.addItems(alg_list)
         if self.ui.algorithm_cbx.currentText() in ['RANK', 'QUADRATIC']:
             self.reload_variant_cbx()
         self.ui.inverse_ckb.setDisabled(
             self.ui.algorithm_cbx.currentText() in ['LOG10'])
-        self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
-        self.use_advanced = False
 
     @pyqtSlot()
     def on_calc_btn_clicked(self):

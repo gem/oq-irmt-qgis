@@ -173,10 +173,9 @@ class Svir:
             ":/plugins/svir/start_plugin_icon.png",
             u"Calculate RISKPLUS, RISKMULT and RISK1F indices",
             self.calculate_svir_indices)
-
+        self.update_actions_status()
         QgsMapLayerRegistry.instance().layersAdded.connect(
             self.update_actions_status)
-
         QgsMapLayerRegistry.instance().layersRemoved.connect(
             self.update_actions_status)
 
@@ -330,19 +329,8 @@ class Svir:
         algorithm
         """
         dlg = NormalizationDialog(self.iface)
-        reg = QgsMapLayerRegistry.instance()
-        layer_list = list(reg.mapLayers())
-        if not layer_list:
-            msg = 'No layer available for normalization'
-            self.iface.messageBar().pushMessage(
-                tr("Error"),
-                tr(msg),
-                level=QgsMessageBar.CRITICAL)
-            return
-        dlg.ui.layer_cbx.addItems(layer_list)
-        alg_list = NORMALIZATION_ALGS.keys()
-        dlg.ui.algorithm_cbx.addItems(alg_list)
         if dlg.exec_():
+            reg = QgsMapLayerRegistry.instance()
             layer = reg.mapLayers().values()[
                 dlg.ui.layer_cbx.currentIndex()]
             attribute_name = dlg.ui.attrib_cbx.currentText()
