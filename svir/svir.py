@@ -681,6 +681,8 @@ class Svir:
 
             count_index = self.aggregation_layer.fieldNameIndex('count')
             sum_index = self.aggregation_layer.fieldNameIndex('sum')
+            prod_index = self.aggregation_layer.fieldNameIndex('prod')
+            avg_index = self.aggregation_layer.fieldNameIndex('avg')
 
             # We cycle through zones in the aggregation_layer, because the
             # aggregation layer contains the zones copied from the zonal
@@ -695,6 +697,8 @@ class Svir:
                 with TraceTimeManager(msg, DEBUG):
                     points_count = 0
                     loss_sum = 0
+                    loss_prod = 0
+                    loss_avg = 0
                     zone_geometry = zone_feature.geometry()
                     # Find ids of points within the bounding box of the zone
                     point_ids = spatial_index.intersects(
@@ -721,6 +725,10 @@ class Svir:
                                 no_loss_points_in_any_zone = False
                                 point_loss = point_feature[self.loss_attr_name]
                                 loss_sum += point_loss
+                                loss_prod *= point_loss
+                    # if there's at least one point in the zone, update avg
+                    if points_count > 0:
+                        loss_avg = loss_sum / points_count
                     msg = "Updating count and sum for the zone..."
                     with TraceTimeManager(tr(msg), DEBUG):
                         fid = zone_feature.id()
@@ -728,6 +736,10 @@ class Svir:
                             fid, count_index, points_count)
                         self.aggregation_layer.changeAttributeValue(
                             fid, sum_index, loss_sum)
+                        self.aggregation_layer.changeAttributeValue(
+                            fid, prod_index, loss_prod)
+                        self.aggregation_layer.changeAttributeValue(
+                            fid, avg_index, loss_avg)
         self.clear_progress_message_bar()
         # display a warning in case none of the loss points are inside
         # any of the zones
