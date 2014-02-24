@@ -280,10 +280,8 @@ class Svir:
         if dlg.exec_():
             if dlg.ui.platform_rbn.isChecked():
                 self.import_sv_indices()
-            if dlg.ui.layer_rbn.isChecked():
+            else:  # dlg.ui.layer_rbn.isChecked():
                 self.run()
-            else:
-                raise
 
     def import_sv_indices(self):
         """
