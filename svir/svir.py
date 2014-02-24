@@ -329,8 +329,8 @@ class Svir:
         algorithm
         """
         dlg = NormalizationDialog(self.iface)
+        reg = QgsMapLayerRegistry.instance()
         if dlg.exec_():
-            reg = QgsMapLayerRegistry.instance()
             layer = reg.mapLayers().values()[
                 dlg.ui.layer_cbx.currentIndex()]
             attribute_name = dlg.ui.attrib_cbx.currentText()
