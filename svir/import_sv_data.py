@@ -14,24 +14,20 @@ class SvDownloadError(Exception):
 class SvDownloader(object):
     def __init__(self, host):
         self.host = host
-        self._login = host + '/account/login/'
+        self._login = host + '/account/ajax_login'
         self.sess = requests.Session()
-        self.sess.headers.update({'Referer': self._login})
 
     def login(self, username, password):
-        session_resp = self.sess.get(self._login)
+        session_resp = self.sess.post(self._login,
+                                      data={
+                                          "username": username,
+                                          "password": password
+                                      })
         if session_resp.status_code != 200:  # 200 means successful:OK
             # TODO: Display it on GUI
-            print ("Unable to get session for login: status code ",
-                   session_resp.status_code)
-            raise SvDownloadError(session_resp.content)
-        data = dict(username=username, password=password)
-        login_resp = self.sess.post(self._login, data=data)
-        if login_resp.status_code != 302:  # 302 = means redirect:found
-            # TODO: Display it on GUI
-            print "Unable to login and redirect: status code %s" % \
-                login_resp.status_code
-            raise SvDownloadError(login_resp.content)
+            error_message = ('Unable to get session for login: %s' %
+                             session_resp.content)
+            raise SvDownloadError(error_message)
 
     def get_items(self, theme=None, subtheme=None, tag=None):
         page = self.host + PLATFORM_EXPORT_SV_ITEMS
