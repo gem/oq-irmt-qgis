@@ -94,8 +94,6 @@ class SelectSvIndicesDialog(QDialog):
     def fill_themes(self):
         self.ui.theme_cbx.clear()
         # load list of themes from the platform
-        raise SvDownloadError(
-            "Unable to download social vulnerability themes")
         try:
             themes = self.sv_downloader.get_items()
             self.ui.theme_cbx.addItems(themes)
