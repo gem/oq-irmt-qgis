@@ -36,7 +36,7 @@ class SvDownloader(object):
         if result.status_code == 200:
             items = [l for l in result.content.splitlines()
                      if l and l[0] != "#"]
-        return items
+        return items[1:]
 
     def get_data_by_indices(self, indices):
         page = self.host + PLATFORM_EXPORT_SV_DATA_BY_INDICES
