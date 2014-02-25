@@ -71,10 +71,8 @@ class SelectSvIndicesDialog(QDialog):
     @pyqtSlot()
     def on_add_name_btn_clicked(self):
         name = self.ui.name_cbx.currentText()
-        if name:
-            duplicates = self.ui.selected_names_lst.findItems(
-                name, QtCore.Qt.MatchFixedString)
-            if len(duplicates) == 0:
+        if not self.ui.selected_names_lst.findItems(
+                name, QtCore.Qt.MatchFixedString):
                 self.ui.selected_names_lst.addItem(name)
                 self.set_ok_button()
 
@@ -96,13 +94,14 @@ class SelectSvIndicesDialog(QDialog):
     def fill_themes(self):
         self.ui.theme_cbx.clear()
         # load list of themes from the platform
+        raise SvDownloadError(
+                "Unable to download social vulnerability themes: %s" % 11)
         try:
             themes = self.sv_downloader.get_items()
             self.ui.theme_cbx.addItems(themes)
         except SvDownloadError as e:
-            # TODO: use QGIS bar to display error
-            print "Unable to download social vulnerability themes: %s" % e
-            return
+            raise SvDownloadError(
+                "Unable to download social vulnerability themes: %s" % e)
         # populate the subsequent combo boxes accordingly with the currently
         # selected item
         current_theme = self.ui.theme_cbx.currentText()
@@ -115,9 +114,8 @@ class SelectSvIndicesDialog(QDialog):
             subthemes = self.sv_downloader.get_items(theme)
             self.ui.subtheme_cbx.addItems(subthemes)
         except SvDownloadError as e:
-            # TODO: use QGIS bar to display error
-            print "Unable to download social vulnerability subthemes: %s" % e
-            return
+            raise SvDownloadError(
+                "Unable to download social vulnerability subthemes: %s" % e)
         # populate the subsequent combo boxes accordingly with the currently
         # selected item
         current_subtheme = self.ui.subtheme_cbx.currentText()
@@ -130,9 +128,8 @@ class SelectSvIndicesDialog(QDialog):
             tags = self.sv_downloader.get_items(theme, subtheme)
             self.ui.tag_cbx.addItems(tags)
         except SvDownloadError as e:
-            # TODO: use QGIS bar to display error
-            print "Unable to download social vulnerability tags: %s" % e
-            return
+            raise SvDownloadError(
+                "Unable to download social vulnerability tags: %s" % e)
         # populate the subsequent combo boxes accordingly with the currently
         # selected item
         current_tag = self.ui.tag_cbx.currentText()
@@ -145,6 +142,5 @@ class SelectSvIndicesDialog(QDialog):
             names = self.sv_downloader.get_items(theme, subtheme, tag)
             self.ui.name_cbx.addItems(names)
         except SvDownloadError as e:
-            # TODO: use QGIS bar to display error
-            print "Unable to download social vulnerability names: %s" % e
-            return
+            raise SvDownloadError(
+                "Unable to download social vulnerability names: %s" % e)

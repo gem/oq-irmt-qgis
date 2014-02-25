@@ -305,44 +305,47 @@ class Svir:
             self.platform_settings()
             return
 
-        dlg = SelectSvIndicesDialog(sv_downloader)
-        if dlg.exec_():
-            # Retrieve the indices selected by the user
-            indices_list = []
-            while dlg.ui.selected_names_lst.count() > 0:
-                item = dlg.ui.selected_names_lst.takeItem(0)
-                item_text = item.text()
-                sv_idx = item_text.split(",")[0]
-                sv_idx = str(sv_idx).replace('"', '')
-                indices_list.append(sv_idx)
-            indices_string = ", ".join(indices_list)
+        try:
+            dlg = SelectSvIndicesDialog(sv_downloader)
+            if dlg.exec_():
+                # Retrieve the indices selected by the user
+                indices_list = []
+                while dlg.ui.selected_names_lst.count() > 0:
+                    item = dlg.ui.selected_names_lst.takeItem(0)
+                    item_text = item.text()
+                    sv_idx = item_text.split(",")[0]
+                    sv_idx = str(sv_idx).replace('"', '')
+                    indices_list.append(sv_idx)
+                indices_string = ", ".join(indices_list)
 
-            try:
-                fname, msg = sv_downloader.get_data_by_indices(indices_string)
-            except SvDownloadError as e:
-                self.iface.messageBar().pushMessage(
-                    tr("Download Error"),
-                    tr(str(e)),
-                    level=QgsMessageBar.CRITICAL,
-                    duration=8)
-                return
-            display_msg = tr("Social vulnerability data loaded in a new layer")
-            self.iface.messageBar().pushMessage(tr("Info"),
-                                                tr(display_msg),
-                                                level=QgsMessageBar.INFO,
+                try:
+                    fname, msg = sv_downloader.get_data_by_indices(indices_string)
+                except SvDownloadError as e:
+                    self.iface.messageBar().pushMessage(
+                        tr("Download Error"),
+                        tr(str(e)),
+                        level=QgsMessageBar.CRITICAL,
+                        duration=8)
+                    return
+                display_msg = tr("Social vulnerability data loaded in a new layer")
+                self.iface.messageBar().pushMessage(tr("Info"),
+                                                    tr(display_msg),
+                                                    level=QgsMessageBar.INFO,
+                                                    duration=8)
+                QgsMessageLog.logMessage(msg,
+                                         'GEM Social Vulnerability Downloader')
+                # don't remove the file, otherwise there will concurrency problems
+                uri = 'file://%s?delimiter=%s&crs=epsg:4326&' \
+                      'skipLines=25&trimFields=yes' % (fname, ',')
+                vlayer = QgsVectorLayer(uri,
+                                        'social_vulnerability_export',
+                                        'delimitedtext')
+                QgsMapLayerRegistry.instance().addMapLayer(vlayer)
+        except SvDownloadError as e:
+            self.iface.messageBar().pushMessage(tr("Download Error"),
+                                                tr(str(e)),
+                                                level=QgsMessageBar.CRITICAL,
                                                 duration=8)
-            QgsMessageLog.logMessage(msg,
-                                     'GEM Social Vulnerability Downloader')
-            # don't remove the file, otherwise there will concurrency problems
-            uri = 'file://%s?delimiter=%s&crs=epsg:4326&' \
-                'skipLines=25&trimFields=yes' % (fname, ',')
-            vlayer = QgsVectorLayer(uri,
-                                    'social_vulnerability_export',
-                                    'delimitedtext')
-            QgsMapLayerRegistry.instance().addMapLayer(vlayer)
-        else:
-            # TODO Implement me
-            pass
 
     def platform_settings(self):
         PlatformSettingsDialog(self.iface).exec_()
