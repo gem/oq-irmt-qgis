@@ -31,8 +31,7 @@ from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox)
 
 from ui.ui_select_sv_indices import Ui_SelectSvIndicesDialog
-from import_sv_data import SvDownloader, SvDownloadError
-from utils import get_credentials
+from import_sv_data import SvDownloadError
 
 
 class SelectSvIndicesDialog(QDialog):
