@@ -28,6 +28,7 @@
 import os.path
 import uuid
 import numpy
+from requests.exceptions import ConnectionError
 
 from PyQt4.QtCore import (QSettings,
                           QTranslator,
@@ -296,7 +297,7 @@ class Svir:
 
         try:
             sv_downloader.login(username, password)
-        except SvDownloadError as e:
+        except (SvDownloadError, ConnectionError) as e:
             self.iface.messageBar().pushMessage(
                 tr("Login Error"),
                 tr(str(e)),
@@ -304,6 +305,7 @@ class Svir:
                 duration=8)
             self.platform_settings()
             return
+
         dlg = SelectSvIndicesDialog(sv_downloader)
         if dlg.exec_():
             # Retrieve the indices selected by the user
