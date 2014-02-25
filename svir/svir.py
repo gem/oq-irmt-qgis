@@ -27,6 +27,7 @@
 """
 import os.path
 import uuid
+from requests.exceptions import ConnectionError
 
 from PyQt4.QtCore import (QSettings,
                           QTranslator,
@@ -37,7 +38,6 @@ from PyQt4.QtCore import (QSettings,
 from PyQt4.QtGui import (QAction,
                          QIcon,
                          QProgressDialog,
-                         QMessageBox,
                          QProgressBar)
 
 from qgis.core import (QgsVectorLayer,
@@ -67,10 +67,16 @@ from select_layers_to_join_dialog import SelectLayersToJoinDialog
 from attribute_selection_dialog import AttributeSelectionDialog
 from normalization_dialog import NormalizationDialog
 from select_attrs_for_stats_dialog import SelectAttrsForStatsDialog
+from select_sv_indices_dialog import SelectSvIndicesDialog
+from platform_settings_dialog import PlatformSettingsDialog
+from choose_sv_data_source_dialog import ChooseSvDataSourceDialog
 
-from utils import LayerEditingManager
+from import_sv_data import SvDownloader, SvDownloadError
 
-from utils import tr, TraceTimeManager
+from utils import (LayerEditingManager,
+                   tr,
+                   get_credentials,
+                   TraceTimeManager)
 from globals import (INT_FIELD_TYPE_NAME,
                      DOUBLE_FIELD_TYPE_NAME,
                      NUMERIC_FIELD_TYPES,
@@ -149,6 +155,20 @@ class Svir:
         self.registered_actions[action_name] = action
 
     def initGui(self):
+        # Action to activate the modal dialog to set up settings for the
+        # connection with the platform
+        self.add_menu_item("platform_settings",
+                           ":/plugins/svir/start_plugin_icon.png",
+                           u"&Openquake platform connection settings",
+                           self.platform_settings,
+                           enable=True)
+        # Action to activate the modal dialog to import social vulnerability
+        # data from the platform
+        self.add_menu_item("choose_sv_data_source",
+                           ":/plugins/svir/start_plugin_icon.png",
+                           u"&Choose social vulnerability data source",
+                           self.choose_sv_data_source,
+                           enable=True)
         # Action to activate the modal dialog to load loss data and zones
         self.add_menu_item("aggregate_losses",
                            ":/plugins/svir/start_plugin_icon.png",
@@ -175,6 +195,7 @@ class Svir:
         self.update_actions_status()
         QgsMapLayerRegistry.instance().layersAdded.connect(
             self.update_actions_status)
+
         QgsMapLayerRegistry.instance().layersRemoved.connect(
             self.update_actions_status)
 
@@ -247,6 +268,90 @@ class Svir:
                                                 tr(msg),
                                                 level=QgsMessageBar.INFO,
                                                 duration=8)
+
+    def choose_sv_data_source(self):
+        """
+        Open a modal dialog to select if the user wants to load social
+        vulnerability data from one of the available layers or throught the
+        OpenQuake Platform
+        """
+        dlg = ChooseSvDataSourceDialog()
+        if dlg.exec_():
+            if dlg.ui.platform_rbn.isChecked():
+                # start openquake platform import
+                self.import_sv_indices()
+            else:
+                # dlg.ui.layer_rbn.isChecked() so go to select layers
+                self.run()
+
+    def import_sv_indices(self):
+        """
+        Open a modal dialog to select social vulnerability indices to download
+        from the openquake platform
+        """
+
+        hostname, username, password = get_credentials(self.iface)
+        # login to platform, to be able to retrieve sv indices
+        sv_downloader = SvDownloader(hostname)
+
+        try:
+            sv_downloader.login(username, password)
+        except (SvDownloadError, ConnectionError) as e:
+            self.iface.messageBar().pushMessage(
+                tr("Login Error"),
+                tr(str(e)),
+                level=QgsMessageBar.CRITICAL,
+                duration=8)
+            self.platform_settings()
+            return
+
+        try:
+            dlg = SelectSvIndicesDialog(sv_downloader)
+            if dlg.exec_():
+                # Retrieve the indices selected by the user
+                indices_list = []
+                while dlg.ui.selected_names_lst.count() > 0:
+                    item = dlg.ui.selected_names_lst.takeItem(0)
+                    item_text = item.text()
+                    sv_idx = item_text.split(",")[0]
+                    sv_idx = str(sv_idx).replace('"', '')
+                    indices_list.append(sv_idx)
+                indices_string = ", ".join(indices_list)
+
+                try:
+                    fname, msg = sv_downloader.get_data_by_indices(
+                        indices_string)
+                except SvDownloadError as e:
+                    self.iface.messageBar().pushMessage(
+                        tr("Download Error"),
+                        tr(str(e)),
+                        level=QgsMessageBar.CRITICAL,
+                        duration=8)
+                    return
+                display_msg = tr(
+                    "Social vulnerability data loaded in a new layer")
+                self.iface.messageBar().pushMessage(tr("Info"),
+                                                    tr(display_msg),
+                                                    level=QgsMessageBar.INFO,
+                                                    duration=8)
+                QgsMessageLog.logMessage(
+                    msg, 'GEM Social Vulnerability Downloader')
+                # don't remove the file, otherwise there will concurrency
+                # problems
+                uri = 'file://%s?delimiter=%s&crs=epsg:4326&' \
+                      'skipLines=25&trimFields=yes' % (fname, ',')
+                vlayer = QgsVectorLayer(uri,
+                                        'social_vulnerability_export',
+                                        'delimitedtext')
+                QgsMapLayerRegistry.instance().addMapLayer(vlayer)
+        except SvDownloadError as e:
+            self.iface.messageBar().pushMessage(tr("Download Error"),
+                                                tr(str(e)),
+                                                level=QgsMessageBar.CRITICAL,
+                                                duration=8)
+
+    def platform_settings(self):
+        PlatformSettingsDialog(self.iface).exec_()
 
     def join_svi_with_aggr_losses(self):
         """
@@ -329,6 +434,17 @@ class Svir:
         """
         dlg = NormalizationDialog(self.iface)
         reg = QgsMapLayerRegistry.instance()
+        layer_list = list(reg.mapLayers())
+        if not layer_list:
+            msg = 'No layer available for normalization'
+            self.iface.messageBar().pushMessage(
+                tr("Error"),
+                tr(msg),
+                level=QgsMessageBar.CRITICAL)
+            return
+        dlg.ui.layer_cbx.addItems(layer_list)
+        alg_list = NORMALIZATION_ALGS.keys()
+        dlg.ui.algorithm_cbx.addItems(alg_list)
         if dlg.exec_():
             layer = reg.mapLayers().values()[
                 dlg.ui.layer_cbx.currentIndex()]
@@ -756,10 +872,12 @@ class Svir:
         # TODO: This is not giving any warning in case no loss points are
         #       contained by any of the zones
         if progress_dialog.wasCanceled():
-            QMessageBox.error(
-                self, tr('ZonalStats: Error'),
+            self.iface.messageBar().pushMessage(
+                tr("ZonalStats Error"),
                 tr('You aborted aggregation, so there are '
-                   'no data for analysis. Exiting...'))
+                   'no data for analysis. Exiting...'),
+                level=QgsMessageBar.CRITICAL,
+                duration=8)
 
     def create_new_aggregation_layer_with_no_empty_zones(self):
         """

@@ -66,7 +66,8 @@ class NormalizationDialog(QDialog):
                 tr(msg),
                 level=QgsMessageBar.CRITICAL)
             return
-        self.ui.layer_cbx.addItems([l.name() for l in reg.mapLayers().values()])
+        self.ui.layer_cbx.addItems(
+            [l.name() for l in reg.mapLayers().values()])
         active_layer_index = self.ui.layer_cbx.findText(active_layer_name)
         self.ui.layer_cbx.setCurrentIndex(active_layer_index)
 

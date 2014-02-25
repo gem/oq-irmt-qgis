@@ -18,22 +18,22 @@ PLUGIN_UPLOAD = $(CURDIR)/plugin_upload.py
 
 QGISDIR=.qgis2
 
-# Makefile for a PyQGIS plugin 
+# Makefile for a PyQGIS plugin
 
 # translation
-SOURCES = svir.py ui/ui_svir.py __init__.py svirdialog.py attribute_selection_dialog.py select_layers_to_join_dialog.py normalization_dialog.py select_attrs_for_stats_dialog.py
+SOURCES = svir.py ui/ui_svir.py __init__.py svirdialog.py attribute_selection_dialog.py select_layers_to_join_dialog.py normalization_dialog.py select_attrs_for_stats_dialog.py select_sv_indices_dialog.py platform_settings_dialog.py choose_sv_data_source_dialog.py
 #TRANSLATIONS = i18n/svir_en.ts
-TRANSLATIONS = 
+TRANSLATIONS =
 
 # global
 
 PLUGINNAME = svir
 
-PY_FILES = svir.py svirdialog.py __init__.py attribute_selection_dialog.py select_layers_to_join_dialog.py normalization_dialog.py select_attrs_for_stats_dialog.py
+PY_FILES = svir.py svirdialog.py __init__.py attribute_selection_dialog.py select_layers_to_join_dialog.py normalization_dialog.py select_attrs_for_stats_dialog.py select_sv_indices_dialog.py platform_settings_dialog.py choose_sv_data_source_dialog.py
 
 EXTRAS = resources/start_plugin_icon.png metadata.txt
 
-UI_FILES = ui/ui_svir.py ui/ui_attribute_selection.py ui/ui_select_layers_to_join.py ui/ui_normalization.py ui/ui_select_attrs_for_stats.py
+UI_FILES = ui/ui_svir.py ui/ui_attribute_selection.py ui/ui_select_layers_to_join.py ui/ui_normalization.py ui/ui_select_attrs_for_stats.py ui/ui_select_sv_indices.py ui/ui_platform_settings.py ui/ui_choose_sv_data_source.py
 
 RESOURCE_FILES = resources_rc.py
 
@@ -76,12 +76,12 @@ derase:
 
 # The zip target deploys the plugin and creates a zip file with the deployed
 # content. You can then upload the zip file on http://plugins.qgis.org
-zip: deploy dclean 
+zip: deploy dclean
 	rm -f $(PLUGINNAME).zip
 	cd $(HOME)/$(QGISDIR)/python/plugins; zip -9r $(CURDIR)/$(PLUGINNAME).zip $(PLUGINNAME)
 
-# Create a zip package of the plugin named $(PLUGINNAME).zip. 
-# This requires use of git (your plugin development directory must be a 
+# Create a zip package of the plugin named $(PLUGINNAME).zip.
+# This requires use of git (your plugin development directory must be a
 # git repository).
 # To use, pass a valid commit or tag as follows:
 #   make package VERSION=Version_0.3.2
@@ -111,5 +111,5 @@ clean:
 	rm $(UI_FILES) $(RESOURCE_FILES)
 
 # build documentation with sphinx
-doc: 
+doc:
 	cd help; make html
