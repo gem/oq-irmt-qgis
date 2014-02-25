@@ -319,7 +319,8 @@ class Svir:
                 indices_string = ", ".join(indices_list)
 
                 try:
-                    fname, msg = sv_downloader.get_data_by_indices(indices_string)
+                    fname, msg = sv_downloader.get_data_by_indices(
+                        indices_string)
                 except SvDownloadError as e:
                     self.iface.messageBar().pushMessage(
                         tr("Download Error"),
@@ -327,14 +328,16 @@ class Svir:
                         level=QgsMessageBar.CRITICAL,
                         duration=8)
                     return
-                display_msg = tr("Social vulnerability data loaded in a new layer")
+                display_msg = tr(
+                    "Social vulnerability data loaded in a new layer")
                 self.iface.messageBar().pushMessage(tr("Info"),
                                                     tr(display_msg),
                                                     level=QgsMessageBar.INFO,
                                                     duration=8)
-                QgsMessageLog.logMessage(msg,
-                                         'GEM Social Vulnerability Downloader')
-                # don't remove the file, otherwise there will concurrency problems
+                QgsMessageLog.logMessage(
+                    msg, 'GEM Social Vulnerability Downloader')
+                # don't remove the file, otherwise there will concurrency
+                # problems
                 uri = 'file://%s?delimiter=%s&crs=epsg:4326&' \
                       'skipLines=25&trimFields=yes' % (fname, ',')
                 vlayer = QgsVectorLayer(uri,
