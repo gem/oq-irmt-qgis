@@ -24,7 +24,6 @@ class SvDownloader(object):
                                           "password": password
                                       })
         if session_resp.status_code != 200:  # 200 means successful:OK
-            # TODO: Display it on GUI
             error_message = ('Unable to get session for login: %s' %
                              session_resp.content)
             raise SvDownloadError(error_message)

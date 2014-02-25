@@ -38,7 +38,6 @@ from PyQt4.QtCore import (QSettings,
 from PyQt4.QtGui import (QAction,
                          QIcon,
                          QProgressDialog,
-                         QMessageBox,
                          QProgressBar)
 
 from qgis.core import (QgsVectorLayer,
@@ -279,8 +278,10 @@ class Svir:
         dlg = ChooseSvDataSourceDialog()
         if dlg.exec_():
             if dlg.ui.platform_rbn.isChecked():
+                # start openquake platform import
                 self.import_sv_indices()
-            else:  # dlg.ui.layer_rbn.isChecked():
+            else:
+                # dlg.ui.layer_rbn.isChecked() so go to select layers
                 self.run()
 
     def import_sv_indices(self):
@@ -288,7 +289,22 @@ class Svir:
         Open a modal dialog to select social vulnerability indices to download
         from the openquake platform
         """
-        dlg = SelectSvIndicesDialog(self.iface)
+
+        hostname, username, password = get_credentials(self.iface)
+        # login to platform, to be able to retrieve sv indices
+        sv_downloader = SvDownloader(hostname)
+
+        try:
+            sv_downloader.login(username, password)
+        except SvDownloadError as e:
+            self.iface.messageBar().pushMessage(
+                tr("Login Error"),
+                tr(str(e)),
+                level=QgsMessageBar.CRITICAL,
+                duration=8)
+            self.platform_settings()
+            return
+        dlg = SelectSvIndicesDialog(sv_downloader)
         if dlg.exec_():
             # Retrieve the indices selected by the user
             indices_list = []
@@ -299,15 +315,15 @@ class Svir:
                 sv_idx = str(sv_idx).replace('"', '')
                 indices_list.append(sv_idx)
             indices_string = ", ".join(indices_list)
-            hostname, username, password = get_credentials(self.iface)
-            # login to platform, to be able to retrieve sv indices
-            sv_downloader = SvDownloader(hostname)
-            sv_downloader.login(username, password)
+
             try:
                 fname, msg = sv_downloader.get_data_by_indices(indices_string)
             except SvDownloadError as e:
-                QMessageBox.warning(
-                    self, 'Download Error', str(e))
+                self.iface.messageBar().pushMessage(
+                    tr("Download Error"),
+                    tr(str(e)),
+                    level=QgsMessageBar.CRITICAL,
+                    duration=8)
                 return
             display_msg = tr("Social vulnerability data loaded in a new layer")
             self.iface.messageBar().pushMessage(tr("Info"),
@@ -809,10 +825,12 @@ class Svir:
         # TODO: This is not giving any warning in case no loss points are
         #       contained by any of the zones
         if progress_dialog.wasCanceled():
-            QMessageBox.error(
-                self, tr('ZonalStats: Error'),
+            self.iface.messageBar().pushMessage(
+                tr("ZonalStats Error"),
                 tr('You aborted aggregation, so there are '
-                   'no data for analysis. Exiting...'))
+                   'no data for analysis. Exiting...'),
+                level=QgsMessageBar.CRITICAL,
+                duration=8)
 
     def create_new_aggregation_layer_with_no_empty_zones(self):
         """

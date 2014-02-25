@@ -40,17 +40,15 @@ class SelectSvIndicesDialog(QDialog):
     Modal dialog giving to the user the possibility to select
     social vulnerability variables to import from the oq-platform
     """
-    def __init__(self, iface):
+    def __init__(self, downloader):
         QDialog.__init__(self)
         # Set up the user interface from Designer.
         self.ui = Ui_SelectSvIndicesDialog()
         self.ui.setupUi(self)
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
         self.set_ok_button()
-        self.hostname, self.username, self.password = get_credentials(iface)
         # login to platform, to be able to retrieve sv indices
-        self.sv_downloader = SvDownloader(self.hostname)
-        self.sv_downloader.login(self.username, self.password)
+        self.sv_downloader = downloader
         self.fill_themes()
 
     @pyqtSlot(str)
