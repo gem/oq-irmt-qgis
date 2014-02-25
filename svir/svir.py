@@ -27,7 +27,6 @@
 """
 import os.path
 import uuid
-import numpy
 from requests.exceptions import ConnectionError
 
 from PyQt4.QtCore import (QSettings,
@@ -193,7 +192,7 @@ class Svir:
             ":/plugins/svir/start_plugin_icon.png",
             u"Calculate RISKPLUS, RISKMULT and RISK1F indices",
             self.calculate_svir_indices)
-
+        self.update_actions_status()
         QgsMapLayerRegistry.instance().layersAdded.connect(
             self.update_actions_status)
 
@@ -534,7 +533,15 @@ class Svir:
             count_field.setTypeName(INT_FIELD_TYPE_NAME)
             sum_field = QgsField("sum", QVariant.Double)
             sum_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
-            pr.addAttributes([zone_field, count_field, sum_field])
+            avg_field = QgsField("avg", QVariant.Double)
+            avg_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
+            prod_field = QgsField("prod", QVariant.Double)
+            prod_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
+            pr.addAttributes([zone_field,
+                              count_field,
+                              sum_field,
+                              avg_field,
+                              prod_field])
 
             # to show the overall progress, cycling through zones
             tot_zones = len(list(self.zonal_layer.getFeatures()))
@@ -555,6 +562,8 @@ class Svir:
                 fields.append(zone_field)
                 fields.append(count_field)
                 fields.append(sum_field)
+                fields.append(avg_field)
+                fields.append(prod_field)
                 # Add fields to the new feature
                 feat.setFields(fields)
                 feat[self.zone_id_in_zones_attr_name] = zone_feature[
@@ -659,13 +668,15 @@ class Svir:
                 zone_id = point_feat[zone_id_attr_name]
                 loss_value = point_feat[self.loss_attr_name]
                 if zone_id in zone_stats:
-                    # increment the count by one and add the loss value
-                    # to the sum
-                    to_add = numpy.array([1, loss_value])
-                    zone_stats[zone_id] += to_add
+                    # update zonal stats
+                    zone_stats[zone_id]['count'] += 1
+                    zone_stats[zone_id]['sum'] += loss_value
+                    zone_stats[zone_id]['prod'] *= loss_value
                 else:
                     # initialize stats for the new zone found
-                    zone_stats[zone_id] = numpy.array([1, loss_value])
+                    zone_stats[zone_id] = {'count': 1,
+                                           'sum': loss_value,
+                                           'prod': loss_value}
         self.clear_progress_message_bar()
 
         msg = tr(
@@ -678,27 +689,43 @@ class Svir:
                                      DEBUG):
                 count_index = self.aggregation_layer.fieldNameIndex('count')
                 sum_index = self.aggregation_layer.fieldNameIndex('sum')
+                prod_index = self.aggregation_layer.fieldNameIndex('prod')
+                avg_index = self.aggregation_layer.fieldNameIndex('avg')
                 for current_zone, zone_feat in enumerate(
                         self.aggregation_layer.getFeatures()):
                     progress_perc = current_zone / float(tot_zones) * 100
                     progress.setValue(progress_perc)
                     # get the id of the current zone
                     zone_id = zone_feat[self.zone_id_in_zones_attr_name]
-                    # initialize points_count and loss_sum to zero, and update
-                    # them afterwards only if the zone contains at least one
-                    # loss point
-                    points_count, loss_sum = (0, 0.0)
-                    # retrieve count and sum from the dictionary, using the
-                    # zone id as key to get the values from the corresponding
-                    # numpy array (otherwise, keep zero values)
+                    # initialize points_count, loss_sum, loss_prod and loss_avg
+                    # to zero, and update them afterwards only if the zone
+                    # contains at least one loss point
+                    points_count = 0
+                    loss_sum = 0.0
+                    loss_prod = 0.0
+                    loss_avg = 0.0
+                    # retrieve count, sum and prod from the dictionary, using
+                    # the zone id as key to get the values from the
+                    # corresponding dict (otherwise, keep zero values)
                     if zone_id in zone_stats:
-                        points_count, loss_sum = zone_stats[zone_id]
+                        #points_count, loss_sum = zone_stats[zone_id]
+                        points_count = zone_stats[zone_id]['count']
+                        loss_sum = zone_stats[zone_id]['sum']
+                        loss_prod = zone_stats[zone_id]['prod']
+                        # division by zero should be impossible, because we are
+                        # computing this only for zones containing at least one
+                        # point (otherwise we keep all zeros)
+                        loss_avg = loss_sum / points_count
                     # without casting to int and to float, it wouldn't work
                     fid = zone_feat.id()
                     self.aggregation_layer.changeAttributeValue(
                         fid, count_index, int(points_count))
                     self.aggregation_layer.changeAttributeValue(
                         fid, sum_index, float(loss_sum))
+                    self.aggregation_layer.changeAttributeValue(
+                        fid, prod_index, float(loss_prod))
+                    self.aggregation_layer.changeAttributeValue(
+                        fid, avg_index, float(loss_avg))
         self.clear_progress_message_bar()
 
     def calculate_vector_stats_using_geometries(self):
@@ -752,6 +779,8 @@ class Svir:
 
             count_index = self.aggregation_layer.fieldNameIndex('count')
             sum_index = self.aggregation_layer.fieldNameIndex('sum')
+            prod_index = self.aggregation_layer.fieldNameIndex('prod')
+            avg_index = self.aggregation_layer.fieldNameIndex('avg')
 
             # We cycle through zones in the aggregation_layer, because the
             # aggregation layer contains the zones copied from the zonal
@@ -766,6 +795,8 @@ class Svir:
                 with TraceTimeManager(msg, DEBUG):
                     points_count = 0
                     loss_sum = 0
+                    loss_prod = 0
+                    loss_avg = 0
                     zone_geometry = zone_feature.geometry()
                     # Find ids of points within the bounding box of the zone
                     point_ids = spatial_index.intersects(
@@ -792,6 +823,10 @@ class Svir:
                                 no_loss_points_in_any_zone = False
                                 point_loss = point_feature[self.loss_attr_name]
                                 loss_sum += point_loss
+                                loss_prod *= point_loss
+                    # if there's at least one point in the zone, update avg
+                    if points_count > 0:
+                        loss_avg = loss_sum / points_count
                     msg = "Updating count and sum for the zone..."
                     with TraceTimeManager(tr(msg), DEBUG):
                         fid = zone_feature.id()
@@ -799,6 +834,10 @@ class Svir:
                             fid, count_index, points_count)
                         self.aggregation_layer.changeAttributeValue(
                             fid, sum_index, loss_sum)
+                        self.aggregation_layer.changeAttributeValue(
+                            fid, prod_index, loss_prod)
+                        self.aggregation_layer.changeAttributeValue(
+                            fid, avg_index, loss_avg)
         self.clear_progress_message_bar()
         # display a warning in case none of the loss points are inside
         # any of the zones
