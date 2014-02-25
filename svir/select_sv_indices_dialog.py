@@ -72,10 +72,8 @@ class SelectSvIndicesDialog(QDialog):
     @pyqtSlot()
     def on_add_name_btn_clicked(self):
         name = self.ui.name_cbx.currentText()
-        if name:
-            duplicates = self.ui.selected_names_lst.findItems(
-                name, QtCore.Qt.MatchFixedString)
-            if len(duplicates) == 0:
+        if not self.ui.selected_names_lst.findItems(
+                name, QtCore.Qt.MatchFixedString):
                 self.ui.selected_names_lst.addItem(name)
                 self.set_ok_button()
 
