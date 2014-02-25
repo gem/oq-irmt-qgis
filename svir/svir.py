@@ -317,7 +317,6 @@ class Svir:
                     sv_idx = str(sv_idx).replace('"', '')
                     indices_list.append(sv_idx)
                 indices_string = ", ".join(indices_list)
-
                 try:
                     fname, msg = sv_downloader.get_data_by_indices(
                         indices_string)
@@ -338,8 +337,8 @@ class Svir:
                     msg, 'GEM Social Vulnerability Downloader')
                 # don't remove the file, otherwise there will concurrency
                 # problems
-                uri = 'file://%s?delimiter=%s&crs=epsg:4326&' \
-                      'skipLines=25&trimFields=yes' % (fname, ',')
+                uri = ('file://%s?delimiter=,&crs=epsg:4326&'
+                       'skipLines=25&trimFields=yes&wktField=geometry' % fname)
                 vlayer = QgsVectorLayer(uri,
                                         'social_vulnerability_export',
                                         'delimitedtext')
