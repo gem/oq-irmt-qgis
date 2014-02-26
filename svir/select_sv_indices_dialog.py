@@ -25,13 +25,13 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
-from PyQt4 import QtCore
-from PyQt4.QtCore import pyqtSlot
+from PyQt4.QtCore import pyqtSlot, Qt
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox)
 
 from ui.ui_select_sv_indices import Ui_SelectSvIndicesDialog
 from import_sv_data import SvDownloadError
+from utils import WaitCursorManager
 
 
 class SelectSvIndicesDialog(QDialog):
@@ -48,31 +48,35 @@ class SelectSvIndicesDialog(QDialog):
         self.set_ok_button()
         # login to platform, to be able to retrieve sv indices
         self.sv_downloader = downloader
-        self.fill_themes()
+        with WaitCursorManager():
+            self.fill_themes()
 
     @pyqtSlot(str)
     def on_theme_cbx_currentIndexChanged(self):
         theme = self.ui.theme_cbx.currentText()
-        self.fill_subthemes(theme)
+        with WaitCursorManager():
+            self.fill_subthemes(theme)
 
     @pyqtSlot(str)
     def on_subtheme_cbx_currentIndexChanged(self):
         theme = self.ui.theme_cbx.currentText()
         subtheme = self.ui.subtheme_cbx.currentText()
-        self.fill_tags(theme, subtheme)
+        with WaitCursorManager():
+            self.fill_tags(theme, subtheme)
 
     @pyqtSlot(str)
     def on_tag_cbx_currentIndexChanged(self):
         theme = self.ui.theme_cbx.currentText()
         subtheme = self.ui.subtheme_cbx.currentText()
         tag = self.ui.tag_cbx.currentText()
-        self.fill_names(theme, subtheme, tag)
+        with WaitCursorManager():
+            self.fill_names(theme, subtheme, tag)
 
     @pyqtSlot()
     def on_add_name_btn_clicked(self):
         name = self.ui.name_cbx.currentText()
         if not self.ui.selected_names_lst.findItems(
-                name, QtCore.Qt.MatchFixedString):
+                name, Qt.MatchFixedString):
                 self.ui.selected_names_lst.addItem(name)
                 self.set_ok_button()
 

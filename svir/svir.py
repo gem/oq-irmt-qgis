@@ -78,7 +78,8 @@ from import_sv_data import SvDownloader, SvDownloadError
 from utils import (LayerEditingManager,
                    tr,
                    get_credentials,
-                   TraceTimeManager)
+                   TraceTimeManager,
+                   WaitCursorManager)
 from globals import (INT_FIELD_TYPE_NAME,
                      DOUBLE_FIELD_TYPE_NAME,
                      NUMERIC_FIELD_TYPES,
@@ -316,28 +317,26 @@ class Svir:
                     tr("Info"), tr(msg), level=QgsMessageBar.INFO)
                 # Retrieve the indices selected by the user
                 indices_list = []
-                QApplication.setOverrideCursor(Qt.WaitCursor)
-                QApplication.processEvents()
-                while dlg.ui.selected_names_lst.count() > 0:
-                    item = dlg.ui.selected_names_lst.takeItem(0)
-                    item_text = item.text()
-                    sv_idx = item_text.split(",")[0]
-                    sv_idx = str(sv_idx).replace('"', '')
-                    indices_list.append(sv_idx)
-                indices_string = ", ".join(indices_list)
-                try:
-                    fname, msg = sv_downloader.get_data_by_indices(
-                        indices_string)
-                except SvDownloadError as e:
-                    self.iface.messageBar().pushMessage(
-                        tr("Download Error"),
-                        tr(str(e)),
-                        level=QgsMessageBar.CRITICAL,
-                        duration=8)
-                    return
-                finally:
-                    QApplication.restoreOverrideCursor()
-                    self.iface.messageBar().popWidget()
+                with WaitCursorManager():
+                    while dlg.ui.selected_names_lst.count() > 0:
+                        item = dlg.ui.selected_names_lst.takeItem(0)
+                        item_text = item.text()
+                        sv_idx = item_text.split(",")[0]
+                        sv_idx = str(sv_idx).replace('"', '')
+                        indices_list.append(sv_idx)
+                    indices_string = ", ".join(indices_list)
+                    try:
+                        fname, msg = sv_downloader.get_data_by_indices(
+                            indices_string)
+                    except SvDownloadError as e:
+                        self.iface.messageBar().pushMessage(
+                            tr("Download Error"),
+                            tr(str(e)),
+                            level=QgsMessageBar.CRITICAL,
+                            duration=8)
+                        return
+                    finally:
+                        self.iface.messageBar().popWidget()
                 display_msg = tr(
                     "Social vulnerability data loaded in a new layer")
                 self.iface.messageBar().pushMessage(tr("Info"),

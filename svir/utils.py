@@ -27,7 +27,7 @@
 """
 import collections
 from time import time
-from PyQt4.QtCore import QSettings
+from PyQt4.QtCore import QSettings, Qt
 from PyQt4.QtGui import QApplication
 from platform_settings_dialog import PlatformSettingsDialog
 
@@ -101,3 +101,11 @@ class LayerEditingManager(object):
         self.layer.updateExtents()
         if self.debug:
             print "END", self.message
+
+
+class WaitCursorManager(object):
+    def __enter__(self):
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+
+    def __exit__(self, type, value, traceback):
+        QApplication.restoreOverrideCursor()
