@@ -313,11 +313,9 @@ class Svir:
             if dlg.exec_():
                 msg = ("Loading social vulnerability data from the OpenQuake "
                        "Platform...")
-                self.iface.messageBar().pushMessage(
-                    tr("Info"), tr(msg), level=QgsMessageBar.INFO)
                 # Retrieve the indices selected by the user
                 indices_list = []
-                with WaitCursorManager():
+                with WaitCursorManager(msg, self.iface):
                     while dlg.ui.selected_names_lst.count() > 0:
                         item = dlg.ui.selected_names_lst.takeItem(0)
                         item_text = item.text()
@@ -335,8 +333,6 @@ class Svir:
                             level=QgsMessageBar.CRITICAL,
                             duration=8)
                         return
-                    finally:
-                        self.iface.messageBar().popWidget()
                 display_msg = tr(
                     "Social vulnerability data loaded in a new layer")
                 self.iface.messageBar().pushMessage(tr("Info"),

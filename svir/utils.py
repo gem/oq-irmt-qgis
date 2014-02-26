@@ -30,6 +30,7 @@ from time import time
 from PyQt4.QtCore import QSettings, Qt
 from PyQt4.QtGui import QApplication
 from platform_settings_dialog import PlatformSettingsDialog
+from qgis.gui import QgsMessageBar
 
 
 def tr(message):
@@ -104,8 +105,20 @@ class LayerEditingManager(object):
 
 
 class WaitCursorManager(object):
+    def __init__(self, msg=None, iface=None):
+        self.iface = iface
+        self.has_message = msg and iface
+        if self.has_message:
+            self.message = self.iface.messageBar().createMessage(
+                tr('Info'), tr(msg))
+            self.message = self.iface.messageBar().pushWidget(
+                self.message, level=QgsMessageBar.INFO)
+            QApplication.processEvents()
+
     def __enter__(self):
         QApplication.setOverrideCursor(Qt.WaitCursor)
 
     def __exit__(self, type, value, traceback):
         QApplication.restoreOverrideCursor()
+        if self.has_message:
+            self.iface.messageBar().popWidget(self.message)
