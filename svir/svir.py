@@ -33,12 +33,14 @@ from PyQt4.QtCore import (QSettings,
                           QTranslator,
                           QCoreApplication,
                           qVersion,
-                          QVariant)
+                          QVariant,
+                          Qt)
 
 from PyQt4.QtGui import (QAction,
                          QIcon,
                          QProgressDialog,
-                         QProgressBar)
+                         QProgressBar,
+                         qApp)
 
 from qgis.core import (QgsVectorLayer,
                        QgsMapLayerRegistry,
@@ -308,8 +310,14 @@ class Svir:
         try:
             dlg = SelectSvIndicesDialog(sv_downloader)
             if dlg.exec_():
+                msg = ("Loading social vulnerability data from the OpenQuake "
+                       "Platform...")
+                self.iface.messageBar().pushMessage(
+                    tr("Info"), tr(msg), level=QgsMessageBar.INFO)
                 # Retrieve the indices selected by the user
                 indices_list = []
+                qApp.setOverrideCursor(Qt.WaitCursor)
+                qApp.processEvents()
                 while dlg.ui.selected_names_lst.count() > 0:
                     item = dlg.ui.selected_names_lst.takeItem(0)
                     item_text = item.text()
@@ -327,6 +335,9 @@ class Svir:
                         level=QgsMessageBar.CRITICAL,
                         duration=8)
                     return
+                finally:
+                    qApp.restoreOverrideCursor()
+                    self.iface.messageBar().popWidget()
                 display_msg = tr(
                     "Social vulnerability data loaded in a new layer")
                 self.iface.messageBar().pushMessage(tr("Info"),
@@ -1077,7 +1088,7 @@ class Svir:
 
         self.clear_progress_message_bar()
 
-    def create_progress_message_bar(self, msg):
+    def create_progress_message_bar(self, msg, no_percentage=False):
         """
         Use the messageBar of QGIS to display a message describing what's going
         on (typically during a time-consuming task), and a bar showing the
@@ -1092,6 +1103,8 @@ class Svir:
         """
         progress_message_bar = self.iface.messageBar().createMessage(msg)
         progress = QProgressBar()
+        if no_percentage:
+            progress.setRange(0, 0)
         progress_message_bar.layout().addWidget(progress)
         self.iface.messageBar().pushWidget(progress_message_bar,
                                            self.iface.messageBar().INFO)
