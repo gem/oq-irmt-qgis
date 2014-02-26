@@ -40,7 +40,7 @@ from PyQt4.QtGui import (QAction,
                          QIcon,
                          QProgressDialog,
                          QProgressBar,
-                         qApp)
+                         QApplication)
 
 from qgis.core import (QgsVectorLayer,
                        QgsMapLayerRegistry,
@@ -316,8 +316,8 @@ class Svir:
                     tr("Info"), tr(msg), level=QgsMessageBar.INFO)
                 # Retrieve the indices selected by the user
                 indices_list = []
-                qApp.setOverrideCursor(Qt.WaitCursor)
-                qApp.processEvents()
+                QApplication.setOverrideCursor(Qt.WaitCursor)
+                QApplication.processEvents()
                 while dlg.ui.selected_names_lst.count() > 0:
                     item = dlg.ui.selected_names_lst.takeItem(0)
                     item_text = item.text()
@@ -336,7 +336,7 @@ class Svir:
                         duration=8)
                     return
                 finally:
-                    qApp.restoreOverrideCursor()
+                    QApplication.restoreOverrideCursor()
                     self.iface.messageBar().popWidget()
                 display_msg = tr(
                     "Social vulnerability data loaded in a new layer")
