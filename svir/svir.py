@@ -33,14 +33,12 @@ from PyQt4.QtCore import (QSettings,
                           QTranslator,
                           QCoreApplication,
                           qVersion,
-                          QVariant,
-                          Qt)
+                          QVariant)
 
 from PyQt4.QtGui import (QAction,
                          QIcon,
                          QProgressDialog,
-                         QProgressBar,
-                         QApplication)
+                         QProgressBar)
 
 from qgis.core import (QgsVectorLayer,
                        QgsMapLayerRegistry,
@@ -439,17 +437,6 @@ class Svir:
         """
         dlg = NormalizationDialog(self.iface)
         reg = QgsMapLayerRegistry.instance()
-        layer_list = list(reg.mapLayers())
-        if not layer_list:
-            msg = 'No layer available for normalization'
-            self.iface.messageBar().pushMessage(
-                tr("Error"),
-                tr(msg),
-                level=QgsMessageBar.CRITICAL)
-            return
-        dlg.ui.layer_cbx.addItems(layer_list)
-        alg_list = NORMALIZATION_ALGS.keys()
-        dlg.ui.algorithm_cbx.addItems(alg_list)
         if dlg.exec_():
             layer = reg.mapLayers().values()[
                 dlg.ui.layer_cbx.currentIndex()]
