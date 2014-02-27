@@ -106,16 +106,18 @@ class LayerEditingManager(object):
 
 class WaitCursorManager(object):
     def __init__(self, msg=None, iface=None):
+        self.msg = msg
         self.iface = iface
         self.has_message = msg and iface
+        self.message = None
+
+    def __enter__(self):
         if self.has_message:
             self.message = self.iface.messageBar().createMessage(
-                tr('Info'), tr(msg))
+                tr('Info'), tr(self.msg))
             self.message = self.iface.messageBar().pushWidget(
                 self.message, level=QgsMessageBar.INFO)
             QApplication.processEvents()
-
-    def __enter__(self):
         QApplication.setOverrideCursor(Qt.WaitCursor)
 
     def __exit__(self, type, value, traceback):

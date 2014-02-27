@@ -57,10 +57,12 @@ from qgis.analysis import QgsZonalStatistics
 import processing as p
 from processing.saga.SagaUtils import SagaUtils
 
-from normalization_algs import NORMALIZATION_ALGS
 from process_layer import ProcessLayer
 
 import resources_rc
+# ugly way to avoid the warning 'resources_rc imported but unused'
+if resources_rc:
+    pass
 
 from svirdialog import SvirDialog
 from select_layers_to_join_dialog import SelectLayersToJoinDialog
@@ -444,13 +446,18 @@ class Svir:
             algorithm_name = dlg.ui.algorithm_cbx.currentText()
             variant = dlg.ui.variant_cbx.currentText()
             inverse = dlg.ui.inverse_ckb.isChecked()
-            mem_layer_name = layer.name() + "_" + algorithm_name
-            mem_layer = ProcessLayer(layer).duplicate_in_memory(mem_layer_name,
-                                                                True)
-            ProcessLayer(mem_layer).normalize_attribute(attribute_name,
+            with WaitCursorManager("Applying transformation", self.iface):
+                ProcessLayer(layer).normalize_attribute(attribute_name,
                                                         algorithm_name,
                                                         variant,
                                                         inverse)
+            msg = ('The result of the transformation has been added to layer '
+                   '%s as a new attribute') % layer.name()
+            self.iface.messageBar().pushMessage(
+                tr("Info"),
+                tr(msg),
+                level=QgsMessageBar.INFO,
+                duration=8)
         elif dlg.use_advanced:
             layer = reg.mapLayers().values()[
                 dlg.ui.layer_cbx.currentIndex()]
