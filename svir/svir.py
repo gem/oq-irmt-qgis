@@ -1052,7 +1052,6 @@ class Svir:
             tot_zones = len(list(layer.getFeatures()))
             msg = tr("Calculating some common SVIR indices...")
             progress = self.create_progress_message_bar(msg)
-
             with LayerEditingManager(layer,
                                      tr("Calculate some common SVIR indices"),
                                      DEBUG):
@@ -1080,8 +1079,21 @@ class Svir:
                         risk1f_idx,
                         (svir_feat[aggr_loss_attr_name] *
                          (1 + svir_feat[svi_attr_name])))
-
-        self.clear_progress_message_bar()
+            self.clear_progress_message_bar()
+        elif dlg.use_advanced:
+            layer = reg.mapLayers().values()[
+                dlg.ui.layer_cbx.currentIndex()]
+            if layer.isModified():
+                layer.commitChanges()
+                layer.triggerRepaint()
+                msg = 'Calculation performed on layer %s' % layer.name()
+                self.iface.messageBar().pushMessage(
+                    tr("Info"),
+                    tr(msg),
+                    level=QgsMessageBar.INFO,
+                    duration=8)
+        elif dlg.use_normalize_dialog:
+            self.normalize_attribute()
 
     def create_progress_message_bar(self, msg, no_percentage=False):
         """

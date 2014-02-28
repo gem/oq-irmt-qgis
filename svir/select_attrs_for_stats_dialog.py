@@ -47,6 +47,10 @@ class SelectAttrsForStatsDialog(QDialog):
         self.ui = Ui_SelectAttrsForStatsDialog()
         self.ui.setupUi(self)
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
+        self.ui.calc_btn.setEnabled(False)
+        self.ui.normalize_btn.setEnabled(False)
+        self.use_advanced = False
+        self.use_normalize_dialog = False
         reg = QgsMapLayerRegistry.instance()
         layer_list = [l.name() for l in reg.mapLayers().values()]
         self.ui.layer_cbx.addItems(layer_list)
@@ -60,8 +64,32 @@ class SelectAttrsForStatsDialog(QDialog):
             self.ui.svi_attr_cbx.clear()
             self.ui.aggr_loss_attr_cbx.clear()
 
+    @pyqtSlot()
+    def on_calc_btn_clicked(self):
+        self.close()
+        layer = QgsMapLayerRegistry.instance().mapLayers().values()[
+            self.ui.layer_cbx.currentIndex()]
+        self.iface.setActiveLayer(layer)
+        # layer is put in editing mode. If the user clicks on ok, the field
+        # calculator will update the layers attributes.
+        # if the user clicks cancel, the field calculator does nothing.
+        # the layer stays in editing mode with the use_advanced flag set.
+        # the calling code should take care of doing layer.commitChanges()
+        # if the flag is set to true.
+        self.use_advanced = True
+        layer.startEditing()
+        self.iface.actionOpenFieldCalculator().trigger()
+
+    @pyqtSlot()
+    def on_normalize_btn_clicked(self):
+        self.close()
+        self.use_normalize_dialog = True
+
     @pyqtSlot(str)
     def on_layer_cbx_currentIndexChanged(self):
+        a_layer_is_selected = self.ui.layer_cbx.currentIndex() != -1
+        self.ui.calc_btn.setEnabled(a_layer_is_selected)
+        self.ui.normalize_btn.setEnabled(a_layer_is_selected)
         self.reload_attribs_cbx()
 
     def reload_attribs_cbx(self):

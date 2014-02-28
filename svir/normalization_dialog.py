@@ -52,7 +52,6 @@ class NormalizationDialog(QDialog):
         self.ui.setupUi(self)
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
         self.use_advanced = False
-        active_layer_name = None
         reg = QgsMapLayerRegistry.instance()
         self.ui.layer_cbx.addItems(
             [l.name() for l in reg.mapLayers().values()])
