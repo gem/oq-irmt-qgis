@@ -29,14 +29,12 @@ from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox)
 from qgis.core import QgsMapLayerRegistry
-from qgis.gui import QgsMessageBar
 
 from ui.ui_normalization import Ui_NormalizationDialog
 from normalization_algs import (RANK_VARIANTS,
                                 QUADRATIC_VARIANTS,
                                 NORMALIZATION_ALGS)
 
-from utils import tr
 from globals import NUMERIC_FIELD_TYPES
 
 
@@ -56,21 +54,16 @@ class NormalizationDialog(QDialog):
         self.use_advanced = False
         active_layer_name = None
         reg = QgsMapLayerRegistry.instance()
-        if iface.activeLayer():  # it's possible that no layer is active
-            active_layer_name = iface.activeLayer().name()
-
-        if not reg.count():
-            msg = 'No layer available for normalization'
-            self.iface.messageBar().pushMessage(
-                tr("Error"),
-                tr(msg),
-                level=QgsMessageBar.CRITICAL)
-            return
         self.ui.layer_cbx.addItems(
             [l.name() for l in reg.mapLayers().values()])
-        active_layer_index = self.ui.layer_cbx.findText(active_layer_name)
-        self.ui.layer_cbx.setCurrentIndex(active_layer_index)
-
+        # In case one of the available layers is active, preselect it
+        if iface.activeLayer():
+            active_layer_name = iface.activeLayer().name()
+            active_layer_index = self.ui.layer_cbx.findText(active_layer_name)
+            self.ui.layer_cbx.setCurrentIndex(active_layer_index)
+        else:
+            self.ui.layer_cbx.setCurrentIndex(-1)
+            self.ui.attrib_cbx.clear()
         alg_list = NORMALIZATION_ALGS.keys()
         self.ui.algorithm_cbx.addItems(alg_list)
         if self.ui.algorithm_cbx.currentText() in ['RANK', 'QUADRATIC']:

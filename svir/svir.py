@@ -439,6 +439,13 @@ class Svir:
         """
         dlg = NormalizationDialog(self.iface)
         reg = QgsMapLayerRegistry.instance()
+        if not reg.count():
+            msg = 'No layer available for normalization'
+            self.iface.messageBar().pushMessage(
+                tr("Error"),
+                tr(msg),
+                level=QgsMessageBar.CRITICAL)
+            return
         if dlg.exec_():
             layer = reg.mapLayers().values()[
                 dlg.ui.layer_cbx.currentIndex()]
@@ -1013,16 +1020,15 @@ class Svir:
         Calculate some common indices, combining total risk (in terms of
         losses) and social vulnerability index
         """
-        dlg = SelectAttrsForStatsDialog()
+        dlg = SelectAttrsForStatsDialog(self.iface)
         reg = QgsMapLayerRegistry.instance()
-        layer_list = list(reg.mapLayers())
-        if not layer_list:
+        layer_count = reg.count()
+        if layer_count < 1:
             msg = 'No layer available for statistical computations'
             self.iface.messageBar().pushMessage(tr("Error"),
                                                 tr(msg),
                                                 level=QgsMessageBar.CRITICAL)
             return
-        dlg.ui.layer_cbx.addItems(layer_list)
         if dlg.exec_():
             layer = reg.mapLayers().values()[
                 dlg.ui.layer_cbx.currentIndex()]

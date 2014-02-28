@@ -29,9 +29,7 @@ from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox)
 from qgis.core import QgsMapLayerRegistry
-
 from ui.ui_select_attrs_for_stats import Ui_SelectAttrsForStatsDialog
-
 from globals import NUMERIC_FIELD_TYPES
 
 
@@ -42,12 +40,25 @@ class SelectAttrsForStatsDialog(QDialog):
     the attributes containing such data in order to perform some
     common statistics on them
     """
-    def __init__(self):
+    def __init__(self, iface):
+        self.iface = iface
         QDialog.__init__(self)
         # Set up the user interface from Designer.
         self.ui = Ui_SelectAttrsForStatsDialog()
         self.ui.setupUi(self)
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
+        reg = QgsMapLayerRegistry.instance()
+        layer_list = [l.name() for l in reg.mapLayers().values()]
+        self.ui.layer_cbx.addItems(layer_list)
+        # In case one of the available layers is active, preselect it
+        if iface.activeLayer():
+            active_layer_name = iface.activeLayer().name()
+            active_layer_index = self.ui.layer_cbx.findText(active_layer_name)
+            self.ui.layer_cbx.setCurrentIndex(active_layer_index)
+        else:
+            self.ui.layer_cbx.setCurrentIndex(-1)
+            self.ui.svi_attr_cbx.clear()
+            self.ui.aggr_loss_attr_cbx.clear()
 
     @pyqtSlot(str)
     def on_layer_cbx_currentIndexChanged(self):
