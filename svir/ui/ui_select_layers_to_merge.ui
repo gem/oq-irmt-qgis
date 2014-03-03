@@ -1,17 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>SelectSvIndicesDialog</class>
- <widget class="QDialog" name="SelectSvIndicesDialog">
+ <class>SelectLayersToMergeDialog</class>
+ <widget class="QDialog" name="SelectLayersToMergeDialog">
+  <property name="windowModality">
+   <enum>Qt::WindowModal</enum>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>671</width>
+    <height>185</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Social Vulnerability Indices Selection</string>
+   <string>Select layers to merge</string>
   </property>
   <property name="modal">
    <bool>true</bool>
@@ -22,69 +25,45 @@
      <property name="fieldGrowthPolicy">
       <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
      </property>
-     <item row="0" column="0">
-      <widget class="QLabel" name="theme_lbl">
-       <property name="text">
-        <string>Theme</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="QComboBox" name="theme_cbx"/>
-     </item>
      <item row="1" column="0">
-      <widget class="QLabel" name="subtheme_lbl">
+      <widget class="QLabel" name="loss_layer_lbl">
        <property name="text">
-        <string>Subtheme</string>
+        <string>Layer containing loss data</string>
        </property>
       </widget>
      </item>
      <item row="1" column="1">
-      <widget class="QComboBox" name="subtheme_cbx"/>
-     </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="tag_lbl">
-       <property name="text">
-        <string>Tag</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="1">
-      <widget class="QComboBox" name="tag_cbx"/>
+      <widget class="QComboBox" name="loss_layer_cbox"/>
      </item>
      <item row="3" column="0">
-      <widget class="QLabel" name="name_lbl">
+      <widget class="QLabel" name="zonal_layer_lbl">
        <property name="text">
-        <string>Name</string>
+        <string>Layer containing zonal data</string>
        </property>
       </widget>
      </item>
      <item row="3" column="1">
-      <widget class="QComboBox" name="name_cbx"/>
+      <widget class="QComboBox" name="zonal_layer_cbox"/>
      </item>
-     <item row="5" column="1">
-      <widget class="QListWidget" name="selected_names_lst"/>
+     <item row="2" column="0">
+      <widget class="QLabel" name="aggr_loss_attr_lbl">
+       <property name="text">
+        <string>Attribute for aggregated losses</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QComboBox" name="aggr_loss_attr_cbox"/>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Merge by attribute</string>
+       </property>
+      </widget>
      </item>
      <item row="4" column="1">
-      <widget class="QPushButton" name="add_name_btn">
-       <property name="text">
-        <string>Add name</string>
-       </property>
-      </widget>
-     </item>
-     <item row="6" column="1">
-      <widget class="QPushButton" name="remove_name_btn">
-       <property name="text">
-        <string>Remove selected names</string>
-       </property>
-      </widget>
-     </item>
-     <item row="5" column="0">
-      <widget class="QPushButton" name="clear_btn">
-       <property name="text">
-        <string>Clear</string>
-       </property>
-      </widget>
+      <widget class="QComboBox" name="merge_attr_cbx"/>
      </item>
     </layout>
    </item>
@@ -105,7 +84,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>SelectSvIndicesDialog</receiver>
+   <receiver>SelectLayersToMergeDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -121,7 +100,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>SelectSvIndicesDialog</receiver>
+   <receiver>SelectLayersToMergeDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

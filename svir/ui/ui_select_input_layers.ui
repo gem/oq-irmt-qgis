@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>SvirDialog</class>
- <widget class="QDialog" name="SvirDialog">
+ <class>SelectInputLayersDialog</class>
+ <widget class="QDialog" name="SelectInputLayersDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Svir</string>
+   <string>Select input layers</string>
   </property>
   <layout class="QFormLayout" name="formLayout">
    <property name="fieldGrowthPolicy">
@@ -86,7 +86,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>SvirDialog</receiver>
+   <receiver>SelectInputLayersDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -102,7 +102,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>SvirDialog</receiver>
+   <receiver>SelectInputLayersDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

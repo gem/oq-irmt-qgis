@@ -1,20 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>SelectLayersToJoinDialog</class>
- <widget class="QDialog" name="SelectLayersToJoinDialog">
-  <property name="windowModality">
-   <enum>Qt::WindowModal</enum>
-  </property>
+ <class>SelectSvVariablesDialog</class>
+ <widget class="QDialog" name="SelectSvVariablesDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>671</width>
-    <height>171</height>
+    <width>400</width>
+    <height>329</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Select layers to merge</string>
+   <string>Select social vulnerability variables</string>
   </property>
   <property name="modal">
    <bool>true</bool>
@@ -25,45 +22,69 @@
      <property name="fieldGrowthPolicy">
       <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
      </property>
-     <item row="1" column="0">
-      <widget class="QLabel" name="loss_layer_lbl">
+     <item row="0" column="0">
+      <widget class="QLabel" name="theme_lbl">
        <property name="text">
-        <string>Layer containing loss data</string>
+        <string>Theme</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QComboBox" name="theme_cbx"/>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="subtheme_lbl">
+       <property name="text">
+        <string>Subtheme</string>
        </property>
       </widget>
      </item>
      <item row="1" column="1">
-      <widget class="QComboBox" name="loss_layer_cbox"/>
-     </item>
-     <item row="3" column="0">
-      <widget class="QLabel" name="zonal_layer_lbl">
-       <property name="text">
-        <string>Layer containing zonal data</string>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="1">
-      <widget class="QComboBox" name="zonal_layer_cbox"/>
+      <widget class="QComboBox" name="subtheme_cbx"/>
      </item>
      <item row="2" column="0">
-      <widget class="QLabel" name="aggr_loss_attr_lbl">
+      <widget class="QLabel" name="tag_lbl">
        <property name="text">
-        <string>Attribute for aggregated losses</string>
+        <string>Tag</string>
        </property>
       </widget>
      </item>
      <item row="2" column="1">
-      <widget class="QComboBox" name="aggr_loss_attr_cbox"/>
+      <widget class="QComboBox" name="tag_cbx"/>
      </item>
-     <item row="4" column="0">
-      <widget class="QLabel" name="label">
+     <item row="3" column="0">
+      <widget class="QLabel" name="name_lbl">
        <property name="text">
-        <string>Merge by attribute</string>
+        <string>Name</string>
        </property>
       </widget>
      </item>
+     <item row="3" column="1">
+      <widget class="QComboBox" name="name_cbx"/>
+     </item>
+     <item row="5" column="1">
+      <widget class="QListWidget" name="selected_names_lst"/>
+     </item>
      <item row="4" column="1">
-      <widget class="QComboBox" name="merge_attr_cbx"/>
+      <widget class="QPushButton" name="add_name_btn">
+       <property name="text">
+        <string>Add name</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="1">
+      <widget class="QPushButton" name="remove_name_btn">
+       <property name="text">
+        <string>Remove selected names</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="0">
+      <widget class="QPushButton" name="clear_btn">
+       <property name="text">
+        <string>Clear</string>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>
@@ -84,7 +105,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>SelectLayersToJoinDialog</receiver>
+   <receiver>SelectSvVariablesDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -100,7 +121,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>SelectLayersToJoinDialog</receiver>
+   <receiver>SelectSvVariablesDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

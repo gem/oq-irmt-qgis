@@ -64,12 +64,12 @@ import resources_rc
 if resources_rc:
     pass
 
-from svirdialog import SvirDialog
-from select_layers_to_join_dialog import SelectLayersToJoinDialog
+from select_input_layers_dialog import SelectInputLayersDialog
+from select_layers_to_merge_dialog import SelectLayersToMergeDialog
 from attribute_selection_dialog import AttributeSelectionDialog
 from normalization_dialog import NormalizationDialog
 from select_attrs_for_stats_dialog import SelectAttrsForStatsDialog
-from select_sv_indices_dialog import SelectSvIndicesDialog
+from select_sv_variables_dialog import SelectSvVariablesDialog
 from platform_settings_dialog import PlatformSettingsDialog
 from choose_sv_data_source_dialog import ChooseSvDataSourceDialog
 
@@ -117,7 +117,7 @@ class Svir:
         self.aggregation_layer = None
         # Output layer containing aggregated loss data for non-empty zones
         self.purged_layer = None
-        # Output layer containing joined data and final svir computations
+        # Output layer containing merged data and final svir computations
         self.svir_layer = None
         # keep a list of the menu items, in order to easily unload them later
         self.registered_actions = dict()
@@ -130,11 +130,11 @@ class Svir:
         # Name of the attribute containing, e.g., SVI values
         self.zonal_attr_name = None
         # It can be, e.g., the aggregation_layer or the purged_layer
-        self.loss_layer_to_join = None
+        self.loss_layer_to_merge = None
         # Most likely, it will be the zonal layer
-        self.zonal_layer_to_join = None
-        # Attribute containing aggregated losses, that will be joined with SVI
-        self.aggr_loss_attr_to_join = None
+        self.zonal_layer_to_merge = None
+        # Attribute containing aggregated losses, that will be merged with SVI
+        self.aggr_loss_attr_to_merge = None
 
     def add_menu_item(self,
                       action_name,
@@ -176,7 +176,7 @@ class Svir:
         self.add_menu_item("aggregate_losses",
                            ":/plugins/svir/start_plugin_icon.png",
                            u"&Aggregate loss by zone",
-                           self.run,
+                           self.select_input_layers,
                            enable=True)
         # Action to activate the modal dialog to select a layer and one of its
         # attributes, in order to normalize that attribute
@@ -184,11 +184,11 @@ class Svir:
                            ":/plugins/svir/start_plugin_icon.png",
                            u"&Normalize attribute",
                            self.normalize_attribute)
-        # Action for joining SVI with loss data (both aggregated by zone)
+        # Action for merging SVI with loss data (both aggregated by zone)
         self.add_menu_item("merge_svi_and_losses",
                            ":/plugins/svir/start_plugin_icon.png",
                            u"Merge SVI and loss data by zone",
-                           self.join_svi_with_aggr_losses)
+                           self.merge_svi_with_aggr_losses)
         # Action for calculating RISKPLUS, RISKMULT and RISK1F indices
         self.add_menu_item(
             "calculate_svir_stats",
@@ -228,10 +228,18 @@ class Svir:
         QgsMapLayerRegistry.instance().layersRemoved.disconnect(
             self.update_actions_status)
 
-    # run method that performs all the real work
-    def run(self):
+    def select_input_layers(self):
+        """
+        Open a modal dialog to select a layer containing zonal data for social
+        vulnerability and a layer containing loss data points. After data are
+        loaded, self.create_aggregation_layer() and self.calculate_stats()
+        are automatically called, in order to aggregate loss points with
+        respect to the same geometries defined for the social vulnerability
+        data, and to compute zonal statistics (loss sum, average and product
+        for each zone)
+        """
         # Create the dialog (after translation) and keep reference
-        dlg = SvirDialog(self.iface)
+        dlg = SelectInputLayersDialog(self.iface)
         # Run the dialog event loop
         # See if OK was pressed
         if dlg.exec_():
@@ -282,15 +290,15 @@ class Svir:
         if dlg.exec_():
             if dlg.ui.platform_rbn.isChecked():
                 # start openquake platform import
-                self.import_sv_indices()
+                self.import_sv_variables()
             else:
                 # dlg.ui.layer_rbn.isChecked() so go to select layers
-                self.run()
+                self.select_input_layers()
 
-    def import_sv_indices(self):
+    def import_sv_variables(self):
         """
-        Open a modal dialog to select social vulnerability indices to download
-        from the openquake platform
+        Open a modal dialog to select social vulnerability variables to
+        download from the openquake platform
         """
 
         hostname, username, password = get_credentials(self.iface)
@@ -309,7 +317,7 @@ class Svir:
             return
 
         try:
-            dlg = SelectSvIndicesDialog(sv_downloader)
+            dlg = SelectSvVariablesDialog(sv_downloader)
             if dlg.exec_():
                 msg = ("Loading social vulnerability data from the OpenQuake "
                        "Platform...")
@@ -324,7 +332,7 @@ class Svir:
                         indices_list.append(sv_idx)
                     indices_string = ", ".join(indices_list)
                     try:
-                        fname, msg = sv_downloader.get_data_by_indices(
+                        fname, msg = sv_downloader.get_data_by_variables_ids(
                             indices_string)
                     except SvDownloadError as e:
                         self.iface.messageBar().pushMessage(
@@ -358,12 +366,12 @@ class Svir:
     def platform_settings(self):
         PlatformSettingsDialog(self.iface).exec_()
 
-    def join_svi_with_aggr_losses(self):
+    def merge_svi_with_aggr_losses(self):
         """
         SVI data and aggregated losses are merged in order to obtain a layer
         containing, for each zone, an aggregated SVI and an aggregated loss
         """
-        if self.select_layers_to_join():
+        if self.select_layers_to_merge():
             self.create_svir_layer()
             msg = 'Select "Calculate common SVIR indices" from SVIR ' \
                   'plugin menu to calculate RISKPLUS, RISKMULT and RISK1F ' \
@@ -478,13 +486,13 @@ class Svir:
                     level=QgsMessageBar.INFO,
                     duration=8)
 
-    def select_layers_to_join(self):
+    def select_layers_to_merge(self):
         """
         Open a modal dialog allowing the user to select a layer containing
         loss data and one containing SVI data, the aggregated loss attribute
         and the zone id that we want to use for merging.
         """
-        dlg = SelectLayersToJoinDialog()
+        dlg = SelectLayersToMergeDialog()
         reg = QgsMapLayerRegistry.instance()
         layer_list = [layer.name() for layer in reg.mapLayers().values()]
         if len(layer_list) < 2:
@@ -497,11 +505,11 @@ class Svir:
         dlg.ui.loss_layer_cbox.addItems(layer_list)
         dlg.ui.zonal_layer_cbox.addItems(layer_list)
         if dlg.exec_():
-            self.loss_layer_to_join = reg.mapLayers().values()[
+            self.loss_layer_to_merge = reg.mapLayers().values()[
                 dlg.ui.loss_layer_cbox.currentIndex()]
-            self.aggr_loss_attr_to_join = \
+            self.aggr_loss_attr_to_merge = \
                 dlg.ui.aggr_loss_attr_cbox.currentText()
-            self.zonal_layer_to_join = reg.mapLayers().values()[
+            self.zonal_layer_to_merge = reg.mapLayers().values()[
                 dlg.ui.zonal_layer_cbox.currentIndex()]
             self.zone_id_in_zones_attr_name = \
                 dlg.ui.merge_attr_cbx.currentText()
@@ -956,7 +964,7 @@ class Svir:
         taken from the zonal layer.
         """
         # to show the overall progress, cycling through zones
-        tot_zones = len(list(self.loss_layer_to_join.getFeatures()))
+        tot_zones = len(list(self.loss_layer_to_merge.getFeatures()))
         msg = tr("Populating SVIR layer with loss values...")
         progress = self.create_progress_message_bar(msg)
 
@@ -965,7 +973,7 @@ class Svir:
                                  DEBUG):
 
             aggr_loss_index = self.svir_layer.fieldNameIndex(
-                self.aggr_loss_attr_to_join)
+                self.aggr_loss_attr_to_merge)
 
             # Begin populating "loss" attribute with data from the
             # aggregation_layer selected by the user (possibly purged from
@@ -976,13 +984,13 @@ class Svir:
                 progress_percent = current_zone / float(tot_zones) * 100
                 progress.setValue(progress_percent)
                 match_found = False
-                for aggr_feat in self.loss_layer_to_join.getFeatures():
+                for aggr_feat in self.loss_layer_to_merge.getFeatures():
                     if (svir_feat[self.zone_id_in_zones_attr_name] ==
                             aggr_feat[self.zone_id_in_zones_attr_name]):
                         self.svir_layer.changeAttributeValue(
                             svir_feat_id,
                             aggr_loss_index,
-                            aggr_feat[self.aggr_loss_attr_to_join])
+                            aggr_feat[self.aggr_loss_attr_to_merge])
                         match_found = True
                 # TODO: Check if this is the desired behavior, i.e., if we
                 #       actually want to remove from svir_layer the zones that
@@ -1002,9 +1010,9 @@ class Svir:
         # Create new svir layer, duplicating social vulnerability layer
         layer_name = tr("SVIR map")
         self.svir_layer = ProcessLayer(
-            self.zonal_layer_to_join).duplicate_in_memory(layer_name, True)
+            self.zonal_layer_to_merge).duplicate_in_memory(layer_name, True)
         # Add aggregated loss attribute to svir_layer
-        field = QgsField(self.aggr_loss_attr_to_join, QVariant.Double)
+        field = QgsField(self.aggr_loss_attr_to_merge, QVariant.Double)
         field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
         ProcessLayer(self.svir_layer).add_attributes([field])
         # Populate "loss" attribute with data from aggregation_layer

@@ -21,7 +21,7 @@ QGISDIR=.qgis2
 # Makefile for a PyQGIS plugin
 
 # translation
-SOURCES = svir.py ui/ui_svir.py __init__.py svirdialog.py attribute_selection_dialog.py select_layers_to_join_dialog.py normalization_dialog.py select_attrs_for_stats_dialog.py select_sv_indices_dialog.py platform_settings_dialog.py choose_sv_data_source_dialog.py
+SOURCES = svir.py ui/ui_select_input_layers.py __init__.py select_input_layers_dialog.py attribute_selection_dialog.py select_layers_to_merge_dialog.py normalization_dialog.py select_attrs_for_stats_dialog.py select_sv_variables_dialog.py platform_settings_dialog.py choose_sv_data_source_dialog.py
 #TRANSLATIONS = i18n/svir_en.ts
 TRANSLATIONS =
 
@@ -29,11 +29,11 @@ TRANSLATIONS =
 
 PLUGINNAME = svir
 
-PY_FILES = svir.py svirdialog.py __init__.py attribute_selection_dialog.py select_layers_to_join_dialog.py normalization_dialog.py select_attrs_for_stats_dialog.py select_sv_indices_dialog.py platform_settings_dialog.py choose_sv_data_source_dialog.py
+PY_FILES = svir.py select_input_layers_dialog.py __init__.py attribute_selection_dialog.py select_layers_to_merge_dialog.py normalization_dialog.py select_attrs_for_stats_dialog.py select_sv_variables_dialog.py platform_settings_dialog.py choose_sv_data_source_dialog.py
 
 EXTRAS = resources/start_plugin_icon.png metadata.txt
 
-UI_FILES = ui/ui_svir.py ui/ui_attribute_selection.py ui/ui_select_layers_to_join.py ui/ui_normalization.py ui/ui_select_attrs_for_stats.py ui/ui_select_sv_indices.py ui/ui_platform_settings.py ui/ui_choose_sv_data_source.py
+UI_FILES = ui/ui_select_input_layers.py ui/ui_attribute_selection.py ui/ui_select_layers_to_merge.py ui/ui_normalization.py ui/ui_select_attrs_for_stats.py ui/ui_select_sv_variables.py ui/ui_platform_settings.py ui/ui_choose_sv_data_source.py
 
 RESOURCE_FILES = resources_rc.py
 

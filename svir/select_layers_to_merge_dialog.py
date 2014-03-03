@@ -29,11 +29,11 @@ from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import QDialog, QDialogButtonBox
 from qgis.core import QgsMapLayerRegistry
 
-from ui.ui_select_layers_to_join import Ui_SelectLayersToJoinDialog
+from ui.ui_select_layers_to_merge import Ui_SelectLayersToMergeDialog
 from globals import NUMERIC_FIELD_TYPES, STRING_FIELD_TYPE_NAME
 
 
-class SelectLayersToJoinDialog(QDialog):
+class SelectLayersToMergeDialog(QDialog):
     """
     Modal dialog giving to the user the possibility to select
     a layer containing loss data and one containing SVI data, that will be
@@ -42,7 +42,7 @@ class SelectLayersToJoinDialog(QDialog):
     def __init__(self):
         QDialog.__init__(self)
         # Set up the user interface from Designer.
-        self.ui = Ui_SelectLayersToJoinDialog()
+        self.ui = Ui_SelectLayersToMergeDialog()
         self.ui.setupUi(self)
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
 
