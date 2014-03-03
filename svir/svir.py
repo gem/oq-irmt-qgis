@@ -172,7 +172,8 @@ class Svir:
                            u"&Choose social vulnerability data source",
                            self.choose_sv_data_source,
                            enable=True)
-        # Action to activate the modal dialog to load loss data and zones
+        # Action to activate the modal dialog to guide the user through loss
+        # aggregation by zone
         self.add_menu_item("aggregate_losses",
                            ":/plugins/svir/start_plugin_icon.png",
                            u"&Aggregate loss by zone",
