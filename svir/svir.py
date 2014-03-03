@@ -354,10 +354,16 @@ class Svir:
                 # problems
                 uri = ('file://%s?delimiter=,&crs=epsg:4326&'
                        'skipLines=25&trimFields=yes&wktField=geometry' % fname)
-                vlayer = QgsVectorLayer(uri,
-                                        'social_vulnerability_export',
-                                        'delimitedtext')
-                QgsMapLayerRegistry.instance().addMapLayer(vlayer)
+                # create vector layer from the csv file exported by the
+                # platform (it is still not editable!)
+                vlayer_csv = QgsVectorLayer(uri,
+                                            'social_vulnerability_export',
+                                            'delimitedtext')
+                # obtain a in-memory copy of the layer (editable) and add it to
+                # the registry
+                ProcessLayer(vlayer_csv).duplicate_in_memory(
+                    'social_vulnerability_zonal_layer',
+                    add_to_registry=True)
         except SvDownloadError as e:
             self.iface.messageBar().pushMessage(tr("Download Error"),
                                                 tr(str(e)),
