@@ -157,19 +157,20 @@ class ProcessLayer():
         my_uuid = str(uuid.uuid4())
         uri = '%s?crs=%s&index=yes&uuid=%s' % (type_str, crs, my_uuid)
         mem_layer = QgsVectorLayer(uri, new_name, 'memory')
-        mem_provider = mem_layer.dataProvider()
+        with LayerEditingManager(mem_layer, 'Duplicating layer', DEBUG):
+            mem_provider = mem_layer.dataProvider()
 
-        provider = self.layer.dataProvider()
-        v_fields = provider.fields()
+            provider = self.layer.dataProvider()
+            v_fields = provider.fields()
 
-        fields = []
-        for i in v_fields:
-            fields.append(i)
+            fields = []
+            for i in v_fields:
+                fields.append(i)
 
-        mem_provider.addAttributes(fields)
+            mem_provider.addAttributes(fields)
 
-        for ft in provider.getFeatures():
-            mem_provider.addFeatures([ft])
+            for ft in provider.getFeatures():
+                mem_provider.addFeatures([ft])
 
         if add_to_registry:
             if mem_layer.isValid():
