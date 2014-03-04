@@ -30,7 +30,8 @@ from PyQt4.QtGui import QDialog, QDialogButtonBox
 from qgis.core import QgsMapLayerRegistry
 
 from ui.ui_select_layers_to_merge import Ui_SelectLayersToMergeDialog
-from globals import NUMERIC_FIELD_TYPES, STRING_FIELD_TYPE_NAME
+from globals import (NUMERIC_FIELD_TYPES,
+                     TEXTUAL_FIELD_TYPES)
 
 
 class SelectLayersToMergeDialog(QDialog):
@@ -68,7 +69,7 @@ class SelectLayersToMergeDialog(QDialog):
                 self.ui.aggr_loss_attr_cbox.addItem(field.name())
                 no_numeric_fields = False
             # add to merge attribute cbx string fields only
-            if field.typeName() == STRING_FIELD_TYPE_NAME:
+            if field.typeName() in TEXTUAL_FIELD_TYPES:
                 self.ui.merge_attr_cbx.addItem(field.name())
                 no_string_fields = False
         self.ok_button.setDisabled(no_numeric_fields)

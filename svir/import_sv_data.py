@@ -74,6 +74,18 @@ class SvDownloader(object):
             # save csv on a temporary file
             fd, fname = tempfile.mkstemp(suffix='.csv')
             os.close(fd)
+            # All the fields of the csv file will be considered as text fields
+            # unless a .csvt file with the same name as the .csv file is used
+            # to specify the field types.
+            # For the type descriptor, use the same name as the csv file
+            fname_types = fname.split('.')[0] + '.csvt'
+            # We expect iso, country_name, v1, v2, ... vn
+            # Count variables ids
+            sv_variables_count = len(sv_variables_ids.split(','))
+            # build the string that describes data types for the csv
+            types_string = '"String","String"' + ',"Real"' * sv_variables_count
+            with open(fname_types, 'w') as csvt:
+                csvt.write(types_string)
             with open(fname, 'w') as csv:
                 csv.write(result.content)
                 msg = 'Downloaded %d lines into %s' % (

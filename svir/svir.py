@@ -84,6 +84,7 @@ from globals import (INT_FIELD_TYPE_NAME,
                      DOUBLE_FIELD_TYPE_NAME,
                      NUMERIC_FIELD_TYPES,
                      STRING_FIELD_TYPE_NAME,
+                     TEXTUAL_FIELD_TYPES,
                      DEBUG)
 
 
@@ -414,7 +415,7 @@ class Svir:
             if field.typeName() in NUMERIC_FIELD_TYPES:
                 dlg.ui.loss_attr_name_cbox.addItem(field.name())
             # Accept only string fields to contain zone ids
-            elif field.typeName() == STRING_FIELD_TYPE_NAME:
+            elif field.typeName() in TEXTUAL_FIELD_TYPES:
                 dlg.ui.zone_id_attr_name_loss_cbox.addItem(field.name())
             else:
                 raise TypeError("Unknown field type %d" % field.type())
@@ -425,7 +426,7 @@ class Svir:
             if field.typeName() in NUMERIC_FIELD_TYPES:
                 dlg.ui.zonal_attr_name_cbox.addItem(field.name())
             # Accept only string fields to contain zone ids
-            elif field.typeName() == STRING_FIELD_TYPE_NAME:
+            elif field.typeName() in TEXTUAL_FIELD_TYPES:
                 dlg.ui.zone_id_attr_name_zone_cbox.addItem(field.name())
             else:
                 raise TypeError("Unknown field type %d" % field.type())
