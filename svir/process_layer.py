@@ -92,7 +92,11 @@ class ProcessLayer():
         algorithm = NORMALIZATION_ALGS[algorithm_name]
 
         # normalize the values in the dictionary with the chosen algorithm
-        normalized_dict = normalize(initial_dict, algorithm, variant, inverse)
+        try:
+            normalized_dict = normalize(
+                initial_dict, algorithm, variant, inverse)
+        except ValueError:
+            raise
 
         with LayerEditingManager(self.layer, 'Write normalized values', DEBUG):
             for feat in self.layer.getFeatures():

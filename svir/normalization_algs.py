@@ -26,6 +26,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 from numpy import mean, std, argwhere, amax, amin, log10
+from PyQt4.QtCore import QPyNullVariant
 from utils import Register
 
 NORMALIZATION_ALGS = Register()
@@ -40,6 +41,12 @@ def normalize(features_dict, algorithm, variant_name="", inverse=False):
     """
     ids = features_dict.keys()
     values = features_dict.values()
+    null_values_count = len(
+        [value for value in values if type(value) == QPyNullVariant])
+    if null_values_count:
+        msg = ("Unable to perform the transformation, because the attribute "
+               "contains %d NULL values" % null_values_count)
+        raise ValueError(msg)
     normalized_list = algorithm(values, variant_name, inverse)
     return dict(zip(ids, normalized_list))
 

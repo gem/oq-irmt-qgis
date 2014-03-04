@@ -469,18 +469,26 @@ class Svir:
             algorithm_name = dlg.ui.algorithm_cbx.currentText()
             variant = dlg.ui.variant_cbx.currentText()
             inverse = dlg.ui.inverse_ckb.isChecked()
-            with WaitCursorManager("Applying transformation", self.iface):
-                ProcessLayer(layer).normalize_attribute(attribute_name,
-                                                        algorithm_name,
-                                                        variant,
-                                                        inverse)
-            msg = ('The result of the transformation has been added to layer '
-                   '%s as a new attribute') % layer.name()
-            self.iface.messageBar().pushMessage(
-                tr("Info"),
-                tr(msg),
-                level=QgsMessageBar.INFO,
-                duration=8)
+            try:
+                with WaitCursorManager("Applying transformation", self.iface):
+                    ProcessLayer(layer).normalize_attribute(attribute_name,
+                                                            algorithm_name,
+                                                            variant,
+                                                            inverse)
+                msg = ('The result of the transformation has been added to'
+                       'layer %s as a new attribute') % layer.name()
+                self.iface.messageBar().pushMessage(
+                    tr("Info"),
+                    tr(msg),
+                    level=QgsMessageBar.INFO,
+                    duration=8)
+            except ValueError as e:
+                self.iface.messageBar().pushMessage(
+                    tr("Error"),
+                    tr(e.message),
+                    level=QgsMessageBar.CRITICAL,
+                    duration=8)
+
         elif dlg.use_advanced:
             layer = reg.mapLayers().values()[
                 dlg.ui.layer_cbx.currentIndex()]
