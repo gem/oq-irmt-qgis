@@ -482,7 +482,7 @@ class Svir:
                     tr(msg),
                     level=QgsMessageBar.INFO,
                     duration=8)
-            except ValueError as e:
+            except (ValueError, NotImplementedError) as e:
                 self.iface.messageBar().pushMessage(
                     tr("Error"),
                     tr(e.message),

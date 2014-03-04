@@ -30,8 +30,9 @@ from PyQt4.QtCore import QPyNullVariant
 from utils import Register
 
 NORMALIZATION_ALGS = Register()
-RANK_VARIANTS = ['AVERAGE', 'MIN', 'MAX', 'DENSE', 'ORDINAL']
-QUADRATIC_VARIANTS = ['INCREASING', 'DECREASING']
+RANK_VARIANTS = ('AVERAGE', 'MIN', 'MAX', 'DENSE', 'ORDINAL')
+QUADRATIC_VARIANTS = ('INCREASING', 'DECREASING')
+LOG10_VARIANTS = ('PRE-CHANGE ZEROS TO ONES', 'NO ZEROS ALLOWED')
 
 
 def normalize(features_dict, algorithm, variant_name="", inverse=False):
@@ -41,11 +42,9 @@ def normalize(features_dict, algorithm, variant_name="", inverse=False):
     """
     ids = features_dict.keys()
     values = features_dict.values()
-    null_values_count = len(
-        [value for value in values if type(value) == QPyNullVariant])
-    if null_values_count:
+    if any(type(value) == QPyNullVariant for value in values):
         msg = ("Unable to perform the transformation, because the attribute "
-               "contains %d NULL values" % null_values_count)
+               "contains NULL values")
         raise ValueError(msg)
     normalized_list = algorithm(values, variant_name, inverse)
     return dict(zip(ids, normalized_list))
@@ -211,21 +210,26 @@ def log10_(input_list, variant_name=None, inverse=False):
     Then use numpy.log10 function to perform the log10 transformation on the
     list of values
     """
-    if variant_name:
-        # TODO: Perhaps it would be better to use the variant to let the user
-        #       choose if setting input zeros to one or not
-        raise NotImplementedError("%s variant not implemented" % variant_name)
     if inverse:
         raise NotImplementedError(
             "Inverse transformation for log10 is not implemented")
     if any(n < 0 for n in input_list):
         raise ValueError("log10 transformation can not be performed if "
                          "the field contains negative values")
-    input_copy = []
-    for input_value in input_list:
-        corrected_value = input_value if input_value > 0 else 1.0
-        input_copy.append(corrected_value)
-    output_list = list(log10(input_copy))
+    if variant_name == 'PRE-CHANGE ZEROS TO ONES':
+        input_copy = []
+        for input_value in input_list:
+            corrected_value = input_value if input_value > 0 else 1.0
+            input_copy.append(corrected_value)
+        output_list = list(log10(input_copy))
+    elif variant_name == 'NO ZEROS ALLOWED':
+        if any(n == 0 for n in input_list):
+            raise ValueError("The attribute contains zeros which have not "
+                             "been changed into ones, so the log10 "
+                             "transformation could not be performed")
+        output_list = list(log10(input_list))
+    else:
+        raise NotImplementedError("%s variant not implemented" % variant_name)
     return output_list
 
 

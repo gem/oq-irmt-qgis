@@ -97,6 +97,8 @@ class ProcessLayer():
                 initial_dict, algorithm, variant, inverse)
         except ValueError:
             raise
+        except NotImplementedError:
+            raise
 
         with LayerEditingManager(self.layer, 'Write normalized values', DEBUG):
             for feat in self.layer.getFeatures():

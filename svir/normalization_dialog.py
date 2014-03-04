@@ -33,6 +33,7 @@ from qgis.core import QgsMapLayerRegistry
 from ui.ui_normalization import Ui_NormalizationDialog
 from normalization_algs import (RANK_VARIANTS,
                                 QUADRATIC_VARIANTS,
+                                LOG10_VARIANTS,
                                 NORMALIZATION_ALGS)
 
 from globals import NUMERIC_FIELD_TYPES
@@ -119,6 +120,8 @@ class NormalizationDialog(QDialog):
             self.ui.variant_cbx.addItems(RANK_VARIANTS)
         elif self.ui.algorithm_cbx.currentText() == 'QUADRATIC':
             self.ui.variant_cbx.addItems(QUADRATIC_VARIANTS)
+        elif self.ui.algorithm_cbx.currentText() == 'LOG10':
+            self.ui.variant_cbx.addItems(LOG10_VARIANTS)
         else:
             self.ui.variant_cbx.setDisabled(True)
         self.ui.inverse_ckb.setDisabled(
