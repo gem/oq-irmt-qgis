@@ -26,8 +26,25 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from normalization_algs import NORMALIZATION_ALGS
+from normalization_algs import normalize, NORMALIZATION_ALGS
 import unittest
+
+
+class MissingValuesTestCase(unittest.TestCase):
+
+    def test_normalize_with_missing_values(self):
+        features_dict = {'0': 2,
+                         '1': 0,
+                         '2': None,
+                         '3': 1,
+                         '4': None,
+                         '5': 6}
+
+        alg = NORMALIZATION_ALGS['MIN_MAX']
+        self.assertRaises(ValueError,
+                          normalize,
+                          features_dict,
+                          alg)
 
 
 class RankTestCase(unittest.TestCase):
@@ -169,13 +186,14 @@ class Log10TestCase(unittest.TestCase):
                       174568]
         self.assertRaises(ValueError, self.alg, input_list)
 
-    def test_log10_with_zeros(self):
+    def test_log10_with_zeros_changed_to_ones(self):
         input_list = [101249,
                       94082,
                       0,
                       0,
                       174568]
-        log10_list = self.alg(input_list)
+        log10_list = self.alg(input_list,
+                              variant_name='PRE-CHANGE ZEROS TO ONES')
         expected_list = [5.005391,
                          4.973507,
                          0,
@@ -183,6 +201,17 @@ class Log10TestCase(unittest.TestCase):
                          5.241965]
         for i in range(len(input_list)):
             self.assertAlmostEqual(log10_list[i], expected_list[i], places=6)
+
+    def test_log10_with_zeros_unchanged(self):
+        input_list = [101249,
+                      94082,
+                      0,
+                      0,
+                      174568]
+        self.assertRaises(ValueError,
+                          self.alg,
+                          input_list,
+                          variant_name='NO ZEROS ALLOWED')
 
 
 class QuadraticTestCase(unittest.TestCase):
