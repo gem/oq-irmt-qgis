@@ -202,12 +202,12 @@ def min_max(input_list, variant_name=None, inverse=False):
 
 
 @NORMALIZATION_ALGS.add('LOG10')
-def log10_(input_list, variant_name=None, inverse=False):
+def log10_(input_list, variant_name='PRE-CHANGE ZEROS TO ONES', inverse=False):
     """
     Accept only input_list containing positive (or zero) values
-    In case of zeros, set those values to 1 (this differs from the built-in
-    QGIS log10 function available in the field calculator, which returns None
-    in case of zeros)
+    In case of zeros, the variant PRE-CHANGE ZEROS TO ONES sets those values
+    to 1 (this differs from the built-in QGIS log10 function available in the
+    field calculator, which returns None in case of zeros)
     Then use numpy.log10 function to perform the log10 transformation on the
     list of values
     """
