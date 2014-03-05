@@ -49,7 +49,8 @@ from qgis.core import (QgsVectorLayer,
                        QgsSpatialIndex,
                        QgsFeatureRequest,
                        QgsVectorDataProvider,
-                       QgsMessageLog)
+                       QgsMessageLog,
+                       QgsMapLayer)
 
 from qgis.gui import QgsMessageBar
 
@@ -186,6 +187,12 @@ class Svir:
                            ":/plugins/svir/start_plugin_icon.png",
                            u"&Normalize attribute",
                            self.normalize_attribute)
+        self.iface.legendInterface().addLegendLayerAction(
+            self.registered_actions["normalize_attribute"],
+            u"SVIR",
+            u"id_normalize_attribute",
+            QgsMapLayer.VectorLayer,
+            True)
         # Action for merging SVI with loss data (both aggregated by zone)
         self.add_menu_item("merge_svi_and_losses",
                            ":/plugins/svir/start_plugin_icon.png",
@@ -193,14 +200,19 @@ class Svir:
                            self.merge_svi_with_aggr_losses)
         # Action for calculating RISKPLUS, RISKMULT and RISK1F indices
         self.add_menu_item(
-            "calculate_svir_stats",
+            "calculate_svir_indices",
             ":/plugins/svir/start_plugin_icon.png",
             u"Calculate RISKPLUS, RISKMULT and RISK1F indices",
             self.calculate_svir_indices)
+        self.iface.legendInterface().addLegendLayerAction(
+            self.registered_actions["calculate_svir_indices"],
+            u"SVIR",
+            u"id_calculate_svir_indices",
+            QgsMapLayer.VectorLayer,
+            True)
         self.update_actions_status()
         QgsMapLayerRegistry.instance().layersAdded.connect(
             self.update_actions_status)
-
         QgsMapLayerRegistry.instance().layersRemoved.connect(
             self.update_actions_status)
 
@@ -214,8 +226,8 @@ class Svir:
         # Enable/disable "merge SVI and aggregated losses" action
         self.registered_actions["merge_svi_and_losses"].setDisabled(
             layer_count < 2)
-        # Enable/disable "calculate common SVIR statistics" action
-        self.registered_actions["calculate_svir_stats"].setDisabled(
+        # Enable/disable "calculate common SVIR indices" action
+        self.registered_actions["calculate_svir_indices"].setDisabled(
             layer_count == 0)
 
     def unload(self):
@@ -224,6 +236,11 @@ class Svir:
             action = self.registered_actions[action_name]
             self.iface.removePluginMenu(u"&SVIR", action)
             self.iface.removeToolBarIcon(action)
+        # Remove the actions in the layer legend
+        self.iface.legendInterface().removeLegendLayerAction(
+            self.registered_actions['normalize_attribute'])
+        self.iface.legendInterface().removeLegendLayerAction(
+            self.registered_actions['calculate_svir_indices'])
         self.clear_progress_message_bar()
         QgsMapLayerRegistry.instance().layersAdded.disconnect(
             self.update_actions_status)
