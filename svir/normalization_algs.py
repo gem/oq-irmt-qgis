@@ -41,14 +41,23 @@ def normalize(features_dict, algorithm, variant_name="", inverse=False):
     Use the chosen algorithm (and optional variant) on the input dict, and
     return a dict containing the normalized values with the original ids
     """
-    ids = features_dict.keys()
-    values = features_dict.values()
-    if any(type(value) in (QPyNullVariant, NoneType) for value in values):
-        msg = ("Unable to perform the transformation, because the attribute "
-               "has missing values")
-        raise ValueError(msg)
-    normalized_list = algorithm(values, variant_name, inverse)
-    return dict(zip(ids, normalized_list))
+    # make a copy of the dictionary containing features (ids and values) and
+    # remove elements containing missing values, so the normalization is
+    # performed only on the subset of valid values
+    f_dict_copy = features_dict.copy()
+    # elements with null value will be saved in another dict, so they can be
+    # re-added afterwards
+    dict_of_null_values = {}
+    for key, value in f_dict_copy.iteritems():
+        if type(value) in (QPyNullVariant, NoneType):
+            dict_of_null_values[key] = value
+    for key in dict_of_null_values.keys():
+        del f_dict_copy[key]
+    normalized_list = algorithm(f_dict_copy.values(), variant_name, inverse)
+    normalized_dict = dict(zip(f_dict_copy.keys(), normalized_list))
+    # add to the normalized_dict the null elements that were removed
+    normalized_dict.update(dict_of_null_values)
+    return normalized_dict
 
 
 @NORMALIZATION_ALGS.add('RANK')

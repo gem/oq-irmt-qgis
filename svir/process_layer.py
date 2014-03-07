@@ -26,7 +26,8 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 import uuid
-from PyQt4.QtCore import QVariant
+from types import NoneType
+from PyQt4.QtCore import QVariant, QPyNullVariant
 from qgis.core import (QgsMapLayer,
                        QGis,
                        QgsVectorLayer,
@@ -103,8 +104,10 @@ class ProcessLayer():
         with LayerEditingManager(self.layer, 'Write normalized values', DEBUG):
             for feat in self.layer.getFeatures():
                 feat_id = feat.id()
-                self.layer.changeAttributeValue(
-                    feat_id, new_attr_id, float(normalized_dict[feat_id]))
+                value = normalized_dict[feat_id]
+                if type(value) not in (QPyNullVariant, NoneType):
+                    value = float(value)
+                self.layer.changeAttributeValue(feat_id, new_attr_id, value)
 
     def find_attribute_id(self, attribute_name):
         """
