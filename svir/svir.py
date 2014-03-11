@@ -332,8 +332,7 @@ class Svir:
             self.iface.messageBar().pushMessage(
                 tr("Login Error"),
                 tr(str(e)),
-                level=QgsMessageBar.CRITICAL,
-                duration=8)
+                level=QgsMessageBar.CRITICAL)
             self.platform_settings()
             return
 
@@ -359,8 +358,7 @@ class Svir:
                         self.iface.messageBar().pushMessage(
                             tr("Download Error"),
                             tr(str(e)),
-                            level=QgsMessageBar.CRITICAL,
-                            duration=8)
+                            level=QgsMessageBar.CRITICAL)
                         return
                 display_msg = tr(
                     "Social vulnerability data loaded in a new layer")
@@ -387,8 +385,7 @@ class Svir:
         except SvDownloadError as e:
             self.iface.messageBar().pushMessage(tr("Download Error"),
                                                 tr(str(e)),
-                                                level=QgsMessageBar.CRITICAL,
-                                                duration=8)
+                                                level=QgsMessageBar.CRITICAL)
 
     def platform_settings(self):
         PlatformSettingsDialog(self.iface).exec_()
@@ -505,8 +502,7 @@ class Svir:
                 self.iface.messageBar().pushMessage(
                     tr("Error"),
                     tr(e.message),
-                    level=QgsMessageBar.CRITICAL,
-                    duration=8)
+                    level=QgsMessageBar.CRITICAL)
 
         elif dlg.use_advanced:
             layer = reg.mapLayers().values()[
@@ -925,8 +921,7 @@ class Svir:
                 tr("ZonalStats Error"),
                 tr('You aborted aggregation, so there are '
                    'no data for analysis. Exiting...'),
-                level=QgsMessageBar.CRITICAL,
-                duration=8)
+                level=QgsMessageBar.CRITICAL)
 
     def create_new_aggregation_layer_with_no_empty_zones(self):
         """
