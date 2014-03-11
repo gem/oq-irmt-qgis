@@ -325,7 +325,9 @@ class Svir:
         sv_downloader = SvDownloader(hostname)
 
         try:
-            sv_downloader.login(username, password)
+            msg = ("Connecting to the OpenQuake Platform...")
+            with WaitCursorManager(msg, self.iface):
+                sv_downloader.login(username, password)
         except (SvDownloadError, ConnectionError) as e:
             self.iface.messageBar().pushMessage(
                 tr("Login Error"),
