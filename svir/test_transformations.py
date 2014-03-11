@@ -25,7 +25,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
-
+import qgis
+# ugly way to avoid "imported but unused" pep8 warning (qgis is necessary to
+# import QPyNullVariant
+if qgis:
+    pass
+from PyQt4.QtCore import QPyNullVariant
 from normalization_algs import normalize, NORMALIZATION_ALGS
 import unittest
 
@@ -33,18 +38,28 @@ import unittest
 class MissingValuesTestCase(unittest.TestCase):
 
     def test_normalize_with_missing_values(self):
-        features_dict = {'0': 2,
-                         '1': 0,
-                         '2': None,
-                         '3': 1,
-                         '4': None,
-                         '5': 6}
-
-        alg = NORMALIZATION_ALGS['MIN_MAX']
-        self.assertRaises(ValueError,
-                          normalize,
-                          features_dict,
-                          alg)
+        # when retrieving data through the platform, the SQL query produces
+        # NULL in case of missing values, where the type of those NULL elements
+        # is QPyNullVariant
+        # Here we test that case and the case of simple None elements
+        null_values = (QPyNullVariant(float), None)
+        for null_value in null_values:
+            features_dict = {'0': 7,
+                             '1': 6,
+                             '2': null_value,
+                             '3': 0,
+                             '4': null_value,
+                             '5': 6}
+            expected_dict = {'0': 4,
+                             '1': 2.5,
+                             '2': null_value,
+                             '3': 1,
+                             '4': null_value,
+                             '5': 2.5}
+            alg = NORMALIZATION_ALGS['RANK']
+            variant = "AVERAGE"
+            normalized_dict = normalize(features_dict, alg, variant)
+            self.assertEqual(normalized_dict, expected_dict)
 
 
 class RankTestCase(unittest.TestCase):
