@@ -154,23 +154,27 @@ class ZScoreTestCase(unittest.TestCase):
 
     def test_z_score_direct(self):
         z_score_list = self.alg(self.input_list, inverse=False)
-        self.assertEqual(z_score_list, [0.3244428422615252,
-                                        -1.9466570535691505,
-                                        0.3244428422615252,
-                                        -0.81110710565381261,
-                                        0.3244428422615252,
-                                        1.459992790176863,
-                                        0.3244428422615252])
+        expected_list = [0.3244428422615252,
+                         -1.9466570535691505,
+                         0.3244428422615252,
+                         -0.81110710565381261,
+                         0.3244428422615252,
+                         1.459992790176863,
+                         0.3244428422615252]
+        for i in range(len(self.input_list)):
+            self.assertAlmostEqual(z_score_list[i], expected_list[i], places=6)
 
     def test_z_score_inverse(self):
         z_score_list = self.alg(self.input_list, inverse=True)
-        self.assertEqual(z_score_list, [-4.2177569493998259,
-                                        -1.9466570535691505,
-                                        -4.2177569493998259,
-                                        -3.0822070014844885,
-                                        -4.2177569493998259,
-                                        -5.3533068973151643,
-                                        -4.2177569493998259])
+        expected_list = [-4.2177569493998259,
+                         -1.9466570535691505,
+                         -4.2177569493998259,
+                         -3.0822070014844885,
+                         -4.2177569493998259,
+                         -5.3533068973151643,
+                         -4.2177569493998259]
+        for i in range(len(self.input_list)):
+            self.assertAlmostEqual(z_score_list[i], expected_list[i], places=6)
 
 
 class Log10TestCase(unittest.TestCase):
