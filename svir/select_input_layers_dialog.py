@@ -34,11 +34,11 @@ from PyQt4.QtGui import (QFileDialog,
 from qgis.core import QgsVectorLayer, QGis, QgsRasterLayer, QgsMapLayerRegistry
 from qgis.gui import QgsMessageBar
 from process_layer import ProcessLayer
-from ui.ui_svir import Ui_SvirDialog
+from ui.ui_select_input_layers import Ui_SelectInputLayersDialog
 from utils import tr
 
 
-class SvirDialog(QDialog):
+class SelectInputLayersDialog(QDialog):
     """
     Modal dialog allowing to select a raster or vector layer
     containing loss data points and a vector layer containing polygons
@@ -49,7 +49,7 @@ class SvirDialog(QDialog):
         self.iface = iface
         QDialog.__init__(self)
         # Set up the user interface from Designer.
-        self.ui = Ui_SvirDialog()
+        self.ui = Ui_SelectInputLayersDialog()
         self.ui.setupUi(self)
         # Disable ok_button until loss and zonal layers are selected
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)

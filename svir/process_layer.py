@@ -26,7 +26,8 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 import uuid
-from PyQt4.QtCore import QVariant
+from types import NoneType
+from PyQt4.QtCore import QVariant, QPyNullVariant
 from qgis.core import (QgsMapLayer,
                        QGis,
                        QgsVectorLayer,
@@ -92,13 +93,21 @@ class ProcessLayer():
         algorithm = NORMALIZATION_ALGS[algorithm_name]
 
         # normalize the values in the dictionary with the chosen algorithm
-        normalized_dict = normalize(initial_dict, algorithm, variant, inverse)
+        try:
+            normalized_dict = normalize(
+                initial_dict, algorithm, variant, inverse)
+        except ValueError:
+            raise
+        except NotImplementedError:
+            raise
 
         with LayerEditingManager(self.layer, 'Write normalized values', DEBUG):
             for feat in self.layer.getFeatures():
                 feat_id = feat.id()
-                self.layer.changeAttributeValue(
-                    feat_id, new_attr_id, float(normalized_dict[feat_id]))
+                value = normalized_dict[feat_id]
+                if type(value) not in (QPyNullVariant, NoneType):
+                    value = float(value)
+                self.layer.changeAttributeValue(feat_id, new_attr_id, value)
 
     def find_attribute_id(self, attribute_name):
         """
@@ -157,19 +166,20 @@ class ProcessLayer():
         my_uuid = str(uuid.uuid4())
         uri = '%s?crs=%s&index=yes&uuid=%s' % (type_str, crs, my_uuid)
         mem_layer = QgsVectorLayer(uri, new_name, 'memory')
-        mem_provider = mem_layer.dataProvider()
+        with LayerEditingManager(mem_layer, 'Duplicating layer', DEBUG):
+            mem_provider = mem_layer.dataProvider()
 
-        provider = self.layer.dataProvider()
-        v_fields = provider.fields()
+            provider = self.layer.dataProvider()
+            v_fields = provider.fields()
 
-        fields = []
-        for i in v_fields:
-            fields.append(i)
+            fields = []
+            for i in v_fields:
+                fields.append(i)
 
-        mem_provider.addAttributes(fields)
+            mem_provider.addAttributes(fields)
 
-        for ft in provider.getFeatures():
-            mem_provider.addFeatures([ft])
+            for ft in provider.getFeatures():
+                mem_provider.addFeatures([ft])
 
         if add_to_registry:
             if mem_layer.isValid():

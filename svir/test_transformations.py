@@ -10,7 +10,7 @@
         email                : devops@openquake.org
  ***************************************************************************/
 
-# Copyright (c) 2010-2013, GEM Foundation.
+# Copyright (c) 2013-2014, GEM Foundation.
 #
 # OpenQuake is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Affero General Public License as published
@@ -25,9 +25,41 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
-
-from normalization_algs import NORMALIZATION_ALGS
+import qgis
+# ugly way to avoid "imported but unused" pep8 warning (qgis is necessary to
+# import QPyNullVariant
+if qgis:
+    pass
+from PyQt4.QtCore import QPyNullVariant
+from normalization_algs import normalize, NORMALIZATION_ALGS
 import unittest
+
+
+class MissingValuesTestCase(unittest.TestCase):
+
+    def test_normalize_with_missing_values(self):
+        # when retrieving data through the platform, the SQL query produces
+        # NULL in case of missing values, where the type of those NULL elements
+        # is QPyNullVariant
+        # Here we test that case and the case of simple None elements
+        null_values = (QPyNullVariant(float), None)
+        for null_value in null_values:
+            features_dict = {'0': 7,
+                             '1': 6,
+                             '2': null_value,
+                             '3': 0,
+                             '4': null_value,
+                             '5': 6}
+            expected_dict = {'0': 4,
+                             '1': 2.5,
+                             '2': null_value,
+                             '3': 1,
+                             '4': null_value,
+                             '5': 2.5}
+            alg = NORMALIZATION_ALGS['RANK']
+            variant = "AVERAGE"
+            normalized_dict = normalize(features_dict, alg, variant)
+            self.assertEqual(normalized_dict, expected_dict)
 
 
 class RankTestCase(unittest.TestCase):
@@ -122,23 +154,27 @@ class ZScoreTestCase(unittest.TestCase):
 
     def test_z_score_direct(self):
         z_score_list = self.alg(self.input_list, inverse=False)
-        self.assertEqual(z_score_list, [0.3244428422615252,
-                                        -1.9466570535691505,
-                                        0.3244428422615252,
-                                        -0.81110710565381261,
-                                        0.3244428422615252,
-                                        1.459992790176863,
-                                        0.3244428422615252])
+        expected_list = [0.3244428422615252,
+                         -1.9466570535691505,
+                         0.3244428422615252,
+                         -0.81110710565381261,
+                         0.3244428422615252,
+                         1.459992790176863,
+                         0.3244428422615252]
+        for i in range(len(self.input_list)):
+            self.assertAlmostEqual(z_score_list[i], expected_list[i], places=6)
 
     def test_z_score_inverse(self):
         z_score_list = self.alg(self.input_list, inverse=True)
-        self.assertEqual(z_score_list, [-4.2177569493998259,
-                                        -1.9466570535691505,
-                                        -4.2177569493998259,
-                                        -3.0822070014844885,
-                                        -4.2177569493998259,
-                                        -5.3533068973151643,
-                                        -4.2177569493998259])
+        expected_list = [-4.2177569493998259,
+                         -1.9466570535691505,
+                         -4.2177569493998259,
+                         -3.0822070014844885,
+                         -4.2177569493998259,
+                         -5.3533068973151643,
+                         -4.2177569493998259]
+        for i in range(len(self.input_list)):
+            self.assertAlmostEqual(z_score_list[i], expected_list[i], places=6)
 
 
 class Log10TestCase(unittest.TestCase):
@@ -169,13 +205,14 @@ class Log10TestCase(unittest.TestCase):
                       174568]
         self.assertRaises(ValueError, self.alg, input_list)
 
-    def test_log10_with_zeros(self):
+    def test_log10_with_zeros_changed_to_ones(self):
         input_list = [101249,
                       94082,
                       0,
                       0,
                       174568]
-        log10_list = self.alg(input_list)
+        log10_list = self.alg(input_list,
+                              variant_name='PRE-CHANGE ZEROS TO ONES')
         expected_list = [5.005391,
                          4.973507,
                          0,
@@ -183,6 +220,17 @@ class Log10TestCase(unittest.TestCase):
                          5.241965]
         for i in range(len(input_list)):
             self.assertAlmostEqual(log10_list[i], expected_list[i], places=6)
+
+    def test_log10_with_zeros_unchanged(self):
+        input_list = [101249,
+                      94082,
+                      0,
+                      0,
+                      174568]
+        self.assertRaises(ValueError,
+                          self.alg,
+                          input_list,
+                          variant_name='NO ZEROS ALLOWED')
 
 
 class QuadraticTestCase(unittest.TestCase):

@@ -29,11 +29,12 @@ from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import QDialog, QDialogButtonBox
 from qgis.core import QgsMapLayerRegistry
 
-from ui.ui_select_layers_to_join import Ui_SelectLayersToJoinDialog
-from globals import NUMERIC_FIELD_TYPES, STRING_FIELD_TYPE_NAME
+from ui.ui_select_layers_to_merge import Ui_SelectLayersToMergeDialog
+from globals import (NUMERIC_FIELD_TYPES,
+                     TEXTUAL_FIELD_TYPES)
 
 
-class SelectLayersToJoinDialog(QDialog):
+class SelectLayersToMergeDialog(QDialog):
     """
     Modal dialog giving to the user the possibility to select
     a layer containing loss data and one containing SVI data, that will be
@@ -42,7 +43,7 @@ class SelectLayersToJoinDialog(QDialog):
     def __init__(self):
         QDialog.__init__(self)
         # Set up the user interface from Designer.
-        self.ui = Ui_SelectLayersToJoinDialog()
+        self.ui = Ui_SelectLayersToMergeDialog()
         self.ui.setupUi(self)
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
 
@@ -68,7 +69,7 @@ class SelectLayersToJoinDialog(QDialog):
                 self.ui.aggr_loss_attr_cbox.addItem(field.name())
                 no_numeric_fields = False
             # add to merge attribute cbx string fields only
-            if field.typeName() == STRING_FIELD_TYPE_NAME:
+            if field.typeName() in TEXTUAL_FIELD_TYPES:
                 self.ui.merge_attr_cbx.addItem(field.name())
                 no_string_fields = False
         self.ok_button.setDisabled(no_numeric_fields)

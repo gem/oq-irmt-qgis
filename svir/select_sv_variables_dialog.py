@@ -10,7 +10,7 @@
         email                : devops@openquake.org
  ***************************************************************************/
 
-# Copyright (c) 2010-2013, GEM Foundation.
+# Copyright (c) 2013-2014, GEM Foundation.
 #
 # OpenQuake is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Affero General Public License as published
@@ -25,16 +25,16 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
-from PyQt4 import QtCore
-from PyQt4.QtCore import pyqtSlot
+from PyQt4.QtCore import pyqtSlot, Qt
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox)
 
-from ui.ui_select_sv_indices import Ui_SelectSvIndicesDialog
+from ui.ui_select_sv_variables import Ui_SelectSvVariablesDialog
 from import_sv_data import SvDownloadError
+from utils import WaitCursorManager
 
 
-class SelectSvIndicesDialog(QDialog):
+class SelectSvVariablesDialog(QDialog):
     """
     Modal dialog giving to the user the possibility to select
     social vulnerability variables to import from the oq-platform
@@ -42,37 +42,41 @@ class SelectSvIndicesDialog(QDialog):
     def __init__(self, downloader):
         QDialog.__init__(self)
         # Set up the user interface from Designer.
-        self.ui = Ui_SelectSvIndicesDialog()
+        self.ui = Ui_SelectSvVariablesDialog()
         self.ui.setupUi(self)
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
         self.set_ok_button()
         # login to platform, to be able to retrieve sv indices
         self.sv_downloader = downloader
-        self.fill_themes()
+        with WaitCursorManager():
+            self.fill_themes()
 
     @pyqtSlot(str)
     def on_theme_cbx_currentIndexChanged(self):
         theme = self.ui.theme_cbx.currentText()
-        self.fill_subthemes(theme)
+        with WaitCursorManager():
+            self.fill_subthemes(theme)
 
     @pyqtSlot(str)
     def on_subtheme_cbx_currentIndexChanged(self):
         theme = self.ui.theme_cbx.currentText()
         subtheme = self.ui.subtheme_cbx.currentText()
-        self.fill_tags(theme, subtheme)
+        with WaitCursorManager():
+            self.fill_tags(theme, subtheme)
 
     @pyqtSlot(str)
     def on_tag_cbx_currentIndexChanged(self):
         theme = self.ui.theme_cbx.currentText()
         subtheme = self.ui.subtheme_cbx.currentText()
         tag = self.ui.tag_cbx.currentText()
-        self.fill_names(theme, subtheme, tag)
+        with WaitCursorManager():
+            self.fill_names(theme, subtheme, tag)
 
     @pyqtSlot()
     def on_add_name_btn_clicked(self):
         name = self.ui.name_cbx.currentText()
         if not self.ui.selected_names_lst.findItems(
-                name, QtCore.Qt.MatchFixedString):
+                name, Qt.MatchFixedString):
                 self.ui.selected_names_lst.addItem(name)
                 self.set_ok_button()
 
@@ -95,7 +99,7 @@ class SelectSvIndicesDialog(QDialog):
         self.ui.theme_cbx.clear()
         # load list of themes from the platform
         try:
-            themes = self.sv_downloader.get_items()
+            themes = self.sv_downloader.get_category_names()
             self.ui.theme_cbx.addItems(themes)
         except SvDownloadError as e:
             raise SvDownloadError(
@@ -109,7 +113,7 @@ class SelectSvIndicesDialog(QDialog):
         self.ui.subtheme_cbx.clear()
         # load list of subthemes from the platform
         try:
-            subthemes = self.sv_downloader.get_items(theme)
+            subthemes = self.sv_downloader.get_category_names(theme)
             self.ui.subtheme_cbx.addItems(subthemes)
         except SvDownloadError as e:
             raise SvDownloadError(
@@ -123,7 +127,7 @@ class SelectSvIndicesDialog(QDialog):
         self.ui.tag_cbx.clear()
         # load list of tags from the platform
         try:
-            tags = self.sv_downloader.get_items(theme, subtheme)
+            tags = self.sv_downloader.get_category_names(theme, subtheme)
             self.ui.tag_cbx.addItems(tags)
         except SvDownloadError as e:
             raise SvDownloadError(
@@ -137,7 +141,7 @@ class SelectSvIndicesDialog(QDialog):
         self.ui.name_cbx.clear()
         # load list of social vulnerability variable names from the platform
         try:
-            names = self.sv_downloader.get_items(theme, subtheme, tag)
+            names = self.sv_downloader.get_category_names(theme, subtheme, tag)
             self.ui.name_cbx.addItems(names)
         except SvDownloadError as e:
             raise SvDownloadError(
