@@ -943,7 +943,9 @@ class Svir:
             count_field.setTypeName(INT_FIELD_TYPE_NAME)
             sum_field = QgsField("sum", QVariant.Double)
             sum_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
-            pr.addAttributes([zone_field, count_field, sum_field])
+            avg_field = QgsField("avg", QVariant.Double)
+            avg_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
+            pr.addAttributes([zone_field, count_field, sum_field, avg_field])
 
             # copy zones from aggregation layer
             for current_zone, zone_feature in enumerate(
