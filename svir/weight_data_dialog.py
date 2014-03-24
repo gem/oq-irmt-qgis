@@ -41,15 +41,14 @@ class WeightDataDialog(QDialog):
     that define the zones for which data need to be aggregated. When
     both are selected and are valid files, they can be loaded by clicking OK
     """
+
     def __init__(self, iface):
         self.iface = iface
         QDialog.__init__(self)
         # Set up the user interface from Designer.
         self.ui = Ui_WeightDataDialog()
         self.ui.setupUi(self)
-        self.ui.web_view.load(
-            QUrl().fromLocalFile(
-                '/home/marco/dev/GEM/qt-experiments/svir/resources/d3.html'))
+        self.ui.web_view.load(QUrl('qrc:/plugins/svir/weight_data.html'))
         # Disable ok_button until loss and zonal layers are selected
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
         self.ui.web_view.loadFinished.connect(self.load_finished)
