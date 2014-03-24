@@ -30,7 +30,6 @@
 from PyQt4.QtCore import QUrl
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox)
-from PyQt4.QtWebKit import QWebView
 
 from ui.ui_weight_data import Ui_WeightDataDialog
 
@@ -48,6 +47,14 @@ class WeightDataDialog(QDialog):
         # Set up the user interface from Designer.
         self.ui = Ui_WeightDataDialog()
         self.ui.setupUi(self)
-        self.ui.web_view.setUrl(QUrl('http://google.ch'))
+        self.ui.web_view.load(
+            QUrl().fromLocalFile(
+                '/home/marco/dev/GEM/qt-experiments/svir/resources/d3.html'))
         # Disable ok_button until loss and zonal layers are selected
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
+        self.ui.web_view.loadFinished.connect(self.load_finished)
+
+    def load_finished(self):
+        print '********************'
+        result = self.sender().page().mainFrame().evaluateJavaScript("f1('test param')");
+        print result
