@@ -55,5 +55,4 @@ class WeightDataDialog(QDialog):
 
     def load_finished(self):
         print '********************'
-        result = self.sender().page().mainFrame().evaluateJavaScript("f1('test param')");
-        print result
+        #result = self.sender().page().mainFrame().evaluateJavaScript("f1('test param')");
