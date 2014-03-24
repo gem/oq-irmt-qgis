@@ -73,6 +73,7 @@ from select_attrs_for_stats_dialog import SelectAttrsForStatsDialog
 from select_sv_variables_dialog import SelectSvVariablesDialog
 from platform_settings_dialog import PlatformSettingsDialog
 from choose_sv_data_source_dialog import ChooseSvDataSourceDialog
+from weight_data_dialog import WeightDataDialog
 
 from import_sv_data import SvDownloader, SvDownloadError
 
@@ -173,6 +174,13 @@ class Svir:
                            ":/plugins/svir/start_plugin_icon.png",
                            u"&Choose social vulnerability data source",
                            self.choose_sv_data_source,
+                           enable=True)
+        # Action to activate the modal dialog to choose weighting of the
+        # data from the platform
+        self.add_menu_item("weight_data",
+                           ":/plugins/svir/start_plugin_icon.png",
+                           u"&Weight data",
+                           self.weight_data,
                            enable=True)
         # Action to activate the modal dialog to guide the user through loss
         # aggregation by zone
@@ -386,6 +394,16 @@ class Svir:
             self.iface.messageBar().pushMessage(tr("Download Error"),
                                                 tr(str(e)),
                                                 level=QgsMessageBar.CRITICAL)
+
+    def weight_data(self):
+        """
+        Open a modal dialog to select if the user wants to load social
+        vulnerability data from one of the available layers or throught the
+        OpenQuake Platform
+        """
+        dlg = WeightDataDialog(self.iface)
+        if dlg.exec_():
+            print 'ok'
 
     def platform_settings(self):
         PlatformSettingsDialog(self.iface).exec_()
