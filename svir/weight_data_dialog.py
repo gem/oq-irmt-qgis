@@ -26,8 +26,14 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-# create the dialog for zoom to point
-from PyQt4.QtCore import Qt, QUrl, QSettings, pyqtProperty, pyqtSignal
+import json
+
+from PyQt4.QtCore import (Qt,
+                          QUrl,
+                          QSettings,
+                          pyqtProperty,
+                          pyqtSignal)
+
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox)
 from PyQt4.QtWebKit import QWebSettings
@@ -43,17 +49,20 @@ class WeightDataDialog(QDialog):
     both are selected and are valid files, they can be loaded by clicking OK
     """
 
+    # QVariantMap is to map a JSON to dict see:
+    # http://pyqt.sourceforge.net/Docs/PyQt4/incompatibilities.html#pyqt4-v4-7-4
     json_updated = pyqtSignal(['QVariantMap'], name='json_updated')
 
-    def __init__(self, iface):
+    def __init__(self, iface, project_definition):
         self.iface = iface
         QDialog.__init__(self)
 
         # Set up the user interface from Designer.
         self.ui = Ui_WeightDataDialog()
         self.ui.setupUi(self)
-
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
+
+        self.project_definition = project_definition
 
         self.web_view = self.ui.web_view
         self.web_view.load(QUrl('qrc:/plugins/svir/weight_data.html'))
@@ -63,10 +72,7 @@ class WeightDataDialog(QDialog):
 
         self.frame.javaScriptWindowObjectCleared.connect(self.setup_js)
         self.web_view.loadFinished.connect(self.show_tree)
-        self.json_updated.connect(self.handle_json)
-
-    def setup_js(self):
-        self.frame.addToJavaScriptWindowObject("qt_page", self)
+        self.json_updated.connect(self.handle_json_updated)
 
     def setup_context_menu(self):
         settings = QSettings()
@@ -79,99 +85,18 @@ class WeightDataDialog(QDialog):
         else:
             self.web_view.setContextMenuPolicy(Qt.NoContextMenu)
 
+    def setup_js(self):
+        # pass a reference (called qt_page) of self to the JS world
+        self.frame.addToJavaScriptWindowObject("qt_page", self)
+
     def show_tree(self):
+        # start the tree
         self.frame.evaluateJavaScript("init_tree()")
-    
-    def handle_json(self, json):
-        print 'UPDATED json: %s' % json
+
+    def handle_json_updated(self, data):
+        self.project_definition = data
 
     @pyqtProperty(str)
     def json_str(self):
-        return self.JSON
-
-    JSON = '{ \
-              "name": "ir",\
-              "weight": "",\
-              "level" : 1,\
-              "children": [\
-              {\
-                "name": "aal",\
-                "weight": 0.5,\
-                "level": 2\
-              },\
-              {\
-                "name": "svi",\
-                "weight": 0.5,\
-                "level": 2,\
-                "children": [\
-                  {\
-                    "name": "population",\
-                    "weight": 0.16,\
-                    "level": 3.2,\
-                    "type": "categoryIndicator",\
-                    "children": [\
-                      {"name": "QFEMALE", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},\
-                      {"name": "QURBAN", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},\
-                      {"name": "MIGFOREIGN", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},\
-                      {"name": "MIGMUNICIP", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},\
-                      {"name": "QFOREIGN", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},\
-                      {"name": "QAGEDEP", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},\
-                      {"name": "POPDENT", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},\
-                      {"name": "PPUNIT", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},\
-                      {"name": "QFHH", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},\
-                      {"name": "QRENTAL", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},\
-                      {"name": "QDISABLED", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},\
-                      {"name": "QSSINT", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"}\
-                    ]\
-                  },\
-                  {\
-                    "name": "economy",\
-                    "weight": 0.16,\
-                    "level": 3.2,\
-                    "type": "categoryIndicator",\
-                    "children": [\
-                      {"name": "QUNEMPL", "weight": 0.167, "level": 4.1, "type": "primaryIndicator"},\
-                      {"name": "QFEMLBR", "weight": 0.167, "level": 4.1, "type": "primaryIndicator"},\
-                      {"name": "QSECOEMPL", "weight": 0.167, "level": 4.1, "type": "primaryIndicator"},\
-                      {"name": "QSERVEMPL", "weight": 0.167, "level": 4.1, "type": "primaryIndicator"},\
-                      {"name": "QNOSKILLEMPL", "weight": 0.167, "level": 4.1, "type": "primaryIndicator"},\
-                      {"name": "PCPP", "weight": 0.167, "level": 4.1, "type": "primaryIndicator"}\
-                    ]\
-                  },\
-                  {\
-                    "name": "education",\
-                    "weight": 0.16,\
-                    "level": 3.2,\
-                    "type": "categoryIndicator",\
-                    "children": [\
-                      {"name": "QEDLESS", "weight": 0.5, "level": 4.2, "type": "primaryIndicator"},\
-                      {"name": "EDUTERTIARY", "weight": 0.5, "level": 4.2, "type": "primaryIndicator"}\
-                    ]\
-                  },\
-                  {\
-                    "name": "infrastructure",\
-                    "weight": 0.16,\
-                    "level": 3.2,\
-                    "type": "categoryIndicator",\
-                    "children": [\
-                      {"name": "QBLDREPAIR", "weight": 0.25, "level": 4.4, "type": "primaryIndicator"},\
-                      {"name": "NEWBUILD", "weight": 0.25, "level": 4.4, "type": "primaryIndicator"},\
-                      {"name": "QPOPNOWATER", "weight": 0.25, "level": 4.4, "type": "primaryIndicator"},\
-                      {"name": "QPOPNOWASTE", "weight": 0.25, "level": 4.4, "type": "primaryIndicator"}\
-                    ]\
-                  },\
-                  {\
-                    "name": "governance",\
-                    "weight": 0.16,\
-                    "level": 3.2,\
-                    "type": "categoryIndicator",\
-                    "children": [\
-                      {"name": "CRIMERATE", "weight": 0.33, "level": 4.5, "type": "primaryIndicator"},\
-                      {"name": "QNOVOTEMU", "weight": 0.33, "level": 4.5, "type": "primaryIndicator"},\
-                      {"name": "QNOVOTEPR", "weight": 0.33, "level": 4.5, "type": "primaryIndicator"}\
-                    ]\
-                  }\
-                ]\
-              }\
-             ]\
-            }'
+        #This method gets exposed to JS thanks to @pyqtProperty(str)
+        return json.dumps(self.project_definition)

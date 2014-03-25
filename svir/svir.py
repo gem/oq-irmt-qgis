@@ -139,6 +139,8 @@ class Svir:
         # Attribute containing aggregated losses, that will be merged with SVI
         self.aggr_loss_attr_to_merge = None
 
+        self.project_definition = self.TEST_JSON
+
     def add_menu_item(self,
                       action_name,
                       icon_path,
@@ -401,9 +403,9 @@ class Svir:
         vulnerability data from one of the available layers or throught the
         OpenQuake Platform
         """
-        dlg = WeightDataDialog(self.iface)
+        dlg = WeightDataDialog(self.iface, self.project_definition)
         if dlg.exec_():
-            print 'ok'
+            self.project_definition = dlg.project_definition
 
     def platform_settings(self):
         PlatformSettingsDialog(self.iface).exec_()
@@ -1161,3 +1163,90 @@ class Svir:
 
     def clear_progress_message_bar(self):
         self.iface.messageBar().clearWidgets()
+
+    TEST_JSON = {
+              "name": "ir",
+              "weight": "",
+              "level" : 1,
+              "children": [
+              {
+                "name": "aal",
+                "weight": 0.5,
+                "level": 2
+              },
+              {
+                "name": "svi",
+                "weight": 0.5,
+                "level": 2,
+                "children": [
+                  {
+                    "name": "population",
+                    "weight": 0.16,
+                    "level": 3.2,
+                    "type": "categoryIndicator",
+                    "children": [
+                      {"name": "QFEMALE", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
+                      {"name": "QURBAN", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
+                      {"name": "MIGFOREIGN", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
+                      {"name": "MIGMUNICIP", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
+                      {"name": "QFOREIGN", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
+                      {"name": "QAGEDEP", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
+                      {"name": "POPDENT", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
+                      {"name": "PPUNIT", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
+                      {"name": "QFHH", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
+                      {"name": "QRENTAL", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
+                      {"name": "QDISABLED", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
+                      {"name": "QSSINT", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"}
+                    ]
+                  },
+                  {
+                    "name": "economy",
+                    "weight": 0.16,
+                    "level": 3.2,
+                    "type": "categoryIndicator",
+                    "children": [
+                      {"name": "QUNEMPL", "weight": 0.167, "level": 4.1, "type": "primaryIndicator"},
+                      {"name": "QFEMLBR", "weight": 0.167, "level": 4.1, "type": "primaryIndicator"},
+                      {"name": "QSECOEMPL", "weight": 0.167, "level": 4.1, "type": "primaryIndicator"},
+                      {"name": "QSERVEMPL", "weight": 0.167, "level": 4.1, "type": "primaryIndicator"},
+                      {"name": "QNOSKILLEMPL", "weight": 0.167, "level": 4.1, "type": "primaryIndicator"},
+                      {"name": "PCPP", "weight": 0.167, "level": 4.1, "type": "primaryIndicator"}
+                    ]
+                  },
+                  {
+                    "name": "education",
+                    "weight": 0.16,
+                    "level": 3.2,
+                    "type": "categoryIndicator",
+                    "children": [
+                      {"name": "QEDLESS", "weight": 0.5, "level": 4.2, "type": "primaryIndicator"},
+                      {"name": "EDUTERTIARY", "weight": 0.5, "level": 4.2, "type": "primaryIndicator"}
+                    ]
+                  },
+                  {
+                    "name": "infrastructure",
+                    "weight": 0.16,
+                    "level": 3.2,
+                    "type": "categoryIndicator",
+                    "children": [
+                      {"name": "QBLDREPAIR", "weight": 0.25, "level": 4.4, "type": "primaryIndicator"},
+                      {"name": "NEWBUILD", "weight": 0.25, "level": 4.4, "type": "primaryIndicator"},
+                      {"name": "QPOPNOWATER", "weight": 0.25, "level": 4.4, "type": "primaryIndicator"},
+                      {"name": "QPOPNOWASTE", "weight": 0.25, "level": 4.4, "type": "primaryIndicator"}
+                    ]
+                  },
+                  {
+                    "name": "governance",
+                    "weight": 0.16,
+                    "level": 3.2,
+                    "type": "categoryIndicator",
+                    "children": [
+                      {"name": "CRIMERATE", "weight": 0.33, "level": 4.5, "type": "primaryIndicator"},
+                      {"name": "QNOVOTEMU", "weight": 0.33, "level": 4.5, "type": "primaryIndicator"},
+                      {"name": "QNOVOTEPR", "weight": 0.33, "level": 4.5, "type": "primaryIndicator"}
+                    ]
+                  }
+                ]
+              }
+             ]
+            }
