@@ -71,7 +71,7 @@ from attribute_selection_dialog import AttributeSelectionDialog
 from normalization_dialog import NormalizationDialog
 from select_attrs_for_stats_dialog import SelectAttrsForStatsDialog
 from select_sv_variables_dialog import SelectSvVariablesDialog
-from platform_settings_dialog import PlatformSettingsDialog
+from settings_dialog import SettingsDialog
 from choose_sv_data_source_dialog import ChooseSvDataSourceDialog
 from weight_data_dialog import WeightDataDialog
 
@@ -165,10 +165,10 @@ class Svir:
     def initGui(self):
         # Action to activate the modal dialog to set up settings for the
         # connection with the platform
-        self.add_menu_item("platform_settings",
+        self.add_menu_item("svir",
                            ":/plugins/svir/start_plugin_icon.png",
-                           u"&Openquake platform connection settings",
-                           self.platform_settings,
+                           u"&SVIR settings",
+                           self.settings,
                            enable=True)
         # Action to activate the modal dialog to import social vulnerability
         # data from the platform
@@ -176,13 +176,6 @@ class Svir:
                            ":/plugins/svir/start_plugin_icon.png",
                            u"&Choose social vulnerability data source",
                            self.choose_sv_data_source,
-                           enable=True)
-        # Action to activate the modal dialog to choose weighting of the
-        # data from the platform
-        self.add_menu_item("weight_data",
-                           ":/plugins/svir/start_plugin_icon.png",
-                           u"&Weight data",
-                           self.weight_data,
                            enable=True)
         # Action to activate the modal dialog to guide the user through loss
         # aggregation by zone
@@ -220,6 +213,13 @@ class Svir:
             u"id_calculate_svir_indices",
             QgsMapLayer.VectorLayer,
             True)
+        # Action to activate the modal dialog to choose weighting of the
+        # data from the platform
+        self.add_menu_item("weight_data",
+                           ":/plugins/svir/start_plugin_icon.png",
+                           u"&Weight data",
+                           self.weight_data,
+                           enable=True)
         self.update_actions_status()
         QgsMapLayerRegistry.instance().layersAdded.connect(
             self.update_actions_status)
@@ -343,7 +343,7 @@ class Svir:
                 tr("Login Error"),
                 tr(str(e)),
                 level=QgsMessageBar.CRITICAL)
-            self.platform_settings()
+            self.settings()
             return
 
         try:
@@ -407,8 +407,8 @@ class Svir:
         if dlg.exec_():
             self.project_definition = dlg.project_definition
 
-    def platform_settings(self):
-        PlatformSettingsDialog(self.iface).exec_()
+    def settings(self):
+        SettingsDialog(self.iface).exec_()
 
     def merge_svi_with_aggr_losses(self):
         """
