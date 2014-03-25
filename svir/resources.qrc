@@ -9,7 +9,7 @@
         <file alias="css/svir_viewer_sub.css">resources/css/svir_viewer_sub.css</file>
         <file alias="start_plugin_icon.png">resources/start_plugin_icon.png</file>
         <file alias="purge_empty_zones_icon.png">resources/purge_empty_zones_icon.png</file>
-        <file>resources/css/images/animated-overlay.gif</file>
+        <file alias="css/images/animated-overlay.gif">resources/css/images/animated-overlay.gif</file>
         <file alias="css/images/ui-bg_flat_0_aaaaaa_40x100.png">resources/css/images/ui-bg_flat_0_aaaaaa_40x100.png</file>
         <file alias="css/images/ui-bg_flat_75_ffffff_40x100.png">resources/css/images/ui-bg_flat_75_ffffff_40x100.png</file>
         <file alias="css/images/ui-bg_glass_55_fbf9ee_1x400.png">resources/css/images/ui-bg_glass_55_fbf9ee_1x400.png</file>

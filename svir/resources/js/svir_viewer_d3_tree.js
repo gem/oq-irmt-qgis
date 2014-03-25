@@ -25,25 +25,6 @@
         });
     });
 
-    //  Project definition dialog
-    $("#projectDefDialog").dialog({
-        autoOpen: false,
-        height: 500,
-        width: 800,
-        modal: false
-    });
-
-    $("#project-definition").button().click(function() {
-        $("#projectDefDialog").dialog("open");
-    });
-
-    $("#warning-no-layer").dialog({
-        autoOpen: false,
-        hieght: 300,
-        width: 350,
-        modal: true
-    });
-
 
     ////////////////////////////////////////////
     //// Project Definition Collapsible Tree ///
@@ -88,7 +69,7 @@
 
                 // Get the values of the spinners
                 for (var i = 0; i < pdTempSpinnerIds.length; i++) {
-                    pdTempWeights.push($('#'+pdTempSpinnerIds[i]).attr('value'));
+                    pdTempWeights.push($('#'+pdTempSpinnerIds[i]).attr('aria-valuenow'));
                 };
 
                 // Adjust the values into percentages
