@@ -15,6 +15,16 @@
       along with this program.  If not, see <https://www.gnu.org/licenses/agpl.html>.
 */
 
+    $(document).ready(function() {
+        //  Project definition weight dialog
+        $("#projectDefWeightDialog").dialog({
+            autoOpen: false,
+            height: 500,
+            width: 500,
+            modal: true
+        });
+    });
+
     //  Project definition dialog
     $("#projectDefDialog").dialog({
         autoOpen: false,
@@ -27,22 +37,11 @@
         $("#projectDefDialog").dialog("open");
     });
 
-    $(document).ready(function() {
-        $("#warning-no-layer").dialog({
-            autoOpen: false,
-            height: 300,
-            width: 350,
-            modal: true
-        });
-
-        //  Project definition weight dialog
-        $("#projectDefWeightDialog").dialog({
-            autoOpen: false,
-            height: 500,
-            width: 500,
-            modal: true
-        });
-
+    $("#warning-no-layer").dialog({
+        autoOpen: false,
+        hieght: 300,
+        width: 350,
+        modal: true
     });
 
 
