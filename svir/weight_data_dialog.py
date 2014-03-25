@@ -49,9 +49,8 @@ class WeightDataDialog(QDialog):
         self.ui = Ui_WeightDataDialog()
         self.ui.setupUi(self)
         self.ui.web_view.load(QUrl('qrc:/plugins/svir/weight_data.html'))
-        # Disable ok_button until loss and zonal layers are selected
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
-        self.ui.web_view.loadFinished.connect(self.load_finished)
+        #self.ui.web_view.loadFinished.connect(self.load_finished)
 
     def load_finished(self):
         print '********************'
