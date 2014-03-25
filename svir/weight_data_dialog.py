@@ -43,7 +43,7 @@ class WeightDataDialog(QDialog):
     both are selected and are valid files, they can be loaded by clicking OK
     """
 
-    json_updated = pyqtSignal([unicode], name='json_updated')
+    json_updated = pyqtSignal(['QVariantMap'], name='json_updated')
 
     def __init__(self, iface):
         self.iface = iface
