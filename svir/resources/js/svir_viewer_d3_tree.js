@@ -30,8 +30,8 @@
     //// Project Definition Collapsible Tree ///
     ////////////////////////////////////////////
 
-    function loadPD(selectedPDef) {
-
+    function loadPD(selectedPDef, qt_page) {
+        var qt_page = typeof qt_page !== 'undefined' ? qt_page : false;
         var margin = {top: 20, right: 120, bottom: 20, left: 30},
             width = 960 - margin.right - margin.left,
             height = 800 - margin.top - margin.bottom;
@@ -69,7 +69,7 @@
 
                 // Get the values of the spinners
                 for (var i = 0; i < pdTempSpinnerIds.length; i++) {
-                    pdTempWeights.push($('#'+pdTempSpinnerIds[i]).val(2));
+                    pdTempWeights.push($('#'+pdTempSpinnerIds[i]).val());
                 };
 
                 // Adjust the values into percentages
@@ -287,7 +287,27 @@
                 d.x0 = d.x;
                 d.y0 = d.y;
             });
-
+            if (qt_page){
+                //this keys will not be added to the returned JSON string
+                var ignore_key = ["depth", "x", "y", "id", "x0", "y0"]
+                var seen = []
+                // http://stackoverflow.com/questions/9382167/#9382383
+                qt_page.json_updated(
+                    JSON.stringify(pdData, function(key, val) {
+                       if (typeof val == "object") {
+                            if (seen.indexOf(val) >= 0) {
+                                return
+                            }
+                           seen.push(val)
+                       }
+                       //if is key in key_ignore
+                       if (ignore_key.indexOf(key)>=0){
+                           return
+                       }
+                       return val
+                    })
+                )
+            }
         }
         
         // Toggle children on click.
