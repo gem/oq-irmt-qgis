@@ -76,7 +76,6 @@ class WeightDataDialog(QDialog):
 
     def setup_context_menu(self):
         settings = QSettings()
-        # TODO (MB) add a place to set this
         developer_mode = settings.value(
             '/svir/developer_mode', True, type=bool)
         if developer_mode is True:

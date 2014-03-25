@@ -404,8 +404,16 @@ class Svir:
         OpenQuake Platform
         """
         dlg = WeightDataDialog(self.iface, self.project_definition)
+        dlg.json_updated.connect(self.redraw_ir_layer)
         if dlg.exec_():
             self.project_definition = dlg.project_definition
+        dlg.json_updated.disconnect(self.redraw_ir_layer)
+        # if the dlg was not accepted, self.project_definition is still the
+        # one we had before opening the dlg and we use it do reset the changes
+        self.redraw_ir_layer(self.project_definition)
+
+    def redraw_ir_layer(self, data):
+        print "REDRAW USING %s" % data
 
     def settings(self):
         SettingsDialog(self.iface).exec_()
