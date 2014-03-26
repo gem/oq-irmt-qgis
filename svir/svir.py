@@ -367,22 +367,28 @@ class Svir:
                         sv_idx = str(sv[1])
                         sv_name = str(sv[2])
 
+                        # add a new theme to the project_definition
                         theme = copy.deepcopy(self.CATEGORY_TEMPLATE)
                         theme['name'] = sv_theme
-
-                        indicator = copy.copy(self.INDICATOR_TEMPLATE)
-                        indicator['name'] = sv_name
-                        indicator['field'] = sv_idx
-                        indices_list.append(sv_idx)
-
                         if sv_theme not in themes:
                             themes.append(sv_theme)
                             svi_children.append(theme)
 
                         theme_idx = themes.index(sv_theme)
+                        level = float('4.%d' % theme_idx)
+
+                        # add a new indicator to a theme
+                        indicator = copy.copy(self.INDICATOR_TEMPLATE)
+                        indicator['name'] = sv_name
+                        indicator['field'] = sv_idx
+                        indicator['level'] = level
                         svi_children[theme_idx]['children'].append(indicator)
 
+                        indices_list.append(sv_idx)
+
+                    # create string for DB query
                     indices_string = ", ".join(indices_list)
+
                     try:
                         fname, msg = sv_downloader.get_data_by_variables_ids(
                             indices_string)
@@ -1222,22 +1228,22 @@ class Svir:
     DEMO_JSON = {
               "name": "ir",
               "weight": "",
-              "level" : 1,
+              "level" : 1.0,
               "children": [
               {
                 "name": "aal",
                 "weight": 0.5,
-                "level": 2
+                "level": 2.0
               },
               {
                 "name": "svi",
                 "weight": 0.5,
-                "level": 2,
+                "level": 2.0,
                 "children": [
                   {
                     "name": "population",
                     "weight": 0.16,
-                    "level": 3.2,
+                    "level": 3.1,
                     "type": "categoryIndicator",
                     "children": [
                       {"name": "QFEMALE", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
@@ -1257,7 +1263,7 @@ class Svir:
                   {
                     "name": "economy",
                     "weight": 0.16,
-                    "level": 3.2,
+                    "level": 3.1,
                     "type": "categoryIndicator",
                     "children": [
                       {"name": "QUNEMPL", "weight": 0.167, "level": 4.1, "type": "primaryIndicator"},
@@ -1271,7 +1277,7 @@ class Svir:
                   {
                     "name": "education",
                     "weight": 0.16,
-                    "level": 3.2,
+                    "level": 3.1,
                     "type": "categoryIndicator",
                     "children": [
                       {"name": "QEDLESS", "weight": 0.5, "level": 4.2, "type": "primaryIndicator"},
@@ -1281,7 +1287,7 @@ class Svir:
                   {
                     "name": "infrastructure",
                     "weight": 0.16,
-                    "level": 3.2,
+                    "level": 3.1,
                     "type": "categoryIndicator",
                     "children": [
                       {"name": "QBLDREPAIR", "weight": 0.25, "level": 4.4, "type": "primaryIndicator"},
@@ -1293,7 +1299,7 @@ class Svir:
                   {
                     "name": "governance",
                     "weight": 0.16,
-                    "level": 3.2,
+                    "level": 3.1,
                     "type": "categoryIndicator",
                     "children": [
                       {"name": "CRIMERATE", "weight": 0.33, "level": 4.5, "type": "primaryIndicator"},
