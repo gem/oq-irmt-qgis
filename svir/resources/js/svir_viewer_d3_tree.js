@@ -288,7 +288,9 @@
                 d.y0 = d.y;
             });
             if (qt_page){
-                qt_page.json_updated(pdData)
+                if (typeof pdData !== 'undefined'){
+                    qt_page.json_updated(pdData)
+                }
             }
         }
         
