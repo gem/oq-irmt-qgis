@@ -27,6 +27,7 @@
 """
 import os.path
 import uuid
+import copy
 from requests.exceptions import ConnectionError
 
 from PyQt4.QtCore import (QSettings,
@@ -139,7 +140,7 @@ class Svir:
         # Attribute containing aggregated losses, that will be merged with SVI
         self.aggr_loss_attr_to_merge = None
 
-        self.project_definition = self.TEST_JSON
+        self.project_definition = self.PROJECT_TEMPLATE
 
     def add_menu_item(self,
                       action_name,
@@ -353,13 +354,34 @@ class Svir:
                        "Platform...")
                 # Retrieve the indices selected by the user
                 indices_list = []
+                svi_children = self.project_definition[
+                    'children'][1]['children']
+                themes = []
                 with WaitCursorManager(msg, self.iface):
                     while dlg.ui.selected_names_lst.count() > 0:
                         item = dlg.ui.selected_names_lst.takeItem(0)
-                        item_text = item.text()
-                        sv_idx = item_text.split(",")[0]
-                        sv_idx = str(sv_idx).replace('"', '')
+                        item_text = item.text().replace('"', '')
+
+                        sv = item_text.split(',', 2)
+                        sv_theme = str(sv[0])
+                        sv_idx = str(sv[1])
+                        sv_name = str(sv[2])
+
+                        theme = copy.deepcopy(self.CATEGORY_TEMPLATE)
+                        theme['name'] = sv_theme
+
+                        indicator = copy.copy(self.INDICATOR_TEMPLATE)
+                        indicator['name'] = sv_name
+                        indicator['field'] = sv_idx
                         indices_list.append(sv_idx)
+
+                        if sv_theme not in themes:
+                            themes.append(sv_theme)
+                            svi_children.append(theme)
+
+                        theme_idx = themes.index(sv_theme)
+                        svi_children[theme_idx]['children'].append(indicator)
+
                     indices_string = ", ".join(indices_list)
                     try:
                         fname, msg = sv_downloader.get_data_by_variables_ids(
@@ -1172,7 +1194,32 @@ class Svir:
     def clear_progress_message_bar(self):
         self.iface.messageBar().clearWidgets()
 
-    TEST_JSON = {
+    PROJECT_TEMPLATE = {'name': 'ir',
+                        'weight': '',
+                        'level': 1,
+                        'children': [
+                            {'name': 'aal',
+                             'weight': 0.5,
+                             'level': 2},
+                            {'name': 'svi',
+                             'weight': 0.5,
+                             'level': 2,
+                             'children': []}
+                        ]}
+
+    CATEGORY_TEMPLATE = {'name': '',
+                         'weight': 0.0,
+                         'level': 3.0,
+                         'type': 'categoryIndicator',
+                         'children': []}
+
+    INDICATOR_TEMPLATE = {'name': '',
+                          'weight': 0.0,
+                          'level': 4.0,
+                          'type': 'primaryIndicator',
+                          'field': ''}
+
+    DEMO_JSON = {
               "name": "ir",
               "weight": "",
               "level" : 1,
