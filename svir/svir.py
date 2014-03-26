@@ -354,9 +354,10 @@ class Svir:
                        "Platform...")
                 # Retrieve the indices selected by the user
                 indices_list = []
-                svi_children = self.project_definition[
+                svi_themes = self.project_definition[
                     'children'][1]['children']
                 themes = []
+                indicators_count = []
                 with WaitCursorManager(msg, self.iface):
                     while dlg.ui.selected_names_lst.count() > 0:
                         item = dlg.ui.selected_names_lst.takeItem(0)
@@ -372,7 +373,8 @@ class Svir:
                         theme['name'] = sv_theme
                         if sv_theme not in themes:
                             themes.append(sv_theme)
-                            svi_children.append(theme)
+                            indicators_count.append(0)
+                            svi_themes.append(theme)
 
                         theme_idx = themes.index(sv_theme)
                         level = float('4.%d' % theme_idx)
@@ -382,12 +384,23 @@ class Svir:
                         indicator['name'] = sv_name
                         indicator['field'] = sv_idx
                         indicator['level'] = level
-                        svi_children[theme_idx]['children'].append(indicator)
+                        indicators_count[theme_idx] += 1
+                        svi_themes[theme_idx]['children'].append(indicator)
 
                         indices_list.append(sv_idx)
 
                     # create string for DB query
                     indices_string = ", ".join(indices_list)
+
+                    # count themes and indicators and assign default weights
+                    # using 2 decimal points (%.2f)
+                    theme_weight = float('%.2f' % (1.0/len(themes)))
+                    for i, theme in enumerate(svi_themes):
+                        theme['weight'] = theme_weight
+                        for indicator in theme['children']:
+                            indicator_weight = 1.0/indicators_count[i]
+                            indicator_weight = '%.2f' % indicator_weight
+                            indicator['weight'] = float(indicator_weight)
 
                     try:
                         fname, msg = sv_downloader.get_data_by_variables_ids(
@@ -398,6 +411,7 @@ class Svir:
                             tr(str(e)),
                             level=QgsMessageBar.CRITICAL)
                         return
+
                 display_msg = tr(
                     "Social vulnerability data loaded in a new layer")
                 self.iface.messageBar().pushMessage(tr("Info"),
