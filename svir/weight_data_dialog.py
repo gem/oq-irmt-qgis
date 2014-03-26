@@ -51,7 +51,10 @@ class WeightDataDialog(QDialog):
 
     # QVariantMap is to map a JSON to dict see:
     # http://pyqt.sourceforge.net/Docs/PyQt4/incompatibilities.html#pyqt4-v4-7-4
+    # this is for javascript to emitt when it changes the json
     json_updated = pyqtSignal(['QVariantMap'], name='json_updated')
+    # Python classes should connect to json_cleaned
+    json_cleaned = pyqtSignal(['QVariantMap'], name='json_cleaned')
 
     def __init__(self, iface, project_definition):
         self.iface = iface
@@ -86,14 +89,26 @@ class WeightDataDialog(QDialog):
 
     def setup_js(self):
         # pass a reference (called qt_page) of self to the JS world
-        self.frame.addToJavaScriptWindowObject("qt_page", self)
+        self.frame.addToJavaScriptWindowObject('qt_page', self)
 
     def show_tree(self):
         # start the tree
-        self.frame.evaluateJavaScript("init_tree()")
+        self.frame.evaluateJavaScript('init_tree()')
 
     def handle_json_updated(self, data):
-        self.project_definition = data
+        self.project_definition = self.clean_json([data])
+        self.json_cleaned.emit(self.project_definition)
+
+    def clean_json(self, data):
+        # this method takes a list of dictionaries and removes some unneeded
+        # keys. It recurses int the children element
+        ignore_keys = ['depth', 'x', 'y', 'id', 'x0', 'y0']
+        for element in data:
+            for key in ignore_keys:
+                element.pop(key, None)
+            if 'children' in element:
+                self.clean_json(element['children'])
+        return data[0]
 
     @pyqtProperty(str)
     def json_str(self):
