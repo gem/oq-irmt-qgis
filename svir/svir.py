@@ -140,7 +140,7 @@ class Svir:
         # Attribute containing aggregated losses, that will be merged with SVI
         self.aggr_loss_attr_to_merge = None
 
-        self.project_definition = self.PROJECT_TEMPLATE
+        self.project_definition = None
 
     def add_menu_item(self,
                       action_name,
@@ -354,6 +354,7 @@ class Svir:
                        "Platform...")
                 # Retrieve the indices selected by the user
                 indices_list = []
+                self.project_definition = copy.deepcopy(self.PROJECT_TEMPLATE)
                 svi_themes = self.project_definition[
                     'children'][1]['children']
                 themes = []
@@ -380,7 +381,7 @@ class Svir:
                         level = float('4.%d' % theme_idx)
 
                         # add a new indicator to a theme
-                        indicator = copy.copy(self.INDICATOR_TEMPLATE)
+                        indicator = copy.deepcopy(self.INDICATOR_TEMPLATE)
                         indicator['name'] = sv_name
                         indicator['field'] = sv_idx
                         indicator['level'] = level
