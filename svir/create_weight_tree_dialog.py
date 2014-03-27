@@ -76,7 +76,7 @@ class CreateWeightTreeDialog(QDialog):
 
     def indicators(self):
         indicators = []
-        for i in range(self.ui.grid_layout.rowCount()):
+        for i in range(1, self.ui.grid_layout.rowCount()):
             label = self.ui.grid_layout.itemAtPosition(i, 0).widget().text()
             theme = self.ui.grid_layout.itemAtPosition(i, 1).widget().text()
             name = self.ui.grid_layout.itemAtPosition(i, 2).widget().text()
