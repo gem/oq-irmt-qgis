@@ -140,28 +140,13 @@ class Svir:
         # Attribute containing aggregated losses, that will be merged with SVI
         self.aggr_loss_attr_to_merge = None
 
-        self.project_definition = None
+        self.project_definitions = {}
+        self.current_layer = None
 
-    def add_menu_item(self,
-                      action_name,
-                      icon_path,
-                      label,
-                      corresponding_method,
-                      enable=False):
-        """
-        Add an item to the SVIR plugin menu and a corresponding toolbar icon
-        @param icon_path: Path of the icon associated to the action
-        @param label: Name of the action, visible to the user
-        @param corresponding_method: Method called when the action is triggered
-        """
-        if action_name in self.registered_actions:
-            raise NameError("Action %s already registered" % action_name)
-        action = QAction(QIcon(icon_path), label, self.iface.mainWindow())
-        action.setEnabled(enable)
-        action.triggered.connect(corresponding_method)
-        self.iface.addToolBarIcon(action)
-        self.iface.addPluginToMenu(u"&SVIR", action)
-        self.registered_actions[action_name] = action
+        self.iface.currentLayerChanged.connect(self.current_layer_changed)
+        QgsMapLayerRegistry.instance().layersAdded.connect(self.layers_added)
+        QgsMapLayerRegistry.instance().layersRemoved.connect(
+            self.layers_removed)
 
     def initGui(self):
         # Action to activate the modal dialog to set up settings for the
@@ -220,12 +205,45 @@ class Svir:
                            ":/plugins/svir/start_plugin_icon.png",
                            u"&Weight data",
                            self.weight_data,
-                           enable=True)
+                           enable=False)
         self.update_actions_status()
-        QgsMapLayerRegistry.instance().layersAdded.connect(
-            self.update_actions_status)
-        QgsMapLayerRegistry.instance().layersRemoved.connect(
-            self.update_actions_status)
+
+    def layers_added(self):
+        self.update_actions_status()
+
+    def layers_removed(self, layer_ids):
+        self.update_actions_status()
+        for layer_id in layer_ids:
+            self.project_definitions.pop(layer_id, None)
+
+    def current_layer_changed(self, layer):
+        self.current_layer = layer
+        try:
+            self.project_definitions[self.current_layer.id()]
+            self.registered_actions["weight_data"].setEnabled(True)
+        except (KeyError, AttributeError):
+            self.registered_actions["weight_data"].setEnabled(False)
+
+    def add_menu_item(self,
+                      action_name,
+                      icon_path,
+                      label,
+                      corresponding_method,
+                      enable=False):
+        """
+        Add an item to the SVIR plugin menu and a corresponding toolbar icon
+        @param icon_path: Path of the icon associated to the action
+        @param label: Name of the action, visible to the user
+        @param corresponding_method: Method called when the action is triggered
+        """
+        if action_name in self.registered_actions:
+            raise NameError("Action %s already registered" % action_name)
+        action = QAction(QIcon(icon_path), label, self.iface.mainWindow())
+        action.setEnabled(enable)
+        action.triggered.connect(corresponding_method)
+        self.iface.addToolBarIcon(action)
+        self.iface.addPluginToMenu(u"&SVIR", action)
+        self.registered_actions[action_name] = action
 
     def update_actions_status(self):
         # Check if actions can be enabled
@@ -253,10 +271,13 @@ class Svir:
         self.iface.legendInterface().removeLegendLayerAction(
             self.registered_actions['calculate_svir_indices'])
         self.clear_progress_message_bar()
+
+        #remove connects
+        self.iface.currentLayerChanged.disconnect(self.current_layer_changed)
         QgsMapLayerRegistry.instance().layersAdded.disconnect(
-            self.update_actions_status)
+            self.layers_added)
         QgsMapLayerRegistry.instance().layersRemoved.disconnect(
-            self.update_actions_status)
+            self.layers_removed)
 
     def select_input_layers(self):
         """
@@ -354,8 +375,8 @@ class Svir:
                        "Platform...")
                 # Retrieve the indices selected by the user
                 indices_list = []
-                self.project_definition = copy.deepcopy(self.PROJECT_TEMPLATE)
-                svi_themes = self.project_definition[
+                project_definition = copy.deepcopy(self.PROJECT_TEMPLATE)
+                svi_themes = project_definition[
                     'children'][1]['children']
                 themes = []
                 indicators_count = []
@@ -432,9 +453,12 @@ class Svir:
                                             'delimitedtext')
                 # obtain a in-memory copy of the layer (editable) and add it to
                 # the registry
-                ProcessLayer(vlayer_csv).duplicate_in_memory(
+                layer = ProcessLayer(vlayer_csv).duplicate_in_memory(
                     'social_vulnerability_zonal_layer',
                     add_to_registry=True)
+                    self.iface.setActiveLayer(layer)
+                self.project_definitions[layer.id()] = project_definition
+
         except SvDownloadError as e:
             self.iface.messageBar().pushMessage(tr("Download Error"),
                                                 tr(str(e)),
@@ -446,14 +470,16 @@ class Svir:
         vulnerability data from one of the available layers or throught the
         OpenQuake Platform
         """
-        dlg = WeightDataDialog(self.iface, self.project_definition)
+        current_layer_id = self.current_layer.id()
+        project_definition = self.project_definitions[current_layer_id]
+        dlg = WeightDataDialog(self.iface, project_definition)
         dlg.json_cleaned.connect(self.redraw_ir_layer)
         if dlg.exec_():
-            self.project_definition = dlg.project_definition
+            self.project_definitions[current_layer_id] = dlg.project_definition
         dlg.json_cleaned.disconnect(self.redraw_ir_layer)
         # if the dlg was not accepted, self.project_definition is still the
         # one we had before opening the dlg and we use it do reset the changes
-        self.redraw_ir_layer(self.project_definition)
+        self.redraw_ir_layer(project_definition)
 
     def redraw_ir_layer(self, data):
         print "REDRAW USING %s" % data
