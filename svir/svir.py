@@ -456,7 +456,7 @@ class Svir:
                 layer = ProcessLayer(vlayer_csv).duplicate_in_memory(
                     'social_vulnerability_zonal_layer',
                     add_to_registry=True)
-                    self.iface.setActiveLayer(layer)
+                self.iface.setActiveLayer(layer)
                 self.project_definitions[layer.id()] = project_definition
 
         except SvDownloadError as e:
