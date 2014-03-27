@@ -50,6 +50,18 @@ def get_credentials(iface):
     return hostname, username, password
 
 
+def assign_default_weights(svi_themes, indicators_count, themes_count):
+        # count themes and indicators and assign default weights
+        # using 2 decimal points (%.2f)
+        theme_weight = float('%.2f' % (1.0 / themes_count))
+        for i, theme in enumerate(svi_themes):
+            theme['weight'] = theme_weight
+            for indicator in theme['children']:
+                indicator_weight = 1.0 / indicators_count[i]
+                indicator_weight = '%.2f' % indicator_weight
+                indicator['weight'] = float(indicator_weight)
+
+
 class Register(collections.OrderedDict):
     """
     Useful to keep (in a single point) a register of available variants of

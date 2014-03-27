@@ -83,7 +83,8 @@ from utils import (LayerEditingManager,
                    tr,
                    get_credentials,
                    TraceTimeManager,
-                   WaitCursorManager)
+                   WaitCursorManager,
+                   assign_default_weights)
 from globals import (INT_FIELD_TYPE_NAME,
                      DOUBLE_FIELD_TYPE_NAME,
                      NUMERIC_FIELD_TYPES,
@@ -360,20 +361,6 @@ class Svir:
                 # dlg.ui.layer_rbn.isChecked() so go to select layers
                 self.select_input_layers()
 
-    def assign_default_weights(self,
-                               svi_themes,
-                               indicators_count,
-                               themes_count):
-        # count themes and indicators and assign default weights
-        # using 2 decimal points (%.2f)
-        theme_weight = float('%.2f' % (1.0 / themes_count))
-        for i, theme in enumerate(svi_themes):
-            theme['weight'] = theme_weight
-            for indicator in theme['children']:
-                indicator_weight = 1.0 / indicators_count[i]
-                indicator_weight = '%.2f' % indicator_weight
-                indicator['weight'] = float(indicator_weight)
-
     def import_sv_variables(self):
         """
         Open a modal dialog to select social vulnerability variables to
@@ -442,9 +429,9 @@ class Svir:
                     # create string for DB query
                     indices_string = ", ".join(indices_list)
 
-                    self.assign_default_weights(svi_themes,
-                                                indicators_count,
-                                                len(themes))
+                    assign_default_weights(svi_themes,
+                                           indicators_count,
+                                           len(themes))
 
                     try:
                         fname, msg = sv_downloader.get_data_by_variables_ids(
@@ -522,12 +509,8 @@ class Svir:
                 indicators_count[theme_idx] += 1
                 svi_themes[theme_idx]['children'].append(indicator)
 
-            self.assign_default_weights(svi_themes,
-                                        indicators_count,
-                                        len(themes))
-            self.project_definitions[current_layer_id] = svi_themes
-
-        print self.project_definitions
+            assign_default_weights(svi_themes, indicators_count, len(themes))
+            self.project_definitions[current_layer_id] = project_definition
 
     def weight_data(self):
         """
