@@ -201,6 +201,13 @@ class Svir:
             True)
         # Action to activate the modal dialog to choose weighting of the
         # data from the platform
+        self.add_menu_item("create_weight_tree",
+                           ":/plugins/svir/start_plugin_icon.png",
+                           u"&Create weight tree",
+                           self.create_weight_tree,
+                           enable=False)
+        # Action to activate the modal dialog to choose weighting of the
+        # data from the platform
         self.add_menu_item("weight_data",
                            ":/plugins/svir/start_plugin_icon.png",
                            u"&Weight data",
@@ -218,11 +225,14 @@ class Svir:
 
     def current_layer_changed(self, layer):
         self.current_layer = layer
-        try:
-            self.project_definitions[self.current_layer.id()]
-            self.registered_actions["weight_data"].setEnabled(True)
-        except (KeyError, AttributeError):
-            self.registered_actions["weight_data"].setEnabled(False)
+        if self.current_layer is not None:
+            try:
+                self.project_definitions[self.current_layer.id()]
+                self.registered_actions["weight_data"].setEnabled(True)
+                self.registered_actions["create_weight_tree"].setEnabled(False)
+            except KeyError:
+                self.registered_actions["weight_data"].setEnabled(False)
+                self.registered_actions["create_weight_tree"].setEnabled(True)
 
     def add_menu_item(self,
                       action_name,
@@ -464,11 +474,20 @@ class Svir:
                                                 tr(str(e)),
                                                 level=QgsMessageBar.CRITICAL)
 
+    def create_weight_tree(self):
+        """
+        Open a modal dialog to create a weight tree from an existing layer
+        """
+        current_layer_id = self.current_layer.id()
+        self.project_definitions[current_layer_id] = copy.deepcopy(
+            self.PROJECT_TEMPLATE
+        )
+
+        print self.project_definitions
+
     def weight_data(self):
         """
-        Open a modal dialog to select if the user wants to load social
-        vulnerability data from one of the available layers or throught the
-        OpenQuake Platform
+        Open a modal dialog to weight the data
         """
         current_layer_id = self.current_layer.id()
         project_definition = self.project_definitions[current_layer_id]
