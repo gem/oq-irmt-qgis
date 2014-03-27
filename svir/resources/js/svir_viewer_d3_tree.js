@@ -52,7 +52,7 @@
             $('#projectDefWeightDialog').append('<p><label for="spinner'+id+'">'+name+': </label><input id="spinner-'+id+'" name="spinner" value="'+weight+'"></p>');
             $(function() {
                 $("#spinner-"+id).width(100).spinner({
-                    min: 0.00000001, 
+                    min: 0, 
                     max: 100,
                     step: 0.01,
                     numberFormat: "n",
