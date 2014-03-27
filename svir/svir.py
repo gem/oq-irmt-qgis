@@ -75,6 +75,7 @@ from select_sv_variables_dialog import SelectSvVariablesDialog
 from settings_dialog import SettingsDialog
 from choose_sv_data_source_dialog import ChooseSvDataSourceDialog
 from weight_data_dialog import WeightDataDialog
+from create_weight_tree_dialog import CreateWeightTreeDialog
 
 from import_sv_data import SvDownloader, SvDownloadError
 
@@ -88,7 +89,10 @@ from globals import (INT_FIELD_TYPE_NAME,
                      NUMERIC_FIELD_TYPES,
                      STRING_FIELD_TYPE_NAME,
                      TEXTUAL_FIELD_TYPES,
-                     DEBUG)
+                     DEBUG,
+                     PROJECT_TEMPLATE,
+                     CATEGORY_TEMPLATE,
+                     INDICATOR_TEMPLATE)
 
 
 class Svir:
@@ -356,6 +360,20 @@ class Svir:
                 # dlg.ui.layer_rbn.isChecked() so go to select layers
                 self.select_input_layers()
 
+    def assign_default_weights(self,
+                               svi_themes,
+                               indicators_count,
+                               themes_count):
+        # count themes and indicators and assign default weights
+        # using 2 decimal points (%.2f)
+        theme_weight = float('%.2f' % (1.0 / themes_count))
+        for i, theme in enumerate(svi_themes):
+            theme['weight'] = theme_weight
+            for indicator in theme['children']:
+                indicator_weight = 1.0 / indicators_count[i]
+                indicator_weight = '%.2f' % indicator_weight
+                indicator['weight'] = float(indicator_weight)
+
     def import_sv_variables(self):
         """
         Open a modal dialog to select social vulnerability variables to
@@ -385,7 +403,7 @@ class Svir:
                        "Platform...")
                 # Retrieve the indices selected by the user
                 indices_list = []
-                project_definition = copy.deepcopy(self.PROJECT_TEMPLATE)
+                project_definition = copy.deepcopy(PROJECT_TEMPLATE)
                 svi_themes = project_definition[
                     'children'][1]['children']
                 themes = []
@@ -401,7 +419,7 @@ class Svir:
                         sv_name = str(sv[2])
 
                         # add a new theme to the project_definition
-                        theme = copy.deepcopy(self.CATEGORY_TEMPLATE)
+                        theme = copy.deepcopy(CATEGORY_TEMPLATE)
                         theme['name'] = sv_theme
                         if sv_theme not in themes:
                             themes.append(sv_theme)
@@ -412,7 +430,7 @@ class Svir:
                         level = float('4.%d' % theme_idx)
 
                         # add a new indicator to a theme
-                        indicator = copy.deepcopy(self.INDICATOR_TEMPLATE)
+                        indicator = copy.deepcopy(INDICATOR_TEMPLATE)
                         indicator['name'] = sv_name
                         indicator['field'] = sv_idx
                         indicator['level'] = level
@@ -424,15 +442,9 @@ class Svir:
                     # create string for DB query
                     indices_string = ", ".join(indices_list)
 
-                    # count themes and indicators and assign default weights
-                    # using 2 decimal points (%.2f)
-                    theme_weight = float('%.2f' % (1.0/len(themes)))
-                    for i, theme in enumerate(svi_themes):
-                        theme['weight'] = theme_weight
-                        for indicator in theme['children']:
-                            indicator_weight = 1.0/indicators_count[i]
-                            indicator_weight = '%.2f' % indicator_weight
-                            indicator['weight'] = float(indicator_weight)
+                    self.assign_default_weights(svi_themes,
+                                                indicators_count,
+                                                len(themes))
 
                     try:
                         fname, msg = sv_downloader.get_data_by_variables_ids(
@@ -479,9 +491,41 @@ class Svir:
         Open a modal dialog to create a weight tree from an existing layer
         """
         current_layer_id = self.current_layer.id()
-        self.project_definitions[current_layer_id] = copy.deepcopy(
-            self.PROJECT_TEMPLATE
-        )
+        dlg = CreateWeightTreeDialog(self.iface, self.current_layer)
+
+        project_definition = copy.deepcopy(PROJECT_TEMPLATE)
+        svi_themes = project_definition['children'][1]['children']
+        themes = []
+        indicators_count = []
+        if dlg.exec_():
+            for indicator in dlg.indicators():
+                sv_theme = indicator['theme']
+                sv_idx = indicator['field']
+                sv_name = indicator['name']
+
+                # add a new theme to the project_definition
+                theme = copy.deepcopy(CATEGORY_TEMPLATE)
+                theme['name'] = sv_theme
+                if sv_theme not in themes:
+                    themes.append(sv_theme)
+                    indicators_count.append(0)
+                    svi_themes.append(theme)
+
+                theme_idx = themes.index(sv_theme)
+                level = float('4.%d' % theme_idx)
+
+                # add a new indicator to a theme
+                indicator = copy.deepcopy(INDICATOR_TEMPLATE)
+                indicator['name'] = sv_name
+                indicator['field'] = sv_idx
+                indicator['level'] = level
+                indicators_count[theme_idx] += 1
+                svi_themes[theme_idx]['children'].append(indicator)
+
+            self.assign_default_weights(svi_themes,
+                                        indicators_count,
+                                        len(themes))
+            self.project_definitions[current_layer_id] = svi_themes
 
         print self.project_definitions
 
@@ -1259,115 +1303,3 @@ class Svir:
 
     def clear_progress_message_bar(self):
         self.iface.messageBar().clearWidgets()
-
-    PROJECT_TEMPLATE = {'name': 'ir',
-                        'weight': '',
-                        'level': 1,
-                        'children': [
-                            {'name': 'aal',
-                             'weight': 0.5,
-                             'level': 2},
-                            {'name': 'svi',
-                             'weight': 0.5,
-                             'level': 2,
-                             'children': []}
-                        ]}
-
-    CATEGORY_TEMPLATE = {'name': '',
-                         'weight': 0.0,
-                         'level': 3.0,
-                         'type': 'categoryIndicator',
-                         'children': []}
-
-    INDICATOR_TEMPLATE = {'name': '',
-                          'weight': 0.0,
-                          'level': 4.0,
-                          'type': 'primaryIndicator',
-                          'field': ''}
-
-    DEMO_JSON = {
-              "name": "ir",
-              "weight": "",
-              "level" : 1.0,
-              "children": [
-              {
-                "name": "aal",
-                "weight": 0.5,
-                "level": 2.0
-              },
-              {
-                "name": "svi",
-                "weight": 0.5,
-                "level": 2.0,
-                "children": [
-                  {
-                    "name": "population",
-                    "weight": 0.16,
-                    "level": 3.1,
-                    "type": "categoryIndicator",
-                    "children": [
-                      {"name": "QFEMALE", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
-                      {"name": "QURBAN", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
-                      {"name": "MIGFOREIGN", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
-                      {"name": "MIGMUNICIP", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
-                      {"name": "QFOREIGN", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
-                      {"name": "QAGEDEP", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
-                      {"name": "POPDENT", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
-                      {"name": "PPUNIT", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
-                      {"name": "QFHH", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
-                      {"name": "QRENTAL", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
-                      {"name": "QDISABLED", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
-                      {"name": "QSSINT", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"}
-                    ]
-                  },
-                  {
-                    "name": "economy",
-                    "weight": 0.16,
-                    "level": 3.1,
-                    "type": "categoryIndicator",
-                    "children": [
-                      {"name": "QUNEMPL", "weight": 0.167, "level": 4.1, "type": "primaryIndicator"},
-                      {"name": "QFEMLBR", "weight": 0.167, "level": 4.1, "type": "primaryIndicator"},
-                      {"name": "QSECOEMPL", "weight": 0.167, "level": 4.1, "type": "primaryIndicator"},
-                      {"name": "QSERVEMPL", "weight": 0.167, "level": 4.1, "type": "primaryIndicator"},
-                      {"name": "QNOSKILLEMPL", "weight": 0.167, "level": 4.1, "type": "primaryIndicator"},
-                      {"name": "PCPP", "weight": 0.167, "level": 4.1, "type": "primaryIndicator"}
-                    ]
-                  },
-                  {
-                    "name": "education",
-                    "weight": 0.16,
-                    "level": 3.1,
-                    "type": "categoryIndicator",
-                    "children": [
-                      {"name": "QEDLESS", "weight": 0.5, "level": 4.2, "type": "primaryIndicator"},
-                      {"name": "EDUTERTIARY", "weight": 0.5, "level": 4.2, "type": "primaryIndicator"}
-                    ]
-                  },
-                  {
-                    "name": "infrastructure",
-                    "weight": 0.16,
-                    "level": 3.1,
-                    "type": "categoryIndicator",
-                    "children": [
-                      {"name": "QBLDREPAIR", "weight": 0.25, "level": 4.4, "type": "primaryIndicator"},
-                      {"name": "NEWBUILD", "weight": 0.25, "level": 4.4, "type": "primaryIndicator"},
-                      {"name": "QPOPNOWATER", "weight": 0.25, "level": 4.4, "type": "primaryIndicator"},
-                      {"name": "QPOPNOWASTE", "weight": 0.25, "level": 4.4, "type": "primaryIndicator"}
-                    ]
-                  },
-                  {
-                    "name": "governance",
-                    "weight": 0.16,
-                    "level": 3.1,
-                    "type": "categoryIndicator",
-                    "children": [
-                      {"name": "CRIMERATE", "weight": 0.33, "level": 4.5, "type": "primaryIndicator"},
-                      {"name": "QNOVOTEMU", "weight": 0.33, "level": 4.5, "type": "primaryIndicator"},
-                      {"name": "QNOVOTEPR", "weight": 0.33, "level": 4.5, "type": "primaryIndicator"}
-                    ]
-                  }
-                ]
-              }
-             ]
-            }
