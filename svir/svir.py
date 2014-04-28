@@ -510,7 +510,7 @@ class Svir:
 
     def weight_data(self):
         """
-        Open a modal dialog to weight the data
+        Open a modal dialog to select weights in a d3.js visualization
         """
         current_layer_id = self.current_layer.id()
         project_definition = self.project_definitions[current_layer_id]

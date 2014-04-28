@@ -43,10 +43,7 @@ from ui.ui_weight_data import Ui_WeightDataDialog
 
 class WeightDataDialog(QDialog):
     """
-    Modal dialog allowing to select a raster or vector layer
-    containing loss data points and a vector layer containing polygons
-    that define the zones for which data need to be aggregated. When
-    both are selected and are valid files, they can be loaded by clicking OK
+    Modal dialog allowing to select weights in a d3.js visualization
     """
 
     # QVariantMap is to map a JSON to dict see:
