@@ -76,11 +76,14 @@ class CreateWeightTreeDialog(QDialog):
             theme.setEditable(True)
             theme.setDuplicatesEnabled(False)
             theme.setInsertPolicy(QComboBox.InsertAlphabetically)
+            theme.currentIndexChanged.connect(self.check_status)
             theme.lineEdit().editingFinished.connect(
                 lambda: self.update_themes(self.sender().parent()))
             self.theme_boxes.append(theme)
 
             name = QLineEdit()
+            name.editingFinished.connect(self.check_status)
+
             self.ui.grid_layout.addWidget(label, i, 0)
             self.ui.grid_layout.addWidget(theme, i, 1)
             self.ui.grid_layout.addWidget(name, i, 2)
@@ -112,8 +115,20 @@ class CreateWeightTreeDialog(QDialog):
         return indicators
 
     def check_status(self):
-        print self.indicators()
-        if self.indicators():
+        valid_state = True
+        for i in range(1, self.ui.grid_layout.rowCount()):
+            theme = self.ui.grid_layout.itemAtPosition(
+                i, 1).widget().currentText()
+            name = self.ui.grid_layout.itemAtPosition(i, 2).widget().text()
+
+            #either both or none are set
+            if theme and name or (not theme and not name):
+                continue
+            else:
+                valid_state = False
+                break
+
+        if valid_state:
             self.ok_button.setEnabled(True)
         else:
             self.ok_button.setDisabled(True)
