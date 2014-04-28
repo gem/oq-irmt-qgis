@@ -76,6 +76,7 @@ class CreateWeightTreeDialog(QDialog):
             theme.setEditable(True)
             theme.setDuplicatesEnabled(False)
             theme.setInsertPolicy(QComboBox.InsertAlphabetically)
+            theme.addItem('')
             theme.currentIndexChanged.connect(self.check_status)
             theme.lineEdit().editingFinished.connect(
                 lambda: self.update_themes(self.sender().parent()))
@@ -87,10 +88,6 @@ class CreateWeightTreeDialog(QDialog):
             self.ui.grid_layout.addWidget(label, i, 0)
             self.ui.grid_layout.addWidget(theme, i, 1)
             self.ui.grid_layout.addWidget(name, i, 2)
-
-        #init theme QComboBoxes
-        for theme_box in self.theme_boxes:
-            theme_box.addItem('')
 
         self.ok_button.setDisabled(True)
 
