@@ -231,13 +231,7 @@ class Svir:
     def current_layer_changed(self, layer):
         self.current_layer = layer
         if self.current_layer is not None:
-            try:
-                self.project_definitions[self.current_layer.id()]
-                self.registered_actions["weight_data"].setEnabled(True)
-                self.registered_actions["create_weight_tree"].setEnabled(False)
-            except KeyError:
-                self.registered_actions["weight_data"].setEnabled(False)
-                self.registered_actions["create_weight_tree"].setEnabled(True)
+            self.update_actions_status()
 
     def add_menu_item(self,
                       action_name,
@@ -273,6 +267,17 @@ class Svir:
         # Enable/disable "calculate common SVIR indices" action
         self.registered_actions["calculate_svir_indices"].setDisabled(
             layer_count == 0)
+
+        try:
+            self.project_definitions[self.current_layer.id()]
+            self.registered_actions["weight_data"].setEnabled(True)
+            self.registered_actions["create_weight_tree"].setEnabled(False)
+        except KeyError:
+            self.registered_actions["weight_data"].setEnabled(False)
+            self.registered_actions["create_weight_tree"].setEnabled(True)
+        except AttributeError:
+            self.registered_actions["weight_data"].setEnabled(False)
+            self.registered_actions["create_weight_tree"].setEnabled(False)
 
     def unload(self):
         # Remove the plugin menu items and toolbar icons
@@ -500,6 +505,7 @@ class Svir:
 
             assign_default_weights(svi_themes)
             self.project_definitions[current_layer_id] = project_definition
+            self.update_actions_status()
 
     def weight_data(self):
         """
@@ -511,6 +517,7 @@ class Svir:
         dlg.json_cleaned.connect(self.redraw_ir_layer)
         if dlg.exec_():
             self.project_definitions[current_layer_id] = dlg.project_definition
+            self.update_actions_status()
         dlg.json_cleaned.disconnect(self.redraw_ir_layer)
         # if the dlg was not accepted, self.project_definition is still the
         # one we had before opening the dlg and we use it do reset the changes
