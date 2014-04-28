@@ -483,33 +483,29 @@ class Svir:
         project_definition = copy.deepcopy(PROJECT_TEMPLATE)
         svi_themes = project_definition['children'][1]['children']
         themes = []
-        indicators_count = []
+        indicators_counts = []
         if dlg.exec_():
             for indicator in dlg.indicators():
-                sv_theme = indicator['theme']
-                sv_idx = indicator['field']
-                sv_name = indicator['name']
-
                 # add a new theme to the project_definition
                 theme = copy.deepcopy(CATEGORY_TEMPLATE)
-                theme['name'] = sv_theme
-                if sv_theme not in themes:
-                    themes.append(sv_theme)
-                    indicators_count.append(0)
+                theme['name'] = indicator['theme']
+                if theme['name'] not in themes:
+                    themes.append(theme['name'])
+                    indicators_counts.append(0)
                     svi_themes.append(theme)
 
-                theme_idx = themes.index(sv_theme)
+                theme_idx = themes.index(theme['name'])
                 level = float('4.%d' % theme_idx)
 
                 # add a new indicator to a theme
-                indicator = copy.deepcopy(INDICATOR_TEMPLATE)
-                indicator['name'] = sv_name
-                indicator['field'] = sv_idx
-                indicator['level'] = level
-                indicators_count[theme_idx] += 1
-                svi_themes[theme_idx]['children'].append(indicator)
+                new_indicator = copy.deepcopy(INDICATOR_TEMPLATE)
+                new_indicator['name'] = indicator['name']
+                new_indicator['field'] = indicator['field']
+                new_indicator['level'] = level
+                indicators_counts[theme_idx] += 1
+                svi_themes[theme_idx]['children'].append(new_indicator)
 
-            assign_default_weights(svi_themes, indicators_count, len(themes))
+            assign_default_weights(svi_themes, indicators_counts, len(themes))
             self.project_definitions[current_layer_id] = project_definition
 
     def weight_data(self):
