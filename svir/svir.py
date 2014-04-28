@@ -92,7 +92,7 @@ from globals import (INT_FIELD_TYPE_NAME,
                      TEXTUAL_FIELD_TYPES,
                      DEBUG,
                      PROJECT_TEMPLATE,
-                     CATEGORY_TEMPLATE,
+                     THEME_TEMPLATE,
                      INDICATOR_TEMPLATE)
 
 
@@ -406,7 +406,7 @@ class Svir:
                         sv_name = str(sv[2])
 
                         # add a new theme to the project_definition
-                        theme = copy.deepcopy(CATEGORY_TEMPLATE)
+                        theme = copy.deepcopy(THEME_TEMPLATE)
                         theme['name'] = sv_theme
                         if sv_theme not in themes:
                             themes.append(sv_theme)
@@ -487,7 +487,7 @@ class Svir:
         if dlg.exec_():
             for indicator in dlg.indicators():
                 # add a new theme to the project_definition
-                theme = copy.deepcopy(CATEGORY_TEMPLATE)
+                theme = copy.deepcopy(THEME_TEMPLATE)
                 theme['name'] = indicator['theme']
                 if theme['name'] not in themes:
                     themes.append(theme['name'])

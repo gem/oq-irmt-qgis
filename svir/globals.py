@@ -55,7 +55,7 @@ PROJECT_TEMPLATE = {'name': 'ir',
                          'children': []}
                     ]}
 
-CATEGORY_TEMPLATE = {'name': '',
+THEME_TEMPLATE = {'name': '',
                      'weight': 0.0,
                      'level': 3.0,
                      'type': 'categoryIndicator',
