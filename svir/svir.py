@@ -402,7 +402,7 @@ class Svir:
 
                         sv = item_text.split(',', 2)
                         sv_theme = str(sv[0])
-                        sv_idx = str(sv[1])
+                        sv_code = str(sv[1])
                         sv_name = str(sv[2])
 
                         # add a new theme to the project_definition
@@ -419,19 +419,17 @@ class Svir:
                         # add a new indicator to a theme
                         indicator = copy.deepcopy(INDICATOR_TEMPLATE)
                         indicator['name'] = sv_name
-                        indicator['field'] = sv_idx
+                        indicator['field'] = sv_code
                         indicator['level'] = level
                         indicators_count[theme_idx] += 1
                         svi_themes[theme_idx]['children'].append(indicator)
 
-                        indices_list.append(sv_idx)
+                        indices_list.append(sv_code)
 
                     # create string for DB query
                     indices_string = ", ".join(indices_list)
 
-                    assign_default_weights(svi_themes,
-                                           indicators_count,
-                                           len(themes))
+                    assign_default_weights(svi_themes, indicators_count)
 
                     try:
                         fname, msg = sv_downloader.get_data_by_variables_ids(
@@ -505,7 +503,7 @@ class Svir:
                 indicators_counts[theme_idx] += 1
                 svi_themes[theme_idx]['children'].append(new_indicator)
 
-            assign_default_weights(svi_themes, indicators_counts, len(themes))
+            assign_default_weights(svi_themes, indicators_counts)
             self.project_definitions[current_layer_id] = project_definition
 
     def weight_data(self):
