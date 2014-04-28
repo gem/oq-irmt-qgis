@@ -393,8 +393,7 @@ class Svir:
                 project_definition = copy.deepcopy(PROJECT_TEMPLATE)
                 svi_themes = project_definition[
                     'children'][1]['children']
-                themes = []
-                indicators_count = []
+                known_themes = []
                 with WaitCursorManager(msg, self.iface):
                     while dlg.ui.selected_names_lst.count() > 0:
                         item = dlg.ui.selected_names_lst.takeItem(0)
@@ -408,28 +407,27 @@ class Svir:
                         # add a new theme to the project_definition
                         theme = copy.deepcopy(THEME_TEMPLATE)
                         theme['name'] = sv_theme
-                        if sv_theme not in themes:
-                            themes.append(sv_theme)
-                            indicators_count.append(0)
+                        if theme['name'] not in known_themes:
+                            known_themes.append(theme['name'])
                             svi_themes.append(theme)
 
-                        theme_idx = themes.index(sv_theme)
-                        level = float('4.%d' % theme_idx)
+                        theme_position = known_themes.index(theme['name'])
+                        level = float('4.%d' % theme_position)
 
                         # add a new indicator to a theme
-                        indicator = copy.deepcopy(INDICATOR_TEMPLATE)
-                        indicator['name'] = sv_name
-                        indicator['field'] = sv_code
-                        indicator['level'] = level
-                        indicators_count[theme_idx] += 1
-                        svi_themes[theme_idx]['children'].append(indicator)
+                        new_indicator = copy.deepcopy(INDICATOR_TEMPLATE)
+                        new_indicator['name'] = sv_name
+                        new_indicator['field'] = sv_code
+                        new_indicator['level'] = level
+                        svi_themes[theme_position]['children'].append(
+                            new_indicator)
 
                         indices_list.append(sv_code)
 
                     # create string for DB query
                     indices_string = ", ".join(indices_list)
 
-                    assign_default_weights(svi_themes, indicators_count)
+                    assign_default_weights(svi_themes)
 
                     try:
                         fname, msg = sv_downloader.get_data_by_variables_ids(
@@ -480,30 +478,27 @@ class Svir:
 
         project_definition = copy.deepcopy(PROJECT_TEMPLATE)
         svi_themes = project_definition['children'][1]['children']
-        themes = []
-        indicators_counts = []
+        known_themes = []
         if dlg.exec_():
             for indicator in dlg.indicators():
                 # add a new theme to the project_definition
                 theme = copy.deepcopy(THEME_TEMPLATE)
                 theme['name'] = indicator['theme']
-                if theme['name'] not in themes:
-                    themes.append(theme['name'])
-                    indicators_counts.append(0)
+                if theme['name'] not in known_themes:
+                    known_themes.append(theme['name'])
                     svi_themes.append(theme)
 
-                theme_idx = themes.index(theme['name'])
-                level = float('4.%d' % theme_idx)
+                theme_position = known_themes.index(theme['name'])
+                level = float('4.%d' % theme_position)
 
                 # add a new indicator to a theme
                 new_indicator = copy.deepcopy(INDICATOR_TEMPLATE)
                 new_indicator['name'] = indicator['name']
                 new_indicator['field'] = indicator['field']
                 new_indicator['level'] = level
-                indicators_counts[theme_idx] += 1
-                svi_themes[theme_idx]['children'].append(new_indicator)
+                svi_themes[theme_position]['children'].append(new_indicator)
 
-            assign_default_weights(svi_themes, indicators_counts)
+            assign_default_weights(svi_themes)
             self.project_definitions[current_layer_id] = project_definition
 
     def weight_data(self):

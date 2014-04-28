@@ -50,7 +50,7 @@ def get_credentials(iface):
     return hostname, username, password
 
 
-def assign_default_weights(svi_themes, indicators_count):
+def assign_default_weights(svi_themes):
     # count themes and indicators and assign default weights
     # using 2 decimal points (%.2f)
     themes_count = len(svi_themes)
@@ -58,7 +58,7 @@ def assign_default_weights(svi_themes, indicators_count):
     for i, theme in enumerate(svi_themes):
         theme['weight'] = theme_weight
         for indicator in theme['children']:
-            indicator_weight = 1.0 / indicators_count[i]
+            indicator_weight = 1.0 / len(theme['children'])
             indicator_weight = '%.2f' % indicator_weight
             indicator['weight'] = float(indicator_weight)
 
