@@ -89,12 +89,15 @@ class CreateWeightTreeDialog(QDialog):
         for theme_box in self.theme_boxes:
             theme_box.addItem('')
 
+        self.ok_button.setDisabled(True)
+
     def update_themes(self, new_theme_box):
         new_theme = new_theme_box.currentText()
         if new_theme not in self.themes:
             self.themes.append(new_theme)
             for theme_box in self.theme_boxes:
                 theme_box.addItem(new_theme)
+            self.check_status()
 
     def indicators(self):
         indicators = []
@@ -107,4 +110,11 @@ class CreateWeightTreeDialog(QDialog):
                                    'theme': theme,
                                    'name': name})
         return indicators
+
+    def check_status(self):
+        print self.indicators()
+        if self.indicators():
+            self.ok_button.setEnabled(True)
+        else:
+            self.ok_button.setDisabled(True)
 
