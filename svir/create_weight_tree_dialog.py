@@ -35,7 +35,8 @@ from PyQt4.QtCore import (Qt,
                           pyqtSignal)
 
 from PyQt4.QtGui import (QDialog,
-                         QDialogButtonBox, QLabel, QLineEdit)
+                         QDialogButtonBox, QLabel, QLineEdit, QComboBox,
+                         QToolButton)
 from PyQt4.QtWebKit import QWebSettings
 
 from ui.ui_create_weight_tree import Ui_CreateWeightTreeDialog
@@ -60,6 +61,8 @@ class CreateWeightTreeDialog(QDialog):
 
         self.project_definition = None
         self.layer = layer
+        self.theme_boxes = []
+        self.themes = ['']
 
         self.generate_gui()
 
@@ -68,17 +71,36 @@ class CreateWeightTreeDialog(QDialog):
         fields = list(dp.fields())
         for i, field in enumerate(fields, start=1):
             label = QLabel(field.name())
-            theme = QLineEdit()
+
+            theme = QComboBox()
+            theme.setEditable(True)
+            theme.setDuplicatesEnabled(False)
+            theme.setInsertPolicy(QComboBox.InsertAlphabetically)
+            theme.lineEdit().editingFinished.connect(
+                lambda: self.update_themes(self.sender().parent()))
+            self.theme_boxes.append(theme)
+
             name = QLineEdit()
             self.ui.grid_layout.addWidget(label, i, 0)
             self.ui.grid_layout.addWidget(theme, i, 1)
             self.ui.grid_layout.addWidget(name, i, 2)
 
+        #init theme QComboBoxes
+        for theme_box in self.theme_boxes:
+            theme_box.addItem('')
+
+    def update_themes(self, new_theme_box):
+        new_theme = new_theme_box.currentText()
+        if new_theme not in self.themes:
+            self.themes.append(new_theme)
+            for theme_box in self.theme_boxes:
+                theme_box.addItem(new_theme)
+
     def indicators(self):
         indicators = []
         for i in range(1, self.ui.grid_layout.rowCount()):
             label = self.ui.grid_layout.itemAtPosition(i, 0).widget().text()
-            theme = self.ui.grid_layout.itemAtPosition(i, 1).widget().text()
+            theme = self.ui.grid_layout.itemAtPosition(i, 1).widget().currentText()
             name = self.ui.grid_layout.itemAtPosition(i, 2).widget().text()
             if name and theme:
                 indicators.append({'field': label,
