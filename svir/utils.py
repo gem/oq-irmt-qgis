@@ -29,7 +29,7 @@ import collections
 from time import time
 from PyQt4.QtCore import QSettings, Qt
 from PyQt4.QtGui import QApplication
-from platform_settings_dialog import PlatformSettingsDialog
+from settings_dialog import SettingsDialog
 from qgis.gui import QgsMessageBar
 
 
@@ -39,14 +39,14 @@ def tr(message):
 
 def get_credentials(iface):
     qs = QSettings()
-    hostname = qs.value('platform_settings/hostname', '')
-    username = qs.value('platform_settings/username', '')
-    password = qs.value('platform_settings/password', '')
+    hostname = qs.value('svir/platform_hostname', '')
+    username = qs.value('svir/platform_username', '')
+    password = qs.value('svir/platform_password', '')
     if not (hostname and username and password):
-        PlatformSettingsDialog(iface).exec_()
-        hostname = qs.value('platform_settings/hostname', '')
-        username = qs.value('platform_settings/username', '')
-        password = qs.value('platform_settings/password', '')
+        SettingsDialog(iface).exec_()
+        hostname = qs.value('svir/platform_hostname', '')
+        username = qs.value('svir/platform_username', '')
+        password = qs.value('svir/platform_password', '')
     return hostname, username, password
 
 

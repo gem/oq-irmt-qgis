@@ -27,6 +27,7 @@
 """
 import os.path
 import uuid
+import copy
 from requests.exceptions import ConnectionError
 
 from PyQt4.QtCore import (QSettings,
@@ -71,8 +72,9 @@ from attribute_selection_dialog import AttributeSelectionDialog
 from normalization_dialog import NormalizationDialog
 from select_attrs_for_stats_dialog import SelectAttrsForStatsDialog
 from select_sv_variables_dialog import SelectSvVariablesDialog
-from platform_settings_dialog import PlatformSettingsDialog
+from settings_dialog import SettingsDialog
 from choose_sv_data_source_dialog import ChooseSvDataSourceDialog
+from weight_data_dialog import WeightDataDialog
 
 from import_sv_data import SvDownloader, SvDownloadError
 
@@ -138,34 +140,21 @@ class Svir:
         # Attribute containing aggregated losses, that will be merged with SVI
         self.aggr_loss_attr_to_merge = None
 
-    def add_menu_item(self,
-                      action_name,
-                      icon_path,
-                      label,
-                      corresponding_method,
-                      enable=False):
-        """
-        Add an item to the SVIR plugin menu and a corresponding toolbar icon
-        @param icon_path: Path of the icon associated to the action
-        @param label: Name of the action, visible to the user
-        @param corresponding_method: Method called when the action is triggered
-        """
-        if action_name in self.registered_actions:
-            raise NameError("Action %s already registered" % action_name)
-        action = QAction(QIcon(icon_path), label, self.iface.mainWindow())
-        action.setEnabled(enable)
-        action.triggered.connect(corresponding_method)
-        self.iface.addToolBarIcon(action)
-        self.iface.addPluginToMenu(u"&SVIR", action)
-        self.registered_actions[action_name] = action
+        self.project_definitions = {}
+        self.current_layer = None
+
+        self.iface.currentLayerChanged.connect(self.current_layer_changed)
+        QgsMapLayerRegistry.instance().layersAdded.connect(self.layers_added)
+        QgsMapLayerRegistry.instance().layersRemoved.connect(
+            self.layers_removed)
 
     def initGui(self):
         # Action to activate the modal dialog to set up settings for the
         # connection with the platform
-        self.add_menu_item("platform_settings",
+        self.add_menu_item("svir",
                            ":/plugins/svir/start_plugin_icon.png",
-                           u"&Openquake platform connection settings",
-                           self.platform_settings,
+                           u"&SVIR settings",
+                           self.settings,
                            enable=True)
         # Action to activate the modal dialog to import social vulnerability
         # data from the platform
@@ -210,11 +199,51 @@ class Svir:
             u"id_calculate_svir_indices",
             QgsMapLayer.VectorLayer,
             True)
+        # Action to activate the modal dialog to choose weighting of the
+        # data from the platform
+        self.add_menu_item("weight_data",
+                           ":/plugins/svir/start_plugin_icon.png",
+                           u"&Weight data",
+                           self.weight_data,
+                           enable=False)
         self.update_actions_status()
-        QgsMapLayerRegistry.instance().layersAdded.connect(
-            self.update_actions_status)
-        QgsMapLayerRegistry.instance().layersRemoved.connect(
-            self.update_actions_status)
+
+    def layers_added(self):
+        self.update_actions_status()
+
+    def layers_removed(self, layer_ids):
+        self.update_actions_status()
+        for layer_id in layer_ids:
+            self.project_definitions.pop(layer_id, None)
+
+    def current_layer_changed(self, layer):
+        self.current_layer = layer
+        try:
+            self.project_definitions[self.current_layer.id()]
+            self.registered_actions["weight_data"].setEnabled(True)
+        except (KeyError, AttributeError):
+            self.registered_actions["weight_data"].setEnabled(False)
+
+    def add_menu_item(self,
+                      action_name,
+                      icon_path,
+                      label,
+                      corresponding_method,
+                      enable=False):
+        """
+        Add an item to the SVIR plugin menu and a corresponding toolbar icon
+        @param icon_path: Path of the icon associated to the action
+        @param label: Name of the action, visible to the user
+        @param corresponding_method: Method called when the action is triggered
+        """
+        if action_name in self.registered_actions:
+            raise NameError("Action %s already registered" % action_name)
+        action = QAction(QIcon(icon_path), label, self.iface.mainWindow())
+        action.setEnabled(enable)
+        action.triggered.connect(corresponding_method)
+        self.iface.addToolBarIcon(action)
+        self.iface.addPluginToMenu(u"&SVIR", action)
+        self.registered_actions[action_name] = action
 
     def update_actions_status(self):
         # Check if actions can be enabled
@@ -242,10 +271,13 @@ class Svir:
         self.iface.legendInterface().removeLegendLayerAction(
             self.registered_actions['calculate_svir_indices'])
         self.clear_progress_message_bar()
+
+        #remove connects
+        self.iface.currentLayerChanged.disconnect(self.current_layer_changed)
         QgsMapLayerRegistry.instance().layersAdded.disconnect(
-            self.update_actions_status)
+            self.layers_added)
         QgsMapLayerRegistry.instance().layersRemoved.disconnect(
-            self.update_actions_status)
+            self.layers_removed)
 
     def select_input_layers(self):
         """
@@ -333,7 +365,7 @@ class Svir:
                 tr("Login Error"),
                 tr(str(e)),
                 level=QgsMessageBar.CRITICAL)
-            self.platform_settings()
+            self.settings()
             return
 
         try:
@@ -343,14 +375,55 @@ class Svir:
                        "Platform...")
                 # Retrieve the indices selected by the user
                 indices_list = []
+                project_definition = copy.deepcopy(self.PROJECT_TEMPLATE)
+                svi_themes = project_definition[
+                    'children'][1]['children']
+                themes = []
+                indicators_count = []
                 with WaitCursorManager(msg, self.iface):
                     while dlg.ui.selected_names_lst.count() > 0:
                         item = dlg.ui.selected_names_lst.takeItem(0)
-                        item_text = item.text()
-                        sv_idx = item_text.split(",")[0]
-                        sv_idx = str(sv_idx).replace('"', '')
+                        item_text = item.text().replace('"', '')
+
+                        sv = item_text.split(',', 2)
+                        sv_theme = str(sv[0])
+                        sv_idx = str(sv[1])
+                        sv_name = str(sv[2])
+
+                        # add a new theme to the project_definition
+                        theme = copy.deepcopy(self.CATEGORY_TEMPLATE)
+                        theme['name'] = sv_theme
+                        if sv_theme not in themes:
+                            themes.append(sv_theme)
+                            indicators_count.append(0)
+                            svi_themes.append(theme)
+
+                        theme_idx = themes.index(sv_theme)
+                        level = float('4.%d' % theme_idx)
+
+                        # add a new indicator to a theme
+                        indicator = copy.deepcopy(self.INDICATOR_TEMPLATE)
+                        indicator['name'] = sv_name
+                        indicator['field'] = sv_idx
+                        indicator['level'] = level
+                        indicators_count[theme_idx] += 1
+                        svi_themes[theme_idx]['children'].append(indicator)
+
                         indices_list.append(sv_idx)
+
+                    # create string for DB query
                     indices_string = ", ".join(indices_list)
+
+                    # count themes and indicators and assign default weights
+                    # using 2 decimal points (%.2f)
+                    theme_weight = float('%.2f' % (1.0/len(themes)))
+                    for i, theme in enumerate(svi_themes):
+                        theme['weight'] = theme_weight
+                        for indicator in theme['children']:
+                            indicator_weight = 1.0/indicators_count[i]
+                            indicator_weight = '%.2f' % indicator_weight
+                            indicator['weight'] = float(indicator_weight)
+
                     try:
                         fname, msg = sv_downloader.get_data_by_variables_ids(
                             indices_string)
@@ -360,6 +433,7 @@ class Svir:
                             tr(str(e)),
                             level=QgsMessageBar.CRITICAL)
                         return
+
                 display_msg = tr(
                     "Social vulnerability data loaded in a new layer")
                 self.iface.messageBar().pushMessage(tr("Info"),
@@ -379,16 +453,37 @@ class Svir:
                                             'delimitedtext')
                 # obtain a in-memory copy of the layer (editable) and add it to
                 # the registry
-                ProcessLayer(vlayer_csv).duplicate_in_memory(
+                layer = ProcessLayer(vlayer_csv).duplicate_in_memory(
                     'social_vulnerability_zonal_layer',
                     add_to_registry=True)
+                self.iface.setActiveLayer(layer)
+                self.project_definitions[layer.id()] = project_definition
+
         except SvDownloadError as e:
             self.iface.messageBar().pushMessage(tr("Download Error"),
                                                 tr(str(e)),
                                                 level=QgsMessageBar.CRITICAL)
 
-    def platform_settings(self):
-        PlatformSettingsDialog(self.iface).exec_()
+    def weight_data(self):
+        """
+        Open a modal dialog to select weights in a d3.js visualization
+        """
+        current_layer_id = self.current_layer.id()
+        project_definition = self.project_definitions[current_layer_id]
+        dlg = WeightDataDialog(self.iface, project_definition)
+        dlg.json_cleaned.connect(self.redraw_ir_layer)
+        if dlg.exec_():
+            self.project_definitions[current_layer_id] = dlg.project_definition
+        dlg.json_cleaned.disconnect(self.redraw_ir_layer)
+        # if the dlg was not accepted, self.project_definition is still the
+        # one we had before opening the dlg and we use it do reset the changes
+        self.redraw_ir_layer(project_definition)
+
+    def redraw_ir_layer(self, data):
+        print "REDRAW USING %s" % data
+
+    def settings(self):
+        SettingsDialog(self.iface).exec_()
 
     def merge_svi_with_aggr_losses(self):
         """
@@ -1143,3 +1238,115 @@ class Svir:
 
     def clear_progress_message_bar(self):
         self.iface.messageBar().clearWidgets()
+
+    PROJECT_TEMPLATE = {'name': 'ir',
+                        'weight': '',
+                        'level': 1,
+                        'children': [
+                            {'name': 'aal',
+                             'weight': 0.5,
+                             'level': 2},
+                            {'name': 'svi',
+                             'weight': 0.5,
+                             'level': 2,
+                             'children': []}
+                        ]}
+
+    CATEGORY_TEMPLATE = {'name': '',
+                         'weight': 0.0,
+                         'level': 3.0,
+                         'type': 'categoryIndicator',
+                         'children': []}
+
+    INDICATOR_TEMPLATE = {'name': '',
+                          'weight': 0.0,
+                          'level': 4.0,
+                          'type': 'primaryIndicator',
+                          'field': ''}
+
+    DEMO_JSON = {
+              "name": "ir",
+              "weight": "",
+              "level" : 1.0,
+              "children": [
+              {
+                "name": "aal",
+                "weight": 0.5,
+                "level": 2.0
+              },
+              {
+                "name": "svi",
+                "weight": 0.5,
+                "level": 2.0,
+                "children": [
+                  {
+                    "name": "population",
+                    "weight": 0.16,
+                    "level": 3.1,
+                    "type": "categoryIndicator",
+                    "children": [
+                      {"name": "QFEMALE", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
+                      {"name": "QURBAN", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
+                      {"name": "MIGFOREIGN", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
+                      {"name": "MIGMUNICIP", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
+                      {"name": "QFOREIGN", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
+                      {"name": "QAGEDEP", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
+                      {"name": "POPDENT", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
+                      {"name": "PPUNIT", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
+                      {"name": "QFHH", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
+                      {"name": "QRENTAL", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
+                      {"name": "QDISABLED", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
+                      {"name": "QSSINT", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"}
+                    ]
+                  },
+                  {
+                    "name": "economy",
+                    "weight": 0.16,
+                    "level": 3.1,
+                    "type": "categoryIndicator",
+                    "children": [
+                      {"name": "QUNEMPL", "weight": 0.167, "level": 4.1, "type": "primaryIndicator"},
+                      {"name": "QFEMLBR", "weight": 0.167, "level": 4.1, "type": "primaryIndicator"},
+                      {"name": "QSECOEMPL", "weight": 0.167, "level": 4.1, "type": "primaryIndicator"},
+                      {"name": "QSERVEMPL", "weight": 0.167, "level": 4.1, "type": "primaryIndicator"},
+                      {"name": "QNOSKILLEMPL", "weight": 0.167, "level": 4.1, "type": "primaryIndicator"},
+                      {"name": "PCPP", "weight": 0.167, "level": 4.1, "type": "primaryIndicator"}
+                    ]
+                  },
+                  {
+                    "name": "education",
+                    "weight": 0.16,
+                    "level": 3.1,
+                    "type": "categoryIndicator",
+                    "children": [
+                      {"name": "QEDLESS", "weight": 0.5, "level": 4.2, "type": "primaryIndicator"},
+                      {"name": "EDUTERTIARY", "weight": 0.5, "level": 4.2, "type": "primaryIndicator"}
+                    ]
+                  },
+                  {
+                    "name": "infrastructure",
+                    "weight": 0.16,
+                    "level": 3.1,
+                    "type": "categoryIndicator",
+                    "children": [
+                      {"name": "QBLDREPAIR", "weight": 0.25, "level": 4.4, "type": "primaryIndicator"},
+                      {"name": "NEWBUILD", "weight": 0.25, "level": 4.4, "type": "primaryIndicator"},
+                      {"name": "QPOPNOWATER", "weight": 0.25, "level": 4.4, "type": "primaryIndicator"},
+                      {"name": "QPOPNOWASTE", "weight": 0.25, "level": 4.4, "type": "primaryIndicator"}
+                    ]
+                  },
+                  {
+                    "name": "governance",
+                    "weight": 0.16,
+                    "level": 3.1,
+                    "type": "categoryIndicator",
+                    "children": [
+                      {"name": "CRIMERATE", "weight": 0.33, "level": 4.5, "type": "primaryIndicator"},
+                      {"name": "QNOVOTEMU", "weight": 0.33, "level": 4.5, "type": "primaryIndicator"},
+                      {"name": "QNOVOTEPR", "weight": 0.33, "level": 4.5, "type": "primaryIndicator"}
+                    ]
+                  }
+                ]
+              }
+             ]
+            }

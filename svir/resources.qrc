@@ -1,6 +1,27 @@
 <RCC>
-    <qresource prefix="/plugins/svir" >
+    <qresource prefix="/plugins/svir">
+        <file alias="weight_data.html">resources/weight_data.html</file>
+        <file alias="js/d3.js">resources/js/d3.min.js</file>
+        <file alias="js/svir_viewer_d3_tree.js">resources/js/svir_viewer_d3_tree.js</file>
+        <file alias="js/jquery.js">resources/js/jquery-1.9.1.min.js</file>
+        <file alias="js/jquery-ui.js">resources/js/jquery-ui-1.10.3.custom.min.js</file>
+        <file alias="css/jquery-ui.css">resources/css/jquery-ui-1.10.3.custom.min.css</file>
+        <file alias="css/svir_viewer_sub.css">resources/css/svir_viewer_sub.css</file>
         <file alias="start_plugin_icon.png">resources/start_plugin_icon.png</file>
         <file alias="purge_empty_zones_icon.png">resources/purge_empty_zones_icon.png</file>
+        <file alias="css/images/animated-overlay.gif">resources/css/images/animated-overlay.gif</file>
+        <file alias="css/images/ui-bg_flat_0_aaaaaa_40x100.png">resources/css/images/ui-bg_flat_0_aaaaaa_40x100.png</file>
+        <file alias="css/images/ui-bg_flat_75_ffffff_40x100.png">resources/css/images/ui-bg_flat_75_ffffff_40x100.png</file>
+        <file alias="css/images/ui-bg_glass_55_fbf9ee_1x400.png">resources/css/images/ui-bg_glass_55_fbf9ee_1x400.png</file>
+        <file alias="css/images/ui-bg_glass_65_ffffff_1x400.png">resources/css/images/ui-bg_glass_65_ffffff_1x400.png</file>
+        <file alias="css/images/ui-bg_glass_75_dadada_1x400.png">resources/css/images/ui-bg_glass_75_dadada_1x400.png</file>
+        <file alias="css/images/ui-bg_glass_75_e6e6e6_1x400.png">resources/css/images/ui-bg_glass_75_e6e6e6_1x400.png</file>
+        <file alias="css/images/ui-bg_glass_95_fef1ec_1x400.png">resources/css/images/ui-bg_glass_95_fef1ec_1x400.png</file>
+        <file alias="css/images/ui-bg_highlight-soft_75_cccccc_1x100.png">resources/css/images/ui-bg_highlight-soft_75_cccccc_1x100.png</file>
+        <file alias="css/images/ui-icons_2e83ff_256x240.png">resources/css/images/ui-icons_2e83ff_256x240.png</file>
+        <file alias="css/images/ui-icons_222222_256x240.png">resources/css/images/ui-icons_222222_256x240.png</file>
+        <file alias="css/images/ui-icons_454545_256x240.png">resources/css/images/ui-icons_454545_256x240.png</file>
+        <file alias="css/images/ui-icons_888888_256x240.png">resources/css/images/ui-icons_888888_256x240.png</file>
+        <file alias="css/images/ui-icons_cd0a0a_256x240.png">resources/css/images/ui-icons_cd0a0a_256x240.png</file>
     </qresource>
 </RCC>

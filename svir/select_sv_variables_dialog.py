@@ -74,7 +74,9 @@ class SelectSvVariablesDialog(QDialog):
 
     @pyqtSlot()
     def on_add_name_btn_clicked(self):
+        theme = self.ui.theme_cbx.currentText()
         name = self.ui.name_cbx.currentText()
+        name = '%s,%s' % (theme, name)
         if not self.ui.selected_names_lst.findItems(
                 name, Qt.MatchFixedString):
                 self.ui.selected_names_lst.addItem(name)
