@@ -218,6 +218,13 @@ class Svir:
                            u"&Weight data",
                            self.weight_data,
                            enable=False)
+
+        # Action to calculate the SVI
+        self.add_menu_item("calculate_svi",
+                           ":/plugins/svir/start_plugin_icon.png",
+                           u"&Calculate SVI",
+                           self.calculate_svi,
+                           enable=False)
         self.update_actions_status()
 
     def layers_added(self):
@@ -270,14 +277,17 @@ class Svir:
 
         try:
             self.project_definitions[self.current_layer.id()]
+            self.registered_actions["create_weight_tree"].setEnabled(False)
             self.registered_actions["weight_data"].setEnabled(True)
-            self.registered_actions["create_weight_tree"].setEnabled(False)
+            self.registered_actions["calculate_svi"].setEnabled(True)
         except KeyError:
-            self.registered_actions["weight_data"].setEnabled(False)
             self.registered_actions["create_weight_tree"].setEnabled(True)
-        except AttributeError:
             self.registered_actions["weight_data"].setEnabled(False)
+            self.registered_actions["calculate_svi"].setEnabled(False)
+        except AttributeError:
             self.registered_actions["create_weight_tree"].setEnabled(False)
+            self.registered_actions["weight_data"].setEnabled(False)
+            self.registered_actions["calculate_svi"].setEnabled(False)
 
     def unload(self):
         # Remove the plugin menu items and toolbar icons
@@ -521,6 +531,9 @@ class Svir:
         # if the dlg was not accepted, self.project_definition is still the
         # one we had before opening the dlg and we use it do reset the changes
         self.redraw_ir_layer(project_definition)
+
+    def calculate_svi(self):
+        print "CALCULATE USING %s" % self.project_definitions
 
     def redraw_ir_layer(self, data):
         print "REDRAW USING %s" % data
