@@ -365,6 +365,7 @@ class Svir:
             else:
                 # dlg.ui.layer_rbn.isChecked() so go to select layers
                 self.select_input_layers()
+            self.update_actions_status()
 
     def import_sv_variables(self):
         """
