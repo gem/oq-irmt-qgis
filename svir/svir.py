@@ -406,9 +406,9 @@ class Svir:
                         item_text = item.text().replace('"', '')
 
                         sv = item_text.split(',', 2)
-                        sv_theme = str(sv[0])
-                        sv_field = str(sv[1])
-                        sv_name = str(sv[2])
+                        sv_theme = sv[0]
+                        sv_field = sv[1]
+                        sv_name = sv[2]
                         self._add_new_theme(svi_themes,
                                             known_themes,
                                             sv_theme,
