@@ -33,7 +33,7 @@ PY_FILES = svir.py select_input_layers_dialog.py __init__.py attribute_selection
 
 EXTRAS = resources/start_plugin_icon.png metadata.txt
 
-UI_FILES = ui/ui_select_input_layers.py ui/ui_attribute_selection.py ui/ui_select_layers_to_merge.py ui/ui_normalization.py ui/ui_select_attrs_for_stats.py ui/ui_select_sv_variables.py ui/ui_settings.py ui/ui_choose_sv_data_source.py ui/ui_weight_data.py ui/ui_create_weight_tree.py
+UI_FILES = ui/ui_select_input_layers.py ui/ui_attribute_selection.py ui/ui_select_layers_to_merge.py ui/ui_normalization.py ui/ui_select_attrs_for_stats.py ui/ui_select_sv_variables.py ui/ui_settings.py ui/ui_choose_sv_data_source.py ui/ui_weight_data.py ui/ui_create_weight_tree.py ui/ui_calculate_svi.py
 
 RESOURCE_FILES = resources_rc.py
 

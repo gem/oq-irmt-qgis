@@ -58,6 +58,7 @@ from qgis.gui import QgsMessageBar
 from qgis.analysis import QgsZonalStatistics
 import processing as p
 from processing.saga.SagaUtils import SagaUtils
+from calculate_svi import CalculateSVIDialog
 
 from process_layer import ProcessLayer
 
@@ -538,11 +539,11 @@ class Svir:
         """
         current_layer_id = self.current_layer.id()
         project_definition = self.project_definitions[current_layer_id]
-        weights = project_definition['children'][1]['children']
-        for theme in weights:
-            print "%s: %s" % (theme['name'], theme['weight'])
-            for indicator in theme['children']:
-                print "\t%s [%s]: %s" % (indicator['name'], indicator['field'], indicator['weight'])
+        dlg = CalculateSVIDialog(
+            self.iface, self.current_layer, project_definition)
+        if dlg.exec_():
+            dlg.calculate()
+
 
     def redraw_ir_layer(self, data):
         print "REDRAW USING %s" % data

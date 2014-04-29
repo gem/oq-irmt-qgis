@@ -57,7 +57,7 @@ class ProcessLayer():
             # add attributes
             layer_pr = self.layer.dataProvider()
             # TODO: Check that the attributes to be added are not already taken
-            layer_pr.addAttributes(attribute_list)
+            print layer_pr.addAttributes(attribute_list)
 
     def normalize_attribute(self,
                             input_attr_name,
