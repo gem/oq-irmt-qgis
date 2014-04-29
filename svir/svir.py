@@ -407,28 +407,15 @@ class Svir:
 
                         sv = item_text.split(',', 2)
                         sv_theme = str(sv[0])
-                        sv_code = str(sv[1])
+                        sv_field = str(sv[1])
                         sv_name = str(sv[2])
+                        self._add_new_theme(svi_themes,
+                                            known_themes,
+                                            sv_theme,
+                                            sv_name,
+                                            sv_field)
 
-                        # add a new theme to the project_definition
-                        theme = copy.deepcopy(THEME_TEMPLATE)
-                        theme['name'] = sv_theme
-                        if theme['name'] not in known_themes:
-                            known_themes.append(theme['name'])
-                            svi_themes.append(theme)
-
-                        theme_position = known_themes.index(theme['name'])
-                        level = float('4.%d' % theme_position)
-
-                        # add a new indicator to a theme
-                        new_indicator = copy.deepcopy(INDICATOR_TEMPLATE)
-                        new_indicator['name'] = sv_name
-                        new_indicator['field'] = sv_code
-                        new_indicator['level'] = level
-                        svi_themes[theme_position]['children'].append(
-                            new_indicator)
-
-                        indices_list.append(sv_code)
+                        indices_list.append(sv_field)
 
                     # create string for DB query
                     indices_string = ", ".join(indices_list)
@@ -475,6 +462,28 @@ class Svir:
                                                 tr(str(e)),
                                                 level=QgsMessageBar.CRITICAL)
 
+    @staticmethod
+    def _add_new_theme(svi_themes,
+                       known_themes,
+                       indicator_theme,
+                       indicator_name,
+                       indicator_field):
+        """add a new theme to the project_definition"""
+
+        theme = copy.deepcopy(THEME_TEMPLATE)
+        theme['name'] = indicator_theme
+        if theme['name'] not in known_themes:
+            known_themes.append(theme['name'])
+            svi_themes.append(theme)
+        theme_position = known_themes.index(theme['name'])
+        level = float('4.%d' % theme_position)
+        # add a new indicator to a theme
+        new_indicator = copy.deepcopy(INDICATOR_TEMPLATE)
+        new_indicator['name'] = indicator_name
+        new_indicator['field'] = indicator_field
+        new_indicator['level'] = level
+        svi_themes[theme_position]['children'].append(new_indicator)
+
     def create_weight_tree(self):
         """
         Open a modal dialog to create a weight tree from an existing layer
@@ -482,27 +491,16 @@ class Svir:
         current_layer_id = self.current_layer.id()
         dlg = CreateWeightTreeDialog(self.iface, self.current_layer)
 
-        project_definition = copy.deepcopy(PROJECT_TEMPLATE)
-        svi_themes = project_definition['children'][1]['children']
-        known_themes = []
         if dlg.exec_():
+            project_definition = copy.deepcopy(PROJECT_TEMPLATE)
+            svi_themes = project_definition['children'][1]['children']
+            known_themes = []
             for indicator in dlg.indicators():
-                # add a new theme to the project_definition
-                theme = copy.deepcopy(THEME_TEMPLATE)
-                theme['name'] = indicator['theme']
-                if theme['name'] not in known_themes:
-                    known_themes.append(theme['name'])
-                    svi_themes.append(theme)
-
-                theme_position = known_themes.index(theme['name'])
-                level = float('4.%d' % theme_position)
-
-                # add a new indicator to a theme
-                new_indicator = copy.deepcopy(INDICATOR_TEMPLATE)
-                new_indicator['name'] = indicator['name']
-                new_indicator['field'] = indicator['field']
-                new_indicator['level'] = level
-                svi_themes[theme_position]['children'].append(new_indicator)
+                self._add_new_theme(svi_themes,
+                                    known_themes,
+                                    indicator['theme'],
+                                    indicator['name'],
+                                    indicator['field'])
 
             assign_default_weights(svi_themes)
             self.project_definitions[current_layer_id] = project_definition
