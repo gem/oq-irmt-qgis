@@ -533,7 +533,16 @@ class Svir:
         self.redraw_ir_layer(project_definition)
 
     def calculate_svi(self):
-        print "CALCULATE USING %s" % self.project_definitions
+        """
+        add an SVI attribute to the current layer
+        """
+        current_layer_id = self.current_layer.id()
+        project_definition = self.project_definitions[current_layer_id]
+        weights = project_definition['children'][1]['children']
+        for theme in weights:
+            print "%s: %s" % (theme['name'], theme['weight'])
+            for indicator in theme['children']:
+                print "\t%s [%s]: %s" % (indicator['name'], indicator['field'], indicator['weight'])
 
     def redraw_ir_layer(self, data):
         print "REDRAW USING %s" % data
