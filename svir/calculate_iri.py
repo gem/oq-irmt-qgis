@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from PyQt4 import QtGui, QtCore
 from PyQt4.QtCore import QVariant
+from PyQt4.QtGui import QDialogButtonBox
 from qgis.core import QgsField
 from globals import DOUBLE_FIELD_TYPE_NAME, DEBUG
 from process_layer import ProcessLayer
@@ -16,10 +17,12 @@ class CalculateIRIDialog(QtGui.QDialog, Ui_CalculateIRIDialog):
         self.current_layer = current_layer
         self.project_definition = project_definition
         self.setupUi(self)
+        self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
+        self.calculate_iri = self.calculate_iri_check.isChecked()
 
     def calculate(self):
         """
-        add an SVI attribute to the current layer
+        add an SVI, AAL and IRI (if activated) attributes to the current layer
         """
 
         indicators_combination = self.indicators_combination_type.currentText()
@@ -32,7 +35,6 @@ class CalculateIRIDialog(QtGui.QDialog, Ui_CalculateIRIDialog):
         svi_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
         attr_names = ProcessLayer(self.current_layer).add_attributes(
             [svi_field])
-        print attr_names
 
         # get the id of the new attribute
         svi_attr_id = ProcessLayer(self.current_layer).find_attribute_id(
@@ -85,3 +87,22 @@ class CalculateIRIDialog(QtGui.QDialog, Ui_CalculateIRIDialog):
 
                 self.current_layer.changeAttributeValue(
                     feat_id, svi_attr_id, svi_value)
+
+    def on_calculate_iri_check_toggled(self, on):
+        self.calculate_iri = on
+        if self.calculate_iri:
+            self.check_iri_fields()
+        else:
+            self.ok_button.setEnabled(True)
+
+    def on_aal_field_currentIndexChanged(self, index):
+        self.check_iri_fields()
+
+    def on_aal_layer_currentIndexChanged(self, index):
+        self.check_iri_fields()
+
+    def check_iri_fields(self):
+        valid_state = False
+        if self.aal_field.currentText() and self.aal_layer.currentText():
+            valid_state = True
+        self.ok_button.setEnabled(valid_state)

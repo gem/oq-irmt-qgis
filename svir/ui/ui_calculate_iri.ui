@@ -85,7 +85,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="calculate_iri">
+    <widget class="QGroupBox" name="calculate_iri_check">
      <property name="title">
       <string>IRI</string>
      </property>
@@ -96,11 +96,47 @@
       <bool>false</bool>
      </property>
      <layout class="QFormLayout" name="formLayout_2">
+      <item row="2" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>IRI combination type</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>AAL layer</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="aal_layer">
+        <item>
+         <property name="text">
+          <string/>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>AAL field</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QComboBox" name="aal_field">
+        <item>
+         <property name="text">
+          <string/>
+         </property>
+        </item>
+       </widget>
+      </item>
       <item row="2" column="1">
        <widget class="QComboBox" name="iri_combination_type">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
         <item>
          <property name="text">
           <string>Average</string>
@@ -118,41 +154,7 @@
         </item>
        </widget>
       </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>IRI combination type</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_4">
-        <property name="text">
-         <string>AAL layer</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QComboBox" name="aal_layer"/>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_5">
-        <property name="text">
-         <string>AAL field</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QComboBox" name="aal_field"/>
-      </item>
      </layout>
-     <zorder>iri_combination_type</zorder>
-     <zorder>iri_combination_type</zorder>
-     <zorder>label</zorder>
-     <zorder>label_4</zorder>
-     <zorder>aal_layer</zorder>
-     <zorder>label_5</zorder>
-     <zorder>aal_field</zorder>
     </widget>
    </item>
    <item>
