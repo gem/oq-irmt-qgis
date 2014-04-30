@@ -277,15 +277,21 @@ class Svir:
             layer_count == 0)
 
         try:
+            if self.current_layer.type() != QgsMapLayer.VectorLayer:
+                raise AttributeError
             self.project_definitions[self.current_layer.id()]
             self.registered_actions["create_weight_tree"].setEnabled(False)
             self.registered_actions["weight_data"].setEnabled(True)
             self.registered_actions["calculate_svi"].setEnabled(True)
+
         except KeyError:
+            # self.project_definitions[self.current_layer.id()] is not defined
             self.registered_actions["create_weight_tree"].setEnabled(True)
             self.registered_actions["weight_data"].setEnabled(False)
             self.registered_actions["calculate_svi"].setEnabled(False)
         except AttributeError:
+            # self.current_layer.id() does not exist or self.current_layer
+            # is not vector
             self.registered_actions["create_weight_tree"].setEnabled(False)
             self.registered_actions["weight_data"].setEnabled(False)
             self.registered_actions["calculate_svi"].setEnabled(False)
