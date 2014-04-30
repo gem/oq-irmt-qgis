@@ -60,9 +60,9 @@ class ProcessLayer():
         with LayerEditingManager(self.layer, 'Add attributes', DEBUG):
             # add attributes
             layer_pr = self.layer.dataProvider()
-            proposed_attribute_list = []
             proposed_attribute_dict = {}
-            for input_attribute_name in attribute_list:
+            for input_attribute in attribute_list:
+                input_attribute_name = input_attribute.name()
                 proposed_attribute_name = input_attribute_name
                 i = 1
                 while True:
@@ -70,16 +70,17 @@ class ProcessLayer():
                         self.find_attribute_id(proposed_attribute_name)
                     except AttributeError:
                         # If the attribute name is not already assigned,
-                        # add it to the proposed_attribute_list
-                        proposed_attribute_list.append(proposed_attribute_name)
-                        proposed_attribute_dict['input_attribute_name'] = \
+                        # add it to the proposed_attribute_dict
+                        proposed_attribute_dict[input_attribute_name] = \
                             proposed_attribute_name
+                        input_attribute.setName(proposed_attribute_name)
                         break
                     # If the attribute is already assigned, change the
                     # proposed_attribute_name
-                    proposed_attribute_name = input_attribute_name + '_%d' % i
+                    proposed_attribute_name = '%s_%d' % (
+                        input_attribute_name, i)
                     i += 1
-            layer_pr.addAttributes(proposed_attribute_list)
+            layer_pr.addAttributes(attribute_list)
         return proposed_attribute_dict
 
     def normalize_attribute(self,
