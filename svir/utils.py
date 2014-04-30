@@ -29,6 +29,7 @@ import collections
 from time import time
 from PyQt4.QtCore import QSettings, Qt
 from PyQt4.QtGui import QApplication
+import itertools
 from settings_dialog import SettingsDialog
 from qgis.gui import QgsMessageBar
 
@@ -61,6 +62,33 @@ def assign_default_weights(svi_themes):
             indicator_weight = 1.0 / len(theme['children'])
             indicator_weight = '%.2f' % indicator_weight
             indicator['weight'] = float(indicator_weight)
+
+
+def reload_attrib_cbx(combo, layer, *valid_field_types):
+    """
+    Load attributes of a layer into a combobox. Can filter by field data type.
+    the additional filter can be NUMERIC_FIELD_TYPES, TEXTUAL_FIELD_TYPES, ...
+
+    :param combo: The combobox to be repopulated
+    :type combo: QComboBox
+    :param layer: The QgsVectorLayer from where the fields are read
+    :type layer: QgsVectorLayer
+    :param *valid_field_types: multiple tuples containing types
+    :type *valid_field_types: tuple, tuple, ...
+    """
+    field_types = set()
+    for field_type in valid_field_types:
+        field_types.update(field_type)
+
+    # reset combo box
+    combo.clear()
+    # populate combo box with field names taken by layers
+    dp = layer.dataProvider()
+    fields = list(dp.fields())
+    for field in fields:
+        # add if in field_types
+        if not field_types or field.typeName() in field_types:
+            combo.addItem(field.name())
 
 
 class Register(collections.OrderedDict):

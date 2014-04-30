@@ -2,11 +2,11 @@
 from PyQt4 import QtGui, QtCore
 from PyQt4.QtCore import QVariant
 from PyQt4.QtGui import QDialogButtonBox
-from qgis.core import QgsField
-from globals import DOUBLE_FIELD_TYPE_NAME, DEBUG
+from qgis.core import QgsField, QgsMapLayerRegistry
+from globals import DOUBLE_FIELD_TYPE_NAME, DEBUG, NUMERIC_FIELD_TYPES
 from process_layer import ProcessLayer
 from ui.ui_calculate_iri import Ui_CalculateIRIDialog
-from utils import LayerEditingManager
+from utils import LayerEditingManager, reload_attrib_cbx
 
 
 class CalculateIRIDialog(QtGui.QDialog, Ui_CalculateIRIDialog):
@@ -19,6 +19,10 @@ class CalculateIRIDialog(QtGui.QDialog, Ui_CalculateIRIDialog):
         self.setupUi(self)
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         self.calculate_iri = self.calculate_iri_check.isChecked()
+
+        self.aal_layer.addItems(
+            [l.name() for l in
+             QgsMapLayerRegistry.instance().mapLayers().values()])
 
     def calculate(self):
         """
@@ -99,6 +103,9 @@ class CalculateIRIDialog(QtGui.QDialog, Ui_CalculateIRIDialog):
         self.check_iri_fields()
 
     def on_aal_layer_currentIndexChanged(self, index):
+        selected_layer = QgsMapLayerRegistry.instance().mapLayers().values()[
+            self.aal_layer.currentIndex()]
+        reload_attrib_cbx(self.aal_field, selected_layer, NUMERIC_FIELD_TYPES)
         self.check_iri_fields()
 
     def check_iri_fields(self):

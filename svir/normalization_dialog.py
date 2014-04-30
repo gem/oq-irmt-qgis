@@ -37,6 +37,7 @@ from normalization_algs import (RANK_VARIANTS,
                                 NORMALIZATION_ALGS)
 
 from globals import NUMERIC_FIELD_TYPES
+from utils import reload_attrib_cbx
 
 
 class NormalizationDialog(QDialog):
@@ -90,29 +91,14 @@ class NormalizationDialog(QDialog):
 
     @pyqtSlot(str)
     def on_layer_cbx_currentIndexChanged(self):
-        self.reload_attrib_cbx()
+        layer = QgsMapLayerRegistry.instance().mapLayers().values()[
+            self.ui.layer_cbx.currentIndex()]
+        reload_attrib_cbx(self.ui.attrib_cbx, layer, NUMERIC_FIELD_TYPES)
+        self.ok_button.setEnabled(self.ui.attrib_cbx.count())
 
     @pyqtSlot(str)
     def on_algorithm_cbx_currentIndexChanged(self):
         self.reload_variant_cbx()
-
-    def reload_attrib_cbx(self):
-        # reset combo box
-        self.ui.attrib_cbx.clear()
-        # populate attribute combo box with the list of attributes of the
-        # layer specified in the other combo box
-        layer = QgsMapLayerRegistry.instance().mapLayers().values()[
-            self.ui.layer_cbx.currentIndex()]
-        # populate combo boxes with field names taken by layers
-        dp = layer.dataProvider()
-        fields = list(dp.fields())
-        no_numeric_fields = True
-        for field in fields:
-            # add numeric fields only
-            if field.typeName() in NUMERIC_FIELD_TYPES:
-                self.ui.attrib_cbx.addItem(field.name())
-                no_numeric_fields = False
-        self.ok_button.setDisabled(no_numeric_fields)
 
     def reload_variant_cbx(self):
         self.ui.variant_cbx.clear()

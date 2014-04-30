@@ -58,7 +58,7 @@ from qgis.gui import QgsMessageBar
 from qgis.analysis import QgsZonalStatistics
 import processing as p
 from processing.saga.SagaUtils import SagaUtils
-from calculate_iri import CalculateIRIDialog
+from calculate_iri_dialog import CalculateIRIDialog
 
 from process_layer import ProcessLayer
 
