@@ -30,11 +30,13 @@ class CalculateSVIDialog(QtGui.QDialog, Ui_CalculateSVIDialog):
         svi_attr_name = 'SVI'
         svi_field = QgsField(svi_attr_name, QVariant.Double)
         svi_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
-        ProcessLayer(self.current_layer).add_attributes([svi_field])
+        attr_names = ProcessLayer(self.current_layer).add_attributes(
+            [svi_field])
+        print attr_names
 
         # get the id of the new attribute
         svi_attr_id = ProcessLayer(self.current_layer).find_attribute_id(
-            svi_attr_name)
+            attr_names[svi_attr_name])
 
         with LayerEditingManager(self.current_layer, 'Add SVI', DEBUG):
             for feat in self.current_layer.getFeatures():
