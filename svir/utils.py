@@ -29,7 +29,7 @@ import collections
 from time import time
 from PyQt4.QtCore import QSettings, Qt
 from PyQt4.QtGui import QApplication
-import itertools
+from qgis.core import QgsMapLayerRegistry, QgsMapLayer
 from settings_dialog import SettingsDialog
 from qgis.gui import QgsMessageBar
 
@@ -62,6 +62,16 @@ def assign_default_weights(svi_themes):
             indicator_weight = 1.0 / len(theme['children'])
             indicator_weight = '%.2f' % indicator_weight
             indicator['weight'] = float(indicator_weight)
+
+
+def reload_layers_in_cbx(combo, *valid_layer_types):
+    layer_types = set()
+    for layer_type in valid_layer_types:
+        layer_types.update([layer_type])
+    combo.clear()
+    for l in QgsMapLayerRegistry.instance().mapLayers().values():
+        if not layer_types or l.type() in layer_types:
+            combo.addItem(l.name())
 
 
 def reload_attrib_cbx(combo, layer, *valid_field_types):

@@ -2,11 +2,11 @@
 from PyQt4 import QtGui, QtCore
 from PyQt4.QtCore import QVariant
 from PyQt4.QtGui import QDialogButtonBox
-from qgis.core import QgsField, QgsMapLayerRegistry
+from qgis.core import QgsField, QgsMapLayerRegistry, QgsMapLayer
 from globals import DOUBLE_FIELD_TYPE_NAME, DEBUG, NUMERIC_FIELD_TYPES
 from process_layer import ProcessLayer
 from ui.ui_calculate_iri import Ui_CalculateIRIDialog
-from utils import LayerEditingManager, reload_attrib_cbx
+from utils import LayerEditingManager, reload_attrib_cbx, reload_layers_in_cbx
 
 
 class CalculateIRIDialog(QtGui.QDialog, Ui_CalculateIRIDialog):
@@ -20,9 +20,7 @@ class CalculateIRIDialog(QtGui.QDialog, Ui_CalculateIRIDialog):
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         self.calculate_iri = self.calculate_iri_check.isChecked()
 
-        self.aal_layer.addItems(
-            [l.name() for l in
-             QgsMapLayerRegistry.instance().mapLayers().values()])
+        reload_layers_in_cbx(self.aal_layer, QgsMapLayer.VectorLayer)
 
     def calculate(self):
         """

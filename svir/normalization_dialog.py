@@ -28,7 +28,7 @@
 from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox)
-from qgis.core import QgsMapLayerRegistry
+from qgis.core import QgsMapLayerRegistry, QgsMapLayer
 
 from ui.ui_normalization import Ui_NormalizationDialog
 from normalization_algs import (RANK_VARIANTS,
@@ -37,7 +37,7 @@ from normalization_algs import (RANK_VARIANTS,
                                 NORMALIZATION_ALGS)
 
 from globals import NUMERIC_FIELD_TYPES
-from utils import reload_attrib_cbx
+from utils import reload_attrib_cbx, reload_layers_in_cbx
 
 
 class NormalizationDialog(QDialog):
@@ -54,16 +54,17 @@ class NormalizationDialog(QDialog):
         self.ui.setupUi(self)
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
         self.use_advanced = False
-        reg = QgsMapLayerRegistry.instance()
-        self.ui.layer_cbx.addItems(
-            [l.name() for l in reg.mapLayers().values()])
+        reload_layers_in_cbx(self.ui.layer_cbx, QgsMapLayer.VectorLayer)
+
         # In case one of the available layers is active, preselect it
         if iface.activeLayer():
             active_layer_name = iface.activeLayer().name()
             active_layer_index = self.ui.layer_cbx.findText(active_layer_name)
             self.ui.layer_cbx.setCurrentIndex(active_layer_index)
         else:
+            self.ui.layer_cbx.blockSignals(True)
             self.ui.layer_cbx.setCurrentIndex(-1)
+            self.ui.layer_cbx.blockSignals(False)
             self.ui.attrib_cbx.clear()
         alg_list = NORMALIZATION_ALGS.keys()
         self.ui.algorithm_cbx.addItems(alg_list)
