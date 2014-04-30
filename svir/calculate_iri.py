@@ -4,11 +4,11 @@ from PyQt4.QtCore import QVariant
 from qgis.core import QgsField
 from globals import DOUBLE_FIELD_TYPE_NAME, DEBUG
 from process_layer import ProcessLayer
-from ui.ui_calculate_svi import Ui_CalculateSVIDialog
+from ui.ui_calculate_iri import Ui_CalculateIRIDialog
 from utils import LayerEditingManager
 
 
-class CalculateSVIDialog(QtGui.QDialog, Ui_CalculateSVIDialog):
+class CalculateIRIDialog(QtGui.QDialog, Ui_CalculateIRIDialog):
     def __init__(self, iface, current_layer, project_definition, parent=None):
         QtGui.QDialog.__init__(self, parent)
         self.iface = iface

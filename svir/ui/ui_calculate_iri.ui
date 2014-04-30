@@ -9,43 +9,17 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>390</width>
-    <height>144</height>
+    <width>407</width>
+    <height>291</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
   <layout class="QFormLayout" name="formLayout">
-   <item row="2" column="0">
-    <widget class="QLabel" name="label">
-     <property name="text">
-      <string>IRI combination type</string>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="1">
-    <widget class="QComboBox" name="iri_combination_type">
-     <property name="enabled">
-      <bool>false</bool>
-     </property>
-     <item>
-      <property name="text">
-       <string>Average</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Sum</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Multiplication</string>
-      </property>
-     </item>
-    </widget>
-   </item>
+   <property name="fieldGrowthPolicy">
+    <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+   </property>
    <item row="0" column="0">
     <widget class="QLabel" name="label_2">
      <property name="text">
@@ -75,17 +49,39 @@
      </item>
     </widget>
    </item>
-   <item row="1" column="0">
-    <widget class="QLabel" name="label_3">
-     <property name="text">
-      <string>Theme combination type</string>
-     </property>
-    </widget>
-   </item>
    <item row="1" column="1">
     <widget class="QComboBox" name="themes_combination_type">
      <property name="enabled">
       <bool>true</bool>
+     </property>
+     <item>
+      <property name="text">
+       <string>Average</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Sum</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Multiplication</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>IRI combination type</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1">
+    <widget class="QComboBox" name="iri_combination_type">
+     <property name="enabled">
+      <bool>false</bool>
      </property>
      <item>
       <property name="text">
@@ -111,6 +107,13 @@
      </property>
      <property name="standardButtons">
       <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="label_3">
+     <property name="text">
+      <string>Theme combination type</string>
      </property>
     </widget>
    </item>

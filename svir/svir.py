@@ -58,7 +58,7 @@ from qgis.gui import QgsMessageBar
 from qgis.analysis import QgsZonalStatistics
 import processing as p
 from processing.saga.SagaUtils import SagaUtils
-from calculate_svi import CalculateSVIDialog
+from calculate_iri import CalculateIRIDialog
 
 from process_layer import ProcessLayer
 
@@ -539,7 +539,7 @@ class Svir:
         """
         current_layer_id = self.current_layer.id()
         project_definition = self.project_definitions[current_layer_id]
-        dlg = CalculateSVIDialog(
+        dlg = CalculateIRIDialog(
             self.iface, self.current_layer, project_definition)
         if dlg.exec_():
             dlg.calculate()
