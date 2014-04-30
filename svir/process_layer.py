@@ -52,12 +52,35 @@ class ProcessLayer():
 
         :param attribute_list: list of QgsField to add to the layer
         :type attribute_list: list of QgsField
+
+        :return: dict having as keys the elements of the list of attributes
+        passed as input argument, and as values the actual names of the
+        assigned attributes
         """
         with LayerEditingManager(self.layer, 'Add attributes', DEBUG):
             # add attributes
             layer_pr = self.layer.dataProvider()
-            # TODO: Check that the attributes to be added are not already taken
-            layer_pr.addAttributes(attribute_list)
+            proposed_attribute_list = []
+            proposed_attribute_dict = {}
+            for input_attribute_name in attribute_list:
+                proposed_attribute_name = input_attribute_name
+                i = 1
+                while True:
+                    try:
+                        self.find_attribute_id(proposed_attribute_name)
+                    except AttributeError:
+                        # If the attribute name is not already assigned,
+                        # add it to the proposed_attribute_list
+                        proposed_attribute_list.append(proposed_attribute_name)
+                        proposed_attribute_dict['input_attribute_name'] = \
+                            proposed_attribute_name
+                        break
+                    # If the attribute is already assigned, change the
+                    # proposed_attribute_name
+                    proposed_attribute_name = input_attribute_name + '_%d' % i
+                    i += 1
+            layer_pr.addAttributes(proposed_attribute_list)
+        return proposed_attribute_dict
 
     def normalize_attribute(self,
                             input_attr_name,
