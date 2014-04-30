@@ -67,9 +67,15 @@ class ProcessLayer():
                 proposed_attribute_name = input_attribute_name
                 i = 1
                 while True:
-                    try:
-                        self.find_attribute_id(proposed_attribute_name)
-                    except AttributeError:
+                    current_attribute_names = \
+                        [attribute.name() for attribute in layer_pr.fields()]
+                    if proposed_attribute_name in current_attribute_names:
+                        # If the attribute is already assigned, change the
+                        # proposed_attribute_name
+                        proposed_attribute_name = '%s_%d' % (
+                            input_attribute_name, i)
+                        i += 1
+                    else:
                         # If the attribute name is not already assigned,
                         # add it to the proposed_attribute_dict
                         proposed_attribute_dict[input_attribute_name] = \
@@ -77,11 +83,6 @@ class ProcessLayer():
                         input_attribute.setName(proposed_attribute_name)
                         proposed_attribute_list.append(input_attribute)
                         break
-                    # If the attribute is already assigned, change the
-                    # proposed_attribute_name
-                    proposed_attribute_name = '%s_%d' % (
-                        input_attribute_name, i)
-                    i += 1
             added_ok = layer_pr.addAttributes(proposed_attribute_list)
             if not added_ok:
                 raise AttributeError(
