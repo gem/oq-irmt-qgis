@@ -27,6 +27,8 @@ class CalculateIRIDialog(QtGui.QDialog, Ui_CalculateIRIDialog):
         add an SVI, AAL and IRI (if activated) attributes to the current layer
         """
 
+        #TODO add IRI calculation
+
         indicators_combination = self.indicators_combination_type.currentText()
         themes_combination = self.themes_combination_type.currentText()
         iri_combination = self.iri_combination_type.currentText()
