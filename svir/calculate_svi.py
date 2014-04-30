@@ -40,25 +40,43 @@ class CalculateSVIDialog(QtGui.QDialog, Ui_CalculateSVIDialog):
             for feat in self.current_layer.getFeatures():
                 feat_id = feat.id()
 
-                svi_value = 0
+                sum_based_combinations = set(['Average', 'Sum'])
+                mul_based_combinations = set(['Multiplication'])
+
+                # init svi_value to the correct value depending on
+                # themes_combination
+                if themes_combination in sum_based_combinations:
+                    svi_value = 0
+                elif themes_combination in mul_based_combinations:
+                    svi_value = 1
+
+                # iterate all themes of SVI
                 for theme in themes:
                     indicators = theme['children']
-                    theme_result = 0
+
+                    # init theme_result to the correct value depending on
+                    # indicators_combination
+                    if indicators_combination in sum_based_combinations:
+                        theme_result = 0
+                    elif indicators_combination in mul_based_combinations:
+                        theme_result = 1
+
+                    # iterate all indicators of a theme
                     for indicator in indicators:
                         indicator_weighted = (feat[indicator['field']] *
                                               indicator['weight'])
-                        if indicators_combination in ['Average', 'Sum']:
+                        if indicators_combination in sum_based_combinations:
                             theme_result += indicator_weighted
-                        else:
+                        elif indicators_combination in mul_based_combinations:
                             theme_result *= indicator_weighted
                     if indicators_combination == 'Average':
                         theme_result /= len(indicators)
 
                     # combine the indicators of each theme
                     theme_weighted = theme_result * theme['weight']
-                    if themes_combination in ['Average', 'Sum']:
+                    if themes_combination in sum_based_combinations:
                             svi_value += theme_weighted
-                    else:
+                    elif themes_combination in mul_based_combinations:
                         svi_value *= theme_weighted
                 if themes_combination == 'Average':
                     svi_value /= len(themes)
