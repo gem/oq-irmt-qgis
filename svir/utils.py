@@ -65,6 +65,15 @@ def assign_default_weights(svi_themes):
 
 
 def reload_layers_in_cbx(combo, *valid_layer_types):
+    """
+    Load layers into a combobox. Can filter by layer type.
+    the additional filter can be QgsMapLayer.VectorLayer, ...
+
+    :param combo: The combobox to be repopulated
+    :type combo: QComboBox
+    :param *valid_layer_types: multiple tuples containing types
+    :type *valid_layer_types: QgsMapLayer.LayerType, ...
+    """
     layer_types = set()
     for layer_type in valid_layer_types:
         layer_types.update([layer_type])
