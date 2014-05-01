@@ -6,7 +6,7 @@ from PyQt4.QtGui import QDialogButtonBox
 from qgis.core import QgsField, QgsMapLayerRegistry, QgsMapLayer, \
     QgsVectorJoinInfo
 from globals import DOUBLE_FIELD_TYPE_NAME, DEBUG, NUMERIC_FIELD_TYPES, \
-    SUM_BASED_COMBINATIONS, MUL_BASED_COMBINATIONS
+    SUM_BASED_COMBINATIONS, MUL_BASED_COMBINATIONS, TEXTUAL_FIELD_TYPES
 from process_layer import ProcessLayer
 from ui.ui_calculate_iri import Ui_CalculateIRIDialog
 from utils import LayerEditingManager, reload_attrib_cbx, reload_layers_in_cbx
@@ -25,6 +25,8 @@ class CalculateIRIDialog(QtGui.QDialog, Ui_CalculateIRIDialog):
         self.calculate_iri = self.calculate_iri_check.isChecked()
 
         reload_layers_in_cbx(self.aal_layer, QgsMapLayer.VectorLayer)
+        reload_attrib_cbx(self.svi_id_field, self.current_layer,
+                          NUMERIC_FIELD_TYPES, TEXTUAL_FIELD_TYPES)
 
     def calculate(self):
         """
@@ -122,8 +124,8 @@ class CalculateIRIDialog(QtGui.QDialog, Ui_CalculateIRIDialog):
         join_layer = QgsMapLayerRegistry.instance().mapLayersByName(self.aal_layer.currentText())[0]
         join_info = QgsVectorJoinInfo()
         join_info.joinLayerId = join_layer.id()
-        join_info.joinFieldName = 'MCODE'
-        join_info.targetFieldName = 'MCODE'
+        join_info.joinFieldName = self.aal_id_field.currentText()
+        join_info.targetFieldName = self.svi_id_field.currentText()
         self.current_layer.addJoin(join_info)
 
         aal_attr_name = '%s_%s' % (self.aal_layer.currentText(), self.aal_field.currentText())
@@ -149,6 +151,8 @@ class CalculateIRIDialog(QtGui.QDialog, Ui_CalculateIRIDialog):
                 self.current_layer.changeAttributeValue(
                     feat_id, iri_attr_id, iri_value)
 
+        self.current_layer.removeJoin(join_info.joinLayerId)
+
     def on_calculate_iri_check_toggled(self, on):
         self.calculate_iri = on
         if self.calculate_iri:
@@ -163,10 +167,13 @@ class CalculateIRIDialog(QtGui.QDialog, Ui_CalculateIRIDialog):
         selected_layer = QgsMapLayerRegistry.instance().mapLayers().values()[
             self.aal_layer.currentIndex()]
         reload_attrib_cbx(self.aal_field, selected_layer, NUMERIC_FIELD_TYPES)
+        reload_attrib_cbx(self.aal_id_field, selected_layer,
+                          NUMERIC_FIELD_TYPES, TEXTUAL_FIELD_TYPES)
         self.check_iri_fields()
 
     def check_iri_fields(self):
         valid_state = False
-        if self.aal_field.currentText() and self.aal_layer.currentText():
+        if (self.aal_field.currentText() and self.aal_layer.currentText()
+            and self.aal_id_field and self.svi_id_field):
             valid_state = True
         self.ok_button.setEnabled(valid_state)

@@ -145,7 +145,7 @@
       <item row="2" column="0">
        <widget class="QLabel" name="label_6">
         <property name="text">
-         <string>AAL id field</string>
+         <string>AAL id attribute</string>
         </property>
        </widget>
       </item>
@@ -155,7 +155,7 @@
       <item row="0" column="0">
        <widget class="QLabel" name="label_7">
         <property name="text">
-         <string>SVI id field</string>
+         <string>SVI id attribute</string>
         </property>
        </widget>
       </item>
