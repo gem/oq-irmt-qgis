@@ -106,9 +106,18 @@ class CalculateIRIDialog(QtGui.QDialog, Ui_CalculateIRIDialog):
         iri_attr_name = 'IRI'
         iri_field = QgsField(iri_attr_name, QVariant.Double)
         iri_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
+        copy_aal_attr_name = 'AAL'
+        aal_field = QgsField(copy_aal_attr_name, QVariant.Double)
+        aal_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
 
         attr_names = ProcessLayer(self.current_layer).add_attributes(
-            [iri_field])
+            [aal_field, iri_field])
+
+        # get the id of the new attributes
+        iri_attr_id = ProcessLayer(self.current_layer).find_attribute_id(
+            attr_names[iri_attr_name])
+        copy_aal_attr_id = ProcessLayer(self.current_layer).find_attribute_id(
+            attr_names[copy_aal_attr_name])
 
         join_layer = QgsMapLayerRegistry.instance().mapLayersByName(self.aal_layer.currentText())[0]
         join_info = QgsVectorJoinInfo()
@@ -118,9 +127,6 @@ class CalculateIRIDialog(QtGui.QDialog, Ui_CalculateIRIDialog):
         self.current_layer.addJoin(join_info)
 
         aal_attr_name = '%s_%s' % (self.aal_layer.currentText(), self.aal_field.currentText())
-        # get the id of the new attributes
-        iri_attr_id = ProcessLayer(self.current_layer).find_attribute_id(
-            attr_names[iri_attr_name])
 
         with LayerEditingManager(self.current_layer, 'Add IRI', DEBUG):
             for feat in self.current_layer.getFeatures():
@@ -136,6 +142,10 @@ class CalculateIRIDialog(QtGui.QDialog, Ui_CalculateIRIDialog):
                     iri_value = (svi_value * svi_weight +
                                  aal_value * aal_weight) / 2.0
 
+                # copy AAL
+                self.current_layer.changeAttributeValue(
+                    feat_id, copy_aal_attr_id, aal_value)
+                # store IRI
                 self.current_layer.changeAttributeValue(
                     feat_id, iri_attr_id, iri_value)
 
