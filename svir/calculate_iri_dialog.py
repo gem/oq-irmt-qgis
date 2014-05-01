@@ -3,13 +3,15 @@ from PyQt4 import QtGui, QtCore
 from PyQt4.QtCore import QVariant
 from PyQt4.QtGui import QDialogButtonBox
 from qgis.core import QgsField, QgsMapLayerRegistry, QgsMapLayer
-from globals import DOUBLE_FIELD_TYPE_NAME, DEBUG, NUMERIC_FIELD_TYPES
+from globals import DOUBLE_FIELD_TYPE_NAME, DEBUG, NUMERIC_FIELD_TYPES, \
+    SUM_BASED_COMBINATIONS, MUL_BASED_COMBINATIONS
 from process_layer import ProcessLayer
 from ui.ui_calculate_iri import Ui_CalculateIRIDialog
 from utils import LayerEditingManager, reload_attrib_cbx, reload_layers_in_cbx
 
 
 class CalculateIRIDialog(QtGui.QDialog, Ui_CalculateIRIDialog):
+
     def __init__(self, iface, current_layer, project_definition, parent=None):
         QtGui.QDialog.__init__(self, parent)
         self.iface = iface
@@ -24,14 +26,11 @@ class CalculateIRIDialog(QtGui.QDialog, Ui_CalculateIRIDialog):
 
     def calculate(self):
         """
-        add an SVI, AAL and IRI (if activated) attributes to the current layer
+        add an SVI attribute to the current layer
         """
-
-        #TODO add IRI calculation
 
         indicators_combination = self.indicators_combination_type.currentText()
         themes_combination = self.themes_combination_type.currentText()
-        iri_combination = self.iri_combination_type.currentText()
 
         themes = self.project_definition['children'][1]['children']
         svi_attr_name = 'SVI'
@@ -48,14 +47,11 @@ class CalculateIRIDialog(QtGui.QDialog, Ui_CalculateIRIDialog):
             for feat in self.current_layer.getFeatures():
                 feat_id = feat.id()
 
-                sum_based_combinations = set(['Average', 'Sum'])
-                mul_based_combinations = set(['Multiplication'])
-
                 # init svi_value to the correct value depending on
                 # themes_combination
-                if themes_combination in sum_based_combinations:
+                if themes_combination in SUM_BASED_COMBINATIONS:
                     svi_value = 0
-                elif themes_combination in mul_based_combinations:
+                elif themes_combination in MUL_BASED_COMBINATIONS:
                     svi_value = 1
 
                 # iterate all themes of SVI
@@ -64,33 +60,77 @@ class CalculateIRIDialog(QtGui.QDialog, Ui_CalculateIRIDialog):
 
                     # init theme_result to the correct value depending on
                     # indicators_combination
-                    if indicators_combination in sum_based_combinations:
+                    if indicators_combination in SUM_BASED_COMBINATIONS:
                         theme_result = 0
-                    elif indicators_combination in mul_based_combinations:
+                    elif indicators_combination in MUL_BASED_COMBINATIONS:
                         theme_result = 1
 
                     # iterate all indicators of a theme
                     for indicator in indicators:
                         indicator_weighted = (feat[indicator['field']] *
                                               indicator['weight'])
-                        if indicators_combination in sum_based_combinations:
+                        if indicators_combination in SUM_BASED_COMBINATIONS:
                             theme_result += indicator_weighted
-                        elif indicators_combination in mul_based_combinations:
+                        elif indicators_combination in MUL_BASED_COMBINATIONS:
                             theme_result *= indicator_weighted
                     if indicators_combination == 'Average':
                         theme_result /= len(indicators)
 
                     # combine the indicators of each theme
                     theme_weighted = theme_result * theme['weight']
-                    if themes_combination in sum_based_combinations:
+                    if themes_combination in SUM_BASED_COMBINATIONS:
                             svi_value += theme_weighted
-                    elif themes_combination in mul_based_combinations:
+                    elif themes_combination in MUL_BASED_COMBINATIONS:
                         svi_value *= theme_weighted
                 if themes_combination == 'Average':
                     svi_value /= len(themes)
 
                 self.current_layer.changeAttributeValue(
                     feat_id, svi_attr_id, svi_value)
+
+        if self.calculate_iri_check:
+            self._calculateIRI(svi_attr_id)
+
+    def _calculateIRI(self, svi_attr_id):
+        iri_combination = self.iri_combination_type.currentText()
+
+        iri_attr_name = 'IRI'
+        iri_field = QgsField(iri_attr_name, QVariant.Double)
+        iri_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
+
+        aal_attr_name = 'AAL'
+        aal_field = QgsField(aal_attr_name, QVariant.Double)
+        aal_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
+
+        attr_names = ProcessLayer(self.current_layer).add_attributes(
+            [aal_field, iri_field])
+
+        # get the id of the new attributes
+        iri_attr_id = ProcessLayer(self.current_layer).find_attribute_id(
+            attr_names[iri_attr_name])
+        aal_attr_id = ProcessLayer(self.current_layer).find_attribute_id(
+            attr_names[aal_attr_name])
+
+        with LayerEditingManager(self.current_layer, 'Add IRI', DEBUG):
+            for feat in self.current_layer.getFeatures():
+                feat_id = feat.id()
+
+                svi_value = feat.attributes()[svi_attr_id]
+
+                # init iri_value to the correct value depending on
+                # iri_combination
+                if iri_combination in SUM_BASED_COMBINATIONS:
+                    iri_value = 0
+                elif iri_combination in MUL_BASED_COMBINATIONS:
+                    iri_value = 1
+
+                aal_value = svi_value * 100
+                iri_value = svi_value /2
+
+                self.current_layer.changeAttributeValue(
+                    feat_id, aal_attr_id, aal_value)
+                self.current_layer.changeAttributeValue(
+                    feat_id, iri_attr_id, iri_value)
 
     def on_calculate_iri_check_toggled(self, on):
         self.calculate_iri = on

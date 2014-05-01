@@ -42,6 +42,9 @@ TEXT_FIELD_TYPE_NAME = "text"
 TEXTUAL_FIELD_TYPES = (STRING_FIELD_TYPE_NAME,
                        TEXT_FIELD_TYPE_NAME)
 
+SUM_BASED_COMBINATIONS = set(['Average', 'Sum'])
+MUL_BASED_COMBINATIONS = set(['Multiplication'])
+
 PROJECT_TEMPLATE = {'name': 'ir',
                     'weight': '',
                     'level': 1,
