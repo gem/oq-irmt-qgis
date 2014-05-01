@@ -209,7 +209,7 @@ class Svir:
         # data from the platform
         self.add_menu_item("create_weight_tree",
                            ":/plugins/svir/start_plugin_icon.png",
-                           u"&Create weight tree",
+                           u"&Create/edit weight tree",
                            self.create_weight_tree,
                            enable=False)
         # Action to activate the modal dialog to choose weighting of the
@@ -280,7 +280,7 @@ class Svir:
             if self.current_layer.type() != QgsMapLayer.VectorLayer:
                 raise AttributeError
             self.project_definitions[self.current_layer.id()]
-            self.registered_actions["create_weight_tree"].setEnabled(False)
+            self.registered_actions["create_weight_tree"].setEnabled(True)
             self.registered_actions["weight_data"].setEnabled(True)
             self.registered_actions["calculate_svi"].setEnabled(True)
 
