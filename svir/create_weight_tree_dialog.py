@@ -70,13 +70,20 @@ class CreateWeightTreeDialog(QDialog):
         dp = self.layer.dataProvider()
         fields = list(dp.fields())
 
+        themes_list = []
         indicators_list = {}
         if self.project_definition:
             themes = self.project_definition['children'][1]['children']
             for theme in themes:
+                themes_list.append(theme['name'])
                 for indicator in theme['children']:
                     indicators_list[indicator['field']] = (theme['name'],
                                                            indicator['name'])
+
+            # remove duplicates
+            themes_list = list(set(themes_list))
+            themes_list.sort()
+        themes_list.insert(0, '')
 
         for i, field in enumerate(fields, start=1):
             theme_name = ''
@@ -91,8 +98,10 @@ class CreateWeightTreeDialog(QDialog):
             theme.setEditable(True)
             theme.setDuplicatesEnabled(False)
             theme.setInsertPolicy(QComboBox.InsertAlphabetically)
-            theme.addItem(theme_name)
-            theme.addItem('')
+            theme.addItems(themes_list)
+            current_index = theme.findText(theme_name)
+            current_index = current_index if current_index != -1 else 0
+            theme.setCurrentIndex(current_index)
             theme.currentIndexChanged.connect(self.check_status)
             theme.lineEdit().editingFinished.connect(
                 lambda: self.update_themes(self.sender().parent()))
