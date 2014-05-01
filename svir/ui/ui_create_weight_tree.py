@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_create_weight_tree.ui'
 #
-# Created: Tue Apr 29 16:53:12 2014
+# Created: Thu May  1 23:06:12 2014
 #      by: PyQt4 UI code generator 4.10.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -38,7 +38,7 @@ class Ui_CreateWeightTreeDialog(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setObjectName(_fromUtf8("scrollArea"))
         self.scrollAreaWidgetContents = QtGui.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 350, 234))
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 350, 200))
         self.scrollAreaWidgetContents.setObjectName(_fromUtf8("scrollAreaWidgetContents"))
         self.gridLayout = QtGui.QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
@@ -79,7 +79,7 @@ class Ui_CreateWeightTreeDialog(object):
 
     def retranslateUi(self, CreateWeightTreeDialog):
         CreateWeightTreeDialog.setWindowTitle(_translate("CreateWeightTreeDialog", "Dialog", None))
-        self.label.setText(_translate("CreateWeightTreeDialog", "Create your IRI by defining which fields appartain to which theme. Attributes MUSTs have both a theme and a name to be considered in the IRI", None))
+        self.label.setText(_translate("CreateWeightTreeDialog", "Create your IRI by defining which fields appartain to which theme. Attributes need both a theme and a name to be considered in the IRI. You can generate a flat index (with no themes) by not entering any theme.", None))
         self.label_4.setText(_translate("CreateWeightTreeDialog", "Name", None))
         self.label_3.setText(_translate("CreateWeightTreeDialog", "Theme", None))
         self.label_2.setText(_translate("CreateWeightTreeDialog", "Attribute", None))

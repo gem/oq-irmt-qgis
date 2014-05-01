@@ -20,7 +20,7 @@
    <item>
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>Create your IRI by defining which fields appartain to which theme. Attributes MUSTs have both a theme and a name to be considered in the IRI</string>
+      <string>Create your IRI by defining which fields appartain to which theme. Attributes need both a theme and a name to be considered in the IRI. You can generate a flat index (with no themes) by not entering any theme.</string>
      </property>
      <property name="wordWrap">
       <bool>true</bool>
@@ -38,7 +38,7 @@
         <x>0</x>
         <y>0</y>
         <width>350</width>
-        <height>234</height>
+        <height>200</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout">

@@ -105,27 +105,31 @@ class CreateWeightTreeDialog(QDialog):
             label = self.ui.grid_layout.itemAtPosition(i, 0).widget().text()
             theme = self.ui.grid_layout.itemAtPosition(i, 1).widget().currentText()
             name = self.ui.grid_layout.itemAtPosition(i, 2).widget().text()
-            if name and theme:
+            if name:
+                theme = theme if theme else ''
                 indicators.append({'field': label,
                                    'theme': theme,
                                    'name': name})
         return indicators
 
     def check_status(self):
-        valid_state = True
+        valid_with_theme = True
+        valid_without_theme = True
         for i in range(1, self.ui.grid_layout.rowCount()):
             theme = self.ui.grid_layout.itemAtPosition(
                 i, 1).widget().currentText()
             name = self.ui.grid_layout.itemAtPosition(i, 2).widget().text()
 
+            if theme:
+                valid_without_theme = False
+
             #either both or none are set
             if theme and name or (not theme and not name):
                 continue
             else:
-                valid_state = False
-                break
+                valid_with_theme = False
 
-        if valid_state:
+        if valid_with_theme or valid_without_theme:
             self.ok_button.setEnabled(True)
         else:
             self.ok_button.setDisabled(True)
