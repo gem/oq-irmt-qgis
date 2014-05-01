@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 from PyQt4 import QtGui, QtCore
+import random
 from PyQt4.QtCore import QVariant
 from PyQt4.QtGui import QDialogButtonBox
-from qgis.core import QgsField, QgsMapLayerRegistry, QgsMapLayer
+from qgis.core import QgsField, QgsMapLayerRegistry, QgsMapLayer, \
+    QgsVectorJoinInfo
 from globals import DOUBLE_FIELD_TYPE_NAME, DEBUG, NUMERIC_FIELD_TYPES, \
     SUM_BASED_COMBINATIONS, MUL_BASED_COMBINATIONS
 from process_layer import ProcessLayer
@@ -92,43 +94,48 @@ class CalculateIRIDialog(QtGui.QDialog, Ui_CalculateIRIDialog):
             self._calculateIRI(svi_attr_id)
 
     def _calculateIRI(self, svi_attr_id):
+        """
+        Copy the AAL and calculate an IRI attribute to the current layer
+        """
+
+        aal_weight = self.project_definition['children'][0]['weight']
+        svi_weight = self.project_definition['children'][1]['weight']
+
         iri_combination = self.iri_combination_type.currentText()
 
         iri_attr_name = 'IRI'
         iri_field = QgsField(iri_attr_name, QVariant.Double)
         iri_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
 
-        aal_attr_name = 'AAL'
-        aal_field = QgsField(aal_attr_name, QVariant.Double)
-        aal_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
-
         attr_names = ProcessLayer(self.current_layer).add_attributes(
-            [aal_field, iri_field])
+            [iri_field])
 
+        join_layer = QgsMapLayerRegistry.instance().mapLayersByName(self.aal_layer.currentText())[0]
+        join_info = QgsVectorJoinInfo()
+        join_info.joinLayerId = join_layer.id()
+        join_info.joinFieldName = 'MCODE'
+        join_info.targetFieldName = 'MCODE'
+        self.current_layer.addJoin(join_info)
+
+        aal_attr_name = '%s_%s' % (self.aal_layer.currentText(), self.aal_field.currentText())
         # get the id of the new attributes
         iri_attr_id = ProcessLayer(self.current_layer).find_attribute_id(
             attr_names[iri_attr_name])
-        aal_attr_id = ProcessLayer(self.current_layer).find_attribute_id(
-            attr_names[aal_attr_name])
 
         with LayerEditingManager(self.current_layer, 'Add IRI', DEBUG):
             for feat in self.current_layer.getFeatures():
                 feat_id = feat.id()
-
                 svi_value = feat.attributes()[svi_attr_id]
+                aal_value = feat[aal_attr_name]
 
-                # init iri_value to the correct value depending on
-                # iri_combination
-                if iri_combination in SUM_BASED_COMBINATIONS:
-                    iri_value = 0
-                elif iri_combination in MUL_BASED_COMBINATIONS:
-                    iri_value = 1
+                if iri_combination == 'Sum':
+                    iri_value = svi_value * svi_weight + aal_value * aal_weight
+                elif iri_combination == 'Multiplication':
+                    iri_value = svi_value * svi_weight * aal_value * aal_weight
+                elif iri_combination == 'Average':
+                    iri_value = (svi_value * svi_weight +
+                                 aal_value * aal_weight) / 2.0
 
-                aal_value = svi_value * 100
-                iri_value = svi_value /2
-
-                self.current_layer.changeAttributeValue(
-                    feat_id, aal_attr_id, aal_value)
                 self.current_layer.changeAttributeValue(
                     feat_id, iri_attr_id, iri_value)
 
