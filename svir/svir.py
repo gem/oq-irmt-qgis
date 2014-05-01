@@ -506,7 +506,13 @@ class Svir:
         Open a modal dialog to create a weight tree from an existing layer
         """
         current_layer_id = self.current_layer.id()
-        dlg = CreateWeightTreeDialog(self.iface, self.current_layer)
+        try:
+            project_definition = self.project_definitions[current_layer_id]
+        except KeyError:
+            project_definition = None
+        dlg = CreateWeightTreeDialog(self.iface,
+                                     self.current_layer,
+                                     project_definition)
 
         if dlg.exec_():
             project_definition = copy.deepcopy(PROJECT_TEMPLATE)

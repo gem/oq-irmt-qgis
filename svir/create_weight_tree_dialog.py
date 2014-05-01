@@ -50,7 +50,7 @@ class CreateWeightTreeDialog(QDialog):
     both are selected and are valid files, they can be loaded by clicking OK
     """
 
-    def __init__(self, iface, layer):
+    def __init__(self, iface, layer, project_definition):
         self.iface = iface
         QDialog.__init__(self)
 
@@ -59,7 +59,7 @@ class CreateWeightTreeDialog(QDialog):
         self.ui.setupUi(self)
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
 
-        self.project_definition = None
+        self.project_definition = project_definition
         self.layer = layer
         self.theme_boxes = []
         self.themes = ['']
@@ -69,27 +69,43 @@ class CreateWeightTreeDialog(QDialog):
     def generate_gui(self):
         dp = self.layer.dataProvider()
         fields = list(dp.fields())
+
+        indicators_list = {}
+        if self.project_definition:
+            themes = self.project_definition['children'][1]['children']
+            for theme in themes:
+                for indicator in theme['children']:
+                    indicators_list[indicator['field']] = (theme['name'],
+                                                           indicator['name'])
+
         for i, field in enumerate(fields, start=1):
+            theme_name = ''
+            indicator_name = ''
+            if field.name() in indicators_list:
+                theme_name = indicators_list[field.name()][0]
+                indicator_name = indicators_list[field.name()][1]
+
             label = QLabel(field.name())
 
             theme = QComboBox()
             theme.setEditable(True)
             theme.setDuplicatesEnabled(False)
             theme.setInsertPolicy(QComboBox.InsertAlphabetically)
+            theme.addItem(theme_name)
             theme.addItem('')
             theme.currentIndexChanged.connect(self.check_status)
             theme.lineEdit().editingFinished.connect(
                 lambda: self.update_themes(self.sender().parent()))
             self.theme_boxes.append(theme)
 
-            name = QLineEdit()
+            name = QLineEdit(indicator_name)
             name.editingFinished.connect(self.check_status)
 
             self.ui.grid_layout.addWidget(label, i, 0)
             self.ui.grid_layout.addWidget(theme, i, 1)
             self.ui.grid_layout.addWidget(name, i, 2)
 
-        self.ok_button.setDisabled(True)
+        self.check_status()
 
     def update_themes(self, new_theme_box):
         new_theme = new_theme_box.currentText()
