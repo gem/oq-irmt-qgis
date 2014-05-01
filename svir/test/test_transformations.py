@@ -31,7 +31,7 @@ import qgis
 if qgis:
     pass
 from PyQt4.QtCore import QPyNullVariant
-from normalization_algs import normalize, NORMALIZATION_ALGS
+from svir.normalization_algs import normalize, NORMALIZATION_ALGS
 import unittest
 
 

@@ -61,26 +61,32 @@ class ProcessLayer():
             # add attributes
             layer_pr = self.layer.dataProvider()
             proposed_attribute_dict = {}
+            proposed_attribute_list = []
             for input_attribute in attribute_list:
                 input_attribute_name = input_attribute.name()
                 proposed_attribute_name = input_attribute_name
                 i = 1
                 while True:
-                    try:
-                        self.find_attribute_id(proposed_attribute_name)
-                    except AttributeError:
+                    current_attribute_names = \
+                        [attribute.name() for attribute in layer_pr.fields()]
+                    if proposed_attribute_name in current_attribute_names:
+                        # If the attribute is already assigned, change the
+                        # proposed_attribute_name
+                        proposed_attribute_name = '%s_%d' % (
+                            input_attribute_name, i)
+                        i += 1
+                    else:
                         # If the attribute name is not already assigned,
                         # add it to the proposed_attribute_dict
                         proposed_attribute_dict[input_attribute_name] = \
                             proposed_attribute_name
                         input_attribute.setName(proposed_attribute_name)
+                        proposed_attribute_list.append(input_attribute)
                         break
-                    # If the attribute is already assigned, change the
-                    # proposed_attribute_name
-                    proposed_attribute_name = '%s_%d' % (
-                        input_attribute_name, i)
-                    i += 1
-            layer_pr.addAttributes(attribute_list)
+            added_ok = layer_pr.addAttributes(proposed_attribute_list)
+            if not added_ok:
+                raise AttributeError(
+                    'Unable to add attributes %s' % proposed_attribute_list)
         return proposed_attribute_dict
 
     def normalize_attribute(self,
@@ -145,9 +151,9 @@ class ProcessLayer():
         for field_id, field in enumerate(pr.fields()):
             if field.name() == attribute_name:
                 attribute_id = field_id
-        if not attribute_id:
-            raise AttributeError
-        return attribute_id
+                return attribute_id
+        # In case the attribute has not been found, raise exception
+        raise AttributeError('Attribute name %s not found' % attribute_name)
 
     def duplicate_in_memory(self, new_name='', add_to_registry=False):
         """
