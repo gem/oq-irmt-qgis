@@ -1,21 +1,23 @@
 # -*- coding: utf-8 -*-
-from PyQt4 import QtGui, QtCore
-import random
 from PyQt4.QtCore import QVariant
-from PyQt4.QtGui import QDialogButtonBox
+from PyQt4.QtGui import QDialog, QDialogButtonBox
 from qgis.core import QgsField, QgsMapLayerRegistry, QgsMapLayer, \
     QgsVectorJoinInfo
+from qgis.gui import QgsMessageBar
 from globals import DOUBLE_FIELD_TYPE_NAME, DEBUG, NUMERIC_FIELD_TYPES, \
     SUM_BASED_COMBINATIONS, MUL_BASED_COMBINATIONS, TEXTUAL_FIELD_TYPES
 from process_layer import ProcessLayer
 from ui.ui_calculate_iri import Ui_CalculateIRIDialog
-from utils import LayerEditingManager, reload_attrib_cbx, reload_layers_in_cbx
+from utils import (LayerEditingManager,
+                   reload_attrib_cbx,
+                   reload_layers_in_cbx,
+                   tr)
 
 
-class CalculateIRIDialog(QtGui.QDialog, Ui_CalculateIRIDialog):
+class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
 
     def __init__(self, iface, current_layer, project_definition, parent=None):
-        QtGui.QDialog.__init__(self, parent)
+        QDialog.__init__(self, parent)
         self.iface = iface
         self.parent = parent
         self.current_layer = current_layer
@@ -27,6 +29,7 @@ class CalculateIRIDialog(QtGui.QDialog, Ui_CalculateIRIDialog):
         reload_layers_in_cbx(self.aal_layer, QgsMapLayer.VectorLayer)
         reload_attrib_cbx(self.svi_id_field, self.current_layer,
                           NUMERIC_FIELD_TYPES, TEXTUAL_FIELD_TYPES)
+        self.ok_button.setEnabled(True)
 
     def calculate(self):
         """
@@ -47,52 +50,60 @@ class CalculateIRIDialog(QtGui.QDialog, Ui_CalculateIRIDialog):
         svi_attr_id = ProcessLayer(self.current_layer).find_attribute_id(
             attr_names[svi_attr_name])
 
-        with LayerEditingManager(self.current_layer, 'Add SVI', DEBUG):
-            for feat in self.current_layer.getFeatures():
-                feat_id = feat.id()
+        try:
+            with LayerEditingManager(self.current_layer, 'Add SVI', DEBUG):
+                for feat in self.current_layer.getFeatures():
+                    feat_id = feat.id()
 
-                # init svi_value to the correct value depending on
-                # themes_combination
-                if themes_combination in SUM_BASED_COMBINATIONS:
-                    svi_value = 0
-                elif themes_combination in MUL_BASED_COMBINATIONS:
-                    svi_value = 1
-
-                # iterate all themes of SVI
-                for theme in themes:
-                    indicators = theme['children']
-
-                    # init theme_result to the correct value depending on
-                    # indicators_combination
-                    if indicators_combination in SUM_BASED_COMBINATIONS:
-                        theme_result = 0
-                    elif indicators_combination in MUL_BASED_COMBINATIONS:
-                        theme_result = 1
-
-                    # iterate all indicators of a theme
-                    for indicator in indicators:
-                        indicator_weighted = (feat[indicator['field']] *
-                                              indicator['weight'])
-                        if indicators_combination in SUM_BASED_COMBINATIONS:
-                            theme_result += indicator_weighted
-                        elif indicators_combination in MUL_BASED_COMBINATIONS:
-                            theme_result *= indicator_weighted
-                    if indicators_combination == 'Average':
-                        theme_result /= len(indicators)
-
-                    # combine the indicators of each theme
-                    theme_weighted = theme_result * theme['weight']
+                    # init svi_value to the correct value depending on
+                    # themes_combination
                     if themes_combination in SUM_BASED_COMBINATIONS:
-                            svi_value += theme_weighted
+                        svi_value = 0
                     elif themes_combination in MUL_BASED_COMBINATIONS:
-                        svi_value *= theme_weighted
-                if themes_combination == 'Average':
-                    svi_value /= len(themes)
+                        svi_value = 1
 
-                self.current_layer.changeAttributeValue(
-                    feat_id, svi_attr_id, svi_value)
+                    # iterate all themes of SVI
+                    for theme in themes:
+                        indicators = theme['children']
 
-        if self.calculate_iri_check:
+                        # init theme_result to the correct value depending on
+                        # indicators_combination
+                        if indicators_combination in SUM_BASED_COMBINATIONS:
+                            theme_result = 0
+                        elif indicators_combination in MUL_BASED_COMBINATIONS:
+                            theme_result = 1
+
+                        # iterate all indicators of a theme
+                        for indicator in indicators:
+                            indicator_weighted = (feat[indicator['field']] *
+                                                  indicator['weight'])
+                            if indicators_combination in SUM_BASED_COMBINATIONS:
+                                theme_result += indicator_weighted
+                            elif indicators_combination in MUL_BASED_COMBINATIONS:
+                                theme_result *= indicator_weighted
+                        if indicators_combination == 'Average':
+                            theme_result /= len(indicators)
+
+                        # combine the indicators of each theme
+                        theme_weighted = theme_result * theme['weight']
+                        if themes_combination in SUM_BASED_COMBINATIONS:
+                                svi_value += theme_weighted
+                        elif themes_combination in MUL_BASED_COMBINATIONS:
+                            svi_value *= theme_weighted
+                    if themes_combination == 'Average':
+                        svi_value /= len(themes)
+
+                    self.current_layer.changeAttributeValue(
+                        feat_id, svi_attr_id, svi_value)
+        except TypeError:
+            self.current_layer.dataProvider().deleteAttributes(
+                [svi_attr_id])
+            msg = 'Could not calculate SVI due to data problems'
+            self.iface.messageBar().pushMessage(tr("Error"),
+                                                tr(msg),
+                                                level=QgsMessageBar.CRITICAL)
+
+        if self.calculate_iri_check.isChecked():
             self._calculateIRI(svi_attr_id)
 
     def _calculateIRI(self, svi_attr_id):
@@ -130,28 +141,36 @@ class CalculateIRIDialog(QtGui.QDialog, Ui_CalculateIRIDialog):
 
         aal_attr_name = '%s_%s' % (self.aal_layer.currentText(), self.aal_field.currentText())
 
-        with LayerEditingManager(self.current_layer, 'Add IRI', DEBUG):
-            for feat in self.current_layer.getFeatures():
-                feat_id = feat.id()
-                svi_value = feat.attributes()[svi_attr_id]
-                aal_value = feat[aal_attr_name]
+        try:
+            with LayerEditingManager(self.current_layer, 'Add IRI', DEBUG):
+                for feat in self.current_layer.getFeatures():
+                    feat_id = feat.id()
+                    svi_value = feat.attributes()[svi_attr_id]
+                    aal_value = feat[aal_attr_name]
 
-                if iri_combination == 'Sum':
-                    iri_value = svi_value * svi_weight + aal_value * aal_weight
-                elif iri_combination == 'Multiplication':
-                    iri_value = svi_value * svi_weight * aal_value * aal_weight
-                elif iri_combination == 'Average':
-                    iri_value = (svi_value * svi_weight +
-                                 aal_value * aal_weight) / 2.0
+                    if iri_combination == 'Sum':
+                        iri_value = svi_value * svi_weight + aal_value * aal_weight
+                    elif iri_combination == 'Multiplication':
+                        iri_value = svi_value * svi_weight * aal_value * aal_weight
+                    elif iri_combination == 'Average':
+                        iri_value = (svi_value * svi_weight +
+                                     aal_value * aal_weight) / 2.0
 
-                # copy AAL
-                self.current_layer.changeAttributeValue(
-                    feat_id, copy_aal_attr_id, aal_value)
-                # store IRI
-                self.current_layer.changeAttributeValue(
-                    feat_id, iri_attr_id, iri_value)
-
-        self.current_layer.removeJoin(join_info.joinLayerId)
+                    # copy AAL
+                    self.current_layer.changeAttributeValue(
+                        feat_id, copy_aal_attr_id, aal_value)
+                    # store IRI
+                    self.current_layer.changeAttributeValue(
+                        feat_id, iri_attr_id, iri_value)
+        except TypeError:
+            self.current_layer.dataProvider().deleteAttributes(
+                [iri_attr_id, copy_aal_attr_id])
+            msg = 'Could not calculate IRI due to data problems'
+            self.iface.messageBar().pushMessage(tr("Error"),
+                                                tr(msg),
+                                                level=QgsMessageBar.CRITICAL)
+        finally:
+            self.current_layer.removeJoin(join_info.joinLayerId)
 
     def on_calculate_iri_check_toggled(self, on):
         self.calculate_iri = on
