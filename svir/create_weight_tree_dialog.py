@@ -62,7 +62,7 @@ class CreateWeightTreeDialog(QDialog):
         self.project_definition = project_definition
         self.layer = layer
         self.theme_boxes = []
-        self.themes = ['']
+        self.themes = set([''])
 
         self.generate_gui()
 
@@ -103,8 +103,7 @@ class CreateWeightTreeDialog(QDialog):
             current_index = current_index if current_index != -1 else 0
             theme.setCurrentIndex(current_index)
             theme.currentIndexChanged.connect(self.check_status)
-            theme.lineEdit().editingFinished.connect(
-                lambda: self.update_themes(self.sender().parent()))
+            theme.lineEdit().editingFinished.connect(self.update_themes)
             self.theme_boxes.append(theme)
 
             name = QLineEdit(indicator_name)
@@ -116,12 +115,14 @@ class CreateWeightTreeDialog(QDialog):
 
         self.check_status()
 
-    def update_themes(self, new_theme_box):
-        new_theme = new_theme_box.currentText()
+    def update_themes(self):
+        new_theme = self.sender().text()
         if new_theme not in self.themes:
-            self.themes.append(new_theme)
+            self.themes.update([new_theme])
             for theme_box in self.theme_boxes:
-                theme_box.addItem(new_theme)
+                # needed to avoid a strange behavoiur when generating_gui
+                if theme_box.findText(new_theme) == -1:
+                    theme_box.addItem(new_theme)
             self.check_status()
 
     def indicators(self):
