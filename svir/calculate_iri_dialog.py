@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from PyQt4.QtCore import QVariant
+from PyQt4.QtCore import QVariant, QPyNullVariant
 from PyQt4.QtGui import QDialog, QDialogButtonBox
 from qgis.core import QgsField, QgsMapLayerRegistry, QgsMapLayer, \
     QgsVectorJoinInfo
@@ -50,9 +50,14 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
         svi_attr_id = ProcessLayer(self.current_layer).find_attribute_id(
             attr_names[svi_attr_name])
 
+        discarded_feats_ids = []
         try:
             with LayerEditingManager(self.current_layer, 'Add SVI', DEBUG):
                 for feat in self.current_layer.getFeatures():
+                    # If a feature contains any NULL value, discard_feat will
+                    # be set to True and the corresponding SVI will be set to
+                    # NULL
+                    discard_feat = False
                     feat_id = feat.id()
 
                     # init svi_value to the correct value depending on
@@ -75,12 +80,19 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
 
                         # iterate all indicators of a theme
                         for indicator in indicators:
+                            if (feat[indicator['field']] ==
+                                    QPyNullVariant(float)):
+                                discard_feat = True
+                                discarded_feats_ids.append(feat_id)
+                                break
                             indicator_weighted = (feat[indicator['field']] *
                                                   indicator['weight'])
                             if indicators_combination in SUM_BASED_COMBINATIONS:
                                 theme_result += indicator_weighted
                             elif indicators_combination in MUL_BASED_COMBINATIONS:
                                 theme_result *= indicator_weighted
+                        if discard_feat:
+                            break
                         if indicators_combination == 'Average':
                             theme_result /= len(indicators)
 
@@ -90,11 +102,24 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
                                 svi_value += theme_weighted
                         elif themes_combination in MUL_BASED_COMBINATIONS:
                             svi_value *= theme_weighted
-                    if themes_combination == 'Average':
-                        svi_value /= len(themes)
+                    if discard_feat:
+                        svi_value = QPyNullVariant(float)
+                    else:
+                        if themes_combination == 'Average':
+                            svi_value /= len(themes)
 
                     self.current_layer.changeAttributeValue(
                         feat_id, svi_attr_id, svi_value)
+            msg = ('The SVI has been calculated for fields containing'
+                   'non-NULL values and it was added to the layer as'
+                   'a new attribute')
+            self.iface.messageBar().pushMessage(
+                    tr("Info"), tr(msg), level=QgsMessageBar.INFO)
+            if discarded_feats_ids:
+                msg = 'Features containing NULL indicators were found: %s' % (
+                    discarded_feats_ids)
+                self.iface.messageBar().pushMessage(
+                        tr("Warning"), tr(msg), level=QgsMessageBar.WARNING)
         except TypeError:
             self.current_layer.dataProvider().deleteAttributes(
                 [svi_attr_id])
