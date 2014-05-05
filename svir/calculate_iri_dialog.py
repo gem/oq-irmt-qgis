@@ -87,9 +87,11 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
                                 break
                             indicator_weighted = (feat[indicator['field']] *
                                                   indicator['weight'])
-                            if indicators_combination in SUM_BASED_COMBINATIONS:
+                            if indicators_combination in \
+                                    SUM_BASED_COMBINATIONS:
                                 theme_result += indicator_weighted
-                            elif indicators_combination in MUL_BASED_COMBINATIONS:
+                            elif indicators_combination in \
+                                    MUL_BASED_COMBINATIONS:
                                 theme_result *= indicator_weighted
                         if discard_feat:
                             break
@@ -114,12 +116,12 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
                    'non-NULL values and it was added to the layer as'
                    'a new attribute')
             self.iface.messageBar().pushMessage(
-                    tr("Info"), tr(msg), level=QgsMessageBar.INFO)
+                tr("Info"), tr(msg), level=QgsMessageBar.INFO)
             if discarded_feats_ids:
                 msg = 'Features containing NULL indicators were found: %s' % (
                     discarded_feats_ids)
                 self.iface.messageBar().pushMessage(
-                        tr("Warning"), tr(msg), level=QgsMessageBar.WARNING)
+                    tr("Warning"), tr(msg), level=QgsMessageBar.WARNING)
         except TypeError:
             self.current_layer.dataProvider().deleteAttributes(
                 [svi_attr_id])
@@ -157,14 +159,16 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
         copy_aal_attr_id = ProcessLayer(self.current_layer).find_attribute_id(
             attr_names[copy_aal_attr_name])
 
-        join_layer = QgsMapLayerRegistry.instance().mapLayersByName(self.aal_layer.currentText())[0]
+        join_layer = QgsMapLayerRegistry.instance().mapLayersByName(
+            self.aal_layer.currentText())[0]
         join_info = QgsVectorJoinInfo()
         join_info.joinLayerId = join_layer.id()
         join_info.joinFieldName = self.aal_id_field.currentText()
         join_info.targetFieldName = self.svi_id_field.currentText()
         self.current_layer.addJoin(join_info)
 
-        aal_attr_name = '%s_%s' % (self.aal_layer.currentText(), self.aal_field.currentText())
+        aal_attr_name = '%s_%s' % (self.aal_layer.currentText(),
+                                   self.aal_field.currentText())
 
         try:
             with LayerEditingManager(self.current_layer, 'Add IRI', DEBUG):
@@ -174,9 +178,11 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
                     aal_value = feat[aal_attr_name]
 
                     if iri_combination == 'Sum':
-                        iri_value = svi_value * svi_weight + aal_value * aal_weight
+                        iri_value = (
+                            svi_value * svi_weight + aal_value * aal_weight)
                     elif iri_combination == 'Multiplication':
-                        iri_value = svi_value * svi_weight * aal_value * aal_weight
+                        iri_value = (
+                            svi_value * svi_weight * aal_value * aal_weight)
                     elif iri_combination == 'Average':
                         iri_value = (svi_value * svi_weight +
                                      aal_value * aal_weight) / 2.0
@@ -218,6 +224,6 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
     def check_iri_fields(self):
         valid_state = False
         if (self.aal_field.currentText() and self.aal_layer.currentText()
-            and self.aal_id_field and self.svi_id_field):
+                and self.aal_id_field and self.svi_id_field):
             valid_state = True
         self.ok_button.setEnabled(valid_state)

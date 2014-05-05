@@ -29,7 +29,7 @@ import collections
 from time import time
 from PyQt4.QtCore import QSettings, Qt
 from PyQt4.QtGui import QApplication
-from qgis.core import QgsMapLayerRegistry, QgsMapLayer
+from qgis.core import QgsMapLayerRegistry
 from settings_dialog import SettingsDialog
 from qgis.gui import QgsMessageBar
 

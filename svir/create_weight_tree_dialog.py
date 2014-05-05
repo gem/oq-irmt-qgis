@@ -26,18 +26,8 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import json
-
-from PyQt4.QtCore import (Qt,
-                          QUrl,
-                          QSettings,
-                          pyqtProperty,
-                          pyqtSignal)
-
 from PyQt4.QtGui import (QDialog,
-                         QDialogButtonBox, QLabel, QLineEdit, QComboBox,
-                         QToolButton)
-from PyQt4.QtWebKit import QWebSettings
+                         QDialogButtonBox, QLabel, QLineEdit, QComboBox, )
 
 from ui.ui_create_weight_tree import Ui_CreateWeightTreeDialog
 
@@ -129,7 +119,8 @@ class CreateWeightTreeDialog(QDialog):
         indicators = []
         for i in range(1, self.ui.grid_layout.rowCount()):
             label = self.ui.grid_layout.itemAtPosition(i, 0).widget().text()
-            theme = self.ui.grid_layout.itemAtPosition(i, 1).widget().currentText()
+            theme = \
+                self.ui.grid_layout.itemAtPosition(i, 1).widget().currentText()
             name = self.ui.grid_layout.itemAtPosition(i, 2).widget().text()
             if name:
                 theme = theme if theme else ''
@@ -159,4 +150,3 @@ class CreateWeightTreeDialog(QDialog):
             self.ok_button.setEnabled(True)
         else:
             self.ok_button.setDisabled(True)
-

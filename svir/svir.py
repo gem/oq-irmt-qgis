@@ -556,7 +556,6 @@ class Svir:
         if dlg.exec_():
             dlg.calculate()
 
-
     def redraw_ir_layer(self, data):
         print "REDRAW USING %s" % data
 
