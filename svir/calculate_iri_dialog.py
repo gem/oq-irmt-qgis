@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from PyQt4.QtCore import QVariant, QPyNullVariant
-from PyQt4.QtGui import QDialog, QDialogButtonBox, QPushButton, QToolButton
+from PyQt4.QtGui import QDialog, QDialogButtonBox, QToolButton
 from qgis.core import QgsField, QgsMapLayerRegistry, QgsMapLayer, \
     QgsVectorJoinInfo
 from qgis.gui import QgsMessageBar
@@ -112,7 +112,7 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
 
                     self.current_layer.changeAttributeValue(
                         feat_id, svi_attr_id, svi_value)
-            msg = ('The SVI has been calculated for fields containing'
+            msg = ('The SVI has been calculated for fields containing '
                    'non-NULL values and it was added to the layer as '
                    'a new attribute called %s') % attr_names[svi_attr_name]
             self.iface.messageBar().pushMessage(
@@ -129,12 +129,12 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
                 current_feats_ids = self.current_layer.selectedFeaturesIds()
                 button.toggled.connect(
                     lambda on, layer=self.current_layer,
-                           new_feature_ids=discarded_feats_ids,
-                           old_feature_ids=current_feats_ids:
-                           toggle_select_features(layer,
-                                                  on,
-                                                  new_feature_ids,
-                                                  old_feature_ids))
+                    new_feature_ids=discarded_feats_ids,
+                    old_feature_ids=current_feats_ids:
+                    toggle_select_features(layer,
+                                           on,
+                                           new_feature_ids,
+                                           old_feature_ids))
                 widget.layout().addWidget(button)
                 self.iface.messageBar().pushWidget(widget,
                                                    QgsMessageBar.WARNING)
