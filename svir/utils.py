@@ -110,8 +110,23 @@ def reload_attrib_cbx(combo, layer, *valid_field_types):
             combo.addItem(field.name())
 
 
-def select_features(layer, feature_ids):
-    layer.setSelectedFeatures(feature_ids)
+def toggle_select_features(layer, use_new, new_feature_ids, old_feature_ids):
+    """
+    Toggles feature selection between two sets.
+
+    :param layer: The QgsVectorLayer where the selection is applied
+    :type layer: QgsVectorLayer
+    :param use_new: which list to select
+    :type use_new: bool
+    :param new_feature_ids: The list to select if use_new is true
+    :type new_feature_ids: QgsFeatureIds
+    :param old_feature_ids: The list to select if use_new is false
+    :type old_feature_ids: QgsFeatureIds
+    """
+    if use_new:
+        layer.setSelectedFeatures(new_feature_ids)
+    else:
+        layer.setSelectedFeatures(old_feature_ids)
 
 
 class Register(collections.OrderedDict):
