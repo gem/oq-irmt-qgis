@@ -111,7 +111,7 @@ def reload_attrib_cbx(combo, layer, *valid_field_types):
 
 
 def select_features(layer, feature_ids):
-            layer.setSelectedFeatures(feature_ids)
+    layer.setSelectedFeatures(feature_ids)
 
 
 class Register(collections.OrderedDict):
