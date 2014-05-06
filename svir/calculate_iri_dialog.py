@@ -142,9 +142,9 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
                                                 level=QgsMessageBar.CRITICAL)
 
         if self.calculate_iri_check.isChecked():
-            self._calculateIRI(svi_attr_id)
+            self._calculateIRI(svi_attr_id, discarded_feats_ids)
 
-    def _calculateIRI(self, svi_attr_id):
+    def _calculateIRI(self, svi_attr_id, discarded_feats_ids):
         """
         Copy the AAL and calculate an IRI attribute to the current layer
         """
@@ -187,8 +187,9 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
                     feat_id = feat.id()
                     svi_value = feat.attributes()[svi_attr_id]
                     aal_value = feat[aal_attr_name]
-
-                    if iri_combination == 'Sum':
+                    if feat_id in discarded_feats_ids:
+                        iri_value = QPyNullVariant(float)
+                    elif iri_combination == 'Sum':
                         iri_value = (
                             svi_value * svi_weight + aal_value * aal_weight)
                     elif iri_combination == 'Multiplication':
