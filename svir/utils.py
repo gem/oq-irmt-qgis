@@ -29,6 +29,7 @@ import collections
 from time import time
 from PyQt4.QtCore import QSettings, Qt
 from PyQt4.QtGui import QApplication
+from qgis.core import QgsMapLayerRegistry
 from settings_dialog import SettingsDialog
 from qgis.gui import QgsMessageBar
 
@@ -61,6 +62,71 @@ def assign_default_weights(svi_themes):
             indicator_weight = 1.0 / len(theme['children'])
             indicator_weight = '%.2f' % indicator_weight
             indicator['weight'] = float(indicator_weight)
+
+
+def reload_layers_in_cbx(combo, *valid_layer_types):
+    """
+    Load layers into a combobox. Can filter by layer type.
+    the additional filter can be QgsMapLayer.VectorLayer, ...
+
+    :param combo: The combobox to be repopulated
+    :type combo: QComboBox
+    :param *valid_layer_types: multiple tuples containing types
+    :type *valid_layer_types: QgsMapLayer.LayerType, ...
+    """
+    layer_types = set()
+    for layer_type in valid_layer_types:
+        layer_types.update([layer_type])
+    combo.clear()
+    for l in QgsMapLayerRegistry.instance().mapLayers().values():
+        if not layer_types or l.type() in layer_types:
+            combo.addItem(l.name())
+
+
+def reload_attrib_cbx(combo, layer, *valid_field_types):
+    """
+    Load attributes of a layer into a combobox. Can filter by field data type.
+    the additional filter can be NUMERIC_FIELD_TYPES, TEXTUAL_FIELD_TYPES, ...
+
+    :param combo: The combobox to be repopulated
+    :type combo: QComboBox
+    :param layer: The QgsVectorLayer from where the fields are read
+    :type layer: QgsVectorLayer
+    :param *valid_field_types: multiple tuples containing types
+    :type *valid_field_types: tuple, tuple, ...
+    """
+    field_types = set()
+    for field_type in valid_field_types:
+        field_types.update(field_type)
+
+    # reset combo box
+    combo.clear()
+    # populate combo box with field names taken by layers
+    dp = layer.dataProvider()
+    fields = list(dp.fields())
+    for field in fields:
+        # add if in field_types
+        if not field_types or field.typeName() in field_types:
+            combo.addItem(field.name())
+
+
+def toggle_select_features(layer, use_new, new_feature_ids, old_feature_ids):
+    """
+    Toggles feature selection between two sets.
+
+    :param layer: The QgsVectorLayer where the selection is applied
+    :type layer: QgsVectorLayer
+    :param use_new: which list to select
+    :type use_new: bool
+    :param new_feature_ids: The list to select if use_new is true
+    :type new_feature_ids: QgsFeatureIds
+    :param old_feature_ids: The list to select if use_new is false
+    :type old_feature_ids: QgsFeatureIds
+    """
+    if use_new:
+        layer.setSelectedFeatures(new_feature_ids)
+    else:
+        layer.setSelectedFeatures(old_feature_ids)
 
 
 class Register(collections.OrderedDict):

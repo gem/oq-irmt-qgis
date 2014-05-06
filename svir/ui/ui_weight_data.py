@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_weight_data.ui'
 #
-# Created: Mon Apr 28 16:36:01 2014
+# Created: Tue Apr 29 16:48:29 2014
 #      by: PyQt4 UI code generator 4.10.3
 #
 # WARNING! All changes made in this file will be lost!

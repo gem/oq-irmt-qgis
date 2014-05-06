@@ -28,7 +28,7 @@
 from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox)
-from qgis.core import QgsMapLayerRegistry
+from qgis.core import QgsMapLayerRegistry, QgsMapLayer
 
 from ui.ui_normalization import Ui_NormalizationDialog
 from normalization_algs import (RANK_VARIANTS,
@@ -37,6 +37,7 @@ from normalization_algs import (RANK_VARIANTS,
                                 NORMALIZATION_ALGS)
 
 from globals import NUMERIC_FIELD_TYPES
+from utils import reload_attrib_cbx, reload_layers_in_cbx
 
 
 class NormalizationDialog(QDialog):
@@ -53,16 +54,17 @@ class NormalizationDialog(QDialog):
         self.ui.setupUi(self)
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
         self.use_advanced = False
-        reg = QgsMapLayerRegistry.instance()
-        self.ui.layer_cbx.addItems(
-            [l.name() for l in reg.mapLayers().values()])
+        reload_layers_in_cbx(self.ui.layer_cbx, QgsMapLayer.VectorLayer)
+
         # In case one of the available layers is active, preselect it
         if iface.activeLayer():
             active_layer_name = iface.activeLayer().name()
             active_layer_index = self.ui.layer_cbx.findText(active_layer_name)
             self.ui.layer_cbx.setCurrentIndex(active_layer_index)
         else:
+            self.ui.layer_cbx.blockSignals(True)
             self.ui.layer_cbx.setCurrentIndex(-1)
+            self.ui.layer_cbx.blockSignals(False)
             self.ui.attrib_cbx.clear()
         alg_list = NORMALIZATION_ALGS.keys()
         self.ui.algorithm_cbx.addItems(alg_list)
@@ -90,29 +92,14 @@ class NormalizationDialog(QDialog):
 
     @pyqtSlot(str)
     def on_layer_cbx_currentIndexChanged(self):
-        self.reload_attrib_cbx()
+        layer = QgsMapLayerRegistry.instance().mapLayers().values()[
+            self.ui.layer_cbx.currentIndex()]
+        reload_attrib_cbx(self.ui.attrib_cbx, layer, NUMERIC_FIELD_TYPES)
+        self.ok_button.setEnabled(self.ui.attrib_cbx.count())
 
     @pyqtSlot(str)
     def on_algorithm_cbx_currentIndexChanged(self):
         self.reload_variant_cbx()
-
-    def reload_attrib_cbx(self):
-        # reset combo box
-        self.ui.attrib_cbx.clear()
-        # populate attribute combo box with the list of attributes of the
-        # layer specified in the other combo box
-        layer = QgsMapLayerRegistry.instance().mapLayers().values()[
-            self.ui.layer_cbx.currentIndex()]
-        # populate combo boxes with field names taken by layers
-        dp = layer.dataProvider()
-        fields = list(dp.fields())
-        no_numeric_fields = True
-        for field in fields:
-            # add numeric fields only
-            if field.typeName() in NUMERIC_FIELD_TYPES:
-                self.ui.attrib_cbx.addItem(field.name())
-                no_numeric_fields = False
-        self.ok_button.setDisabled(no_numeric_fields)
 
     def reload_variant_cbx(self):
         self.ui.variant_cbx.clear()

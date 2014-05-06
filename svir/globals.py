@@ -42,114 +42,136 @@ TEXT_FIELD_TYPE_NAME = "text"
 TEXTUAL_FIELD_TYPES = (STRING_FIELD_TYPE_NAME,
                        TEXT_FIELD_TYPE_NAME)
 
-PROJECT_TEMPLATE = {'name': 'ir',
-                    'weight': '',
-                    'level': 1,
-                    'children': [
-                        {'name': 'aal',
-                         'weight': 0.5,
-                         'level': 2},
-                        {'name': 'svi',
-                         'weight': 0.5,
-                         'level': 2,
-                         'children': []}
-                    ]}
+SUM_BASED_COMBINATIONS = set(['Average', 'Sum'])
+MUL_BASED_COMBINATIONS = set(['Multiplication'])
 
-THEME_TEMPLATE = {'name': '',
-                     'weight': 0.0,
-                     'level': 3.0,
-                     'type': 'categoryIndicator',
-                     'children': []}
+PROJECT_TEMPLATE = {
+    'name': 'ir',
+    'weight': '',
+    'level': 1,
+    'children': [
+        {'name': 'aal',
+         'weight': 0.5,
+         'level': 2},
+        {'name': 'svi',
+         'weight': 0.5,
+         'level': 2,
+         'children': []}
+    ]
+}
 
-INDICATOR_TEMPLATE = {'name': '',
-                      'weight': 0.0,
-                      'level': 4.0,
-                      'type': 'primaryIndicator',
-                      'field': ''}
+THEME_TEMPLATE = {
+    'name': '',
+    'weight': 0.0,
+    'level': 3.0,
+    'type': 'categoryIndicator',
+    'children': []
+}
+
+INDICATOR_TEMPLATE = {
+    'name': '',
+    'weight': 0.0,
+    'level': 4.0,
+    'type': 'primaryIndicator',
+    'field': ''
+}
 
 DEMO_JSON = {
-              "name": "ir",
-              "weight": "",
-              "level" : 1.0,
+    "name": "ir",
+    "weight": "",
+    "level": 1.0,
+    "children": [
+        {"name": "aal",
+         "weight": 0.5,
+         "level": 2.0},
+        {"name": "svi",
+         "weight": 0.5,
+         "level": 2.0,
+         "children": [
+             {"name": "population",
+              "weight": 0.16,
+              "level": 3.1,
+              "type": "categoryIndicator",
               "children": [
-              {
-                "name": "aal",
-                "weight": 0.5,
-                "level": 2.0
+                  {"name": "QFEMALE", "weight": 0.083, "level": 4.0,
+                   "type": "primaryIndicator"},
+                  {"name": "QURBAN", "weight": 0.083, "level": 4.0,
+                   "type": "primaryIndicator"},
+                  {"name": "MIGFOREIGN", "weight": 0.083, "level": 4.0,
+                   "type": "primaryIndicator"},
+                  {"name": "MIGMUNICIP", "weight": 0.083, "level": 4.0,
+                   "type": "primaryIndicator"},
+                  {"name": "QFOREIGN", "weight": 0.083, "level": 4.0,
+                   "type": "primaryIndicator"},
+                  {"name": "QAGEDEP", "weight": 0.083, "level": 4.0,
+                   "type": "primaryIndicator"},
+                  {"name": "POPDENT", "weight": 0.083, "level": 4.0,
+                   "type": "primaryIndicator"},
+                  {"name": "PPUNIT", "weight": 0.083, "level": 4.0,
+                   "type": "primaryIndicator"},
+                  {"name": "QFHH", "weight": 0.083, "level": 4.0,
+                   "type": "primaryIndicator"},
+                  {"name": "QRENTAL", "weight": 0.083, "level": 4.0,
+                   "type": "primaryIndicator"},
+                  {"name": "QDISABLED", "weight": 0.083, "level": 4.0,
+                   "type": "primaryIndicator"},
+                  {"name": "QSSINT", "weight": 0.083, "level": 4.0,
+                   "type": "primaryIndicator"}]
               },
-              {
-                "name": "svi",
-                "weight": 0.5,
-                "level": 2.0,
-                "children": [
-                  {
-                    "name": "population",
-                    "weight": 0.16,
-                    "level": 3.1,
-                    "type": "categoryIndicator",
-                    "children": [
-                      {"name": "QFEMALE", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
-                      {"name": "QURBAN", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
-                      {"name": "MIGFOREIGN", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
-                      {"name": "MIGMUNICIP", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
-                      {"name": "QFOREIGN", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
-                      {"name": "QAGEDEP", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
-                      {"name": "POPDENT", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
-                      {"name": "PPUNIT", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
-                      {"name": "QFHH", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
-                      {"name": "QRENTAL", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
-                      {"name": "QDISABLED", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"},
-                      {"name": "QSSINT", "weight": 0.083, "level": 4.0, "type": "primaryIndicator"}
-                    ]
-                  },
-                  {
-                    "name": "economy",
-                    "weight": 0.16,
-                    "level": 3.1,
-                    "type": "categoryIndicator",
-                    "children": [
-                      {"name": "QUNEMPL", "weight": 0.167, "level": 4.1, "type": "primaryIndicator"},
-                      {"name": "QFEMLBR", "weight": 0.167, "level": 4.1, "type": "primaryIndicator"},
-                      {"name": "QSECOEMPL", "weight": 0.167, "level": 4.1, "type": "primaryIndicator"},
-                      {"name": "QSERVEMPL", "weight": 0.167, "level": 4.1, "type": "primaryIndicator"},
-                      {"name": "QNOSKILLEMPL", "weight": 0.167, "level": 4.1, "type": "primaryIndicator"},
-                      {"name": "PCPP", "weight": 0.167, "level": 4.1, "type": "primaryIndicator"}
-                    ]
-                  },
-                  {
-                    "name": "education",
-                    "weight": 0.16,
-                    "level": 3.1,
-                    "type": "categoryIndicator",
-                    "children": [
-                      {"name": "QEDLESS", "weight": 0.5, "level": 4.2, "type": "primaryIndicator"},
-                      {"name": "EDUTERTIARY", "weight": 0.5, "level": 4.2, "type": "primaryIndicator"}
-                    ]
-                  },
-                  {
-                    "name": "infrastructure",
-                    "weight": 0.16,
-                    "level": 3.1,
-                    "type": "categoryIndicator",
-                    "children": [
-                      {"name": "QBLDREPAIR", "weight": 0.25, "level": 4.4, "type": "primaryIndicator"},
-                      {"name": "NEWBUILD", "weight": 0.25, "level": 4.4, "type": "primaryIndicator"},
-                      {"name": "QPOPNOWATER", "weight": 0.25, "level": 4.4, "type": "primaryIndicator"},
-                      {"name": "QPOPNOWASTE", "weight": 0.25, "level": 4.4, "type": "primaryIndicator"}
-                    ]
-                  },
-                  {
-                    "name": "governance",
-                    "weight": 0.16,
-                    "level": 3.1,
-                    "type": "categoryIndicator",
-                    "children": [
-                      {"name": "CRIMERATE", "weight": 0.33, "level": 4.5, "type": "primaryIndicator"},
-                      {"name": "QNOVOTEMU", "weight": 0.33, "level": 4.5, "type": "primaryIndicator"},
-                      {"name": "QNOVOTEPR", "weight": 0.33, "level": 4.5, "type": "primaryIndicator"}
-                    ]
-                  }
-                ]
-              }
-             ]
-            }
+             {"name": "economy",
+              "weight": 0.16,
+              "level": 3.1,
+              "type": "categoryIndicator",
+              "children": [
+                  {"name": "QUNEMPL", "weight": 0.167, "level": 4.1,
+                   "type": "primaryIndicator"},
+                  {"name": "QFEMLBR", "weight": 0.167, "level": 4.1,
+                   "type": "primaryIndicator"},
+                  {"name": "QSECOEMPL", "weight": 0.167, "level": 4.1,
+                   "type": "primaryIndicator"},
+                  {"name": "QSERVEMPL", "weight": 0.167, "level": 4.1,
+                   "type": "primaryIndicator"},
+                  {"name": "QNOSKILLEMPL", "weight": 0.167, "level": 4.1,
+                   "type": "primaryIndicator"},
+                  {"name": "PCPP", "weight": 0.167, "level": 4.1,
+                   "type": "primaryIndicator"}]
+              },
+             {"name": "education",
+              "weight": 0.16,
+              "level": 3.1,
+              "type": "categoryIndicator",
+              "children": [
+                  {"name": "QEDLESS", "weight": 0.5, "level": 4.2,
+                   "type": "primaryIndicator"},
+                  {"name": "EDUTERTIARY", "weight": 0.5, "level": 4.2,
+                   "type": "primaryIndicator"}
+                  ]
+              },
+             {"name": "infrastructure",
+              "weight": 0.16,
+              "level": 3.1,
+              "type": "categoryIndicator",
+              "children": [
+                  {"name": "QBLDREPAIR", "weight": 0.25, "level": 4.4,
+                   "type": "primaryIndicator"},
+                  {"name": "NEWBUILD", "weight": 0.25, "level": 4.4,
+                   "type": "primaryIndicator"},
+                  {"name": "QPOPNOWATER", "weight": 0.25, "level": 4.4,
+                   "type": "primaryIndicator"},
+                  {"name": "QPOPNOWASTE", "weight": 0.25, "level": 4.4,
+                   "type": "primaryIndicator"}]
+              },
+             {"name": "governance",
+              "weight": 0.16,
+              "level": 3.1,
+              "type": "categoryIndicator",
+              "children": [
+                  {"name": "CRIMERATE", "weight": 0.33, "level": 4.5,
+                   "type": "primaryIndicator"},
+                  {"name": "QNOVOTEMU", "weight": 0.33, "level": 4.5,
+                   "type": "primaryIndicator"},
+                  {"name": "QNOVOTEPR", "weight": 0.33, "level": 4.5,
+                   "type": "primaryIndicator"}]
+              }]
+         }]
+}

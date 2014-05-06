@@ -58,6 +58,7 @@ from qgis.gui import QgsMessageBar
 from qgis.analysis import QgsZonalStatistics
 import processing as p
 from processing.saga.SagaUtils import SagaUtils
+from calculate_iri_dialog import CalculateIRIDialog
 
 from process_layer import ProcessLayer
 
@@ -208,7 +209,7 @@ class Svir:
         # data from the platform
         self.add_menu_item("create_weight_tree",
                            ":/plugins/svir/start_plugin_icon.png",
-                           u"&Create weight tree",
+                           u"&Create/edit weight tree",
                            self.create_weight_tree,
                            enable=False)
         # Action to activate the modal dialog to choose weighting of the
@@ -217,6 +218,13 @@ class Svir:
                            ":/plugins/svir/start_plugin_icon.png",
                            u"&Weight data",
                            self.weight_data,
+                           enable=False)
+
+        # Action to calculate the SVI
+        self.add_menu_item("calculate_svi",
+                           ":/plugins/svir/start_plugin_icon.png",
+                           u"&Calculate SVI",
+                           self.calculate_svi,
                            enable=False)
         self.update_actions_status()
 
@@ -269,15 +277,24 @@ class Svir:
             layer_count == 0)
 
         try:
+            if self.current_layer.type() != QgsMapLayer.VectorLayer:
+                raise AttributeError
             self.project_definitions[self.current_layer.id()]
-            self.registered_actions["weight_data"].setEnabled(True)
-            self.registered_actions["create_weight_tree"].setEnabled(False)
-        except KeyError:
-            self.registered_actions["weight_data"].setEnabled(False)
             self.registered_actions["create_weight_tree"].setEnabled(True)
-        except AttributeError:
+            self.registered_actions["weight_data"].setEnabled(True)
+            self.registered_actions["calculate_svi"].setEnabled(True)
+
+        except KeyError:
+            # self.project_definitions[self.current_layer.id()] is not defined
+            self.registered_actions["create_weight_tree"].setEnabled(True)
             self.registered_actions["weight_data"].setEnabled(False)
+            self.registered_actions["calculate_svi"].setEnabled(False)
+        except AttributeError:
+            # self.current_layer.id() does not exist or self.current_layer
+            # is not vector
             self.registered_actions["create_weight_tree"].setEnabled(False)
+            self.registered_actions["weight_data"].setEnabled(False)
+            self.registered_actions["calculate_svi"].setEnabled(False)
 
     def unload(self):
         # Remove the plugin menu items and toolbar icons
@@ -489,7 +506,13 @@ class Svir:
         Open a modal dialog to create a weight tree from an existing layer
         """
         current_layer_id = self.current_layer.id()
-        dlg = CreateWeightTreeDialog(self.iface, self.current_layer)
+        try:
+            project_definition = self.project_definitions[current_layer_id]
+        except KeyError:
+            project_definition = None
+        dlg = CreateWeightTreeDialog(self.iface,
+                                     self.current_layer,
+                                     project_definition)
 
         if dlg.exec_():
             project_definition = copy.deepcopy(PROJECT_TEMPLATE)
@@ -521,6 +544,17 @@ class Svir:
         # if the dlg was not accepted, self.project_definition is still the
         # one we had before opening the dlg and we use it do reset the changes
         self.redraw_ir_layer(project_definition)
+
+    def calculate_svi(self):
+        """
+        add an SVI attribute to the current layer
+        """
+        current_layer_id = self.current_layer.id()
+        project_definition = self.project_definitions[current_layer_id]
+        dlg = CalculateIRIDialog(
+            self.iface, self.current_layer, project_definition)
+        if dlg.exec_():
+            dlg.calculate()
 
     def redraw_ir_layer(self, data):
         print "REDRAW USING %s" % data
