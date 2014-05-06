@@ -113,19 +113,19 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
                     self.current_layer.changeAttributeValue(
                         feat_id, svi_attr_id, svi_value)
             msg = ('The SVI has been calculated for fields containing'
-                   'non-NULL values and it was added to the layer as'
-                   'a new attribute')
+                   'non-NULL values and it was added to the layer as '
+                   'a new attribute called %s') % attr_names[svi_attr_name]
             self.iface.messageBar().pushMessage(
                 tr("Info"), tr(msg), level=QgsMessageBar.INFO)
             if discarded_feats_ids:
-                msg = 'Features containing NULL indicators were found: %s' % (
-                    discarded_feats_ids)
+                msg = 'Invalid indicators were found in features %s' % \
+                      ', '.join(map(str, discarded_feats_ids))
                 self.iface.messageBar().pushMessage(
                     tr("Warning"), tr(msg), level=QgsMessageBar.WARNING)
-        except TypeError:
+        except TypeError as e:
             self.current_layer.dataProvider().deleteAttributes(
                 [svi_attr_id])
-            msg = 'Could not calculate SVI due to data problems'
+            msg = 'Could not calculate SVI due to data problems: %s' % e
             self.iface.messageBar().pushMessage(tr("Error"),
                                                 tr(msg),
                                                 level=QgsMessageBar.CRITICAL)
