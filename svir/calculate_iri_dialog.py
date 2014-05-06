@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from PyQt4.QtCore import QVariant, QPyNullVariant
-from PyQt4.QtGui import QDialog, QDialogButtonBox
+from PyQt4.QtGui import QDialog, QDialogButtonBox, QPushButton
 from qgis.core import QgsField, QgsMapLayerRegistry, QgsMapLayer, \
     QgsVectorJoinInfo
 from qgis.gui import QgsMessageBar
@@ -11,7 +11,7 @@ from ui.ui_calculate_iri import Ui_CalculateIRIDialog
 from utils import (LayerEditingManager,
                    reload_attrib_cbx,
                    reload_layers_in_cbx,
-                   tr)
+                   tr, select_features)
 
 
 class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
@@ -118,10 +118,21 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
             self.iface.messageBar().pushMessage(
                 tr("Info"), tr(msg), level=QgsMessageBar.INFO)
             if discarded_feats_ids:
-                msg = 'Invalid indicators were found in features %s' % \
-                      ', '.join(map(str, discarded_feats_ids))
-                self.iface.messageBar().pushMessage(
-                    tr("Warning"), tr(msg), level=QgsMessageBar.WARNING)
+                self.discarded_feats_ids = discarded_feats_ids
+
+                msg = 'Invalid indicators were found in some features'
+
+                widget = self.iface.messageBar().createMessage(
+                    tr("Warning"), msg)
+                button = QPushButton(widget)
+                button.setText("Select invalid features")
+                button.pressed.connect(
+                    lambda layer=self.current_layer,
+                    feature_ids=discarded_feats_ids:
+                    select_features(layer, feature_ids))
+                widget.layout().addWidget(button)
+                self.iface.messageBar().pushWidget(widget,
+                                                   QgsMessageBar.WARNING)
         except TypeError as e:
             self.current_layer.dataProvider().deleteAttributes(
                 [svi_attr_id])

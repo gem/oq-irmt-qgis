@@ -110,6 +110,10 @@ def reload_attrib_cbx(combo, layer, *valid_field_types):
             combo.addItem(field.name())
 
 
+def select_features(layer, feature_ids):
+            layer.setSelectedFeatures(feature_ids)
+
+
 class Register(collections.OrderedDict):
     """
     Useful to keep (in a single point) a register of available variants of
