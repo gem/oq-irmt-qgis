@@ -335,7 +335,7 @@ class Svir:
             self.iface.legendInterface().removeLegendLayerAction(action)
             self.iface.removePluginMenu(u"&SVIR", action)
             self.iface.removeToolBarIcon(action)
-        clear_progress_message_bar()
+        clear_progress_message_bar(self.iface)
 
         #remove connects
         self.iface.currentLayerChanged.disconnect(self.current_layer_changed)
