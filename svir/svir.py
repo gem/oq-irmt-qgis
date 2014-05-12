@@ -132,6 +132,8 @@ class Svir:
         self.purged_layer = None
         # Output layer containing merged data and final svir computations
         self.svir_layer = None
+        # our own toolbar
+        self.toolbar = None
         # keep a list of the menu items, in order to easily unload them later
         self.registered_actions = dict()
         # Name of the attribute containing loss values (in loss_layer)
@@ -158,9 +160,14 @@ class Svir:
             self.layers_removed)
 
     def initGui(self):
+
+        # create our own toolbar
+        self.toolbar = self.iface.addToolBar('SVIR')
+        self.toolbar.setObjectName('SVIRToolBar')
+
         # Action to activate the modal dialog to set up settings for the
         # connection with the platform
-        self.add_menu_item("svir",
+        self.add_menu_item("settings",
                            ":/plugins/svir/start_plugin_icon.png",
                            u"&SVIR settings",
                            self.settings,
@@ -268,7 +275,7 @@ class Svir:
         action = QAction(QIcon(icon_path), label, self.iface.mainWindow())
         action.setEnabled(enable)
         action.triggered.connect(corresponding_method)
-        self.iface.addToolBarIcon(action)
+        self.toolbar.addAction(action)
         self.iface.addPluginToMenu(u"&SVIR", action)
         self.registered_actions[action_name] = action
 
