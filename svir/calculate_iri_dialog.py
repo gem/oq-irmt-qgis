@@ -36,8 +36,8 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
         add an SVI attribute to the current layer
         """
 
-        indicators_combination = self.indicators_combination_type.currentText()
-        themes_combination = self.themes_combination_type.currentText()
+        indicators_operator = self.indicators_combination_type.currentText()
+        themes_operator = self.themes_combination_type.currentText()
 
         themes = self.project_definition['children'][1]['children']
         svi_attr_name = 'SVI'
@@ -61,10 +61,10 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
                     feat_id = feat.id()
 
                     # init svi_value to the correct value depending on
-                    # themes_combination
-                    if themes_combination in SUM_BASED_COMBINATIONS:
+                    # themes_operator
+                    if themes_operator in SUM_BASED_COMBINATIONS:
                         svi_value = 0
-                    elif themes_combination in MUL_BASED_COMBINATIONS:
+                    elif themes_operator in MUL_BASED_COMBINATIONS:
                         svi_value = 1
 
                     # iterate all themes of SVI
@@ -72,10 +72,10 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
                         indicators = theme['children']
 
                         # init theme_result to the correct value depending on
-                        # indicators_combination
-                        if indicators_combination in SUM_BASED_COMBINATIONS:
+                        # indicators_operator
+                        if indicators_operator in SUM_BASED_COMBINATIONS:
                             theme_result = 0
-                        elif indicators_combination in MUL_BASED_COMBINATIONS:
+                        elif indicators_operator in MUL_BASED_COMBINATIONS:
                             theme_result = 1
 
                         # iterate all indicators of a theme
@@ -87,27 +87,27 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
                                 break
                             indicator_weighted = (feat[indicator['field']] *
                                                   indicator['weight'])
-                            if indicators_combination in \
+                            if indicators_operator in \
                                     SUM_BASED_COMBINATIONS:
                                 theme_result += indicator_weighted
-                            elif indicators_combination in \
+                            elif indicators_operator in \
                                     MUL_BASED_COMBINATIONS:
                                 theme_result *= indicator_weighted
                         if discard_feat:
                             break
-                        if indicators_combination == 'Average':
+                        if indicators_operator == 'Average':
                             theme_result /= len(indicators)
 
                         # combine the indicators of each theme
                         theme_weighted = theme_result * theme['weight']
-                        if themes_combination in SUM_BASED_COMBINATIONS:
-                                svi_value += theme_weighted
-                        elif themes_combination in MUL_BASED_COMBINATIONS:
+                        if themes_operator in SUM_BASED_COMBINATIONS:
+                            svi_value += theme_weighted
+                        elif themes_operator in MUL_BASED_COMBINATIONS:
                             svi_value *= theme_weighted
                     if discard_feat:
                         svi_value = QPyNullVariant(float)
                     else:
-                        if themes_combination == 'Average':
+                        if themes_operator == 'Average':
                             svi_value /= len(themes)
 
                     self.current_layer.changeAttributeValue(
@@ -129,8 +129,8 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
                 current_feats_ids = self.current_layer.selectedFeaturesIds()
                 button.toggled.connect(
                     lambda on, layer=self.current_layer,
-                    new_feature_ids=discarded_feats_ids,
-                    old_feature_ids=current_feats_ids:
+                           new_feature_ids=discarded_feats_ids,
+                           old_feature_ids=current_feats_ids:
                     toggle_select_features(layer,
                                            on,
                                            new_feature_ids,
@@ -138,6 +138,13 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
                 widget.layout().addWidget(button)
                 self.iface.messageBar().pushWidget(widget,
                                                    QgsMessageBar.WARNING)
+
+            self.project_definition['indicators_operator'] = indicators_operator
+            self.project_definition['themes_operator'] = themes_operator
+
+            if self.calculate_iri_check.isChecked():
+                self._calculateIRI(svi_attr_id, discarded_feats_ids)
+
         except TypeError as e:
             self.current_layer.dataProvider().deleteAttributes(
                 [svi_attr_id])
@@ -145,9 +152,6 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
             self.iface.messageBar().pushMessage(tr("Error"),
                                                 tr(msg),
                                                 level=QgsMessageBar.CRITICAL)
-
-        if self.calculate_iri_check.isChecked():
-            self._calculateIRI(svi_attr_id, discarded_feats_ids)
 
     def _calculateIRI(self, svi_attr_id, discarded_feats_ids):
         """
@@ -157,7 +161,7 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
         aal_weight = self.project_definition['children'][0]['weight']
         svi_weight = self.project_definition['children'][1]['weight']
 
-        iri_combination = self.iri_combination_type.currentText()
+        iri_operator = self.iri_combination_type.currentText()
 
         iri_attr_name = 'IRI'
         iri_field = QgsField(iri_attr_name, QVariant.Double)
@@ -194,13 +198,13 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
                     aal_value = feat[aal_attr_name]
                     if feat_id in discarded_feats_ids:
                         iri_value = QPyNullVariant(float)
-                    elif iri_combination == 'Sum':
+                    elif iri_operator == 'Sum':
                         iri_value = (
                             svi_value * svi_weight + aal_value * aal_weight)
-                    elif iri_combination == 'Multiplication':
+                    elif iri_operator == 'Multiplication':
                         iri_value = (
                             svi_value * svi_weight * aal_value * aal_weight)
-                    elif iri_combination == 'Average':
+                    elif iri_operator == 'Average':
                         iri_value = (svi_value * svi_weight +
                                      aal_value * aal_weight) / 2.0
 
@@ -210,6 +214,8 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
                     # store IRI
                     self.current_layer.changeAttributeValue(
                         feat_id, iri_attr_id, iri_value)
+            self.project_definition['IRI_operator'] = iri_operator
+            
         except TypeError:
             self.current_layer.dataProvider().deleteAttributes(
                 [iri_attr_id, copy_aal_attr_id])

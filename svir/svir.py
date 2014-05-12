@@ -26,8 +26,11 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 import os.path
+import tempfile
 import uuid
 import copy
+import json
+
 from requests.exceptions import ConnectionError
 
 from PyQt4.QtCore import (QSettings,
@@ -51,7 +54,7 @@ from qgis.core import (QgsVectorLayer,
                        QgsFeatureRequest,
                        QgsVectorDataProvider,
                        QgsMessageLog,
-                       QgsMapLayer)
+                       QgsMapLayer, QgsVectorFileWriter)
 
 from qgis.gui import QgsMessageBar
 
@@ -226,6 +229,13 @@ class Svir:
                            u"&Calculate SVI",
                            self.calculate_svi,
                            enable=False)
+
+        # Action to upload
+        self.add_menu_item("upload",
+                           ":/plugins/svir/start_plugin_icon.png",
+                           u"&Upload project",
+                           self.upload,
+                           enable=False)
         self.update_actions_status()
 
     def layers_added(self):
@@ -279,10 +289,15 @@ class Svir:
         try:
             if self.current_layer.type() != QgsMapLayer.VectorLayer:
                 raise AttributeError
-            self.project_definitions[self.current_layer.id()]
+            proj_def = self.project_definitions[self.current_layer.id()]
             self.registered_actions["create_weight_tree"].setEnabled(True)
             self.registered_actions["weight_data"].setEnabled(True)
             self.registered_actions["calculate_svi"].setEnabled(True)
+            try:
+                proj_def['IRI_operator']
+                self.registered_actions["upload"].setEnabled(True)
+            except KeyError:
+                self.registered_actions["upload"].setEnabled(False)
 
         except KeyError:
             # self.project_definitions[self.current_layer.id()] is not defined
@@ -367,6 +382,7 @@ class Svir:
                                                 tr(msg),
                                                 level=QgsMessageBar.INFO,
                                                 duration=8)
+            self.update_actions_status()
 
     def choose_sv_data_source(self):
         """
@@ -473,6 +489,7 @@ class Svir:
                     add_to_registry=True)
                 self.iface.setActiveLayer(layer)
                 self.project_definitions[layer.id()] = project_definition
+                self.update_actions_status()
 
         except SvDownloadError as e:
             self.iface.messageBar().pushMessage(tr("Download Error"),
@@ -555,6 +572,7 @@ class Svir:
             self.iface, self.current_layer, project_definition)
         if dlg.exec_():
             dlg.calculate()
+            self.update_actions_status()
 
     def redraw_ir_layer(self, data):
         print "REDRAW USING %s" % data
@@ -631,6 +649,7 @@ class Svir:
             self.zonal_attr_name = dlg.ui.zonal_attr_name_cbox.currentText()
             self.zone_id_in_zones_attr_name = \
                 dlg.ui.zone_id_attr_name_zone_cbox.currentText()
+            self.update_actions_status()
             return True
         else:
             return False
@@ -688,6 +707,7 @@ class Svir:
                     tr(msg),
                     level=QgsMessageBar.INFO,
                     duration=8)
+        self.update_actions_status()
 
     def select_layers_to_merge(self):
         """
@@ -716,6 +736,7 @@ class Svir:
                 dlg.ui.zonal_layer_cbox.currentIndex()]
             self.zone_id_in_zones_attr_name = \
                 dlg.ui.merge_attr_cbx.currentText()
+            self.update_actions_status()
             return True
         else:
             return False
@@ -1290,14 +1311,18 @@ class Svir:
                     duration=8)
         elif dlg.use_normalize_dialog:
             self.normalize_attribute()
+        self.update_actions_status()
 
-    def create_progress_message_bar(self, msg, no_percentage=False):
+    def create_progress_message_bar(self, msg, no_percentage=False, return_message=False):
         """
         Use the messageBar of QGIS to display a message describing what's going
         on (typically during a time-consuming task), and a bar showing the
         progress of the process.
 
         :param msg: Message to be displayed, describing the current task
+        :type: str
+
+        :param return_message: ReturnsMessage to be displayed, describing the current task
         :type: str
 
         :returns: progress object on which we can set the percentage of
@@ -1311,7 +1336,40 @@ class Svir:
         progress_message_bar.layout().addWidget(progress)
         self.iface.messageBar().pushWidget(progress_message_bar,
                                            self.iface.messageBar().INFO)
+        if return_message:
+            return progress_message_bar, progress
         return progress
 
-    def clear_progress_message_bar(self):
-        self.iface.messageBar().clearWidgets()
+    def clear_progress_message_bar(self, message=None):
+        if message:
+            self.iface.messageBar().popWidget(message)
+        else:
+            self.iface.messageBar().clearWidgets()
+
+    def upload(self):
+        temp_dir = tempfile.gettempdir()
+        file_stem = '%s%ssvir_%s' % (temp_dir, os.path.sep, uuid.uuid4())
+
+        data_json = '%s%s' % (file_stem, '_data.json')
+        proj_json = '%s%s' % (file_stem, '_proj.json')
+
+        project_definition = self.project_definitions[self.current_layer.id()]
+        with open(proj_json, 'w') as outfile:
+            json.dump(project_definition, outfile)
+
+        QgsVectorFileWriter.writeAsVectorFormat(
+            self.current_layer,
+            data_json,
+            'utf-8',
+            self.current_layer.crs(),
+            'GeoJson')
+        msg = tr("Uploading to platform")
+        message, progress = self.create_progress_message_bar(
+            msg, return_message=True)
+
+        # TODO UPLOAD
+        max_range = 1000000.0
+        for i in range(int(max_range)):
+            p_int = i / max_range * 100
+            progress.setValue(p_int)
+        self.clear_progress_message_bar(message)
