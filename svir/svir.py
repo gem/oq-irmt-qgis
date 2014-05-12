@@ -184,58 +184,55 @@ class Svir:
         self.add_menu_item("normalize_attribute",
                            ":/plugins/svir/start_plugin_icon.png",
                            u"&Normalize attribute",
-                           self.normalize_attribute)
-        self.iface.legendInterface().addLegendLayerAction(
-            self.registered_actions["normalize_attribute"],
-            u"SVIR",
-            u"id_normalize_attribute",
-            QgsMapLayer.VectorLayer,
-            True)
+                           self.normalize_attribute,
+                           enable=False,
+                           add_to_layer_actions=True)
         # Action for merging SVI with loss data (both aggregated by zone)
         self.add_menu_item("merge_svi_and_losses",
                            ":/plugins/svir/start_plugin_icon.png",
                            u"Merge SVI and loss data by zone",
-                           self.merge_svi_with_aggr_losses)
+                           self.merge_svi_with_aggr_losses,
+                           enable=False)
         # Action for calculating RISKPLUS, RISKMULT and RISK1F indices
         self.add_menu_item(
             "calculate_svir_indices",
             ":/plugins/svir/start_plugin_icon.png",
             u"Calculate RISKPLUS, RISKMULT and RISK1F indices",
-            self.calculate_svir_indices)
-        self.iface.legendInterface().addLegendLayerAction(
-            self.registered_actions["calculate_svir_indices"],
-            u"SVIR",
-            u"id_calculate_svir_indices",
-            QgsMapLayer.VectorLayer,
-            True)
+            self.calculate_svir_indices,
+            enable=False,
+            add_to_layer_actions=True)
         # Action to activate the modal dialog to choose weighting of the
         # data from the platform
         self.add_menu_item("create_weight_tree",
                            ":/plugins/svir/start_plugin_icon.png",
                            u"&Create/edit weight tree",
                            self.create_weight_tree,
-                           enable=False)
+                           enable=False,
+                           add_to_layer_actions=True)
         # Action to activate the modal dialog to choose weighting of the
         # data from the platform
         self.add_menu_item("weight_data",
                            ":/plugins/svir/start_plugin_icon.png",
                            u"&Weight data",
                            self.weight_data,
-                           enable=False)
+                           enable=False,
+                           add_to_layer_actions=True)
 
         # Action to calculate the SVI
         self.add_menu_item("calculate_svi",
                            ":/plugins/svir/start_plugin_icon.png",
                            u"&Calculate SVI",
                            self.calculate_svi,
-                           enable=False)
+                           enable=False,
+                           add_to_layer_actions=True)
 
         # Action to upload
         self.add_menu_item("upload",
                            ":/plugins/svir/start_plugin_icon.png",
                            u"&Upload project",
                            self.upload,
-                           enable=False)
+                           enable=False,
+                           add_to_layer_actions=True)
         self.update_actions_status()
 
     def layers_added(self):
@@ -256,7 +253,10 @@ class Svir:
                       icon_path,
                       label,
                       corresponding_method,
-                      enable=False):
+                      enable=False,
+                      add_to_layer_actions=False,
+                      layers_type=QgsMapLayer.VectorLayer
+                      ):
         """
         Add an item to the SVIR plugin menu and a corresponding toolbar icon
         @param icon_path: Path of the icon associated to the action
@@ -271,6 +271,14 @@ class Svir:
         self.iface.addToolBarIcon(action)
         self.iface.addPluginToMenu(u"&SVIR", action)
         self.registered_actions[action_name] = action
+
+        if add_to_layer_actions:
+            self.iface.legendInterface().addLegendLayerAction(
+                action,
+                u"SVIR",
+                action_name,
+                layers_type,
+                True)
 
     def update_actions_status(self):
         # Check if actions can be enabled
@@ -315,13 +323,10 @@ class Svir:
         # Remove the plugin menu items and toolbar icons
         for action_name in self.registered_actions:
             action = self.registered_actions[action_name]
+            # Remove the actions in the layer legend
+            self.iface.legendInterface().removeLegendLayerAction(action)
             self.iface.removePluginMenu(u"&SVIR", action)
             self.iface.removeToolBarIcon(action)
-        # Remove the actions in the layer legend
-        self.iface.legendInterface().removeLegendLayerAction(
-            self.registered_actions['normalize_attribute'])
-        self.iface.legendInterface().removeLegendLayerAction(
-            self.registered_actions['calculate_svir_indices'])
         self.clear_progress_message_bar()
 
         #remove connects
