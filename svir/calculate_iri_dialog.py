@@ -215,7 +215,10 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
                     self.current_layer.changeAttributeValue(
                         feat_id, iri_attr_id, iri_value)
             self.project_definition['IRI_operator'] = iri_operator
-            
+            # set the field name for the copied AAL layer
+            self.project_definition['children'][0]['field'] = attr_names[
+                copy_aal_attr_name]
+
         except TypeError:
             self.current_layer.dataProvider().deleteAttributes(
                 [iri_attr_id, copy_aal_attr_id])
