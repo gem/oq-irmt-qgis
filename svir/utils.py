@@ -28,7 +28,7 @@
 import collections
 from time import time
 from PyQt4.QtCore import QSettings, Qt
-from PyQt4.QtGui import QApplication
+from PyQt4.QtGui import QApplication, QProgressBar
 from qgis.core import QgsMapLayerRegistry
 from settings_dialog import SettingsDialog
 from qgis.gui import QgsMessageBar
@@ -49,6 +49,36 @@ def get_credentials(iface):
         username = qs.value('svir/platform_username', '')
         password = qs.value('svir/platform_password', '')
     return hostname, username, password
+
+
+def clear_progress_message_bar(iface, msg_bar_item=None):
+        if msg_bar_item:
+            iface.messageBar().popWidget(msg_bar_item)
+        else:
+            iface.messageBar().clearWidgets()
+
+
+def create_progress_message_bar(iface, msg, no_percentage=False):
+    """
+    Use the messageBar of QGIS to display a message describing what's going
+    on (typically during a time-consuming task), and a bar showing the
+    progress of the process.
+
+    :param msg: Message to be displayed, describing the current task
+    :type: str
+
+    :returns: progress object on which we can set the percentage of
+    completion of the task through progress.setValue(percentage)
+    :rtype: QProgressBar
+    """
+    progress_message_bar = iface.messageBar().createMessage(msg)
+    progress = QProgressBar()
+    if no_percentage:
+        progress.setRange(0, 0)
+    progress_message_bar.layout().addWidget(progress)
+    iface.messageBar().pushWidget(progress_message_bar,
+                                  iface.messageBar().INFO)
+    return progress_message_bar, progress
 
 
 def assign_default_weights(svi_themes):

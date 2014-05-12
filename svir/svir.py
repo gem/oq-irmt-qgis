@@ -88,7 +88,8 @@ from utils import (LayerEditingManager,
                    get_credentials,
                    TraceTimeManager,
                    WaitCursorManager,
-                   assign_default_weights)
+                   assign_default_weights,
+                   clear_progress_message_bar, create_progress_message_bar)
 from globals import (INT_FIELD_TYPE_NAME,
                      DOUBLE_FIELD_TYPE_NAME,
                      NUMERIC_FIELD_TYPES,
@@ -334,7 +335,7 @@ class Svir:
             self.iface.legendInterface().removeLegendLayerAction(action)
             self.iface.removePluginMenu(u"&SVIR", action)
             self.iface.removeToolBarIcon(action)
-        self.clear_progress_message_bar()
+        clear_progress_message_bar()
 
         #remove connects
         self.iface.currentLayerChanged.disconnect(self.current_layer_changed)
@@ -799,7 +800,7 @@ class Svir:
             # to show the overall progress, cycling through zones
             tot_zones = len(list(self.zonal_layer.getFeatures()))
             msg = tr("Step 1 of 3: initializing aggregation layer...")
-            msg_bar_item, progress = self.create_progress_message_bar(msg)
+            msg_bar_item, progress = create_progress_message_bar(self.iface, msg)
 
             # copy zones from zonal layer
             for current_zone, zone_feature in enumerate(
@@ -823,7 +824,7 @@ class Svir:
                 # Add the new feature to the layer
                 if caps & QgsVectorDataProvider.AddFeatures:
                     pr.addFeatures([feat])
-            self.clear_progress_message_bar(msg_bar_item)
+            clear_progress_message_bar(self.iface, msg_bar_item)
         # Add aggregation layer to registry
         if self.aggregation_layer.isValid():
             QgsMapLayerRegistry.instance().addMapLayer(self.aggregation_layer)
@@ -903,7 +904,7 @@ class Svir:
         """
         tot_points = len(list(loss_layer.getFeatures()))
         msg = tr("Step 2 of 3: aggregating losses by zone id...")
-        msg_bar_item, progress = self.create_progress_message_bar(msg)
+        msg_bar_item, progress = create_progress_message_bar(self.iface, msg)
         with TraceTimeManager(msg, DEBUG):
             zone_stats = {}
             for current_point, point_feat in enumerate(
@@ -927,13 +928,13 @@ class Svir:
                     # initialize stats for the new zone found
                     zone_stats[zone_id] = {'count': 1,
                                            'sum': loss_value}
-        self.clear_progress_message_bar(msg_bar_item)
+        clear_progress_message_bar(self.iface, msg_bar_item)
 
         msg = tr(
             "Step 3 of 3: writing counts and sums on aggregation_layer...")
         with TraceTimeManager(msg, DEBUG):
             tot_zones = len(list(self.aggregation_layer.getFeatures()))
-            msg_bar_item, progress = self.create_progress_message_bar(msg)
+            msg_bar_item, progress = create_progress_message_bar(self.iface, msg)
             with LayerEditingManager(self.aggregation_layer,
                                      msg,
                                      DEBUG):
@@ -971,7 +972,7 @@ class Svir:
                         fid, sum_index, float(loss_sum))
                     self.aggregation_layer.changeAttributeValue(
                         fid, avg_index, float(loss_avg))
-        self.clear_progress_message_bar(msg_bar_item)
+        clear_progress_message_bar(self.iface, msg_bar_item)
 
     def calculate_vector_stats_using_geometries(self):
         """
@@ -994,7 +995,7 @@ class Svir:
         tot_points = len(list(self.loss_layer.getFeatures()))
         msg = tr(
             "Step 2 of 3: creating spatial index for loss points...")
-        msg_bar_item, progress = self.create_progress_message_bar(msg)
+        msg_bar_item, progress = create_progress_message_bar(self.iface, msg)
 
         # create spatial index
         with TraceTimeManager(tr("Creating spatial index for loss points..."),
@@ -1006,7 +1007,7 @@ class Svir:
                 progress.setValue(progress_perc)
                 spatial_index.insertFeature(loss_feature)
 
-        self.clear_progress_message_bar(msg_bar_item)
+        clear_progress_message_bar(self.iface, msg_bar_item)
 
         with LayerEditingManager(self.aggregation_layer,
                                  tr("Calculate count and sum attributes"),
@@ -1016,7 +1017,7 @@ class Svir:
             # aggregation layer
             tot_zones = len(list(self.aggregation_layer.getFeatures()))
             msg = tr("Step 3 of 3: aggregating points by zone...")
-            msg_bar_item, progress = self.create_progress_message_bar(msg)
+            msg_bar_item, progress = create_progress_message_bar(self.iface, msg)
 
             # check if there are no loss points contained in any of the zones
             # and later display a warning if that occurs
@@ -1078,7 +1079,7 @@ class Svir:
                             fid, sum_index, loss_sum)
                         self.aggregation_layer.changeAttributeValue(
                             fid, avg_index, loss_avg)
-        self.clear_progress_message_bar(msg_bar_item)
+        clear_progress_message_bar(self.iface, msg_bar_item)
         # display a warning in case none of the loss points are inside
         # any of the zones
         if no_loss_points_in_any_zone:
@@ -1135,7 +1136,7 @@ class Svir:
 
         tot_zones = len(list(self.aggregation_layer.getFeatures()))
         msg = tr("Purging zones containing no loss points...")
-        msg_bar_item, progress = self.create_progress_message_bar(msg)
+        msg_bar_item, progress = create_progress_message_bar(self.iface, msg)
 
         with LayerEditingManager(self.purged_layer,
                                  tr("Purged layer initialization"),
@@ -1164,7 +1165,7 @@ class Svir:
                     if caps & QgsVectorDataProvider.AddFeatures:
                         pr.addFeatures([feat])
 
-        self.clear_progress_message_bar(msg_bar_item)
+        clear_progress_message_bar(self.iface, msg_bar_item)
 
         # Add purged layer to registry
         if self.purged_layer.isValid():
@@ -1187,7 +1188,7 @@ class Svir:
         # to show the overall progress, cycling through zones
         tot_zones = len(list(self.loss_layer_to_merge.getFeatures()))
         msg = tr("Populating SVIR layer with loss values...")
-        msg_bar_item, progress = self.create_progress_message_bar(msg)
+        msg_bar_item, progress = create_progress_message_bar(self.iface, msg)
 
         with LayerEditingManager(self.svir_layer,
                                  tr("Add loss values to svir_layer"),
@@ -1221,7 +1222,7 @@ class Svir:
                     if caps & QgsVectorDataProvider.DeleteFeatures:
                         self.svir_layer.dataProvider().deleteFeatures(
                             [svir_feat.id()])
-        self.clear_progress_message_bar(msg_bar_item)
+        clear_progress_message_bar(self.iface, msg_bar_item)
 
     def create_svir_layer(self):
         """
@@ -1280,7 +1281,7 @@ class Svir:
             # to show the overall progress, cycling through zones
             tot_zones = len(list(layer.getFeatures()))
             msg = tr("Calculating some common SVIR indices...")
-            msg_bar_item, progress = self.create_progress_message_bar(msg)
+            msg_bar_item, progress = create_progress_message_bar(self.iface, msg)
             with LayerEditingManager(layer,
                                      tr("Calculate some common SVIR indices"),
                                      DEBUG):
@@ -1308,7 +1309,7 @@ class Svir:
                         risk1f_idx,
                         (svir_feat[aggr_loss_attr_name] *
                          (1 + svir_feat[svi_attr_name])))
-            self.clear_progress_message_bar(msg_bar_item)
+            clear_progress_message_bar(self.iface, msg_bar_item)
         elif dlg.use_advanced:
             layer = reg.mapLayers().values()[
                 dlg.ui.layer_cbx.currentIndex()]
@@ -1324,34 +1325,6 @@ class Svir:
         elif dlg.use_normalize_dialog:
             self.normalize_attribute()
         self.update_actions_status()
-
-    def create_progress_message_bar(self, msg, no_percentage=False):
-        """
-        Use the messageBar of QGIS to display a message describing what's going
-        on (typically during a time-consuming task), and a bar showing the
-        progress of the process.
-
-        :param msg: Message to be displayed, describing the current task
-        :type: str
-
-        :returns: progress object on which we can set the percentage of
-        completion of the task through progress.setValue(percentage)
-        :rtype: QProgressBar
-        """
-        progress_message_bar = self.iface.messageBar().createMessage(msg)
-        progress = QProgressBar()
-        if no_percentage:
-            progress.setRange(0, 0)
-        progress_message_bar.layout().addWidget(progress)
-        self.iface.messageBar().pushWidget(progress_message_bar,
-                                           self.iface.messageBar().INFO)
-        return progress_message_bar, progress
-
-    def clear_progress_message_bar(self, msg_bar_item=None):
-        if msg_bar_item:
-            self.iface.messageBar().popWidget(msg_bar_item)
-        else:
-            self.iface.messageBar().clearWidgets()
 
     def upload(self):
         temp_dir = tempfile.gettempdir()
@@ -1371,11 +1344,11 @@ class Svir:
             self.current_layer.crs(),
             'GeoJson')
         msg = tr("Uploading to platform")
-        msg_bar_item, progress = self.create_progress_message_bar(msg)
+        msg_bar_item, progress = create_progress_message_bar(self.iface, msg)
 
         # TODO UPLOAD
         max_range = 1000000.0
         for i in range(int(max_range)):
             p_int = i / max_range * 100
             progress.setValue(p_int)
-        self.clear_progress_message_bar(msg_bar_item)
+        clear_progress_message_bar(self.iface, msg_bar_item)
