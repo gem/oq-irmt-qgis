@@ -308,10 +308,10 @@ class Svir:
 
             # SVI was calculated once at least
             self.registered_actions["weight_data"].setEnabled(
-                'themes_operator' in proj_def)
+                'SVI_field' in proj_def)
             # IRI was calculated once at least
             self.registered_actions["upload"].setEnabled(
-                'IRI_operator' in proj_def)
+                'IRI_field' in proj_def)
 
         except KeyError:
             # self.project_definitions[self.current_layer.id()] is not defined

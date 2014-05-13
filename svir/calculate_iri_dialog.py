@@ -160,6 +160,7 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
             self.project_definition['indicators_operator'] = \
                 indicators_operator
             self.project_definition['themes_operator'] = themes_operator
+            self.project_definition['SVI_field'] = attr_names[svi_attr_name]
 
             if self.calculate_iri_check.isChecked():
                 self._calculateIRI(svi_attr_id, discarded_feats_ids)
@@ -238,8 +239,10 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
                         feat_id, iri_attr_id, iri_value)
             self.project_definition['IRI_operator'] = iri_operator
             # set the field name for the copied AAL layer
-            self.project_definition['children'][0]['field'] = attr_names[
+            self.project_definition['AAL_field'] = attr_names[
                 copy_aal_attr_name]
+            self.project_definition['IRI_field'] = attr_names[
+                iri_attr_name]
 
         except TypeError:
             self.current_layer.dataProvider().deleteAttributes(
