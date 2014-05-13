@@ -562,8 +562,8 @@ class Svir:
         Open a modal dialog to select weights in a d3.js visualization
         """
         current_layer_id = self.current_layer.id()
-        project_definition = self.project_definitions[current_layer_id]
-        dlg = WeightDataDialog(self.iface, project_definition)
+        dlg = WeightDataDialog(
+            self.iface, self.project_definitions[current_layer_id])
         dlg.json_cleaned.connect(self.redraw_ir_layer)
         if dlg.exec_():
             self.project_definitions[current_layer_id] = dlg.project_definition
@@ -571,7 +571,7 @@ class Svir:
         dlg.json_cleaned.disconnect(self.redraw_ir_layer)
         # if the dlg was not accepted, self.project_definition is still the
         # one we had before opening the dlg and we use it do reset the changes
-        self.redraw_ir_layer(project_definition)
+        self.redraw_ir_layer(self.project_definitions[current_layer_id])
 
     def calculate_indices(self):
         """
