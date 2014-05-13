@@ -41,7 +41,8 @@ from PyQt4.QtCore import (QSettings,
 
 from PyQt4.QtGui import (QAction,
                          QIcon,
-                         QProgressDialog, )
+                         QProgressDialog,
+                         QProgressBar)
 
 from qgis.core import (QgsVectorLayer,
                        QgsMapLayerRegistry,
@@ -303,13 +304,14 @@ class Svir:
                 raise AttributeError
             proj_def = self.project_definitions[self.current_layer.id()]
             self.registered_actions["create_weight_tree"].setEnabled(True)
-            self.registered_actions["weight_data"].setEnabled(True)
             self.registered_actions["calculate_indices"].setEnabled(True)
-            try:
-                proj_def['IRI_operator']
-                self.registered_actions["upload"].setEnabled(True)
-            except KeyError:
-                self.registered_actions["upload"].setEnabled(False)
+
+            # SVI was calculated once at least
+            self.registered_actions["weight_data"].setEnabled(
+                'themes_operator' in proj_def)
+            # IRI was calculated once at least
+            self.registered_actions["upload"].setEnabled(
+                'IRI_operator' in proj_def)
 
         except KeyError:
             # self.project_definitions[self.current_layer.id()] is not defined
