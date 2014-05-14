@@ -42,7 +42,7 @@ from PyQt4.QtCore import (QSettings,
 from PyQt4.QtGui import (QAction,
                          QIcon,
                          QProgressDialog,
-                         QProgressBar)
+                         QColor)
 
 from qgis.core import (QgsVectorLayer,
                        QgsMapLayerRegistry,
@@ -54,7 +54,11 @@ from qgis.core import (QgsVectorLayer,
                        QgsFeatureRequest,
                        QgsVectorDataProvider,
                        QgsMessageLog,
-                       QgsMapLayer, QgsVectorFileWriter)
+                       QgsMapLayer,
+                       QgsVectorFileWriter,
+                       QgsGraduatedSymbolRendererV2,
+                       QgsRendererRangeV2,
+                       QgsSymbolV2, QgsVectorGradientColorRampV2)
 
 from qgis.gui import QgsMessageBar
 
@@ -65,10 +69,7 @@ from calculate_iri_dialog import CalculateIRIDialog
 
 from process_layer import ProcessLayer
 
-import resources_rc
-# ugly way to avoid the warning 'resources_rc imported but unused'
-if resources_rc:
-    pass
+import resources_rc # pylint: disable=W0611
 
 from select_input_layers_dialog import SelectInputLayersDialog
 from select_layers_to_merge_dialog import SelectLayersToMergeDialog
@@ -583,10 +584,26 @@ class Svir:
             self.iface, self.current_layer, project_definition)
         if dlg.exec_():
             dlg.calculate()
+            self.redraw_ir_layer(self.project_definitions[current_layer_id])
             self.update_actions_status()
 
     def redraw_ir_layer(self, data):
-        print "REDRAW USING %s" % data
+        color1 = QColor("white")
+        color2 = QColor("red")
+        classes_count = 10
+
+        ramp = QgsVectorGradientColorRampV2(color1, color2)
+        renderer = QgsGraduatedSymbolRendererV2.createRenderer(
+            self.current_layer,
+            data['SVI_field'],
+            classes_count,
+            QgsGraduatedSymbolRendererV2.Quantile,
+            QgsSymbolV2.defaultSymbol(self.current_layer.geometryType()),
+            ramp)
+
+        self.current_layer.setRendererV2(renderer)
+        self.iface.mapCanvas().refresh()
+        self.iface.legendInterface().refreshLayerSymbology(self.current_layer)
 
     def settings(self):
         SettingsDialog(self.iface).exec_()
