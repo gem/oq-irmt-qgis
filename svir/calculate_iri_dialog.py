@@ -164,6 +164,8 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
 
             if self.calculate_iri_check.isChecked():
                 self._calculateIRI(svi_attr_id, discarded_feats_ids)
+            else:
+                self.project_definition.pop('IRI_field', None)
 
         except TypeError as e:
             self.current_layer.dataProvider().deleteAttributes(

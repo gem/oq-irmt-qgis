@@ -588,6 +588,11 @@ class Svir:
             self.update_actions_status()
 
     def redraw_ir_layer(self, data):
+        if 'IRI_field' in data:
+            target_field = data['IRI_field']
+        else:
+            target_field = data['SVI_field']
+
         color1 = QColor("white")
         color2 = QColor("red")
         classes_count = 10
@@ -595,13 +600,15 @@ class Svir:
         ramp = QgsVectorGradientColorRampV2(color1, color2)
         renderer = QgsGraduatedSymbolRendererV2.createRenderer(
             self.current_layer,
-            data['SVI_field'],
+            target_field,
             classes_count,
             QgsGraduatedSymbolRendererV2.Quantile,
             QgsSymbolV2.defaultSymbol(self.current_layer.geometryType()),
             ramp)
 
         self.current_layer.setRendererV2(renderer)
+        curr_name = self.current_layer.name().split(' [')[0]
+        self.current_layer.setLayerName('%s [%s]' % (curr_name, target_field))
         self.iface.mapCanvas().refresh()
         self.iface.legendInterface().refreshLayerSymbology(self.current_layer)
 
