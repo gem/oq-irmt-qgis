@@ -37,7 +37,7 @@ from PyQt4.QtCore import (QSettings,
                           QTranslator,
                           QCoreApplication,
                           qVersion,
-                          QVariant)
+                          QVariant, Qt)
 
 from PyQt4.QtGui import (QAction,
                          QIcon,
@@ -58,7 +58,9 @@ from qgis.core import (QgsVectorLayer,
                        QgsVectorFileWriter,
                        QgsGraduatedSymbolRendererV2,
                        QgsRendererRangeV2,
-                       QgsSymbolV2, QgsVectorGradientColorRampV2)
+                       QgsSymbolV2, QgsVectorGradientColorRampV2,
+                       QgsRuleBasedRendererV2, QgsSimpleFillSymbolLayerV2,
+                       QgsFillSymbolV2)
 
 from qgis.gui import QgsMessageBar
 
@@ -596,9 +598,8 @@ class Svir:
         color1 = QColor("white")
         color2 = QColor("red")
         classes_count = 10
-
         ramp = QgsVectorGradientColorRampV2(color1, color2)
-        renderer = QgsGraduatedSymbolRendererV2.createRenderer(
+        graduated_renderer = QgsGraduatedSymbolRendererV2.createRenderer(
             self.current_layer,
             target_field,
             classes_count,
@@ -606,7 +607,37 @@ class Svir:
             QgsSymbolV2.defaultSymbol(self.current_layer.geometryType()),
             ramp)
 
-        self.current_layer.setRendererV2(renderer)
+        empty_symbol = QgsFillSymbolV2.createSimple(
+            {'style' : 'no', 'style_border' : 'no'})
+        root_rule = QgsRuleBasedRendererV2.Rule(empty_symbol)
+
+        null_rule = QgsRuleBasedRendererV2.Rule(
+            QgsFillSymbolV2.createSimple(
+            {'style' : 'no',
+             'color_border': '255,255,0,255',
+             'width_border': '0.5'}),
+            filterExp='%s IS NULL' % target_field,
+            label='%s IS NULL' % target_field,
+            elseRule=True)
+
+        not_null_rule = QgsRuleBasedRendererV2.Rule(
+            empty_symbol,
+            filterExp='%s IS NOT NULL' % target_field,
+            label='%s:' % target_field)
+
+        root_rule.appendChild(not_null_rule)
+        root_rule.appendChild(null_rule)
+        #root_rule.removeChildAt(0)
+
+
+        rule_renderer = QgsRuleBasedRendererV2(root_rule)
+        rule_renderer.dump()
+
+        rule_renderer.refineRuleRanges(not_null_rule, graduated_renderer)
+
+
+
+        self.current_layer.setRendererV2(rule_renderer)
         curr_name = self.current_layer.name().split(' [')[0]
         self.current_layer.setLayerName('%s [%s]' % (curr_name, target_field))
         self.iface.mapCanvas().refresh()
