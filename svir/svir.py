@@ -613,7 +613,7 @@ class Svir:
              'color_border': '255,255,0,255',
              'width_border': '0.5'}))
         null_rule.setFilterExpression('%s IS NULL' % target_field)
-        null_rule.setLabel('%s IS NULL' % target_field)
+        null_rule.setLabel(tr('Invalid value'))
         root_rule.appendChild(null_rule)
 
         color1 = QColor("#FFEBEB")
@@ -629,13 +629,14 @@ class Svir:
             ramp)
         # create value ranges
         rule_renderer.refineRuleRanges(not_null_rule, graduated_renderer)
-
+        for rule in not_null_rule.children():
+            label = rule.label().replace('"%s" >= ' % target_field, '')
+            label = label.replace(' AND "%s" <= ' % target_field, ' - ')
+            rule.setLabel(label)
         # remove default rule
         root_rule.removeChildAt(0)
 
         self.current_layer.setRendererV2(rule_renderer)
-        curr_name = self.current_layer.name().split(' [')[0]
-        self.current_layer.setLayerName('%s [%s]' % (curr_name, target_field))
         self.iface.mapCanvas().refresh()
         self.iface.legendInterface().refreshLayerSymbology(self.current_layer)
 
