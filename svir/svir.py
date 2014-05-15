@@ -595,7 +595,7 @@ class Svir:
         else:
             target_field = data['SVI_field']
 
-        color1 = QColor("white")
+        color1 = QColor("#FFEBEB")
         color2 = QColor("red")
         classes_count = 10
         ramp = QgsVectorGradientColorRampV2(color1, color2)
@@ -607,35 +607,29 @@ class Svir:
             QgsSymbolV2.defaultSymbol(self.current_layer.geometryType()),
             ramp)
 
-        empty_symbol = QgsFillSymbolV2.createSimple(
-            {'style' : 'no', 'style_border' : 'no'})
-        root_rule = QgsRuleBasedRendererV2.Rule(empty_symbol)
+        rule_renderer = QgsRuleBasedRendererV2(
+            QgsSymbolV2.defaultSymbol(self.current_layer.geometryType()))
+        root_rule = rule_renderer.rootRule()
 
-        null_rule = QgsRuleBasedRendererV2.Rule(
-            QgsFillSymbolV2.createSimple(
+        not_null_rule = root_rule.children()[0].clone()
+        not_null_rule.setSymbol(QgsFillSymbolV2.createSimple(
+            {'style' : 'no',
+             'style_border' : 'no'}))
+        not_null_rule.setFilterExpression('%s IS NOT NULL' % target_field)
+        not_null_rule.setLabel('%s:' % target_field)
+        root_rule.appendChild(not_null_rule)
+
+        null_rule = root_rule.children()[0].clone()
+        null_rule.setSymbol(QgsFillSymbolV2.createSimple(
             {'style' : 'no',
              'color_border': '255,255,0,255',
-             'width_border': '0.5'}),
-            filterExp='%s IS NULL' % target_field,
-            label='%s IS NULL' % target_field,
-            elseRule=True)
-
-        not_null_rule = QgsRuleBasedRendererV2.Rule(
-            empty_symbol,
-            filterExp='%s IS NOT NULL' % target_field,
-            label='%s:' % target_field)
-
-        root_rule.appendChild(not_null_rule)
+             'width_border': '0.5'}))
+        null_rule.setFilterExpression('%s IS NULL' % target_field)
+        null_rule.setLabel('%s IS NULL' % target_field)
         root_rule.appendChild(null_rule)
-        #root_rule.removeChildAt(0)
-
-
-        rule_renderer = QgsRuleBasedRendererV2(root_rule)
-        rule_renderer.dump()
+        root_rule.removeChildAt(0)
 
         rule_renderer.refineRuleRanges(not_null_rule, graduated_renderer)
-
-
 
         self.current_layer.setRendererV2(rule_renderer)
         curr_name = self.current_layer.name().split(' [')[0]
