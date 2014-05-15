@@ -595,18 +595,6 @@ class Svir:
         else:
             target_field = data['SVI_field']
 
-        color1 = QColor("#FFEBEB")
-        color2 = QColor("red")
-        classes_count = 10
-        ramp = QgsVectorGradientColorRampV2(color1, color2)
-        graduated_renderer = QgsGraduatedSymbolRendererV2.createRenderer(
-            self.current_layer,
-            target_field,
-            classes_count,
-            QgsGraduatedSymbolRendererV2.Quantile,
-            QgsSymbolV2.defaultSymbol(self.current_layer.geometryType()),
-            ramp)
-
         rule_renderer = QgsRuleBasedRendererV2(
             QgsSymbolV2.defaultSymbol(self.current_layer.geometryType()))
         root_rule = rule_renderer.rootRule()
@@ -627,9 +615,23 @@ class Svir:
         null_rule.setFilterExpression('%s IS NULL' % target_field)
         null_rule.setLabel('%s IS NULL' % target_field)
         root_rule.appendChild(null_rule)
-        root_rule.removeChildAt(0)
 
+        color1 = QColor("#FFEBEB")
+        color2 = QColor("red")
+        classes_count = 10
+        ramp = QgsVectorGradientColorRampV2(color1, color2)
+        graduated_renderer = QgsGraduatedSymbolRendererV2.createRenderer(
+            self.current_layer,
+            target_field,
+            classes_count,
+            QgsGraduatedSymbolRendererV2.Quantile,
+            QgsSymbolV2.defaultSymbol(self.current_layer.geometryType()),
+            ramp)
+        # create value ranges
         rule_renderer.refineRuleRanges(not_null_rule, graduated_renderer)
+
+        # remove default rule
+        root_rule.removeChildAt(0)
 
         self.current_layer.setRendererV2(rule_renderer)
         curr_name = self.current_layer.name().split(' [')[0]
