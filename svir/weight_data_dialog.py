@@ -47,7 +47,7 @@ class WeightDataDialog(QDialog):
     """
 
     # QVariantMap is to map a JSON to dict see:
-    # http://pyqt.sourceforge.net/Docs/PyQt4/incompatibilities.html#pyqt4-v4-7-4
+    #http://pyqt.sourceforge.net/Docs/PyQt4/incompatibilities.html#pyqt4-v4-7-4
     # this is for javascript to emitt when it changes the json
     json_updated = pyqtSignal(['QVariantMap'], name='json_updated')
     # Python classes should connect to json_cleaned

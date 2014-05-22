@@ -41,8 +41,7 @@ from PyQt4.QtCore import (QSettings,
 
 from PyQt4.QtGui import (QAction,
                          QIcon,
-                         QProgressDialog,
-                         QProgressBar)
+                         QProgressDialog, )
 
 from qgis.core import (QgsVectorLayer,
                        QgsMapLayerRegistry,
@@ -800,7 +799,8 @@ class Svir:
             # to show the overall progress, cycling through zones
             tot_zones = len(list(self.zonal_layer.getFeatures()))
             msg = tr("Step 1 of 3: initializing aggregation layer...")
-            msg_bar_item, progress = create_progress_message_bar(self.iface, msg)
+            msg_bar_item, progress = create_progress_message_bar(
+                self.iface, msg)
 
             # copy zones from zonal layer
             for current_zone, zone_feature in enumerate(
@@ -934,7 +934,8 @@ class Svir:
             "Step 3 of 3: writing counts and sums on aggregation_layer...")
         with TraceTimeManager(msg, DEBUG):
             tot_zones = len(list(self.aggregation_layer.getFeatures()))
-            msg_bar_item, progress = create_progress_message_bar(self.iface, msg)
+            msg_bar_item, progress = create_progress_message_bar(
+                self.iface, msg)
             with LayerEditingManager(self.aggregation_layer,
                                      msg,
                                      DEBUG):
@@ -1017,7 +1018,8 @@ class Svir:
             # aggregation layer
             tot_zones = len(list(self.aggregation_layer.getFeatures()))
             msg = tr("Step 3 of 3: aggregating points by zone...")
-            msg_bar_item, progress = create_progress_message_bar(self.iface, msg)
+            msg_bar_item, progress = create_progress_message_bar(
+                self.iface, msg)
 
             # check if there are no loss points contained in any of the zones
             # and later display a warning if that occurs
@@ -1281,7 +1283,8 @@ class Svir:
             # to show the overall progress, cycling through zones
             tot_zones = len(list(layer.getFeatures()))
             msg = tr("Calculating some common SVIR indices...")
-            msg_bar_item, progress = create_progress_message_bar(self.iface, msg)
+            msg_bar_item, progress = create_progress_message_bar(
+                self.iface, msg)
             with LayerEditingManager(layer,
                                      tr("Calculate some common SVIR indices"),
                                      DEBUG):

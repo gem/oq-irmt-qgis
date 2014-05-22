@@ -129,8 +129,8 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
                 current_feats_ids = self.current_layer.selectedFeaturesIds()
                 button.toggled.connect(
                     lambda on, layer=self.current_layer,
-                           new_feature_ids=discarded_feats_ids,
-                           old_feature_ids=current_feats_ids:
+                    new_feature_ids=discarded_feats_ids,
+                    old_feature_ids=current_feats_ids:
                     toggle_select_features(layer,
                                            on,
                                            new_feature_ids,
@@ -139,7 +139,8 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
                 self.iface.messageBar().pushWidget(widget,
                                                    QgsMessageBar.WARNING)
 
-            self.project_definition['indicators_operator'] = indicators_operator
+            self.project_definition['indicators_operator'] = \
+                indicators_operator
             self.project_definition['themes_operator'] = themes_operator
 
             if self.calculate_iri_check.isChecked():
