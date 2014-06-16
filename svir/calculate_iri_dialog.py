@@ -26,7 +26,9 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         self.calculate_iri = self.calculate_iri_check.isChecked()
 
-        reload_layers_in_cbx(self.aal_layer, QgsMapLayer.VectorLayer)
+        reload_layers_in_cbx(self.aal_layer,
+                             [QgsMapLayer.VectorLayer],
+                             [self.current_layer.id()])
         reload_attrib_cbx(self.svi_id_field, self.current_layer,
                           NUMERIC_FIELD_TYPES, TEXTUAL_FIELD_TYPES)
         self.ok_button.setEnabled(True)
