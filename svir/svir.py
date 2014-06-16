@@ -590,6 +590,9 @@ class Svir:
             self.update_actions_status()
 
     def redraw_ir_layer(self, data):
+        print "REDRAW with %s" % data
+        # if an IRi has been already calculated, show it else show the SVI
+        # TODO: recalculate
         if 'IRI_field' in data:
             target_field = data['IRI_field']
         else:
