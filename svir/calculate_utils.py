@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
 from PyQt4.QtCore import QVariant, QPyNullVariant
-from PyQt4.QtGui import QDialog, QDialogButtonBox, QToolButton
-from qgis.core import QgsField, QgsMapLayerRegistry, QgsMapLayer, \
-    QgsVectorJoinInfo
+from PyQt4.QtGui import QToolButton
+from qgis.core import QgsField, QgsMapLayerRegistry, QgsVectorJoinInfo
 from qgis.gui import QgsMessageBar
-from globals import DOUBLE_FIELD_TYPE_NAME, DEBUG, NUMERIC_FIELD_TYPES, \
-    SUM_BASED_COMBINATIONS, MUL_BASED_COMBINATIONS, TEXTUAL_FIELD_TYPES
+from globals import DOUBLE_FIELD_TYPE_NAME, DEBUG, SUM_BASED_COMBINATIONS,\
+    MUL_BASED_COMBINATIONS
 from process_layer import ProcessLayer
 from utils import (LayerEditingManager,
-                   tr, toggle_select_features)
+                   tr, toggle_select_features, toggle_select_features_widget)
 
 
-def calculate_SVI(iface, current_layer, project_definition,
+def calculate_svi(iface, current_layer, project_definition,
                   indicators_operator, themes_operator):
     """
     add an SVI attribute to the current layer
@@ -93,41 +92,31 @@ def calculate_SVI(iface, current_layer, project_definition,
                'non-NULL values and it was added to the layer as '
                'a new attribute called %s') % attr_names[svi_attr_name]
         iface.messageBar().pushMessage(
-            tr("Info"), tr(msg), level=QgsMessageBar.INFO)
+            tr('Info'), tr(msg), level=QgsMessageBar.INFO)
         if discarded_feats_ids:
-
-            msg = 'Invalid indicators were found in some features'
-
-            widget = iface.messageBar().createMessage(
-                tr("Warning"), msg)
-            button = QToolButton(widget)
-            button.setCheckable(True)
-            button.setText("Select invalid features")
-            current_feats_ids = current_layer.selectedFeaturesIds()
-            button.toggled.connect(
-                lambda on, layer=current_layer,
-                       new_feature_ids=discarded_feats_ids,
-                       old_feature_ids=current_feats_ids:
-                toggle_select_features(layer,
-                                       on,
-                                       new_feature_ids,
-                                       old_feature_ids))
-            widget.layout().addWidget(button)
+            widget = toggle_select_features_widget(
+                tr('Warning'),
+                tr('Invalid indicators were found in some features while '
+                   'calculating SVI'),
+                tr('Select invalid features'),
+                current_layer,
+                discarded_feats_ids,
+                current_layer.selectedFeaturesIds())
             iface.messageBar().pushWidget(widget, QgsMessageBar.WARNING)
 
         project_definition['indicators_operator'] = indicators_operator
         project_definition['themes_operator'] = themes_operator
-        project_definition['SVI_field'] = attr_names[svi_attr_name]
+        project_definition['svi_field'] = attr_names[svi_attr_name]
         return svi_attr_id, discarded_feats_ids
 
     except TypeError as e:
         current_layer.dataProvider().deleteAttributes([svi_attr_id])
         msg = 'Could not calculate SVI due to data problems: %s' % e
-        iface.messageBar().pushMessage(tr("Error"), tr(msg), 
+        iface.messageBar().pushMessage(tr('Error'), tr(msg),
                                        level=QgsMessageBar.CRITICAL)
 
 
-def calculate_IRI(iface, current_layer, project_definition, iri_operator,
+def calculate_iri(iface, current_layer, project_definition, iri_operator,
                   svi_attr_id, svi_id_field, aal_layer, aal_field, aal_id_field,
                   discarded_feats_ids):
     """
@@ -161,6 +150,7 @@ def calculate_IRI(iface, current_layer, project_definition, iri_operator,
     current_layer.addJoin(join_info)
 
     aal_attr_name = '%s_%s' % (aal_layer, aal_field)
+    discarded_aal_feats_ids = []
 
     try:
         with LayerEditingManager(current_layer, 'Add IRI', DEBUG):
@@ -168,9 +158,10 @@ def calculate_IRI(iface, current_layer, project_definition, iri_operator,
                 feat_id = feat.id()
                 svi_value = feat.attributes()[svi_attr_id]
                 aal_value = feat[aal_attr_name]
-
-                if feat_id in discarded_feats_ids:
+                if (aal_value == QPyNullVariant(float)
+                        or feat_id in discarded_feats_ids):
                     iri_value = QPyNullVariant(float)
+                    discarded_aal_feats_ids.append(feat_id)
                 elif iri_operator == 'Sum':
                     iri_value = (
                         svi_value * svi_weight + aal_value * aal_weight)
@@ -187,23 +178,34 @@ def calculate_IRI(iface, current_layer, project_definition, iri_operator,
                 # store IRI
                 current_layer.changeAttributeValue(
                     feat_id, iri_attr_id, iri_value)
-        project_definition['IRI_operator'] = iri_operator
+        project_definition['iri_operator'] = iri_operator
         # set the field name for the copied AAL layer
-        project_definition['AAL_field'] = attr_names[
-            copy_aal_attr_name]
-        project_definition['IRI_field'] = attr_names[
-            iri_attr_name]
+        project_definition['aal_field'] = attr_names[copy_aal_attr_name]
+        project_definition['joined_aal_field'] = aal_field
+        project_definition['iri_field'] = attr_names[iri_attr_name]
+        project_definition['aal_id_field'] = aal_id_field
+        project_definition['svi_id_field'] = svi_id_field
+        project_definition['aal_layer'] = aal_layer
         msg = ('The IRI has been calculated for fields containing '
                'non-NULL values and it was added to the layer as '
                'a new attribute called %s') % attr_names[iri_attr_name]
-        iface.messageBar().pushMessage(tr("Info"), tr(msg),
+        iface.messageBar().pushMessage(tr('Info'), tr(msg),
                                        level=QgsMessageBar.INFO)
+        widget = toggle_select_features_widget(
+            tr('Warning'),
+            tr('Invalid values were found in some features while calculating '
+               'IRI'),
+            tr('Select invalid features'),
+            current_layer,
+            discarded_aal_feats_ids,
+            current_layer.selectedFeaturesIds())
+        iface.messageBar().pushWidget(widget, QgsMessageBar.WARNING)
 
     except TypeError as e:
         current_layer.dataProvider().deleteAttributes(
             [iri_attr_id, copy_aal_attr_id])
         msg = 'Could not calculate IRI due to data problems: %s' % e
-        iface.messageBar().pushMessage(tr("Error"), tr(msg),
+        iface.messageBar().pushMessage(tr('Error'), tr(msg),
                                        level=QgsMessageBar.CRITICAL)
     finally:
         current_layer.removeJoin(join_info.joinLayerId)

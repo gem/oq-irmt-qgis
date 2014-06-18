@@ -12,7 +12,7 @@ from utils import (LayerEditingManager,
                    reload_attrib_cbx,
                    reload_layers_in_cbx,
                    tr)
-from calculate_utils import calculate_IRI, calculate_SVI
+from calculate_utils import calculate_iri, calculate_svi
 
 
 class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
@@ -42,7 +42,7 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
         indicators_operator = self.indicators_combination_type.currentText()
         themes_operator = self.themes_combination_type.currentText()
 
-        svi_attr_id, discarded_feats_ids = calculate_SVI(
+        svi_attr_id, discarded_feats_ids = calculate_svi(
             self.iface, self.current_layer, self.project_definition,
             indicators_operator, themes_operator)
 
@@ -53,12 +53,12 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
             svi_id_field = self.svi_id_field.currentText()
             iri_operator = self.iri_combination_type.currentText()
 
-            calculate_IRI(self.iface, self.current_layer,
+            calculate_iri(self.iface, self.current_layer,
                           self.project_definition, iri_operator, svi_attr_id,
                           svi_id_field, aal_layer, aal_field, aal_id_field,
                           discarded_feats_ids)
         else:
-            self.project_definition.pop('IRI_field', None)
+            self.project_definition.pop('iri_field', None)
 
     def on_calculate_iri_check_toggled(self, on):
         self.calculate_iri = on

@@ -68,6 +68,7 @@ from qgis.analysis import QgsZonalStatistics
 import processing as p
 from processing.algs.saga.SagaUtils import SagaUtils
 from calculate_iri_dialog import CalculateIRIDialog
+from calculate_utils import calculate_svi, calculate_iri
 
 from process_layer import ProcessLayer
 
@@ -311,10 +312,10 @@ class Svir:
 
             # SVI was calculated once at least
             self.registered_actions["weight_data"].setEnabled(
-                'SVI_field' in proj_def)
+                'svi_field' in proj_def)
             # IRI was calculated once at least
             self.registered_actions["upload"].setEnabled(
-                'IRI_field' in proj_def)
+                'iri_field' in proj_def)
 
         except KeyError:
             # self.project_definitions[self.current_layer.id()] is not defined
@@ -567,36 +568,64 @@ class Svir:
         current_layer_id = self.current_layer.id()
         dlg = WeightDataDialog(
             self.iface, self.project_definitions[current_layer_id])
-        dlg.json_cleaned.connect(self.redraw_ir_layer)
+        dlg.json_cleaned.connect(self.weights_changed)
         if dlg.exec_():
             self.project_definitions[current_layer_id] = dlg.project_definition
+            self.recalculate_indexes(dlg.project_definition)
             self.update_actions_status()
-        dlg.json_cleaned.disconnect(self.redraw_ir_layer)
+        dlg.json_cleaned.disconnect(self.weights_changed)
         # if the dlg was not accepted, self.project_definition is still the
         # one we had before opening the dlg and we use it do reset the changes
         self.redraw_ir_layer(self.project_definitions[current_layer_id])
+
+    def weights_changed(self, data):
+        self.redraw_ir_layer(data)
+
+    def recalculate_indexes(self, data):
+        project_definition = self.project_definitions[self.current_layer.id()]
+
+        indicators_operator = data['indicators_operator']
+        themes_operator = data['themes_operator']
+
+        # when updating weights, we need to recalculate the indexes
+        svi_attr_id, discarded_feats_ids = calculate_svi(
+            self.iface, self.current_layer, project_definition,
+            indicators_operator, themes_operator)
+
+        # if an IRi has been already calculated, calculate a new one
+        if 'iri_field' in data:
+            aal_layer = data['aal_layer']
+            aal_field = data['joined_aal_field']
+            aal_id_field = data['aal_id_field']
+            svi_id_field = data['svi_id_field']
+            iri_operator = data['iri_operator']
+
+            calculate_iri(self.iface, self.current_layer,
+                          project_definition, iri_operator, svi_attr_id,
+                          svi_id_field, aal_layer, aal_field, aal_id_field,
+                          discarded_feats_ids)
 
     def calculate_indices(self):
         """
         add an SVI attribute to the current layer
         """
-        current_layer_id = self.current_layer.id()
-        project_definition = self.project_definitions[current_layer_id]
+        project_definition = self.project_definitions[self.current_layer.id()]
         dlg = CalculateIRIDialog(
             self.iface, self.current_layer, project_definition)
         if dlg.exec_():
             dlg.calculate()
-            self.redraw_ir_layer(self.project_definitions[current_layer_id])
+            self.redraw_ir_layer(project_definition)
             self.update_actions_status()
 
     def redraw_ir_layer(self, data):
-        print "REDRAW with %s" % data
+        if DEBUG:
+            print 'REDRAWING using:\n%s' % data
+
         # if an IRi has been already calculated, show it else show the SVI
-        # TODO: recalculate
-        if 'IRI_field' in data:
-            target_field = data['IRI_field']
+        if 'iri_field' in data:
+            target_field = data['iri_field']
         else:
-            target_field = data['SVI_field']
+            target_field = data['svi_field']
 
         rule_renderer = QgsRuleBasedRendererV2(
             QgsSymbolV2.defaultSymbol(self.current_layer.geometryType()))
