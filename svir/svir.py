@@ -37,7 +37,7 @@ from PyQt4.QtCore import (QSettings,
                           QTranslator,
                           QCoreApplication,
                           qVersion,
-                          QVariant, Qt)
+                          QVariant)
 
 from PyQt4.QtGui import (QAction,
                          QIcon,
@@ -57,9 +57,8 @@ from qgis.core import (QgsVectorLayer,
                        QgsMapLayer,
                        QgsVectorFileWriter,
                        QgsGraduatedSymbolRendererV2,
-                       QgsRendererRangeV2,
                        QgsSymbolV2, QgsVectorGradientColorRampV2,
-                       QgsRuleBasedRendererV2, QgsSimpleFillSymbolLayerV2,
+                       QgsRuleBasedRendererV2,
                        QgsFillSymbolV2)
 
 from qgis.gui import QgsMessageBar
