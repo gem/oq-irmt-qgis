@@ -312,7 +312,7 @@ class Svir:
             # SVI was calculated once at least
             self.registered_actions["weight_data"].setEnabled(
                 'svi_field' in proj_def)
-            # IRI was calculated once at least
+            # If IRI was calculated once at least enable upload
             self.registered_actions["upload"].setEnabled(
                 'iri_field' in proj_def)
 
@@ -565,17 +565,25 @@ class Svir:
         Open a modal dialog to select weights in a d3.js visualization
         """
         current_layer_id = self.current_layer.id()
-        dlg = WeightDataDialog(
-            self.iface, self.project_definitions[current_layer_id])
+        project_definition = self.project_definitions[current_layer_id]
+        old_project_definition = copy.deepcopy(project_definition)
+        svi_attr_id, iri_attr_id, aal_field_id = self.recalculate_indexes(
+            project_definition)
+        dlg = WeightDataDialog(self.iface, project_definition)
         dlg.json_cleaned.connect(self.weights_changed)
+        self.redraw_ir_layer(dlg.project_definition)
         if dlg.exec_():
-            self.project_definitions[current_layer_id] = dlg.project_definition
-            self.recalculate_indexes(dlg.project_definition)
+            project_definition = dlg.project_definition
             self.update_actions_status()
+        else:
+            project_definition = old_project_definition
+            ProcessLayer(self.current_layer).delete_attributes(
+                [svi_attr_id, iri_attr_id, aal_field_id])
+
         dlg.json_cleaned.disconnect(self.weights_changed)
         # if the dlg was not accepted, self.project_definition is still the
         # one we had before opening the dlg and we use it do reset the changes
-        self.redraw_ir_layer(self.project_definitions[current_layer_id])
+        self.redraw_ir_layer(project_definition)
 
     def weights_changed(self, data):
         self.redraw_ir_layer(data)
@@ -591,6 +599,8 @@ class Svir:
             self.iface, self.current_layer, project_definition,
             indicators_operator, themes_operator)
 
+        iri_attr_id = None
+        aal_field_id = None
         # if an IRi has been already calculated, calculate a new one
         if 'iri_field' in data:
             aal_layer = data['aal_layer']
@@ -599,10 +609,14 @@ class Svir:
             svi_id_field = data['svi_id_field']
             iri_operator = data['iri_operator']
 
-            calculate_iri(self.iface, self.current_layer,
-                          project_definition, iri_operator, svi_attr_id,
-                          svi_id_field, aal_layer, aal_field, aal_id_field,
-                          discarded_feats_ids)
+            iri_attr_id, aal_field_id = calculate_iri(
+                self.iface,
+                self.current_layer,
+                project_definition, iri_operator, svi_attr_id,
+                svi_id_field, aal_layer, aal_field, aal_id_field,
+                discarded_feats_ids)
+
+        return svi_attr_id, iri_attr_id, aal_field_id
 
     def calculate_indices(self):
         """

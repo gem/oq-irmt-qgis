@@ -226,6 +226,7 @@ def calculate_iri(iface, current_layer, project_definition, iri_operator,
             discarded_aal_feats_ids,
             current_layer.selectedFeaturesIds())
         iface.messageBar().pushWidget(widget, QgsMessageBar.WARNING)
+        return iri_attr_id, copy_aal_attr_id
 
     except TypeError as e:
         current_layer.dataProvider().deleteAttributes(
