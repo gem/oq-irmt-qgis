@@ -28,7 +28,7 @@
 import collections
 from time import time
 from PyQt4.QtCore import QSettings, Qt
-from PyQt4.QtGui import QApplication
+from PyQt4.QtGui import QApplication, QProgressBar
 from qgis.core import QgsMapLayerRegistry
 from settings_dialog import SettingsDialog
 from qgis.gui import QgsMessageBar
@@ -51,6 +51,36 @@ def get_credentials(iface):
     return hostname, username, password
 
 
+def clear_progress_message_bar(iface, msg_bar_item=None):
+        if msg_bar_item:
+            iface.messageBar().popWidget(msg_bar_item)
+        else:
+            iface.messageBar().clearWidgets()
+
+
+def create_progress_message_bar(iface, msg, no_percentage=False):
+    """
+    Use the messageBar of QGIS to display a message describing what's going
+    on (typically during a time-consuming task), and a bar showing the
+    progress of the process.
+
+    :param msg: Message to be displayed, describing the current task
+    :type: str
+
+    :returns: progress object on which we can set the percentage of
+    completion of the task through progress.setValue(percentage)
+    :rtype: QProgressBar
+    """
+    progress_message_bar = iface.messageBar().createMessage(msg)
+    progress = QProgressBar()
+    if no_percentage:
+        progress.setRange(0, 0)
+    progress_message_bar.layout().addWidget(progress)
+    iface.messageBar().pushWidget(progress_message_bar,
+                                  iface.messageBar().INFO)
+    return progress_message_bar, progress
+
+
 def assign_default_weights(svi_themes):
     # count themes and indicators and assign default weights
     # using 2 decimal points (%.2f)
@@ -64,22 +94,26 @@ def assign_default_weights(svi_themes):
             indicator['weight'] = float(indicator_weight)
 
 
-def reload_layers_in_cbx(combo, *valid_layer_types):
+def reload_layers_in_cbx(combo, layer_types=None, skip_layer_ids=None):
     """
     Load layers into a combobox. Can filter by layer type.
     the additional filter can be QgsMapLayer.VectorLayer, ...
 
     :param combo: The combobox to be repopulated
     :type combo: QComboBox
-    :param *valid_layer_types: multiple tuples containing types
-    :type *valid_layer_types: QgsMapLayer.LayerType, ...
+    :param layer_types: list containing types or None if all type accepted
+    :type layer_types: [QgsMapLayer.LayerType, ...]
+    :param skip_layer_ids: list containing layers to be skipped in the combobox
+     or None if all layers accepted
+    :type skip_layer_ids: [QgsMapLayer ...]
     """
-    layer_types = set()
-    for layer_type in valid_layer_types:
-        layer_types.update([layer_type])
     combo.clear()
     for l in QgsMapLayerRegistry.instance().mapLayers().values():
-        if not layer_types or l.type() in layer_types:
+        layer_type_allowed = bool(layer_types is None
+                                  or l.type() in layer_types)
+        layer_id_allowed = bool(skip_layer_ids is None
+                                or l.id() not in skip_layer_ids)
+        if layer_type_allowed and layer_id_allowed:
             combo.addItem(l.name())
 
 

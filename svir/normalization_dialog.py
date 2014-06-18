@@ -54,7 +54,7 @@ class NormalizationDialog(QDialog):
         self.ui.setupUi(self)
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
         self.use_advanced = False
-        reload_layers_in_cbx(self.ui.layer_cbx, QgsMapLayer.VectorLayer)
+        reload_layers_in_cbx(self.ui.layer_cbx, [QgsMapLayer.VectorLayer])
 
         # In case one of the available layers is active, preselect it
         if iface.activeLayer():

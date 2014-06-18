@@ -26,8 +26,11 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 import os.path
+import tempfile
 import uuid
 import copy
+import json
+
 from requests.exceptions import ConnectionError
 
 from PyQt4.QtCore import (QSettings,
@@ -38,8 +41,7 @@ from PyQt4.QtCore import (QSettings,
 
 from PyQt4.QtGui import (QAction,
                          QIcon,
-                         QProgressDialog,
-                         QProgressBar)
+                         QProgressDialog, )
 
 from qgis.core import (QgsVectorLayer,
                        QgsMapLayerRegistry,
@@ -51,7 +53,7 @@ from qgis.core import (QgsVectorLayer,
                        QgsFeatureRequest,
                        QgsVectorDataProvider,
                        QgsMessageLog,
-                       QgsMapLayer)
+                       QgsMapLayer, QgsVectorFileWriter)
 
 from qgis.gui import QgsMessageBar
 
@@ -85,7 +87,8 @@ from utils import (LayerEditingManager,
                    get_credentials,
                    TraceTimeManager,
                    WaitCursorManager,
-                   assign_default_weights)
+                   assign_default_weights,
+                   clear_progress_message_bar, create_progress_message_bar)
 from globals import (INT_FIELD_TYPE_NAME,
                      DOUBLE_FIELD_TYPE_NAME,
                      NUMERIC_FIELD_TYPES,
@@ -129,6 +132,8 @@ class Svir:
         self.purged_layer = None
         # Output layer containing merged data and final svir computations
         self.svir_layer = None
+        # our own toolbar
+        self.toolbar = None
         # keep a list of the menu items, in order to easily unload them later
         self.registered_actions = dict()
         # Name of the attribute containing loss values (in loss_layer)
@@ -155,9 +160,14 @@ class Svir:
             self.layers_removed)
 
     def initGui(self):
+
+        # create our own toolbar
+        self.toolbar = self.iface.addToolBar('SVIR')
+        self.toolbar.setObjectName('SVIRToolBar')
+
         # Action to activate the modal dialog to set up settings for the
         # connection with the platform
-        self.add_menu_item("svir",
+        self.add_menu_item("settings",
                            ":/plugins/svir/start_plugin_icon.png",
                            u"&SVIR settings",
                            self.settings,
@@ -181,51 +191,55 @@ class Svir:
         self.add_menu_item("normalize_attribute",
                            ":/plugins/svir/start_plugin_icon.png",
                            u"&Normalize attribute",
-                           self.normalize_attribute)
-        self.iface.legendInterface().addLegendLayerAction(
-            self.registered_actions["normalize_attribute"],
-            u"SVIR",
-            u"id_normalize_attribute",
-            QgsMapLayer.VectorLayer,
-            True)
+                           self.normalize_attribute,
+                           enable=False,
+                           add_to_layer_actions=True)
         # Action for merging SVI with loss data (both aggregated by zone)
         self.add_menu_item("merge_svi_and_losses",
                            ":/plugins/svir/start_plugin_icon.png",
                            u"Merge SVI and loss data by zone",
-                           self.merge_svi_with_aggr_losses)
+                           self.merge_svi_with_aggr_losses,
+                           enable=False)
         # Action for calculating RISKPLUS, RISKMULT and RISK1F indices
         self.add_menu_item(
             "calculate_svir_indices",
             ":/plugins/svir/start_plugin_icon.png",
             u"Calculate RISKPLUS, RISKMULT and RISK1F indices",
-            self.calculate_svir_indices)
-        self.iface.legendInterface().addLegendLayerAction(
-            self.registered_actions["calculate_svir_indices"],
-            u"SVIR",
-            u"id_calculate_svir_indices",
-            QgsMapLayer.VectorLayer,
-            True)
+            self.calculate_svir_indices,
+            enable=False,
+            add_to_layer_actions=True)
         # Action to activate the modal dialog to choose weighting of the
         # data from the platform
         self.add_menu_item("create_weight_tree",
                            ":/plugins/svir/start_plugin_icon.png",
                            u"&Create/edit weight tree",
                            self.create_weight_tree,
-                           enable=False)
+                           enable=False,
+                           add_to_layer_actions=True)
         # Action to activate the modal dialog to choose weighting of the
         # data from the platform
         self.add_menu_item("weight_data",
                            ":/plugins/svir/start_plugin_icon.png",
                            u"&Weight data",
                            self.weight_data,
-                           enable=False)
+                           enable=False,
+                           add_to_layer_actions=True)
 
         # Action to calculate the SVI
         self.add_menu_item("calculate_svi",
                            ":/plugins/svir/start_plugin_icon.png",
                            u"&Calculate SVI",
                            self.calculate_svi,
-                           enable=False)
+                           enable=False,
+                           add_to_layer_actions=True)
+
+        # Action to upload
+        self.add_menu_item("upload",
+                           ":/plugins/svir/start_plugin_icon.png",
+                           u"&Upload project",
+                           self.upload,
+                           enable=False,
+                           add_to_layer_actions=True)
         self.update_actions_status()
 
     def layers_added(self):
@@ -246,7 +260,10 @@ class Svir:
                       icon_path,
                       label,
                       corresponding_method,
-                      enable=False):
+                      enable=False,
+                      add_to_layer_actions=False,
+                      layers_type=QgsMapLayer.VectorLayer
+                      ):
         """
         Add an item to the SVIR plugin menu and a corresponding toolbar icon
         @param icon_path: Path of the icon associated to the action
@@ -258,9 +275,17 @@ class Svir:
         action = QAction(QIcon(icon_path), label, self.iface.mainWindow())
         action.setEnabled(enable)
         action.triggered.connect(corresponding_method)
-        self.iface.addToolBarIcon(action)
+        self.toolbar.addAction(action)
         self.iface.addPluginToMenu(u"&SVIR", action)
         self.registered_actions[action_name] = action
+
+        if add_to_layer_actions:
+            self.iface.legendInterface().addLegendLayerAction(
+                action,
+                u"SVIR",
+                action_name,
+                layers_type,
+                True)
 
     def update_actions_status(self):
         # Check if actions can be enabled
@@ -279,10 +304,15 @@ class Svir:
         try:
             if self.current_layer.type() != QgsMapLayer.VectorLayer:
                 raise AttributeError
-            self.project_definitions[self.current_layer.id()]
+            proj_def = self.project_definitions[self.current_layer.id()]
             self.registered_actions["create_weight_tree"].setEnabled(True)
             self.registered_actions["weight_data"].setEnabled(True)
             self.registered_actions["calculate_svi"].setEnabled(True)
+            try:
+                proj_def['IRI_operator']
+                self.registered_actions["upload"].setEnabled(True)
+            except KeyError:
+                self.registered_actions["upload"].setEnabled(False)
 
         except KeyError:
             # self.project_definitions[self.current_layer.id()] is not defined
@@ -300,14 +330,11 @@ class Svir:
         # Remove the plugin menu items and toolbar icons
         for action_name in self.registered_actions:
             action = self.registered_actions[action_name]
+            # Remove the actions in the layer legend
+            self.iface.legendInterface().removeLegendLayerAction(action)
             self.iface.removePluginMenu(u"&SVIR", action)
             self.iface.removeToolBarIcon(action)
-        # Remove the actions in the layer legend
-        self.iface.legendInterface().removeLegendLayerAction(
-            self.registered_actions['normalize_attribute'])
-        self.iface.legendInterface().removeLegendLayerAction(
-            self.registered_actions['calculate_svir_indices'])
-        self.clear_progress_message_bar()
+        clear_progress_message_bar(self.iface)
 
         #remove connects
         self.iface.currentLayerChanged.disconnect(self.current_layer_changed)
@@ -367,6 +394,7 @@ class Svir:
                                                 tr(msg),
                                                 level=QgsMessageBar.INFO,
                                                 duration=8)
+            self.update_actions_status()
 
     def choose_sv_data_source(self):
         """
@@ -473,6 +501,7 @@ class Svir:
                     add_to_registry=True)
                 self.iface.setActiveLayer(layer)
                 self.project_definitions[layer.id()] = project_definition
+                self.update_actions_status()
 
         except SvDownloadError as e:
             self.iface.messageBar().pushMessage(tr("Download Error"),
@@ -555,6 +584,7 @@ class Svir:
             self.iface, self.current_layer, project_definition)
         if dlg.exec_():
             dlg.calculate()
+            self.update_actions_status()
 
     def redraw_ir_layer(self, data):
         print "REDRAW USING %s" % data
@@ -631,6 +661,7 @@ class Svir:
             self.zonal_attr_name = dlg.ui.zonal_attr_name_cbox.currentText()
             self.zone_id_in_zones_attr_name = \
                 dlg.ui.zone_id_attr_name_zone_cbox.currentText()
+            self.update_actions_status()
             return True
         else:
             return False
@@ -688,6 +719,7 @@ class Svir:
                     tr(msg),
                     level=QgsMessageBar.INFO,
                     duration=8)
+        self.update_actions_status()
 
     def select_layers_to_merge(self):
         """
@@ -716,6 +748,7 @@ class Svir:
                 dlg.ui.zonal_layer_cbox.currentIndex()]
             self.zone_id_in_zones_attr_name = \
                 dlg.ui.merge_attr_cbx.currentText()
+            self.update_actions_status()
             return True
         else:
             return False
@@ -766,7 +799,8 @@ class Svir:
             # to show the overall progress, cycling through zones
             tot_zones = len(list(self.zonal_layer.getFeatures()))
             msg = tr("Step 1 of 3: initializing aggregation layer...")
-            progress = self.create_progress_message_bar(msg)
+            msg_bar_item, progress = create_progress_message_bar(
+                self.iface, msg)
 
             # copy zones from zonal layer
             for current_zone, zone_feature in enumerate(
@@ -790,7 +824,7 @@ class Svir:
                 # Add the new feature to the layer
                 if caps & QgsVectorDataProvider.AddFeatures:
                     pr.addFeatures([feat])
-
+            clear_progress_message_bar(self.iface, msg_bar_item)
         # Add aggregation layer to registry
         if self.aggregation_layer.isValid():
             QgsMapLayerRegistry.instance().addMapLayer(self.aggregation_layer)
@@ -870,7 +904,7 @@ class Svir:
         """
         tot_points = len(list(loss_layer.getFeatures()))
         msg = tr("Step 2 of 3: aggregating losses by zone id...")
-        progress = self.create_progress_message_bar(msg)
+        msg_bar_item, progress = create_progress_message_bar(self.iface, msg)
         with TraceTimeManager(msg, DEBUG):
             zone_stats = {}
             for current_point, point_feat in enumerate(
@@ -894,13 +928,14 @@ class Svir:
                     # initialize stats for the new zone found
                     zone_stats[zone_id] = {'count': 1,
                                            'sum': loss_value}
-        self.clear_progress_message_bar()
+        clear_progress_message_bar(self.iface, msg_bar_item)
 
         msg = tr(
             "Step 3 of 3: writing counts and sums on aggregation_layer...")
         with TraceTimeManager(msg, DEBUG):
             tot_zones = len(list(self.aggregation_layer.getFeatures()))
-            progress = self.create_progress_message_bar(msg)
+            msg_bar_item, progress = create_progress_message_bar(
+                self.iface, msg)
             with LayerEditingManager(self.aggregation_layer,
                                      msg,
                                      DEBUG):
@@ -938,7 +973,7 @@ class Svir:
                         fid, sum_index, float(loss_sum))
                     self.aggregation_layer.changeAttributeValue(
                         fid, avg_index, float(loss_avg))
-        self.clear_progress_message_bar()
+        clear_progress_message_bar(self.iface, msg_bar_item)
 
     def calculate_vector_stats_using_geometries(self):
         """
@@ -961,7 +996,7 @@ class Svir:
         tot_points = len(list(self.loss_layer.getFeatures()))
         msg = tr(
             "Step 2 of 3: creating spatial index for loss points...")
-        progress = self.create_progress_message_bar(msg)
+        msg_bar_item, progress = create_progress_message_bar(self.iface, msg)
 
         # create spatial index
         with TraceTimeManager(tr("Creating spatial index for loss points..."),
@@ -973,7 +1008,7 @@ class Svir:
                 progress.setValue(progress_perc)
                 spatial_index.insertFeature(loss_feature)
 
-        self.clear_progress_message_bar()
+        clear_progress_message_bar(self.iface, msg_bar_item)
 
         with LayerEditingManager(self.aggregation_layer,
                                  tr("Calculate count and sum attributes"),
@@ -983,7 +1018,8 @@ class Svir:
             # aggregation layer
             tot_zones = len(list(self.aggregation_layer.getFeatures()))
             msg = tr("Step 3 of 3: aggregating points by zone...")
-            progress = self.create_progress_message_bar(msg)
+            msg_bar_item, progress = create_progress_message_bar(
+                self.iface, msg)
 
             # check if there are no loss points contained in any of the zones
             # and later display a warning if that occurs
@@ -1045,7 +1081,7 @@ class Svir:
                             fid, sum_index, loss_sum)
                         self.aggregation_layer.changeAttributeValue(
                             fid, avg_index, loss_avg)
-        self.clear_progress_message_bar()
+        clear_progress_message_bar(self.iface, msg_bar_item)
         # display a warning in case none of the loss points are inside
         # any of the zones
         if no_loss_points_in_any_zone:
@@ -1102,7 +1138,7 @@ class Svir:
 
         tot_zones = len(list(self.aggregation_layer.getFeatures()))
         msg = tr("Purging zones containing no loss points...")
-        progress = self.create_progress_message_bar(msg)
+        msg_bar_item, progress = create_progress_message_bar(self.iface, msg)
 
         with LayerEditingManager(self.purged_layer,
                                  tr("Purged layer initialization"),
@@ -1131,7 +1167,7 @@ class Svir:
                     if caps & QgsVectorDataProvider.AddFeatures:
                         pr.addFeatures([feat])
 
-        self.clear_progress_message_bar()
+        clear_progress_message_bar(self.iface, msg_bar_item)
 
         # Add purged layer to registry
         if self.purged_layer.isValid():
@@ -1154,7 +1190,7 @@ class Svir:
         # to show the overall progress, cycling through zones
         tot_zones = len(list(self.loss_layer_to_merge.getFeatures()))
         msg = tr("Populating SVIR layer with loss values...")
-        progress = self.create_progress_message_bar(msg)
+        msg_bar_item, progress = create_progress_message_bar(self.iface, msg)
 
         with LayerEditingManager(self.svir_layer,
                                  tr("Add loss values to svir_layer"),
@@ -1188,7 +1224,7 @@ class Svir:
                     if caps & QgsVectorDataProvider.DeleteFeatures:
                         self.svir_layer.dataProvider().deleteFeatures(
                             [svir_feat.id()])
-        self.clear_progress_message_bar()
+        clear_progress_message_bar(self.iface, msg_bar_item)
 
     def create_svir_layer(self):
         """
@@ -1247,7 +1283,8 @@ class Svir:
             # to show the overall progress, cycling through zones
             tot_zones = len(list(layer.getFeatures()))
             msg = tr("Calculating some common SVIR indices...")
-            progress = self.create_progress_message_bar(msg)
+            msg_bar_item, progress = create_progress_message_bar(
+                self.iface, msg)
             with LayerEditingManager(layer,
                                      tr("Calculate some common SVIR indices"),
                                      DEBUG):
@@ -1275,7 +1312,7 @@ class Svir:
                         risk1f_idx,
                         (svir_feat[aggr_loss_attr_name] *
                          (1 + svir_feat[svi_attr_name])))
-            self.clear_progress_message_bar()
+            clear_progress_message_bar(self.iface, msg_bar_item)
         elif dlg.use_advanced:
             layer = reg.mapLayers().values()[
                 dlg.ui.layer_cbx.currentIndex()]
@@ -1290,28 +1327,31 @@ class Svir:
                     duration=8)
         elif dlg.use_normalize_dialog:
             self.normalize_attribute()
+        self.update_actions_status()
 
-    def create_progress_message_bar(self, msg, no_percentage=False):
-        """
-        Use the messageBar of QGIS to display a message describing what's going
-        on (typically during a time-consuming task), and a bar showing the
-        progress of the process.
+    def upload(self):
+        temp_dir = tempfile.gettempdir()
+        file_stem = '%s%ssvir_%s' % (temp_dir, os.path.sep, uuid.uuid4())
 
-        :param msg: Message to be displayed, describing the current task
-        :type: str
+        data_json = '%s%s' % (file_stem, '_data.json')
+        proj_json = '%s%s' % (file_stem, '_proj.json')
 
-        :returns: progress object on which we can set the percentage of
-        completion of the task through progress.setValue(percentage)
-        :rtype: QProgressBar
-        """
-        progress_message_bar = self.iface.messageBar().createMessage(msg)
-        progress = QProgressBar()
-        if no_percentage:
-            progress.setRange(0, 0)
-        progress_message_bar.layout().addWidget(progress)
-        self.iface.messageBar().pushWidget(progress_message_bar,
-                                           self.iface.messageBar().INFO)
-        return progress
+        project_definition = self.project_definitions[self.current_layer.id()]
+        with open(proj_json, 'w') as outfile:
+            json.dump(project_definition, outfile)
 
-    def clear_progress_message_bar(self):
-        self.iface.messageBar().clearWidgets()
+        QgsVectorFileWriter.writeAsVectorFormat(
+            self.current_layer,
+            data_json,
+            'utf-8',
+            self.current_layer.crs(),
+            'GeoJson')
+        msg = tr("Uploading to platform")
+        msg_bar_item, progress = create_progress_message_bar(self.iface, msg)
+
+        # TODO UPLOAD
+        max_range = 1000000.0
+        for i in range(int(max_range)):
+            p_int = i / max_range * 100
+            progress.setValue(p_int)
+        clear_progress_message_bar(self.iface, msg_bar_item)
