@@ -253,8 +253,7 @@ class Svir:
 
     def current_layer_changed(self, layer):
         self.current_layer = layer
-        if self.current_layer is not None:
-            self.update_actions_status()
+        self.update_actions_status()
 
     def add_menu_item(self,
                       action_name,
@@ -302,6 +301,8 @@ class Svir:
         self.registered_actions["calculate_svir_indices"].setDisabled(
             layer_count == 0)
 
+        if DEBUG:
+            print 'Selected: %s' % self.current_layer
         try:
             if self.current_layer.type() != QgsMapLayer.VectorLayer:
                 raise AttributeError
