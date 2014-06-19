@@ -25,8 +25,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
+from PyQt4.QtCore import QSettings
 
-DEBUG = False
+DEBUG = QSettings().value('/svir/developer_mode', False, type=bool)
 
 INT_FIELD_TYPE_NAME = "integer"
 DOUBLE_FIELD_TYPE_NAME = "double"
