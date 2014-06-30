@@ -172,11 +172,11 @@ class Svir:
                            u"&SVIR settings",
                            self.settings,
                            enable=True)
-        # Action to activate the modal dialog to import social vulnerability
+        # Action to activate the modal dialog to import socioeconomic
         # data from the platform
         self.add_menu_item("choose_sv_data_source",
                            ":/plugins/svir/start_plugin_icon.png",
-                           u"&Choose social vulnerability data source",
+                           u"&Load socioeconomic indicators",
                            self.choose_sv_data_source,
                            enable=True)
         # Action to activate the modal dialog to guide the user through loss
@@ -349,7 +349,7 @@ class Svir:
         vulnerability and a layer containing loss data points. After data are
         loaded, self.create_aggregation_layer() and self.calculate_stats()
         are automatically called, in order to aggregate loss points with
-        respect to the same geometries defined for the social vulnerability
+        respect to the same geometries defined for the socioeconomic
         data, and to compute zonal statistics (loss sum, average and product
         for each zone)
         """
@@ -414,7 +414,7 @@ class Svir:
 
     def import_sv_variables(self):
         """
-        Open a modal dialog to select social vulnerability variables to
+        Open a modal dialog to select socioeconomic variables to
         download from the openquake platform
         """
 
@@ -437,7 +437,7 @@ class Svir:
         try:
             dlg = SelectSvVariablesDialog(sv_downloader)
             if dlg.exec_():
-                msg = ("Loading social vulnerability data from the OpenQuake "
+                msg = ("Loading socioeconomic data from the OpenQuake "
                        "Platform...")
                 # Retrieve the indices selected by the user
                 indices_list = []
@@ -478,7 +478,7 @@ class Svir:
                         return
 
                 display_msg = tr(
-                    "Social vulnerability data loaded in a new layer")
+                    "Socioeconomic data loaded in a new layer")
                 self.iface.messageBar().pushMessage(tr("Info"),
                                                     tr(display_msg),
                                                     level=QgsMessageBar.INFO,
@@ -492,12 +492,12 @@ class Svir:
                 # create vector layer from the csv file exported by the
                 # platform (it is still not editable!)
                 vlayer_csv = QgsVectorLayer(uri,
-                                            'social_vulnerability_export',
+                                            'socioeconomic_data_export',
                                             'delimitedtext')
                 # obtain a in-memory copy of the layer (editable) and add it to
                 # the registry
                 layer = ProcessLayer(vlayer_csv).duplicate_in_memory(
-                    'social_vulnerability_zonal_layer',
+                    'socioeconomic_zonal_layer',
                     add_to_registry=True)
                 self.iface.setActiveLayer(layer)
                 self.project_definitions[layer.id()] = project_definition
@@ -836,7 +836,7 @@ class Svir:
         A loss_layer containing loss data points needs to be already loaded,
         and it can be a raster or vector layer.
         Another layer (zonal_layer) needs to be previously loaded as well,
-        containing social vulnerability data aggregated by zone.
+        containing socioeconomic data aggregated by zone.
         This method calls other methods of the class in order to produce
         a new aggregation_layer containing, for each feature (zone):
         * a zone id attribute, that can be taken from the zonal_layer or from
@@ -1186,7 +1186,7 @@ class Svir:
     def populate_svir_layer_with_loss_values(self):
         """
         Copy loss values from the aggregation layer to the svir layer
-        which already contains social vulnerability related attributes
+        which already contains socioeconomic related attributes
         taken from the zonal layer.
         """
         # to show the overall progress, cycling through zones
@@ -1233,7 +1233,7 @@ class Svir:
         Create a new layer merging (by zone id) social vulnerability
         and loss data
         """
-        # Create new svir layer, duplicating social vulnerability layer
+        # Create new svir layer, duplicating socioeconomic layer
         layer_name = tr("SVIR map")
         self.svir_layer = ProcessLayer(
             self.zonal_layer_to_merge).duplicate_in_memory(layer_name, True)
