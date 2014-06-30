@@ -59,7 +59,7 @@ from qgis.gui import QgsMessageBar
 
 from qgis.analysis import QgsZonalStatistics
 import processing as p
-from processing.saga.SagaUtils import SagaUtils
+from processing.algs.saga.SagaUtils import SagaUtils
 from calculate_iri_dialog import CalculateIRIDialog
 
 from process_layer import ProcessLayer
@@ -861,11 +861,13 @@ class Svir:
                 # otherwise we need to acquire the zones' geometries from the
                 # zonal layer and check if loss points are inside those zones
                 alg_name = 'saga:clippointswithpolygons'
-                msg = SagaUtils.checkSagaIsInstalled()
-                if msg is not None:
-                    msg += tr(" In order to cope with complex geometries, "
-                              "a working installation of SAGA is recommended.")
-                    QgsMessageLog.logMessage(msg)
+                # if SAGA is not installed, the check will return a error msg
+                err_msg = SagaUtils.checkSagaIsInstalled()
+                if err_msg is not None:
+                    err_msg += tr(" In order to cope with complex geometries, "
+                                  "a working installation of SAGA is "
+                                  "recommended.")
+                    QgsMessageLog.logMessage(err_msg)
                     self.calculate_vector_stats_using_geometries()
                 else:
                     # using SAGA to find out in which zone each point is
