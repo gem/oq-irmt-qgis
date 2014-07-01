@@ -30,6 +30,7 @@ from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox, QLabel, QLineEdit, QComboBox, )
 
 from ui.ui_create_weight_tree import Ui_CreateWeightTreeDialog
+from globals import NUMERIC_FIELD_TYPES
 
 
 class CreateWeightTreeDialog(QDialog):
@@ -59,6 +60,8 @@ class CreateWeightTreeDialog(QDialog):
     def generate_gui(self):
         dp = self.layer.dataProvider()
         fields = list(dp.fields())
+        numeric_fields = [field for field in fields
+                          if field.typeName() in NUMERIC_FIELD_TYPES]
 
         themes_list = []
         indicators_list = {}
@@ -75,7 +78,7 @@ class CreateWeightTreeDialog(QDialog):
             themes_list.sort()
         themes_list.insert(0, '')
 
-        for i, field in enumerate(fields, start=1):
+        for i, field in enumerate(numeric_fields, start=1):
             theme_name = ''
             indicator_name = ''
             if field.name() in indicators_list:
