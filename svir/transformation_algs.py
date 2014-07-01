@@ -30,16 +30,16 @@ from types import NoneType
 from PyQt4.QtCore import QPyNullVariant
 from utils import Register
 
-NORMALIZATION_ALGS = Register()
+TRANSFORMATION_ALGS = Register()
 RANK_VARIANTS = ('AVERAGE', 'MIN', 'MAX', 'DENSE', 'ORDINAL')
 QUADRATIC_VARIANTS = ('INCREASING', 'DECREASING')
 LOG10_VARIANTS = ('PRE-CHANGE ZEROS TO ONES', 'NO ZEROS ALLOWED')
 
 
-def normalize(features_dict, algorithm, variant_name="", inverse=False):
+def transform(features_dict, algorithm, variant_name="", inverse=False):
     """
     Use the chosen algorithm (and optional variant) on the input dict, and
-    return a dict containing the normalized values with the original ids
+    return a dict containing the transformed values with the original ids
     """
     # make a copy of the dictionary containing features (ids and values) and
     # remove elements containing missing values, so the normalization is
@@ -53,14 +53,14 @@ def normalize(features_dict, algorithm, variant_name="", inverse=False):
             dict_of_null_values[key] = value
     for key in dict_of_null_values.keys():
         del f_dict_copy[key]
-    normalized_list = algorithm(f_dict_copy.values(), variant_name, inverse)
-    normalized_dict = dict(zip(f_dict_copy.keys(), normalized_list))
-    # add to the normalized_dict the null elements that were removed
-    normalized_dict.update(dict_of_null_values)
-    return normalized_dict
+    transformed_list = algorithm(f_dict_copy.values(), variant_name, inverse)
+    transformed_dict = dict(zip(f_dict_copy.keys(), transformed_list))
+    # add to the transformed_dict the null elements that were removed
+    transformed_dict.update(dict_of_null_values)
+    return transformed_dict
 
 
-@NORMALIZATION_ALGS.add('RANK')
+@TRANSFORMATION_ALGS.add('RANK')
 def rank(input_list, variant_name="AVERAGE", inverse=False):
     """Assign ranks to data, dealing with ties appropriately.
 
@@ -164,11 +164,11 @@ def rank(input_list, variant_name="AVERAGE", inverse=False):
     return rank_list
 
 
-@NORMALIZATION_ALGS.add('Z_SCORE')
+@TRANSFORMATION_ALGS.add('Z_SCORE')
 def z_score(input_list, variant_name=None, inverse=False):
     """
     Direct:
-        Normalized(e_i) = (e_i - mean(e)) / stddev(e)
+        Transformed(e_i) = (e_i - mean(e)) / stddev(e)
     Inverse:
         Multiply each input by -1, before doing exactly the same
     """
@@ -185,13 +185,13 @@ def z_score(input_list, variant_name=None, inverse=False):
     return output_list
 
 
-@NORMALIZATION_ALGS.add('MIN_MAX')
+@TRANSFORMATION_ALGS.add('MIN_MAX')
 def min_max(input_list, variant_name=None, inverse=False):
     """
     Direct:
-        Normalized(e_i) = (e_i - min(e)) / (max(e) - min(e))
+        Transformed(e_i) = (e_i - min(e)) / (max(e) - min(e))
     Inverse:
-        Normalized(e_i) = 1 - [(e_i - min(e)) / (max(e) - min(e))]
+        Transformed(e_i) = 1 - [(e_i - min(e)) / (max(e) - min(e))]
 
     """
     if variant_name:
@@ -200,7 +200,7 @@ def min_max(input_list, variant_name=None, inverse=False):
     list_max = max(input_list)
     # Get the range of the list
     list_range = float(list_max - list_min)
-    # Normalize
+    # Transform
     if inverse:
         output_list = map(
             lambda x: 1.0 - ((x - list_min) / list_range), input_list)
@@ -210,7 +210,7 @@ def min_max(input_list, variant_name=None, inverse=False):
     return output_list
 
 
-@NORMALIZATION_ALGS.add('LOG10')
+@TRANSFORMATION_ALGS.add('LOG10')
 def log10_(input_list, variant_name='PRE-CHANGE ZEROS TO ONES', inverse=False):
     """
     Accept only input_list containing positive (or zero) values
@@ -243,7 +243,7 @@ def log10_(input_list, variant_name='PRE-CHANGE ZEROS TO ONES', inverse=False):
     return output_list
 
 
-@NORMALIZATION_ALGS.add('QUADRATIC')
+@TRANSFORMATION_ALGS.add('QUADRATIC')
 def simple_quadratic(input_list, variant_name="INCREASING", inverse=False):
     """
     Simple quadratic transformation (bottom = 0)

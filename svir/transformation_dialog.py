@@ -30,27 +30,27 @@ from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox)
 from qgis.core import QgsMapLayerRegistry, QgsMapLayer
 
-from ui.ui_normalization import Ui_NormalizationDialog
-from normalization_algs import (RANK_VARIANTS,
-                                QUADRATIC_VARIANTS,
-                                LOG10_VARIANTS,
-                                NORMALIZATION_ALGS)
+from ui.ui_transformation import Ui_TransformationDialog
+from transformation_algs import (RANK_VARIANTS,
+                                 QUADRATIC_VARIANTS,
+                                 LOG10_VARIANTS,
+                                 TRANSFORMATION_ALGS)
 
 from globals import NUMERIC_FIELD_TYPES
 from utils import reload_attrib_cbx, reload_layers_in_cbx
 
 
-class NormalizationDialog(QDialog):
+class TransformationDialog(QDialog):
     """
     Modal dialog giving to the user the possibility to select
-    a layer and an attribute of the same layer, and then a normalization
+    a layer and an attribute of the same layer, and then a transformation
     algorithm.
     """
     def __init__(self, iface):
         QDialog.__init__(self)
         self.iface = iface
         # Set up the user interface from Designer.
-        self.ui = Ui_NormalizationDialog()
+        self.ui = Ui_TransformationDialog()
         self.ui.setupUi(self)
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
         self.use_advanced = False
@@ -66,7 +66,7 @@ class NormalizationDialog(QDialog):
             self.ui.layer_cbx.setCurrentIndex(-1)
             self.ui.layer_cbx.blockSignals(False)
             self.ui.attrib_cbx.clear()
-        alg_list = NORMALIZATION_ALGS.keys()
+        alg_list = TRANSFORMATION_ALGS.keys()
         self.ui.algorithm_cbx.addItems(alg_list)
         if self.ui.algorithm_cbx.currentText() in ['RANK', 'QUADRATIC']:
             self.reload_variant_cbx()
