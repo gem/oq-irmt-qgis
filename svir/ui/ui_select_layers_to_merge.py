@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_select_layers_to_merge.ui'
 #
-# Created: Mon Mar  3 14:26:28 2014
+# Created: Mon Jun 30 17:20:44 2014
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!

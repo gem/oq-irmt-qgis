@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_choose_sv_data_source.ui'
 #
-# Created: Thu Feb 20 17:22:59 2014
+# Created: Mon Jun 30 17:47:38 2014
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -17,7 +17,7 @@ except AttributeError:
 class Ui_ChooseSvDataSourceDialog(object):
     def setupUi(self, ChooseSvDataSourceDialog):
         ChooseSvDataSourceDialog.setObjectName(_fromUtf8("ChooseSvDataSourceDialog"))
-        ChooseSvDataSourceDialog.resize(400, 300)
+        ChooseSvDataSourceDialog.resize(407, 300)
         ChooseSvDataSourceDialog.setModal(True)
         self.gridLayout = QtGui.QGridLayout(ChooseSvDataSourceDialog)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
@@ -42,8 +42,8 @@ class Ui_ChooseSvDataSourceDialog(object):
         QtCore.QMetaObject.connectSlotsByName(ChooseSvDataSourceDialog)
 
     def retranslateUi(self, ChooseSvDataSourceDialog):
-        ChooseSvDataSourceDialog.setWindowTitle(QtGui.QApplication.translate("ChooseSvDataSourceDialog", "Load social vulnerability data", None, QtGui.QApplication.UnicodeUTF8))
+        ChooseSvDataSourceDialog.setWindowTitle(QtGui.QApplication.translate("ChooseSvDataSourceDialog", "Load socioeconomic indicators", None, QtGui.QApplication.UnicodeUTF8))
         self.layer_rbn.setText(QtGui.QApplication.translate("ChooseSvDataSourceDialog", "Use one of the available layers", None, QtGui.QApplication.UnicodeUTF8))
         self.platform_rbn.setText(QtGui.QApplication.translate("ChooseSvDataSourceDialog", "Load data from the OpenQuake Platform", None, QtGui.QApplication.UnicodeUTF8))
-        self.question_lbl.setText(QtGui.QApplication.translate("ChooseSvDataSourceDialog", "Please select the source for the social vulnerability data", None, QtGui.QApplication.UnicodeUTF8))
+        self.question_lbl.setText(QtGui.QApplication.translate("ChooseSvDataSourceDialog", "Please select the source for the socioeconomic indicators", None, QtGui.QApplication.UnicodeUTF8))
 

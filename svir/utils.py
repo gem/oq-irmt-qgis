@@ -166,12 +166,12 @@ def toggle_select_features(layer, use_new, new_feature_ids, old_feature_ids):
 class Register(collections.OrderedDict):
     """
     Useful to keep (in a single point) a register of available variants of
-    something, e.g. a set of different normalization/standardization algorithms
+    something, e.g. a set of different transformation algorithms
     """
     def add(self, tag):
         """
         Add a new variant to the OrderedDict
-        For instance, if we add a class implementing a specific normalization
+        For instance, if we add a class implementing a specific transformation
         algorithm, the register will keep track of a new item having as key the
         name of the algorithm and as value the class implementing the algorithm
         """

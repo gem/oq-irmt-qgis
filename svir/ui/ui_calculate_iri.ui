@@ -14,7 +14,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Calculate Indices</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -23,35 +23,9 @@
       <string>SVI</string>
      </property>
      <layout class="QFormLayout" name="formLayout">
-      <item row="0" column="1">
-       <widget class="QComboBox" name="themes_combination_type">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <item>
-         <property name="text">
-          <string>Average</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Sum</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Multiplication</string>
-         </property>
-        </item>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_3">
-        <property name="text">
-         <string>Theme combination type</string>
-        </property>
-       </widget>
-      </item>
+      <property name="fieldGrowthPolicy">
+       <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+      </property>
       <item row="1" column="0">
        <widget class="QLabel" name="label_2">
         <property name="text">
@@ -81,6 +55,35 @@
         </item>
        </widget>
       </item>
+      <item row="3" column="1">
+       <widget class="QComboBox" name="themes_combination_type">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <item>
+         <property name="text">
+          <string>Average</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Sum</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Multiplication</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Theme combination type</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
@@ -106,7 +109,7 @@
       <item row="1" column="0">
        <widget class="QLabel" name="label_4">
         <property name="text">
-         <string>AAL layer</string>
+         <string>Risk layer</string>
         </property>
        </widget>
       </item>
@@ -116,7 +119,7 @@
       <item row="3" column="0">
        <widget class="QLabel" name="label_5">
         <property name="text">
-         <string>AAL field</string>
+         <string>Risk field</string>
         </property>
        </widget>
       </item>
@@ -145,7 +148,7 @@
       <item row="2" column="0">
        <widget class="QLabel" name="label_6">
         <property name="text">
-         <string>AAL id attribute</string>
+         <string>Zone ID in Risk layer</string>
         </property>
        </widget>
       </item>
@@ -155,7 +158,7 @@
       <item row="0" column="0">
        <widget class="QLabel" name="label_7">
         <property name="text">
-         <string>SVI id attribute</string>
+         <string>Zone ID in SVI layer</string>
         </property>
        </widget>
       </item>

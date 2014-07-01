@@ -14,7 +14,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Select attributes for statistical computations</string>
+   <string>Calculate Integrated Risk Indices</string>
   </property>
   <property name="modal">
    <bool>true</bool>
@@ -67,9 +67,9 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="normalize_btn">
+      <widget class="QPushButton" name="transform_btn">
        <property name="text">
-        <string>Normalize Attribute</string>
+        <string>Transform Attribute</string>
        </property>
       </widget>
      </item>

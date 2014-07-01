@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_select_attrs_for_stats.ui'
 #
-# Created: Fri Feb 28 11:32:34 2014
+# Created: Mon Jun 30 17:20:44 2014
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -49,9 +49,9 @@ class Ui_SelectAttrsForStatsDialog(object):
         self.calc_btn = QtGui.QPushButton(SelectAttrsForStatsDialog)
         self.calc_btn.setObjectName(_fromUtf8("calc_btn"))
         self.horizontalLayout.addWidget(self.calc_btn)
-        self.normalize_btn = QtGui.QPushButton(SelectAttrsForStatsDialog)
-        self.normalize_btn.setObjectName(_fromUtf8("normalize_btn"))
-        self.horizontalLayout.addWidget(self.normalize_btn)
+        self.transform_btn = QtGui.QPushButton(SelectAttrsForStatsDialog)
+        self.transform_btn.setObjectName(_fromUtf8("transform_btn"))
+        self.horizontalLayout.addWidget(self.transform_btn)
         self.buttonBox = QtGui.QDialogButtonBox(SelectAttrsForStatsDialog)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
         self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
@@ -65,10 +65,10 @@ class Ui_SelectAttrsForStatsDialog(object):
         QtCore.QMetaObject.connectSlotsByName(SelectAttrsForStatsDialog)
 
     def retranslateUi(self, SelectAttrsForStatsDialog):
-        SelectAttrsForStatsDialog.setWindowTitle(QtGui.QApplication.translate("SelectAttrsForStatsDialog", "Select attributes for statistical computations", None, QtGui.QApplication.UnicodeUTF8))
+        SelectAttrsForStatsDialog.setWindowTitle(QtGui.QApplication.translate("SelectAttrsForStatsDialog", "Calculate Integrated Risk Indices", None, QtGui.QApplication.UnicodeUTF8))
         self.layer_lbl.setText(QtGui.QApplication.translate("SelectAttrsForStatsDialog", "Layer", None, QtGui.QApplication.UnicodeUTF8))
         self.svi_attr_lbl.setText(QtGui.QApplication.translate("SelectAttrsForStatsDialog", "SVI attribute name", None, QtGui.QApplication.UnicodeUTF8))
         self.aggr_loss_attr_lbl.setText(QtGui.QApplication.translate("SelectAttrsForStatsDialog", "Aggregated loss attribute name", None, QtGui.QApplication.UnicodeUTF8))
         self.calc_btn.setText(QtGui.QApplication.translate("SelectAttrsForStatsDialog", "Advanced Calculator", None, QtGui.QApplication.UnicodeUTF8))
-        self.normalize_btn.setText(QtGui.QApplication.translate("SelectAttrsForStatsDialog", "Normalize Attribute", None, QtGui.QApplication.UnicodeUTF8))
+        self.transform_btn.setText(QtGui.QApplication.translate("SelectAttrsForStatsDialog", "Transform Attribute", None, QtGui.QApplication.UnicodeUTF8))
 
