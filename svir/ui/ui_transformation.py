@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_transformation.ui'
 #
-# Created: Tue Jul  1 12:03:29 2014
+# Created: Thu Jul  3 14:48:22 2014
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -74,7 +74,7 @@ class Ui_TransformationDialog(object):
         QtCore.QMetaObject.connectSlotsByName(TransformationDialog)
 
     def retranslateUi(self, TransformationDialog):
-        TransformationDialog.setWindowTitle(QtGui.QApplication.translate("TransformationDialog", "Field Transformation", None, QtGui.QApplication.UnicodeUTF8))
+        TransformationDialog.setWindowTitle(QtGui.QApplication.translate("TransformationDialog", "Field transformation", None, QtGui.QApplication.UnicodeUTF8))
         self.layer_lbl.setText(QtGui.QApplication.translate("TransformationDialog", "Layer", None, QtGui.QApplication.UnicodeUTF8))
         self.attrib_lbl.setText(QtGui.QApplication.translate("TransformationDialog", "Field", None, QtGui.QApplication.UnicodeUTF8))
         self.algorithm_lbl.setText(QtGui.QApplication.translate("TransformationDialog", "Transformation function", None, QtGui.QApplication.UnicodeUTF8))

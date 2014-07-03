@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_choose_sv_data_source.ui'
 #
-# Created: Mon Jun 30 17:47:38 2014
+# Created: Thu Jul  3 14:48:23 2014
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -17,7 +17,7 @@ except AttributeError:
 class Ui_ChooseSvDataSourceDialog(object):
     def setupUi(self, ChooseSvDataSourceDialog):
         ChooseSvDataSourceDialog.setObjectName(_fromUtf8("ChooseSvDataSourceDialog"))
-        ChooseSvDataSourceDialog.resize(407, 300)
+        ChooseSvDataSourceDialog.resize(407, 160)
         ChooseSvDataSourceDialog.setModal(True)
         self.gridLayout = QtGui.QGridLayout(ChooseSvDataSourceDialog)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))

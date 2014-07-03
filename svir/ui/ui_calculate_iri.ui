@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>363</width>
-    <height>348</height>
+    <height>360</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -40,17 +40,17 @@
         </property>
         <item>
          <property name="text">
-          <string>Average</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
           <string>Sum</string>
          </property>
         </item>
         <item>
          <property name="text">
           <string>Multiplication</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Average</string>
          </property>
         </item>
        </widget>
@@ -62,17 +62,17 @@
         </property>
         <item>
          <property name="text">
-          <string>Average</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
           <string>Sum</string>
          </property>
         </item>
         <item>
          <property name="text">
           <string>Multiplication</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Average</string>
          </property>
         </item>
        </widget>

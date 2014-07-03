@@ -14,7 +14,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Field Transformation</string>
+   <string>Field transformation</string>
   </property>
   <property name="modal">
    <bool>true</bool>

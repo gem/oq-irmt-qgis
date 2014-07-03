@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_select_layers_to_merge.ui'
 #
-# Created: Mon Jun 30 17:20:44 2014
+# Created: Thu Jul  3 14:48:22 2014
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -62,7 +62,7 @@ class Ui_SelectLayersToMergeDialog(object):
         QtCore.QMetaObject.connectSlotsByName(SelectLayersToMergeDialog)
 
     def retranslateUi(self, SelectLayersToMergeDialog):
-        SelectLayersToMergeDialog.setWindowTitle(QtGui.QApplication.translate("SelectLayersToMergeDialog", "Select layers to merge", None, QtGui.QApplication.UnicodeUTF8))
+        SelectLayersToMergeDialog.setWindowTitle(QtGui.QApplication.translate("SelectLayersToMergeDialog", "Merge loss and zonal data in a single layer", None, QtGui.QApplication.UnicodeUTF8))
         self.loss_layer_lbl.setText(QtGui.QApplication.translate("SelectLayersToMergeDialog", "Layer containing loss data", None, QtGui.QApplication.UnicodeUTF8))
         self.zonal_layer_lbl.setText(QtGui.QApplication.translate("SelectLayersToMergeDialog", "Layer containing zonal data", None, QtGui.QApplication.UnicodeUTF8))
         self.aggr_loss_attr_lbl.setText(QtGui.QApplication.translate("SelectLayersToMergeDialog", "Attribute for aggregated losses", None, QtGui.QApplication.UnicodeUTF8))

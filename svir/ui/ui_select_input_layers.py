@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_select_input_layers.ui'
 #
-# Created: Mon Jun 30 17:20:44 2014
+# Created: Thu Jul  3 14:48:22 2014
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -61,7 +61,7 @@ class Ui_SelectInputLayersDialog(object):
         QtCore.QMetaObject.connectSlotsByName(SelectInputLayersDialog)
 
     def retranslateUi(self, SelectInputLayersDialog):
-        SelectInputLayersDialog.setWindowTitle(QtGui.QApplication.translate("SelectInputLayersDialog", "Select input layers", None, QtGui.QApplication.UnicodeUTF8))
+        SelectInputLayersDialog.setWindowTitle(QtGui.QApplication.translate("SelectInputLayersDialog", "Aggregate loss by zone", None, QtGui.QApplication.UnicodeUTF8))
         self.loss_layer_lbl.setText(QtGui.QApplication.translate("SelectInputLayersDialog", "Loss layer", None, QtGui.QApplication.UnicodeUTF8))
         self.loss_layer_tbn.setText(QtGui.QApplication.translate("SelectInputLayersDialog", "...", None, QtGui.QApplication.UnicodeUTF8))
         self.zonal_layer_tbn.setText(QtGui.QApplication.translate("SelectInputLayersDialog", "...", None, QtGui.QApplication.UnicodeUTF8))

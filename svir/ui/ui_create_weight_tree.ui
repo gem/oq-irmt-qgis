@@ -14,13 +14,13 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Define Model Structure</string>
+   <string>Define model structure</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>Create your IRI by defining which fields appartain to which theme. Attributes need both a theme and a name to be considered in the IRI. You can generate a flat index (with no themes) by not entering any theme.</string>
+      <string>Create your indices by defining which fields appartain to which theme. Attributes need both a theme and a name to be considered in the index calculation. You can generate a flat index (with no themes) by not entering any theme.</string>
      </property>
      <property name="wordWrap">
       <bool>true</bool>
@@ -38,7 +38,7 @@
         <x>0</x>
         <y>0</y>
         <width>492</width>
-        <height>308</height>
+        <height>291</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout">

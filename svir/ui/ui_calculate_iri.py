@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_calculate_iri.ui'
 #
-# Created: Mon Jun 30 17:20:44 2014
+# Created: Thu Jul  3 14:48:23 2014
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -18,7 +18,7 @@ class Ui_CalculateIRIDialog(object):
     def setupUi(self, CalculateIRIDialog):
         CalculateIRIDialog.setObjectName(_fromUtf8("CalculateIRIDialog"))
         CalculateIRIDialog.setWindowModality(QtCore.Qt.ApplicationModal)
-        CalculateIRIDialog.resize(363, 348)
+        CalculateIRIDialog.resize(363, 360)
         self.verticalLayout = QtGui.QVBoxLayout(CalculateIRIDialog)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.groupBox = QtGui.QGroupBox(CalculateIRIDialog)
@@ -102,12 +102,12 @@ class Ui_CalculateIRIDialog(object):
         CalculateIRIDialog.setWindowTitle(QtGui.QApplication.translate("CalculateIRIDialog", "Calculate Indices", None, QtGui.QApplication.UnicodeUTF8))
         self.groupBox.setTitle(QtGui.QApplication.translate("CalculateIRIDialog", "SVI", None, QtGui.QApplication.UnicodeUTF8))
         self.label_2.setText(QtGui.QApplication.translate("CalculateIRIDialog", "Indicators combination type", None, QtGui.QApplication.UnicodeUTF8))
-        self.indicators_combination_type.setItemText(0, QtGui.QApplication.translate("CalculateIRIDialog", "Average", None, QtGui.QApplication.UnicodeUTF8))
-        self.indicators_combination_type.setItemText(1, QtGui.QApplication.translate("CalculateIRIDialog", "Sum", None, QtGui.QApplication.UnicodeUTF8))
-        self.indicators_combination_type.setItemText(2, QtGui.QApplication.translate("CalculateIRIDialog", "Multiplication", None, QtGui.QApplication.UnicodeUTF8))
-        self.themes_combination_type.setItemText(0, QtGui.QApplication.translate("CalculateIRIDialog", "Average", None, QtGui.QApplication.UnicodeUTF8))
-        self.themes_combination_type.setItemText(1, QtGui.QApplication.translate("CalculateIRIDialog", "Sum", None, QtGui.QApplication.UnicodeUTF8))
-        self.themes_combination_type.setItemText(2, QtGui.QApplication.translate("CalculateIRIDialog", "Multiplication", None, QtGui.QApplication.UnicodeUTF8))
+        self.indicators_combination_type.setItemText(0, QtGui.QApplication.translate("CalculateIRIDialog", "Sum", None, QtGui.QApplication.UnicodeUTF8))
+        self.indicators_combination_type.setItemText(1, QtGui.QApplication.translate("CalculateIRIDialog", "Multiplication", None, QtGui.QApplication.UnicodeUTF8))
+        self.indicators_combination_type.setItemText(2, QtGui.QApplication.translate("CalculateIRIDialog", "Average", None, QtGui.QApplication.UnicodeUTF8))
+        self.themes_combination_type.setItemText(0, QtGui.QApplication.translate("CalculateIRIDialog", "Sum", None, QtGui.QApplication.UnicodeUTF8))
+        self.themes_combination_type.setItemText(1, QtGui.QApplication.translate("CalculateIRIDialog", "Multiplication", None, QtGui.QApplication.UnicodeUTF8))
+        self.themes_combination_type.setItemText(2, QtGui.QApplication.translate("CalculateIRIDialog", "Average", None, QtGui.QApplication.UnicodeUTF8))
         self.label_3.setText(QtGui.QApplication.translate("CalculateIRIDialog", "Theme combination type", None, QtGui.QApplication.UnicodeUTF8))
         self.calculate_iri_check.setTitle(QtGui.QApplication.translate("CalculateIRIDialog", "IRI", None, QtGui.QApplication.UnicodeUTF8))
         self.label.setText(QtGui.QApplication.translate("CalculateIRIDialog", "IRI combination type", None, QtGui.QApplication.UnicodeUTF8))

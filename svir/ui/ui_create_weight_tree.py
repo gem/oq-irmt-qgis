@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_create_weight_tree.ui'
 #
-# Created: Tue Jul  1 14:14:54 2014
+# Created: Thu Jul  3 14:48:23 2014
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -29,7 +29,7 @@ class Ui_CreateWeightTreeDialog(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setObjectName(_fromUtf8("scrollArea"))
         self.scrollAreaWidgetContents = QtGui.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 492, 308))
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 492, 291))
         self.scrollAreaWidgetContents.setObjectName(_fromUtf8("scrollAreaWidgetContents"))
         self.gridLayout = QtGui.QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
@@ -69,8 +69,8 @@ class Ui_CreateWeightTreeDialog(object):
         QtCore.QMetaObject.connectSlotsByName(CreateWeightTreeDialog)
 
     def retranslateUi(self, CreateWeightTreeDialog):
-        CreateWeightTreeDialog.setWindowTitle(QtGui.QApplication.translate("CreateWeightTreeDialog", "Define Model Structure", None, QtGui.QApplication.UnicodeUTF8))
-        self.label.setText(QtGui.QApplication.translate("CreateWeightTreeDialog", "Create your IRI by defining which fields appartain to which theme. Attributes need both a theme and a name to be considered in the IRI. You can generate a flat index (with no themes) by not entering any theme.", None, QtGui.QApplication.UnicodeUTF8))
+        CreateWeightTreeDialog.setWindowTitle(QtGui.QApplication.translate("CreateWeightTreeDialog", "Define model structure", None, QtGui.QApplication.UnicodeUTF8))
+        self.label.setText(QtGui.QApplication.translate("CreateWeightTreeDialog", "Create your indices by defining which fields appartain to which theme. Attributes need both a theme and a name to be considered in the index calculation. You can generate a flat index (with no themes) by not entering any theme.", None, QtGui.QApplication.UnicodeUTF8))
         self.label_4.setText(QtGui.QApplication.translate("CreateWeightTreeDialog", "Name", None, QtGui.QApplication.UnicodeUTF8))
         self.label_3.setText(QtGui.QApplication.translate("CreateWeightTreeDialog", "Theme", None, QtGui.QApplication.UnicodeUTF8))
         self.label_2.setText(QtGui.QApplication.translate("CreateWeightTreeDialog", "Attribute", None, QtGui.QApplication.UnicodeUTF8))
