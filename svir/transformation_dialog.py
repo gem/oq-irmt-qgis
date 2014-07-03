@@ -103,6 +103,7 @@ class TransformationDialog(QDialog):
 
     def reload_variant_cbx(self):
         self.ui.variant_cbx.clear()
+        self.ui.variant_cbx.setEnabled(True)
         if self.ui.algorithm_cbx.currentText() == 'RANK':
             self.ui.variant_cbx.addItems(RANK_VARIANTS)
         elif self.ui.algorithm_cbx.currentText() == 'QUADRATIC':
