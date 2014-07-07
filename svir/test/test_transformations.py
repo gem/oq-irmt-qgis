@@ -31,13 +31,13 @@ import qgis
 if qgis:
     pass
 from PyQt4.QtCore import QPyNullVariant
-from svir.normalization_algs import normalize, NORMALIZATION_ALGS
+from svir.transformation_algs import transform, TRANSFORMATION_ALGS
 import unittest
 
 
 class MissingValuesTestCase(unittest.TestCase):
 
-    def test_normalize_with_missing_values(self):
+    def test_transform_with_missing_values(self):
         # when retrieving data through the platform, the SQL query produces
         # NULL in case of missing values, where the type of those NULL elements
         # is QPyNullVariant
@@ -56,16 +56,16 @@ class MissingValuesTestCase(unittest.TestCase):
                              '3': 1,
                              '4': null_value,
                              '5': 2.5}
-            alg = NORMALIZATION_ALGS['RANK']
+            alg = TRANSFORMATION_ALGS['RANK']
             variant = "AVERAGE"
-            normalized_dict = normalize(features_dict, alg, variant)
-            self.assertEqual(normalized_dict, expected_dict)
+            transformed_dict = transform(features_dict, alg, variant)
+            self.assertEqual(transformed_dict, expected_dict)
 
 
 class RankTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.alg = NORMALIZATION_ALGS["RANK"]
+        self.alg = TRANSFORMATION_ALGS["RANK"]
         self.input_list = [2, 0, 2, 1, 2, 3, 2]
 
     def test_rank_direct_average(self):
@@ -122,7 +122,7 @@ class RankTestCase(unittest.TestCase):
 class MinMaxTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.alg = NORMALIZATION_ALGS["MIN_MAX"]
+        self.alg = TRANSFORMATION_ALGS["MIN_MAX"]
         self.input_list = [2, 0, 2, 1, 2, 3, 2]
 
     def test_min_max_direct(self):
@@ -149,7 +149,7 @@ class MinMaxTestCase(unittest.TestCase):
 class ZScoreTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.alg = NORMALIZATION_ALGS["Z_SCORE"]
+        self.alg = TRANSFORMATION_ALGS["Z_SCORE"]
         self.input_list = [2, 0, 2, 1, 2, 3, 2]
 
     def test_z_score_direct(self):
@@ -180,7 +180,7 @@ class ZScoreTestCase(unittest.TestCase):
 class Log10TestCase(unittest.TestCase):
 
     def setUp(self):
-        self.alg = NORMALIZATION_ALGS["LOG10"]
+        self.alg = TRANSFORMATION_ALGS["LOG10"]
 
     def test_log10_all_positive_values(self):
         input_list = [101249,
@@ -236,7 +236,7 @@ class Log10TestCase(unittest.TestCase):
 class QuadraticTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.alg = NORMALIZATION_ALGS["QUADRATIC"]
+        self.alg = TRANSFORMATION_ALGS["QUADRATIC"]
         self.input_list = [80089,
                            83696,
                            249586,

@@ -48,9 +48,9 @@ class SelectAttrsForStatsDialog(QDialog):
         self.ui.setupUi(self)
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
         self.ui.calc_btn.setEnabled(False)
-        self.ui.normalize_btn.setEnabled(False)
+        self.ui.transform_btn.setEnabled(False)
         self.use_advanced = False
-        self.use_normalize_dialog = False
+        self.use_transform_dialog = False
         reg = QgsMapLayerRegistry.instance()
         layer_list = [l.name() for l in reg.mapLayers().values()]
         self.ui.layer_cbx.addItems(layer_list)
@@ -81,15 +81,15 @@ class SelectAttrsForStatsDialog(QDialog):
         self.iface.actionOpenFieldCalculator().trigger()
 
     @pyqtSlot()
-    def on_normalize_btn_clicked(self):
+    def on_transform_btn_clicked(self):
         self.close()
-        self.use_normalize_dialog = True
+        self.use_transform_dialog = True
 
     @pyqtSlot(str)
     def on_layer_cbx_currentIndexChanged(self):
         a_layer_is_selected = self.ui.layer_cbx.currentIndex() != -1
         self.ui.calc_btn.setEnabled(a_layer_is_selected)
-        self.ui.normalize_btn.setEnabled(a_layer_is_selected)
+        self.ui.transform_btn.setEnabled(a_layer_is_selected)
         self.reload_attribs_cbx()
 
     def reload_attribs_cbx(self):

@@ -72,7 +72,7 @@ if resources_rc:
 from select_input_layers_dialog import SelectInputLayersDialog
 from select_layers_to_merge_dialog import SelectLayersToMergeDialog
 from attribute_selection_dialog import AttributeSelectionDialog
-from normalization_dialog import NormalizationDialog
+from transformation_dialog import TransformationDialog
 from select_attrs_for_stats_dialog import SelectAttrsForStatsDialog
 from select_sv_variables_dialog import SelectSvVariablesDialog
 from settings_dialog import SettingsDialog
@@ -165,54 +165,26 @@ class Svir:
         self.toolbar = self.iface.addToolBar('SVIR')
         self.toolbar.setObjectName('SVIRToolBar')
 
-        # Action to activate the modal dialog to set up settings for the
-        # connection with the platform
-        self.add_menu_item("settings",
-                           ":/plugins/svir/start_plugin_icon.png",
-                           u"&SVIR settings",
-                           self.settings,
-                           enable=True)
-        # Action to activate the modal dialog to import social vulnerability
+        # Action to activate the modal dialog to import socioeconomic
         # data from the platform
         self.add_menu_item("choose_sv_data_source",
                            ":/plugins/svir/start_plugin_icon.png",
-                           u"&Choose social vulnerability data source",
+                           u"&Load socioeconomic indicators",
                            self.choose_sv_data_source,
                            enable=True)
-        # Action to activate the modal dialog to guide the user through loss
-        # aggregation by zone
-        self.add_menu_item("aggregate_losses",
-                           ":/plugins/svir/start_plugin_icon.png",
-                           u"&Aggregate loss by zone",
-                           self.select_input_layers,
-                           enable=True)
         # Action to activate the modal dialog to select a layer and one of its
-        # attributes, in order to normalize that attribute
-        self.add_menu_item("normalize_attribute",
+        # attributes, in order to transform that attribute
+        self.add_menu_item("transform_attribute",
                            ":/plugins/svir/start_plugin_icon.png",
-                           u"&Normalize attribute",
-                           self.normalize_attribute,
+                           u"&Transform attribute",
+                           self.transform_attribute,
                            enable=False,
                            add_to_layer_actions=True)
-        # Action for merging SVI with loss data (both aggregated by zone)
-        self.add_menu_item("merge_svi_and_losses",
-                           ":/plugins/svir/start_plugin_icon.png",
-                           u"Merge SVI and loss data by zone",
-                           self.merge_svi_with_aggr_losses,
-                           enable=False)
-        # Action for calculating RISKPLUS, RISKMULT and RISK1F indices
-        self.add_menu_item(
-            "calculate_svir_indices",
-            ":/plugins/svir/start_plugin_icon.png",
-            u"Calculate RISKPLUS, RISKMULT and RISK1F indices",
-            self.calculate_svir_indices,
-            enable=False,
-            add_to_layer_actions=True)
         # Action to activate the modal dialog to choose weighting of the
         # data from the platform
         self.add_menu_item("create_weight_tree",
                            ":/plugins/svir/start_plugin_icon.png",
-                           u"&Create/edit weight tree",
+                           u"&Define model structure",
                            self.create_weight_tree,
                            enable=False,
                            add_to_layer_actions=True)
@@ -224,22 +196,47 @@ class Svir:
                            self.weight_data,
                            enable=False,
                            add_to_layer_actions=True)
-
-        # Action to calculate the SVI
-        self.add_menu_item("calculate_svi",
+        # Action to calculate the SVI or the IRI
+        self.add_menu_item("calculate_indices",
                            ":/plugins/svir/start_plugin_icon.png",
-                           u"&Calculate SVI",
-                           self.calculate_svi,
+                           u"&Calculate indices",
+                           self.calculate_indices,
                            enable=False,
                            add_to_layer_actions=True)
-
+        # Action to activate the modal dialog to guide the user through loss
+        # aggregation by zone
+        self.add_menu_item("aggregate_losses",
+                           ":/plugins/svir/start_plugin_icon.png",
+                           u"&Aggregate loss by zone",
+                           self.select_input_layers,
+                           enable=True)
+        # Action for merging SVI with loss data (both aggregated by zone)
+        self.add_menu_item("merge_svi_and_losses",
+                           ":/plugins/svir/start_plugin_icon.png",
+                           u"Merge SVI and loss data by zone",
+                           self.merge_svi_with_aggr_losses,
+                           enable=False)
+        # Action for calculating RISKPLUS, RISKMULT and RISK1F indices
+        self.add_menu_item("calculate_svir_indices",
+                           ":/plugins/svir/start_plugin_icon.png",
+                           u"Calculate common integrated risk indices",
+                           self.calculate_svir_indices,
+                           enable=False,
+                           add_to_layer_actions=True)
         # Action to upload
         self.add_menu_item("upload",
                            ":/plugins/svir/start_plugin_icon.png",
-                           u"&Upload project",
+                           u"&Upload project to the OpenQuake Platform",
                            self.upload,
                            enable=False,
                            add_to_layer_actions=True)
+        # Action to activate the modal dialog to set up settings for the
+        # connection with the platform
+        self.add_menu_item("settings",
+                           ":/plugins/svir/start_plugin_icon.png",
+                           u"&OpenQuake Platform connection settings",
+                           self.settings,
+                           enable=True)
         self.update_actions_status()
 
     def layers_added(self):
@@ -291,8 +288,8 @@ class Svir:
         # Check if actions can be enabled
         reg = QgsMapLayerRegistry.instance()
         layer_count = len(list(reg.mapLayers()))
-        # Enable/disable "normalize" action
-        self.registered_actions["normalize_attribute"].setDisabled(
+        # Enable/disable "transform" action
+        self.registered_actions["transform_attribute"].setDisabled(
             layer_count == 0)
         # Enable/disable "merge SVI and aggregated losses" action
         self.registered_actions["merge_svi_and_losses"].setDisabled(
@@ -307,7 +304,7 @@ class Svir:
             proj_def = self.project_definitions[self.current_layer.id()]
             self.registered_actions["create_weight_tree"].setEnabled(True)
             self.registered_actions["weight_data"].setEnabled(True)
-            self.registered_actions["calculate_svi"].setEnabled(True)
+            self.registered_actions["calculate_indices"].setEnabled(True)
             try:
                 proj_def['IRI_operator']
                 self.registered_actions["upload"].setEnabled(True)
@@ -318,13 +315,13 @@ class Svir:
             # self.project_definitions[self.current_layer.id()] is not defined
             self.registered_actions["create_weight_tree"].setEnabled(True)
             self.registered_actions["weight_data"].setEnabled(False)
-            self.registered_actions["calculate_svi"].setEnabled(False)
+            self.registered_actions["calculate_indices"].setEnabled(False)
         except AttributeError:
             # self.current_layer.id() does not exist or self.current_layer
             # is not vector
             self.registered_actions["create_weight_tree"].setEnabled(False)
             self.registered_actions["weight_data"].setEnabled(False)
-            self.registered_actions["calculate_svi"].setEnabled(False)
+            self.registered_actions["calculate_indices"].setEnabled(False)
 
     def unload(self):
         # Remove the plugin menu items and toolbar icons
@@ -349,7 +346,7 @@ class Svir:
         vulnerability and a layer containing loss data points. After data are
         loaded, self.create_aggregation_layer() and self.calculate_stats()
         are automatically called, in order to aggregate loss points with
-        respect to the same geometries defined for the social vulnerability
+        respect to the same geometries defined for the socioeconomic
         data, and to compute zonal statistics (loss sum, average and product
         for each zone)
         """
@@ -414,7 +411,7 @@ class Svir:
 
     def import_sv_variables(self):
         """
-        Open a modal dialog to select social vulnerability variables to
+        Open a modal dialog to select socioeconomic variables to
         download from the openquake platform
         """
 
@@ -437,7 +434,7 @@ class Svir:
         try:
             dlg = SelectSvVariablesDialog(sv_downloader)
             if dlg.exec_():
-                msg = ("Loading social vulnerability data from the OpenQuake "
+                msg = ("Loading socioeconomic data from the OpenQuake "
                        "Platform...")
                 # Retrieve the indices selected by the user
                 indices_list = []
@@ -478,7 +475,7 @@ class Svir:
                         return
 
                 display_msg = tr(
-                    "Social vulnerability data loaded in a new layer")
+                    "Socioeconomic data loaded in a new layer")
                 self.iface.messageBar().pushMessage(tr("Info"),
                                                     tr(display_msg),
                                                     level=QgsMessageBar.INFO,
@@ -492,12 +489,12 @@ class Svir:
                 # create vector layer from the csv file exported by the
                 # platform (it is still not editable!)
                 vlayer_csv = QgsVectorLayer(uri,
-                                            'social_vulnerability_export',
+                                            'socioeconomic_data_export',
                                             'delimitedtext')
                 # obtain a in-memory copy of the layer (editable) and add it to
                 # the registry
                 layer = ProcessLayer(vlayer_csv).duplicate_in_memory(
-                    'social_vulnerability_zonal_layer',
+                    'socioeconomic_zonal_layer',
                     add_to_registry=True)
                 self.iface.setActiveLayer(layer)
                 self.project_definitions[layer.id()] = project_definition
@@ -574,7 +571,7 @@ class Svir:
         # one we had before opening the dlg and we use it do reset the changes
         self.redraw_ir_layer(project_definition)
 
-    def calculate_svi(self):
+    def calculate_indices(self):
         """
         add an SVI attribute to the current layer
         """
@@ -666,16 +663,16 @@ class Svir:
         else:
             return False
 
-    def normalize_attribute(self):
+    def transform_attribute(self):
         """
         A modal dialog is displayed to the user, for the selection of a layer,
-        one of its attributes, a normalization algorithm and a variant of the
+        one of its attributes, a transformation algorithm and a variant of the
         algorithm
         """
-        dlg = NormalizationDialog(self.iface)
+        dlg = TransformationDialog(self.iface)
         reg = QgsMapLayerRegistry.instance()
         if not reg.count():
-            msg = 'No layer available for normalization'
+            msg = 'No layer available for transformation'
             self.iface.messageBar().pushMessage(
                 tr("Error"),
                 tr(msg),
@@ -688,14 +685,15 @@ class Svir:
             algorithm_name = dlg.ui.algorithm_cbx.currentText()
             variant = dlg.ui.variant_cbx.currentText()
             inverse = dlg.ui.inverse_ckb.isChecked()
+            new_attr_name = dlg.ui.new_field_name_txt.text()
             try:
                 with WaitCursorManager("Applying transformation", self.iface):
-                    ProcessLayer(layer).normalize_attribute(attribute_name,
-                                                            algorithm_name,
-                                                            variant,
-                                                            inverse)
+                    res_attr_name = ProcessLayer(layer).transform_attribute(
+                        attribute_name, algorithm_name, variant,
+                        inverse, new_attr_name)
                 msg = ('The result of the transformation has been added to'
-                       'layer %s as a new attribute') % layer.name()
+                       'layer %s as a new attribute named %s') % (
+                    layer.name(), res_attr_name)
                 self.iface.messageBar().pushMessage(
                     tr("Info"),
                     tr(msg),
@@ -836,7 +834,7 @@ class Svir:
         A loss_layer containing loss data points needs to be already loaded,
         and it can be a raster or vector layer.
         Another layer (zonal_layer) needs to be previously loaded as well,
-        containing social vulnerability data aggregated by zone.
+        containing socioeconomic data aggregated by zone.
         This method calls other methods of the class in order to produce
         a new aggregation_layer containing, for each feature (zone):
         * a zone id attribute, that can be taken from the zonal_layer or from
@@ -1186,7 +1184,7 @@ class Svir:
     def populate_svir_layer_with_loss_values(self):
         """
         Copy loss values from the aggregation layer to the svir layer
-        which already contains social vulnerability related attributes
+        which already contains socioeconomic related attributes
         taken from the zonal layer.
         """
         # to show the overall progress, cycling through zones
@@ -1233,7 +1231,7 @@ class Svir:
         Create a new layer merging (by zone id) social vulnerability
         and loss data
         """
-        # Create new svir layer, duplicating social vulnerability layer
+        # Create new svir layer, duplicating socioeconomic layer
         layer_name = tr("SVIR map")
         self.svir_layer = ProcessLayer(
             self.zonal_layer_to_merge).duplicate_in_memory(layer_name, True)
@@ -1327,8 +1325,8 @@ class Svir:
                     tr(msg),
                     level=QgsMessageBar.INFO,
                     duration=8)
-        elif dlg.use_normalize_dialog:
-            self.normalize_attribute()
+        elif dlg.use_transform_dialog:
+            self.transform_attribute()
         self.update_actions_status()
 
     def upload(self):

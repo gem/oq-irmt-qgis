@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'ui/ui_weight_data.ui'
 #
-# Created: Tue Apr 29 16:48:29 2014
-#      by: PyQt4 UI code generator 4.10.3
+# Created: Thu Jul  3 14:48:23 2014
+#      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,16 +12,7 @@ from PyQt4 import QtCore, QtGui
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
-    def _fromUtf8(s):
-        return s
-
-try:
-    _encoding = QtGui.QApplication.UnicodeUTF8
-    def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig, _encoding)
-except AttributeError:
-    def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig)
+    _fromUtf8 = lambda s: s
 
 class Ui_WeightDataDialog(object):
     def setupUi(self, WeightDataDialog):
@@ -45,6 +36,6 @@ class Ui_WeightDataDialog(object):
         QtCore.QMetaObject.connectSlotsByName(WeightDataDialog)
 
     def retranslateUi(self, WeightDataDialog):
-        WeightDataDialog.setWindowTitle(_translate("WeightDataDialog", "Dialog", None))
+        WeightDataDialog.setWindowTitle(QtGui.QApplication.translate("WeightDataDialog", "Weight Data", None, QtGui.QApplication.UnicodeUTF8))
 
 from PyQt4 import QtWebKit

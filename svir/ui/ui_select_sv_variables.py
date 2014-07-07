@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_select_sv_variables.ui'
 #
-# Created: Mon Mar  3 14:47:19 2014
+# Created: Thu Jul  3 14:48:22 2014
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -73,7 +73,7 @@ class Ui_SelectSvVariablesDialog(object):
         QtCore.QMetaObject.connectSlotsByName(SelectSvVariablesDialog)
 
     def retranslateUi(self, SelectSvVariablesDialog):
-        SelectSvVariablesDialog.setWindowTitle(QtGui.QApplication.translate("SelectSvVariablesDialog", "Select social vulnerability variables", None, QtGui.QApplication.UnicodeUTF8))
+        SelectSvVariablesDialog.setWindowTitle(QtGui.QApplication.translate("SelectSvVariablesDialog", "Select socioeconomic indicators", None, QtGui.QApplication.UnicodeUTF8))
         self.theme_lbl.setText(QtGui.QApplication.translate("SelectSvVariablesDialog", "Theme", None, QtGui.QApplication.UnicodeUTF8))
         self.subtheme_lbl.setText(QtGui.QApplication.translate("SelectSvVariablesDialog", "Subtheme", None, QtGui.QApplication.UnicodeUTF8))
         self.tag_lbl.setText(QtGui.QApplication.translate("SelectSvVariablesDialog", "Tag", None, QtGui.QApplication.UnicodeUTF8))

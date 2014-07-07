@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>NormalizationDialog</class>
- <widget class="QDialog" name="NormalizationDialog">
+ <class>TransformationDialog</class>
+ <widget class="QDialog" name="TransformationDialog">
   <property name="windowModality">
    <enum>Qt::ApplicationModal</enum>
   </property>
@@ -9,12 +9,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>207</height>
+    <width>539</width>
+    <height>260</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Normalize Attribute</string>
+   <string>Field transformation</string>
   </property>
   <property name="modal">
    <bool>true</bool>
@@ -32,14 +32,14 @@
      <item row="1" column="0">
       <widget class="QLabel" name="attrib_lbl">
        <property name="text">
-        <string>Attribute</string>
+        <string>Field</string>
        </property>
       </widget>
      </item>
      <item row="2" column="0">
       <widget class="QLabel" name="algorithm_lbl">
        <property name="text">
-        <string>Algorithm</string>
+        <string>Transformation function</string>
        </property>
       </widget>
      </item>
@@ -62,10 +62,27 @@
      <item row="3" column="1">
       <widget class="QComboBox" name="variant_cbx"/>
      </item>
-     <item row="4" column="0">
+     <item row="5" column="0">
       <widget class="QCheckBox" name="inverse_ckb">
        <property name="text">
         <string>Inverse</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="new_field_name_lbl">
+       <property name="text">
+        <string>New field name</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QLineEdit" name="new_field_name_txt">
+       <property name="maxLength">
+        <number>10</number>
+       </property>
+       <property name="placeholderText">
+        <string>Type name or use transformation name by default</string>
        </property>
       </widget>
      </item>
@@ -95,7 +112,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>NormalizationDialog</receiver>
+   <receiver>TransformationDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -111,7 +128,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>NormalizationDialog</receiver>
+   <receiver>TransformationDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

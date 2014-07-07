@@ -14,7 +14,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Select layers to merge</string>
+   <string>Merge loss and zonal data in a single layer</string>
   </property>
   <property name="modal">
    <bool>true</bool>
