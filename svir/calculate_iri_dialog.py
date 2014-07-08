@@ -75,9 +75,9 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
             iri_operator = self.iri_combination_type.currentText()
 
             calculate_iri(self.iface, self.current_layer,
-                          self.project_definition, iri_operator, svi_attr_id,
-                          svi_id_field, aal_layer, aal_field, aal_id_field,
-                          discarded_feats_ids)
+                          self.project_definition, svi_attr_id, svi_id_field,
+                          aal_layer, aal_field, aal_id_field,
+                          discarded_feats_ids, iri_operator)
         else:
             self.project_definition.pop('iri_field', None)
 

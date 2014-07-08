@@ -37,7 +37,7 @@ from utils import LayerEditingManager, tr, toggle_select_features_widget
 
 
 def calculate_svi(iface, current_layer, project_definition,
-                  indicators_operator, themes_operator):
+                  indicators_operator='Sum', themes_operator='Sum'):
     """
     add an SVI attribute to the current layer
     """
@@ -158,9 +158,9 @@ def calculate_svi(iface, current_layer, project_definition,
                                        level=QgsMessageBar.CRITICAL)
 
 
-def calculate_iri(iface, current_layer, project_definition, iri_operator,
-                  svi_attr_id, svi_id_field, aal_layer, aal_field, aal_id_field,
-                  discarded_feats_ids):
+def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
+                  svi_id_field, aal_layer, aal_field, aal_id_field,
+                  discarded_feats_ids, iri_operator='Sum'):
     """
     Copy the AAL and calculate an IRI attribute to the current layer
     """

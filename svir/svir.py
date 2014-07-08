@@ -308,10 +308,10 @@ class Svir:
             proj_def = self.project_definitions[self.current_layer.id()]
             self.registered_actions["create_weight_tree"].setEnabled(True)
             self.registered_actions["calculate_indices"].setEnabled(True)
+            self.registered_actions["weight_data"].setEnabled(True)
 
-            # SVI was calculated once at least
-            self.registered_actions["weight_data"].setEnabled(
-                'svi_field' in proj_def)
+            # TODO maybe we want to have only an svi to allow upload, in that
+            # case use 'svi_field' in proj_def
             # If IRI was calculated once at least enable upload
             self.registered_actions["upload"].setEnabled(
                 'iri_field' in proj_def)
@@ -567,6 +567,22 @@ class Svir:
         current_layer_id = self.current_layer.id()
         project_definition = self.project_definitions[current_layer_id]
         old_project_definition = copy.deepcopy(project_definition)
+
+        if 'svi_field' not in project_definition:
+            # no svi wa calculatet before trying to change weights, so we
+            # calculate one.
+            calculate_svi(self.iface, self.current_layer, project_definition)
+
+            # add the calculated svi as default one.
+            # TODO we might consider removing this and remove the generated svi
+            old_project_definition = project_definition
+
+            msg = 'An SVI was calculated using the default methods'
+            self.iface.messageBar().pushMessage(tr("Info"),
+                                                tr(msg),
+                                                level=QgsMessageBar.INFO,
+                                                duration=8)
+
         svi_attr_id, iri_attr_id, aal_field_id = self.recalculate_indexes(
             project_definition)
         dlg = WeightDataDialog(self.iface, project_definition)
@@ -609,12 +625,14 @@ class Svir:
             svi_id_field = data['svi_id_field']
             iri_operator = data['iri_operator']
 
-            iri_attr_id, aal_field_id = calculate_iri(
-                self.iface,
-                self.current_layer,
-                project_definition, iri_operator, svi_attr_id,
-                svi_id_field, aal_layer, aal_field, aal_id_field,
-                discarded_feats_ids)
+            iri_attr_id, aal_field_id = calculate_iri(self.iface,
+                                                      self.current_layer,
+                                                      project_definition,
+                                                      svi_attr_id, svi_id_field,
+                                                      aal_layer, aal_field,
+                                                      aal_id_field,
+                                                      discarded_feats_ids,
+                                                      iri_operator)
 
         return svi_attr_id, iri_attr_id, aal_field_id
 
