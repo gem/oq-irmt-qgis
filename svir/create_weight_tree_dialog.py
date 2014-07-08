@@ -26,6 +26,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+from PyQt4.QtCore import Qt
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox, QLabel, QLineEdit, QComboBox, )
 
@@ -86,6 +87,7 @@ class CreateWeightTreeDialog(QDialog):
                 indicator_name = indicators_list[field.name()][1]
 
             label = QLabel(field.name())
+            label.setTextInteractionFlags(Qt.TextSelectableByMouse)
 
             theme = QComboBox()
             theme.setEditable(True)
@@ -100,6 +102,7 @@ class CreateWeightTreeDialog(QDialog):
             self.theme_boxes.append(theme)
 
             name = QLineEdit(indicator_name)
+            #name.setPlaceholderText(field.name())
             name.editingFinished.connect(self.check_status)
 
             self.ui.grid_layout.addWidget(label, i, 0)
