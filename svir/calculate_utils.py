@@ -87,8 +87,16 @@ def calculate_svi(iface, current_layer, project_definition,
                             discard_feat = True
                             discarded_feats_ids.append(feat_id)
                             break
-                        indicator_weighted = (feat[indicator['field']] *
-                                              indicator['weight'])
+                        # For "Average" it's equivalent to use equal
+                        # weights, or to sum the indicators (all weights 1)
+                        # and divide by the number of indicators (we use
+                        # the latter solution)
+                        if indicators_operator == 'Average':
+                            indicator_weighted = feat[indicator['field']]
+                        else:
+                            indicator_weighted = (feat[indicator['field']] *
+                                                  indicator['weight'])
+
                         if indicators_operator in \
                                 SUM_BASED_COMBINATIONS:
                             theme_result += indicator_weighted
@@ -101,7 +109,15 @@ def calculate_svi(iface, current_layer, project_definition,
                         theme_result /= len(indicators)
 
                     # combine the indicators of each theme
-                    theme_weighted = theme_result * theme['weight']
+                    # For "Average" it's equivalent to use equal
+                    # weights, or to sum the themes (all weights 1)
+                    # and divide by the number of themes (we use
+                    # the latter solution)
+                    if themes_operator == 'Average':
+                        theme_weighted = theme_result
+                    else:
+                        theme_weighted = theme_result * theme['weight']
+
                     if themes_operator in SUM_BASED_COMBINATIONS:
                         svi_value += theme_weighted
                     elif themes_operator in MUL_BASED_COMBINATIONS:
@@ -195,8 +211,11 @@ def calculate_iri(iface, current_layer, project_definition, iri_operator,
                     iri_value = (
                         svi_value * svi_weight * aal_value * aal_weight)
                 elif iri_operator == 'Average':
-                    iri_value = (svi_value * svi_weight +
-                                 aal_value * aal_weight) / 2.0
+                    # For "Average" it's equivalent to use equal
+                    # weights, or to sum the indices (all weights 1)
+                    # and divide by the number of indices (we use
+                    # the latter solution)
+                    iri_value = (svi_value + aal_value) / 2.0
 
                 # copy AAL
                 current_layer.changeAttributeValue(
