@@ -102,7 +102,7 @@ class CreateWeightTreeDialog(QDialog):
             self.theme_boxes.append(theme)
 
             name = QLineEdit(indicator_name)
-            #name.setPlaceholderText(field.name())
+            name.setPlaceholderText(field.name())
             name.editingFinished.connect(self.check_status)
 
             self.ui.grid_layout.addWidget(label, i, 0)
@@ -138,6 +138,8 @@ class CreateWeightTreeDialog(QDialog):
     def check_status(self):
         valid_with_theme = True
         valid_without_theme = True
+        enough_indicators = False
+
         for i in range(1, self.ui.grid_layout.rowCount()):
             theme = self.ui.grid_layout.itemAtPosition(
                 i, 1).widget().currentText()
@@ -146,6 +148,9 @@ class CreateWeightTreeDialog(QDialog):
             if theme:
                 valid_without_theme = False
 
+            if name:
+                enough_indicators = True
+
             #either both or none are set
             if theme and name or (not theme and not name):
                 continue
@@ -153,6 +158,9 @@ class CreateWeightTreeDialog(QDialog):
                 valid_with_theme = False
 
         if valid_with_theme or valid_without_theme:
-            self.ok_button.setEnabled(True)
+            if enough_indicators:
+                self.ok_button.setEnabled(True)
+            else:
+                self.ok_button.setEnabled(False)
         else:
             self.ok_button.setDisabled(True)
