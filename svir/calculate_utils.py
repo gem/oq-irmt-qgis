@@ -37,20 +37,33 @@ from utils import LayerEditingManager, tr, toggle_select_features_widget
 
 
 def calculate_svi(iface, current_layer, project_definition,
-                  indicators_operator='Sum', themes_operator='Sum'):
+                  indicators_operator=None, themes_operator=None,
+                  reuse_field=False):
     """
     add an SVI attribute to the current layer
     """
+    #set default
+    if indicators_operator is None:
+        indicators_operator = 'Sum'
+    if themes_operator is None:
+        themes_operator = 'Sum'
+
     themes = project_definition['children'][1]['children']
-    svi_attr_name = 'SVI'
-    svi_field = QgsField(svi_attr_name, QVariant.Double)
-    svi_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
-    attr_names = ProcessLayer(current_layer).add_attributes(
-        [svi_field])
+
+    if reuse_field and 'svi_field' in project_definition:
+        svi_attr_name = project_definition['svi_field']
+        if DEBUG:
+            print 'Reusing %s' % svi_attr_name
+    else:
+        svi_attr_name = 'SVI'
+        svi_field = QgsField(svi_attr_name, QVariant.Double)
+        svi_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
+        attr_names = ProcessLayer(current_layer).add_attributes(
+            [svi_field])
+        svi_attr_name = attr_names[svi_attr_name]
 
     # get the id of the new attribute
-    svi_attr_id = ProcessLayer(current_layer).find_attribute_id(
-        attr_names[svi_attr_name])
+    svi_attr_id = ProcessLayer(current_layer).find_attribute_id(svi_attr_name)
 
     discarded_feats_ids = []
     try:
@@ -103,6 +116,11 @@ def calculate_svi(iface, current_layer, project_definition,
                         elif indicators_operator in \
                                 MUL_BASED_COMBINATIONS:
                             theme_result *= indicator_weighted
+                        else:
+                            error_message = (
+                                'invalid indicators_operator: %s' %
+                                indicators_operator)
+                            raise RuntimeError(error_message)
                     if discard_feat:
                         break
                     if indicators_operator == 'Average':
@@ -132,7 +150,7 @@ def calculate_svi(iface, current_layer, project_definition,
                     feat_id, svi_attr_id, svi_value)
         msg = ('The SVI has been calculated for fields containing '
                'non-NULL values and it was added to the layer as '
-               'a new attribute called %s') % attr_names[svi_attr_name]
+               'a new attribute called %s') % svi_attr_name
         iface.messageBar().pushMessage(
             tr('Info'), tr(msg), level=QgsMessageBar.INFO)
         if discarded_feats_ids:
@@ -148,7 +166,7 @@ def calculate_svi(iface, current_layer, project_definition,
 
         project_definition['indicators_operator'] = indicators_operator
         project_definition['themes_operator'] = themes_operator
-        project_definition['svi_field'] = attr_names[svi_attr_name]
+        project_definition['svi_field'] = svi_attr_name
         return svi_attr_id, discarded_feats_ids
 
     except TypeError as e:
@@ -160,10 +178,14 @@ def calculate_svi(iface, current_layer, project_definition,
 
 def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
                   svi_id_field, aal_layer, aal_field, aal_id_field,
-                  discarded_feats_ids, iri_operator='Sum'):
+                  discarded_feats_ids, iri_operator=None):
     """
     Copy the AAL and calculate an IRI attribute to the current layer
     """
+
+    #set default
+    if iri_operator is None:
+        iri_operator = 'Sum'
 
     aal_weight = project_definition['children'][0]['weight']
     svi_weight = project_definition['children'][1]['weight']

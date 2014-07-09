@@ -102,7 +102,6 @@ class CreateWeightTreeDialog(QDialog):
             self.theme_boxes.append(theme)
 
             name = QLineEdit(indicator_name)
-            name.setPlaceholderText(field.name())
             name.textChanged.connect(self.check_status)
 
             self.ui.grid_layout.addWidget(label, i, 0)
@@ -116,7 +115,7 @@ class CreateWeightTreeDialog(QDialog):
         if new_theme not in self.themes:
             self.themes.update([new_theme])
             for theme_box in self.theme_boxes:
-                # needed to avoid a strange behavoiur when generating_gui
+                # needed to avoid a strange behaviour when generating_gui
                 if theme_box.findText(new_theme) == -1:
                     theme_box.addItem(new_theme)
             self.check_status()
