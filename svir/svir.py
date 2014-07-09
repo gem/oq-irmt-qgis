@@ -569,23 +569,8 @@ class Svir:
         project_definition = self.project_definitions[current_layer_id]
         old_project_definition = copy.deepcopy(project_definition)
 
-        if 'svi_field' not in project_definition:
-            # no svi wa calculatet before trying to change weights, so we
-            # calculate one.
-            calculate_svi(self.iface, self.current_layer, project_definition)
-
-            # add the calculated svi as default one.
-            # TODO we might consider removing this and remove the generated svi
-            old_project_definition = project_definition
-
-            msg = 'An SVI was calculated using the default methods'
-            self.iface.messageBar().pushMessage(tr("Info"),
-                                                tr(msg),
-                                                level=QgsMessageBar.INFO,
-                                                duration=8)
-
         svi_attr_id, iri_attr_id, aal_field_id = self.recalculate_indexes(
-            project_definition)
+            project_definition, reuse_indices=True)
         dlg = WeightDataDialog(self.iface, project_definition)
         dlg.json_cleaned.connect(self.weights_changed)
         self.redraw_ir_layer(dlg.project_definition)
@@ -600,21 +585,29 @@ class Svir:
         dlg.json_cleaned.disconnect(self.weights_changed)
         # if the dlg was not accepted, self.project_definition is still the
         # one we had before opening the dlg and we use it do reset the changes
-        self.redraw_ir_layer(project_definition)
+        # if the user cancels the weighting before a definitive index was
+        # created, we don't redraw
+        if 'svi_field' in project_definition:
+            self.redraw_ir_layer(project_definition)
 
     def weights_changed(self, data):
+        self.recalculate_indexes(data, reuse_indices=True)
         self.redraw_ir_layer(data)
 
-    def recalculate_indexes(self, data):
+    def recalculate_indexes(self, data, reuse_indices=False):
         project_definition = self.project_definitions[self.current_layer.id()]
 
-        indicators_operator = data['indicators_operator']
-        themes_operator = data['themes_operator']
+        try:
+            indicators_operator = data['indicators_operator']
+            themes_operator = data['themes_operator']
+        except KeyError:
+            indicators_operator = None
+            themes_operator = None
 
         # when updating weights, we need to recalculate the indexes
         svi_attr_id, discarded_feats_ids = calculate_svi(
             self.iface, self.current_layer, project_definition,
-            indicators_operator, themes_operator)
+            indicators_operator, themes_operator, True)
 
         iri_attr_id = None
         aal_field_id = None
