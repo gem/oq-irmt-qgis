@@ -62,7 +62,7 @@ class ProcessLayer():
             proposed_attribute_dict = {}
             proposed_attribute_list = []
             for input_attribute in attribute_list:
-                input_attribute_name = input_attribute.name()
+                input_attribute_name = input_attribute.name()[:10]
                 proposed_attribute_name = input_attribute_name
                 i = 1
                 while True:
@@ -71,8 +71,12 @@ class ProcessLayer():
                     if proposed_attribute_name in current_attribute_names:
                         # If the attribute is already assigned, change the
                         # proposed_attribute_name
+                        i_num_digits = len(str(i))
+                        # 10 = shapefile limit
+                        # 1 = underscore
+                        max_name_len = 10 - i_num_digits - 1
                         proposed_attribute_name = '%s_%d' % (
-                            input_attribute_name, i)
+                            input_attribute_name[:max_name_len], i)
                         i += 1
                     else:
                         # If the attribute name is not already assigned,
@@ -87,7 +91,7 @@ class ProcessLayer():
                 raise AttributeError(
                     'Unable to add attributes %s' % proposed_attribute_list)
         return proposed_attribute_dict
-	
+
     def delete_attributes(self, attribute_list):
         """
         Delete attributes from the layer
