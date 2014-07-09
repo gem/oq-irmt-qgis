@@ -607,7 +607,7 @@ class Svir:
         # when updating weights, we need to recalculate the indexes
         svi_attr_id, discarded_feats_ids = calculate_svi(
             self.iface, self.current_layer, project_definition,
-            indicators_operator, themes_operator, True)
+            indicators_operator, themes_operator, reuse_indices)
 
         iri_attr_id = None
         aal_field_id = None
