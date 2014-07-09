@@ -87,7 +87,7 @@ class ProcessLayer():
                 raise AttributeError(
                     'Unable to add attributes %s' % proposed_attribute_list)
         return proposed_attribute_dict
-	
+
     def delete_attributes(self, attribute_list):
         """
         Delete attributes from the layer
@@ -102,6 +102,7 @@ class ProcessLayer():
             layer_pr = self.layer.dataProvider()
             print "REMOVING %s" % attribute_list
             #TODO fix this
+            print "TODO fix ProcessLayer.delete_attributes()"
             #return layer_pr.deleteAttributes(attribute_list)
 
     def transform_attribute(
