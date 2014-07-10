@@ -31,7 +31,7 @@ from PyQt4.QtCore import QSettings, Qt
 from PyQt4.QtGui import QApplication, QProgressBar, QToolButton
 from qgis.core import QgsMapLayerRegistry
 from settings_dialog import SettingsDialog
-from qgis.gui import QgsMessageBar, QgsMessageBar
+from qgis.gui import QgsMessageBar
 
 
 def tr(message):
@@ -187,9 +187,9 @@ def toggle_select_features_widget(title, text, button_text, layer,
     button.setText(button_text)
     button.toggled.connect(
         lambda on,
-               layer=layer,
-               new_feature_ids=new_feature_ids,
-               old_feature_ids=old_feature_ids:
+        layer=layer,
+        new_feature_ids=new_feature_ids,
+        old_feature_ids=old_feature_ids:
         toggle_select_features(layer,
                                on,
                                new_feature_ids,
