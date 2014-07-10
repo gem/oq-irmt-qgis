@@ -28,7 +28,7 @@
 
 
 from PyQt4.QtCore import QVariant, QPyNullVariant
-from qgis.core import QgsField, QgsMapLayerRegistry, QgsVectorJoinInfo
+from qgis.core import QgsField
 from qgis.gui import QgsMessageBar
 from globals import (DOUBLE_FIELD_TYPE_NAME, DEBUG, SUM_BASED_COMBINATIONS,
                      MUL_BASED_COMBINATIONS)
@@ -177,8 +177,7 @@ def calculate_svi(iface, current_layer, project_definition,
 
 
 def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
-                  svi_id_field, aal_layer, aal_field, aal_id_field,
-                  discarded_feats_ids, iri_operator=None):
+                  aal_field_name, discarded_feats_ids, iri_operator=None):
     """
     Copy the AAL and calculate an IRI attribute to the current layer
     """
@@ -193,27 +192,13 @@ def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
     iri_attr_name = 'IRI'
     iri_field = QgsField(iri_attr_name, QVariant.Double)
     iri_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
-    copy_aal_attr_name = 'AAL'
-    aal_attribute = QgsField(copy_aal_attr_name, QVariant.Double)
-    aal_attribute.setTypeName(DOUBLE_FIELD_TYPE_NAME)
 
-    attr_names = ProcessLayer(current_layer).add_attributes(
-        [aal_attribute, iri_field])
+    attr_names = ProcessLayer(current_layer).add_attributes([iri_field])
 
     # get the id of the new attributes
     iri_attr_id = ProcessLayer(current_layer).find_attribute_id(
         attr_names[iri_attr_name])
-    copy_aal_attr_id = ProcessLayer(current_layer).find_attribute_id(
-        attr_names[copy_aal_attr_name])
 
-    join_layer = QgsMapLayerRegistry.instance().mapLayersByName(aal_layer)[0]
-    join_info = QgsVectorJoinInfo()
-    join_info.joinLayerId = join_layer.id()
-    join_info.joinFieldName = aal_id_field
-    join_info.targetFieldName = svi_id_field
-    current_layer.addJoin(join_info)
-
-    aal_attr_name = '%s_%s' % (aal_layer, aal_field)
     discarded_aal_feats_ids = []
 
     try:
@@ -221,7 +206,7 @@ def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
             for feat in current_layer.getFeatures():
                 feat_id = feat.id()
                 svi_value = feat.attributes()[svi_attr_id]
-                aal_value = feat[aal_attr_name]
+                aal_value = feat[aal_field_name]
                 if (aal_value == QPyNullVariant(float)
                         or feat_id in discarded_feats_ids):
                     iri_value = QPyNullVariant(float)
@@ -238,21 +223,13 @@ def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
                     # and divide by the number of indices (we use
                     # the latter solution)
                     iri_value = (svi_value + aal_value) / 2.0
-
-                # copy AAL
-                current_layer.changeAttributeValue(
-                    feat_id, copy_aal_attr_id, aal_value)
                 # store IRI
                 current_layer.changeAttributeValue(
                     feat_id, iri_attr_id, iri_value)
         project_definition['iri_operator'] = iri_operator
         # set the field name for the copied AAL layer
-        project_definition['aal_field'] = attr_names[copy_aal_attr_name]
-        project_definition['joined_aal_field'] = aal_field
+        project_definition['aal_field'] = aal_field_name
         project_definition['iri_field'] = attr_names[iri_attr_name]
-        project_definition['aal_id_field'] = aal_id_field
-        project_definition['svi_id_field'] = svi_id_field
-        project_definition['aal_layer'] = aal_layer
         msg = ('The IRI has been calculated for fields containing '
                'non-NULL values and it was added to the layer as '
                'a new attribute called %s') % attr_names[iri_attr_name]
@@ -267,13 +244,11 @@ def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
             discarded_aal_feats_ids,
             current_layer.selectedFeaturesIds())
         iface.messageBar().pushWidget(widget, QgsMessageBar.WARNING)
-        return iri_attr_id, copy_aal_attr_id
+        return iri_attr_id
 
     except TypeError as e:
         current_layer.dataProvider().deleteAttributes(
-            [iri_attr_id, copy_aal_attr_id])
+            [iri_attr_id])
         msg = 'Could not calculate IRI due to data problems: %s' % e
         iface.messageBar().pushMessage(tr('Error'), tr(msg),
                                        level=QgsMessageBar.CRITICAL)
-    finally:
-        current_layer.removeJoin(join_info.joinLayerId)
