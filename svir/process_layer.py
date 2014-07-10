@@ -107,6 +107,7 @@ class ProcessLayer():
             print "REMOVING %s" % attribute_list
             #TODO fix this
             print "TODO fix ProcessLayer.delete_attributes()"
+            print "this attributes should be deleted: %s" % attribute_list
             #return layer_pr.deleteAttributes(attribute_list)
 
     def transform_attribute(
