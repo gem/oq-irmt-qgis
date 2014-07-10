@@ -63,7 +63,12 @@ from qgis.gui import QgsMessageBar
 
 from qgis.analysis import QgsZonalStatistics
 import processing as p
-from processing.algs.saga.SagaUtils import SagaUtils
+try:
+    from processing.algs.saga.SagaUtils import SagaUtils
+    saga_was_imported = True
+except:
+    print "Unable to import SagaUtils module from processing.algs.saga"
+    saga_was_imported = False
 from calculate_iri_dialog import CalculateIRIDialog
 from calculate_utils import calculate_svi, calculate_iri
 
@@ -570,7 +575,7 @@ class Svir:
         project_definition = self.project_definitions[current_layer_id]
         old_project_definition = copy.deepcopy(project_definition)
 
-        svi_attr_id, iri_attr_id, aal_field_id = self.recalculate_indexes(
+        svi_attr_id, iri_attr_id = self.recalculate_indexes(
             project_definition, reuse_indices=True)
         dlg = WeightDataDialog(self.iface, project_definition)
         dlg.json_cleaned.connect(self.weights_changed)
@@ -581,7 +586,7 @@ class Svir:
         else:
             project_definition = old_project_definition
             ProcessLayer(self.current_layer).delete_attributes(
-                [svi_attr_id, iri_attr_id, aal_field_id])
+                [svi_attr_id, iri_attr_id])
 
         dlg.json_cleaned.disconnect(self.weights_changed)
         # if the dlg was not accepted, self.project_definition is still the
@@ -611,7 +616,6 @@ class Svir:
             indicators_operator, themes_operator, reuse_indices)
 
         iri_attr_id = None
-        aal_field_id = None
         # if an IRi has been already calculated, calculate a new one
         if 'iri_field' in data:
             aal_layer = data['aal_layer']
@@ -620,11 +624,11 @@ class Svir:
             svi_id_field = data['svi_id_field']
             iri_operator = data['iri_operator']
 
-            iri_attr_id, aal_field_id = calculate_iri(
+            iri_attr_id = calculate_iri(
                 self.iface, self.current_layer, project_definition,
                 svi_attr_id, svi_id_field, aal_layer, aal_field,
                 aal_id_field, discarded_feats_ids, iri_operator)
-        return svi_attr_id, iri_attr_id, aal_field_id
+        return svi_attr_id, iri_attr_id
 
     def calculate_indices(self):
         """
@@ -910,7 +914,10 @@ class Svir:
                 # zonal layer and check if loss points are inside those zones
                 alg_name = 'saga:clippointswithpolygons'
                 # if SAGA is not installed, the check will return a error msg
-                err_msg = SagaUtils.checkSagaIsInstalled()
+                if saga_was_imported:
+                    err_msg = SagaUtils.checkSagaIsInstalled()
+                else:
+                    err_msg = 'SagaUtils was not imported.'
                 if err_msg is not None:
                     err_msg += tr(" In order to cope with complex geometries, "
                                   "a working installation of SAGA is "

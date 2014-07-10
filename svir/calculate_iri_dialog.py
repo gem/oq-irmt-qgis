@@ -28,12 +28,11 @@
 
 
 from PyQt4.QtGui import QDialog, QDialogButtonBox
-from qgis.core import QgsMapLayerRegistry, QgsMapLayer
 
 from ui.ui_calculate_iri import Ui_CalculateIRIDialog
 from globals import NUMERIC_FIELD_TYPES, TEXTUAL_FIELD_TYPES
 from calculate_utils import calculate_iri, calculate_svi
-from utils import reload_attrib_cbx, reload_layers_in_cbx
+from utils import reload_attrib_cbx
 
 
 class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
@@ -47,12 +46,7 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
         self.setupUi(self)
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         self.calculate_iri = self.calculate_iri_check.isChecked()
-
-        reload_layers_in_cbx(self.aal_layer,
-                             [QgsMapLayer.VectorLayer],
-                             [self.current_layer.id()])
-        reload_attrib_cbx(self.svi_id_field, self.current_layer,
-                          NUMERIC_FIELD_TYPES, TEXTUAL_FIELD_TYPES)
+        reload_attrib_cbx(self.aal_field, current_layer, NUMERIC_FIELD_TYPES)
         self.ok_button.setEnabled(True)
 
     def calculate(self):
@@ -68,16 +62,11 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
             indicators_operator, themes_operator)
 
         if self.calculate_iri_check.isChecked():
-            aal_layer = self.aal_layer.currentText()
-            aal_field = self.aal_field.currentText()
-            aal_id_field = self.aal_id_field.currentText()
-            svi_id_field = self.svi_id_field.currentText()
+            aal_field_name = self.aal_field.currentText()
             iri_operator = self.iri_combination_type.currentText()
-
             calculate_iri(self.iface, self.current_layer,
-                          self.project_definition, svi_attr_id, svi_id_field,
-                          aal_layer, aal_field, aal_id_field,
-                          discarded_feats_ids, iri_operator)
+                          self.project_definition, svi_attr_id,
+                          aal_field_name, discarded_feats_ids, iri_operator)
         else:
             self.project_definition.pop('iri_field', None)
 
@@ -91,17 +80,8 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
     def on_aal_field_currentIndexChanged(self, index):
         self.check_iri_fields()
 
-    def on_aal_layer_currentIndexChanged(self, index):
-        selected_layer = QgsMapLayerRegistry.instance().mapLayers().values()[
-            self.aal_layer.currentIndex()]
-        reload_attrib_cbx(self.aal_field, selected_layer, NUMERIC_FIELD_TYPES)
-        reload_attrib_cbx(self.aal_id_field, selected_layer,
-                          NUMERIC_FIELD_TYPES, TEXTUAL_FIELD_TYPES)
-        self.check_iri_fields()
-
     def check_iri_fields(self):
         valid_state = False
-        if (self.aal_field.currentText() and self.aal_layer.currentText()
-                and self.aal_id_field and self.svi_id_field):
+        if self.aal_field.currentText():
             valid_state = True
         self.ok_button.setEnabled(valid_state)
