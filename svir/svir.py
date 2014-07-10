@@ -583,6 +583,7 @@ class Svir:
                 [svi_attr_id, iri_attr_id, aal_field_id])
 
         dlg.json_cleaned.disconnect(self.weights_changed)
+        self.project_definitions[current_layer_id] = project_definition
         # if the dlg was not accepted, self.project_definition is still the
         # one we had before opening the dlg and we use it do reset the changes
         # if the user cancels the weighting before a definitive index was
