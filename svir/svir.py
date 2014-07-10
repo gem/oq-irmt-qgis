@@ -569,23 +569,34 @@ class Svir:
         project_definition = self.project_definitions[current_layer_id]
         old_project_definition = copy.deepcopy(project_definition)
 
-        svi_attr_id, iri_attr_id, aal_field_id = self.recalculate_indexes(
-            project_definition)
+        first_svi = False
+        if 'svi_field' not in project_definition:
+            # auto generate svi field
+            first_svi = True
+            svi_attr_id, iri_attr_id, aal_field_id = self.recalculate_indexes(
+                project_definition)
+
         dlg = WeightDataDialog(self.iface, project_definition)
         dlg.json_cleaned.connect(self.weights_changed)
-        self.redraw_ir_layer(dlg.project_definition)
+
         if dlg.exec_():
             project_definition = dlg.project_definition
             self.update_actions_status()
         else:
             project_definition = old_project_definition
-            ProcessLayer(self.current_layer).delete_attributes(
-                [svi_attr_id, iri_attr_id, aal_field_id])
+            if first_svi:
+                # delete auto generated svi field
+                ProcessLayer(self.current_layer).delete_attributes(
+                    [svi_attr_id, iri_attr_id, aal_field_id])
+            else:
+                # recalculate with the old weights
+                self.recalculate_indexes(project_definition)
 
         dlg.json_cleaned.disconnect(self.weights_changed)
+
+        # store the correct project definitions
         self.project_definitions[current_layer_id] = project_definition
-        # if the dlg was not accepted, self.project_definition is still the
-        # one we had before opening the dlg and we use it do reset the changes
+
         # if the user cancels the weighting before a definitive index was
         # created, we don't redraw
         if 'svi_field' in project_definition:
