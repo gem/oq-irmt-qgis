@@ -576,7 +576,7 @@ class Svir:
         old_project_definition = copy.deepcopy(project_definition)
 
         svi_attr_id, iri_attr_id = self.recalculate_indexes(
-            project_definition, reuse_indices=True)
+            project_definition)
         dlg = WeightDataDialog(self.iface, project_definition)
         dlg.json_cleaned.connect(self.weights_changed)
         self.redraw_ir_layer(dlg.project_definition)
@@ -589,6 +589,7 @@ class Svir:
                 [svi_attr_id, iri_attr_id])
 
         dlg.json_cleaned.disconnect(self.weights_changed)
+        self.project_definitions[current_layer_id] = project_definition
         # if the dlg was not accepted, self.project_definition is still the
         # one we had before opening the dlg and we use it do reset the changes
         # if the user cancels the weighting before a definitive index was
@@ -597,11 +598,11 @@ class Svir:
             self.redraw_ir_layer(project_definition)
 
     def weights_changed(self, data):
-        self.recalculate_indexes(data, reuse_indices=True)
+        self.recalculate_indexes(data)
         self.redraw_ir_layer(data)
 
-    def recalculate_indexes(self, data, reuse_indices=False):
-        project_definition = self.project_definitions[self.current_layer.id()]
+    def recalculate_indexes(self, data):
+        project_definition = data
 
         try:
             indicators_operator = data['indicators_operator']
@@ -613,7 +614,7 @@ class Svir:
         # when updating weights, we need to recalculate the indexes
         svi_attr_id, discarded_feats_ids = calculate_svi(
             self.iface, self.current_layer, project_definition,
-            indicators_operator, themes_operator, reuse_indices)
+            indicators_operator, themes_operator, True)
 
         iri_attr_id = None
         # if an IRi has been already calculated, calculate a new one
