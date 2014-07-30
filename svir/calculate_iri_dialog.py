@@ -46,6 +46,9 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
         self.setupUi(self)
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         self.calculate_iri = self.calculate_iri_check.isChecked()
+        self.recalculate_svi = self.recalculate_svi_check.isChecked()
+        reload_attrib_cbx(
+            self.svi_field_cbx, current_layer, NUMERIC_FIELD_TYPES)
         reload_attrib_cbx(self.aal_field, current_layer, NUMERIC_FIELD_TYPES)
         self.ok_button.setEnabled(True)
 
@@ -70,7 +73,22 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
         else:
             self.project_definition.pop('iri_field', None)
 
+    def on_recalculate_svi_check_toggled(self, on):
+        self.svi_field_cbx.setEnabled(not on)
+        self.indicators_combination_type.setEnabled(on)
+        self.themes_combination_type.setEnabled(on)
+
     def on_calculate_iri_check_toggled(self, on):
+        self.recalculate_svi_check.setChecked(not on)
+        # if "recalculate svi" is checked ==> enable combination types and
+        # disable svi field combo
+        # otherwise ==> disable combination types and enable svi field combo
+        self.indicators_combination_type.setEnabled(
+            self.recalculate_svi_check.isChecked())
+        self.themes_combination_type.setEnabled(
+            self.recalculate_svi_check.isChecked())
+        self.svi_field_cbx.setEnabled(
+            not self.recalculate_svi_check.isChecked())
         self.calculate_iri = on
         if self.calculate_iri:
             self.check_iri_fields()
