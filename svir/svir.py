@@ -630,16 +630,12 @@ class Svir:
         iri_attr_id = None
         # if an IRi has been already calculated, calculate a new one
         if 'iri_field' in data:
-            aal_layer = data['aal_layer']
             aal_field = data['joined_aal_field']
-            aal_id_field = data['aal_id_field']
-            svi_id_field = data['svi_id_field']
             iri_operator = data['iri_operator']
 
             iri_attr_id = calculate_iri(
                 self.iface, self.current_layer, project_definition,
-                svi_attr_id, svi_id_field, aal_layer, aal_field,
-                aal_id_field, discarded_feats_ids, iri_operator)
+                svi_attr_id, aal_field, discarded_feats_ids, iri_operator)
         return svi_attr_id, iri_attr_id
 
     def calculate_indices(self):

@@ -30,9 +30,10 @@
 from PyQt4.QtGui import QDialog, QDialogButtonBox
 
 from ui.ui_calculate_iri import Ui_CalculateIRIDialog
-from globals import NUMERIC_FIELD_TYPES, TEXTUAL_FIELD_TYPES
+from globals import NUMERIC_FIELD_TYPES
 from calculate_utils import calculate_iri, calculate_svi
 from utils import reload_attrib_cbx
+from process_layer import ProcessLayer
 
 
 class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
@@ -45,8 +46,6 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
         self.project_definition = project_definition
         self.setupUi(self)
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
-        self.calculate_iri = self.calculate_iri_check.isChecked()
-        self.recalculate_svi = self.recalculate_svi_check.isChecked()
         reload_attrib_cbx(
             self.svi_field_cbx, current_layer, NUMERIC_FIELD_TYPES)
         reload_attrib_cbx(self.aal_field, current_layer, NUMERIC_FIELD_TYPES)
@@ -60,9 +59,17 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
         indicators_operator = self.indicators_combination_type.currentText()
         themes_operator = self.themes_combination_type.currentText()
 
-        svi_attr_id, discarded_feats_ids = calculate_svi(
-            self.iface, self.current_layer, self.project_definition,
-            indicators_operator, themes_operator)
+        if self.recalculate_svi_check.isChecked():
+            svi_attr_id, discarded_feats_ids = calculate_svi(
+                self.iface, self.current_layer, self.project_definition,
+                indicators_operator, themes_operator)
+
+        else:
+            svi_attr_name = self.svi_field_cbx.currentText()
+            svi_attr_id = ProcessLayer(
+                self.current_layer).find_attribute_id(svi_attr_name)
+            # FIXME: get the NULL values for the SVI attribute
+            discarded_feats_ids = []
 
         if self.calculate_iri_check.isChecked():
             aal_field_name = self.aal_field.currentText()
@@ -90,7 +97,7 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
         self.svi_field_cbx.setEnabled(
             not self.recalculate_svi_check.isChecked())
         self.calculate_iri = on
-        if self.calculate_iri:
+        if self.calculate_iri_check.isChecked():
             self.check_iri_fields()
         else:
             self.ok_button.setEnabled(True)
