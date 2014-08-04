@@ -33,7 +33,9 @@ from utils import Register
 TRANSFORMATION_ALGS = Register()
 RANK_VARIANTS = ('AVERAGE', 'MIN', 'MAX', 'DENSE', 'ORDINAL')
 QUADRATIC_VARIANTS = ('INCREASING', 'DECREASING')
-LOG10_VARIANTS = ('PRE-CHANGE ZEROS TO ONES', 'NO ZEROS ALLOWED')
+LOG10_VARIANTS = ('INCREMENT BY ONE IF ZEROS ARE FOUND',
+                  'PRE-CHANGE ZEROS TO ONES',
+                  'NO ZEROS ALLOWED')
 
 
 def transform(features_dict, algorithm, variant_name="", inverse=False):
@@ -211,12 +213,17 @@ def min_max(input_list, variant_name=None, inverse=False):
 
 
 @TRANSFORMATION_ALGS.add('LOG10')
-def log10_(input_list, variant_name='PRE-CHANGE ZEROS TO ONES', inverse=False):
+def log10_(input_list,
+           variant_name='INCREMENT BY ONE IF ZEROS ARE FOUND',
+           inverse=False):
     """
     Accept only input_list containing positive (or zero) values
-    In case of zeros, the variant PRE-CHANGE ZEROS TO ONES sets those values
-    to 1 (this differs from the built-in QGIS log10 function available in the
-    field calculator, which returns None in case of zeros)
+    In case of zeros:
+        * the variant PRE-CHANGE ZEROS TO ONES sets those values
+          to 1 (this differs from the built-in QGIS log10 function available
+          in the field calculator, which returns None in case of zeros)
+        * the variant INCREMENT BY ONE IF ZEROS ARE FOUND increments all input
+          data by 1
     Then use numpy.log10 function to perform the log10 transformation on the
     list of values
     """
@@ -232,6 +239,12 @@ def log10_(input_list, variant_name='PRE-CHANGE ZEROS TO ONES', inverse=False):
             corrected_value = input_value if input_value > 0 else 1.0
             input_copy.append(corrected_value)
         output_list = list(log10(input_copy))
+    elif variant_name == 'INCREMENT BY ONE IF ZEROS ARE FOUND':
+        if any(n == 0 for n in input_list):
+            corrected_input = [input_value + 1 for input_value in input_list]
+        else:
+            corrected_input = input_list[:]
+        output_list = list(log10(corrected_input))
     elif variant_name == 'NO ZEROS ALLOWED':
         if any(n == 0 for n in input_list):
             raise ValueError("The attribute contains zeros which have not "
