@@ -34,7 +34,6 @@ TRANSFORMATION_ALGS = Register()
 RANK_VARIANTS = ('AVERAGE', 'MIN', 'MAX', 'DENSE', 'ORDINAL')
 QUADRATIC_VARIANTS = ('INCREASING', 'DECREASING')
 LOG10_VARIANTS = ('INCREMENT BY ONE IF ZEROS ARE FOUND',
-                  'PRE-CHANGE ZEROS TO ONES',
                   'NO ZEROS ALLOWED')
 
 
@@ -233,12 +232,6 @@ def log10_(input_list,
     if any(n < 0 for n in input_list):
         raise ValueError("log10 transformation can not be performed if "
                          "the field contains negative values")
-    if variant_name == 'PRE-CHANGE ZEROS TO ONES':
-        input_copy = []
-        for input_value in input_list:
-            corrected_value = input_value if input_value > 0 else 1.0
-            input_copy.append(corrected_value)
-        output_list = list(log10(input_copy))
     elif variant_name == 'INCREMENT BY ONE IF ZEROS ARE FOUND':
         if any(n == 0 for n in input_list):
             corrected_input = [input_value + 1 for input_value in input_list]

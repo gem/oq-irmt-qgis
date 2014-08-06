@@ -237,22 +237,6 @@ class Log10TestCase(unittest.TestCase):
         for i in range(len(input_list)):
             self.assertAlmostEqual(log10_list[i], expected_list[i], places=6)
 
-    def test_log10_with_zeros_changed_to_ones(self):
-        input_list = [101249,
-                      94082,
-                      0,
-                      0,
-                      174568]
-        log10_list = self.alg(input_list,
-                              variant_name='PRE-CHANGE ZEROS TO ONES')
-        expected_list = [5.005391,
-                         4.973507,
-                         0,
-                         0,
-                         5.241965]
-        for i in range(len(input_list)):
-            self.assertAlmostEqual(log10_list[i], expected_list[i], places=6)
-
     def test_log10_with_zeros_unchanged(self):
         input_list = [101249,
                       94082,
