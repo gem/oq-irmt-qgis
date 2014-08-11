@@ -44,9 +44,9 @@ def calculate_svi(iface, current_layer, project_definition,
     """
     #set default
     if indicators_operator is None:
-        indicators_operator = 'Sum'
+        indicators_operator = 'Sum (weighted)'
     if themes_operator is None:
-        themes_operator = 'Sum'
+        themes_operator = 'Sum (weighted)'
 
     themes = project_definition['children'][1]['children']
 
@@ -100,11 +100,13 @@ def calculate_svi(iface, current_layer, project_definition,
                             discard_feat = True
                             discarded_feats_ids.append(feat_id)
                             break
-                        # For "Average" it's equivalent to use equal
-                        # weights, or to sum the indicators (all weights 1)
+                        # For "Average (equal weights)" it's equivalent to use
+                        # equal weights, or to sum the indicators
+                        # (all weights 1)
                         # and divide by the number of indicators (we use
                         # the latter solution)
-                        if indicators_operator == 'Average':
+                        if indicators_operator in ('Sum (simple)',
+                                                   'Average (equal weights)'):
                             indicator_weighted = feat[indicator['field']]
                         else:
                             indicator_weighted = (feat[indicator['field']] *
@@ -123,15 +125,16 @@ def calculate_svi(iface, current_layer, project_definition,
                             raise RuntimeError(error_message)
                     if discard_feat:
                         break
-                    if indicators_operator == 'Average':
+                    if indicators_operator == 'Average (equal weights)':
                         theme_result /= len(indicators)
 
                     # combine the indicators of each theme
-                    # For "Average" it's equivalent to use equal
-                    # weights, or to sum the themes (all weights 1)
+                    # For "Average (equal weights)" it's equivalent to use
+                    # equal weights, or to sum the themes (all weights 1)
                     # and divide by the number of themes (we use
                     # the latter solution)
-                    if themes_operator == 'Average':
+                    if themes_operator in ('Sum (simple)',
+                                           'Average (equal weights)'):
                         theme_weighted = theme_result
                     else:
                         theme_weighted = theme_result * theme['weight']
@@ -143,7 +146,7 @@ def calculate_svi(iface, current_layer, project_definition,
                 if discard_feat:
                     svi_value = QPyNullVariant(float)
                 else:
-                    if themes_operator == 'Average':
+                    if themes_operator == 'Average (equal weights)':
                         svi_value /= len(themes)
 
                 current_layer.changeAttributeValue(
@@ -184,7 +187,7 @@ def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
 
     #set default
     if iri_operator is None:
-        iri_operator = 'Sum'
+        iri_operator = 'Sum (weighted)'
 
     aal_weight = project_definition['children'][0]['weight']
     svi_weight = project_definition['children'][1]['weight']
@@ -211,15 +214,17 @@ def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
                         or feat_id in discarded_feats_ids):
                     iri_value = QPyNullVariant(float)
                     discarded_aal_feats_ids.append(feat_id)
-                elif iri_operator == 'Sum':
+                elif iri_operator == 'Sum (simple)':
+                    iri_value = svi_value + aal_value
+                elif iri_operator == 'Sum (weighted)':
                     iri_value = (
                         svi_value * svi_weight + aal_value * aal_weight)
                 elif iri_operator == 'Multiplication':
                     iri_value = (
                         svi_value * svi_weight * aal_value * aal_weight)
-                elif iri_operator == 'Average':
-                    # For "Average" it's equivalent to use equal
-                    # weights, or to sum the indices (all weights 1)
+                elif iri_operator == 'Average (equal weights)':
+                    # For "Average (equal weights)" it's equivalent to use
+                    # equal weights, or to sum the indices (all weights 1)
                     # and divide by the number of indices (we use
                     # the latter solution)
                     iri_value = (svi_value + aal_value) / 2.0
@@ -250,5 +255,6 @@ def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
         current_layer.dataProvider().deleteAttributes(
             [iri_attr_id])
         msg = 'Could not calculate IRI due to data problems: %s' % e
+
         iface.messageBar().pushMessage(tr('Error'), tr(msg),
                                        level=QgsMessageBar.CRITICAL)
