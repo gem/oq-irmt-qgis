@@ -51,7 +51,8 @@ TEXTUAL_FIELD_TYPES = (STRING_FIELD_TYPE_NAME,
 SUM_BASED_COMBINATIONS = ('Sum (simple)',
                           'Sum (weighted)',
                           'Average (equal weights)')
-MUL_BASED_COMBINATIONS = ('Multiplication',)
+MUL_BASED_COMBINATIONS = ('Multiplication (simple)',
+                          'Multiplication (weighted)')
 COMBINATION_TYPES = SUM_BASED_COMBINATIONS + MUL_BASED_COMBINATIONS
 
 PROJECT_TEMPLATE = {

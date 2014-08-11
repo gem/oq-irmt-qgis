@@ -106,7 +106,8 @@ def calculate_svi(iface, current_layer, project_definition,
                         # and divide by the number of indicators (we use
                         # the latter solution)
                         if indicators_operator in ('Sum (simple)',
-                                                   'Average (equal weights)'):
+                                                   'Average (equal weights)',
+                                                   'Multiplication (simple)'):
                             indicator_weighted = feat[indicator['field']]
                         else:
                             indicator_weighted = (feat[indicator['field']] *
@@ -134,7 +135,8 @@ def calculate_svi(iface, current_layer, project_definition,
                     # and divide by the number of themes (we use
                     # the latter solution)
                     if themes_operator in ('Sum (simple)',
-                                           'Average (equal weights)'):
+                                           'Average (equal weights)',
+                                           'Multiplication (simple)'):
                         theme_weighted = theme_result
                     else:
                         theme_weighted = theme_result * theme['weight']
@@ -216,10 +218,12 @@ def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
                     discarded_aal_feats_ids.append(feat_id)
                 elif iri_operator == 'Sum (simple)':
                     iri_value = svi_value + aal_value
+                elif iri_operator == 'Multiplication (simple)':
+                    iri_value = svi_value * aal_value
                 elif iri_operator == 'Sum (weighted)':
                     iri_value = (
                         svi_value * svi_weight + aal_value * aal_weight)
-                elif iri_operator == 'Multiplication':
+                elif iri_operator == 'Multiplication (weighted)':
                     iri_value = (
                         svi_value * svi_weight * aal_value * aal_weight)
                 elif iri_operator == 'Average (equal weights)':

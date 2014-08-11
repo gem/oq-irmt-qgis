@@ -49,8 +49,14 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
         reload_attrib_cbx(self.aal_field, current_layer, NUMERIC_FIELD_TYPES)
         self.ok_button.setEnabled(True)
         self.indicators_combination_type.addItems(COMBINATION_TYPES)
+        idx = self.indicators_combination_type.findText('Sum (weighted)')
+        self.indicators_combination_type.setCurrentIndex(idx)
         self.themes_combination_type.addItems(COMBINATION_TYPES)
+        idx = self.themes_combination_type.findText('Sum (weighted)')
+        self.themes_combination_type.setCurrentIndex(idx)
         self.iri_combination_type.addItems(COMBINATION_TYPES)
+        idx = self.iri_combination_type.findText('Sum (weighted)')
+        self.iri_combination_type.setCurrentIndex(idx)
 
     def calculate(self):
         """
