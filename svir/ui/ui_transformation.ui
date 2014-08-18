@@ -82,7 +82,7 @@
         <number>10</number>
        </property>
        <property name="placeholderText">
-        <string>Type name or use transformation name by default</string>
+        <string/>
        </property>
       </widget>
      </item>
