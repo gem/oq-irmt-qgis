@@ -120,6 +120,12 @@ class TransformationDialog(QDialog):
     def on_variant_cbx_currentIndexChanged(self):
         self.update_default_fieldname()
 
+    @pyqtSlot()
+    def on_new_field_name_txt_editingFinished(self):
+        self.attr_name_user_def = True
+        if not self.ui.new_field_name_txt.text():
+            self.update_default_fieldname()
+
     def reload_variant_cbx(self):
         self.ui.variant_cbx.clear()
         self.ui.variant_cbx.setEnabled(True)
@@ -146,3 +152,4 @@ class TransformationDialog(QDialog):
                     attribute_name, algorithm_name, variant,
                     inverse, simulate=True)
             self.ui.new_field_name_txt.setText(new_attr_name)
+            self.attr_name_user_def = False

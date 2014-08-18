@@ -126,8 +126,10 @@ class ProcessLayer():
         # build the name of the output transformed attribute
         # WARNING! Shape files support max 10 chars for attribute names
         if not new_attr_name:
-            new_attr_name = algorithm_name + variant
-            new_attr_name = new_attr_name[:10]
+            if variant:
+                new_attr_name = algorithm_name[:5] + '_' + variant[:4]
+            else:
+                new_attr_name = algorithm_name[:10]
         else:
             new_attr_name = new_attr_name[:10]
         new_attr_name = new_attr_name.replace(' ', '_')
