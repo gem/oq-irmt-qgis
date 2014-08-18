@@ -44,9 +44,9 @@ def calculate_svi(iface, current_layer, project_definition,
     """
     #set default
     if indicators_operator is None:
-        indicators_operator = 'Sum (weighted)'
+        indicators_operator = DEFAULT_COMBINATION
     if themes_operator is None:
-        themes_operator = 'Sum (weighted)'
+        themes_operator = DEFAULT_COMBINATION
 
     themes = project_definition['children'][1]['children']
 
