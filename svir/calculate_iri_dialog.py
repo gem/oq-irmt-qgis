@@ -30,7 +30,7 @@
 from PyQt4.QtGui import QDialog, QDialogButtonBox
 
 from ui.ui_calculate_iri import Ui_CalculateIRIDialog
-from globals import NUMERIC_FIELD_TYPES, COMBINATION_TYPES
+from globals import NUMERIC_FIELD_TYPES, COMBINATION_TYPES, DEFAULT_COMBINATION
 from calculate_utils import calculate_iri, calculate_svi
 from utils import reload_attrib_cbx
 
@@ -49,13 +49,13 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
         reload_attrib_cbx(self.aal_field, current_layer, NUMERIC_FIELD_TYPES)
         self.ok_button.setEnabled(True)
         self.indicators_combination_type.addItems(COMBINATION_TYPES)
-        idx = self.indicators_combination_type.findText('Sum (weighted)')
+        idx = self.indicators_combination_type.findText(DEFAULT_COMBINATION)
         self.indicators_combination_type.setCurrentIndex(idx)
         self.themes_combination_type.addItems(COMBINATION_TYPES)
-        idx = self.themes_combination_type.findText('Sum (weighted)')
+        idx = self.themes_combination_type.findText(DEFAULT_COMBINATION)
         self.themes_combination_type.setCurrentIndex(idx)
         self.iri_combination_type.addItems(COMBINATION_TYPES)
-        idx = self.iri_combination_type.findText('Sum (weighted)')
+        idx = self.iri_combination_type.findText(DEFAULT_COMBINATION)
         self.iri_combination_type.setCurrentIndex(idx)
 
     def calculate(self):

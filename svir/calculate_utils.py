@@ -31,7 +31,7 @@ from PyQt4.QtCore import QVariant, QPyNullVariant
 from qgis.core import QgsField
 from qgis.gui import QgsMessageBar
 from globals import (DOUBLE_FIELD_TYPE_NAME, DEBUG, SUM_BASED_COMBINATIONS,
-                     MUL_BASED_COMBINATIONS)
+                     MUL_BASED_COMBINATIONS, DEFAULT_COMBINATION)
 from process_layer import ProcessLayer
 from utils import LayerEditingManager, tr, toggle_select_features_widget
 
@@ -189,7 +189,7 @@ def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
 
     #set default
     if iri_operator is None:
-        iri_operator = 'Sum (weighted)'
+        iri_operator = DEFAULT_COMBINATION
 
     aal_weight = project_definition['children'][0]['weight']
     svi_weight = project_definition['children'][1]['weight']

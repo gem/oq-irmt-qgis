@@ -54,6 +54,7 @@ SUM_BASED_COMBINATIONS = ('Sum (simple)',
 MUL_BASED_COMBINATIONS = ('Multiplication (simple)',
                           'Multiplication (weighted)')
 COMBINATION_TYPES = SUM_BASED_COMBINATIONS + MUL_BASED_COMBINATIONS
+DEFAULT_COMBINATION = 'Sum (weighted)'
 
 PROJECT_TEMPLATE = {
     'name': 'ir',
