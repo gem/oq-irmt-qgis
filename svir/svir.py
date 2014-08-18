@@ -145,8 +145,6 @@ class Svir:
         self.zone_id_in_losses_attr_name = None
         # Name of the attribute containing zone id (in zonal_layer)
         self.zone_id_in_zones_attr_name = None
-        # Name of the attribute containing, e.g., SVI values
-        self.zonal_attr_name = None
         # We might have a user-provided layer with losses aggregated by zone
         self.loss_layer_to_merge = None
         # Most likely, it will be the zonal layer
@@ -630,16 +628,12 @@ class Svir:
         iri_attr_id = None
         # if an IRi has been already calculated, calculate a new one
         if 'iri_field' in data:
-            aal_layer = data['aal_layer']
             aal_field = data['joined_aal_field']
-            aal_id_field = data['aal_id_field']
-            svi_id_field = data['svi_id_field']
             iri_operator = data['iri_operator']
 
             iri_attr_id = calculate_iri(
                 self.iface, self.current_layer, project_definition,
-                svi_attr_id, svi_id_field, aal_layer, aal_field,
-                aal_id_field, discarded_feats_ids, iri_operator)
+                svi_attr_id, aal_field, discarded_feats_ids, iri_operator)
         return svi_attr_id, iri_attr_id
 
     def calculate_indices(self):
@@ -767,14 +761,9 @@ class Svir:
         zonal_dp = self.zonal_layer.dataProvider()
         zonal_fields = list(zonal_dp.fields())
         for field in zonal_fields:
-            # Accept only numeric fields to contain loss data
-            if field.typeName() in NUMERIC_FIELD_TYPES:
-                dlg.ui.zonal_attr_name_cbox.addItem(field.name())
             # Accept only string fields to contain zone ids
-            elif field.typeName() in TEXTUAL_FIELD_TYPES:
+            if field.typeName() in TEXTUAL_FIELD_TYPES:
                 dlg.ui.zone_id_attr_name_zone_cbox.addItem(field.name())
-            else:
-                raise TypeError("Unknown field type %d" % field.type())
         # if the user presses OK
         if dlg.exec_():
             # retrieve attribute names from combobox selections
@@ -785,7 +774,6 @@ class Svir:
             else:
                 self.zone_id_in_losses_attr_name = \
                     dlg.ui.zone_id_attr_name_loss_cbox.currentText()
-            self.zonal_attr_name = dlg.ui.zonal_attr_name_cbox.currentText()
             self.zone_id_in_zones_attr_name = \
                 dlg.ui.zone_id_attr_name_zone_cbox.currentText()
             self.update_actions_status()
