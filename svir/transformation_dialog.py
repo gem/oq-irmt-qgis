@@ -45,7 +45,7 @@ class TransformationDialog(QDialog):
     """
     Modal dialog giving to the user the possibility to select
     a layer and an attribute of the same layer, and then a transformation
-    algorithm.
+    algorithm and one of its variants (if the algorithm has any).
     """
     def __init__(self, iface):
         QDialog.__init__(self)

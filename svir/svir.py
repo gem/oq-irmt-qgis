@@ -311,12 +311,14 @@ class Svir:
         if DEBUG:
             print 'Selected: %s' % self.current_layer
         try:
+            # Activate actions which require a vector layer to be selected
             if self.current_layer.type() != QgsMapLayer.VectorLayer:
                 raise AttributeError
             proj_def = self.project_definitions[self.current_layer.id()]
             self.registered_actions["create_weight_tree"].setEnabled(True)
             self.registered_actions["calculate_indices"].setEnabled(True)
             self.registered_actions["weight_data"].setEnabled(True)
+            self.registered_actions["transform_attribute"].setEnabled(True)
 
             # TODO maybe we want to have only an svi to allow upload, in that
             # case use 'svi_field' in proj_def
@@ -329,9 +331,11 @@ class Svir:
             self.registered_actions["create_weight_tree"].setEnabled(True)
             self.registered_actions["weight_data"].setEnabled(False)
             self.registered_actions["calculate_indices"].setEnabled(False)
+            self.registered_actions["transform_attribute"].setEnabled(True)
         except AttributeError:
             # self.current_layer.id() does not exist or self.current_layer
             # is not vector
+            self.registered_actions["transform_attribute"].setEnabled(False)
             self.registered_actions["create_weight_tree"].setEnabled(False)
             self.registered_actions["weight_data"].setEnabled(False)
             self.registered_actions["calculate_indices"].setEnabled(False)
