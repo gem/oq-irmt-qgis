@@ -18,21 +18,23 @@ class SettingsDialog(QtGui.QDialog, Ui_SettingsDialog):
         """
         mySettings = QtCore.QSettings()
         platform_username = mySettings.value('svir/platform_username', '')
+        platform_username = mySettings.value('svir/platform_username', '')
         platform_password = mySettings.value('svir/platform_password', '')
         platform_hostname = mySettings.value(
             'svir/platform_hostname', 'https://platform.openquake.org')
 
         # hack for strange mac behaviour
-        platform_username = (
-            platform_username if platform_username is not None else '')
-        platform_password = (
-            platform_password if platform_password is not None else '')
-        platform_hostname = (
-            platform_hostname if platform_hostname is not None else '')
-        self.passwordEdit.setText(platform_password)
+        if platform_username is None:
+            platform_username = ''
+        if platform_password is None:
+            platform_password = ''
+        if platform_hostname is None:
+            platform_hostname = ''
+
         self.usernameEdit.setText(platform_username)
+        self.passwordEdit.setText(platform_password)
         self.hostnameEdit.setText(platform_hostname)
-        
+
         self.developermodeCheck.setChecked(
             mySettings.value('svir/developer_mode', False, type=bool))
 
