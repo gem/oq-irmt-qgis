@@ -24,11 +24,11 @@ class SettingsDialog(QtGui.QDialog, Ui_SettingsDialog):
             'svir/platform_hostname', 'https://platform.openquake.org')
 
         # hack for strange mac behaviour
-        if platform_username is None:
+        if not platform_username:
             platform_username = ''
-        if platform_password is None:
+        if not platform_password:
             platform_password = ''
-        if platform_hostname is None:
+        if not platform_hostname:
             platform_hostname = ''
 
         self.usernameEdit.setText(platform_username)
