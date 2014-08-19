@@ -83,7 +83,6 @@ from transformation_dialog import TransformationDialog
 from select_attrs_for_stats_dialog import SelectAttrsForStatsDialog
 from select_sv_variables_dialog import SelectSvVariablesDialog
 from settings_dialog import SettingsDialog
-from choose_sv_data_source_dialog import ChooseSvDataSourceDialog
 from weight_data_dialog import WeightDataDialog
 from create_weight_tree_dialog import CreateWeightTreeDialog
 
@@ -170,10 +169,11 @@ class Svir:
 
         # Action to activate the modal dialog to import socioeconomic
         # data from the platform
-        self.add_menu_item("choose_sv_data_source",
+        self.add_menu_item("import_sv_variables",
                            ":/plugins/svir/start_plugin_icon.png",
-                           u"&Load socioeconomic indicators",
-                           self.choose_sv_data_source,
+                           u"&Load socioeconomic indicators"
+                           " from the OpenQuake Platform",
+                           self.import_sv_variables,
                            enable=True,
                            add_to_layer_actions=False)
         # Action to activate the modal dialog to select a layer and one of its
@@ -407,22 +407,6 @@ class Svir:
                                                 tr(msg),
                                                 level=QgsMessageBar.INFO,
                                                 duration=8)
-            self.update_actions_status()
-
-    def choose_sv_data_source(self):
-        """
-        Open a modal dialog to select if the user wants to load social
-        vulnerability data from one of the available layers or throught the
-        OpenQuake Platform
-        """
-        dlg = ChooseSvDataSourceDialog()
-        if dlg.exec_():
-            if dlg.ui.platform_rbn.isChecked():
-                # start openquake platform import
-                self.import_sv_variables()
-            else:
-                # dlg.ui.layer_rbn.isChecked() so go to select layers
-                self.aggregate_losses()
             self.update_actions_status()
 
     def import_sv_variables(self):
