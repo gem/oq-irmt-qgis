@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'ui/ui_calculate_iri.ui'
 #
-# Created: Mon Aug 18 17:11:40 2014
-#      by: PyQt4 UI code generator 4.9.1
+# Created: Tue Aug 19 16:01:01 2014
+#      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,7 +12,16 @@ from PyQt4 import QtCore, QtGui
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
-    _fromUtf8 = lambda s: s
+    def _fromUtf8(s):
+        return s
+
+try:
+    _encoding = QtGui.QApplication.UnicodeUTF8
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig, _encoding)
+except AttributeError:
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig)
 
 class Ui_CalculateIRIDialog(object):
     def setupUi(self, CalculateIRIDialog):
@@ -56,9 +65,6 @@ class Ui_CalculateIRIDialog(object):
         self.formLayout_2.setWidget(5, QtGui.QFormLayout.LabelRole, self.label_5)
         self.iri_combination_type = QtGui.QComboBox(self.calculate_iri_check)
         self.iri_combination_type.setObjectName(_fromUtf8("iri_combination_type"))
-        self.iri_combination_type.addItem(_fromUtf8(""))
-        self.iri_combination_type.addItem(_fromUtf8(""))
-        self.iri_combination_type.addItem(_fromUtf8(""))
         self.formLayout_2.setWidget(8, QtGui.QFormLayout.FieldRole, self.iri_combination_type)
         self.label = QtGui.QLabel(self.calculate_iri_check)
         self.label.setObjectName(_fromUtf8("label"))
@@ -86,16 +92,13 @@ class Ui_CalculateIRIDialog(object):
         QtCore.QMetaObject.connectSlotsByName(CalculateIRIDialog)
 
     def retranslateUi(self, CalculateIRIDialog):
-        CalculateIRIDialog.setWindowTitle(QtGui.QApplication.translate("CalculateIRIDialog", "Calculate Indices", None, QtGui.QApplication.UnicodeUTF8))
-        self.groupBox.setTitle(QtGui.QApplication.translate("CalculateIRIDialog", "SVI", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_2.setText(QtGui.QApplication.translate("CalculateIRIDialog", "Indicators combination type", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_3.setText(QtGui.QApplication.translate("CalculateIRIDialog", "Theme combination type", None, QtGui.QApplication.UnicodeUTF8))
-        self.calculate_iri_check.setTitle(QtGui.QApplication.translate("CalculateIRIDialog", "IRI", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_5.setText(QtGui.QApplication.translate("CalculateIRIDialog", "Risk field", None, QtGui.QApplication.UnicodeUTF8))
-        self.iri_combination_type.setItemText(0, QtGui.QApplication.translate("CalculateIRIDialog", "Sum", None, QtGui.QApplication.UnicodeUTF8))
-        self.iri_combination_type.setItemText(1, QtGui.QApplication.translate("CalculateIRIDialog", "Average", None, QtGui.QApplication.UnicodeUTF8))
-        self.iri_combination_type.setItemText(2, QtGui.QApplication.translate("CalculateIRIDialog", "Multiplication", None, QtGui.QApplication.UnicodeUTF8))
-        self.label.setText(QtGui.QApplication.translate("CalculateIRIDialog", "IRI combination type", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_4.setText(QtGui.QApplication.translate("CalculateIRIDialog", "SVI field", None, QtGui.QApplication.UnicodeUTF8))
-        self.recalculate_svi_check.setText(QtGui.QApplication.translate("CalculateIRIDialog", "Recalculate SVI", None, QtGui.QApplication.UnicodeUTF8))
+        CalculateIRIDialog.setWindowTitle(_translate("CalculateIRIDialog", "Calculate Indices", None))
+        self.groupBox.setTitle(_translate("CalculateIRIDialog", "SVI", None))
+        self.label_2.setText(_translate("CalculateIRIDialog", "Indicators combination type", None))
+        self.label_3.setText(_translate("CalculateIRIDialog", "Theme combination type", None))
+        self.calculate_iri_check.setTitle(_translate("CalculateIRIDialog", "IRI", None))
+        self.label_5.setText(_translate("CalculateIRIDialog", "Risk field", None))
+        self.label.setText(_translate("CalculateIRIDialog", "IRI combination type", None))
+        self.label_4.setText(_translate("CalculateIRIDialog", "SVI field", None))
+        self.recalculate_svi_check.setText(_translate("CalculateIRIDialog", "Recalculate SVI", None))
 
