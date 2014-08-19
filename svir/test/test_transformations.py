@@ -243,10 +243,15 @@ class Log10TestCase(unittest.TestCase):
                       0,
                       0,
                       174568]
-        self.assertRaises(ValueError,
-                          self.alg,
-                          input_list,
-                          variant_name='NO ZEROS ALLOWED')
+        log10_list = self.alg(
+            input_list, variant_name='IGNORE ZEROS')
+        expected_list = [5.005391,
+                         4.973507,
+                         QPyNullVariant(float),
+                         QPyNullVariant(float),
+                         5.241965]
+        for i in range(len(input_list)):
+            self.assertAlmostEqual(log10_list[i], expected_list[i], places=6)
 
 
 class QuadraticTestCase(unittest.TestCase):
