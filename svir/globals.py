@@ -48,8 +48,13 @@ TEXTUAL_FIELD_TYPES = (STRING_FIELD_TYPE_NAME,
                        TEXT_FIELD_TYPE_NAME,
                        TEXT_FIELD_TYPE_NAME.capitalize())
 
-SUM_BASED_COMBINATIONS = set(['Average', 'Sum'])
-MUL_BASED_COMBINATIONS = set(['Multiplication'])
+SUM_BASED_COMBINATIONS = ('Sum (simple)',
+                          'Sum (weighted)',
+                          'Average (equal weights)')
+MUL_BASED_COMBINATIONS = ('Multiplication (simple)',
+                          'Multiplication (weighted)')
+COMBINATION_TYPES = SUM_BASED_COMBINATIONS + MUL_BASED_COMBINATIONS
+DEFAULT_COMBINATION = 'Sum (weighted)'
 
 PROJECT_TEMPLATE = {
     'name': 'ir',

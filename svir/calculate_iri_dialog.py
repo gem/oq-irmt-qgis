@@ -30,9 +30,10 @@
 from PyQt4.QtGui import QDialog, QDialogButtonBox
 
 from ui.ui_calculate_iri import Ui_CalculateIRIDialog
-from globals import NUMERIC_FIELD_TYPES, TEXTUAL_FIELD_TYPES
+from globals import NUMERIC_FIELD_TYPES, COMBINATION_TYPES, DEFAULT_COMBINATION
 from calculate_utils import calculate_iri, calculate_svi
 from utils import reload_attrib_cbx
+from process_layer import ProcessLayer
 
 
 class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
@@ -45,9 +46,19 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
         self.project_definition = project_definition
         self.setupUi(self)
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
-        self.calculate_iri = self.calculate_iri_check.isChecked()
+        reload_attrib_cbx(
+            self.svi_field_cbx, current_layer, NUMERIC_FIELD_TYPES)
         reload_attrib_cbx(self.aal_field, current_layer, NUMERIC_FIELD_TYPES)
         self.ok_button.setEnabled(True)
+        self.indicators_combination_type.addItems(COMBINATION_TYPES)
+        idx = self.indicators_combination_type.findText(DEFAULT_COMBINATION)
+        self.indicators_combination_type.setCurrentIndex(idx)
+        self.themes_combination_type.addItems(COMBINATION_TYPES)
+        idx = self.themes_combination_type.findText(DEFAULT_COMBINATION)
+        self.themes_combination_type.setCurrentIndex(idx)
+        self.iri_combination_type.addItems(COMBINATION_TYPES)
+        idx = self.iri_combination_type.findText(DEFAULT_COMBINATION)
+        self.iri_combination_type.setCurrentIndex(idx)
 
     def calculate(self):
         """
@@ -57,9 +68,17 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
         indicators_operator = self.indicators_combination_type.currentText()
         themes_operator = self.themes_combination_type.currentText()
 
-        svi_attr_id, discarded_feats_ids = calculate_svi(
-            self.iface, self.current_layer, self.project_definition,
-            indicators_operator, themes_operator)
+        if self.recalculate_svi_check.isChecked():
+            svi_attr_id, discarded_feats_ids = calculate_svi(
+                self.iface, self.current_layer, self.project_definition,
+                indicators_operator, themes_operator)
+
+        else:
+            svi_attr_name = self.svi_field_cbx.currentText()
+            svi_attr_id = ProcessLayer(
+                self.current_layer).find_attribute_id(svi_attr_name)
+            # FIXME: get the NULL values for the SVI attribute
+            discarded_feats_ids = []
 
         if self.calculate_iri_check.isChecked():
             aal_field_name = self.aal_field.currentText()
@@ -70,9 +89,24 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
         else:
             self.project_definition.pop('iri_field', None)
 
+    def on_recalculate_svi_check_toggled(self, on):
+        self.svi_field_cbx.setEnabled(not on)
+        self.indicators_combination_type.setEnabled(on)
+        self.themes_combination_type.setEnabled(on)
+
     def on_calculate_iri_check_toggled(self, on):
+        self.recalculate_svi_check.setChecked(not on)
+        # if "recalculate svi" is checked ==> enable combination types and
+        # disable svi field combo
+        # otherwise ==> disable combination types and enable svi field combo
+        self.indicators_combination_type.setEnabled(
+            self.recalculate_svi_check.isChecked())
+        self.themes_combination_type.setEnabled(
+            self.recalculate_svi_check.isChecked())
+        self.svi_field_cbx.setEnabled(
+            not self.recalculate_svi_check.isChecked())
         self.calculate_iri = on
-        if self.calculate_iri:
+        if self.calculate_iri_check.isChecked():
             self.check_iri_fields()
         else:
             self.ok_button.setEnabled(True)
