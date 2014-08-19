@@ -135,16 +135,11 @@ class ProcessLayer():
         new_attr_name = new_attr_name.replace(' ', '_')
         field = QgsField(new_attr_name, QVariant.Double)
         field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
-        attr_names_dict = self.add_attributes([field], simulate=simulate)
-
-        # get the name actually assigned to the new attribute
-        actual_new_attr_name = attr_names_dict[new_attr_name]
-
         if simulate:
+            attr_names_dict = self.add_attributes([field], simulate=simulate)
+            # get the name actually assigned to the new attribute
+            actual_new_attr_name = attr_names_dict[new_attr_name]
             return actual_new_attr_name
-
-        # get the id of the new attribute
-        new_attr_id = self.find_attribute_id(actual_new_attr_name)
 
         # a dict will contain all the values for the chosen input attribute,
         # keeping as key, for each value, the id of the corresponding feature
@@ -163,6 +158,12 @@ class ProcessLayer():
             raise
         except NotImplementedError:
             raise
+
+        attr_names_dict = self.add_attributes([field], simulate=simulate)
+        # get the name actually assigned to the new attribute
+        actual_new_attr_name = attr_names_dict[new_attr_name]
+        # get the id of the new attribute
+        new_attr_id = self.find_attribute_id(actual_new_attr_name)
 
         with LayerEditingManager(
                 self.layer, 'Write transformed values', DEBUG):
