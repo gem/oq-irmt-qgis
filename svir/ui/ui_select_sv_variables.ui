@@ -68,14 +68,14 @@
      <item row="4" column="1">
       <widget class="QPushButton" name="add_name_btn">
        <property name="text">
-        <string>Add name</string>
+        <string>Add indicator</string>
        </property>
       </widget>
      </item>
      <item row="6" column="1">
       <widget class="QPushButton" name="remove_name_btn">
        <property name="text">
-        <string>Remove selected names</string>
+        <string>Remove selected indicators</string>
        </property>
       </widget>
      </item>

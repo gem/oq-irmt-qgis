@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'ui/ui_select_sv_variables.ui'
 #
-# Created: Thu Jul  3 14:48:22 2014
-#      by: PyQt4 UI code generator 4.9.1
+# Created: Tue Aug 19 14:39:18 2014
+#      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,7 +12,16 @@ from PyQt4 import QtCore, QtGui
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
-    _fromUtf8 = lambda s: s
+    def _fromUtf8(s):
+        return s
+
+try:
+    _encoding = QtGui.QApplication.UnicodeUTF8
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig, _encoding)
+except AttributeError:
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig)
 
 class Ui_SelectSvVariablesDialog(object):
     def setupUi(self, SelectSvVariablesDialog):
@@ -73,12 +82,12 @@ class Ui_SelectSvVariablesDialog(object):
         QtCore.QMetaObject.connectSlotsByName(SelectSvVariablesDialog)
 
     def retranslateUi(self, SelectSvVariablesDialog):
-        SelectSvVariablesDialog.setWindowTitle(QtGui.QApplication.translate("SelectSvVariablesDialog", "Select socioeconomic indicators", None, QtGui.QApplication.UnicodeUTF8))
-        self.theme_lbl.setText(QtGui.QApplication.translate("SelectSvVariablesDialog", "Theme", None, QtGui.QApplication.UnicodeUTF8))
-        self.subtheme_lbl.setText(QtGui.QApplication.translate("SelectSvVariablesDialog", "Subtheme", None, QtGui.QApplication.UnicodeUTF8))
-        self.tag_lbl.setText(QtGui.QApplication.translate("SelectSvVariablesDialog", "Tag", None, QtGui.QApplication.UnicodeUTF8))
-        self.name_lbl.setText(QtGui.QApplication.translate("SelectSvVariablesDialog", "Name", None, QtGui.QApplication.UnicodeUTF8))
-        self.add_name_btn.setText(QtGui.QApplication.translate("SelectSvVariablesDialog", "Add name", None, QtGui.QApplication.UnicodeUTF8))
-        self.remove_name_btn.setText(QtGui.QApplication.translate("SelectSvVariablesDialog", "Remove selected names", None, QtGui.QApplication.UnicodeUTF8))
-        self.clear_btn.setText(QtGui.QApplication.translate("SelectSvVariablesDialog", "Clear", None, QtGui.QApplication.UnicodeUTF8))
+        SelectSvVariablesDialog.setWindowTitle(_translate("SelectSvVariablesDialog", "Select socioeconomic indicators", None))
+        self.theme_lbl.setText(_translate("SelectSvVariablesDialog", "Theme", None))
+        self.subtheme_lbl.setText(_translate("SelectSvVariablesDialog", "Subtheme", None))
+        self.tag_lbl.setText(_translate("SelectSvVariablesDialog", "Tag", None))
+        self.name_lbl.setText(_translate("SelectSvVariablesDialog", "Name", None))
+        self.add_name_btn.setText(_translate("SelectSvVariablesDialog", "Add indicator", None))
+        self.remove_name_btn.setText(_translate("SelectSvVariablesDialog", "Remove selected indicators", None))
+        self.clear_btn.setText(_translate("SelectSvVariablesDialog", "Clear", None))
 
