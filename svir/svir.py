@@ -147,8 +147,6 @@ class Svir:
         self.zone_id_in_zones_attr_name = None
         # We might have a user-provided layer with losses aggregated by zone
         self.loss_layer_to_merge = None
-        # Most likely, it will be the zonal layer
-        self.zonal_layer_to_merge = None
         # Attribute containing aggregated losses, that will be merged with SVI
         self.aggr_loss_attr_to_merge = None
 
@@ -176,7 +174,8 @@ class Svir:
                            ":/plugins/svir/start_plugin_icon.png",
                            u"&Load socioeconomic indicators",
                            self.choose_sv_data_source,
-                           enable=True)
+                           enable=True,
+                           add_to_layer_actions=False)
         # Action to activate the modal dialog to select a layer and one of its
         # attributes, in order to transform that attribute
         self.add_menu_item("transform_attribute",
@@ -214,13 +213,15 @@ class Svir:
                            ":/plugins/svir/start_plugin_icon.png",
                            u"&Aggregate loss by zone",
                            self.aggregate_losses,
-                           enable=True)
+                           enable=True,
+                           add_to_layer_actions=False)
         # Action for merging SVI with loss data (both aggregated by zone)
         self.add_menu_item("merge_svi_and_losses",
                            ":/plugins/svir/start_plugin_icon.png",
-                           u"Merge SVI and loss data by zone",
+                           u"Copy loss data into selected layer",
                            self.merge_svi_with_aggr_losses,
-                           enable=False)
+                           enable=False,
+                           add_to_layer_actions=True)
 
         # FIXME Probably to be removed
         # Action for calculating RISKPLUS, RISKMULT and RISK1F indices
@@ -334,6 +335,7 @@ class Svir:
             self.registered_actions["create_weight_tree"].setEnabled(False)
             self.registered_actions["weight_data"].setEnabled(False)
             self.registered_actions["calculate_indices"].setEnabled(False)
+            self.registered_actions["merge_svi_and_losses"].setEnabled(False)
 
     def unload(self):
         # Remove the plugin menu items and toolbar icons
@@ -714,9 +716,9 @@ class Svir:
             # Add aggregated loss attribute to zonal_layer
             field = QgsField(self.aggr_loss_attr_to_merge, QVariant.Double)
             field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
-            ProcessLayer(self.zonal_layer).add_attributes([field])
+            ProcessLayer(self.current_layer).add_attributes([field])
             # Populate "loss" attribute with data from aggregation_layer
-            self.populate_zonal_layer_with_loss_values()
+            self.copy_loss_values_to_current_layer()
 
             # FIXME Probably this is going to be removed
             msg = 'Select "Calculate common SVIR indices" from SVIR ' \
@@ -854,14 +856,11 @@ class Svir:
                 level=QgsMessageBar.CRITICAL)
             return False
         dlg.ui.loss_layer_cbox.addItems(layer_list)
-        dlg.ui.zonal_layer_cbox.addItems(layer_list)
         if dlg.exec_():
             self.loss_layer_to_merge = reg.mapLayers().values()[
                 dlg.ui.loss_layer_cbox.currentIndex()]
             self.aggr_loss_attr_to_merge = \
                 dlg.ui.aggr_loss_attr_cbox.currentText()
-            self.zonal_layer_to_merge = reg.mapLayers().values()[
-                dlg.ui.zonal_layer_cbox.currentIndex()]
             self.zone_id_in_zones_attr_name = \
                 dlg.ui.merge_attr_cbx.currentText()
             self.update_actions_status()
@@ -1218,9 +1217,9 @@ class Svir:
         else:
             raise RuntimeError('Purged layer invalid')
 
-    def populate_zonal_layer_with_loss_values(self):
+    def copy_loss_values_to_current_layer(self):
         """
-        Copy loss values from the aggregation layer to the zonal layer
+        Copy loss values from the aggregation layer to the current layer
         which already contains socioeconomic related attributes
         """
         # to show the overall progress, cycling through zones
@@ -1228,25 +1227,25 @@ class Svir:
         msg = tr("Populating zonal layer with loss values...")
         msg_bar_item, progress = create_progress_message_bar(self.iface, msg)
 
-        with LayerEditingManager(self.zonal_layer,
+        with LayerEditingManager(self.current_layer,
                                  tr("Add loss values to zonal layer"),
                                  DEBUG):
 
-            aggr_loss_index = self.zonal_layer.fieldNameIndex(
+            aggr_loss_index = self.current_layer.fieldNameIndex(
                 self.aggr_loss_attr_to_merge)
 
             # Begin populating "loss" attribute with data from the
             # aggregation_layer selected by the user (possibly purged from
             # zones containing no loss data)
             for current_zone, zonal_feat in enumerate(
-                    self.zonal_layer.getFeatures()):
+                    self.current_layer.getFeatures()):
                 zonal_feat_id = zonal_feat.id()
                 progress_percent = current_zone / float(tot_zones) * 100
                 progress.setValue(progress_percent)
                 for aggr_feat in self.loss_layer_to_merge.getFeatures():
                     if (zonal_feat[self.zone_id_in_zones_attr_name] ==
                             aggr_feat[self.zone_id_in_zones_attr_name]):
-                        self.zonal_layer.changeAttributeValue(
+                        self.current_layer.changeAttributeValue(
                             zonal_feat_id,
                             aggr_loss_index,
                             aggr_feat[self.aggr_loss_attr_to_merge])
