@@ -30,6 +30,7 @@ import tempfile
 import uuid
 import copy
 import json
+from math import ceil
 
 from requests.exceptions import ConnectionError
 
@@ -680,6 +681,16 @@ class Svir:
             QgsGraduatedSymbolRendererV2.Quantile,
             QgsSymbolV2.defaultSymbol(self.current_layer.geometryType()),
             ramp)
+
+        # NOTE: Workaround to avoid rounding problem (QGIS renderer's bug)
+        # which has the consequence to hide the zone containing the highest
+        # value in some cases
+        rangeIndex = len(graduated_renderer.ranges()) - 1
+        upper_value = graduated_renderer.ranges()[rangeIndex].upperValue()
+        increased_upper_value = ceil(upper_value * 10000.0) / 10000.0
+        graduated_renderer.updateRangeUpperValue(rangeIndex,
+                                                 increased_upper_value)
+
         # create value ranges
         rule_renderer.refineRuleRanges(not_null_rule, graduated_renderer)
         for rule in not_null_rule.children():
