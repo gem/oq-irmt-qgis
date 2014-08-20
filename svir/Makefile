@@ -36,6 +36,7 @@ EXTRAS = resources/start_plugin_icon.png metadata.txt
 UI_FILES = ui/ui_select_input_layers.py ui/ui_attribute_selection.py ui/ui_select_layers_to_merge.py ui/ui_transformation.py ui/ui_select_attrs_for_stats.py ui/ui_select_sv_variables.py ui/ui_settings.py ui/ui_weight_data.py ui/ui_create_weight_tree.py ui/ui_calculate_iri.py
 
 RESOURCE_FILES = resources_rc.py
+RESOURCE_SRC=$(shell grep '^ *<file' resources.qrc | sed 's@</file>@@g;s/.*>//g' | tr '\n' ' ')
 
 HELP = help/build/html
 
@@ -43,7 +44,7 @@ default: compile
 
 compile: $(UI_FILES) $(RESOURCE_FILES)
 
-%_rc.py : %.qrc
+%_rc.py : %.qrc $(RESOURCE_SRC)
 	pyrcc4 -o $*_rc.py  $<
 
 %.py : %.ui
