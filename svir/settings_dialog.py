@@ -17,13 +17,23 @@ class SettingsDialog(QtGui.QDialog, Ui_SettingsDialog):
         Reinstate the options based on the user's stored session info.
         """
         mySettings = QtCore.QSettings()
-        self.usernameEdit.setText(
-            mySettings.value('svir/platform_username', ''))
-        self.passwordEdit.setText(
-            mySettings.value('svir/platform_password', ''))
-        self.hostnameEdit.setText(
-            mySettings.value('svir/platform_hostname',
-                             'https://platform.openquake.org'))
+        platform_username = mySettings.value('svir/platform_username', '')
+        platform_password = mySettings.value('svir/platform_password', '')
+        platform_hostname = mySettings.value(
+            'svir/platform_hostname', 'https://platform.openquake.org')
+
+        # hack for strange mac behaviour
+        if not platform_username:
+            platform_username = ''
+        if not platform_password:
+            platform_password = ''
+        if not platform_hostname:
+            platform_hostname = ''
+
+        self.usernameEdit.setText(platform_username)
+        self.passwordEdit.setText(platform_password)
+        self.hostnameEdit.setText(platform_hostname)
+
         self.developermodeCheck.setChecked(
             mySettings.value('svir/developer_mode', False, type=bool))
 
