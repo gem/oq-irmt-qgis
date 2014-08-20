@@ -25,25 +25,36 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
+from PyQt4.QtCore import QSettings
 
-DEBUG = False
+DEBUG = QSettings().value('/svir/developer_mode', False, type=bool)
 
 INT_FIELD_TYPE_NAME = "integer"
-DOUBLE_FIELD_TYPE_NAME = "double"
 REAL_FIELD_TYPE_NAME = "Real"
+DOUBLE_FIELD_TYPE_NAME = "double"
 
 NUMERIC_FIELD_TYPES = (INT_FIELD_TYPE_NAME,
+                       INT_FIELD_TYPE_NAME.capitalize(),
                        REAL_FIELD_TYPE_NAME,
-                       DOUBLE_FIELD_TYPE_NAME)
+                       REAL_FIELD_TYPE_NAME.lower(),
+                       DOUBLE_FIELD_TYPE_NAME,
+                       DOUBLE_FIELD_TYPE_NAME.capitalize())
 
 STRING_FIELD_TYPE_NAME = "String"
 TEXT_FIELD_TYPE_NAME = "text"
 
 TEXTUAL_FIELD_TYPES = (STRING_FIELD_TYPE_NAME,
-                       TEXT_FIELD_TYPE_NAME)
+                       STRING_FIELD_TYPE_NAME.lower(),
+                       TEXT_FIELD_TYPE_NAME,
+                       TEXT_FIELD_TYPE_NAME.capitalize())
 
-SUM_BASED_COMBINATIONS = set(['Average', 'Sum'])
-MUL_BASED_COMBINATIONS = set(['Multiplication'])
+SUM_BASED_COMBINATIONS = ('Sum (simple)',
+                          'Sum (weighted)',
+                          'Average (equal weights)')
+MUL_BASED_COMBINATIONS = ('Multiplication (simple)',
+                          'Multiplication (weighted)')
+COMBINATION_TYPES = SUM_BASED_COMBINATIONS + MUL_BASED_COMBINATIONS
+DEFAULT_COMBINATION = 'Sum (weighted)'
 
 PROJECT_TEMPLATE = {
     'name': 'ir',

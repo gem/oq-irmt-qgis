@@ -38,22 +38,25 @@ from transformation_algs import (RANK_VARIANTS,
 
 from globals import NUMERIC_FIELD_TYPES
 from utils import reload_attrib_cbx, reload_layers_in_cbx
+from process_layer import ProcessLayer
 
 
 class TransformationDialog(QDialog):
     """
     Modal dialog giving to the user the possibility to select
     a layer and an attribute of the same layer, and then a transformation
-    algorithm.
+    algorithm and one of its variants (if the algorithm has any).
     """
     def __init__(self, iface):
         QDialog.__init__(self)
         self.iface = iface
+        self.attr_name_user_def = False
+        self.use_advanced = False
+        self.selected_layer = None
         # Set up the user interface from Designer.
         self.ui = Ui_TransformationDialog()
         self.ui.setupUi(self)
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
-        self.use_advanced = False
         reload_layers_in_cbx(self.ui.layer_cbx, [QgsMapLayer.VectorLayer])
 
         # In case one of the available layers is active, preselect it
@@ -61,11 +64,15 @@ class TransformationDialog(QDialog):
             active_layer_name = iface.activeLayer().name()
             active_layer_index = self.ui.layer_cbx.findText(active_layer_name)
             self.ui.layer_cbx.setCurrentIndex(active_layer_index)
+            self.selected_layer = \
+                QgsMapLayerRegistry.instance().mapLayers().values()[
+                    self.ui.layer_cbx.currentIndex()]
         else:
             self.ui.layer_cbx.blockSignals(True)
             self.ui.layer_cbx.setCurrentIndex(-1)
             self.ui.layer_cbx.blockSignals(False)
             self.ui.attrib_cbx.clear()
+            self.ok_button.setDisabled(True)
         alg_list = TRANSFORMATION_ALGS.keys()
         self.ui.algorithm_cbx.addItems(alg_list)
         if self.ui.algorithm_cbx.currentText() in ['RANK', 'QUADRATIC']:
@@ -76,9 +83,10 @@ class TransformationDialog(QDialog):
     @pyqtSlot()
     def on_calc_btn_clicked(self):
         self.close()
-        layer = QgsMapLayerRegistry.instance().mapLayers().values()[
-            self.ui.layer_cbx.currentIndex()]
-        self.iface.setActiveLayer(layer)
+        self.selected_layer = \
+            QgsMapLayerRegistry.instance().mapLayers().values()[
+                self.ui.layer_cbx.currentIndex()]
+        self.iface.setActiveLayer(self.selected_layer)
 
         # layer is put in editing mode. If the user clicks on ok, the field
         # calculator will update the layers attributes.
@@ -87,19 +95,36 @@ class TransformationDialog(QDialog):
         # the calling code should take care of doing layer.commitChanges()
         # if the flag is set to true.
         self.use_advanced = True
-        layer.startEditing()
+        self.selected_layer.startEditing()
         self.iface.actionOpenFieldCalculator().trigger()
 
     @pyqtSlot(str)
     def on_layer_cbx_currentIndexChanged(self):
-        layer = QgsMapLayerRegistry.instance().mapLayers().values()[
-            self.ui.layer_cbx.currentIndex()]
-        reload_attrib_cbx(self.ui.attrib_cbx, layer, NUMERIC_FIELD_TYPES)
-        self.ok_button.setEnabled(self.ui.attrib_cbx.count())
+        self.selected_layer = \
+            QgsMapLayerRegistry.instance().mapLayers().values()[
+                self.ui.layer_cbx.currentIndex()]
+        reload_attrib_cbx(self.ui.attrib_cbx,
+                          self.selected_layer,
+                          NUMERIC_FIELD_TYPES)
+        if self.ui.attrib_cbx.count():
+            self.ok_button.setEnabled(True)
+            if self.ui.algorithm_cbx.count():
+                self.update_default_fieldname()
 
     @pyqtSlot(str)
     def on_algorithm_cbx_currentIndexChanged(self):
         self.reload_variant_cbx()
+        self.update_default_fieldname()
+
+    @pyqtSlot(str)
+    def on_variant_cbx_currentIndexChanged(self):
+        self.update_default_fieldname()
+
+    @pyqtSlot()
+    def on_new_field_name_txt_editingFinished(self):
+        self.attr_name_user_def = True
+        if not self.ui.new_field_name_txt.text():
+            self.update_default_fieldname()
 
     def reload_variant_cbx(self):
         self.ui.variant_cbx.clear()
@@ -114,3 +139,17 @@ class TransformationDialog(QDialog):
             self.ui.variant_cbx.setDisabled(True)
         self.ui.inverse_ckb.setDisabled(
             self.ui.algorithm_cbx.currentText() in ['LOG10'])
+
+    def update_default_fieldname(self):
+        if (not self.attr_name_user_def
+                or not self.ui.new_field_name_txt.text()):
+            attribute_name = self.ui.attrib_cbx.currentText()
+            algorithm_name = self.ui.algorithm_cbx.currentText()
+            variant = self.ui.variant_cbx.currentText()
+            inverse = self.ui.inverse_ckb.isChecked()
+            new_attr_name = \
+                ProcessLayer(self.selected_layer).transform_attribute(
+                    attribute_name, algorithm_name, variant,
+                    inverse, simulate=True)
+            self.ui.new_field_name_txt.setText(new_attr_name)
+            self.attr_name_user_def = False

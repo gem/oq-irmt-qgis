@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'ui/ui_select_layers_to_merge.ui'
 #
-# Created: Thu Jul  3 14:48:22 2014
-#      by: PyQt4 UI code generator 4.9.1
+# Created: Tue Aug 19 14:39:18 2014
+#      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,13 +12,22 @@ from PyQt4 import QtCore, QtGui
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
-    _fromUtf8 = lambda s: s
+    def _fromUtf8(s):
+        return s
+
+try:
+    _encoding = QtGui.QApplication.UnicodeUTF8
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig, _encoding)
+except AttributeError:
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig)
 
 class Ui_SelectLayersToMergeDialog(object):
     def setupUi(self, SelectLayersToMergeDialog):
         SelectLayersToMergeDialog.setObjectName(_fromUtf8("SelectLayersToMergeDialog"))
         SelectLayersToMergeDialog.setWindowModality(QtCore.Qt.WindowModal)
-        SelectLayersToMergeDialog.resize(671, 185)
+        SelectLayersToMergeDialog.resize(671, 153)
         SelectLayersToMergeDialog.setModal(True)
         self.gridLayout = QtGui.QGridLayout(SelectLayersToMergeDialog)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
@@ -31,12 +40,6 @@ class Ui_SelectLayersToMergeDialog(object):
         self.loss_layer_cbox = QtGui.QComboBox(SelectLayersToMergeDialog)
         self.loss_layer_cbox.setObjectName(_fromUtf8("loss_layer_cbox"))
         self.formLayout.setWidget(1, QtGui.QFormLayout.FieldRole, self.loss_layer_cbox)
-        self.zonal_layer_lbl = QtGui.QLabel(SelectLayersToMergeDialog)
-        self.zonal_layer_lbl.setObjectName(_fromUtf8("zonal_layer_lbl"))
-        self.formLayout.setWidget(3, QtGui.QFormLayout.LabelRole, self.zonal_layer_lbl)
-        self.zonal_layer_cbox = QtGui.QComboBox(SelectLayersToMergeDialog)
-        self.zonal_layer_cbox.setObjectName(_fromUtf8("zonal_layer_cbox"))
-        self.formLayout.setWidget(3, QtGui.QFormLayout.FieldRole, self.zonal_layer_cbox)
         self.aggr_loss_attr_lbl = QtGui.QLabel(SelectLayersToMergeDialog)
         self.aggr_loss_attr_lbl.setObjectName(_fromUtf8("aggr_loss_attr_lbl"))
         self.formLayout.setWidget(2, QtGui.QFormLayout.LabelRole, self.aggr_loss_attr_lbl)
@@ -45,10 +48,10 @@ class Ui_SelectLayersToMergeDialog(object):
         self.formLayout.setWidget(2, QtGui.QFormLayout.FieldRole, self.aggr_loss_attr_cbox)
         self.label = QtGui.QLabel(SelectLayersToMergeDialog)
         self.label.setObjectName(_fromUtf8("label"))
-        self.formLayout.setWidget(4, QtGui.QFormLayout.LabelRole, self.label)
+        self.formLayout.setWidget(3, QtGui.QFormLayout.LabelRole, self.label)
         self.merge_attr_cbx = QtGui.QComboBox(SelectLayersToMergeDialog)
         self.merge_attr_cbx.setObjectName(_fromUtf8("merge_attr_cbx"))
-        self.formLayout.setWidget(4, QtGui.QFormLayout.FieldRole, self.merge_attr_cbx)
+        self.formLayout.setWidget(3, QtGui.QFormLayout.FieldRole, self.merge_attr_cbx)
         self.gridLayout.addLayout(self.formLayout, 0, 0, 1, 1)
         self.buttonBox = QtGui.QDialogButtonBox(SelectLayersToMergeDialog)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
@@ -62,9 +65,8 @@ class Ui_SelectLayersToMergeDialog(object):
         QtCore.QMetaObject.connectSlotsByName(SelectLayersToMergeDialog)
 
     def retranslateUi(self, SelectLayersToMergeDialog):
-        SelectLayersToMergeDialog.setWindowTitle(QtGui.QApplication.translate("SelectLayersToMergeDialog", "Merge loss and zonal data in a single layer", None, QtGui.QApplication.UnicodeUTF8))
-        self.loss_layer_lbl.setText(QtGui.QApplication.translate("SelectLayersToMergeDialog", "Layer containing loss data", None, QtGui.QApplication.UnicodeUTF8))
-        self.zonal_layer_lbl.setText(QtGui.QApplication.translate("SelectLayersToMergeDialog", "Layer containing zonal data", None, QtGui.QApplication.UnicodeUTF8))
-        self.aggr_loss_attr_lbl.setText(QtGui.QApplication.translate("SelectLayersToMergeDialog", "Attribute for aggregated losses", None, QtGui.QApplication.UnicodeUTF8))
-        self.label.setText(QtGui.QApplication.translate("SelectLayersToMergeDialog", "Merge by attribute", None, QtGui.QApplication.UnicodeUTF8))
+        SelectLayersToMergeDialog.setWindowTitle(_translate("SelectLayersToMergeDialog", "Copy loss data into selected layer", None))
+        self.loss_layer_lbl.setText(_translate("SelectLayersToMergeDialog", "Layer containing loss data", None))
+        self.aggr_loss_attr_lbl.setText(_translate("SelectLayersToMergeDialog", "Attribute for aggregated losses", None))
+        self.label.setText(_translate("SelectLayersToMergeDialog", "Merge by attribute", None))
 

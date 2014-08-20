@@ -10,11 +10,11 @@
     <x>0</x>
     <y>0</y>
     <width>671</width>
-    <height>185</height>
+    <height>153</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Merge loss and zonal data in a single layer</string>
+   <string>Copy loss data into selected layer</string>
   </property>
   <property name="modal">
    <bool>true</bool>
@@ -35,16 +35,6 @@
      <item row="1" column="1">
       <widget class="QComboBox" name="loss_layer_cbox"/>
      </item>
-     <item row="3" column="0">
-      <widget class="QLabel" name="zonal_layer_lbl">
-       <property name="text">
-        <string>Layer containing zonal data</string>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="1">
-      <widget class="QComboBox" name="zonal_layer_cbox"/>
-     </item>
      <item row="2" column="0">
       <widget class="QLabel" name="aggr_loss_attr_lbl">
        <property name="text">
@@ -55,14 +45,14 @@
      <item row="2" column="1">
       <widget class="QComboBox" name="aggr_loss_attr_cbox"/>
      </item>
-     <item row="4" column="0">
+     <item row="3" column="0">
       <widget class="QLabel" name="label">
        <property name="text">
         <string>Merge by attribute</string>
        </property>
       </widget>
      </item>
-     <item row="4" column="1">
+     <item row="3" column="1">
       <widget class="QComboBox" name="merge_attr_cbx"/>
      </item>
     </layout>

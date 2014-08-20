@@ -25,6 +25,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
+import copy
 
 import json
 
@@ -62,7 +63,7 @@ class WeightDataDialog(QDialog):
         self.ui.setupUi(self)
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
 
-        self.project_definition = project_definition
+        self.project_definition = copy.deepcopy(project_definition)
 
         self.web_view = self.ui.web_view
         self.web_view.load(QUrl('qrc:/plugins/svir/weight_data.html'))

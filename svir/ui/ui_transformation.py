@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'ui/ui_transformation.ui'
 #
-# Created: Thu Jul  3 14:48:22 2014
-#      by: PyQt4 UI code generator 4.9.1
+# Created: Tue Aug 19 14:39:18 2014
+#      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,7 +12,16 @@ from PyQt4 import QtCore, QtGui
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
-    _fromUtf8 = lambda s: s
+    def _fromUtf8(s):
+        return s
+
+try:
+    _encoding = QtGui.QApplication.UnicodeUTF8
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig, _encoding)
+except AttributeError:
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig)
 
 class Ui_TransformationDialog(object):
     def setupUi(self, TransformationDialog):
@@ -56,6 +65,7 @@ class Ui_TransformationDialog(object):
         self.formLayout.setWidget(4, QtGui.QFormLayout.LabelRole, self.new_field_name_lbl)
         self.new_field_name_txt = QtGui.QLineEdit(TransformationDialog)
         self.new_field_name_txt.setMaxLength(10)
+        self.new_field_name_txt.setPlaceholderText(_fromUtf8(""))
         self.new_field_name_txt.setObjectName(_fromUtf8("new_field_name_txt"))
         self.formLayout.setWidget(4, QtGui.QFormLayout.FieldRole, self.new_field_name_txt)
         self.gridLayout.addLayout(self.formLayout, 0, 0, 1, 2)
@@ -74,13 +84,12 @@ class Ui_TransformationDialog(object):
         QtCore.QMetaObject.connectSlotsByName(TransformationDialog)
 
     def retranslateUi(self, TransformationDialog):
-        TransformationDialog.setWindowTitle(QtGui.QApplication.translate("TransformationDialog", "Field transformation", None, QtGui.QApplication.UnicodeUTF8))
-        self.layer_lbl.setText(QtGui.QApplication.translate("TransformationDialog", "Layer", None, QtGui.QApplication.UnicodeUTF8))
-        self.attrib_lbl.setText(QtGui.QApplication.translate("TransformationDialog", "Field", None, QtGui.QApplication.UnicodeUTF8))
-        self.algorithm_lbl.setText(QtGui.QApplication.translate("TransformationDialog", "Transformation function", None, QtGui.QApplication.UnicodeUTF8))
-        self.variant_lbl.setText(QtGui.QApplication.translate("TransformationDialog", "Variant", None, QtGui.QApplication.UnicodeUTF8))
-        self.inverse_ckb.setText(QtGui.QApplication.translate("TransformationDialog", "Inverse", None, QtGui.QApplication.UnicodeUTF8))
-        self.new_field_name_lbl.setText(QtGui.QApplication.translate("TransformationDialog", "New field name", None, QtGui.QApplication.UnicodeUTF8))
-        self.new_field_name_txt.setPlaceholderText(QtGui.QApplication.translate("TransformationDialog", "Type name or use transformation name by default", None, QtGui.QApplication.UnicodeUTF8))
-        self.calc_btn.setText(QtGui.QApplication.translate("TransformationDialog", "Advanced Calculator", None, QtGui.QApplication.UnicodeUTF8))
+        TransformationDialog.setWindowTitle(_translate("TransformationDialog", "Field transformation", None))
+        self.layer_lbl.setText(_translate("TransformationDialog", "Layer", None))
+        self.attrib_lbl.setText(_translate("TransformationDialog", "Field", None))
+        self.algorithm_lbl.setText(_translate("TransformationDialog", "Transformation function", None))
+        self.variant_lbl.setText(_translate("TransformationDialog", "Variant", None))
+        self.inverse_ckb.setText(_translate("TransformationDialog", "Inverse", None))
+        self.new_field_name_lbl.setText(_translate("TransformationDialog", "New field name", None))
+        self.calc_btn.setText(_translate("TransformationDialog", "Advanced Calculator", None))
 

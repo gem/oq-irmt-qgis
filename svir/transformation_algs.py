@@ -33,7 +33,8 @@ from utils import Register
 TRANSFORMATION_ALGS = Register()
 RANK_VARIANTS = ('AVERAGE', 'MIN', 'MAX', 'DENSE', 'ORDINAL')
 QUADRATIC_VARIANTS = ('INCREASING', 'DECREASING')
-LOG10_VARIANTS = ('PRE-CHANGE ZEROS TO ONES', 'NO ZEROS ALLOWED')
+LOG10_VARIANTS = ('INCREMENT BY ONE IF ZEROS ARE FOUND',
+                  'IGNORE ZEROS')
 
 
 def transform(features_dict, algorithm, variant_name="", inverse=False):
@@ -211,35 +212,43 @@ def min_max(input_list, variant_name=None, inverse=False):
 
 
 @TRANSFORMATION_ALGS.add('LOG10')
-def log10_(input_list, variant_name='PRE-CHANGE ZEROS TO ONES', inverse=False):
+def log10_(input_list,
+           variant_name='IGNORE ZEROS',
+           inverse=False):
     """
     Accept only input_list containing positive (or zero) values
-    In case of zeros, the variant PRE-CHANGE ZEROS TO ONES sets those values
-    to 1 (this differs from the built-in QGIS log10 function available in the
-    field calculator, which returns None in case of zeros)
+    In case of zeros:
+        * the variant IGNORE ZEROS produces NULL as output when any input is
+          zero
+        * the variant INCREMENT BY ONE IF ZEROS ARE FOUND increments all input
+          data by 1
     Then use numpy.log10 function to perform the log10 transformation on the
     list of values
     """
     if inverse:
         raise NotImplementedError(
             "Inverse transformation for log10 is not implemented")
+    if variant_name not in LOG10_VARIANTS:
+        raise NotImplementedError(
+            "%s variant not implemented" % variant_name)
     if any(n < 0 for n in input_list):
         raise ValueError("log10 transformation can not be performed if "
                          "the field contains negative values")
-    if variant_name == 'PRE-CHANGE ZEROS TO ONES':
-        input_copy = []
-        for input_value in input_list:
-            corrected_value = input_value if input_value > 0 else 1.0
-            input_copy.append(corrected_value)
-        output_list = list(log10(input_copy))
-    elif variant_name == 'NO ZEROS ALLOWED':
-        if any(n == 0 for n in input_list):
-            raise ValueError("The attribute contains zeros which have not "
-                             "been changed into ones, so the log10 "
-                             "transformation could not be performed")
-        output_list = list(log10(input_list))
-    else:
-        raise NotImplementedError("%s variant not implemented" % variant_name)
+    if any(n == 0 for n in input_list):
+        if variant_name == 'INCREMENT BY ONE IF ZEROS ARE FOUND':
+            corrected_input = [input_value + 1 for input_value in input_list]
+            output_list = list(log10(corrected_input))
+            return output_list
+        elif variant_name == 'IGNORE ZEROS':
+            output_list = []
+            for input_value in input_list:
+                if input_value == 0:
+                    output_value = QPyNullVariant(float)
+                    output_list.append(output_value)
+                else:
+                    output_list.append(log10(input_value))
+            return output_list
+    output_list = list(log10(input_list))
     return output_list
 
 

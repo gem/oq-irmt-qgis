@@ -26,8 +26,10 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+from PyQt4.QtCore import Qt
 from PyQt4.QtGui import (QDialog,
-                         QDialogButtonBox, QLabel, QLineEdit, QComboBox, )
+                         QDialogButtonBox, QLabel, QLineEdit, QComboBox)
+from PyQt4.QtGui import QSizePolicy
 
 from ui.ui_create_weight_tree import Ui_CreateWeightTreeDialog
 from globals import NUMERIC_FIELD_TYPES
@@ -52,12 +54,16 @@ class CreateWeightTreeDialog(QDialog):
 
         self.project_definition = project_definition
         self.layer = layer
-        self.theme_boxes = []
-        self.themes = set([''])
+        self.theme_boxes = None
+        self.themes = None
 
         self.generate_gui()
+        self.ui.buttonBox.button(QDialogButtonBox.Reset).clicked.connect(
+            self.reset)
 
     def generate_gui(self):
+        self.theme_boxes = []
+        self.themes = set([''])
         dp = self.layer.dataProvider()
         fields = list(dp.fields())
         numeric_fields = [field for field in fields
@@ -78,6 +84,18 @@ class CreateWeightTreeDialog(QDialog):
             themes_list.sort()
         themes_list.insert(0, '')
 
+        attribute_label = QLabel('Attribute')
+        theme_label = QLabel('Theme')
+        name_label = QLabel('Name')
+
+        sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
+        sizePolicy.setHorizontalStretch(5)
+        theme_label.setSizePolicy(sizePolicy)
+        name_label.setSizePolicy(sizePolicy)
+        self.ui.grid_layout.addWidget(attribute_label, 0, 0)
+        self.ui.grid_layout.addWidget(theme_label, 0, 1)
+        self.ui.grid_layout.addWidget(name_label, 0, 2)
+
         for i, field in enumerate(numeric_fields, start=1):
             theme_name = ''
             indicator_name = ''
@@ -85,7 +103,8 @@ class CreateWeightTreeDialog(QDialog):
                 theme_name = indicators_list[field.name()][0]
                 indicator_name = indicators_list[field.name()][1]
 
-            label = QLabel(field.name())
+            attribute_label = QLabel(field.name())
+            attribute_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
 
             theme = QComboBox()
             theme.setEditable(True)
@@ -100,9 +119,9 @@ class CreateWeightTreeDialog(QDialog):
             self.theme_boxes.append(theme)
 
             name = QLineEdit(indicator_name)
-            name.editingFinished.connect(self.check_status)
+            name.textChanged.connect(self.check_status)
 
-            self.ui.grid_layout.addWidget(label, i, 0)
+            self.ui.grid_layout.addWidget(attribute_label, i, 0)
             self.ui.grid_layout.addWidget(theme, i, 1)
             self.ui.grid_layout.addWidget(name, i, 2)
 
@@ -113,7 +132,7 @@ class CreateWeightTreeDialog(QDialog):
         if new_theme not in self.themes:
             self.themes.update([new_theme])
             for theme_box in self.theme_boxes:
-                # needed to avoid a strange behavoiur when generating_gui
+                # needed to avoid a strange behaviour when generating_gui
                 if theme_box.findText(new_theme) == -1:
                     theme_box.addItem(new_theme)
             self.check_status()
@@ -135,13 +154,23 @@ class CreateWeightTreeDialog(QDialog):
     def check_status(self):
         valid_with_theme = True
         valid_without_theme = True
+        enough_indicators = False
+
         for i in range(1, self.ui.grid_layout.rowCount()):
             theme = self.ui.grid_layout.itemAtPosition(
                 i, 1).widget().currentText()
-            name = self.ui.grid_layout.itemAtPosition(i, 2).widget().text()
+            name_field = self.ui.grid_layout.itemAtPosition(i, 2).widget()
+            name = name_field.text()
+            label = self.ui.grid_layout.itemAtPosition(i, 0).widget().text()
 
             if theme:
                 valid_without_theme = False
+                if name == '':
+                    name_field.setText(label)
+                    name = label
+
+            if name:
+                enough_indicators = True
 
             #either both or none are set
             if theme and name or (not theme and not name):
@@ -150,6 +179,17 @@ class CreateWeightTreeDialog(QDialog):
                 valid_with_theme = False
 
         if valid_with_theme or valid_without_theme:
-            self.ok_button.setEnabled(True)
+            if enough_indicators:
+                self.ok_button.setEnabled(True)
+            else:
+                self.ok_button.setEnabled(False)
         else:
             self.ok_button.setDisabled(True)
+
+    def reset(self):
+        layout = self.ui.grid_layout
+        # clear the layout as per
+        # http://stackoverflow.com/questions/4528347/clear-all-widgets-in-a-layout-in-pyqt#answer-13103617
+        for i in reversed(range(layout.count())):
+            layout.itemAt(i).widget().setParent(None)
+        self.generate_gui()

@@ -205,19 +205,35 @@ class Log10TestCase(unittest.TestCase):
                       174568]
         self.assertRaises(ValueError, self.alg, input_list)
 
-    def test_log10_with_zeros_changed_to_ones(self):
+    def test_log10_incrementing_by_one_case_no_zeros_found(self):
+        input_list = [101249,
+                      94082,
+                      94062,
+                      158661,
+                      174568]
+        log10_list = self.alg(
+            input_list, variant_name='INCREMENT BY ONE IF ZEROS ARE FOUND')
+        expected_list = [5.005391,
+                         4.973507,
+                         4.973414,
+                         5.200470,
+                         5.241965]
+        for i in range(len(input_list)):
+            self.assertAlmostEqual(log10_list[i], expected_list[i], places=6)
+
+    def test_log10_incrementing_by_one_case_zeros_found(self):
         input_list = [101249,
                       94082,
                       0,
                       0,
                       174568]
-        log10_list = self.alg(input_list,
-                              variant_name='PRE-CHANGE ZEROS TO ONES')
-        expected_list = [5.005391,
-                         4.973507,
+        log10_list = self.alg(
+            input_list, variant_name='INCREMENT BY ONE IF ZEROS ARE FOUND')
+        expected_list = [5.005395,
+                         4.973511,
                          0,
                          0,
-                         5.241965]
+                         5.241967]
         for i in range(len(input_list)):
             self.assertAlmostEqual(log10_list[i], expected_list[i], places=6)
 
@@ -227,10 +243,15 @@ class Log10TestCase(unittest.TestCase):
                       0,
                       0,
                       174568]
-        self.assertRaises(ValueError,
-                          self.alg,
-                          input_list,
-                          variant_name='NO ZEROS ALLOWED')
+        log10_list = self.alg(
+            input_list, variant_name='IGNORE ZEROS')
+        expected_list = [5.005391,
+                         4.973507,
+                         QPyNullVariant(float),
+                         QPyNullVariant(float),
+                         5.241965]
+        for i in range(len(input_list)):
+            self.assertAlmostEqual(log10_list[i], expected_list[i], places=6)
 
 
 class QuadraticTestCase(unittest.TestCase):
