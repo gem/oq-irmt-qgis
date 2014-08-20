@@ -18,7 +18,6 @@ class SettingsDialog(QtGui.QDialog, Ui_SettingsDialog):
         """
         mySettings = QtCore.QSettings()
         platform_username = mySettings.value('svir/platform_username', '')
-        platform_username = mySettings.value('svir/platform_username', '')
         platform_password = mySettings.value('svir/platform_password', '')
         platform_hostname = mySettings.value(
             'svir/platform_hostname', 'https://platform.openquake.org')
