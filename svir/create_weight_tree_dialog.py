@@ -28,8 +28,8 @@
 
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import (QDialog,
-                         QDialogButtonBox, QLabel, QLineEdit, QComboBox,
-                         QSpacerItem)
+                         QDialogButtonBox, QLabel, QLineEdit, QComboBox)
+from PyQt4.QtGui import QSizePolicy
 
 from ui.ui_create_weight_tree import Ui_CreateWeightTreeDialog
 from globals import NUMERIC_FIELD_TYPES
@@ -84,9 +84,17 @@ class CreateWeightTreeDialog(QDialog):
             themes_list.sort()
         themes_list.insert(0, '')
 
-        self.ui.grid_layout.addWidget(QLabel('Attribute'), 0, 0)
-        self.ui.grid_layout.addWidget(QLabel('Theme'), 0, 1)
-        self.ui.grid_layout.addWidget(QLabel('Name'), 0, 2)
+        attribute_label = QLabel('Attribute')
+        theme_label = QLabel('Theme')
+        name_label = QLabel('Name')
+
+        sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
+        sizePolicy.setHorizontalStretch(5)
+        theme_label.setSizePolicy(sizePolicy)
+        name_label.setSizePolicy(sizePolicy)
+        self.ui.grid_layout.addWidget(attribute_label, 0, 0)
+        self.ui.grid_layout.addWidget(theme_label, 0, 1)
+        self.ui.grid_layout.addWidget(name_label, 0, 2)
 
         for i, field in enumerate(numeric_fields, start=1):
             theme_name = ''
@@ -95,8 +103,8 @@ class CreateWeightTreeDialog(QDialog):
                 theme_name = indicators_list[field.name()][0]
                 indicator_name = indicators_list[field.name()][1]
 
-            label = QLabel(field.name())
-            label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+            attribute_label = QLabel(field.name())
+            attribute_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
 
             theme = QComboBox()
             theme.setEditable(True)
@@ -113,7 +121,7 @@ class CreateWeightTreeDialog(QDialog):
             name = QLineEdit(indicator_name)
             name.textChanged.connect(self.check_status)
 
-            self.ui.grid_layout.addWidget(label, i, 0)
+            self.ui.grid_layout.addWidget(attribute_label, i, 0)
             self.ui.grid_layout.addWidget(theme, i, 1)
             self.ui.grid_layout.addWidget(name, i, 2)
 
