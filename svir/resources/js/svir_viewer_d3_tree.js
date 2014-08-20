@@ -205,36 +205,9 @@
             
             nodeUpdate.select("circle")
                 .attr("r", function (d) {
-                    if (d.weight <= 0.10) {
-                        return 2;
-                    }
-                    else if (d.weight > 0.10 && d.weight <= 0.20 ) {
-                        return 4;
-                    }
-                    else if (d.weight > 0.20 && d.weight <= 0.30 ) {
-                        return 6;
-                    }
-                    else if (d.weight > 0.30 && d.weight <= 0.40 ) {
-                        return 8;
-                    }
-                    else if (d.weight > 0.40 && d.weight <= 0.50 ) {
-                        return 10;
-                    }
-                    else if (d.weight > 0.50 && d.weight <= 0.60 ) {
-                        return 12;
-                    }
-                    else if (d.weight > 0.60 && d.weight <= 0.70 ) {
-                        return 14;
-                    }
-                    else if (d.weight > 0.70 && d.weight <= 0.80 ) {
-                        return 16;
-                    }
-                    else if (d.weight > 0.80 && d.weight <= 0.90 ) {
-                        return 18;
-                    }
-                    else if (d.weight > 0.90 && d.weight <= 100 ) {
-                        return 20;
-                    };
+                    // d.weight is expected to be between 0 and 1
+                    // Nodes are displayed as circles of size between 2 and 20
+                    return d.weight ? Math.max(d.weight * 20, 2): 2;
                 })
                 .style("fill", function(d) {
                     return d.source ? d.source.linkColor: d.linkColor
