@@ -28,7 +28,8 @@
 
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import (QDialog,
-                         QDialogButtonBox, QLabel, QLineEdit, QComboBox, )
+                         QDialogButtonBox, QLabel, QLineEdit, QComboBox,
+                         QSpacerItem)
 
 from ui.ui_create_weight_tree import Ui_CreateWeightTreeDialog
 from globals import NUMERIC_FIELD_TYPES
@@ -57,6 +58,8 @@ class CreateWeightTreeDialog(QDialog):
         self.themes = set([''])
 
         self.generate_gui()
+        self.ui.buttonBox.button(QDialogButtonBox.Reset).clicked.connect(
+            self.reset)
 
     def generate_gui(self):
         dp = self.layer.dataProvider()
@@ -78,6 +81,10 @@ class CreateWeightTreeDialog(QDialog):
             themes_list = list(set(themes_list))
             themes_list.sort()
         themes_list.insert(0, '')
+
+        self.ui.grid_layout.addWidget(QLabel('Attribute'), 0, 0)
+        self.ui.grid_layout.addWidget(QLabel('Theme'), 0, 1)
+        self.ui.grid_layout.addWidget(QLabel('Name'), 0, 2)
 
         for i, field in enumerate(numeric_fields, start=1):
             theme_name = ''
@@ -107,6 +114,11 @@ class CreateWeightTreeDialog(QDialog):
             self.ui.grid_layout.addWidget(label, i, 0)
             self.ui.grid_layout.addWidget(theme, i, 1)
             self.ui.grid_layout.addWidget(name, i, 2)
+
+        #spacer = QSpacerItem(20, 40, QSizePolicy.Minimum,QSizePolicy.Expanding)
+        #self.ui.grid_layout.addItem(spacer)
+
+        self.adjustSize()
 
         self.check_status()
 
@@ -168,3 +180,12 @@ class CreateWeightTreeDialog(QDialog):
                 self.ok_button.setEnabled(False)
         else:
             self.ok_button.setDisabled(True)
+
+    def reset(self):
+        layout = self.ui.grid_layout
+        # clear the layout as per
+        # http://stackoverflow.com/questions/4528347/clear-all-widgets-in-a-layout-in-pyqt#answer-13103617
+        for i in reversed(range(layout.count())):
+                layout.itemAt(i).widget().setParent(None)
+
+        self.generate_gui()
