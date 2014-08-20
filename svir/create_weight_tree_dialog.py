@@ -54,14 +54,16 @@ class CreateWeightTreeDialog(QDialog):
 
         self.project_definition = project_definition
         self.layer = layer
-        self.theme_boxes = []
-        self.themes = set([''])
+        self.theme_boxes = None
+        self.themes = None
 
         self.generate_gui()
         self.ui.buttonBox.button(QDialogButtonBox.Reset).clicked.connect(
             self.reset)
 
     def generate_gui(self):
+        self.theme_boxes = []
+        self.themes = set([''])
         dp = self.layer.dataProvider()
         fields = list(dp.fields())
         numeric_fields = [field for field in fields
@@ -114,11 +116,6 @@ class CreateWeightTreeDialog(QDialog):
             self.ui.grid_layout.addWidget(label, i, 0)
             self.ui.grid_layout.addWidget(theme, i, 1)
             self.ui.grid_layout.addWidget(name, i, 2)
-
-        #spacer = QSpacerItem(20, 40, QSizePolicy.Minimum,QSizePolicy.Expanding)
-        #self.ui.grid_layout.addItem(spacer)
-
-        self.adjustSize()
 
         self.check_status()
 
@@ -186,6 +183,5 @@ class CreateWeightTreeDialog(QDialog):
         # clear the layout as per
         # http://stackoverflow.com/questions/4528347/clear-all-widgets-in-a-layout-in-pyqt#answer-13103617
         for i in reversed(range(layout.count())):
-                layout.itemAt(i).widget().setParent(None)
-
+            layout.itemAt(i).widget().setParent(None)
         self.generate_gui()
