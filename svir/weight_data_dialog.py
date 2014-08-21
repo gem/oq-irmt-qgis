@@ -41,6 +41,8 @@ from PyQt4.QtWebKit import QWebSettings
 
 from ui.ui_weight_data import Ui_WeightDataDialog
 
+from globals import COMBINATION_TYPES, DEFAULT_COMBINATION
+
 
 class WeightDataDialog(QDialog):
     """
@@ -49,7 +51,7 @@ class WeightDataDialog(QDialog):
 
     # QVariantMap is to map a JSON to dict see:
     #http://pyqt.sourceforge.net/Docs/PyQt4/incompatibilities.html#pyqt4-v4-7-4
-    # this is for javascript to emitt when it changes the json
+    # this is for javascript to emit when it changes the json
     json_updated = pyqtSignal(['QVariantMap'], name='json_updated')
     # Python classes should connect to json_cleaned
     json_cleaned = pyqtSignal(['QVariantMap'], name='json_cleaned')
@@ -87,6 +89,8 @@ class WeightDataDialog(QDialog):
 
     def setup_js(self):
         # pass a reference (called qt_page) of self to the JS world
+        # to expose a member of self to js you need to declare it as property
+        # see for example self.json_str()
         self.frame.addToJavaScriptWindowObject('qt_page', self)
 
     def show_tree(self):
@@ -112,3 +116,11 @@ class WeightDataDialog(QDialog):
     def json_str(self):
         #This method gets exposed to JS thanks to @pyqtProperty(str)
         return json.dumps(self.project_definition)
+
+    @pyqtProperty(str)
+    def DEFAULT_COMBINATION(self):
+        return DEFAULT_COMBINATION
+
+    @pyqtProperty(str)
+    def COMBINATION_TYPES(self):
+        return ';'.join(COMBINATION_TYPES)

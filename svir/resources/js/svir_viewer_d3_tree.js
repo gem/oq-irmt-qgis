@@ -34,6 +34,8 @@ const circle_scale = 20;
 
     function loadPD(selectedPDef, qt_page) {
         var qt_page = typeof qt_page !== 'undefined' ? qt_page : false;
+        const DEFAULT_COMBINATION = qt_page.DEFAULT_COMBINATION
+        const COMBINATION_TYPES = qt_page.COMBINATION_TYPES.split(';')
         var margin = {top: 20, right: 120, bottom: 20, left: 60},
             width = 960 - margin.right - margin.left,
             height = 800 - margin.top - margin.bottom;
@@ -57,12 +59,39 @@ const circle_scale = 20;
                     min: 0, 
                     max: 100,
                     step: 0.01,
-                    numberFormat: "n",
+                    numberFormat: "n"
                 });
             });
         }
 
         var nodeEnter;
+
+        function operatorSelect(pid){
+            var tid = "operator_" + pid
+
+            $('#projectDefWeightDialog')
+                .append('<br/><label for="' + tid +'">Operator: </label>')
+                .append('<select id="' + tid + '">'+ operatorOptions() + '</select>');
+            //$('#operator' + pid).selectmenu();
+            $('#operator' + pid).click(function(d) {alert(d.id)});
+        }
+
+        function operatorOptions(){
+            var options = ''
+            for (i = 0; i < COMBINATION_TYPES.length; i++) {
+                var c = COMBINATION_TYPES[i];
+                if (c == DEFAULT_COMBINATION){
+                    options += '<option value="' + c + '" selected="selected">' + c + '</option>'
+                }
+                else{
+                    options += '<option value="' + c + '">' + c + '</option>'
+                }
+            }
+
+            return options
+        }
+
+
         function updateButton(){
             $('#projectDefWeightDialog').append('<br/><br/><button type="button" id="update-spinner-value">Update</button>');
             $('#update-spinner-value').click(function() {
@@ -103,10 +132,12 @@ const circle_scale = 20;
 
         function findTreeBranchInfo(pdData, pdName, pdLevel) {
             // Find out how many elements are in tree branch
-            if (pdLevel.some(function(currentValue) {
-                return (pdData.level == currentValue);
-                
-            })) {
+            if (pdLevel.some(
+                function(currentValue) {
+                    return (pdData.level == currentValue);
+                }
+            ))
+            {
                 pdTempIds.push(pdData.id);
                 createSpinner(pdData.id, pdData.weight, pdData.name);
             }
@@ -114,6 +145,8 @@ const circle_scale = 20;
             (pdData.children || []).forEach(function(currentItem) {
                 findTreeBranchInfo(currentItem, [pdName], [pdLevel]);
             });
+
+
         }
 
         function updateTreeBranch(pdData, id, pdWeight) {
@@ -183,11 +216,7 @@ const circle_scale = 20;
                     return "-1em" })
                 .attr("text-anchor", function(d) { return "end"; })
                 .text(function(d) {
-                    var text = d.name + " " + d.weight ;
-                    if (d.children){
-                        //text += "(SUMMMMM)";
-                    }
-                    return text;
+                    return d.name + " " + d.weight ;
                 })
                 .style("fill-opacity", 1e-6)
                 .on("click", function(d) {
@@ -200,6 +229,27 @@ const circle_scale = 20;
                     pdTempIds = [];
                     $('#projectDefWeightDialog').empty();
                     findTreeBranchInfo(pdData, [pdName], [pdLevel]);
+                    updateButton();
+                });
+
+            nodeEnter.append("text")
+                .text(function(d) {
+                    if (d.children){
+                        return "(SW)";
+                    }
+                })
+                .attr("x", function(d) { return d.weight * circle_scale + 15; })
+                .on("click", function(d) {
+                    pdName = d.children[0].name;
+                    pdData = data;
+                    pdLevel = d.children[0].level;
+                    pdParent = d.name;
+                    pdTempSpinnerIds = [];
+                    pdTempIds = [];
+                    pdId = d.id
+                    $('#projectDefWeightDialog').empty();
+                    findTreeBranchInfo(pdData, [pdName], [pdLevel]);
+                    operatorSelect(pdId);
                     updateButton();
                 });
 
