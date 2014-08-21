@@ -15,6 +15,8 @@
       along with this program.  If not, see <https://www.gnu.org/licenses/agpl.html>.
 */
 
+const circle_scale = 20;
+
     $(document).ready(function() {
         //  Project definition weight dialog
         $("#projectDefWeightDialog").dialog({
@@ -32,7 +34,7 @@
 
     function loadPD(selectedPDef, qt_page) {
         var qt_page = typeof qt_page !== 'undefined' ? qt_page : false;
-        var margin = {top: 20, right: 120, bottom: 20, left: 30},
+        var margin = {top: 20, right: 120, bottom: 20, left: 60},
             width = 960 - margin.right - margin.left,
             height = 800 - margin.top - margin.bottom;
     
@@ -138,14 +140,6 @@
             root = data;
             root.x0 = height / 2;
             root.y0 = 0;
-            
-            function collapse(d) {
-                if (d.children) {
-                    d._children = d.children;
-                    d._children.forEach(collapse);
-                    d.children = null;
-                }
-            }
 
             //root.children.forEach(collapse);
             updateD3Tree(root);
@@ -169,21 +163,32 @@
             nodeEnter = node.enter().append("g")
                 .attr("class", "node")
                 .attr("transform", function(d) { return "translate(" + source.y0 + "," + source.x0 + ")"; })
-                //.on("click", click);
-            
+
             nodeEnter.append("circle")
-                .attr("r", 1e-6)
-                .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
+                .attr("r", 1e-6);
             
             nodeEnter.append("text")
                 .attr("class", (function(d) { return "level-" + d.level; }))
                 //.attr("id", (function(d) { return d.name; }))
                 .attr("id", "svg-text")
                 .attr("value", (function(d) { return d.weight; }))
-                .attr("x", function(d) { return d.children || d._children ? -10 : 10; })
-                .attr("dy", ".35em")
-                .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
-                .text(function(d) { return d.name + " " + d.weight; })
+                .attr("x", function(d) { return -(d.weight * circle_scale + 5); })
+                .attr("dy", function(d) {
+                    // NOTE are x and y swapped?
+                    // set te text above or below the node depending on the
+                    // parent position
+                    if (typeof d.parent != "undefined" && d.x > d.parent.x){
+                        return "2em";
+                    }
+                    return "-1em" })
+                .attr("text-anchor", function(d) { return "end"; })
+                .text(function(d) {
+                    var text = d.name + " " + d.weight ;
+                    if (d.children){
+                        //text += "(SUMMMMM)";
+                    }
+                    return text;
+                })
                 .style("fill-opacity", 1e-6)
                 .on("click", function(d) {
                     pdName = d.name;
@@ -207,7 +212,7 @@
                 .attr("r", function (d) {
                     // d.weight is expected to be between 0 and 1
                     // Nodes are displayed as circles of size between 2 and 20
-                    return d.weight ? Math.max(d.weight * 20, 2): 2;
+                    return d.weight ? Math.max(d.weight * circle_scale, 2): 2;
                 })
                 .style("fill", function(d) {
                     return d.source ? d.source.linkColor: d.linkColor
@@ -265,18 +270,6 @@
                     qt_page.json_updated(pdData)
                 }
             }
-        }
-        
-        // Toggle children on click.
-        function click(d) {
-            if (d.children) {
-                d._children = d.children;
-                d.children = null;
-            } else {
-                d.children = d._children;
-                d._children = null;
-            }
-            update(d);
         }
     } //end d3 tree
 
