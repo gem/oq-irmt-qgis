@@ -66,14 +66,14 @@ const circle_scale = 20;
 
         var nodeEnter;
 
-        function operatorSelect(pid){
-            var tid = "operator_" + pid
-
+        function operatorSelect(pdOperator){
             $('#projectDefWeightDialog')
-                .append('<br/><label for="' + tid +'">Operator: </label>')
-                .append('<select id="' + tid + '">'+ operatorOptions() + '</select>');
-            //$('#operator' + pid).selectmenu();
-            $('#operator' + pid).click(function(d) {alert(d.id)});
+                .append('<br/><label for="operator">Operator: </label>')
+                .append('<select id="operator">'+ operatorOptions() + '</select>');
+            //TODO use selectmenu when the bug there is fixed?
+            //$(selector).selectmenu()
+            //$(selector).prop('selectedIndex', 4)
+            $('#operator').val(pdOperator);
         }
 
         function operatorOptions(){
@@ -92,9 +92,10 @@ const circle_scale = 20;
         }
 
 
-        function updateButton(){
-            $('#projectDefWeightDialog').append('<br/><br/><button type="button" id="update-spinner-value">Update</button>');
-            $('#update-spinner-value').click(function() {
+        function updateButton(pdId){
+            pdId = typeof pdId !== 'undefined' ? pdId : false;
+            $('#projectDefWeightDialog').append('<br/><br/><button type="button" id="update-button">Update</button>');
+            $('#update-button').click(function() {
                 pdTempWeights = [];
                 pdTempWeightsComputed = [];
 
@@ -115,16 +116,21 @@ const circle_scale = 20;
                     pdTempWeightsComputed.push(tempMath / 100);
                 };
 
-                // Uopdate the results back into the spinners and to the d3.js chart
+                // Update the results back into the spinners and to the d3.js chart
                 for (var i = 0; i < pdTempSpinnerIds.length; i++) {
                     $('#'+pdTempSpinnerIds[i]).spinner("value", pdTempWeightsComputed[i]);
                 };
 
-                // Upadte the json with new values
+                // Update the json with new values
                 for (var i = 0; i < pdTempWeightsComputed.length; i++) {
                     updateTreeBranch(pdData, [pdTempIds[i]], pdTempWeightsComputed[i]);
                 };
-                
+
+                if ($('#operator').length != 0) {
+                    var operator = $('#operator').val()
+                    updateOperator(pdData, pdId, operator);
+                }
+
                 nodeEnter.remove("text");
                 updateD3Tree(pdData);
             });
@@ -158,6 +164,16 @@ const circle_scale = 20;
 
             (pdData.children || []).forEach(function(currentItem) {
                 updateTreeBranch(currentItem, id, pdWeight);
+            });
+        }
+
+        function updateOperator(pdData, id, pdOperator) {
+            if (pdData.id == id){
+                pdData.operator = pdOperator;
+            }
+
+            (pdData.children || []).forEach(function(currentItem) {
+                updateOperator(currentItem, id, pdOperator);
             });
         }
 
@@ -235,7 +251,9 @@ const circle_scale = 20;
             nodeEnter.append("text")
                 .text(function(d) {
                     if (d.children){
-                        return "(SW)";
+                        var operator = d.operator? d.operator : DEFAULT_COMBINATION;
+                        d.operator = operator
+                        return "(" + operator + ")"
                     }
                 })
                 .attr("x", function(d) { return d.weight * circle_scale + 15; })
@@ -246,11 +264,12 @@ const circle_scale = 20;
                     pdParent = d.name;
                     pdTempSpinnerIds = [];
                     pdTempIds = [];
+                    pdOperator = d.operator
                     pdId = d.id
                     $('#projectDefWeightDialog').empty();
                     findTreeBranchInfo(pdData, [pdName], [pdLevel]);
-                    operatorSelect(pdId);
-                    updateButton();
+                    operatorSelect(pdOperator);
+                    updateButton(pdId);
                 });
 
             // Transition nodes to their new position.
