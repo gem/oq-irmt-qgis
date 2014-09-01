@@ -50,12 +50,6 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
             self.svi_field_cbx, current_layer, NUMERIC_FIELD_TYPES)
         reload_attrib_cbx(self.aal_field, current_layer, NUMERIC_FIELD_TYPES)
         self.ok_button.setEnabled(True)
-        self.indicators_combination_type.addItems(COMBINATION_TYPES)
-        idx = self.indicators_combination_type.findText(DEFAULT_COMBINATION)
-        self.indicators_combination_type.setCurrentIndex(idx)
-        self.themes_combination_type.addItems(COMBINATION_TYPES)
-        idx = self.themes_combination_type.findText(DEFAULT_COMBINATION)
-        self.themes_combination_type.setCurrentIndex(idx)
         self.iri_combination_type.addItems(COMBINATION_TYPES)
         idx = self.iri_combination_type.findText(DEFAULT_COMBINATION)
         self.iri_combination_type.setCurrentIndex(idx)
@@ -65,13 +59,9 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
         add an SVI attribute to the current layer
         """
 
-        indicators_operator = self.indicators_combination_type.currentText()
-        themes_operator = self.themes_combination_type.currentText()
-
         if self.recalculate_svi_check.isChecked():
             svi_attr_id, discarded_feats_ids = calculate_svi(
-                self.iface, self.current_layer, self.project_definition,
-                indicators_operator, themes_operator)
+                self.iface, self.current_layer, self.project_definition)
 
         else:
             svi_attr_name = self.svi_field_cbx.currentText()
@@ -80,36 +70,14 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
             # FIXME: get the NULL values for the SVI attribute
             discarded_feats_ids = []
 
-        if self.calculate_iri_check.isChecked():
-            aal_field_name = self.aal_field.currentText()
-            iri_operator = self.iri_combination_type.currentText()
-            calculate_iri(self.iface, self.current_layer,
-                          self.project_definition, svi_attr_id,
-                          aal_field_name, discarded_feats_ids, iri_operator)
-        else:
-            self.project_definition.pop('iri_field', None)
+        aal_field_name = self.aal_field.currentText()
+        iri_operator = self.iri_combination_type.currentText()
+        calculate_iri(self.iface, self.current_layer,
+                      self.project_definition, svi_attr_id,
+                      aal_field_name, discarded_feats_ids, iri_operator)
 
     def on_recalculate_svi_check_toggled(self, on):
         self.svi_field_cbx.setEnabled(not on)
-        self.indicators_combination_type.setEnabled(on)
-        self.themes_combination_type.setEnabled(on)
-
-    def on_calculate_iri_check_toggled(self, on):
-        self.recalculate_svi_check.setChecked(not on)
-        # if "recalculate svi" is checked ==> enable combination types and
-        # disable svi field combo
-        # otherwise ==> disable combination types and enable svi field combo
-        self.indicators_combination_type.setEnabled(
-            self.recalculate_svi_check.isChecked())
-        self.themes_combination_type.setEnabled(
-            self.recalculate_svi_check.isChecked())
-        self.svi_field_cbx.setEnabled(
-            not self.recalculate_svi_check.isChecked())
-        self.calculate_iri = on
-        if self.calculate_iri_check.isChecked():
-            self.check_iri_fields()
-        else:
-            self.ok_button.setEnabled(True)
 
     def on_aal_field_currentIndexChanged(self, index):
         self.check_iri_fields()

@@ -36,19 +36,17 @@ from process_layer import ProcessLayer
 from utils import LayerEditingManager, tr, toggle_select_features_widget
 
 
-def calculate_svi(iface, current_layer, project_definition,
-                  indicators_operator=None, themes_operator=None,
-                  reuse_field=False):
+def calculate_svi(iface, current_layer, project_definition, reuse_field=False):
     """
     add an SVI attribute to the current layer
     """
-    #set default
-    if indicators_operator is None:
-        indicators_operator = DEFAULT_COMBINATION
-    if themes_operator is None:
-        themes_operator = DEFAULT_COMBINATION
 
-    themes = project_definition['children'][1]['children']
+    svi_node = project_definition['children'][1]
+    themes = svi_node['children']
+    try:
+        themes_operator = svi_node['operator']
+    except KeyError:
+        themes_operator = DEFAULT_COMBINATION
 
     if reuse_field and 'svi_field' in project_definition:
         svi_attr_name = project_definition['svi_field']
@@ -86,6 +84,11 @@ def calculate_svi(iface, current_layer, project_definition,
                 for theme in themes:
                     indicators = theme['children']
 
+                    #set default operator
+                    try:
+                        indicators_operator = theme['operator']
+                    except KeyError:
+                        indicators_operator = DEFAULT_COMBINATION
                     # init theme_result to the correct value depending on
                     # indicators_operator
                     if indicators_operator in SUM_BASED_COMBINATIONS:
@@ -169,8 +172,6 @@ def calculate_svi(iface, current_layer, project_definition,
                 current_layer.selectedFeaturesIds())
             iface.messageBar().pushWidget(widget, QgsMessageBar.WARNING)
 
-        project_definition['indicators_operator'] = indicators_operator
-        project_definition['themes_operator'] = themes_operator
         project_definition['svi_field'] = svi_attr_name
         return svi_attr_id, discarded_feats_ids
 

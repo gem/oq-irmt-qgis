@@ -202,10 +202,10 @@ class Svir:
                            enable=False,
                            add_to_layer_actions=True)
         # Action to calculate the SVI or the IRI
-        self.add_menu_item("calculate_indices",
+        self.add_menu_item("calculate_indexes",
                            ":/plugins/svir/start_plugin_icon.png",
-                           u"&Calculate indices",
-                           self.calculate_indices,
+                           u"&Calculate IRI",
+                           self.calculate_indexes,
                            enable=False,
                            add_to_layer_actions=True)
         # Action to activate the modal dialog to guide the user through loss
@@ -317,7 +317,7 @@ class Svir:
                 raise AttributeError
             proj_def = self.project_definitions[self.current_layer.id()]
             self.registered_actions["create_weight_tree"].setEnabled(True)
-            self.registered_actions["calculate_indices"].setEnabled(True)
+            self.registered_actions["calculate_indexes"].setEnabled(True)
             self.registered_actions["weight_data"].setEnabled(True)
             self.registered_actions["transform_attribute"].setEnabled(True)
 
@@ -331,7 +331,7 @@ class Svir:
             # self.project_definitions[self.current_layer.id()] is not defined
             self.registered_actions["create_weight_tree"].setEnabled(True)
             self.registered_actions["weight_data"].setEnabled(False)
-            self.registered_actions["calculate_indices"].setEnabled(False)
+            self.registered_actions["calculate_indexes"].setEnabled(False)
             self.registered_actions["transform_attribute"].setEnabled(True)
         except AttributeError:
             # self.current_layer.id() does not exist or self.current_layer
@@ -339,7 +339,7 @@ class Svir:
             self.registered_actions["transform_attribute"].setEnabled(False)
             self.registered_actions["create_weight_tree"].setEnabled(False)
             self.registered_actions["weight_data"].setEnabled(False)
-            self.registered_actions["calculate_indices"].setEnabled(False)
+            self.registered_actions["calculate_indexes"].setEnabled(False)
             self.registered_actions["merge_svi_and_losses"].setEnabled(False)
 
     def unload(self):
@@ -604,17 +604,11 @@ class Svir:
     def recalculate_indexes(self, data):
         project_definition = data
 
-        try:
-            indicators_operator = data['indicators_operator']
-            themes_operator = data['themes_operator']
-        except KeyError:
-            indicators_operator = None
-            themes_operator = None
-
         # when updating weights, we need to recalculate the indexes
-        svi_attr_id, discarded_feats_ids = calculate_svi(
-            self.iface, self.current_layer, project_definition,
-            indicators_operator, themes_operator, True)
+        svi_attr_id, discarded_feats_ids = calculate_svi(self.iface,
+                                                         self.current_layer,
+                                                         project_definition,
+                                                         True)
 
         iri_attr_id = None
         # if an IRi has been already calculated, calculate a new one
@@ -627,7 +621,7 @@ class Svir:
                 svi_attr_id, aal_field, discarded_feats_ids, iri_operator)
         return svi_attr_id, iri_attr_id
 
-    def calculate_indices(self):
+    def calculate_indexes(self):
         """
         Open dialog to choose how to calculate indices
         """
