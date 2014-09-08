@@ -240,12 +240,20 @@ const circle_scale = 20;
                     pdData = data;
                     pdWeight = d.weight;
                     pdLevel = d.level;
-                    pdParent = d.parent.name;
                     pdTempSpinnerIds = [];
                     pdTempIds = [];
                     $('#projectDefWeightDialog').empty();
-                    findTreeBranchInfo(pdData, [pdName], [pdLevel]);
-                    updateButton();
+                    if (d.parent){
+                        findTreeBranchInfo(pdData, [pdName], [pdLevel]);
+                        var pdParentOperator = d.parent.operator? d.parent.operator : DEFAULT_COMBINATION;
+                        d.parent.operator = pdParentOperator
+                        operatorSelect(pdParentOperator);
+                        pdId = d.parent.id
+                        updateButton(pdId);
+                    }
+                    else{
+                        //we clicked the root element
+                    }
                 });
 
             nodeEnter.append("text")
