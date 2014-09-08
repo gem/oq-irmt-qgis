@@ -41,7 +41,7 @@ from PyQt4.QtWebKit import QWebSettings
 
 from ui.ui_weight_data import Ui_WeightDataDialog
 
-from globals import COMBINATION_TYPES, DEFAULT_COMBINATION
+from globals import DEFAULT_OPERATOR, OPERATORS_DICT
 
 
 class WeightDataDialog(QDialog):
@@ -119,8 +119,8 @@ class WeightDataDialog(QDialog):
 
     @pyqtProperty(str)
     def DEFAULT_COMBINATION(self):
-        return DEFAULT_COMBINATION
+        return DEFAULT_OPERATOR
 
     @pyqtProperty(str)
     def COMBINATION_TYPES(self):
-        return ';'.join(COMBINATION_TYPES)
+        return ';'.join(OPERATORS_DICT.values())

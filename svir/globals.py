@@ -25,6 +25,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
+from collections import OrderedDict
 from PyQt4.QtCore import QSettings
 
 DEBUG = QSettings().value('/svir/developer_mode', False, type=bool)
@@ -48,13 +49,19 @@ TEXTUAL_FIELD_TYPES = (STRING_FIELD_TYPE_NAME,
                        TEXT_FIELD_TYPE_NAME,
                        TEXT_FIELD_TYPE_NAME.capitalize())
 
-SUM_BASED_COMBINATIONS = ('Sum (simple)',
-                          'Sum (weighted)',
-                          'Average (equal weights)')
-MUL_BASED_COMBINATIONS = ('Multiplication (simple)',
-                          'Multiplication (weighted)')
-COMBINATION_TYPES = SUM_BASED_COMBINATIONS + MUL_BASED_COMBINATIONS
-DEFAULT_COMBINATION = 'Sum (weighted)'
+OPERATORS_DICT = OrderedDict()
+OPERATORS_DICT['SUM_S'] = 'Simple sum (ignore weights)'
+OPERATORS_DICT['SUM_W'] = 'Weighted sum'
+OPERATORS_DICT['AVG'] = 'Average (ignore weights)'
+OPERATORS_DICT['MUL_S'] = 'Simple multiplication (ignore weights)'
+OPERATORS_DICT['MUL_W'] = 'Weighted multiplication'
+
+DEFAULT_OPERATOR = OPERATORS_DICT['SUM_W']
+SUM_BASED_OPERATORS = (OPERATORS_DICT['SUM_S'],
+                          OPERATORS_DICT['SUM_W'],
+                          OPERATORS_DICT['AVG'])
+MUL_BASED_OPERATORS = (OPERATORS_DICT['MUL_S'],
+                          OPERATORS_DICT['MUL_W'])
 
 PROJECT_TEMPLATE = {
     'name': 'ir',

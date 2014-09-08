@@ -30,7 +30,8 @@
 from PyQt4.QtGui import QDialog, QDialogButtonBox
 
 from ui.ui_calculate_iri import Ui_CalculateIRIDialog
-from globals import NUMERIC_FIELD_TYPES, COMBINATION_TYPES, DEFAULT_COMBINATION
+from globals import NUMERIC_FIELD_TYPES, DEFAULT_OPERATOR, \
+    OPERATORS_DICT
 from calculate_utils import calculate_iri, calculate_svi
 from utils import reload_attrib_cbx
 from process_layer import ProcessLayer
@@ -50,8 +51,8 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
             self.svi_field_cbx, current_layer, NUMERIC_FIELD_TYPES)
         reload_attrib_cbx(self.aal_field, current_layer, NUMERIC_FIELD_TYPES)
         self.ok_button.setEnabled(True)
-        self.iri_combination_type.addItems(COMBINATION_TYPES)
-        idx = self.iri_combination_type.findText(DEFAULT_COMBINATION)
+        self.iri_combination_type.addItems(OPERATORS_DICT.values())
+        idx = self.iri_combination_type.findText(DEFAULT_OPERATOR)
         self.iri_combination_type.setCurrentIndex(idx)
 
     def calculate(self):
