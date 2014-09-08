@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_select_layers_to_merge.ui'
 #
-# Created: Tue Aug 19 14:39:18 2014
+# Created: Mon Sep  8 16:21:26 2014
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -26,7 +26,7 @@ except AttributeError:
 class Ui_SelectLayersToMergeDialog(object):
     def setupUi(self, SelectLayersToMergeDialog):
         SelectLayersToMergeDialog.setObjectName(_fromUtf8("SelectLayersToMergeDialog"))
-        SelectLayersToMergeDialog.setWindowModality(QtCore.Qt.WindowModal)
+        SelectLayersToMergeDialog.setWindowModality(QtCore.Qt.ApplicationModal)
         SelectLayersToMergeDialog.resize(671, 153)
         SelectLayersToMergeDialog.setModal(True)
         self.gridLayout = QtGui.QGridLayout(SelectLayersToMergeDialog)
