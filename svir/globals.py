@@ -68,7 +68,7 @@ PROJECT_TEMPLATE = {
     'weight': '',
     'level': 1,
     'children': [
-        {'name': 'aal',
+        {'name': 'risk',
          'weight': 0.5,
          'level': 2},
         {'name': 'svi',
@@ -99,7 +99,7 @@ DEMO_JSON = {
     "weight": "",
     "level": 1.0,
     "children": [
-        {"name": "aal",
+        {"name": "risk",
          "weight": 0.5,
          "level": 2.0},
         {"name": "svi",

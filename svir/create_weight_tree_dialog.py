@@ -26,13 +26,14 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from PyQt4.QtCore import Qt
+from PyQt4.QtCore import Qt, pyqtSlot
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox, QLabel, QLineEdit, QComboBox)
 from PyQt4.QtGui import QSizePolicy
 
 from ui.ui_create_weight_tree import Ui_CreateWeightTreeDialog
 from globals import NUMERIC_FIELD_TYPES
+from utils import reload_attrib_cbx
 
 
 class CreateWeightTreeDialog(QDialog):
@@ -43,7 +44,7 @@ class CreateWeightTreeDialog(QDialog):
     both are selected and are valid files, they can be loaded by clicking OK
     """
 
-    def __init__(self, iface, layer, project_definition):
+    def __init__(self, iface, layer, project_definition, merge_action):
         self.iface = iface
         QDialog.__init__(self)
 
@@ -56,8 +57,16 @@ class CreateWeightTreeDialog(QDialog):
         self.layer = layer
         self.theme_boxes = None
         self.themes = None
+        self.merge_action = merge_action
 
         self.generate_gui()
+        self.populate_risk_field_cbx()
+        try:
+            risk_field = self.project_definition['risk_field']
+            select_index = self.ui.risk_field_cbx.findText(risk_field)
+            self.ui.risk_field_cbx.setCurrentIndex(select_index)
+        except (TypeError, KeyError):
+            pass
         self.ui.buttonBox.button(QDialogButtonBox.Reset).clicked.connect(
             self.reset)
 
@@ -193,3 +202,22 @@ class CreateWeightTreeDialog(QDialog):
         for i in reversed(range(layout.count())):
             layout.itemAt(i).widget().setParent(None)
         self.generate_gui()
+
+    def populate_risk_field_cbx(self):
+        reload_attrib_cbx(self.ui.risk_field_cbx,
+                          self.iface.activeLayer(),
+                          NUMERIC_FIELD_TYPES)
+        self.ui.risk_field_cbx.insertItem(0, '')
+        self.ui.risk_field_cbx.setCurrentIndex(0)
+
+    @pyqtSlot()
+    def on_merge_risk_btn_clicked(self):
+        pre_fields_count = self.ui.risk_field_cbx.count()
+        self.setDisabled(True)
+        self.merge_action.trigger()
+        self.populate_risk_field_cbx()
+        self.setDisabled(False)
+        post_fields_count = self.ui.risk_field_cbx.count()
+        # a new field was added in the merge dialog
+        if pre_fields_count < post_fields_count:
+            self.ui.risk_field_cbx.setCurrentIndex(post_fields_count-1)

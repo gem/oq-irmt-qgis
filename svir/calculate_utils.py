@@ -183,16 +183,16 @@ def calculate_svi(iface, current_layer, project_definition, reuse_field=False):
 
 
 def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
-                  aal_field_name, discarded_feats_ids, iri_operator=None):
+                  risk_field_name, discarded_feats_ids, iri_operator=None):
     """
-    Copy the AAL and calculate an IRI attribute to the current layer
+    Copy the RISK and calculate an IRI attribute to the current layer
     """
 
     #set default
     if iri_operator is None:
         iri_operator = DEFAULT_OPERATOR
 
-    aal_weight = project_definition['children'][0]['weight']
+    risk_weight = project_definition['children'][0]['weight']
     svi_weight = project_definition['children'][1]['weight']
 
     iri_attr_name = 'IRI'
@@ -205,40 +205,40 @@ def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
     iri_attr_id = ProcessLayer(current_layer).find_attribute_id(
         attr_names[iri_attr_name])
 
-    discarded_aal_feats_ids = []
+    discarded_risk_feats_ids = []
 
     try:
         with LayerEditingManager(current_layer, 'Add IRI', DEBUG):
             for feat in current_layer.getFeatures():
                 feat_id = feat.id()
                 svi_value = feat.attributes()[svi_attr_id]
-                aal_value = feat[aal_field_name]
-                if (aal_value == QPyNullVariant(float)
+                risk_value = feat[risk_field_name]
+                if (risk_value == QPyNullVariant(float)
                         or feat_id in discarded_feats_ids):
                     iri_value = QPyNullVariant(float)
-                    discarded_aal_feats_ids.append(feat_id)
+                    discarded_risk_feats_ids.append(feat_id)
                 elif iri_operator == OPERATORS_DICT['SUM_S']:
-                    iri_value = svi_value + aal_value
+                    iri_value = svi_value + risk_value
                 elif iri_operator == OPERATORS_DICT['MUL_S']:
-                    iri_value = svi_value * aal_value
+                    iri_value = svi_value * risk_value
                 elif iri_operator == OPERATORS_DICT['SUM_W']:
                     iri_value = (
-                        svi_value * svi_weight + aal_value * aal_weight)
+                        svi_value * svi_weight + risk_value * risk_weight)
                 elif iri_operator == OPERATORS_DICT['MUL_W']:
                     iri_value = (
-                        svi_value * svi_weight * aal_value * aal_weight)
+                        svi_value * svi_weight * risk_value * risk_weight)
                 elif iri_operator == OPERATORS_DICT['AVG']:
                     # For "Average (equal weights)" it's equivalent to use
                     # equal weights, or to sum the indices (all weights 1)
                     # and divide by the number of indices (we use
                     # the latter solution)
-                    iri_value = (svi_value + aal_value) / 2.0
+                    iri_value = (svi_value + risk_value) / 2.0
                 # store IRI
                 current_layer.changeAttributeValue(
                     feat_id, iri_attr_id, iri_value)
-        project_definition['iri_operator'] = iri_operator
-        # set the field name for the copied AAL layer
-        project_definition['aal_field'] = aal_field_name
+        project_definition['operator'] = iri_operator
+        # set the field name for the copied RISK layer
+        project_definition['risk_field'] = risk_field_name
         project_definition['iri_field'] = attr_names[iri_attr_name]
         msg = ('The IRI has been calculated for fields containing '
                'non-NULL values and it was added to the layer as '
@@ -251,7 +251,7 @@ def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
                'IRI'),
             tr('Select invalid features'),
             current_layer,
-            discarded_aal_feats_ids,
+            discarded_risk_feats_ids,
             current_layer.selectedFeaturesIds())
         iface.messageBar().pushWidget(widget, QgsMessageBar.WARNING)
         return iri_attr_id

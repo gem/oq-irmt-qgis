@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_create_weight_tree.ui'
 #
-# Created: Wed Aug 20 16:17:12 2014
+# Created: Mon Sep  8 17:11:33 2014
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -35,6 +35,23 @@ class Ui_CreateWeightTreeDialog(object):
         CreateWeightTreeDialog.setSizePolicy(sizePolicy)
         self.verticalLayout = QtGui.QVBoxLayout(CreateWeightTreeDialog)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
+        self.horizontalLayout = QtGui.QHBoxLayout()
+        self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
+        self.label_2 = QtGui.QLabel(CreateWeightTreeDialog)
+        self.label_2.setObjectName(_fromUtf8("label_2"))
+        self.horizontalLayout.addWidget(self.label_2)
+        self.risk_field_cbx = QtGui.QComboBox(CreateWeightTreeDialog)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.risk_field_cbx.sizePolicy().hasHeightForWidth())
+        self.risk_field_cbx.setSizePolicy(sizePolicy)
+        self.risk_field_cbx.setObjectName(_fromUtf8("risk_field_cbx"))
+        self.horizontalLayout.addWidget(self.risk_field_cbx)
+        self.merge_risk_btn = QtGui.QPushButton(CreateWeightTreeDialog)
+        self.merge_risk_btn.setObjectName(_fromUtf8("merge_risk_btn"))
+        self.horizontalLayout.addWidget(self.merge_risk_btn)
+        self.verticalLayout.addLayout(self.horizontalLayout)
         self.label = QtGui.QLabel(CreateWeightTreeDialog)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -53,7 +70,7 @@ class Ui_CreateWeightTreeDialog(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setObjectName(_fromUtf8("scrollArea"))
         self.scrollAreaWidgetContents = QtGui.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 550, 110))
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 550, 75))
         self.scrollAreaWidgetContents.setObjectName(_fromUtf8("scrollAreaWidgetContents"))
         self.gridLayout = QtGui.QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
@@ -78,5 +95,7 @@ class Ui_CreateWeightTreeDialog(object):
 
     def retranslateUi(self, CreateWeightTreeDialog):
         CreateWeightTreeDialog.setWindowTitle(_translate("CreateWeightTreeDialog", "Define model structure", None))
+        self.label_2.setText(_translate("CreateWeightTreeDialog", "Risk field", None))
+        self.merge_risk_btn.setText(_translate("CreateWeightTreeDialog", "Copy risk field from another layer", None))
         self.label.setText(_translate("CreateWeightTreeDialog", "Create your indices by defining which fields appartain to which theme. Attributes need both a theme and a name to be considered in the index calculation. You can generate a flat index (with no themes) by not entering any theme.", None))
 

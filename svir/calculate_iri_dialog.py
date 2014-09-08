@@ -49,7 +49,7 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         reload_attrib_cbx(
             self.svi_field_cbx, current_layer, NUMERIC_FIELD_TYPES)
-        reload_attrib_cbx(self.aal_field, current_layer, NUMERIC_FIELD_TYPES)
+        reload_attrib_cbx(self.risk_field, current_layer, NUMERIC_FIELD_TYPES)
         self.ok_button.setEnabled(True)
         self.iri_combination_type.addItems(OPERATORS_DICT.values())
         idx = self.iri_combination_type.findText(DEFAULT_OPERATOR)
@@ -71,20 +71,20 @@ class CalculateIRIDialog(QDialog, Ui_CalculateIRIDialog):
             # FIXME: get the NULL values for the SVI attribute
             discarded_feats_ids = []
 
-        aal_field_name = self.aal_field.currentText()
+        risk_field_name = self.risk_field.currentText()
         iri_operator = self.iri_combination_type.currentText()
         calculate_iri(self.iface, self.current_layer,
                       self.project_definition, svi_attr_id,
-                      aal_field_name, discarded_feats_ids, iri_operator)
+                      risk_field_name, discarded_feats_ids, iri_operator)
 
     def on_recalculate_svi_check_toggled(self, on):
         self.svi_field_cbx.setEnabled(not on)
 
-    def on_aal_field_currentIndexChanged(self, index):
+    def on_risk_field_currentIndexChanged(self, index):
         self.check_iri_fields()
 
     def check_iri_fields(self):
         valid_state = False
-        if self.aal_field.currentText():
+        if self.risk_field.currentText():
             valid_state = True
         self.ok_button.setEnabled(valid_state)
