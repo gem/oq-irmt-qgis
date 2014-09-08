@@ -34,8 +34,8 @@ const circle_scale = 20;
 
     function loadPD(selectedPDef, qt_page) {
         var qt_page = typeof qt_page !== 'undefined' ? qt_page : false;
-        const DEFAULT_COMBINATION = qt_page.DEFAULT_COMBINATION
-        const COMBINATION_TYPES = qt_page.COMBINATION_TYPES.split(';')
+        const DEFAULT_OPERATOR = qt_page.DEFAULT_OPERATOR
+        const OPERATORS = qt_page.OPERATORS.split(';')
         var margin = {top: 20, right: 120, bottom: 20, left: 60},
             width = 960 - margin.right - margin.left,
             height = 800 - margin.top - margin.bottom;
@@ -70,7 +70,7 @@ const circle_scale = 20;
             $('#projectDefWeightDialog')
                 .append('<br/><label for="operator">Operator: </label>')
                 .append('<select id="operator">'+ operatorOptions() + '</select>');
-            //TODO use selectmenu when the bug there is fixed?
+            //TODO use selectmenu when the bug there is fixed9?
             //$(selector).selectmenu()
             //$(selector).prop('selectedIndex', 4)
             $('#operator').val(pdOperator);
@@ -78,9 +78,9 @@ const circle_scale = 20;
 
         function operatorOptions(){
             var options = ''
-            for (i = 0; i < COMBINATION_TYPES.length; i++) {
-                var c = COMBINATION_TYPES[i];
-                if (c == DEFAULT_COMBINATION){
+            for (i = 0; i < OPERATORS.length; i++) {
+                var c = OPERATORS[i];
+                if (c == DEFAULT_OPERATOR){
                     options += '<option value="' + c + '" selected="selected">' + c + '</option>'
                 }
                 else{
@@ -245,7 +245,7 @@ const circle_scale = 20;
                     $('#projectDefWeightDialog').empty();
                     if (d.parent){
                         findTreeBranchInfo(pdData, [pdName], [pdLevel]);
-                        var pdParentOperator = d.parent.operator? d.parent.operator : DEFAULT_COMBINATION;
+                        var pdParentOperator = d.parent.operator? d.parent.operator : DEFAULT_OPERATOR;
                         d.parent.operator = pdParentOperator
                         operatorSelect(pdParentOperator);
                         pdId = d.parent.id
@@ -259,7 +259,7 @@ const circle_scale = 20;
             nodeEnter.append("text")
                 .text(function(d) {
                     if (d.children){
-                        var operator = d.operator? d.operator : DEFAULT_COMBINATION;
+                        var operator = d.operator? d.operator : DEFAULT_OPERATOR;
                         d.operator = operator
                         return operator
                     }

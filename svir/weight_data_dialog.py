@@ -118,9 +118,9 @@ class WeightDataDialog(QDialog):
         return json.dumps(self.project_definition)
 
     @pyqtProperty(str)
-    def DEFAULT_COMBINATION(self):
+    def DEFAULT_OPERATOR(self):
         return DEFAULT_OPERATOR
 
     @pyqtProperty(str)
-    def COMBINATION_TYPES(self):
+    def OPERATORS(self):
         return ';'.join(OPERATORS_DICT.values())
