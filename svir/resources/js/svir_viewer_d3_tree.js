@@ -15,6 +15,8 @@
       along with this program.  If not, see <https://www.gnu.org/licenses/agpl.html>.
 */
 
+const circle_scale = 20;
+
     $(document).ready(function() {
         //  Project definition weight dialog
         $("#projectDefWeightDialog").dialog({
@@ -32,7 +34,9 @@
 
     function loadPD(selectedPDef, qt_page) {
         var qt_page = typeof qt_page !== 'undefined' ? qt_page : false;
-        var margin = {top: 20, right: 120, bottom: 20, left: 30},
+        const DEFAULT_OPERATOR = qt_page.DEFAULT_OPERATOR
+        const OPERATORS = qt_page.OPERATORS.split(';')
+        var margin = {top: 20, right: 120, bottom: 20, left: 60},
             width = 960 - margin.right - margin.left,
             height = 800 - margin.top - margin.bottom;
     
@@ -55,15 +59,43 @@
                     min: 0, 
                     max: 100,
                     step: 0.01,
-                    numberFormat: "n",
+                    numberFormat: "n"
                 });
             });
         }
 
         var nodeEnter;
-        function updateButton(){
-            $('#projectDefWeightDialog').append('<br/><br/><button type="button" id="update-spinner-value">Update</button>');
-            $('#update-spinner-value').click(function() {
+
+        function operatorSelect(pdOperator){
+            $('#projectDefWeightDialog')
+                .append('<br/><label for="operator">Operator: </label>')
+                .append('<select id="operator">'+ operatorOptions() + '</select>');
+            //TODO use selectmenu when the bug there is fixed9?
+            //$(selector).selectmenu()
+            //$(selector).prop('selectedIndex', 4)
+            $('#operator').val(pdOperator);
+        }
+
+        function operatorOptions(){
+            var options = ''
+            for (i = 0; i < OPERATORS.length; i++) {
+                var c = OPERATORS[i];
+                if (c == DEFAULT_OPERATOR){
+                    options += '<option value="' + c + '" selected="selected">' + c + '</option>'
+                }
+                else{
+                    options += '<option value="' + c + '">' + c + '</option>'
+                }
+            }
+
+            return options
+        }
+
+
+        function updateButton(pdId){
+            pdId = typeof pdId !== 'undefined' ? pdId : false;
+            $('#projectDefWeightDialog').append('<br/><br/><button type="button" id="update-button">Update</button>');
+            $('#update-button').click(function() {
                 pdTempWeights = [];
                 pdTempWeightsComputed = [];
 
@@ -84,16 +116,21 @@
                     pdTempWeightsComputed.push(tempMath / 100);
                 };
 
-                // Uopdate the results back into the spinners and to the d3.js chart
+                // Update the results back into the spinners and to the d3.js chart
                 for (var i = 0; i < pdTempSpinnerIds.length; i++) {
                     $('#'+pdTempSpinnerIds[i]).spinner("value", pdTempWeightsComputed[i]);
                 };
 
-                // Upadte the json with new values
+                // Update the json with new values
                 for (var i = 0; i < pdTempWeightsComputed.length; i++) {
                     updateTreeBranch(pdData, [pdTempIds[i]], pdTempWeightsComputed[i]);
                 };
-                
+
+                if ($('#operator').length != 0) {
+                    var operator = $('#operator').val()
+                    updateOperator(pdData, pdId, operator);
+                }
+
                 nodeEnter.remove("text");
                 updateD3Tree(pdData);
             });
@@ -101,10 +138,12 @@
 
         function findTreeBranchInfo(pdData, pdName, pdLevel) {
             // Find out how many elements are in tree branch
-            if (pdLevel.some(function(currentValue) {
-                return (pdData.level == currentValue);
-                
-            })) {
+            if (pdLevel.some(
+                function(currentValue) {
+                    return (pdData.level == currentValue);
+                }
+            ))
+            {
                 pdTempIds.push(pdData.id);
                 createSpinner(pdData.id, pdData.weight, pdData.name);
             }
@@ -112,6 +151,8 @@
             (pdData.children || []).forEach(function(currentItem) {
                 findTreeBranchInfo(currentItem, [pdName], [pdLevel]);
             });
+
+
         }
 
         function updateTreeBranch(pdData, id, pdWeight) {
@@ -123,6 +164,16 @@
 
             (pdData.children || []).forEach(function(currentItem) {
                 updateTreeBranch(currentItem, id, pdWeight);
+            });
+        }
+
+        function updateOperator(pdData, id, pdOperator) {
+            if (pdData.id == id){
+                pdData.operator = pdOperator;
+            }
+
+            (pdData.children || []).forEach(function(currentItem) {
+                updateOperator(currentItem, id, pdOperator);
             });
         }
 
@@ -138,14 +189,6 @@
             root = data;
             root.x0 = height / 2;
             root.y0 = 0;
-            
-            function collapse(d) {
-                if (d.children) {
-                    d._children = d.children;
-                    d._children.forEach(collapse);
-                    d.children = null;
-                }
-            }
 
             //root.children.forEach(collapse);
             updateD3Tree(root);
@@ -169,33 +212,72 @@
             nodeEnter = node.enter().append("g")
                 .attr("class", "node")
                 .attr("transform", function(d) { return "translate(" + source.y0 + "," + source.x0 + ")"; })
-                //.on("click", click);
-            
+
             nodeEnter.append("circle")
-                .attr("r", 1e-6)
-                .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
+                .attr("r", 1e-6);
             
             nodeEnter.append("text")
                 .attr("class", (function(d) { return "level-" + d.level; }))
                 //.attr("id", (function(d) { return d.name; }))
                 .attr("id", "svg-text")
                 .attr("value", (function(d) { return d.weight; }))
-                .attr("x", function(d) { return d.children || d._children ? -10 : 10; })
-                .attr("dy", ".35em")
-                .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
-                .text(function(d) { return d.name + " " + d.weight; })
+                .attr("x", function(d) { return -(d.weight * circle_scale + 5); })
+                .attr("dy", function(d) {
+                    // NOTE are x and y swapped?
+                    // set te text above or below the node depending on the
+                    // parent position
+                    if (typeof d.parent != "undefined" && d.x > d.parent.x){
+                        return "2em";
+                    }
+                    return "-1em" })
+                .attr("text-anchor", function(d) { return "end"; })
+                .text(function(d) {
+                    return d.name + " " + d.weight ;
+                })
                 .style("fill-opacity", 1e-6)
                 .on("click", function(d) {
                     pdName = d.name;
                     pdData = data;
                     pdWeight = d.weight;
                     pdLevel = d.level;
-                    pdParent = d.parent.name;
                     pdTempSpinnerIds = [];
                     pdTempIds = [];
                     $('#projectDefWeightDialog').empty();
+                    if (d.parent){
+                        findTreeBranchInfo(pdData, [pdName], [pdLevel]);
+                        var pdParentOperator = d.parent.operator? d.parent.operator : DEFAULT_OPERATOR;
+                        d.parent.operator = pdParentOperator
+                        operatorSelect(pdParentOperator);
+                        pdId = d.parent.id
+                        updateButton(pdId);
+                    }
+                    else{
+                        //we clicked the root element
+                    }
+                });
+
+            nodeEnter.append("text")
+                .text(function(d) {
+                    if (d.children){
+                        var operator = d.operator? d.operator : DEFAULT_OPERATOR;
+                        d.operator = operator
+                        return operator
+                    }
+                })
+                .attr("x", function(d) { return d.weight * circle_scale + 15; })
+                .on("click", function(d) {
+                    pdName = d.children[0].name;
+                    pdData = data;
+                    pdLevel = d.children[0].level;
+                    pdParent = d.name;
+                    pdTempSpinnerIds = [];
+                    pdTempIds = [];
+                    pdOperator = d.operator
+                    pdId = d.id
+                    $('#projectDefWeightDialog').empty();
                     findTreeBranchInfo(pdData, [pdName], [pdLevel]);
-                    updateButton();
+                    operatorSelect(pdOperator);
+                    updateButton(pdId);
                 });
 
             // Transition nodes to their new position.
@@ -205,36 +287,9 @@
             
             nodeUpdate.select("circle")
                 .attr("r", function (d) {
-                    if (d.weight <= 0.10) {
-                        return 2;
-                    }
-                    else if (d.weight > 0.10 && d.weight <= 0.20 ) {
-                        return 4;
-                    }
-                    else if (d.weight > 0.20 && d.weight <= 0.30 ) {
-                        return 6;
-                    }
-                    else if (d.weight > 0.30 && d.weight <= 0.40 ) {
-                        return 8;
-                    }
-                    else if (d.weight > 0.40 && d.weight <= 0.50 ) {
-                        return 10;
-                    }
-                    else if (d.weight > 0.50 && d.weight <= 0.60 ) {
-                        return 12;
-                    }
-                    else if (d.weight > 0.60 && d.weight <= 0.70 ) {
-                        return 14;
-                    }
-                    else if (d.weight > 0.70 && d.weight <= 0.80 ) {
-                        return 16;
-                    }
-                    else if (d.weight > 0.80 && d.weight <= 0.90 ) {
-                        return 18;
-                    }
-                    else if (d.weight > 0.90 && d.weight <= 100 ) {
-                        return 20;
-                    };
+                    // d.weight is expected to be between 0 and 1
+                    // Nodes are displayed as circles of size between 2 and 20
+                    return d.weight ? Math.max(d.weight * circle_scale, 2): 2;
                 })
                 .style("fill", function(d) {
                     return d.source ? d.source.linkColor: d.linkColor
@@ -292,18 +347,6 @@
                     qt_page.json_updated(pdData)
                 }
             }
-        }
-        
-        // Toggle children on click.
-        function click(d) {
-            if (d.children) {
-                d._children = d.children;
-                d.children = null;
-            } else {
-                d.children = d._children;
-                d._children = null;
-            }
-            update(d);
         }
     } //end d3 tree
 

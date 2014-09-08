@@ -30,25 +30,23 @@
 from PyQt4.QtCore import QVariant, QPyNullVariant
 from qgis.core import QgsField
 from qgis.gui import QgsMessageBar
-from globals import (DOUBLE_FIELD_TYPE_NAME, DEBUG, SUM_BASED_COMBINATIONS,
-                     MUL_BASED_COMBINATIONS, DEFAULT_COMBINATION)
+from globals import (DOUBLE_FIELD_TYPE_NAME, DEBUG, SUM_BASED_OPERATORS,
+                     MUL_BASED_OPERATORS, DEFAULT_OPERATOR, OPERATORS_DICT)
 from process_layer import ProcessLayer
 from utils import LayerEditingManager, tr, toggle_select_features_widget
 
 
-def calculate_svi(iface, current_layer, project_definition,
-                  indicators_operator=None, themes_operator=None,
-                  reuse_field=False):
+def calculate_svi(iface, current_layer, project_definition, reuse_field=False):
     """
     add an SVI attribute to the current layer
     """
-    #set default
-    if indicators_operator is None:
-        indicators_operator = DEFAULT_COMBINATION
-    if themes_operator is None:
-        themes_operator = DEFAULT_COMBINATION
 
-    themes = project_definition['children'][1]['children']
+    svi_node = project_definition['children'][1]
+    themes = svi_node['children']
+    try:
+        themes_operator = svi_node['operator']
+    except KeyError:
+        themes_operator = DEFAULT_OPERATOR
 
     if reuse_field and 'svi_field' in project_definition:
         svi_attr_name = project_definition['svi_field']
@@ -77,20 +75,25 @@ def calculate_svi(iface, current_layer, project_definition,
 
                 # init svi_value to the correct value depending on
                 # themes_operator
-                if themes_operator in SUM_BASED_COMBINATIONS:
+                if themes_operator in SUM_BASED_OPERATORS:
                     svi_value = 0
-                elif themes_operator in MUL_BASED_COMBINATIONS:
+                elif themes_operator in MUL_BASED_OPERATORS:
                     svi_value = 1
 
                 # iterate all themes of SVI
                 for theme in themes:
                     indicators = theme['children']
 
+                    #set default operator
+                    try:
+                        indicators_operator = theme['operator']
+                    except KeyError:
+                        indicators_operator = DEFAULT_OPERATOR
                     # init theme_result to the correct value depending on
                     # indicators_operator
-                    if indicators_operator in SUM_BASED_COMBINATIONS:
+                    if indicators_operator in SUM_BASED_OPERATORS:
                         theme_result = 0
-                    elif indicators_operator in MUL_BASED_COMBINATIONS:
+                    elif indicators_operator in MUL_BASED_OPERATORS:
                         theme_result = 1
 
                     # iterate all indicators of a theme
@@ -105,19 +108,19 @@ def calculate_svi(iface, current_layer, project_definition,
                         # (all weights 1)
                         # and divide by the number of indicators (we use
                         # the latter solution)
-                        if indicators_operator in ('Sum (simple)',
-                                                   'Average (equal weights)',
-                                                   'Multiplication (simple)'):
+                        if indicators_operator in (OPERATORS_DICT['SUM_S'],
+                                                   OPERATORS_DICT['AVG'],
+                                                   OPERATORS_DICT['MUL_S']):
                             indicator_weighted = feat[indicator['field']]
                         else:
                             indicator_weighted = (feat[indicator['field']] *
                                                   indicator['weight'])
 
                         if indicators_operator in \
-                                SUM_BASED_COMBINATIONS:
+                                SUM_BASED_OPERATORS:
                             theme_result += indicator_weighted
                         elif indicators_operator in \
-                                MUL_BASED_COMBINATIONS:
+                                MUL_BASED_OPERATORS:
                             theme_result *= indicator_weighted
                         else:
                             error_message = (
@@ -126,7 +129,7 @@ def calculate_svi(iface, current_layer, project_definition,
                             raise RuntimeError(error_message)
                     if discard_feat:
                         break
-                    if indicators_operator == 'Average (equal weights)':
+                    if indicators_operator == OPERATORS_DICT['AVG']:
                         theme_result /= len(indicators)
 
                     # combine the indicators of each theme
@@ -134,21 +137,21 @@ def calculate_svi(iface, current_layer, project_definition,
                     # equal weights, or to sum the themes (all weights 1)
                     # and divide by the number of themes (we use
                     # the latter solution)
-                    if themes_operator in ('Sum (simple)',
-                                           'Average (equal weights)',
-                                           'Multiplication (simple)'):
+                    if themes_operator in (OPERATORS_DICT['SUM_S'],
+                                           OPERATORS_DICT['AVG'],
+                                           OPERATORS_DICT['MUL_S']):
                         theme_weighted = theme_result
                     else:
                         theme_weighted = theme_result * theme['weight']
 
-                    if themes_operator in SUM_BASED_COMBINATIONS:
+                    if themes_operator in SUM_BASED_OPERATORS:
                         svi_value += theme_weighted
-                    elif themes_operator in MUL_BASED_COMBINATIONS:
+                    elif themes_operator in MUL_BASED_OPERATORS:
                         svi_value *= theme_weighted
                 if discard_feat:
                     svi_value = QPyNullVariant(float)
                 else:
-                    if themes_operator == 'Average (equal weights)':
+                    if themes_operator == OPERATORS_DICT['AVG']:
                         svi_value /= len(themes)
 
                 current_layer.changeAttributeValue(
@@ -169,8 +172,6 @@ def calculate_svi(iface, current_layer, project_definition,
                 current_layer.selectedFeaturesIds())
             iface.messageBar().pushWidget(widget, QgsMessageBar.WARNING)
 
-        project_definition['indicators_operator'] = indicators_operator
-        project_definition['themes_operator'] = themes_operator
         project_definition['svi_field'] = svi_attr_name
         return svi_attr_id, discarded_feats_ids
 
@@ -189,7 +190,7 @@ def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
 
     #set default
     if iri_operator is None:
-        iri_operator = DEFAULT_COMBINATION
+        iri_operator = DEFAULT_OPERATOR
 
     aal_weight = project_definition['children'][0]['weight']
     svi_weight = project_definition['children'][1]['weight']
@@ -216,17 +217,17 @@ def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
                         or feat_id in discarded_feats_ids):
                     iri_value = QPyNullVariant(float)
                     discarded_aal_feats_ids.append(feat_id)
-                elif iri_operator == 'Sum (simple)':
+                elif iri_operator == OPERATORS_DICT['SUM_S']:
                     iri_value = svi_value + aal_value
-                elif iri_operator == 'Multiplication (simple)':
+                elif iri_operator == OPERATORS_DICT['MUL_S']:
                     iri_value = svi_value * aal_value
-                elif iri_operator == 'Sum (weighted)':
+                elif iri_operator == OPERATORS_DICT['SUM_W']:
                     iri_value = (
                         svi_value * svi_weight + aal_value * aal_weight)
-                elif iri_operator == 'Multiplication (weighted)':
+                elif iri_operator == OPERATORS_DICT['MUL_W']:
                     iri_value = (
                         svi_value * svi_weight * aal_value * aal_weight)
-                elif iri_operator == 'Average (equal weights)':
+                elif iri_operator == OPERATORS_DICT['AVG']:
                     # For "Average (equal weights)" it's equivalent to use
                     # equal weights, or to sum the indices (all weights 1)
                     # and divide by the number of indices (we use
