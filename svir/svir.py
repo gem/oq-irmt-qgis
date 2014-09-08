@@ -70,7 +70,7 @@ try:
 except:
     print "Unable to import SagaUtils module from processing.algs.saga"
     saga_was_imported = False
-from calculate_iri_dialog import CalculateIRIDialog
+
 from calculate_utils import calculate_svi, calculate_iri
 
 from process_layer import ProcessLayer
@@ -201,13 +201,6 @@ class Svir:
                            self.weight_data,
                            enable=False,
                            add_to_layer_actions=True)
-        # Action to calculate the SVI or the IRI
-        self.add_menu_item("calculate_indexes",
-                           ":/plugins/svir/start_plugin_icon.png",
-                           u"&Calculate IRI",
-                           self.calculate_indexes,
-                           enable=False,
-                           add_to_layer_actions=True)
         # Action to activate the modal dialog to guide the user through loss
         # aggregation by zone
         self.add_menu_item("aggregate_losses",
@@ -317,7 +310,6 @@ class Svir:
                 raise AttributeError
             proj_def = self.project_definitions[self.current_layer.id()]
             self.registered_actions["create_weight_tree"].setEnabled(True)
-            self.registered_actions["calculate_indexes"].setEnabled(True)
             self.registered_actions["weight_data"].setEnabled(True)
             self.registered_actions["transform_attribute"].setEnabled(True)
 
@@ -331,7 +323,6 @@ class Svir:
             # self.project_definitions[self.current_layer.id()] is not defined
             self.registered_actions["create_weight_tree"].setEnabled(True)
             self.registered_actions["weight_data"].setEnabled(False)
-            self.registered_actions["calculate_indexes"].setEnabled(False)
             self.registered_actions["transform_attribute"].setEnabled(True)
         except AttributeError:
             # self.current_layer.id() does not exist or self.current_layer
@@ -339,7 +330,6 @@ class Svir:
             self.registered_actions["transform_attribute"].setEnabled(False)
             self.registered_actions["create_weight_tree"].setEnabled(False)
             self.registered_actions["weight_data"].setEnabled(False)
-            self.registered_actions["calculate_indexes"].setEnabled(False)
             self.registered_actions["merge_svi_and_losses"].setEnabled(False)
 
     def unload(self):
@@ -627,18 +617,6 @@ class Svir:
                 self.iface, self.current_layer, project_definition,
                 svi_attr_id, risk_field, discarded_feats_ids, iri_operator)
         return svi_attr_id, iri_attr_id
-
-    def calculate_indexes(self):
-        """
-        Open dialog to choose how to calculate indices
-        """
-        project_definition = self.project_definitions[self.current_layer.id()]
-        dlg = CalculateIRIDialog(
-            self.iface, self.current_layer, project_definition)
-        if dlg.exec_():
-            dlg.calculate()
-            self.redraw_ir_layer(project_definition)
-            self.update_actions_status()
 
     def redraw_ir_layer(self, data):
         # if an IRi has been already calculated, show it else show the SVI
