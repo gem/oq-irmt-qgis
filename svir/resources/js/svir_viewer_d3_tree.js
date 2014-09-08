@@ -253,7 +253,7 @@ const circle_scale = 20;
                     if (d.children){
                         var operator = d.operator? d.operator : DEFAULT_COMBINATION;
                         d.operator = operator
-                        return "(" + operator + ")"
+                        return operator
                     }
                 })
                 .attr("x", function(d) { return d.weight * circle_scale + 15; })
