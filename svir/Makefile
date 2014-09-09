@@ -87,8 +87,8 @@ zip: deploy dclean
 # To use, pass a valid commit or tag as follows:
 #   make package VERSION=Version_0.3.2
 package: compile
-		rm -f $(PLUGINNAME).zip
-		git archive --prefix=$(PLUGINNAME)/ -o $(PLUGINNAME).zip $(VERSION)
+		rm -f $(PLUGINNAME)/$(PLUGINNAME).zip
+		git archive --prefix=$(PLUGINNAME)/ --output $(PLUGINNAME).zip $(VERSION)
 		echo "Created package: $(PLUGINNAME).zip"
 
 upload: zip

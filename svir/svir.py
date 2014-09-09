@@ -32,7 +32,7 @@ import copy
 import json
 from math import ceil
 
-from requests.exceptions import ConnectionError
+from third_party.requests.exceptions import ConnectionError
 
 from PyQt4.QtCore import (QSettings,
                           QTranslator,
