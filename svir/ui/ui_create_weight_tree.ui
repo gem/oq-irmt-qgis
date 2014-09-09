@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>570</width>
-    <height>220</height>
+    <height>255</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -23,6 +23,44 @@
    <string>Define model structure</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="label_3">
+     <property name="text">
+      <string>Entering a Risk field will allow calculating an IRI. If no risk field is entered, only the SVI  is calculated.</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Risk field</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="risk_field_cbx">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="merge_risk_btn">
+       <property name="text">
+        <string>Copy risk field from another layer</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
    <item>
     <widget class="QLabel" name="label">
      <property name="sizePolicy">
@@ -56,7 +94,7 @@
         <x>0</x>
         <y>0</y>
         <width>550</width>
-        <height>110</height>
+        <height>70</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout">

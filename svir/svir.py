@@ -70,7 +70,7 @@ try:
 except:
     print "Unable to import SagaUtils module from processing.algs.saga"
     saga_was_imported = False
-from calculate_iri_dialog import CalculateIRIDialog
+
 from calculate_utils import calculate_svi, calculate_iri
 
 from process_layer import ProcessLayer
@@ -103,7 +103,7 @@ from globals import (INT_FIELD_TYPE_NAME,
                      DEBUG,
                      PROJECT_TEMPLATE,
                      THEME_TEMPLATE,
-                     INDICATOR_TEMPLATE)
+                     INDICATOR_TEMPLATE, DEFAULT_OPERATOR)
 
 
 class Svir:
@@ -197,15 +197,8 @@ class Svir:
         # data from the platform
         self.add_menu_item("weight_data",
                            ":/plugins/svir/start_plugin_icon.png",
-                           u"&Weight data",
+                           u"&Weight data and calculate indices",
                            self.weight_data,
-                           enable=False,
-                           add_to_layer_actions=True)
-        # Action to calculate the SVI or the IRI
-        self.add_menu_item("calculate_indexes",
-                           ":/plugins/svir/start_plugin_icon.png",
-                           u"&Calculate IRI",
-                           self.calculate_indexes,
                            enable=False,
                            add_to_layer_actions=True)
         # Action to activate the modal dialog to guide the user through loss
@@ -317,7 +310,6 @@ class Svir:
                 raise AttributeError
             proj_def = self.project_definitions[self.current_layer.id()]
             self.registered_actions["create_weight_tree"].setEnabled(True)
-            self.registered_actions["calculate_indexes"].setEnabled(True)
             self.registered_actions["weight_data"].setEnabled(True)
             self.registered_actions["transform_attribute"].setEnabled(True)
 
@@ -331,7 +323,6 @@ class Svir:
             # self.project_definitions[self.current_layer.id()] is not defined
             self.registered_actions["create_weight_tree"].setEnabled(True)
             self.registered_actions["weight_data"].setEnabled(False)
-            self.registered_actions["calculate_indexes"].setEnabled(False)
             self.registered_actions["transform_attribute"].setEnabled(True)
         except AttributeError:
             # self.current_layer.id() does not exist or self.current_layer
@@ -339,7 +330,6 @@ class Svir:
             self.registered_actions["transform_attribute"].setEnabled(False)
             self.registered_actions["create_weight_tree"].setEnabled(False)
             self.registered_actions["weight_data"].setEnabled(False)
-            self.registered_actions["calculate_indexes"].setEnabled(False)
             self.registered_actions["merge_svi_and_losses"].setEnabled(False)
 
     def unload(self):
@@ -537,12 +527,16 @@ class Svir:
             project_definition = self.project_definitions[current_layer_id]
         except KeyError:
             project_definition = None
-        dlg = CreateWeightTreeDialog(self.iface,
-                                     self.current_layer,
-                                     project_definition)
+        dlg = CreateWeightTreeDialog(
+            self.iface,
+            self.current_layer,
+            project_definition,
+            self.registered_actions['merge_svi_and_losses'])
 
         if dlg.exec_():
             project_definition = copy.deepcopy(PROJECT_TEMPLATE)
+            if dlg.ui.risk_field_cbx.currentText() != '':
+                project_definition['risk_field'] = dlg.ui.risk_field_cbx.currentText()
             svi_themes = project_definition['children'][1]['children']
             known_themes = []
             for indicator in dlg.indicators():
@@ -607,41 +601,34 @@ class Svir:
         # when updating weights, we need to recalculate the indexes
         svi_attr_id, discarded_feats_ids = calculate_svi(self.iface,
                                                          self.current_layer,
-                                                         project_definition,
-                                                         True)
+                                                         project_definition)
 
         iri_attr_id = None
         # if an IRi has been already calculated, calculate a new one
-        if 'iri_field' in data:
-            aal_field = data['joined_aal_field']
-            iri_operator = data['iri_operator']
+        if 'risk_field' in data:
+            risk_field = data['risk_field']
+            try:
+                iri_operator = data['operator']
+            except KeyError:
+                iri_operator = None
 
-            iri_attr_id = calculate_iri(
-                self.iface, self.current_layer, project_definition,
-                svi_attr_id, aal_field, discarded_feats_ids, iri_operator)
+            iri_attr_id = calculate_iri(self.iface, self.current_layer,
+                                        project_definition, svi_attr_id,
+                                        risk_field, discarded_feats_ids,
+                                        iri_operator)
         return svi_attr_id, iri_attr_id
 
-    def calculate_indexes(self):
-        """
-        Open dialog to choose how to calculate indices
-        """
-        project_definition = self.project_definitions[self.current_layer.id()]
-        dlg = CalculateIRIDialog(
-            self.iface, self.current_layer, project_definition)
-        if dlg.exec_():
-            dlg.calculate()
-            self.redraw_ir_layer(project_definition)
-            self.update_actions_status()
-
     def redraw_ir_layer(self, data):
-        if DEBUG:
-            print 'REDRAWING using:\n%s' % data
-
         # if an IRi has been already calculated, show it else show the SVI
         if 'iri_field' in data:
             target_field = data['iri_field']
+            printing_str = 'IRI'
         else:
             target_field = data['svi_field']
+            printing_str = 'SVI'
+
+        if DEBUG:
+            print 'REDRAWING %s using:\n%s' % (printing_str, data)
 
         rule_renderer = QgsRuleBasedRendererV2(
             QgsSymbolV2.defaultSymbol(self.current_layer.geometryType()))
@@ -676,14 +663,17 @@ class Svir:
             QgsSymbolV2.defaultSymbol(self.current_layer.geometryType()),
             ramp)
 
-        # NOTE: Workaround to avoid rounding problem (QGIS renderer's bug)
-        # which has the consequence to hide the zone containing the highest
-        # value in some cases
-        rangeIndex = len(graduated_renderer.ranges()) - 1
-        upper_value = graduated_renderer.ranges()[rangeIndex].upperValue()
-        increased_upper_value = ceil(upper_value * 10000.0) / 10000.0
-        graduated_renderer.updateRangeUpperValue(rangeIndex,
-                                                 increased_upper_value)
+        if graduated_renderer.ranges():
+            range_index = len(graduated_renderer.ranges()) - 1
+            # NOTE: Workaround to avoid rounding problem (QGIS renderer's bug)
+            # which has the consequence to hide the zone containing the highest
+            # value in some cases
+            upper_value = graduated_renderer.ranges()[range_index].upperValue()
+            increased_upper_value = ceil(upper_value * 10000.0) / 10000.0
+            graduated_renderer.updateRangeUpperValue(
+                range_index, increased_upper_value)
+        elif DEBUG:
+            print 'All features are NULL'
 
         # create value ranges
         rule_renderer.refineRuleRanges(not_null_rule, graduated_renderer)
