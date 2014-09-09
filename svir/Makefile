@@ -65,21 +65,9 @@ deploy: compile doc transcompile
 	cp -vfr i18n $(HOME)/$(QGISDIR)/python/plugins/$(PLUGINNAME)
 	cp -vfr $(HELP) $(HOME)/$(QGISDIR)/python/plugins/$(PLUGINNAME)/help
 
-# The dclean target removes compiled python files from plugin directory
-# also delets any .svn entry
-dclean:
-	find $(HOME)/$(QGISDIR)/python/plugins/$(PLUGINNAME) -iname "*.pyc" -delete
-	find $(HOME)/$(QGISDIR)/python/plugins/$(PLUGINNAME) -iname ".svn" -prune -exec rm -Rf {} \;
-
 # The derase deletes deployed plugin
 derase:
 	rm -Rf $(HOME)/$(QGISDIR)/python/plugins/$(PLUGINNAME)
-
-# The zip target deploys the plugin and creates a zip file with the deployed
-# content. You can then upload the zip file on http://plugins.qgis.org
-zip: deploy dclean
-	rm -f $(PLUGINNAME).zip
-	cd $(HOME)/$(QGISDIR)/python/plugins; zip -9r $(CURDIR)/$(PLUGINNAME).zip $(PLUGINNAME)
 
 # Create a zip package of the plugin named $(PLUGINNAME).zip.
 # This requires use of git (your plugin development directory must be a
@@ -91,7 +79,7 @@ package: compile
 		git archive --prefix=$(PLUGINNAME)/ --output $(PLUGINNAME).zip $(VERSION)
 		echo "Created package: $(PLUGINNAME).zip"
 
-upload: zip
+upload: package
 	$(PLUGIN_UPLOAD) $(PLUGINNAME).zip
 
 # transup
