@@ -27,7 +27,7 @@
 """
 import os
 import tempfile
-import requests
+from third_party.requests import Session
 
 # FIXME Change exposure to sv when app is ready on platform
 PLATFORM_EXPORT_SV_CATEGORY_NAMES = "/svir/export_sv_category_names"
@@ -43,7 +43,7 @@ class SvDownloader(object):
     def __init__(self, host):
         self.host = host
         self._login = host + '/account/ajax_login'
-        self.sess = requests.Session()
+        self.sess = Session()
 
     def login(self, username, password):
         session_resp = self.sess.post(self._login,
