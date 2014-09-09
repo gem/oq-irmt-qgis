@@ -36,7 +36,7 @@ from process_layer import ProcessLayer
 from utils import LayerEditingManager, tr, toggle_select_features_widget
 
 
-def calculate_svi(iface, current_layer, project_definition, reuse_field=False):
+def calculate_svi(iface, current_layer, project_definition):
     """
     add an SVI attribute to the current layer
     """
@@ -48,10 +48,10 @@ def calculate_svi(iface, current_layer, project_definition, reuse_field=False):
     except KeyError:
         themes_operator = DEFAULT_OPERATOR
 
-    if reuse_field and 'svi_field' in project_definition:
+    if 'svi_field' in project_definition:
         svi_attr_name = project_definition['svi_field']
         if DEBUG:
-            print 'Reusing %s' % svi_attr_name
+            print 'Reusing %s for SVI' % svi_attr_name
     else:
         svi_attr_name = 'SVI'
         svi_field = QgsField(svi_attr_name, QVariant.Double)
@@ -183,9 +183,11 @@ def calculate_svi(iface, current_layer, project_definition, reuse_field=False):
 
 
 def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
-                  risk_field_name, discarded_feats_ids, iri_operator=None):
+                  risk_field_name, discarded_feats_ids, iri_operator=None,
+                  reuse_field=False):
     """
     Copy the RISK and calculate an IRI attribute to the current layer
+    :param reuse_field:
     """
 
     #set default
@@ -195,15 +197,19 @@ def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
     risk_weight = project_definition['children'][0]['weight']
     svi_weight = project_definition['children'][1]['weight']
 
-    iri_attr_name = 'IRI'
-    iri_field = QgsField(iri_attr_name, QVariant.Double)
-    iri_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
-
-    attr_names = ProcessLayer(current_layer).add_attributes([iri_field])
+    if 'iri_field' in project_definition:
+        iri_attr_name = project_definition['iri_field']
+        if DEBUG:
+            print 'Reusing %s for IRI' % iri_attr_name
+    else:
+        iri_attr_name = 'IRI'
+        iri_field = QgsField(iri_attr_name, QVariant.Double)
+        iri_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
+        attr_names = ProcessLayer(current_layer).add_attributes([iri_field])
+        iri_attr_name = attr_names[iri_attr_name]
 
     # get the id of the new attributes
-    iri_attr_id = ProcessLayer(current_layer).find_attribute_id(
-        attr_names[iri_attr_name])
+    iri_attr_id = ProcessLayer(current_layer).find_attribute_id(iri_attr_name)
 
     discarded_risk_feats_ids = []
 
@@ -239,10 +245,10 @@ def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
         project_definition['operator'] = iri_operator
         # set the field name for the copied RISK layer
         project_definition['risk_field'] = risk_field_name
-        project_definition['iri_field'] = attr_names[iri_attr_name]
+        project_definition['iri_field'] = iri_attr_name
         msg = ('The IRI has been calculated for fields containing '
                'non-NULL values and it was added to the layer as '
-               'a new attribute called %s') % attr_names[iri_attr_name]
+               'a new attribute called %s') % iri_attr_name
         iface.messageBar().pushMessage(tr('Info'), tr(msg),
                                        level=QgsMessageBar.INFO)
         widget = toggle_select_features_widget(

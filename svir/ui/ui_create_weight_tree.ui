@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>570</width>
-    <height>220</height>
+    <height>255</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -23,6 +23,16 @@
    <string>Define model structure</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="label_3">
+     <property name="text">
+      <string>Entering a Risk field will allow calculating an IRI. If no risk field is entered, only the SVI  is calculated.</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
@@ -84,7 +94,7 @@
         <x>0</x>
         <y>0</y>
         <width>550</width>
-        <height>75</height>
+        <height>70</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout">

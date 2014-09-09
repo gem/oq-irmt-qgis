@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_create_weight_tree.ui'
 #
-# Created: Mon Sep  8 17:11:33 2014
+# Created: Tue Sep  9 10:42:07 2014
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -27,7 +27,7 @@ class Ui_CreateWeightTreeDialog(object):
     def setupUi(self, CreateWeightTreeDialog):
         CreateWeightTreeDialog.setObjectName(_fromUtf8("CreateWeightTreeDialog"))
         CreateWeightTreeDialog.setWindowModality(QtCore.Qt.ApplicationModal)
-        CreateWeightTreeDialog.resize(570, 220)
+        CreateWeightTreeDialog.resize(570, 255)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.MinimumExpanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -35,6 +35,10 @@ class Ui_CreateWeightTreeDialog(object):
         CreateWeightTreeDialog.setSizePolicy(sizePolicy)
         self.verticalLayout = QtGui.QVBoxLayout(CreateWeightTreeDialog)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
+        self.label_3 = QtGui.QLabel(CreateWeightTreeDialog)
+        self.label_3.setWordWrap(True)
+        self.label_3.setObjectName(_fromUtf8("label_3"))
+        self.verticalLayout.addWidget(self.label_3)
         self.horizontalLayout = QtGui.QHBoxLayout()
         self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
         self.label_2 = QtGui.QLabel(CreateWeightTreeDialog)
@@ -70,7 +74,7 @@ class Ui_CreateWeightTreeDialog(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setObjectName(_fromUtf8("scrollArea"))
         self.scrollAreaWidgetContents = QtGui.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 550, 75))
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 550, 70))
         self.scrollAreaWidgetContents.setObjectName(_fromUtf8("scrollAreaWidgetContents"))
         self.gridLayout = QtGui.QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
@@ -95,6 +99,7 @@ class Ui_CreateWeightTreeDialog(object):
 
     def retranslateUi(self, CreateWeightTreeDialog):
         CreateWeightTreeDialog.setWindowTitle(_translate("CreateWeightTreeDialog", "Define model structure", None))
+        self.label_3.setText(_translate("CreateWeightTreeDialog", "Entering a Risk field will allow calculating an IRI. If no risk field is entered, only the SVI  is calculated.", None))
         self.label_2.setText(_translate("CreateWeightTreeDialog", "Risk field", None))
         self.merge_risk_btn.setText(_translate("CreateWeightTreeDialog", "Copy risk field from another layer", None))
         self.label.setText(_translate("CreateWeightTreeDialog", "Create your indices by defining which fields appartain to which theme. Attributes need both a theme and a name to be considered in the index calculation. You can generate a flat index (with no themes) by not entering any theme.", None))

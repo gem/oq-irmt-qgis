@@ -91,7 +91,6 @@ const circle_scale = 20;
             return options
         }
 
-
         function updateButton(pdId){
             pdId = typeof pdId !== 'undefined' ? pdId : false;
             $('#projectDefWeightDialog').append('<br/><br/><button type="button" id="update-button">Update</button>');

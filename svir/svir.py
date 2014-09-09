@@ -197,7 +197,7 @@ class Svir:
         # data from the platform
         self.add_menu_item("weight_data",
                            ":/plugins/svir/start_plugin_icon.png",
-                           u"&Weight data",
+                           u"&Weight data and calculate indices",
                            self.weight_data,
                            enable=False,
                            add_to_layer_actions=True)
@@ -601,8 +601,7 @@ class Svir:
         # when updating weights, we need to recalculate the indexes
         svi_attr_id, discarded_feats_ids = calculate_svi(self.iface,
                                                          self.current_layer,
-                                                         project_definition,
-                                                         True)
+                                                         project_definition)
 
         iri_attr_id = None
         # if an IRi has been already calculated, calculate a new one
@@ -613,9 +612,10 @@ class Svir:
             except KeyError:
                 iri_operator = None
 
-            iri_attr_id = calculate_iri(
-                self.iface, self.current_layer, project_definition,
-                svi_attr_id, risk_field, discarded_feats_ids, iri_operator)
+            iri_attr_id = calculate_iri(self.iface, self.current_layer,
+                                        project_definition, svi_attr_id,
+                                        risk_field, discarded_feats_ids,
+                                        iri_operator)
         return svi_attr_id, iri_attr_id
 
     def redraw_ir_layer(self, data):
