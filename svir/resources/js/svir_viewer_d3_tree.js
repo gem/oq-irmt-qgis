@@ -95,7 +95,14 @@ const circle_scale = 20;
         function updateButton(pdId){
             pdId = typeof pdId !== 'undefined' ? pdId : false;
             $('#projectDefWeightDialog').append('<br/><br/><button type="button" id="update-button">Update</button>');
-            $('#update-button').click(function() {
+            $('#update-button').click(function(){updateButtonClicked()});
+            $('#projectDefWeightDialog').append('<button type="button" id="updateandclose-button">Update and close</button>');
+            $('#updateandclose-button').click(function(){
+                updateButtonClicked();
+                $('#projectDefWeightDialog').dialog("close");
+            });
+
+            function updateButtonClicked() {
                 pdTempWeights = [];
                 pdTempWeightsComputed = [];
 
@@ -133,7 +140,7 @@ const circle_scale = 20;
 
                 nodeEnter.remove("text");
                 updateD3Tree(pdData);
-            });
+            }
         };
 
         function findTreeBranchInfo(pdData, pdName, pdLevel) {
