@@ -38,8 +38,8 @@ from PyQt4.QtCore import QVariant
 
 from qgis.core import QgsVectorLayer, QgsField
 
-from svir.process_layer import ProcessLayer
-from svir.globals import INT_FIELD_TYPE_NAME, STRING_FIELD_TYPE_NAME
+from process_layer import ProcessLayer
+from globals import INT_FIELD_TYPE_NAME, STRING_FIELD_TYPE_NAME
 
 
 class AddAttributesTestCase(unittest.TestCase):

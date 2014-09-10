@@ -34,7 +34,7 @@ from app import getTestApp
 QGISAPP, CANVAS, IFACE, PARENT = getTestApp()
 
 from PyQt4.QtCore import QPyNullVariant
-from svir.transformation_algs import transform, TRANSFORMATION_ALGS
+from transformation_algs import transform, TRANSFORMATION_ALGS
 
 
 class MissingValuesTestCase(unittest.TestCase):
