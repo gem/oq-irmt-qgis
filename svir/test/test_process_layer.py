@@ -25,8 +25,14 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
+
 import unittest
+
+# This 3 lines need for qgis tests
 import qgis  # pylint: disable=W0611  # NOQA
+from app import getTestApp
+QGISAPP, CANVAS, IFACE, PARENT = getTestApp()
+
 
 from PyQt4.QtCore import QVariant
 
@@ -34,13 +40,11 @@ from qgis.core import QgsVectorLayer, QgsField
 
 from svir.process_layer import ProcessLayer
 from svir.globals import INT_FIELD_TYPE_NAME, STRING_FIELD_TYPE_NAME
-from app import getTestApp
 
 
 class AddAttributesTestCase(unittest.TestCase):
 
     def setUp(self):
-        QGISAPP, CANVAS, IFACE, PARENT = getTestApp()
         uri = 'Point?crs=epsg:4326'
         self.layer = QgsVectorLayer(uri, 'TestLayer', 'memory')
         self.dp = self.layer.dataProvider()

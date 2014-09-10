@@ -25,14 +25,16 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
-import qgis
-# ugly way to avoid "imported but unused" pep8 warning (qgis is necessary to
-# import QPyNullVariant
-if qgis:
-    pass
+
+import unittest
+
+# This 3 lines need for qgis tests
+import qgis  # pylint: disable=W0611  # NOQA
+from app import getTestApp
+QGISAPP, CANVAS, IFACE, PARENT = getTestApp()
+
 from PyQt4.QtCore import QPyNullVariant
 from svir.transformation_algs import transform, TRANSFORMATION_ALGS
-import unittest
 
 
 class MissingValuesTestCase(unittest.TestCase):
