@@ -26,11 +26,8 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 import unittest
-import qgis
-# FIXME ugly way to avoid "imported but unused" pep8 warning (qgis is
-# necessary to import QPyNullVariant
-if qgis:
-    pass
+import qgis  # pylint: disable=W0611  # NOQA
+
 from PyQt4.QtCore import QVariant
 
 from qgis.core import QgsVectorLayer, QgsField
