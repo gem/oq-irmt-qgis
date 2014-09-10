@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_create_weight_tree.ui'
 #
-# Created: Tue Sep  9 10:42:07 2014
+# Created: Wed Sep 10 10:39:21 2014
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -27,7 +27,7 @@ class Ui_CreateWeightTreeDialog(object):
     def setupUi(self, CreateWeightTreeDialog):
         CreateWeightTreeDialog.setObjectName(_fromUtf8("CreateWeightTreeDialog"))
         CreateWeightTreeDialog.setWindowModality(QtCore.Qt.ApplicationModal)
-        CreateWeightTreeDialog.resize(570, 255)
+        CreateWeightTreeDialog.resize(570, 278)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.MinimumExpanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -56,6 +56,11 @@ class Ui_CreateWeightTreeDialog(object):
         self.merge_risk_btn.setObjectName(_fromUtf8("merge_risk_btn"))
         self.horizontalLayout.addWidget(self.merge_risk_btn)
         self.verticalLayout.addLayout(self.horizontalLayout)
+        self.line = QtGui.QFrame(CreateWeightTreeDialog)
+        self.line.setFrameShape(QtGui.QFrame.HLine)
+        self.line.setFrameShadow(QtGui.QFrame.Sunken)
+        self.line.setObjectName(_fromUtf8("line"))
+        self.verticalLayout.addWidget(self.line)
         self.label = QtGui.QLabel(CreateWeightTreeDialog)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -74,7 +79,7 @@ class Ui_CreateWeightTreeDialog(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setObjectName(_fromUtf8("scrollArea"))
         self.scrollAreaWidgetContents = QtGui.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 550, 70))
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 550, 84))
         self.scrollAreaWidgetContents.setObjectName(_fromUtf8("scrollAreaWidgetContents"))
         self.gridLayout = QtGui.QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))

@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>570</width>
-    <height>255</height>
+    <height>278</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -62,6 +62,13 @@
     </layout>
    </item>
    <item>
+    <widget class="Line" name="line">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QLabel" name="label">
      <property name="sizePolicy">
       <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
@@ -94,7 +101,7 @@
         <x>0</x>
         <y>0</y>
         <width>550</width>
-        <height>70</height>
+        <height>84</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout">
