@@ -16,13 +16,8 @@
 #################################################
 # Edit the following to match your sources lists
 #################################################
-
-
 #Add iso code for any locales you want to support here (space separated)
-LOCALES =
-
-# translation
-SOURCES = svir.py ui/ui_select_input_layers.py __init__.py select_input_layers_dialog.py attribute_selection_dialog.py select_layers_to_merge_dialog.py transformation_dialog.py select_attrs_for_stats_dialog.py select_sv_variables_dialog.py settings_dialog.py
+LOCALES = it
 
 PLUGINNAME = svir
 
@@ -31,12 +26,14 @@ PY_FILES = svir.py select_input_layers_dialog.py __init__.py attribute_selection
 EXTRAS = resources/start_plugin_icon.png metadata.txt
 
 COMPILED_RESOURCE_FILES = resources_rc.py
-RESOURCE_SRC=$(shell grep '^ *<file' resources.qrc | sed 's@</file>@@g;s/.*>//g' | tr '\n' ' ')
 
 PEP8EXCLUDE=pydev,resources_rc.py,conf.py,third_party,ui
+
 #################################################
 # Normally you would not need to edit below here
 #################################################
+
+RESOURCE_SRC=$(shell grep '^ *<file' resources.qrc | sed 's@</file>@@g;s/.*>//g' | tr '\n' ' ')
 
 HELP = help/build/html
 
@@ -137,8 +134,6 @@ upload: package
 	@echo "-------------------------------------"
 	$(PLUGIN_UPLOAD) $(PLUGINNAME).zip
 
-# transup
-# update .ts translation files
 transup:
 	@echo
 	@echo "------------------------------------------------"
@@ -155,8 +150,6 @@ transcompile:
 	@chmod +x scripts/compile-strings.sh
 	@scripts/compile-strings.sh $(LOCALES)
 
-# transclean
-# deletes all .qm files
 transclean:
 	@echo
 	@echo "------------------------------------"
