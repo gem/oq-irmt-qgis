@@ -28,10 +28,7 @@
 
 import unittest
 
-# This 3 lines need for qgis tests
 import qgis  # pylint: disable=W0611  # NOQA
-from app import getTestApp
-QGISAPP, CANVAS, IFACE, PARENT = getTestApp()
 
 from PyQt4.QtCore import QPyNullVariant
 from transformation_algs import transform, TRANSFORMATION_ALGS
