@@ -1,5 +1,7 @@
 # coding=utf-8
 """Tests QGIS plugin init."""
+# This file was generated from the QGIS Plugin builder plugin
+# See https://github.com/g-sherman/Qgis-Plugin-Builder/
 
 __author__ = 'Tim Sutton <tim@linfiniti.com>'
 __revision__ = '$Format:%H$'

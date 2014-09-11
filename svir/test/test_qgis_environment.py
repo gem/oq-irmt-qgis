@@ -8,6 +8,10 @@
      (at your option) any later version.
 
 """
+
+# This file was generated from the QGIS Plugin builder plugin
+# See https://github.com/g-sherman/Qgis-Plugin-Builder/
+
 __author__ = 'tim@linfiniti.com'
 __date__ = '20/01/2011'
 __copyright__ = ('Copyright 2012, Australia Indonesia Facility for '

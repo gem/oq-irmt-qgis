@@ -7,6 +7,10 @@
      (at your option) any later version.
 
 """
+
+# This file was generated from the QGIS Plugin builder plugin
+# See https://github.com/g-sherman/Qgis-Plugin-Builder/
+
 from utilities import get_qgis_app
 
 __author__ = 'ismailsunni@yahoo.co.id'

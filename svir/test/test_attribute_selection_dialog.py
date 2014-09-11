@@ -8,9 +8,12 @@
 
 """
 
-__author__ = 'io@berna.io'
+# This file was generated from the QGIS Plugin builder plugin
+# See https://github.com/g-sherman/Qgis-Plugin-Builder/
+
+__author__ = 'devops@openquake.org'
 __date__ = '2014-09-10'
-__copyright__ = 'Copyright 2014, marco'
+__copyright__ = 'Copyright 2014, GEM Foundation'
 
 import unittest
 

@@ -1,6 +1,9 @@
 # coding=utf-8
 """Common functionality used by regression tests."""
 
+# This file was generated from the QGIS Plugin builder plugin
+# See https://github.com/g-sherman/Qgis-Plugin-Builder/
+
 import sys
 import logging
 
