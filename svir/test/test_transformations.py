@@ -28,7 +28,7 @@
 
 import unittest
 
-from PyQt4.QtCore import QPyNullVariant
+from qgis import QPyNullVariant
 from transformation_algs import transform, TRANSFORMATION_ALGS
 
 

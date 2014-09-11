@@ -27,7 +27,8 @@
 """
 import uuid
 from types import NoneType
-from PyQt4.QtCore import QVariant, QPyNullVariant
+from PyQt4.QtCore import QVariant
+from qgis import QPyNullVariant
 from qgis.core import (QgsMapLayer,
                        QGis,
                        QgsVectorLayer,

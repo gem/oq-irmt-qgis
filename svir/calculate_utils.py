@@ -25,9 +25,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
-
-
-from PyQt4.QtCore import QVariant, QPyNullVariant
+from PyQt4.QtCore import QVariant
+from qgis import QPyNullVariant
 from qgis.core import QgsField
 from qgis.gui import QgsMessageBar
 from globals import (DOUBLE_FIELD_TYPE_NAME, DEBUG, SUM_BASED_OPERATORS,

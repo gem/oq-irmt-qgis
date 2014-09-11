@@ -27,7 +27,7 @@
 """
 from numpy import mean, std, argwhere, amax, amin, log10
 from types import NoneType
-from PyQt4.QtCore import QPyNullVariant
+from qgis import QPyNullVariant
 from utils import Register
 
 TRANSFORMATION_ALGS = Register()
