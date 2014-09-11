@@ -28,8 +28,6 @@
 
 import unittest
 
-import qgis  # pylint: disable=W0611  # NOQA
-
 from PyQt4.QtCore import QPyNullVariant
 from transformation_algs import transform, TRANSFORMATION_ALGS
 
