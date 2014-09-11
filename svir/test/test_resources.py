@@ -18,7 +18,7 @@ from PyQt4.QtGui import QIcon
 
 
 
-class SVIRDialogTest(unittest.TestCase):
+class SVIRTest(unittest.TestCase):
     """Test rerources work."""
 
     def setUp(self):
@@ -36,7 +36,7 @@ class SVIRDialogTest(unittest.TestCase):
         self.assertFalse(icon.isNull())
 
 if __name__ == "__main__":
-    suite = unittest.makeSuite(SVIRResourcesTest)
+    suite = unittest.makeSuite(SVIRTest)
     runner = unittest.TextTestRunner(verbosity=2)
     runner.run(suite)
 
