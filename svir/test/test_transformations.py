@@ -309,5 +309,28 @@ class QuadraticTestCase(unittest.TestCase):
             self.assertAlmostEqual(
                 quadratic_list[i], expected_list[i], places=4)
 
+
+class SigmoidTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.alg = TRANSFORMATION_ALGS["SIGMOID"]
+        self.input_list = [-1,
+                           0,
+                           1,
+                           -0.3,
+                           0.3]
+
+    def test_sigmoid(self):
+        sigmoid_list = self.alg(self.input_list)
+        expected_list = [0.268941421,
+                         0.5,
+                         0.7310585790,
+                         0.425557483,
+                         0.574442517]
+        for i in range(len(self.input_list)):
+            self.assertAlmostEqual(
+                sigmoid_list[i], expected_list[i], places=4)
+
+
 if __name__ == '__main__':
     unittest.main()

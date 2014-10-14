@@ -78,7 +78,7 @@ class TransformationDialog(QDialog):
         if self.ui.algorithm_cbx.currentText() in ['RANK', 'QUADRATIC']:
             self.reload_variant_cbx()
         self.ui.inverse_ckb.setDisabled(
-            self.ui.algorithm_cbx.currentText() in ['LOG10'])
+            self.ui.algorithm_cbx.currentText() in ['LOG10', 'SIGMOID'])
 
     @pyqtSlot()
     def on_calc_btn_clicked(self):
@@ -138,7 +138,7 @@ class TransformationDialog(QDialog):
         else:
             self.ui.variant_cbx.setDisabled(True)
         self.ui.inverse_ckb.setDisabled(
-            self.ui.algorithm_cbx.currentText() in ['LOG10'])
+            self.ui.algorithm_cbx.currentText() in ['LOG10', 'SIGMOID'])
 
     def update_default_fieldname(self):
         if (not self.attr_name_user_def

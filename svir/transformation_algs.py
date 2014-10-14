@@ -25,6 +25,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
+import math
 from numpy import mean, std, argwhere, amax, amin, log10
 from types import NoneType
 from qgis import QPyNullVariant
@@ -282,4 +283,19 @@ def simple_quadratic(input_list, variant_name="INCREASING", inverse=False):
         raise NotImplementedError("%s variant not implemented" % variant_name)
     if inverse:
         output_list[:] = [1.0 - x for x in output_list]
+    return output_list
+
+
+@TRANSFORMATION_ALGS.add('SIGMOID')
+def sigmoid(input_list, variant_name="", inverse=False):
+    """
+    Logistic sigmoid function:
+        f(x) = 1 / [1 + e^(-x)]
+    """
+    if variant_name:
+        raise NotImplementedError("%s variant not implemented" % variant_name)
+    if inverse:
+        raise NotImplementedError("Inverse function not implemented")
+    output_list = map(
+        lambda x: 1 / (1 + math.exp(-x)), input_list)
     return output_list
