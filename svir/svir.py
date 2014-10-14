@@ -89,7 +89,7 @@ from settings_dialog import SettingsDialog
 from weight_data_dialog import WeightDataDialog
 from create_weight_tree_dialog import CreateWeightTreeDialog
 
-from import_sv_data import SvDownloader, SvDownloadError
+from import_sv_data import SvDownloader
 
 from utils import (LayerEditingManager,
                    tr,
@@ -97,7 +97,8 @@ from utils import (LayerEditingManager,
                    TraceTimeManager,
                    WaitCursorManager,
                    assign_default_weights,
-                   clear_progress_message_bar, create_progress_message_bar)
+                   clear_progress_message_bar, create_progress_message_bar,
+                   SvNetworkError)
 from globals import (INT_FIELD_TYPE_NAME,
                      DOUBLE_FIELD_TYPE_NAME,
                      NUMERIC_FIELD_TYPES,
@@ -416,7 +417,7 @@ class Svir:
             msg = ("Connecting to the OpenQuake Platform...")
             with WaitCursorManager(msg, self.iface):
                 sv_downloader.login(username, password)
-        except (SvDownloadError, ConnectionError) as e:
+        except (SvNetworkError, ConnectionError) as e:
             self.iface.messageBar().pushMessage(
                 tr("Login Error"),
                 tr(str(e)),
@@ -460,7 +461,7 @@ class Svir:
                     try:
                         fname, msg = sv_downloader.get_data_by_variables_ids(
                             indices_string)
-                    except SvDownloadError as e:
+                    except SvNetworkError as e:
                         self.iface.messageBar().pushMessage(
                             tr("Download Error"),
                             tr(str(e)),
@@ -493,7 +494,7 @@ class Svir:
                 self.project_definitions[layer.id()] = project_definition
                 self.update_actions_status()
 
-        except SvDownloadError as e:
+        except SvNetworkError as e:
             self.iface.messageBar().pushMessage(tr("Download Error"),
                                                 tr(str(e)),
                                                 level=QgsMessageBar.CRITICAL)

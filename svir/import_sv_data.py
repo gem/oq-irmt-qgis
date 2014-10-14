@@ -27,34 +27,25 @@
 """
 import os
 import tempfile
+
 from third_party.requests import Session
 
+
 # FIXME Change exposure to sv when app is ready on platform
+from utils import SvNetworkError, platform_login
+
 PLATFORM_EXPORT_SV_CATEGORY_NAMES = "/svir/export_sv_category_names"
 PLATFORM_EXPORT_SV_DATA_BY_VARIABLES_IDS = \
     "/svir/export_sv_data_by_variables_ids"
 
 
-class SvDownloadError(Exception):
-    pass
-
-
 class SvDownloader(object):
     def __init__(self, host):
         self.host = host
-        self._login = host + '/account/ajax_login'
         self.sess = Session()
 
     def login(self, username, password):
-        session_resp = self.sess.post(self._login,
-                                      data={
-                                          "username": username,
-                                          "password": password
-                                      })
-        if session_resp.status_code != 200:  # 200 means successful:OK
-            error_message = ('Unable to get session for login: %s' %
-                             session_resp.content)
-            raise SvDownloadError(error_message)
+        platform_login(self.host, username, password, self.sess)
 
     def get_category_names(self, theme=None, subtheme=None, tag=None):
         page = self.host + PLATFORM_EXPORT_SV_CATEGORY_NAMES
@@ -92,4 +83,4 @@ class SvDownloader(object):
                     result.content.count('\n'), fname)
                 return fname, msg
         else:
-            raise SvDownloadError(result.content)
+            raise SvNetworkError(result.content)

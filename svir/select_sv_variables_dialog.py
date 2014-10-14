@@ -30,8 +30,7 @@ from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox)
 
 from ui.ui_select_sv_variables import Ui_SelectSvVariablesDialog
-from import_sv_data import SvDownloadError
-from utils import WaitCursorManager
+from utils import WaitCursorManager, SvNetworkError
 
 
 class SelectSvVariablesDialog(QDialog):
@@ -103,8 +102,8 @@ class SelectSvVariablesDialog(QDialog):
         try:
             themes = self.sv_downloader.get_category_names()
             self.ui.theme_cbx.addItems(themes)
-        except SvDownloadError as e:
-            raise SvDownloadError(
+        except SvNetworkError as e:
+            raise SvNetworkError(
                 "Unable to download social vulnerability themes: %s" % e)
         # populate the subsequent combo boxes accordingly with the currently
         # selected item
@@ -117,8 +116,8 @@ class SelectSvVariablesDialog(QDialog):
         try:
             subthemes = self.sv_downloader.get_category_names(theme)
             self.ui.subtheme_cbx.addItems(subthemes)
-        except SvDownloadError as e:
-            raise SvDownloadError(
+        except SvNetworkError as e:
+            raise SvNetworkError(
                 "Unable to download social vulnerability subthemes: %s" % e)
         # populate the subsequent combo boxes accordingly with the currently
         # selected item
@@ -131,8 +130,8 @@ class SelectSvVariablesDialog(QDialog):
         try:
             tags = self.sv_downloader.get_category_names(theme, subtheme)
             self.ui.tag_cbx.addItems(tags)
-        except SvDownloadError as e:
-            raise SvDownloadError(
+        except SvNetworkError as e:
+            raise SvNetworkError(
                 "Unable to download social vulnerability tags: %s" % e)
         # populate the subsequent combo boxes accordingly with the currently
         # selected item
@@ -145,6 +144,6 @@ class SelectSvVariablesDialog(QDialog):
         try:
             names = self.sv_downloader.get_category_names(theme, subtheme, tag)
             self.ui.name_cbx.addItems(names)
-        except SvDownloadError as e:
-            raise SvDownloadError(
+        except SvNetworkError as e:
+            raise SvNetworkError(
                 "Unable to download social vulnerability names: %s" % e)

@@ -198,6 +198,32 @@ def toggle_select_features_widget(title, text, button_text, layer,
     return widget
 
 
+def platform_login(host, username, password, session):
+    """
+    Logs in a session to a platform
+
+    :param host: The host url
+    :type host: str
+    :param username: The username
+    :type username: str
+    :param password: The password
+    :type password: str
+    :param session: The session to be autenticated
+    :type session: Session
+    """
+
+    login_url = host + '/account/ajax_login'
+    session_resp = session.post(login_url,
+                                data={
+                                    "username": username,
+                                    "password": password
+                                })
+    if session_resp.status_code != 200:  # 200 means successful:OK
+        error_message = ('Unable to get session for login: %s' %
+                         session_resp.content)
+        raise SvNetworkError(error_message)
+
+
 class Register(collections.OrderedDict):
     """
     Useful to keep (in a single point) a register of available variants of
@@ -272,3 +298,7 @@ class WaitCursorManager(object):
         QApplication.restoreOverrideCursor()
         if self.has_message:
             self.iface.messageBar().popWidget(self.message)
+
+
+class SvNetworkError(Exception):
+    pass
