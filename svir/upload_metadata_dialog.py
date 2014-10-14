@@ -35,10 +35,11 @@ from PyQt4.QtCore import (Qt,
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox)
 from PyQt4.QtWebKit import QWebSettings
+from third_party.requests.sessions import Session
 
 from ui.ui_upload_metadata import Ui_UploadMetadataDialog
 
-from utils import get_credentials
+from utils import get_credentials, platform_login
 
 
 class UploadMetadataDialog(QDialog):
@@ -56,8 +57,13 @@ class UploadMetadataDialog(QDialog):
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
 
         self.web_view = self.ui.web_view
+
         hostname, username, password = get_credentials(self.iface)
-        self.web_view.load(QUrl('%s/upload/' % hostname))
+        self.session = Session()
+        platform_login(hostname, username, password, self.session)
+        result = self.session.get('%s/upload/' % hostname)
+
+        self.web_view.setHtml(result.content, QUrl(hostname))
         self.frame = self.web_view.page().mainFrame()
 
         self.setup_context_menu()
