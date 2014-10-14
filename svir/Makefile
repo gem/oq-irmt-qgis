@@ -23,6 +23,8 @@ PLUGINNAME = svir
 
 PY_FILES = svir.py select_input_layers_dialog.py __init__.py attribute_selection_dialog.py select_layers_to_merge_dialog.py transformation_dialog.py select_attrs_for_stats_dialog.py select_sv_variables_dialog.py settings_dialog.py
 
+UI_FILES = ui/ui_select_input_layers.py ui/ui_attribute_selection.py ui/ui_select_layers_to_merge.py ui/ui_transformation.py ui/ui_select_attrs_for_stats.py ui/ui_select_sv_variables.py ui/ui_settings.py ui/ui_weight_data.py ui/ui_create_weight_tree.py ui/ui_calculate_iri.py
+
 EXTRAS = resources/start_plugin_icon.png metadata.txt
 
 COMPILED_RESOURCE_FILES = resources_rc.py
@@ -35,6 +37,7 @@ PEP8EXCLUDE=pydev,resources_rc.py,conf.py,third_party,ui
 
 RESOURCE_SRC=$(shell grep '^ *<file' resources.qrc | sed 's@</file>@@g;s/.*>//g' | tr '\n' ' ')
 
+
 HELP = help/build/html
 
 PLUGIN_UPLOAD = ./plugin_upload.py
@@ -43,10 +46,13 @@ QGISDIR=.qgis2
 
 default: compile
 
-compile: $(COMPILED_RESOURCE_FILES)
+compile: $(UI_FILES) $(COMPILED_RESOURCE_FILES)
 
 %_rc.py : %.qrc $(RESOURCE_SRC)
 	pyrcc4 -o $*_rc.py  $<
+
+%.py : %.ui
+	pyuic4 -o $@ $<
 
 %.qm : %.ts
 	lrelease $<
