@@ -64,6 +64,8 @@ from qgis.gui import QgsMessageBar
 
 from qgis.analysis import QgsZonalStatistics
 import processing as p
+from upload_metadata_dialog import UploadMetadataDialog
+
 try:
     from processing.algs.saga.SagaUtils import SagaUtils
     saga_was_imported = True
@@ -1320,26 +1322,33 @@ class Svir:
     def upload(self):
         temp_dir = tempfile.gettempdir()
         file_stem = '%s%ssvir_%s' % (temp_dir, os.path.sep, uuid.uuid4())
-
-        data_json = '%s%s' % (file_stem, '_data.json')
-        proj_json = '%s%s' % (file_stem, '_proj.json')
-
-        project_definition = self.project_definitions[self.current_layer.id()]
-        with open(proj_json, 'w') as outfile:
+        #
+        data_file = '%s%s' % (file_stem, '.shp')
+        proj_file = '%s%s' % (file_stem, '.json')
+        #
+        # project_definition = self.project_definitions[self.current_layer.id()]
+        project_definition = {'name': 'test'}
+        with open(proj_file, 'w') as outfile:
             json.dump(project_definition, outfile)
 
         QgsVectorFileWriter.writeAsVectorFormat(
             self.current_layer,
-            data_json,
+            data_file,
             'utf-8',
             self.current_layer.crs(),
-            'GeoJson')
-        msg = tr("Uploading to platform")
-        msg_bar_item, progress = create_progress_message_bar(self.iface, msg)
+            'ESRI Shapefile')
+        # msg = tr("Uploading to platform")
+        # msg_bar_item, progress = create_progress_message_bar(self.iface, msg)
 
-        # TODO UPLOAD
-        max_range = 1000000.0
-        for i in range(int(max_range)):
-            p_int = i / max_range * 100
-            progress.setValue(p_int)
-        clear_progress_message_bar(self.iface, msg_bar_item)
+        # # TODO UPLOAD
+        # max_range = 1000000.0
+        # for i in range(int(max_range)):
+        #     p_int = i / max_range * 100
+        #     progress.setValue(p_int)
+        # clear_progress_message_bar(self.iface, msg_bar_item)
+
+        metadata_dialog = UploadMetadataDialog(self.iface, file_stem)
+        if metadata_dialog.exec_():
+            print "ok"
+        else:
+            print "eee"
