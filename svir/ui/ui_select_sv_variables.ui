@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>329</height>
+    <width>754</width>
+    <height>401</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -22,67 +22,92 @@
      <property name="fieldGrowthPolicy">
       <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
      </property>
-     <item row="0" column="0">
+     <item row="2" column="0">
       <widget class="QLabel" name="theme_lbl">
        <property name="text">
         <string>Theme</string>
        </property>
       </widget>
      </item>
-     <item row="0" column="1">
+     <item row="2" column="1">
       <widget class="QComboBox" name="theme_cbx"/>
      </item>
-     <item row="1" column="0">
+     <item row="3" column="0">
       <widget class="QLabel" name="subtheme_lbl">
        <property name="text">
         <string>Subtheme</string>
        </property>
       </widget>
      </item>
-     <item row="1" column="1">
+     <item row="3" column="1">
       <widget class="QComboBox" name="subtheme_cbx"/>
      </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="tag_lbl">
-       <property name="text">
-        <string>Tag</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="1">
-      <widget class="QComboBox" name="tag_cbx"/>
-     </item>
-     <item row="3" column="0">
+     <item row="6" column="0">
       <widget class="QLabel" name="name_lbl">
        <property name="text">
-        <string>Name</string>
+        <string>Indicator</string>
        </property>
       </widget>
      </item>
-     <item row="3" column="1">
+     <item row="6" column="1">
       <widget class="QComboBox" name="name_cbx"/>
      </item>
-     <item row="5" column="1">
-      <widget class="QListWidget" name="selected_names_lst"/>
-     </item>
-     <item row="4" column="1">
+     <item row="7" column="1">
       <widget class="QPushButton" name="add_name_btn">
        <property name="text">
         <string>Add indicator</string>
        </property>
       </widget>
      </item>
-     <item row="6" column="1">
+     <item row="8" column="0">
+      <widget class="QPushButton" name="clear_btn">
+       <property name="text">
+        <string>Clear</string>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="1">
+      <widget class="QListWidget" name="selected_names_lst"/>
+     </item>
+     <item row="9" column="1">
       <widget class="QPushButton" name="remove_name_btn">
        <property name="text">
         <string>Remove selected indicators</string>
        </property>
       </widget>
      </item>
-     <item row="5" column="0">
-      <widget class="QPushButton" name="clear_btn">
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="name_filter_le">
+       <property name="placeholderText">
+        <string>Type the name of an indicator, or part of it</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="name_filter_lbl">
        <property name="text">
-        <string>Clear</string>
+        <string>Name</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="keywords_lbl">
+       <property name="text">
+        <string>Keywords</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLineEdit" name="keywords_le">
+       <property name="placeholderText">
+        <string>Type one or more keywords (comma-separated)</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0">
+      <widget class="QPushButton" name="filter_btn">
+       <property name="text">
+        <string>Filter indicators by the above criteria</string>
        </property>
       </widget>
      </item>

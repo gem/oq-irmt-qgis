@@ -27,12 +27,18 @@
 """
 import os
 import tempfile
+import StringIO
+import csv
 from third_party.requests import Session
 
 # FIXME Change exposure to sv when app is ready on platform
 PLATFORM_EXPORT_SV_CATEGORY_NAMES = "/svir/export_sv_category_names"
 PLATFORM_EXPORT_SV_DATA_BY_VARIABLES_IDS = \
     "/svir/export_sv_data_by_variables_ids"
+PLATFORM_EXPORT_SV_THEMES = "/svir/list_themes"
+PLATFORM_EXPORT_SV_SUBTHEMES = "/svir/list_subthemes_by_theme"
+PLATFORM_EXPORT_SV_NAMES = "/svir/export_variables_info"
+PLATFORM_EXPORT_VARIABLES_DATA_BY_IDS = "/svir/export_variables_data_by_ids"
 
 
 class SvDownloadError(Exception):
@@ -56,18 +62,38 @@ class SvDownloader(object):
                              session_resp.content)
             raise SvDownloadError(error_message)
 
-    def get_category_names(self, theme=None, subtheme=None, tag=None):
-        page = self.host + PLATFORM_EXPORT_SV_CATEGORY_NAMES
-        params = dict(theme=theme, subtheme=subtheme, tag=tag)
-        category_names = []
+    def get_themes(self):
+        page = self.host + PLATFORM_EXPORT_SV_THEMES
+        themes = []
+        result = self.sess.get(page)
+        if result.status_code == 200:
+            reader = csv.reader(StringIO.StringIO(result.content))
+            themes = reader.next()
+        return themes
+
+    def get_subthemes_by_theme(self, theme):
+        page = self.host + PLATFORM_EXPORT_SV_SUBTHEMES
+        params = dict(theme=theme)
+        subthemes = []
         result = self.sess.get(page, params=params)
         if result.status_code == 200:
-            category_names = \
-                [l for l in result.content.splitlines() if l and l[0] != "#"]
-        return category_names[1:]
+            reader = csv.reader(StringIO.StringIO(result.content))
+            subthemes = reader.next()
+        return subthemes
+
+    def get_names(self, name_filter=None, keywords=None, theme=None, subtheme=None):
+        page = self.host + PLATFORM_EXPORT_SV_NAMES
+        params = dict(name=name_filter,
+                      keywords=keywords,
+                      theme=theme,
+                      subtheme=subtheme)
+        result = self.sess.get(page, params=params)
+        if result.status_code == 200:
+            names = [l for l in result.content.splitlines() if l and l[0] != '#']
+        return names[1:]
 
     def get_data_by_variables_ids(self, sv_variables_ids):
-        page = self.host + PLATFORM_EXPORT_SV_DATA_BY_VARIABLES_IDS
+        page = self.host + PLATFORM_EXPORT_VARIABLES_DATA_BY_IDS
         params = dict(sv_variables_ids=sv_variables_ids)
         result = self.sess.get(page, params=params)
         if result.status_code == 200:

@@ -57,20 +57,10 @@ class SelectSvVariablesDialog(QDialog):
         with WaitCursorManager():
             self.fill_subthemes(theme)
 
-    @pyqtSlot(str)
-    def on_subtheme_cbx_currentIndexChanged(self):
-        theme = self.ui.theme_cbx.currentText()
-        subtheme = self.ui.subtheme_cbx.currentText()
+    @pyqtSlot()
+    def on_filter_btn_clicked(self):
         with WaitCursorManager():
-            self.fill_tags(theme, subtheme)
-
-    @pyqtSlot(str)
-    def on_tag_cbx_currentIndexChanged(self):
-        theme = self.ui.theme_cbx.currentText()
-        subtheme = self.ui.subtheme_cbx.currentText()
-        tag = self.ui.tag_cbx.currentText()
-        with WaitCursorManager():
-            self.fill_names(theme, subtheme, tag)
+            self.fill_names()
 
     @pyqtSlot()
     def on_add_name_btn_clicked(self):
@@ -100,8 +90,9 @@ class SelectSvVariablesDialog(QDialog):
     def fill_themes(self):
         self.ui.theme_cbx.clear()
         # load list of themes from the platform
+        self.ui.theme_cbx.addItems([None])
         try:
-            themes = self.sv_downloader.get_category_names()
+            themes = self.sv_downloader.get_themes()
             self.ui.theme_cbx.addItems(themes)
         except SvDownloadError as e:
             raise SvDownloadError(
@@ -114,36 +105,25 @@ class SelectSvVariablesDialog(QDialog):
     def fill_subthemes(self, theme):
         self.ui.subtheme_cbx.clear()
         # load list of subthemes from the platform
+        self.ui.subtheme_cbx.addItems([None])
         try:
-            subthemes = self.sv_downloader.get_category_names(theme)
+            subthemes = self.sv_downloader.get_subthemes_by_theme(theme)
             self.ui.subtheme_cbx.addItems(subthemes)
         except SvDownloadError as e:
             raise SvDownloadError(
                 "Unable to download social vulnerability subthemes: %s" % e)
-        # populate the subsequent combo boxes accordingly with the currently
-        # selected item
-        current_subtheme = self.ui.subtheme_cbx.currentText()
-        self.fill_tags(theme, current_subtheme)
 
-    def fill_tags(self, theme, subtheme):
-        self.ui.tag_cbx.clear()
-        # load list of tags from the platform
-        try:
-            tags = self.sv_downloader.get_category_names(theme, subtheme)
-            self.ui.tag_cbx.addItems(tags)
-        except SvDownloadError as e:
-            raise SvDownloadError(
-                "Unable to download social vulnerability tags: %s" % e)
-        # populate the subsequent combo boxes accordingly with the currently
-        # selected item
-        current_tag = self.ui.tag_cbx.currentText()
-        self.fill_names(theme, subtheme, current_tag)
-
-    def fill_names(self, theme, subtheme, tag):
+    def fill_names(self):
         self.ui.name_cbx.clear()
         # load list of social vulnerability variable names from the platform
+
+        name_filter = self.ui.name_filter_le.text()
+        keywords = self.ui.keywords_le.text()
+        theme = self.ui.theme_cbx.currentText()
+        subtheme = self.ui.subtheme_cbx.currentText()
         try:
-            names = self.sv_downloader.get_category_names(theme, subtheme, tag)
+            names = self.sv_downloader.get_names(
+                name_filter, keywords, theme, subtheme)
             self.ui.name_cbx.addItems(names)
         except SvDownloadError as e:
             raise SvDownloadError(
