@@ -26,6 +26,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 import collections
+import json
 from time import time
 from PyQt4.QtCore import QSettings, Qt
 from PyQt4.QtGui import QApplication, QProgressBar, QToolButton
@@ -222,6 +223,26 @@ def platform_login(host, username, password, session):
         error_message = ('Unable to get session for login: %s' %
                          session_resp.content)
         raise SvNetworkError(error_message)
+
+
+def upload_shp(host, session, file_stem):
+    files = {'layer_title': file_stem,
+             'base_file': ('file.shp', open('%s.shp' % file_stem, 'rb')),
+             'dbf_file': ('file.dbf', open('%s.dbf' % file_stem, 'rb')),
+             'shx_file': ('file.shx', open('%s.shx' % file_stem, 'rb')),
+             'prj_file': ('file.prj', open('%s.prj' % file_stem, 'rb')),
+             # 'xml_file': ('file.prj', open('%s.prj' % file_stem, 'rb')),
+             }
+    payload = {'charset': ['UTF-8'],
+               'permissions': [
+                   '{"anonymous":"layer_readonly","authenticated":"layer_readwrite","users":[]}']}
+
+    r = session.post(host + '/layers/upload', data=payload, files=files)
+    response = json.loads(r.text)
+    try:
+        return host + response['url']
+    except KeyError:
+        return False
 
 
 class Register(collections.OrderedDict):

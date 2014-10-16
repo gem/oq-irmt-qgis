@@ -34,12 +34,14 @@ from PyQt4.QtCore import (Qt,
 
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox)
+from PyQt4.QtNetwork import QNetworkCookieJar, QNetworkCookie
 from PyQt4.QtWebKit import QWebSettings
 from third_party.requests.sessions import Session
+from third_party.requests.utils import dict_from_cookiejar
 
 from ui.ui_upload_metadata import Ui_UploadMetadataDialog
 
-from utils import get_credentials, platform_login
+from utils import get_credentials, platform_login, upload_shp
 
 
 class UploadMetadataDialog(QDialog):
@@ -56,22 +58,42 @@ class UploadMetadataDialog(QDialog):
         self.ui.setupUi(self)
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
 
+        self.hostname, self.username, self.password = get_credentials(
+            self.iface)
+
         self.web_view = self.ui.web_view
+        self.page = self.web_view.page()
+        self.frame = self.page.mainFrame()
 
-        hostname, username, password = get_credentials(self.iface)
         self.session = Session()
-        platform_login(hostname, username, password, self.session)
-        result = self.session.get('%s/upload/' % hostname)
+        self.network_access_manager = self.page.networkAccessManager()
+        self.cookie_jar = QNetworkCookieJar()
+        self.network_access_manager.setCookieJar(self.cookie_jar)
 
-        self.web_view.setHtml(result.content, QUrl(hostname))
-        self.frame = self.web_view.page().mainFrame()
+        self._setup_context_menu()
+        self.frame.javaScriptWindowObjectCleared.connect(self._setup_js)
+        
+        self.file_stem = file_stem
+        self.upload()
 
-        self.setup_context_menu()
+    def upload(self):
+        self._login_to_platform()
+        layer_url = upload_shp(self.hostname, self.session, self.file_stem)
+        if layer_url:
+            self._load_metadata_page(layer_url)
 
-        self.frame.javaScriptWindowObjectCleared.connect(self.setup_js)
-        self.web_view.loadFinished.connect(self.page_loaded)
+    def _login_to_platform(self):
+        platform_login(
+            self.hostname, self.username, self.password, self.session)
+        sessionid = dict_from_cookiejar(self.session.cookies)['sessionid']
+        sessionid_cookie = QNetworkCookie('sessionid', sessionid)
+        self.cookie_jar.setCookiesFromUrl(
+            [sessionid_cookie], QUrl(self.hostname))
 
-    def setup_context_menu(self):
+    def _load_metadata_page(self, url):
+        self.web_view.load(QUrl(url))
+
+    def _setup_context_menu(self):
         settings = QSettings()
         developer_mode = settings.value(
             '/svir/developer_mode', True, type=bool)
@@ -81,11 +103,8 @@ class UploadMetadataDialog(QDialog):
         else:
             self.web_view.setContextMenuPolicy(Qt.NoContextMenu)
 
-    def setup_js(self):
+    def _setup_js(self):
         # pass a reference (called qt_page) of self to the JS world
         # to expose a member of self to js you need to declare it as property
         # see for example self.json_str()
         self.frame.addToJavaScriptWindowObject('qt_page', self)
-
-    def page_loaded(self):
-        print 'loaded'
