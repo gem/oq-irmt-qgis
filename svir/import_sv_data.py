@@ -81,16 +81,36 @@ class SvDownloader(object):
             subthemes = reader.next()
         return subthemes
 
-    def get_names(self, name_filter=None, keywords=None, theme=None, subtheme=None):
+    def get_indicators_info(
+            self, name_filter=None, keywords=None, theme=None, subtheme=None):
         page = self.host + PLATFORM_EXPORT_SV_NAMES
         params = dict(name=name_filter,
                       keywords=keywords,
                       theme=theme,
                       subtheme=subtheme)
         result = self.sess.get(page, params=params)
+        indicators_info = {}
         if result.status_code == 200:
-            names = [l for l in result.content.splitlines() if l and l[0] != '#']
-        return names[1:]
+            reader = csv.reader(StringIO.StringIO(result.content))
+            header = None
+            for row in reader:
+                if row[0].startswith('#'):
+                    continue
+                if not header:
+                    header = row
+                    continue
+                code = row[0]
+                indicators_info[code] = dict()
+                indicators_info[code]['name'] = row[1].decode('utf-8')
+                indicators_info[code]['theme'] = row[2].decode('utf-8')
+                indicators_info[code]['subtheme'] = row[3].decode('utf-8')
+                indicators_info[code]['description'] = row[4].decode('utf-8')
+                indicators_info[code]['measurement_type'] = row[5].decode('utf-8')
+                indicators_info[code]['source'] = row[6].decode('utf-8')
+                indicators_info[code]['aggregation_method'] = row[7].decode('utf-8')
+                indicators_info[code]['keywords_str'] = row[8].decode('utf-8')
+                # names.append(indicators_main_info[code])
+        return indicators_info
 
     def get_data_by_variables_ids(self, sv_variables_ids):
         page = self.host + PLATFORM_EXPORT_VARIABLES_DATA_BY_IDS

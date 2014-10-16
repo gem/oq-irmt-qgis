@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>754</width>
-    <height>401</height>
+    <width>1024</width>
+    <height>737</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,10 +18,80 @@
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
+    <widget class="QGroupBox" name="filters_group">
+     <property name="title">
+      <string>Filters</string>
+     </property>
+     <zorder></zorder>
+     <zorder></zorder>
+    </widget>
+   </item>
+   <item row="5" column="0">
+    <widget class="QTextBrowser" name="indicator_details"/>
+   </item>
+   <item row="6" column="0">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="ListMultiSelectWidget" name="list_multiselect">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="title">
+      <string>Select indicators</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="QPushButton" name="filter_btn">
+     <property name="text">
+      <string>Filter indicators by the above criteria</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
     <layout class="QFormLayout" name="formLayout">
      <property name="fieldGrowthPolicy">
       <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
      </property>
+     <item row="0" column="0">
+      <widget class="QLabel" name="name_filter_lbl">
+       <property name="text">
+        <string>Name</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="name_filter_le">
+       <property name="placeholderText">
+        <string>Type the name of an indicator, or part of it</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="keywords_lbl">
+       <property name="text">
+        <string>Keywords</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLineEdit" name="keywords_le">
+       <property name="placeholderText">
+        <string>Type one or more keywords (comma-separated)</string>
+       </property>
+      </widget>
+     </item>
      <item row="2" column="0">
       <widget class="QLabel" name="theme_lbl">
        <property name="text">
@@ -42,89 +112,25 @@
      <item row="3" column="1">
       <widget class="QComboBox" name="subtheme_cbx"/>
      </item>
-     <item row="6" column="0">
-      <widget class="QLabel" name="name_lbl">
-       <property name="text">
-        <string>Indicator</string>
-       </property>
-      </widget>
-     </item>
-     <item row="6" column="1">
-      <widget class="QComboBox" name="name_cbx"/>
-     </item>
-     <item row="7" column="1">
-      <widget class="QPushButton" name="add_name_btn">
-       <property name="text">
-        <string>Add indicator</string>
-       </property>
-      </widget>
-     </item>
-     <item row="8" column="0">
-      <widget class="QPushButton" name="clear_btn">
-       <property name="text">
-        <string>Clear</string>
-       </property>
-      </widget>
-     </item>
-     <item row="8" column="1">
-      <widget class="QListWidget" name="selected_names_lst"/>
-     </item>
-     <item row="9" column="1">
-      <widget class="QPushButton" name="remove_name_btn">
-       <property name="text">
-        <string>Remove selected indicators</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="QLineEdit" name="name_filter_le">
-       <property name="placeholderText">
-        <string>Type the name of an indicator, or part of it</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="name_filter_lbl">
-       <property name="text">
-        <string>Name</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="keywords_lbl">
-       <property name="text">
-        <string>Keywords</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="QLineEdit" name="keywords_le">
-       <property name="placeholderText">
-        <string>Type one or more keywords (comma-separated)</string>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="0">
-      <widget class="QPushButton" name="filter_btn">
-       <property name="text">
-        <string>Filter indicators by the above criteria</string>
-       </property>
-      </widget>
-     </item>
     </layout>
    </item>
-   <item row="1" column="0">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+   <item row="4" column="0">
+    <widget class="QGroupBox" name="indicator_info">
+     <property name="title">
+      <string>Indicator details</string>
      </property>
     </widget>
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ListMultiSelectWidget</class>
+   <extends>QGroupBox</extends>
+   <header>list_multiselect_widget</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections>
   <connection>

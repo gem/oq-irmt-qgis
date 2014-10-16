@@ -48,6 +48,7 @@ class SelectSvVariablesDialog(QDialog):
         self.set_ok_button()
         # login to platform, to be able to retrieve sv indices
         self.sv_downloader = downloader
+        self.indicators_info_dict = {}
         with WaitCursorManager():
             self.fill_themes()
 
@@ -67,25 +68,28 @@ class SelectSvVariablesDialog(QDialog):
         theme = self.ui.theme_cbx.currentText()
         name = self.ui.name_cbx.currentText()
         name = '%s,%s' % (theme, name)
-        if not self.ui.selected_names_lst.findItems(
-                name, Qt.MatchFixedString):
-                self.ui.selected_names_lst.addItem(name)
-                self.set_ok_button()
+        # if not self.ui.selected_names_lst.findItems(
+        #         name, Qt.MatchFixedString):
+        #         self.ui.selected_names_lst.addItem(name)
+        #         self.set_ok_button()
 
     @pyqtSlot()
     def on_remove_name_btn_clicked(self):
-        row = self.ui.selected_names_lst.currentRow()
-        if row is not None:
-            self.ui.selected_names_lst.takeItem(row)
-            self.set_ok_button()
+        pass
+        # row = self.ui.selected_names_lst.currentRow()
+        # if row is not None:
+        #     self.ui.selected_names_lst.takeItem(row)
+        #     self.set_ok_button()
 
     @pyqtSlot()
     def on_clear_btn_clicked(self):
-        self.ui.selected_names_lst.clear()
-        self.set_ok_button()
+        pass
+        # self.ui.selected_names_lst.clear()
+        # self.set_ok_button()
 
     def set_ok_button(self):
-        self.ok_button.setEnabled(self.ui.selected_names_lst.count() > 0)
+        pass
+        # self.ok_button.setEnabled(self.ui.selected_names_lst.count() > 0)
 
     def fill_themes(self):
         self.ui.theme_cbx.clear()
@@ -114,7 +118,7 @@ class SelectSvVariablesDialog(QDialog):
                 "Unable to download social vulnerability subthemes: %s" % e)
 
     def fill_names(self):
-        self.ui.name_cbx.clear()
+        self.ui.list_multiselect.set_unselected_items([])
         # load list of social vulnerability variable names from the platform
 
         name_filter = self.ui.name_filter_le.text()
@@ -122,9 +126,32 @@ class SelectSvVariablesDialog(QDialog):
         theme = self.ui.theme_cbx.currentText()
         subtheme = self.ui.subtheme_cbx.currentText()
         try:
-            names = self.sv_downloader.get_names(
-                name_filter, keywords, theme, subtheme)
-            self.ui.name_cbx.addItems(names)
+            self.indicators_info_dict = \
+                self.sv_downloader.get_indicators_info(name_filter,
+                                                       keywords,
+                                                       theme,
+                                                       subtheme)
+            names = sorted(
+                [code + ': ' + self.indicators_info_dict[code]['name']
+                    for code in self.indicators_info_dict])
+            self.ui.list_multiselect.add_unselected_items(names)
+            self.ui.list_multiselect.unselected_widget.currentItemChanged.connect(
+                self.update_hint)
+            self.ui.list_multiselect.selected_widget.currentItemChanged.connect(
+                self.update_hint)
         except SvDownloadError as e:
             raise SvDownloadError(
                 "Unable to download social vulnerability names: %s" % e)
+
+    def update_hint(self, current, previous):
+        hint_text = current.text()
+        indicator_code = current.text().split(':')[0]
+        indicator_info_dict = self.indicators_info_dict[indicator_code]
+        hint_text += '\n\n' + 'Description:\n' + indicator_info_dict[
+            'description']
+        hint_text += '\n\n' + 'Source:\n' + indicator_info_dict['source']
+        hint_text += '\n\n' + 'Aggregation method:\n' + indicator_info_dict[
+            'aggregation_method']
+        # for key in indicator_info_dict:
+        #     hint_text += key.upper() + ': ' + indicator_info_dict[key] + '\n'
+        self.ui.indicator_details.setText(hint_text)
