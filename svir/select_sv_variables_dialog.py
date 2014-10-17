@@ -51,6 +51,10 @@ class SelectSvVariablesDialog(QDialog):
         self.indicators_info_dict = {}
         with WaitCursorManager():
             self.fill_themes()
+        self.ui.list_multiselect.unselected_widget.currentItemChanged.connect(
+            self.update_hint)
+        self.ui.list_multiselect.selected_widget.currentItemChanged.connect(
+            self.update_hint)
 
     @pyqtSlot(str)
     def on_theme_cbx_currentIndexChanged(self):
@@ -135,15 +139,13 @@ class SelectSvVariablesDialog(QDialog):
                 [code + ': ' + self.indicators_info_dict[code]['name']
                     for code in self.indicators_info_dict])
             self.ui.list_multiselect.add_unselected_items(names)
-            self.ui.list_multiselect.unselected_widget.currentItemChanged.connect(
-                self.update_hint)
-            self.ui.list_multiselect.selected_widget.currentItemChanged.connect(
-                self.update_hint)
         except SvDownloadError as e:
             raise SvDownloadError(
                 "Unable to download social vulnerability names: %s" % e)
 
     def update_hint(self, current, previous):
+        if not current:
+            return
         hint_text = current.text()
         indicator_code = current.text().split(':')[0]
         indicator_info_dict = self.indicators_info_dict[indicator_code]
