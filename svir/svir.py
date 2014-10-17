@@ -434,14 +434,14 @@ class Svir:
                     'children'][1]['children']
                 known_themes = []
                 with WaitCursorManager(msg, self.iface):
-                    while dlg.ui.selected_names_lst.count() > 0:
-                        item = dlg.ui.selected_names_lst.takeItem(0)
-                        item_text = item.text().replace('"', '')
+                    while dlg.ui.list_multiselect.selected_widget.count() > 0:
+                        item = dlg.ui.list_multiselect.selected_widget.takeItem(0)
+                        ind_code = item.text().split(':')[0]
+                        ind_info = dlg.indicators_info_dict[ind_code]
+                        sv_theme = ind_info['theme']
+                        sv_field = ind_code
+                        sv_name = ind_info['name']
 
-                        sv = item_text.split(',', 2)
-                        sv_theme = sv[0]
-                        sv_field = sv[1]
-                        sv_name = sv[2]
                         self._add_new_theme(svi_themes,
                                             known_themes,
                                             sv_theme,
@@ -451,7 +451,7 @@ class Svir:
                         indices_list.append(sv_field)
 
                     # create string for DB query
-                    indices_string = ", ".join(indices_list)
+                    indices_string = ",".join(indices_list)
 
                     assign_default_weights(svi_themes)
 
@@ -475,18 +475,29 @@ class Svir:
                     msg, 'GEM Social Vulnerability Downloader')
                 # don't remove the file, otherwise there will be concurrency
                 # problems
+
+                # TODO: Check if we actually want to avoid importing geometries
+                # uri = ('file://%s?delimiter=,&crs=epsg:4326&'
+                #        'skipLines=25&trimFields=yes&wktField=geometry' % fname)
+
                 uri = ('file://%s?delimiter=,&crs=epsg:4326&'
-                       'skipLines=25&trimFields=yes&wktField=geometry' % fname)
+                       'skipLines=25&trimFields=yes' % fname)
                 # create vector layer from the csv file exported by the
                 # platform (it is still not editable!)
                 vlayer_csv = QgsVectorLayer(uri,
                                             'socioeconomic_data_export',
                                             'delimitedtext')
-                # obtain a in-memory copy of the layer (editable) and add it to
-                # the registry
-                layer = ProcessLayer(vlayer_csv).duplicate_in_memory(
-                    'socioeconomic_zonal_layer',
-                    add_to_registry=True)
+                if vlayer_csv.isValid():
+                    QgsMapLayerRegistry.instance().addMapLayer(vlayer_csv)
+                else:
+                    raise RuntimeError('Layer invalid')
+                layer = vlayer_csv
+                # FIXME: Make an editale in-memory copy!
+                # # obtain a in-memory copy of the layer (editable) and add it to
+                # # the registry
+                # layer = ProcessLayer(vlayer_csv).duplicate_in_memory(
+                #     'socioeconomic_zonal_layer',
+                #     add_to_registry=True)
                 self.iface.setActiveLayer(layer)
                 self.project_definitions[layer.id()] = project_definition
                 self.update_actions_status()
