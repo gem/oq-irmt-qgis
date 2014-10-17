@@ -51,10 +51,18 @@ class SelectSvVariablesDialog(QDialog):
         self.indicators_info_dict = {}
         with WaitCursorManager():
             self.fill_themes()
-        self.ui.list_multiselect.unselected_widget.currentItemChanged.connect(
-            self.update_hint)
-        self.ui.list_multiselect.selected_widget.currentItemChanged.connect(
-            self.update_hint)
+        self.ui.list_multiselect.unselected_widget.itemClicked.connect(
+            self.update_indicator_info)
+        self.ui.list_multiselect.selected_widget.itemClicked.connect(
+            self.update_indicator_info)
+        self.ui.list_multiselect.select_all_btn.clicked.connect(
+            self.set_ok_button)
+        self.ui.list_multiselect.deselect_all_btn.clicked.connect(
+            self.set_ok_button)
+        self.ui.list_multiselect.select_btn.clicked.connect(
+            self.set_ok_button)
+        self.ui.list_multiselect.deselect_btn.clicked.connect(
+            self.set_ok_button)
 
     @pyqtSlot(str)
     def on_theme_cbx_currentIndexChanged(self):
@@ -67,33 +75,9 @@ class SelectSvVariablesDialog(QDialog):
         with WaitCursorManager():
             self.fill_names()
 
-    @pyqtSlot()
-    def on_add_name_btn_clicked(self):
-        theme = self.ui.theme_cbx.currentText()
-        name = self.ui.name_cbx.currentText()
-        name = '%s,%s' % (theme, name)
-        # if not self.ui.selected_names_lst.findItems(
-        #         name, Qt.MatchFixedString):
-        #         self.ui.selected_names_lst.addItem(name)
-        #         self.set_ok_button()
-
-    @pyqtSlot()
-    def on_remove_name_btn_clicked(self):
-        pass
-        # row = self.ui.selected_names_lst.currentRow()
-        # if row is not None:
-        #     self.ui.selected_names_lst.takeItem(row)
-        #     self.set_ok_button()
-
-    @pyqtSlot()
-    def on_clear_btn_clicked(self):
-        pass
-        # self.ui.selected_names_lst.clear()
-        # self.set_ok_button()
-
     def set_ok_button(self):
-        pass
-        # self.ok_button.setEnabled(self.ui.selected_names_lst.count() > 0)
+        self.ok_button.setEnabled(
+            self.ui.list_multiselect.selected_widget.count() > 0)
 
     def fill_themes(self):
         self.ui.theme_cbx.clear()
@@ -124,36 +108,29 @@ class SelectSvVariablesDialog(QDialog):
     def fill_names(self):
         self.ui.list_multiselect.set_unselected_items([])
         # load list of social vulnerability variable names from the platform
-
         name_filter = self.ui.name_filter_le.text()
         keywords = self.ui.keywords_le.text()
         theme = self.ui.theme_cbx.currentText()
         subtheme = self.ui.subtheme_cbx.currentText()
         try:
-            self.indicators_info_dict = \
-                self.sv_downloader.get_indicators_info(name_filter,
-                                                       keywords,
-                                                       theme,
-                                                       subtheme)
+            filter_result_dict = self.sv_downloader.get_indicators_info(
+                name_filter, keywords, theme, subtheme)
+            self.indicators_info_dict.update(filter_result_dict)
             names = sorted(
-                [code + ': ' + self.indicators_info_dict[code]['name']
-                    for code in self.indicators_info_dict])
+                [code + ': ' + filter_result_dict[code]['name']
+                    for code in filter_result_dict])
             self.ui.list_multiselect.add_unselected_items(names)
         except SvDownloadError as e:
             raise SvDownloadError(
                 "Unable to download social vulnerability names: %s" % e)
 
-    def update_hint(self, current, previous):
-        if not current:
-            return
-        hint_text = current.text()
-        indicator_code = current.text().split(':')[0]
+    def update_indicator_info(self, item):
+        hint_text = item.text()
+        indicator_code = item.text().split(':')[0]
         indicator_info_dict = self.indicators_info_dict[indicator_code]
         hint_text += '\n\n' + 'Description:\n' + indicator_info_dict[
             'description']
         hint_text += '\n\n' + 'Source:\n' + indicator_info_dict['source']
         hint_text += '\n\n' + 'Aggregation method:\n' + indicator_info_dict[
             'aggregation_method']
-        # for key in indicator_info_dict:
-        #     hint_text += key.upper() + ': ' + indicator_info_dict[key] + '\n'
         self.ui.indicator_details.setText(hint_text)
