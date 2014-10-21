@@ -32,9 +32,6 @@ import csv
 from third_party.requests import Session
 
 # FIXME Change exposure to sv when app is ready on platform
-PLATFORM_EXPORT_SV_CATEGORY_NAMES = "/svir/export_sv_category_names"
-PLATFORM_EXPORT_SV_DATA_BY_VARIABLES_IDS = \
-    "/svir/export_sv_data_by_variables_ids"
 PLATFORM_EXPORT_SV_THEMES = "/svir/list_themes"
 PLATFORM_EXPORT_SV_SUBTHEMES = "/svir/list_subthemes_by_theme"
 PLATFORM_EXPORT_SV_NAMES = "/svir/export_variables_info"
@@ -105,16 +102,19 @@ class SvDownloader(object):
                 indicators_info[code]['theme'] = row[2].decode('utf-8')
                 indicators_info[code]['subtheme'] = row[3].decode('utf-8')
                 indicators_info[code]['description'] = row[4].decode('utf-8')
-                indicators_info[code]['measurement_type'] = row[5].decode('utf-8')
+                indicators_info[code]['measurement_type'] = \
+                    row[5].decode('utf-8')
                 indicators_info[code]['source'] = row[6].decode('utf-8')
-                indicators_info[code]['aggregation_method'] = row[7].decode('utf-8')
+                indicators_info[code]['aggregation_method'] = \
+                    row[7].decode('utf-8')
                 indicators_info[code]['keywords_str'] = row[8].decode('utf-8')
                 # names.append(indicators_main_info[code])
         return indicators_info
 
-    def get_data_by_variables_ids(self, sv_variables_ids):
+    def get_data_by_variables_ids(self, sv_variables_ids, load_geometries):
         page = self.host + PLATFORM_EXPORT_VARIABLES_DATA_BY_IDS
-        params = dict(sv_variables_ids=sv_variables_ids)
+        params = dict(sv_variables_ids=sv_variables_ids,
+                      export_geometries=load_geometries)
         result = self.sess.get(page, params=params)
         if result.status_code == 200:
             # save csv on a temporary file
@@ -130,6 +130,8 @@ class SvDownloader(object):
             sv_variables_count = len(sv_variables_ids.split(','))
             # build the string that describes data types for the csv
             types_string = '"String","String"' + ',"Real"' * sv_variables_count
+            if load_geometries:
+                types_string += ',"String"'
             with open(fname_types, 'w') as csvt:
                 csvt.write(types_string)
             with open(fname, 'w') as csv:

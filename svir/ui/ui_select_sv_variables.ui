@@ -17,19 +17,28 @@
    <bool>true</bool>
   </property>
   <layout class="QGridLayout" name="gridLayout">
+   <item row="4" column="0">
+    <widget class="QGroupBox" name="indicator_info">
+     <property name="title">
+      <string>Indicator details</string>
+     </property>
+    </widget>
+   </item>
    <item row="0" column="0">
     <widget class="QGroupBox" name="filters_group">
      <property name="title">
       <string>Filters</string>
      </property>
-     <zorder></zorder>
-     <zorder></zorder>
     </widget>
    </item>
-   <item row="5" column="0">
-    <widget class="QTextBrowser" name="indicator_details"/>
+   <item row="2" column="0">
+    <widget class="QPushButton" name="filter_btn">
+     <property name="text">
+      <string>Filter indicators by the above criteria</string>
+     </property>
+    </widget>
    </item>
-   <item row="6" column="0">
+   <item row="7" column="0">
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
@@ -38,6 +47,16 @@
       <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
      </property>
     </widget>
+   </item>
+   <item row="6" column="0">
+    <widget class="QCheckBox" name="load_geometries_chk">
+     <property name="text">
+      <string>Load geometries</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0">
+    <widget class="QTextBrowser" name="indicator_details"/>
    </item>
    <item row="3" column="0">
     <widget class="ListMultiSelectWidget" name="list_multiselect">
@@ -49,13 +68,6 @@
      </property>
      <property name="title">
       <string>Select indicators</string>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="0">
-    <widget class="QPushButton" name="filter_btn">
-     <property name="text">
-      <string>Filter indicators by the above criteria</string>
      </property>
     </widget>
    </item>
@@ -113,13 +125,6 @@
       <widget class="QComboBox" name="subtheme_cbx"/>
      </item>
     </layout>
-   </item>
-   <item row="4" column="0">
-    <widget class="QGroupBox" name="indicator_info">
-     <property name="title">
-      <string>Indicator details</string>
-     </property>
-    </widget>
    </item>
   </layout>
  </widget>

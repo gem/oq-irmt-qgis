@@ -222,6 +222,8 @@ class ProcessLayer():
                 type_str = "multilinestring"
             elif v_type == QGis.WKBMultiPolygon:
                 type_str = "multipolygon"
+            elif v_type == QGis.WKBNoGeometry:
+                type_str = ""
             else:
                 raise TypeError('Layer type %s can not be accepted' % v_type)
         else:

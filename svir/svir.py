@@ -425,6 +425,7 @@ class Svir:
         try:
             dlg = SelectSvVariablesDialog(sv_downloader)
             if dlg.exec_():
+                load_geometries = dlg.ui.load_geometries_chk.isChecked()
                 msg = ("Loading socioeconomic data from the OpenQuake "
                        "Platform...")
                 # Retrieve the indices selected by the user
@@ -457,7 +458,7 @@ class Svir:
 
                     try:
                         fname, msg = sv_downloader.get_data_by_variables_ids(
-                            indices_string)
+                            indices_string, load_geometries)
                     except SvDownloadError as e:
                         self.iface.messageBar().pushMessage(
                             tr("Download Error"),
@@ -477,28 +478,29 @@ class Svir:
                 # problems
 
                 # TODO: Check if we actually want to avoid importing geometries
-                uri = ('file://%s?delimiter=,&crs=epsg:4326&'
-                       'skipLines=25&trimFields=yes&wktField=geometry' % fname)
-
-                # uri = ('file://%s?delimiter=,&crs=epsg:4326&'
-                #        'skipLines=25&trimFields=yes' % fname)
-
+                if load_geometries:
+                    uri = ('file://%s?delimiter=,&crs=epsg:4326&skipLines=25'
+                           '&trimFields=yes&wktField=geometry' % fname)
+                else:
+                    uri = ('file://%s?delimiter=,&skipLines=25'
+                           '&trimFields=yes' % fname)
                 # create vector layer from the csv file exported by the
                 # platform (it is still not editable!)
                 vlayer_csv = QgsVectorLayer(uri,
                                             'socioeconomic_data_export',
                                             'delimitedtext')
-                # if vlayer_csv.isValid():
-                #     QgsMapLayerRegistry.instance().addMapLayer(vlayer_csv)
-                # else:
-                #     raise RuntimeError('Layer invalid')
-                # layer = vlayer_csv
-
-                # obtain a in-memory copy of the layer (editable) and add it to
-                # the registry
-                layer = ProcessLayer(vlayer_csv).duplicate_in_memory(
-                    'socioeconomic_zonal_layer',
-                    add_to_registry=True)
+                if not load_geometries:
+                    if vlayer_csv.isValid():
+                        QgsMapLayerRegistry.instance().addMapLayer(vlayer_csv)
+                    else:
+                        raise RuntimeError('Layer invalid')
+                    layer = vlayer_csv
+                else:
+                    # obtain a in-memory copy of the layer (editable) and add it to
+                    # the registry
+                    layer = ProcessLayer(vlayer_csv).duplicate_in_memory(
+                        'socioeconomic_zonal_layer',
+                        add_to_registry=True)
                 self.iface.setActiveLayer(layer)
                 self.project_definitions[layer.id()] = project_definition
                 self.update_actions_status()
