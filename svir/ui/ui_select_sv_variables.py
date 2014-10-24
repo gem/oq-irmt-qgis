@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_select_sv_variables.ui'
 #
-# Created: Tue Oct 21 11:07:44 2014
+# Created: Tue Oct 21 17:48:37 2014
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -97,7 +97,7 @@ class Ui_SelectSvVariablesDialog(object):
         self.indicator_info.setTitle(_translate("SelectSvVariablesDialog", "Indicator details", None))
         self.filters_group.setTitle(_translate("SelectSvVariablesDialog", "Filters", None))
         self.filter_btn.setText(_translate("SelectSvVariablesDialog", "Filter indicators by the above criteria", None))
-        self.load_geometries_chk.setText(_translate("SelectSvVariablesDialog", "Load geometries", None))
+        self.load_geometries_chk.setText(_translate("SelectSvVariablesDialog", "Load geometries (Warning: GADM geometries will be downloaded, i.e., more than 1 GB of data)", None))
         self.list_multiselect.setTitle(_translate("SelectSvVariablesDialog", "Select indicators", None))
         self.name_filter_lbl.setText(_translate("SelectSvVariablesDialog", "Name", None))
         self.name_filter_le.setPlaceholderText(_translate("SelectSvVariablesDialog", "Type the name of an indicator, or part of it", None))
