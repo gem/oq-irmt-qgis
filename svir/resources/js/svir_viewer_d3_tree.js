@@ -36,6 +36,8 @@ const circle_scale = 20;
         var qt_page = typeof qt_page !== 'undefined' ? qt_page : false;
         const DEFAULT_OPERATOR = qt_page.DEFAULT_OPERATOR
         const OPERATORS = qt_page.OPERATORS.split(';')
+        // PAOLO: Load the list of layer fields
+        const LAYER_FIELDS = qt_page.LAYER_FIELDS.split(';');
         var margin = {top: 20, right: 120, bottom: 20, left: 60},
             width = 960 - margin.right - margin.left,
             height = 800 - margin.top - margin.bottom;
@@ -50,10 +52,14 @@ const circle_scale = 20;
         var diagonal = d3.svg.diagonal()
             .projection(function(d) { return [d.y, d.x]; });
 
-        function createSpinner(id, weight, name) {
+        function createSpinner(id, weight, name, field) {
             pdTempSpinnerIds.push("spinner-"+id);
             $('#projectDefWeightDialog').dialog("open");
-            $('#projectDefWeightDialog').append('<p><label for="spinner'+id+'">'+name+': </label><input id="spinner-'+id+'" name="spinner" value="'+weight+'"></p>');
+            if (field === undefined) {
+                $('#projectDefWeightDialog').append('<p><label for="spinner'+id+'">'+name+': </label><input id="spinner-'+id+'" name="spinner" value="'+weight+'"></p>');
+            } else {
+                $('#projectDefWeightDialog').append('<p><label for="spinner'+id+'">'+name+'('+field+'): </label><input id="spinner-'+id+'" name="spinner" value="'+weight+'"></p>');
+            }
             $(function() {
                 $("#spinner-"+id).width(100).spinner({
                     min: 0, 
@@ -142,7 +148,7 @@ const circle_scale = 20;
             }
         };
 
-        function findTreeBranchInfo(pdData, pdName, pdLevel) {
+        function findTreeBranchInfo(pdData, pdName, pdLevel, pdField) {
             // Find out how many elements are in tree branch
             if (pdLevel.some(
                 function(currentValue) {
@@ -151,11 +157,11 @@ const circle_scale = 20;
             ))
             {
                 pdTempIds.push(pdData.id);
-                createSpinner(pdData.id, pdData.weight, pdData.name);
+                createSpinner(pdData.id, pdData.weight, pdData.name, pdData.field);
             }
 
             (pdData.children || []).forEach(function(currentItem) {
-                findTreeBranchInfo(currentItem, [pdName], [pdLevel]);
+                findTreeBranchInfo(currentItem, [pdName], [pdLevel], pdField);
             });
 
 
@@ -202,6 +208,7 @@ const circle_scale = 20;
         
         d3.select(self.frameElement).style("height", "800px");
         
+
         function updateD3Tree(source) {
             // Compute the new tree layout.
             var nodes = tree.nodes(root).reverse(),
@@ -220,7 +227,33 @@ const circle_scale = 20;
                 .attr("transform", function(d) { return "translate(" + source.y0 + "," + source.x0 + ")"; })
 
             nodeEnter.append("circle")
-                .attr("r", 1e-6);
+                .attr("r", 1e-6)
+                .on("click", function(d) {
+                    // TODO: Open dialog to select one of the fields of the current layer
+                    // and build the newNode depending on it and on the siblings 
+                    // NOTE: Only fields that are not already in the tree should be selectable
+                    // By default, assign equal weights to the new node and to its siblings
+                    var siblings;
+                    if (d.children) {
+                        siblings = d.children;
+                    } else {
+                        siblings = [];
+                    }
+                    var avgWeight = 1.0 / (siblings.length + 1);
+                    for (var i = 0; i < siblings.length; i++) {
+                        siblings[i].weight = avgWeight;
+                        updateD3Tree(siblings[i]);
+                    }
+                    var newNode = {
+                        "name": "Testname",
+                        "parent": d.name, 
+                        "weight": avgWeight,
+                        "level": 1
+                    };
+                    // Add node, appending it to the node that has been clicked
+                    (d.children || (d.children = [])).push(newNode);
+                    updateD3Tree(d);
+                });
             
             nodeEnter.append("text")
                 .attr("class", (function(d) { return "level-" + d.level; }))
@@ -238,10 +271,11 @@ const circle_scale = 20;
                     return "-1em" })
                 .attr("text-anchor", function(d) { return "end"; })
                 .text(function(d) {
-                    return d.name + " " + d.weight ;
+                    return d.name;
                 })
                 .style("fill-opacity", 1e-6)
                 .on("click", function(d) {
+                    pdField = d.field;
                     pdName = d.name;
                     pdData = data;
                     pdWeight = d.weight;
@@ -250,7 +284,7 @@ const circle_scale = 20;
                     pdTempIds = [];
                     $('#projectDefWeightDialog').empty();
                     if (d.parent){
-                        findTreeBranchInfo(pdData, [pdName], [pdLevel]);
+                        findTreeBranchInfo(pdData, [pdName], [pdLevel], pdField);
                         var pdParentOperator = d.parent.operator? d.parent.operator : DEFAULT_OPERATOR;
                         d.parent.operator = pdParentOperator
                         operatorSelect(pdParentOperator);
@@ -276,12 +310,13 @@ const circle_scale = 20;
                     pdData = data;
                     pdLevel = d.children[0].level;
                     pdParent = d.name;
+                    pdParentField = d.field;
                     pdTempSpinnerIds = [];
                     pdTempIds = [];
                     pdOperator = d.operator
                     pdId = d.id
                     $('#projectDefWeightDialog').empty();
-                    findTreeBranchInfo(pdData, [pdName], [pdLevel]);
+                    findTreeBranchInfo(pdData, [pdName], [pdLevel], pdParentField);
                     operatorSelect(pdOperator);
                     updateButton(pdId);
                 });
