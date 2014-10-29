@@ -58,137 +58,137 @@ OPERATORS_DICT['MUL_W'] = 'Weighted multiplication'
 
 DEFAULT_OPERATOR = OPERATORS_DICT['SUM_W']
 SUM_BASED_OPERATORS = (OPERATORS_DICT['SUM_S'],
-                          OPERATORS_DICT['SUM_W'],
-                          OPERATORS_DICT['AVG'])
+                       OPERATORS_DICT['SUM_W'],
+                       OPERATORS_DICT['AVG'])
 MUL_BASED_OPERATORS = (OPERATORS_DICT['MUL_S'],
-                          OPERATORS_DICT['MUL_W'])
+                       OPERATORS_DICT['MUL_W'])
+
+NODE_TYPES = {'IRI': 'Integrated Risk Index',
+              'RI': 'Risk Index',
+              'RISK_INDICATOR': 'Risk Indicator',
+              'SVI': 'Social Vulnerability Index',
+              'SV_THEME': 'Social Vulnerability Theme',
+              'SV_INDICATOR': 'Social Vulnerability Indicator',
+              }
+
 
 PROJECT_TEMPLATE = {
-    'name': 'ir',
-    'weight': '',
-    'level': 1,
+    'name': 'IRI',
+    'type': NODE_TYPES['IRI'],
+    'weight': 1.0,
     'children': [
-        {'name': 'risk',
+        {'name': 'RI',
+         'type': NODE_TYPES['RI'],
+         'weight': 0.5},
+        {'name': 'SVI',
+         'type': NODE_TYPES['SVI'],
          'weight': 0.5,
-         'level': 2},
-        {'name': 'svi',
-         'weight': 0.5,
-         'level': 2,
          'children': []}
     ]
 }
 
 THEME_TEMPLATE = {
     'name': '',
-    'weight': 0.0,
-    'level': 3.0,
-    'type': 'categoryIndicator',
+    'weight': 1.0,
+    'type': NODE_TYPES['SV_THEME'],
     'children': []
 }
 
 INDICATOR_TEMPLATE = {
     'name': '',
-    'weight': 0.0,
-    'level': 4.0,
-    'type': 'primaryIndicator',
+    'weight': 1.0,
+    'type': NODE_TYPES['SV_INDICATOR'],
     'field': ''
 }
 
+# FIXME: change types using NODE_TYPES
 DEMO_JSON = {
-    "name": "ir",
+    "name": "IR",
     "weight": "",
-    "level": 1.0,
     "children": [
-        {"name": "risk",
+        {"name": "RI",
+         "weight": 0.5},
+        {"name": "SVI",
          "weight": 0.5,
-         "level": 2.0},
-        {"name": "svi",
-         "weight": 0.5,
-         "level": 2.0,
          "children": [
              {"name": "population",
               "weight": 0.16,
-              "level": 3.1,
               "type": "categoryIndicator",
               "children": [
-                  {"name": "QFEMALE", "weight": 0.083, "level": 4.0,
+                  {"name": "QFEMALE", "weight": 0.083,
                    "type": "primaryIndicator"},
-                  {"name": "QURBAN", "weight": 0.083, "level": 4.0,
+                  {"name": "QURBAN", "weight": 0.083,
                    "type": "primaryIndicator"},
-                  {"name": "MIGFOREIGN", "weight": 0.083, "level": 4.0,
+                  {"name": "MIGFOREIGN", "weight": 0.083,
                    "type": "primaryIndicator"},
-                  {"name": "MIGMUNICIP", "weight": 0.083, "level": 4.0,
+                  {"name": "MIGMUNICIP", "weight": 0.083,
                    "type": "primaryIndicator"},
-                  {"name": "QFOREIGN", "weight": 0.083, "level": 4.0,
+                  {"name": "QFOREIGN", "weight": 0.083,
                    "type": "primaryIndicator"},
-                  {"name": "QAGEDEP", "weight": 0.083, "level": 4.0,
+                  {"name": "QAGEDEP", "weight": 0.083,
                    "type": "primaryIndicator"},
-                  {"name": "POPDENT", "weight": 0.083, "level": 4.0,
+                  {"name": "POPDENT", "weight": 0.083,
                    "type": "primaryIndicator"},
-                  {"name": "PPUNIT", "weight": 0.083, "level": 4.0,
+                  {"name": "PPUNIT", "weight": 0.083,
                    "type": "primaryIndicator"},
-                  {"name": "QFHH", "weight": 0.083, "level": 4.0,
+                  {"name": "QFHH", "weight": 0.083,
                    "type": "primaryIndicator"},
-                  {"name": "QRENTAL", "weight": 0.083, "level": 4.0,
+                  {"name": "QRENTAL", "weight": 0.083,
                    "type": "primaryIndicator"},
-                  {"name": "QDISABLED", "weight": 0.083, "level": 4.0,
+                  {"name": "QDISABLED", "weight": 0.083,
                    "type": "primaryIndicator"},
-                  {"name": "QSSINT", "weight": 0.083, "level": 4.0,
+                  {"name": "QSSINT", "weight": 0.083,
                    "type": "primaryIndicator"}]
               },
              {"name": "economy",
               "weight": 0.16,
-              "level": 3.1,
               "type": "categoryIndicator",
               "children": [
-                  {"name": "QUNEMPL", "weight": 0.167, "level": 4.1,
+                  {"name": "QUNEMPL", "weight": 0.167,
                    "type": "primaryIndicator"},
-                  {"name": "QFEMLBR", "weight": 0.167, "level": 4.1,
+                  {"name": "QFEMLBR", "weight": 0.167,
                    "type": "primaryIndicator"},
-                  {"name": "QSECOEMPL", "weight": 0.167, "level": 4.1,
+                  {"name": "QSECOEMPL", "weight": 0.167,
                    "type": "primaryIndicator"},
-                  {"name": "QSERVEMPL", "weight": 0.167, "level": 4.1,
+                  {"name": "QSERVEMPL", "weight": 0.167,
                    "type": "primaryIndicator"},
-                  {"name": "QNOSKILLEMPL", "weight": 0.167, "level": 4.1,
+                  {"name": "QNOSKILLEMPL", "weight": 0.167,
                    "type": "primaryIndicator"},
-                  {"name": "PCPP", "weight": 0.167, "level": 4.1,
+                  {"name": "PCPP", "weight": 0.167,
                    "type": "primaryIndicator"}]
               },
              {"name": "education",
               "weight": 0.16,
-              "level": 3.1,
               "type": "categoryIndicator",
               "children": [
-                  {"name": "QEDLESS", "weight": 0.5, "level": 4.2,
+                  {"name": "QEDLESS", "weight": 0.5,
                    "type": "primaryIndicator"},
-                  {"name": "EDUTERTIARY", "weight": 0.5, "level": 4.2,
+                  {"name": "EDUTERTIARY", "weight": 0.5,
                    "type": "primaryIndicator"}
                   ]
               },
              {"name": "infrastructure",
               "weight": 0.16,
-              "level": 3.1,
               "type": "categoryIndicator",
               "children": [
-                  {"name": "QBLDREPAIR", "weight": 0.25, "level": 4.4,
+                  {"name": "QBLDREPAIR", "weight": 0.25,
                    "type": "primaryIndicator"},
-                  {"name": "NEWBUILD", "weight": 0.25, "level": 4.4,
+                  {"name": "NEWBUILD", "weight": 0.25,
                    "type": "primaryIndicator"},
-                  {"name": "QPOPNOWATER", "weight": 0.25, "level": 4.4,
+                  {"name": "QPOPNOWATER", "weight": 0.25,
                    "type": "primaryIndicator"},
-                  {"name": "QPOPNOWASTE", "weight": 0.25, "level": 4.4,
+                  {"name": "QPOPNOWASTE", "weight": 0.25,
                    "type": "primaryIndicator"}]
               },
              {"name": "governance",
               "weight": 0.16,
-              "level": 3.1,
               "type": "categoryIndicator",
               "children": [
-                  {"name": "CRIMERATE", "weight": 0.33, "level": 4.5,
+                  {"name": "CRIMERATE", "weight": 0.33,
                    "type": "primaryIndicator"},
-                  {"name": "QNOVOTEMU", "weight": 0.33, "level": 4.5,
+                  {"name": "QNOVOTEMU", "weight": 0.33,
                    "type": "primaryIndicator"},
-                  {"name": "QNOVOTEPR", "weight": 0.33, "level": 4.5,
+                  {"name": "QNOVOTEPR", "weight": 0.33,
                    "type": "primaryIndicator"}]
               }]
          }]

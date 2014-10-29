@@ -15,7 +15,8 @@
       along with this program.  If not, see <https://www.gnu.org/licenses/agpl.html>.
 */
 
-const circle_scale = 20;
+const CIRCLE_SCALE = 30;
+const MIN_CIRCLE_SIZE = 0.001;
 
     $(document).ready(function() {
         //  Project definition weight dialog
@@ -36,8 +37,17 @@ const circle_scale = 20;
         var qt_page = typeof qt_page !== 'undefined' ? qt_page : false;
         const DEFAULT_OPERATOR = qt_page.DEFAULT_OPERATOR
         const OPERATORS = qt_page.OPERATORS.split(';')
-        // PAOLO: Load the list of layer fields
         const ACTIVE_LAYER_NUMERIC_FIELDS = qt_page.ACTIVE_LAYER_NUMERIC_FIELDS.split(';');
+        const NODE_TYPES = qt_page.NODE_TYPES.split(';');
+        var node_types_dict = {};
+        for (i=0; i<NODE_TYPES.length; i++) {
+            var keyval = NODE_TYPES[i];
+            var keyvalsplit = keyval.split(':');
+            var type_key = keyvalsplit[0];
+            var type_name = keyvalsplit[1];
+            node_types_dict[type_key] = type_name;
+        }
+
         var margin = {top: 20, right: 120, bottom: 20, left: 60},
             width = 960 - margin.right - margin.left,
             height = 800 - margin.top - margin.bottom;
@@ -148,20 +158,15 @@ const circle_scale = 20;
             }
         };
 
-        function findTreeBranchInfo(pdData, pdName, pdLevel, pdField) {
+        function findTreeBranchInfo(pdData, pdName, pdField) {
             // Find out how many elements are in tree branch
-            if (pdLevel.some(
-                function(currentValue) {
-                    return (pdData.level == currentValue);
-                }
-            ))
             {
                 pdTempIds.push(pdData.id);
                 createSpinner(pdData.id, pdData.weight, pdData.name, pdData.field);
             }
 
             (pdData.children || []).forEach(function(currentItem) {
-                findTreeBranchInfo(currentItem, [pdName], [pdLevel], pdField);
+                findTreeBranchInfo(currentItem, [pdName], pdField);
             });
 
 
@@ -233,37 +238,35 @@ const circle_scale = 20;
                     // and build the newNode depending on it and on the siblings 
                     // NOTE: Only fields that are not already in the tree should be selectable
                     // By default, assign equal weights to the new node and to its siblings
-                    var siblings;
+                    var nodeType;
+                    switch (d.type) {
+                        case undefined:
+                            alert("You clicked a node with undefined type");
+                            return false;
+                        case node_types_dict['SV_INDICATOR']:
+                            alert("You clicked a node with type " + d.type);
+                            alert("You can't add new nodes to primary indicator nodes");
+                            return false;
+                        case node_types_dict['SV_THEME']:
+                            alert("You clicked a node with type " + d.type);
+                            nodeType = node_types_dict['SV_INDICATOR'];
+                            break;
+                        default:
+                            alert("You clicked a node with type " + d.type);
+                            return false;
+                    }
                     if (d.children === undefined) {
-                        alert("Aggiunta sezione children al nodo cliccato");
                         d.children = [];
                     }
                     var avgWeight = 1.0 / (d.children.length + 1);
-                    alert("avgWeight: " + avgWeight);
-                    var siblings_max_level = 0;
                     for (var i = 0; i < d.children.length; i++) {
                         d.children[i].weight = avgWeight;
-                        updateD3Tree(d.children[i]);
-                        if (d.children[i].level > siblings_max_level) {
-                            siblings_max_level = d.children[i].level;
-                        }
-                    }
-                    // Calculate level
-                    var level;
-                    // Using Math.floor is ok because levels can't be negative
-                    int_level = Math.floor(d.level) + 1;
-                    if (d.children.length > 0) {
-                        dec_level = (siblings_max_level - Math.floor(siblings_max_level)) + 1;
-                        level = int_level + dec_level;
-                    }
-                    else {
-                        level = d.level;
                     }
                     var newNode = {
-                        "name": ACTIVE_LAYER_NUMERIC_FIELDS[0], // FIXME assign from dialog
-                        "parent": d.name, 
-                        "weight": avgWeight,
-                        "level": level
+                        'name': ACTIVE_LAYER_NUMERIC_FIELDS[0], // FIXME assign from dialog
+                        'parent': d.name, 
+                        'weight': avgWeight,
+                        'type': nodeType
                     };
                     // Add node, appending it to the node that has been clicked
                     (d.children || (d.children = [])).push(newNode);
@@ -271,11 +274,11 @@ const circle_scale = 20;
                 });
             
             nodeEnter.append("text")
-                .attr("class", (function(d) { return "level-" + d.level; }))
+                // .attr("class", (function(d) { return "level-" + d.level; }))
                 //.attr("id", (function(d) { return d.name; }))
                 .attr("id", "svg-text")
                 .attr("value", (function(d) { return d.weight; }))
-                .attr("x", function(d) { return -(d.weight * circle_scale + 5); })
+                .attr("x", function(d) { return -(d.weight * CIRCLE_SCALE + 5); })
                 .attr("dy", function(d) {
                     // NOTE are x and y swapped?
                     // set te text above or below the node depending on the
@@ -294,12 +297,11 @@ const circle_scale = 20;
                     pdName = d.name;
                     pdData = data;
                     pdWeight = d.weight;
-                    pdLevel = d.level;
                     pdTempSpinnerIds = [];
                     pdTempIds = [];
                     $('#projectDefWeightDialog').empty();
                     if (d.parent){
-                        findTreeBranchInfo(pdData, [pdName], [pdLevel], pdField);
+                        findTreeBranchInfo(pdData, [pdName], pdField);
                         var pdParentOperator = d.parent.operator? d.parent.operator : DEFAULT_OPERATOR;
                         d.parent.operator = pdParentOperator
                         operatorSelect(pdParentOperator);
@@ -319,11 +321,10 @@ const circle_scale = 20;
                         return operator
                     }
                 })
-                .attr("x", function(d) { return d.weight * circle_scale + 15; })
+                .attr("x", function(d) { return d.weight * CIRCLE_SCALE + 15; })
                 .on("click", function(d) {
                     pdName = d.children[0].name;
                     pdData = data;
-                    pdLevel = d.children[0].level;
                     pdParent = d.name;
                     pdParentField = d.field;
                     pdTempSpinnerIds = [];
@@ -331,7 +332,7 @@ const circle_scale = 20;
                     pdOperator = d.operator
                     pdId = d.id
                     $('#projectDefWeightDialog').empty();
-                    findTreeBranchInfo(pdData, [pdName], [pdLevel], pdParentField);
+                    findTreeBranchInfo(pdData, [pdName], pdParentField);
                     operatorSelect(pdOperator);
                     updateButton(pdId);
                 });
@@ -344,8 +345,8 @@ const circle_scale = 20;
             nodeUpdate.select("circle")
                 .attr("r", function (d) {
                     // d.weight is expected to be between 0 and 1
-                    // Nodes are displayed as circles of size between 2 and 20
-                    return d.weight ? Math.max(d.weight * circle_scale, 2): 2;
+                    // Nodes are displayed as circles of size between 1 and CIRCLE_SCALE
+                    return d.weight ? Math.max(d.weight * CIRCLE_SCALE, MIN_CIRCLE_SIZE): MIN_CIRCLE_SIZE;
                 })
                 .style("fill", function(d) {
                     return d.source ? d.source.linkColor: d.linkColor
