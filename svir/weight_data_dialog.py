@@ -41,7 +41,7 @@ from PyQt4.QtWebKit import QWebSettings
 
 from ui.ui_weight_data import Ui_WeightDataDialog
 
-from globals import DEFAULT_OPERATOR, OPERATORS_DICT
+from globals import DEFAULT_OPERATOR, OPERATORS_DICT, NUMERIC_FIELD_TYPES
 
 
 class WeightDataDialog(QDialog):
@@ -76,6 +76,11 @@ class WeightDataDialog(QDialog):
         self.frame.javaScriptWindowObjectCleared.connect(self.setup_js)
         self.web_view.loadFinished.connect(self.show_tree)
         self.json_updated.connect(self.handle_json_updated)
+
+        self.active_layer_numeric_fields = [
+            field.name()
+            for field in iface.activeLayer().dataProvider().fields()
+            if field.typeName() in NUMERIC_FIELD_TYPES]
 
     def setup_context_menu(self):
         settings = QSettings()
@@ -124,3 +129,9 @@ class WeightDataDialog(QDialog):
     @pyqtProperty(str)
     def OPERATORS(self):
         return ';'.join(OPERATORS_DICT.values())
+
+    @pyqtProperty(str)
+    def ACTIVE_LAYER_NUMERIC_FIELDS(self):
+        # FIXME Remove
+        print "Numeric fields:", self.active_layer_numeric_fields
+        return ';'.join(self.active_layer_numeric_fields)

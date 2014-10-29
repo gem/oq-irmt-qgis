@@ -37,7 +37,7 @@ const circle_scale = 20;
         const DEFAULT_OPERATOR = qt_page.DEFAULT_OPERATOR
         const OPERATORS = qt_page.OPERATORS.split(';')
         // PAOLO: Load the list of layer fields
-        const LAYER_FIELDS = qt_page.LAYER_FIELDS.split(';');
+        const ACTIVE_LAYER_NUMERIC_FIELDS = qt_page.ACTIVE_LAYER_NUMERIC_FIELDS.split(';');
         var margin = {top: 20, right: 120, bottom: 20, left: 60},
             width = 960 - margin.right - margin.left,
             height = 800 - margin.top - margin.bottom;
@@ -234,21 +234,36 @@ const circle_scale = 20;
                     // NOTE: Only fields that are not already in the tree should be selectable
                     // By default, assign equal weights to the new node and to its siblings
                     var siblings;
-                    if (d.children) {
-                        siblings = d.children;
-                    } else {
-                        siblings = [];
+                    if (d.children === undefined) {
+                        alert("Aggiunta sezione children al nodo cliccato");
+                        d.children = [];
                     }
-                    var avgWeight = 1.0 / (siblings.length + 1);
-                    for (var i = 0; i < siblings.length; i++) {
-                        siblings[i].weight = avgWeight;
-                        updateD3Tree(siblings[i]);
+                    var avgWeight = 1.0 / (d.children.length + 1);
+                    alert("avgWeight: " + avgWeight);
+                    var siblings_max_level = 0;
+                    for (var i = 0; i < d.children.length; i++) {
+                        d.children[i].weight = avgWeight;
+                        updateD3Tree(d.children[i]);
+                        if (d.children[i].level > siblings_max_level) {
+                            siblings_max_level = d.children[i].level;
+                        }
+                    }
+                    // Calculate level
+                    var level;
+                    // Using Math.floor is ok because levels can't be negative
+                    int_level = Math.floor(d.level) + 1;
+                    if (d.children.length > 0) {
+                        dec_level = (siblings_max_level - Math.floor(siblings_max_level)) + 1;
+                        level = int_level + dec_level;
+                    }
+                    else {
+                        level = d.level;
                     }
                     var newNode = {
-                        "name": "Testname",
+                        "name": ACTIVE_LAYER_NUMERIC_FIELDS[0], // FIXME assign from dialog
                         "parent": d.name, 
                         "weight": avgWeight,
-                        "level": 1
+                        "level": level
                     };
                     // Add node, appending it to the node that has been clicked
                     (d.children || (d.children = [])).push(newNode);
