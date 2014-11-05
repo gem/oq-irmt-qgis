@@ -212,7 +212,12 @@ const MIN_CIRCLE_SIZE = 0.001;
         });
         
         d3.select(self.frameElement).style("height", "800px");
+
         
+        var tooltipdiv = d3.select("#projectDefDialog").append("div")   
+            .attr("class", "tooltip")               
+            .style("opacity", 0);
+
 
         function updateD3Tree(source) {
             // Compute the new tree layout.
@@ -233,6 +238,20 @@ const MIN_CIRCLE_SIZE = 0.001;
 
             nodeEnter.append("circle")
                 .attr("r", 1e-6)
+                .on("mouseover", function(d) {      
+                    var info = d.name;
+                    tooltipdiv .transition()        
+                        .duration(500)      
+                        .style("opacity", .9);      
+                    tooltipdiv .html(info)  
+                        .style("left", (d3.event.pageX) + "px")     
+                        .style("top", (d3.event.pageY - 28) + "px");    
+                    })                  
+                .on("mouseout", function(d) {       
+                    tooltipdiv .transition()        
+                        .duration(500)      
+                        .style("opacity", 0);
+                })
                 .on("click", function(d) {
                     // TODO: Open dialog to select one of the fields of the current layer
                     // and build the newNode depending on it and on the siblings 
