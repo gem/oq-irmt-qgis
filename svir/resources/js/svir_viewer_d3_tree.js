@@ -61,28 +61,31 @@
         var margin = {top: 20, right: 120, bottom: 20, left: 60},
             width = 960 - margin.right - margin.left,
             height = 800 - margin.top - margin.bottom;
-    
+
         var i = 0,
             duration = 750,
             root;
-        
+
         var tree = d3.layout.tree()
             .size([height, width]);
-        
+
         var diagonal = d3.svg.diagonal()
             .projection(function(d) { return [d.y, d.x]; });
+
 
         function createSpinner(id, weight, name, field) {
             pdTempSpinnerIds.push("spinner-"+id);
             $('#projectDefWeightDialog').dialog("open");
             if (field === undefined) {
-                $('#projectDefWeightDialog').append('<p><label for="spinner'+id+'">'+name+': </label><input id="spinner-'+id+'" name="spinner" value="'+weight+'"></p>');
+                $('#projectDefWeightDialog').append(
+                    '<p><label for="spinner'+id+'">'+name+': </label><input id="spinner-'+id+'" name="spinner" value="'+weight+'"></p>');
             } else {
-                $('#projectDefWeightDialog').append('<p><label for="spinner'+id+'">'+name+'('+field+'): </label><input id="spinner-'+id+'" name="spinner" value="'+weight+'"></p>');
+                $('#projectDefWeightDialog').append(
+                    '<p><label for="spinner'+id+'">'+name+'('+field+'): </label><input id="spinner-'+id+'" name="spinner" value="'+weight+'"></p>');
             }
             $(function() {
                 $("#spinner-"+id).width(100).spinner({
-                    min: 0, 
+                    min: 0,
                     max: 100,
                     step: 0.01,
                     numberFormat: "n"
@@ -319,7 +322,7 @@
             .attr("id", "project-definition-svg")
             .append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-        
+
         d3.json(selectedPDef, function() {
             data = JSON.parse(selectedPDef);
             root = data;
@@ -329,12 +332,12 @@
             //root.children.forEach(collapse);
             updateD3Tree(root);
         });
-        
+
         d3.select(self.frameElement).style("height", "800px");
 
-        
-        var tooltipdiv = d3.select("#projectDefDialog").append("div")   
-            .attr("class", "tooltip")               
+
+        var tooltipdiv = d3.select("#projectDefDialog").append("div")
+            .attr("class", "tooltip")
             .style("opacity", 0);
 
 
@@ -342,14 +345,14 @@
             // Compute the new tree layout.
             var nodes = tree.nodes(root).reverse(),
                 links = tree.links(nodes);
-        
+
             // Normalize for fixed-depth.
             nodes.forEach(function(d) { d.y = d.depth * 180; });
-        
+
             // Update the nodes…
             var node = svg.selectAll("g.node")
                 .data(nodes, function(d) { return d.id || (d.id = ++i); });
-            
+
             // Enter any new nodes at the parent's previous position.
             nodeEnter = node.enter().append("g")
                 .attr("class", "node")
@@ -357,40 +360,41 @@
 
             nodeEnter.append("circle")
                 .attr("r", 1e-6)
-                .on("mouseover", function(d) {      
+                .on("mouseover", function(d) {
                     var info = d.name;
-                    tooltipdiv .transition()        
-                        .duration(500)      
-                        .style("opacity", .9);      
-                    tooltipdiv .html(info)  
-                        .style("left", (d3.event.pageX) + "px")     
-                        .style("top", (d3.event.pageY - 28) + "px");    
-                    })                  
-                .on("mouseout", function(d) {       
-                    tooltipdiv .transition()        
-                        .duration(500)      
+                    tooltipdiv .transition()
+                        .duration(500)
+                        .style("opacity", 0.9);
+                    tooltipdiv .html(info)
+                        .style("left", (d3.event.pageX) + "px")
+                        .style("top", (d3.event.pageY - 28) + "px");
+                    })
+                .on("mouseout", function(d) {
+                    tooltipdiv .transition()
+                        .duration(500)
                         .style("opacity", 0);
                 })
                 .on("click", function(d) {
                     // TODO: Open dialog to select one of the fields of the current layer
-                    // and build the newNode depending on it and on the siblings 
+                    // and build the newNode depending on it and on the siblings
                     // NOTE: Only fields that are not already in the tree should be selectable
                     // By default, assign equal weights to the new node and to its siblings
+                    // pdData = data; // PAOLO: What's data?
                     var nodeType;
                     switch (d.type) {
                         case undefined:
-                            alert("You clicked a node with undefined type");
+                            // alert("You clicked a node with undefined type");
                             return false;
-                        case node_types_dict['SV_INDICATOR']:
-                            alert("You clicked a node with type " + d.type);
-                            alert("You can't add new nodes to primary indicator nodes");
+                        case node_types_dict.SV_INDICATOR:
+                            // alert("You clicked a node with type " + d.type);
+                            // alert("You can't add new nodes to primary indicator nodes");
                             return false;
-                        case node_types_dict['SV_THEME']:
-                            alert("You clicked a node with type " + d.type);
-                            nodeType = node_types_dict['SV_INDICATOR'];
+                        case node_types_dict.SV_THEME:
+                            // alert("You clicked a node with type " + d.type);
+                            nodeType = node_types_dict.SV_INDICATOR;
                             break;
                         default:
-                            alert("You clicked a node with type " + d.type);
+                            // alert("You clicked a node with type " + d.type);
                             return false;
                     }
                     if (d.children === undefined) {
@@ -403,7 +407,7 @@
                     var newNode = {
                         // 'name': ACTIVE_LAYER_NUMERIC_FIELDS[0], // FIXME assign from dialog
                         // 'field': ACTIVE_LAYER_NUMERIC_FIELDS[0], // FIXME assign from dialog
-                        'parent': d.name, 
+                        'parent': d.name,
                         'weight': avgWeight,
                         'type': nodeType
                     };
@@ -424,7 +428,7 @@
                     cancelAddNodeButton(d);
                     addNodeButton(builtNode);
                 });
-            
+
             nodeEnter.append("text")
                 // .attr("class", (function(d) { return "level-" + d.level; }))
                 //.attr("id", (function(d) { return d.name; }))
@@ -494,7 +498,7 @@
             var nodeUpdate = node.transition()
                 .duration(duration)
                 .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
-            
+
             nodeUpdate.select("circle")
                 .attr("r", function (d) {
                     // d.weight is expected to be between 0 and 1
@@ -507,23 +511,23 @@
 
             nodeUpdate.select("text")
                 .style("fill-opacity", 1);
-            
+
             // Transition exiting nodes to the parent's new position.
             var nodeExit = node.exit().transition()
                 .duration(duration)
                 .attr("transform", function(d) { return "translate(" + source.y + "," + source.x + ")"; })
                 .remove();
-            
+
             nodeExit.select("circle")
                 .attr("r", 1e-6);
-            
+
             nodeExit.select("text")
                 .style("fill-opacity", 1e-6);
-            
+
             // Update the links…
             var link = svg.selectAll("path.link")
                 .data(links, function(d) { return d.target.id; });
-            
+
             // Enter any new links at the parent's previous position.
             link.enter().insert("path", "g")
                 .attr("class", "link")
@@ -531,12 +535,12 @@
                   var o = {x: source.x0, y: source.y0};
                   return diagonal({source: o, target: o});
                 });
-            
+
             // Transition links to their new position.
             link.transition()
                 .duration(duration)
                 .attr("d", diagonal);
-            
+
             // Transition exiting nodes to the parent's new position.
             link.exit().transition()
                 .duration(duration)
@@ -545,7 +549,7 @@
                   return diagonal({source: o, target: o});
                 })
                 .remove();
-            
+
             // Stash the old positions for transition.
             nodes.forEach(function(d) {
                 d.x0 = d.x;
@@ -553,7 +557,7 @@
             });
             if (qt_page){
                 if (typeof pdData !== 'undefined'){
-                    qt_page.json_updated(pdData)
+                    qt_page.json_updated(pdData);
                 }
             }
         }
