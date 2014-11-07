@@ -28,6 +28,15 @@ const MIN_CIRCLE_SIZE = 0.001;
         });
     });
 
+    $(document).ready(function() {
+        //  Dialog to set up a new node to insert into the project definition
+        $("#projectDefNewNodeDialog").dialog({
+            autoOpen: false,
+            height: 200,
+            width: 500,
+            modal: true
+        });
+    });
 
     ////////////////////////////////////////////
     //// Project Definition Collapsible Tree ///
@@ -35,10 +44,10 @@ const MIN_CIRCLE_SIZE = 0.001;
 
     function loadPD(selectedPDef, qt_page) {
         var qt_page = typeof qt_page !== 'undefined' ? qt_page : false;
-        const DEFAULT_OPERATOR = qt_page.DEFAULT_OPERATOR
-        const OPERATORS = qt_page.OPERATORS.split(';')
-        const ACTIVE_LAYER_NUMERIC_FIELDS = qt_page.ACTIVE_LAYER_NUMERIC_FIELDS.split(';');
-        const NODE_TYPES = qt_page.NODE_TYPES.split(';');
+        var DEFAULT_OPERATOR = qt_page.DEFAULT_OPERATOR;
+        var OPERATORS = qt_page.OPERATORS.split(';');
+        var ACTIVE_LAYER_NUMERIC_FIELDS = qt_page.ACTIVE_LAYER_NUMERIC_FIELDS.split(';');
+        var NODE_TYPES = qt_page.NODE_TYPES.split(';');
         var node_types_dict = {};
         for (i=0; i<NODE_TYPES.length; i++) {
             var keyval = NODE_TYPES[i];
@@ -103,8 +112,92 @@ const MIN_CIRCLE_SIZE = 0.001;
                     options += '<option value="' + c + '">' + c + '</option>'
                 }
             }
+            return options;
+        }
 
-            return options
+
+        function fieldSelect(node){
+            // TODO: Add more stuff to the node
+            $('#projectDefNewNodeDialog').dialog("open");
+            $('#projectDefNewNodeDialog')
+                .append('<br/><label for="field">Field: </label>')
+                .append('<select id="field">'+ fieldOptions(node) + '</select>');
+            //TODO use selectmenu when the bug there is fixed9?
+            //$(selector).selectmenu()
+            //$(selector).prop('selectedIndex', 4)
+            // $('#field').val(node.field);
+        }
+
+        function getRootNode(node){
+            if (node.parent === undefined) {
+                return node;
+            } else {
+                return getRootNode(node.parent);
+            }
+        }
+
+        function listTakenFields(node) {
+            var takenFields = [];
+            if (typeof node.field !== "undefined") {
+                takenFields.push(node.field);
+            }
+            // Recursive search inside the children of the node
+            if (typeof node.children !== "undefined"){
+                for (var i = 0; i < node.children.length; i++){
+                    var takenInChild = listTakenFields(node.children[i]);
+                    takenFields.push.apply(takenFields, takenInChild);
+                }
+            }
+            return takenFields;
+        }
+
+        function fieldOptions(pdData) {
+            var options = '';
+            // Retrieve the root (TODO: we should keep the root node visible and use that here)
+            var rootNode = getRootNode(pdData);
+            // Get a list of fields that are already in the Project Definition
+            var takenFields = listTakenFields(rootNode);
+            for (i = 0; i < ACTIVE_LAYER_NUMERIC_FIELDS.length; i++) {
+                var field_name = ACTIVE_LAYER_NUMERIC_FIELDS[i];
+                // Add only numeric fields in the active layer that are not already in the PD
+                if (takenFields.indexOf(field_name) === -1){
+                    options += '<option value="' + field_name + '">' + field_name + '</option>';
+                }
+            }
+            return options;
+        }
+
+        function cancelAddNodeButton(pdData) {
+            $('#projectDefNewNodeDialog').append(
+                '<br/><br/><button type="button" id="cancel-add-node-button">Cancel</button>'
+            );
+            $('#cancel-add-node-button').click(
+                function(){
+                    // Remove the new node (the last child, just created) from the children
+                    pdData.children.splice(pdData.children.length - 1, 1);
+                    updateD3Tree(pdData);
+                    $('#projectDefNewNodeDialog').dialog("close");
+                }
+            );
+
+        }
+
+        function addNodeButton(pdData) {
+            // pdId = typeof pdId !== 'undefined' ? pdId : false;
+            $('#projectDefNewNodeDialog').append(
+                '<button type="button" id="add-node-button">Add node</button>'
+            );
+            // alert('Created the "add node" button');
+            $('#add-node-button').click(
+                function(){
+                    if ($('#field').length !== 0) {
+                        var field = $('#field').val();
+                        updateField(pdData, field);
+                        // updateField(pdData, pdData.id, field);
+                    }
+                    $('#projectDefNewNodeDialog').dialog("close");
+                }
+            );
         }
 
         function updateButton(pdId){
@@ -191,6 +284,27 @@ const MIN_CIRCLE_SIZE = 0.001;
 
             (pdData.children || []).forEach(function(currentItem) {
                 updateOperator(currentItem, id, pdOperator);
+            });
+        }
+
+        function updateField(pdData, field) {
+            // alert('Inside updateField');
+            pdData.field = field;
+            // FIXME Let the user type a name for the field
+            pdData.name = field;
+            updateD3Tree(pdData);
+            // alert(pdData.name);
+        }
+
+        function updateFieldOLD(pdData, id, pdField) {
+            if (pdData.id == id){
+                pdData.field = pdField;
+                // FIXME Let the user type a name for the field
+                pdData.name = pdField;
+            }
+
+            (pdData.children || []).forEach(function(currentItem) {
+                updateField(currentItem, id, pdField);
             });
         }
 
@@ -282,14 +396,28 @@ const MIN_CIRCLE_SIZE = 0.001;
                         d.children[i].weight = avgWeight;
                     }
                     var newNode = {
-                        'name': ACTIVE_LAYER_NUMERIC_FIELDS[0], // FIXME assign from dialog
+                        // 'name': ACTIVE_LAYER_NUMERIC_FIELDS[0], // FIXME assign from dialog
+                        // 'field': ACTIVE_LAYER_NUMERIC_FIELDS[0], // FIXME assign from dialog
                         'parent': d.name, 
                         'weight': avgWeight,
                         'type': nodeType
                     };
                     // Add node, appending it to the node that has been clicked
                     (d.children || (d.children = [])).push(newNode);
-                    updateD3Tree(d);
+                    // alert(JSON.stringify(source));
+                    builtNode = d.children[d.children.length - 1];
+                    updateD3Tree(builtNode);
+                    // updateD3Tree(pdData);
+                    // Let the user choose one of the available fields and set the name
+                    $('#projectDefNewNodeDialog').empty();
+                    fieldSelect(d);
+                    // pdData = d.children[d.children.length - 1];
+                    // alert(pdData.id);
+                    // alert(builtNode.id);
+                    // pdData.transition();
+                    // addNodeButton(pdData);
+                    cancelAddNodeButton(d);
+                    addNodeButton(builtNode);
                 });
             
             nodeEnter.append("text")
