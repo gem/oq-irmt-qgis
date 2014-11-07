@@ -627,7 +627,10 @@ class Svir:
             printing_str = 'SVI'
 
         if DEBUG:
-            print 'REDRAWING %s using:\n%s' % (printing_str, data)
+            import pprint
+            pp = pprint.PrettyPrinter(indent=4)
+            print 'REDRAWING %s using:' % printing_str
+            pp.pprint(data)
 
         rule_renderer = QgsRuleBasedRendererV2(
             QgsSymbolV2.defaultSymbol(self.current_layer.geometryType()))
