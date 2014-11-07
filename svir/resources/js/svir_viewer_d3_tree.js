@@ -50,7 +50,7 @@
         var ACTIVE_LAYER_NUMERIC_FIELDS = qt_page.ACTIVE_LAYER_NUMERIC_FIELDS.split(';');
         var NODE_TYPES = qt_page.NODE_TYPES.split(';');
         var node_types_dict = {};
-        for (i=0; i<NODE_TYPES.length; i++) {
+        for (var i = 0; i < NODE_TYPES.length; i++) {
             var keyval = NODE_TYPES[i];
             var keyvalsplit = keyval.split(':');
             var type_key = keyvalsplit[0];
@@ -107,7 +107,7 @@
 
         function operatorOptions(){
             var options = '';
-            for (i = 0; i < OPERATORS.length; i++) {
+            for (var i = 0; i < OPERATORS.length; i++) {
                 var c = OPERATORS[i];
                 if (c == DEFAULT_OPERATOR){
                     options += '<option value="' + c + '" selected="selected">' + c + '</option>';
@@ -161,7 +161,7 @@
             var rootNode = getRootNode(pdData);
             // Get a list of fields that are already in the Project Definition
             var takenFields = listTakenFields(rootNode);
-            for (i = 0; i < ACTIVE_LAYER_NUMERIC_FIELDS.length; i++) {
+            for (var i = 0; i < ACTIVE_LAYER_NUMERIC_FIELDS.length; i++) {
                 var field_name = ACTIVE_LAYER_NUMERIC_FIELDS[i];
                 // Add only numeric fields in the active layer that are not already in the PD
                 if (takenFields.indexOf(field_name) === -1){
