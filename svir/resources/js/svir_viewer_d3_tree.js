@@ -15,8 +15,9 @@
       along with this program.  If not, see <https://www.gnu.org/licenses/agpl.html>.
 */
 
-const CIRCLE_SCALE = 30;
-const MIN_CIRCLE_SIZE = 0.001;
+    // const is not supported by all the browsers, so we are using var instead
+    var CIRCLE_SCALE = 30;
+    var MIN_CIRCLE_SIZE = 0.001;
 
     $(document).ready(function() {
         //  Project definition weight dialog
@@ -102,14 +103,14 @@ const MIN_CIRCLE_SIZE = 0.001;
         }
 
         function operatorOptions(){
-            var options = ''
+            var options = '';
             for (i = 0; i < OPERATORS.length; i++) {
                 var c = OPERATORS[i];
                 if (c == DEFAULT_OPERATOR){
-                    options += '<option value="' + c + '" selected="selected">' + c + '</option>'
+                    options += '<option value="' + c + '" selected="selected">' + c + '</option>';
                 }
                 else{
-                    options += '<option value="' + c + '">' + c + '</option>'
+                    options += '<option value="' + c + '">' + c + '</option>';
                 }
             }
             return options;
@@ -203,7 +204,11 @@ const MIN_CIRCLE_SIZE = 0.001;
         function updateButton(pdId){
             pdId = typeof pdId !== 'undefined' ? pdId : false;
             $('#projectDefWeightDialog').append('<br/><br/><button type="button" id="update-button">Update</button>');
-            $('#update-button').click(function(){updateButtonClicked()});
+            $('#update-button').click(
+                function(){
+                    updateButtonClicked();
+                }
+            );
             $('#projectDefWeightDialog').append('<button type="button" id="updateandclose-button">Update and close</button>');
             $('#updateandclose-button').click(function(){
                 updateButtonClicked();
@@ -217,7 +222,7 @@ const MIN_CIRCLE_SIZE = 0.001;
                 // Get the values of the spinners
                 for (var i = 0; i < pdTempSpinnerIds.length; i++) {
                     pdTempWeights.push($('#'+pdTempSpinnerIds[i]).val());
-                };
+                }
 
                 // Adjust the values into percentages
                 pdTempWeights = pdTempWeights.map(Number);
@@ -229,27 +234,27 @@ const MIN_CIRCLE_SIZE = 0.001;
                 for (var i = 0; i < pdTempWeights.length; i++) {
                     var tempMath = Math.floor((pdTempWeights[i] * 100) / totalWeights);
                     pdTempWeightsComputed.push(tempMath / 100);
-                };
+                }
 
                 // Update the results back into the spinners and to the d3.js chart
                 for (var i = 0; i < pdTempSpinnerIds.length; i++) {
                     $('#'+pdTempSpinnerIds[i]).spinner("value", pdTempWeightsComputed[i]);
-                };
+                }
 
                 // Update the json with new values
                 for (var i = 0; i < pdTempWeightsComputed.length; i++) {
                     updateTreeBranch(pdData, [pdTempIds[i]], pdTempWeightsComputed[i]);
-                };
+                }
 
-                if ($('#operator').length != 0) {
-                    var operator = $('#operator').val()
+                if ($('#operator').length !== 0) {
+                    var operator = $('#operator').val();
                     updateOperator(pdData, pdId, operator);
                 }
 
                 nodeEnter.remove("text");
                 updateD3Tree(pdData);
             }
-        };
+        }
 
         function findTreeBranchInfo(pdData, pdName, pdField) {
             // Find out how many elements are in tree branch
@@ -348,7 +353,7 @@ const MIN_CIRCLE_SIZE = 0.001;
             // Enter any new nodes at the parent's previous position.
             nodeEnter = node.enter().append("g")
                 .attr("class", "node")
-                .attr("transform", function(d) { return "translate(" + source.y0 + "," + source.x0 + ")"; })
+                .attr("transform", function(d) { return "translate(" + source.y0 + "," + source.x0 + ")"; });
 
             nodeEnter.append("circle")
                 .attr("r", 1e-6)
@@ -433,7 +438,8 @@ const MIN_CIRCLE_SIZE = 0.001;
                     if (typeof d.parent != "undefined" && d.x > d.parent.x){
                         return "2em";
                     }
-                    return "-1em" })
+                    return "-1em";
+                })
                 .attr("text-anchor", function(d) { return "end"; })
                 .text(function(d) {
                     return d.name;
@@ -450,9 +456,9 @@ const MIN_CIRCLE_SIZE = 0.001;
                     if (d.parent){
                         findTreeBranchInfo(pdData, [pdName], pdField);
                         var pdParentOperator = d.parent.operator? d.parent.operator : DEFAULT_OPERATOR;
-                        d.parent.operator = pdParentOperator
+                        d.parent.operator = pdParentOperator;
                         operatorSelect(pdParentOperator);
-                        pdId = d.parent.id
+                        pdId = d.parent.id;
                         updateButton(pdId);
                     }
                     else{
@@ -464,8 +470,8 @@ const MIN_CIRCLE_SIZE = 0.001;
                 .text(function(d) {
                     if (d.children){
                         var operator = d.operator? d.operator : DEFAULT_OPERATOR;
-                        d.operator = operator
-                        return operator
+                        d.operator = operator;
+                        return operator;
                     }
                 })
                 .attr("x", function(d) { return d.weight * CIRCLE_SCALE + 15; })
@@ -476,8 +482,8 @@ const MIN_CIRCLE_SIZE = 0.001;
                     pdParentField = d.field;
                     pdTempSpinnerIds = [];
                     pdTempIds = [];
-                    pdOperator = d.operator
-                    pdId = d.id
+                    pdOperator = d.operator;
+                    pdId = d.id;
                     $('#projectDefWeightDialog').empty();
                     findTreeBranchInfo(pdData, [pdName], pdParentField);
                     operatorSelect(pdOperator);
@@ -496,9 +502,8 @@ const MIN_CIRCLE_SIZE = 0.001;
                     return d.weight ? Math.max(d.weight * CIRCLE_SCALE, MIN_CIRCLE_SIZE): MIN_CIRCLE_SIZE;
                 })
                 .style("fill", function(d) {
-                    return d.source ? d.source.linkColor: d.linkColor
-                })
-
+                    return d.source ? d.source.linkColor: d.linkColor;
+                });
 
             nodeUpdate.select("text")
                 .style("fill-opacity", 1);
