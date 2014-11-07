@@ -79,7 +79,8 @@ PROJECT_TEMPLATE = {
     'children': [
         {'name': 'RI',
          'type': NODE_TYPES['RI'],
-         'weight': 0.5},
+         'weight': 0.5,
+         'children': []},
         {'name': 'SVI',
          'type': NODE_TYPES['SVI'],
          'weight': 0.5,
@@ -98,7 +99,8 @@ INDICATOR_TEMPLATE = {
     'name': '',
     'weight': 1.0,
     'type': NODE_TYPES['SV_INDICATOR'],
-    'field': ''
+    'field': '',
+    'children': []
 }
 
 # FIXME: change types using NODE_TYPES
