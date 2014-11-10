@@ -174,7 +174,7 @@ class Svir:
         # Action to activate the modal dialog to import socioeconomic
         # data from the platform
         self.add_menu_item("import_sv_variables",
-                           ":/plugins/svir/start_plugin_icon.png",
+                           ":/plugins/svir/load.svg",
                            u"&Load socioeconomic indicators"
                            " from the OpenQuake Platform",
                            self.import_sv_variables,
@@ -183,7 +183,7 @@ class Svir:
         # Action to activate the modal dialog to select a layer and one of its
         # attributes, in order to transform that attribute
         self.add_menu_item("transform_attribute",
-                           ":/plugins/svir/start_plugin_icon.png",
+                           ":/plugins/svir/transform.svg",
                            u"&Transform attribute",
                            self.transform_attribute,
                            enable=False,
@@ -191,7 +191,7 @@ class Svir:
         # Action to activate the modal dialog to choose weighting of the
         # data from the platform
         self.add_menu_item("create_weight_tree",
-                           ":/plugins/svir/start_plugin_icon.png",
+                           ":/plugins/svir/define.svg",
                            u"&Define model structure",
                            self.create_weight_tree,
                            enable=False,
@@ -199,7 +199,7 @@ class Svir:
         # Action to activate the modal dialog to choose weighting of the
         # data from the platform
         self.add_menu_item("weight_data",
-                           ":/plugins/svir/start_plugin_icon.png",
+                           ":/plugins/svir/weights.svg",
                            u"&Weight data and calculate indices",
                            self.weight_data,
                            enable=False,
@@ -207,14 +207,14 @@ class Svir:
         # Action to activate the modal dialog to guide the user through loss
         # aggregation by zone
         self.add_menu_item("aggregate_losses",
-                           ":/plugins/svir/start_plugin_icon.png",
+                           ":/plugins/svir/aggregate.svg",
                            u"&Aggregate loss by zone",
                            self.aggregate_losses,
                            enable=True,
                            add_to_layer_actions=False)
         # Action for merging SVI with loss data (both aggregated by zone)
         self.add_menu_item("merge_svi_and_losses",
-                           ":/plugins/svir/start_plugin_icon.png",
+                           ":/plugins/svir/copy.svg",
                            u"Copy loss data into selected layer",
                            self.merge_svi_with_aggr_losses,
                            enable=False,
@@ -223,7 +223,7 @@ class Svir:
         # FIXME Probably to be removed
         # Action for calculating RISKPLUS, RISKMULT and RISK1F indices
         self.add_menu_item("calculate_svir_indices",
-                           ":/plugins/svir/start_plugin_icon.png",
+                           ":/plugins/svir/calculate.svg",
                            u"Calculate common integrated risk indices",
                            self.calculate_svir_indices,
                            enable=False,
@@ -231,7 +231,7 @@ class Svir:
 
         # Action to upload
         self.add_menu_item("upload",
-                           ":/plugins/svir/start_plugin_icon.png",
+                           ":/plugins/svir/upload.svg",
                            u"&Upload project to the OpenQuake Platform",
                            self.upload,
                            enable=False,
@@ -239,7 +239,7 @@ class Svir:
         # Action to activate the modal dialog to set up settings for the
         # connection with the platform
         self.add_menu_item("settings",
-                           ":/plugins/svir/start_plugin_icon.png",
+                           ":/plugins/svir/settings.svg",
                            u"&OpenQuake Platform connection settings",
                            self.settings,
                            enable=True)
