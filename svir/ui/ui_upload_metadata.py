@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_upload_metadata.ui'
 #
-# Created: Tue Oct 14 11:14:54 2014
+# Created: Tue Nov 11 17:13:53 2014
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -28,16 +28,16 @@ class Ui_UploadMetadataDialog(object):
         UploadMetadataDialog.setObjectName(_fromUtf8("UploadMetadataDialog"))
         UploadMetadataDialog.setWindowModality(QtCore.Qt.ApplicationModal)
         UploadMetadataDialog.resize(900, 551)
-        self.gridLayout = QtGui.QGridLayout(UploadMetadataDialog)
-        self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
+        self.verticalLayout = QtGui.QVBoxLayout(UploadMetadataDialog)
+        self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
+        self.web_view = QtWebKit.QWebView(UploadMetadataDialog)
+        self.web_view.setObjectName(_fromUtf8("web_view"))
+        self.verticalLayout.addWidget(self.web_view)
         self.buttonBox = QtGui.QDialogButtonBox(UploadMetadataDialog)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
         self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName(_fromUtf8("buttonBox"))
-        self.gridLayout.addWidget(self.buttonBox, 1, 0, 1, 1)
-        self.web_view = QtWebKit.QWebView(UploadMetadataDialog)
-        self.web_view.setObjectName(_fromUtf8("web_view"))
-        self.gridLayout.addWidget(self.web_view, 0, 0, 1, 1)
+        self.verticalLayout.addWidget(self.buttonBox)
 
         self.retranslateUi(UploadMetadataDialog)
         QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), UploadMetadataDialog.accept)

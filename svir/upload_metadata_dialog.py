@@ -40,8 +40,10 @@ from third_party.requests.utils import dict_from_cookiejar
 
 from ui.ui_upload_metadata import Ui_UploadMetadataDialog
 
-from utils import get_credentials, platform_login, upload_shp,\
-    create_progress_message_bar
+from utils import (get_credentials,
+                   platform_login,
+                   upload_shp,
+                   create_progress_message_bar)
 
 
 class UploadMetadataDialog(QDialog):
@@ -76,9 +78,11 @@ class UploadMetadataDialog(QDialog):
         self.file_stem = file_stem
         self.project_definition = project_definition
 
+        self.layout().setContentsMargins(0, 0, 0, 0)
+
         self.bar = QgsMessageBar()
         self.bar.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
-        self.layout().addWidget(self.bar, 0, 0, 1, 1)
+        self.layout().insertWidget(0, self.bar)
         self.msg_bar_item, self.progress = create_progress_message_bar(
             self.bar, 'uploading', no_percentage=True)
 
