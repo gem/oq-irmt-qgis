@@ -55,7 +55,8 @@ class MissingValuesTestCase(unittest.TestCase):
                              '5': 2.5}
             alg = TRANSFORMATION_ALGS['RANK']
             variant = "AVERAGE"
-            transformed_dict = transform(features_dict, alg, variant)
+            transformed_dict, missing_values = transform(
+                features_dict, alg, variant)
             self.assertEqual(transformed_dict, expected_dict)
 
 
