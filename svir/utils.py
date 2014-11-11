@@ -230,7 +230,7 @@ def upload_shp(host, session, file_stem):
              'dbf_file': ('file.dbf', open('%s.dbf' % file_stem, 'rb')),
              'shx_file': ('file.shx', open('%s.shx' % file_stem, 'rb')),
              'prj_file': ('file.prj', open('%s.prj' % file_stem, 'rb')),
-             # 'xml_file': ('file.xml', open('%s.xml' % file_stem, 'rb')),
+             'xml_file': ('file.xml', open('%s.xml' % file_stem, 'r')),
              }
     payload = {'charset': ['UTF-8'],
                'permissions': [
