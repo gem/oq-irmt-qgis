@@ -58,6 +58,9 @@ class UploadMetadataDialog(QDialog):
         # Set up the user interface from Designer.
         self.ui = Ui_UploadMetadataDialog()
         self.ui.setupUi(self)
+        self.messagebar = QgsMessageBar()
+        self.messagebar.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
+        self.layout().insertWidget(0, self.messagebar)
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
 
         self.hostname, self.username, self.password = get_credentials(
@@ -80,11 +83,8 @@ class UploadMetadataDialog(QDialog):
 
         self.layout().setContentsMargins(0, 0, 0, 0)
 
-        self.bar = QgsMessageBar()
-        self.bar.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
-        self.layout().insertWidget(0, self.bar)
         self.msg_bar_item, self.progress = create_progress_message_bar(
-            self.bar, 'uploading', no_percentage=True)
+            self.messagebar, 'uploading', no_percentage=True)
 
         # allow showing the dialog
         QTimer.singleShot(100, self.upload)
@@ -97,6 +97,7 @@ class UploadMetadataDialog(QDialog):
             self.hostname, self.session, self.file_stem)
         if layer_url:
             self.web_view.load(QUrl(layer_url))
+        clear_progress_message_bar(self.bar, self.msg_bar_item)
 
     def _login_to_platform(self):
         platform_login(
