@@ -1351,8 +1351,8 @@ class Svir:
         #     progress.setValue(p_int)
         # clear_progress_message_bar(self.iface, msg_bar_item)
 
-        # project_definition = self.project_definitions[self.current_layer.id()]
-        project_definition = {'name': 'TEEEEST'}
+        #project_definition = {'name': 'TEEEEST'}
+        project_definition = self.project_definitions[self.current_layer.id()]
         metadata_dialog = UploadMetadataDialog(self.iface,
                                                file_stem,
                                                project_definition)

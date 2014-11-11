@@ -191,8 +191,8 @@
                 </gmd:EX_Extent>
             </gmd:extent>
             <gmd:supplementalInformation>
-                <svir_project_definition>$SVIR_PROJECT_DEFINITION
-                </svir_project_definition>
+                <gco:CharacterString>$SVIR_PROJECT_DEFINITION
+                </gco:CharacterString>
             </gmd:supplementalInformation>
         </gmd:MD_DataIdentification>
     </gmd:identificationInfo>

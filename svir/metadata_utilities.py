@@ -39,7 +39,7 @@ ISO_METADATA_KEYWORD_NESTING = [
     '{http://www.isotc211.org/2005/gmd}identificationInfo',
     '{http://www.isotc211.org/2005/gmd}MD_DataIdentification',
     '{http://www.isotc211.org/2005/gmd}supplementalInformation',
-    'svir_project_definition']
+    '{http://www.isotc211.org/2005/gco}CharacterString']
 
 # flat xpath for the keyword container tag
 ISO_METADATA_KEYWORD_TAG = '/'.join(ISO_METADATA_KEYWORD_NESTING)
