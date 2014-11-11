@@ -29,15 +29,13 @@
 
 import unittest
 
-from PyQt4.QtGui import QDialogButtonBox, QDialog, QIcon
-
-from attribute_selection_dialog import AttributeSelectionDialog
+from PyQt4.QtGui import QIcon
 
 from utilities import get_qgis_app
 QGIS_APP, CANVAS, PARENT, IFACE = get_qgis_app()
 
-import svir
-SVIR = svir.classFactory(IFACE)
+#import svir
+#SVIR = svir.classFactory(IFACE)
 #SVIR.ui = svir.plugin.dlg.ui  # useful for shorthand later
 
 
