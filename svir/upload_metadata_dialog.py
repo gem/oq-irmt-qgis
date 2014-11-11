@@ -28,13 +28,10 @@
 
 from PyQt4.QtCore import (Qt,
                           QUrl,
-                          QSettings,
-                          pyqtProperty,
-                          pyqtSignal)
-                          pyqtSignal, QTimer)
+                          QSettings, QTimer)
+from qgis.gui import QgsMessageBar
 
-from PyQt4.QtGui import (QDialog,
-                         QDialogButtonBox)
+from PyQt4.QtGui import (QDialog, QSizePolicy, QDialogButtonBox)
 from PyQt4.QtNetwork import QNetworkCookieJar, QNetworkCookie
 from PyQt4.QtWebKit import QWebSettings
 from metadata_utilities import write_iso_metadata_file
@@ -43,8 +40,7 @@ from third_party.requests.utils import dict_from_cookiejar
 
 from ui.ui_upload_metadata import Ui_UploadMetadataDialog
 
-from utils import get_credentials, platform_login, upload_shp
-from utils import get_credentials, platform_login, upload_shp, \
+from utils import get_credentials, platform_login, upload_shp,\
     create_progress_message_bar
 
 
