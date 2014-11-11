@@ -36,6 +36,7 @@ from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox)
 from PyQt4.QtNetwork import QNetworkCookieJar, QNetworkCookie
 from PyQt4.QtWebKit import QWebSettings
+from metadata_utilities import write_iso_metadata_file
 from third_party.requests.sessions import Session
 from third_party.requests.utils import dict_from_cookiejar
 
@@ -49,7 +50,7 @@ class UploadMetadataDialog(QDialog):
     Modal dialog allowing to upload the data to a platform
     """
 
-    def __init__(self, iface, file_stem):
+    def __init__(self, iface, file_stem, project_definition):
         self.iface = iface
         QDialog.__init__(self)
 
@@ -74,9 +75,12 @@ class UploadMetadataDialog(QDialog):
         self.frame.javaScriptWindowObjectCleared.connect(self._setup_js)
         
         self.file_stem = file_stem
+        self.project_definition = project_definition
         self.upload()
 
     def upload(self):
+        xml_file = self.file_stem + '.xml'
+        write_iso_metadata_file(xml_file, self.project_definition)
         self._login_to_platform()
         layer_url = upload_shp(self.hostname, self.session, self.file_stem)
         if layer_url:

@@ -231,7 +231,7 @@ def upload_shp(host, session, file_stem):
              'dbf_file': ('file.dbf', open('%s.dbf' % file_stem, 'rb')),
              'shx_file': ('file.shx', open('%s.shx' % file_stem, 'rb')),
              'prj_file': ('file.prj', open('%s.prj' % file_stem, 'rb')),
-             # 'xml_file': ('file.prj', open('%s.prj' % file_stem, 'rb')),
+             # 'xml_file': ('file.xml', open('%s.xml' % file_stem, 'rb')),
              }
     payload = {'charset': ['UTF-8'],
                'permissions': [
@@ -323,3 +323,9 @@ class WaitCursorManager(object):
 
 class SvNetworkError(Exception):
     pass
+
+
+class ReadMetadataError(RuntimeError):
+    """When a metadata xml is not correctly formatted can't be read"""
+    suggestion = (
+        'Check that the file is correct')

@@ -307,6 +307,7 @@ class Svir:
 
         if DEBUG:
             print 'Selected: %s' % self.current_layer
+            self.registered_actions["upload"].setEnabled(True)
         try:
             # Activate actions which require a vector layer to be selected
             if self.current_layer.type() != QgsMapLayer.VectorLayer:
@@ -1338,7 +1339,7 @@ class Svir:
             'utf-8',
             self.current_layer.crs(),
             'ESRI Shapefile')
-        # msg = tr("Uploading to platform")
+          # msg = tr("Uploading to platform")
         # msg_bar_item, progress = create_progress_message_bar(self.iface, msg)
 
         # # TODO UPLOAD
@@ -1348,8 +1349,10 @@ class Svir:
         #     progress.setValue(p_int)
         # clear_progress_message_bar(self.iface, msg_bar_item)
 
-        metadata_dialog = UploadMetadataDialog(self.iface, file_stem)
+        metadata_dialog = UploadMetadataDialog(self.iface,
+                                               file_stem,
+                                               self.project_definitions)
         if metadata_dialog.exec_():
-            print "ok"
+            print "metadata_dialog ok"
         else:
-            print "eee"
+            print "metadata_dialog cancelled"
