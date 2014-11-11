@@ -43,7 +43,7 @@ from ui.ui_upload_metadata import Ui_UploadMetadataDialog
 from utils import (get_credentials,
                    platform_login,
                    upload_shp,
-                   create_progress_message_bar)
+                   create_progress_message_bar, clear_progress_message_bar)
 
 
 class UploadMetadataDialog(QDialog):
@@ -97,7 +97,7 @@ class UploadMetadataDialog(QDialog):
             self.hostname, self.session, self.file_stem)
         if layer_url:
             self.web_view.load(QUrl(layer_url))
-        clear_progress_message_bar(self.bar, self.msg_bar_item)
+        clear_progress_message_bar(self.messagebar, self.msg_bar_item)
 
     def _login_to_platform(self):
         platform_login(
