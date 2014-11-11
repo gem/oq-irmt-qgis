@@ -344,7 +344,7 @@ class Svir:
             self.iface.legendInterface().removeLegendLayerAction(action)
             self.iface.removePluginMenu(u"&SVIR", action)
             self.iface.removeToolBarIcon(action)
-        clear_progress_message_bar(self.iface)
+        clear_progress_message_bar(self.iface.messageBar())
 
         #remove connects
         self.iface.currentLayerChanged.disconnect(self.current_layer_changed)
@@ -955,7 +955,7 @@ class Svir:
         """
         tot_points = len(list(loss_layer.getFeatures()))
         msg = tr("Step 2 of 3: aggregating losses by zone id...")
-        msg_bar_item, progress = create_progress_message_bar(self.iface, msg)
+        msg_bar_item, progress = create_progress_message_bar(self.iface.messageBar(), msg)
         with TraceTimeManager(msg, DEBUG):
             zone_stats = {}
             for current_point, point_feat in enumerate(
@@ -979,7 +979,7 @@ class Svir:
                     # initialize stats for the new zone found
                     zone_stats[zone_id] = {'count': 1,
                                            'sum': loss_value}
-        clear_progress_message_bar(self.iface, msg_bar_item)
+        clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
 
         msg = tr(
             "Step 3 of 3: writing point counts, loss sums and averages into "
@@ -1028,7 +1028,7 @@ class Svir:
                         fid, sum_index, float(loss_sum))
                     self.zonal_layer.changeAttributeValue(
                         fid, avg_index, float(loss_avg))
-        clear_progress_message_bar(self.iface, msg_bar_item)
+        clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
 
     def calculate_vector_stats_using_geometries(self):
         """
@@ -1051,7 +1051,7 @@ class Svir:
         tot_points = len(list(self.loss_layer.getFeatures()))
         msg = tr(
             "Step 2 of 3: creating spatial index for loss points...")
-        msg_bar_item, progress = create_progress_message_bar(self.iface, msg)
+        msg_bar_item, progress = create_progress_message_bar(self.iface.messageBar(), msg)
 
         # create spatial index
         with TraceTimeManager(tr("Creating spatial index for loss points..."),
@@ -1063,7 +1063,7 @@ class Svir:
                 progress.setValue(progress_perc)
                 spatial_index.insertFeature(loss_feature)
 
-        clear_progress_message_bar(self.iface, msg_bar_item)
+        clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
 
         with LayerEditingManager(self.zonal_layer,
                                  tr("Calculate point counts, sums and "
@@ -1136,7 +1136,7 @@ class Svir:
                             fid, sum_index, loss_sum)
                         self.zonal_layer.changeAttributeValue(
                             fid, avg_index, loss_avg)
-        clear_progress_message_bar(self.iface, msg_bar_item)
+        clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
         # display a warning in case none of the loss points are inside
         # any of the zones
         if no_loss_points_in_any_zone:
@@ -1182,7 +1182,7 @@ class Svir:
 
         tot_zones = len(list(self.zonal_layer.getFeatures()))
         msg = tr("Purging zones containing no loss points...")
-        msg_bar_item, progress = create_progress_message_bar(self.iface, msg)
+        msg_bar_item, progress = create_progress_message_bar(self.iface.messageBar(), msg)
 
         with LayerEditingManager(self.purged_layer,
                                  msg,
@@ -1198,7 +1198,7 @@ class Svir:
                     if caps & QgsVectorDataProvider.deleteFeatures:
                         pr.deleteFeatures([zone_feature.id()])
 
-        clear_progress_message_bar(self.iface, msg_bar_item)
+        clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
 
         # Add purged layer to registry
         if self.purged_layer.isValid():
@@ -1220,7 +1220,7 @@ class Svir:
         # to show the overall progress, cycling through zones
         tot_zones = len(list(self.loss_layer_to_merge.getFeatures()))
         msg = tr("Populating zonal layer with loss values...")
-        msg_bar_item, progress = create_progress_message_bar(self.iface, msg)
+        msg_bar_item, progress = create_progress_message_bar(self.iface.messageBar(), msg)
 
         with LayerEditingManager(self.current_layer,
                                  tr("Add loss values to zonal layer"),
@@ -1244,7 +1244,7 @@ class Svir:
                             zonal_feat_id,
                             aggr_loss_index,
                             aggr_feat[self.aggr_loss_attr_to_merge])
-        clear_progress_message_bar(self.iface, msg_bar_item)
+        clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
 
     # FIXME Probably to be removed
     def calculate_svir_indices(self):
@@ -1312,7 +1312,7 @@ class Svir:
                         risk1f_idx,
                         (svir_feat[aggr_loss_attr_name] *
                          (1 + svir_feat[svi_attr_name])))
-            clear_progress_message_bar(self.iface, msg_bar_item)
+            clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
         elif dlg.use_advanced:
             layer = reg.mapLayers().values()[
                 dlg.ui.layer_cbx.currentIndex()]
@@ -1334,12 +1334,6 @@ class Svir:
         file_stem = '%s%ssvir_%s' % (temp_dir, os.path.sep, uuid.uuid4())
         #
         data_file = '%s%s' % (file_stem, '.shp')
-        proj_file = '%s%s' % (file_stem, '.json')
-        #
-        # project_definition = self.project_definitions[self.current_layer.id()]
-        project_definition = {'name': 'test'}
-        with open(proj_file, 'w') as outfile:
-            json.dump(project_definition, outfile)
 
         QgsVectorFileWriter.writeAsVectorFormat(
             self.current_layer,
@@ -1348,7 +1342,7 @@ class Svir:
             self.current_layer.crs(),
             'ESRI Shapefile')
           # msg = tr("Uploading to platform")
-        # msg_bar_item, progress = create_progress_message_bar(self.iface, msg)
+        # msg_bar_item, progress = create_progress_message_bar(self.iface.messageBar(), msg)
 
         # # TODO UPLOAD
         # max_range = 1000000.0
@@ -1357,9 +1351,11 @@ class Svir:
         #     progress.setValue(p_int)
         # clear_progress_message_bar(self.iface, msg_bar_item)
 
+        # project_definition = self.project_definitions[self.current_layer.id()]
+        project_definition = {'name': 'TEEEEST'}
         metadata_dialog = UploadMetadataDialog(self.iface,
                                                file_stem,
-                                               self.project_definitions)
+                                               project_definition)
         if metadata_dialog.exec_():
             print "metadata_dialog ok"
         else:

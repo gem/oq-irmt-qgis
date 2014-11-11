@@ -52,14 +52,14 @@ def get_credentials(iface):
     return hostname, username, password
 
 
-def clear_progress_message_bar(iface, msg_bar_item=None):
+def clear_progress_message_bar(msg_bar, msg_bar_item=None):
         if msg_bar_item:
-            iface.messageBar().popWidget(msg_bar_item)
+            msg_bar.popWidget(msg_bar_item)
         else:
-            iface.messageBar().clearWidgets()
+            msg_bar.clearWidgets()
 
 
-def create_progress_message_bar(iface, msg, no_percentage=False):
+def create_progress_message_bar(msg_bar, msg, no_percentage=False):
     """
     Use the messageBar of QGIS to display a message describing what's going
     on (typically during a time-consuming task), and a bar showing the
@@ -72,13 +72,12 @@ def create_progress_message_bar(iface, msg, no_percentage=False):
     completion of the task through progress.setValue(percentage)
     :rtype: QProgressBar
     """
-    progress_message_bar = iface.messageBar().createMessage(msg)
+    progress_message_bar = msg_bar.createMessage(msg)
     progress = QProgressBar()
     if no_percentage:
         progress.setRange(0, 0)
     progress_message_bar.layout().addWidget(progress)
-    iface.messageBar().pushWidget(progress_message_bar,
-                                  iface.messageBar().INFO)
+    msg_bar.pushWidget(progress_message_bar,msg_bar.INFO)
     return progress_message_bar, progress
 
 

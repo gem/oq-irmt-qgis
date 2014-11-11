@@ -31,6 +31,7 @@ from PyQt4.QtCore import (Qt,
                           QSettings,
                           pyqtProperty,
                           pyqtSignal)
+                          pyqtSignal, QTimer)
 
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox)
@@ -43,6 +44,8 @@ from third_party.requests.utils import dict_from_cookiejar
 from ui.ui_upload_metadata import Ui_UploadMetadataDialog
 
 from utils import get_credentials, platform_login, upload_shp
+from utils import get_credentials, platform_login, upload_shp, \
+    create_progress_message_bar
 
 
 class UploadMetadataDialog(QDialog):
@@ -76,15 +79,24 @@ class UploadMetadataDialog(QDialog):
         
         self.file_stem = file_stem
         self.project_definition = project_definition
-        self.upload()
+
+        self.bar = QgsMessageBar()
+        self.bar.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
+        self.layout().addWidget(self.bar, 0, 0, 1, 1)
+        self.msg_bar_item, self.progress = create_progress_message_bar(
+            self.bar, 'uploading', no_percentage=True)
+
+        # allow showing the dialog
+        QTimer.singleShot(100, self.upload)
 
     def upload(self):
         xml_file = self.file_stem + '.xml'
         write_iso_metadata_file(xml_file, self.project_definition)
         self._login_to_platform()
-        layer_url = upload_shp(self.hostname, self.session, self.file_stem)
+        layer_url = upload_shp(
+            self.hostname, self.session, self.file_stem)
         if layer_url:
-            self._load_metadata_page(layer_url)
+            self.web_view.load(QUrl(layer_url))
 
     def _login_to_platform(self):
         platform_login(
@@ -93,9 +105,6 @@ class UploadMetadataDialog(QDialog):
         sessionid_cookie = QNetworkCookie('sessionid', sessionid)
         self.cookie_jar.setCookiesFromUrl(
             [sessionid_cookie], QUrl(self.hostname))
-
-    def _load_metadata_page(self, url):
-        self.web_view.load(QUrl(url))
 
     def _setup_context_menu(self):
         settings = QSettings()
