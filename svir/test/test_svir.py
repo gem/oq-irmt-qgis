@@ -29,9 +29,7 @@
 
 import unittest
 
-from PyQt4.QtGui import QDialogButtonBox, QDialog, QIcon
-
-from attribute_selection_dialog import AttributeSelectionDialog
+from PyQt4.QtGui import QIcon
 
 from utilities import get_qgis_app
 QGIS_APP, CANVAS, PARENT, IFACE = get_qgis_app()

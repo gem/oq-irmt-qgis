@@ -305,7 +305,7 @@ def sigmoid(input_list, variant_name="", inverse=False):
             try:
                 output = log(y / (1 - y))
             except:
-                output = QPyNullVariant(float)
+                output = qgis.QPyNullVariant(float)
                 invalid_input_values.append(y)
             output_list.append(output)
     else:  # direct
@@ -313,7 +313,7 @@ def sigmoid(input_list, variant_name="", inverse=False):
             try:
                 output = 1 / (1 + math.exp(-x))
             except:
-                output = QPyNullVariant(float)
+                output = qgis.QPyNullVariant(float)
                 invalid_input_values.append(x)
             output_list.append(output)
     return output_list, invalid_input_values
