@@ -28,7 +28,7 @@
 import math
 from numpy import mean, std, argwhere, amax, amin, log10, log
 from types import NoneType
-from qgis import QPyNullVariant
+import qgis
 from utils import Register
 
 TRANSFORMATION_ALGS = Register()
@@ -51,7 +51,7 @@ def transform(features_dict, algorithm, variant_name="", inverse=False):
     # re-added afterwards
     dict_of_null_values = {}
     for key, value in f_dict_copy.iteritems():
-        if type(value) in (QPyNullVariant, NoneType):
+        if type(value) in (qgis.QPyNullVariant, NoneType):
             dict_of_null_values[key] = value
     for key in dict_of_null_values.keys():
         del f_dict_copy[key]
@@ -245,7 +245,7 @@ def log10_(input_list,
             output_list = []
             for input_value in input_list:
                 if input_value == 0:
-                    output_value = QPyNullVariant(float)
+                    output_value = qgis.QPyNullVariant(float)
                     output_list.append(output_value)
                 else:
                     output_list.append(log10(input_value))
