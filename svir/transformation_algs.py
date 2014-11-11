@@ -25,7 +25,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
-from numpy import mean, std, argwhere, amax, amin, log10
+import math
+from numpy import mean, std, argwhere, amax, amin, log10, log
 from types import NoneType
 import qgis
 from utils import Register
@@ -43,7 +44,7 @@ def transform(features_dict, algorithm, variant_name="", inverse=False):
     return a dict containing the transformed values with the original ids
     """
     # make a copy of the dictionary containing features (ids and values) and
-    # remove elements containing missing values, so the normalization is
+    # remove elements containing missing values, so the transformation is
     # performed only on the subset of valid values
     f_dict_copy = features_dict.copy()
     # elements with null value will be saved in another dict, so they can be
@@ -54,11 +55,12 @@ def transform(features_dict, algorithm, variant_name="", inverse=False):
             dict_of_null_values[key] = value
     for key in dict_of_null_values.keys():
         del f_dict_copy[key]
-    transformed_list = algorithm(f_dict_copy.values(), variant_name, inverse)
+    transformed_list, invalid_input_values = algorithm(
+        f_dict_copy.values(), variant_name, inverse)
     transformed_dict = dict(zip(f_dict_copy.keys(), transformed_list))
     # add to the transformed_dict the null elements that were removed
     transformed_dict.update(dict_of_null_values)
-    return transformed_dict
+    return transformed_dict, invalid_input_values
 
 
 @TRANSFORMATION_ALGS.add('RANK')
@@ -162,7 +164,7 @@ def rank(input_list, variant_name="AVERAGE", inverse=False):
             if variant_name != "ORDINAL":
                 curr_idx -= top_amount
             previous_ties += top_amount - 1
-    return rank_list
+    return rank_list, None
 
 
 @TRANSFORMATION_ALGS.add('Z_SCORE')
@@ -183,7 +185,7 @@ def z_score(input_list, variant_name=None, inverse=False):
         input_copy[:] = [-x for x in input_list]
     output_list = [
         1.0 * (num - mean_val) / stddev_val for num in input_copy]
-    return output_list
+    return output_list, None
 
 
 @TRANSFORMATION_ALGS.add('MIN_MAX')
@@ -208,7 +210,7 @@ def min_max(input_list, variant_name=None, inverse=False):
     else:
         output_list = map(
             lambda x: (x - list_min) / list_range, input_list)
-    return output_list
+    return output_list, None
 
 
 @TRANSFORMATION_ALGS.add('LOG10')
@@ -238,7 +240,7 @@ def log10_(input_list,
         if variant_name == 'INCREMENT BY ONE IF ZEROS ARE FOUND':
             corrected_input = [input_value + 1 for input_value in input_list]
             output_list = list(log10(corrected_input))
-            return output_list
+            return output_list, None
         elif variant_name == 'IGNORE ZEROS':
             output_list = []
             for input_value in input_list:
@@ -247,9 +249,9 @@ def log10_(input_list,
                     output_list.append(output_value)
                 else:
                     output_list.append(log10(input_value))
-            return output_list
+            return output_list, None
     output_list = list(log10(input_list))
-    return output_list
+    return output_list, None
 
 
 @TRANSFORMATION_ALGS.add('QUADRATIC')
@@ -282,4 +284,36 @@ def simple_quadratic(input_list, variant_name="INCREASING", inverse=False):
         raise NotImplementedError("%s variant not implemented" % variant_name)
     if inverse:
         output_list[:] = [1.0 - x for x in output_list]
-    return output_list
+    return output_list, None
+
+
+@TRANSFORMATION_ALGS.add('SIGMOID')
+def sigmoid(input_list, variant_name="", inverse=False):
+    """
+    Logistic sigmoid function:
+        f(x) = 1 / [1 + e^(-x)]
+
+    Inverse function:
+        f(y) =  ln[y / (1 - y)]
+    """
+    if variant_name:
+        raise NotImplementedError("%s variant not implemented" % variant_name)
+    output_list = []
+    invalid_input_values = []
+    if inverse:
+        for y in input_list:
+            try:
+                output = log(y / (1 - y))
+            except:
+                output = QPyNullVariant(float)
+                invalid_input_values.append(y)
+            output_list.append(output)
+    else:  # direct
+        for x in input_list:
+            try:
+                output = 1 / (1 + math.exp(-x))
+            except:
+                output = QPyNullVariant(float)
+                invalid_input_values.append(x)
+            output_list.append(output)
+    return output_list, invalid_input_values
