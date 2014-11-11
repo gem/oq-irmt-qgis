@@ -25,25 +25,26 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
+
+# import qgis libs so that ve set the correct sip api version
+import qgis   # pylint: disable=W0611  # NOQA
+
 import unittest
-import qgis
-# FIXME ugly way to avoid "imported but unused" pep8 warning (qgis is
-# necessary to import QPyNullVariant
-if qgis:
-    pass
+
 from PyQt4.QtCore import QVariant
 
 from qgis.core import QgsVectorLayer, QgsField
 
-from svir.process_layer import ProcessLayer
-from svir.globals import INT_FIELD_TYPE_NAME, STRING_FIELD_TYPE_NAME
-from app import getTestApp
+from process_layer import ProcessLayer
+from globals import INT_FIELD_TYPE_NAME, STRING_FIELD_TYPE_NAME
+
+from utilities import get_qgis_app
+QGIS_APP, CANVAS, PARENT, IFACE = get_qgis_app()
 
 
 class AddAttributesTestCase(unittest.TestCase):
 
     def setUp(self):
-        QGISAPP, CANVAS, IFACE, PARENT = getTestApp()
         uri = 'Point?crs=epsg:4326'
         self.layer = QgsVectorLayer(uri, 'TestLayer', 'memory')
         self.dp = self.layer.dataProvider()
@@ -80,7 +81,7 @@ class AddAttributesTestCase(unittest.TestCase):
         added_attributes = ProcessLayer(self.layer).add_attributes(attributes)
         expected_dict = {'first': 'first',
                          'second': 'second'}
-        assert added_attributes == expected_dict
+        self.assertDictEqual(added_attributes, expected_dict)
         # Let's add 2 other fields with the same names of the previous ones
         # ==> Since the names are already taken, we expect to add fields with
         # the same names plus '_1'

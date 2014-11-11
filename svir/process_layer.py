@@ -27,7 +27,8 @@
 """
 import uuid
 from types import NoneType
-from PyQt4.QtCore import QVariant, QPyNullVariant
+from PyQt4.QtCore import QVariant
+import qgis
 from qgis.core import (QgsMapLayer,
                        QGis,
                        QgsVectorLayer,
@@ -149,8 +150,9 @@ class ProcessLayer():
         algorithm = TRANSFORMATION_ALGS[algorithm_name]
 
         # transform the values in the dictionary with the chosen algorithm
+        invalid_input_values = None
         try:
-            transformed_dict = transform(
+            transformed_dict, invalid_input_values = transform(
                 initial_dict, algorithm, variant, inverse)
         except ValueError:
             raise
@@ -168,10 +170,10 @@ class ProcessLayer():
             for feat in self.layer.getFeatures():
                 feat_id = feat.id()
                 value = transformed_dict[feat_id]
-                if type(value) not in (QPyNullVariant, NoneType):
+                if type(value) not in (qgis.QPyNullVariant, NoneType):
                     value = float(value)
                 self.layer.changeAttributeValue(feat_id, new_attr_id, value)
-        return actual_new_attr_name
+        return actual_new_attr_name, invalid_input_values
 
     def find_attribute_id(self, attribute_name):
         """
