@@ -795,16 +795,24 @@ class Svir:
             new_attr_name = dlg.ui.new_field_name_txt.text()
             try:
                 with WaitCursorManager("Applying transformation", self.iface):
-                    res_attr_name = ProcessLayer(layer).transform_attribute(
-                        attribute_name, algorithm_name, variant,
-                        inverse, new_attr_name)
+                    res_attr_name, invalid_input_values = ProcessLayer(
+                        layer).transform_attribute(attribute_name,
+                                                   algorithm_name,
+                                                   variant,
+                                                   inverse,
+                                                   new_attr_name)
                 msg = ('The result of the transformation has been added to'
-                       'layer %s as a new attribute named %s') % (
+                       'layer %s as a new attribute named %s.') % (
                     layer.name(), res_attr_name)
+                if invalid_input_values:
+                    msg += (' The transformation could not '
+                            'be performed for the following '
+                            'input values: %s' % invalid_input_values)
                 self.iface.messageBar().pushMessage(
                     tr("Info"),
                     tr(msg),
-                    level=QgsMessageBar.INFO,
+                    level=(QgsMessageBar.INFO if not invalid_input_values
+                           else QgsMessageBar.WARNING),
                     duration=8)
             except (ValueError, NotImplementedError) as e:
                 self.iface.messageBar().pushMessage(

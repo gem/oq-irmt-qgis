@@ -70,9 +70,9 @@ test: compile transcompile
 		nosetests -v --with-id --with-coverage --cover-package=. test\
 		3>&1 1>&2 2>&3 3>&- || true
 	@echo "----------------------"
-	@echo "If you get a 'no module named qgis.core error, try sourcing"
+	@echo "If you get 'no module...' errors, try sourcing"
 	@echo "the helper script we have provided first then run make test."
-	@echo "e.g. source run-env-linux.sh <path to qgis install>; make test"
+	@echo "e.g. source scripts/run-env-linux.sh <path to qgis install>; make test"
 	@echo "----------------------"
 
 deploy: compile doc transcompile
@@ -186,9 +186,9 @@ pylint:
 	@pylint --reports=n --rcfile=pylintrc . || true
 	@echo
 	@echo "----------------------"
-	@echo "If you get a 'no module named qgis.core' error, try sourcing"
+	@echo "If you get a 'no module...' errors, try sourcing"
 	@echo "the helper script we have provided first then run make pylint."
-	@echo "e.g. source run-env-linux.sh <path to qgis install>; make pylint"
+	@echo "e.g. source scripts/run-env-linux.sh <path to qgis install>; make pylint"
 	@echo "----------------------"
 
 
