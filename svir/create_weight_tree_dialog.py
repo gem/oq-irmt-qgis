@@ -38,10 +38,7 @@ from utils import reload_attrib_cbx
 
 class CreateWeightTreeDialog(QDialog):
     """
-    Modal dialog allowing to select a raster or vector layer
-    containing loss data points and a vector layer containing polygons
-    that define the zones for which data need to be aggregated. When
-    both are selected and are valid files, they can be loaded by clicking OK
+    FIXME Missing docstring
     """
 
     def __init__(self, iface, layer, project_definition, merge_action):

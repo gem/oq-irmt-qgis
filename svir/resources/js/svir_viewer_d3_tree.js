@@ -223,6 +223,7 @@
         }
 
         function updateButton(pdId){
+            // FIXME: Are we using pdId?
             pdId = typeof pdId !== 'undefined' ? pdId : false;
             $('#projectDefWeightDialog').append('<br/><br/><button type="button" id="update-button">Update</button>');
             $('#update-button').click(
@@ -423,8 +424,8 @@
                         d.children[i].weight = avgWeight;
                     }
                     var newNode = {
-                        // 'name': ACTIVE_LAYER_NUMERIC_FIELDS[0], // FIXME assign from dialog
-                        // 'field': ACTIVE_LAYER_NUMERIC_FIELDS[0], // FIXME assign from dialog
+                        // field and name are assigned through a dialog,
+                        // after the node is created
                         'parent': d.name,
                         'weight': avgWeight,
                         'type': nodeType
