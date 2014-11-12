@@ -104,6 +104,26 @@ def generate_iso_metadata(project_definition=None):
                 project_definition['source']
         except KeyError:
             template_replacements['ISO19115_LINEAGE'] = ''
+        try:
+            template_replacements['ISO19115_ORGANIZATION'] = \
+                project_definition['organization']
+        except KeyError:
+            template_replacements['ISO19115_ORGANIZATION'] = ''
+        try:
+            template_replacements['$ISO19115_EMAIL'] = \
+                project_definition['email']
+        except KeyError:
+            template_replacements['ISO19115_EMAIL'] = ''
+        try:
+            template_replacements['ISO19115_LICENSE'] = \
+                project_definition['license']
+        except KeyError:
+            template_replacements[''] = ''
+        try:
+            template_replacements['$ISO19115_URL'] = \
+                project_definition['$ISO19115_URL']
+        except KeyError:
+            template_replacements['ISO19115_URL'] = ''
 
     else:
         template_replacements['SVIR_PROJECT_DEFINITION'] = ''

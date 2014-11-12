@@ -89,6 +89,7 @@ from select_sv_variables_dialog import SelectSvVariablesDialog
 from settings_dialog import SettingsDialog
 from weight_data_dialog import WeightDataDialog
 from create_weight_tree_dialog import CreateWeightTreeDialog
+from upload_settings_dialog import UploadSettingsDialog
 
 from import_sv_data import SvDownloader
 
@@ -1346,26 +1347,27 @@ class Svir:
             self.current_layer.crs(),
             'ESRI Shapefile')
 
-        write_iso_metadata_file(xml_file, project_definition)
-
         file_size_mb = os.path.getsize(data_file)
-        file_size_mb += os.path.getsize(xml_file)
         file_size_mb += os.path.getsize(file_stem + '.shx')
         file_size_mb += os.path.getsize(file_stem + '.dbf')
-        file_size_mb += os.path.getsize(file_stem + '.prj')
         # convert bytes to MB
         file_size_mb = file_size_mb / 1024 / 1024
 
-        reply = QMessageBox.question(
-            self.iface.mainWindow(),
-            'Confirm upload',
-            'Are you sure to upload at least %sMB to the platform?' % (
-                file_size_mb),
-            QMessageBox.Yes,
-            QMessageBox.No)
-        print reply
+        dlg = UploadSettingsDialog(file_size_mb)
+        if dlg.exec_():
+            project_definition['organization'] = dlg.ui.organization_le.text()
+            project_definition['url'] = dlg.ui.url_le.text()
+            project_definition['email'] = dlg.ui.email_le.text()
+            project_definition['title'] = dlg.ui.title_le.text()
 
-        if reply == QMessageBox.Yes:
+            license_name = dlg.ui.license_cbx.currentText()
+            license_idx = dlg.ui.license_cbx.currentIndex()
+            license_url = dlg.ui.license_cbx.itemData(license_idx)
+            license_txt = '%s (%s)' % (license_name, license_url)
+            project_definition['license'] = license_txt
+
+            write_iso_metadata_file(xml_file,
+                                    project_definition)
             metadata_dialog = UploadMetadataDialog(
                 self.iface, file_stem, project_definition)
             metadata_dialog.exec_()
