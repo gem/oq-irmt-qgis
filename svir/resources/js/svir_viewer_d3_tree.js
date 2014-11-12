@@ -122,14 +122,26 @@
 
         function fieldSelect(node){
             // TODO: Add more stuff to the node
+            $('#projectDefNewNodeDialog').empty();
             $('#projectDefNewNodeDialog').dialog("open");
             $('#projectDefNewNodeDialog')
                 .append('<br/><label for="field">Field: </label>')
-                .append('<select id="field">'+ fieldOptions(node) + '</select>');
+                .append('<select id="field">'+ fieldOptions(node) + '</select>')
+                .append('<br/><label for="name">Name: </label>')
+                .append('<input id="nodeName" type="text" name="nodeName">');
+
             //TODO use selectmenu when the bug there is fixed9?
             //$(selector).selectmenu()
             //$(selector).prop('selectedIndex', 4)
             // $('#field').val(node.field);
+            
+            // By default, set the name to be equal to the fieldname selected
+            var defaultName = $('#field').val();
+            $('#nodeName').val(defaultName);
+
+            $('#field').on('change', function() {
+                $('#nodeName').val(this.value);
+            });
         }
 
         function getRootNode(node){
@@ -172,12 +184,15 @@
         }
 
         function cancelAddNodeButton(pdData) {
+            $('#projectDefNewNodeDialog').dialog("open");
             $('#projectDefNewNodeDialog').append(
                 '<br/><br/><button type="button" id="cancel-add-node-button">Cancel</button>'
             );
             $('#cancel-add-node-button').click(
                 function(){
+                    // $('.ui-icon-closethick').click();
                     // Remove the new node (the last child, just created) from the children
+                    // FIXME: Currently, if you press cancel twice or more, it keeps removing children
                     pdData.children.splice(pdData.children.length - 1, 1);
                     updateD3Tree(pdData);
                     $('#projectDefNewNodeDialog').dialog("close");
@@ -188,16 +203,19 @@
 
         function addNodeButton(pdData) {
             // pdId = typeof pdId !== 'undefined' ? pdId : false;
+            $('#projectDefNewNodeDialog').dialog("open");
             $('#projectDefNewNodeDialog').append(
                 '<button type="button" id="add-node-button">Add node</button>'
             );
             // alert('Created the "add node" button');
             $('#add-node-button').click(
                 function(){
+                    // $('.ui-icon-closethick').click();
                     if ($('#field').length !== 0) {
                         var field = $('#field').val();
-                        updateField(pdData, field);
-                        // updateField(pdData, pdData.id, field);
+                        var nodeName = $('#nodeName').val();
+                        updateNode(pdData, field, nodeName);
+                        // updateNode(pdData, pdData.id, field);
                     }
                     $('#projectDefNewNodeDialog').dialog("close");
                 }
@@ -418,7 +436,6 @@
                     updateD3Tree(builtNode);
                     // updateD3Tree(pdData);
                     // Let the user choose one of the available fields and set the name
-                    $('#projectDefNewNodeDialog').empty();
                     fieldSelect(d);
                     // pdData = d.children[d.children.length - 1];
                     // alert(pdData.id);
