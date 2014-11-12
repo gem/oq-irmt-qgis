@@ -34,7 +34,6 @@ from qgis.gui import QgsMessageBar
 from PyQt4.QtGui import (QDialog, QSizePolicy, QDialogButtonBox)
 from PyQt4.QtNetwork import QNetworkCookieJar, QNetworkCookie
 from PyQt4.QtWebKit import QWebSettings
-from metadata_utilities import write_iso_metadata_file
 from third_party.requests.sessions import Session
 from third_party.requests.utils import dict_from_cookiejar
 
@@ -61,7 +60,7 @@ class UploadMetadataDialog(QDialog):
         self.messagebar = QgsMessageBar()
         self.messagebar.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
         self.layout().insertWidget(0, self.messagebar)
-        self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
+        self.button_box = self.ui.buttonBox
 
         self.hostname, self.username, self.password = get_credentials(
             self.iface)
@@ -77,7 +76,7 @@ class UploadMetadataDialog(QDialog):
 
         self._setup_context_menu()
         self.frame.javaScriptWindowObjectCleared.connect(self._setup_js)
-        
+
         self.file_stem = file_stem
         self.project_definition = project_definition
 
@@ -86,18 +85,19 @@ class UploadMetadataDialog(QDialog):
         self.msg_bar_item, self.progress = create_progress_message_bar(
             self.messagebar, 'uploading', no_percentage=True)
 
+    def showEvent(self, event):
+        QDialog.showEvent(self, event)
         # allow showing the dialog
         QTimer.singleShot(100, self.upload)
 
     def upload(self):
-        xml_file = self.file_stem + '.xml'
-        write_iso_metadata_file(xml_file, self.project_definition)
         self._login_to_platform()
         layer_url = upload_shp(
             self.hostname, self.session, self.file_stem)
         if layer_url:
             self.web_view.load(QUrl(layer_url))
         clear_progress_message_bar(self.messagebar, self.msg_bar_item)
+        self.button_box.setStandardButtons(QDialogButtonBox.Close)
 
     def _login_to_platform(self):
         platform_login(

@@ -31,6 +31,7 @@ import uuid
 import copy
 import json
 from math import ceil
+from metadata_utilities import write_iso_metadata_file
 
 from third_party.requests.exceptions import ConnectionError
 
@@ -43,7 +44,7 @@ from PyQt4.QtCore import (QSettings,
 from PyQt4.QtGui import (QAction,
                          QIcon,
                          QProgressDialog,
-                         QColor)
+                         QColor, QMessageBox)
 
 from qgis.core import (QgsVectorLayer,
                        QgsMapLayerRegistry,
@@ -1284,7 +1285,7 @@ class Svir:
             tot_zones = len(list(layer.getFeatures()))
             msg = tr("Calculating some common SVIR indices...")
             msg_bar_item, progress = create_progress_message_bar(
-                self.iface, msg)
+                self.iface.messageBar(), msg)
             with LayerEditingManager(layer,
                                      tr("Calculate some common SVIR indices"),
                                      DEBUG):
@@ -1332,8 +1333,11 @@ class Svir:
     def upload(self):
         temp_dir = tempfile.gettempdir()
         file_stem = '%s%ssvir_%s' % (temp_dir, os.path.sep, uuid.uuid4())
-        #
         data_file = '%s%s' % (file_stem, '.shp')
+        xml_file = file_stem + '.xml'
+
+        project_definition = self.project_definitions[self.current_layer.id()]
+        # project_definition = {'name': 'TEEEEST'}
 
         QgsVectorFileWriter.writeAsVectorFormat(
             self.current_layer,
@@ -1341,22 +1345,29 @@ class Svir:
             'utf-8',
             self.current_layer.crs(),
             'ESRI Shapefile')
-          # msg = tr("Uploading to platform")
-        # msg_bar_item, progress = create_progress_message_bar(self.iface.messageBar(), msg)
 
-        # # TODO UPLOAD
-        # max_range = 1000000.0
-        # for i in range(int(max_range)):
-        #     p_int = i / max_range * 100
-        #     progress.setValue(p_int)
-        # clear_progress_message_bar(self.iface, msg_bar_item)
+        write_iso_metadata_file(xml_file, project_definition)
 
-        #project_definition = {'name': 'TEEEEST'}
-        project_definition = self.project_definitions[self.current_layer.id()]
-        metadata_dialog = UploadMetadataDialog(self.iface,
-                                               file_stem,
-                                               project_definition)
-        if metadata_dialog.exec_():
-            print "metadata_dialog ok"
+        file_size_mb = os.path.getsize(data_file)
+        file_size_mb += os.path.getsize(xml_file)
+        file_size_mb += os.path.getsize(file_stem + '.shx')
+        file_size_mb += os.path.getsize(file_stem + '.dbf')
+        file_size_mb += os.path.getsize(file_stem + '.prj')
+        # convert bytes to MB
+        file_size_mb = file_size_mb / 1024 / 1024
+
+        reply = QMessageBox.question(
+            self.iface.mainWindow(),
+            'Confirm upload',
+            'Are you sure to upload at least %sMB to the platform?' % (
+                file_size_mb),
+            QMessageBox.Yes,
+            QMessageBox.No)
+        print reply
+
+        if reply == QMessageBox.Yes:
+            metadata_dialog = UploadMetadataDialog(
+                self.iface, file_stem, project_definition)
+            metadata_dialog.exec_()
         else:
             print "metadata_dialog cancelled"
