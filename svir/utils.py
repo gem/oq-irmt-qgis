@@ -77,7 +77,7 @@ def create_progress_message_bar(msg_bar, msg, no_percentage=False):
     if no_percentage:
         progress.setRange(0, 0)
     progress_message_bar.layout().addWidget(progress)
-    msg_bar.pushWidget(progress_message_bar,msg_bar.INFO)
+    msg_bar.pushWidget(progress_message_bar, msg_bar.INFO)
     return progress_message_bar, progress
 
 
@@ -322,9 +322,3 @@ class WaitCursorManager(object):
 
 class SvNetworkError(Exception):
     pass
-
-
-class ReadMetadataError(RuntimeError):
-    """When a metadata xml is not correctly formatted can't be read"""
-    suggestion = (
-        'Check that the file is correct')

@@ -26,14 +26,16 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+
 from PyQt4.QtCore import (Qt,
                           QUrl,
-                          QSettings, QTimer)
-from qgis.gui import QgsMessageBar
+                          QSettings, QThread, pyqtSignal)
 
 from PyQt4.QtGui import (QDialog, QSizePolicy, QDialogButtonBox)
 from PyQt4.QtNetwork import QNetworkCookieJar, QNetworkCookie
 from PyQt4.QtWebKit import QWebSettings
+
+from qgis.gui import QgsMessageBar
 from third_party.requests.sessions import Session
 from third_party.requests.utils import dict_from_cookiejar
 
@@ -57,9 +59,9 @@ class UploadMetadataDialog(QDialog):
         # Set up the user interface from Designer.
         self.ui = Ui_UploadMetadataDialog()
         self.ui.setupUi(self)
-        self.messagebar = QgsMessageBar()
-        self.messagebar.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
-        self.layout().insertWidget(0, self.messagebar)
+        self.message_bar = QgsMessageBar()
+        self.message_bar.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
+        self.layout().insertWidget(0, self.message_bar)
         self.button_box = self.ui.buttonBox
 
         self.hostname, self.username, self.password = get_credentials(
@@ -82,21 +84,33 @@ class UploadMetadataDialog(QDialog):
 
         self.layout().setContentsMargins(0, 0, 0, 0)
 
-        self.msg_bar_item, self.progress = create_progress_message_bar(
-            self.messagebar, 'uploading', no_percentage=True)
+        self.message_bar_item, self.progress = create_progress_message_bar(
+            self.message_bar, 'Uploading data...', no_percentage=True)
 
-    def showEvent(self, event):
-        QDialog.showEvent(self, event)
-        # allow showing the dialog
-        QTimer.singleShot(100, self.upload)
+        self.web_view.loadFinished.connect(self.load_finished)
+
+        self.uploadThread = None
+        self.upload()
 
     def upload(self):
         self._login_to_platform()
-        layer_url = upload_shp(
+        # adding by emitting signal in different thread
+        self.uploadThread = UploaderThread(
             self.hostname, self.session, self.file_stem)
-        if layer_url:
+        self.uploadThread.upload_done.connect(self.upload_done)
+        self.uploadThread.start()
+
+    def upload_done(self, layer_url):
+        if layer_url != 'False':
+            self.message_bar_item.setText('Loading page...')
             self.web_view.load(QUrl(layer_url))
-        clear_progress_message_bar(self.messagebar, self.msg_bar_item)
+        else:
+            clear_progress_message_bar(self.message_bar)
+            self.message_bar.pushMessage(
+                'Upload error', 'problems', level=QgsMessageBar.CRITICAL)
+
+    def load_finished(self):
+        clear_progress_message_bar(self.message_bar, self.message_bar_item)
         self.button_box.setStandardButtons(QDialogButtonBox.Close)
 
     def _login_to_platform(self):
@@ -122,3 +136,20 @@ class UploadMetadataDialog(QDialog):
         # to expose a member of self to js you need to declare it as property
         # see for example self.json_str()
         self.frame.addToJavaScriptWindowObject('qt_page', self)
+
+
+class UploaderThread(QThread):
+    # This defines a signal called 'rangeChanged' that takes two
+    # integer arguments.
+    upload_done = pyqtSignal(str, name='upload_done')
+
+    def __init__(self, hostname, session, file_stem):
+        self.hostname = hostname
+        self.session = session
+        self.file_stem = file_stem
+        QThread.__init__(self)
+
+    def run(self):
+        layer_url = upload_shp(self.hostname, self.session, self.file_stem)
+        self.upload_done.emit(str(layer_url))
+        return

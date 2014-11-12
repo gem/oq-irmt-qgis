@@ -29,7 +29,6 @@ import time
 
 from xml.etree import ElementTree
 
-from utils import ReadMetadataError
 from iso_19115_template import ISO_METADATA_XML_TEMPLATE
 
 
