@@ -404,6 +404,9 @@
                         case undefined:
                             // alert("You clicked a node with undefined type");
                             return false;
+                        case node_types_dict.RI:
+                            nodeType = node_types_dict.RISK_INDICATOR;
+                            break;
                         case node_types_dict.SV_INDICATOR:
                             // alert("You clicked a node with type " + d.type);
                             // alert("You can't add new nodes to primary indicator nodes");
