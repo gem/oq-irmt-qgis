@@ -90,6 +90,9 @@ class UploadMetadataDialog(QDialog):
         self.web_view.loadFinished.connect(self.load_finished)
 
         self.uploadThread = None
+
+    def showEvent(self, event):
+        super(UploadMetadataDialog, self).showEvent(event)
         self.upload()
 
     def upload(self):
