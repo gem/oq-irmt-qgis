@@ -184,7 +184,7 @@
         }
 
         function cancelAddNodeButton(pdData) {
-            $('#projectDefNewNodeDialog').dialog("open");
+            // $('#projectDefNewNodeDialog').dialog("open");
             $('#projectDefNewNodeDialog').append(
                 '<br/><br/><button type="button" id="cancel-add-node-button">Cancel</button>'
             );
@@ -203,7 +203,7 @@
 
         function addNodeButton(pdData) {
             // pdId = typeof pdId !== 'undefined' ? pdId : false;
-            $('#projectDefNewNodeDialog').dialog("open");
+            // $('#projectDefNewNodeDialog').dialog("open");
             $('#projectDefNewNodeDialog').append(
                 '<button type="button" id="add-node-button">Add node</button>'
             );
@@ -278,15 +278,17 @@
             }
         }
 
-        function findTreeBranchInfo(pdData, pdName, pdField) {
+        function findTreeBranchInfo(pdData, pdName, pdField, node) {
             // Find out how many elements are in tree branch
-            {
+
+            // PAOLO: Create spinners for nodes sharing the same parent
+            if (node.parent === pdData) {
                 pdTempIds.push(pdData.id);
                 createSpinner(pdData.id, pdData.weight, pdData.name, pdData.field);
             }
 
-            (pdData.children || []).forEach(function(currentItem) {
-                findTreeBranchInfo(currentItem, [pdName], pdField);
+            (pdData.children || []).forEach(function(child) {
+                findTreeBranchInfo(child, [pdName], pdField, node);
             });
 
 
@@ -314,16 +316,15 @@
             });
         }
 
-        function updateField(pdData, field) {
-            // alert('Inside updateField');
+        function updateNode(pdData, field, name) {
+            // alert('Inside updateNode');
             pdData.field = field;
-            // FIXME Let the user type a name for the field
-            pdData.name = field;
+            pdData.name = name;
             updateD3Tree(pdData);
             // alert(pdData.name);
         }
 
-        function updateFieldOLD(pdData, id, pdField) {
+        function updateNodeOLD(pdData, id, pdField) {
             if (pdData.id == id){
                 pdData.field = pdField;
                 // FIXME Let the user type a name for the field
@@ -331,7 +332,7 @@
             }
 
             (pdData.children || []).forEach(function(currentItem) {
-                updateField(currentItem, id, pdField);
+                updateNode(currentItem, id, pdField);
             });
         }
 
@@ -440,6 +441,7 @@
                     updateD3Tree(builtNode);
                     // updateD3Tree(pdData);
                     // Let the user choose one of the available fields and set the name
+                    $('#projectDefNewNodeDialog').dialog("open");
                     fieldSelect(d);
                     // pdData = d.children[d.children.length - 1];
                     // alert(pdData.id);
@@ -479,7 +481,7 @@
                     pdTempIds = [];
                     $('#projectDefWeightDialog').empty();
                     if (d.parent){
-                        findTreeBranchInfo(pdData, [pdName], pdField);
+                        findTreeBranchInfo(pdData, [pdName], pdField, d);
                         var pdParentOperator = d.parent.operator? d.parent.operator : DEFAULT_OPERATOR;
                         d.parent.operator = pdParentOperator;
                         operatorSelect(pdParentOperator);
@@ -510,7 +512,8 @@
                     pdOperator = d.operator;
                     pdId = d.id;
                     $('#projectDefWeightDialog').empty();
-                    findTreeBranchInfo(pdData, [pdName], pdParentField);
+                    node = d.children[0];
+                    findTreeBranchInfo(pdData, [pdName], pdParentField, node);
                     operatorSelect(pdOperator);
                     updateButton(pdId);
                 });

@@ -564,23 +564,27 @@ class Svir:
             svi_attr_id, iri_attr_id = self.recalculate_indexes(
                 project_definition)
 
-        dlg = WeightDataDialog(self.iface, project_definition)
-        dlg.json_cleaned.connect(self.weights_changed)
+        # FIXME
+        self.dlg = WeightDataDialog(self.iface, project_definition)
+        self.dlg.show()
 
-        if dlg.exec_():
-            project_definition = dlg.project_definition
-            self.update_actions_status()
-        else:
-            project_definition = old_project_definition
-            if first_svi:
-                # delete auto generated svi field
-                ProcessLayer(self.current_layer).delete_attributes(
-                    [svi_attr_id, iri_attr_id])
-            else:
-                # recalculate with the old weights
-                self.recalculate_indexes(project_definition)
+        # dlg = WeightDataDialog(self.iface, project_definition)
+        # dlg.json_cleaned.connect(self.weights_changed)
 
-        dlg.json_cleaned.disconnect(self.weights_changed)
+        # if dlg.exec_():
+        #     project_definition = dlg.project_definition
+        #     self.update_actions_status()
+        # else:
+        #     project_definition = old_project_definition
+        #     if first_svi:
+        #         # delete auto generated svi field
+        #         ProcessLayer(self.current_layer).delete_attributes(
+        #             [svi_attr_id, iri_attr_id])
+        #     else:
+        #         # recalculate with the old weights
+        #         self.recalculate_indexes(project_definition)
+
+        # dlg.json_cleaned.disconnect(self.weights_changed)
 
         # store the correct project definitions
         self.project_definitions[current_layer_id] = project_definition
