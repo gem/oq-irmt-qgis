@@ -394,7 +394,7 @@
                     // and build the newNode depending on it and on the siblings
                     // NOTE: Only fields that are not already in the tree should be selectable
                     // By default, assign equal weights to the new node and to its siblings
-                    // pdData = data; // PAOLO: What's data?
+                    pdData = data; // PAOLO: What's data?
                     var nodeType;
                     switch (d.type) {
                         case undefined:
