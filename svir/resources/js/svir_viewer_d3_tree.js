@@ -128,7 +128,7 @@
                 .append('<br/><label for="field">Field: </label>')
                 .append('<select id="field">'+ fieldOptions(node) + '</select>')
                 .append('<br/><label for="name">Name: </label>')
-                .append('<input id="nodeName" type="text" name="nodeName">');
+                .append('<input id="newNodeName" type="text" name="newNodeName">');
 
             //TODO use selectmenu when the bug there is fixed9?
             //$(selector).selectmenu()
@@ -137,10 +137,10 @@
             
             // By default, set the name to be equal to the fieldname selected
             var defaultName = $('#field').val();
-            $('#nodeName').val(defaultName);
+            $('#newNodeName').val(defaultName);
 
             $('#field').on('change', function() {
-                $('#nodeName').val(this.value);
+                $('#newNodeName').val(this.value);
             });
         }
 
@@ -213,8 +213,8 @@
                     // $('.ui-icon-closethick').click();
                     if ($('#field').length !== 0) {
                         var field = $('#field').val();
-                        var nodeName = $('#nodeName').val();
-                        updateNode(pdData, field, nodeName);
+                        var newNodeName = $('#newNodeName').val();
+                        updateNode(pdData, field, newNodeName);
                         // updateNode(pdData, pdData.id, field);
                     }
                     $('#projectDefNewNodeDialog').dialog("close");
