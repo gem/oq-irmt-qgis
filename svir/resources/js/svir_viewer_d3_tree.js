@@ -391,7 +391,96 @@
                     tooltipdiv .transition()
                         .duration(500)
                         .style("opacity", 0);
-                });
+                    })
+                .on("click", function(d) {
+                    // TODO: Open dialog to select one of the fields of the current layer
+                    // and build the newNode depending on it and on the siblings
+                    // NOTE: Only fields that are not already in the tree should be selectable
+                    // By default, assign equal weights to the new node and to its siblings
+                    pdData = data; // PAOLO: What's data?
+                    var nodeType;
+                    switch (d.type) {
+                        // clicked on IR, we allow generating a node
+                        case node_types_dict.RI:
+                            nodeType = node_types_dict.RISK_INDICATOR;
+                            alert("You clicked a node with type " + d.type);
+                            break;
+                        // clicked on an SVI theme, we allow generating a node
+                        case node_types_dict.SV_THEME:
+                            alert("You clicked a node with type " + d.type);
+                            nodeType = node_types_dict.SV_INDICATOR;
+                            break;
+                        // cases where we don't allow generating a node
+                        case node_types_dict.SV_INDICATOR:
+                            alert("You clicked a node with type " + d.type +
+                                ". You can't add new nodes there");
+                            return false;
+                        case undefined:
+                            alert("You clicked a node with type " + d.type +
+                                ". You can't add new nodes there");
+                            return false;
+                        default:
+                            alert("You clicked a node with type " + d.type +
+                                ". You can't add new nodes there");
+                            return false;
+                    }
+
+                    if (d.children === undefined) {
+                        alert("added a node to a childless parent");
+                        d.children = [];
+                    }
+
+                    var avgWeight = 1.0 / (d.children.length + 1);
+                    var siblings_max_level = 0;
+                    for (var i = 0; i < d.children.length; i++) {
+                        d.children[i].weight = avgWeight;
+                        updateD3Tree(d.children[i]);
+                        if (d.children[i].level > siblings_max_level) {
+                            siblings_max_level = d.children[i].level;
+                        }
+                    }
+
+                    // Calculate level
+                    var level;
+                    // Using Math.floor is ok because levels can't be negative
+                    int_level = Math.floor(d.level) + 1;
+                    if (d.children.length > 0) {
+                        dec_level = (siblings_max_level - Math.floor(siblings_max_level)) + 1;
+                        level = int_level + dec_level;
+                    }
+                    else {
+                        level = d.level;
+                    }
+
+                    var newNode = {
+                        // field and name are assigned through a dialog,
+                        // after the node is created
+                        'parent': d.name,
+                        'weight': avgWeight,
+                        'type': nodeType,
+                        'x0': d.x,
+                        'y0': d.y,
+                        'level': level
+                    };
+
+                    // Add node, appending it to the node that has been clicked
+                    d.children.push(newNode);
+                    // alert(JSON.stringify(source));
+
+                    var builtNode = d.children[d.children.length - 1];
+                    updateD3Tree(builtNode);
+                    // updateD3Tree(pdData);
+                    // Let the user choose one of the available fields and set the name
+                    $('#projectDefNewNodeDialog').dialog("open");
+                    fieldSelect(d);
+                    // pdData = d.children[d.children.length - 1];
+                    // alert(pdData.id);
+                    // alert(builtNode.id);
+                    // pdData.transition();
+                    // addNodeButton(pdData);
+                    cancelAddNodeButton(d);
+                    addNodeButton(builtNode);
+                });;
 
             nodeEnter.append("text")
                 .attr("class", (function(d) { return "level-" + d.level; }))
