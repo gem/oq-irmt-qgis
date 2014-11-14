@@ -36,6 +36,7 @@
         });
     });
 
+
     ////////////////////////////////////////////
     //// Project Definition Collapsible Tree ///
     ////////////////////////////////////////////
@@ -71,7 +72,6 @@
 
         var diagonal = d3.svg.diagonal()
             .projection(function(d) { return [d.y, d.x]; });
-
 
         function createSpinner(id, weight, name, field) {
             pdTempSpinnerIds.push("spinner-"+id);
@@ -278,17 +278,20 @@
             }
         }
 
-        function findTreeBranchInfo(pdData, pdName, pdField, node) {
+        function findTreeBranchInfo(pdData, pdName, pdLevel, pdField, node) {
             // Find out how many elements are in tree branch
-
-            // PAOLO: Create spinners for nodes sharing the same parent
-            if (node.parent === pdData) {
+            if (pdLevel.some(
+                function(currentValue) {
+                    return (pdData.level == currentValue);
+                }
+            ))
+            {
                 pdTempIds.push(pdData.id);
                 createSpinner(pdData.id, pdData.weight, pdData.name, pdData.field);
             }
 
             (pdData.children || []).forEach(function(child) {
-                findTreeBranchInfo(child, [pdName], pdField, node);
+                findTreeBranchInfo(child, [pdName], [pdLevel], pdField, node);
             });
 
 
@@ -415,13 +418,23 @@
                             // alert("You clicked a node with type " + d.type);
                             return false;
                     }
-                    if (d.children === undefined) {
-                        d.children = [];
+                               // Calculate level
+                    var level;
+                    // Using Math.floor is ok because levels can't be negative
+                    int_level = Math.floor(d.level) + 1;
+                    if (d.children.length > 0) {
+                        dec_level = (siblings_max_level - Math.floor(siblings_max_level)) + 1;
+                        level = int_level + dec_level;
                     }
-                    var avgWeight = 1.0 / (d.children.length + 1);
+                    else {
+                        level = d.level;
+                    }
+             		
+					var avgWeight = 1.0 / (d.children.length + 1);
                     for (var i = 0; i < d.children.length; i++) {
                         d.children[i].weight = avgWeight;
                     }
+
                     var newNode = {
                         // field and name are assigned through a dialog,
                         // after the node is created
@@ -450,7 +463,7 @@
                 });
 
             nodeEnter.append("text")
-                // .attr("class", (function(d) { return "level-" + d.level; }))
+                .attr("class", (function(d) { return "level-" + d.level; }))
                 //.attr("id", (function(d) { return d.name; }))
                 .attr("id", "svg-text")
                 .attr("value", (function(d) { return d.weight; }))
@@ -474,11 +487,12 @@
                     pdName = d.name;
                     pdData = data;
                     pdWeight = d.weight;
+                    pdLevel = d.level;
                     pdTempSpinnerIds = [];
                     pdTempIds = [];
                     $('#projectDefWeightDialog').empty();
                     if (d.parent){
-                        findTreeBranchInfo(pdData, [pdName], pdField, d);
+                        findTreeBranchInfo(pdData, [pdName], [pdLevel], pdField, d);
                         var pdParentOperator = d.parent.operator? d.parent.operator : DEFAULT_OPERATOR;
                         d.parent.operator = pdParentOperator;
                         operatorSelect(pdParentOperator);
@@ -502,6 +516,7 @@
                 .on("click", function(d) {
                     pdName = d.children[0].name;
                     pdData = data;
+                    pdLevel = d.children[0].level;
                     pdParent = d.name;
                     pdParentField = d.field;
                     pdTempSpinnerIds = [];
@@ -510,7 +525,7 @@
                     pdId = d.id;
                     $('#projectDefWeightDialog').empty();
                     node = d.children[0];
-                    findTreeBranchInfo(pdData, [pdName], pdParentField, node);
+                    findTreeBranchInfo(pdData, [pdName], [pdLevel], pdParentField, node);
                     operatorSelect(pdOperator);
                     updateButton(pdId);
                 });

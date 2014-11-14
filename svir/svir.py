@@ -103,7 +103,7 @@ from globals import (INT_FIELD_TYPE_NAME,
                      DEBUG,
                      PROJECT_TEMPLATE,
                      THEME_TEMPLATE,
-                     INDICATOR_TEMPLATE)
+                     INDICATOR_TEMPLATE, DEFAULT_OPERATOR)
 
 
 class Svir:
@@ -513,10 +513,12 @@ class Svir:
             known_themes.append(theme['name'])
             svi_themes.append(theme)
         theme_position = known_themes.index(theme['name'])
+        level = float('4.%d' % theme_position)
         # add a new indicator to a theme
         new_indicator = copy.deepcopy(INDICATOR_TEMPLATE)
         new_indicator['name'] = indicator_name
         new_indicator['field'] = indicator_field
+        new_indicator['level'] = level
         svi_themes[theme_position]['children'].append(new_indicator)
 
     def create_weight_tree(self):
@@ -537,8 +539,7 @@ class Svir:
         if dlg.exec_():
             project_definition = copy.deepcopy(PROJECT_TEMPLATE)
             if dlg.ui.risk_field_cbx.currentText() != '':
-                project_definition['risk_field'] = \
-                    dlg.ui.risk_field_cbx.currentText()
+                project_definition['risk_field'] = dlg.ui.risk_field_cbx.currentText()
             svi_themes = project_definition['children'][1]['children']
             known_themes = []
             for indicator in dlg.indicators():

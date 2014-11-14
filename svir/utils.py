@@ -89,10 +89,9 @@ def assign_default_weights(svi_themes):
     for i, theme in enumerate(svi_themes):
         theme['weight'] = theme_weight
         for indicator in theme['children']:
-            indicator['weight'] = 1.0 / len(theme['children'])
-            # indicator_weight = 1.0 / len(theme['children'])
-            # indicator_weight = '%.2f' % indicator_weight
-            # indicator['weight'] = float(indicator_weight)
+            indicator_weight = 1.0 / len(theme['children'])
+            indicator_weight = '%.2f' % indicator_weight
+            indicator['weight'] = float(indicator_weight)
 
 
 def reload_layers_in_cbx(combo, layer_types=None, skip_layer_ids=None):
