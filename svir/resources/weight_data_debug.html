@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <script type="text/javascript" src="/home/paolo/projects/qt-experiments/svir/resources/js/jquery-1.9.1.js" charset="utf-8"></script>
-    <script type="text/javascript" src="/home/paolo/projects/qt-experiments/svir/resources/js/jquery-ui.js" charset="utf-8"></script>
-    <script type="text/javascript" src="/home/paolo/projects/qt-experiments/svir/resources/js/d3.js" charset="utf-8"></script>
-    <script type="text/javascript" src="/home/paolo/projects/qt-experiments/svir/resources/js/svir_viewer_d3_tree.js" charset="utf-8"></script>
-    <link type="text/css" rel="stylesheet" href="/home/paolo/projects/qt-experiments/svir/resources/css/jquery-ui.css">
-    <link type="text/css" rel="stylesheet" href="/home/paolo/projects/qt-experiments/svir/resources/css/svir_viewer_sub.css">
+    <script type="text/javascript" src="./js/jquery-1.9.1.js" charset="utf-8"></script>
+    <script type="text/javascript" src="./js/jquery-ui.js" charset="utf-8"></script>
+    <script type="text/javascript" src="./js/d3.js" charset="utf-8"></script>
+    <script type="text/javascript" src="./js/svir_viewer_d3_tree.js" charset="utf-8"></script>
+    <link type="text/css" rel="stylesheet" href="./css/jquery-ui.css">
+    <link type="text/css" rel="stylesheet" href="./css/svir_viewer_sub.css">
 </head>
 <body>
 
@@ -20,7 +20,11 @@
             ACTIVE_LAYER_NUMERIC_FIELDS: "FOREIGN;AGEDEP;POPDENT;UNEMPL;SERVEMPL;NOSKILE_MM;SVI;SVI_1;IRI;SVI_2;SVI_3;IRI_1;SVI_4;IRI_2;SVI_5;IRI_3;SVI_6;IRI_4;SVI_7;IRI_5;SVI_8;IRI_6;SVI_9;IRI_7;SVI_10;IRI_8;SVI_11;IRI_9;SVI_12;IRI_10;SVI_13;IRI_11;SVI_14;IRI_12;SVI_15;IRI_13;SVI_16;SVI_17;SVI_18",
             DEFAULT_OPERATOR: "Weighted sum",
             NODE_TYPES: "RISK_INDICATOR:Risk Indicator;SVI:Social Vulnerability Index;SV_INDICATOR:Social Vulnerability Indicator;SV_THEME:Social Vulnerability Theme;IRI:Integrated Risk Index;RI:Risk Index",
-            OPERATORS: "Simple sum (ignore weights);Weighted sum;Average (ignore weights);Simple multiplication (ignore weights);Weighted multiplication"
+            OPERATORS: "Simple sum (ignore weights);Weighted sum;Average (ignore weights);Simple multiplication (ignore weights);Weighted multiplication",
+            json_updated: function (updated_json_str) {
+                console.log("json_updated signal emitted with the following JSON")
+                console.log(updated_json_str)
+            }
         }
         var json_str = '{"svi_field": "SVI_18", "type": "Integrated Risk Index", "name": "IRI", "weight": 1.0, "children": [{"type": "Risk Index", "name": "RI", "weight": 0.5, "children": []}, {"type": "Social Vulnerability Index", "name": "SVI", "weight": 0.5, "children": [{"type": "Social Vulnerability Theme", "name": "aaa", "weight": 0.5, "children": [{"field": "AGEDEP", "type": "Social Vulnerability Indicator", "name": "AGEDEP", "weight": 0.5, "children": []}, {"field": "POPDENT", "type": "Social Vulnerability Indicator", "name": "POPDENT", "weight": 0.5, "children": []}]}, {"type": "Social Vulnerability Theme", "name": "bbb", "weight": 0.5, "children": [{"field": "UNEMPL", "type": "Social Vulnerability Indicator", "name": "UNEMPL", "weight": 1.0, "children": []}]}]}]}'
         loadPD(json_str, qt_page);
