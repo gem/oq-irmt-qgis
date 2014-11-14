@@ -425,7 +425,11 @@ class Svir:
         try:
             dlg = SelectSvVariablesDialog(sv_downloader)
             if dlg.exec_():
-                load_geometries = dlg.ui.load_geometries_chk.isChecked()
+                # TODO: We should fix the workflow in case no geometries are
+                # downloaded. Currently we must download them, so the checkbox
+                # to let the user choose has been temporarily removed.
+                # load_geometries = dlg.ui.load_geometries_chk.isChecked()
+                load_geometries = True
                 msg = ("Loading socioeconomic data from the OpenQuake "
                        "Platform...")
                 # Retrieve the indices selected by the user
