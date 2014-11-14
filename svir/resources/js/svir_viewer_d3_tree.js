@@ -27,9 +27,6 @@
             width: 500,
             modal: true
         });
-    });
-
-    $(document).ready(function() {
         //  Dialog to set up a new node to insert into the project definition
         $("#projectDefNewNodeDialog").dialog({
             autoOpen: false,
@@ -44,7 +41,10 @@
     ////////////////////////////////////////////
 
     function loadPD(selectedPDef, qt_page) {
-        var qt_page = typeof qt_page !== 'undefined' ? qt_page : false;
+        var tooltipdiv = d3.select("#projectDefDialog").append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0);
+
         var DEFAULT_OPERATOR = qt_page.DEFAULT_OPERATOR;
         var OPERATORS = qt_page.OPERATORS.split(';');
         var ACTIVE_LAYER_NUMERIC_FIELDS = qt_page.ACTIVE_LAYER_NUMERIC_FIELDS.split(';');
@@ -356,11 +356,6 @@
         d3.select(self.frameElement).style("height", "800px");
 
 
-        var tooltipdiv = d3.select("#projectDefDialog").append("div")
-            .attr("class", "tooltip")
-            .style("opacity", 0);
-
-
         function updateD3Tree(source) {
             // Compute the new tree layout.
             var nodes = tree.nodes(root).reverse(),
@@ -399,7 +394,7 @@
                     // and build the newNode depending on it and on the siblings
                     // NOTE: Only fields that are not already in the tree should be selectable
                     // By default, assign equal weights to the new node and to its siblings
-                    // pdData = data; // PAOLO: What's data?
+                    pdData = data; // PAOLO: What's data?
                     var nodeType;
                     switch (d.type) {
                         case undefined:
@@ -579,10 +574,8 @@
                 d.x0 = d.x;
                 d.y0 = d.y;
             });
-            if (qt_page){
-                if (typeof pdData !== 'undefined'){
-                    qt_page.json_updated(pdData);
-                }
+            if (typeof pdData !== 'undefined'){
+                qt_page.json_updated(pdData);
             }
         }
     } //end d3 tree
