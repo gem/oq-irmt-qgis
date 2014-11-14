@@ -152,6 +152,9 @@ class Svir:
 
         self.project_definitions = {}
         self.current_layer = None
+        # FIXME replace self.weight_dlg with dlg.exec_ to make it modal when
+        # done debugging
+        self.weight_dlg = None
 
         self.aggr_loss_attr_names = dict(count='PTS_CNT',
                                          sum='LOSS_SUM',
@@ -565,8 +568,8 @@ class Svir:
                 project_definition)
 
         # FIXME
-        self.dlg = WeightDataDialog(self.iface, project_definition)
-        self.dlg.show()
+        self.weight_dlg = WeightDataDialog(self.iface, project_definition)
+        self.weight_dlg.show()
 
         # dlg = WeightDataDialog(self.iface, project_definition)
         # dlg.json_cleaned.connect(self.weights_changed)
