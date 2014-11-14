@@ -63,15 +63,28 @@ SUM_BASED_OPERATORS = (OPERATORS_DICT['SUM_S'],
 MUL_BASED_OPERATORS = (OPERATORS_DICT['MUL_S'],
                           OPERATORS_DICT['MUL_W'])
 
+NODE_TYPES = {'IRI': 'Integrated Risk Index',
+              'RI': 'Risk Index',
+              'RISK_INDICATOR': 'Risk Indicator',
+              'SVI': 'Social Vulnerability Index',
+              'SV_THEME': 'Social Vulnerability Theme',
+              'SV_INDICATOR': 'Social Vulnerability Indicator',
+              }
+
+
 PROJECT_TEMPLATE = {
-    'name': 'ir',
-    'weight': '',
+    'name': 'IRI',
+    'type': NODE_TYPES['IRI'],
+    'weight': 1.0,
     'level': 1,
     'children': [
-        {'name': 'risk',
+        {'name': 'RI',
+         'type': NODE_TYPES['RI'],
          'weight': 0.5,
-         'level': 2},
-        {'name': 'svi',
+         'level': 2,
+         'children': []},
+        {'name': 'SVI',
+         'type': NODE_TYPES['SVI'],
          'weight': 0.5,
          'level': 2,
          'children': []}
@@ -80,20 +93,22 @@ PROJECT_TEMPLATE = {
 
 THEME_TEMPLATE = {
     'name': '',
-    'weight': 0.0,
+    'weight': 1.0,
     'level': 3.0,
-    'type': 'categoryIndicator',
+    'type': NODE_TYPES['SV_THEME'],
     'children': []
 }
 
 INDICATOR_TEMPLATE = {
     'name': '',
-    'weight': 0.0,
+    'weight': 1.0,
     'level': 4.0,
-    'type': 'primaryIndicator',
-    'field': ''
+    'type': NODE_TYPES['SV_INDICATOR'],
+    'field': '',
+    'children': []
 }
 
+# FIXME
 DEMO_JSON = {
     "name": "IR",
     "weight": "",

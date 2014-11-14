@@ -418,7 +418,23 @@
                             // alert("You clicked a node with type " + d.type);
                             return false;
                     }
-                               // Calculate level
+
+                    if (d.children === undefined) {
+                        alert("Aggiunta sezione children al nodo cliccato");
+                        d.children = [];
+                    }
+
+                    var avgWeight = 1.0 / (d.children.length + 1);
+                    var siblings_max_level = 0;
+                    for (var i = 0; i < d.children.length; i++) {
+                        d.children[i].weight = avgWeight;
+                        updateD3Tree(d.children[i]);
+                        if (d.children[i].level > siblings_max_level) {
+                            siblings_max_level = d.children[i].level;
+                        }
+                    }
+
+                    // Calculate level
                     var level;
                     // Using Math.floor is ok because levels can't be negative
                     int_level = Math.floor(d.level) + 1;
@@ -429,11 +445,6 @@
                     else {
                         level = d.level;
                     }
-             		
-					var avgWeight = 1.0 / (d.children.length + 1);
-                    for (var i = 0; i < d.children.length; i++) {
-                        d.children[i].weight = avgWeight;
-                    }
 
                     var newNode = {
                         // field and name are assigned through a dialog,
@@ -442,11 +453,14 @@
                         'weight': avgWeight,
                         'type': nodeType,
                         'x0': d.x,
-                        'y0': d.y
+                        'y0': d.y,
+                        'level': level
                     };
+
                     // Add node, appending it to the node that has been clicked
-                    (d.children || (d.children = [])).push(newNode);
+                    d.children.push(newNode);
                     // alert(JSON.stringify(source));
+
                     var builtNode = d.children[d.children.length - 1];
                     updateD3Tree(builtNode);
                     // updateD3Tree(pdData);
