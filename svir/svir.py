@@ -103,7 +103,7 @@ from globals import (INT_FIELD_TYPE_NAME,
                      DEBUG,
                      PROJECT_TEMPLATE,
                      THEME_TEMPLATE,
-                     INDICATOR_TEMPLATE, DEFAULT_OPERATOR)
+                     INDICATOR_TEMPLATE)
 
 
 class Svir:
@@ -436,7 +436,8 @@ class Svir:
                 known_themes = []
                 with WaitCursorManager(msg, self.iface):
                     while dlg.ui.list_multiselect.selected_widget.count() > 0:
-                        item = dlg.ui.list_multiselect.selected_widget.takeItem(0)
+                        item = \
+                            dlg.ui.list_multiselect.selected_widget.takeItem(0)
                         ind_code = item.text().split(':')[0]
                         ind_info = dlg.indicators_info_dict[ind_code]
                         sv_theme = ind_info['theme']
@@ -496,8 +497,8 @@ class Svir:
                         raise RuntimeError('Layer invalid')
                     layer = vlayer_csv
                 else:
-                    # obtain a in-memory copy of the layer (editable) and add it to
-                    # the registry
+                    # obtain a in-memory copy of the layer (editable) and
+                    # add it to the registry
                     layer = ProcessLayer(vlayer_csv).duplicate_in_memory(
                         'socioeconomic_zonal_layer',
                         add_to_registry=True)
@@ -550,7 +551,8 @@ class Svir:
         if dlg.exec_():
             project_definition = copy.deepcopy(PROJECT_TEMPLATE)
             if dlg.ui.risk_field_cbx.currentText() != '':
-                project_definition['risk_field'] = dlg.ui.risk_field_cbx.currentText()
+                project_definition['risk_field'] = \
+                    dlg.ui.risk_field_cbx.currentText()
             svi_themes = project_definition['children'][1]['children']
             known_themes = []
             for indicator in dlg.indicators():
