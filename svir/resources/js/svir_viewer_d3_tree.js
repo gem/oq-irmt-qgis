@@ -427,12 +427,14 @@
                         // after the node is created
                         'parent': d.name,
                         'weight': avgWeight,
-                        'type': nodeType
+                        'type': nodeType,
+                        'x0': d.x,
+                        'y0': d.y
                     };
                     // Add node, appending it to the node that has been clicked
                     (d.children || (d.children = [])).push(newNode);
                     // alert(JSON.stringify(source));
-                    builtNode = d.children[d.children.length - 1];
+                    var builtNode = d.children[d.children.length - 1];
                     updateD3Tree(builtNode);
                     // updateD3Tree(pdData);
                     // Let the user choose one of the available fields and set the name
