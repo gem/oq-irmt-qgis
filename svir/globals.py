@@ -76,17 +76,17 @@ PROJECT_TEMPLATE = {
     'name': 'IRI',
     'type': NODE_TYPES['IRI'],
     'weight': 1.0,
-    'level': 1,
+    'level': 1.0,
     'children': [
         {'name': 'RI',
          'type': NODE_TYPES['RI'],
          'weight': 0.5,
-         'level': 2,
+         'level': 2.0,
          'children': []},
         {'name': 'SVI',
          'type': NODE_TYPES['SVI'],
          'weight': 0.5,
-         'level': 2,
+         'level': 2.1,
          'children': []}
     ]
 }
@@ -121,11 +121,11 @@ DEMO_JSON = {
          "level": 2.0},
         {"name": "svi",
          "weight": 0.5,
-         "level": 2.0,
+         "level": 2.1,
          "children": [
              {"name": "population",
               "weight": 0.16,
-              "level": 3.1,
+              "level": 3.0,
               "type": "categoryIndicator",
               "children": [
                   {"name": "QFEMALE", "weight": 0.083, "level": 4.0,
@@ -173,7 +173,7 @@ DEMO_JSON = {
               },
              {"name": "education",
               "weight": 0.16,
-              "level": 3.1,
+              "level": 3.2,
               "type": "categoryIndicator",
               "children": [
                   {"name": "QEDLESS", "weight": 0.5, "level": 4.2,
@@ -184,7 +184,7 @@ DEMO_JSON = {
               },
              {"name": "infrastructure",
               "weight": 0.16,
-              "level": 3.1,
+              "level": 3.3,
               "type": "categoryIndicator",
               "children": [
                   {"name": "QBLDREPAIR", "weight": 0.25, "level": 4.4,
@@ -198,7 +198,7 @@ DEMO_JSON = {
               },
              {"name": "governance",
               "weight": 0.16,
-              "level": 3.1,
+              "level": 3.4,
               "type": "categoryIndicator",
               "children": [
                   {"name": "CRIMERATE", "weight": 0.33, "level": 4.5,
