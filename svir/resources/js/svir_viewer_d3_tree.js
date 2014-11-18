@@ -394,7 +394,7 @@
                     })
                 .on("click", function(parent) {
                     // TODO: Open dialog to select one of the fields of the current layer
-                    // and build the newNode depending on it and on the siblings
+                    // and build the new_node depending on it and on the siblings
                     // NOTE: Only fields that are not already in the tree should be selectable
                     // By default, assign equal weights to the new node and to its siblings
                     pdData = data; // PAOLO: What's data?
@@ -430,8 +430,7 @@
                         parent.children = [];
                     }
 
-
-                    //TODO check from here
+                    //Prepare for the new node
                     var parent_level = Math.floor(parent.level);
                     var siblings_max_level = 0;
                     var avg_weight = 1.0 / (parent.children.length + 1);
@@ -443,19 +442,15 @@
                         var siblings_level = (parent.children[i].level % 1).toFixed(1)
                         // here siblings_level is 0.x and we want x
                         siblings_level = siblings_level.substr(siblings_level.length - 1);
-
                         if (siblings_level > siblings_max_level) {
                             siblings_max_level = siblings_level;
                         }
-                        alert(siblings_level + ": " + siblings_max_level)
                     }
+                    // the new node needs to be after the siblings_max_level
+                    siblings_max_level++
+                    var new_node_level = parseFloat(parent_level + '.' + siblings_max_level);
 
-                    var new_node_level = parent_level + '.' + siblings_max_level;
-
-
-                    alert(new_node_level)
-
-                    var newNode = {
+                    var new_node = {
                         // field and name are assigned through a dialog,
                         // after the node is created
                         'parent': parent,
@@ -468,7 +463,7 @@
                     };
 
                     // Add node, appending it to the node that has been clicked
-                    parent.children.push(newNode);
+                    parent.children.push(new_node);
                     // alert(JSON.stringify(source));
 
                     var builtNode = parent.children[parent.children.length - 1];
