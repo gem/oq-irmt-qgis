@@ -22,10 +22,7 @@ label {
 	display:block;
     float:left;
     text-align:left;
-}
-input {
-  width:240px;
-  float:left;	
+    padding-right: 1em;
 }
 
 div.tooltip {
@@ -39,4 +36,8 @@ div.tooltip {
   border: 0px;
   border-radius: 8px;
   pointer-events: none;
+}
+
+.no-close .ui-dialog-titlebar-close {
+  display: none;
 }

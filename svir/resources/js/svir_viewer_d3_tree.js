@@ -23,16 +23,14 @@
         //  Project definition weight dialog
         $("#projectDefWeightDialog").dialog({
             autoOpen: false,
-            height: 500,
-            width: 500,
             modal: true
         });
         //  Dialog to set up a new node to insert into the project definition
         $("#projectDefNewNodeDialog").dialog({
             autoOpen: false,
-            height: 200,
-            width: 500,
-            modal: true
+            modal: true,
+            dialogClass: "no-close",
+            closeOnEscape: false
         });
     });
 
@@ -41,11 +39,7 @@
     //// Project Definition Collapsible Tree ///
     ////////////////////////////////////////////
 
-    function loadPD(selectedPDef, qt_page) {
-        var tooltipdiv = d3.select("#projectDefDialog").append("div")
-            .attr("class", "tooltip")
-            .style("opacity", 0);
-
+    function loadPD(project_definition, qt_page) {
         var DEFAULT_OPERATOR = qt_page.DEFAULT_OPERATOR;
         var OPERATORS = qt_page.OPERATORS.split(';');
         var ACTIVE_LAYER_NUMERIC_FIELDS = qt_page.ACTIVE_LAYER_NUMERIC_FIELDS.split(';');
@@ -59,16 +53,21 @@
             node_types_dict[type_key] = type_name;
         }
 
-        var margin = {top: 20, right: 120, bottom: 20, left: 60},
-            width = 960 - margin.right - margin.left,
-            height = 800 - margin.top - margin.bottom;
+        var margin = {top: 20, right: 120, bottom: 20, left: 60};
+        var width = 960 - margin.right - margin.left;
+        var height = 800 - margin.top - margin.bottom;
 
-        var i = 0,
-            duration = 750,
-            root;
+        var i = 0;
+        var duration = 750;
+        var root;
 
-        var tree = d3.layout.tree()
-            .size([height, width]);
+        var tooltipdiv = d3.select("#projectDefDialog").append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0);
+
+        var tree = d3.layout.tree().size([height, width]);
+
+        var nodeEnter;
 
         var diagonal = d3.svg.diagonal()
             .projection(function(d) { return [d.y, d.x]; });
@@ -92,8 +91,6 @@
                 });
             });
         }
-
-        var nodeEnter;
 
         function operatorSelect(pdOperator){
             $('#projectDefWeightDialog')
@@ -119,11 +116,10 @@
             return options;
         }
 
-
         function fieldSelect(node){
             // TODO: Add more stuff to the node
             $('#projectDefNewNodeDialog').empty();
-            $('#projectDefNewNodeDialog').dialog("open");
+
             $('#projectDefNewNodeDialog')
                 .append('<br/><label for="field">Field: </label>')
                 .append('<select id="field">'+ fieldOptions(node) + '</select>')
@@ -181,45 +177,6 @@
                 }
             }
             return options;
-        }
-
-        function cancelAddNodeButton(pdData) {
-            // $('#projectDefNewNodeDialog').dialog("open");
-            $('#projectDefNewNodeDialog').append(
-                '<br/><br/><button type="button" id="cancel-add-node-button">Cancel</button>'
-            );
-            $('#cancel-add-node-button').click(
-                function(){
-                    // $('.ui-icon-closethick').click();
-                    // Remove the new node (the last child, just created) from the children
-                    // FIXME: Currently, if you press cancel twice or more, it keeps removing children
-                    pdData.children.splice(pdData.children.length - 1, 1);
-                    updateD3Tree(pdData);
-                    $('#projectDefNewNodeDialog').dialog("close");
-                }
-            );
-
-        }
-
-        function addNodeButton(pdData) {
-            // pdId = typeof pdId !== 'undefined' ? pdId : false;
-            // $('#projectDefNewNodeDialog').dialog("open");
-            $('#projectDefNewNodeDialog').append(
-                '<button type="button" id="add-node-button">Add node</button>'
-            );
-            // alert('Created the "add node" button');
-            $('#add-node-button').click(
-                function(){
-                    // $('.ui-icon-closethick').click();
-                    if ($('#field').length !== 0) {
-                        var field = $('#field').val();
-                        var newNodeName = $('#newNodeName').val();
-                        updateNode(pdData, field, newNodeName);
-                        // updateNode(pdData, pdData.id, field);
-                    }
-                    $('#projectDefNewNodeDialog').dialog("close");
-                }
-            );
         }
 
         function updateButton(pdId){
@@ -319,12 +276,12 @@
             });
         }
 
-        function updateNode(pdData, field, name) {
+        function updateNode(node, field, name) {
             // alert('Inside updateNode');
-            pdData.field = field;
-            pdData.name = name;
-            updateD3Tree(pdData);
-            // alert(pdData.name);
+            node.field = field;
+            node.name = name;
+            updateD3Tree(node);
+            // alert(node.name);
         }
 
         function updateNodeOLD(pdData, id, pdField) {
@@ -346,8 +303,8 @@
             .append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-        d3.json(selectedPDef, function() {
-            data = JSON.parse(selectedPDef);
+        d3.json(project_definition, function() {
+            data = JSON.parse(project_definition);
             root = data;
             root.x0 = height / 2;
             root.y0 = 0;
@@ -403,25 +360,22 @@
                         // clicked on IR, we allow generating a node
                         case node_types_dict.RI:
                             nodeType = node_types_dict.RISK_INDICATOR;
-                            alert("You clicked a node with type " + parent.type);
+                            //alert("You clicked a node with type " + parent.type);
                             break;
                         // clicked on an SVI theme, we allow generating a node
                         case node_types_dict.SV_THEME:
-                            alert("You clicked a node with type " + parent.type);
+                            //alert("You clicked a node with type " + parent.type);
                             nodeType = node_types_dict.SV_INDICATOR;
                             break;
                         // cases where we don't allow generating a node
                         case node_types_dict.SV_INDICATOR:
-                            alert("You clicked a node with type " + parent.type +
-                                ". You can't add new nodes there");
+                            //alert("You clicked a node with type " + parent.type + ". You can't add new nodes there");
                             return false;
                         case undefined:
-                            alert("You clicked a node with type " + parent.type +
-                                ". You can't add new nodes there");
+                            //alert("You clicked a node with type " + parent.type + ". You can't add new nodes there");
                             return false;
                         default:
-                            alert("You clicked a node with type " + parent.type +
-                                ". You can't add new nodes there");
+                            //alert("You clicked a node with type " + parent.type + ". You can't add new nodes there");
                             return false;
                     }
 
@@ -466,20 +420,36 @@
                     parent.children.push(new_node);
                     // alert(JSON.stringify(source));
 
-                    var builtNode = parent.children[parent.children.length - 1];
-                    updateD3Tree(builtNode);
+                    updateD3Tree(new_node);
                     // updateD3Tree(pdData);
                     // Let the user choose one of the available fields and set the name
-                    $('#projectDefNewNodeDialog').dialog("open");
+                    $('#projectDefNewNodeDialog').dialog({
+                      buttons: [
+                        {
+                          text: "Cancel",
+                          click: function() {
+                            parent.children.splice(parent.children.length - 1, 1);
+                            updateD3Tree(parent);
+                            $( this ).dialog( "close" );
+                          }
+                        },
+                        {
+                          text: "Add",
+                          click: function(){
+                            if ($('#field').length !== 0) {
+                                var field = $('#field').val();
+                                var newNodeName = $('#newNodeName').val();
+                                updateNode(new_node, field, newNodeName);
+                            }
+                            $( this ).dialog( "close" );
+                        }
+                          }
+                      ]
+                    });
+
                     fieldSelect(parent);
-                    // pdData = parent.children[parent.children.length - 1];
-                    // alert(pdData.id);
-                    // alert(builtNode.id);
-                    // pdData.transition();
-                    // addNodeButton(pdData);
-                    cancelAddNodeButton(parent);
-                    addNodeButton(builtNode);
-                });;
+                    $('#projectDefNewNodeDialog').dialog("open");
+                });
                 //TODO check to here
 
 
