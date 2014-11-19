@@ -22,12 +22,14 @@
     $(document).ready(function() {
         //  Project definition weight dialog
         $("#projectDefWeightDialog").dialog({
+            title: "Set weights and operator",
             autoOpen: false,
             modal: true,
             minWidth: 400
         });
         //  Dialog to set up a new node to insert into the project definition
         $("#projectDefNewNodeDialog").dialog({
+            title: "Add new indicator",
             autoOpen: false,
             modal: true,
             dialogClass: "no-close",
@@ -414,15 +416,14 @@
                         'x0': parent.x,
                         'y0': parent.y,
                         'level': new_node_level,
-                        'depth': parent.depth + 1
+                        'depth': parent.depth + 1,
+                        'field': "",
+                        'name': ""
                     };
 
                     // Add node, appending it to the node that has been clicked
                     parent.children.push(new_node);
                     // alert(JSON.stringify(source));
-
-                    updateD3Tree(new_node);
-                    // updateD3Tree(pdData);
                     // Let the user choose one of the available fields and set the name
                     $('#projectDefNewNodeDialog').dialog({
                       buttons: [
@@ -452,7 +453,6 @@
                     $('#projectDefNewNodeDialog').dialog("open");
                 });
                 //TODO check to here
-
 
             nodeEnter.append("text")
                 .attr("class", (function(d) { return "level-" + d.level; }))
