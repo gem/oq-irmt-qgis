@@ -23,7 +23,8 @@
         //  Project definition weight dialog
         $("#projectDefWeightDialog").dialog({
             autoOpen: false,
-            modal: true
+            modal: true,
+            minWidth: 400
         });
         //  Dialog to set up a new node to insert into the project definition
         $("#projectDefNewNodeDialog").dialog({

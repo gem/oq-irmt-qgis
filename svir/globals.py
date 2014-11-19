@@ -81,12 +81,12 @@ PROJECT_TEMPLATE = {
         {'name': 'RI',
          'type': NODE_TYPES['RI'],
          'weight': 0.5,
-         'level': 2,
+         'level': 2.0,
          'children': []},
         {'name': 'SVI',
          'type': NODE_TYPES['SVI'],
          'weight': 0.5,
-         'level': 2,
+         'level': 2.0,
          'children': []}
     ]
 }
