@@ -41,3 +41,7 @@ div.tooltip {
 .no-close .ui-dialog-titlebar-close {
   display: none;
 }
+
+circle:hover {
+    cursor: copy;
+}

@@ -29,7 +29,7 @@
         });
         //  Dialog to set up a new node to insert into the project definition
         $("#projectDefNewNodeDialog").dialog({
-            title: "Add new indicator",
+            title: "Add new node",
             autoOpen: false,
             modal: true,
             dialogClass: "no-close",
@@ -365,6 +365,10 @@
                             nodeType = node_types_dict.RISK_INDICATOR;
                             //alert("You clicked a node with type " + parent.type);
                             break;
+                        case node_types_dict.SVI:
+                            //alert("You clicked a node with type " + parent.type);
+                            nodeType = node_types_dict.SV_THEME;
+                            break;
                         // clicked on an SVI theme, we allow generating a node
                         case node_types_dict.SV_THEME:
                             //alert("You clicked a node with type " + parent.type);
@@ -383,7 +387,7 @@
                     }
 
                     if (parent.children === undefined) {
-                        alert("added a node to a childless parent");
+                        //alert("added a node to a childless parent");
                         parent.children = [];
                     }
 
