@@ -19,6 +19,11 @@
     var CIRCLE_SCALE = 30;
     var MIN_CIRCLE_SIZE = 0.001;
 
+    // For checking if a string is blank or contains only white-space
+    String.prototype.isEmpty = function() {
+        return (this.length === 0 || !this.trim());
+    };
+
     $(document).ready(function() {
         //  Project definition weight dialog
         $("#projectDefWeightDialog").dialog({
@@ -29,7 +34,7 @@
         });
         //  Dialog to set up a new node to insert into the project definition
         $("#projectDefNewNodeDialog").dialog({
-            title: "Add new node",
+            title: "Add new indicator",
             autoOpen: false,
             modal: true,
             dialogClass: "no-close",
@@ -119,28 +124,42 @@
             return options;
         }
 
-        function fieldSelect(node){
+        function fieldSelect(node, node_type){
             // TODO: Add more stuff to the node
-            $('#projectDefNewNodeDialog').empty();
-
-            $('#projectDefNewNodeDialog')
-                .append('<br/><label for="field">Field: </label>')
-                .append('<select id="field">'+ fieldOptions(node) + '</select>')
-                .append('<br/><label for="name">Name: </label>')
-                .append('<input id="newNodeName" type="text" name="newNodeName">');
-
+            dialog = $('#projectDefNewNodeDialog');
             //TODO use selectmenu when the bug there is fixed9?
             //$(selector).selectmenu()
             //$(selector).prop('selectedIndex', 4)
             // $('#field').val(node.field);
-            
-            // By default, set the name to be equal to the fieldname selected
-            var defaultName = $('#field').val();
-            $('#newNodeName').val(defaultName);
+            dialog.empty();
 
-            $('#field').on('change', function() {
-                $('#newNodeName').val(this.value);
-            });
+            dialog
+                .append('<label for="name">Name: </label>')
+                .append('<input id="newNodeName" type="text" name="newNodeName" value="">');
+
+            newNodeName = $('#newNodeName')
+            newNodeName.blur(function(){
+                if (newNodeName.val().isEmpty()){
+                    newNodeName.addClass("ui-state-error");
+                }
+                else{
+                    newNodeName.removeClass("ui-state-error");
+                }
+            })
+
+            if (node_type != node_types_dict.SV_THEME) {
+                dialog
+                    .append('<br/><label for="field">Field: </label>')
+                    .append('<select id="field">' + fieldOptions(node) + '</select><br/>')
+
+                // By default, set the name to be equal to the fieldname selected
+                var defaultName = $('#field').val();
+                newNodeName.val(defaultName);
+
+                $('#field').on('change', function() {
+                    newNodeName.val(this.value);
+                });
+            }
         }
 
         function getRootNode(node){
@@ -358,21 +377,21 @@
                     // NOTE: Only fields that are not already in the tree should be selectable
                     // By default, assign equal weights to the new node and to its siblings
                     pdData = data; // PAOLO: What's data?
-                    var nodeType;
+                    var node_type;
                     switch (parent.type) {
                         // clicked on IR, we allow generating a node
                         case node_types_dict.RI:
-                            nodeType = node_types_dict.RISK_INDICATOR;
+                            node_type = node_types_dict.RISK_INDICATOR;
                             //alert("You clicked a node with type " + parent.type);
                             break;
                         case node_types_dict.SVI:
                             //alert("You clicked a node with type " + parent.type);
-                            nodeType = node_types_dict.SV_THEME;
+                            node_type = node_types_dict.SV_THEME;
                             break;
                         // clicked on an SVI theme, we allow generating a node
                         case node_types_dict.SV_THEME:
                             //alert("You clicked a node with type " + parent.type);
-                            nodeType = node_types_dict.SV_INDICATOR;
+                            node_type = node_types_dict.SV_INDICATOR;
                             break;
                         // cases where we don't allow generating a node
                         case node_types_dict.SV_INDICATOR:
@@ -391,6 +410,8 @@
                         parent.children = [];
                     }
 
+
+                    //TODO fix level
                     //Prepare for the new node
                     var parent_level = Math.floor(parent.level);
                     var siblings_max_level = 0;
@@ -408,7 +429,7 @@
                         }
                     }
                     // the new node needs to be after the siblings_max_level
-                    siblings_max_level++
+                    siblings_max_level = 1
                     var new_node_level = parseFloat(parent_level + '.' + siblings_max_level);
 
                     var new_node = {
@@ -416,7 +437,7 @@
                         // after the node is created
                         'parent': parent,
                         'weight': avg_weight,
-                        'type': nodeType,
+                        'type': node_type,
                         'x0': parent.x,
                         'y0': parent.y,
                         'level': new_node_level,
@@ -430,6 +451,7 @@
                     // alert(JSON.stringify(source));
                     // Let the user choose one of the available fields and set the name
                     $('#projectDefNewNodeDialog').dialog({
+                      title: "Add New " + node_type,
                       buttons: [
                         {
                           text: "Cancel",
@@ -442,18 +464,21 @@
                         {
                           text: "Add",
                           click: function(){
-                            if ($('#field').length !== 0) {
-                                var field = $('#field').val();
-                                var newNodeName = $('#newNodeName').val();
+                              var newNodeName = $('#newNodeName');
+
+                              if (newNodeName.val().isEmpty()){
+                                  newNodeName.addClass("ui-state-error");
+                                  return false;
+                              }
+                              var field = $('#field').val();
                                 updateNode(new_node, field, newNodeName);
-                            }
                             $( this ).dialog( "close" );
-                        }
+                            }
                           }
                       ]
                     });
 
-                    fieldSelect(parent);
+                    fieldSelect(parent, node_type);
                     $('#projectDefNewNodeDialog').dialog("open");
                 });
                 //TODO check to here
