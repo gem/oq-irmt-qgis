@@ -408,31 +408,40 @@
                             return false;
                     }
 
-                    if (parent.children === undefined) {
+                    var siblings = parent.children;
+                    if (undefined === siblings) {
                         //alert("added a node to a childless parent");
-                        parent.children = [];
+                        siblings = [];
                     }
 
                     //TODO fix level
                     //Prepare for the new node
+                    // Using Math.floor is ok because levels can't be negative
                     var parent_level = Math.floor(parent.level);
-                    var siblings_max_level = 0;
-                    var avg_weight = 1.0 / (parent.children.length + 1);
+                    var siblings_dec_level = 0;
+                    var avg_weight = 1.0 / (siblings.length + 1);
 
-                    for (var i = 0; i < parent.children.length; i++) {
-                        //updateD3Tree(parent.children[i]);
-                        parent.children[i].weight = avg_weight;
-                        // %1 takes only the decimal part
-                        var siblings_level = (parent.children[i].level % 1).toFixed(1)
-                        // here siblings_level is 0.x and we want x
-                        siblings_level = siblings_level.substr(siblings_level.length - 1);
-                        if (siblings_level > siblings_max_level) {
-                            siblings_max_level = siblings_level;
-                        }
+                    for (var i = 0; i < siblings.length; i++) {
+                        siblings[i].weight = avg_weight;
                     }
-                    // the new node needs to be after the siblings_max_level
-                    siblings_max_level = 1
-                    var new_node_level = parseFloat(parent_level + '.' + siblings_max_level);
+
+                    if (siblings.length > 0) {
+                        // the parent already has a child
+                        siblings_dec_level = siblings[0].level;
+                    }
+                    else {
+                        // TODO implement this by checking all nodes' parent level
+                        var parents_siblings = 0
+                        siblings_dec_level = parent.level + 1;
+                        siblings_dec_level = siblings_dec_level + '.' + parents_siblings;
+                    }
+
+                    dec_level = (siblings_dec_level - Math.floor(siblings_dec_level)) + 1;
+                    new_node_level = parent_level + dec_level;
+
+
+
+
 
                     var new_node = {
                         // field and name are assigned through a dialog,
@@ -447,9 +456,10 @@
                         'field': "",
                         'name': ""
                     };
+                    console.log(new_node)
 
                     // Add node, appending it to the node that has been clicked
-                    parent.children.push(new_node);
+                    siblings.push(new_node);
                     // alert(JSON.stringify(source));
                     // Let the user choose one of the available fields and set the name
                     $('#projectDefNewNodeDialog').dialog({
