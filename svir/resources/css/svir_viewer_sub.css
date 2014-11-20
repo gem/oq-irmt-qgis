@@ -42,6 +42,11 @@ div.tooltip {
   display: none;
 }
 
-circle:hover {
+circle{
+    cursor: default;
+}
+circle.social_vulnerability_theme:hover,
+circle.social_vulnerability_index:hover,
+circle.risk_index:hover {
     cursor: copy;
 }

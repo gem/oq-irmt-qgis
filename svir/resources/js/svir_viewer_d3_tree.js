@@ -162,6 +162,10 @@
             }
         }
 
+        function node_type_to_class(node_type){
+            return node_type.toLowerCase().replace(/ /g, '_');
+        }
+
         function getRootNode(node){
             if (node.parent === undefined) {
                 return node;
@@ -357,6 +361,7 @@
 
             nodeEnter.append("circle")
                 .attr("r", 1e-6)
+                .attr("class", function(d){return node_type_to_class(d.type)})
                 .on("mouseover", function(d) {
                     var info = d.name;
                     tooltipdiv .transition()
