@@ -377,8 +377,6 @@
                         .style("opacity", 0);
                     })
                 .on("click", function(parent) {
-                    // TODO: Open dialog to select one of the fields of the current layer
-                    // and build the new_node depending on it and on the siblings
                     // NOTE: Only fields that are not already in the tree should be selectable
                     // By default, assign equal weights to the new node and to its siblings
                     pdData = data; // PAOLO: What's data?
@@ -414,7 +412,6 @@
                         //alert("added a node to a childless parent");
                         parent.children = [];
                     }
-
 
                     //TODO fix level
                     //Prepare for the new node
@@ -462,7 +459,7 @@
                           text: "Cancel",
                           click: function() {
                             parent.children.splice(parent.children.length - 1, 1);
-                            updateD3Tree(parent);
+                            updateD3Tree(pdData);
                             $( this ).dialog( "close" );
                           }
                         },
@@ -476,7 +473,7 @@
                                   return false;
                               }
                               var field = $('#field').val();
-                                updateNode(new_node, field, newNodeName);
+                                updateNode(new_node, field, newNodeName.val());
                             $( this ).dialog( "close" );
                             }
                           }
@@ -486,7 +483,6 @@
                     fieldSelect(parent, node_type);
                     $('#projectDefNewNodeDialog').dialog("open");
                 });
-                //TODO check to here
 
             nodeEnter.append("text")
                 .attr("class", (function(d) { return "level-" + d.level; }))
