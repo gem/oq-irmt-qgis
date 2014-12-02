@@ -166,6 +166,33 @@
             return node_type.toLowerCase().replace(/ /g, '_');
         }
 
+        function find_next_decimal_level(nesting_level){
+            var max_dec_level = 0
+
+            var nodes_str = JSON.stringify(root, function(key, value) {
+                //avoid circularity in JSON by removing the parent key
+                if (key == "parent") {
+                    return undefined;
+                  }
+                  return value;
+                })
+
+            //match level":3.2 with a submatch containing 2 in the whole json
+            var re = new RegExp('level":"'+nesting_level+'\\.(\\d)', 'gi');
+            var match;
+            while ((match = re.exec(nodes_str)) != null) {
+                if (match.index === re.lastIndex) {
+                    re.lastIndex++;
+                }
+                // get 2 out of level":3.2
+                var decimal_level = match[1];
+                if (decimal_level >= max_dec_level){
+                    max_dec_level = parseInt(decimal_level) + 1
+                }
+            }
+            return max_dec_level
+        }
+
         function getRootNode(node){
             if (node.parent === undefined) {
                 return node;
@@ -411,12 +438,6 @@
                         parent['operator'] = DEFAULT_OPERATOR
                     }
                     var siblings = parent.children;
-
-                    //TODO fix level
-                    //Prepare for the new node
-                    // Using Math.floor is ok because levels can't be negative
-                    var parent_level = Math.floor(parent.level);
-                    var siblings_dec_level = 0;
                     var avg_weight = 1.0 / (siblings.length + 1);
 
                     var old_weights = []
@@ -425,19 +446,20 @@
                         siblings[i].weight = avg_weight;
                     }
 
+                    //Prepare for the new node
+                    var siblings_level = 0;
+                    var new_node_level = 0;
+
                     if (siblings.length > 0) {
                         // the parent already has a child
-                        siblings_dec_level = siblings[0].level;
+                        new_node_level = siblings[0].level;
                     }
                     else {
-                        // TODO implement this by checking all nodesparent level
-                        var parents_siblings = 0
-                        siblings_dec_level = parent.level + 1;
-                        siblings_dec_level = siblings_dec_level + '.' + parents_siblings;
+                        var parent_level = (parent.level).split('.')[0];
+                        siblings_level = parseInt(parent_level) + 1; //ex: 4
+                        var next_decimal_level = find_next_decimal_level(siblings_level) //ex: 1
+                        new_node_level = siblings_level + '.' + next_decimal_level; //ex: 4.1
                     }
-
-                    dec_level = (siblings_dec_level - Math.floor(siblings_dec_level)) + 1;
-                    new_node_level = parent_level + dec_level;
 
                     var new_node = {
                         // field and name are assigned through a dialog,

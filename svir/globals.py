@@ -76,17 +76,17 @@ PROJECT_TEMPLATE = {
     'name': 'IRI',
     'type': NODE_TYPES['IRI'],
     'weight': 1.0,
-    'level': 1,
+    'level': '1.0',
     'children': [
         {'name': 'RI',
          'type': NODE_TYPES['RI'],
          'weight': 0.5,
-         'level': 2.0,
+         'level': '2.0',
          'children': []},
         {'name': 'SVI',
          'type': NODE_TYPES['SVI'],
          'weight': 0.5,
-         'level': 2.0,
+         'level': '2.0',
          'children': []}
     ]
 }
@@ -94,7 +94,7 @@ PROJECT_TEMPLATE = {
 THEME_TEMPLATE = {
     'name': '',
     'weight': 1.0,
-    'level': 3.0,
+    'level': '3.0',
     'type': NODE_TYPES['SV_THEME'],
     'children': []
 }
@@ -102,7 +102,7 @@ THEME_TEMPLATE = {
 INDICATOR_TEMPLATE = {
     'name': '',
     'weight': 1.0,
-    'level': 4.0,
+    'level': '4.0',
     'type': NODE_TYPES['SV_INDICATOR'],
     'field': '',
     'children': []
