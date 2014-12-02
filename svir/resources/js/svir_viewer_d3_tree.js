@@ -327,7 +327,7 @@
             .append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-        d3.json(project_definition, function() {
+        d3.json('', function() {
             data = JSON.parse(project_definition);
             root = data;
             root.x0 = height / 2;
@@ -453,6 +453,7 @@
                         'field': "",
                         'name': ""
                     };
+                    console.log("newnode:")
                     console.log(new_node)
 
                     // Add node, appending it to the node that has been clicked
