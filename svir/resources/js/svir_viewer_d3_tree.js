@@ -421,7 +421,9 @@
                     var siblings_dec_level = 0;
                     var avg_weight = 1.0 / (siblings.length + 1);
 
+                    var old_weights = []
                     for (var i = 0; i < siblings.length; i++) {
+                        old_weights[i] = siblings[i].weight
                         siblings[i].weight = avg_weight;
                     }
 
@@ -470,10 +472,8 @@
                           text: "Cancel",
                           click: function() {
                             parent.children.splice(parent.children.length - 1, 1);
-                            //TODO reset weights to old value
-                            var avg_weight = 1.0 / (siblings.length);
                             for (var i = 0; i < siblings.length; i++) {
-                                siblings[i].weight = avg_weight;
+                                siblings[i].weight = old_weights[i];
                             }
                             updateD3Tree(pdData);
                             $( this ).dialog( "close" );
