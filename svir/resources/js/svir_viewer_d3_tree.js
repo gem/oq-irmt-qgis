@@ -335,18 +335,6 @@
             updateD3Tree(node);
         }
 
-        function updateNodeOLD(pdData, id, pdField) {
-            if (pdData.id == id){
-                pdData.field = pdField;
-                // FIXME Let the user type a name for the field
-                pdData.name = pdField;
-            }
-
-            (pdData.children || []).forEach(function(currentItem) {
-                updateNode(currentItem, id, pdField);
-            });
-        }
-
         var svg = d3.select("#projectDefDialog").append("svg")
             .attr("width", width + margin.right + margin.left)
             .attr("height", height + margin.top + margin.bottom)
