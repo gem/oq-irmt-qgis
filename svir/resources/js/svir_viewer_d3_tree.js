@@ -408,6 +408,7 @@
 
                     if (undefined === parent.children) {
                         parent['children'] = []
+                        parent['operator'] = DEFAULT_OPERATOR
                     }
                     var siblings = parent.children;
 
