@@ -447,6 +447,7 @@
                         // field and name are assigned through a dialog,
                         // after the node is created
                         'parent': parent,
+                        'children':[],
                         'weight': avg_weight,
                         'type': node_type,
                         'x0': parent.x,
@@ -469,6 +470,11 @@
                           text: "Cancel",
                           click: function() {
                             parent.children.splice(parent.children.length - 1, 1);
+                            //TODO reset weights to old value
+                            var avg_weight = 1.0 / (siblings.length);
+                            for (var i = 0; i < siblings.length; i++) {
+                                siblings[i].weight = avg_weight;
+                            }
                             updateD3Tree(pdData);
                             $( this ).dialog( "close" );
                           }
