@@ -303,11 +303,9 @@
         }
 
         function updateNode(node, field, name) {
-            // alert('Inside updateNode');
             node.field = field;
             node.name = name;
             updateD3Tree(node);
-            // alert(node.name);
         }
 
         function updateNodeOLD(pdData, id, pdField) {
@@ -408,11 +406,10 @@
                             return false;
                     }
 
-                    var siblings = parent.children;
-                    if (undefined === siblings) {
-                        //alert("added a node to a childless parent");
-                        siblings = [];
+                    if (undefined === parent.children) {
+                        parent['children'] = []
                     }
+                    var siblings = parent.children;
 
                     //TODO fix level
                     //Prepare for the new node
@@ -432,7 +429,7 @@
                         siblings_dec_level = siblings[0].level;
                     }
                     else {
-                        // TODO implement this by checking all nodes' parent level
+                        // TODO implement this by checking all nodesparent level
                         var parents_siblings = 0
                         siblings_dec_level = parent.level + 1;
                         siblings_dec_level = siblings_dec_level + '.' + parents_siblings;
@@ -440,10 +437,6 @@
 
                     dec_level = (siblings_dec_level - Math.floor(siblings_dec_level)) + 1;
                     new_node_level = parent_level + dec_level;
-
-
-
-
 
                     var new_node = {
                         // field and name are assigned through a dialog,
