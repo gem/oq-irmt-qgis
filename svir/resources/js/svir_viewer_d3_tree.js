@@ -363,14 +363,14 @@
             // Normalize for fixed-depth.
             nodes.forEach(function(d) { d.y = d.depth * 180; });
 
-            // Update the nodes…
-            var node = svg.selectAll("g.node")
-                .data(nodes, function(d) { return d.id || (d.id = ++i); });
-
+            // remove all the old nodes will redraw the full graph
+            svg.selectAll("*").remove();
+            //https://github.com/mbostock/d3/wiki/Selections#data
+            var updated_nodes = svg.selectAll("g.node").data(nodes, function(d) { return d.id || (d.id = ++i); });
             // Enter any new nodes at the parent's previous position.
-            nodeEnter = node.enter().append("g")
+            nodeEnter = updated_nodes.enter().append("g")
                 .attr("class", "node")
-                .attr("transform", function(d) { return "translate(" + source.y0 + "," + source.x0 + ")"; });
+                .attr("transform", function(d) { return "translate(" + root.y0 + "," + root.x0 + ")"; });
 
             nodeEnter.append("circle")
                 .attr("r", 1e-6)
@@ -507,8 +507,7 @@
 
             nodeEnter.append("text")
                 .attr("class", (function(d) { return "level-" + d.level; }))
-                //.attr("id", (function(d) { return d.name; }))
-                .attr("id", "svg-text")
+                .attr("id", (function(d) { return 'indicator-label-' + d.name.replace(' ', '-'); }))
                 .attr("value", (function(d) { return d.weight; }))
                 .attr("x", function(d) { return -(d.weight * CIRCLE_SCALE + 5); })
                 .attr("dy", function(d) {
@@ -555,6 +554,7 @@
                         return operator;
                     }
                 })
+                .attr("id", function(d) {return "operator-label-" + d.level})
                 .attr("x", function(d) { return d.weight * CIRCLE_SCALE + 15; })
                 .on("click", function(d) {
                     pdName = d.children[0].name;
@@ -567,14 +567,14 @@
                     pdOperator = d.operator;
                     pdId = d.id;
                     $('#projectDefWeightDialog').empty();
-                    node = d.children[0];
-                    findTreeBranchInfo(pdData, [pdName], [pdLevel], pdParentField, node);
+                    updated_nodes = d.children[0];
+                    findTreeBranchInfo(pdData, [pdName], [pdLevel], pdParentField, updated_nodes);
                     operatorSelect(pdOperator);
                     updateButton(pdId);
                 });
 
             // Transition nodes to their new position.
-            var nodeUpdate = node.transition()
+            var nodeUpdate = updated_nodes.transition()
                 .duration(duration)
                 .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
 
@@ -592,7 +592,7 @@
                 .style("fill-opacity", 1);
 
             // Transition exiting nodes to the parent's new position.
-            var nodeExit = node.exit().transition()
+            var nodeExit = updated_nodes.exit().transition()
                 .duration(duration)
                 .attr("transform", function(d) { return "translate(" + source.y + "," + source.x + ")"; })
                 .remove();
