@@ -41,7 +41,14 @@ def calculate_svi(iface, current_layer, project_definition):
     """
 
     svi_node = project_definition['children'][1]
-    themes = svi_node['children']
+    try:
+        themes = svi_node['children']
+        # calculate the SVI only if all themes contain at least one indicator
+        for theme in themes:
+            indicators = theme['children']
+    except KeyError:
+        # FIXME Decide what to do here
+        return None, None
     try:
         themes_operator = svi_node['operator']
     except KeyError:
