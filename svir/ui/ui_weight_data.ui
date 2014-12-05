@@ -3,7 +3,7 @@
  <class>WeightDataDialog</class>
  <widget class="QDialog" name="WeightDataDialog">
   <property name="windowModality">
-   <enum>Qt::NonModal</enum>
+   <enum>Qt::ApplicationModal</enum>
   </property>
   <property name="geometry">
    <rect>
@@ -15,6 +15,9 @@
   </property>
   <property name="windowTitle">
    <string>Weight Data</string>
+  </property>
+  <property name="modal">
+   <bool>true</bool>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="1" column="0">
