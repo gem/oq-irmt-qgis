@@ -85,7 +85,6 @@ from select_attrs_for_stats_dialog import SelectAttrsForStatsDialog
 from select_sv_variables_dialog import SelectSvVariablesDialog
 from settings_dialog import SettingsDialog
 from weight_data_dialog import WeightDataDialog
-from create_weight_tree_dialog import CreateWeightTreeDialog
 
 from import_sv_data import SvDownloader, SvDownloadError
 
@@ -183,14 +182,6 @@ class Svir:
                            ":/plugins/svir/transform.svg",
                            u"&Transform attribute",
                            self.transform_attribute,
-                           enable=False,
-                           add_to_layer_actions=True)
-        # Action to activate the modal dialog to choose weighting of the
-        # data from the platform
-        self.add_menu_item("create_weight_tree",
-                           ":/plugins/svir/define.svg",
-                           u"&Define model structure",
-                           self.create_weight_tree,
                            enable=False,
                            add_to_layer_actions=True)
         # Action to activate the modal dialog to choose weighting of the
@@ -309,7 +300,6 @@ class Svir:
             if self.current_layer.type() != QgsMapLayer.VectorLayer:
                 raise AttributeError
             proj_def = self.project_definitions[self.current_layer.id()]
-            self.registered_actions["create_weight_tree"].setEnabled(True)
             self.registered_actions["weight_data"].setEnabled(True)
             self.registered_actions["transform_attribute"].setEnabled(True)
 
@@ -321,14 +311,12 @@ class Svir:
 
         except KeyError:
             # self.project_definitions[self.current_layer.id()] is not defined
-            self.registered_actions["create_weight_tree"].setEnabled(True)
             self.registered_actions["weight_data"].setEnabled(False)
             self.registered_actions["transform_attribute"].setEnabled(True)
         except AttributeError:
             # self.current_layer.id() does not exist or self.current_layer
             # is not vector
             self.registered_actions["transform_attribute"].setEnabled(False)
-            self.registered_actions["create_weight_tree"].setEnabled(False)
             self.registered_actions["weight_data"].setEnabled(False)
             self.registered_actions["merge_svi_and_losses"].setEnabled(False)
 
@@ -517,38 +505,6 @@ class Svir:
         new_indicator['field'] = indicator_field
         new_indicator['level'] = level
         svi_themes[theme_position]['children'].append(new_indicator)
-
-    def create_weight_tree(self):
-        """
-        Open a modal dialog to create a weight tree from an existing layer
-        """
-        current_layer_id = self.current_layer.id()
-        try:
-            project_definition = self.project_definitions[current_layer_id]
-        except KeyError:
-            project_definition = None
-        dlg = CreateWeightTreeDialog(
-            self.iface,
-            self.current_layer,
-            project_definition,
-            self.registered_actions['merge_svi_and_losses'])
-
-        if dlg.exec_():
-            project_definition = copy.deepcopy(PROJECT_TEMPLATE)
-            if dlg.ui.risk_field_cbx.currentText() != '':
-                project_definition['risk_field'] = dlg.ui.risk_field_cbx.currentText()
-            svi_themes = project_definition['children'][1]['children']
-            known_themes = []
-            for indicator in dlg.indicators():
-                self._add_new_theme(svi_themes,
-                                    known_themes,
-                                    indicator['theme'],
-                                    indicator['name'],
-                                    indicator['field'])
-
-            assign_default_weights(svi_themes)
-            self.project_definitions[current_layer_id] = project_definition
-            self.update_actions_status()
 
     def weight_data(self):
         """
