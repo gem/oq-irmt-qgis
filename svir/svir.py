@@ -299,9 +299,9 @@ class Svir:
             # Activate actions which require a vector layer to be selected
             if self.current_layer.type() != QgsMapLayer.VectorLayer:
                 raise AttributeError
-            proj_def = self.project_definitions[self.current_layer.id()]
             self.registered_actions["weight_data"].setEnabled(True)
             self.registered_actions["transform_attribute"].setEnabled(True)
+            proj_def = self.project_definitions[self.current_layer.id()]
 
             # TODO maybe we want to have only an svi to allow upload, in that
             # case use 'svi_field' in proj_def
@@ -311,8 +311,7 @@ class Svir:
 
         except KeyError:
             # self.project_definitions[self.current_layer.id()] is not defined
-            self.registered_actions["weight_data"].setEnabled(False)
-            self.registered_actions["transform_attribute"].setEnabled(True)
+            pass  # We can still use the weight_data dialog
         except AttributeError:
             # self.current_layer.id() does not exist or self.current_layer
             # is not vector
@@ -511,7 +510,11 @@ class Svir:
         Open a modal dialog to select weights in a d3.js visualization
         """
         current_layer_id = self.current_layer.id()
-        project_definition = self.project_definitions[current_layer_id]
+        try:
+            project_definition = self.project_definitions[current_layer_id]
+        except KeyError:
+            project_definition = PROJECT_TEMPLATE
+            self.project_definitions[current_layer_id] = project_definition
         old_project_definition = copy.deepcopy(project_definition)
 
         first_svi = False
