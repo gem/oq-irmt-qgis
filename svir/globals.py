@@ -58,10 +58,10 @@ OPERATORS_DICT['MUL_W'] = 'Weighted multiplication'
 
 DEFAULT_OPERATOR = OPERATORS_DICT['SUM_W']
 SUM_BASED_OPERATORS = (OPERATORS_DICT['SUM_S'],
-                          OPERATORS_DICT['SUM_W'],
-                          OPERATORS_DICT['AVG'])
+                       OPERATORS_DICT['SUM_W'],
+                       OPERATORS_DICT['AVG'])
 MUL_BASED_OPERATORS = (OPERATORS_DICT['MUL_S'],
-                          OPERATORS_DICT['MUL_W'])
+                       OPERATORS_DICT['MUL_W'])
 
 NODE_TYPES = {'IRI': 'Integrated Risk Index',
               'RI': 'Risk Index',
@@ -77,6 +77,7 @@ PROJECT_TEMPLATE = {
     'type': NODE_TYPES['IRI'],
     'weight': 1.0,
     'level': '1.0',
+    'operator': DEFAULT_OPERATOR,
     'children': [
         {'name': 'RI',
          'type': NODE_TYPES['RI'],
@@ -96,6 +97,7 @@ THEME_TEMPLATE = {
     'weight': 1.0,
     'level': '3.0',
     'type': NODE_TYPES['SV_THEME'],
+    'operator': DEFAULT_OPERATOR,
     'children': []
 }
 
