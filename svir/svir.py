@@ -536,7 +536,7 @@ class Svir:
             if first_svi:
                 # delete auto generated svi field
                 ProcessLayer(self.current_layer).delete_attributes(
-                    [svi_attr_id, iri_attr_id])
+                    [svi_attr_id, ri_attr_id, iri_attr_id])
             else:
                 # recalculate with the old weights
                 self.recalculate_indexes(project_definition)
@@ -567,18 +567,21 @@ class Svir:
             return None, None, None
         discarded_feats_ids = discarded_feats_ids_svi.extend(
             discarded_feats_ids_ri)
-        iri_attr_id = calculate_iri(self.iface, self.current_layer,
-                                    project_definition, svi_attr_id,
-                                    ri_attr_id, discarded_feats_ids)
+        iri_attr_id, discarded_feats_ids = calculate_iri(
+            self.iface, self.current_layer,
+            project_definition,
+            svi_attr_id,
+            ri_attr_id, discarded_feats_ids)
         return svi_attr_id, ri_attr_id, iri_attr_id
 
     def redraw_ir_layer(self, data):
         # if an IRI has been already calculated, show it else show the SVI
-        if 'iri_field' in data:
-            target_field = data['iri_field']
+        if 'field' in data:  # the root is the IRI node
+            target_field = data['field']
             printing_str = 'IRI'
         else:
-            target_field = data['svi_field']
+            svi_node = data['children'][1]
+            target_field = svi_node['field']
             printing_str = 'SVI'
 
         if DEBUG:

@@ -54,8 +54,8 @@ def calculate_svi(iface, current_layer, project_definition):
     except KeyError:
         themes_operator = DEFAULT_OPERATOR
 
-    if 'svi_field' in project_definition:
-        svi_attr_name = project_definition['svi_field']
+    if 'field' in svi_node:
+        svi_attr_name = svi_node['field']
         if DEBUG:
             print 'Reusing %s for SVI' % svi_attr_name
     else:
@@ -178,7 +178,7 @@ def calculate_svi(iface, current_layer, project_definition):
                 current_layer.selectedFeaturesIds())
             iface.messageBar().pushWidget(widget, QgsMessageBar.WARNING)
 
-        project_definition['svi_field'] = svi_attr_name
+        svi_node['field'] = svi_attr_name
         return svi_attr_id, discarded_feats_ids
 
     except TypeError as e:
@@ -205,8 +205,8 @@ def calculate_ri(iface, current_layer, project_definition):
     except KeyError:
         ri_operator = DEFAULT_OPERATOR
 
-    if 'ri_field' in project_definition:
-        ri_attr_name = project_definition['ri_field']
+    if 'field' in ri_node:
+        ri_attr_name = ri_node['field']
         if DEBUG:
             print 'Reusing %s for RI' % ri_attr_name
     else:
@@ -286,7 +286,7 @@ def calculate_ri(iface, current_layer, project_definition):
                 current_layer.selectedFeaturesIds())
             iface.messageBar().pushWidget(widget, QgsMessageBar.WARNING)
 
-        project_definition['ri_field'] = ri_attr_name
+        ri_node['field'] = ri_attr_name
         return ri_attr_id, discarded_feats_ids
 
     except TypeError as e:
@@ -311,10 +311,8 @@ def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
     risk_weight = project_definition['children'][0]['weight']
     svi_weight = project_definition['children'][1]['weight']
 
-    # TODO: Use 'field' inside the IRI node, instead of an additional
-    # 'iri_field'
-    if 'iri_field' in project_definition:
-        iri_attr_name = project_definition['iri_field']
+    if 'field' in project_definition:  # The root is the node containing IRI
+        iri_attr_name = project_definition['field']
         if DEBUG:
             print 'Reusing %s for IRI' % iri_attr_name
     else:
@@ -362,7 +360,7 @@ def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
         project_definition['operator'] = iri_operator
         # set the field name for the copied RISK layer
         # project_definition['ri_field'] = ri_field_name
-        project_definition['iri_field'] = iri_attr_name
+        project_definition['field'] = iri_attr_name
         msg = ('The IRI has been calculated for fields containing '
                'non-NULL values and it was added to the layer as '
                'a new attribute called %s') % iri_attr_name
