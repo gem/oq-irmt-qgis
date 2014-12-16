@@ -71,7 +71,7 @@ except:
     print "Unable to import SagaUtils module from processing.algs.saga"
     saga_was_imported = False
 
-from calculate_utils import calculate_svi, calculate_iri
+from calculate_utils import calculate_svi, calculate_ri, calculate_iri
 
 from process_layer import ProcessLayer
 
@@ -521,7 +521,7 @@ class Svir:
         if 'svi_field' not in project_definition:
             # auto generate svi field
             first_svi = True
-            svi_attr_id, iri_attr_id = self.recalculate_indexes(
+            svi_attr_id, ri_attr_id, iri_attr_id = self.recalculate_indexes(
                 project_definition)
 
         dlg = WeightDataDialog(self.iface, project_definition)
@@ -559,24 +559,18 @@ class Svir:
         project_definition = data
 
         # when updating weights, we need to recalculate the indexes
-        svi_attr_id, discarded_feats_ids = calculate_svi(self.iface,
-                                                         self.current_layer,
-                                                         project_definition)
-
-        iri_attr_id = None
-        # if an IRi has been already calculated, calculate a new one
-        if 'risk_field' in data:
-            risk_field = data['risk_field']
-            try:
-                iri_operator = data['operator']
-            except KeyError:
-                iri_operator = None
-
-            iri_attr_id = calculate_iri(self.iface, self.current_layer,
-                                        project_definition, svi_attr_id,
-                                        risk_field, discarded_feats_ids,
-                                        iri_operator)
-        return svi_attr_id, iri_attr_id
+        svi_attr_id, discarded_feats_ids_svi = calculate_svi(
+            self.iface, self.current_layer, project_definition)
+        ri_attr_id, discarded_feats_ids_ri = calculate_ri(
+            self.iface, self.current_layer, project_definition)
+        if svi_attr_id is None or ri_attr_id is None:
+            return None, None, None
+        discarded_feats_ids = discarded_feats_ids_svi.extend(
+            discarded_feats_ids_ri)
+        iri_attr_id = calculate_iri(self.iface, self.current_layer,
+                                    project_definition, svi_attr_id,
+                                    ri_attr_id, discarded_feats_ids)
+        return svi_attr_id, ri_attr_id, iri_attr_id
 
     def redraw_ir_layer(self, data):
         # if an IRI has been already calculated, show it else show the SVI

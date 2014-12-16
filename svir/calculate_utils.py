@@ -188,21 +188,131 @@ def calculate_svi(iface, current_layer, project_definition):
                                        level=QgsMessageBar.CRITICAL)
 
 
-def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
-                  risk_field_name, discarded_feats_ids, iri_operator=None,
-                  reuse_field=False):
+def calculate_ri(iface, current_layer, project_definition):
     """
-    Copy the RISK and calculate an IRI attribute to the current layer
-    :param reuse_field:
+    add an RI attribute to the current layer
     """
 
-    #set default
-    if iri_operator is None:
+    ri_node = project_definition['children'][0]
+    try:
+        # calculate the RI only if there is at least one risk indicator
+        indicators = ri_node['children']
+    except KeyError:
+        # FIXME Decide what to do here
+        return None, None
+    try:
+        ri_operator = ri_node['operator']
+    except KeyError:
+        ri_operator = DEFAULT_OPERATOR
+
+    if 'ri_field' in project_definition:
+        ri_attr_name = project_definition['ri_field']
+        if DEBUG:
+            print 'Reusing %s for RI' % ri_attr_name
+    else:
+        ri_attr_name = 'RI'
+        ri_field = QgsField(ri_attr_name, QVariant.Double)
+        ri_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
+        attr_names = ProcessLayer(current_layer).add_attributes(
+            [ri_field])
+        ri_attr_name = attr_names[ri_attr_name]
+
+    # get the id of the new attribute
+    ri_attr_id = ProcessLayer(current_layer).find_attribute_id(ri_attr_name)
+
+    discarded_feats_ids = []
+    try:
+        with LayerEditingManager(current_layer, 'Add RI', DEBUG):
+            for feat in current_layer.getFeatures():
+                # If a feature contains any NULL value, discard_feat will
+                # be set to True and the corresponding RI will be set to
+                # NULL
+                discard_feat = False
+                feat_id = feat.id()
+
+                # init ri_value to the correct value depending on
+                # ri_operator
+                if ri_operator in SUM_BASED_OPERATORS:
+                    ri_value = 0
+                elif ri_operator in MUL_BASED_OPERATORS:
+                    ri_value = 1
+                for indicator in indicators:
+                    if (feat[indicator['field']] ==
+                            QPyNullVariant(float)):
+                        discard_feat = True
+                        discarded_feats_ids.append(feat_id)
+                        break
+                    # For "Average (equal weights)" it's equivalent to use
+                    # equal weights, or to sum the indicators
+                    # (all weights 1)
+                    # and divide by the number of indicators (we use
+                    # the latter solution)
+                    if ri_operator in (OPERATORS_DICT['SUM_S'],
+                                       OPERATORS_DICT['AVG'],
+                                       OPERATORS_DICT['MUL_S']):
+                        indicator_weighted = feat[indicator['field']]
+                    else:
+                        indicator_weighted = (feat[indicator['field']] *
+                                              indicator['weight'])
+
+                    if ri_operator in SUM_BASED_OPERATORS:
+                        ri_value += indicator_weighted
+                    elif ri_operator in MUL_BASED_OPERATORS:
+                        ri_value *= indicator_weighted
+                    else:
+                        error_message = (
+                            'invalid indicators_operator: %s' %
+                            ri_operator)
+                        raise RuntimeError(error_message)
+                if discard_feat:
+                    ri_value = QPyNullVariant(float)
+                elif ri_operator == OPERATORS_DICT['AVG']:
+                    ri_value /= len(indicators)
+                current_layer.changeAttributeValue(
+                    feat_id, ri_attr_id, ri_value)
+        msg = ('The Risk Index has been calculated for fields containing '
+               'non-NULL values and it was added to the layer as '
+               'a new attribute called %s') % ri_attr_name
+        iface.messageBar().pushMessage(
+            tr('Info'), tr(msg), level=QgsMessageBar.INFO)
+        if discarded_feats_ids:
+            widget = toggle_select_features_widget(
+                tr('Warning'),
+                tr('Invalid indicators were found in some features while '
+                   'calculating the Risk Index'),
+                tr('Select invalid features'),
+                current_layer,
+                discarded_feats_ids,
+                current_layer.selectedFeaturesIds())
+            iface.messageBar().pushWidget(widget, QgsMessageBar.WARNING)
+
+        project_definition['ri_field'] = ri_attr_name
+        return ri_attr_id, discarded_feats_ids
+
+    except TypeError as e:
+        current_layer.dataProvider().deleteAttributes([ri_attr_id])
+        msg = 'Could not calculate the Risk Index due to data problems: %s' % e
+        iface.messageBar().pushMessage(tr('Error'), tr(msg),
+                                       level=QgsMessageBar.CRITICAL)
+
+
+def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
+                  ri_attr_id, discarded_feats_ids, reuse_field=False):
+    """
+    Calculate the Risk Index and calculate an IRI attribute to the
+    current layer
+    """
+
+    try:
+        iri_operator = project_definition['operator']
+    except KeyError:
         iri_operator = DEFAULT_OPERATOR
 
     risk_weight = project_definition['children'][0]['weight']
     svi_weight = project_definition['children'][1]['weight']
 
+    # TODO: Use 'field' inside the IRI node, instead of an additional
+    # 'iri_field'
     if 'iri_field' in project_definition:
         iri_attr_name = project_definition['iri_field']
         if DEBUG:
@@ -214,43 +324,44 @@ def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
         attr_names = ProcessLayer(current_layer).add_attributes([iri_field])
         iri_attr_name = attr_names[iri_attr_name]
 
-    # get the id of the new attributes
+    # get the id of the new attribute
     iri_attr_id = ProcessLayer(current_layer).find_attribute_id(iri_attr_name)
 
-    discarded_risk_feats_ids = []
+    discarded_feats_ids = []
 
     try:
         with LayerEditingManager(current_layer, 'Add IRI', DEBUG):
             for feat in current_layer.getFeatures():
                 feat_id = feat.id()
                 svi_value = feat.attributes()[svi_attr_id]
-                risk_value = feat[risk_field_name]
-                if (risk_value == QPyNullVariant(float)
+                ri_value = feat.attributes()[ri_attr_id]
+                # ri_value = feat[iri_field_name]
+                if (ri_value == QPyNullVariant(float)
                         or feat_id in discarded_feats_ids):
                     iri_value = QPyNullVariant(float)
-                    discarded_risk_feats_ids.append(feat_id)
+                    discarded_feats_ids.append(feat_id)
                 elif iri_operator == OPERATORS_DICT['SUM_S']:
-                    iri_value = svi_value + risk_value
+                    iri_value = svi_value + ri_value
                 elif iri_operator == OPERATORS_DICT['MUL_S']:
-                    iri_value = svi_value * risk_value
+                    iri_value = svi_value * ri_value
                 elif iri_operator == OPERATORS_DICT['SUM_W']:
                     iri_value = (
-                        svi_value * svi_weight + risk_value * risk_weight)
+                        svi_value * svi_weight + ri_value * risk_weight)
                 elif iri_operator == OPERATORS_DICT['MUL_W']:
                     iri_value = (
-                        svi_value * svi_weight * risk_value * risk_weight)
+                        svi_value * svi_weight * ri_value * risk_weight)
                 elif iri_operator == OPERATORS_DICT['AVG']:
                     # For "Average (equal weights)" it's equivalent to use
                     # equal weights, or to sum the indices (all weights 1)
                     # and divide by the number of indices (we use
                     # the latter solution)
-                    iri_value = (svi_value + risk_value) / 2.0
+                    iri_value = (svi_value + ri_value) / 2.0
                 # store IRI
                 current_layer.changeAttributeValue(
                     feat_id, iri_attr_id, iri_value)
         project_definition['operator'] = iri_operator
         # set the field name for the copied RISK layer
-        project_definition['risk_field'] = risk_field_name
+        # project_definition['ri_field'] = ri_field_name
         project_definition['iri_field'] = iri_attr_name
         msg = ('The IRI has been calculated for fields containing '
                'non-NULL values and it was added to the layer as '
@@ -263,10 +374,10 @@ def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
                'IRI'),
             tr('Select invalid features'),
             current_layer,
-            discarded_risk_feats_ids,
+            discarded_feats_ids,
             current_layer.selectedFeaturesIds())
         iface.messageBar().pushWidget(widget, QgsMessageBar.WARNING)
-        return iri_attr_id
+        return iri_attr_id, discarded_feats_ids
 
     except TypeError as e:
         current_layer.dataProvider().deleteAttributes(
