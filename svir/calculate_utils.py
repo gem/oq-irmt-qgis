@@ -304,6 +304,12 @@ def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
     """
 
     try:
+        project_definition['children'][0]['field']  # ri node's field
+        project_definition['children'][1]['field']  # svi node's field
+    except KeyError:
+        return None, None
+
+    try:
         iri_operator = project_definition['operator']
     except KeyError:
         iri_operator = DEFAULT_OPERATOR
@@ -325,7 +331,8 @@ def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
     # get the id of the new attribute
     iri_attr_id = ProcessLayer(current_layer).find_attribute_id(iri_attr_name)
 
-    discarded_feats_ids = []
+    if discarded_feats_ids is None:
+        discarded_feats_ids = []
 
     try:
         with LayerEditingManager(current_layer, 'Add IRI', DEBUG):
@@ -361,20 +368,20 @@ def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
         # set the field name for the copied RISK layer
         # project_definition['ri_field'] = ri_field_name
         project_definition['field'] = iri_attr_name
-        msg = ('The IRI has been calculated for fields containing '
-               'non-NULL values and it was added to the layer as '
-               'a new attribute called %s') % iri_attr_name
+        msg = ('The IRI was calculated for non-NULL input values. '
+               'Results were stored into attribute %s') % iri_attr_name
         iface.messageBar().pushMessage(tr('Info'), tr(msg),
                                        level=QgsMessageBar.INFO)
-        widget = toggle_select_features_widget(
-            tr('Warning'),
-            tr('Invalid values were found in some features while calculating '
-               'IRI'),
-            tr('Select invalid features'),
-            current_layer,
-            discarded_feats_ids,
-            current_layer.selectedFeaturesIds())
-        iface.messageBar().pushWidget(widget, QgsMessageBar.WARNING)
+        if discarded_feats_ids:
+            widget = toggle_select_features_widget(
+                tr('Warning'),
+                tr('Invalid values were found in some features while '
+                    'calculating the IRI'),
+                tr('Select invalid features'),
+                current_layer,
+                discarded_feats_ids,
+                current_layer.selectedFeaturesIds())
+            iface.messageBar().pushWidget(widget, QgsMessageBar.WARNING)
         return iri_attr_id, discarded_feats_ids
 
     except TypeError as e:
