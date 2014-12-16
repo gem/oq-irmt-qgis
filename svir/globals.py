@@ -101,6 +101,7 @@ THEME_TEMPLATE = {
     'children': []
 }
 
+# Actually not used, because it's built in the d3 javascript
 INDICATOR_TEMPLATE = {
     'name': '',
     'weight': 1.0,

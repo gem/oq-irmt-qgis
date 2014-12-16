@@ -102,7 +102,7 @@ from globals import (INT_FIELD_TYPE_NAME,
                      DEBUG,
                      PROJECT_TEMPLATE,
                      THEME_TEMPLATE,
-                     INDICATOR_TEMPLATE, DEFAULT_OPERATOR)
+                     INDICATOR_TEMPLATE)
 
 
 class Svir:
@@ -579,7 +579,7 @@ class Svir:
         return svi_attr_id, iri_attr_id
 
     def redraw_ir_layer(self, data):
-        # if an IRi has been already calculated, show it else show the SVI
+        # if an IRI has been already calculated, show it else show the SVI
         if 'iri_field' in data:
             target_field = data['iri_field']
             printing_str = 'IRI'
