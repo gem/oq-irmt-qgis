@@ -25,6 +25,7 @@
     };
 
     $(document).ready(function() {
+        var longpress = false;
         //  Project definition weight dialog
         $("#projectDefWeightDialog").dialog({
             title: "Set weights and operator",
@@ -41,7 +42,6 @@
             closeOnEscape: false
         });
     });
-
 
     ////////////////////////////////////////////
     //// Project Definition Collapsible Tree ///
@@ -389,120 +389,155 @@
                         .duration(500)
                         .style("opacity", 0);
                     })
+                .on("mousedown", function(){
+                    startTime = new Date().getTime();
+                    })
+                .on("mouseup", function(){
+                    endTime = new Date().getTime();
+                    longpress = (endTime - startTime < 500) ? false : true;
+                    })
                 .on("click", function(parent) {
-                    // NOTE: Only fields that are not already in the tree should be selectable
-                    // By default, assign equal weights to the new node and to its siblings
-                    pdData = data; // PAOLO: What's data?
-                    var node_type;
-                    switch (parent.type) {
-                        // clicked on IR, we allow generating a node
-                        case node_types_dict.RI:
-                            node_type = node_types_dict.RISK_INDICATOR;
-                            //alert("You clicked a node with type " + parent.type);
-                            break;
-                        case node_types_dict.SVI:
-                            //alert("You clicked a node with type " + parent.type);
-                            node_type = node_types_dict.SV_THEME;
-                            break;
-                        // clicked on an SVI theme, we allow generating a node
-                        case node_types_dict.SV_THEME:
-                            //alert("You clicked a node with type " + parent.type);
-                            node_type = node_types_dict.SV_INDICATOR;
-                            break;
-                        // cases where we don't allow generating a node
-                        case node_types_dict.SV_INDICATOR:
-                            //alert("You clicked a node with type " + parent.type + ". You can't add new nodes there");
+                    if (longpress) {
+                        // Delete the clicked node, if it's an indicator or a theme
+                        // If it's a theme, delete also its children
+                        var node_to_del = parent;
+                        pdData = data;
+                        var deletable_types = [node_types_dict.RISK_INDICATOR,
+                                               node_types_dict.SV_INDICATOR,
+                                               node_types_dict.SV_THEME];
+                        if ( ($.inArray(node_to_del.type, deletable_types)) === -1 ) {
+                            // Do not delete the node
                             return false;
-                        case undefined:
-                            //alert("You clicked a node with type " + parent.type + ". You can't add new nodes there");
+                        }
+                        var resp = confirm("Are you sure you want to remove the node named '" + node_to_del.name + "'?");
+                        if (resp === false) {
                             return false;
-                        default:
-                            //alert("You clicked a node with type " + parent.type + ". You can't add new nodes there");
-                            return false;
-                    }
-
-                    if (undefined === parent.children) {
-                        parent['children'] = []
-                        parent['operator'] = DEFAULT_OPERATOR
-                    }
-                    var siblings = parent.children;
-                    var avg_weight = 1.0 / (siblings.length + 1);
-
-                    var old_weights = []
-                    for (var i = 0; i < siblings.length; i++) {
-                        old_weights[i] = siblings[i].weight
-                        siblings[i].weight = avg_weight;
-                    }
-
-                    //Prepare for the new node
-                    var siblings_level = 0;
-                    var new_node_level = 0;
-
-                    if (siblings.length > 0) {
-                        // the parent already has a child
-                        new_node_level = siblings[0].level;
-                    }
-                    else {
-                        var parent_level = (parent.level).split('.')[0];
-                        siblings_level = parseInt(parent_level) + 1; //ex: 4
-                        var next_decimal_level = find_next_decimal_level(siblings_level) //ex: 1
-                        new_node_level = siblings_level + '.' + next_decimal_level; //ex: 4.1
-                    }
-
-                    var new_node = {
-                        // field and name are assigned through a dialog,
-                        // after the node is created
-                        'parent': parent,
-                        'children':[],
-                        'weight': avg_weight,
-                        'type': node_type,
-                        'x0': parent.x,
-                        'y0': parent.y,
-                        'level': new_node_level,
-                        'depth': parent.depth + 1,
-                        'field': "",
-                        'name': ""
-                    };
-                    console.log("newnode:")
-                    console.log(new_node)
-
-                    // Add node, appending it to the node that has been clicked
-                    siblings.push(new_node);
-                    // alert(JSON.stringify(source));
-                    // Let the user choose one of the available fields and set the name
-                    $('#projectDefNewNodeDialog').dialog({
-                      title: "Add New " + node_type,
-                      buttons: [
-                        {
-                          text: "Cancel",
-                          click: function() {
-                            parent.children.splice(parent.children.length - 1, 1);
-                            for (var i = 0; i < siblings.length; i++) {
-                                siblings[i].weight = old_weights[i];
+                        }
+                        // Delete the node (find it between it's parent's children and delete it)
+                        var siblings = node_to_del.parent.children;
+                        for (var i = 0; i < siblings.length; i++) {
+                            if (siblings[i].id === node_to_del.id) {
+                                siblings.splice(i, 1);
                             }
-                            updateD3Tree(pdData);
-                            $( this ).dialog( "close" );
-                          }
-                        },
-                        {
-                          text: "Add",
-                          click: function(){
-                              var newNodeName = $('#newNodeName');
+                        }
+                        // node_to_del.parent.children.splice(node_to_del.parent.children.length - 1, 1);
+                        updateD3Tree(pdData);
+                    } else {
+                        // Add a child to the clicked node, if possible
+                        // NOTE: Only fields that are not already in the tree should be selectable
+                        // By default, assign equal weights to the new node and to its siblings
+                        pdData = data; // PAOLO: What's data?
+                        var node_type;
+                        switch (parent.type) {
+                            // clicked on IR, we allow generating a node
+                            case node_types_dict.RI:
+                                node_type = node_types_dict.RISK_INDICATOR;
+                                //alert("You clicked a node with type " + parent.type);
+                                break;
+                            case node_types_dict.SVI:
+                                //alert("You clicked a node with type " + parent.type);
+                                node_type = node_types_dict.SV_THEME;
+                                break;
+                            // clicked on an SVI theme, we allow generating a node
+                            case node_types_dict.SV_THEME:
+                                //alert("You clicked a node with type " + parent.type);
+                                node_type = node_types_dict.SV_INDICATOR;
+                                break;
+                            // cases where we don't allow generating a node
+                            case node_types_dict.SV_INDICATOR:
+                                //alert("You clicked a node with type " + parent.type + ". You can't add new nodes there");
+                                return false;
+                            case undefined:
+                                //alert("You clicked a node with type " + parent.type + ". You can't add new nodes there");
+                                return false;
+                            default:
+                                //alert("You clicked a node with type " + parent.type + ". You can't add new nodes there");
+                                return false;
+                        }
 
-                              if (newNodeName.val().isEmpty()){
-                                  newNodeName.addClass("ui-state-error");
-                                  return false;
-                              }
-                              var field = $('#field').val();
-                                updateNode(new_node, field, newNodeName.val());
-                            $( this ).dialog( "close" );
+                        if (undefined === parent.children) {
+                            parent['children'] = []
+                            parent['operator'] = DEFAULT_OPERATOR
+                        }
+                        var siblings = parent.children;
+                        var avg_weight = 1.0 / (siblings.length + 1);
+
+                        var old_weights = []
+                        for (var i = 0; i < siblings.length; i++) {
+                            old_weights[i] = siblings[i].weight
+                            siblings[i].weight = avg_weight;
+                        }
+
+                        //Prepare for the new node
+                        var siblings_level = 0;
+                        var new_node_level = 0;
+
+                        if (siblings.length > 0) {
+                            // the parent already has a child
+                            new_node_level = siblings[0].level;
+                        }
+                        else {
+                            var parent_level = (parent.level).split('.')[0];
+                            siblings_level = parseInt(parent_level) + 1; //ex: 4
+                            var next_decimal_level = find_next_decimal_level(siblings_level) //ex: 1
+                            new_node_level = siblings_level + '.' + next_decimal_level; //ex: 4.1
+                        }
+
+                        var new_node = {
+                            // field and name are assigned through a dialog,
+                            // after the node is created
+                            'parent': parent,
+                            'children':[],
+                            'weight': avg_weight,
+                            'type': node_type,
+                            'x0': parent.x,
+                            'y0': parent.y,
+                            'level': new_node_level,
+                            'depth': parent.depth + 1,
+                            'field': "",
+                            'name': ""
+                        };
+                        // console.log("newnode:")
+                        // console.log(new_node)
+
+                        // Add node, appending it to the node that has been clicked
+                        siblings.push(new_node);
+                        // alert(JSON.stringify(source));
+                        // Let the user choose one of the available fields and set the name
+                        $('#projectDefNewNodeDialog').dialog({
+                        title: "Add New " + node_type,
+                        buttons: [
+                            {
+                            text: "Cancel",
+                            click: function() {
+                                parent.children.splice(parent.children.length - 1, 1);
+                                for (var i = 0; i < siblings.length; i++) {
+                                    siblings[i].weight = old_weights[i];
+                                }
+                                updateD3Tree(pdData);
+                                $( this ).dialog( "close" );
                             }
-                          }
-                      ]
-                    });
+                            },
+                            {
+                            text: "Add",
+                            click: function(){
+                                var newNodeName = $('#newNodeName');
 
-                    fieldSelect(parent, node_type);
-                    $('#projectDefNewNodeDialog').dialog("open");
+                                if (newNodeName.val().isEmpty()){
+                                    newNodeName.addClass("ui-state-error");
+                                    return false;
+                                }
+                                var field = $('#field').val();
+                                    updateNode(new_node, field, newNodeName.val());
+                                $( this ).dialog( "close" );
+                                }
+                            }
+                        ]
+                        });
+
+                        fieldSelect(parent, node_type);
+                        $('#projectDefNewNodeDialog').dialog("open");
+                    }
                 });
 
             nodeEnter.append("text")
