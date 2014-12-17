@@ -396,11 +396,11 @@
                     endTime = new Date().getTime();
                     longpress = (endTime - startTime < 500) ? false : true;
                     })
-                .on("click", function(parent) {
+                .on("click", function(clicked_node) {
                     if (longpress) {
                         // Delete the clicked node, if it's an indicator or a theme
                         // If it's a theme, delete also its children
-                        var node_to_del = parent;
+                        var node_to_del = clicked_node;
                         pdData = data;
                         var deletable_types = [node_types_dict.RISK_INDICATOR,
                                                node_types_dict.SV_INDICATOR,
@@ -420,7 +420,6 @@
                                 siblings.splice(i, 1);
                             }
                         }
-                        // node_to_del.parent.children.splice(node_to_del.parent.children.length - 1, 1);
                         updateD3Tree(pdData);
                     } else {
                         // Add a child to the clicked node, if possible
@@ -428,38 +427,38 @@
                         // By default, assign equal weights to the new node and to its siblings
                         pdData = data; // PAOLO: What's data?
                         var node_type;
-                        switch (parent.type) {
+                        switch (clicked_node.type) {
                             // clicked on IR, we allow generating a node
                             case node_types_dict.RI:
                                 node_type = node_types_dict.RISK_INDICATOR;
-                                //alert("You clicked a node with type " + parent.type);
+                                //alert("You clicked a node with type " + clicked_node.type);
                                 break;
                             case node_types_dict.SVI:
-                                //alert("You clicked a node with type " + parent.type);
+                                //alert("You clicked a node with type " + clicked_node.type);
                                 node_type = node_types_dict.SV_THEME;
                                 break;
                             // clicked on an SVI theme, we allow generating a node
                             case node_types_dict.SV_THEME:
-                                //alert("You clicked a node with type " + parent.type);
+                                //alert("You clicked a node with type " + clicked_node.type);
                                 node_type = node_types_dict.SV_INDICATOR;
                                 break;
                             // cases where we don't allow generating a node
                             case node_types_dict.SV_INDICATOR:
-                                //alert("You clicked a node with type " + parent.type + ". You can't add new nodes there");
+                                //alert("You clicked a node with type " + clicked_node.type + ". You can't add new nodes there");
                                 return false;
                             case undefined:
-                                //alert("You clicked a node with type " + parent.type + ". You can't add new nodes there");
+                                //alert("You clicked a node with type " + clicked_node.type + ". You can't add new nodes there");
                                 return false;
                             default:
-                                //alert("You clicked a node with type " + parent.type + ". You can't add new nodes there");
+                                //alert("You clicked a node with type " + clicked_node.type + ". You can't add new nodes there");
                                 return false;
                         }
 
-                        if (undefined === parent.children) {
-                            parent['children'] = []
-                            parent['operator'] = DEFAULT_OPERATOR
+                        if (undefined === clicked_node.children) {
+                            clicked_node['children'] = []
+                            clicked_node['operator'] = DEFAULT_OPERATOR
                         }
-                        var siblings = parent.children;
+                        var siblings = clicked_node.children;
                         var avg_weight = 1.0 / (siblings.length + 1);
 
                         var old_weights = []
@@ -473,11 +472,11 @@
                         var new_node_level = 0;
 
                         if (siblings.length > 0) {
-                            // the parent already has a child
+                            // the clicked_node already has a child
                             new_node_level = siblings[0].level;
                         }
                         else {
-                            var parent_level = (parent.level).split('.')[0];
+                            var parent_level = (clicked_node.level).split('.')[0];
                             siblings_level = parseInt(parent_level) + 1; //ex: 4
                             var next_decimal_level = find_next_decimal_level(siblings_level) //ex: 1
                             new_node_level = siblings_level + '.' + next_decimal_level; //ex: 4.1
@@ -486,14 +485,14 @@
                         var new_node = {
                             // field and name are assigned through a dialog,
                             // after the node is created
-                            'parent': parent,
+                            'parent': clicked_node,
                             'children':[],
                             'weight': avg_weight,
                             'type': node_type,
-                            'x0': parent.x,
-                            'y0': parent.y,
+                            'x0': clicked_node.x,
+                            'y0': clicked_node.y,
                             'level': new_node_level,
-                            'depth': parent.depth + 1,
+                            'depth': clicked_node.depth + 1,
                             'field': "",
                             'name': ""
                         };
@@ -510,7 +509,7 @@
                             {
                             text: "Cancel",
                             click: function() {
-                                parent.children.splice(parent.children.length - 1, 1);
+                                clicked_node.children.splice(clicked_node.children.length - 1, 1);
                                 for (var i = 0; i < siblings.length; i++) {
                                     siblings[i].weight = old_weights[i];
                                 }
@@ -535,7 +534,7 @@
                         ]
                         });
 
-                        fieldSelect(parent, node_type);
+                        fieldSelect(clicked_node, node_type);
                         $('#projectDefNewNodeDialog').dialog("open");
                     }
                 });
