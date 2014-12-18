@@ -137,7 +137,7 @@
                 .append('<label for="name">Name: </label>')
                 .append('<input id="newNodeName" type="text" name="newNodeName" value="">');
 
-            newNodeName = $('#newNodeName')
+            newNodeName = $('#newNodeName');
             newNodeName.blur(function(){
                 if (newNodeName.val().isEmpty()){
                     newNodeName.addClass("ui-state-error");
@@ -145,12 +145,12 @@
                 else{
                     newNodeName.removeClass("ui-state-error");
                 }
-            })
+            });
 
             if (node_type != node_types_dict.SV_THEME) {
                 dialog
                     .append('<br/><label for="field">Field: </label>')
-                    .append('<select id="field">' + fieldOptions(node) + '</select><br/>')
+                    .append('<select id="field">' + fieldOptions(node) + '</select><br/>');
 
                 // By default, set the name to be equal to the fieldname selected
                 var defaultName = $('#field').val();
@@ -167,7 +167,7 @@
         }
 
         function find_next_decimal_level(nesting_level){
-            var max_dec_level = 0
+            var max_dec_level = 0;
 
             var nodes_str = JSON.stringify(root, function(key, value) {
                 //avoid circularity in JSON by removing the parent key
@@ -175,22 +175,22 @@
                     return undefined;
                   }
                   return value;
-                })
+                });
 
             //match level":3.2 with a submatch containing 2 in the whole json
             var re = new RegExp('level":"'+nesting_level+'\\.(\\d)', 'gi');
             var match;
-            while ((match = re.exec(nodes_str)) != null) {
+            while ((match = re.exec(nodes_str)) !== null) {
                 if (match.index === re.lastIndex) {
                     re.lastIndex++;
                 }
                 // get 2 out of level":3.2
                 var decimal_level = match[1];
                 if (decimal_level >= max_dec_level){
-                    max_dec_level = parseInt(decimal_level) + 1
+                    max_dec_level = parseInt(decimal_level) + 1;
                 }
             }
-            return max_dec_level
+            return max_dec_level;
         }
 
         function getRootNode(node){
@@ -374,7 +374,7 @@
 
             nodeEnter.append("circle")
                 .attr("r", 1e-6)
-                .attr("class", function(d){return node_type_to_class(d.type)})
+                .attr("class", function(d){return node_type_to_class(d.type);})
                 .on("mouseover", function(d) {
                     var info = d.name;
                     tooltipdiv .transition()
@@ -455,15 +455,15 @@
                         }
 
                         if (undefined === clicked_node.children) {
-                            clicked_node['children'] = []
-                            clicked_node['operator'] = DEFAULT_OPERATOR
+                            clicked_node.children = [];
+                            clicked_node.operator = DEFAULT_OPERATOR;
                         }
                         var siblings = clicked_node.children;
                         var avg_weight = 1.0 / (siblings.length + 1);
 
-                        var old_weights = []
+                        var old_weights = [];
                         for (var i = 0; i < siblings.length; i++) {
-                            old_weights[i] = siblings[i].weight
+                            old_weights[i] = siblings[i].weight;
                             siblings[i].weight = avg_weight;
                         }
 
@@ -478,7 +478,7 @@
                         else {
                             var parent_level = (clicked_node.level).split('.')[0];
                             siblings_level = parseInt(parent_level) + 1; //ex: 4
-                            var next_decimal_level = find_next_decimal_level(siblings_level) //ex: 1
+                            var next_decimal_level = find_next_decimal_level(siblings_level); //ex: 1
                             new_node_level = siblings_level + '.' + next_decimal_level; //ex: 4.1
                         }
 
@@ -588,7 +588,7 @@
                         return operator;
                     }
                 })
-                .attr("id", function(d) {return "operator-label-" + d.level})
+                .attr("id", function(d) {return "operator-label-" + d.level;})
                 .attr("x", function(d) { return d.weight * CIRCLE_SCALE + 15; })
                 .on("click", function(d) {
                     pdName = d.children[0].name;
