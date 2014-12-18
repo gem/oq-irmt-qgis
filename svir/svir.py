@@ -1333,12 +1333,11 @@ class Svir:
 
     def upload(self):
         temp_dir = tempfile.gettempdir()
-        file_stem = '%s%ssvir_%s' % (temp_dir, os.path.sep, uuid.uuid4())
+        file_stem = '%s%sqgis_svir_%s' % (temp_dir, os.path.sep, uuid.uuid4())
         data_file = '%s%s' % (file_stem, '.shp')
         xml_file = file_stem + '.xml'
 
         project_definition = self.project_definitions[self.current_layer.id()]
-        # project_definition = {'name': 'TEEEEST'}
 
         QgsVectorFileWriter.writeAsVectorFormat(
             self.current_layer,

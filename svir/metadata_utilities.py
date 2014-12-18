@@ -30,6 +30,7 @@ import time
 from xml.etree import ElementTree
 
 from iso_19115_template import ISO_METADATA_XML_TEMPLATE
+from globals import DEBUG
 
 
 # list of tags to get to the svir project definition.
@@ -90,8 +91,8 @@ def generate_iso_metadata(project_definition=None):
     # create runtime based replacement values
     template_replacements['ISO19115_TODAY_DATE'] = time.strftime("%Y-%m-%d")
     if project_definition is not None:
-        print "here"
-        print project_definition
+        if DEBUG:
+            print project_definition
         template_replacements['SVIR_PROJECT_DEFINITION'] = '<![CDATA[%s]]>' % \
             json.dumps(project_definition)
         try:
