@@ -4,14 +4,22 @@
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
 	 width="37.547px" height="37.578px" viewBox="0 0 37.547 37.578" enable-background="new 0 0 37.547 37.578" xml:space="preserve">
 <g>
-	<rect x="15.267" y="15.11" fill="#1B75A5" width="7" height="7"/>
-	<rect x="7.767" y="15.61" opacity="0.4" fill="none" stroke="#1B75A5" stroke-miterlimit="10" width="7" height="7"/>
-	<rect x="10.767" y="11.61" fill="none" stroke="#1B75A5" stroke-miterlimit="10" width="7" height="7"/>
-	<rect x="18.767" y="11.61" fill="none" stroke="#1B75A5" stroke-miterlimit="10" width="7" height="7"/>
-	<rect x="10.767" y="19.61" fill="none" stroke="#1B75A5" stroke-miterlimit="10" width="7" height="7"/>
-	<rect x="18.767" y="19.61" fill="none" stroke="#1B75A5" stroke-miterlimit="10" width="7" height="7"/>
-	<rect x="21.767" y="15.61" opacity="0.4" fill="none" stroke="#1B75A5" stroke-miterlimit="10" width="7" height="7"/>
-	<rect x="14.767" y="22.61" opacity="0.4" fill="none" stroke="#1B75A5" stroke-miterlimit="10" width="7" height="7"/>
-	<rect x="14.767" y="8.61" opacity="0.4" fill="none" stroke="#1B75A5" stroke-miterlimit="10" width="7" height="7"/>
+	
+		<rect x="2.762" y="13.554" opacity="0.6" fill="#FFFFFF" stroke="#1B75A5" stroke-width="1.5249" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" width="10.674" height="10.674"/>
+	
+		<rect x="24.11" y="13.554" opacity="0.6" fill="#FFFFFF" stroke="#1B75A5" stroke-width="1.5249" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" width="10.674" height="10.674"/>
+	
+		<rect x="13.437" y="24.229" opacity="0.6" fill="#FFFFFF" stroke="#1B75A5" stroke-width="1.5249" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" width="10.674" height="10.674"/>
+	
+		<rect x="13.437" y="2.88" opacity="0.6" fill="#FFFFFF" stroke="#1B75A5" stroke-width="1.5249" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" width="10.674" height="10.674"/>
+	
+		<rect x="7.336" y="7.455" fill="#FFFFFF" stroke="#1B75A5" stroke-width="1.5249" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" width="10.674" height="10.674"/>
+	
+		<rect x="19.536" y="7.455" fill="#FFFFFF" stroke="#1B75A5" stroke-width="1.5249" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" width="10.674" height="10.674"/>
+	
+		<rect x="7.336" y="19.653" fill="#FFFFFF" stroke="#1B75A5" stroke-width="1.5249" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" width="10.674" height="10.675"/>
+	
+		<rect x="19.536" y="19.653" fill="#FFFFFF" stroke="#1B75A5" stroke-width="1.5249" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" width="10.674" height="10.675"/>
+	<rect x="13.199" y="13.792" fill="#1B75A5" width="10.674" height="10.674"/>
 </g>
 </svg>
