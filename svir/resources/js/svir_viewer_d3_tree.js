@@ -409,17 +409,25 @@
                             // Do not delete the node
                             return false;
                         }
-                        var resp = confirm("Are you sure you want to remove the node named '" + node_to_del.name + "'?");
+                        var resp = confirm("The node named '" + node_to_del.name + "' will be removed and the weights of its siblings will be reset. Are you sure?");
                         if (resp === false) {
                             return false;
                         }
                         // Delete the node (find it between it's parent's children and delete it)
-                        var siblings = node_to_del.parent.children;
+                        var siblings = node_to_del.parent.children;  // siblings include the clicked node itself
+                        var idx_to_remove;
                         for (var i = 0; i < siblings.length; i++) {
                             if (siblings[i].id === node_to_del.id) {
-                                siblings.splice(i, 1);
+                                // save the index of the item, but don't remove it before updating weights
+                                idx_to_remove = i;
+                            } else {
+                                // reset the weights of the other nodes
+                                // (-1 is because we are removing the clicked node)
+                                siblings[i].weight = 1.0 / (siblings.length - 1);
                             }
                         }
+                        // now it's safe to remove the clicked node
+                        siblings.splice(idx_to_remove, 1);
                         updateD3Tree(pdData);
                     } else {
                         // Add a child to the clicked node, if possible
