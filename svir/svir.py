@@ -575,14 +575,21 @@ class Svir:
         return svi_attr_id, ri_attr_id, iri_attr_id
 
     def redraw_ir_layer(self, data):
-        # if an IRI has been already calculated, show it else show the SVI
+        # if an IRI has been already calculated, show it
+        # else show the SVI, else RI
         if 'field' in data:  # the root is the IRI node
             target_field = data['field']
             printing_str = 'IRI'
-        else:
+        elif 'field' in data['children'][1]:
             svi_node = data['children'][1]
             target_field = svi_node['field']
             printing_str = 'SVI'
+        elif 'field' in data['children'][0]:
+            ri_node = data['children'][0]
+            target_field = ri_node['field']
+            printing_str = 'RI'
+        else:
+            return
 
         if DEBUG:
             import pprint
