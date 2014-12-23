@@ -565,8 +565,7 @@ class Svir:
             self.iface, self.current_layer, project_definition)
         if svi_attr_id is None or ri_attr_id is None:
             return None, None, None
-        discarded_feats_ids = discarded_feats_ids_svi.extend(
-            discarded_feats_ids_ri)
+        discarded_feats_ids = discarded_feats_ids_svi | discarded_feats_ids_ri
         iri_attr_id, discarded_feats_ids = calculate_iri(
             self.iface, self.current_layer,
             project_definition,

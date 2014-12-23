@@ -69,7 +69,7 @@ def calculate_svi(iface, current_layer, project_definition):
     # get the id of the new attribute
     svi_attr_id = ProcessLayer(current_layer).find_attribute_id(svi_attr_name)
 
-    discarded_feats_ids = []
+    discarded_feats_ids = set()
     try:
         with LayerEditingManager(current_layer, 'Add SVI', DEBUG):
             for feat in current_layer.getFeatures():
@@ -107,7 +107,7 @@ def calculate_svi(iface, current_layer, project_definition):
                         if (feat[indicator['field']] ==
                                 QPyNullVariant(float)):
                             discard_feat = True
-                            discarded_feats_ids.append(feat_id)
+                            discarded_feats_ids.add(feat_id)
                             break
                         # For "Average (equal weights)" it's equivalent to use
                         # equal weights, or to sum the indicators
@@ -220,7 +220,7 @@ def calculate_ri(iface, current_layer, project_definition):
     # get the id of the new attribute
     ri_attr_id = ProcessLayer(current_layer).find_attribute_id(ri_attr_name)
 
-    discarded_feats_ids = []
+    discarded_feats_ids = set()
     try:
         with LayerEditingManager(current_layer, 'Add RI', DEBUG):
             for feat in current_layer.getFeatures():
@@ -240,7 +240,7 @@ def calculate_ri(iface, current_layer, project_definition):
                     if (feat[indicator['field']] ==
                             QPyNullVariant(float)):
                         discard_feat = True
-                        discarded_feats_ids.append(feat_id)
+                        discarded_feats_ids.add(feat_id)
                         break
                     # For "Average (equal weights)" it's equivalent to use
                     # equal weights, or to sum the indicators
@@ -332,7 +332,7 @@ def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
     iri_attr_id = ProcessLayer(current_layer).find_attribute_id(iri_attr_name)
 
     if discarded_feats_ids is None:
-        discarded_feats_ids = []
+        discarded_feats_ids = set()
 
     try:
         with LayerEditingManager(current_layer, 'Add IRI', DEBUG):
@@ -344,7 +344,7 @@ def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
                 if (ri_value == QPyNullVariant(float)
                         or feat_id in discarded_feats_ids):
                     iri_value = QPyNullVariant(float)
-                    discarded_feats_ids.append(feat_id)
+                    discarded_feats_ids.add(feat_id)
                 elif iri_operator == OPERATORS_DICT['SUM_S']:
                     iri_value = svi_value + ri_value
                 elif iri_operator == OPERATORS_DICT['MUL_S']:
