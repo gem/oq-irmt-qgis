@@ -35,6 +35,15 @@ from process_layer import ProcessLayer
 from utils import LayerEditingManager, tr, toggle_select_features_widget
 
 
+def add_numeric_attribute(proposed_attr_name, current_layer):
+        field = QgsField(proposed_attr_name, QVariant.Double)
+        field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
+        assigned_attr_names = ProcessLayer(current_layer).add_attributes(
+            [field])
+        assigned_attr_name = assigned_attr_names[proposed_attr_name]
+        return assigned_attr_name
+
+
 def calculate_svi(iface, current_layer, project_definition):
     """
     add an SVI attribute to the current layer
@@ -56,15 +65,18 @@ def calculate_svi(iface, current_layer, project_definition):
 
     if 'field' in svi_node:
         svi_attr_name = svi_node['field']
-        if DEBUG:
+        # check that the field is still in the layer (the user might have
+        # deleted it). If it is not there anymore, add a new field
+        if current_layer.fieldNameIndex(svi_attr_name) == -1:
+            proposed_svi_attr_name = 'SVI'
+            svi_attr_name = add_numeric_attribute(
+                proposed_svi_attr_name, current_layer)
+        elif DEBUG:
             print 'Reusing %s for SVI' % svi_attr_name
     else:
-        svi_attr_name = 'SVI'
-        svi_field = QgsField(svi_attr_name, QVariant.Double)
-        svi_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
-        attr_names = ProcessLayer(current_layer).add_attributes(
-            [svi_field])
-        svi_attr_name = attr_names[svi_attr_name]
+        proposed_svi_attr_name = 'SVI'
+        svi_attr_name = add_numeric_attribute(
+            proposed_svi_attr_name, current_layer)
 
     # get the id of the new attribute
     svi_attr_id = ProcessLayer(current_layer).find_attribute_id(svi_attr_name)
@@ -207,15 +219,18 @@ def calculate_ri(iface, current_layer, project_definition):
 
     if 'field' in ri_node:
         ri_attr_name = ri_node['field']
+        # check that the field is still in the layer (the user might have
+        # deleted it). If it is not there anymore, add a new field
+        if current_layer.fieldNameIndex(ri_attr_name) == -1:
+            proposed_ri_attr_name = 'RI'
+            ri_attr_name = add_numeric_attribute(
+                proposed_ri_attr_name, current_layer)
         if DEBUG:
             print 'Reusing %s for RI' % ri_attr_name
     else:
-        ri_attr_name = 'RI'
-        ri_field = QgsField(ri_attr_name, QVariant.Double)
-        ri_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
-        attr_names = ProcessLayer(current_layer).add_attributes(
-            [ri_field])
-        ri_attr_name = attr_names[ri_attr_name]
+        proposed_ri_attr_name = 'RI'
+        ri_attr_name = add_numeric_attribute(
+            proposed_ri_attr_name, current_layer)
 
     # get the id of the new attribute
     ri_attr_id = ProcessLayer(current_layer).find_attribute_id(ri_attr_name)
@@ -319,14 +334,18 @@ def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
 
     if 'field' in project_definition:  # The root is the node containing IRI
         iri_attr_name = project_definition['field']
-        if DEBUG:
+        # check that the field is still in the layer (the user might have
+        # deleted it). If it is not there anymore, add a new field
+        if current_layer.fieldNameIndex(iri_attr_name) == -1:
+            proposed_iri_attr_name = 'IRI'
+            iri_attr_name = add_numeric_attribute(
+                proposed_iri_attr_name, current_layer)
+        elif DEBUG:
             print 'Reusing %s for IRI' % iri_attr_name
     else:
-        iri_attr_name = 'IRI'
-        iri_field = QgsField(iri_attr_name, QVariant.Double)
-        iri_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
-        attr_names = ProcessLayer(current_layer).add_attributes([iri_field])
-        iri_attr_name = attr_names[iri_attr_name]
+        proposed_iri_attr_name = 'IRI'
+        iri_attr_name = add_numeric_attribute(
+            proposed_iri_attr_name, current_layer)
 
     # get the id of the new attribute
     iri_attr_id = ProcessLayer(current_layer).find_attribute_id(iri_attr_name)
