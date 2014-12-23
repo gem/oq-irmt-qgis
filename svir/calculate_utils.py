@@ -113,7 +113,10 @@ def calculate_svi(iface, current_layer, project_definition):
                         theme_result = 0
                     elif indicators_operator in MUL_BASED_OPERATORS:
                         theme_result = 1
-
+                    if not indicators:
+                        discard_feat = True
+                        discarded_feats_ids.add(feat_id)
+                        svi_value = QPyNullVariant(float)
                     # iterate all indicators of a theme
                     for indicator in indicators:
                         if (feat[indicator['field']] ==
@@ -251,6 +254,10 @@ def calculate_ri(iface, current_layer, project_definition):
                     ri_value = 0
                 elif ri_operator in MUL_BASED_OPERATORS:
                     ri_value = 1
+                if not indicators:
+                    discard_feat = True
+                    discarded_feats_ids.add(feat_id)
+                    ri_value = QPyNullVariant(float)
                 for indicator in indicators:
                     if (feat[indicator['field']] ==
                             QPyNullVariant(float)):
