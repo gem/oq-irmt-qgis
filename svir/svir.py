@@ -518,7 +518,8 @@ class Svir:
         old_project_definition = copy.deepcopy(project_definition)
 
         first_svi = False
-        if 'svi_field' not in project_definition:
+        # if the svi_node does not contain the field name
+        if 'field' not in project_definition['children'][1]:  # svi_node
             # auto generate svi field
             first_svi = True
             svi_attr_id, ri_attr_id, iri_attr_id = self.recalculate_indexes(
@@ -540,16 +541,10 @@ class Svir:
             else:
                 # recalculate with the old weights
                 self.recalculate_indexes(project_definition)
-
         dlg.json_cleaned.disconnect(self.weights_changed)
-
         # store the correct project definitions
         self.project_definitions[current_layer_id] = project_definition
-
-        # if the user cancels the weighting before a definitive index was
-        # created, we don't redraw
-        if 'svi_field' in project_definition:
-            self.redraw_ir_layer(project_definition)
+        self.redraw_ir_layer(project_definition)
 
     def weights_changed(self, data):
         self.recalculate_indexes(data)
@@ -579,17 +574,18 @@ class Svir:
         if 'field' in data:  # the root is the IRI node
             target_field = data['field']
             printing_str = 'IRI'
-        elif 'field' in data['children'][1]:
+        elif 'field' in data['children'][1]:  # SVI node
             svi_node = data['children'][1]
             target_field = svi_node['field']
             printing_str = 'SVI'
-        elif 'field' in data['children'][0]:
+        elif 'field' in data['children'][0]:  # RI node
             ri_node = data['children'][0]
             target_field = ri_node['field']
             printing_str = 'RI'
         else:
             return
-
+        if self.current_layer.fieldNameIndex(target_field) == -1:
+            return
         if DEBUG:
             import pprint
             pp = pprint.PrettyPrinter(indent=4)

@@ -97,11 +97,14 @@ def calculate_svi(iface, current_layer, project_definition):
                     svi_value = 0
                 elif themes_operator in MUL_BASED_OPERATORS:
                     svi_value = 1
-
+                if not themes:
+                    discard_feat = True
+                    discarded_feats_ids.add(feat_id)
                 # iterate all themes of SVI
                 for theme in themes:
+                    if discard_feat:
+                        break  # proceed to next feature
                     indicators = theme['children']
-
                     #set default operator
                     try:
                         indicators_operator = theme['operator']
@@ -117,13 +120,19 @@ def calculate_svi(iface, current_layer, project_definition):
                         discard_feat = True
                         discarded_feats_ids.add(feat_id)
                         svi_value = QPyNullVariant(float)
+                        current_layer.changeAttributeValue(
+                            feat_id, svi_attr_id, svi_value)
+                        break  # proceed to next feature
                     # iterate all indicators of a theme
                     for indicator in indicators:
                         if (feat[indicator['field']] ==
                                 QPyNullVariant(float)):
                             discard_feat = True
                             discarded_feats_ids.add(feat_id)
-                            break
+                            current_layer.changeAttributeValue(
+                                feat_id, svi_attr_id, svi_value)
+                            break  # proceed to next theme, where if
+                                   # discard_feat is true it will break
                         # For "Average (equal weights)" it's equivalent to use
                         # equal weights, or to sum the indicators
                         # (all weights 1)
@@ -149,7 +158,9 @@ def calculate_svi(iface, current_layer, project_definition):
                                 indicators_operator)
                             raise RuntimeError(error_message)
                     if discard_feat:
-                        break
+                        current_layer.changeAttributeValue(
+                            feat_id, svi_attr_id, svi_value)
+                        break  # to next feature
                     if indicators_operator == OPERATORS_DICT['AVG']:
                         theme_result /= len(indicators)
 
@@ -174,7 +185,6 @@ def calculate_svi(iface, current_layer, project_definition):
                 else:
                     if themes_operator == OPERATORS_DICT['AVG']:
                         svi_value /= len(themes)
-
                 current_layer.changeAttributeValue(
                     feat_id, svi_attr_id, svi_value)
         msg = ('The SVI has been calculated for fields containing '
@@ -207,7 +217,7 @@ def calculate_ri(iface, current_layer, project_definition):
     """
     add an RI attribute to the current layer
     """
-
+    # get the risk index node, starting from the tree root
     ri_node = project_definition['children'][0]
     try:
         # calculate the RI only if there is at least one risk indicator
@@ -257,13 +267,14 @@ def calculate_ri(iface, current_layer, project_definition):
                 if not indicators:
                     discard_feat = True
                     discarded_feats_ids.add(feat_id)
-                    ri_value = QPyNullVariant(float)
                 for indicator in indicators:
                     if (feat[indicator['field']] ==
                             QPyNullVariant(float)):
                         discard_feat = True
                         discarded_feats_ids.add(feat_id)
-                        break
+                        current_layer.changeAttributeValue(
+                            feat_id, ri_attr_id, ri_value)
+                        break  # proceed to next feature
                     # For "Average (equal weights)" it's equivalent to use
                     # equal weights, or to sum the indicators
                     # (all weights 1)
