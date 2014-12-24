@@ -140,7 +140,7 @@
             <gmd:descriptiveKeywords>
                 <gmd:MD_Keywords>
                     <gmd:keyword>
-                        <gco:CharacterString>Human health and safety
+                        <gco:CharacterString>SVIR, user-contributed
                         </gco:CharacterString>
                     </gmd:keyword>
                     <gmd:thesaurusName>
@@ -183,7 +183,7 @@
                 </gmd:LanguageCode>
             </gmd:language>
             <gmd:topicCategory>
-                <gmd:MD_TopicCategoryCode>geoscientificInformation
+                <gmd:MD_TopicCategoryCode>SVIR
                 </gmd:MD_TopicCategoryCode>
             </gmd:topicCategory>
             <gmd:extent>
