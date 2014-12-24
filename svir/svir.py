@@ -101,7 +101,8 @@ from utils import (LayerEditingManager,
                    assign_default_weights,
                    clear_progress_message_bar, create_progress_message_bar,
                    SvNetworkError)
-from globals import (INT_FIELD_TYPE_NAME,
+from globals import (SVIR_PLUGIN_VERSION,
+                     INT_FIELD_TYPE_NAME,
                      DOUBLE_FIELD_TYPE_NAME,
                      NUMERIC_FIELD_TYPES,
                      TEXTUAL_FIELD_TYPES,
@@ -1395,6 +1396,7 @@ class Svir:
             license_url = dlg.ui.license_cbx.itemData(license_idx)
             license_txt = '%s (%s)' % (license_name, license_url)
             project_definition['license'] = license_txt
+            project_definition['svir_plugin_version'] = SVIR_PLUGIN_VERSION
 
             write_iso_metadata_file(xml_file,
                                     project_definition)

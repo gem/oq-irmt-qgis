@@ -30,6 +30,8 @@ from PyQt4.QtCore import QSettings
 
 DEBUG = QSettings().value('/svir/developer_mode', False, type=bool)
 
+SVIR_PLUGIN_VERSION = '1.0.0'
+
 INT_FIELD_TYPE_NAME = "integer"
 REAL_FIELD_TYPE_NAME = "Real"
 DOUBLE_FIELD_TYPE_NAME = "double"
