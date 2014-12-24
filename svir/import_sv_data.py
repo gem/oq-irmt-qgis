@@ -29,35 +29,24 @@ import os
 import tempfile
 import StringIO
 import csv
+
 from third_party.requests import Session
 
-# FIXME Change exposure to sv when app is ready on platform
+from utils import SvNetworkError, platform_login
+
 PLATFORM_EXPORT_SV_THEMES = "/svir/list_themes"
 PLATFORM_EXPORT_SV_SUBTHEMES = "/svir/list_subthemes_by_theme"
 PLATFORM_EXPORT_SV_NAMES = "/svir/export_variables_info"
 PLATFORM_EXPORT_VARIABLES_DATA_BY_IDS = "/svir/export_variables_data_by_ids"
 
 
-class SvDownloadError(Exception):
-    pass
-
-
 class SvDownloader(object):
     def __init__(self, host):
         self.host = host
-        self._login = host + '/account/ajax_login'
         self.sess = Session()
 
     def login(self, username, password):
-        session_resp = self.sess.post(self._login,
-                                      data={
-                                          "username": username,
-                                          "password": password
-                                      })
-        if session_resp.status_code != 200:  # 200 means successful:OK
-            error_message = ('Unable to get session for login: %s' %
-                             session_resp.content)
-            raise SvDownloadError(error_message)
+        platform_login(self.host, username, password, self.sess)
 
     def get_themes(self):
         page = self.host + PLATFORM_EXPORT_SV_THEMES
@@ -140,4 +129,4 @@ class SvDownloader(object):
                     result.content.count('\n'), fname)
                 return fname, msg
         else:
-            raise SvDownloadError(result.content)
+            raise SvNetworkError(result.content)

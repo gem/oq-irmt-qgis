@@ -30,8 +30,7 @@ from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox)
 
 from ui.ui_select_sv_variables import Ui_SelectSvVariablesDialog
-from import_sv_data import SvDownloadError
-from utils import WaitCursorManager
+from utils import WaitCursorManager, SvNetworkError
 
 
 class SelectSvVariablesDialog(QDialog):
@@ -86,8 +85,8 @@ class SelectSvVariablesDialog(QDialog):
         try:
             themes = self.sv_downloader.get_themes()
             self.ui.theme_cbx.addItems(themes)
-        except SvDownloadError as e:
-            raise SvDownloadError(
+        except SvNetworkError as e:
+            raise SvNetworkError(
                 "Unable to download social vulnerability themes: %s" % e)
         # populate the subsequent combo boxes accordingly with the currently
         # selected item
@@ -101,8 +100,8 @@ class SelectSvVariablesDialog(QDialog):
         try:
             subthemes = self.sv_downloader.get_subthemes_by_theme(theme)
             self.ui.subtheme_cbx.addItems(subthemes)
-        except SvDownloadError as e:
-            raise SvDownloadError(
+        except SvNetworkError as e:
+            raise SvNetworkError(
                 "Unable to download social vulnerability subthemes: %s" % e)
 
     def fill_names(self):
@@ -120,8 +119,8 @@ class SelectSvVariablesDialog(QDialog):
                 [code + ': ' + filter_result_dict[code]['name']
                     for code in filter_result_dict])
             self.ui.list_multiselect.add_unselected_items(names)
-        except SvDownloadError as e:
-            raise SvDownloadError(
+        except SvNetworkError as e:
+            raise SvNetworkError(
                 "Unable to download social vulnerability names: %s" % e)
 
     def update_indicator_info(self, item):

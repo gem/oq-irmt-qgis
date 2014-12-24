@@ -31,6 +31,7 @@ import uuid
 import copy
 import json
 from math import ceil
+from metadata_utilities import write_iso_metadata_file
 
 from third_party.requests.exceptions import ConnectionError
 
@@ -43,7 +44,7 @@ from PyQt4.QtCore import (QSettings,
 from PyQt4.QtGui import (QAction,
                          QIcon,
                          QProgressDialog,
-                         QColor)
+                         QColor, QMessageBox)
 
 from qgis.core import (QgsVectorLayer,
                        QgsMapLayerRegistry,
@@ -64,6 +65,8 @@ from qgis.gui import QgsMessageBar
 
 from qgis.analysis import QgsZonalStatistics
 import processing as p
+from upload_metadata_dialog import UploadMetadataDialog
+
 try:
     from processing.algs.saga.SagaUtils import SagaUtils
     saga_was_imported = True
@@ -86,8 +89,9 @@ from select_sv_variables_dialog import SelectSvVariablesDialog
 from settings_dialog import SettingsDialog
 from weight_data_dialog import WeightDataDialog
 from create_weight_tree_dialog import CreateWeightTreeDialog
+from upload_settings_dialog import UploadSettingsDialog
 
-from import_sv_data import SvDownloader, SvDownloadError
+from import_sv_data import SvDownloader
 
 from utils import (LayerEditingManager,
                    tr,
@@ -95,7 +99,8 @@ from utils import (LayerEditingManager,
                    TraceTimeManager,
                    WaitCursorManager,
                    assign_default_weights,
-                   clear_progress_message_bar, create_progress_message_bar)
+                   clear_progress_message_bar, create_progress_message_bar,
+                   SvNetworkError)
 from globals import (INT_FIELD_TYPE_NAME,
                      DOUBLE_FIELD_TYPE_NAME,
                      NUMERIC_FIELD_TYPES,
@@ -304,6 +309,7 @@ class Svir:
 
         if DEBUG:
             print 'Selected: %s' % self.current_layer
+            self.registered_actions["upload"].setEnabled(True)
         try:
             # Activate actions which require a vector layer to be selected
             if self.current_layer.type() != QgsMapLayer.VectorLayer:
@@ -340,7 +346,7 @@ class Svir:
             self.iface.legendInterface().removeLegendLayerAction(action)
             self.iface.removePluginMenu(u"&SVIR", action)
             self.iface.removeToolBarIcon(action)
-        clear_progress_message_bar(self.iface)
+        clear_progress_message_bar(self.iface.messageBar())
 
         #remove connects
         self.iface.currentLayerChanged.disconnect(self.current_layer_changed)
@@ -414,7 +420,7 @@ class Svir:
             msg = ("Connecting to the OpenQuake Platform...")
             with WaitCursorManager(msg, self.iface):
                 sv_downloader.login(username, password)
-        except (SvDownloadError, ConnectionError) as e:
+        except (SvNetworkError, ConnectionError) as e:
             self.iface.messageBar().pushMessage(
                 tr("Login Error"),
                 tr(str(e)),
@@ -464,7 +470,7 @@ class Svir:
                     try:
                         fname, msg = sv_downloader.get_data_by_variables_ids(
                             indices_string, load_geometries)
-                    except SvDownloadError as e:
+                    except SvNetworkError as e:
                         self.iface.messageBar().pushMessage(
                             tr("Download Error"),
                             tr(str(e)),
@@ -524,7 +530,7 @@ class Svir:
                 self.project_definitions[layer.id()] = project_definition
                 self.update_actions_status()
 
-        except SvDownloadError as e:
+        except SvNetworkError as e:
             self.iface.messageBar().pushMessage(tr("Download Error"),
                                                 tr(str(e)),
                                                 level=QgsMessageBar.CRITICAL)
@@ -985,7 +991,7 @@ class Svir:
         """
         tot_points = len(list(loss_layer.getFeatures()))
         msg = tr("Step 2 of 3: aggregating losses by zone id...")
-        msg_bar_item, progress = create_progress_message_bar(self.iface, msg)
+        msg_bar_item, progress = create_progress_message_bar(self.iface.messageBar(), msg)
         with TraceTimeManager(msg, DEBUG):
             zone_stats = {}
             for current_point, point_feat in enumerate(
@@ -1009,7 +1015,7 @@ class Svir:
                     # initialize stats for the new zone found
                     zone_stats[zone_id] = {'count': 1,
                                            'sum': loss_value}
-        clear_progress_message_bar(self.iface, msg_bar_item)
+        clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
 
         msg = tr(
             "Step 3 of 3: writing point counts, loss sums and averages into "
@@ -1058,7 +1064,7 @@ class Svir:
                         fid, sum_index, float(loss_sum))
                     self.zonal_layer.changeAttributeValue(
                         fid, avg_index, float(loss_avg))
-        clear_progress_message_bar(self.iface, msg_bar_item)
+        clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
 
     def calculate_vector_stats_using_geometries(self):
         """
@@ -1081,7 +1087,7 @@ class Svir:
         tot_points = len(list(self.loss_layer.getFeatures()))
         msg = tr(
             "Step 2 of 3: creating spatial index for loss points...")
-        msg_bar_item, progress = create_progress_message_bar(self.iface, msg)
+        msg_bar_item, progress = create_progress_message_bar(self.iface.messageBar(), msg)
 
         # create spatial index
         with TraceTimeManager(tr("Creating spatial index for loss points..."),
@@ -1093,7 +1099,7 @@ class Svir:
                 progress.setValue(progress_perc)
                 spatial_index.insertFeature(loss_feature)
 
-        clear_progress_message_bar(self.iface, msg_bar_item)
+        clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
 
         with LayerEditingManager(self.zonal_layer,
                                  tr("Calculate point counts, sums and "
@@ -1166,7 +1172,7 @@ class Svir:
                             fid, sum_index, loss_sum)
                         self.zonal_layer.changeAttributeValue(
                             fid, avg_index, loss_avg)
-        clear_progress_message_bar(self.iface, msg_bar_item)
+        clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
         # display a warning in case none of the loss points are inside
         # any of the zones
         if no_loss_points_in_any_zone:
@@ -1212,7 +1218,7 @@ class Svir:
 
         tot_zones = len(list(self.zonal_layer.getFeatures()))
         msg = tr("Purging zones containing no loss points...")
-        msg_bar_item, progress = create_progress_message_bar(self.iface, msg)
+        msg_bar_item, progress = create_progress_message_bar(self.iface.messageBar(), msg)
 
         with LayerEditingManager(self.purged_layer,
                                  msg,
@@ -1228,7 +1234,7 @@ class Svir:
                     if caps & QgsVectorDataProvider.deleteFeatures:
                         pr.deleteFeatures([zone_feature.id()])
 
-        clear_progress_message_bar(self.iface, msg_bar_item)
+        clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
 
         # Add purged layer to registry
         if self.purged_layer.isValid():
@@ -1250,7 +1256,7 @@ class Svir:
         # to show the overall progress, cycling through zones
         tot_zones = len(list(self.loss_layer_to_merge.getFeatures()))
         msg = tr("Populating zonal layer with loss values...")
-        msg_bar_item, progress = create_progress_message_bar(self.iface, msg)
+        msg_bar_item, progress = create_progress_message_bar(self.iface.messageBar(), msg)
 
         with LayerEditingManager(self.current_layer,
                                  tr("Add loss values to zonal layer"),
@@ -1274,7 +1280,7 @@ class Svir:
                             zonal_feat_id,
                             aggr_loss_index,
                             aggr_feat[self.aggr_loss_attr_to_merge])
-        clear_progress_message_bar(self.iface, msg_bar_item)
+        clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
 
     # FIXME Probably to be removed
     def calculate_svir_indices(self):
@@ -1314,7 +1320,7 @@ class Svir:
             tot_zones = len(list(layer.getFeatures()))
             msg = tr("Calculating some common SVIR indices...")
             msg_bar_item, progress = create_progress_message_bar(
-                self.iface, msg)
+                self.iface.messageBar(), msg)
             with LayerEditingManager(layer,
                                      tr("Calculate some common SVIR indices"),
                                      DEBUG):
@@ -1342,7 +1348,7 @@ class Svir:
                         risk1f_idx,
                         (svir_feat[aggr_loss_attr_name] *
                          (1 + svir_feat[svi_attr_name])))
-            clear_progress_message_bar(self.iface, msg_bar_item)
+            clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
         elif dlg.use_advanced:
             layer = reg.mapLayers().values()[
                 dlg.ui.layer_cbx.currentIndex()]
@@ -1361,27 +1367,42 @@ class Svir:
 
     def upload(self):
         temp_dir = tempfile.gettempdir()
-        file_stem = '%s%ssvir_%s' % (temp_dir, os.path.sep, uuid.uuid4())
-
-        data_json = '%s%s' % (file_stem, '_data.json')
-        proj_json = '%s%s' % (file_stem, '_proj.json')
+        file_stem = '%s%sqgis_svir_%s' % (temp_dir, os.path.sep, uuid.uuid4())
+        data_file = '%s%s' % (file_stem, '.shp')
+        xml_file = file_stem + '.xml'
 
         project_definition = self.project_definitions[self.current_layer.id()]
-        with open(proj_json, 'w') as outfile:
-            json.dump(project_definition, outfile)
 
         QgsVectorFileWriter.writeAsVectorFormat(
             self.current_layer,
-            data_json,
+            data_file,
             'utf-8',
             self.current_layer.crs(),
-            'GeoJson')
-        msg = tr("Uploading to platform")
-        msg_bar_item, progress = create_progress_message_bar(self.iface, msg)
+            'ESRI Shapefile')
 
-        # TODO UPLOAD
-        max_range = 1000000.0
-        for i in range(int(max_range)):
-            p_int = i / max_range * 100
-            progress.setValue(p_int)
-        clear_progress_message_bar(self.iface, msg_bar_item)
+        file_size_mb = os.path.getsize(data_file)
+        file_size_mb += os.path.getsize(file_stem + '.shx')
+        file_size_mb += os.path.getsize(file_stem + '.dbf')
+        # convert bytes to MB
+        file_size_mb = file_size_mb / 1024 / 1024
+
+        dlg = UploadSettingsDialog(file_size_mb)
+        if dlg.exec_():
+            project_definition['organization'] = dlg.ui.organization_le.text()
+            project_definition['url'] = dlg.ui.url_le.text()
+            project_definition['email'] = dlg.ui.email_le.text()
+            project_definition['title'] = dlg.ui.title_le.text()
+
+            license_name = dlg.ui.license_cbx.currentText()
+            license_idx = dlg.ui.license_cbx.currentIndex()
+            license_url = dlg.ui.license_cbx.itemData(license_idx)
+            license_txt = '%s (%s)' % (license_name, license_url)
+            project_definition['license'] = license_txt
+
+            write_iso_metadata_file(xml_file,
+                                    project_definition)
+            metadata_dialog = UploadMetadataDialog(
+                self.iface, file_stem, project_definition)
+            metadata_dialog.exec_()
+        else:
+            print "metadata_dialog cancelled"

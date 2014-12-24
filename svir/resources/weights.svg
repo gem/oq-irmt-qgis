@@ -4,9 +4,12 @@
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
 	 width="37.547px" height="37.578px" viewBox="0 0 37.547 37.578" enable-background="new 0 0 37.547 37.578" xml:space="preserve">
 <g>
-	<polygon fill="#1B75A5" points="14.66,29.36 18.804,22.862 22.924,29.36 	"/>
-	<rect x="8.292" y="8.86" fill="none" stroke="#1B75A5" stroke-miterlimit="10" width="7" height="7"/>
-	<rect x="22.292" y="8.86" opacity="0.4" fill="none" stroke="#1B75A5" stroke-miterlimit="10" width="7" height="7"/>
-	<line fill="none" stroke="#1B75A5" stroke-width="2" stroke-miterlimit="10" x1="7.792" y1="20.36" x2="29.792" y2="20.36"/>
+	<polygon fill="#1B75A5" points="12.472,34.521 18.792,24.612 25.074,34.521 	"/>
+	
+		<rect x="2.763" y="3.261" fill="#FFFFFF" stroke="#1B75A5" stroke-width="1.5249" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" width="10.674" height="10.674"/>
+	
+		<rect x="24.11" y="3.261" opacity="0.6" fill="#FFFFFF" stroke="#1B75A5" stroke-width="1.5249" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" width="10.674" height="10.674"/>
+	
+		<line fill="none" stroke="#1B75A5" stroke-width="3.0497" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" x1="2" y1="20.797" x2="35.547" y2="20.797"/>
 </g>
 </svg>

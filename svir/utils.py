@@ -26,6 +26,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 import collections
+import json
 from time import time
 from PyQt4.QtCore import QSettings, Qt
 from PyQt4.QtGui import QApplication, QProgressBar, QToolButton
@@ -51,14 +52,14 @@ def get_credentials(iface):
     return hostname, username, password
 
 
-def clear_progress_message_bar(iface, msg_bar_item=None):
+def clear_progress_message_bar(msg_bar, msg_bar_item=None):
         if msg_bar_item:
-            iface.messageBar().popWidget(msg_bar_item)
+            msg_bar.popWidget(msg_bar_item)
         else:
-            iface.messageBar().clearWidgets()
+            msg_bar.clearWidgets()
 
 
-def create_progress_message_bar(iface, msg, no_percentage=False):
+def create_progress_message_bar(msg_bar, msg, no_percentage=False):
     """
     Use the messageBar of QGIS to display a message describing what's going
     on (typically during a time-consuming task), and a bar showing the
@@ -71,13 +72,12 @@ def create_progress_message_bar(iface, msg, no_percentage=False):
     completion of the task through progress.setValue(percentage)
     :rtype: QProgressBar
     """
-    progress_message_bar = iface.messageBar().createMessage(msg)
+    progress_message_bar = msg_bar.createMessage(msg)
     progress = QProgressBar()
     if no_percentage:
         progress.setRange(0, 0)
     progress_message_bar.layout().addWidget(progress)
-    iface.messageBar().pushWidget(progress_message_bar,
-                                  iface.messageBar().INFO)
+    msg_bar.pushWidget(progress_message_bar, msg_bar.INFO)
     return progress_message_bar, progress
 
 
@@ -198,6 +198,52 @@ def toggle_select_features_widget(title, text, button_text, layer,
     return widget
 
 
+def platform_login(host, username, password, session):
+    """
+    Logs in a session to a platform
+
+    :param host: The host url
+    :type host: str
+    :param username: The username
+    :type username: str
+    :param password: The password
+    :type password: str
+    :param session: The session to be autenticated
+    :type session: Session
+    """
+
+    login_url = host + '/account/ajax_login'
+    session_resp = session.post(login_url,
+                                data={
+                                    "username": username,
+                                    "password": password
+                                })
+    if session_resp.status_code != 200:  # 200 means successful:OK
+        error_message = ('Unable to get session for login: %s' %
+                         session_resp.content)
+        raise SvNetworkError(error_message)
+
+
+def upload_shp(host, session, file_stem):
+    files = {'layer_title': file_stem,
+             'base_file': ('file.shp', open('%s.shp' % file_stem, 'rb')),
+             'dbf_file': ('file.dbf', open('%s.dbf' % file_stem, 'rb')),
+             'shx_file': ('file.shx', open('%s.shx' % file_stem, 'rb')),
+             'prj_file': ('file.prj', open('%s.prj' % file_stem, 'rb')),
+             'xml_file': ('file.xml', open('%s.xml' % file_stem, 'r')),
+             }
+    payload = {'charset': ['UTF-8'],
+               'permissions': [
+                   '{"anonymous":"layer_readonly","authenticated":"layer_readwrite","users":[]}']}
+
+    r = session.post(host + '/layers/upload', data=payload, files=files)
+    response = json.loads(r.text)
+    try:
+        return host + response['url']
+    except KeyError:
+        return False
+
+
 class Register(collections.OrderedDict):
     """
     Useful to keep (in a single point) a register of available variants of
@@ -272,3 +318,7 @@ class WaitCursorManager(object):
         QApplication.restoreOverrideCursor()
         if self.has_message:
             self.iface.messageBar().popWidget(self.message)
+
+
+class SvNetworkError(Exception):
+    pass
