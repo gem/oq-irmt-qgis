@@ -482,13 +482,27 @@ class Svir:
                 # don't remove the file, otherwise there will be concurrency
                 # problems
 
-                # TODO: Check if we actually want to avoid importing geometries
+                # count top lines in the csv starting with '#'
+                with open(fname) as f:
+                    lines_to_skip_count = 0
+                    for line in f:
+                        li = line.strip()
+                        if li.startswith('#'):
+                            lines_to_skip_count += 1
+                        else:
+                            break
+                if DEBUG:
+                    print "%s rows will be skipped from the CSV" % (
+                        lines_to_skip_count)
+
                 if load_geometries:
-                    uri = ('file://%s?delimiter=,&crs=epsg:4326&skipLines=25'
-                           '&trimFields=yes&wktField=geometry' % fname)
+                    uri = ('file://%s?delimiter=,&crs=epsg:4326&skipLines=%s'
+                           '&trimFields=yes&wktField=geometry' % (
+                               fname, lines_to_skip_count))
                 else:
-                    uri = ('file://%s?delimiter=,&skipLines=25'
-                           '&trimFields=yes' % fname)
+                    uri = ('file://%s?delimiter=,&skipLines=%s'
+                           '&trimFields=yes' % (fname,
+                                                lines_to_skip_count))
                 # create vector layer from the csv file exported by the
                 # platform (it is still not editable!)
                 vlayer_csv = QgsVectorLayer(uri,
