@@ -61,9 +61,6 @@ class UploadSettingsDialog(QDialog):
                     '(About %s MB of data will be transmitted)'
                     % upload_size)
         self.ui.head_msg_lbl.setText(head_msg)
-        self.ui.organization_le.setText(DEFAULTS['ISO19115_ORGANIZATION'])
-        self.ui.url_le.setText(DEFAULTS['ISO19115_URL'])
-        self.ui.email_le.setText(DEFAULTS['ISO19115_EMAIL'])
         self.ui.title_le.setText(DEFAULTS['ISO19115_TITLE'])
         for license, link in LICENSES:
             self.ui.license_cbx.addItem(license, link)

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_upload_settings.ui'
 #
-# Created: Thu Nov 13 14:54:27 2014
+# Created: Wed Dec 24 16:05:28 2014
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -35,30 +35,12 @@ class Ui_UploadSettingsDialog(object):
         self.formLayout = QtGui.QFormLayout()
         self.formLayout.setFieldGrowthPolicy(QtGui.QFormLayout.AllNonFixedFieldsGrow)
         self.formLayout.setObjectName(_fromUtf8("formLayout"))
-        self.label_2 = QtGui.QLabel(UploadSettingsDialog)
-        self.label_2.setObjectName(_fromUtf8("label_2"))
-        self.formLayout.setWidget(0, QtGui.QFormLayout.LabelRole, self.label_2)
-        self.organization_le = QtGui.QLineEdit(UploadSettingsDialog)
-        self.organization_le.setObjectName(_fromUtf8("organization_le"))
-        self.formLayout.setWidget(0, QtGui.QFormLayout.FieldRole, self.organization_le)
-        self.label_3 = QtGui.QLabel(UploadSettingsDialog)
-        self.label_3.setObjectName(_fromUtf8("label_3"))
-        self.formLayout.setWidget(1, QtGui.QFormLayout.LabelRole, self.label_3)
-        self.url_le = QtGui.QLineEdit(UploadSettingsDialog)
-        self.url_le.setObjectName(_fromUtf8("url_le"))
-        self.formLayout.setWidget(1, QtGui.QFormLayout.FieldRole, self.url_le)
-        self.label_5 = QtGui.QLabel(UploadSettingsDialog)
-        self.label_5.setObjectName(_fromUtf8("label_5"))
-        self.formLayout.setWidget(2, QtGui.QFormLayout.LabelRole, self.label_5)
-        self.email_le = QtGui.QLineEdit(UploadSettingsDialog)
-        self.email_le.setObjectName(_fromUtf8("email_le"))
-        self.formLayout.setWidget(2, QtGui.QFormLayout.FieldRole, self.email_le)
         self.label_4 = QtGui.QLabel(UploadSettingsDialog)
         self.label_4.setObjectName(_fromUtf8("label_4"))
-        self.formLayout.setWidget(3, QtGui.QFormLayout.LabelRole, self.label_4)
+        self.formLayout.setWidget(0, QtGui.QFormLayout.LabelRole, self.label_4)
         self.title_le = QtGui.QLineEdit(UploadSettingsDialog)
         self.title_le.setObjectName(_fromUtf8("title_le"))
-        self.formLayout.setWidget(3, QtGui.QFormLayout.FieldRole, self.title_le)
+        self.formLayout.setWidget(0, QtGui.QFormLayout.FieldRole, self.title_le)
         self.verticalLayout.addLayout(self.formLayout)
         self.gridLayout = QtGui.QGridLayout()
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
@@ -89,11 +71,8 @@ class Ui_UploadSettingsDialog(object):
         QtCore.QMetaObject.connectSlotsByName(UploadSettingsDialog)
 
     def retranslateUi(self, UploadSettingsDialog):
-        UploadSettingsDialog.setWindowTitle(_translate("UploadSettingsDialog", "Dialog", None))
-        self.head_msg_lbl.setText(_translate("UploadSettingsDialog", "Uploading current layer", None))
-        self.label_2.setText(_translate("UploadSettingsDialog", "Organization", None))
-        self.label_3.setText(_translate("UploadSettingsDialog", "URL", None))
-        self.label_5.setText(_translate("UploadSettingsDialog", "Email", None))
+        UploadSettingsDialog.setWindowTitle(_translate("UploadSettingsDialog", "Upload Settings", None))
+        self.head_msg_lbl.setText(_translate("UploadSettingsDialog", "The active layer will be uploaded to the Openquake Platform", None))
         self.label_4.setText(_translate("UploadSettingsDialog", "Project title", None))
         self.label_6.setText(_translate("UploadSettingsDialog", "License", None))
         self.license_info_btn.setText(_translate("UploadSettingsDialog", "Info", None))

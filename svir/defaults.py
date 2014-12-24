@@ -23,9 +23,6 @@ __copyright__ = ('Copyright 2012, Australia Indonesia Facility for '
 
 DEFAULTS = dict()
 #Defaults for iso_19115_template.xml
-DEFAULTS['ISO19115_ORGANIZATION'] = 'globalquakemodel.org'
-DEFAULTS['ISO19115_URL'] = 'http://globalquakemodel.org'
-DEFAULTS['ISO19115_EMAIL'] = 'info@globalquakemodel.org'
 DEFAULTS['ISO19115_TITLE'] = 'SVIR analysis result'
 DEFAULTS['ISO19115_LICENSE'] = 'Free use with accreditation (Affero GPL)'
 

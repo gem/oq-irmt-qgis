@@ -1388,9 +1388,6 @@ class Svir:
 
         dlg = UploadSettingsDialog(file_size_mb)
         if dlg.exec_():
-            project_definition['organization'] = dlg.ui.organization_le.text()
-            project_definition['url'] = dlg.ui.url_le.text()
-            project_definition['email'] = dlg.ui.email_le.text()
             project_definition['title'] = dlg.ui.title_le.text()
 
             license_name = dlg.ui.license_cbx.currentText()
