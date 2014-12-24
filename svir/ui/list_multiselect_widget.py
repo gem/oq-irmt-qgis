@@ -129,12 +129,16 @@ class ListMultiSelectWidget(QtGui.QGroupBox):
         self.deselect_all_btn = SmallQPushButton('<<')
         self.select_btn = SmallQPushButton('>')
         self.deselect_btn = SmallQPushButton('<')
+        self.select_btn.setToolTip('Add the selected items')
+        self.deselect_btn.setToolTip('Remove the selected items')
+        self.select_all_btn.setToolTip('Add all')
+        self.deselect_all_btn.setToolTip('Remove all')
 
         #add buttons
-        self.buttons_vertical_layout.addWidget(self.select_all_btn)
-        self.buttons_vertical_layout.addWidget(self.deselect_all_btn)
         self.buttons_vertical_layout.addWidget(self.select_btn)
         self.buttons_vertical_layout.addWidget(self.deselect_btn)
+        self.buttons_vertical_layout.addWidget(self.select_all_btn)
+        self.buttons_vertical_layout.addWidget(self.deselect_all_btn)
 
         #add sub widgets
         self.main_horizontal_layout.addWidget(self.unselected_widget)
