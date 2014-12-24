@@ -35,6 +35,7 @@ from metadata_utilities import write_iso_metadata_file
 
 from third_party.requests.exceptions import ConnectionError
 
+from qgis import QPyNullVariant
 from PyQt4.QtCore import (QSettings,
                           QTranslator,
                           QCoreApplication,
@@ -1334,21 +1335,38 @@ class Svir:
                     svir_feat_id = svir_feat.id()
                     progress_percent = current_zone / float(tot_zones) * 100
                     progress.setValue(progress_percent)
-                    layer.changeAttributeValue(
-                        svir_feat_id,
-                        riskplus_idx,
-                        (svir_feat[aggr_loss_attr_name] +
-                         svir_feat[svi_attr_name]))
-                    layer.changeAttributeValue(
-                        svir_feat_id,
-                        riskmult_idx,
-                        (svir_feat[aggr_loss_attr_name] *
-                         svir_feat[svi_attr_name]))
-                    layer.changeAttributeValue(
-                        svir_feat_id,
-                        risk1f_idx,
-                        (svir_feat[aggr_loss_attr_name] *
-                         (1 + svir_feat[svi_attr_name])))
+                    aggr_loss_val = svir_feat[aggr_loss_attr_name]
+                    svi_val = svir_feat[svi_attr_name]
+                    if (svi_val == QPyNullVariant(float)
+                            or aggr_loss_val == QPyNullVariant(float)):
+                        layer.changeAttributeValue(
+                            svir_feat_id,
+                            riskplus_idx,
+                            QPyNullVariant(float))
+                        layer.changeAttributeValue(
+                            svir_feat_id,
+                            riskmult_idx,
+                            QPyNullVariant(float))
+                        layer.changeAttributeValue(
+                            svir_feat_id,
+                            risk1f_idx,
+                            QPyNullVariant(float))
+                    else:
+                        layer.changeAttributeValue(
+                            svir_feat_id,
+                            riskplus_idx,
+                            (svir_feat[aggr_loss_attr_name] +
+                             svir_feat[svi_attr_name]))
+                        layer.changeAttributeValue(
+                            svir_feat_id,
+                            riskmult_idx,
+                            (svir_feat[aggr_loss_attr_name] *
+                             svir_feat[svi_attr_name]))
+                        layer.changeAttributeValue(
+                            svir_feat_id,
+                            risk1f_idx,
+                            (svir_feat[aggr_loss_attr_name] *
+                             (1 + svir_feat[svi_attr_name])))
             clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
         elif dlg.use_advanced:
             layer = reg.mapLayers().values()[
