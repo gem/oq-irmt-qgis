@@ -250,15 +250,16 @@ def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
                'a new attribute called %s') % iri_attr_name
         iface.messageBar().pushMessage(tr('Info'), tr(msg),
                                        level=QgsMessageBar.INFO)
-        widget = toggle_select_features_widget(
-            tr('Warning'),
-            tr('Invalid values were found in some features while calculating '
-               'IRI'),
-            tr('Select invalid features'),
-            current_layer,
-            discarded_risk_feats_ids,
-            current_layer.selectedFeaturesIds())
-        iface.messageBar().pushWidget(widget, QgsMessageBar.WARNING)
+        if discarded_risk_feats_ids:
+            widget = toggle_select_features_widget(
+                tr('Warning'),
+                tr('Invalid values were found in some features while '
+                   'calculating IRI'),
+                tr('Select invalid features'),
+                current_layer,
+                discarded_risk_feats_ids,
+                current_layer.selectedFeaturesIds())
+            iface.messageBar().pushWidget(widget, QgsMessageBar.WARNING)
         return iri_attr_id
 
     except TypeError as e:
