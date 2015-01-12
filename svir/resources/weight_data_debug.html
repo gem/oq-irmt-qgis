@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script type="text/javascript" src="./js/jquery-1.9.1.js" charset="utf-8"></script>
+    <script type="text/javascript" src="./js/jquery-ui.js" charset="utf-8"></script>
+    <script type="text/javascript" src="./js/d3.js" charset="utf-8"></script>
+    <script type="text/javascript" src="./js/svir_viewer_d3_tree.js" charset="utf-8"></script>
+    <link type="text/css" rel="stylesheet" href="./css/jquery-ui.css">
+    <link type="text/css" rel="stylesheet" href="./css/svir_viewer_sub.css">
+</head>
+<body>
+
+    <div id="projectDefDialog"></div>
+    <div id="projectDefWeightDialog"></div>
+    <div id="projectDefNewNodeDialog"></div>
+    <div id="warning-no-layer"></div>
+
+    <script type="text/javascript">
+        var qt_page = {
+            ACTIVE_LAYER_NUMERIC_FIELDS: "FID_1;haz_level;SVI;IRI;SVI_1;IRI_1;SVI_2;IRI_2;SVI_3;IRI_3;SVI_4;IRI_4;SVI_5;IRI_5;SVI_6;IRI_6;SVI_7;IRI_7;SVI_8;IRI_8;SVI_9;IRI_9;SVI_10;IRI_10;SVI_11;IRI_11;SVI_12;IRI_12;SVI_13;IRI_13;SVI_14;IRI_14;SVI_15;IRI_15;SVI_16;IRI_16;SVI_17;IRI_17;SVI_18;IRI_18;SVI_19;IRI_19;SVI_20;IRI_20;SVI_21;IRI_21;SVI_22;IRI_22;SVI_23;IRI_23;SVI_24;IRI_24;SVI_25;IRI_25;SVI_26;IRI_26;SVI_27;IRI_27;SVI_28;IRI_28;SVI_29;IRI_29;SVI_30;IRI_30;SVI_31;IRI_31;SVI_32;IRI_32;SVI_33;IRI_33;SVI_34;IRI_34;SVI_35;IRI_35;SVI_36;IRI_36",
+            DEFAULT_OPERATOR: "Weighted sum",
+            NODE_TYPES: "RISK_INDICATOR:Risk Indicator;SVI:Social Vulnerability Index;SV_INDICATOR:Social Vulnerability Indicator;SV_THEME:Social Vulnerability Theme;IRI:Integrated Risk Index;RI:Risk Index",
+            OPERATORS: "Simple sum (ignore weights);Weighted sum;Average (ignore weights);Simple multiplication (ignore weights);Weighted multiplication",
+            json_updated: function (updated_json_str) {
+                console.log("json_updated signal emitted with the following JSON")
+                console.log(updated_json_str)
+            }
+        }
+        var json_str = '{"risk_field": "IRI_7", "name": "IRI", "weight": 1.0, "level": "1.0", "svi_field": "SVI_36", "operator": "Weighted sum", "type": "Integrated Risk Index", "children": [{"name": "RI", "type": "Risk Index", "children": [], "weight": 0.5, "level": "2.0"}, {"name": "SVI", "type": "Social Vulnerability Index", "children": [{"name": "ds test", "type": "Social Vulnerability Theme", "children": [{"name": "FID_1", "weight": 0.5, "level": "4.0", "field": "FID_1", "type": "Social Vulnerability Indicator", "children": []}, {"name": "haz_level", "weight": 0.5, "level": "4.0", "field": "haz_level", "type": "Social Vulnerability Indicator", "children": []}], "weight": 1.0, "level": "3.0"}], "weight": 0.5, "level": "2.0"}], "iri_field": "IRI_36"}'
+        loadPD(json_str, qt_page);
+    </script>
+
+</body>
+</html>

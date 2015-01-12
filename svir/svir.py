@@ -29,7 +29,6 @@ import os.path
 import tempfile
 import uuid
 import copy
-import json
 from math import ceil
 from metadata_utilities import write_iso_metadata_file
 
@@ -45,7 +44,7 @@ from PyQt4.QtCore import (QSettings,
 from PyQt4.QtGui import (QAction,
                          QIcon,
                          QProgressDialog,
-                         QColor, QMessageBox)
+                         QColor)
 
 from qgis.core import (QgsVectorLayer,
                        QgsMapLayerRegistry,
@@ -75,7 +74,7 @@ except:
     print "Unable to import SagaUtils module from processing.algs.saga"
     saga_was_imported = False
 
-from calculate_utils import calculate_svi, calculate_iri
+from calculate_utils import calculate_svi, calculate_ri, calculate_iri
 
 from process_layer import ProcessLayer
 
@@ -89,7 +88,6 @@ from select_attrs_for_stats_dialog import SelectAttrsForStatsDialog
 from select_sv_variables_dialog import SelectSvVariablesDialog
 from settings_dialog import SettingsDialog
 from weight_data_dialog import WeightDataDialog
-from create_weight_tree_dialog import CreateWeightTreeDialog
 from upload_settings_dialog import UploadSettingsDialog
 
 from import_sv_data import SvDownloader
@@ -190,14 +188,6 @@ class Svir:
                            ":/plugins/svir/transform.svg",
                            u"&Transform attribute",
                            self.transform_attribute,
-                           enable=False,
-                           add_to_layer_actions=True)
-        # Action to activate the modal dialog to choose weighting of the
-        # data from the platform
-        self.add_menu_item("create_weight_tree",
-                           ":/plugins/svir/define.svg",
-                           u"&Define model structure",
-                           self.create_weight_tree,
                            enable=False,
                            add_to_layer_actions=True)
         # Action to activate the modal dialog to choose weighting of the
@@ -311,34 +301,24 @@ class Svir:
 
         if DEBUG:
             print 'Selected: %s' % self.current_layer
-            self.registered_actions["upload"].setEnabled(True)
         try:
             # Activate actions which require a vector layer to be selected
             if self.current_layer.type() != QgsMapLayer.VectorLayer:
                 raise AttributeError
-            proj_def = self.project_definitions[self.current_layer.id()]
-            self.registered_actions["create_weight_tree"].setEnabled(True)
             self.registered_actions["weight_data"].setEnabled(True)
             self.registered_actions["transform_attribute"].setEnabled(True)
-
-            # TODO maybe we want to have only an svi to allow upload, in that
-            # case use 'svi_field' in proj_def
-            # If IRI was calculated once at least enable upload
-            self.registered_actions["upload"].setEnabled(
-                'iri_field' in proj_def)
-
+            proj_def = self.project_definitions[self.current_layer.id()]
+            self.registered_actions["upload"].setEnabled(proj_def is not None)
         except KeyError:
             # self.project_definitions[self.current_layer.id()] is not defined
-            self.registered_actions["create_weight_tree"].setEnabled(True)
-            self.registered_actions["weight_data"].setEnabled(False)
-            self.registered_actions["transform_attribute"].setEnabled(True)
+            pass  # We can still use the weight_data dialog
         except AttributeError:
             # self.current_layer.id() does not exist or self.current_layer
             # is not vector
             self.registered_actions["transform_attribute"].setEnabled(False)
-            self.registered_actions["create_weight_tree"].setEnabled(False)
             self.registered_actions["weight_data"].setEnabled(False)
             self.registered_actions["merge_svi_and_losses"].setEnabled(False)
+            self.registered_actions["upload"].setEnabled(False)
 
     def unload(self):
         # Remove the plugin menu items and toolbar icons
@@ -559,57 +539,30 @@ class Svir:
         new_indicator['level'] = level
         svi_themes[theme_position]['children'].append(new_indicator)
 
-    def create_weight_tree(self):
-        """
-        Open a modal dialog to create a weight tree from an existing layer
-        """
-        current_layer_id = self.current_layer.id()
-        try:
-            project_definition = self.project_definitions[current_layer_id]
-        except KeyError:
-            project_definition = None
-        dlg = CreateWeightTreeDialog(
-            self.iface,
-            self.current_layer,
-            project_definition,
-            self.registered_actions['merge_svi_and_losses'])
-
-        if dlg.exec_():
-            project_definition = copy.deepcopy(PROJECT_TEMPLATE)
-            if dlg.ui.risk_field_cbx.currentText() != '':
-                project_definition['risk_field'] = \
-                    dlg.ui.risk_field_cbx.currentText()
-            svi_themes = project_definition['children'][1]['children']
-            known_themes = []
-            for indicator in dlg.indicators():
-                self._add_new_theme(svi_themes,
-                                    known_themes,
-                                    indicator['theme'],
-                                    indicator['name'],
-                                    indicator['field'])
-
-            assign_default_weights(svi_themes)
-            self.project_definitions[current_layer_id] = project_definition
-            self.update_actions_status()
-
     def weight_data(self):
         """
         Open a modal dialog to select weights in a d3.js visualization
         """
         current_layer_id = self.current_layer.id()
-        project_definition = self.project_definitions[current_layer_id]
+        try:
+            project_definition = self.project_definitions[current_layer_id]
+        except KeyError:
+            project_definition = PROJECT_TEMPLATE
+            self.project_definitions[current_layer_id] = project_definition
         old_project_definition = copy.deepcopy(project_definition)
 
         first_svi = False
-        if 'svi_field' not in project_definition:
+        # if the svi_node does not contain the field name
+        if 'field' not in project_definition['children'][1]:  # svi_node
             # auto generate svi field
             first_svi = True
-            svi_attr_id, iri_attr_id = self.recalculate_indexes(
+            svi_attr_id, ri_attr_id, iri_attr_id = self.recalculate_indexes(
                 project_definition)
 
         dlg = WeightDataDialog(self.iface, project_definition)
-        dlg.json_cleaned.connect(self.weights_changed)
+        dlg.show()
 
+        dlg.json_cleaned.connect(self.weights_changed)
         if dlg.exec_():
             project_definition = dlg.project_definition
             self.update_actions_status()
@@ -618,20 +571,14 @@ class Svir:
             if first_svi:
                 # delete auto generated svi field
                 ProcessLayer(self.current_layer).delete_attributes(
-                    [svi_attr_id, iri_attr_id])
+                    [svi_attr_id, ri_attr_id, iri_attr_id])
             else:
                 # recalculate with the old weights
                 self.recalculate_indexes(project_definition)
-
         dlg.json_cleaned.disconnect(self.weights_changed)
-
         # store the correct project definitions
         self.project_definitions[current_layer_id] = project_definition
-
-        # if the user cancels the weighting before a definitive index was
-        # created, we don't redraw
-        if 'svi_field' in project_definition:
-            self.redraw_ir_layer(project_definition)
+        self.redraw_ir_layer(project_definition)
 
     def weights_changed(self, data):
         self.recalculate_indexes(data)
@@ -641,36 +588,43 @@ class Svir:
         project_definition = data
 
         # when updating weights, we need to recalculate the indexes
-        svi_attr_id, discarded_feats_ids = calculate_svi(self.iface,
-                                                         self.current_layer,
-                                                         project_definition)
-
-        iri_attr_id = None
-        # if an IRi has been already calculated, calculate a new one
-        if 'risk_field' in data:
-            risk_field = data['risk_field']
-            try:
-                iri_operator = data['operator']
-            except KeyError:
-                iri_operator = None
-
-            iri_attr_id = calculate_iri(self.iface, self.current_layer,
-                                        project_definition, svi_attr_id,
-                                        risk_field, discarded_feats_ids,
-                                        iri_operator)
-        return svi_attr_id, iri_attr_id
+        svi_attr_id, discarded_feats_ids_svi = calculate_svi(
+            self.iface, self.current_layer, project_definition)
+        ri_attr_id, discarded_feats_ids_ri = calculate_ri(
+            self.iface, self.current_layer, project_definition)
+        if svi_attr_id is None or ri_attr_id is None:
+            return None, None, None
+        discarded_feats_ids = discarded_feats_ids_svi | discarded_feats_ids_ri
+        iri_attr_id, discarded_feats_ids = calculate_iri(
+            self.iface, self.current_layer,
+            project_definition,
+            svi_attr_id,
+            ri_attr_id, discarded_feats_ids)
+        return svi_attr_id, ri_attr_id, iri_attr_id
 
     def redraw_ir_layer(self, data):
-        # if an IRi has been already calculated, show it else show the SVI
-        if 'iri_field' in data:
-            target_field = data['iri_field']
+        # if an IRI has been already calculated, show it
+        # else show the SVI, else RI
+        if 'field' in data:  # the root is the IRI node
+            target_field = data['field']
             printing_str = 'IRI'
-        else:
-            target_field = data['svi_field']
+        elif 'field' in data['children'][1]:  # SVI node
+            svi_node = data['children'][1]
+            target_field = svi_node['field']
             printing_str = 'SVI'
-
+        elif 'field' in data['children'][0]:  # RI node
+            ri_node = data['children'][0]
+            target_field = ri_node['field']
+            printing_str = 'RI'
+        else:
+            return
+        if self.current_layer.fieldNameIndex(target_field) == -1:
+            return
         if DEBUG:
-            print 'REDRAWING %s using:\n%s' % (printing_str, data)
+            import pprint
+            pp = pprint.PrettyPrinter(indent=4)
+            print 'REDRAWING %s using:' % printing_str
+            pp.pprint(data)
 
         rule_renderer = QgsRuleBasedRendererV2(
             QgsSymbolV2.defaultSymbol(self.current_layer.geometryType()))
@@ -993,7 +947,8 @@ class Svir:
         """
         tot_points = len(list(loss_layer.getFeatures()))
         msg = tr("Step 2 of 3: aggregating losses by zone id...")
-        msg_bar_item, progress = create_progress_message_bar(self.iface.messageBar(), msg)
+        msg_bar_item, progress = create_progress_message_bar(
+            self.iface.messageBar(), msg)
         with TraceTimeManager(msg, DEBUG):
             zone_stats = {}
             for current_point, point_feat in enumerate(
@@ -1089,7 +1044,8 @@ class Svir:
         tot_points = len(list(self.loss_layer.getFeatures()))
         msg = tr(
             "Step 2 of 3: creating spatial index for loss points...")
-        msg_bar_item, progress = create_progress_message_bar(self.iface.messageBar(), msg)
+        msg_bar_item, progress = create_progress_message_bar(
+            self.iface.messageBar(), msg)
 
         # create spatial index
         with TraceTimeManager(tr("Creating spatial index for loss points..."),
@@ -1220,7 +1176,8 @@ class Svir:
 
         tot_zones = len(list(self.zonal_layer.getFeatures()))
         msg = tr("Purging zones containing no loss points...")
-        msg_bar_item, progress = create_progress_message_bar(self.iface.messageBar(), msg)
+        msg_bar_item, progress = create_progress_message_bar(
+            self.iface.messageBar(), msg)
 
         with LayerEditingManager(self.purged_layer,
                                  msg,
@@ -1258,7 +1215,8 @@ class Svir:
         # to show the overall progress, cycling through zones
         tot_zones = len(list(self.loss_layer_to_merge.getFeatures()))
         msg = tr("Populating zonal layer with loss values...")
-        msg_bar_item, progress = create_progress_message_bar(self.iface.messageBar(), msg)
+        msg_bar_item, progress = create_progress_message_bar(
+            self.iface.messageBar(), msg)
 
         with LayerEditingManager(self.current_layer,
                                  tr("Add loss values to zonal layer"),

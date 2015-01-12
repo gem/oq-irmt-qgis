@@ -41,7 +41,11 @@ from PyQt4.QtWebKit import QWebSettings
 
 from ui.ui_weight_data import Ui_WeightDataDialog
 
-from globals import DEFAULT_OPERATOR, OPERATORS_DICT
+from globals import (DEFAULT_OPERATOR,
+                     OPERATORS_DICT,
+                     NUMERIC_FIELD_TYPES,
+                     NODE_TYPES,
+                     DEBUG)
 
 
 class WeightDataDialog(QDialog):
@@ -77,6 +81,11 @@ class WeightDataDialog(QDialog):
         self.web_view.loadFinished.connect(self.show_tree)
         self.json_updated.connect(self.handle_json_updated)
 
+        self.active_layer_numeric_fields = [
+            field.name()
+            for field in iface.activeLayer().dataProvider().fields()
+            if field.typeName() in NUMERIC_FIELD_TYPES]
+
     def setup_context_menu(self):
         settings = QSettings()
         developer_mode = settings.value(
@@ -98,6 +107,12 @@ class WeightDataDialog(QDialog):
         self.frame.evaluateJavaScript('init_tree()')
 
     def handle_json_updated(self, data):
+        if DEBUG:
+            import pprint
+            pp = pprint.PrettyPrinter(indent=4)
+            print 'in handle_json_updated, data='
+            pp.pprint(data)
+
         self.project_definition = self.clean_json([data])
         self.json_cleaned.emit(self.project_definition)
 
@@ -124,3 +139,11 @@ class WeightDataDialog(QDialog):
     @pyqtProperty(str)
     def OPERATORS(self):
         return ';'.join(OPERATORS_DICT.values())
+
+    @pyqtProperty(str)
+    def ACTIVE_LAYER_NUMERIC_FIELDS(self):
+        return ';'.join(self.active_layer_numeric_fields)
+
+    @pyqtProperty(str)
+    def NODE_TYPES(self):
+        return ';'.join(["%s:%s" % (k, v) for k, v in NODE_TYPES.iteritems()])

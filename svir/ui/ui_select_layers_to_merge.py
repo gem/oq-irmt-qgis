@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_select_layers_to_merge.ui'
 #
-# Created: Mon Sep  8 16:21:26 2014
+# Created: Fri Dec  5 14:13:33 2014
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -65,8 +65,8 @@ class Ui_SelectLayersToMergeDialog(object):
         QtCore.QMetaObject.connectSlotsByName(SelectLayersToMergeDialog)
 
     def retranslateUi(self, SelectLayersToMergeDialog):
-        SelectLayersToMergeDialog.setWindowTitle(_translate("SelectLayersToMergeDialog", "Copy loss data into selected layer", None))
-        self.loss_layer_lbl.setText(_translate("SelectLayersToMergeDialog", "Layer containing loss data", None))
-        self.aggr_loss_attr_lbl.setText(_translate("SelectLayersToMergeDialog", "Attribute for aggregated losses", None))
+        SelectLayersToMergeDialog.setWindowTitle(_translate("SelectLayersToMergeDialog", "Copy risk data into selected layer", None))
+        self.loss_layer_lbl.setText(_translate("SelectLayersToMergeDialog", "Layer containing risk data", None))
+        self.aggr_loss_attr_lbl.setText(_translate("SelectLayersToMergeDialog", "Attribute for aggregated risk", None))
         self.label.setText(_translate("SelectLayersToMergeDialog", "Merge by attribute", None))
 

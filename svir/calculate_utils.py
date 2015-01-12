@@ -10,7 +10,7 @@
         email                : devops@openquake.org
  ***************************************************************************/
 
-# Copyright (c) 2010-2013, GEM Foundation.
+# Copyright (c) 2013-2014, GEM Foundation.
 #
 # OpenQuake is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Affero General Public License as published
@@ -35,34 +35,53 @@ from process_layer import ProcessLayer
 from utils import LayerEditingManager, tr, toggle_select_features_widget
 
 
+def add_numeric_attribute(proposed_attr_name, current_layer):
+        field = QgsField(proposed_attr_name, QVariant.Double)
+        field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
+        assigned_attr_names = ProcessLayer(current_layer).add_attributes(
+            [field])
+        assigned_attr_name = assigned_attr_names[proposed_attr_name]
+        return assigned_attr_name
+
+
 def calculate_svi(iface, current_layer, project_definition):
     """
     add an SVI attribute to the current layer
     """
 
     svi_node = project_definition['children'][1]
-    themes = svi_node['children']
+    try:
+        themes = svi_node['children']
+        # calculate the SVI only if all themes contain at least one indicator
+        for theme in themes:
+            indicators = theme['children']
+    except KeyError:
+        # FIXME Decide what to do here
+        return None, None
     try:
         themes_operator = svi_node['operator']
     except KeyError:
         themes_operator = DEFAULT_OPERATOR
 
-    if 'svi_field' in project_definition:
-        svi_attr_name = project_definition['svi_field']
-        if DEBUG:
+    if 'field' in svi_node:
+        svi_attr_name = svi_node['field']
+        # check that the field is still in the layer (the user might have
+        # deleted it). If it is not there anymore, add a new field
+        if current_layer.fieldNameIndex(svi_attr_name) == -1:
+            proposed_svi_attr_name = 'SVI'
+            svi_attr_name = add_numeric_attribute(
+                proposed_svi_attr_name, current_layer)
+        elif DEBUG:
             print 'Reusing %s for SVI' % svi_attr_name
     else:
-        svi_attr_name = 'SVI'
-        svi_field = QgsField(svi_attr_name, QVariant.Double)
-        svi_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
-        attr_names = ProcessLayer(current_layer).add_attributes(
-            [svi_field])
-        svi_attr_name = attr_names[svi_attr_name]
+        proposed_svi_attr_name = 'SVI'
+        svi_attr_name = add_numeric_attribute(
+            proposed_svi_attr_name, current_layer)
 
     # get the id of the new attribute
     svi_attr_id = ProcessLayer(current_layer).find_attribute_id(svi_attr_name)
 
-    discarded_feats_ids = []
+    discarded_feats_ids = set()
     try:
         with LayerEditingManager(current_layer, 'Add SVI', DEBUG):
             for feat in current_layer.getFeatures():
@@ -78,11 +97,14 @@ def calculate_svi(iface, current_layer, project_definition):
                     svi_value = 0
                 elif themes_operator in MUL_BASED_OPERATORS:
                     svi_value = 1
-
+                if not themes:
+                    discard_feat = True
+                    discarded_feats_ids.add(feat_id)
                 # iterate all themes of SVI
                 for theme in themes:
+                    if discard_feat:
+                        break  # proceed to next feature
                     indicators = theme['children']
-
                     #set default operator
                     try:
                         indicators_operator = theme['operator']
@@ -94,14 +116,23 @@ def calculate_svi(iface, current_layer, project_definition):
                         theme_result = 0
                     elif indicators_operator in MUL_BASED_OPERATORS:
                         theme_result = 1
-
+                    if not indicators:
+                        discard_feat = True
+                        discarded_feats_ids.add(feat_id)
+                        svi_value = QPyNullVariant(float)
+                        current_layer.changeAttributeValue(
+                            feat_id, svi_attr_id, svi_value)
+                        break  # proceed to next feature
                     # iterate all indicators of a theme
                     for indicator in indicators:
                         if (feat[indicator['field']] ==
                                 QPyNullVariant(float)):
                             discard_feat = True
-                            discarded_feats_ids.append(feat_id)
-                            break
+                            discarded_feats_ids.add(feat_id)
+                            current_layer.changeAttributeValue(
+                                feat_id, svi_attr_id, svi_value)
+                            break  # proceed to next theme, where if
+                                   # discard_feat is true it will break
                         # For "Average (equal weights)" it's equivalent to use
                         # equal weights, or to sum the indicators
                         # (all weights 1)
@@ -127,7 +158,9 @@ def calculate_svi(iface, current_layer, project_definition):
                                 indicators_operator)
                             raise RuntimeError(error_message)
                     if discard_feat:
-                        break
+                        current_layer.changeAttributeValue(
+                            feat_id, svi_attr_id, svi_value)
+                        break  # to next feature
                     if indicators_operator == OPERATORS_DICT['AVG']:
                         theme_result /= len(indicators)
 
@@ -152,7 +185,6 @@ def calculate_svi(iface, current_layer, project_definition):
                 else:
                     if themes_operator == OPERATORS_DICT['AVG']:
                         svi_value /= len(themes)
-
                 current_layer.changeAttributeValue(
                     feat_id, svi_attr_id, svi_value)
         msg = ('The SVI has been calculated for fields containing '
@@ -171,7 +203,7 @@ def calculate_svi(iface, current_layer, project_definition):
                 current_layer.selectedFeaturesIds())
             iface.messageBar().pushWidget(widget, QgsMessageBar.WARNING)
 
-        project_definition['svi_field'] = svi_attr_name
+        svi_node['field'] = svi_attr_name
         return svi_attr_id, discarded_feats_ids
 
     except TypeError as e:
@@ -181,86 +213,213 @@ def calculate_svi(iface, current_layer, project_definition):
                                        level=QgsMessageBar.CRITICAL)
 
 
-def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
-                  risk_field_name, discarded_feats_ids, iri_operator=None,
-                  reuse_field=False):
+def calculate_ri(iface, current_layer, project_definition):
     """
-    Copy the RISK and calculate an IRI attribute to the current layer
-    :param reuse_field:
+    add an RI attribute to the current layer
+    """
+    # get the risk index node, starting from the tree root
+    ri_node = project_definition['children'][0]
+    try:
+        # calculate the RI only if there is at least one risk indicator
+        indicators = ri_node['children']
+    except KeyError:
+        # FIXME Decide what to do here
+        return None, None
+    try:
+        ri_operator = ri_node['operator']
+    except KeyError:
+        ri_operator = DEFAULT_OPERATOR
+
+    if 'field' in ri_node:
+        ri_attr_name = ri_node['field']
+        # check that the field is still in the layer (the user might have
+        # deleted it). If it is not there anymore, add a new field
+        if current_layer.fieldNameIndex(ri_attr_name) == -1:
+            proposed_ri_attr_name = 'RI'
+            ri_attr_name = add_numeric_attribute(
+                proposed_ri_attr_name, current_layer)
+        if DEBUG:
+            print 'Reusing %s for RI' % ri_attr_name
+    else:
+        proposed_ri_attr_name = 'RI'
+        ri_attr_name = add_numeric_attribute(
+            proposed_ri_attr_name, current_layer)
+
+    # get the id of the new attribute
+    ri_attr_id = ProcessLayer(current_layer).find_attribute_id(ri_attr_name)
+
+    discarded_feats_ids = set()
+    try:
+        with LayerEditingManager(current_layer, 'Add RI', DEBUG):
+            for feat in current_layer.getFeatures():
+                # If a feature contains any NULL value, discard_feat will
+                # be set to True and the corresponding RI will be set to
+                # NULL
+                discard_feat = False
+                feat_id = feat.id()
+
+                # init ri_value to the correct value depending on
+                # ri_operator
+                if ri_operator in SUM_BASED_OPERATORS:
+                    ri_value = 0
+                elif ri_operator in MUL_BASED_OPERATORS:
+                    ri_value = 1
+                if not indicators:
+                    discard_feat = True
+                    discarded_feats_ids.add(feat_id)
+                for indicator in indicators:
+                    if (feat[indicator['field']] ==
+                            QPyNullVariant(float)):
+                        discard_feat = True
+                        discarded_feats_ids.add(feat_id)
+                        current_layer.changeAttributeValue(
+                            feat_id, ri_attr_id, ri_value)
+                        break  # proceed to next feature
+                    # For "Average (equal weights)" it's equivalent to use
+                    # equal weights, or to sum the indicators
+                    # (all weights 1)
+                    # and divide by the number of indicators (we use
+                    # the latter solution)
+                    if ri_operator in (OPERATORS_DICT['SUM_S'],
+                                       OPERATORS_DICT['AVG'],
+                                       OPERATORS_DICT['MUL_S']):
+                        indicator_weighted = feat[indicator['field']]
+                    else:
+                        indicator_weighted = (feat[indicator['field']] *
+                                              indicator['weight'])
+
+                    if ri_operator in SUM_BASED_OPERATORS:
+                        ri_value += indicator_weighted
+                    elif ri_operator in MUL_BASED_OPERATORS:
+                        ri_value *= indicator_weighted
+                    else:
+                        error_message = (
+                            'invalid indicators_operator: %s' %
+                            ri_operator)
+                        raise RuntimeError(error_message)
+                if discard_feat:
+                    ri_value = QPyNullVariant(float)
+                elif ri_operator == OPERATORS_DICT['AVG']:
+                    ri_value /= len(indicators)
+                current_layer.changeAttributeValue(
+                    feat_id, ri_attr_id, ri_value)
+        msg = ('The Risk Index has been calculated for fields containing '
+               'non-NULL values and it was added to the layer as '
+               'a new attribute called %s') % ri_attr_name
+        iface.messageBar().pushMessage(
+            tr('Info'), tr(msg), level=QgsMessageBar.INFO)
+        if discarded_feats_ids:
+            widget = toggle_select_features_widget(
+                tr('Warning'),
+                tr('Invalid indicators were found in some features while '
+                   'calculating the Risk Index'),
+                tr('Select invalid features'),
+                current_layer,
+                discarded_feats_ids,
+                current_layer.selectedFeaturesIds())
+            iface.messageBar().pushWidget(widget, QgsMessageBar.WARNING)
+
+        ri_node['field'] = ri_attr_name
+        return ri_attr_id, discarded_feats_ids
+
+    except TypeError as e:
+        current_layer.dataProvider().deleteAttributes([ri_attr_id])
+        msg = 'Could not calculate the Risk Index due to data problems: %s' % e
+        iface.messageBar().pushMessage(tr('Error'), tr(msg),
+                                       level=QgsMessageBar.CRITICAL)
+
+
+def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
+                  ri_attr_id, discarded_feats_ids, reuse_field=False):
+    """
+    Calculate the Risk Index and calculate an IRI attribute to the
+    current layer
     """
 
-    #set default
-    if iri_operator is None:
+    try:
+        project_definition['children'][0]['field']  # ri node's field
+        project_definition['children'][1]['field']  # svi node's field
+    except KeyError:
+        return None, None
+
+    try:
+        iri_operator = project_definition['operator']
+    except KeyError:
         iri_operator = DEFAULT_OPERATOR
 
     risk_weight = project_definition['children'][0]['weight']
     svi_weight = project_definition['children'][1]['weight']
 
-    if 'iri_field' in project_definition:
-        iri_attr_name = project_definition['iri_field']
-        if DEBUG:
+    if 'field' in project_definition:  # The root is the node containing IRI
+        iri_attr_name = project_definition['field']
+        # check that the field is still in the layer (the user might have
+        # deleted it). If it is not there anymore, add a new field
+        if current_layer.fieldNameIndex(iri_attr_name) == -1:
+            proposed_iri_attr_name = 'IRI'
+            iri_attr_name = add_numeric_attribute(
+                proposed_iri_attr_name, current_layer)
+        elif DEBUG:
             print 'Reusing %s for IRI' % iri_attr_name
     else:
-        iri_attr_name = 'IRI'
-        iri_field = QgsField(iri_attr_name, QVariant.Double)
-        iri_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
-        attr_names = ProcessLayer(current_layer).add_attributes([iri_field])
-        iri_attr_name = attr_names[iri_attr_name]
+        proposed_iri_attr_name = 'IRI'
+        iri_attr_name = add_numeric_attribute(
+            proposed_iri_attr_name, current_layer)
 
-    # get the id of the new attributes
+    # get the id of the new attribute
     iri_attr_id = ProcessLayer(current_layer).find_attribute_id(iri_attr_name)
 
-    discarded_risk_feats_ids = []
+    if discarded_feats_ids is None:
+        discarded_feats_ids = set()
 
     try:
         with LayerEditingManager(current_layer, 'Add IRI', DEBUG):
             for feat in current_layer.getFeatures():
                 feat_id = feat.id()
                 svi_value = feat.attributes()[svi_attr_id]
-                risk_value = feat[risk_field_name]
-                if (risk_value == QPyNullVariant(float)
+                ri_value = feat.attributes()[ri_attr_id]
+                # ri_value = feat[iri_field_name]
+                if (ri_value == QPyNullVariant(float)
                         or feat_id in discarded_feats_ids):
                     iri_value = QPyNullVariant(float)
-                    discarded_risk_feats_ids.append(feat_id)
+                    discarded_feats_ids.add(feat_id)
                 elif iri_operator == OPERATORS_DICT['SUM_S']:
-                    iri_value = svi_value + risk_value
+                    iri_value = svi_value + ri_value
                 elif iri_operator == OPERATORS_DICT['MUL_S']:
-                    iri_value = svi_value * risk_value
+                    iri_value = svi_value * ri_value
                 elif iri_operator == OPERATORS_DICT['SUM_W']:
                     iri_value = (
-                        svi_value * svi_weight + risk_value * risk_weight)
+                        svi_value * svi_weight + ri_value * risk_weight)
                 elif iri_operator == OPERATORS_DICT['MUL_W']:
                     iri_value = (
-                        svi_value * svi_weight * risk_value * risk_weight)
+                        svi_value * svi_weight * ri_value * risk_weight)
                 elif iri_operator == OPERATORS_DICT['AVG']:
                     # For "Average (equal weights)" it's equivalent to use
                     # equal weights, or to sum the indices (all weights 1)
                     # and divide by the number of indices (we use
                     # the latter solution)
-                    iri_value = (svi_value + risk_value) / 2.0
+                    iri_value = (svi_value + ri_value) / 2.0
                 # store IRI
                 current_layer.changeAttributeValue(
                     feat_id, iri_attr_id, iri_value)
         project_definition['operator'] = iri_operator
         # set the field name for the copied RISK layer
-        project_definition['risk_field'] = risk_field_name
-        project_definition['iri_field'] = iri_attr_name
-        msg = ('The IRI has been calculated for fields containing '
-               'non-NULL values and it was added to the layer as '
-               'a new attribute called %s') % iri_attr_name
+        # project_definition['ri_field'] = ri_field_name
+        project_definition['field'] = iri_attr_name
+        msg = ('The IRI was calculated for non-NULL input values. '
+               'Results were stored into attribute %s') % iri_attr_name
         iface.messageBar().pushMessage(tr('Info'), tr(msg),
                                        level=QgsMessageBar.INFO)
-        if discarded_risk_feats_ids:
+        if discarded_feats_ids:
             widget = toggle_select_features_widget(
                 tr('Warning'),
                 tr('Invalid values were found in some features while '
-                   'calculating IRI'),
+                    'calculating the IRI'),
                 tr('Select invalid features'),
                 current_layer,
-                discarded_risk_feats_ids,
+                discarded_feats_ids,
                 current_layer.selectedFeaturesIds())
             iface.messageBar().pushWidget(widget, QgsMessageBar.WARNING)
-        return iri_attr_id
+        return iri_attr_id, discarded_feats_ids
 
     except TypeError as e:
         current_layer.dataProvider().deleteAttributes(

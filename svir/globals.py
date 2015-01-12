@@ -60,48 +60,68 @@ OPERATORS_DICT['MUL_W'] = 'Weighted multiplication'
 
 DEFAULT_OPERATOR = OPERATORS_DICT['SUM_W']
 SUM_BASED_OPERATORS = (OPERATORS_DICT['SUM_S'],
-                          OPERATORS_DICT['SUM_W'],
-                          OPERATORS_DICT['AVG'])
+                       OPERATORS_DICT['SUM_W'],
+                       OPERATORS_DICT['AVG'])
 MUL_BASED_OPERATORS = (OPERATORS_DICT['MUL_S'],
-                          OPERATORS_DICT['MUL_W'])
+                       OPERATORS_DICT['MUL_W'])
+
+NODE_TYPES = {'IRI': 'Integrated Risk Index',
+              'RI': 'Risk Index',
+              'RISK_INDICATOR': 'Risk Indicator',
+              'SVI': 'Social Vulnerability Index',
+              'SV_THEME': 'Social Vulnerability Theme',
+              'SV_INDICATOR': 'Social Vulnerability Indicator',
+              }
+
 
 PROJECT_TEMPLATE = {
-    'name': 'ir',
-    'weight': '',
-    'level': 1,
+    'name': 'IRI',
+    'type': NODE_TYPES['IRI'],
+    'weight': 1.0,
+    'level': '1.0',
+    'operator': DEFAULT_OPERATOR,
     'children': [
-        {'name': 'risk',
+        {'name': 'RI',
+         'type': NODE_TYPES['RI'],
          'weight': 0.5,
-         'level': 2},
-        {'name': 'svi',
+         'level': '2.0',
+         'children': []},
+        {'name': 'SVI',
+         'type': NODE_TYPES['SVI'],
          'weight': 0.5,
-         'level': 2,
+         'level': '2.0',
          'children': []}
     ]
 }
 
 THEME_TEMPLATE = {
     'name': '',
-    'weight': 0.0,
-    'level': 3.0,
-    'type': 'categoryIndicator',
+    'weight': 1.0,
+    'level': '3.0',
+    'type': NODE_TYPES['SV_THEME'],
+    'operator': DEFAULT_OPERATOR,
     'children': []
 }
 
+# Actually not used, because it's built in the d3 javascript
 INDICATOR_TEMPLATE = {
     'name': '',
-    'weight': 0.0,
-    'level': 4.0,
-    'type': 'primaryIndicator',
-    'field': ''
+    'weight': 1.0,
+    'level': '4.0',
+    'type': NODE_TYPES['SV_INDICATOR'],
+    'field': '',
+    'children': []
 }
 
+# FIXME
 DEMO_JSON = {
-    "name": "ir",
+    "name": "IR",
     "weight": "",
     "level": 1.0,
     "children": [
-        {"name": "risk",
+        {"name": "RI",
+         "weight": 0.5},
+        {"name": "SVI",
          "weight": 0.5,
          "level": 2.0},
         {"name": "svi",

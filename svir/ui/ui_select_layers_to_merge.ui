@@ -14,7 +14,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Copy loss data into selected layer</string>
+   <string>Copy risk data into selected layer</string>
   </property>
   <property name="modal">
    <bool>true</bool>
@@ -28,7 +28,7 @@
      <item row="1" column="0">
       <widget class="QLabel" name="loss_layer_lbl">
        <property name="text">
-        <string>Layer containing loss data</string>
+        <string>Layer containing risk data</string>
        </property>
       </widget>
      </item>
@@ -38,7 +38,7 @@
      <item row="2" column="0">
       <widget class="QLabel" name="aggr_loss_attr_lbl">
        <property name="text">
-        <string>Attribute for aggregated losses</string>
+        <string>Attribute for aggregated risk</string>
        </property>
       </widget>
      </item>

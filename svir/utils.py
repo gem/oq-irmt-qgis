@@ -158,9 +158,9 @@ def toggle_select_features(layer, use_new, new_feature_ids, old_feature_ids):
     :type old_feature_ids: QgsFeatureIds
     """
     if use_new:
-        layer.setSelectedFeatures(new_feature_ids)
+        layer.setSelectedFeatures(list(new_feature_ids))
     else:
-        layer.setSelectedFeatures(old_feature_ids)
+        layer.setSelectedFeatures(list(old_feature_ids))
 
 
 def toggle_select_features_widget(title, text, button_text, layer,
