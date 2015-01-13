@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'ui/ui_attribute_selection.ui'
 #
-# Created: Fri Aug  1 12:03:27 2014
-#      by: PyQt4 UI code generator 4.9.1
+# Created: Tue Jan 13 15:09:52 2015
+#      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,7 +12,16 @@ from PyQt4 import QtCore, QtGui
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
-    _fromUtf8 = lambda s: s
+    def _fromUtf8(s):
+        return s
+
+try:
+    _encoding = QtGui.QApplication.UnicodeUTF8
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig, _encoding)
+except AttributeError:
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig)
 
 class Ui_AttributeSelctionDialog(object):
     def setupUi(self, AttributeSelctionDialog):
@@ -63,10 +72,10 @@ class Ui_AttributeSelctionDialog(object):
         QtCore.QMetaObject.connectSlotsByName(AttributeSelctionDialog)
 
     def retranslateUi(self, AttributeSelctionDialog):
-        AttributeSelctionDialog.setWindowTitle(QtGui.QApplication.translate("AttributeSelctionDialog", "Select attributes for merging", None, QtGui.QApplication.UnicodeUTF8))
-        self.groupBox.setTitle(QtGui.QApplication.translate("AttributeSelctionDialog", "Loss Layer", None, QtGui.QApplication.UnicodeUTF8))
-        self.loss_attr_name_lbl.setText(QtGui.QApplication.translate("AttributeSelctionDialog", "Loss attribute name", None, QtGui.QApplication.UnicodeUTF8))
-        self.zone_id_attr_name_loss_lbl.setText(QtGui.QApplication.translate("AttributeSelctionDialog", "Zone ID attribute name", None, QtGui.QApplication.UnicodeUTF8))
-        self.groupBox_2.setTitle(QtGui.QApplication.translate("AttributeSelctionDialog", "Zonal Layer", None, QtGui.QApplication.UnicodeUTF8))
-        self.zone_id_attr_name_zone_lbl.setText(QtGui.QApplication.translate("AttributeSelctionDialog", "Zone ID attriubute name", None, QtGui.QApplication.UnicodeUTF8))
+        AttributeSelctionDialog.setWindowTitle(_translate("AttributeSelctionDialog", "Aggregate loss by zone", None))
+        self.groupBox.setTitle(_translate("AttributeSelctionDialog", "Loss Layer", None))
+        self.loss_attr_name_lbl.setText(_translate("AttributeSelctionDialog", "Loss attribute name", None))
+        self.zone_id_attr_name_loss_lbl.setText(_translate("AttributeSelctionDialog", "Zone ID attribute name", None))
+        self.groupBox_2.setTitle(_translate("AttributeSelctionDialog", "Zonal Layer", None))
+        self.zone_id_attr_name_zone_lbl.setText(_translate("AttributeSelctionDialog", "Zone ID attriubute name", None))
 

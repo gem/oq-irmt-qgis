@@ -30,7 +30,8 @@
 from PyQt4.QtCore import pyqtSlot, QDir
 from PyQt4.QtGui import (QFileDialog,
                          QDialog,
-                         QDialogButtonBox)
+                         QDialogButtonBox,
+                         QMessageBox)
 from qgis.core import QgsVectorLayer, QGis, QgsRasterLayer, QgsMapLayerRegistry
 from qgis.gui import QgsMessageBar
 from process_layer import ProcessLayer
@@ -90,6 +91,16 @@ class SelectInputLayersDialog(QDialog):
             return layer
         else:
             return None
+
+    @pyqtSlot(int)
+    def on_purge_chk_stateChanged(self, state):
+        if state:
+            reply = QMessageBox.question(
+                self, 'Warning!',
+                "Are you sure to delete the empty zones from the zonal layer?",
+                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if reply == QMessageBox.No:
+                self.ui.purge_chk.setCheckState(0)
 
     @pyqtSlot()
     def on_loss_layer_tbn_clicked(self):

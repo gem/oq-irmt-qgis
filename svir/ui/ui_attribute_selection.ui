@@ -14,7 +14,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Select attributes for merging</string>
+   <string>Aggregate loss by zone</string>
   </property>
   <property name="modal">
    <bool>true</bool>
