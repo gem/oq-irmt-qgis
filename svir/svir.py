@@ -137,9 +137,6 @@ class Svir:
         # Input layer specifying zones for aggregation and containing social
         # vulnerability data already aggregated by zone
         self.zonal_layer = None
-        # From the zonal layer we might want to purge zones containing no loss
-        # points, and build a purged zonal layer from that
-        self.purged_layer = None
         # our own toolbar
         self.toolbar = None
         # keep a list of the menu items, in order to easily unload them later
@@ -714,7 +711,6 @@ class Svir:
         to select what are the attribute names for
         * loss values (from loss layer)
         * zone id (from loss layer)
-        * social vulnerability index (from zonal layer)
         * zone id (from zonal layer)
         """
         dlg = AttributeSelectionDialog()
@@ -1169,9 +1165,7 @@ class Svir:
         Create a new zonal layer containing all the zones of the
         aggregation layer that contain at least one loss point
         """
-        self.purged_layer = ProcessLayer(self.zonal_layer).duplicate_in_memory(
-            'Zonal data (purged empty zones)', add_to_registry=True)
-        pr = self.purged_layer.dataProvider()
+        pr = self.zonal_layer.dataProvider()
         caps = pr.capabilities()
 
         tot_zones = len(list(self.zonal_layer.getFeatures()))
@@ -1179,33 +1173,28 @@ class Svir:
         msg_bar_item, progress = create_progress_message_bar(
             self.iface.messageBar(), msg)
 
-        with LayerEditingManager(self.purged_layer,
+        empty_zones_ids = []
+
+        with LayerEditingManager(self.zonal_layer,
                                  msg,
                                  DEBUG):
             for current_zone, zone_feature in enumerate(
-                    self.purged_layer.getFeatures()):
+                    self.zonal_layer.getFeatures()):
                 progress_percent = current_zone / float(tot_zones) * 100
                 progress.setValue(progress_percent)
-                # keep only zones which contain at least one loss point
-                pts_count_attr_name = self.aggr_loss_attr_names['count']
-                if zone_feature[pts_count_attr_name] == 0:
-                    # delete the feature from the layer
-                    if caps & QgsVectorDataProvider.deleteFeatures:
-                        pr.deleteFeatures([zone_feature.id()])
+                # save the ids of the zones to purge (which contain no loss
+                # points)
+                if zone_feature[self.aggr_loss_attr_names['count']] == 0:
+                    empty_zones_ids.append(zone_feature.id())
+            if caps & QgsVectorDataProvider.DeleteFeatures:
+                pr.deleteFeatures(empty_zones_ids)
 
         clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
 
-        # Add purged layer to registry
-        if self.purged_layer.isValid():
-            QgsMapLayerRegistry.instance().addMapLayer(self.purged_layer)
-            msg = "Zones containing at least one loss point have been " \
-                  "copied into a new zonal layer."
-            self.iface.messageBar().pushMessage(tr("Info"),
-                                                tr(msg),
-                                                level=QgsMessageBar.INFO,
-                                                duration=8)
-        else:
-            raise RuntimeError('Purged layer invalid')
+        msg = "Zones containing no loss points were deleted"
+        self.iface.messageBar().pushMessage(tr("Warning"),
+                                            tr(msg),
+                                            level=QgsMessageBar.WARNING)
 
     def copy_loss_values_to_current_layer(self):
         """
