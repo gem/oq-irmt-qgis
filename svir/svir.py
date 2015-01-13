@@ -980,7 +980,7 @@ class Svir:
         with TraceTimeManager(msg, DEBUG):
             tot_zones = len(list(self.zonal_layer.getFeatures()))
             msg_bar_item, progress = create_progress_message_bar(
-                self.iface, msg)
+                self.iface.messageBar(), msg)
             with LayerEditingManager(self.zonal_layer,
                                      msg,
                                      DEBUG):
@@ -1067,7 +1067,7 @@ class Svir:
             tot_zones = len(list(self.zonal_layer.getFeatures()))
             msg = tr("Step 3 of 3: aggregating points by zone...")
             msg_bar_item, progress = create_progress_message_bar(
-                self.iface, msg)
+                self.iface.messageBar(), msg)
 
             # check if there are no loss points contained in any of the zones
             # and later display a warning if that occurs
