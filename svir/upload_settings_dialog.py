@@ -37,7 +37,7 @@ LICENSES = (
     ('CC0', 'http://creativecommons.org/about/cc0'),
     ('CC BY 3.0 ', 'http://creativecommons.org/licenses/by/3.0/'),
     ('CC BY-SA 3.0', 'http://creativecommons.org/licenses/by-sa/3.0/'),
-    ('C BY-NC-SA 3.0', 'http://creativecommons.org/licenses/by-nc-sa/3.0/'),
+    ('CC BY-NC-SA 3.0', 'http://creativecommons.org/licenses/by-nc-sa/3.0/'),
 )
 DEFAULT_LICENSE = LICENSES[2]  # CC BY-SA 3.0
 
