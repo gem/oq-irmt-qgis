@@ -224,7 +224,7 @@ def platform_login(host, username, password, session):
         raise SvNetworkError(error_message)
 
 
-def upload_shp(host, session, file_stem):
+def upload_shp(host, session, file_stem, username):
     files = {'layer_title': file_stem,
              'base_file': ('file.shp', open('%s.shp' % file_stem, 'rb')),
              'dbf_file': ('file.dbf', open('%s.dbf' % file_stem, 'rb')),
@@ -232,9 +232,12 @@ def upload_shp(host, session, file_stem):
              'prj_file': ('file.prj', open('%s.prj' % file_stem, 'rb')),
              'xml_file': ('file.xml', open('%s.xml' % file_stem, 'r')),
              }
+    permissions = ('{"authenticated":"_none",'
+                   '"anonymous":"_none",'
+                   '"users":[["%s","layer_readwrite"],["%s","layer_admin"]]'
+                   '}') % (username, username)
     payload = {'charset': ['UTF-8'],
-               'permissions': [
-                   '{"anonymous":"layer_readonly","authenticated":"layer_readwrite","users":[]}']}
+               'permissions': [permissions]}
 
     r = session.post(host + '/layers/upload', data=payload, files=files)
     response = json.loads(r.text)

@@ -99,7 +99,7 @@ class UploadMetadataDialog(QDialog):
         self._login_to_platform()
         # adding by emitting signal in different thread
         self.uploadThread = UploaderThread(
-            self.hostname, self.session, self.file_stem)
+            self.hostname, self.session, self.file_stem, self.username)
         self.uploadThread.upload_done.connect(self.upload_done)
         self.uploadThread.start()
 
@@ -146,13 +146,15 @@ class UploaderThread(QThread):
     # integer arguments.
     upload_done = pyqtSignal(str, name='upload_done')
 
-    def __init__(self, hostname, session, file_stem):
+    def __init__(self, hostname, session, file_stem, username):
         self.hostname = hostname
         self.session = session
         self.file_stem = file_stem
+        self.username = username
         QThread.__init__(self)
 
     def run(self):
-        layer_url = upload_shp(self.hostname, self.session, self.file_stem)
+        layer_url = upload_shp(
+            self.hostname, self.session, self.file_stem, self.username)
         self.upload_done.emit(str(layer_url))
         return
