@@ -538,6 +538,12 @@
                                     newNodeName.addClass("ui-state-error");
                                     return false;
                                 }
+                                if (node_type == node_types_dict.SV_INDICATOR || node_type == node_types_dict.RISK_INDICATOR) {
+                                    var newNodeField = $('#field');
+                                    if (newNodeField.val().isEmpty()) {
+                                        return false;
+                                    }
+                                }
                                 var field = $('#field').val();
                                     updateNode(new_node, field, newNodeName.val());
                                 $( this ).dialog( "close" );
