@@ -150,7 +150,7 @@
 
             if (node_type != node_types_dict.SV_THEME) {
                 dialog
-                    .append('<br/><label for="field">Field: </label>')
+                    .append('<br/><label for="field">Field name: </label>')
                     .append('<select id="field">' + fieldOptions(node) + '</select><br/>');
 
                 // By default, set the name to be equal to the fieldname selected
