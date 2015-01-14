@@ -31,13 +31,14 @@
             title: "Set weights and operator",
             autoOpen: false,
             modal: true,
-            minWidth: 400
+            minWidth: 600
         });
         //  Dialog to set up a new node to insert into the project definition
         $("#projectDefNewNodeDialog").dialog({
             title: "Add new indicator",
             autoOpen: false,
             modal: true,
+            minWidth: 500,
             dialogClass: "no-close",
             closeOnEscape: false
         });
@@ -134,7 +135,7 @@
             dialog.empty();
 
             dialog
-                .append('<label for="name">Name: </label>')
+                .append('<label for="name">Description: </label>')
                 .append('<input id="newNodeName" type="text" name="newNodeName" value="">');
 
             newNodeName = $('#newNodeName');
