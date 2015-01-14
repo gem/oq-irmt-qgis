@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_weight_data.ui'
 #
-# Created: Fri Dec  5 10:51:26 2014
+# Created: Wed Jan 14 12:08:46 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -27,7 +27,7 @@ class Ui_WeightDataDialog(object):
     def setupUi(self, WeightDataDialog):
         WeightDataDialog.setObjectName(_fromUtf8("WeightDataDialog"))
         WeightDataDialog.setWindowModality(QtCore.Qt.ApplicationModal)
-        WeightDataDialog.resize(900, 551)
+        WeightDataDialog.resize(800, 700)
         WeightDataDialog.setModal(True)
         self.gridLayout = QtGui.QGridLayout(WeightDataDialog)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
