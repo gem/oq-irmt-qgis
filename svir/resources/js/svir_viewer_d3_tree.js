@@ -29,6 +29,7 @@
         //  Project definition weight dialog
         $("#projectDefWeightDialog").dialog({
             title: "Set weights and operator",
+            position: {my: "left top", at: "left top", of: "#projectDefDialog"},
             autoOpen: false,
             modal: true,
             minWidth: 600
@@ -36,6 +37,7 @@
         //  Dialog to set up a new node to insert into the project definition
         $("#projectDefNewNodeDialog").dialog({
             title: "Add new indicator",
+            position: {my: "left top", at: "left top", of: "#projectDefDialog"},
             autoOpen: false,
             modal: true,
             minWidth: 500,
