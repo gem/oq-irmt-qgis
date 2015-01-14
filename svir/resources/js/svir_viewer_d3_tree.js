@@ -376,14 +376,17 @@
                 .attr("r", 1e-6)
                 .attr("class", function(d){return node_type_to_class(d.type);})
                 .on("mouseover", function(d) {
-                    var info = d.name;
-                    tooltipdiv .transition()
-                        .duration(500)
-                        .style("opacity", 0.9);
-                    tooltipdiv .html(info)
-                        .style("left", (d3.event.pageX) + "px")
-                        .style("top", (d3.event.pageY - 28) + "px");
-                    })
+                    var info;
+                    if (d.field !== undefined) {
+                        info = d.field;
+                        tooltipdiv .transition()
+                            .duration(500)
+                            .style("opacity", 0.7);
+                        tooltipdiv .html(info)
+                            .style("left", (d3.event.pageX) + "px")
+                            .style("top", (d3.event.pageY - 20) + "px");
+                    }
+                })
                 .on("mouseout", function(d) {
                     tooltipdiv .transition()
                         .duration(500)
