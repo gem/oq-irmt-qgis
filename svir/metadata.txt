@@ -12,7 +12,7 @@
 name=GEM OpenQuake Social Vulnerability and Integrated Risk (SVIR)
 qgisMinimumVersion=2.0
 description=GEM OpenQuake Social Vulnerability and Integrated Risk (SVIR)
-version=1.0.0
+version=1.0.1
 author=GEM Foundation
 email=staff.it@globalquakemodel.org
 
@@ -31,7 +31,7 @@ tracker=https://github.com/gem/qt-experiments/issues
 repository=https://github.com/gem/qt-experiments
 icon=resources/start_plugin_icon.png
 # experimental flag
-experimental=False
+experimental=True
 
 # deprecated flag (applies to the whole plugin, not just a single version
 deprecated=False

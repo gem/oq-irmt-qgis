@@ -6,12 +6,10 @@
  OpenQuake Social Vulnerability and Integrated Risk
                               -------------------
         begin                : 2013-10-24
-        copyright            : (C) 2013 by GEM Foundation
+        copyright            : (C) 2014-2015 by GEM Foundation
         email                : devops@openquake.org
  ***************************************************************************/
 
-# Copyright (c) 2010-2013, GEM Foundation.
-#
 # OpenQuake is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Affero General Public License as published
 # by the Free Software Foundation, either version 3 of the License, or
@@ -30,7 +28,7 @@ from PyQt4.QtCore import QSettings
 
 DEBUG = QSettings().value('/svir/developer_mode', False, type=bool)
 
-SVIR_PLUGIN_VERSION = '1.0.0'
+SVIR_PLUGIN_VERSION = '1.0.1'
 
 INT_FIELD_TYPE_NAME = "integer"
 REAL_FIELD_TYPE_NAME = "Real"

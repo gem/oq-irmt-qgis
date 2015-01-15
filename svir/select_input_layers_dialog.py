@@ -6,11 +6,9 @@
  OpenQuake Social Vulnerability and Integrated Risk
                               -------------------
         begin                : 2013-10-24
-        copyright            : (C) 2013 by GEM Foundation
+        copyright            : (C) 2014-2015 by GEM Foundation
         email                : devops@openquake.org
  ***************************************************************************/
-
-# Copyright (c) 2010-2013, GEM Foundation.
 #
 # OpenQuake is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Affero General Public License as published
