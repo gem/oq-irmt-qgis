@@ -203,6 +203,9 @@ def min_max(input_list, variant_name=None, inverse=False):
     list_max = max(input_list)
     # Get the range of the list
     list_range = float(list_max - list_min)
+    if list_range == 0:
+        raise ValueError("The min_max transformation can not be performed"
+                         " if the range of valid values (max-min) is zero.")
     # Transform
     if inverse:
         output_list = map(
