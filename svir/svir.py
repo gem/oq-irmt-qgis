@@ -584,17 +584,57 @@ class Svir:
             ri_attr_id, discarded_feats_ids)
         return svi_attr_id, ri_attr_id, iri_attr_id
 
+    def is_svi_renderable(self, proj_def):
+        svi_node = proj_def['children'][1]
+        # check that that the svi_node has a corresponding field
+        if 'field' not in svi_node:
+            return False
+        # check that there is at least one theme
+        if 'children' not in svi_node:
+            return False
+        if len(svi_node['children']) == 0:
+            return False
+        # check that each theme contains at least one indicator
+        for theme_node in svi_node['children']:
+            if len(theme_node['children']) == 0:
+                return False
+        return True
+
+    def is_ri_renderable(self, proj_def):
+        ri_node = proj_def['children'][0]
+        # check that that the ri_node has a corresponding field
+        if 'field' not in ri_node:
+            return False
+        # check that there is at least one risk indicator
+        if 'children' not in ri_node:
+            return False
+        if len(ri_node['children']) == 0:
+            return False
+        return True
+
+    def is_iri_renderable(self, proj_def):
+        iri_node = proj_def
+        # check that that the iri_node has a corresponding field
+        if 'field' not in iri_node:
+            return False
+        # check that all the sub-indices are well-defined
+        if not self.is_ri_renderable(proj_def):
+            return False
+        if not self.is_svi_renderable(proj_def):
+            return False
+        return True
+
     def redraw_ir_layer(self, data):
         # if an IRI has been already calculated, show it
         # else show the SVI, else RI
-        if 'field' in data:  # the root is the IRI node
+        if self.is_iri_renderable(data):
             target_field = data['field']
             printing_str = 'IRI'
-        elif 'field' in data['children'][1]:  # SVI node
+        elif self.is_svi_renderable(data):
             svi_node = data['children'][1]
             target_field = svi_node['field']
             printing_str = 'SVI'
-        elif 'field' in data['children'][0]:  # RI node
+        elif self.is_ri_renderable(data):
             ri_node = data['children'][0]
             target_field = ri_node['field']
             printing_str = 'RI'
