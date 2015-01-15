@@ -240,9 +240,9 @@ def upload_shp(host, session, file_stem, username):
     r = session.post(host + '/layers/upload', data=payload, files=files)
     response = json.loads(r.text)
     try:
-        return host + response['url']
+        return host + response['url'], True
     except KeyError:
-        return False
+        return response, False
 
 
 class Register(collections.OrderedDict):

@@ -101,14 +101,14 @@ class UploadMetadataDialog(QDialog):
         self.uploadThread.upload_done.connect(self.upload_done)
         self.uploadThread.start()
 
-    def upload_done(self, layer_url):
-        if layer_url != 'False':
+    def upload_done(self, layer_url, success):
+        if success != 'False':
             self.message_bar_item.setText('Loading page...')
             self.web_view.load(QUrl(layer_url))
         else:
             clear_progress_message_bar(self.message_bar)
             self.message_bar.pushMessage(
-                'Upload error', 'problems', level=QgsMessageBar.CRITICAL)
+                'Upload error', layer_url, level=QgsMessageBar.CRITICAL)
 
     def load_finished(self):
         clear_progress_message_bar(self.message_bar, self.message_bar_item)
@@ -142,7 +142,7 @@ class UploadMetadataDialog(QDialog):
 class UploaderThread(QThread):
     # This defines a signal called 'rangeChanged' that takes two
     # integer arguments.
-    upload_done = pyqtSignal(str, name='upload_done')
+    upload_done = pyqtSignal(str, str, name='upload_done')
 
     def __init__(self, hostname, session, file_stem, username):
         self.hostname = hostname
@@ -152,7 +152,7 @@ class UploaderThread(QThread):
         QThread.__init__(self)
 
     def run(self):
-        layer_url = upload_shp(
+        layer_url, success = upload_shp(
             self.hostname, self.session, self.file_stem, self.username)
-        self.upload_done.emit(str(layer_url))
+        self.upload_done.emit(str(layer_url), str(success))
         return
