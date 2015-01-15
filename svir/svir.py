@@ -84,7 +84,6 @@ from select_input_layers_dialog import SelectInputLayersDialog
 from select_layers_to_merge_dialog import SelectLayersToMergeDialog
 from attribute_selection_dialog import AttributeSelectionDialog
 from transformation_dialog import TransformationDialog
-from select_attrs_for_stats_dialog import SelectAttrsForStatsDialog
 from select_sv_variables_dialog import SelectSvVariablesDialog
 from settings_dialog import SettingsDialog
 from weight_data_dialog import WeightDataDialog
@@ -211,15 +210,6 @@ class Svir:
                            enable=False,
                            add_to_layer_actions=True)
 
-        # FIXME Probably to be removed
-        # Action for calculating RISKPLUS, RISKMULT and RISK1F indices
-        self.add_menu_item("calculate_svir_indices",
-                           ":/plugins/svir/calculate.svg",
-                           u"Calculate common integrated risk indices",
-                           self.calculate_svir_indices,
-                           enable=False,
-                           add_to_layer_actions=True)
-
         # Action to upload
         self.add_menu_item("upload",
                            ":/plugins/svir/upload.svg",
@@ -290,11 +280,6 @@ class Svir:
         # Enable/disable "merge SVI and aggregated losses" action
         self.registered_actions["merge_svi_and_losses"].setDisabled(
             layer_count < 2)
-
-        #FIXME Probably to be removed
-        # Enable/disable "calculate common SVIR indices" action
-        self.registered_actions["calculate_svir_indices"].setDisabled(
-            layer_count == 0)
 
         if DEBUG:
             print 'Selected: %s' % self.current_layer
@@ -1232,106 +1217,6 @@ class Svir:
                             aggr_loss_index,
                             aggr_feat[self.aggr_loss_attr_to_merge])
         clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
-
-    # FIXME Probably to be removed
-    def calculate_svir_indices(self):
-        """
-        Calculate some common indices, combining total risk (in terms of
-        losses) and social vulnerability index
-        """
-        dlg = SelectAttrsForStatsDialog(self.iface)
-        reg = QgsMapLayerRegistry.instance()
-        layer_count = reg.count()
-        if layer_count < 1:
-            msg = 'No layer available for statistical computations'
-            self.iface.messageBar().pushMessage(tr("Error"),
-                                                tr(msg),
-                                                level=QgsMessageBar.CRITICAL)
-            return
-        if dlg.exec_():
-            layer = reg.mapLayers().values()[
-                dlg.ui.layer_cbx.currentIndex()]
-            svi_attr_name = dlg.ui.svi_attr_cbx.currentText()
-            aggr_loss_attr_name = dlg.ui.aggr_loss_attr_cbx.currentText()
-
-            # add attributes:
-            # RISKPLUS = TOTRISK + TOTSVI
-            # RISKMULT = TOTRISK * TOTSVI
-            # RISK1F   = TOTRISK * (1 + TOTSVI)
-            riskplus_field = QgsField('RISKPLUS', QVariant.Double)
-            riskplus_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
-            riskmult_field = QgsField('RISKMULT', QVariant.Double)
-            riskmult_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
-            risk1f_field = QgsField('RISK1F', QVariant.Double)
-            risk1f_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
-            ProcessLayer(layer).add_attributes(
-                [riskplus_field, riskmult_field, risk1f_field])
-            # for each zone, calculate the value of the output attributes
-            # to show the overall progress, cycling through zones
-            tot_zones = len(list(layer.getFeatures()))
-            msg = tr("Calculating some common SVIR indices...")
-            msg_bar_item, progress = create_progress_message_bar(
-                self.iface.messageBar(), msg)
-            with LayerEditingManager(layer,
-                                     tr("Calculate some common SVIR indices"),
-                                     DEBUG):
-                riskplus_idx = layer.fieldNameIndex('RISKPLUS')
-                riskmult_idx = layer.fieldNameIndex('RISKMULT')
-                risk1f_idx = layer.fieldNameIndex('RISK1F')
-
-                for current_zone, svir_feat in enumerate(
-                        layer.getFeatures()):
-                    svir_feat_id = svir_feat.id()
-                    progress_percent = current_zone / float(tot_zones) * 100
-                    progress.setValue(progress_percent)
-                    aggr_loss_val = svir_feat[aggr_loss_attr_name]
-                    svi_val = svir_feat[svi_attr_name]
-                    if (svi_val == QPyNullVariant(float)
-                            or aggr_loss_val == QPyNullVariant(float)):
-                        layer.changeAttributeValue(
-                            svir_feat_id,
-                            riskplus_idx,
-                            QPyNullVariant(float))
-                        layer.changeAttributeValue(
-                            svir_feat_id,
-                            riskmult_idx,
-                            QPyNullVariant(float))
-                        layer.changeAttributeValue(
-                            svir_feat_id,
-                            risk1f_idx,
-                            QPyNullVariant(float))
-                    else:
-                        layer.changeAttributeValue(
-                            svir_feat_id,
-                            riskplus_idx,
-                            (svir_feat[aggr_loss_attr_name] +
-                             svir_feat[svi_attr_name]))
-                        layer.changeAttributeValue(
-                            svir_feat_id,
-                            riskmult_idx,
-                            (svir_feat[aggr_loss_attr_name] *
-                             svir_feat[svi_attr_name]))
-                        layer.changeAttributeValue(
-                            svir_feat_id,
-                            risk1f_idx,
-                            (svir_feat[aggr_loss_attr_name] *
-                             (1 + svir_feat[svi_attr_name])))
-            clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
-        elif dlg.use_advanced:
-            layer = reg.mapLayers().values()[
-                dlg.ui.layer_cbx.currentIndex()]
-            if layer.isModified():
-                layer.commitChanges()
-                layer.triggerRepaint()
-                msg = 'Calculation performed on layer %s' % layer.name()
-                self.iface.messageBar().pushMessage(
-                    tr("Info"),
-                    tr(msg),
-                    level=QgsMessageBar.INFO,
-                    duration=8)
-        elif dlg.use_transform_dialog:
-            self.transform_attribute()
-        self.update_actions_status()
 
     def upload(self):
         temp_dir = tempfile.gettempdir()

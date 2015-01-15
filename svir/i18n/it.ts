@@ -249,39 +249,6 @@
     </message>
 </context>
 <context>
-    <name>SelectAttrsForStatsDialog</name>
-    <message>
-        <location filename="ui_select_attrs_for_stats.ui" line="17"/>
-        <source>Calculate Integrated Risk Indices</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="ui_select_attrs_for_stats.ui" line="31"/>
-        <source>Layer</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="ui_select_attrs_for_stats.ui" line="41"/>
-        <source>SVI attribute name</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="ui_select_attrs_for_stats.ui" line="51"/>
-        <source>Aggregated loss attribute name</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="ui_select_attrs_for_stats.ui" line="65"/>
-        <source>Advanced Calculator</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="ui_select_attrs_for_stats.ui" line="72"/>
-        <source>Transform Attribute</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>SelectInputLayersDialog</name>
     <message>
         <location filename="ui_select_input_layers.py" line="64"/>
