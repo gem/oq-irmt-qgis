@@ -789,9 +789,12 @@ class Svir:
                                                    variant,
                                                    inverse,
                                                    new_attr_name)
-                msg = ('The result of the transformation has been added to'
-                       'layer %s as a new attribute named %s.') % (
-                    layer.name(), res_attr_name)
+                msg = ('Transformation %s has been applied to attribute %s of'
+                       ' layer %s and the resulting attribute %s has been'
+                       ' saved into the same layer.') % (algorithm_name,
+                                                         attribute_name,
+                                                         layer.name(),
+                                                         res_attr_name)
                 if invalid_input_values:
                     msg += (' The transformation could not '
                             'be performed for the following '
@@ -800,8 +803,7 @@ class Svir:
                     tr("Info"),
                     tr(msg),
                     level=(QgsMessageBar.INFO if not invalid_input_values
-                           else QgsMessageBar.WARNING),
-                    duration=8)
+                           else QgsMessageBar.WARNING))
             except (ValueError, NotImplementedError) as e:
                 self.iface.messageBar().pushMessage(
                     tr("Error"),
