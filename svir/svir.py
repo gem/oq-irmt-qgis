@@ -596,6 +596,8 @@ class Svir:
             return False
         # check that each theme contains at least one indicator
         for theme_node in svi_node['children']:
+            if 'children' not in theme_node:
+                return False
             if len(theme_node['children']) == 0:
                 return False
         return True
