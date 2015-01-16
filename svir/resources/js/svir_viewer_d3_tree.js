@@ -404,6 +404,43 @@
                     })
                 .on("click", function(clicked_node) {
                     if (longpress) {
+                        // If the clicked node is the IRI, clean the whole tree
+                        if (clicked_node.type === node_types_dict.IRI) {
+                            // Before cleaning the tree, ask for the user's confirmation
+                            var resp = confirm("If you proceed, the whole tree will be reset. Are you sure?");
+                            if (resp === false) {
+                                return false;
+                            }
+                            // its children are RI and SVI, and we want to delete their children (grandchildren)
+                            for (var i = 0; i < clicked_node.children.length; i++) {
+                                var child = clicked_node.children[i];
+                                var grandchildren = child.children;
+                                if (typeof(grandchildren) !== 'undefined') {
+                                    while(grandchildren.length > 0) {
+                                        grandchildren.pop();
+                                    }
+                                }
+                            }
+                            updateD3Tree(clicked_node);
+                            return true;
+                        }
+                        // If the clicked node is the RI or SVI, clean its own branch
+                        if (clicked_node.type === node_types_dict.RI || clicked_node.type === node_types_dict.SVI) {
+                            // Before cleaning the branch, ask for the user's confirmation
+                            var resp = confirm("If you proceed, the whole branch be reset. Are you sure?");
+                            if (resp === false) {
+                                return false;
+                            }
+                            children = clicked_node.children;
+                            if (typeof(children) !== 'undefined') {
+                                while (children.length > 0) {
+                                    children.pop();
+                                }
+                            }
+                            updateD3Tree(clicked_node);
+                            return true;
+                        }
+
                         // Delete the clicked node, if it's an indicator or a theme
                         // If it's a theme, delete also its children
                         var node_to_del = clicked_node;
