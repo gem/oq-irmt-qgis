@@ -406,6 +406,7 @@
                     if (longpress) {
                         // If the clicked node is the IRI, clean the whole tree
                         if (clicked_node.type === node_types_dict.IRI) {
+                            pdData = data;
                             // Before cleaning the tree, ask for the user's confirmation
                             var resp = confirm("If you proceed, the whole tree will be reset. Are you sure?");
                             if (resp === false) {
@@ -421,11 +422,12 @@
                                     }
                                 }
                             }
-                            updateD3Tree(clicked_node);
+                            updateD3Tree(pdData);
                             return true;
                         }
                         // If the clicked node is the RI or SVI, clean its own branch
                         if (clicked_node.type === node_types_dict.RI || clicked_node.type === node_types_dict.SVI) {
+                            pdData = data;
                             // Before cleaning the branch, ask for the user's confirmation
                             var resp = confirm("If you proceed, the whole branch be reset. Are you sure?");
                             if (resp === false) {
@@ -437,7 +439,7 @@
                                     children.pop();
                                 }
                             }
-                            updateD3Tree(clicked_node);
+                            updateD3Tree(pdData);
                             return true;
                         }
 
