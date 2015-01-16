@@ -102,13 +102,15 @@ class UploadMetadataDialog(QDialog):
         self.uploadThread.start()
 
     def upload_done(self, layer_url, success):
-        if success != 'False':
+        # In case success == 'False', layer_url contains the error message
+        if success == 'True':
             self.message_bar_item.setText('Loading page...')
             self.web_view.load(QUrl(layer_url))
         else:
+            error_msg = layer_url
             clear_progress_message_bar(self.message_bar)
             self.message_bar.pushMessage(
-                'Upload error', layer_url, level=QgsMessageBar.CRITICAL)
+                'Upload error', error_msg, level=QgsMessageBar.CRITICAL)
 
     def load_finished(self):
         clear_progress_message_bar(self.message_bar, self.message_bar_item)
@@ -152,6 +154,7 @@ class UploaderThread(QThread):
         QThread.__init__(self)
 
     def run(self):
+        # if success == 'False', layer_url will contain the error message
         layer_url, success = upload_shp(
             self.hostname, self.session, self.file_stem, self.username)
         self.upload_done.emit(str(layer_url), str(success))

@@ -242,7 +242,10 @@ def upload_shp(host, session, file_stem, username):
     try:
         return host + response['url'], True
     except KeyError:
-        return response, False
+        if 'errors' in response:
+            return response['errors'], False
+        else:
+            return "The server did not provide error messages", False
 
 
 class Register(collections.OrderedDict):
