@@ -56,7 +56,8 @@ from qgis.core import (QgsVectorLayer,
                        QgsGraduatedSymbolRendererV2,
                        QgsSymbolV2, QgsVectorGradientColorRampV2,
                        QgsRuleBasedRendererV2,
-                       QgsFillSymbolV2)
+                       QgsFillSymbolV2,
+                       QgsProject,)
 
 from qgis.gui import QgsMessageBar
 
@@ -148,7 +149,6 @@ class Svir:
         # Attribute containing aggregated losses, that will be merged with SVI
         self.aggr_loss_attr_to_merge = None
 
-        self.project_definitions = {}
         self.current_layer = None
 
         self.aggr_loss_attr_names = dict(count='PTS_CNT',
@@ -229,7 +229,36 @@ class Svir:
     def layers_removed(self, layer_ids):
         self.update_actions_status()
         for layer_id in layer_ids:
+            self.update_proj_def(layer_id)
+
+    def sync_proj_def(self):
+        # get prpject_definitions from the project's properties
+        # it returns a tuple, with the returned value and a boolean indicating
+        # if such property is available
+        resp = QgsProject.instance().readEntry('svir', 'project_definitions')
+        if resp[1] is True:
+            self.project_definitions = eval(resp[0])
+        else:
+            self.project_definitions = {}
+        if DEBUG:
+            print "self.project_definitions synchronized with project, as:"
+            print self.project_definitions
+
+    def update_proj_def(self, layer_id, proj_def=None):
+        self.sync_proj_def()
+        # add the project definition to the list
+        # or pop the layer's project definition if no proj_def is provided
+        if proj_def is not None:
+            self.project_definitions[layer_id] = proj_def
+        else:
             self.project_definitions.pop(layer_id, None)
+        # set the QgsProject's property
+        QgsProject.instance().writeEntry(
+            'svir', 'project_definitions', str(self.project_definitions))
+        if DEBUG:
+            print "Project's property 'project_definitions' updated:"
+            print QgsProject.instance().readEntry(
+                'svir', 'project_definitions')[0]
 
     def current_layer_changed(self, layer):
         self.current_layer = layer
@@ -286,6 +315,7 @@ class Svir:
                 raise AttributeError
             self.registered_actions["weight_data"].setEnabled(True)
             self.registered_actions["transform_attribute"].setEnabled(True)
+            self.sync_proj_def()
             proj_def = self.project_definitions[self.current_layer.id()]
             self.registered_actions["upload"].setEnabled(proj_def is not None)
         except KeyError:
@@ -488,7 +518,7 @@ class Svir:
                         'socioeconomic_zonal_layer',
                         add_to_registry=True)
                 self.iface.setActiveLayer(layer)
-                self.project_definitions[layer.id()] = project_definition
+                self.update_proj_def(layer.id(), project_definition)
                 self.update_actions_status()
 
         except SvNetworkError as e:
@@ -527,7 +557,7 @@ class Svir:
             project_definition = self.project_definitions[current_layer_id]
         except KeyError:
             project_definition = PROJECT_TEMPLATE
-            self.project_definitions[current_layer_id] = project_definition
+            self.update_proj_def(current_layer_id, project_definition)
         old_project_definition = copy.deepcopy(project_definition)
 
         first_svi = False
@@ -556,7 +586,7 @@ class Svir:
                 self.recalculate_indexes(project_definition)
         dlg.json_cleaned.disconnect(self.weights_changed)
         # store the correct project definitions
-        self.project_definitions[current_layer_id] = project_definition
+        self.update_proj_def(current_layer_id, project_definition)
         self.redraw_ir_layer(project_definition)
 
     def weights_changed(self, data):
