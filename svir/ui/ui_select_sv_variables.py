@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_select_sv_variables.ui'
 #
-# Created: Wed Dec 24 10:31:23 2014
+# Created: Thu Jan 22 14:24:33 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -26,7 +26,7 @@ except AttributeError:
 class Ui_SelectSvVariablesDialog(object):
     def setupUi(self, SelectSvVariablesDialog):
         SelectSvVariablesDialog.setObjectName(_fromUtf8("SelectSvVariablesDialog"))
-        SelectSvVariablesDialog.resize(1024, 737)
+        SelectSvVariablesDialog.resize(1024, 823)
         SelectSvVariablesDialog.setModal(True)
         self.gridLayout = QtGui.QGridLayout(SelectSvVariablesDialog)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
@@ -43,7 +43,7 @@ class Ui_SelectSvVariablesDialog(object):
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
         self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName(_fromUtf8("buttonBox"))
-        self.gridLayout.addWidget(self.buttonBox, 7, 0, 1, 1)
+        self.gridLayout.addWidget(self.buttonBox, 9, 0, 1, 1)
         self.indicator_details = QtGui.QTextBrowser(SelectSvVariablesDialog)
         self.indicator_details.setObjectName(_fromUtf8("indicator_details"))
         self.gridLayout.addWidget(self.indicator_details, 6, 0, 1, 1)
@@ -86,6 +86,14 @@ class Ui_SelectSvVariablesDialog(object):
         self.label = QtGui.QLabel(SelectSvVariablesDialog)
         self.label.setObjectName(_fromUtf8("label"))
         self.gridLayout.addWidget(self.label, 1, 0, 1, 1, QtCore.Qt.AlignHCenter)
+        self.country_select = ListMultiSelectWidget(SelectSvVariablesDialog)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.MinimumExpanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.country_select.sizePolicy().hasHeightForWidth())
+        self.country_select.setSizePolicy(sizePolicy)
+        self.country_select.setObjectName(_fromUtf8("country_select"))
+        self.gridLayout.addWidget(self.country_select, 8, 0, 1, 1)
 
         self.retranslateUi(SelectSvVariablesDialog)
         QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), SelectSvVariablesDialog.accept)
@@ -105,5 +113,6 @@ class Ui_SelectSvVariablesDialog(object):
         self.theme_lbl.setText(_translate("SelectSvVariablesDialog", "Theme", None))
         self.subtheme_lbl.setText(_translate("SelectSvVariablesDialog", "Subtheme", None))
         self.label.setText(_translate("SelectSvVariablesDialog", "All filters are optional. If no filter is set, the whole set of indicators will be retrieved.", None))
+        self.country_select.setTitle(_translate("SelectSvVariablesDialog", "Select countries", None))
 
 from list_multiselect_widget import ListMultiSelectWidget

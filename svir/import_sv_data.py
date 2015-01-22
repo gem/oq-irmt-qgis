@@ -35,7 +35,8 @@ from utils import SvNetworkError, platform_login
 PLATFORM_EXPORT_SV_THEMES = "/svir/list_themes"
 PLATFORM_EXPORT_SV_SUBTHEMES = "/svir/list_subthemes_by_theme"
 PLATFORM_EXPORT_SV_NAMES = "/svir/export_variables_info"
-PLATFORM_EXPORT_VARIABLES_DATA_BY_IDS = "/svir/export_variables_data_by_ids"
+PLATFORM_EXPORT_VARIABLES_DATA = "/svir/export_variables_data"
+PLATFORM_EXPORT_COUNTRIES_INFO = "/svir/export_countries_info"
 
 
 class SvDownloader(object):
@@ -98,10 +99,29 @@ class SvDownloader(object):
                 # names.append(indicators_main_info[code])
         return indicators_info
 
-    def get_data_by_variables_ids(self, sv_variables_ids, load_geometries):
-        page = self.host + PLATFORM_EXPORT_VARIABLES_DATA_BY_IDS
+    def get_countries_info(self):
+        page = self.host + PLATFORM_EXPORT_COUNTRIES_INFO
+        result = self.sess.get(page)
+        countries_info = {}
+        if result.status_code == 200:
+            reader = csv.reader(StringIO.StringIO(result.content))
+            header = None
+            for row in reader:
+                if row[0].startswith('#'):
+                    continue
+                if not header:
+                    header = row
+                    continue
+                iso = row[0]
+                countries_info[iso] = row[1].decode('utf-8')
+        return countries_info
+
+    def get_sv_data(
+            self, sv_variables_ids, load_geometries, country_iso_codes):
+        page = self.host + PLATFORM_EXPORT_VARIABLES_DATA
         params = dict(sv_variables_ids=sv_variables_ids,
-                      export_geometries=load_geometries)
+                      export_geometries=load_geometries,
+                      country_iso_codes=country_iso_codes)
         result = self.sess.get(page, params=params)
         if result.status_code == 200:
             # save csv on a temporary file

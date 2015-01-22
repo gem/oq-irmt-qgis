@@ -48,6 +48,7 @@ class SelectSvVariablesDialog(QDialog):
         self.indicators_info_dict = {}
         with WaitCursorManager():
             self.fill_themes()
+            self.fill_countries()
         self.ui.list_multiselect.unselected_widget.itemClicked.connect(
             self.update_indicator_info)
         self.ui.list_multiselect.selected_widget.itemClicked.connect(
@@ -59,6 +60,14 @@ class SelectSvVariablesDialog(QDialog):
         self.ui.list_multiselect.select_btn.clicked.connect(
             self.set_ok_button)
         self.ui.list_multiselect.deselect_btn.clicked.connect(
+            self.set_ok_button)
+        self.ui.country_select.select_all_btn.clicked.connect(
+            self.set_ok_button)
+        self.ui.country_select.deselect_all_btn.clicked.connect(
+            self.set_ok_button)
+        self.ui.country_select.select_btn.clicked.connect(
+            self.set_ok_button)
+        self.ui.country_select.deselect_btn.clicked.connect(
             self.set_ok_button)
 
     @pyqtSlot(str)
@@ -74,7 +83,8 @@ class SelectSvVariablesDialog(QDialog):
 
     def set_ok_button(self):
         self.ok_button.setEnabled(
-            self.ui.list_multiselect.selected_widget.count() > 0)
+            self.ui.list_multiselect.selected_widget.count() > 0
+            and self.ui.country_select.selected_widget.count() > 0)
 
     def fill_themes(self):
         self.ui.theme_cbx.clear()
@@ -133,3 +143,16 @@ class SelectSvVariablesDialog(QDialog):
         hint_text += '\n\n' + 'Aggregation method:\n' + indicator_info_dict[
             'aggregation_method']
         self.ui.indicator_details.setText(hint_text)
+
+    def fill_countries(self):
+        # load from platform a list of countries for which socioeconomic data
+        # are available
+        try:
+            countries_dict = self.sv_downloader.get_countries_info()
+            names = sorted(
+                [countries_dict[iso] + ' (' + iso + ')'
+                    for iso in countries_dict])
+            self.ui.country_select.set_unselected_items(names)
+        except SvNetworkError as e:
+            raise SvNetworkError(
+                "Unable to download the list of countries: %s" % e)

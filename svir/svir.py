@@ -431,6 +431,7 @@ class Svir:
                        "Platform...")
                 # Retrieve the indices selected by the user
                 indices_list = []
+                iso_codes_list = []
                 project_definition = copy.deepcopy(PROJECT_TEMPLATE)
                 svi_themes = project_definition[
                     'children'][1]['children']
@@ -452,15 +453,23 @@ class Svir:
                                             sv_field)
 
                         indices_list.append(sv_field)
+                    while dlg.ui.country_select.selected_widget.count() > 0:
+                        item = \
+                            dlg.ui.country_select.selected_widget.takeItem(0)
+                        # get the iso from something like:
+                        # country_name (iso_code)
+                        iso_code = item.text().split('(')[1].split(')')[0]
+                        iso_codes_list.append(iso_code)
 
                     # create string for DB query
                     indices_string = ",".join(indices_list)
+                    iso_codes_string = ",".join(iso_codes_list)
 
                     assign_default_weights(svi_themes)
 
                     try:
-                        fname, msg = sv_downloader.get_data_by_variables_ids(
-                            indices_string, load_geometries)
+                        fname, msg = sv_downloader.get_sv_data(
+                            indices_string, load_geometries, iso_codes_string)
                     except SvNetworkError as e:
                         self.iface.messageBar().pushMessage(
                             tr("Download Error"),
