@@ -23,7 +23,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
-from PyQt4.QtCore import pyqtSlot, Qt
+from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox)
 
@@ -95,12 +95,14 @@ class SelectSvVariablesDialog(QDialog):
         self.ui.subtheme_cbx.clear()
         # load list of subthemes from the platform
         self.ui.subtheme_cbx.addItems([None])
-        try:
-            subthemes = self.sv_downloader.get_subthemes_by_theme(theme)
-            self.ui.subtheme_cbx.addItems(subthemes)
-        except SvNetworkError as e:
-            raise SvNetworkError(
-                "Unable to download social vulnerability subthemes: %s" % e)
+        if theme:
+            try:
+                subthemes = self.sv_downloader.get_subthemes_by_theme(theme)
+                self.ui.subtheme_cbx.addItems(subthemes)
+            except SvNetworkError as e:
+                raise SvNetworkError(
+                    "Unable to download social vulnerability"
+                    " subthemes: %s" % e)
 
     def fill_names(self):
         self.ui.list_multiselect.set_unselected_items([])
