@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_select_sv_variables.ui'
 #
-# Created: Thu Jan 22 14:24:33 2015
+# Created: Fri Jan 23 10:07:58 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -26,7 +26,7 @@ except AttributeError:
 class Ui_SelectSvVariablesDialog(object):
     def setupUi(self, SelectSvVariablesDialog):
         SelectSvVariablesDialog.setObjectName(_fromUtf8("SelectSvVariablesDialog"))
-        SelectSvVariablesDialog.resize(1024, 823)
+        SelectSvVariablesDialog.resize(1024, 765)
         SelectSvVariablesDialog.setModal(True)
         self.gridLayout = QtGui.QGridLayout(SelectSvVariablesDialog)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
