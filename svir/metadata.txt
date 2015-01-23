@@ -12,7 +12,7 @@
 name=GEM OpenQuake Social Vulnerability and Integrated Risk (SVIR)
 qgisMinimumVersion=2.0
 description=GEM OpenQuake Social Vulnerability and Integrated Risk (SVIR)
-version=1.2.0
+version=1.2.1
 author=GEM Foundation
 email=staff.it@globalquakemodel.org
 
