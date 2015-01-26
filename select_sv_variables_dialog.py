@@ -53,21 +53,9 @@ class SelectSvVariablesDialog(QDialog):
             self.update_indicator_info)
         self.ui.list_multiselect.selected_widget.itemClicked.connect(
             self.update_indicator_info)
-        self.ui.list_multiselect.select_all_btn.clicked.connect(
+        self.ui.list_multiselect.selection_changed.connect(
             self.set_ok_button)
-        self.ui.list_multiselect.deselect_all_btn.clicked.connect(
-            self.set_ok_button)
-        self.ui.list_multiselect.select_btn.clicked.connect(
-            self.set_ok_button)
-        self.ui.list_multiselect.deselect_btn.clicked.connect(
-            self.set_ok_button)
-        self.ui.country_select.select_all_btn.clicked.connect(
-            self.set_ok_button)
-        self.ui.country_select.deselect_all_btn.clicked.connect(
-            self.set_ok_button)
-        self.ui.country_select.select_btn.clicked.connect(
-            self.set_ok_button)
-        self.ui.country_select.deselect_btn.clicked.connect(
+        self.ui.country_select.selection_changed.connect(
             self.set_ok_button)
 
     @pyqtSlot(str)
