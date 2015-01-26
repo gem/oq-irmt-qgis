@@ -42,6 +42,9 @@ class ListMultiSelectWidget(QtGui.QGroupBox):
         self.select_btn.clicked.connect(self._select)
         self.deselect_btn.clicked.connect(self._deselect)
 
+        self.unselected_widget.itemDoubleClicked.connect(self._select)
+        self.selected_widget.itemDoubleClicked.connect(self._deselect)
+
     def get_selected_items(self):
         """
         :return list with all the selected items text
