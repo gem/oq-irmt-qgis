@@ -25,10 +25,13 @@
 """
 from collections import OrderedDict
 from PyQt4.QtCore import QSettings
+from ConfigParser import ConfigParser
 
 DEBUG = QSettings().value('/svir/developer_mode', False, type=bool)
 
-SVIR_PLUGIN_VERSION = '1.2.1'
+cp = ConfigParser()
+cp.readfp(open("metadata.txt"))
+SVIR_PLUGIN_VERSION = cp.get('general', 'version')
 
 INT_FIELD_TYPE_NAME = "integer"
 REAL_FIELD_TYPE_NAME = "Real"
