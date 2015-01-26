@@ -28,6 +28,8 @@ class ListMultiSelectWidget(QtGui.QGroupBox):
         promote it to ListMultiSelectWidget
     """
 
+    selection_changed = QtCore.pyqtSignal()
+
     def __init__(self, parent=None, title=None):
         QtGui.QGroupBox.__init__(self)
         self.setTitle(title)
@@ -41,6 +43,9 @@ class ListMultiSelectWidget(QtGui.QGroupBox):
         self.deselect_all_btn.clicked.connect(self._deselect_all)
         self.select_btn.clicked.connect(self._select)
         self.deselect_btn.clicked.connect(self._deselect)
+
+        self.unselected_widget.itemDoubleClicked.connect(self._select)
+        self.selected_widget.itemDoubleClicked.connect(self._deselect)
 
     def get_selected_items(self):
         """
@@ -106,6 +111,8 @@ class ListMultiSelectWidget(QtGui.QGroupBox):
     def _do_move(self, fromList, toList):
         for item in fromList.selectedItems():
             toList.addItem(fromList.takeItem(fromList.row(item)))
+        self.selection_changed.emit()
+
 
     def _setupUI(self):
         self.setSizePolicy(
