@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_upload_metadata.ui'
 #
-# Created: Wed Dec 24 14:25:16 2014
+# Created: Mon Jan 26 18:50:34 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -34,6 +34,7 @@ class Ui_UploadMetadataDialog(object):
         self.web_view.setObjectName(_fromUtf8("web_view"))
         self.verticalLayout.addWidget(self.web_view)
         self.buttonBox = QtGui.QDialogButtonBox(UploadMetadataDialog)
+        self.buttonBox.setEnabled(False)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
         self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.NoButton)
         self.buttonBox.setObjectName(_fromUtf8("buttonBox"))

@@ -36,13 +36,15 @@ from PyQt4.QtCore import (QSettings,
                           QTranslator,
                           QCoreApplication,
                           qVersion,
-                          QVariant)
+                          QVariant,
+                          QUrl)
 
 from PyQt4.QtGui import (QAction,
                          QIcon,
                          QProgressDialog,
                          QColor,
-                         QFileDialog)
+                         QFileDialog,
+                         QDesktopServices)
 
 from qgis.core import (QgsVectorLayer,
                        QgsMapLayerRegistry,
@@ -1287,6 +1289,7 @@ class Svir:
                                     project_definition)
             metadata_dialog = UploadMetadataDialog(
                 self.iface, file_stem, project_definition)
-            metadata_dialog.exec_()
+            if metadata_dialog.exec_():
+                QDesktopServices.openUrl(QUrl(metadata_dialog.layer_url))
         else:
             print "metadata_dialog cancelled"
