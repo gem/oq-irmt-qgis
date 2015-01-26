@@ -297,29 +297,6 @@
     </message>
 </context>
 <context>
-    <name>SelectLayersToMergeDialog</name>
-    <message>
-        <location filename="ui_select_layers_to_merge.py" line="68"/>
-        <source>Copy loss data into selected layer</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="ui_select_layers_to_merge.py" line="69"/>
-        <source>Layer containing loss data</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="ui_select_layers_to_merge.py" line="70"/>
-        <source>Attribute for aggregated losses</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="ui_select_layers_to_merge.py" line="71"/>
-        <source>Merge by attribute</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>SelectSvVariablesDialog</name>
     <message>
         <location filename="ui_select_sv_variables.py" line="85"/>
