@@ -89,7 +89,7 @@ def generate_iso_metadata(project_definition=None):
     template_replacements = copy.copy(get_defaults())
 
     # create runtime based replacement values
-    template_replacements['ISO19115_TODAY_DATE'] = time.strftime("%Y-%m-%d")
+    template_replacements['ISO19115_TODAY_DATETIME'] = time.strftime("%Y-%m-%dT%H:%M:%SZ")
     if project_definition is not None:
         if DEBUG:
             print project_definition
