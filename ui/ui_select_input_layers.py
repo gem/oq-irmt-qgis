@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'ui/ui_select_input_layers.ui'
 #
-# Created: Thu Jul  3 14:48:22 2014
-#      by: PyQt4 UI code generator 4.9.1
+# Created: Mon Jan 26 11:16:10 2015
+#      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,7 +12,16 @@ from PyQt4 import QtCore, QtGui
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
-    _fromUtf8 = lambda s: s
+    def _fromUtf8(s):
+        return s
+
+try:
+    _encoding = QtGui.QApplication.UnicodeUTF8
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig, _encoding)
+except AttributeError:
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig)
 
 class Ui_SelectInputLayersDialog(object):
     def setupUi(self, SelectInputLayersDialog):
@@ -61,10 +70,10 @@ class Ui_SelectInputLayersDialog(object):
         QtCore.QMetaObject.connectSlotsByName(SelectInputLayersDialog)
 
     def retranslateUi(self, SelectInputLayersDialog):
-        SelectInputLayersDialog.setWindowTitle(QtGui.QApplication.translate("SelectInputLayersDialog", "Aggregate loss by zone", None, QtGui.QApplication.UnicodeUTF8))
-        self.loss_layer_lbl.setText(QtGui.QApplication.translate("SelectInputLayersDialog", "Loss layer", None, QtGui.QApplication.UnicodeUTF8))
-        self.loss_layer_tbn.setText(QtGui.QApplication.translate("SelectInputLayersDialog", "...", None, QtGui.QApplication.UnicodeUTF8))
-        self.zonal_layer_tbn.setText(QtGui.QApplication.translate("SelectInputLayersDialog", "...", None, QtGui.QApplication.UnicodeUTF8))
-        self.zonal_layer_lbl.setText(QtGui.QApplication.translate("SelectInputLayersDialog", "Zonal layer", None, QtGui.QApplication.UnicodeUTF8))
-        self.purge_chk.setText(QtGui.QApplication.translate("SelectInputLayersDialog", "Purge zones containing no loss points", None, QtGui.QApplication.UnicodeUTF8))
+        SelectInputLayersDialog.setWindowTitle(_translate("SelectInputLayersDialog", "Aggregate loss by zone", None))
+        self.loss_layer_lbl.setText(_translate("SelectInputLayersDialog", "Loss layer", None))
+        self.loss_layer_tbn.setText(_translate("SelectInputLayersDialog", "...", None))
+        self.zonal_layer_tbn.setText(_translate("SelectInputLayersDialog", "...", None))
+        self.zonal_layer_lbl.setText(_translate("SelectInputLayersDialog", "Zonal layer", None))
+        self.purge_chk.setText(_translate("SelectInputLayersDialog", "Purge zones containing no loss points", None))
 

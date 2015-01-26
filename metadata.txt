@@ -26,9 +26,9 @@ email=staff.it@globalquakemodel.org
 # tags are comma separated with spaces allowed
 tags=GEM, SVIR, OpenQuake, Social Vulnerability, Integrated Risk
 
-homepage=https://github.com/gem/qt-experiments
-tracker=https://github.com/gem/qt-experiments/issues
-repository=https://github.com/gem/qt-experiments
+homepage=https://github.com/gem/oq-svir-qgis
+tracker=https://github.com/gem/oq-svir-qgis/issues
+repository=https://github.com/gem/oq-svir-qgis
 icon=resources/start_plugin_icon.png
 # experimental flag
 experimental=False
