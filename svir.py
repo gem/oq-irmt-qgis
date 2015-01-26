@@ -79,7 +79,6 @@ from process_layer import ProcessLayer
 import resources_rc  # pylint: disable=W0611  # NOQA
 
 from select_input_layers_dialog import SelectInputLayersDialog
-from select_layers_to_merge_dialog import SelectLayersToMergeDialog
 from attribute_selection_dialog import AttributeSelectionDialog
 from transformation_dialog import TransformationDialog
 from select_sv_variables_dialog import SelectSvVariablesDialog
@@ -199,13 +198,6 @@ class Svir:
                            self.aggregate_losses,
                            enable=True,
                            add_to_layer_actions=False)
-        # Action for merging SVI with loss data (both aggregated by zone)
-        self.add_menu_item("merge_svi_and_losses",
-                           ":/plugins/svir/copy.svg",
-                           u"Copy loss data into selected layer",
-                           self.merge_svi_with_aggr_losses,
-                           enable=False,
-                           add_to_layer_actions=True)
 
         # Action to upload
         self.add_menu_item("upload",
@@ -303,9 +295,6 @@ class Svir:
         # Enable/disable "transform" action
         self.registered_actions["transform_attribute"].setDisabled(
             layer_count == 0)
-        # Enable/disable "merge SVI and aggregated losses" action
-        self.registered_actions["merge_svi_and_losses"].setDisabled(
-            layer_count < 2)
 
         if DEBUG:
             print 'Selected: %s' % self.current_layer
@@ -326,7 +315,6 @@ class Svir:
             # is not vector
             self.registered_actions["transform_attribute"].setEnabled(False)
             self.registered_actions["weight_data"].setEnabled(False)
-            self.registered_actions["merge_svi_and_losses"].setEnabled(False)
             self.registered_actions["upload"].setEnabled(False)
 
     def unload(self):
@@ -747,27 +735,6 @@ class Svir:
     def settings(self):
         SettingsDialog(self.iface).exec_()
 
-    def merge_svi_with_aggr_losses(self):
-        """
-        Merge aggregated loss data into the zonal layer (by zone id)
-        """
-        if self.select_layers_to_merge():
-            # Add aggregated loss attribute to zonal_layer
-            field = QgsField(self.aggr_loss_attr_to_merge, QVariant.Double)
-            field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
-            ProcessLayer(self.current_layer).add_attributes([field])
-            # Populate "loss" attribute with data from aggregation_layer
-            self.copy_loss_values_to_current_layer()
-
-            # FIXME Probably this is going to be removed
-            msg = 'Select "Calculate common SVIR indices" from SVIR ' \
-                  'plugin menu to calculate RISKPLUS, RISKMULT and RISK1F ' \
-                  'indices'
-            self.iface.messageBar().pushMessage(tr("Info"),
-                                                tr(msg),
-                                                level=QgsMessageBar.INFO,
-                                                duration=8)
-
     def attribute_selection(self):
         """
         Open a modal dialog containing combo boxes, allowing the user
@@ -886,35 +853,6 @@ class Svir:
                     level=QgsMessageBar.INFO,
                     duration=8)
         self.update_actions_status()
-
-    def select_layers_to_merge(self):
-        """
-        Open a modal dialog allowing the user to select a layer containing
-        loss data and one containing SVI data, the aggregated loss attribute
-        and the zone id that we want to use for merging.
-        """
-        dlg = SelectLayersToMergeDialog()
-        reg = QgsMapLayerRegistry.instance()
-        layer_list = [layer.name() for layer in reg.mapLayers().values()]
-        if len(layer_list) < 2:
-            msg = 'At least two layers must be available for merging!'
-            self.iface.messageBar().pushMessage(
-                tr("Error"),
-                tr(msg),
-                level=QgsMessageBar.CRITICAL)
-            return False
-        dlg.ui.loss_layer_cbox.addItems(layer_list)
-        if dlg.exec_():
-            self.loss_layer_to_merge = reg.mapLayers().values()[
-                dlg.ui.loss_layer_cbox.currentIndex()]
-            self.aggr_loss_attr_to_merge = \
-                dlg.ui.aggr_loss_attr_cbox.currentText()
-            self.zone_id_in_zones_attr_name = \
-                dlg.ui.merge_attr_cbx.currentText()
-            self.update_actions_status()
-            return True
-        else:
-            return False
 
     def calculate_stats(self):
         """
