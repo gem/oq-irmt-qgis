@@ -41,7 +41,8 @@ from PyQt4.QtCore import (QSettings,
 from PyQt4.QtGui import (QAction,
                          QIcon,
                          QProgressDialog,
-                         QColor)
+                         QColor,
+                         QFileDialog)
 
 from qgis.core import (QgsVectorLayer,
                        QgsMapLayerRegistry,
@@ -410,6 +411,16 @@ class Svir:
         try:
             dlg = SelectSvVariablesDialog(sv_downloader)
             if dlg.exec_():
+                dest_filename = QFileDialog.getSaveFileName(
+                    dlg,
+                    'Download destination',
+                    os.path.expanduser("~"),
+                    'Shapefiles (*.shp)')
+                if dest_filename:
+                    if dest_filename[-4:] != ".shp":
+                        dest_filename += ".shp"
+                else:
+                    return
                 # TODO: We should fix the workflow in case no geometries are
                 # downloaded. Currently we must download them, so the checkbox
                 # to let the user choose has been temporarily removed.
@@ -509,11 +520,17 @@ class Svir:
                         raise RuntimeError('Layer invalid')
                     layer = vlayer_csv
                 else:
-                    # obtain a in-memory copy of the layer (editable) and
-                    # add it to the registry
-                    layer = ProcessLayer(vlayer_csv).duplicate_in_memory(
-                        'socioeconomic_zonal_layer',
-                        add_to_registry=True)
+                    result = QgsVectorFileWriter.writeAsVectorFormat(
+                        vlayer_csv, dest_filename, 'CP1250',
+                        None, 'ESRI Shapefile')
+                    if result != QgsVectorFileWriter.NoError:
+                        raise RuntimeError('Could not save shapefile')
+                    layer = QgsVectorLayer(
+                        dest_filename, 'Socioeconomic data', 'ogr')
+                    if layer.isValid():
+                        QgsMapLayerRegistry.instance().addMapLayer(layer)
+                    else:
+                        raise RuntimeError('Layer invalid')
                 self.iface.setActiveLayer(layer)
                 self.update_proj_def(layer.id(), project_definition)
                 self.update_actions_status()
