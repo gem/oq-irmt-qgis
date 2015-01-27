@@ -5,8 +5,8 @@
                                  A QGIS plugin
  OpenQuake Social Vulnerability and Integrated Risk
                               -------------------
-        begin                : 2013-10-24
-        copyright            : (C) 2014 by GEM Foundation
+        begin                : 2015-01-19
+        copyright            : (C) 2015 by GEM Foundation
         email                : devops@openquake.org
  ***************************************************************************/
 
