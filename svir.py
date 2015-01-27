@@ -1282,7 +1282,8 @@ class Svir:
             license_txt = '%s (%s)' % (license_name, license_url)
             project_definition['license'] = license_txt
             project_definition['svir_plugin_version'] = SVIR_PLUGIN_VERSION
-
+            if DEBUG:
+                print 'xml_file:', xml_file
             write_iso_metadata_file(xml_file,
                                     project_definition)
             metadata_dialog = UploadMetadataDialog(
