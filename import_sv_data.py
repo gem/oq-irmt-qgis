@@ -119,10 +119,10 @@ class SvDownloader(object):
     def get_sv_data(
             self, sv_variables_ids, load_geometries, country_iso_codes):
         page = self.host + PLATFORM_EXPORT_VARIABLES_DATA
-        params = dict(sv_variables_ids=sv_variables_ids,
-                      export_geometries=load_geometries,
-                      country_iso_codes=country_iso_codes)
-        result = self.sess.get(page, params=params)
+        data = dict(sv_variables_ids=sv_variables_ids,
+                    export_geometries=load_geometries,
+                    country_iso_codes=country_iso_codes)
+        result = self.sess.post(page, data=data)
         if result.status_code == 200:
             # save csv on a temporary file
             fd, fname = tempfile.mkstemp(suffix='.csv')
