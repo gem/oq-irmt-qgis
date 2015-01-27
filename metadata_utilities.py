@@ -120,7 +120,7 @@ def generate_iso_metadata(project_definition=None):
             template_replacements['ISO19115_LICENSE'] = \
                 'licensed under ' + project_definition['license']
         except KeyError:
-            template_replacements['ISO19115_LICENSE'] = ''
+            template_replacements['ISO19115_LICENSE'] = 'no license specified'
         try:
             template_replacements['$ISO19115_URL'] = \
                 project_definition['$ISO19115_URL']
