@@ -89,6 +89,8 @@ class UploadMetadataDialog(QDialog):
 
         self.uploadThread = None
 
+        self.layer_url = None
+
     def showEvent(self, event):
         super(UploadMetadataDialog, self).showEvent(event)
         self.upload()
@@ -106,6 +108,7 @@ class UploadMetadataDialog(QDialog):
         if success == 'True':
             self.message_bar_item.setText('Loading page...')
             self.web_view.load(QUrl(layer_url))
+            self.layer_url = layer_url
         else:
             error_msg = layer_url
             clear_progress_message_bar(self.message_bar)
@@ -114,7 +117,12 @@ class UploadMetadataDialog(QDialog):
 
     def load_finished(self):
         clear_progress_message_bar(self.message_bar, self.message_bar_item)
-        self.button_box.setStandardButtons(QDialogButtonBox.Close)
+        if not self.button_box.isEnabled():
+            self.button_box.setEnabled(True)
+            self.button_box.addButton('Close',
+                                      QDialogButtonBox.NoRole)
+            self.button_box.addButton('Close and show in browser',
+                                      QDialogButtonBox.YesRole)
 
     def _login_to_platform(self):
         platform_login(
