@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_set_project_definition.ui'
 #
-# Created: Tue Jan 27 15:48:44 2015
+# Created: Tue Jan 27 15:56:53 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -51,5 +51,5 @@ class Ui_SetProjectDefinitionDialog(object):
         QtCore.QMetaObject.connectSlotsByName(SetProjectDefinitionDialog)
 
     def retranslateUi(self, SetProjectDefinitionDialog):
-        SetProjectDefinitionDialog.setWindowTitle(_translate("SetProjectDefinitionDialog", "Field transformation", None))
+        SetProjectDefinitionDialog.setWindowTitle(_translate("SetProjectDefinitionDialog", "Set project definition", None))
 
