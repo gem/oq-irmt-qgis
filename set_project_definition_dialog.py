@@ -50,7 +50,8 @@ class SetProjectDefinitionDialog(QDialog, Ui_SetProjectDefinitionDialog):
 
     def on_project_definition_ta_textChanged(self):
         try:
-            json.loads(self.project_definition_ta.toPlainText())
+            project_definition = self.project_definition_ta.toPlainText()
+            self.project_definition = json.loads(project_definition)
             self.ok_button.setEnabled(True)
         except ValueError:
             self.ok_button.setEnabled(False)
