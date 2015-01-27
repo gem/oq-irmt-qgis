@@ -117,9 +117,9 @@ def generate_iso_metadata(project_definition=None):
             template_replacements['ISO19115_EMAIL'] = ''
         try:
             template_replacements['ISO19115_LICENSE'] = \
-                project_definition['license']
+                'licensed under ' + project_definition['license']
         except KeyError:
-            template_replacements[''] = ''
+            template_replacements['ISO19115_LICENSE'] = ''
         try:
             template_replacements['$ISO19115_URL'] = \
                 project_definition['$ISO19115_URL']

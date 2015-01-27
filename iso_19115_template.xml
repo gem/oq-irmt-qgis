@@ -175,7 +175,7 @@
                     </gmd:useConstraints>
                     <gmd:otherConstraints>
                         <gco:CharacterString>
-                            licensed under $ISO19115_LICENSE
+                            $ISO19115_LICENSE
                         </gco:CharacterString>
                     </gmd:otherConstraints>
                 </gmd:MD_LegalConstraints>
