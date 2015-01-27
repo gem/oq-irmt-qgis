@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_set_project_definition.ui'
 #
-# Created: Tue Jan 27 15:56:53 2015
+# Created: Tue Jan 27 17:11:37 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -27,7 +27,7 @@ class Ui_SetProjectDefinitionDialog(object):
     def setupUi(self, SetProjectDefinitionDialog):
         SetProjectDefinitionDialog.setObjectName(_fromUtf8("SetProjectDefinitionDialog"))
         SetProjectDefinitionDialog.setWindowModality(QtCore.Qt.ApplicationModal)
-        SetProjectDefinitionDialog.resize(539, 260)
+        SetProjectDefinitionDialog.resize(694, 584)
         SetProjectDefinitionDialog.setModal(True)
         self.verticalLayout = QtGui.QVBoxLayout(SetProjectDefinitionDialog)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
