@@ -41,16 +41,17 @@ class SetProjectDefinitionDialog(QDialog, Ui_SetProjectDefinitionDialog):
         self.project_definition = project_definition
         self.setupUi(self)
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
-        self.layer_name.setText(iface.activeLayer().name())
-        self.project_definition_ta.setText(json.dumps(
+        self.layer_name.setText("Project definition for layer: %s" %
+                                iface.activeLayer().name())
+        self.project_definition_te.setText(json.dumps(
             self.project_definition,
             sort_keys=False,
             indent=2,
             separators=(',', ': ')))
 
-    def on_project_definition_ta_textChanged(self):
+    def on_project_definition_te_textChanged(self):
         try:
-            project_definition = self.project_definition_ta.toPlainText()
+            project_definition = self.project_definition_te.toPlainText()
             self.project_definition = json.loads(project_definition)
             self.ok_button.setEnabled(True)
         except ValueError:
