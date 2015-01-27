@@ -89,7 +89,8 @@ def generate_iso_metadata(project_definition=None):
     template_replacements = copy.copy(get_defaults())
 
     # create runtime based replacement values
-    template_replacements['ISO19115_TODAY_DATETIME'] = time.strftime("%Y-%m-%dT%H:%M:%SZ")
+    template_replacements['ISO19115_TODAY_DATETIME'] = time.strftime(
+        "%Y-%m-%dT%H:%M:%SZ")
     if project_definition is not None:
         if DEBUG:
             print project_definition
@@ -117,9 +118,9 @@ def generate_iso_metadata(project_definition=None):
             template_replacements['ISO19115_EMAIL'] = ''
         try:
             template_replacements['ISO19115_LICENSE'] = \
-                project_definition['license']
+                'licensed under ' + project_definition['license']
         except KeyError:
-            template_replacements[''] = ''
+            template_replacements['ISO19115_LICENSE'] = 'no license specified'
         try:
             template_replacements['$ISO19115_URL'] = \
                 project_definition['$ISO19115_URL']
@@ -133,7 +134,8 @@ def generate_iso_metadata(project_definition=None):
 
 
 def write_iso_metadata_file(xml_filename, project_definition=None):
-    """Make a valid ISO 19115 XML file using the values of defaults.get_defaults
+    """
+    Make a valid ISO 19115 XML file using the values of defaults.get_defaults
 
     This method will create a file based on the iso_19115_template.py template
     The $placeholders there will be replaced by the values returned from
