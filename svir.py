@@ -27,6 +27,7 @@ import os.path
 import tempfile
 import uuid
 import copy
+import json
 from math import ceil
 from metadata_utilities import write_iso_metadata_file
 
@@ -232,7 +233,7 @@ class Svir:
         # if such property is available
         resp = QgsProject.instance().readEntry('svir', 'project_definitions')
         if resp[1] is True:
-            self.project_definitions = eval(resp[0])
+            self.project_definitions = json.loads(resp[0])
         else:
             self.project_definitions = {}
         if DEBUG:
@@ -249,7 +250,8 @@ class Svir:
             self.project_definitions.pop(layer_id, None)
         # set the QgsProject's property
         QgsProject.instance().writeEntry(
-            'svir', 'project_definitions', str(self.project_definitions))
+            'svir', 'project_definitions',
+            json.dumps(self.project_definitions))
         if DEBUG:
             print "Project's property 'project_definitions' updated:"
             print QgsProject.instance().readEntry(
