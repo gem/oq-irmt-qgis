@@ -242,8 +242,7 @@ class Svir:
         # if such property is available
         resp = QgsProject.instance().readEntry('svir', 'project_definitions')
         if resp[1] is True:
-            #TODO replace eval with JSON.parse()
-            self.project_definitions = eval(resp[0])
+            self.project_definitions = json.loads(resp[0])
         else:
             self.project_definitions = {}
         if DEBUG:
@@ -260,7 +259,11 @@ class Svir:
             self.project_definitions.pop(layer_id, None)
         # set the QgsProject's property
         QgsProject.instance().writeEntry(
-            'svir', 'project_definitions', str(self.project_definitions))
+            'svir', 'project_definitions',
+            json.dumps(self.project_definitions,
+                sort_keys=False,
+                indent=2,
+                separators=(',', ': ')))
         if DEBUG:
             print "Project's property 'project_definitions' updated:"
             print QgsProject.instance().readEntry(
