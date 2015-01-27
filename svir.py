@@ -23,11 +23,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
+import json
 import os.path
 import tempfile
 import uuid
 import copy
-import json
 from math import ceil
 from metadata_utilities import write_iso_metadata_file
 
@@ -37,15 +37,13 @@ from PyQt4.QtCore import (QSettings,
                           QTranslator,
                           QCoreApplication,
                           qVersion,
-                          QVariant,
-                          QUrl)
+                          QVariant)
 
 from PyQt4.QtGui import (QAction,
                          QIcon,
                          QProgressDialog,
                          QColor,
-                         QFileDialog,
-                         QDesktopServices)
+                         QFileDialog)
 
 from qgis.core import (QgsVectorLayer,
                        QgsMapLayerRegistry,
@@ -67,6 +65,7 @@ from qgis.gui import QgsMessageBar
 
 from qgis.analysis import QgsZonalStatistics
 import processing as p
+from set_project_definition_dialog import SetProjectDefinitionDialog
 from upload_metadata_dialog import UploadMetadataDialog
 
 try:
@@ -186,6 +185,13 @@ class Svir:
                            self.transform_attribute,
                            enable=False,
                            add_to_layer_actions=True)
+        # Action to set a preexisting project definition to a layer
+        self.add_menu_item("set_project_definition",
+                           ":/plugins/svir/copy.svg",
+                           u"&Set project definition",
+                           self.set_project_definition,
+                           enable=True,
+                           add_to_layer_actions=True)
         # Action to activate the modal dialog to choose weighting of the
         # data from the platform
         self.add_menu_item("weight_data",
@@ -217,6 +223,7 @@ class Svir:
                            u"&OpenQuake Platform connection settings",
                            self.settings,
                            enable=True)
+
         self.update_actions_status()
 
     def layers_added(self):
@@ -228,12 +235,13 @@ class Svir:
             self.update_proj_def(layer_id)
 
     def sync_proj_def(self):
-        # get prpject_definitions from the project's properties
+        # get project_definitions from the project's properties
         # it returns a tuple, with the returned value and a boolean indicating
         # if such property is available
         resp = QgsProject.instance().readEntry('svir', 'project_definitions')
         if resp[1] is True:
-            self.project_definitions = json.loads(resp[0])
+            #TODO replace eval with JSON.parse()
+            self.project_definitions = eval(resp[0])
         else:
             self.project_definitions = {}
         if DEBUG:
@@ -250,8 +258,7 @@ class Svir:
             self.project_definitions.pop(layer_id, None)
         # set the QgsProject's property
         QgsProject.instance().writeEntry(
-            'svir', 'project_definitions',
-            json.dumps(self.project_definitions))
+            'svir', 'project_definitions', str(self.project_definitions))
         if DEBUG:
             print "Project's property 'project_definitions' updated:"
             print QgsProject.instance().readEntry(
@@ -565,6 +572,31 @@ class Svir:
         new_indicator['field'] = indicator_field
         new_indicator['level'] = level
         svi_themes[theme_position]['children'].append(new_indicator)
+
+    def set_project_definition(self):
+        """
+        Open a modal dialog to select weights in a d3.js visualization
+        """
+        self.sync_proj_def()
+        current_layer_id = self.iface.activeLayer().id()
+        try:
+            project_definition = self.project_definitions[current_layer_id]
+        except KeyError:
+            project_definition = PROJECT_TEMPLATE
+            self.update_proj_def(current_layer_id, project_definition)
+        old_project_definition = copy.deepcopy(project_definition)
+
+        dlg = SetProjectDefinitionDialog(self.iface, project_definition, )
+        if dlg.exec_():
+            project_definition = dlg.project_definition
+            self.update_actions_status()
+        else:
+            project_definition = old_project_definition
+
+        print project_definition
+
+        self.update_proj_def(current_layer_id, project_definition)
+        self.redraw_ir_layer(project_definition)
 
     def weight_data(self):
         """
@@ -1292,7 +1324,6 @@ class Svir:
                                     project_definition)
             metadata_dialog = UploadMetadataDialog(
                 self.iface, file_stem, project_definition)
-            if metadata_dialog.exec_():
-                QDesktopServices.openUrl(QUrl(metadata_dialog.layer_url))
+            metadata_dialog.exec_()
         else:
             print "metadata_dialog cancelled"
