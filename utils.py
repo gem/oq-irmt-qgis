@@ -25,9 +25,11 @@
 """
 import collections
 import json
+import os
 from time import time
 from PyQt4.QtCore import QSettings, Qt
-from PyQt4.QtGui import QApplication, QProgressBar, QToolButton
+from PyQt4.QtGui import QApplication, QProgressBar, QToolButton, QFileDialog, \
+    QMessageBox
 from qgis.core import QgsMapLayerRegistry
 from settings_dialog import SettingsDialog
 from qgis.gui import QgsMessageBar
@@ -247,6 +249,32 @@ def upload_shp(host, session, file_stem, username):
             return response['errors'], False
         else:
             return "The server did not provide error messages", False
+
+
+def ask_for_download_destination(parent, text='Download destination'):
+    return QFileDialog.getExistingDirectory(
+        parent,
+        text,
+        os.path.expanduser("~"))
+
+
+def files_exist_in_destination(destination, file_names,):
+        file_exists_in_destination = []
+        for file_name in file_names:
+            file_path = os.path.join(destination, file_name)
+            if os.path.isfile(file_path):
+                file_exists_in_destination.append(file_path)
+        return file_exists_in_destination
+
+
+def confirm_overwrite(parent, files):
+        return QMessageBox.question(
+            parent,
+            'Overwrite existing files?',
+            'If you continue the following files will be '
+            'overwritten: %s\n\n'
+            'Continue?' % '\n'.join(files),
+            QMessageBox.Yes | QMessageBox.No)
 
 
 class Register(collections.OrderedDict):

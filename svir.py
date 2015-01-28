@@ -28,6 +28,9 @@ import os.path
 import tempfile
 import uuid
 import copy
+import zipfile
+import StringIO
+
 from math import ceil
 from download_layer_dialog import DownloadLayerDialog
 from metadata_utilities import write_iso_metadata_file
@@ -45,7 +48,8 @@ from PyQt4.QtGui import (QAction,
                          QProgressDialog,
                          QColor,
                          QFileDialog,
-                         QDesktopServices)
+                         QDesktopServices,
+                         QMessageBox)
 
 from qgis.core import (QgsVectorLayer,
                        QgsMapLayerRegistry,
@@ -99,7 +103,8 @@ from utils import (LayerEditingManager,
                    WaitCursorManager,
                    assign_default_weights,
                    clear_progress_message_bar, create_progress_message_bar,
-                   SvNetworkError)
+                   SvNetworkError, ask_for_download_destination,
+                   files_exist_in_destination, confirm_overwrite)
 from globals import (SVIR_PLUGIN_VERSION,
                      INT_FIELD_TYPE_NAME,
                      DOUBLE_FIELD_TYPE_NAME,
@@ -560,30 +565,40 @@ class Svir:
 
         dlg = DownloadLayerDialog(sv_downloader)
         if dlg.exec_():
-            dest_filename = QFileDialog.getSaveFileName(
-                dlg,
-                'Download destination',
-                os.path.expanduser("~"),
-                'Shapefiles (*.shp)')
-            if dest_filename:
-                if dest_filename[-4:] != ".shp":
-                    dest_filename += ".shp"
-            else:
+            dest_dir = ask_for_download_destination(dlg)
+            if not dest_dir:
                 return
-
             try:
-                #TODO: DOWNLOAD and unzip LAYER
-                fname, msg = sv_downloader.get_sv_data()
-                #TODO: DOWNLOAD METADATA
+                #download and unzip layer
+                request = sv_downloader.sess.get('https://platform-staging.openquake.org/geoserver/wfs?format_options=charset%3AUTF-8&typename=oqplatform%3Afile_12&outputFormat=SHAPE-ZIP&version=1.0.0&service=WFS&request=GetFeature')
+                downloaded_zip = zipfile.ZipFile(
+                    StringIO.StringIO(request.content))
             except SvNetworkError as e:
                 self.iface.messageBar().pushMessage(
                     tr("Download Error"),
                     tr(str(e)),
                     level=QgsMessageBar.CRITICAL)
                 return
+
+            file_in_destination = files_exist_in_destination(
+                dest_dir, downloaded_zip.namelist())
+
+            if file_in_destination:
+                while confirm_overwrite(dlg, file_in_destination) == \
+                        QMessageBox.No:
+                    dest_dir = ask_for_download_destination(dlg)
+                    file_in_destination = files_exist_in_destination(
+                        dest_dir, downloaded_zip.namelist())
+                    if not file_in_destination:
+                        break
+
+            downloaded_zip.extractall(dest_dir)
+
+            #TODO: DOWNLOAD METADATA
             #TODO: READ metadata
             project_definition = ""
-            layer = QgsVectorLayer(dest_filename, 'Socioeconomic data', 'ogr')
+            layer = QgsVectorLayer(
+                dest_dir, dlg.extra_infos[dlg.layer_id]['Title'], 'ogr')
             if layer.isValid():
                 QgsMapLayerRegistry.instance().addMapLayer(layer)
             else:
