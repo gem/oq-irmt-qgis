@@ -14,6 +14,7 @@ Contact : ole.moller.nielsen@gmail.com
 
 """
 from defaults import get_defaults
+from utils import ReadMetadataError
 
 __author__ = 'marco@opengis.ch'
 __revision__ = '$Format:%H$'
@@ -179,3 +180,16 @@ def valid_iso_xml(xml_filename):
         tree = ElementTree.parse(xml_filename)
 
     return tree
+
+
+def get_supplemental_info(xml_filename):
+    # this raises a IOError if the file doesn't exist
+    tree = ElementTree.parse(xml_filename)
+    root = tree.getroot()
+
+    keyword_element = root.find(ISO_METADATA_KEYWORD_TAG)
+    # we have an xml file but it has no valid container
+    if keyword_element is None:
+        raise ReadMetadataError
+
+    return keyword_element.text.split('\n')
