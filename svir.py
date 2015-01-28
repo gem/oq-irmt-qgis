@@ -29,9 +29,9 @@ import tempfile
 import uuid
 import copy
 from math import ceil
+from download_layer_dialog import DownloadLayerDialog
 from metadata_utilities import write_iso_metadata_file
 
-from third_party.requests.exceptions import ConnectionError
 
 from PyQt4.QtCore import (QSettings,
                           QTranslator,
@@ -91,11 +91,10 @@ from settings_dialog import SettingsDialog
 from weight_data_dialog import WeightDataDialog
 from upload_settings_dialog import UploadSettingsDialog
 
-from import_sv_data import SvDownloader
+from import_sv_data import get_loggedin_downloader
 
 from utils import (LayerEditingManager,
                    tr,
-                   get_credentials,
                    TraceTimeManager,
                    WaitCursorManager,
                    assign_default_weights,
@@ -165,7 +164,6 @@ class Svir:
             self.layers_removed)
 
     def initGui(self):
-
         # create our own toolbar
         self.toolbar = self.iface.addToolBar('SVIR')
         self.toolbar.setObjectName('SVIRToolBar')
@@ -177,6 +175,14 @@ class Svir:
                            u"&Load socioeconomic indicators"
                            " from the OpenQuake Platform",
                            self.import_sv_variables,
+                           enable=True,
+                           add_to_layer_actions=False)
+        # Action to activate the modal dialog to import socioeconomic
+        # data from the platform
+        self.add_menu_item("import_layer",
+                           ":/plugins/svir/load_layer.svg",
+                           u"&Import layer from the OpenQuake Platform",
+                           self.import_layer,
                            enable=True,
                            add_to_layer_actions=False)
         # Action to activate the modal dialog to select a layer and one of its
@@ -218,12 +224,12 @@ class Svir:
                            self.upload,
                            enable=False,
                            add_to_layer_actions=True)
-        # Action to activate the modal dialog to set up settings for the
+        # Action to activate the modal dialog to set up show_settings for the
         # connection with the platform
-        self.add_menu_item("settings",
-                           ":/plugins/svir/settings.svg",
-                           u"&OpenQuake Platform connection settings",
-                           self.settings,
+        self.add_menu_item("show_settings",
+                           ":/plugins/svir/show_settings.svg",
+                           u"&OpenQuake Platform connection show_settings",
+                           self.show_settings,
                            enable=True)
 
         self.update_actions_status()
@@ -408,20 +414,10 @@ class Svir:
         download from the openquake platform
         """
 
-        hostname, username, password = get_credentials(self.iface)
         # login to platform, to be able to retrieve sv indices
-        sv_downloader = SvDownloader(hostname)
-
-        try:
-            msg = ("Connecting to the OpenQuake Platform...")
-            with WaitCursorManager(msg, self.iface):
-                sv_downloader.login(username, password)
-        except (SvNetworkError, ConnectionError) as e:
-            self.iface.messageBar().pushMessage(
-                tr("Login Error"),
-                tr(str(e)),
-                level=QgsMessageBar.CRITICAL)
-            self.settings()
+        sv_downloader = get_loggedin_downloader(self.iface)
+        if sv_downloader is None:
+            self.show_settings()
             return
 
         try:
@@ -555,6 +551,46 @@ class Svir:
             self.iface.messageBar().pushMessage(tr("Download Error"),
                                                 tr(str(e)),
                                                 level=QgsMessageBar.CRITICAL)
+
+    def import_layer(self):
+        sv_downloader = get_loggedin_downloader(self.iface)
+        if sv_downloader is None:
+            self.show_settings()
+            return
+
+        dlg = DownloadLayerDialog(sv_downloader)
+        if dlg.exec_():
+            dest_filename = QFileDialog.getSaveFileName(
+                dlg,
+                'Download destination',
+                os.path.expanduser("~"),
+                'Shapefiles (*.shp)')
+            if dest_filename:
+                if dest_filename[-4:] != ".shp":
+                    dest_filename += ".shp"
+            else:
+                return
+
+            try:
+                #TODO: DOWNLOAD and unzip LAYER
+                fname, msg = sv_downloader.get_sv_data()
+                #TODO: DOWNLOAD METADATA
+            except SvNetworkError as e:
+                self.iface.messageBar().pushMessage(
+                    tr("Download Error"),
+                    tr(str(e)),
+                    level=QgsMessageBar.CRITICAL)
+                return
+            #TODO: READ metadata
+            project_definition = ""
+            layer = QgsVectorLayer(dest_filename, 'Socioeconomic data', 'ogr')
+            if layer.isValid():
+                QgsMapLayerRegistry.instance().addMapLayer(layer)
+            else:
+                raise RuntimeError('Layer invalid')
+            self.iface.setActiveLayer(layer)
+            self.update_proj_def(layer.id(), project_definition)
+            self.update_actions_status()
 
     @staticmethod
     def _add_new_theme(svi_themes,
@@ -790,7 +826,7 @@ class Svir:
         self.iface.mapCanvas().refresh()
         self.iface.legendInterface().refreshLayerSymbology(self.current_layer)
 
-    def settings(self):
+    def show_settings(self):
         SettingsDialog(self.iface).exec_()
 
     def attribute_selection(self):
