@@ -33,8 +33,7 @@ import StringIO
 
 from math import ceil
 from download_layer_dialog import DownloadLayerDialog
-from metadata_utilities import write_iso_metadata_file
-
+from metadata_utilities import write_iso_metadata_file, get_supplemental_info
 
 from PyQt4.QtCore import (QSettings,
                           QTranslator,
@@ -597,8 +596,12 @@ class Svir:
             downloaded_zip.extractall(dest_dir)
 
             #TODO: DOWNLOAD METADATA
-            #TODO: READ metadata
-            project_definition = ""
+            metadata_url = 'https://platform-staging.openquake.org/catalogue/csw?outputschema=http%3A%2F%2Fwww.isotc211.org%2F2005%2Fgmd&service=CSW&request=GetRecordById&version=2.0.2&elementsetname=full&id=4029f53c-a583-11e4-b941-00163e801d62'
+            request = sv_downloader.sess.get(metadata_url)
+            metadata_xml = request.content
+
+            project_definition = get_supplemental_info(
+                metadata_xml, '{http://www.isotc211.org/2005/gmd}MD_Metadata/')
             layer = QgsVectorLayer(
                 dest_dir, dlg.extra_infos[dlg.layer_id]['Title'], 'ogr')
             if layer.isValid():

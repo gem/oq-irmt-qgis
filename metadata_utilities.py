@@ -48,6 +48,7 @@ ISO_METADATA_KEYWORD_TAG = '/'.join(ISO_METADATA_KEYWORD_NESTING)
 ElementTree.register_namespace('gmi', 'http://www.isotc211.org/2005/gmi')
 ElementTree.register_namespace('gco', 'http://www.isotc211.org/2005/gco')
 ElementTree.register_namespace('gmd', 'http://www.isotc211.org/2005/gmd')
+ElementTree.register_namespace('csw', 'http://www.opengis.net/cat/csw/2.0.2')
 ElementTree.register_namespace('xsi',
                                'http://www.w3.org/2001/XMLSchema-instance')
 
@@ -182,12 +183,16 @@ def valid_iso_xml(xml_filename):
     return tree
 
 
-def get_supplemental_info(xml_filename):
+def get_supplemental_info(xml, prefix=None):
     # this raises a IOError if the file doesn't exist
-    tree = ElementTree.parse(xml_filename)
-    root = tree.getroot()
+    if os.path.isfile(xml):
+        tree = ElementTree.parse(xml)
+        root = tree.getroot()
+    else:
+        root = ElementTree.fromstring(xml)
 
-    keyword_element = root.find(ISO_METADATA_KEYWORD_TAG)
+    keyword_tag = prefix + ISO_METADATA_KEYWORD_TAG
+    keyword_element = root.find(keyword_tag)
     # we have an xml file but it has no valid container
     if keyword_element is None:
         raise ReadMetadataError
