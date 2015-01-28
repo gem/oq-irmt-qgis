@@ -570,7 +570,9 @@ class Svir:
                 return
             try:
                 #download and unzip layer
-                request = sv_downloader.sess.get('https://platform-staging.openquake.org/geoserver/wfs?format_options=charset%3AUTF-8&typename=oqplatform%3Afile_12&outputFormat=SHAPE-ZIP&version=1.0.0&service=WFS&request=GetFeature')
+                shape_url = '%s/geoserver/wfs?format_options=charset:UTF-8&typename=%s&outputFormat=SHAPE-ZIP&version=1.0.0&service=WFS&request=GetFeature'
+                shape_url = shape_url % (sv_downloader.host, dlg.layer_id)
+                request = sv_downloader.sess.get(shape_url)
                 downloaded_zip = zipfile.ZipFile(
                     StringIO.StringIO(request.content))
             except SvNetworkError as e:
