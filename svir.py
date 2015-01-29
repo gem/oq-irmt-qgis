@@ -596,9 +596,9 @@ class Svir:
                         break
 
             downloaded_zip.extractall(dest_dir)
-
-            #TODO: DOWNLOAD METADATA
-            metadata_url = 'https://platform-staging.openquake.org/catalogue/csw?outputschema=http%3A%2F%2Fwww.isotc211.org%2F2005%2Fgmd&service=CSW&request=GetRecordById&version=2.0.2&elementsetname=full&id=4029f53c-a583-11e4-b941-00163e801d62'
+            request_url = '%s/svir/get_layer_metadata_url?layer_name=%s' % (
+                sv_downloader.host, dlg.layer_id)
+            metadata_url = sv_downloader.sess.get(request_url).content
             request = sv_downloader.sess.get(metadata_url)
             metadata_xml = request.content
 
