@@ -72,7 +72,10 @@ class DownloadLayerDialog(QDialog):
 
     def get_capabilities(self):
         wfs = '/geoserver/wfs?'
-        params = 'SERVICE=WFS&VERSION=1.0.0&REQUEST=GetCapabilities&SRSNAME=EPSG:4326'
+        params = ('SERVICE=WFS'
+                  '&VERSION=1.0.0'
+                  '&REQUEST=GetCapabilities'
+                  '&SRSNAME=EPSG:4326')
         url = '%s%s%s' % (self.sv_downloader.host, wfs, params)
         result = self.sv_downloader.sess.get(url)
         if result.status_code == 200:

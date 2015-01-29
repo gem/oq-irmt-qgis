@@ -56,4 +56,3 @@ class SetProjectDefinitionDialog(QDialog, Ui_SetProjectDefinitionDialog):
             self.ok_button.setEnabled(True)
         except ValueError:
             self.ok_button.setEnabled(False)
-

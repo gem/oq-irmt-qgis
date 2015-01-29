@@ -271,9 +271,9 @@ class Svir:
         QgsProject.instance().writeEntry(
             'svir', 'project_definitions',
             json.dumps(self.project_definitions,
-                sort_keys=False,
-                indent=2,
-                separators=(',', ': ')))
+                       sort_keys=False,
+                       indent=2,
+                       separators=(',', ': ')))
         if DEBUG:
             print "Project's property 'project_definitions' updated:"
             print QgsProject.instance().readEntry(

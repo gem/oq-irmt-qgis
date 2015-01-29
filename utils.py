@@ -33,7 +33,6 @@ from PyQt4.QtGui import QApplication, QProgressBar, QToolButton, QFileDialog, \
 from qgis.core import QgsMapLayerRegistry
 from settings_dialog import SettingsDialog
 from qgis.gui import QgsMessageBar
-from third_party.requests.exceptions import ConnectionError
 
 
 def tr(message):
@@ -361,4 +360,3 @@ class ReadMetadataError(Exception):
     """When a metadata xml is not correctly formatted can't be read"""
     suggestion = (
         'Check that the file is correct')
-

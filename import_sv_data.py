@@ -33,7 +33,7 @@ from third_party.requests import Session
 from third_party.requests.exceptions import ConnectionError
 
 from utils import (SvNetworkError, platform_login, get_credentials,
-    WaitCursorManager, tr)
+                   WaitCursorManager, tr)
 
 PLATFORM_EXPORT_SV_THEMES = "/svir/list_themes"
 PLATFORM_EXPORT_SV_SUBTHEMES = "/svir/list_subthemes_by_theme"
