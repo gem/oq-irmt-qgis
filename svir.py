@@ -231,8 +231,8 @@ class Svir:
         # Action to activate the modal dialog to set up show_settings for the
         # connection with the platform
         self.add_menu_item("show_settings",
-                           ":/plugins/svir/show_settings.svg",
-                           u"&OpenQuake Platform connection show_settings",
+                           ":/plugins/svir/settings.svg",
+                           u"&OpenQuake Platform connection settings",
                            self.show_settings,
                            enable=True)
 
