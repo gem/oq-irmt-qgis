@@ -580,9 +580,11 @@ class Svir:
                     tr(str(e)),
                     level=QgsMessageBar.CRITICAL)
                 return
-
+            files_in_zip = downloaded_zip.namelist()
+            shp_file = next(
+                filename for filename in files_in_zip if '.shp' in filename)
             file_in_destination = files_exist_in_destination(
-                dest_dir, downloaded_zip.namelist())
+                dest_dir, files_in_zip)
 
             if file_in_destination:
                 while confirm_overwrite(dlg, file_in_destination) == \
@@ -602,10 +604,16 @@ class Svir:
 
             project_definition = get_supplemental_info(
                 metadata_xml, '{http://www.isotc211.org/2005/gmd}MD_Metadata/')
+            dest_file = os.path.join(dest_dir, shp_file)
             layer = QgsVectorLayer(
-                dest_dir, dlg.extra_infos[dlg.layer_id]['Title'], 'ogr')
+                dest_file,
+                dlg.extra_infos[dlg.layer_id]['Title'], 'ogr')
             if layer.isValid():
                 QgsMapLayerRegistry.instance().addMapLayer(layer)
+                self.iface.messageBar().pushMessage(
+                    tr('Download successful'),
+                    tr('Shapefile downloaded to %s' % dest_file),
+                    duration=8)
             else:
                 raise RuntimeError('Layer invalid')
             self.iface.setActiveLayer(layer)
