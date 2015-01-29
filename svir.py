@@ -580,7 +580,9 @@ class Svir:
                     '&service=WFS'
                     '&request=GetFeature')
                 shape_url = shape_url_fmt % (sv_downloader.host, dlg.layer_id)
-                request = sv_downloader.sess.get(shape_url)
+                with WaitCursorManager("Downloading project", self.iface):
+                    request = sv_downloader.sess.get(shape_url)
+
                 downloaded_zip = zipfile.ZipFile(
                     StringIO.StringIO(request.content))
             except SvNetworkError as e:
