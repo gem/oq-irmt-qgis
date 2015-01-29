@@ -94,7 +94,7 @@ class DownloadLayerDialog(QDialog):
         for layer in layers:
             try:
                 keywords = layer.find('%sKeywords' % NS_NET_OPENGIS_WFS).text
-                if keywords is not None and 'SVIR' in keywords:
+                if keywords is not None and 'SVIR_QGIS_Plugin' in keywords:
                     title = layer.find('%sTitle' % NS_NET_OPENGIS_WFS).text
                     layer_id = layer.find('%sName' % NS_NET_OPENGIS_WFS).text
                     abstract = layer.find(
