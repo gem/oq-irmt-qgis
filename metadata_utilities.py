@@ -196,5 +196,10 @@ def get_supplemental_info(xml, prefix=None):
     # we have an xml file but it has no valid container
     if keyword_element is None:
         raise ReadMetadataError
-
-    return keyword_element.text.split('\n')
+    supplemental_info = json.loads(keyword_element.text)
+    if DEBUG:
+        print "keyword_element.text"
+        print keyword_element.text
+        print "Downloaded supplemental information"
+        print supplemental_info
+    return supplemental_info
