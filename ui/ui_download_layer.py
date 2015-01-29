@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_download_layer.ui'
 #
-# Created: Wed Jan 28 18:07:05 2015
+# Created: Thu Jan 29 11:41:55 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -52,8 +52,8 @@ class Ui_DownloadLayerDialog(object):
         QtCore.QMetaObject.connectSlotsByName(DownloadLayerDialog)
 
     def retranslateUi(self, DownloadLayerDialog):
-        DownloadLayerDialog.setWindowTitle(_translate("DownloadLayerDialog", "Select socioeconomic indicators", None))
-        self.label.setText(_translate("DownloadLayerDialog", "Layer to download", None))
+        DownloadLayerDialog.setWindowTitle(_translate("DownloadLayerDialog", "Download project from the OpenQuake Platform", None))
+        self.label.setText(_translate("DownloadLayerDialog", "Please select one of the available projects", None))
         self.layer_detail.setHtml(_translate("DownloadLayerDialog", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
