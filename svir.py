@@ -569,8 +569,15 @@ class Svir:
                 return
             try:
                 #download and unzip layer
-                shape_url = '%s/geoserver/wfs?format_options=charset:UTF-8&typename=%s&outputFormat=SHAPE-ZIP&version=1.0.0&service=WFS&request=GetFeature'
-                shape_url = shape_url % (sv_downloader.host, dlg.layer_id)
+                shape_url_fmt = (
+                    '%s/geoserver/wfs?'
+                    'format_options=charset:UTF-8'
+                    '&typename=%s'
+                    '&outputFormat=SHAPE-ZIP'
+                    '&version=1.0.0'
+                    '&service=WFS'
+                    '&request=GetFeature')
+                shape_url = shape_url_fmt % (sv_downloader.host, dlg.layer_id)
                 request = sv_downloader.sess.get(shape_url)
                 downloaded_zip = zipfile.ZipFile(
                     StringIO.StringIO(request.content))
