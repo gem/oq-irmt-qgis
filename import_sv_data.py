@@ -27,16 +27,36 @@ import os
 import tempfile
 import StringIO
 import csv
+from qgis.gui import QgsMessageBar
 
 from third_party.requests import Session
+from third_party.requests.exceptions import ConnectionError
 
-from utils import SvNetworkError, platform_login
+from utils import (SvNetworkError, platform_login, get_credentials,
+    WaitCursorManager, tr)
 
 PLATFORM_EXPORT_SV_THEMES = "/svir/list_themes"
 PLATFORM_EXPORT_SV_SUBTHEMES = "/svir/list_subthemes_by_theme"
 PLATFORM_EXPORT_SV_NAMES = "/svir/export_variables_info"
 PLATFORM_EXPORT_VARIABLES_DATA = "/svir/export_variables_data"
 PLATFORM_EXPORT_COUNTRIES_INFO = "/svir/export_countries_info"
+
+
+def get_loggedin_downloader(iface):
+    hostname, username, password = get_credentials(iface)
+    sv_downloader = SvDownloader(hostname)
+
+    try:
+        msg = ("Connecting to the OpenQuake Platform...")
+        with WaitCursorManager(msg, iface):
+            sv_downloader.login(username, password)
+        return sv_downloader
+    except (SvNetworkError, ConnectionError) as e:
+        iface.messageBar().pushMessage(
+            tr("Login Error"),
+            tr(str(e)),
+            level=QgsMessageBar.CRITICAL)
+        return None
 
 
 class SvDownloader(object):

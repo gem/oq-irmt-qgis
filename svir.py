@@ -28,10 +28,12 @@ import os.path
 import tempfile
 import uuid
 import copy
-from math import ceil
-from metadata_utilities import write_iso_metadata_file
+import zipfile
+import StringIO
 
-from third_party.requests.exceptions import ConnectionError
+from math import ceil
+from download_layer_dialog import DownloadLayerDialog
+from metadata_utilities import write_iso_metadata_file, get_supplemental_info
 
 from PyQt4.QtCore import (QSettings,
                           QTranslator,
@@ -45,7 +47,8 @@ from PyQt4.QtGui import (QAction,
                          QProgressDialog,
                          QColor,
                          QFileDialog,
-                         QDesktopServices)
+                         QDesktopServices,
+                         QMessageBox)
 
 from qgis.core import (QgsVectorLayer,
                        QgsMapLayerRegistry,
@@ -91,16 +94,16 @@ from settings_dialog import SettingsDialog
 from weight_data_dialog import WeightDataDialog
 from upload_settings_dialog import UploadSettingsDialog
 
-from import_sv_data import SvDownloader
+from import_sv_data import get_loggedin_downloader
 
 from utils import (LayerEditingManager,
                    tr,
-                   get_credentials,
                    TraceTimeManager,
                    WaitCursorManager,
                    assign_default_weights,
                    clear_progress_message_bar, create_progress_message_bar,
-                   SvNetworkError)
+                   SvNetworkError, ask_for_download_destination,
+                   files_exist_in_destination, confirm_overwrite)
 from globals import (SVIR_PLUGIN_VERSION,
                      INT_FIELD_TYPE_NAME,
                      DOUBLE_FIELD_TYPE_NAME,
@@ -165,7 +168,6 @@ class Svir:
             self.layers_removed)
 
     def initGui(self):
-
         # create our own toolbar
         self.toolbar = self.iface.addToolBar('SVIR')
         self.toolbar.setObjectName('SVIRToolBar')
@@ -177,6 +179,14 @@ class Svir:
                            u"&Load socioeconomic indicators"
                            " from the OpenQuake Platform",
                            self.import_sv_variables,
+                           enable=True,
+                           add_to_layer_actions=False)
+        # Action to activate the modal dialog to import socioeconomic
+        # data from the platform
+        self.add_menu_item("import_layer",
+                           ":/plugins/svir/load_layer.svg",
+                           u"&Import layer from the OpenQuake Platform",
+                           self.import_layer,
                            enable=True,
                            add_to_layer_actions=False)
         # Action to activate the modal dialog to select a layer and one of its
@@ -218,12 +228,12 @@ class Svir:
                            self.upload,
                            enable=False,
                            add_to_layer_actions=True)
-        # Action to activate the modal dialog to set up settings for the
+        # Action to activate the modal dialog to set up show_settings for the
         # connection with the platform
-        self.add_menu_item("settings",
-                           ":/plugins/svir/settings.svg",
-                           u"&OpenQuake Platform connection settings",
-                           self.settings,
+        self.add_menu_item("show_settings",
+                           ":/plugins/svir/show_settings.svg",
+                           u"&OpenQuake Platform connection show_settings",
+                           self.show_settings,
                            enable=True)
 
         self.update_actions_status()
@@ -408,20 +418,10 @@ class Svir:
         download from the openquake platform
         """
 
-        hostname, username, password = get_credentials(self.iface)
         # login to platform, to be able to retrieve sv indices
-        sv_downloader = SvDownloader(hostname)
-
-        try:
-            msg = ("Connecting to the OpenQuake Platform...")
-            with WaitCursorManager(msg, self.iface):
-                sv_downloader.login(username, password)
-        except (SvNetworkError, ConnectionError) as e:
-            self.iface.messageBar().pushMessage(
-                tr("Login Error"),
-                tr(str(e)),
-                level=QgsMessageBar.CRITICAL)
-            self.settings()
+        sv_downloader = get_loggedin_downloader(self.iface)
+        if sv_downloader is None:
+            self.show_settings()
             return
 
         try:
@@ -555,6 +555,77 @@ class Svir:
             self.iface.messageBar().pushMessage(tr("Download Error"),
                                                 tr(str(e)),
                                                 level=QgsMessageBar.CRITICAL)
+
+    def import_layer(self):
+        sv_downloader = get_loggedin_downloader(self.iface)
+        if sv_downloader is None:
+            self.show_settings()
+            return
+
+        dlg = DownloadLayerDialog(sv_downloader)
+        if dlg.exec_():
+            dest_dir = ask_for_download_destination(dlg)
+            if not dest_dir:
+                return
+            try:
+                #download and unzip layer
+                shape_url_fmt = (
+                    '%s/geoserver/wfs?'
+                    'format_options=charset:UTF-8'
+                    '&typename=%s'
+                    '&outputFormat=SHAPE-ZIP'
+                    '&version=1.0.0'
+                    '&service=WFS'
+                    '&request=GetFeature')
+                shape_url = shape_url_fmt % (sv_downloader.host, dlg.layer_id)
+                request = sv_downloader.sess.get(shape_url)
+                downloaded_zip = zipfile.ZipFile(
+                    StringIO.StringIO(request.content))
+            except SvNetworkError as e:
+                self.iface.messageBar().pushMessage(
+                    tr("Download Error"),
+                    tr(str(e)),
+                    level=QgsMessageBar.CRITICAL)
+                return
+            files_in_zip = downloaded_zip.namelist()
+            shp_file = next(
+                filename for filename in files_in_zip if '.shp' in filename)
+            file_in_destination = files_exist_in_destination(
+                dest_dir, files_in_zip)
+
+            if file_in_destination:
+                while confirm_overwrite(dlg, file_in_destination) == \
+                        QMessageBox.No:
+                    dest_dir = ask_for_download_destination(dlg)
+                    file_in_destination = files_exist_in_destination(
+                        dest_dir, downloaded_zip.namelist())
+                    if not file_in_destination:
+                        break
+
+            downloaded_zip.extractall(dest_dir)
+            request_url = '%s/svir/get_layer_metadata_url?layer_name=%s' % (
+                sv_downloader.host, dlg.layer_id)
+            metadata_url = sv_downloader.sess.get(request_url).content
+            request = sv_downloader.sess.get(metadata_url)
+            metadata_xml = request.content
+
+            project_definition = get_supplemental_info(
+                metadata_xml, '{http://www.isotc211.org/2005/gmd}MD_Metadata/')
+            dest_file = os.path.join(dest_dir, shp_file)
+            layer = QgsVectorLayer(
+                dest_file,
+                dlg.extra_infos[dlg.layer_id]['Title'], 'ogr')
+            if layer.isValid():
+                QgsMapLayerRegistry.instance().addMapLayer(layer)
+                self.iface.messageBar().pushMessage(
+                    tr('Download successful'),
+                    tr('Shapefile downloaded to %s' % dest_file),
+                    duration=8)
+            else:
+                raise RuntimeError('Layer invalid')
+            self.iface.setActiveLayer(layer)
+            self.update_proj_def(layer.id(), project_definition)
+            self.update_actions_status()
 
     @staticmethod
     def _add_new_theme(svi_themes,
@@ -790,7 +861,7 @@ class Svir:
         self.iface.mapCanvas().refresh()
         self.iface.legendInterface().refreshLayerSymbology(self.current_layer)
 
-    def settings(self):
+    def show_settings(self):
         SettingsDialog(self.iface).exec_()
 
     def attribute_selection(self):

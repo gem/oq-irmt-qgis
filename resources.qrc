@@ -6,6 +6,7 @@
     <file alias="define.svg">resources/define.svg</file>
     <file alias="load.svg">resources/load.svg</file>
     <file alias="settings.svg">resources/settings.svg</file>
+    <file alias="load_layer.svg">resources/load_layer.svg</file>
     <file alias="transform.svg">resources/transform.svg</file>
     <file alias="upload.svg">resources/upload.svg</file>
     <file alias="weights.svg">resources/weights.svg</file>
