@@ -185,7 +185,7 @@ class Svir:
         # data from the platform
         self.add_menu_item("import_layer",
                            ":/plugins/svir/load_layer.svg",
-                           u"&Import layer from the OpenQuake Platform",
+                           u"&Import project from the OpenQuake Platform",
                            self.import_layer,
                            enable=True,
                            add_to_layer_actions=False)
@@ -202,7 +202,7 @@ class Svir:
                            ":/plugins/svir/copy.svg",
                            u"&Set project definition",
                            self.set_project_definition,
-                           enable=True,
+                           enable=False,
                            add_to_layer_actions=True)
         # Action to activate the modal dialog to choose weighting of the
         # data from the platform
@@ -329,6 +329,7 @@ class Svir:
             # Activate actions which require a vector layer to be selected
             if self.current_layer.type() != QgsMapLayer.VectorLayer:
                 raise AttributeError
+            self.registered_actions["set_project_definition"].setEnabled(True)
             self.registered_actions["weight_data"].setEnabled(True)
             self.registered_actions["transform_attribute"].setEnabled(True)
             self.sync_proj_def()
@@ -343,6 +344,7 @@ class Svir:
             self.registered_actions["transform_attribute"].setEnabled(False)
             self.registered_actions["weight_data"].setEnabled(False)
             self.registered_actions["upload"].setEnabled(False)
+            self.registered_actions["set_project_definition"].setEnabled(False)
 
     def unload(self):
         # Remove the plugin menu items and toolbar icons
