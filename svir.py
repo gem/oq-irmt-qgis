@@ -605,7 +605,14 @@ class Svir:
             downloaded_zip.extractall(dest_dir)
             request_url = '%s/svir/get_layer_metadata_url?layer_name=%s' % (
                 sv_downloader.host, dlg.layer_id)
-            metadata_url = sv_downloader.sess.get(request_url).content
+            get_metadata_url_resp = sv_downloader.sess.get(request_url)
+            if not get_metadata_url_resp.ok:
+                self.iface.messageBar().pushMessage(
+                    tr("Download Error"),
+                    tr('Unable to locate the metadata'),
+                    level=QgsMessageBar.CRITICAL)
+                return
+            metadata_url = get_metadata_url_resp.content
             request = sv_downloader.sess.get(metadata_url)
             metadata_xml = request.content
 
@@ -622,7 +629,11 @@ class Svir:
                     tr('Shapefile downloaded to %s' % dest_file),
                     duration=8)
             else:
-                raise RuntimeError('Layer invalid')
+                self.iface.messageBar().pushMessage(
+                    tr("Download Error"),
+                    tr('Layer invalid'),
+                    level=QgsMessageBar.CRITICAL)
+                return
             self.iface.setActiveLayer(layer)
             self.update_proj_def(layer.id(), project_definition)
             self.update_actions_status()
