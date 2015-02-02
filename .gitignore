@@ -1,6 +1,11 @@
 *.py[cod]
 *~
 .idea/*
+.coverage
+.noseids
+.ropeproject/*
+build/
+help/build/*
 *.rdb
 *.db
 .\#*
