@@ -1343,41 +1343,6 @@ class Svir:
                                             tr(msg),
                                             level=QgsMessageBar.WARNING)
 
-    def copy_loss_values_to_current_layer(self):
-        """
-        Copy loss values from the aggregation layer to the current layer
-        which already contains socioeconomic related attributes
-        """
-        # to show the overall progress, cycling through zones
-        tot_zones = len(list(self.loss_layer_to_merge.getFeatures()))
-        msg = tr("Populating zonal layer with loss values...")
-        msg_bar_item, progress = create_progress_message_bar(
-            self.iface.messageBar(), msg)
-
-        with LayerEditingManager(self.current_layer,
-                                 tr("Add loss values to zonal layer"),
-                                 DEBUG):
-
-            aggr_loss_index = self.current_layer.fieldNameIndex(
-                self.aggr_loss_attr_to_merge)
-
-            # Begin populating "loss" attribute with data from the
-            # aggregation_layer selected by the user (possibly purged from
-            # zones containing no loss data)
-            for current_zone, zonal_feat in enumerate(
-                    self.current_layer.getFeatures()):
-                zonal_feat_id = zonal_feat.id()
-                progress_percent = current_zone / float(tot_zones) * 100
-                progress.setValue(progress_percent)
-                for aggr_feat in self.loss_layer_to_merge.getFeatures():
-                    if (zonal_feat[self.zone_id_in_zones_attr_name] ==
-                            aggr_feat[self.zone_id_in_zones_attr_name]):
-                        self.current_layer.changeAttributeValue(
-                            zonal_feat_id,
-                            aggr_loss_index,
-                            aggr_feat[self.aggr_loss_attr_to_merge])
-        clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
-
     def upload(self):
         temp_dir = tempfile.gettempdir()
         file_stem = '%s%sqgis_svir_%s' % (temp_dir, os.path.sep, uuid.uuid4())
