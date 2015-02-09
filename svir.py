@@ -405,12 +405,6 @@ class Svir:
             if dlg.ui.purge_chk.isChecked():
                 self.purge_zones_without_loss_points()
 
-            msg = 'Select "Merge SVI with loss data" from SVIR plugin menu ' \
-                  'to add aggregated losses to the zonal layer'
-            self.iface.messageBar().pushMessage(tr("Info"),
-                                                tr(msg),
-                                                level=QgsMessageBar.INFO,
-                                                duration=8)
             self.update_actions_status()
 
     def import_sv_variables(self):
