@@ -24,9 +24,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 from PyQt4.QtGui import QDialog
-from PyQt4.QtCore import pyqtSlot
 from ui.ui_attribute_selection import Ui_AttributeSelctionDialog
-from utils import tr
 
 
 class AttributeSelectionDialog(QDialog):
@@ -40,9 +38,3 @@ class AttributeSelectionDialog(QDialog):
         # Set up the user interface from Designer.
         self.ui = Ui_AttributeSelctionDialog()
         self.ui.setupUi(self)
-
-    @pyqtSlot(str)
-    def on_zone_id_attr_name_loss_cbox_currentIndexChanged(self):
-        zone_id_loss = self.ui.zone_id_attr_name_loss_cbox.currentText()
-        use_geometries = (zone_id_loss == tr("Use zonal geometries"))
-        self.ui.zone_id_attr_name_zone_cbox.setDisabled(use_geometries)
