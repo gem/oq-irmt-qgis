@@ -1000,30 +1000,31 @@ class Svir:
         containing socioeconomic data aggregated by zone.
         This method calls other methods of the class in order to produce,
         for each feature (zone):
-        * a "PTS_COUNT" attribute, specifying how many loss points are
+        * a "LOSS_PTS" attribute, specifying how many loss points are
           inside the zone
-        * a "LOSS_SUM" attribute, summing the loss values for all the
-          points that are inside the zone
-        * a "LOSS_AVG" attribute, averaging losses for each zone
+        * for each loss variable:
+            * a "SUM" attribute, summing the loss values for all the
+            points that are inside the zone
+            * a "AVG" attribute, averaging losses for each zone
         """
         # add count, sum and avg fields for aggregating statistics
         # (one new attribute for the count of points, then a sum and an average
         # for all the other loss attributes)
         self.loss_attrs_dict = {}
         count_field = QgsField(
-            'N_LOSS_PTS', QVariant.Int)
+            'LOSS_PTS', QVariant.Int)
         count_field.setTypeName(INT_FIELD_TYPE_NAME)
         count_added = \
             ProcessLayer(self.zonal_layer).add_attributes([count_field])
         self.loss_attrs_dict['count'] = count_added.values()[0]
         for loss_attr_name in self.loss_attr_names:
             self.loss_attrs_dict[loss_attr_name] = {}
-            sum_field = QgsField('%s_SUM' % loss_attr_name, QVariant.Double)
+            sum_field = QgsField('SUM_%s' % loss_attr_name, QVariant.Double)
             sum_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
             sum_added = \
                 ProcessLayer(self.zonal_layer).add_attributes([sum_field])
             self.loss_attrs_dict[loss_attr_name]['sum'] = sum_added.values()[0]
-            avg_field = QgsField('%s_AVG' % loss_attr_name, QVariant.Double)
+            avg_field = QgsField('AVG_%s' % loss_attr_name, QVariant.Double)
             avg_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
             avg_added = \
                 ProcessLayer(self.zonal_layer).add_attributes([avg_field])
