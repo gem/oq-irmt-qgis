@@ -1050,7 +1050,10 @@ class Svir:
                     err_msg += tr(" In order to cope with complex geometries, "
                                   "a working installation of SAGA is "
                                   "recommended.")
-                    QgsMessageLog.logMessage(err_msg)
+                    self.iface.messageBar().pushMessage(
+                        tr("Warning"),
+                        tr(err_msg),
+                        level=QgsMessageBar.WARNING)
                     self.calculate_vector_stats_using_geometries()
                 else:
                     # using SAGA to find out in which zone each point is
