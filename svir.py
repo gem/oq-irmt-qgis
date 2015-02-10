@@ -898,27 +898,35 @@ class Svir:
         # Load in the comboboxes only the names of the attributes compatible
         # with the following analyses: only numeric for losses and only
         # string for zone ids
+        default_zone_id_loss = None
         for field in loss_fields:
+            # The zone id is usually textual, but it might also be numeric
+            dlg.ui.zone_id_attr_name_loss_cbox.addItem(field.name())
             # Accept only numeric fields to contain loss data
             if field.typeName() in NUMERIC_FIELD_TYPES:
                 dlg.ui.loss_attrs_multisel.add_unselected_items([field.name()])
-            # Accept only string fields to contain zone ids
             elif field.typeName() in TEXTUAL_FIELD_TYPES:
-                dlg.ui.zone_id_attr_name_loss_cbox.addItem(field.name())
+                default_zone_id_loss = field.name()
             else:
                 raise TypeError("Unknown field: type is %d, typeName is %s" % (
                     field.type(), field.typeName()))
+        if default_zone_id_loss:
+            default_idx = dlg.ui.zone_id_attr_name_loss_cbox.findText(
+                default_zone_id_loss)
+            if default_idx != -1:  # -1 for not found
+                dlg.ui.zone_id_attr_name_loss_cbox.setCurrentIndex(default_idx)
         zonal_dp = self.zonal_layer.dataProvider()
         zonal_fields = list(zonal_dp.fields())
+        default_zone_id_zonal = None
         for field in zonal_fields:
             # Although the ID is usually a string, it might possibly be numeric
             dlg.ui.zone_id_attr_name_zone_cbox.addItem(field.name())
             # by default, set the selection to the first textual field
             if field.typeName() in TEXTUAL_FIELD_TYPES:
-                default_selection = field.name()
-        if default_selection:
+                default_zone_id_zonal = field.name()
+        if default_zone_id_zonal:
             default_idx = dlg.ui.zone_id_attr_name_zone_cbox.findText(
-                default_selection)
+                default_zone_id_zonal)
             if default_idx != -1:  # -1 for not found
                 dlg.ui.zone_id_attr_name_zone_cbox.setCurrentIndex(default_idx)
         # if the user presses OK
