@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_attribute_selection.ui'
 #
-# Created: Tue Feb 10 11:31:39 2015
+# Created: Tue Feb 10 14:06:22 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -27,7 +27,7 @@ class Ui_AttributeSelctionDialog(object):
     def setupUi(self, AttributeSelctionDialog):
         AttributeSelctionDialog.setObjectName(_fromUtf8("AttributeSelctionDialog"))
         AttributeSelctionDialog.setWindowModality(QtCore.Qt.WindowModal)
-        AttributeSelctionDialog.resize(700, 302)
+        AttributeSelctionDialog.resize(700, 377)
         AttributeSelctionDialog.setModal(True)
         self.verticalLayout = QtGui.QVBoxLayout(AttributeSelctionDialog)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
