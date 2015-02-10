@@ -1111,6 +1111,23 @@ class Svir:
                         if DEBUG:
                             QgsMapLayerRegistry.instance().addMapLayer(
                                 loss_layer_plus_zones)
+                        # If the zone id attribute name was already taken in
+                        # the loss layer, when SAGA added the new attribute, it
+                        # was given a different name by default. We need to get
+                        # the new attribute name (as the difference between the
+                        # loss_layer and the loss_layer_plus_zones)
+                        new_fields = set(
+                            field.name() for field in
+                            loss_layer_plus_zones.dataProvider().fields())
+                        orig_fields = set(
+                            field.name() for field in
+                            self.loss_layer.dataProvider().fields())
+                        zone_field_name = (new_fields - orig_fields).pop()
+                        if zone_field_name:
+                            self.zone_id_in_losses_attr_name = zone_field_name
+                        else:
+                            self.zone_id_in_losses_attr_name = \
+                                self.zone_id_in_zones_attr_name
                         self.calculate_vector_stats_aggregating_by_zone_id(
                             loss_layer_plus_zones)
 
@@ -1130,17 +1147,15 @@ class Svir:
         # if the user picked an attribute from the loss layer, to be
         # used as zone id, use that; otherwise, use the attribute
         # copied from the zonal layer
-        if self.zone_id_in_losses_attr_name:
-            zone_id_attr_name = self.zone_id_in_losses_attr_name
-        else:
-            zone_id_attr_name = self.zone_id_in_zones_attr_name
+        if not self.zone_id_in_losses_attr_name:
+            self.zone_id_in_losses_attr_name = self.zone_id_in_zones_attr_name
         with TraceTimeManager(msg, DEBUG):
             zone_stats = {}
             for current_point, point_feat in enumerate(
                     loss_layer.getFeatures()):
                 progress_perc = current_point / float(tot_points) * 100
                 progress.setValue(progress_perc)
-                zone_id = point_feat[zone_id_attr_name]
+                zone_id = point_feat[self.zone_id_in_losses_attr_name]
                 if zone_id not in zone_stats:
                     zone_stats[zone_id] = {}
                 for loss_attr_name in self.loss_attr_names:
