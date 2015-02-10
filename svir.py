@@ -372,6 +372,12 @@ class Svir:
         data, and to compute zonal statistics (point count, loss sum,
         and average for each zone)
         """
+        # for safety, clean variables that might be there from a previous
+        # attempt
+        self.loss_attr_names = None
+        self.zone_id_in_losses_attr_name = None
+        self.zone_id_in_zones_attr_name = None
+        self.loss_attrs_dict = {}
         # Create the dialog (after translation) and keep reference
         dlg = SelectInputLayersDialog(self.iface)
         # Run the dialog event loop
