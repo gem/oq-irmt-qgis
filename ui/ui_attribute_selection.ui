@@ -21,6 +21,16 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>For each zone, the plugin will calculate the count of loss points and (for each of the selected loss variables) the sum and average values</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="ListMultiSelectWidget" name="loss_attrs_multisel">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
@@ -31,8 +41,6 @@
      <property name="title">
       <string>Loss Layer</string>
      </property>
-     <zorder>zone_id_attr_name_loss_lbl</zorder>
-     <zorder>zone_id_attr_name_loss_cbox</zorder>
     </widget>
    </item>
    <item>

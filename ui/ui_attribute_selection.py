@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_attribute_selection.ui'
 #
-# Created: Thu Feb  5 21:55:54 2015
+# Created: Tue Feb 10 11:31:39 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -31,6 +31,10 @@ class Ui_AttributeSelctionDialog(object):
         AttributeSelctionDialog.setModal(True)
         self.verticalLayout = QtGui.QVBoxLayout(AttributeSelctionDialog)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
+        self.label = QtGui.QLabel(AttributeSelctionDialog)
+        self.label.setWordWrap(True)
+        self.label.setObjectName(_fromUtf8("label"))
+        self.verticalLayout.addWidget(self.label)
         self.loss_attrs_multisel = ListMultiSelectWidget(AttributeSelctionDialog)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.MinimumExpanding)
         sizePolicy.setHorizontalStretch(0)
@@ -77,6 +81,7 @@ class Ui_AttributeSelctionDialog(object):
 
     def retranslateUi(self, AttributeSelctionDialog):
         AttributeSelctionDialog.setWindowTitle(_translate("AttributeSelctionDialog", "Aggregate loss by zone", None))
+        self.label.setText(_translate("AttributeSelctionDialog", "For each zone, the plugin will calculate the count of loss points and (for each of the selected loss variables) the sum and average values", None))
         self.loss_attrs_multisel.setTitle(_translate("AttributeSelctionDialog", "Loss Layer", None))
         self.zone_id_attr_name_loss_lbl.setText(_translate("AttributeSelctionDialog", "Zone ID attribute name", None))
         self.groupBox_2.setTitle(_translate("AttributeSelctionDialog", "Zonal Layer", None))

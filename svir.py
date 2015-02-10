@@ -905,9 +905,16 @@ class Svir:
         zonal_dp = self.zonal_layer.dataProvider()
         zonal_fields = list(zonal_dp.fields())
         for field in zonal_fields:
-            # Accept only string fields to contain zone ids
+            # Although the ID is usually a string, it might possibly be numeric
+            dlg.ui.zone_id_attr_name_zone_cbox.addItem(field.name())
+            # by default, set the selection to the first textual field
             if field.typeName() in TEXTUAL_FIELD_TYPES:
-                dlg.ui.zone_id_attr_name_zone_cbox.addItem(field.name())
+                default_selection = field.name()
+        if default_selection:
+            default_idx = dlg.ui.zone_id_attr_name_zone_cbox.findText(
+                default_selection)
+            if default_idx != -1:  # -1 for not found
+                dlg.ui.zone_id_attr_name_zone_cbox.setCurrentIndex(default_idx)
         # if the user presses OK
         if dlg.exec_():
             # retrieve attribute names from selections
@@ -1058,6 +1065,17 @@ class Svir:
                 else:
                     # using SAGA to find out in which zone each point is
                     # (it does not compute any other statistics)
+                    # NOTE: The algorithm builds a new loss layer, in which
+                    #       each point will have an additional attribute,
+                    #       indicating the zone to which the point belongs. Be
+                    #       aware that such attribute is not actually the id of
+                    #       the zone, but the value of the attribute
+                    #       self.zone_id_in_zones_attr_name, which might
+                    #       possibly be not unique, causing later the grouping
+                    #       of points with the same value, even if
+                    #       geographically belonging to different polygons. For
+                    #       this reason, the user MUST select carefully the
+                    #       attribute in the zonal layer!
                     res = p.runalg(alg_name,
                                    self.loss_layer,
                                    self.zonal_layer,
@@ -1085,8 +1103,7 @@ class Svir:
         else:
             self.calculate_raster_stats()
 
-    def calculate_vector_stats_aggregating_by_zone_id(
-            self, loss_layer):
+    def calculate_vector_stats_aggregating_by_zone_id(self, loss_layer):
         """
         If we know the zone id of each point in the loss map, we
         don't need to use geometries while aggregating, and we can
@@ -1183,6 +1200,20 @@ class Svir:
                             fid, avg_idx[loss_attr_name],
                             float(loss_avg[loss_attr_name]))
         clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
+        self.notify_loss_aggregation_by_zone_complete()
+
+    def notify_loss_aggregation_by_zone_complete(self):
+        added_attrs = []
+        added_attrs.append(self.loss_attrs_dict['count'])
+        for loss_attr_name in self.loss_attr_names:
+            added_attrs.extend(self.loss_attrs_dict[loss_attr_name].values())
+        msg = "New attributes [%s] have been added to the zonal layer" % (
+            ', '.join(added_attrs))
+        self.iface.messageBar().pushMessage(
+            tr("Info"),
+            tr(msg),
+            level=QgsMessageBar.INFO,
+            duration=8)
 
     def calculate_vector_stats_using_geometries(self):
         """
@@ -1308,6 +1339,7 @@ class Svir:
                                 fid, avg_index[loss_attr_name],
                                 loss_avg[loss_attr_name])
         clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
+        self.notify_loss_aggregation_by_zone_complete()
         # display a warning in case none of the loss points are inside
         # any of the zones
         if no_loss_points_in_any_zone:
