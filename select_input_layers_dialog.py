@@ -25,12 +25,18 @@
 """
 
 # create the dialog for zoom to point
+import os.path
 from PyQt4.QtCore import pyqtSlot, QDir
 from PyQt4.QtGui import (QFileDialog,
                          QDialog,
                          QDialogButtonBox,
                          QMessageBox)
-from qgis.core import QgsVectorLayer, QGis, QgsRasterLayer, QgsMapLayerRegistry
+from qgis.core import (QgsVectorLayer,
+                       QGis,
+                       QgsRasterLayer,
+                       QgsMapLayerRegistry,
+                       QgsVectorFileWriter,
+                       )
 from qgis.gui import QgsMessageBar
 from process_layer import ProcessLayer
 from ui.ui_select_input_layers import Ui_SelectInputLayersDialog
@@ -66,13 +72,14 @@ class SelectInputLayersDialog(QDialog):
         if dialog_type == 'loss_layer':
             text = self.tr('Select loss map to import')
             # FIXME: What should be the format of the raster maps?
-            filters = self.tr('Geojson vector loss maps (*.geojson);; '
-                              'Shapefile vector loss maps (*.shp);; '
+            filters = self.tr('Geojson vector loss maps (*.geojson);;'
+                              'Shapefile vector loss maps (*.shp);;'
+                              'Loss maps from the OpenQuake-engine (*.csv);;'
                               'Raster loss maps (*.*)')
         elif dialog_type == 'zonal_layer':
             text = self.tr('Select zonal layer to import')
-            filters = self.tr('Vector shapefiles (*.shp);; SQLite (*.sqlite);;'
-                              ' All files (*.*)')
+            filters = self.tr('Vector shapefiles (*.shp);;SQLite (*.sqlite);;'
+                              'All files (*.*)')
         else:
             raise RuntimeError('Invalid dialog_type: {}'.format(dialog_type))
         file_name, file_type = QFileDialog.getOpenFileNameAndFilter(
@@ -83,7 +90,10 @@ class SelectInputLayersDialog(QDialog):
             elif dialog_type == 'loss_layer':
                 if file_type == 'Raster loss maps (*.*)':
                     self.loss_layer_is_vector = False
-                layer = self.load_loss_layer(file_name)
+                if file_type == 'Loss maps from the OpenQuake-engine (*.csv)':
+                    layer = self.import_loss_layer_from_csv(file_name)
+                else:
+                    layer = self.load_loss_layer(file_name)
             else:
                 raise RuntimeError
             return layer
@@ -143,6 +153,55 @@ class SelectInputLayersDialog(QDialog):
             self.ok_button.setEnabled(True)
         else:
             self.ok_button.setEnabled(False)
+
+    def import_loss_layer_from_csv(self, csv_file_path):
+        lines_to_skip_count = count_heading_commented_lines(csv_file_path)
+        longitude_field = 'LON'
+        latitude_field = 'LAT'
+        uri = ("file://%s?"
+               "type=csv"
+               "&xField=%s"
+               "&yField=%s"
+               "&spatialIndex=no"
+               "&subsetIndex=no"
+               "&watchFile=no"
+               "&delimiter=,"
+               "&crs=epsg:4326"
+               "&skipLines=%s"
+               "&trimFields=yes") % (csv_file_path,
+                                     longitude_field,
+                                     latitude_field,
+                                     lines_to_skip_count)
+        csv_layer = QgsVectorLayer(uri, 'Loss', "delimitedtext")
+        dest_filename = QFileDialog.getSaveFileName(
+            self,
+            'Save loss shapefile as...',
+            os.path.expanduser("~"),
+            'Shapefiles (*.shp)')
+        if dest_filename:
+            if dest_filename[-4:] != ".shp":
+                dest_filename += ".shp"
+        else:
+            return
+        result = QgsVectorFileWriter.writeAsVectorFormat(
+            csv_layer, dest_filename, 'CP1250',
+            None, 'ESRI Shapefile')
+        if result != QgsVectorFileWriter.NoError:
+            raise RuntimeError('Could not save shapefile')
+        shp_layer = QgsVectorLayer(
+            dest_filename, 'Loss data', 'ogr')
+        ProcessLayer(shp_layer).delete_attributes(
+            [longitude_field, latitude_field]),
+        if shp_layer.isValid():
+            QgsMapLayerRegistry.instance().addMapLayer(shp_layer)
+        else:
+            msg = 'Invalid loss map'
+            self.iface.messageBar().pushMessage(
+                tr("Error"),
+                tr(msg),
+                level=QgsMessageBar.CRITICAL)
+            return None
+        return shp_layer
 
     def load_loss_layer(self, loss_layer_path):
         # Load loss layer
