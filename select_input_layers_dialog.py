@@ -40,7 +40,7 @@ from qgis.core import (QgsVectorLayer,
 from qgis.gui import QgsMessageBar
 from process_layer import ProcessLayer
 from ui.ui_select_input_layers import Ui_SelectInputLayersDialog
-from utils import tr
+from utils import tr, count_heading_commented_lines
 
 
 class SelectInputLayersDialog(QDialog):
