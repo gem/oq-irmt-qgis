@@ -156,6 +156,7 @@ class SelectInputLayersDialog(QDialog):
 
     def import_loss_layer_from_csv(self, csv_file_path):
         lines_to_skip_count = count_heading_commented_lines(csv_file_path)
+        # FIXME: Use the actual attribute names exported by the engine
         longitude_field = 'LON'
         latitude_field = 'LAT'
         uri = ("file://%s?"
