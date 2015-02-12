@@ -405,7 +405,7 @@ class Svir:
                 return
 
             # aggregate losses by zone (calculate count of points in the
-            # zone and sum of loss values for the same zone)
+            # zone, sum and average loss values for the same zone)
             self.calculate_stats()
 
             if dlg.ui.purge_chk.isChecked():
@@ -1037,6 +1037,9 @@ class Svir:
         count_field.setTypeName(INT_FIELD_TYPE_NAME)
         count_added = \
             ProcessLayer(self.zonal_layer).add_attributes([count_field])
+        # add_attributes returns a dict
+        #     proposed_attr_name -> assigned_attr_name
+        # so the actual count attribute name is the first value of the dict
         self.loss_attrs_dict['count'] = count_added.values()[0]
         for loss_attr_name in self.loss_attr_names:
             self.loss_attrs_dict[loss_attr_name] = {}
@@ -1044,11 +1047,13 @@ class Svir:
             sum_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
             sum_added = \
                 ProcessLayer(self.zonal_layer).add_attributes([sum_field])
+            # see comment above
             self.loss_attrs_dict[loss_attr_name]['sum'] = sum_added.values()[0]
             avg_field = QgsField('AVG_%s' % loss_attr_name, QVariant.Double)
             avg_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
             avg_added = \
                 ProcessLayer(self.zonal_layer).add_attributes([avg_field])
+            # see comment above
             self.loss_attrs_dict[loss_attr_name]['avg'] = avg_added.values()[0]
         if self.loss_layer_is_vector:
             # check if the user specified that the loss_layer contains an
@@ -1245,6 +1250,100 @@ class Svir:
             duration=8)
 
     def calculate_vector_stats_using_geometries(self):
+        """
+        On the hypothesis that we don't know what is the zone in which
+        each point was collected (and if we can't use SAGA),
+        we use an alternative implementation of what SAGA does, i.e.,
+        we add a field to the loss layer, containing the id of the zone
+        to which it belongs. In order to achieve that:
+        * we create a spatial index of the loss points
+        * for each zone (in the layer containing zonally-aggregated SVI
+            * we identify points that are inside the zone's bounding box
+            * we check if each of these points is actually inside the
+              zone's geometry; if it is:
+                * copy the zone id into the new field of the loss point
+        * then we calculate_vector_stats_aggregating_by_zone_id
+        Notes:
+        * self.loss_layer contains the not aggregated loss points
+        * self.zonal_layer contains the zone geometries
+        * self.aggregation_layer is the new layer with losses aggregated by
+            zone
+        """
+        # make a copy of the loss layer and use that from now on
+        add_to_registry = True if DEBUG else False
+        loss_layer_plus_zones = \
+            ProcessLayer(self.loss_layer).duplicate_in_memory(add_to_registry)
+        # add to it the new attribute that will contain the zone id
+        assigned_attr_names_dict = \
+            ProcessLayer(loss_layer_plus_zones).add_attributes(
+                [self.zone_id_in_zones_attr_name])
+        self.zone_id_in_loss_attr_name = assigned_attr_names_dict.values()[0]
+        # get the index of the new attribute, to be used to update its values
+        zone_id_attr_idx = loss_layer_plus_zones.fieldNameIndex(
+            self.zone_id_in_loss_attr_name)
+        # to show the overall progress, cycling through points
+        tot_points = len(list(loss_layer_plus_zones.getFeatures()))
+        msg = tr(
+            "Step 2 of 3: creating spatial index for loss points...")
+        msg_bar_item, progress = create_progress_message_bar(
+            self.iface.messageBar(), msg)
+
+        # create spatial index
+        with TraceTimeManager(tr("Creating spatial index for loss points..."),
+                              DEBUG):
+            spatial_index = QgsSpatialIndex()
+            for current_point, loss_feature in enumerate(
+                    loss_layer_plus_zones.getFeatures()):
+                progress_perc = current_point / float(tot_points) * 100
+                progress.setValue(progress_perc)
+                spatial_index.insertFeature(loss_feature)
+
+        clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
+        with LayerEditingManager(loss_layer_plus_zones,
+                                 tr("Label each point with the zone id"),
+                                 DEBUG):
+            # to show the overall progress, cycling through zones
+            tot_zones = len(list(self.zonal_layer.getFeatures()))
+            msg = tr("Step 3 of 3: labeling points by zone id...")
+            msg_bar_item, progress = create_progress_message_bar(
+                self.iface.messageBar(), msg)
+            for current_zone, zone_feature in enumerate(
+                    self.zonal_layer.getFeatures()):
+                progress_perc = current_zone / float(tot_zones) * 100
+                progress.setValue(progress_perc)
+                msg = "{0}% - Zone: {1} on {2}".format(progress_perc,
+                                                       zone_feature.id(),
+                                                       tot_zones)
+                with TraceTimeManager(msg, DEBUG):
+                    zone_geometry = zone_feature.geometry()
+                    # Find ids of points within the bounding box of the zone
+                    point_ids = spatial_index.intersects(
+                        zone_geometry.boundingBox())
+                    # check if the points inside the bounding box of the zone
+                    # are actually inside the zone's geometry
+                    for point_id in point_ids:
+                        msg = "Checking if point {0} is actually inside " \
+                              "the zone".format(point_id)
+                        with TraceTimeManager(msg, DEBUG):
+                            # Get the point feature by the point's id
+                            request = QgsFeatureRequest().setFilterFid(
+                                point_id)
+                            point_feature = loss_layer_plus_zones.getFeatures(
+                                request).next()
+                            point_geometry = QgsGeometry(
+                                point_feature.geometry())
+                            # check if the point is actually inside the zone
+                            # and it is not only contained by its bounding box
+                            if zone_geometry.contains(point_geometry):
+                                zone_id = zone_feature[
+                                    self.zone_id_in_zones_attr_name]
+                                loss_layer_plus_zones.changeAttributeValue(
+                                    point_id, zone_id_attr_idx, zone_id)
+        clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
+        self.calculate_vector_stats_aggregating_by_zone_id(
+            loss_layer_plus_zones)
+
+    def calculate_vector_stats_using_geometries_old(self):
         """
         On the hypothesis that we don't know what is the zone in which
         each point was collected (and if we can't use SAGA),
