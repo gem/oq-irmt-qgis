@@ -31,7 +31,7 @@ import time
 from xml.etree import ElementTree
 
 from iso_19115_template import ISO_METADATA_XML_TEMPLATE
-from globals import DEBUG
+from shared import DEBUG
 
 
 # list of tags to get to the svir project definition.

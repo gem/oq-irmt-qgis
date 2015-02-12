@@ -105,15 +105,15 @@ from utils import (LayerEditingManager,
                    SvNetworkError, ask_for_download_destination,
                    files_exist_in_destination, confirm_overwrite,
                    count_heading_commented_lines)
-from globals import (SVIR_PLUGIN_VERSION,
-                     INT_FIELD_TYPE_NAME,
-                     DOUBLE_FIELD_TYPE_NAME,
-                     NUMERIC_FIELD_TYPES,
-                     TEXTUAL_FIELD_TYPES,
-                     DEBUG,
-                     PROJECT_TEMPLATE,
-                     THEME_TEMPLATE,
-                     INDICATOR_TEMPLATE)
+from shared import (SVIR_PLUGIN_VERSION,
+                    INT_FIELD_TYPE_NAME,
+                    DOUBLE_FIELD_TYPE_NAME,
+                    NUMERIC_FIELD_TYPES,
+                    TEXTUAL_FIELD_TYPES,
+                    DEBUG,
+                    PROJECT_TEMPLATE,
+                    THEME_TEMPLATE,
+                    INDICATOR_TEMPLATE)
 
 
 class Svir:
@@ -507,7 +507,7 @@ class Svir:
                 # problems
 
                 # count top lines in the csv starting with '#'
-                lines_to_skip_count = self.count_heading_commented_lines(fname)
+                lines_to_skip_count = count_heading_commented_lines(fname)
                 if load_geometries:
                     uri = ('file://%s?delimiter=,&crs=epsg:4326&skipLines=%s'
                            '&trimFields=yes&wktField=geometry' % (

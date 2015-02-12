@@ -33,7 +33,7 @@ from PyQt4.QtGui import QApplication, QProgressBar, QToolButton, QFileDialog, \
 from qgis.core import QgsMapLayerRegistry
 from settings_dialog import SettingsDialog
 from qgis.gui import QgsMessageBar
-from globals import DEBUG
+from shared import DEBUG
 
 
 def tr(message):
