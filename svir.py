@@ -1272,7 +1272,8 @@ class Svir:
         # make a copy of the loss layer and use that from now on
         add_to_registry = True if DEBUG else False
         loss_layer_plus_zones = \
-            ProcessLayer(self.loss_layer).duplicate_in_memory(add_to_registry)
+            ProcessLayer(self.loss_layer).duplicate_in_memory(
+                add_to_registry=add_to_registry)
         # add to it the new attribute that will contain the zone id
         assigned_attr_names_dict = \
             ProcessLayer(loss_layer_plus_zones).add_attributes(
