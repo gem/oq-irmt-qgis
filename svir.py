@@ -104,15 +104,15 @@ from utils import (LayerEditingManager,
                    clear_progress_message_bar, create_progress_message_bar,
                    SvNetworkError, ask_for_download_destination,
                    files_exist_in_destination, confirm_overwrite)
-from globals import (SVIR_PLUGIN_VERSION,
-                     INT_FIELD_TYPE_NAME,
-                     DOUBLE_FIELD_TYPE_NAME,
-                     NUMERIC_FIELD_TYPES,
-                     TEXTUAL_FIELD_TYPES,
-                     DEBUG,
-                     PROJECT_TEMPLATE,
-                     THEME_TEMPLATE,
-                     INDICATOR_TEMPLATE)
+from shared import (SVIR_PLUGIN_VERSION,
+                    INT_FIELD_TYPE_NAME,
+                    DOUBLE_FIELD_TYPE_NAME,
+                    NUMERIC_FIELD_TYPES,
+                    TEXTUAL_FIELD_TYPES,
+                    DEBUG,
+                    PROJECT_TEMPLATE,
+                    THEME_TEMPLATE,
+                    INDICATOR_TEMPLATE)
 
 
 class Svir:
