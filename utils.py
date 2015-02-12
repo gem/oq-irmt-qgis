@@ -51,7 +51,7 @@ def count_heading_commented_lines(fname):
             else:
                 break
     if DEBUG:
-        print "%s rows will be skipped from the CSV" % (
+        print "The file contains %s heading lines starting with #" % (
             lines_to_skip_count)
     return lines_to_skip_count
 
