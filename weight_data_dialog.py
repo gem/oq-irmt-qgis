@@ -39,11 +39,11 @@ from PyQt4.QtWebKit import QWebSettings
 
 from ui.ui_weight_data import Ui_WeightDataDialog
 
-from globals import (DEFAULT_OPERATOR,
-                     OPERATORS_DICT,
-                     NUMERIC_FIELD_TYPES,
-                     NODE_TYPES,
-                     DEBUG)
+from shared import (DEFAULT_OPERATOR,
+                    OPERATORS_DICT,
+                    NUMERIC_FIELD_TYPES,
+                    NODE_TYPES,
+                    DEBUG)
 
 
 class WeightDataDialog(QDialog):

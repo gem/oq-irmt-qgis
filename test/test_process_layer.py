@@ -24,7 +24,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-# import qgis libs so that ve set the correct sip api version
+# import qgis libs so that we set the correct sip api version
 import qgis   # pylint: disable=W0611  # NOQA
 
 import unittest
@@ -34,7 +34,7 @@ from PyQt4.QtCore import QVariant
 from qgis.core import QgsVectorLayer, QgsField
 
 from process_layer import ProcessLayer
-from globals import INT_FIELD_TYPE_NAME, STRING_FIELD_TYPE_NAME
+from shared import INT_FIELD_TYPE_NAME, STRING_FIELD_TYPE_NAME
 
 from utilities import get_qgis_app
 QGIS_APP, CANVAS, PARENT, IFACE = get_qgis_app()
