@@ -36,7 +36,7 @@ from utils import LayerEditingManager
 
 from transformation_algs import (TRANSFORMATION_ALGS, transform)
 
-from globals import DEBUG, DOUBLE_FIELD_TYPE_NAME
+from shared import DEBUG, DOUBLE_FIELD_TYPE_NAME
 
 
 class ProcessLayer():

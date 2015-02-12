@@ -34,7 +34,7 @@ from transformation_algs import (RANK_VARIANTS,
                                  LOG10_VARIANTS,
                                  TRANSFORMATION_ALGS)
 
-from globals import NUMERIC_FIELD_TYPES
+from shared import NUMERIC_FIELD_TYPES
 from utils import reload_attrib_cbx, reload_layers_in_cbx
 from process_layer import ProcessLayer
 
