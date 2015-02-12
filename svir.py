@@ -1275,13 +1275,20 @@ class Svir:
             ProcessLayer(self.loss_layer).duplicate_in_memory(
                 add_to_registry=add_to_registry)
         # add to it the new attribute that will contain the zone id
+        # and to do that we need to know the type of the zone id field
+        zonal_layer_fields = self.zonal_layer.dataProvider().fields()
+        zone_id_field_variant = [
+            field.type() for field in zonal_layer_fields
+            if field.name() == self.zone_id_in_zones_attr_name][0]
+        zone_id_field = QgsField(
+            self.zone_id_in_zones_attr_name, zone_id_field_variant)
         assigned_attr_names_dict = \
             ProcessLayer(loss_layer_plus_zones).add_attributes(
-                [self.zone_id_in_zones_attr_name])
-        self.zone_id_in_loss_attr_name = assigned_attr_names_dict.values()[0]
+                [zone_id_field])
+        self.zone_id_in_losses_attr_name = assigned_attr_names_dict.values()[0]
         # get the index of the new attribute, to be used to update its values
         zone_id_attr_idx = loss_layer_plus_zones.fieldNameIndex(
-            self.zone_id_in_loss_attr_name)
+            self.zone_id_in_losses_attr_name)
         # to show the overall progress, cycling through points
         tot_points = len(list(loss_layer_plus_zones.getFeatures()))
         msg = tr(
