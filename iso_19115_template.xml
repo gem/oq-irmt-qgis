@@ -140,7 +140,15 @@
             <gmd:descriptiveKeywords>
                 <gmd:MD_Keywords>
                     <gmd:keyword>
-                        <gco:CharacterString>SVIR, user-contributed, SVIR_QGIS_Plugin
+                        <gco:CharacterString>SVIR
+                        </gco:CharacterString>
+                    </gmd:keyword>
+                    <gmd:keyword>
+                        <gco:CharacterString>user-contributed
+                        </gco:CharacterString>
+                    </gmd:keyword>
+                    <gmd:keyword>
+                        <gco:CharacterString>SVIR_QGIS_Plugin
                         </gco:CharacterString>
                     </gmd:keyword>
                     <gmd:thesaurusName>
