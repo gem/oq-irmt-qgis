@@ -226,11 +226,16 @@ def platform_login(host, username, password, session):
 
 def upload_shp(host, session, file_stem, username):
     files = {'layer_title': file_stem,
-             'base_file': ('file.shp', open('%s.shp' % file_stem, 'rb')),
-             'dbf_file': ('file.dbf', open('%s.dbf' % file_stem, 'rb')),
-             'shx_file': ('file.shx', open('%s.shx' % file_stem, 'rb')),
-             'prj_file': ('file.prj', open('%s.prj' % file_stem, 'rb')),
-             'xml_file': ('file.xml', open('%s.xml' % file_stem, 'r')),
+             'base_file': ('%s.shp' % file_stem,
+                           open('%s.shp' % file_stem, 'rb')),
+             'dbf_file': ('%s.dbf' % file_stem,
+                          open('%s.dbf' % file_stem, 'rb')),
+             'shx_file': ('%s.shx' % file_stem,
+                          open('%s.shx' % file_stem, 'rb')),
+             'prj_file': ('%s.prj' % file_stem,
+                          open('%s.prj' % file_stem, 'rb')),
+             'xml_file': ('%s.xml' % file_stem,
+                          open('%s.xml' % file_stem, 'r')),
              }
     permissions = ('{"authenticated":"_none",'
                    '"anonymous":"_none",'
