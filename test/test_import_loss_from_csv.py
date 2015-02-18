@@ -66,9 +66,9 @@ class ImportLossFromCsvTestCase(unittest.TestCase):
         curr_dir_name = os.path.dirname(__file__)
         data_dir_name = os.path.join(curr_dir_name, 'data/loss/from_oqengine')
         csv_file_path = os.path.join(
-            data_dir_name, 'loss-curves-1.csv')
+            data_dir_name, 'loss-curves-4.csv')
         dest_shp_file_path = os.path.join(
-            data_dir_name, 'output_loss_curves-1.shp')
+            data_dir_name, 'output_loss_curves-4.shp')
         dlg = SelectInputLayersDialog(IFACE)
         shp_layer = dlg.import_loss_layer_from_csv(csv_file_path,
                                                    dest_shp_file_path,

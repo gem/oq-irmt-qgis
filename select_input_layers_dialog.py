@@ -160,11 +160,9 @@ class SelectInputLayersDialog(QDialog):
                                    from_oqengine=True):
         lines_to_skip_count = count_heading_commented_lines(csv_file_path)
         if from_oqengine:
-            use_header = 'no'
-            longitude_field = '1'
-            latitude_field = '2'
+            longitude_field = 'lon'
+            latitude_field = 'lat'
         else:
-            use_header = 'yes'
             # FIXME: hardcoded field names
             longitude_field = 'LON'
             latitude_field = 'LAT'
@@ -178,12 +176,10 @@ class SelectInputLayersDialog(QDialog):
                "&delimiter=,"
                "&crs=epsg:4326"
                "&skipLines=%s"
-               "&useHeader=%s"
                "&trimFields=yes") % (csv_file_path,
                                      longitude_field,
                                      latitude_field,
-                                     lines_to_skip_count,
-                                     use_header)
+                                     lines_to_skip_count)
         csv_layer = QgsVectorLayer(uri, 'Loss', "delimitedtext")
         dest_filename = dest_shp or QFileDialog.getSaveFileName(
             self,
