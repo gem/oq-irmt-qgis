@@ -154,11 +154,20 @@ class SelectInputLayersDialog(QDialog):
         else:
             self.ok_button.setEnabled(False)
 
-    def import_loss_layer_from_csv(self, csv_file_path):
+    def import_loss_layer_from_csv(self,
+                                   csv_file_path,
+                                   dest_shp=None,
+                                   from_oqengine=True):
         lines_to_skip_count = count_heading_commented_lines(csv_file_path)
-        # FIXME: Use the actual attribute names exported by the engine
-        longitude_field = 'LON'
-        latitude_field = 'LAT'
+        if from_oqengine:
+            use_header = 'no'
+            longitude_field = '1'
+            latitude_field = '2'
+        else:
+            use_header = 'yes'
+            # FIXME: hardcoded field names
+            longitude_field = 'LON'
+            latitude_field = 'LAT'
         uri = ("file://%s?"
                "type=csv"
                "&xField=%s"
@@ -169,12 +178,14 @@ class SelectInputLayersDialog(QDialog):
                "&delimiter=,"
                "&crs=epsg:4326"
                "&skipLines=%s"
+               "&useHeader=%s"
                "&trimFields=yes") % (csv_file_path,
                                      longitude_field,
                                      latitude_field,
-                                     lines_to_skip_count)
+                                     lines_to_skip_count,
+                                     use_header)
         csv_layer = QgsVectorLayer(uri, 'Loss', "delimitedtext")
-        dest_filename = QFileDialog.getSaveFileName(
+        dest_filename = dest_shp or QFileDialog.getSaveFileName(
             self,
             'Save loss shapefile as...',
             os.path.expanduser("~"),
