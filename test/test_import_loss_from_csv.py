@@ -44,7 +44,7 @@ class ImportLossFromCsvTestCase(unittest.TestCase):
         csv_file_path = os.path.join(
             data_dir_name, 'dummy_loss_data.csv')
         dest_shp_file_path = os.path.join(
-            data_dir_name, 'output_dummy_loss_layer.shp')
+            data_dir_name, 'output/dummy_loss_layer.shp')
         dlg = SelectInputLayersDialog(IFACE)
         shp_layer = dlg.import_loss_layer_from_csv(csv_file_path,
                                                    dest_shp_file_path,
@@ -68,7 +68,7 @@ class ImportLossFromCsvTestCase(unittest.TestCase):
         csv_file_path = os.path.join(
             data_dir_name, 'loss-curves-4.csv')
         dest_shp_file_path = os.path.join(
-            data_dir_name, 'output_loss_curves-4.shp')
+            data_dir_name, 'output/loss_curves-4.shp')
         dlg = SelectInputLayersDialog(IFACE)
         shp_layer = dlg.import_loss_layer_from_csv(csv_file_path,
                                                    dest_shp_file_path,
