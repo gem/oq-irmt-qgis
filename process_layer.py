@@ -97,17 +97,28 @@ class ProcessLayer():
         """
         Delete attributes from the layer
 
-        :param attribute_list: list of id to remove from the layer
-        :type attribute_list: list of int
+        :param attribute_list: list of id to remove from the layer (if a list
+                               of field names is given instead of a list of
+                               ids, then the corresponding indices are found
+                               and used)
+        :type attribute_list: list of int (or list of str)
 
         :return: true in case of success and false in case of failure
         """
+        attr_idx_list = []
         with LayerEditingManager(self.layer, 'Remove attributes', DEBUG):
-            # remove attributes
             layer_pr = self.layer.dataProvider()
+            for attribute in attribute_list:
+                if isinstance(attribute, basestring):
+                    attr_idx = layer_pr.fieldNameIndex(attribute)
+                else:
+                    attr_idx = attribute
+                attr_idx_list.append(attr_idx)
+            # remove attributes
             if DEBUG:
-                print "REMOVING %s" % attribute_list
-            return layer_pr.deleteAttributes(attribute_list)
+                print "REMOVING %s, (indices %s)" % (
+                    attribute_list, attr_idx_list)
+            return layer_pr.deleteAttributes(attr_idx_list)
 
     def transform_attribute(
             self, input_attr_name, algorithm_name, variant="",

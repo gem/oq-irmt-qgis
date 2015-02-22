@@ -33,10 +33,27 @@ from PyQt4.QtGui import QApplication, QProgressBar, QToolButton, QFileDialog, \
 from qgis.core import QgsMapLayerRegistry
 from settings_dialog import SettingsDialog
 from qgis.gui import QgsMessageBar
+from shared import DEBUG
 
 
 def tr(message):
     return QApplication.translate('Svir', message)
+
+
+def count_heading_commented_lines(fname):
+    # count top lines in the file starting with '#'
+    with open(fname) as f:
+        lines_to_skip_count = 0
+        for line in f:
+            li = line.strip()
+            if li.startswith('#'):
+                lines_to_skip_count += 1
+            else:
+                break
+    if DEBUG:
+        print "The file contains %s heading lines starting with #" % (
+            lines_to_skip_count)
+    return lines_to_skip_count
 
 
 def get_credentials(iface):
