@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_attribute_selection.ui'
 #
-# Created: Tue Feb 10 14:06:22 2015
+# Created: Sun Feb 22 18:30:10 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!

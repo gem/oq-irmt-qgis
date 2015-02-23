@@ -44,6 +44,24 @@ class ProcessLayer():
     def __init__(self, layer):
         self.layer = layer
 
+    def has_same_content_as(self, other_layer):
+        this_dp = self.layer.dataProvider()
+        other_dp = other_layer.dataProvider()
+        len_this = sum(1 for feature in this_dp.getFeatures())
+        len_other = sum(1 for feature in other_dp.getFeatures())
+        if len_this != len_other:
+            return False
+        this_features = this_dp.getFeatures()
+        other_features = other_dp.getFeatures()
+        # we already checked that the layers have the same number of features
+        for i in xrange(len_this):
+            this_feature = this_features.next()
+            other_feature = other_features.next()
+            if this_feature.attributes() != other_feature.attributes():
+                # at least one feature is different
+                return False
+        return True
+
     def add_attributes(self, attribute_list, simulate=False):
         """
         Add attributes to the layer
