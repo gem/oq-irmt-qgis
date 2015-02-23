@@ -136,29 +136,10 @@ class Svir:
             if qVersion() > '4.3.3':
                 QCoreApplication.installTranslator(self.translator)
 
-        self.loss_layer_is_vector = True
-        # Input layer containing loss data
-        self.loss_layer = None
-        # Input layer specifying zones for aggregation and containing social
-        # vulnerability data already aggregated by zone
-        self.zonal_layer = None
         # our own toolbar
         self.toolbar = None
         # keep a list of the menu items, in order to easily unload them later
         self.registered_actions = dict()
-        # Name of the attribute containing loss values (in loss_layer)
-        self.loss_attr_names = None
-        # Name of the (optional) attribute containing zone id (in loss_layer)
-        self.zone_id_in_losses_attr_name = None
-        # Name of the attribute containing zone id (in zonal_layer)
-        self.zone_id_in_zones_attr_name = None
-        # We might have a user-provided layer with losses aggregated by zone
-        self.loss_layer_to_merge = None
-        # Attribute containing aggregated losses, that will be merged with SVI
-        self.aggr_loss_attr_to_merge = None
-        # Dict associating loss attribute names and the corresponding attribute
-        # names created in the zonal layer
-        self.loss_attrs_dict = {}
 
         self.current_layer = None
 
@@ -373,12 +354,6 @@ class Svir:
         data, and to compute zonal statistics (point count, loss sum,
         and average for each zone)
         """
-        # for safety, clean variables that might be there from a previous
-        # attempt
-        self.loss_attr_names = None
-        self.zone_id_in_losses_attr_name = None
-        self.zone_id_in_zones_attr_name = None
-        self.loss_attrs_dict = {}
         # Create the dialog (after translation) and keep reference
         dlg = SelectInputLayersDialog(self.iface)
         # Run the dialog event loop
@@ -386,33 +361,43 @@ class Svir:
         if dlg.exec_():
             loss_layer_id = dlg.ui.loss_layer_cbx.itemData(
                 dlg.ui.loss_layer_cbx.currentIndex())
-            self.loss_layer = QgsMapLayerRegistry.instance().mapLayer(
+            loss_layer = QgsMapLayerRegistry.instance().mapLayer(
                 loss_layer_id)
             zonal_layer_id = dlg.ui.zonal_layer_cbx.itemData(
                 dlg.ui.zonal_layer_cbx.currentIndex())
-            self.zonal_layer = QgsMapLayerRegistry.instance().mapLayer(
+            zonal_layer = QgsMapLayerRegistry.instance().mapLayer(
                 zonal_layer_id)
 
             # check if loss layer is raster or vector (aggregating by zone
             # is different in the two cases)
-            self.loss_layer_is_vector = dlg.loss_layer_is_vector
+            loss_layer_is_vector = dlg.loss_layer_is_vector
 
             # Open dialog to ask the user to specify attributes
             # * loss from loss_layer
             # * zone_id from loss_layer
             # * svi from zonal_layer
             # * zone_id from zonal_layer
-            if not self.attribute_selection():
+            ret_val = self.attribute_selection(
+                loss_layer, zonal_layer)
+            if not ret_val:
                 return
-
+            else:
+                (loss_attr_names,
+                 zone_id_in_losses_attr_name,
+                 zone_id_in_zones_attr_name) = ret_val
             # aggregate losses by zone (calculate count of points in the
             # zone, sum and average loss values for the same zone)
-            self.calculate_stats()
+            res = self.calculate_stats(loss_layer,
+                                       zonal_layer,
+                                       loss_attr_names,
+                                       loss_layer_is_vector,
+                                       zone_id_in_losses_attr_name,
+                                       zone_id_in_zones_attr_name)
+            (loss_layer, zonal_layer, loss_attrs_dict) = res
 
             if dlg.ui.purge_chk.isChecked():
-                self.purge_zones_without_loss_points()
-
-            self.update_actions_status()
+                self.purge_zones_without_loss_points(
+                    zonal_layer, loss_attrs_dict)
 
     def import_sv_variables(self):
         """
@@ -868,7 +853,7 @@ class Svir:
     def show_settings(self):
         SettingsDialog(self.iface).exec_()
 
-    def attribute_selection(self):
+    def attribute_selection(self, loss_layer, zonal_layer):
         """
         Open a modal dialog containing combo boxes, allowing the user
         to select what are the attribute names for
@@ -883,7 +868,7 @@ class Svir:
         dlg.ui.zone_id_attr_name_loss_cbox.addItem(
             tr("Use zonal geometries"))
         # populate combo boxes with field names taken by layers
-        loss_dp = self.loss_layer.dataProvider()
+        loss_dp = loss_layer.dataProvider()
         loss_fields = list(loss_dp.fields())
         # Load in the comboboxes only the names of the attributes compatible
         # with the following analyses: only numeric for losses and only
@@ -905,7 +890,7 @@ class Svir:
                 default_zone_id_loss)
             if default_idx != -1:  # -1 for not found
                 dlg.ui.zone_id_attr_name_loss_cbox.setCurrentIndex(default_idx)
-        zonal_dp = self.zonal_layer.dataProvider()
+        zonal_dp = zonal_layer.dataProvider()
         zonal_fields = list(zonal_dp.fields())
         default_zone_id_zonal = None
         for field in zonal_fields:
@@ -922,18 +907,19 @@ class Svir:
         # if the user presses OK
         if dlg.exec_():
             # retrieve attribute names from selections
-            self.loss_attr_names = \
+            loss_attr_names = \
                 list(dlg.ui.loss_attrs_multisel.get_selected_items())
             # index 0 is for "use zonal geometries" (no zone id available)
             if dlg.ui.zone_id_attr_name_loss_cbox.currentIndex() == 0:
-                self.zone_id_in_losses_attr_name = None
+                zone_id_in_losses_attr_name = None
             else:
-                self.zone_id_in_losses_attr_name = \
+                zone_id_in_losses_attr_name = \
                     dlg.ui.zone_id_attr_name_loss_cbox.currentText()
-            self.zone_id_in_zones_attr_name = \
+            zone_id_in_zones_attr_name = \
                 dlg.ui.zone_id_attr_name_zone_cbox.currentText()
-            self.update_actions_status()
-            return True
+            return (loss_attr_names,
+                    zone_id_in_losses_attr_name,
+                    zone_id_in_zones_attr_name)
         else:
             return False
 
@@ -1003,7 +989,13 @@ class Svir:
                     duration=8)
         self.update_actions_status()
 
-    def calculate_stats(self):
+    def calculate_stats(self,
+                        loss_layer,
+                        zonal_layer,
+                        loss_attr_names,
+                        loss_layer_is_vector,
+                        zone_id_in_losses_attr_name,
+                        zone_id_in_zones_attr_name):
         """
         A loss_layer containing loss data points needs to be already loaded,
         and it can be a raster or vector layer.
@@ -1021,38 +1013,41 @@ class Svir:
         # add count, sum and avg fields for aggregating statistics
         # (one new attribute for the count of points, then a sum and an average
         # for all the other loss attributes)
-        self.loss_attrs_dict = {}
+        loss_attrs_dict = {}
         count_field = QgsField(
             'LOSS_PTS', QVariant.Int)
         count_field.setTypeName(INT_FIELD_TYPE_NAME)
         count_added = \
-            ProcessLayer(self.zonal_layer).add_attributes([count_field])
+            ProcessLayer(zonal_layer).add_attributes([count_field])
         # add_attributes returns a dict
         #     proposed_attr_name -> assigned_attr_name
         # so the actual count attribute name is the first value of the dict
-        self.loss_attrs_dict['count'] = count_added.values()[0]
-        for loss_attr_name in self.loss_attr_names:
-            self.loss_attrs_dict[loss_attr_name] = {}
+        loss_attrs_dict['count'] = count_added.values()[0]
+        for loss_attr_name in loss_attr_names:
+            loss_attrs_dict[loss_attr_name] = {}
             sum_field = QgsField('SUM_%s' % loss_attr_name, QVariant.Double)
             sum_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
             sum_added = \
-                ProcessLayer(self.zonal_layer).add_attributes([sum_field])
+                ProcessLayer(zonal_layer).add_attributes([sum_field])
             # see comment above
-            self.loss_attrs_dict[loss_attr_name]['sum'] = sum_added.values()[0]
+            loss_attrs_dict[loss_attr_name]['sum'] = sum_added.values()[0]
             avg_field = QgsField('AVG_%s' % loss_attr_name, QVariant.Double)
             avg_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
             avg_added = \
-                ProcessLayer(self.zonal_layer).add_attributes([avg_field])
+                ProcessLayer(zonal_layer).add_attributes([avg_field])
             # see comment above
-            self.loss_attrs_dict[loss_attr_name]['avg'] = avg_added.values()[0]
-        if self.loss_layer_is_vector:
+            loss_attrs_dict[loss_attr_name]['avg'] = avg_added.values()[0]
+        if loss_layer_is_vector:
             # check if the user specified that the loss_layer contains an
             # attribute specifying what's the zone id for each loss point
-            if self.zone_id_in_losses_attr_name:
+            if zone_id_in_losses_attr_name:
                 # then we can aggregate by zone id, instead of doing a
                 # geo-spatial analysis to see in which zone each point is
-                self.calculate_vector_stats_aggregating_by_zone_id(
-                    self.loss_layer)
+                res = self.calculate_vector_stats_aggregating_by_zone_id(
+                    loss_layer, zonal_layer, zone_id_in_losses_attr_name,
+                    zone_id_in_zones_attr_name, loss_attr_names,
+                    loss_attrs_dict)
+                (loss_layer, zonal_layer) = res
             else:
                 # otherwise we need to acquire the zones' geometries from the
                 # zonal layer and check if loss points are inside those zones
@@ -1070,7 +1065,10 @@ class Svir:
                         tr("Warning"),
                         tr(err_msg),
                         level=QgsMessageBar.WARNING)
-                    self.calculate_vector_stats_using_geometries()
+                    self.calculate_vector_stats_using_geometries(
+                        loss_layer, zonal_layer, zone_id_in_zones_attr_name,
+                        zone_id_in_losses_attr_name, loss_attr_names,
+                        loss_attrs_dict)
                 else:
                     # using SAGA to find out in which zone each point is
                     # (it does not compute any other statistics)
@@ -1079,16 +1077,16 @@ class Svir:
                     #       indicating the zone to which the point belongs. Be
                     #       aware that such attribute is not actually the id of
                     #       the zone, but the value of the attribute
-                    #       self.zone_id_in_zones_attr_name, which might
+                    #       zone_id_in_zones_attr_name, which might
                     #       possibly be not unique, causing later the grouping
                     #       of points with the same value, even if
                     #       geographically belonging to different polygons. For
                     #       this reason, the user MUST select carefully the
                     #       attribute in the zonal layer!
                     res = p.runalg(alg_name,
-                                   self.loss_layer,
-                                   self.zonal_layer,
-                                   self.zone_id_in_zones_attr_name,
+                                   loss_layer,
+                                   zonal_layer,
+                                   zone_id_in_zones_attr_name,
                                    0,
                                    None)
                     if res is None:
@@ -1116,20 +1114,27 @@ class Svir:
                             loss_layer_plus_zones.dataProvider().fields())
                         orig_fields = set(
                             field.name() for field in
-                            self.loss_layer.dataProvider().fields())
+                            loss_layer.dataProvider().fields())
                         zone_field_name = (new_fields - orig_fields).pop()
                         if zone_field_name:
-                            self.zone_id_in_losses_attr_name = zone_field_name
+                            zone_id_in_losses_attr_name = zone_field_name
                         else:
-                            self.zone_id_in_losses_attr_name = \
-                                self.zone_id_in_zones_attr_name
+                            zone_id_in_losses_attr_name = \
+                                zone_id_in_zones_attr_name
                         self.calculate_vector_stats_aggregating_by_zone_id(
-                            loss_layer_plus_zones)
-
+                            loss_layer_plus_zones, zonal_layer,
+                            zone_id_in_losses_attr_name,
+                            zone_id_in_zones_attr_name,
+                            loss_attr_names,
+                            loss_attrs_dict)
         else:
-            self.calculate_raster_stats()
+            (loss_layer, zonal_layer) = \
+                self.calculate_raster_stats(loss_layer, zonal_layer)
+        return (loss_layer, zonal_layer, loss_attrs_dict)
 
-    def calculate_vector_stats_aggregating_by_zone_id(self, loss_layer):
+    def calculate_vector_stats_aggregating_by_zone_id(
+            self, loss_layer, zonal_layer, zone_id_in_losses_attr_name,
+            zone_id_in_zones_attr_name, loss_attr_names, loss_attrs_dict):
         """
         If we know the zone id of each point in the loss map, we
         don't need to use geometries while aggregating, and we can
@@ -1142,18 +1147,18 @@ class Svir:
         # if the user picked an attribute from the loss layer, to be
         # used as zone id, use that; otherwise, use the attribute
         # copied from the zonal layer
-        if not self.zone_id_in_losses_attr_name:
-            self.zone_id_in_losses_attr_name = self.zone_id_in_zones_attr_name
+        if not zone_id_in_losses_attr_name:
+            zone_id_in_losses_attr_name = zone_id_in_zones_attr_name
         with TraceTimeManager(msg, DEBUG):
             zone_stats = {}
             for current_point, point_feat in enumerate(
                     loss_layer.getFeatures()):
                 progress_perc = current_point / float(tot_points) * 100
                 progress.setValue(progress_perc)
-                zone_id = point_feat[self.zone_id_in_losses_attr_name]
+                zone_id = point_feat[zone_id_in_losses_attr_name]
                 if zone_id not in zone_stats:
                     zone_stats[zone_id] = {}
-                for loss_attr_name in self.loss_attr_names:
+                for loss_attr_name in loss_attr_names:
                     if loss_attr_name not in zone_stats[zone_id]:
                         zone_stats[zone_id][loss_attr_name] = {
                             'count': 0, 'sum': 0.0}
@@ -1166,41 +1171,41 @@ class Svir:
             "Step 3 of 3: writing point counts, loss sums and averages into "
             "the zonal layer...")
         with TraceTimeManager(msg, DEBUG):
-            tot_zones = len(list(self.zonal_layer.getFeatures()))
+            tot_zones = len(list(zonal_layer.getFeatures()))
             msg_bar_item, progress = create_progress_message_bar(
                 self.iface.messageBar(), msg)
-            with LayerEditingManager(self.zonal_layer,
+            with LayerEditingManager(zonal_layer,
                                      msg,
                                      DEBUG):
-                count_idx = self.zonal_layer.fieldNameIndex(
-                    self.loss_attrs_dict['count'])
+                count_idx = zonal_layer.fieldNameIndex(
+                    loss_attrs_dict['count'])
                 sum_idx = {}
                 avg_idx = {}
-                for loss_attr_name in self.loss_attr_names:
-                    sum_idx[loss_attr_name] = self.zonal_layer.fieldNameIndex(
-                        self.loss_attrs_dict[loss_attr_name]['sum'])
-                    avg_idx[loss_attr_name] = self.zonal_layer.fieldNameIndex(
-                        self.loss_attrs_dict[loss_attr_name]['avg'])
+                for loss_attr_name in loss_attr_names:
+                    sum_idx[loss_attr_name] = zonal_layer.fieldNameIndex(
+                        loss_attrs_dict[loss_attr_name]['sum'])
+                    avg_idx[loss_attr_name] = zonal_layer.fieldNameIndex(
+                        loss_attrs_dict[loss_attr_name]['avg'])
                 for current_zone, zone_feat in enumerate(
-                        self.zonal_layer.getFeatures()):
+                        zonal_layer.getFeatures()):
                     progress_perc = current_zone / float(tot_zones) * 100
                     progress.setValue(progress_perc)
                     # get the id of the current zone
-                    zone_id = zone_feat[self.zone_id_in_zones_attr_name]
+                    zone_id = zone_feat[zone_id_in_zones_attr_name]
                     # initialize points_count, loss_sum and loss_avg
                     # to zero, and update them afterwards only if the zone
                     # contains at least one loss point
                     points_count = 0
                     loss_sum = {}
                     loss_avg = {}
-                    for loss_attr_name in self.loss_attr_names:
+                    for loss_attr_name in loss_attr_names:
                         loss_sum[loss_attr_name] = 0.0
                         loss_avg[loss_attr_name] = 0.0
                     # retrieve count and sum from the dictionary, using
                     # the zone id as key to get the values from the
                     # corresponding dict (otherwise, keep zero values)
                     if zone_id in zone_stats:
-                        for loss_attr_name in self.loss_attr_names:
+                        for loss_attr_name in loss_attr_names:
                             points_count = \
                                 zone_stats[zone_id][loss_attr_name]['count']
                             loss_sum[loss_attr_name] = \
@@ -1214,23 +1219,26 @@ class Svir:
                                 loss_avg
                     # without casting to int and to float, it wouldn't work
                     fid = zone_feat.id()
-                    self.zonal_layer.changeAttributeValue(
+                    zonal_layer.changeAttributeValue(
                         fid, count_idx, int(points_count))
-                    for loss_attr_name in self.loss_attr_names:
-                        self.zonal_layer.changeAttributeValue(
+                    for loss_attr_name in loss_attr_names:
+                        zonal_layer.changeAttributeValue(
                             fid, sum_idx[loss_attr_name],
                             float(loss_sum[loss_attr_name]))
-                        self.zonal_layer.changeAttributeValue(
+                        zonal_layer.changeAttributeValue(
                             fid, avg_idx[loss_attr_name],
                             float(loss_avg[loss_attr_name]))
         clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
-        self.notify_loss_aggregation_by_zone_complete()
+        self.notify_loss_aggregation_by_zone_complete(
+            loss_attrs_dict, loss_attr_names)
+        return (loss_layer, zonal_layer)
 
-    def notify_loss_aggregation_by_zone_complete(self):
+    def notify_loss_aggregation_by_zone_complete(
+            self, loss_attrs_dict, loss_attr_names):
         added_attrs = []
-        added_attrs.append(self.loss_attrs_dict['count'])
-        for loss_attr_name in self.loss_attr_names:
-            added_attrs.extend(self.loss_attrs_dict[loss_attr_name].values())
+        added_attrs.append(loss_attrs_dict['count'])
+        for loss_attr_name in loss_attr_names:
+            added_attrs.extend(loss_attrs_dict[loss_attr_name].values())
         msg = "New attributes [%s] have been added to the zonal layer" % (
             ', '.join(added_attrs))
         self.iface.messageBar().pushMessage(
@@ -1239,7 +1247,9 @@ class Svir:
             level=QgsMessageBar.INFO,
             duration=8)
 
-    def calculate_vector_stats_using_geometries(self):
+    def calculate_vector_stats_using_geometries(
+            self, loss_layer, zonal_layer, zone_id_in_zones_attr_name,
+            zone_id_in_losses_attr_name, loss_attr_names, loss_attrs_dict):
         """
         On the hypothesis that we don't know what is the zone in which
         each point was collected (and if we can't use SAGA),
@@ -1254,31 +1264,31 @@ class Svir:
                 * copy the zone id into the new field of the loss point
         * then we calculate_vector_stats_aggregating_by_zone_id
         Notes:
-        * self.loss_layer contains the not aggregated loss points
-        * self.zonal_layer contains the zone geometries
-        * self.aggregation_layer is the new layer with losses aggregated by
+        * loss_layer contains the not aggregated loss points
+        * zonal_layer contains the zone geometries
+        * aggregation_layer is the new layer with losses aggregated by
             zone
         """
         # make a copy of the loss layer and use that from now on
         add_to_registry = True if DEBUG else False
         loss_layer_plus_zones = \
-            ProcessLayer(self.loss_layer).duplicate_in_memory(
+            ProcessLayer(loss_layer).duplicate_in_memory(
                 add_to_registry=add_to_registry)
         # add to it the new attribute that will contain the zone id
         # and to do that we need to know the type of the zone id field
-        zonal_layer_fields = self.zonal_layer.dataProvider().fields()
+        zonal_layer_fields = zonal_layer.dataProvider().fields()
         zone_id_field_variant = [
             field.type() for field in zonal_layer_fields
-            if field.name() == self.zone_id_in_zones_attr_name][0]
+            if field.name() == zone_id_in_zones_attr_name][0]
         zone_id_field = QgsField(
-            self.zone_id_in_zones_attr_name, zone_id_field_variant)
+            zone_id_in_zones_attr_name, zone_id_field_variant)
         assigned_attr_names_dict = \
             ProcessLayer(loss_layer_plus_zones).add_attributes(
                 [zone_id_field])
-        self.zone_id_in_losses_attr_name = assigned_attr_names_dict.values()[0]
+        zone_id_in_losses_attr_name = assigned_attr_names_dict.values()[0]
         # get the index of the new attribute, to be used to update its values
         zone_id_attr_idx = loss_layer_plus_zones.fieldNameIndex(
-            self.zone_id_in_losses_attr_name)
+            zone_id_in_losses_attr_name)
         # to show the overall progress, cycling through points
         tot_points = len(list(loss_layer_plus_zones.getFeatures()))
         msg = tr(
@@ -1301,12 +1311,12 @@ class Svir:
                                  tr("Label each point with the zone id"),
                                  DEBUG):
             # to show the overall progress, cycling through zones
-            tot_zones = len(list(self.zonal_layer.getFeatures()))
+            tot_zones = len(list(zonal_layer.getFeatures()))
             msg = tr("Step 3 of 3: labeling points by zone id...")
             msg_bar_item, progress = create_progress_message_bar(
                 self.iface.messageBar(), msg)
             for current_zone, zone_feature in enumerate(
-                    self.zonal_layer.getFeatures()):
+                    zonal_layer.getFeatures()):
                 progress_perc = current_zone / float(tot_zones) * 100
                 progress.setValue(progress_perc)
                 msg = "{0}% - Zone: {1} on {2}".format(progress_perc,
@@ -1334,22 +1344,25 @@ class Svir:
                             # and it is not only contained by its bounding box
                             if zone_geometry.contains(point_geometry):
                                 zone_id = zone_feature[
-                                    self.zone_id_in_zones_attr_name]
+                                    zone_id_in_zones_attr_name]
                                 loss_layer_plus_zones.changeAttributeValue(
                                     point_id, zone_id_attr_idx, zone_id)
         clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
         self.calculate_vector_stats_aggregating_by_zone_id(
-            loss_layer_plus_zones)
+            loss_layer_plus_zones,
+            zonal_layer, zone_id_in_losses_attr_name,
+            zone_id_in_zones_attr_name, loss_attr_names,
+            loss_attrs_dict)
 
-    def calculate_raster_stats(self):
+    def calculate_raster_stats(self, loss_layer, zonal_layer):
         """
         In case the layer containing loss data is raster, use
         QgsZonalStatistics to calculate PTS_COUNT, sum and average loss
         values for each zone
         """
         zonal_statistics = QgsZonalStatistics(
-            self.zonal_layer,
-            self.loss_layer.dataProvider().dataSourceUri())
+            zonal_layer,
+            loss_layer.dataProvider().dataSourceUri())
         progress_dialog = QProgressDialog(
             tr('Calculating zonal statistics'),
             tr('Abort...'),
@@ -1364,31 +1377,33 @@ class Svir:
                 tr('You aborted aggregation, so there are '
                    'no data for analysis. Exiting...'),
                 level=QgsMessageBar.CRITICAL)
+        return (loss_layer, zonal_layer)
 
-    def purge_zones_without_loss_points(self):
+    def purge_zones_without_loss_points(
+            self, zonal_layer, loss_attrs_dict):
         """
         Delete from the zonal layer the zones that contain no loss points
         """
-        pr = self.zonal_layer.dataProvider()
+        pr = zonal_layer.dataProvider()
         caps = pr.capabilities()
 
-        tot_zones = len(list(self.zonal_layer.getFeatures()))
+        tot_zones = len(list(zonal_layer.getFeatures()))
         msg = tr("Purging zones containing no loss points...")
         msg_bar_item, progress = create_progress_message_bar(
             self.iface.messageBar(), msg)
 
         empty_zones_ids = []
 
-        with LayerEditingManager(self.zonal_layer,
+        with LayerEditingManager(zonal_layer,
                                  msg,
                                  DEBUG):
             for current_zone, zone_feature in enumerate(
-                    self.zonal_layer.getFeatures()):
+                    zonal_layer.getFeatures()):
                 progress_percent = current_zone / float(tot_zones) * 100
                 progress.setValue(progress_percent)
                 # save the ids of the zones to purge (which contain no loss
                 # points)
-                if zone_feature[self.loss_attrs_dict['count']] == 0:
+                if zone_feature[loss_attrs_dict['count']] == 0:
                     empty_zones_ids.append(zone_feature.id())
             if caps & QgsVectorDataProvider.DeleteFeatures:
                 pr.deleteFeatures(empty_zones_ids)
