@@ -117,7 +117,7 @@ def calculate_zonal_stats(loss_layer,
                 loss_layer, zonal_layer, zone_id_in_losses_attr_name,
                 zone_id_in_zones_attr_name, loss_attr_names,
                 loss_attrs_dict, iface)
-            (loss_layer, zonal_layer) = res
+            (loss_layer, zonal_layer, loss_attrs_dict) = res
         else:
             # otherwise we need to acquire the zones' geometries from the
             # zonal layer and check if loss points are inside those zones
@@ -141,10 +141,11 @@ def calculate_zonal_stats(loss_layer,
                     tr("Warning"),
                     tr(err_msg),
                     level=QgsMessageBar.WARNING)
-                calculate_vector_stats_using_geometries(
+                res = calculate_vector_stats_using_geometries(
                     loss_layer, zonal_layer, zone_id_in_zones_attr_name,
                     zone_id_in_losses_attr_name, loss_attr_names,
                     loss_attrs_dict, iface)
+                (loss_layer, zonal_layer, loss_attrs_dict) = res
             else:
                 # using SAGA to find out in which zone each point is
                 # (it does not compute any other statistics)
@@ -159,7 +160,6 @@ def calculate_zonal_stats(loss_layer,
                 #       geographically belonging to different polygons. For
                 #       this reason, the user MUST select carefully the
                 #       attribute in the zonal layer!
-                import pdb; pdb.set_trace()
                 res = processing.runalg(alg_name,
                                         loss_layer,
                                         zonal_layer,
@@ -204,11 +204,12 @@ def calculate_zonal_stats(loss_layer,
                     else:
                         zone_id_in_losses_attr_name = \
                             zone_id_in_zones_attr_name
-                    calculate_vector_stats_aggregating_by_zone_id(
+                    res = calculate_vector_stats_aggregating_by_zone_id(
                         loss_layer_plus_zones, zonal_layer,
                         zone_id_in_losses_attr_name,
                         zone_id_in_zones_attr_name,
                         loss_attr_names, loss_attrs_dict, iface)
+                    (loss_layer, zonal_layer, loss_attrs_dict) = res
     else:
         (loss_layer, zonal_layer) = \
             calculate_raster_stats(loss_layer, zonal_layer)
@@ -246,8 +247,7 @@ def calculate_vector_stats_aggregating_by_zone_id(
                         'count': 0, 'sum': 0.0}
                 loss_value = point_feat[loss_attr_name]
                 zone_stats[zone_id][loss_attr_name]['count'] += 1
-                zone_stats[zone_id][loss_attr_name]['sum'] \
-                    += loss_value
+                zone_stats[zone_id][loss_attr_name]['sum'] += loss_value
     clear_progress_message_bar(iface.messageBar(), msg_bar_item)
     msg = tr(
         "Step 3 of 3: writing point counts, loss sums and averages into "
@@ -297,8 +297,7 @@ def calculate_vector_stats_aggregating_by_zone_id(
                         # at least one point (otherwise we keep all zeros)
                         loss_avg[loss_attr_name] = (
                             loss_sum[loss_attr_name] / points_count)
-                        zone_stats[zone_id][loss_attr_name]['avg'] = \
-                            loss_avg
+                        zone_stats[zone_id][loss_attr_name]['avg'] = loss_avg
                 # without casting to int and to float, it wouldn't work
                 fid = zone_feat.id()
                 zonal_layer.changeAttributeValue(
@@ -313,7 +312,7 @@ def calculate_vector_stats_aggregating_by_zone_id(
     clear_progress_message_bar(iface.messageBar(), msg_bar_item)
     notify_loss_aggregation_by_zone_complete(
         loss_attrs_dict, loss_attr_names, iface)
-    return (loss_layer, zonal_layer)
+    return (loss_layer, zonal_layer, loss_attrs_dict)
 
 
 def notify_loss_aggregation_by_zone_complete(
@@ -430,7 +429,7 @@ def calculate_vector_stats_using_geometries(
                             loss_layer_plus_zones.changeAttributeValue(
                                 point_id, zone_id_attr_idx, zone_id)
     clear_progress_message_bar(iface.messageBar(), msg_bar_item)
-    calculate_vector_stats_aggregating_by_zone_id(
+    return calculate_vector_stats_aggregating_by_zone_id(
         loss_layer_plus_zones,
         zonal_layer, zone_id_in_losses_attr_name,
         zone_id_in_zones_attr_name, loss_attr_names,

@@ -66,6 +66,7 @@ class AggregateLossByZoneTestCase(unittest.TestCase):
         # TODO: manage both with or without SAGA
         zone_id_in_losses_attr_name = None
         zone_id_in_zones_attr_name = 'ZONE_ID'
+
         res = calculate_zonal_stats(self.loss_layer,
                                     self.zonal_layer,
                                     self.loss_attr_names,
