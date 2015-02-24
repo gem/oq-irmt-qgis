@@ -39,7 +39,7 @@ from qgis.analysis import QgsZonalStatistics
 import processing as p
 
 try:
-    from processing.algs.saga.SagaUtils import SagaUtils
+    from processing.algs.saga import SagaUtils
     saga_was_imported = True
 except:
     print "Unable to import SagaUtils module from processing.algs.saga"
@@ -123,8 +123,11 @@ def calculate_zonal_stats(loss_layer,
             # zonal layer and check if loss points are inside those zones
             alg_name = 'saga:clippointswithpolygons'
             # if SAGA is not installed, the check will return a error msg
+            err_msg = None
             if saga_was_imported:
-                err_msg = SagaUtils.checkSagaIsInstalled()
+                saga_version = SagaUtils.getSagaInstalledVersion()
+                if saga_version is None:
+                    err_msg = 'SAGA is not installed.'
             else:
                 err_msg = 'SagaUtils was not imported.'
             if err_msg is not None:
