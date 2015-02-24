@@ -75,10 +75,17 @@ class AggregateLossByZoneTestCase(unittest.TestCase):
                                     zone_id_in_zones_attr_name,
                                     IFACE)
         (output_loss_layer, output_zonal_layer, output_loss_attrs_dict) = res
-        expected_zonal_layer = os.path.join(self.data_dir_name,
-                                            'svi_zones_plys_loss_stats.shp')
+
+        expected_zonal_layer_path = os.path.join(
+            self.data_dir_name, 'svi_zones_plus_loss_stats.shp')
+        expected_zonal_layer = QgsVectorLayer(
+            expected_zonal_layer_path, 'Expected zonal layer', 'ogr')
+
         if not ProcessLayer(output_zonal_layer).has_same_content_as(
                 expected_zonal_layer):
+            ProcessLayer(output_loss_layer).pprint()
+            ProcessLayer(output_zonal_layer).pprint()
+            ProcessLayer(expected_zonal_layer).pprint()
             raise Exception('The output layer is different than expected')
 
     def test_aggregate_and_purge_empty_zones(self):
