@@ -36,7 +36,7 @@ from qgis.core import (QgsVectorLayer,
 from qgis.gui import QgsMessageBar
 
 from qgis.analysis import QgsZonalStatistics
-import processing as p
+import processing
 
 try:
     from processing.algs.saga import SagaUtils
@@ -159,12 +159,13 @@ def calculate_zonal_stats(loss_layer,
                 #       geographically belonging to different polygons. For
                 #       this reason, the user MUST select carefully the
                 #       attribute in the zonal layer!
-                res = p.runalg(alg_name,
-                               loss_layer,
-                               zonal_layer,
-                               zone_id_in_zones_attr_name,
-                               0,
-                               None)
+                import pdb; pdb.set_trace()
+                res = processing.runalg(alg_name,
+                                        loss_layer,
+                                        zonal_layer,
+                                        zone_id_in_zones_attr_name,
+                                        0,
+                                        None)
                 if res is None:
                     msg = "An error occurred while attempting to " \
                           "compute zonal statistics with SAGA"
