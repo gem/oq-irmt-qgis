@@ -216,7 +216,7 @@ class ProcessLayer():
 
         """
         if new_name is '':
-            new_name = self.layer.name() + ' TMP'
+            new_name = self.layer.name() + ' (copy)'
 
         if self.layer.type() == QgsMapLayer.VectorLayer:
             v_type = self.layer.wkbType()

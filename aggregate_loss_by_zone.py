@@ -347,7 +347,7 @@ def calculate_vector_stats_using_geometries(
     add_to_registry = True if DEBUG else False
     loss_layer_plus_zones = \
         ProcessLayer(loss_layer).duplicate_in_memory(
-            add_to_registry=add_to_registry)
+            new_name='Loss plus zone labels', add_to_registry=add_to_registry)
     # add to it the new attribute that will contain the zone id
     # and to do that we need to know the type of the zone id field
     zonal_layer_fields = zonal_layer.dataProvider().fields()

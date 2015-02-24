@@ -381,6 +381,7 @@ class Svir:
             if dlg.ui.purge_chk.isChecked():
                 self.purge_zones_without_loss_points(
                     zonal_layer, loss_attrs_dict)
+            self.update_actions_status()
 
     def import_sv_variables(self):
         """
