@@ -69,12 +69,10 @@ def calculate_zonal_stats(loss_layer,
                           zone_id_in_zones_attr_name,
                           iface):
     """
-    A loss_layer containing loss data points needs to be already loaded,
-    and it can be a raster or vector layer.
-    Another layer (zonal_layer) needs to be previously loaded as well,
-    containing socioeconomic data aggregated by zone.
-    This method calls other methods of the class in order to produce,
-    for each feature (zone):
+    The loss_layer containing loss data points, can raster or vector.
+    The zonal_layer has to be a vector layer containing socioeconomic
+    data aggregated by zone.
+    At the end of the workflow, we will have, for each feature (zone):
     * a "LOSS_PTS" attribute, specifying how many loss points are
         inside the zone
     * for each loss variable:
@@ -208,9 +206,8 @@ def calculate_vector_stats_aggregating_by_zone_id(
         loss_layer, zonal_layer, zone_id_in_losses_attr_name,
         zone_id_in_zones_attr_name, loss_attr_names, loss_attrs_dict, iface):
     """
-    If we know the zone id of each point in the loss map, we
-    don't need to use geometries while aggregating, and we can
-    simply count by zone id
+    Once we know the zone id of each point in the loss map, we
+    can count how many points are in each zone, sum and average their values
     """
     tot_points = len(list(loss_layer.getFeatures()))
     msg = tr("Step 2 of 3: aggregating losses by zone id...")
@@ -340,8 +337,6 @@ def calculate_vector_stats_using_geometries(
     Notes:
     * loss_layer contains the not aggregated loss points
     * zonal_layer contains the zone geometries
-    * aggregation_layer is the new layer with losses aggregated by
-        zone
     """
     # make a copy of the loss layer and use that from now on
     add_to_registry = True if DEBUG else False
@@ -452,4 +447,5 @@ def calculate_raster_stats(loss_layer, zonal_layer, iface):
             tr('You aborted aggregation, so there are '
                 'no data for analysis. Exiting...'),
             level=QgsMessageBar.CRITICAL)
+    # FIXME: We probably need to return something more
     return (loss_layer, zonal_layer)
