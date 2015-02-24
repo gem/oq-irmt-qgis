@@ -125,9 +125,12 @@ def calculate_zonal_stats(loss_layer,
             # if SAGA is not installed, the check will return a error msg
             err_msg = None
             if saga_was_imported:
-                saga_version = SagaUtils.getSagaInstalledVersion()
-                if saga_version is None:
-                    err_msg = 'SAGA is not installed.'
+                try:
+                    saga_version = SagaUtils.getSagaInstalledVersion()
+                    if saga_version is None:
+                        err_msg = 'SAGA is not installed.'
+                except AttributeError:
+                    err_msg = 'Unable to get the SAGA installed version.'
             else:
                 err_msg = 'SagaUtils was not imported.'
             if err_msg is not None:
