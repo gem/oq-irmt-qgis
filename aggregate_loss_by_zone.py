@@ -167,12 +167,18 @@ def calculate_zonal_stats(loss_layer,
                                         0,
                                         None)
                 if res is None:
-                    msg = "An error occurred while attempting to " \
-                          "compute zonal statistics with SAGA"
+                    msg = ("An error occurred while attempting to"
+                           " compute zonal statistics with SAGA. Therefore"
+                           " an alternative algorithm is used.")
                     iface.messageBar().pushMessage(
                         tr("Error"),
                         tr(msg),
                         level=QgsMessageBar.CRITICAL)
+                    res = calculate_vector_stats_using_geometries(
+                        loss_layer, zonal_layer, zone_id_in_zones_attr_name,
+                        zone_id_in_losses_attr_name, loss_attr_names,
+                        loss_attrs_dict, iface)
+                    (loss_layer, zonal_layer, loss_attrs_dict) = res
                 else:
                     loss_layer_plus_zones = QgsVectorLayer(
                         res['CLIPS'],
