@@ -26,6 +26,7 @@
 
 # import qgis libs so that we set the correct sip api version
 import qgis   # pylint: disable=W0611  # NOQA
+import os.path
 
 import unittest
 
@@ -38,6 +39,41 @@ from shared import INT_FIELD_TYPE_NAME, STRING_FIELD_TYPE_NAME
 
 from utilities import get_qgis_app
 QGIS_APP, CANVAS, PARENT, IFACE = get_qgis_app()
+
+
+class CompareLayerContentTestCase(unittest.TestCase):
+
+    def setUp(self):
+        # a and b are equal
+        # c is longer than a and b but they have the same partial content
+        # d is different with respect to all the others
+        curr_dir_name = os.path.dirname(__file__)
+        data_dir_name = os.path.join(curr_dir_name,
+                                     'data/process_layer/compare')
+        layer_a_file_path = os.path.join(data_dir_name, 'layer_a.shp')
+        layer_b_file_path = os.path.join(data_dir_name, 'layer_b.shp')
+        layer_c_file_path = os.path.join(data_dir_name, 'layer_c.shp')
+        layer_d_file_path = os.path.join(data_dir_name, 'layer_d.shp')
+        self.layer_a = QgsVectorLayer(layer_a_file_path, 'layer_a', 'ogr')
+        self.layer_b = QgsVectorLayer(layer_b_file_path, 'layer_b', 'ogr')
+        self.layer_c = QgsVectorLayer(layer_c_file_path, 'layer_c', 'ogr')
+        self.layer_d = QgsVectorLayer(layer_d_file_path, 'layer_d', 'ogr')
+
+    def test_same_content_case_layers_are_equal(self):
+        res = ProcessLayer(self.layer_a).has_same_content_as(self.layer_b)
+        self.assertEqual(res, True)
+
+    def test_same_content_case_first_layer_has_more_features(self):
+        res = ProcessLayer(self.layer_c).has_same_content_as(self.layer_a)
+        self.assertEqual(res, False)
+
+    def test_same_content_case_second_layer_has_more_features(self):
+        res = ProcessLayer(self.layer_a).has_same_content_as(self.layer_c)
+        self.assertEqual(res, False)
+
+    def test_same_content_case_layers_are_completely_different(self):
+        res = ProcessLayer(self.layer_a).has_same_content_as(self.layer_d)
+        self.assertEqual(res, False)
 
 
 class AddAttributesTestCase(unittest.TestCase):
