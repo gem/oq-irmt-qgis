@@ -38,7 +38,7 @@ from process_layer import ProcessLayer
 from shared import INT_FIELD_TYPE_NAME, STRING_FIELD_TYPE_NAME
 
 from utilities import get_qgis_app
-QGIS_APP, CANVAS, PARENT, IFACE = get_qgis_app()
+QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 
 
 class CompareLayerContentTestCase(unittest.TestCase):

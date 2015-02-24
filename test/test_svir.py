@@ -32,7 +32,7 @@ import unittest
 from PyQt4.QtGui import QIcon
 
 from utilities import get_qgis_app
-QGIS_APP, CANVAS, PARENT, IFACE = get_qgis_app()
+QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 
 #import svir
 #SVIR = svir.classFactory(IFACE)
