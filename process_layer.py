@@ -47,8 +47,8 @@ class ProcessLayer():
     def has_same_content_as(self, other_layer):
         this_dp = self.layer.dataProvider()
         other_dp = other_layer.dataProvider()
-        len_this = sum(1 for feature in this_dp.getFeatures())
-        len_other = sum(1 for feature in other_dp.getFeatures())
+        len_this = self.layer.featureCount()
+        len_other = other_layer.featureCount()
         if len_this != len_other:
             return False
         this_features = this_dp.getFeatures()
