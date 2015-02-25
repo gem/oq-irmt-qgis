@@ -379,7 +379,7 @@ class Svir:
             (loss_layer, zonal_layer, loss_attrs_dict) = res
 
             if dlg.ui.purge_chk.isChecked():
-                purge_zones_without_loss_points(
+                zonal_layer = purge_zones_without_loss_points(
                     zonal_layer, loss_attrs_dict, self.iface)
             self.update_actions_status()
 
