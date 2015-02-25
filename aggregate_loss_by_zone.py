@@ -31,6 +31,7 @@ from qgis.core import (QgsVectorLayer,
                        QgsGeometry,
                        QgsSpatialIndex,
                        QgsFeatureRequest,
+                       QgsVectorDataProvider,
                        )
 
 from qgis.gui import QgsMessageBar
@@ -461,3 +462,39 @@ def calculate_raster_stats(loss_layer, zonal_layer, iface):
             level=QgsMessageBar.CRITICAL)
     # FIXME: We probably need to return something more
     return (loss_layer, zonal_layer)
+
+
+def purge_zones_without_loss_points(
+        zonal_layer, loss_attrs_dict, iface):
+    """
+    Delete from the zonal layer the zones that contain no loss points
+    """
+    pr = zonal_layer.dataProvider()
+    caps = pr.capabilities()
+
+    tot_zones = len(list(zonal_layer.getFeatures()))
+    msg = tr("Purging zones containing no loss points...")
+    msg_bar_item, progress = create_progress_message_bar(
+        iface.messageBar(), msg)
+
+    empty_zones_ids = []
+
+    with LayerEditingManager(zonal_layer, msg, DEBUG):
+        for current_zone, zone_feature in enumerate(
+                zonal_layer.getFeatures()):
+            progress_percent = current_zone / float(tot_zones) * 100
+            progress.setValue(progress_percent)
+            # save the ids of the zones to purge (which contain no loss
+            # points)
+            if zone_feature[loss_attrs_dict['count']] == 0:
+                empty_zones_ids.append(zone_feature.id())
+        if caps & QgsVectorDataProvider.DeleteFeatures:
+            pr.deleteFeatures(empty_zones_ids)
+
+    clear_progress_message_bar(iface.messageBar(), msg_bar_item)
+
+    msg = "Zones containing no loss points were deleted"
+    iface.messageBar().pushMessage(tr("Warning"),
+                                   tr(msg),
+                                   level=QgsMessageBar.WARNING)
+    return zonal_layer

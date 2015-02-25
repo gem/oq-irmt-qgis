@@ -35,7 +35,8 @@ from utilities import get_qgis_app
 QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 
 from process_layer import ProcessLayer
-from aggregate_loss_by_zone import calculate_zonal_stats
+from aggregate_loss_by_zone import (calculate_zonal_stats,
+                                    purge_zones_without_loss_points,)
 
 
 class AggregateLossByZoneTestCase(unittest.TestCase):

@@ -50,7 +50,6 @@ from PyQt4.QtGui import (QAction,
 
 from qgis.core import (QgsVectorLayer,
                        QgsMapLayerRegistry,
-                       QgsVectorDataProvider,
                        QgsMessageLog,
                        QgsMapLayer,
                        QgsVectorFileWriter,
@@ -81,11 +80,10 @@ from upload_settings_dialog import UploadSettingsDialog
 
 from import_sv_data import get_loggedin_downloader
 
-from utils import (LayerEditingManager,
-                   tr,
+from utils import (tr,
                    WaitCursorManager,
                    assign_default_weights,
-                   clear_progress_message_bar, create_progress_message_bar,
+                   clear_progress_message_bar,
                    SvNetworkError, ask_for_download_destination,
                    files_exist_in_destination, confirm_overwrite,
                    count_heading_commented_lines)
@@ -96,7 +94,9 @@ from shared import (SVIR_PLUGIN_VERSION,
                     PROJECT_TEMPLATE,
                     THEME_TEMPLATE,
                     INDICATOR_TEMPLATE)
-from aggregate_loss_by_zone import calculate_zonal_stats
+from aggregate_loss_by_zone import (calculate_zonal_stats,
+                                    purge_zones_without_loss_points,
+                                    )
 
 
 class Svir:
@@ -379,8 +379,8 @@ class Svir:
             (loss_layer, zonal_layer, loss_attrs_dict) = res
 
             if dlg.ui.purge_chk.isChecked():
-                self.purge_zones_without_loss_points(
-                    zonal_layer, loss_attrs_dict)
+                purge_zones_without_loss_points(
+                    zonal_layer, loss_attrs_dict, self.iface)
             self.update_actions_status()
 
     def import_sv_variables(self):
@@ -972,42 +972,6 @@ class Svir:
                     level=QgsMessageBar.INFO,
                     duration=8)
         self.update_actions_status()
-
-    def purge_zones_without_loss_points(
-            self, zonal_layer, loss_attrs_dict):
-        """
-        Delete from the zonal layer the zones that contain no loss points
-        """
-        pr = zonal_layer.dataProvider()
-        caps = pr.capabilities()
-
-        tot_zones = len(list(zonal_layer.getFeatures()))
-        msg = tr("Purging zones containing no loss points...")
-        msg_bar_item, progress = create_progress_message_bar(
-            self.iface.messageBar(), msg)
-
-        empty_zones_ids = []
-
-        with LayerEditingManager(zonal_layer,
-                                 msg,
-                                 DEBUG):
-            for current_zone, zone_feature in enumerate(
-                    zonal_layer.getFeatures()):
-                progress_percent = current_zone / float(tot_zones) * 100
-                progress.setValue(progress_percent)
-                # save the ids of the zones to purge (which contain no loss
-                # points)
-                if zone_feature[loss_attrs_dict['count']] == 0:
-                    empty_zones_ids.append(zone_feature.id())
-            if caps & QgsVectorDataProvider.DeleteFeatures:
-                pr.deleteFeatures(empty_zones_ids)
-
-        clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
-
-        msg = "Zones containing no loss points were deleted"
-        self.iface.messageBar().pushMessage(tr("Warning"),
-                                            tr(msg),
-                                            level=QgsMessageBar.WARNING)
 
     def upload(self):
         temp_dir = tempfile.gettempdir()
