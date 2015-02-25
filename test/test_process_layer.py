@@ -93,7 +93,7 @@ class AddAttributesTestCase(unittest.TestCase):
         ProcessLayer(self.layer).add_attributes(attributes)
         added_field_names = [field.name() for field in self.dp.fields()]
         # Double-check that add_attributes is working properly
-        assert added_field_names == field_names
+        self.assertEqual(added_field_names, field_names)
         # Check that both attributes are correctly found
         for attr_name in field_names:
             try:
@@ -127,7 +127,7 @@ class AddAttributesTestCase(unittest.TestCase):
         added_attributes = ProcessLayer(self.layer).add_attributes(attributes)
         expected_dict = {'first': 'first_1',
                          'second': 'second_1'}
-        assert added_attributes == expected_dict
+        self.assertEqual(added_attributes, expected_dict)
         # Let's add 2 other fields with the same names of the previous ones
         # ==> Since the names are already taken, as well as the corresponding
         # '_1' versions, we expect to add fields with the same names plus '_2'
@@ -139,4 +139,4 @@ class AddAttributesTestCase(unittest.TestCase):
         added_attributes = ProcessLayer(self.layer).add_attributes(attributes)
         expected_dict = {'first': 'first_2',
                          'second': 'second_2'}
-        assert added_attributes == expected_dict
+        self.assertEqual(added_attributes, expected_dict)
