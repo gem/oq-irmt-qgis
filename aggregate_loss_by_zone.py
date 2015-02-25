@@ -485,20 +485,14 @@ def purge_zones_without_loss_points(
     msg_bar_item, progress = create_progress_message_bar(
         iface.messageBar(), msg)
 
-    empty_zones_ids = []
-
     with LayerEditingManager(zonal_layer, msg, DEBUG):
-        pr = zonal_layer.dataProvider()
-        for current_zone, zone_feature in enumerate(pr.getFeatures()):
+        for current_zone, zone_feature in enumerate(zonal_layer.getFeatures()):
             progress_percent = current_zone / float(tot_zones) * 100
             progress.setValue(progress_percent)
             # save the ids of the zones to purge (which contain no loss
             # points)
             if zone_feature[loss_attrs_dict['count']] == 0:
-                empty_zones_ids.append(zone_feature.id())
-        caps = pr.capabilities()
-        if caps & QgsVectorDataProvider.DeleteFeatures:
-            pr.deleteFeatures(empty_zones_ids)
+                zonal_layer.deleteFeature(zone_feature.id())
 
     clear_progress_message_bar(iface.messageBar(), msg_bar_item)
 
