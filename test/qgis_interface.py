@@ -24,9 +24,10 @@ __copyright__ = (
 )
 
 import logging
+from mock import Mock
 from PyQt4.QtCore import QObject, pyqtSlot, pyqtSignal
 from qgis.core import QgsMapLayerRegistry
-from qgis.gui import QgsMapCanvasLayer, QgsMessageBar
+from qgis.gui import QgsMapCanvasLayer
 LOGGER = logging.getLogger('SVIR')
 
 
@@ -208,5 +209,5 @@ class QgisInterface(QObject):
     def messageBar(self):
         """Get the legend."""
         if self._messageBar is None:
-            self._messageBar = QgsMessageBar()
+            self._messageBar = Mock()  # avoid creating GUI by QgsMessageBar()
         return self._messageBar
