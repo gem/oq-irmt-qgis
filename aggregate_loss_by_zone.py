@@ -31,7 +31,6 @@ from qgis.core import (QgsVectorLayer,
                        QgsGeometry,
                        QgsSpatialIndex,
                        QgsFeatureRequest,
-                       QgsVectorDataProvider,
                        )
 
 from qgis.gui import QgsMessageBar
@@ -431,14 +430,9 @@ def calculate_vector_stats_using_geometries(
                                 point_id, zone_id_attr_idx, zone_id)
         # for consistency with the SAGA algorithm, remove points that don't
         # belong to any zone
-        pr = loss_layer_plus_zones.dataProvider()
-        caps = pr.capabilities()
-        to_remove_ids = []
         for point_feature in loss_layer_plus_zones.getFeatures():
             if not point_feature[zone_id_in_losses_attr_name]:
-                to_remove_ids.append(point_feature.id())
-        if caps & QgsVectorDataProvider.DeleteFeatures:
-            pr.deleteFeatures(to_remove_ids)
+                loss_layer_plus_zones.deleteFeature(point_feature.id())
 
     clear_progress_message_bar(iface.messageBar(), msg_bar_item)
     return calculate_vector_stats_aggregating_by_zone_id(
