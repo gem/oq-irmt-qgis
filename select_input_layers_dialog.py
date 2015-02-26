@@ -27,6 +27,7 @@
 # create the dialog for zoom to point
 import os.path
 import csv
+import tempfile
 from PyQt4.QtCore import pyqtSlot, QDir
 from PyQt4.QtGui import (QFileDialog,
                          QDialog,
@@ -188,7 +189,8 @@ class SelectInputLayersDialog(QDialog):
                 raise Exception('Input csv fields have different lengths')
             header = ['LON', 'LAT']
             header.extend([loss_type.upper() for loss_type in loss_types])
-            reduced_csv_path = os.path.join('/tmp', 'reduced.csv')
+            fd, reduced_csv_path = tempfile.mkstemp(suffix='csv')
+            os.close(fd)
             source_files = []
             source_readers = []
             for csv_file_path in csv_file_paths:
