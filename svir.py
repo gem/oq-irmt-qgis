@@ -813,8 +813,9 @@ class Svir:
 
         not_null_rule = root_rule.children()[0].clone()
         not_null_rule.setSymbol(QgsFillSymbolV2.createSimple(
-            {'style': 'no',
-             'style_border': 'no'}))
+            {'style': 'solid',
+             'color': '255,255,255,255',
+             'style_border': 'solid'}))
         not_null_rule.setFilterExpression('%s IS NOT NULL' % target_field)
         not_null_rule.setLabel('%s:' % target_field)
         root_rule.appendChild(not_null_rule)
@@ -822,6 +823,7 @@ class Svir:
         null_rule = root_rule.children()[0].clone()
         null_rule.setSymbol(QgsFillSymbolV2.createSimple(
             {'style': 'no',
+             'style_border': 'solid',
              'color_border': '255,255,0,255',
              'width_border': '0.5'}))
         null_rule.setFilterExpression('%s IS NULL' % target_field)
