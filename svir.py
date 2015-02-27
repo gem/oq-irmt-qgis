@@ -896,11 +896,12 @@ class Svir:
             # index 0 is for "use zonal geometries" (no zone id available)
             if dlg.ui.zone_id_attr_name_loss_cbox.currentIndex() == 0:
                 zone_id_in_losses_attr_name = None
+                zone_id_in_zones_attr_name = None
             else:
                 zone_id_in_losses_attr_name = \
                     dlg.ui.zone_id_attr_name_loss_cbox.currentText()
-            zone_id_in_zones_attr_name = \
-                dlg.ui.zone_id_attr_name_zone_cbox.currentText()
+                zone_id_in_zones_attr_name = \
+                    dlg.ui.zone_id_attr_name_zone_cbox.currentText()
             return (loss_attr_names,
                     zone_id_in_losses_attr_name,
                     zone_id_in_zones_attr_name)

@@ -121,7 +121,25 @@ def calculate_zonal_stats(loss_layer,
         else:
             # otherwise we need to acquire the zones' geometries from the
             # zonal layer and check if loss points are inside those zones
-            alg_name = 'saga:clippointswithpolygons'
+            # In order to be sure to avoid duplicate zone names, we add to the
+            # zonal layer an additional field and copy into that the unique id
+            # of each feature
+            proposed_attr_name = 'ZONE_ID'
+            # attr = QgsField(proposed_attr_name, QVariant.LongLong)
+            new_attr = QgsField(proposed_attr_name, QVariant.String)
+            attr_dict = \
+                ProcessLayer(zonal_layer).add_attributes([new_attr])
+            # we get a dict, from which we find the actual attribute name in
+            # the only dict value
+            zone_id_in_zones_attr_name = attr_dict.values()[0]
+            with LayerEditingManager(zonal_layer,
+                                     'Copy feature id into the new field',
+                                     DEBUG):
+                unique_id_idx = zonal_layer.fieldNameIndex(
+                    zone_id_in_zones_attr_name)
+                for feat in zonal_layer.getFeatures():
+                    zonal_layer.changeAttributeValue(
+                        feat.id(), unique_id_idx, str(feat.id()))
             # if SAGA is not installed, the check will return a error msg
             err_msg = None
             if saga_was_imported:
@@ -151,16 +169,8 @@ def calculate_zonal_stats(loss_layer,
                 # (it does not compute any other statistics)
                 # NOTE: The algorithm builds a new loss layer, in which
                 #       each point will have an additional attribute,
-                #       indicating the zone to which the point belongs. Be
-                #       aware that such attribute is not actually the id of
-                #       the zone, but the value of the attribute
-                #       zone_id_in_zones_attr_name, which might
-                #       possibly be not unique, causing later the grouping
-                #       of points with the same value, even if
-                #       geographically belonging to different polygons. For
-                #       this reason, the user MUST select carefully the
-                #       attribute in the zonal layer!
-                res = processing.runalg(alg_name,
+                #       indicating the zone to which the point belongs.
+                res = processing.runalg('saga:clippointswithpolygons',
                                         loss_layer,
                                         zonal_layer,
                                         zone_id_in_zones_attr_name,
@@ -175,7 +185,8 @@ def calculate_zonal_stats(loss_layer,
                         tr(msg),
                         level=QgsMessageBar.CRITICAL)
                     res = calculate_vector_stats_using_geometries(
-                        loss_layer, zonal_layer, zone_id_in_zones_attr_name,
+                        loss_layer, zonal_layer,
+                        zone_id_in_zones_attr_name,
                         zone_id_in_losses_attr_name, loss_attr_names,
                         loss_attrs_dict, iface)
                     (loss_layer, zonal_layer, loss_attrs_dict) = res
