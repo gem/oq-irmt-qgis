@@ -25,6 +25,7 @@ import os
 import time
 import unittest
 import tempfile
+import uuid
 
 from metadata_utilities import (
     valid_iso_xml,
@@ -36,8 +37,11 @@ class TestCase(unittest.TestCase):
 
     def test_valid_iso_xml(self):
         # test when XML file is non existent
-        fd, filename = tempfile.mkstemp(suffix='xml')
-        os.close(fd)
+        # NOTE: we are not creating a new temporary file here, but just
+        # attempting to look for a non-existing file. If it doesn't exiist, a
+        # new file will be created from a template.
+        random_name = '%s.xml' % uuid.uuid4()
+        filename = os.path.join(tempfile.gettempdir(), random_name)
         tree = valid_iso_xml(filename)
         root = tree.getroot()
         self.assertIsNotNone(root.find(ISO_METADATA_KEYWORD_TAG))
