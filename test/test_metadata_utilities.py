@@ -38,8 +38,9 @@ class TestCase(unittest.TestCase):
     def test_valid_iso_xml(self):
         # test when XML file is non existent
         # NOTE: we are not creating a new temporary file here, but just
-        # attempting to look for a non-existing file. If it doesn't exiist, a
-        # new file will be created from a template.
+        # attempting to look for a non-existing file.
+        # valid_iso_xml will create a new xml file from a template, if the
+        # filename is not found.
         random_name = '%s.xml' % uuid.uuid4()
         filename = os.path.join(tempfile.gettempdir(), random_name)
         tree = valid_iso_xml(filename)
