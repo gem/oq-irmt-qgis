@@ -856,7 +856,7 @@ class Svir:
                 zone_id_in_losses_attr_name = \
                     dlg.ui.zone_id_attr_name_loss_cbox.currentText()
             # index 0 is for "Add field with unique zone id"
-            if dlg.ui.zone_id_attr_name_loss_cbox.currentIndex() == 0:
+            if dlg.ui.zone_id_attr_name_zone_cbox.currentIndex() == 0:
                 zone_id_in_zones_attr_name = None
             else:
                 zone_id_in_zones_attr_name = \
