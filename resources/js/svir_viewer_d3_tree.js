@@ -679,13 +679,19 @@
                 })
                 .style("stroke", function(d) {
                     if (d.weight < 0) {
-                        return "red";
+                        return "PowderBlue";
                     } else {
-                        return "blue";
+                        return "RoyalBlue";
                     }
                 })
+                .style("stroke-width", 4)
                 .style("fill", function(d) {
-                    return d.source ? d.source.linkColor: d.linkColor;
+                    // return d.source ? d.source.linkColor: d.linkColor;
+                    if (d.weight < 0) {
+                        return "RoyalBlue";
+                    } else {
+                        return "PowderBlue";
+                    }
                 });
 
             nodeUpdate.select("text")
