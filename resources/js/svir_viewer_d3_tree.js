@@ -615,7 +615,11 @@
                 })
                 .attr("text-anchor", function(d) { return "end"; })
                 .text(function(d) {
-                    return d.name;
+                    if (d.weight < 0) {
+                        return "- " + d.name;
+                    } else {
+                        return d.name;
+                    }
                 })
                 .style("fill-opacity", 1e-6)
                 .on("click", function(d) {
