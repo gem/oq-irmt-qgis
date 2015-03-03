@@ -95,9 +95,9 @@
             }
             $(function() {
                 $("#spinner-"+id).width(100).spinner({
-                    min: 0,
+                    min: -100,
                     max: 100,
-                    step: 0.01,
+                    step: 0.000001,
                     numberFormat: "n"
                 });
             });
@@ -263,11 +263,11 @@
                 pdTempWeights = pdTempWeights.map(Number);
                 var totalWeights = 0;
                 $.each(pdTempWeights,function() {
-                    totalWeights += this;
+                    totalWeights += Math.abs(this);
                 });
 
                 for (var i = 0; i < pdTempWeights.length; i++) {
-                    var tempMath = Math.floor((pdTempWeights[i] * 100) / totalWeights);
+                    var tempMath = (pdTempWeights[i] * 100) / totalWeights;
                     pdTempWeightsComputed.push(tempMath / 100);
                 }
 
@@ -602,7 +602,7 @@
                 .attr("class", (function(d) { return "level-" + d.level; }))
                 .attr("id", (function(d) { return 'indicator-label-' + d.name.replace(' ', '-'); }))
                 .attr("value", (function(d) { return d.weight; }))
-                .attr("x", function(d) { return -(d.weight * CIRCLE_SCALE + 5); })
+                .attr("x", function(d) { return -(Math.abs(d.weight) * CIRCLE_SCALE + 5); })
                 .attr("dy", function(d) {
                     // NOTE are x and y swapped?
                     // set te text above or below the node depending on the
@@ -675,7 +675,14 @@
                 .attr("r", function (d) {
                     // d.weight is expected to be between 0 and 1
                     // Nodes are displayed as circles of size between 1 and CIRCLE_SCALE
-                    return d.weight ? Math.max(d.weight * CIRCLE_SCALE, MIN_CIRCLE_SIZE): MIN_CIRCLE_SIZE;
+                    return d.weight ? Math.max(Math.abs(d.weight) * CIRCLE_SCALE, MIN_CIRCLE_SIZE): MIN_CIRCLE_SIZE;
+                })
+                .style("stroke", function(d) {
+                    if (d.weight < 0) {
+                        return "red";
+                    } else {
+                        return "blue";
+                    }
                 })
                 .style("fill", function(d) {
                     return d.source ? d.source.linkColor: d.linkColor;
