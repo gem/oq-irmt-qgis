@@ -52,8 +52,12 @@ class AttributeSelectionDialogTest(unittest.TestCase):
     def test_dialog_ok(self):
         """Test we can click OK."""
 
-        button = self.dialog.ui.buttonBox.button(QDialogButtonBox.Ok)
-        button.click()
+        ok_button = self.dialog.ui.buttonBox.button(QDialogButtonBox.Ok)
+        ok_button.click()
+        result = self.dialog.result()
+        self.assertEqual(result, QDialog.Rejected)
+        self.dialog.ui.loss_attrs_multisel.select_all_btn.click()
+        ok_button.click()
         result = self.dialog.result()
         self.assertEqual(result, QDialog.Accepted)
 
