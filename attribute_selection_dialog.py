@@ -23,7 +23,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
-from PyQt4.QtGui import QDialog
+from PyQt4.QtGui import QDialog, QDialogButtonBox
 from ui.ui_attribute_selection import Ui_AttributeSelctionDialog
 from utils import tr
 from shared import NUMERIC_FIELD_TYPES, TEXTUAL_FIELD_TYPES
@@ -40,6 +40,8 @@ class AttributeSelectionDialog(QDialog):
         # Set up the user interface from Designer.
         self.ui = Ui_AttributeSelctionDialog()
         self.ui.setupUi(self)
+        self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
+        self.set_ok_button()
 
         # if the loss layer does not contain an attribute specifying the ids of
         # zones, the user must not be forced to select such attribute, so we
@@ -87,3 +89,10 @@ class AttributeSelectionDialog(QDialog):
             if default_idx != -1:  # -1 for not found
                 self.ui.zone_id_attr_name_zone_cbox.setCurrentIndex(
                     default_idx)
+
+        self.ui.loss_attrs_multisel.selection_changed.connect(
+            self.set_ok_button)
+
+    def set_ok_button(self):
+        self.ok_button.setEnabled(
+            self.ui.loss_attrs_multisel.selected_widget.count() > 0)
