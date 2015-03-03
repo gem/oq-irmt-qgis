@@ -17,6 +17,7 @@
 
     // const is not supported by all the browsers, so we are using var instead
     var CIRCLE_SCALE = 30;
+    var MAX_STROKE_SIZE = 4;
     var MIN_CIRCLE_SIZE = 0.001;
 
     // For checking if a string is blank or contains only white-space
@@ -684,7 +685,9 @@
                         return "RoyalBlue";
                     }
                 })
-                .style("stroke-width", 4)
+                .style("stroke-width", function(d) {
+                    return d.weight ? Math.min(Math.abs(d.weight) * CIRCLE_SCALE / 2, MAX_STROKE_SIZE): 4;
+                })
                 .style("fill", function(d) {
                     // return d.source ? d.source.linkColor: d.linkColor;
                     if (d.weight < 0) {
