@@ -205,7 +205,7 @@ def calculate_svi(iface, current_layer, project_definition):
         return svi_attr_id, discarded_feats_ids
 
     except TypeError as e:
-        current_layer.dataProvider().deleteAttributes([svi_attr_id])
+        ProcessLayer(current_layer).delete_attributes([svi_attr_id])
         msg = 'Could not calculate SVI due to data problems: %s' % e
         iface.messageBar().pushMessage(tr('Error'), tr(msg),
                                        level=QgsMessageBar.CRITICAL)
@@ -321,7 +321,7 @@ def calculate_ri(iface, current_layer, project_definition):
         return ri_attr_id, discarded_feats_ids
 
     except TypeError as e:
-        current_layer.dataProvider().deleteAttributes([ri_attr_id])
+        ProcessLayer(current_layer).delete_attributes([ri_attr_id])
         msg = 'Could not calculate the Risk Index due to data problems: %s' % e
         iface.messageBar().pushMessage(tr('Error'), tr(msg),
                                        level=QgsMessageBar.CRITICAL)
@@ -420,8 +420,7 @@ def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
         return iri_attr_id, discarded_feats_ids
 
     except TypeError as e:
-        current_layer.dataProvider().deleteAttributes(
-            [iri_attr_id])
+        ProcessLayer(current_layer).delete_attributes([iri_attr_id])
         msg = 'Could not calculate IRI due to data problems: %s' % e
 
         iface.messageBar().pushMessage(tr('Error'), tr(msg),
