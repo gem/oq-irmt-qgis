@@ -126,8 +126,7 @@ def calculate_zonal_stats(loss_layer,
                 # the zonal layer an additional field and copy into that the
                 # unique id of each feature
                 proposed_attr_name = 'ZONE_ID'
-                # attr = QgsField(proposed_attr_name, QVariant.LongLong)
-                new_attr = QgsField(proposed_attr_name, QVariant.String)
+                new_attr = QgsField(proposed_attr_name, QVariant.Int)
                 attr_dict = \
                     ProcessLayer(zonal_layer).add_attributes([new_attr])
                 # we get a dict, from which we find the actual attribute name
@@ -140,7 +139,7 @@ def calculate_zonal_stats(loss_layer,
                         zone_id_in_zones_attr_name)
                     for feat in zonal_layer.getFeatures():
                         zonal_layer.changeAttributeValue(
-                            feat.id(), unique_id_idx, str(feat.id()))
+                            feat.id(), unique_id_idx, feat.id())
             # if SAGA is not installed, the check will return a error msg
             err_msg = None
             if saga_was_imported:
