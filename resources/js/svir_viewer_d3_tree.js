@@ -648,7 +648,7 @@
                     }
                 })
                 .attr("id", function(d) {return "operator-label-" + d.level;})
-                .attr("x", function(d) { return d.weight * CIRCLE_SCALE + 15; })
+                .attr("x", function(d) { return Math.abs(d.weight) * CIRCLE_SCALE + 15; })
                 .on("click", function(d) {
                     pdName = d.children[0].name;
                     pdData = data;
