@@ -127,6 +127,7 @@ def calculate_zonal_stats(loss_layer,
                 # unique id of each feature
                 proposed_attr_name = 'ZONE_ID'
                 new_attr = QgsField(proposed_attr_name, QVariant.Int)
+                new_attr.setTypeName(INT_FIELD_TYPE_NAME)
                 attr_dict = \
                     ProcessLayer(zonal_layer).add_attributes([new_attr])
                 # we get a dict, from which we find the actual attribute name
@@ -369,11 +370,12 @@ def calculate_vector_stats_using_geometries(
     # add to it the new attribute that will contain the zone id
     # and to do that we need to know the type of the zone id field
     zonal_layer_fields = zonal_layer.dataProvider().fields()
-    zone_id_field_variant = [
-        field.type() for field in zonal_layer_fields
+    zone_id_field_variant, zone_id_field_type_name = [
+        (field.type(), field.typeName()) for field in zonal_layer_fields
         if field.name() == zone_id_in_zones_attr_name][0]
     zone_id_field = QgsField(
         zone_id_in_zones_attr_name, zone_id_field_variant)
+    zone_id_field.setTypeName(zone_id_field_type_name)
     assigned_attr_names_dict = \
         ProcessLayer(loss_layer_plus_zones).add_attributes(
             [zone_id_field])
