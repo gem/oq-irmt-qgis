@@ -1421,9 +1421,11 @@ class Svir:
         # convert bytes to MB
         file_size_mb = file_size_mb / 1024 / 1024
 
-        dlg = UploadSettingsDialog(file_size_mb)
+        dlg = UploadSettingsDialog(file_size_mb, self.iface)
         if dlg.exec_():
             project_definition['title'] = dlg.ui.title_le.text()
+            zone_label_field = dlg.ui.zone_label_field_cbx.currentText()
+            project_definition['zone_label_field'] = zone_label_field
 
             license_name = dlg.ui.license_cbx.currentText()
             license_idx = dlg.ui.license_cbx.currentIndex()
