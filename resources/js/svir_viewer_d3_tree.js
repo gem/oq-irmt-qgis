@@ -672,6 +672,23 @@
                     updateButton(pdId);
                 });
 
+            nodeEnter.append("text")
+                .attr("id", (function(d) {return 'node-weight-' + d.name.replace(' ', '-'); }))
+                .attr("x", function(d) { return "-1em"; })
+                .attr("dy", function(d) {
+                    if (typeof d.parent != "undefined" && d.x > d.parent.x){
+                        return -(Math.abs(d.weight) * CIRCLE_SCALE + 5);
+                    } else {
+                        return Math.abs(d.weight) * CIRCLE_SCALE + 12;
+                    }})
+                .text(function(d) {
+                    if (d.parent === undefined) {
+                        return "";
+                    }
+                    return (d.weight * 100).toFixed(1) + '%';
+                });
+
+
             // Transition nodes to their new position.
             var nodeUpdate = updated_nodes.transition()
                 .duration(duration)
