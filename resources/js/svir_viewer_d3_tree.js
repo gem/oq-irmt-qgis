@@ -174,6 +174,7 @@
             var max_dec_level = 0;
 
             var nodes_str = JSON.stringify(root, function(key, value) {
+                // NOTE: The following 'if' looks bad. We need the parent for many things
                 //avoid circularity in JSON by removing the parent key
                 if (key == "parent") {
                     return undefined;
@@ -694,6 +695,9 @@
                 })
                 .style("fill", function(d) {
                     // return d.source ? d.source.linkColor: d.linkColor;
+                    if (d.parent !== undefined && d.parent.operator.indexOf("ignore weights") > -1) {
+                        return "Gold";
+                    }
                     if (d.weight < 0) {
                         return "RoyalBlue";
                     } else {
