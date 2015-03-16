@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_settings.ui'
 #
-# Created: Mon Mar 16 14:59:29 2015
+# Created: Mon Mar 16 15:05:25 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -80,11 +80,11 @@ class Ui_SettingsDialog(object):
 
     def retranslateUi(self, SettingsDialog):
         SettingsDialog.setWindowTitle(_translate("SettingsDialog", "OpenQuake Platform settings", None))
-        self.groupBox.setTitle(_translate("SettingsDialog", "Openquake platform connection settings", None))
+        self.groupBox.setTitle(_translate("SettingsDialog", "OpenQuake Platform connection settings", None))
         self.label_3.setText(_translate("SettingsDialog", "Host", None))
         self.label.setText(_translate("SettingsDialog", "User", None))
         self.label_2.setText(_translate("SettingsDialog", "Password", None))
-        self.registration_link_lbl.setText(_translate("SettingsDialog", "TextLabel", None))
+        self.registration_link_lbl.setText(_translate("SettingsDialog", "Link to the OQ-Platform registration", None))
         self.groupBox_2.setTitle(_translate("SettingsDialog", "SVIR settings", None))
         self.developermodeCheck.setText(_translate("SettingsDialog", "Developer mode (requires restart)", None))
 

@@ -17,7 +17,7 @@
    <item>
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
-      <string>Openquake platform connection settings</string>
+      <string>OpenQuake Platform connection settings</string>
      </property>
      <layout class="QFormLayout" name="formLayout">
       <item row="2" column="0">
@@ -60,7 +60,7 @@
    <item>
     <widget class="QLabel" name="registration_link_lbl">
      <property name="text">
-      <string>TextLabel</string>
+      <string>Link to the OQ-Platform registration</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>
