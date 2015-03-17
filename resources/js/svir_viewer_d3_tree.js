@@ -650,20 +650,51 @@
                     if (d.children){
                         var operator = d.operator? d.operator : DEFAULT_OPERATOR;
                         d.operator = operator;
+                        if (operator.indexOf('ignore weights') != -1) {
+                            parts = operator.split('(');
+                            operator = parts[0];
+                        }
                         return operator;
                     }
                 })
                 .attr("id", function(d) {return "operator-label-" + d.level;})
                 .attr("x", function(d) { return Math.abs(d.weight) * CIRCLE_SCALE + 15; })
+                .on("click", function(d) {
+                    pdName = d.children[0].name;
+                    pdData = data;
+                    pdLevel = d.children[0].level;
+                    pdParent = d.name;
+                    pdParentField = d.field;
+                    pdTempSpinnerIds = [];
+                    pdTempIds = [];
+                    pdOperator = d.operator;
+                    pdId = d.id;
+                    $('#projectDefWeightDialog').empty();
+                    updated_nodes = d.children[0];
+                    findTreeBranchInfo(pdData, [pdName], [pdLevel], pdParentField, updated_nodes);
+                    operatorSelect(pdOperator);
+                    updateButton(pdId);
+                });
+
+            // Write (ignore weights) in a new line, if present
+            nodeEnter.append("text")
+                .text(function(d) {
+                    if (d.children){
+                        var ignoreWeightsStr = '';
+                        if (d.operator.indexOf('ignore weights') != -1) {
+                            parts = d.operator.split('(');
+                            ignoreWeightsStr = '(' + parts[1];
+                        }
+                        return ignoreWeightsStr;
+                    }
+                })
+                .attr("id", function(d) {return "ignore-weights-label" + d.level;})
+                .attr("x", function(d) { return Math.abs(d.weight) * CIRCLE_SCALE + 15; })
+                .attr("transform", "translate(0, 12)")
                 .style("fill", function(d) {
                     if (d.operator !== undefined) {
                         // Check for operators that ignore weights and style accordingly
-                        var color;
-                        if (d.operator.indexOf('ignore weights') != -1) {
-                            color = '#660000';
-                        } else {
-                            color = 'black';
-                        }
+                        var color = '#660000';
                         return color;
                     }
                 })
