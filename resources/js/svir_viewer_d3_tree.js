@@ -655,6 +655,18 @@
                 })
                 .attr("id", function(d) {return "operator-label-" + d.level;})
                 .attr("x", function(d) { return Math.abs(d.weight) * CIRCLE_SCALE + 15; })
+                .style("fill", function(d) {
+                    if (d.operator !== undefined) {
+                        // Check for operators that ignore weights and style accordingly
+                        var color;
+                        if (d.operator.indexOf('ignore weights') != -1) {
+                            color = '#660000';
+                        } else {
+                            color = 'black';
+                        }
+                        return color;
+                    }
+                })
                 .on("click", function(d) {
                     pdName = d.children[0].name;
                     pdData = data;
