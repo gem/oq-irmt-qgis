@@ -725,6 +725,14 @@
                         return "";
                     }
                     return (d.weight * 100).toFixed(1) + '%';
+                    })
+                .style("fill", function(d) {
+                    if (typeof d.parent == 'undefined') { return; }
+                    if (typeof d.parent.operator == 'undefined') { return; }
+                    if (d.parent.operator.indexOf('ignore weights') != -1) {
+                        var color = '#660000';
+                        return color;
+                    }
                 });
 
             // Transition nodes to their new position.
