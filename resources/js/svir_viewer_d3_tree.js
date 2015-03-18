@@ -340,6 +340,23 @@
             updateD3Tree(node);
         }
 
+        function openWeightingDialog(node) {
+            pdName = node.children[0].name;
+            pdData = data;
+            pdLevel = node.children[0].level;
+            pdParent = node.name;
+            pdParentField = node.field;
+            pdTempSpinnerIds = [];
+            pdTempIds = [];
+            pdOperator = node.operator;
+            pdId = node.id;
+            $('#projectDefWeightDialog').empty();
+            updated_nodes = node.children[0];
+            findTreeBranchInfo(pdData, [pdName], [pdLevel], pdParentField, updated_nodes);
+            operatorSelect(pdOperator);
+            updateButton(pdId);
+        }
+
         var svg = d3.select("#projectDefDialog").append("svg")
             .attr("width", width + margin.right + margin.left)
             .attr("height", height + margin.top + margin.bottom)
@@ -659,22 +676,7 @@
                 })
                 .attr("id", function(d) {return "operator-label-" + d.level;})
                 .attr("x", function(d) { return Math.abs(d.weight) * CIRCLE_SCALE + 15; })
-                .on("click", function(d) {
-                    pdName = d.children[0].name;
-                    pdData = data;
-                    pdLevel = d.children[0].level;
-                    pdParent = d.name;
-                    pdParentField = d.field;
-                    pdTempSpinnerIds = [];
-                    pdTempIds = [];
-                    pdOperator = d.operator;
-                    pdId = d.id;
-                    $('#projectDefWeightDialog').empty();
-                    updated_nodes = d.children[0];
-                    findTreeBranchInfo(pdData, [pdName], [pdLevel], pdParentField, updated_nodes);
-                    operatorSelect(pdOperator);
-                    updateButton(pdId);
-                });
+                .on("click", function(d) { openWeightingDialog(d); });
 
             // Write (ignore weights) in a new line, if present
             nodeEnter.append("text")
@@ -698,22 +700,7 @@
                         return color;
                     }
                 })
-                .on("click", function(d) {
-                    pdName = d.children[0].name;
-                    pdData = data;
-                    pdLevel = d.children[0].level;
-                    pdParent = d.name;
-                    pdParentField = d.field;
-                    pdTempSpinnerIds = [];
-                    pdTempIds = [];
-                    pdOperator = d.operator;
-                    pdId = d.id;
-                    $('#projectDefWeightDialog').empty();
-                    updated_nodes = d.children[0];
-                    findTreeBranchInfo(pdData, [pdName], [pdLevel], pdParentField, updated_nodes);
-                    operatorSelect(pdOperator);
-                    updateButton(pdId);
-                });
+                .on("click", function(d) { openWeightingDialog(d); });
 
             nodeEnter.append("text")
                 .attr("id", (function(d) {return 'node-weight-' + d.name.replace(' ', '-'); }))
