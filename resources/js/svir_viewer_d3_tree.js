@@ -87,7 +87,7 @@
         function createSpinner(id, weight, name, field) {
             pdTempSpinnerIds.push("spinner-"+id);
             $('#projectDefWeightDialog').dialog("open");
-            if (field === undefined) {
+            if (typeof field == 'undefined') {
                 $('#projectDefWeightDialog').append(
                     '<p><label for="spinner'+id+'">'+name+': </label><input id="spinner-'+id+'" name="spinner" value="'+weight+'"></p>');
             } else {
@@ -177,7 +177,7 @@
                 // NOTE: The following 'if' looks bad. We need the parent for many things
                 //avoid circularity in JSON by removing the parent key
                 if (key == "parent") {
-                    return undefined;
+                    return 'undefined';
                   }
                   return value;
                 });
@@ -199,7 +199,7 @@
         }
 
         function getRootNode(node){
-            if (node.parent === undefined) {
+            if (typeof node.parent == 'undefined') {
                 return node;
             } else {
                 return getRootNode(node.parent);
@@ -208,11 +208,11 @@
 
         function listTakenFields(node) {
             var takenFields = [];
-            if (typeof node.field !== "undefined") {
+            if (typeof node.field !== 'undefined') {
                 takenFields.push(node.field);
             }
             // Recursive search inside the children of the node
-            if (typeof node.children !== "undefined"){
+            if (typeof node.children !== 'undefined'){
                 for (var i = 0; i < node.children.length; i++){
                     var takenInChild = listTakenFields(node.children[i]);
                     takenFields.push.apply(takenFields, takenInChild);
@@ -382,7 +382,7 @@
                 .attr("class", function(d){return node_type_to_class(d.type);})
                 .on("mouseover", function(d) {
                     var info;
-                    if (d.field !== undefined) {
+                    if (typeof d.field !== 'undefined') {
                         info = d.field;
                         tooltipdiv .transition()
                             .duration(500)
@@ -418,7 +418,7 @@
                             for (var i = 0; i < clicked_node.children.length; i++) {
                                 var child = clicked_node.children[i];
                                 var grandchildren = child.children;
-                                if (typeof(grandchildren) !== 'undefined') {
+                                if (typeof grandchildren !== 'undefined') {
                                     while(grandchildren.length > 0) {
                                         grandchildren.pop();
                                     }
@@ -436,7 +436,7 @@
                                 return false;
                             }
                             children = clicked_node.children;
-                            if (typeof(children) !== 'undefined') {
+                            if (typeof children !== 'undefined') {
                                 while (children.length > 0) {
                                     children.pop();
                                 }
@@ -501,7 +501,7 @@
                             case node_types_dict.SV_INDICATOR:
                                 //alert("You clicked a node with type " + clicked_node.type + ". You can't add new nodes there");
                                 return false;
-                            case undefined:
+                            case 'undefined':
                                 //alert("You clicked a node with type " + clicked_node.type + ". You can't add new nodes there");
                                 return false;
                             default:
@@ -509,7 +509,7 @@
                                 return false;
                         }
 
-                        if (undefined === clicked_node.children) {
+                        if (typeof clicked_node.children == 'undefined') {
                             clicked_node.children = [];
                             clicked_node.operator = DEFAULT_OPERATOR;
                         }
@@ -692,7 +692,7 @@
                 .attr("x", function(d) { return Math.abs(d.weight) * CIRCLE_SCALE + 15; })
                 .attr("transform", "translate(0, 12)")
                 .style("fill", function(d) {
-                    if (d.operator !== undefined) {
+                    if (typeof d.operator != 'undefined') {
                         // Check for operators that ignore weights and style accordingly
                         var color = '#660000';
                         return color;
@@ -719,13 +719,13 @@
                 .attr("id", (function(d) {return 'node-weight-' + d.name.replace(' ', '-'); }))
                 .attr("x", function(d) { return "-1em"; })
                 .attr("dy", function(d) {
-                    if (typeof d.parent != "undefined" && d.x > d.parent.x){
+                    if (typeof d.parent != 'undefined' && d.x > d.parent.x){
                         return -(Math.abs(d.weight) * CIRCLE_SCALE + 5);
                     } else {
                         return Math.abs(d.weight) * CIRCLE_SCALE + 12;
                     }})
                 .text(function(d) {
-                    if (d.parent === undefined) {
+                    if (typeof d.parent == 'undefined') {
                         return "";
                     }
                     return (d.weight * 100).toFixed(1) + '%';
@@ -750,12 +750,14 @@
                         return "RoyalBlue";
                     }
                 })
+                // Scale the stroke width, otherwise the stroke is too thick for very small nodes
                 .style("stroke-width", function(d) {
                     return d.weight ? Math.min(Math.abs(d.weight) * CIRCLE_SCALE / 2, MAX_STROKE_SIZE): 4;
                 })
                 .style("fill", function(d) {
                     // return d.source ? d.source.linkColor: d.linkColor;
-                    if (d.parent !== undefined && d.parent.operator.indexOf("ignore weights") > -1) {
+                    // Set a Gold fill color in case the weight is ignored
+                    if (typeof d.parent != 'undefined' && d.parent.operator.indexOf("ignore weights") > -1) {
                         return "Gold";
                     }
                     if (d.weight < 0) {
@@ -811,7 +813,7 @@
                 d.x0 = d.x;
                 d.y0 = d.y;
             });
-            if (typeof pdData !== 'undefined'){
+            if (typeof pdData != 'undefined'){
                 qt_page.json_updated(pdData);
             }
         }
