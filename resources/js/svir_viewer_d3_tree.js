@@ -617,6 +617,7 @@
                     }
                 });
 
+            // Render the name of the node (e.g. the indicator's name)
             nodeEnter.append("text")
                 .attr("class", (function(d) { return "level-" + d.level; }))
                 .attr("id", (function(d) { return 'indicator-label-' + d.name.replace(' ', '-'); }))
@@ -626,13 +627,14 @@
                     // NOTE are x and y swapped?
                     // set te text above or below the node depending on the
                     // parent position
-                    if (typeof d.parent != "undefined" && d.x > d.parent.x){
+                    if (typeof d.parent != 'undefined' && d.x > d.parent.x){
                         return "2em";
                     }
                     return "-1em";
                 })
                 .attr("text-anchor", function(d) { return "end"; })
                 .text(function(d) {
+                    // Render a minus before the name of a variable which weight is negative
                     if (d.weight < 0) {
                         return "- " + d.name;
                     } else {
@@ -662,12 +664,16 @@
                     }
                 });
 
+            // Render the operator's name, without the optional '(ignore weights)' part
             nodeEnter.append("text")
                 .text(function(d) {
                     if (d.children){
                         var operator = d.operator? d.operator : DEFAULT_OPERATOR;
                         d.operator = operator;
                         if (operator.indexOf('ignore weights') != -1) {
+                            // Example:
+                            // from "Simple sum (ignore weights)"
+                            // we render just "Simple sum"
                             parts = operator.split('(');
                             operator = parts[0];
                         }
@@ -678,7 +684,7 @@
                 .attr("x", function(d) { return Math.abs(d.weight) * CIRCLE_SCALE + 15; })
                 .on("click", function(d) { openWeightingDialog(d); });
 
-            // Write (ignore weights) in a new line, if present
+            // Render '(ignore weights)' in a new line, if present
             nodeEnter.append("text")
                 .text(function(d) {
                     if (d.children){
@@ -692,6 +698,8 @@
                 })
                 .attr("id", function(d) {return "ignore-weights-label" + d.level;})
                 .attr("x", function(d) { return Math.abs(d.weight) * CIRCLE_SCALE + 15; })
+                // Translate the text vertically (newline)
+                // NOTE: D3 doesn't allow using <br> or \n, so I had to implement the newline like this
                 .attr("transform", "translate(0, 12)")
                 .style("fill", function(d) {
                     if (typeof d.operator != 'undefined') {
@@ -702,6 +710,7 @@
                 })
                 .on("click", function(d) { openWeightingDialog(d); });
 
+            // Render the weight next to the node, as a percentage
             nodeEnter.append("text")
                 .attr("id", (function(d) {return 'node-weight-' + d.name.replace(' ', '-'); }))
                 .attr("x", function(d) { return "-1em"; })
@@ -718,12 +727,12 @@
                     return (d.weight * 100).toFixed(1) + '%';
                 });
 
-
             // Transition nodes to their new position.
             var nodeUpdate = updated_nodes.transition()
                 .duration(duration)
                 .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
 
+            // Style the stroke and fill of the node's circle, depending on the weight and operator
             nodeUpdate.select("circle")
                 .attr("r", function (d) {
                     // d.weight is expected to be between 0 and 1
