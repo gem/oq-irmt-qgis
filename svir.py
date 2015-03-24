@@ -251,7 +251,7 @@ class Svir:
         # it returns a tuple, with the returned value and a boolean indicating
         # if such property is available
         resp = QgsProject.instance().readEntry('svir', 'project_definitions')
-        if resp[1] is True:
+        if resp[1] and resp[0]:
             self.project_definitions = json.loads(resp[0])
         else:
             self.project_definitions = {}
