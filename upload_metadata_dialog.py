@@ -24,6 +24,8 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+# import xml.etree.ElementTree as ET
+from lxml import etree
 
 from PyQt4.QtCore import (Qt,
                           QUrl,
@@ -32,17 +34,20 @@ from PyQt4.QtCore import (Qt,
 from PyQt4.QtGui import (QDialog, QSizePolicy, QDialogButtonBox)
 from PyQt4.QtNetwork import QNetworkCookieJar, QNetworkCookie
 from PyQt4.QtWebKit import QWebSettings
+# from PyQt4.QtXml import QDomDocument
 
 from qgis.gui import QgsMessageBar
 from third_party.requests.sessions import Session
 from third_party.requests.utils import dict_from_cookiejar
+from sldadapter import getGsCompatibleSld
 
 from ui.ui_upload_metadata import Ui_UploadMetadataDialog
 
 from utils import (get_credentials,
                    platform_login,
-                   upload_shp,
+                   upload_shp, upload_style,
                    create_progress_message_bar, clear_progress_message_bar)
+from shared import DEBUG
 
 
 class UploadMetadataDialog(QDialog):
@@ -97,6 +102,39 @@ class UploadMetadataDialog(QDialog):
 
     def upload(self):
         self._login_to_platform()
+
+        # FIXME: Move inside thread
+        style_file = self.file_stem + '.sld'
+        unformatted_sld = getGsCompatibleSld(self.iface.activeLayer())
+        with open('/tmp/string_from_getGsCompatibleSld.sld', 'w') as f:
+            f.write(unformatted_sld)
+        # root = ET.fromstring(unformatted_sld)
+        # tree = ET.ElementTree(root)
+        root = etree.fromstring(unformatted_sld)
+        tree = etree.ElementTree(root)
+        tree.write(style_file, pretty_print=True)
+        # sld = ET.tostring(root, pretty_print=True)
+        # tree.write(style_file)
+        # style_dom = QDomDocument()
+        # FIXME: Move it just before uploading, when everything else is done
+        # self.iface.activeLayer().exportSldStyle(
+        #     style_dom, "Unable to export the layer's SLD style")
+        # with open(style_file, "w") as f:
+        #     f.write(style_dom.toString())
+        # if DEBUG:
+        #     print 'style_file:', style_file
+        # with open(style_file, "w") as f:
+            # f.write(sld)
+        if DEBUG:
+            print 'style_file:', style_file
+            import os
+            os.system('tidy -xml -i %s' % style_file)
+        # FIXME: remove the return
+        # return
+        # TODO
+        # upload_style(
+        #     self.hostname, self.session, self.file_stem, self.username)
+
         # adding by emitting signal in different thread
         self.uploadThread = UploaderThread(
             self.hostname, self.session, self.file_stem, self.username)
@@ -159,6 +197,7 @@ class UploaderThread(QThread):
         self.session = session
         self.file_stem = file_stem
         self.username = username
+
         QThread.__init__(self)
 
     def run(self):
