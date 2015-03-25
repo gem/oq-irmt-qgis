@@ -241,26 +241,6 @@ def platform_login(host, username, password, session):
         raise SvNetworkError(error_message)
 
 
-def upload_style(host, session, file_stem, username):
-    # FIXME: Set a reasonable name for the style
-    # data = '<style><name>%s</name><filename>%s.sld</filename></style>' % (
-    #     file_stem + '-style', file_stem)
-    data = (
-        '<style><name>mystyle</name><filename>mystyle.sld</filename></style>')
-    headers = {'content-type': 'text/xml'}
-    r = session.post(
-        host + '/geoserver/rest/styles', data=data, headers=headers)
-    response = json.loads(r.text)
-    try:
-        return host + response['url'], True
-        print 'New style created in geoserver:', response
-    except KeyError:
-        if 'errors' in response:
-            return response['errors'], False
-        else:
-            return "The server did not provide error messages", False
-
-
 def upload_shp(host, session, file_stem, username):
     files = {'layer_title': file_stem,
              'base_file': ('%s.shp' % file_stem,

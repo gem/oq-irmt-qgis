@@ -24,9 +24,6 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-# import xml.etree.ElementTree as ET
-from lxml import etree
-
 from PyQt4.QtCore import (Qt,
                           QUrl,
                           QSettings, QThread, pyqtSignal)
@@ -45,7 +42,7 @@ from ui.ui_upload_metadata import Ui_UploadMetadataDialog
 
 from utils import (get_credentials,
                    platform_login,
-                   upload_shp, upload_style,
+                   upload_shp,
                    create_progress_message_bar, clear_progress_message_bar)
 from shared import DEBUG
 
@@ -103,47 +100,46 @@ class UploadMetadataDialog(QDialog):
     def upload(self):
         self._login_to_platform()
 
-        # FIXME: Move inside thread
-        style_file = self.file_stem + '.sld'
-        unformatted_sld = getGsCompatibleSld(self.iface.activeLayer())
-        with open('/tmp/string_from_getGsCompatibleSld.sld', 'w') as f:
-            f.write(unformatted_sld)
-        # root = ET.fromstring(unformatted_sld)
-        # tree = ET.ElementTree(root)
-        root = etree.fromstring(unformatted_sld)
-        tree = etree.ElementTree(root)
-        tree.write(style_file, pretty_print=True)
-        # sld = ET.tostring(root, pretty_print=True)
-        # tree.write(style_file)
-        # style_dom = QDomDocument()
-        # FIXME: Move it just before uploading, when everything else is done
-        # self.iface.activeLayer().exportSldStyle(
-        #     style_dom, "Unable to export the layer's SLD style")
-        # with open(style_file, "w") as f:
-        #     f.write(style_dom.toString())
-        # if DEBUG:
-        #     print 'style_file:', style_file
-        # with open(style_file, "w") as f:
-            # f.write(sld)
-        if DEBUG:
-            print 'style_file:', style_file
-            import os
-            os.system('tidy -xml -i %s' % style_file)
-        # FIXME: remove the return
-        # return
-        # TODO
-        # upload_style(
-        #     self.hostname, self.session, self.file_stem, self.username)
-
         # adding by emitting signal in different thread
         self.uploadThread = UploaderThread(
             self.hostname, self.session, self.file_stem, self.username)
         self.uploadThread.upload_done.connect(self.upload_done)
         self.uploadThread.start()
 
+    def _update_layer_style(self):
+        sld = getGsCompatibleSld(self.iface.activeLayer())
+        if DEBUG:
+            import os
+            filename = '/tmp/sld.sld'
+            with open(filename, 'w') as f:
+                f.write(sld)
+            os.system('tidy -xml -i %s' % filename)
+        headers = {'content-type': 'application/vnd.ogc.sld+xml'}
+        # file_stem contains also the path, which needs to be removed
+        # (split by '/' and get the filename after the last slash)
+        # Since the style name is set by default substituting '-' with '_',
+        # tp get the right style we need to do the same substitution
+        style_name = self.file_stem.split('/')[-1].replace('-', '_')
+        r = self.session.put(
+            self.hostname + '/gs/rest/styles/%s.xml' % style_name,
+            data=sld, headers=headers)
+        # FIXME: check the response and provide a good error message if needed
+        print r
+        # import pdb; pdb.set_trace()
+        # response = json.loads(r.text)
+        # try:
+        #     return self.hostname + response['url'], True
+        #     print 'Style applied to the layer:', response
+        # except KeyError:
+        #     if 'errors' in response:
+        #         return response['errors'], False
+        #     else:
+        #         return "The server did not provide error messages", False
+
     def upload_done(self, layer_url, success):
         # In case success == 'False', layer_url contains the error message
         if success == 'True':
+            self._update_layer_style()
             self.message_bar_item.setText('Loading page...')
             self.web_view.load(QUrl(layer_url))
             self.layer_url = layer_url
