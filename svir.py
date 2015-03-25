@@ -250,9 +250,10 @@ class Svir:
         # get project_definitions from the project's properties
         # it returns a tuple, with the returned value and a boolean indicating
         # if such property is available
-        resp = QgsProject.instance().readEntry('svir', 'project_definitions')
-        if resp[1] and resp[0]:
-            self.project_definitions = json.loads(resp[0])
+        project_definitions_str, is_available = \
+            QgsProject.instance().readEntry('svir', 'project_definitions')
+        if is_available and project_definitions_str:
+            self.project_definitions = json.loads(project_definitions_str)
         else:
             self.project_definitions = {}
         if DEBUG:
