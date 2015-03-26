@@ -398,7 +398,7 @@ def symbolLayer_to_sld(symbolLayer, document, element, props):
         strokeElem = document.createElement('sld:Stroke')
         symbolizerElem.appendChild(strokeElem)
         # TODO: Add dash style and other parameters
-        line_to_sld(document, element, symbolLayer.borderStyle(),
+        line_to_sld(document, strokeElem, symbolLayer.borderStyle(),
                     symbolLayer.borderColor(), symbolLayer.borderWidth(),
                     symbolLayer.penJoinStyle())
     # Displacement

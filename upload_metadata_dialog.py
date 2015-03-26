@@ -130,7 +130,8 @@ class UploadMetadataDialog(QDialog):
         if not resp.ok:
             error_msg = (
                 'Error while styling the uploaded layer: ' + resp.reason)
-            self.message_bar.pushMessage('Style error', error_msg, level=QgsMessageBar.CRITICAL)
+            self.message_bar.pushMessage(
+                'Style error', error_msg, level=QgsMessageBar.CRITICAL)
 
     def upload_done(self, layer_url, success):
         # In case success == 'False', layer_url contains the error message
