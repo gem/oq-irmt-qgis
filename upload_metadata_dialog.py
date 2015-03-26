@@ -107,7 +107,12 @@ class UploadMetadataDialog(QDialog):
         self.uploadThread.start()
 
     def _update_layer_style(self):
-        sld = getGsCompatibleSld(self.iface.activeLayer())
+        # file_stem contains also the path, which needs to be removed
+        # (split by '/' and get the filename after the last slash)
+        # Since the style name is set by default substituting '-' with '_',
+        # tp get the right style we need to do the same substitution
+        style_name = self.file_stem.split('/')[-1].replace('-', '_')
+        sld = getGsCompatibleSld(self.iface.activeLayer(), style_name)
         if DEBUG:
             import os
             filename = '/tmp/sld.sld'
@@ -115,26 +120,17 @@ class UploadMetadataDialog(QDialog):
                 f.write(sld)
             os.system('tidy -xml -i %s' % filename)
         headers = {'content-type': 'application/vnd.ogc.sld+xml'}
-        # file_stem contains also the path, which needs to be removed
-        # (split by '/' and get the filename after the last slash)
-        # Since the style name is set by default substituting '-' with '_',
-        # tp get the right style we need to do the same substitution
-        style_name = self.file_stem.split('/')[-1].replace('-', '_')
-        r = self.session.put(
-            self.hostname + '/gs/rest/styles/%s.xml' % style_name,
+        resp = self.session.put(
+            # self.hostname + '/gs/rest/styles/%s.xml' % style_name,
+            self.hostname + '/gs/rest/styles/%s' % style_name,
             data=sld, headers=headers)
         # FIXME: check the response and provide a good error message if needed
-        print r
-        # import pdb; pdb.set_trace()
-        # response = json.loads(r.text)
-        # try:
-        #     return self.hostname + response['url'], True
-        #     print 'Style applied to the layer:', response
-        # except KeyError:
-        #     if 'errors' in response:
-        #         return response['errors'], False
-        #     else:
-        #         return "The server did not provide error messages", False
+        if DEBUG:
+            print 'Style upload response:', resp
+        if not resp.ok:
+            error_msg = (
+                'Error while styling the uploaded layer: ' + resp.reason)
+            self.message_bar.pushMessage('Style error', error_msg, level=QgsMessageBar.CRITICAL)
 
     def upload_done(self, layer_url, success):
         # In case success == 'False', layer_url contains the error message

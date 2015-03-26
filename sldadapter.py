@@ -1,4 +1,4 @@
-# Taken from https://github.com/boundlessgeo/suite-qgis-plugin/blob/master/src/opengeo/qgis/sldadapter.py
+# Partly taken from https://github.com/boundlessgeo/suite-qgis-plugin/blob/master/src/opengeo/qgis/sldadapter.py
 '''
 methods to convert the SLD produced by GeoServer (1.0) to the SLD produced by QGIS (1.1), and also the other way round.
 This is a quick and dirty solution until both programs support the same specification
@@ -93,8 +93,8 @@ def getLabelingAsSld(layer):
 def adaptGsToQgs(sld):
     return sld
 
-def getGsCompatibleSld(layer):
-    sld = getStyleAsSld(layer)
+def getGsCompatibleSld(layer, style_name):
+    sld = getStyleAsSld(layer, style_name)
     if sld is not None:
         return adaptQgsToGs(sld, layer)
     else:
@@ -205,7 +205,7 @@ def getGsCompatibleSld(layer):
  #  387   }
  #  388 }
 
-def getStyleAsSld(layer):
+def getStyleAsSld(layer, styleName):
     if layer.type() == layer.VectorLayer:
         document = QDomDocument()
         header = document.createProcessingInstruction("xml", "version=\"1.0\"")
@@ -225,12 +225,17 @@ def getStyleAsSld(layer):
         nameNode = document.createElement("sld:Name")
         featureTypeStyleElem = document.createElement("sld:FeatureTypeStyle")
         namedLayerNode.appendChild(nameNode)
-        nameNode.appendChild(document.createTextNode(layer.name()))
+        # nameNode.appendChild(document.createTextNode(layer.name()))
+        nameNode.appendChild(document.createTextNode(styleName))
         userNode = document.createElement("sld:UserStyle")
         namedLayerNode.appendChild(userNode)
-        ### nameElem = document.createElement("sld:Name")
-        ### # nameElem.appendChild(document.createTextNode(styleName))
-        ### nameElem.appendChild(document.createTextNode("FIXME"))
+
+        nameElem = document.createElement("sld:Name")
+        nameElem.appendChild(document.createTextNode(styleName))
+        userNode.appendChild(nameElem)
+        titleElem = document.createElement("sld:Title")
+        titleElem.appendChild(document.createTextNode(styleName))
+        userNode.appendChild(titleElem)
 
  # void QgsRuleBasedRendererV2::Rule::toSld( QDomDocument& doc, QDomElement &element, QgsStringMap props )
         rule = layer.rendererV2().rootRule()
@@ -388,12 +393,14 @@ def symbolLayer_to_sld(symbolLayer, document, element, props):
         fillElem = document.createElement('sld:Fill')
         symbolizerElem.appendChild(fillElem)
         fill_to_sld(symbolLayer, document, fillElem, symbolLayer.brushStyle(), symbolLayer.color())
-    if symbolLayer.borderStyle() == Qt.Qt.NoPen:
+    if symbolLayer.borderStyle() != Qt.Qt.NoPen:
         # stroke
         strokeElem = document.createElement('sld:Stroke')
         symbolizerElem.appendChild(strokeElem)
-        # TODO
-        line_to_sld(symbolLayer, document, strokeElem, symbolLayer.borderStyle(), symbolLayer.borderColor(), symbolLayer.borderWidth, symbolLayer.penJoinStyle())
+        # TODO: Add dash style and other parameters
+        line_to_sld(document, element, symbolLayer.borderStyle(),
+                    symbolLayer.borderColor(), symbolLayer.borderWidth(),
+                    symbolLayer.penJoinStyle())
     # Displacement
     create_displacement_element(document, element, symbolLayer.offset())
 
@@ -409,9 +416,19 @@ def create_displacement_element(document, element, offset):
     displacemenElem.appendChild(dispXElem)
     displacemenElem.appendChild(dispYElem)
 
-def line_to_sld(symbolLayer, document, strokeElem, borderStyle, borderColor, borderWidth, penJoinStyle):
-    # TODO
-    pass
+def line_to_sld(document, element, penStyle, color, width, penJoinStyle):
+    # TODO: manage line types
+    if color.isValid():
+        element.appendChild(createCssParameterElement(
+            document, "stroke", color.name()))
+        if color.alpha() < 255:
+            element.appendChild(createCssParameterElement(
+                document, "stroke-opacity", encodeSldAlpha(color.alpha())))
+    if width > 0:
+        element.appendChild(createCssParameterElement(
+            document, "stroke-width", str(width)))
+    # TODO: manage other style elements
+
  # 1763 void QgsSymbolLayerV2Utils::lineToSld( QDomDocument &doc, QDomElement &element,
  # 1764                                        Qt::PenStyle penStyle, QColor color, double width,
  # 1765                                        const Qt::PenJoinStyle *penJoinStyle, const Qt::PenCapStyle *penCapStyle,
