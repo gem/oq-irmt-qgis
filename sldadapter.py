@@ -225,7 +225,6 @@ def getStyleAsSld(layer, styleName):
         nameNode = document.createElement("sld:Name")
         featureTypeStyleElem = document.createElement("sld:FeatureTypeStyle")
         namedLayerNode.appendChild(nameNode)
-        # nameNode.appendChild(document.createTextNode(layer.name()))
         nameNode.appendChild(document.createTextNode(styleName))
         userNode = document.createElement("sld:UserStyle")
         namedLayerNode.appendChild(userNode)
@@ -237,13 +236,9 @@ def getStyleAsSld(layer, styleName):
         titleElem.appendChild(document.createTextNode(styleName))
         userNode.appendChild(titleElem)
 
- # void QgsRuleBasedRendererV2::Rule::toSld( QDomDocument& doc, QDomElement &element, QgsStringMap props )
         rule = layer.rendererV2().rootRule()
-        props = {}  # QgsStringMap()
+        props = {}  # QgsStringMap() can be see as a python dictionary
         rule_to_sld(rule, document, featureTypeStyleElem, props)
-# RULE RENDER (rule, doc, element)
-        # errorMsg = ""
-        # layer.writeSld(namedLayerNode, document, errorMsg)
         userNode.appendChild(featureTypeStyleElem)
 
         return unicode(document.toString(4))
@@ -380,7 +375,8 @@ def encodeSldUom(outputUnit, scaleFactor):
         return (scaleFactor, 'http://www.opengeospatial.org/se/units/pixel')
 
 def symbolLayer_to_sld(symbolLayer, document, element, props):
-    if symbolLayer.brushStyle() == Qt.Qt.NoBrush and symbolLayer.borderStyle() == Qt.Qt.NoPen:
+    if (symbolLayer.brushStyle() == Qt.Qt.NoBrush
+            and symbolLayer.borderStyle() == Qt.Qt.NoPen):
         return
     symbolizerElem = document.createElement('sld:PolygonSymbolizer')
     if 'uom' in props:
@@ -392,17 +388,21 @@ def symbolLayer_to_sld(symbolLayer, document, element, props):
         # fill
         fillElem = document.createElement('sld:Fill')
         symbolizerElem.appendChild(fillElem)
-        fill_to_sld(symbolLayer, document, fillElem, symbolLayer.brushStyle(), symbolLayer.color())
+        fill_to_sld(symbolLayer, document, fillElem,
+                    symbolLayer.brushStyle(), symbolLayer.color())
     if symbolLayer.borderStyle() != Qt.Qt.NoPen:
         # stroke
         strokeElem = document.createElement('sld:Stroke')
         symbolizerElem.appendChild(strokeElem)
         # TODO: Add dash style and other parameters
-        line_to_sld(document, strokeElem, symbolLayer.borderStyle(),
+        line_to_sld(document, strokeElem, symbolLayer.dxfPenStyle(),
                     symbolLayer.borderColor(), symbolLayer.borderWidth(),
-                    symbolLayer.penJoinStyle())
+                    symbolLayer.penJoinStyle(),  # penCapStyle,
+                    symbolLayer.dxfCustomDashPattern()[0],
+                    symbolLayer.offset())
     # Displacement
     create_displacement_element(document, element, symbolLayer.offset())
+
 
 def create_displacement_element(document, element, offset):
     if not offset:
@@ -413,21 +413,67 @@ def create_displacement_element(document, element, offset):
     dispXElem.appendChild(document.createTextNode(str(offset.x())))
     dispYElem = document.createElement('sld:DisplacementY')
     dispYElem.appendChild(document.createTextNode(str(offset.y())))
-    displacemenElem.appendChild(dispXElem)
-    displacemenElem.appendChild(dispYElem)
+    displacementElem.appendChild(dispXElem)
+    displacementElem.appendChild(dispYElem)
 
-def line_to_sld(document, element, penStyle, color, width, penJoinStyle):
-    # TODO: manage line types
+
+def line_to_sld(document, element, penStyle, color, width,
+                penJoinStyle, customDashPattern, dashOffset):
+    dashPattern = []
+    if penStyle == Qt.Qt.CustomDashLine and not customDashPattern:
+        element.appendChild(document.createComment(
+            "WARNING: Custom dash pattern required but not provided."
+            " Using default dash pattern."))
+        penStyle = Qt.Qt.DashLine
+    if penStyle == Qt.Qt.NoPen:
+        return
+    if penStyle != Qt.Qt.SolidLine:
+        if penStyle == Qt.Qt.DashLine:
+            dashPattern.append(4.0)
+            dashPattern.append(2.0)
+        elif penStyle == Qt.Qt.DotLine:
+            dashPattern.append(1.0)
+            dashPattern.append(2.0)
+        elif penStyle == Qt.Qt.DashDotLine:
+            dashPattern.append(4.0)
+            dashPattern.append(2.0)
+            dashPattern.append(1.0)
+            dashPattern.append(2.0)
+        elif penStyle == Qt.Qt.DashDotDotLine:
+            dashPattern.append(4.0)
+            dashPattern.append(2.0)
+            dashPattern.append(1.0)
+            dashPattern.append(2.0)
+            dashPattern.append(1.0)
+            dashPattern.append(2.0)
+        else:
+            element.appendChild(document.createComment(
+                'BrushStyle %s not supported yet' % penStyle))
     if color.isValid():
         element.appendChild(createCssParameterElement(
             document, "stroke", color.name()))
         if color.alpha() < 255:
             element.appendChild(createCssParameterElement(
-                document, "stroke-opacity", encodeSldAlpha(color.alpha())))
+                document, "stroke-opacity",
+                QgsSymbolLayerV2Utils.encodeSldAlpha(color.alpha())))
     if width > 0:
         element.appendChild(createCssParameterElement(
             document, "stroke-width", str(width)))
-    # TODO: manage other style elements
+    if penJoinStyle:
+        element.appendChild(createCssParameterElement(
+            document, "stroke-linejoin",
+            QgsSymbolLayerV2Utils.encodeSldLineJoinStyle(penJoinStyle)))
+    # TODO: manage penCapStyle
+    if len(dashPattern) > 0:
+        element.appendChild(createCssParameterElement(
+            document, "stroke-dasharray",
+            QgsSymbolLayerV2Utils.encodeSldRealVector(dashPattern)))  # " ".join(dashPattern)))
+        # FIXME: what's dashOffset? qgsDoubleNear expects a singular number,
+        # not a tuple
+        # if qgsDoubleNear(dashOffset, 0.0):
+        # if abs(dashOffset - 0.0) > 1e-8:
+        #     element.appendChild(createCssParameterElement(
+        #         document, "stroke-dashoffset", str(dashOffset)))
 
  # 1763 void QgsSymbolLayerV2Utils::lineToSld( QDomDocument &doc, QDomElement &element,
  # 1764                                        Qt::PenStyle penStyle, QColor color, double width,
@@ -505,6 +551,21 @@ def line_to_sld(document, element, penStyle, color, width, penJoinStyle):
  # 1836   }
  # 1837 }
 
+  # 448 QString QgsSymbolLayerV2Utils::encodeSldRealVector( const QVector<qreal>& v )
+  # 449 {
+  # 450   QString vectorString;
+  # 451   QVector<qreal>::const_iterator it = v.constBegin();
+  # 452   for ( ; it != v.constEnd(); ++it )
+  # 453   {
+  # 454     if ( it != v.constBegin() )
+  # 455     {
+  # 456       vectorString.append( " " );
+  # 457     }
+  # 458     vectorString.append( QString::number( *it ) );
+  # 459   }
+  # 460   return vectorString;
+  # 461 }
+
 def createCssParameterElement(document, name, value):
     nodeElem = document.createElement('sld:CssParameter')
     nodeElem.setAttribute('name', name)
@@ -528,7 +589,9 @@ def fill_to_sld(symbolLayer, document, element, brushStyle, color):
             cssElement = createCssParameterElement(document, 'fill', color.name())
             element.appendChild(cssElement)
             if color.alpha() < 255:
-                cssElement = createCssParameterElement(document, 'fill-opacity', QgsSymbolLayerV2Utils.encodeSldAlpha(color.alpha()))
+                cssElement = createCssParameterElement(
+                    document, 'fill-opacity',
+                    QgsSymbolLayerV2Utils.encodeSldAlpha(color.alpha()))
                 element.appendChild()
         return
     elif brushStyle in (Qt.Qt.CrossPattern,
@@ -557,7 +620,9 @@ def fill_to_sld(symbolLayer, document, element, brushStyle, color):
     fillColor = color if patternName.startswith('brush://') else QColor()
     borderColor = color if not patternName.startswith('brush://') else QColor()
     # Use WellKnownName tag to handle QT brush styles.
-    QgsSymbolLayerV2Utils.wellKnownMarkerToSld( document, graphicElem, patternName, fillColor, borderColor, Qt.Qt.SolidLine, -1, -1 );
+    QgsSymbolLayerV2Utils.wellKnownMarkerToSld(
+        document, graphicElem, patternName, fillColor,
+        borderColor, Qt.Qt.SolidLine, -1, -1)
 
 
 def createGeometryElement(document, element, geomFunc):
