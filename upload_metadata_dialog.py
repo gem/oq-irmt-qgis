@@ -123,16 +123,17 @@ class UploadMetadataDialog(QDialog):
 
         if DEBUG:
             import os
-            filename = '/tmp/sld.sld'
-            with open(filename, 'w') as f:
+            import tempfile
+            fd, fname = tempfile.mkstemp(suffix=".sld")
+            os.close(fd)
+            with open(fname, 'w') as f:
                 f.write(sld)
-            os.system('tidy -xml -i %s' % filename)
+            os.system('tidy -xml -i %s' % fname)
         headers = {'content-type': 'application/vnd.ogc.sld+xml'}
         resp = self.session.put(
             # self.hostname + '/gs/rest/styles/%s.xml' % style_name,
             self.hostname + '/gs/rest/styles/%s' % style_name,
             data=sld, headers=headers)
-        # FIXME: check the response and provide a good error message if needed
         if DEBUG:
             print 'Style upload response:', resp
         if not resp.ok:
