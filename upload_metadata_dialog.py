@@ -112,7 +112,15 @@ class UploadMetadataDialog(QDialog):
         # Since the style name is set by default substituting '-' with '_',
         # tp get the right style we need to do the same substitution
         style_name = self.file_stem.split('/')[-1].replace('-', '_')
-        sld = getGsCompatibleSld(self.iface.activeLayer(), style_name)
+        try:
+            sld = getGsCompatibleSld(self.iface.activeLayer(), style_name)
+        except Exception as e:
+            error_msg = (
+                'Unable to export the styled layer descriptor: ' + e.message)
+            self.message_bar.pushMessage(
+                'Style error', error_msg, level=QgsMessageBar.CRITICAL)
+            return
+
         if DEBUG:
             import os
             filename = '/tmp/sld.sld'
