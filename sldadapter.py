@@ -36,37 +36,43 @@ from PyQt4.QtXml import *
 from qgis.core import *
 
 SIZE_FACTOR = 4
-RASTER_SLD_TEMPLATE = ('<?xml version="1.0"?>'
-                    '<sld:StyledLayerDescriptor xmlns="http://www.opengis.net/sld" xmlns:sld="http://www.opengis.net/sld" xmlns:ogc="http://www.opengis.net/ogc" xmlns:gml="http://www.opengis.''net/gml" version="1.0.0">'
-                    '<sld:NamedLayer>'
-                    '<sld:Name>STYLE_NAME</sld:Name>'
-                    '<sld:UserStyle>'
-                    '<sld:Name>STYLE_NAME</sld:Name>'
-                    '<sld:Title/>'
-                    '<sld:FeatureTypeStyle>'
-                    #'<sld:Name>name</sld:Name>'
-                    '<sld:Rule>'
-                    #'<sld:Name>Single symbol</sld:Name>'
-                    '<RasterSymbolizer>'
-                    'SYMBOLIZER_CODE'
-                    '</RasterSymbolizer>'
-                    '</sld:Rule>'
-                    '</sld:FeatureTypeStyle>'
-                    '</sld:UserStyle>'
-                    '</sld:NamedLayer>'
-                    '</sld:StyledLayerDescriptor>')
+RASTER_SLD_TEMPLATE = (
+    '<?xml version="1.0"?>'
+    '<sld:StyledLayerDescriptor xmlns="http://www.opengis.net/sld"'
+    ' xmlns:sld="http://www.opengis.net/sld"'
+    ' xmlns:ogc="http://www.opengis.net/ogc"'
+    ' xmlns:gml="http://www.opengis.''net/gml" version="1.0.0">'
+    '<sld:NamedLayer>'
+    '<sld:Name>STYLE_NAME</sld:Name>'
+    '<sld:UserStyle>'
+    '<sld:Name>STYLE_NAME</sld:Name>'
+    '<sld:Title/>'
+    '<sld:FeatureTypeStyle>'
+    #'<sld:Name>name</sld:Name>'
+    '<sld:Rule>'
+    #'<sld:Name>Single symbol</sld:Name>'
+    '<RasterSymbolizer>'
+    'SYMBOLIZER_CODE'
+    '</RasterSymbolizer>'
+    '</sld:Rule>'
+    '</sld:FeatureTypeStyle>'
+    '</sld:UserStyle>'
+    '</sld:NamedLayer>'
+    '</sld:StyledLayerDescriptor>')
+
 
 def adaptQgsToGs(sld, layer):
-    sld = sld.replace("se:SvgParameter","CssParameter")
-    sld = sld.replace("1.1.","1.0.")
-    sld = sld.replace("\t","")
-    sld = sld.replace("\n","")
-    sld = re.sub("\s\s+" , " ", sld)
-    sld = re.sub("<ogc:Filter>[ ]*?<ogc:Filter>","<ogc:Filter>", sld)
-    sld = re.sub("</ogc:Filter>[ ]*?</ogc:Filter>","</ogc:Filter>", sld)
+    sld = sld.replace("se:SvgParameter", "CssParameter")
+    sld = sld.replace("1.1.", "1.0.")
+    sld = sld.replace("\t", "")
+    sld = sld.replace("\n", "")
+    sld = re.sub("\s\s+", " ", sld)
+    sld = re.sub("<ogc:Filter>[ ]*?<ogc:Filter>", "<ogc:Filter>", sld)
+    sld = re.sub("</ogc:Filter>[ ]*?</ogc:Filter>", "</ogc:Filter>", sld)
     if layer.hasScaleBasedVisibility():
         s = ("<MinScaleDenominator>" + str(layer.minimumScale()) +
-        "</MinScaleDenominator><MaxScaleDenominator>" + str(layer.maximumScale()) + "</MaxScaleDenominator>")
+             "</MinScaleDenominator><MaxScaleDenominator>" +
+             str(layer.maximumScale()) + "</MaxScaleDenominator>")
         sld = sld.replace("<se:Rule>", "<se:Rule>" + s)
     labeling = layer.customProperty("labeling/enabled")
     labeling = str(labeling).lower() == str(True).lower()
@@ -76,23 +82,31 @@ def adaptQgsToGs(sld, layer):
     sld = sld.replace("se:", "sld:")
     sizes = re.findall("<sld:Size>.*?</sld:Size>", sld)
     for size in sizes:
-        newsize="<sld:Size>%f</sld:Size>" % (float(size[10:-11]) * SIZE_FACTOR)
+        newsize = "<sld:Size>%f</sld:Size>" % (
+            float(size[10:-11]) * SIZE_FACTOR)
         sld = sld.replace(size, newsize)
     return sld
+
 
 def getLabelingAsSld(layer):
     try:
         s = "<TextSymbolizer><Label>"
-        s += "<ogc:PropertyName>" + layer.customProperty("labeling/fieldName") + "</ogc:PropertyName>"
+        s += ("<ogc:PropertyName>" + layer.customProperty("labeling/fieldName")
+              + "</ogc:PropertyName>")
         s += "</Label>"
         r = int(layer.customProperty("labeling/textColorR"))
         g = int(layer.customProperty("labeling/textColorG"))
         b = int(layer.customProperty("labeling/textColorB"))
         rgb = '#%02x%02x%02x' % (r, g, b)
-        s += '<Fill><CssParameter name="fill">' + rgb + "</CssParameter></Fill>"
+        s += ('<Fill><CssParameter name="fill">' + rgb
+              + "</CssParameter></Fill>")
         s += "<Font>"
-        s += '<CssParameter name="font-family">' + layer.customProperty("labeling/fontFamily") +'</CssParameter>'
-        s += '<CssParameter name="font-size">' + str(layer.customProperty("labeling/fontSize")) +'</CssParameter>'
+        s += ('<CssParameter name="font-family">'
+              + layer.customProperty("labeling/fontFamily")
+              + '</CssParameter>')
+        s += ('<CssParameter name="font-size">'
+              + str(layer.customProperty("labeling/fontSize"))
+              + '</CssParameter>')
         if bool(layer.customProperty("labeling/fontItalic")):
             s += '<CssParameter name="font-style">italic</CssParameter>'
         if bool(layer.customProperty("labeling/fontBold")):
@@ -100,23 +114,32 @@ def getLabelingAsSld(layer):
         s += "</Font>"
         s += "<LabelPlacement>"
         s += ("<PointPlacement>"
-                "<AnchorPoint>"
-                "<AnchorPointX>0.5</AnchorPointX>"
-                "<AnchorPointY>0.5</AnchorPointY>"
-                "</AnchorPoint>")
+              "<AnchorPoint>"
+              "<AnchorPointX>0.5</AnchorPointX>"
+              "<AnchorPointY>0.5</AnchorPointY>"
+              "</AnchorPoint>")
         s += "<Displacement>"
-        s += "<DisplacementX>" + str(layer.customProperty("labeling/xOffset")) + "0</DisplacementX>"
-        s += "<DisplacementY>" + str(layer.customProperty("labeling/yOffset")) + "0</DisplacementY>"
+        s += ("<DisplacementX>"
+              + str(layer.customProperty("labeling/xOffset"))
+              + "0</DisplacementX>")
+        s += ("<DisplacementY>"
+              + str(layer.customProperty("labeling/yOffset"))
+              + "0</DisplacementY>")
         s += "</Displacement>"
-        s += "<Rotation>" + str(layer.customProperty("labeling/angleOffset")) + "</Rotation>"
+        s += ("<Rotation>"
+              + str(layer.customProperty("labeling/angleOffset"))
+              + "</Rotation>")
         s += "</PointPlacement></LabelPlacement>"
-        s +="</TextSymbolizer>"
+        s += "</TextSymbolizer>"
         return s
     except:
         return ""
 
+
 def adaptGsToQgs(sld):
+    # TODO
     return sld
+
 
 def getGsCompatibleSld(layer, style_name):
     sld = getStyleAsSld(layer, style_name)
@@ -127,15 +150,15 @@ def getGsCompatibleSld(layer, style_name):
 # QDomElement QgsFeatureRendererV2::writeSld( QDomDocument& doc, const QString& styleName ) const
 #   492 {
 #   493   QDomElement userStyleElem = doc.createElement( "UserStyle" );
-#   494 
+#   494
 #   495   QDomElement nameElem = doc.createElement( "se:Name" );
 #   496   nameElem.appendChild( doc.createTextNode( styleName ) );
 #   497   userStyleElem.appendChild( nameElem );
-#   498 
+#   498
 #   499   QDomElement featureTypeStyleElem = doc.createElement( "se:FeatureTypeStyle" );
 #   500   toSld( doc, featureTypeStyleElem );
 #   501   userStyleElem.appendChild( featureTypeStyleElem );
-#   502 
+#   502
 #   503   return userStyleElem;
 #   504 }
 
@@ -144,14 +167,14 @@ def getGsCompatibleSld(layer, style_name):
  #  301   // do not convert this rule if there are no symbols
  #  302   if ( symbols().isEmpty() )
  #  303     return;
- #  304 
+ #  304
  #  305   if ( !mFilterExp.isEmpty() )
  #  306   {
  #  307     if ( !props.value( "filter", "" ).isEmpty() )
  #  308       props[ "filter" ] += " AND ";
  #  309     props[ "filter" ] += mFilterExp;
  #  310   }
- #  311 
+ #  311
  #  312   if ( mScaleMinDenom != 0 )
  #  313   {
  #  314     bool ok;
@@ -161,7 +184,7 @@ def getGsCompatibleSld(layer, style_name):
  #  318     else
  #  319       props[ "scaleMinDenom" ] = QString::number( qMax( parentScaleMinDenom, mScaleMinDenom ) );
  #  320   }
- #  321 
+ #  321
  #  322   if ( mScaleMaxDenom != 0 )
  #  323   {
  #  324     bool ok;
@@ -171,18 +194,18 @@ def getGsCompatibleSld(layer, style_name):
  #  328     else
  #  329       props[ "scaleMaxDenom" ] = QString::number( qMin( parentScaleMaxDenom, mScaleMaxDenom ) );
  #  330   }
- #  331 
+ #  331
  #  332   if ( mSymbol )
  #  333   {
  #  334     QDomElement ruleElem = doc.createElement( "se:Rule" );
  #  335     element.appendChild( ruleElem );
- #  336 
+ #  336
  #  337     //XXX: <se:Name> is the rule identifier, but our the Rule objects
  #  338     // have no properties could be used as identifier. Use the label.
  #  339     QDomElement nameElem = doc.createElement( "se:Name" );
  #  340     nameElem.appendChild( doc.createTextNode( mLabel ) );
  #  341     ruleElem.appendChild( nameElem );
- #  342 
+ #  342
  #  343     if ( !mLabel.isEmpty() || !mDescription.isEmpty() )
  #  344     {
  #  345       QDomElement descrElem = doc.createElement( "se:Description" );
@@ -200,29 +223,29 @@ def getGsCompatibleSld(layer, style_name):
  #  357       }
  #  358       ruleElem.appendChild( descrElem );
  #  359     }
- #  360 
+ #  360
  #  361     if ( !props.value( "filter", "" ).isEmpty() )
  #  362     {
  #  363       QgsSymbolLayerV2Utils::createFunctionElement( doc, ruleElem, props.value( "filter", "" ) );
  #  364     }
- #  365 
+ #  365
  #  366     if ( !props.value( "scaleMinDenom", "" ).isEmpty() )
  #  367     {
  #  368       QDomElement scaleMinDenomElem = doc.createElement( "se:MinScaleDenominator" );
  #  369       scaleMinDenomElem.appendChild( doc.createTextNode( props.value( "scaleMinDenom", "" ) ) );
  #  370       ruleElem.appendChild( scaleMinDenomElem );
  #  371     }
- #  372 
+ #  372
  #  373     if ( !props.value( "scaleMaxDenom", "" ).isEmpty() )
  #  374     {
  #  375       QDomElement scaleMaxDenomElem = doc.createElement( "se:MaxScaleDenominator" );
  #  376       scaleMaxDenomElem.appendChild( doc.createTextNode( props.value( "scaleMaxDenom", "" ) ) );
  #  377       ruleElem.appendChild( scaleMaxDenomElem );
  #  378     }
- #  379 
+ #  379
  #  380     mSymbol->toSld( doc, ruleElem, props );
  #  381   }
- #  382 
+ #  382
  #  383   // loop into childern rule list
  #  384   for ( RuleList::iterator it = mChildren.begin(); it != mChildren.end(); ++it )
  #  385   {
@@ -230,18 +253,21 @@ def getGsCompatibleSld(layer, style_name):
  #  387   }
  #  388 }
 
+
 def getStyleAsSld(layer, styleName):
     if layer.type() == layer.VectorLayer:
         document = QDomDocument()
         header = document.createProcessingInstruction("xml", "version=\"1.0\"")
         document.appendChild(header)
 
-        root = document.createElementNS("http://www.opengis.net/sld", "StyledLayerDescriptor")
+        root = document.createElementNS(
+            "http://www.opengis.net/sld", "StyledLayerDescriptor")
         root.setAttribute("version", "1.0.0")
         root.setAttribute("xmlns:ogc", "http://www.opengis.net/ogc")
         root.setAttribute("xmlns:sld", "http://www.opengis.net/sld")
-        # root.setAttribute( "xmlns:xlink", "http://www.w3.org/1999/xlink" )
-        # root.setAttribute( "xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance" )
+        # root.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink" )
+        # root.setAttribute(
+        #     "xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance" )
         document.appendChild(root)
 
         namedLayerNode = document.createElement("sld:NamedLayer")
@@ -271,24 +297,35 @@ def getStyleAsSld(layer, styleName):
         renderer = layer.renderer()
         if isinstance(renderer, QgsSingleBandGrayRenderer):
             symbolizerCode = "<Opacity>%d</Opacity>" % renderer.opacity()
-            symbolizerCode += ("<ChannelSelection><GrayChannel><SourceChannelName>"
-                                + str(renderer.grayBand()) + "</SourceChannelName></GrayChannel></ChannelSelection>")
-            sld =  RASTER_SLD_TEMPLATE.replace("SYMBOLIZER_CODE", symbolizerCode).replace("STYLE_NAME", layer.name())
+            symbolizerCode += (
+                "<ChannelSelection><GrayChannel><SourceChannelName>"
+                + str(renderer.grayBand())
+                + "</SourceChannelName></GrayChannel></ChannelSelection>")
+            sld = RASTER_SLD_TEMPLATE.replace(
+                "SYMBOLIZER_CODE", symbolizerCode).replace("STYLE_NAME",
+                                                           layer.name())
             return sld
         elif isinstance(renderer, QgsSingleBandPseudoColorRenderer):
             symbolizerCode = "<ColorMap>"
             band = renderer.usesBands()[0]
-            items = renderer.shader().rasterShaderFunction().colorRampItemList()
+            items = \
+                renderer.shader().rasterShaderFunction().colorRampItemList()
             for item in items:
                 color = item.color
-                rgb = '#%02x%02x%02x' % (color.red(), color.green(), color.blue())
-                symbolizerCode += '<ColorMapEntry color="' + rgb + '" quantity="' + unicode(item.value) + '" />'
+                rgb = '#%02x%02x%02x' % (
+                    color.red(), color.green(), color.blue())
+                symbolizerCode += ('<ColorMapEntry color="' + rgb
+                                   + '" quantity="'
+                                   + unicode(item.value) + '" />')
             symbolizerCode += "</ColorMap>"
-            sld =  RASTER_SLD_TEMPLATE.replace("SYMBOLIZER_CODE", symbolizerCode).replace("STYLE_NAME", layer.name())
+            sld = RASTER_SLD_TEMPLATE.replace(
+                "SYMBOLIZER_CODE", symbolizerCode).replace("STYLE_NAME",
+                                                           layer.name())
             return sld
         else:
             #we use some default styles in case we have an unsupported renderer
-            sldpath = os.path.join(os.path.dirname(__file__), "..", "resources")
+            sldpath = os.path.join(
+                os.path.dirname(__file__), "..", "resources")
             if layer.bandCount() == 1:
                 sldfile = os.path.join(sldpath, "grayscale.sld")
             else:
@@ -298,6 +335,7 @@ def getStyleAsSld(layer, styleName):
             return sld
     else:
         return None
+
 
 def rule_to_sld(rule, document, element, props):
     if rule.symbols():
@@ -333,41 +371,44 @@ def rule_to_sld(rule, document, element, props):
                     min(parentScaleMaxDenom, scaleMaxDenom))
 
         if rule.symbol():
-            ruleNode = document.createElement( "sld:Rule" )
-            element.appendChild( ruleNode )
+            ruleNode = document.createElement("sld:Rule")
+            element.appendChild(ruleNode)
 #  337     //XXX: <se:Name> is the rule identifier, but our the Rule objects
 #  338     // have no properties could be used as identifier. Use the label.
-            nameNode = document.createElement( "sld:Name" )
+            nameNode = document.createElement("sld:Name")
             nameNode.appendChild(document.createTextNode(rule.label()))
-            ruleNode.appendChild( nameNode )
+            ruleNode.appendChild(nameNode)
             if rule.label() or rule.description():
                 # descrNode = document.createElement( "sld:Description" )
                 if rule.label():
-                    titleNode = document.createElement( "sld:Title" )
+                    titleNode = document.createElement("sld:Title")
                     titleNode.appendChild(document.createTextNode(rule.label()))
                     # descrNode.appendChild(titleNode)
                     ruleNode.appendChild(titleNode)
                 if rule.description():
-                    abstractNode = document.createElement( "sld:Abstract" )
+                    abstractNode = document.createElement("sld:Abstract")
                     abstractNode.appendChild(document.createTextNode(rule.description()))
                     # descrNode.appendChild(abstractNode)
                     ruleNode.appendChild(abstractNode)
                 # ruleNode.appendChild(descrNode)
             if 'filter' in props:
-                createFunctionElement(document, ruleNode, props.get('filter', ''))
+                createFunctionElement(
+                    document, ruleNode, props.get('filter', ''))
             if props.get('scaleMinDenom', ''):
-                sminNode = document.createElement( "sld:MinScaleDenominator" )
-                sminNode.appendChild(document.createTextNode(props['scaleMinDenom']))
+                sminNode = document.createElement("sld:MinScaleDenominator")
+                sminNode.appendChild(
+                    document.createTextNode(props['scaleMinDenom']))
                 descrNode.appendChild(sminNode)
             if props.get('scaleMaxDenom', ''):
-                smaxNode = document.createElement( "sld:MaxScaleDenominator" )
-                smaxNode.appendChild(document.createTextNode(props['scaleMaxDenom']))
+                smaxNode = document.createElement("sld:MaxScaleDenominator")
+                smaxNode.appendChild(
+                    document.createTextNode(props['scaleMaxDenom']))
                 descrNode.appendChild(smaxNode)
             symbolv2_to_sld(rule.symbol(), document, ruleNode, props)
-#  379 
+#  379
 #  380     mSymbol->toSld( doc, ruleElem, props );
 #  381   }
-#  382 
+#  382
         # loop into childern rule list
         for child in rule.children():
             rule_to_sld(child, document, element, props)
@@ -378,13 +419,16 @@ def rule_to_sld(rule, document, element, props):
 #  387   }
 #  388 }
 
+
 def symbolv2_to_sld(symbol, document, element, props):
     props['alpha'] = str(symbol.alpha())
     scaleFactor = 1.0
-    (scaleFactor, props['uom']) = encodeSldUom(symbol.outputUnit(), scaleFactor)
+    (scaleFactor, props['uom']) = encodeSldUom(symbol.outputUnit(),
+                                               scaleFactor)
     props['uomScale'] = str(scaleFactor) if scaleFactor != 1 else ''
     for symbolLayer in symbol.symbolLayers():
         symbolLayer_to_sld(symbolLayer, document, element, props)
+
 
 def encodeSldUom(outputUnit, scaleFactor):
     if outputUnit == QgsSymbolV2.MapUnit:
@@ -398,6 +442,7 @@ def encodeSldUom(outputUnit, scaleFactor):
             scaleFactor = 0.28  # from millimeters to pixels
         # http://www.opengeospatial.org/sld/units/pixel
         return (scaleFactor, 'http://www.opengeospatial.org/se/units/pixel')
+
 
 def symbolLayer_to_sld(symbolLayer, document, element, props):
     if (symbolLayer.brushStyle() == Qt.Qt.NoBrush
@@ -507,21 +552,21 @@ def line_to_sld(document, element, penStyle, color, width,
  # 1767 {
  # 1768   QVector<qreal> dashPattern;
  # 1769   const QVector<qreal> *pattern = &dashPattern;
- # 1770 
+ # 1770
  # 1771   if ( penStyle == Qt::CustomDashLine && !customDashPattern )
  # 1772   {
  # 1773     element.appendChild( doc.createComment( "WARNING: Custom dash pattern required but not provided. Using default dash pattern." ) );
  # 1774     penStyle = Qt::DashLine;
  # 1775   }
- # 1776 
+ # 1776
  # 1777   switch ( penStyle )
  # 1778   {
  # 1779     case Qt::NoPen:
  # 1780       return;
- # 1781 
+ # 1781
  # 1782     case Qt::SolidLine:
  # 1783       break;
- # 1784 
+ # 1784
  # 1785     case Qt::DashLine:
  # 1786       dashPattern.push_back( 4.0 );
  # 1787       dashPattern.push_back( 2.0 );
@@ -544,17 +589,17 @@ def line_to_sld(document, element, penStyle, color, width,
  # 1804       dashPattern.push_back( 1.0 );
  # 1805       dashPattern.push_back( 2.0 );
  # 1806       break;
- # 1807 
+ # 1807
  # 1808     case Qt::CustomDashLine:
  # 1809       Q_ASSERT( customDashPattern );
  # 1810       pattern = customDashPattern;
  # 1811       break;
- # 1812 
+ # 1812
  # 1813     default:
  # 1814       element.appendChild( doc.createComment( QString( "Qt::BrushStyle '%1'' not supported yet" ).arg( penStyle ) ) );
  # 1815       return;
  # 1816   }
- # 1817 
+ # 1817
  # 1818   if ( color.isValid() )
  # 1819   {
  # 1820     element.appendChild( createSvgParameterElement( doc, "stroke", color.name() ) );
@@ -567,7 +612,7 @@ def line_to_sld(document, element, penStyle, color, width,
  # 1827     element.appendChild( createSvgParameterElement( doc, "stroke-linejoin", encodeSldLineJoinStyle( *penJoinStyle ) ) );
  # 1828   if ( penCapStyle )
  # 1829     element.appendChild( createSvgParameterElement( doc, "stroke-linecap", encodeSldLineCapStyle( *penCapStyle ) ) );
- # 1830 
+ # 1830
  # 1831   if ( pattern->size() > 0 )
  # 1832   {
  # 1833     element.appendChild( createSvgParameterElement( doc, "stroke-dasharray", encodeSldRealVector( *pattern ) ) );
@@ -591,6 +636,7 @@ def line_to_sld(document, element, penStyle, color, width,
   # 460   return vectorString;
   # 461 }
 
+
 def createCssParameterElement(document, name, value):
     nodeElem = document.createElement('sld:CssParameter')
     nodeElem.setAttribute('name', name)
@@ -611,7 +657,9 @@ def fill_to_sld(symbolLayer, document, element, brushStyle, color):
         return
     elif brushStyle == Qt.Qt.SolidPattern:
         if color.isValid():
-            cssElement = createCssParameterElement(document, 'fill', color.name())
+            cssElement = createCssParameterElement(document,
+                                                   'fill',
+                                                   color.name())
             element.appendChild(cssElement)
             if color.alpha() < 255:
                 cssElement = createCssParameterElement(
@@ -660,10 +708,10 @@ def createGeometryElement(document, element, geomFunc):
 #  2388 {
 #  2389   if ( geomFunc.isEmpty() )
 #  2390     return;
-#  2391 
+#  2391
 #  2392   QDomElement geometryElem = doc.createElement( "Geometry" );
 #  2393   element.appendChild( geometryElem );
-#  2394 
+#  2394
 #  2395   /* About using a function withing the Geometry tag.
 #  2396    *
 #  2397    * The SLD specification <= 1.1 is vague:
@@ -686,9 +734,10 @@ def createGeometryElement(document, element, geomFunc):
 #  2414    * Anyway we will use a ogc:Function to handle geometry transformations
 #  2415    * like offset, centroid, ...
 #  2416    */
-#  2417 
+#  2417
 #  2418   createFunctionElement( doc, geometryElem, geomFunc );
 #  2419 }
+
 
 def createFunctionElement(document, element, function):
     expr = QgsExpression(function)
@@ -714,6 +763,7 @@ def createFunctionElement(document, element, function):
 #  2441     element.appendChild( filterElem );
 #  2442   return true;
 #  2443 }
+
 
 def getGeomTypeFromSld(sld):
     if "PointSymbolizer" in sld:
