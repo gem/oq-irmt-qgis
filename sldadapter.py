@@ -1,8 +1,33 @@
-# Partly taken from https://github.com/boundlessgeo/suite-qgis-plugin/blob/master/src/opengeo/qgis/sldadapter.py
-'''
-methods to convert the SLD produced by GeoServer (1.0) to the SLD produced by QGIS (1.1), and also the other way round.
-This is a quick and dirty solution until both programs support the same specification
-'''
+# -*- coding: utf-8 -*-
+"""
+/***************************************************************************
+ Svir
+                                 A QGIS plugin
+ OpenQuake Social Vulnerability and Integrated Risk
+                              -------------------
+        begin                : 2015-03-27
+        copyright            : (C) 2015 by GEM Foundation
+        email                : devops@openquake.org
+ ***************************************************************************/
+
+# OpenQuake is free software: you can redistribute it and/or modify it
+# under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# OpenQuake is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
+"""
+# Part of this code was taken and re-adapted from
+# https://github.com/boundlessgeo/suite-qgis-plugin/blob/master/src/opengeo/qgis/sldadapter.py
+# methods to convert the SLD produced by GeoServer (1.0) to the SLD produced
+# by QGIS (1.1), and also the other way round. This is a quick and dirty
+# solution until both programs support the same specification
 
 import re
 import os
