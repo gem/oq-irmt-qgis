@@ -251,7 +251,7 @@ class Svir:
         # it returns a tuple, with the returned value and a boolean indicating
         # if such property is available
         resp = QgsProject.instance().readEntry('svir', 'project_definitions')
-        if resp[1] is True:
+        if resp[1] and resp[0]:
             self.project_definitions = json.loads(resp[0])
         else:
             self.project_definitions = {}
@@ -813,9 +813,8 @@ class Svir:
 
         not_null_rule = root_rule.children()[0].clone()
         not_null_rule.setSymbol(QgsFillSymbolV2.createSimple(
-            {'style': 'solid',
-             'color': '255,255,255,255',
-             'style_border': 'solid'}))
+            {'style': 'no',
+             'style_border': 'no'}))
         not_null_rule.setFilterExpression('%s IS NOT NULL' % target_field)
         not_null_rule.setLabel('%s:' % target_field)
         root_rule.appendChild(not_null_rule)
@@ -823,7 +822,6 @@ class Svir:
         null_rule = root_rule.children()[0].clone()
         null_rule.setSymbol(QgsFillSymbolV2.createSimple(
             {'style': 'no',
-             'style_border': 'solid',
              'color_border': '255,255,0,255',
              'width_border': '0.5'}))
         null_rule.setFilterExpression('%s IS NULL' % target_field)
@@ -866,6 +864,12 @@ class Svir:
         self.current_layer.setRendererV2(rule_renderer)
         self.iface.mapCanvas().refresh()
         self.iface.legendInterface().refreshLayerSymbology(self.current_layer)
+        # Reset default symbol (otherwise if the user attempts to re-style the
+        # layer, they will need to explicitly set the border and fill)
+        root_rule.setSymbol(QgsFillSymbolV2.createSimple(
+            {'style': 'solid',
+             'style_border': 'solid'}))
+        self.current_layer.setRendererV2(rule_renderer)
 
     def show_settings(self):
         SettingsDialog(self.iface).exec_()

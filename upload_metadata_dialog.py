@@ -24,7 +24,6 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-
 from PyQt4.QtCore import (Qt,
                           QUrl,
                           QSettings, QThread, pyqtSignal)
@@ -32,10 +31,12 @@ from PyQt4.QtCore import (Qt,
 from PyQt4.QtGui import (QDialog, QSizePolicy, QDialogButtonBox)
 from PyQt4.QtNetwork import QNetworkCookieJar, QNetworkCookie
 from PyQt4.QtWebKit import QWebSettings
+# from PyQt4.QtXml import QDomDocument
 
 from qgis.gui import QgsMessageBar
 from third_party.requests.sessions import Session
 from third_party.requests.utils import dict_from_cookiejar
+from sldadapter import getGsCompatibleSld
 
 from ui.ui_upload_metadata import Ui_UploadMetadataDialog
 
@@ -43,6 +44,7 @@ from utils import (get_credentials,
                    platform_login,
                    upload_shp,
                    create_progress_message_bar, clear_progress_message_bar)
+from shared import DEBUG
 
 
 class UploadMetadataDialog(QDialog):
@@ -97,15 +99,53 @@ class UploadMetadataDialog(QDialog):
 
     def upload(self):
         self._login_to_platform()
+
         # adding by emitting signal in different thread
         self.uploadThread = UploaderThread(
             self.hostname, self.session, self.file_stem, self.username)
         self.uploadThread.upload_done.connect(self.upload_done)
         self.uploadThread.start()
 
+    def _update_layer_style(self):
+        # file_stem contains also the path, which needs to be removed
+        # (split by '/' and get the filename after the last slash)
+        # Since the style name is set by default substituting '-' with '_',
+        # tp get the right style we need to do the same substitution
+        style_name = self.file_stem.split('/')[-1].replace('-', '_')
+        try:
+            sld = getGsCompatibleSld(self.iface.activeLayer(), style_name)
+        except Exception as e:
+            error_msg = (
+                'Unable to export the styled layer descriptor: ' + e.message)
+            self.message_bar.pushMessage(
+                'Style error', error_msg, level=QgsMessageBar.CRITICAL)
+            return
+
+        if DEBUG:
+            import os
+            import tempfile
+            fd, fname = tempfile.mkstemp(suffix=".sld")
+            os.close(fd)
+            with open(fname, 'w') as f:
+                f.write(sld)
+            os.system('tidy -xml -i %s' % fname)
+        headers = {'content-type': 'application/vnd.ogc.sld+xml'}
+        resp = self.session.put(
+            # self.hostname + '/gs/rest/styles/%s.xml' % style_name,
+            self.hostname + '/gs/rest/styles/%s' % style_name,
+            data=sld, headers=headers)
+        if DEBUG:
+            print 'Style upload response:', resp
+        if not resp.ok:
+            error_msg = (
+                'Error while styling the uploaded layer: ' + resp.reason)
+            self.message_bar.pushMessage(
+                'Style error', error_msg, level=QgsMessageBar.CRITICAL)
+
     def upload_done(self, layer_url, success):
         # In case success == 'False', layer_url contains the error message
         if success == 'True':
+            self._update_layer_style()
             self.message_bar_item.setText('Loading page...')
             self.web_view.load(QUrl(layer_url))
             self.layer_url = layer_url
@@ -159,6 +199,7 @@ class UploaderThread(QThread):
         self.session = session
         self.file_stem = file_stem
         self.username = username
+
         QThread.__init__(self)
 
     def run(self):
