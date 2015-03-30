@@ -103,6 +103,7 @@ class TransformationDialog(QDialog):
                 self.ui.layer_cbx.currentIndex()]
         reload_attrib_cbx(self.ui.attrib_cbx,
                           self.selected_layer,
+                          False,
                           NUMERIC_FIELD_TYPES)
         if self.ui.attrib_cbx.count():
             self.ok_button.setEnabled(True)
