@@ -864,6 +864,12 @@ class Svir:
         self.current_layer.setRendererV2(rule_renderer)
         self.iface.mapCanvas().refresh()
         self.iface.legendInterface().refreshLayerSymbology(self.current_layer)
+        # Reset default symbol (otherwise if the user attempts to re-style the
+        # layer, they will need to explicitly set the border and fill)
+        root_rule.setSymbol(QgsFillSymbolV2.createSimple(
+            {'style': 'solid',
+             'style_border': 'solid'}))
+        self.current_layer.setRendererV2(rule_renderer)
 
     def show_settings(self):
         SettingsDialog(self.iface).exec_()
