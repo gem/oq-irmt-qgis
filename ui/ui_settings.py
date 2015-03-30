@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'ui/ui_settings.ui'
 #
-# Created: Thu Jul  3 14:48:23 2014
-#      by: PyQt4 UI code generator 4.9.1
+# Created: Mon Mar 16 15:05:25 2015
+#      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,7 +12,16 @@ from PyQt4 import QtCore, QtGui
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
-    _fromUtf8 = lambda s: s
+    def _fromUtf8(s):
+        return s
+
+try:
+    _encoding = QtGui.QApplication.UnicodeUTF8
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig, _encoding)
+except AttributeError:
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig)
 
 class Ui_SettingsDialog(object):
     def setupUi(self, SettingsDialog):
@@ -44,6 +53,12 @@ class Ui_SettingsDialog(object):
         self.passwordEdit.setObjectName(_fromUtf8("passwordEdit"))
         self.formLayout.setWidget(1, QtGui.QFormLayout.FieldRole, self.passwordEdit)
         self.verticalLayout.addWidget(self.groupBox)
+        self.registration_link_lbl = QtGui.QLabel(SettingsDialog)
+        self.registration_link_lbl.setAlignment(QtCore.Qt.AlignCenter)
+        self.registration_link_lbl.setOpenExternalLinks(True)
+        self.registration_link_lbl.setTextInteractionFlags(QtCore.Qt.TextBrowserInteraction)
+        self.registration_link_lbl.setObjectName(_fromUtf8("registration_link_lbl"))
+        self.verticalLayout.addWidget(self.registration_link_lbl)
         self.groupBox_2 = QtGui.QGroupBox(SettingsDialog)
         self.groupBox_2.setObjectName(_fromUtf8("groupBox_2"))
         self.verticalLayout_2 = QtGui.QVBoxLayout(self.groupBox_2)
@@ -64,11 +79,12 @@ class Ui_SettingsDialog(object):
         QtCore.QMetaObject.connectSlotsByName(SettingsDialog)
 
     def retranslateUi(self, SettingsDialog):
-        SettingsDialog.setWindowTitle(QtGui.QApplication.translate("SettingsDialog", "OpenQuake Platform settings", None, QtGui.QApplication.UnicodeUTF8))
-        self.groupBox.setTitle(QtGui.QApplication.translate("SettingsDialog", "Openquake platform connection settings", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_3.setText(QtGui.QApplication.translate("SettingsDialog", "Host", None, QtGui.QApplication.UnicodeUTF8))
-        self.label.setText(QtGui.QApplication.translate("SettingsDialog", "User", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_2.setText(QtGui.QApplication.translate("SettingsDialog", "Password", None, QtGui.QApplication.UnicodeUTF8))
-        self.groupBox_2.setTitle(QtGui.QApplication.translate("SettingsDialog", "SVIR settings", None, QtGui.QApplication.UnicodeUTF8))
-        self.developermodeCheck.setText(QtGui.QApplication.translate("SettingsDialog", "Developer mode (requires restart)", None, QtGui.QApplication.UnicodeUTF8))
+        SettingsDialog.setWindowTitle(_translate("SettingsDialog", "OpenQuake Platform settings", None))
+        self.groupBox.setTitle(_translate("SettingsDialog", "OpenQuake Platform connection settings", None))
+        self.label_3.setText(_translate("SettingsDialog", "Host", None))
+        self.label.setText(_translate("SettingsDialog", "User", None))
+        self.label_2.setText(_translate("SettingsDialog", "Password", None))
+        self.registration_link_lbl.setText(_translate("SettingsDialog", "Link to the OQ-Platform registration", None))
+        self.groupBox_2.setTitle(_translate("SettingsDialog", "SVIR settings", None))
+        self.developermodeCheck.setText(_translate("SettingsDialog", "Developer mode (requires restart)", None))
 
