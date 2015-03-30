@@ -30,6 +30,7 @@ from PyQt4.QtGui import (QDialog,
                          QDesktopServices)
 from ui.ui_upload_settings import Ui_UploadSettingsDialog
 from defaults import DEFAULTS
+from utils import reload_attrib_cbx
 
 LICENSES = (
     ('CC0', 'http://creativecommons.org/about/cc0'),
@@ -60,12 +61,12 @@ class UploadSettingsDialog(QDialog):
                     % upload_size)
         self.ui.head_msg_lbl.setText(head_msg)
         self.ui.title_le.setText(DEFAULTS['ISO19115_TITLE'])
-        zonal_layer_fields = list(iface.activeLayer().dataProvider().fields())
+
         # if no field is selected, whe should not allow uploading
         self.zone_label_field_is_specified = False
-        self.ui.zone_label_field_cbx.addItem(None)  # empty first item
-        self.ui.zone_label_field_cbx.addItems(
-            [field.name() for field in zonal_layer_fields])
+        reload_attrib_cbx(
+            self.ui.zone_label_field_cbx, iface.activeLayer(), True)
+
         for license, link in LICENSES:
             self.ui.license_cbx.addItem(license, link)
         self.ui.license_cbx.setCurrentIndex(
