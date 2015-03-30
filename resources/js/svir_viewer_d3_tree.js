@@ -732,6 +732,26 @@
                     if (d.parent.operator.indexOf('ignore weights') != -1) {
                         var color = '#660000';
                         return color;
+                    }})
+                .on("click", function(d) {
+                    pdField = d.field;
+                    pdName = d.name;
+                    pdData = data;
+                    pdWeight = d.weight;
+                    pdLevel = d.level;
+                    pdTempSpinnerIds = [];
+                    pdTempIds = [];
+                    $('#projectDefWeightDialog').empty();
+                    if (d.parent){
+                        findTreeBranchInfo(pdData, [pdName], [pdLevel], pdField, d);
+                        var pdParentOperator = d.parent.operator? d.parent.operator : DEFAULT_OPERATOR;
+                        d.parent.operator = pdParentOperator;
+                        operatorSelect(pdParentOperator);
+                        pdId = d.parent.id;
+                        updateButton(pdId);
+                    }
+                    else{
+                        //we clicked the root element
                     }
                 });
 
