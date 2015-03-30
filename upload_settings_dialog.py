@@ -63,7 +63,7 @@ class UploadSettingsDialog(QDialog):
         zonal_layer_fields = list(iface.activeLayer().dataProvider().fields())
         # if no field is selected, whe should not allow uploading
         self.zone_label_field_is_specified = False
-        self.ui.zone_label_field_cbx.addItem(None)
+        self.ui.zone_label_field_cbx.addItem(None)  # empty first item
         self.ui.zone_label_field_cbx.addItems(
             [field.name() for field in zonal_layer_fields])
         for license, link in LICENSES:
@@ -79,7 +79,7 @@ class UploadSettingsDialog(QDialog):
     @pyqtSlot(str)
     def on_zone_label_field_cbx_currentIndexChanged(self):
         zone_label_field = self.ui.zone_label_field_cbx.currentText()
-        self.zone_label_field_is_specified = zone_label_field != ''
+        self.zone_label_field_is_specified = (zone_label_field != '')
         self.set_ok_button()
 
     @pyqtSlot(int)
