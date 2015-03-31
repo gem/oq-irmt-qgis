@@ -25,6 +25,7 @@
 """
 from PyQt4 import QtGui, QtCore
 from ui.ui_settings import Ui_SettingsDialog
+from shared import PLATFORM_REGISTRATION_URL
 
 
 class SettingsDialog(QtGui.QDialog, Ui_SettingsDialog):
@@ -32,7 +33,12 @@ class SettingsDialog(QtGui.QDialog, Ui_SettingsDialog):
         QtGui.QDialog.__init__(self, parent)
         self.iface = iface
         self.parent = parent
-        self.setupUi(self)
+        # Set up the user interface from Designer.
+        self.ui = Ui_SettingsDialog()
+        self.ui.setupUi(self)
+        link_text = ('<a href="%s">Register to the OpenQuake Platform</a>'
+                     % PLATFORM_REGISTRATION_URL)
+        self.ui.registration_link_lbl.setText(link_text)
 
         self.restoreState()
 
@@ -54,11 +60,11 @@ class SettingsDialog(QtGui.QDialog, Ui_SettingsDialog):
         if not platform_hostname:
             platform_hostname = ''
 
-        self.usernameEdit.setText(platform_username)
-        self.passwordEdit.setText(platform_password)
-        self.hostnameEdit.setText(platform_hostname)
+        self.ui.usernameEdit.setText(platform_username)
+        self.ui.passwordEdit.setText(platform_password)
+        self.ui.hostnameEdit.setText(platform_hostname)
 
-        self.developermodeCheck.setChecked(
+        self.ui.developermodeCheck.setChecked(
             mySettings.value('svir/developer_mode', False, type=bool))
 
     def saveState(self):
@@ -67,13 +73,13 @@ class SettingsDialog(QtGui.QDialog, Ui_SettingsDialog):
         """
         mySettings = QtCore.QSettings()
         mySettings.setValue('svir/platform_hostname',
-                            self.hostnameEdit.text())
+                            self.ui.hostnameEdit.text())
         mySettings.setValue('svir/platform_username',
-                            self.usernameEdit.text())
+                            self.ui.usernameEdit.text())
         mySettings.setValue('svir/platform_password',
-                            self.passwordEdit.text())
+                            self.ui.passwordEdit.text())
         mySettings.setValue('svir/developer_mode',
-                            self.developermodeCheck.isChecked())
+                            self.ui.developermodeCheck.isChecked())
 
     def accept(self):
         """

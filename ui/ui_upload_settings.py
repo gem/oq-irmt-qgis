@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_upload_settings.ui'
 #
-# Created: Wed Dec 24 16:05:28 2014
+# Created: Fri Mar  6 11:24:15 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -41,6 +41,12 @@ class Ui_UploadSettingsDialog(object):
         self.title_le = QtGui.QLineEdit(UploadSettingsDialog)
         self.title_le.setObjectName(_fromUtf8("title_le"))
         self.formLayout.setWidget(0, QtGui.QFormLayout.FieldRole, self.title_le)
+        self.label = QtGui.QLabel(UploadSettingsDialog)
+        self.label.setObjectName(_fromUtf8("label"))
+        self.formLayout.setWidget(1, QtGui.QFormLayout.LabelRole, self.label)
+        self.zone_label_field_cbx = QtGui.QComboBox(UploadSettingsDialog)
+        self.zone_label_field_cbx.setObjectName(_fromUtf8("zone_label_field_cbx"))
+        self.formLayout.setWidget(1, QtGui.QFormLayout.FieldRole, self.zone_label_field_cbx)
         self.verticalLayout.addLayout(self.formLayout)
         self.gridLayout = QtGui.QGridLayout()
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
@@ -74,6 +80,7 @@ class Ui_UploadSettingsDialog(object):
         UploadSettingsDialog.setWindowTitle(_translate("UploadSettingsDialog", "Upload Settings", None))
         self.head_msg_lbl.setText(_translate("UploadSettingsDialog", "The active layer will be uploaded to the Openquake Platform", None))
         self.label_4.setText(_translate("UploadSettingsDialog", "Project title", None))
+        self.label.setText(_translate("UploadSettingsDialog", "Zone labels field", None))
         self.label_6.setText(_translate("UploadSettingsDialog", "License", None))
         self.license_info_btn.setText(_translate("UploadSettingsDialog", "Info", None))
         self.confirm_chk.setText(_translate("UploadSettingsDialog", "I confirm I have read the license conditions", None))

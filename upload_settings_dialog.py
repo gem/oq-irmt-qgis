@@ -30,6 +30,7 @@ from PyQt4.QtGui import (QDialog,
                          QDesktopServices)
 from ui.ui_upload_settings import Ui_UploadSettingsDialog
 from defaults import DEFAULTS
+from utils import reload_attrib_cbx
 
 LICENSES = (
     ('CC0', 'http://creativecommons.org/about/cc0'),
@@ -47,7 +48,7 @@ class UploadSettingsDialog(QDialog):
     licenses. The user must click on a confirmation checkbox, before the
     uploading of the layer can be started.
     """
-    def __init__(self, upload_size):
+    def __init__(self, upload_size, iface):
         QDialog.__init__(self)
         # Set up the user interface from Designer.
         self.ui = Ui_UploadSettingsDialog()
@@ -60,14 +61,31 @@ class UploadSettingsDialog(QDialog):
                     % upload_size)
         self.ui.head_msg_lbl.setText(head_msg)
         self.ui.title_le.setText(DEFAULTS['ISO19115_TITLE'])
+
+        # if no field is selected, whe should not allow uploading
+        self.zone_label_field_is_specified = False
+        reload_attrib_cbx(
+            self.ui.zone_label_field_cbx, iface.activeLayer(), True)
+
         for license, link in LICENSES:
             self.ui.license_cbx.addItem(license, link)
         self.ui.license_cbx.setCurrentIndex(
             self.ui.license_cbx.findText(DEFAULT_LICENSE[0]))
 
+    def set_ok_button(self):
+        self.ok_button.setEnabled(
+            self.zone_label_field_is_specified
+            and self.ui.confirm_chk.isChecked())
+
+    @pyqtSlot(str)
+    def on_zone_label_field_cbx_currentIndexChanged(self):
+        zone_label_field = self.ui.zone_label_field_cbx.currentText()
+        self.zone_label_field_is_specified = (zone_label_field != '')
+        self.set_ok_button()
+
     @pyqtSlot(int)
     def on_confirm_chk_stateChanged(self):
-        self.ok_button.setEnabled(self.ui.confirm_chk.isChecked())
+        self.set_ok_button()
 
     @pyqtSlot()
     def on_license_info_btn_clicked(self):
