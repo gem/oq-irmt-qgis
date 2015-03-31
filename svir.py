@@ -212,9 +212,10 @@ class Svir:
         # get project_definitions from the project's properties
         # it returns a tuple, with the returned value and a boolean indicating
         # if such property is available
-        resp = QgsProject.instance().readEntry('svir', 'project_definitions')
-        if resp[1] is True:
-            self.project_definitions = json.loads(resp[0])
+        project_definitions_str, is_available = \
+            QgsProject.instance().readEntry('svir', 'project_definitions')
+        if is_available and project_definitions_str:
+            self.project_definitions = json.loads(project_definitions_str)
         else:
             self.project_definitions = {}
         if DEBUG:
@@ -831,6 +832,12 @@ class Svir:
         self.current_layer.setRendererV2(rule_renderer)
         self.iface.mapCanvas().refresh()
         self.iface.legendInterface().refreshLayerSymbology(self.current_layer)
+        # Reset default symbol (otherwise if the user attempts to re-style the
+        # layer, they will need to explicitly set the border and fill)
+        root_rule.setSymbol(QgsFillSymbolV2.createSimple(
+            {'style': 'solid',
+             'style_border': 'solid'}))
+        self.current_layer.setRendererV2(rule_renderer)
 
     def show_settings(self):
         SettingsDialog(self.iface).exec_()
@@ -954,9 +961,11 @@ class Svir:
         # convert bytes to MB
         file_size_mb = file_size_mb / 1024 / 1024
 
-        dlg = UploadSettingsDialog(file_size_mb)
+        dlg = UploadSettingsDialog(file_size_mb, self.iface)
         if dlg.exec_():
             project_definition['title'] = dlg.ui.title_le.text()
+            zone_label_field = dlg.ui.zone_label_field_cbx.currentText()
+            project_definition['zone_label_field'] = zone_label_field
 
             license_name = dlg.ui.license_cbx.currentText()
             license_idx = dlg.ui.license_cbx.currentIndex()

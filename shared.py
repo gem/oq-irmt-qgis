@@ -33,6 +33,7 @@ DEBUG = QSettings().value('/svir/developer_mode', False, type=bool)
 cp = ConfigParser()
 cp.readfp(open(os.path.dirname(os.path.realpath(__file__)) + "/metadata.txt"))
 SVIR_PLUGIN_VERSION = cp.get('general', 'version')
+PLATFORM_REGISTRATION_URL = 'https://platform.openquake.org/account/signup/'
 
 INT_FIELD_TYPE_NAME = "integer"
 REAL_FIELD_TYPE_NAME = "Real"
