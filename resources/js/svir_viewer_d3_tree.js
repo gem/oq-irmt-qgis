@@ -89,16 +89,23 @@
         function createSpinner(id, weight, name, field) {
             pdTempSpinnerIds.push("spinner-"+id);
             $('#projectDefWeightDialog').dialog("open");
-            if (typeof field == 'undefined') {
-                $('#projectDefWeightDialog').append(
-                    '<p><label for="spinner'+id+'">'+name+': </label><input id="spinner-'+id+'" name="spinner" value="'+weight+'"></p>');
-            } else {
-                $('#projectDefWeightDialog').append(
-                    '<p><label for="spinner'+id+'">'+name+'('+field+'): </label><input id="spinner-'+id+'" name="spinner" value="'+weight+'"></p>');
+            var content = '<p><label style="clear: left; float: left; width: 10em;" for="spinner'+id+'">'+name;
+            if (typeof field !== 'undefined') {
+                content += ' ('+field+')';
             }
+            content += ': </label><input id="spinner-'+id+'" name="spinner" value="'+Math.abs(weight)+'">';
+            content += '<input type="checkbox" id="inverter-spinner-'+id+'"><label style="font-size: 0.8em; "for="inverter-spinner-'+id+'" title="Select to invert the contribution of the variable to the calculation">Invert</label>';
+            content += '</p>';
+            $('#projectDefWeightDialog').append(content);
+            $(function() {
+                var inverter = $("#inverter-spinner-" + id);
+                inverter.button();
+                inverter.prop("checked", (weight < 0));
+                inverter.button("refresh");
+            });
             $(function() {
                 $("#spinner-"+id).width(100).spinner({
-                    min: -100,
+                    min: 0,
                     max: 100,
                     step: 0.001,
                     numberFormat: "n",
@@ -109,7 +116,7 @@
 
         function operatorSelect(pdOperator){
             $('#projectDefWeightDialog')
-                .append('<br/><label for="operator">Operator: </label>')
+                .append('<br/><label style="clear: left; float: left; width: 10em;" for="operator">Operator: </label>')
                 .append('<select id="operator">'+ operatorOptions() + '</select>');
             //TODO use selectmenu when the bug there is fixed9?
             //$(selector).selectmenu()
@@ -282,7 +289,12 @@
 
                 // Get the values of the spinners
                 for (var i = 0; i < pdTempSpinnerIds.length; i++) {
-                    pdTempWeights.push($('#'+pdTempSpinnerIds[i]).val());
+                    var isInverted = $('#inverter-' + pdTempSpinnerIds[i]).is(':checked');
+                    var spinnerValue = $('#'+pdTempSpinnerIds[i]).val();
+                    if (isInverted) {
+                        spinnerValue = -spinnerValue;
+                    }
+                    pdTempWeights.push(spinnerValue);
                 }
 
                 // Adjust the values into percentages
@@ -299,7 +311,7 @@
 
                 // Update the results back into the spinners and to the d3.js chart
                 for (var i = 0; i < pdTempSpinnerIds.length; i++) {
-                    $('#'+pdTempSpinnerIds[i]).spinner("value", pdTempWeightsComputed[i]);
+                    $('#'+pdTempSpinnerIds[i]).spinner("value", Math.abs(pdTempWeightsComputed[i]));
                 }
 
                 // Update the json with new values
