@@ -33,6 +33,8 @@
             position: {my: "left top", at: "left top", of: "#projectDefDialog"},
             autoOpen: false,
             modal: true,
+            dialogClass: "no-close",
+            closeOnEscape: false,
             minWidth: 600
         });
         //  Dialog to set up a new node to insert into the project definition
@@ -239,15 +241,31 @@
         }
 
         function updateButton(pdId){
-            // FIXME: Are we using pdId?
             pdId = typeof pdId !== 'undefined' ? pdId : false;
-            $('#projectDefWeightDialog').append('<br/><br/><button type="button" id="update-button">Update</button>');
+            $('#projectDefWeightDialog').append(
+                '<div class="ui-dialog-buttonpane ui-widget-content ui-helper-clearfix">' +
+                    '<div class="ui-dialog-buttonset">' +
+                        '<button id="cancel-button" type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button">' +
+                            '<span class="ui-button-text">Cancel</span>' +
+                        '</button>' +
+                        '<button id="update-button" type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button">' +
+                            '<span class="ui-button-text">Update</span>' +
+                        '</button>' +
+                        '<button type="button" id="updateandclose-button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button">' +
+                            '<span class="ui-button-text">Update and close</span>' +
+                        '</button>' +
+                    '</div>' +
+                '</div>');
+            $('#cancel-button').click(
+                function(){
+                    $('#projectDefWeightDialog').dialog("close");
+                }
+            );
             $('#update-button').click(
                 function(){
                     updateButtonClicked();
                 }
             );
-            $('#projectDefWeightDialog').append('<button type="button" id="updateandclose-button">Update and close</button>');
             $('#updateandclose-button').click(function(){
                 updateButtonClicked();
                 $('#projectDefWeightDialog').dialog("close");
