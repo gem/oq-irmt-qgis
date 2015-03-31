@@ -98,8 +98,9 @@
                 $("#spinner-"+id).width(100).spinner({
                     min: -100,
                     max: 100,
-                    step: 0.000001,
-                    numberFormat: "n"
+                    step: 0.001,
+                    numberFormat: "n",
+                    incremental: true
                 });
             });
         }
