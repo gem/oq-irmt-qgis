@@ -377,6 +377,31 @@
 
         d3.select(self.frameElement).style("height", "800px");
 
+        function confirmationDialog(title, question, onOk) {
+            var confDialog = $('#projectDefNewNodeDialog');
+            confDialog.dialog({
+                modal: true,
+                autoOpen: false,
+                closeOnEscape: false,
+                dialogClass: "no-close",
+                title: title,
+                buttons: [
+                    {
+                    text: "Cancel",
+                    click: function() { $( this ).dialog( "close" ); }
+                    },
+                    {
+                    text: "Ok",
+                    click: function() {
+                        $( this ).dialog( "close" );
+                        onOk(); }
+                    }
+                ]
+            });
+            confDialog.empty();
+            confDialog.html(question);
+            confDialog.dialog('open');
+        }
 
         function updateD3Tree(source) {
             // Compute the new tree layout.
@@ -428,39 +453,39 @@
                         if (clicked_node.type === node_types_dict.IRI) {
                             pdData = data;
                             // Before cleaning the tree, ask for the user's confirmation
-                            var resp = confirm("If you proceed, the whole tree will be reset. Are you sure?");
-                            if (resp === false) {
-                                return false;
-                            }
-                            // its children are RI and SVI, and we want to delete their children (grandchildren)
-                            for (var i = 0; i < clicked_node.children.length; i++) {
-                                var child = clicked_node.children[i];
-                                var grandchildren = child.children;
-                                if (typeof grandchildren !== 'undefined') {
-                                    while(grandchildren.length > 0) {
-                                        grandchildren.pop();
+                            onOk = function() {
+                                // its children are RI and SVI, and we want to delete their children (grandchildren)
+                                for (var i = 0; i < clicked_node.children.length; i++) {
+                                    var child = clicked_node.children[i];
+                                    var grandchildren = child.children;
+                                    if (typeof grandchildren !== 'undefined') {
+                                        while(grandchildren.length > 0) {
+                                            grandchildren.pop();
+                                        }
                                     }
                                 }
-                            }
-                            updateD3Tree(pdData);
-                            return true;
+                                updateD3Tree(pdData);
+                                return true;
+                            };
+                            confirmationDialog(
+                                "Confirm", "If you proceed, the whole tree will be reset. Are you sure?", onOk);
                         }
                         // If the clicked node is the RI or SVI, clean its own branch
                         if (clicked_node.type === node_types_dict.RI || clicked_node.type === node_types_dict.SVI) {
                             pdData = data;
                             // Before cleaning the branch, ask for the user's confirmation
-                            var resp = confirm("If you proceed, the whole branch be reset. Are you sure?");
-                            if (resp === false) {
-                                return false;
-                            }
-                            children = clicked_node.children;
-                            if (typeof children !== 'undefined') {
-                                while (children.length > 0) {
-                                    children.pop();
+                            onOk = function() {
+                                children = clicked_node.children;
+                                if (typeof children !== 'undefined') {
+                                    while (children.length > 0) {
+                                        children.pop();
+                                    }
                                 }
+                                updateD3Tree(pdData);
+                                return true;
                             }
-                            updateD3Tree(pdData);
-                            return true;
+                            confirmationDialog(
+                                "Confirm", "If you proceed, the whole branch be reset. Are you sure?", onOk);
                         }
 
                         // Delete the clicked node, if it's an indicator or a theme
@@ -474,26 +499,28 @@
                             // Do not delete the node
                             return false;
                         }
-                        var resp = confirm("The node named '" + node_to_del.name + "' will be removed and the weights of its siblings will be reset. Are you sure?");
-                        if (resp === false) {
-                            return false;
-                        }
-                        // Delete the node (find it between it's parent's children and delete it)
-                        var siblings = node_to_del.parent.children;  // siblings include the clicked node itself
-                        var idx_to_remove;
-                        for (var i = 0; i < siblings.length; i++) {
-                            if (siblings[i].id === node_to_del.id) {
-                                // save the index of the item, but don't remove it before updating weights
-                                idx_to_remove = i;
-                            } else {
-                                // reset the weights of the other nodes
-                                // (-1 is because we are removing the clicked node)
-                                siblings[i].weight = 1.0 / (siblings.length - 1);
+                        onOk = function() {
+                            var siblings = node_to_del.parent.children;  // siblings include the clicked node itself
+                            var idx_to_remove;
+                            for (var i = 0; i < siblings.length; i++) {
+                                if (siblings[i].id === node_to_del.id) {
+                                    // save the index of the item, but don't remove it before updating weights
+                                    idx_to_remove = i;
+                                } else {
+                                    // reset the weights of the other nodes
+                                    // (-1 is because we are removing the clicked node)
+                                    siblings[i].weight = 1.0 / (siblings.length - 1);
+                                }
                             }
-                        }
-                        // now it's safe to remove the clicked node
-                        siblings.splice(idx_to_remove, 1);
-                        updateD3Tree(pdData);
+                            // now it's safe to remove the clicked node
+                            siblings.splice(idx_to_remove, 1);
+                            updateD3Tree(pdData);
+                        };
+                        confirmationDialog(
+                            "Confirm",
+                            "The node named '" + node_to_del.name + "' will be removed and the weights of its siblings will be reset. Are you sure?",
+                            onOk);
+                        // Delete the node (find it between it's parent's children and delete it)
                     } else {
                         // Add a child to the clicked node, if possible
                         // NOTE: Only fields that are not already in the tree should be selectable
