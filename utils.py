@@ -134,15 +134,19 @@ def reload_layers_in_cbx(combo, layer_types=None, skip_layer_ids=None):
             combo.addItem(l.name())
 
 
-def reload_attrib_cbx(combo, layer, *valid_field_types):
+def reload_attrib_cbx(
+        combo, layer, prepend_empty_item=False, *valid_field_types):
     """
     Load attributes of a layer into a combobox. Can filter by field data type.
-    the additional filter can be NUMERIC_FIELD_TYPES, TEXTUAL_FIELD_TYPES, ...
+    the optional filter can be NUMERIC_FIELD_TYPES, TEXTUAL_FIELD_TYPES, ...
+    if no filter is specified all fields are returned
 
     :param combo: The combobox to be repopulated
     :type combo: QComboBox
     :param layer: The QgsVectorLayer from where the fields are read
     :type layer: QgsVectorLayer
+    :param prepend_empty_item: if to prepend an empty item to the combo
+    :type layer: Bool
     :param *valid_field_types: multiple tuples containing types
     :type *valid_field_types: tuple, tuple, ...
     """
@@ -155,6 +159,10 @@ def reload_attrib_cbx(combo, layer, *valid_field_types):
     # populate combo box with field names taken by layers
     dp = layer.dataProvider()
     fields = list(dp.fields())
+
+    if prepend_empty_item:
+        combo.addItem(None)
+
     for field in fields:
         # add if in field_types
         if not field_types or field.typeName() in field_types:
