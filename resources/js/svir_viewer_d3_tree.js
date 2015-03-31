@@ -261,6 +261,11 @@
                     $('#projectDefWeightDialog').dialog("close");
                 }
             );
+            $('#projectDefWeightDialog').keypress(function(e) {
+                if (e.keyCode == $.ui.keyCode.ENTER) {
+                    $('#update-button').trigger('click');
+                }
+            });
             $('#update-button').click(
                 function(){
                     updateButtonClicked();
@@ -621,10 +626,16 @@
                         siblings.push(new_node);
                         // alert(JSON.stringify(source));
                         // Let the user choose one of the available fields and set the name
+                        $('#projectDefNewNodeDialog').keypress(function(e) {
+                            if (e.keyCode == $.ui.keyCode.ENTER) {
+                                $('#add-button').trigger('click');
+                            }
+                        });
                         $('#projectDefNewNodeDialog').dialog({
                         title: "Add New " + node_type,
                         buttons: [
                             {
+                            id: "cancel-button",
                             text: "Cancel",
                             click: function() {
                                 clicked_node.children.splice(clicked_node.children.length - 1, 1);
@@ -636,6 +647,7 @@
                             }
                             },
                             {
+                            id: "add-button",
                             text: "Add",
                             click: function(){
                                 var newNodeName = $('#newNodeName');
