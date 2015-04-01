@@ -17,6 +17,7 @@
 
     // const is not supported by all the browsers, so we are using var instead
     var CIRCLE_SCALE = 30;
+    var MAX_STROKE_SIZE = 4;
     var MIN_CIRCLE_SIZE = 0.001;
 
     // For checking if a string is blank or contains only white-space
@@ -32,6 +33,8 @@
             position: {my: "left top", at: "left top", of: "#projectDefDialog"},
             autoOpen: false,
             modal: true,
+            dialogClass: "no-close",
+            closeOnEscape: false,
             minWidth: 600
         });
         //  Dialog to set up a new node to insert into the project definition
@@ -86,26 +89,34 @@
         function createSpinner(id, weight, name, field) {
             pdTempSpinnerIds.push("spinner-"+id);
             $('#projectDefWeightDialog').dialog("open");
-            if (field === undefined) {
-                $('#projectDefWeightDialog').append(
-                    '<p><label for="spinner'+id+'">'+name+': </label><input id="spinner-'+id+'" name="spinner" value="'+weight+'"></p>');
-            } else {
-                $('#projectDefWeightDialog').append(
-                    '<p><label for="spinner'+id+'">'+name+'('+field+'): </label><input id="spinner-'+id+'" name="spinner" value="'+weight+'"></p>');
+            var content = '<p><label style="clear: left; float: left; width: 10em;" for="spinner'+id+'">'+name;
+            if (typeof field !== 'undefined') {
+                content += ' ('+field+')';
             }
+            content += ': </label><input id="spinner-'+id+'" name="spinner" value="'+Math.abs(weight)+'">';
+            content += '<input type="checkbox" id="inverter-spinner-'+id+'"><label style="font-size: 0.8em; "for="inverter-spinner-'+id+'" title="Select to invert the contribution of the variable to the calculation">Invert</label>';
+            content += '</p>';
+            $('#projectDefWeightDialog').append(content);
+            $(function() {
+                var inverter = $("#inverter-spinner-" + id);
+                inverter.button();
+                inverter.prop("checked", (weight < 0));
+                inverter.button("refresh");
+            });
             $(function() {
                 $("#spinner-"+id).width(100).spinner({
                     min: 0,
                     max: 100,
-                    step: 0.01,
-                    numberFormat: "n"
+                    step: 0.001,
+                    numberFormat: "n",
+                    incremental: true
                 });
             });
         }
 
         function operatorSelect(pdOperator){
             $('#projectDefWeightDialog')
-                .append('<br/><label for="operator">Operator: </label>')
+                .append('<br/><label style="clear: left; float: left; width: 10em;" for="operator">Operator: </label>')
                 .append('<select id="operator">'+ operatorOptions() + '</select>');
             //TODO use selectmenu when the bug there is fixed9?
             //$(selector).selectmenu()
@@ -173,9 +184,10 @@
             var max_dec_level = 0;
 
             var nodes_str = JSON.stringify(root, function(key, value) {
+                // NOTE: The following 'if' looks bad. We need the parent for many things
                 //avoid circularity in JSON by removing the parent key
                 if (key == "parent") {
-                    return undefined;
+                    return 'undefined';
                   }
                   return value;
                 });
@@ -197,7 +209,7 @@
         }
 
         function getRootNode(node){
-            if (node.parent === undefined) {
+            if (typeof node.parent == 'undefined') {
                 return node;
             } else {
                 return getRootNode(node.parent);
@@ -206,11 +218,11 @@
 
         function listTakenFields(node) {
             var takenFields = [];
-            if (typeof node.field !== "undefined") {
+            if (typeof node.field !== 'undefined') {
                 takenFields.push(node.field);
             }
             // Recursive search inside the children of the node
-            if (typeof node.children !== "undefined"){
+            if (typeof node.children !== 'undefined'){
                 for (var i = 0; i < node.children.length; i++){
                     var takenInChild = listTakenFields(node.children[i]);
                     takenFields.push.apply(takenFields, takenInChild);
@@ -236,15 +248,36 @@
         }
 
         function updateButton(pdId){
-            // FIXME: Are we using pdId?
             pdId = typeof pdId !== 'undefined' ? pdId : false;
-            $('#projectDefWeightDialog').append('<br/><br/><button type="button" id="update-button">Update</button>');
+            $('#projectDefWeightDialog').append(
+                '<div class="ui-dialog-buttonpane ui-widget-content ui-helper-clearfix">' +
+                    '<div class="ui-dialog-buttonset">' +
+                        '<button id="cancel-button" type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button">' +
+                            '<span class="ui-button-text">Cancel</span>' +
+                        '</button>' +
+                        '<button id="update-button" type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button">' +
+                            '<span class="ui-button-text">Update</span>' +
+                        '</button>' +
+                        '<button type="button" id="updateandclose-button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button">' +
+                            '<span class="ui-button-text">Update and close</span>' +
+                        '</button>' +
+                    '</div>' +
+                '</div>');
+            $('#cancel-button').click(
+                function(){
+                    $('#projectDefWeightDialog').dialog("close");
+                }
+            );
+            $('#projectDefWeightDialog').keypress(function(e) {
+                if (e.keyCode == $.ui.keyCode.ENTER) {
+                    $('#update-button').trigger('click');
+                }
+            });
             $('#update-button').click(
                 function(){
                     updateButtonClicked();
                 }
             );
-            $('#projectDefWeightDialog').append('<button type="button" id="updateandclose-button">Update and close</button>');
             $('#updateandclose-button').click(function(){
                 updateButtonClicked();
                 $('#projectDefWeightDialog').dialog("close");
@@ -256,24 +289,29 @@
 
                 // Get the values of the spinners
                 for (var i = 0; i < pdTempSpinnerIds.length; i++) {
-                    pdTempWeights.push($('#'+pdTempSpinnerIds[i]).val());
+                    var isInverted = $('#inverter-' + pdTempSpinnerIds[i]).is(':checked');
+                    var spinnerValue = $('#'+pdTempSpinnerIds[i]).val();
+                    if (isInverted) {
+                        spinnerValue = -spinnerValue;
+                    }
+                    pdTempWeights.push(spinnerValue);
                 }
 
                 // Adjust the values into percentages
                 pdTempWeights = pdTempWeights.map(Number);
                 var totalWeights = 0;
                 $.each(pdTempWeights,function() {
-                    totalWeights += this;
+                    totalWeights += Math.abs(this);
                 });
 
                 for (var i = 0; i < pdTempWeights.length; i++) {
-                    var tempMath = Math.floor((pdTempWeights[i] * 100) / totalWeights);
+                    var tempMath = (pdTempWeights[i] * 100) / totalWeights;
                     pdTempWeightsComputed.push(tempMath / 100);
                 }
 
                 // Update the results back into the spinners and to the d3.js chart
                 for (var i = 0; i < pdTempSpinnerIds.length; i++) {
-                    $('#'+pdTempSpinnerIds[i]).spinner("value", pdTempWeightsComputed[i]);
+                    $('#'+pdTempSpinnerIds[i]).spinner("value", Math.abs(pdTempWeightsComputed[i]));
                 }
 
                 // Update the json with new values
@@ -338,6 +376,35 @@
             updateD3Tree(node);
         }
 
+        function openWeightingDialog(node) {
+            pdName = node.children[0].name;
+            pdData = data;
+            pdLevel = node.children[0].level;
+            pdParent = node.name;
+            pdParentField = node.field;
+            pdTempSpinnerIds = [];
+            pdTempIds = [];
+            pdOperator = node.operator;
+            pdId = node.id;
+            $('#projectDefWeightDialog').empty();
+            updated_nodes = node.children[0];
+            findTreeBranchInfo(pdData, [pdName], [pdLevel], pdParentField, updated_nodes);
+            operatorSelect(pdOperator);
+            updateButton(pdId);
+        }
+
+        function getRadius(d) {
+            if (typeof d.parent != 'undefined') {
+                if (typeof d.parent.operator != 'undefined') {
+                    if (d.parent.operator.indexOf('ignore weights') != -1) {
+                        radius = Math.max(1 / d.parent.children.length * CIRCLE_SCALE, MIN_CIRCLE_SIZE);
+                        return radius;
+                    }
+                }
+            }
+            return d.weight ? Math.max(Math.abs(d.weight) * CIRCLE_SCALE, MIN_CIRCLE_SIZE): MIN_CIRCLE_SIZE;
+        }
+
         var svg = d3.select("#projectDefDialog").append("svg")
             .attr("width", width + margin.right + margin.left)
             .attr("height", height + margin.top + margin.bottom)
@@ -357,6 +424,31 @@
 
         d3.select(self.frameElement).style("height", "800px");
 
+        function confirmationDialog(title, question, onOk) {
+            var confDialog = $('#projectDefNewNodeDialog');
+            confDialog.dialog({
+                modal: true,
+                autoOpen: false,
+                closeOnEscape: false,
+                dialogClass: "no-close",
+                title: title,
+                buttons: [
+                    {
+                    text: "Cancel",
+                    click: function() { $( this ).dialog( "close" ); }
+                    },
+                    {
+                    text: "Ok",
+                    click: function() {
+                        $( this ).dialog( "close" );
+                        onOk(); }
+                    }
+                ]
+            });
+            confDialog.empty();
+            confDialog.html(question);
+            confDialog.dialog('open');
+        }
 
         function updateD3Tree(source) {
             // Compute the new tree layout.
@@ -380,7 +472,7 @@
                 .attr("class", function(d){return node_type_to_class(d.type);})
                 .on("mouseover", function(d) {
                     var info;
-                    if (d.field !== undefined) {
+                    if (typeof d.field !== 'undefined') {
                         info = d.field;
                         tooltipdiv .transition()
                             .duration(500)
@@ -408,39 +500,39 @@
                         if (clicked_node.type === node_types_dict.IRI) {
                             pdData = data;
                             // Before cleaning the tree, ask for the user's confirmation
-                            var resp = confirm("If you proceed, the whole tree will be reset. Are you sure?");
-                            if (resp === false) {
-                                return false;
-                            }
-                            // its children are RI and SVI, and we want to delete their children (grandchildren)
-                            for (var i = 0; i < clicked_node.children.length; i++) {
-                                var child = clicked_node.children[i];
-                                var grandchildren = child.children;
-                                if (typeof(grandchildren) !== 'undefined') {
-                                    while(grandchildren.length > 0) {
-                                        grandchildren.pop();
+                            onOk = function() {
+                                // its children are RI and SVI, and we want to delete their children (grandchildren)
+                                for (var i = 0; i < clicked_node.children.length; i++) {
+                                    var child = clicked_node.children[i];
+                                    var grandchildren = child.children;
+                                    if (typeof grandchildren !== 'undefined') {
+                                        while(grandchildren.length > 0) {
+                                            grandchildren.pop();
+                                        }
                                     }
                                 }
-                            }
-                            updateD3Tree(pdData);
-                            return true;
+                                updateD3Tree(pdData);
+                                return true;
+                            };
+                            confirmationDialog(
+                                "Confirm", "If you proceed, the whole tree will be reset. Are you sure?", onOk);
                         }
                         // If the clicked node is the RI or SVI, clean its own branch
                         if (clicked_node.type === node_types_dict.RI || clicked_node.type === node_types_dict.SVI) {
                             pdData = data;
                             // Before cleaning the branch, ask for the user's confirmation
-                            var resp = confirm("If you proceed, the whole branch be reset. Are you sure?");
-                            if (resp === false) {
-                                return false;
-                            }
-                            children = clicked_node.children;
-                            if (typeof(children) !== 'undefined') {
-                                while (children.length > 0) {
-                                    children.pop();
+                            onOk = function() {
+                                children = clicked_node.children;
+                                if (typeof children !== 'undefined') {
+                                    while (children.length > 0) {
+                                        children.pop();
+                                    }
                                 }
-                            }
-                            updateD3Tree(pdData);
-                            return true;
+                                updateD3Tree(pdData);
+                                return true;
+                            };
+                            confirmationDialog(
+                                "Confirm", "If you proceed, the whole branch be reset. Are you sure?", onOk);
                         }
 
                         // Delete the clicked node, if it's an indicator or a theme
@@ -454,26 +546,28 @@
                             // Do not delete the node
                             return false;
                         }
-                        var resp = confirm("The node named '" + node_to_del.name + "' will be removed and the weights of its siblings will be reset. Are you sure?");
-                        if (resp === false) {
-                            return false;
-                        }
-                        // Delete the node (find it between it's parent's children and delete it)
-                        var siblings = node_to_del.parent.children;  // siblings include the clicked node itself
-                        var idx_to_remove;
-                        for (var i = 0; i < siblings.length; i++) {
-                            if (siblings[i].id === node_to_del.id) {
-                                // save the index of the item, but don't remove it before updating weights
-                                idx_to_remove = i;
-                            } else {
-                                // reset the weights of the other nodes
-                                // (-1 is because we are removing the clicked node)
-                                siblings[i].weight = 1.0 / (siblings.length - 1);
+                        onOk = function() {
+                            var siblings = node_to_del.parent.children;  // siblings include the clicked node itself
+                            var idx_to_remove;
+                            for (var i = 0; i < siblings.length; i++) {
+                                if (siblings[i].id === node_to_del.id) {
+                                    // save the index of the item, but don't remove it before updating weights
+                                    idx_to_remove = i;
+                                } else {
+                                    // reset the weights of the other nodes
+                                    // (-1 is because we are removing the clicked node)
+                                    siblings[i].weight = 1.0 / (siblings.length - 1);
+                                }
                             }
-                        }
-                        // now it's safe to remove the clicked node
-                        siblings.splice(idx_to_remove, 1);
-                        updateD3Tree(pdData);
+                            // now it's safe to remove the clicked node
+                            siblings.splice(idx_to_remove, 1);
+                            updateD3Tree(pdData);
+                        };
+                        confirmationDialog(
+                            "Confirm",
+                            "The node named '" + node_to_del.name + "' will be removed and the weights of its siblings will be reset. Are you sure?",
+                            onOk);
+                        // Delete the node (find it between it's parent's children and delete it)
                     } else {
                         // Add a child to the clicked node, if possible
                         // NOTE: Only fields that are not already in the tree should be selectable
@@ -499,7 +593,7 @@
                             case node_types_dict.SV_INDICATOR:
                                 //alert("You clicked a node with type " + clicked_node.type + ". You can't add new nodes there");
                                 return false;
-                            case undefined:
+                            case 'undefined':
                                 //alert("You clicked a node with type " + clicked_node.type + ". You can't add new nodes there");
                                 return false;
                             default:
@@ -507,7 +601,7 @@
                                 return false;
                         }
 
-                        if (undefined === clicked_node.children) {
+                        if (typeof clicked_node.children == 'undefined') {
                             clicked_node.children = [];
                             clicked_node.operator = DEFAULT_OPERATOR;
                         }
@@ -556,10 +650,16 @@
                         siblings.push(new_node);
                         // alert(JSON.stringify(source));
                         // Let the user choose one of the available fields and set the name
+                        $('#projectDefNewNodeDialog').keypress(function(e) {
+                            if (e.keyCode == $.ui.keyCode.ENTER) {
+                                $('#add-button').trigger('click');
+                            }
+                        });
                         $('#projectDefNewNodeDialog').dialog({
                         title: "Add New " + node_type,
                         buttons: [
                             {
+                            id: "cancel-button",
                             text: "Cancel",
                             click: function() {
                                 clicked_node.children.splice(clicked_node.children.length - 1, 1);
@@ -571,6 +671,7 @@
                             }
                             },
                             {
+                            id: "add-button",
                             text: "Add",
                             click: function(){
                                 var newNodeName = $('#newNodeName');
@@ -598,23 +699,29 @@
                     }
                 });
 
+            // Render the name of the node (e.g. the indicator's name)
             nodeEnter.append("text")
                 .attr("class", (function(d) { return "level-" + d.level; }))
                 .attr("id", (function(d) { return 'indicator-label-' + d.name.replace(' ', '-'); }))
                 .attr("value", (function(d) { return d.weight; }))
-                .attr("x", function(d) { return -(d.weight * CIRCLE_SCALE + 5); })
+                .attr("x", function(d) { return -(getRadius(d) + 5); })
                 .attr("dy", function(d) {
                     // NOTE are x and y swapped?
                     // set te text above or below the node depending on the
                     // parent position
-                    if (typeof d.parent != "undefined" && d.x > d.parent.x){
+                    if (typeof d.parent != 'undefined' && d.x > d.parent.x){
                         return "2em";
                     }
                     return "-1em";
                 })
                 .attr("text-anchor", function(d) { return "end"; })
                 .text(function(d) {
-                    return d.name;
+                    // Render a minus before the name of a variable which weight is negative
+                    if (d.weight < 0) {
+                        return "- " + d.name;
+                    } else {
+                        return d.name;
+                    }
                 })
                 .style("fill-opacity", 1e-6)
                 .on("click", function(d) {
@@ -639,31 +746,100 @@
                     }
                 });
 
+            // Render the operator's name, without the optional '(ignore weights)' part
             nodeEnter.append("text")
                 .text(function(d) {
                     if (d.children){
                         var operator = d.operator? d.operator : DEFAULT_OPERATOR;
                         d.operator = operator;
+                        if (operator.indexOf('ignore weights') != -1) {
+                            // Example:
+                            // from "Simple sum (ignore weights)"
+                            // we render just "Simple sum"
+                            parts = operator.split('(');
+                            operator = parts[0];
+                        }
                         return operator;
                     }
                 })
                 .attr("id", function(d) {return "operator-label-" + d.level;})
-                .attr("x", function(d) { return d.weight * CIRCLE_SCALE + 15; })
+                .attr("x", function(d) { return getRadius(d) + 15; })
+                .on("click", function(d) { openWeightingDialog(d); });
+
+            // Render '(ignore weights)' in a new line, if present
+            nodeEnter.append("text")
+                .text(function(d) {
+                    if (d.children){
+                        var ignoreWeightsStr = '';
+                        if (d.operator.indexOf('ignore weights') != -1) {
+                            parts = d.operator.split('(');
+                            ignoreWeightsStr = '(' + parts[1];
+                        }
+                        return ignoreWeightsStr;
+                    }
+                })
+                .attr("id", function(d) {return "ignore-weights-label" + d.level;})
+                .attr("x", function(d) { return getRadius(d) + 15; })
+                // Translate the text vertically (newline)
+                // NOTE: D3 doesn't allow using <br> or \n, so I had to implement the newline like this
+                .attr("transform", "translate(0, 12)")
+                .style("fill", function(d) {
+                    if (typeof d.operator != 'undefined') {
+                        // Check for operators that ignore weights and style accordingly
+                        var color = '#660000';
+                        return color;
+                    }
+                })
+                .on("click", function(d) { openWeightingDialog(d); });
+
+            // Render the weight next to the node, as a percentage
+            nodeEnter.append("text")
+                .attr("id", (function(d) {return 'node-weight-' + d.name.replace(' ', '-'); }))
+                .attr("x", function(d) { return "-1em"; })
+                .attr("dy", function(d) {
+                    if (typeof d.parent != 'undefined' && d.x > d.parent.x){
+                        return -(getRadius(d) + 5);
+                    } else {
+                        return getRadius(d) + 12;
+                    }})
+                .text(function(d) {
+                    if (typeof d.parent == 'undefined') {
+                        return "";
+                    }
+                    if (typeof d.parent.operator != 'undefined') {
+                        if (d.parent.operator.indexOf('ignore weights') != -1) {
+                            return '';
+                        }
+                    }
+                    return (d.weight * 100).toFixed(1) + '%';
+                    })
+                .style("fill", function(d) {
+                    if (typeof d.parent == 'undefined') { return; }
+                    if (typeof d.parent.operator == 'undefined') { return; }
+                    if (d.parent.operator.indexOf('ignore weights') != -1) {
+                        var color = '#660000';
+                        return color;
+                    }})
                 .on("click", function(d) {
-                    pdName = d.children[0].name;
+                    pdField = d.field;
+                    pdName = d.name;
                     pdData = data;
-                    pdLevel = d.children[0].level;
-                    pdParent = d.name;
-                    pdParentField = d.field;
+                    pdWeight = d.weight;
+                    pdLevel = d.level;
                     pdTempSpinnerIds = [];
                     pdTempIds = [];
-                    pdOperator = d.operator;
-                    pdId = d.id;
                     $('#projectDefWeightDialog').empty();
-                    updated_nodes = d.children[0];
-                    findTreeBranchInfo(pdData, [pdName], [pdLevel], pdParentField, updated_nodes);
-                    operatorSelect(pdOperator);
-                    updateButton(pdId);
+                    if (d.parent){
+                        findTreeBranchInfo(pdData, [pdName], [pdLevel], pdField, d);
+                        var pdParentOperator = d.parent.operator? d.parent.operator : DEFAULT_OPERATOR;
+                        d.parent.operator = pdParentOperator;
+                        operatorSelect(pdParentOperator);
+                        pdId = d.parent.id;
+                        updateButton(pdId);
+                    }
+                    else{
+                        //we clicked the root element
+                    }
                 });
 
             // Transition nodes to their new position.
@@ -671,14 +847,31 @@
                 .duration(duration)
                 .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
 
+            // Style the stroke and fill of the node's circle, depending on the weight and operator
             nodeUpdate.select("circle")
                 .attr("r", function (d) {
                     // d.weight is expected to be between 0 and 1
                     // Nodes are displayed as circles of size between 1 and CIRCLE_SCALE
-                    return d.weight ? Math.max(d.weight * CIRCLE_SCALE, MIN_CIRCLE_SIZE): MIN_CIRCLE_SIZE;
+                    return getRadius(d);
+                })
+                .style("stroke", function(d) {
+                    if (d.weight < 0) {
+                        return "PowderBlue";
+                    } else {
+                        return "RoyalBlue";
+                    }
+                })
+                // Scale the stroke width, otherwise the stroke is too thick for very small nodes
+                .style("stroke-width", function(d) {
+                    return d.weight ? Math.min(getRadius(d) / 2, MAX_STROKE_SIZE): 4;
                 })
                 .style("fill", function(d) {
-                    return d.source ? d.source.linkColor: d.linkColor;
+                    // return d.source ? d.source.linkColor: d.linkColor;
+                    if (d.weight < 0) {
+                        return "RoyalBlue";
+                    } else {
+                        return "PowderBlue";
+                    }
                 });
 
             nodeUpdate.select("text")
@@ -727,7 +920,7 @@
                 d.x0 = d.x;
                 d.y0 = d.y;
             });
-            if (typeof pdData !== 'undefined'){
+            if (typeof pdData != 'undefined'){
                 qt_page.json_updated(pdData);
             }
         }
