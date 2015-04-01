@@ -393,6 +393,18 @@
             updateButton(pdId);
         }
 
+        function getRadius(d) {
+            if (typeof d.parent != 'undefined') {
+                if (typeof d.parent.operator != 'undefined') {
+                    if (d.parent.operator.indexOf('ignore weights') != -1) {
+                        radius = Math.max(1 / d.parent.children.length * CIRCLE_SCALE, MIN_CIRCLE_SIZE);
+                        return radius;
+                    }
+                }
+            }
+            return d.weight ? Math.max(Math.abs(d.weight) * CIRCLE_SCALE, MIN_CIRCLE_SIZE): MIN_CIRCLE_SIZE;
+        }
+
         var svg = d3.select("#projectDefDialog").append("svg")
             .attr("width", width + margin.right + margin.left)
             .attr("height", height + margin.top + margin.bottom)
@@ -692,7 +704,7 @@
                 .attr("class", (function(d) { return "level-" + d.level; }))
                 .attr("id", (function(d) { return 'indicator-label-' + d.name.replace(' ', '-'); }))
                 .attr("value", (function(d) { return d.weight; }))
-                .attr("x", function(d) { return -(Math.abs(d.weight) * CIRCLE_SCALE + 5); })
+                .attr("x", function(d) { return -(getRadius(d) + 5); })
                 .attr("dy", function(d) {
                     // NOTE are x and y swapped?
                     // set te text above or below the node depending on the
@@ -751,7 +763,7 @@
                     }
                 })
                 .attr("id", function(d) {return "operator-label-" + d.level;})
-                .attr("x", function(d) { return Math.abs(d.weight) * CIRCLE_SCALE + 15; })
+                .attr("x", function(d) { return getRadius(d) + 15; })
                 .on("click", function(d) { openWeightingDialog(d); });
 
             // Render '(ignore weights)' in a new line, if present
@@ -767,7 +779,7 @@
                     }
                 })
                 .attr("id", function(d) {return "ignore-weights-label" + d.level;})
-                .attr("x", function(d) { return Math.abs(d.weight) * CIRCLE_SCALE + 15; })
+                .attr("x", function(d) { return getRadius(d) + 15; })
                 // Translate the text vertically (newline)
                 // NOTE: D3 doesn't allow using <br> or \n, so I had to implement the newline like this
                 .attr("transform", "translate(0, 12)")
@@ -786,9 +798,9 @@
                 .attr("x", function(d) { return "-1em"; })
                 .attr("dy", function(d) {
                     if (typeof d.parent != 'undefined' && d.x > d.parent.x){
-                        return -(Math.abs(d.weight) * CIRCLE_SCALE + 5);
+                        return -(getRadius(d) + 5);
                     } else {
-                        return Math.abs(d.weight) * CIRCLE_SCALE + 12;
+                        return getRadius(d) + 12;
                     }})
                 .text(function(d) {
                     if (typeof d.parent == 'undefined') {
@@ -840,15 +852,7 @@
                 .attr("r", function (d) {
                     // d.weight is expected to be between 0 and 1
                     // Nodes are displayed as circles of size between 1 and CIRCLE_SCALE
-                    if (typeof d.parent != 'undefined') {
-                        if (typeof d.parent.operator != 'undefined') {
-                            if (d.parent.operator.indexOf('ignore weights') != -1) {
-                                radius = Math.max(1 / d.parent.children.length * CIRCLE_SCALE, MIN_CIRCLE_SIZE);
-                                return radius;
-                            }
-                        }
-                    }
-                    return d.weight ? Math.max(Math.abs(d.weight) * CIRCLE_SCALE, MIN_CIRCLE_SIZE): MIN_CIRCLE_SIZE;
+                    return getRadius(d);
                 })
                 .style("stroke", function(d) {
                     if (d.weight < 0) {
@@ -859,7 +863,7 @@
                 })
                 // Scale the stroke width, otherwise the stroke is too thick for very small nodes
                 .style("stroke-width", function(d) {
-                    return d.weight ? Math.min(Math.abs(d.weight) * CIRCLE_SCALE / 2, MAX_STROKE_SIZE): 4;
+                    return d.weight ? Math.min(getRadius(d) / 2, MAX_STROKE_SIZE): 4;
                 })
                 .style("fill", function(d) {
                     // return d.source ? d.source.linkColor: d.linkColor;
