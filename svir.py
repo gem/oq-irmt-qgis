@@ -628,6 +628,26 @@ class Svir:
                     tr('Layer invalid'),
                     level=QgsMessageBar.CRITICAL)
                 return
+            try:
+                # dlg.layer_id has the format "oqplatform:layername"
+                style_name = dlg.layer_id.split(':')[1] + '.sld'
+                request_url = '%s/gs/rest/styles/%s' % (
+                    sv_downloader.host, style_name)
+                get_style_resp = sv_downloader.sess.get(request_url)
+                if not get_style_resp.ok:
+                    raise SvNetworkError(get_style_resp.reason)
+                fd, sld_file = tempfile.mkstemp(suffix=".sld")
+                os.close(fd)
+                with open(sld_file, 'w') as f:
+                    f.write(get_style_resp.text)
+                layer.loadSldStyle(sld_file)
+            except Exception as e:
+                error_msg = ('Unable to download and apply the'
+                             ' style layer descriptor: %s' % e)
+                self.iface.messageBar().pushMessage(
+                    'Error downloading style',
+                    error_msg, level=QgsMessageBar.WARNING,
+                    duration=8)
             self.iface.setActiveLayer(layer)
             self.update_proj_def(layer.id(), project_definition)
             self.update_actions_status()
