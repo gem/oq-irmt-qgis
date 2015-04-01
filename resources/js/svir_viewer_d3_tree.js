@@ -518,7 +518,7 @@
                                 }
                                 updateD3Tree(pdData);
                                 return true;
-                            }
+                            };
                             confirmationDialog(
                                 "Confirm", "If you proceed, the whole branch be reset. Are you sure?", onOk);
                         }
@@ -794,6 +794,11 @@
                     if (typeof d.parent == 'undefined') {
                         return "";
                     }
+                    if (typeof d.parent.operator != 'undefined') {
+                        if (d.parent.operator.indexOf('ignore weights') != -1) {
+                            return '';
+                        }
+                    }
                     return (d.weight * 100).toFixed(1) + '%';
                     })
                 .style("fill", function(d) {
@@ -835,6 +840,14 @@
                 .attr("r", function (d) {
                     // d.weight is expected to be between 0 and 1
                     // Nodes are displayed as circles of size between 1 and CIRCLE_SCALE
+                    if (typeof d.parent != 'undefined') {
+                        if (typeof d.parent.operator != 'undefined') {
+                            if (d.parent.operator.indexOf('ignore weights') != -1) {
+                                radius = Math.max(1 / d.parent.children.length * CIRCLE_SCALE, MIN_CIRCLE_SIZE);
+                                return radius;
+                            }
+                        }
+                    }
                     return d.weight ? Math.max(Math.abs(d.weight) * CIRCLE_SCALE, MIN_CIRCLE_SIZE): MIN_CIRCLE_SIZE;
                 })
                 .style("stroke", function(d) {
@@ -850,10 +863,6 @@
                 })
                 .style("fill", function(d) {
                     // return d.source ? d.source.linkColor: d.linkColor;
-                    // Set a Gold fill color in case the weight is ignored
-                    if (typeof d.parent != 'undefined' && d.parent.operator.indexOf("ignore weights") > -1) {
-                        return "Gold";
-                    }
                     if (d.weight < 0) {
                         return "RoyalBlue";
                     } else {
