@@ -847,11 +847,13 @@ class Svir:
             # NOTE: Workaround to avoid rounding problem (QGIS renderer's bug)
             # which creates problems styling the zone containing the lowest
             # and highest values in some cases
-            lower_value = graduated_renderer.ranges()[first_range_index].lowerValue()
+            lower_value = \
+                graduated_renderer.ranges()[first_range_index].lowerValue()
             decreased_lower_value = floor(lower_value * 10000.0) / 10000.0
             graduated_renderer.updateRangeLowerValue(
                 first_range_index, decreased_lower_value)
-            upper_value = graduated_renderer.ranges()[last_range_index].upperValue()
+            upper_value = \
+                graduated_renderer.ranges()[last_range_index].upperValue()
             increased_upper_value = ceil(upper_value * 10000.0) / 10000.0
             graduated_renderer.updateRangeUpperValue(
                 last_range_index, increased_upper_value)
