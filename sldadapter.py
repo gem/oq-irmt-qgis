@@ -48,9 +48,9 @@ RASTER_SLD_TEMPLATE = (
     '<sld:Name>STYLE_NAME</sld:Name>'
     '<sld:Title/>'
     '<sld:FeatureTypeStyle>'
-    #'<sld:Name>name</sld:Name>'
+    # '<sld:Name>name</sld:Name>'
     '<sld:Rule>'
-    #'<sld:Name>Single symbol</sld:Name>'
+    # '<sld:Name>Single symbol</sld:Name>'
     '<RasterSymbolizer>'
     'SYMBOLIZER_CODE'
     '</RasterSymbolizer>'
@@ -307,7 +307,7 @@ def getStyleAsSld(layer, styleName):
             return sld
         elif isinstance(renderer, QgsSingleBandPseudoColorRenderer):
             symbolizerCode = "<ColorMap>"
-            band = renderer.usesBands()[0]
+            # band = renderer.usesBands()[0]
             items = \
                 renderer.shader().rasterShaderFunction().colorRampItemList()
             for item in items:
@@ -323,7 +323,8 @@ def getStyleAsSld(layer, styleName):
                                                            layer.name())
             return sld
         else:
-            #we use some default styles in case we have an unsupported renderer
+            # we use some default styles in case we have an
+            # unsupported renderer
             sldpath = os.path.join(
                 os.path.dirname(__file__), "..", "resources")
             if layer.bandCount() == 1:
@@ -379,15 +380,17 @@ def rule_to_sld(rule, document, element, props):
             nameNode.appendChild(document.createTextNode(rule.label()))
             ruleNode.appendChild(nameNode)
             if rule.label() or rule.description():
-                # descrNode = document.createElement( "sld:Description" )
+                descrNode = document.createElement("sld:Description")
                 if rule.label():
                     titleNode = document.createElement("sld:Title")
-                    titleNode.appendChild(document.createTextNode(rule.label()))
+                    titleNode.appendChild(
+                        document.createTextNode(rule.label()))
                     # descrNode.appendChild(titleNode)
                     ruleNode.appendChild(titleNode)
                 if rule.description():
                     abstractNode = document.createElement("sld:Abstract")
-                    abstractNode.appendChild(document.createTextNode(rule.description()))
+                    abstractNode.appendChild(
+                        document.createTextNode(rule.description()))
                     # descrNode.appendChild(abstractNode)
                     ruleNode.appendChild(abstractNode)
                 # ruleNode.appendChild(descrNode)
@@ -690,8 +693,9 @@ def fill_to_sld(symbolLayer, document, element, brushStyle, color):
     element.appendChild(graphicFillElem)
     graphicElem = document.createElement('sld:Graphic')
     element.appendChild(graphicElem)
-    fillColor = color if patternName.startswith('brush://') else QColor()
-    borderColor = color if not patternName.startswith('brush://') else QColor()
+    fillColor = color if patternName.startswith('brush://') else Qt.QColor()
+    borderColor = \
+        color if not patternName.startswith('brush://') else Qt.QColor()
     # Use WellKnownName tag to handle QT brush styles.
     QgsSymbolLayerV2Utils.wellKnownMarkerToSld(
         document, graphicElem, patternName, fillColor,

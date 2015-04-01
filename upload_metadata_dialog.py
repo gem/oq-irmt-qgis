@@ -131,7 +131,6 @@ class UploadMetadataDialog(QDialog):
             os.system('tidy -xml -i %s' % fname)
         headers = {'content-type': 'application/vnd.ogc.sld+xml'}
         resp = self.session.put(
-            # self.hostname + '/gs/rest/styles/%s.xml' % style_name,
             self.hostname + '/gs/rest/styles/%s' % style_name,
             data=sld, headers=headers)
         if DEBUG:
