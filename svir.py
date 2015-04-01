@@ -31,7 +31,7 @@ import copy
 import zipfile
 import StringIO
 
-from math import ceil
+from math import floor, ceil
 from download_layer_dialog import DownloadLayerDialog
 from metadata_utilities import write_iso_metadata_file, get_supplemental_info
 
@@ -628,6 +628,26 @@ class Svir:
                     tr('Layer invalid'),
                     level=QgsMessageBar.CRITICAL)
                 return
+            try:
+                # dlg.layer_id has the format "oqplatform:layername"
+                style_name = dlg.layer_id.split(':')[1] + '.sld'
+                request_url = '%s/gs/rest/styles/%s' % (
+                    sv_downloader.host, style_name)
+                get_style_resp = sv_downloader.sess.get(request_url)
+                if not get_style_resp.ok:
+                    raise SvNetworkError(get_style_resp.reason)
+                fd, sld_file = tempfile.mkstemp(suffix=".sld")
+                os.close(fd)
+                with open(sld_file, 'w') as f:
+                    f.write(get_style_resp.text)
+                layer.loadSldStyle(sld_file)
+            except Exception as e:
+                error_msg = ('Unable to download and apply the'
+                             ' style layer descriptor: %s' % e)
+                self.iface.messageBar().pushMessage(
+                    'Error downloading style',
+                    error_msg, level=QgsMessageBar.WARNING,
+                    duration=8)
             self.iface.setActiveLayer(layer)
             self.update_proj_def(layer.id(), project_definition)
             self.update_actions_status()
@@ -842,14 +862,21 @@ class Svir:
             ramp)
 
         if graduated_renderer.ranges():
-            range_index = len(graduated_renderer.ranges()) - 1
+            first_range_index = 0
+            last_range_index = len(graduated_renderer.ranges()) - 1
             # NOTE: Workaround to avoid rounding problem (QGIS renderer's bug)
-            # which has the consequence to hide the zone containing the highest
-            # value in some cases
-            upper_value = graduated_renderer.ranges()[range_index].upperValue()
+            # which creates problems styling the zone containing the lowest
+            # and highest values in some cases
+            lower_value = \
+                graduated_renderer.ranges()[first_range_index].lowerValue()
+            decreased_lower_value = floor(lower_value * 10000.0) / 10000.0
+            graduated_renderer.updateRangeLowerValue(
+                first_range_index, decreased_lower_value)
+            upper_value = \
+                graduated_renderer.ranges()[last_range_index].upperValue()
             increased_upper_value = ceil(upper_value * 10000.0) / 10000.0
             graduated_renderer.updateRangeUpperValue(
-                range_index, increased_upper_value)
+                last_range_index, increased_upper_value)
         elif DEBUG:
             print 'All features are NULL'
 
