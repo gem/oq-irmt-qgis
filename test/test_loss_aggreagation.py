@@ -54,32 +54,40 @@ class AggregateLossByZoneTestCase(unittest.TestCase):
             ProcessLayer(orig_zonal_layer).duplicate_in_memory()
         self.loss_attr_names = ['FATALITIES', 'STRUCTURAL']
         self.loss_layer_is_vector = True
-        self.zone_id_in_zones_attr_name = 'ZONE_ID'
 
     def test_aggregate_using_zone_id(self):
         loss_layer_path = os.path.join(
-            self.data_dir_name, 'loss_points_plus_zone_ids.shp')
+            self.data_dir_name, 'loss_points_having_zone_ids.shp')
         orig_loss_layer = QgsVectorLayer(loss_layer_path,
-                                         'Loss points plus zone ids',
+                                         'Loss points having zone ids',
                                          'ogr')
         # avoid modifying the original layers
         copied_loss_layer = ProcessLayer(orig_loss_layer).duplicate_in_memory()
-        zone_id_in_losses_attr_name = 'ZONE_ID'
+        zone_id_in_zones_attr_name = 'ZONE_NAME'
+        zone_id_in_losses_attr_name = 'ZONE_NAME'
         res = calculate_zonal_stats(copied_loss_layer,
                                     self.copied_zonal_layer,
                                     self.loss_attr_names,
                                     self.loss_layer_is_vector,
                                     zone_id_in_losses_attr_name,
-                                    self.zone_id_in_zones_attr_name,
+                                    zone_id_in_zones_attr_name,
                                     IFACE)
         (output_loss_layer, output_zonal_layer, output_loss_attrs_dict) = res
 
         expected_zonal_layer_path = os.path.join(
-            self.data_dir_name, 'svi_zones_plus_loss_stats.shp')
+            self.data_dir_name, 'svi_zones_plus_loss_stats_zone_names.shp')
         expected_zonal_layer = QgsVectorLayer(
             expected_zonal_layer_path, 'Expected zonal layer', 'ogr')
 
         self._check_output_layer(output_zonal_layer, expected_zonal_layer)
+        # just to make sure that we can manage correctly the attributes that
+        # were added, attempt to delete them
+        added_attrs = []
+        added_attrs.append(output_loss_attrs_dict['count'])
+        for loss_attr in self.loss_attr_names:
+            added_attrs.extend(output_loss_attrs_dict[loss_attr].values())
+        ProcessLayer(output_zonal_layer).delete_attributes(
+            added_attrs)
 
     def test_aggregate_using_geometries(self):
         # TODO: manage both with or without SAGA
@@ -89,22 +97,23 @@ class AggregateLossByZoneTestCase(unittest.TestCase):
         # avoid modifying the original layers
         copied_loss_layer = ProcessLayer(orig_loss_layer).duplicate_in_memory()
         zone_id_in_losses_attr_name = None
+        zone_id_in_zones_attr_name = None
 
         res = calculate_zonal_stats(copied_loss_layer,
                                     self.copied_zonal_layer,
                                     self.loss_attr_names,
                                     self.loss_layer_is_vector,
                                     zone_id_in_losses_attr_name,
-                                    self.zone_id_in_zones_attr_name,
+                                    zone_id_in_zones_attr_name,
                                     IFACE)
         (output_loss_layer, output_zonal_layer, output_loss_attrs_dict) = res
         expected_loss_layer_path = os.path.join(
-            self.data_dir_name, 'loss_points_plus_zone_ids.shp')
+            self.data_dir_name, 'loss_points_added_zone_ids.shp')
         expected_loss_layer = QgsVectorLayer(expected_loss_layer_path,
                                              'Loss points plus zone ids',
                                              'ogr')
         expected_zonal_layer_path = os.path.join(
-            self.data_dir_name, 'svi_zones_plus_loss_stats.shp')
+            self.data_dir_name, 'svi_zones_plus_loss_stats_zone_ids.shp')
         expected_zonal_layer = QgsVectorLayer(
             expected_zonal_layer_path, 'Expected zonal layer', 'ogr')
         self._check_output_layer(output_loss_layer, expected_loss_layer)
@@ -118,7 +127,7 @@ class AggregateLossByZoneTestCase(unittest.TestCase):
             'STRUCTURAL': {'sum': u'SUM_STRUCT',
                            'avg': u'AVG_STRUCT'}}
         orig_zonal_layer_path = os.path.join(
-            self.data_dir_name, 'svi_zones_plus_loss_stats.shp')
+            self.data_dir_name, 'svi_zones_plus_loss_stats_zone_ids.shp')
         orig_zonal_layer = QgsVectorLayer(
             orig_zonal_layer_path, 'Zonal layer plus stats', 'ogr')
         # avoid modifying the original layers
