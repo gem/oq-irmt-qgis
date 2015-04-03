@@ -694,7 +694,8 @@ class Svir:
         else:
             project_definition = old_project_definition
 
-        print project_definition
+        if DEBUG:
+            print project_definition
 
         self.update_proj_def(current_layer_id, project_definition)
         self.redraw_ir_layer(project_definition)
@@ -721,6 +722,7 @@ class Svir:
 
         dlg = WeightDataDialog(self.iface, project_definition)
         dlg.show()
+        self.redraw_ir_layer(project_definition)
 
         dlg.json_cleaned.connect(self.weights_changed)
         if dlg.exec_():
@@ -890,14 +892,19 @@ class Svir:
         root_rule.removeChildAt(0)
 
         self.current_layer.setRendererV2(rule_renderer)
-        self.iface.mapCanvas().refresh()
         self.iface.legendInterface().refreshLayerSymbology(self.current_layer)
-        # Reset default symbol (otherwise if the user attempts to re-style the
-        # layer, they will need to explicitly set the border and fill)
-        root_rule.setSymbol(QgsFillSymbolV2.createSimple(
-            {'style': 'solid',
-             'style_border': 'solid'}))
-        self.current_layer.setRendererV2(rule_renderer)
+        self.iface.mapCanvas().refresh()
+
+        # NOTE: The following commented lines do not work, because they apply
+        # to the active layer a solid fill and the null features are therefore
+        # colored in blue instead of being transparent
+        # The intent was to reset default symbol, otherwise if the user
+        # attempts to re-style the layer, they will need to explicitly
+        # set the border and fill). I am commenting this out for the moment.
+        # root_rule.setSymbol(QgsFillSymbolV2.createSimple(
+        #     {'style': 'solid',
+        #      'style_border': 'solid'}))
+        # self.current_layer.setRendererV2(rule_renderer)
 
     def show_settings(self):
         SettingsDialog(self.iface).exec_()
