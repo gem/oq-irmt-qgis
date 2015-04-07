@@ -693,10 +693,8 @@ class Svir:
             self.update_actions_status()
         else:
             project_definition = old_project_definition
-
         if DEBUG:
             print project_definition
-
         self.update_proj_def(current_layer_id, project_definition)
         self.redraw_ir_layer(project_definition)
 
@@ -712,6 +710,19 @@ class Svir:
             self.update_proj_def(current_layer_id, project_definition)
         old_project_definition = copy.deepcopy(project_definition)
 
+        # Save the style so the following styling can be undone
+        fd, sld_file_name = tempfile.mkstemp(suffix=".sld")
+        os.close(fd)
+        (resp_text, sld_was_saved) = \
+            self.iface.activeLayer().saveSldStyle(sld_file_name)
+        if sld_was_saved:
+            print 'original sld saved in %s' % sld_file_name
+        else:
+            err_msg = 'Unable to save the sld: %s' % resp_text
+            self.iface.messageBar().pushMessage(
+                tr("Warning"),
+                tr(err_msg),
+                level=QgsMessageBar.WARNING)
         first_svi = False
         # if the svi_node does not contain the field name
         if 'field' not in project_definition['children'][1]:  # svi_node
@@ -729,6 +740,8 @@ class Svir:
             project_definition = dlg.project_definition
             self.update_actions_status()
         else:
+            if sld_was_saved:  # was able to save the original style
+                self.iface.activeLayer().loadSldStyle(sld_file_name)
             project_definition = old_project_definition
             if first_svi:
                 # delete auto generated svi field
