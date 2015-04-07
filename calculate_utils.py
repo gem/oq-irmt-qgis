@@ -136,19 +136,20 @@ def calculate_svi(iface, current_layer, project_definition):
                         # (all weights 1)
                         # and divide by the number of indicators (we use
                         # the latter solution)
+                        try:
+                            inversion_factor = \
+                                -1 if indicator['isInverted'] else 1
+                        except KeyError:
+                            inversion_factor = 1
                         if indicators_operator in (OPERATORS_DICT['SUM_S'],
                                                    OPERATORS_DICT['AVG'],
                                                    OPERATORS_DICT['MUL_S']):
-                            # If the weight is negative, it means that the user
-                            # wants to invert the contribute of the indicator
-                            # to the calculation, even if the weight itself
-                            # is ignored
-                            indicator_weighted = feat[indicator['field']]
-                            if indicator['weight'] < 0:
-                                indicator_weighted = -indicator_weighted
+                            indicator_weighted = (
+                                feat[indicator['field']] * inversion_factor)
                         else:
-                            indicator_weighted = (feat[indicator['field']] *
-                                                  indicator['weight'])
+                            indicator_weighted = (
+                                feat[indicator['field']] *
+                                indicator['weight'] * inversion_factor)
 
                         if indicators_operator in \
                                 SUM_BASED_OPERATORS:
@@ -168,6 +169,10 @@ def calculate_svi(iface, current_layer, project_definition):
                     if indicators_operator == OPERATORS_DICT['AVG']:
                         theme_result /= len(indicators)
 
+                    try:
+                        inversion_factor = -1 if theme['isInverted'] else 1
+                    except KeyError:
+                        inversion_factor = 1
                     # combine the indicators of each theme
                     # For "Average (equal weights)" it's equivalent to use
                     # equal weights, or to sum the themes (all weights 1)
@@ -176,15 +181,10 @@ def calculate_svi(iface, current_layer, project_definition):
                     if themes_operator in (OPERATORS_DICT['SUM_S'],
                                            OPERATORS_DICT['AVG'],
                                            OPERATORS_DICT['MUL_S']):
-                        # If the weight is negative, it means that the user
-                        # wants to invert the contribute of the theme
-                        # to the calculation, even if the weight itself
-                        # is ignored
-                        theme_weighted = theme_result
-                        if theme['weight'] < 0:
-                            theme_weighted = -theme_weighted
+                        theme_weighted = theme_result * inversion_factor
                     else:
-                        theme_weighted = theme_result * theme['weight']
+                        theme_weighted = (
+                            theme_result * theme['weight'] * inversion_factor)
 
                     if themes_operator in SUM_BASED_OPERATORS:
                         svi_value += theme_weighted
@@ -290,18 +290,21 @@ def calculate_ri(iface, current_layer, project_definition):
                     # (all weights 1)
                     # and divide by the number of indicators (we use
                     # the latter solution)
+                    try:
+                        inversion_factor = -1 if indicator['isInverted'] else 1
+                    except KeyError:
+                        inversion_factor = 1
                     if ri_operator in (OPERATORS_DICT['SUM_S'],
                                        OPERATORS_DICT['AVG'],
                                        OPERATORS_DICT['MUL_S']):
-                        # If the weight is negative, it means that the user
-                        # wants to invert the contribute of the indicator to
-                        # the calculation, even if the weight itself is ignored
-                        indicator_weighted = feat[indicator['field']]
-                        if indicator['weight'] < 0:
-                            indicator_weighted = -indicator_weighted
-                    else:
-                        indicator_weighted = (feat[indicator['field']] *
-                                              indicator['weight'])
+                        # these operators ignore weights, but take into account
+                        # the inversion
+                        indicator_weighted = \
+                            feat[indicator['field']] * inversion_factor
+                    else:  # also multiply by the weight
+                        indicator_weighted = (
+                            feat[indicator['field']] *
+                            indicator['weight'] * inversion_factor)
 
                     if ri_operator in SUM_BASED_OPERATORS:
                         ri_value += indicator_weighted
@@ -363,7 +366,15 @@ def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
         iri_operator = DEFAULT_OPERATOR
 
     risk_weight = project_definition['children'][0]['weight']
+    try:
+        risk_is_inverted = project_definition['children'][0]['isInverted']
+    except KeyError:
+        risk_is_inverted = False
     svi_weight = project_definition['children'][1]['weight']
+    try:
+        svi_is_inverted = project_definition['children'][1]['isInverted']
+    except KeyError:
+        svi_is_inverted = False
 
     if 'field' in project_definition:  # The root is the node containing IRI
         iri_attr_name = project_definition['field']
@@ -397,8 +408,8 @@ def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
                 # item to the calculation. To do that, we multiply the value of
                 # the item by -1 if the weight is negative (do the invertion)
                 # or by 1 if the weight is positive (no invertion)
-                svi_invert = -1 if svi_weight < 0 else 1
-                ri_invert = -1 if risk_weight < 0 else 1
+                svi_inversion_factor = -1 if svi_is_inverted else 1
+                ri_inversion_factor = -1 if risk_is_inverted else 1
                 # ri_value = feat[iri_field_name]
                 if (ri_value == QPyNullVariant(float)
                         or feat_id in discarded_feats_ids):
@@ -406,22 +417,27 @@ def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
                     discarded_feats_ids.add(feat_id)
                 # see the above comment about svi_invert and ri_invert
                 elif iri_operator == OPERATORS_DICT['SUM_S']:
-                    iri_value = svi_value * svi_invert + ri_value * ri_invert
+                    iri_value = (svi_value * svi_inversion_factor
+                                 + ri_value * ri_inversion_factor)
                 elif iri_operator == OPERATORS_DICT['MUL_S']:
-                    iri_value = svi_value * svi_invert * ri_value * ri_invert
+                    iri_value = (svi_value * svi_inversion_factor
+                                 * ri_value * ri_inversion_factor)
                 elif iri_operator == OPERATORS_DICT['SUM_W']:
                     iri_value = (
-                        svi_value * svi_weight + ri_value * risk_weight)
+                        svi_value * svi_weight * svi_inversion_factor
+                        + ri_value * risk_weight * ri_inversion_factor)
                 elif iri_operator == OPERATORS_DICT['MUL_W']:
                     iri_value = (
-                        svi_value * svi_weight * ri_value * risk_weight)
+                        svi_value * svi_weight * svi_inversion_factor
+                        * ri_value * risk_weight * ri_inversion_factor)
                 elif iri_operator == OPERATORS_DICT['AVG']:
                     # For "Average (equal weights)" it's equivalent to use
                     # equal weights, or to sum the indices (all weights 1)
                     # and divide by the number of indices (we use
                     # the latter solution)
                     iri_value = (
-                        svi_value * svi_invert + ri_value * svi_invert) / 2.0
+                        svi_value * svi_inversion_factor
+                        + ri_value * svi_inversion_factor) / 2.0
                 # store IRI
                 current_layer.changeAttributeValue(
                     feat_id, iri_attr_id, iri_value)
