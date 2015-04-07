@@ -716,7 +716,8 @@ class Svir:
         (resp_text, sld_was_saved) = \
             self.iface.activeLayer().saveSldStyle(sld_file_name)
         if sld_was_saved:
-            print 'original sld saved in %s' % sld_file_name
+            if DEBUG:
+                print 'original sld saved in %s' % sld_file_name
         else:
             err_msg = 'Unable to save the sld: %s' % resp_text
             self.iface.messageBar().pushMessage(
