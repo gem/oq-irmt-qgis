@@ -24,6 +24,7 @@ __copyright__ = (
 )
 
 import logging
+from mock import Mock
 from PyQt4.QtCore import QObject, pyqtSlot, pyqtSignal
 from qgis.core import QgsMapLayerRegistry
 from qgis.gui import QgsMapCanvasLayer
@@ -45,6 +46,7 @@ class QgisInterface(QObject):
         """
         QObject.__init__(self)
         self.canvas = canvas
+        self._messageBar = None
         # Set up slots so we can mimic the behaviour of QGIS when layers
         # are added.
         LOGGER.debug('Initialising canvas...')
@@ -203,3 +205,9 @@ class QgisInterface(QObject):
     def legendInterface(self):
         """Get the legend."""
         return self.canvas
+
+    def messageBar(self):
+        """Get the legend."""
+        if self._messageBar is None:
+            self._messageBar = Mock()  # avoid creating GUI by QgsMessageBar()
+        return self._messageBar

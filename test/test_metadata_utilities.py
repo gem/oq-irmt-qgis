@@ -24,6 +24,7 @@ __copyright__ = ('Copyright 2012, Australia Indonesia Facility for '
 import os
 import time
 import unittest
+import tempfile
 import uuid
 
 from metadata_utilities import (
@@ -36,7 +37,12 @@ class TestCase(unittest.TestCase):
 
     def test_valid_iso_xml(self):
         # test when XML file is non existent
-        filename = '/tmp/%s.xml' % uuid.uuid4()
+        # NOTE: we are not creating a new temporary file here, but just
+        # attempting to look for a non-existing file.
+        # valid_iso_xml will create a new xml file from a template, if the
+        # filename is not found.
+        random_name = '%s.xml' % uuid.uuid4()
+        filename = os.path.join(tempfile.gettempdir(), random_name)
         tree = valid_iso_xml(filename)
         root = tree.getroot()
         self.assertIsNotNone(root.find(ISO_METADATA_KEYWORD_TAG))

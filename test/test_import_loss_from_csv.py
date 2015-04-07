@@ -30,7 +30,7 @@ import unittest
 import os.path
 
 from utilities import get_qgis_app
-QGIS_APP, CANVAS, PARENT, IFACE = get_qgis_app()
+QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 
 from collections import namedtuple
 from select_input_layers_dialog import SelectInputLayersDialog

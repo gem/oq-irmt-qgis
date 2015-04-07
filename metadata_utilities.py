@@ -159,7 +159,6 @@ def valid_iso_xml(xml_filename):
     :param xml_filename: name of the xml file
     :return: tree the parsed ElementTree
     """
-
     if os.path.isfile(xml_filename):
         #the file already has an xml file, we need to check it's structure
         tree = ElementTree.parse(xml_filename)

@@ -24,6 +24,8 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 import uuid
+from numpy.testing import assert_almost_equal
+from pprint import pprint
 from types import NoneType
 from PyQt4.QtCore import QVariant
 import qgis
@@ -44,6 +46,12 @@ class ProcessLayer():
     def __init__(self, layer):
         self.layer = layer
 
+    def pprint(self):
+        print 'Layer: %s' % self.layer.name()
+        print [field.name() for field in self.layer.dataProvider().fields()]
+        pprint([feature.attributes()
+                for feature in self.layer.dataProvider().getFeatures()])
+
     def has_same_content_as(self, other_layer):
         this_dp = self.layer.dataProvider()
         other_dp = other_layer.dataProvider()
@@ -51,15 +59,30 @@ class ProcessLayer():
         len_other = other_layer.featureCount()
         if len_this != len_other:
             return False
+        this_fields = [field.name() for field in this_dp.fields()]
+        other_fields = [field.name() for field in other_dp.fields()]
+        if this_fields != other_fields:
+            return False
         this_features = this_dp.getFeatures()
         other_features = other_dp.getFeatures()
         # we already checked that the layers have the same number of features
         for i in xrange(len_this):
             this_feature = this_features.next()
             other_feature = other_features.next()
-            if this_feature.attributes() != other_feature.attributes():
-                # at least one feature is different
+            this_feat_data = this_feature.attributes()
+            other_feat_data = other_feature.attributes()
+            if len(this_feat_data) != len(other_feat_data):
                 return False
+            for j in xrange(len(this_feat_data)):
+                if isinstance(this_feat_data[j], (int, long, float, complex)):
+                    try:
+                        assert_almost_equal(this_feat_data[j],
+                                            other_feat_data[j])
+                    except AssertionError:
+                        return False
+                else:
+                    if this_feat_data[j] != other_feat_data[j]:
+                        return False
         return True
 
     def add_attributes(self, attribute_list, simulate=False):
@@ -234,7 +257,7 @@ class ProcessLayer():
 
         """
         if new_name is '':
-            new_name = self.layer.name() + ' TMP'
+            new_name = self.layer.name() + ' (copy)'
 
         if self.layer.type() == QgsMapLayer.VectorLayer:
             v_type = self.layer.wkbType()
