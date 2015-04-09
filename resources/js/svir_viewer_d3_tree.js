@@ -296,7 +296,6 @@
                     pdTempWeights.push(spinnerValue);
                 }
 
-                // Adjust the values into percentages
                 pdTempWeights = pdTempWeights.map(Number);
                 var totalWeights = 0;
                 $.each(pdTempWeights,function() {
@@ -307,8 +306,7 @@
                     if (totalWeights === 0) {
                         pdTempWeightsComputed.push(1 / pdTempWeights.length);
                     } else {
-                        var tempMath = (pdTempWeights[i] * 100) / totalWeights;
-                        pdTempWeightsComputed.push(tempMath / 100);
+                        pdTempWeightsComputed.push(pdTempWeights[i] / totalWeights);
                     }
                 }
 
