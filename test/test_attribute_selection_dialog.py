@@ -22,7 +22,7 @@ from PyQt4.QtGui import QDialogButtonBox, QDialog
 from attribute_selection_dialog import AttributeSelectionDialog
 
 from utilities import get_qgis_app
-QGIS_APP = get_qgis_app()
+QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 
 
 class AttributeSelectionDialogTest(unittest.TestCase):
@@ -55,4 +55,3 @@ if __name__ == "__main__":
     suite = unittest.makeSuite(AttributeSelectionDialogTest)
     runner = unittest.TextTestRunner(verbosity=2)
     runner.run(suite)
-

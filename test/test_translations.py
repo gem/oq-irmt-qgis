@@ -22,7 +22,7 @@ import os
 
 from PyQt4.QtCore import QCoreApplication, QTranslator
 
-QGIS_APP = get_qgis_app()
+QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 
 
 class SafeTranslationsTest(unittest.TestCase):
