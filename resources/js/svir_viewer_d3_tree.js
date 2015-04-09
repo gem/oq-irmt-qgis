@@ -86,21 +86,21 @@
         var diagonal = d3.svg.diagonal()
             .projection(function(d) { return [d.y, d.x]; });
 
-        function createSpinner(id, weight, name, field) {
+        function createSpinner(id, weight, name, field, isInverted) {
             pdTempSpinnerIds.push("spinner-"+id);
             $('#projectDefWeightDialog').dialog("open");
             var content = '<p><label style="clear: left; float: left; width: 10em;" for="spinner'+id+'">'+name;
             if (typeof field !== 'undefined') {
                 content += ' ('+field+')';
             }
-            content += ': </label><input id="spinner-'+id+'" name="spinner" value="'+Math.abs(weight)+'">';
+            content += ': </label><input id="spinner-' + id + '" name="spinner" value="' + weight + '">';
             content += '<input type="checkbox" id="inverter-spinner-'+id+'"><label style="font-size: 0.8em; "for="inverter-spinner-'+id+'" title="Select to invert the contribution of the variable to the calculation">Invert</label>';
             content += '</p>';
             $('#projectDefWeightDialog').append(content);
             $(function() {
                 var inverter = $("#inverter-spinner-" + id);
                 inverter.button();
-                inverter.prop("checked", (weight < 0));
+                inverter.prop("checked", isInverted);
                 inverter.button("refresh");
             });
             $(function() {
@@ -285,15 +285,14 @@
 
             function updateButtonClicked() {
                 pdTempWeights = [];
+                pdTempInverters = [];
                 pdTempWeightsComputed = [];
 
-                // Get the values of the spinners
+                // Get the values of the spinners and of the inverters
                 for (var i = 0; i < pdTempSpinnerIds.length; i++) {
                     var isInverted = $('#inverter-' + pdTempSpinnerIds[i]).is(':checked');
                     var spinnerValue = $('#'+pdTempSpinnerIds[i]).val();
-                    if (isInverted) {
-                        spinnerValue = -spinnerValue;
-                    }
+                    pdTempInverters.push(isInverted);
                     pdTempWeights.push(spinnerValue);
                 }
 
@@ -301,7 +300,7 @@
                 pdTempWeights = pdTempWeights.map(Number);
                 var totalWeights = 0;
                 $.each(pdTempWeights,function() {
-                    totalWeights += Math.abs(this);
+                    totalWeights += this;
                 });
 
                 for (var i = 0; i < pdTempWeights.length; i++) {
@@ -311,12 +310,12 @@
 
                 // Update the results back into the spinners and to the d3.js chart
                 for (var i = 0; i < pdTempSpinnerIds.length; i++) {
-                    $('#'+pdTempSpinnerIds[i]).spinner("value", Math.abs(pdTempWeightsComputed[i]));
+                    $('#'+pdTempSpinnerIds[i]).spinner("value", pdTempWeightsComputed[i]);
                 }
 
                 // Update the json with new values
                 for (var i = 0; i < pdTempWeightsComputed.length; i++) {
-                    updateTreeBranch(pdData, [pdTempIds[i]], pdTempWeightsComputed[i]);
+                    updateTreeBranch(pdData, [pdTempIds[i]], pdTempWeightsComputed[i], pdTempInverters[i]);
                 }
 
                 if ($('#operator').length !== 0) {
@@ -338,7 +337,7 @@
             ))
             {
                 pdTempIds.push(pdData.id);
-                createSpinner(pdData.id, pdData.weight, pdData.name, pdData.field);
+                createSpinner(pdData.id, pdData.weight, pdData.name, pdData.field, pdData.isInverted);
             }
 
             (pdData.children || []).forEach(function(child) {
@@ -348,15 +347,16 @@
 
         }
 
-        function updateTreeBranch(pdData, id, pdWeight) {
+        function updateTreeBranch(pdData, id, pdWeight, pdIsInverted) {
             if (id.some(function(currentValue) {
                 return (pdData.id == currentValue);
             })) {
                 pdData.weight = pdWeight;
+                pdData.isInverted = pdIsInverted;
             }
 
             (pdData.children || []).forEach(function(currentItem) {
-                updateTreeBranch(currentItem, id, pdWeight);
+                updateTreeBranch(currentItem, id, pdWeight, pdIsInverted);
             });
         }
 
@@ -402,7 +402,7 @@
                     }
                 }
             }
-            return d.weight ? Math.max(Math.abs(d.weight) * CIRCLE_SCALE, MIN_CIRCLE_SIZE): MIN_CIRCLE_SIZE;
+            return d.weight ? Math.max(d.weight * CIRCLE_SCALE, MIN_CIRCLE_SIZE): MIN_CIRCLE_SIZE;
         }
 
         var svg = d3.select("#projectDefDialog").append("svg")
@@ -717,7 +717,7 @@
                 .attr("text-anchor", function(d) { return "end"; })
                 .text(function(d) {
                     // Render a minus before the name of a variable which weight is negative
-                    if (d.weight < 0) {
+                    if (d.isInverted) {
                         return "- " + d.name;
                     } else {
                         return d.name;
@@ -855,7 +855,7 @@
                     return getRadius(d);
                 })
                 .style("stroke", function(d) {
-                    if (d.weight < 0) {
+                    if (d.isInverted) {
                         return "PowderBlue";
                     } else {
                         return "RoyalBlue";
@@ -867,7 +867,7 @@
                 })
                 .style("fill", function(d) {
                     // return d.source ? d.source.linkColor: d.linkColor;
-                    if (d.weight < 0) {
+                    if (d.isInverted) {
                         return "RoyalBlue";
                     } else {
                         return "PowderBlue";
