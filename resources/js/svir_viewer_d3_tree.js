@@ -302,9 +302,13 @@
                     totalWeights += this;
                 });
 
+                // Adjust weights of sibling nodes to sum to 1
+                // apart from the case in which all nodes are set to weight=0
+                // In such corner case, we assume the user wants to remove the effect
+                // of all sibling nodes, so we set all weights to 0
                 for (var i = 0; i < pdTempWeights.length; i++) {
                     if (totalWeights === 0) {
-                        pdTempWeightsComputed.push(1 / pdTempWeights.length);
+                        pdTempWeightsComputed.push(0);
                     } else {
                         pdTempWeightsComputed.push(pdTempWeights[i] / totalWeights);
                     }
