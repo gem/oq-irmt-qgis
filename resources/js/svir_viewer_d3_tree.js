@@ -296,16 +296,22 @@
                     pdTempWeights.push(spinnerValue);
                 }
 
-                // Adjust the values into percentages
                 pdTempWeights = pdTempWeights.map(Number);
                 var totalWeights = 0;
                 $.each(pdTempWeights,function() {
                     totalWeights += this;
                 });
 
+                // Adjust weights of sibling nodes to sum to 1
+                // apart from the case in which all nodes are set to weight=0
+                // In such corner case, we assume the user wants to remove the effect
+                // of all sibling nodes, so we set all weights to 0
                 for (var i = 0; i < pdTempWeights.length; i++) {
-                    var tempMath = (pdTempWeights[i] * 100) / totalWeights;
-                    pdTempWeightsComputed.push(tempMath / 100);
+                    if (totalWeights === 0) {
+                        pdTempWeightsComputed.push(0);
+                    } else {
+                        pdTempWeightsComputed.push(pdTempWeights[i] / totalWeights);
+                    }
                 }
 
                 // Update the results back into the spinners and to the d3.js chart
