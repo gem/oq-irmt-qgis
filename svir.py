@@ -299,6 +299,8 @@ class Svir:
             self.registered_actions["transform_attribute"].setEnabled(True)
             self.sync_proj_def()
             proj_def = self.project_definitions[self.current_layer.id()]
+            if isinstance(proj_def, list):
+                proj_def = proj_def[-1]
             self.registered_actions["upload"].setEnabled(proj_def is not None)
         except KeyError:
             # self.project_definitions[self.current_layer.id()] is not defined
@@ -651,12 +653,14 @@ class Svir:
         current_layer_id = self.iface.activeLayer().id()
         try:
             project_definition = self.project_definitions[current_layer_id]
+            if isinstance(project_definition, list):
+                project_definition = project_definition[-1]
         except KeyError:
             project_definition = PROJECT_TEMPLATE
             self.update_proj_def(current_layer_id, project_definition)
         old_project_definition = copy.deepcopy(project_definition)
 
-        dlg = SetProjectDefinitionDialog(self.iface, project_definition, )
+        dlg = SetProjectDefinitionDialog(self.iface, project_definition)
         if dlg.exec_():
             project_definition = dlg.project_definition
             self.update_actions_status()
@@ -674,6 +678,8 @@ class Svir:
         current_layer_id = self.current_layer.id()
         try:
             project_definition = self.project_definitions[current_layer_id]
+            if isinstance(project_definition, list):
+                project_definition = project_definition[-1]
         except KeyError:
             project_definition = PROJECT_TEMPLATE
             self.update_proj_def(current_layer_id, project_definition)
@@ -1035,6 +1041,8 @@ class Svir:
         xml_file = file_stem + '.xml'
 
         project_definition = self.project_definitions[self.current_layer.id()]
+        if isinstance(project_definition, list):
+            project_definition = project_definition[-1]
 
         QgsVectorFileWriter.writeAsVectorFormat(
             self.current_layer,
