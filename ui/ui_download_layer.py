@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_download_layer.ui'
 #
-# Created: Thu Jan 29 11:41:55 2015
+# Created: Thu Apr 16 14:42:50 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!

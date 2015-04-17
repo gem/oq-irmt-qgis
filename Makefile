@@ -21,9 +21,9 @@ LOCALES = it
 
 PLUGINNAME = svir
 
-PY_FILES = svir.py select_input_layers_dialog.py __init__.py attribute_selection_dialog.py transformation_dialog.py select_sv_variables_dialog.py settings_dialog.py
+PY_FILES = svir.py select_input_layers_dialog.py __init__.py attribute_selection_dialog.py transformation_dialog.py select_sv_variables_dialog.py settings_dialog.py select_project_definition_dialog.py
 
-UI_FILES = ui/ui_select_input_layers.py ui/ui_attribute_selection.py ui/ui_transformation.py ui/ui_select_sv_variables.py ui/ui_settings.py ui/ui_weight_data.py ui/ui_calculate_iri.py ui/ui_upload_metadata.py ui/ui_upload_settings.py ui/ui_set_project_definition.py ui/ui_download_layer.py
+UI_FILES = ui/ui_select_input_layers.py ui/ui_attribute_selection.py ui/ui_transformation.py ui/ui_select_sv_variables.py ui/ui_settings.py ui/ui_weight_data.py ui/ui_calculate_iri.py ui/ui_upload_metadata.py ui/ui_upload_settings.py ui/ui_set_project_definition.py ui/ui_download_layer.py ui/ui_select_project_definition.py
 
 EXTRAS = resources/start_plugin_icon.png metadata.txt
 
