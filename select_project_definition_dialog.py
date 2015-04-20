@@ -28,9 +28,11 @@ import json
 from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox,
-                         )
+                         QInputDialog)
 from qgis.core import QgsProject
 from ui.ui_select_project_definition import Ui_SelectProjectDefinitionDialog
+from utils import tr
+from shared import PROJECT_TEMPLATE
 
 
 class SelectProjectDefinitionDialog(QDialog):
@@ -67,22 +69,17 @@ class SelectProjectDefinitionDialog(QDialog):
                 return
         else:
             self.project_definitions = {'selected_idx': None, 'proj_defs': []}
-        # TODO: Avoid opening the dialog if it's useless
-        if len(self.project_definitions['proj_defs']) == 0:
-            self.cancel_button.animateClick()
-            return
-        if len(self.project_definitions['proj_defs']) == 1:
-            self.selected_idx = 0
-            self.display_proj_def_details()
-            self.ok_button.animateClick()
-            return
 
     def populate_proj_def_cbx(self):
+        self.ui.proj_def_cbx.clear()
         for proj_def in self.project_definitions['proj_defs']:
             if 'title' in proj_def:
                 self.ui.proj_def_cbx.addItem(proj_def['title'])
             else:
                 self.ui.proj_def_cbx.addItem('Untitled project definition')
+        if self.project_definitions['selected_idx'] is not None:
+            self.ui.proj_def_cbx.setCurrentIndex(
+                self.project_definitions['selected_idx'])
 
     def display_proj_def_details(self):
         # display the corresponding project definition in the textedit
@@ -93,7 +90,22 @@ class SelectProjectDefinitionDialog(QDialog):
                                   separators=(',', ': '))
         self.ui.proj_def_detail.setText(proj_def_str)
 
+    def add_proj_def(self, title):
+        proj_def_template = PROJECT_TEMPLATE
+        proj_def_template['title'] = title
+        self.project_definitions['proj_defs'].append(proj_def_template)
+        self.project_definitions['selected_idx'] = len(
+            self.project_definitions['proj_defs']) - 1
+        self.populate_proj_def_cbx()
+
     @pyqtSlot(str)
     def on_proj_def_cbx_currentIndexChanged(self):
         self.selected_idx = self.ui.proj_def_cbx.currentIndex()
         self.display_proj_def_details()
+
+    @pyqtSlot()
+    def on_add_proj_def_btn_clicked(self):
+        title, ok = QInputDialog().getText(
+            self, tr('Assign a title'), tr('Project definition title'))
+        if ok:
+            self.add_proj_def(title)

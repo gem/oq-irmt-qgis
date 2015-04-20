@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_select_project_definition.ui'
 #
-# Created: Thu Apr 16 14:51:36 2015
+# Created: Mon Apr 20 11:37:46 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -34,17 +34,24 @@ class Ui_SelectProjectDefinitionDialog(object):
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
         self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName(_fromUtf8("buttonBox"))
-        self.gridLayout.addWidget(self.buttonBox, 3, 0, 1, 1)
+        self.gridLayout.addWidget(self.buttonBox, 5, 0, 1, 1)
         self.label = QtGui.QLabel(SelectProjectDefinitionDialog)
         self.label.setObjectName(_fromUtf8("label"))
         self.gridLayout.addWidget(self.label, 0, 0, 1, 1)
-        self.proj_def_cbx = QtGui.QComboBox(SelectProjectDefinitionDialog)
-        self.proj_def_cbx.setObjectName(_fromUtf8("proj_def_cbx"))
-        self.gridLayout.addWidget(self.proj_def_cbx, 1, 0, 1, 1)
         self.proj_def_detail = QtGui.QTextEdit(SelectProjectDefinitionDialog)
         self.proj_def_detail.setReadOnly(True)
         self.proj_def_detail.setObjectName(_fromUtf8("proj_def_detail"))
-        self.gridLayout.addWidget(self.proj_def_detail, 2, 0, 1, 1)
+        self.gridLayout.addWidget(self.proj_def_detail, 4, 0, 1, 1)
+        self.horizontalLayout = QtGui.QHBoxLayout()
+        self.horizontalLayout.setContentsMargins(-1, 0, -1, -1)
+        self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
+        self.proj_def_cbx = QtGui.QComboBox(SelectProjectDefinitionDialog)
+        self.proj_def_cbx.setObjectName(_fromUtf8("proj_def_cbx"))
+        self.horizontalLayout.addWidget(self.proj_def_cbx)
+        self.add_proj_def_btn = QtGui.QToolButton(SelectProjectDefinitionDialog)
+        self.add_proj_def_btn.setObjectName(_fromUtf8("add_proj_def_btn"))
+        self.horizontalLayout.addWidget(self.add_proj_def_btn)
+        self.gridLayout.addLayout(self.horizontalLayout, 2, 0, 1, 1)
 
         self.retranslateUi(SelectProjectDefinitionDialog)
         QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), SelectProjectDefinitionDialog.accept)
@@ -59,4 +66,5 @@ class Ui_SelectProjectDefinitionDialog(object):
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:\'Ubuntu\'; font-size:11pt; font-weight:400; font-style:normal;\">\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p></body></html>", None))
+        self.add_proj_def_btn.setText(_translate("SelectProjectDefinitionDialog", "+", None))
 

@@ -251,11 +251,9 @@ class Svir:
         if proj_defs is not None:
             assert isinstance(proj_defs, list)
             assert selected_idx < len(proj_defs)
-            if layer_id not in self.project_definitions:
-                self.project_definitions[layer_id] = {
-                    'selected_idx': selected_idx,
-                    'proj_defs': proj_defs}
-            self.project_definitions[layer_id]['selected_idx'] = selected_idx
+            self.project_definitions[layer_id] = {
+                'selected_idx': selected_idx,
+                'proj_defs': proj_defs}
         else:
             self.project_definitions.pop(layer_id, None)
         # set the QgsProject's property
