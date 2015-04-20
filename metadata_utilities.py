@@ -97,7 +97,10 @@ def generate_iso_metadata(project_definition=None):
         if DEBUG:
             print project_definition
         template_replacements['SVIR_PROJECT_DEFINITION'] = '<![CDATA[%s]]>' % \
-            json.dumps(project_definition)
+            json.dumps(project_definition,
+                       sort_keys=False,
+                       indent=2,
+                       separators=(',', ': '))
         try:
             template_replacements['ISO19115_TITLE'] = \
                 project_definition['title']
