@@ -61,7 +61,6 @@ from qgis.core import (QgsVectorLayer,
 
 from qgis.gui import QgsMessageBar
 
-from set_project_definition_dialog import SetProjectDefinitionDialog
 from upload_metadata_dialog import UploadMetadataDialog
 
 from calculate_utils import calculate_svi, calculate_ri, calculate_iri
@@ -77,7 +76,7 @@ from select_sv_variables_dialog import SelectSvVariablesDialog
 from settings_dialog import SettingsDialog
 from weight_data_dialog import WeightDataDialog
 from upload_settings_dialog import UploadSettingsDialog
-from select_project_definition_dialog import SelectProjectDefinitionDialog
+from projects_manager_dialog import ProjectsManagerDialog
 
 from import_sv_data import get_loggedin_downloader
 
@@ -162,21 +161,14 @@ class Svir:
                            self.transform_attribute,
                            enable=False,
                            add_to_layer_actions=True)
-        # Action to select one of the available project definitions and use it
-        # for the active layer
-        self.add_menu_item("select_project_definition",
+        # Action to manage the projects
+        self.add_menu_item("projects_manager",
                            ":/plugins/svir/copy.svg",
-                           u"&Select project definition",
-                           self.select_project_definition,
+                           u"Projects &manager",
+                           self.projects_manager,
                            enable=False,
                            add_to_layer_actions=True)
-        # Action to set a preexisting project definition to a layer
-        self.add_menu_item("set_project_definition",
-                           ":/plugins/svir/copy.svg",
-                           u"&Set project definition",
-                           self.set_project_definition,
-                           enable=False,
-                           add_to_layer_actions=True)
+
         # Action to activate the modal dialog to choose weighting of the
         # data from the platform
         self.add_menu_item("weight_data",
@@ -318,9 +310,7 @@ class Svir:
             # Activate actions which require a vector layer to be selected
             if self.current_layer.type() != QgsMapLayer.VectorLayer:
                 raise AttributeError
-            self.registered_actions[
-                "select_project_definition"].setEnabled(True)
-            self.registered_actions["set_project_definition"].setEnabled(True)
+            self.registered_actions["projects_manager"].setEnabled(True)
             self.registered_actions["weight_data"].setEnabled(True)
             self.registered_actions["transform_attribute"].setEnabled(True)
             self.sync_proj_def()
@@ -339,9 +329,7 @@ class Svir:
             self.registered_actions["transform_attribute"].setEnabled(False)
             self.registered_actions["weight_data"].setEnabled(False)
             self.registered_actions["upload"].setEnabled(False)
-            self.registered_actions[
-                "select_project_definition"].setEnabled(False)
-            self.registered_actions["set_project_definition"].setEnabled(False)
+            self.registered_actions["projects_manager"].setEnabled(False)
 
     def unload(self):
         # Remove the plugin menu items and toolbar icons
@@ -654,15 +642,7 @@ class Svir:
             self.update_actions_status()
             # in case of multiple project definitions, let the user select one
             if isinstance(project_definitions, list):
-                self.select_project_definition()
-
-    def select_project_definition(self):
-        select_proj_def_dlg = SelectProjectDefinitionDialog(self.iface)
-        if select_proj_def_dlg.exec_():
-            self.update_proj_defs(
-                self.iface.activeLayer().id(),
-                select_proj_def_dlg.project_definitions['proj_defs'],
-                select_proj_def_dlg.selected_idx)
+                self.projects_manager()
 
     @staticmethod
     def _add_new_theme(svi_themes,
@@ -686,32 +666,18 @@ class Svir:
         new_indicator['level'] = level
         svi_themes[theme_position]['children'].append(new_indicator)
 
-    def set_project_definition(self):
-        """
-        Open a modal dialog to select weights in a d3.js visualization
-        """
+    def projects_manager(self):
         self.sync_proj_def()
-        current_layer_id = self.iface.activeLayer().id()
-        try:
-            layer_dict = self.project_definitions[current_layer_id]
-            selected_idx = layer_dict['selected_idx']
-            proj_defs = layer_dict['proj_defs']
-            project_definition = proj_defs[selected_idx]
-        except KeyError:
-            project_definition = PROJECT_TEMPLATE
-            self.update_proj_defs(current_layer_id, [project_definition])
-        old_project_definition = copy.deepcopy(project_definition)
-
-        dlg = SetProjectDefinitionDialog(self.iface, project_definition)
-        if dlg.exec_():
-            project_definition = dlg.project_definition
-            self.update_actions_status()
-        else:
-            project_definition = old_project_definition
-        if DEBUG:
-            print project_definition
-        self.update_proj_defs(current_layer_id, [project_definition])
-        self.redraw_ir_layer(project_definition)
+        select_proj_def_dlg = ProjectsManagerDialog(self.iface)
+        if select_proj_def_dlg.exec_():
+            project_definitions = select_proj_def_dlg.project_definitions[
+                'proj_defs']
+            self.update_proj_defs(
+                self.iface.activeLayer().id(),
+                project_definitions,
+                select_proj_def_dlg.selected_idx)
+            self.redraw_ir_layer(
+                project_definitions[select_proj_def_dlg.selected_idx])
 
     def weight_data(self):
         """

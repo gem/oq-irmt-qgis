@@ -30,12 +30,12 @@ from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox,
                          QInputDialog)
 from qgis.core import QgsProject
-from ui.ui_select_project_definition import Ui_SelectProjectDefinitionDialog
+from ui.ui_projects_manager_dialog import Ui_ProjectsManagerDialog
 from utils import tr
 from shared import PROJECT_TEMPLATE
 
 
-class SelectProjectDefinitionDialog(QDialog):
+class ProjectsManagerDialog(QDialog):
     """
     Modal dialog allowing to select one of the project definitions
     available for the active layer
@@ -44,7 +44,7 @@ class SelectProjectDefinitionDialog(QDialog):
         self.iface = iface
         QDialog.__init__(self)
         # Set up the user interface from Designer.
-        self.ui = Ui_SelectProjectDefinitionDialog()
+        self.ui = Ui_ProjectsManagerDialog()
         self.ui.setupUi(self)
         self.cancel_button = self.ui.buttonBox.button(QDialogButtonBox.Cancel)
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
@@ -65,7 +65,8 @@ class SelectProjectDefinitionDialog(QDialog):
             except KeyError:
                 self.project_definitions = {'selected_idx': None,
                                             'proj_defs': []}
-                self.cancel_button.animateClick()
+                #FIXME: really needed?
+                #self.cancel_button.animateClick()
                 return
         else:
             self.project_definitions = {'selected_idx': None, 'proj_defs': []}
@@ -109,3 +110,13 @@ class SelectProjectDefinitionDialog(QDialog):
             self, tr('Assign a title'), tr('Project definition title'))
         if ok:
             self.add_proj_def(title)
+
+    @pyqtSlot(str)
+    def on_project_definition_te_textChanged(self):
+        try:
+            project_definition = self.proj_def_detail.toPlainText()
+            self.project_definitions['proj_defs'][
+                self.selected_idx] = json.loads(project_definition)
+            self.ok_button.setEnabled(True)
+        except ValueError:
+            self.ok_button.setEnabled(False)
