@@ -48,6 +48,7 @@ class ProjectsManagerDialog(QDialog):
         self.ui.setupUi(self)
         self.cancel_button = self.ui.buttonBox.button(QDialogButtonBox.Cancel)
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
+        self.ok_button.setEnabled(False)
         self.project_definitions = None  # it will store the project
                                          # definitions for the active layer
         self.selected_idx = None  # index of the selected project definition
@@ -65,9 +66,6 @@ class ProjectsManagerDialog(QDialog):
             except KeyError:
                 self.project_definitions = {'selected_idx': None,
                                             'proj_defs': []}
-                #FIXME: really needed?
-                #self.cancel_button.animateClick()
-                return
         else:
             self.project_definitions = {'selected_idx': None, 'proj_defs': []}
 
@@ -111,12 +109,14 @@ class ProjectsManagerDialog(QDialog):
         if ok:
             self.add_proj_def(title)
 
-    @pyqtSlot(str)
-    def on_project_definition_te_textChanged(self):
+    @pyqtSlot()
+    def on_proj_def_detail_textChanged(self):
+        print "3456zu"
         try:
-            project_definition = self.proj_def_detail.toPlainText()
+            project_definition = self.ui.proj_def_detail.toPlainText()
             self.project_definitions['proj_defs'][
                 self.selected_idx] = json.loads(project_definition)
             self.ok_button.setEnabled(True)
-        except ValueError:
+        except ValueError as e:
+            print e
             self.ok_button.setEnabled(False)
