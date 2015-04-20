@@ -35,10 +35,8 @@ from ui.ui_select_project_definition import Ui_SelectProjectDefinitionDialog
 
 class SelectProjectDefinitionDialog(QDialog):
     """
-    Modal dialog allowing to select a raster or vector layer
-    containing loss data points and a vector layer containing polygons
-    that define the zones for which data need to be aggregated. When
-    both are selected and are valid files, they can be loaded by clicking OK
+    Modal dialog allowing to select one of the project definitions
+    available for the active layer
     """
     def __init__(self, iface):
         self.iface = iface
