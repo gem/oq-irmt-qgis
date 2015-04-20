@@ -737,7 +737,10 @@ class Svir:
                 self.recalculate_indexes(project_definition)
         dlg.json_cleaned.disconnect(self.weights_changed)
         # store the correct project definitions
-        self.update_proj_defs(current_layer_id, [project_definition])
+        proj_defs[selected_idx] = project_definition
+        self.update_proj_defs(current_layer_id,
+                              proj_defs,
+                              selected_idx)
         self.redraw_ir_layer(project_definition)
 
     def weights_changed(self, data):

@@ -111,7 +111,6 @@ class ProjectsManagerDialog(QDialog):
 
     @pyqtSlot()
     def on_proj_def_detail_textChanged(self):
-        print "3456zu"
         try:
             project_definition = self.ui.proj_def_detail.toPlainText()
             self.project_definitions['proj_defs'][
