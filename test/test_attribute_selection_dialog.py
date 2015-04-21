@@ -16,7 +16,9 @@ __date__ = '2014-09-10'
 __copyright__ = 'Copyright 2014, GEM Foundation'
 
 import unittest
+import os.path
 
+from qgis.core import QgsVectorLayer
 from PyQt4.QtGui import QDialogButtonBox, QDialog
 
 from attribute_selection_dialog import AttributeSelectionDialog
@@ -30,7 +32,18 @@ class AttributeSelectionDialogTest(unittest.TestCase):
 
     def setUp(self):
         """Runs before each test."""
-        self.dialog = AttributeSelectionDialog()
+        curr_dir_name = os.path.dirname(__file__)
+        self.data_dir_name = os.path.join(curr_dir_name,
+                                          'data/aggregation/dummy')
+        loss_layer_path = os.path.join(
+            self.data_dir_name, 'loss_points_having_zone_ids.shp')
+        loss_layer = QgsVectorLayer(loss_layer_path,
+                                    'Loss points having zone ids',
+                                    'ogr')
+        zonal_layer_path = os.path.join(
+            self.data_dir_name, 'svi_zones.shp')
+        zonal_layer = QgsVectorLayer(zonal_layer_path, 'SVI zones', 'ogr')
+        self.dialog = AttributeSelectionDialog(loss_layer, zonal_layer)
 
     def tearDown(self):
         """Runs after each test."""
@@ -39,8 +52,12 @@ class AttributeSelectionDialogTest(unittest.TestCase):
     def test_dialog_ok(self):
         """Test we can click OK."""
 
-        button = self.dialog.ui.buttonBox.button(QDialogButtonBox.Ok)
-        button.click()
+        ok_button = self.dialog.ui.buttonBox.button(QDialogButtonBox.Ok)
+        ok_button.click()
+        result = self.dialog.result()
+        self.assertEqual(result, QDialog.Rejected)
+        self.dialog.ui.loss_attrs_multisel.select_all_btn.click()
+        ok_button.click()
         result = self.dialog.result()
         self.assertEqual(result, QDialog.Accepted)
 

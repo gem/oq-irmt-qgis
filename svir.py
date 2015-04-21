@@ -88,8 +88,6 @@ from utils import (tr,
                    files_exist_in_destination, confirm_overwrite,
                    count_heading_commented_lines)
 from shared import (SVIR_PLUGIN_VERSION,
-                    NUMERIC_FIELD_TYPES,
-                    TEXTUAL_FIELD_TYPES,
                     DEBUG,
                     PROJECT_TEMPLATE,
                     THEME_TEMPLATE,
@@ -918,49 +916,7 @@ class Svir:
         * zone id (from loss layer)
         * zone id (from zonal layer)
         """
-        dlg = AttributeSelectionDialog()
-        # if the loss layer does not contain an attribute specifying the ids of
-        # zones, the user must not be forced to select such attribute, so we
-        # add an "empty" option to the combobox
-        dlg.ui.zone_id_attr_name_loss_cbox.addItem(
-            tr("Use zonal geometries"))
-        # populate combo boxes with field names taken by layers
-        loss_dp = loss_layer.dataProvider()
-        loss_fields = list(loss_dp.fields())
-        # Load in the comboboxes only the names of the attributes compatible
-        # with the following analyses: only numeric for losses and only
-        # string for zone ids
-        default_zone_id_loss = None
-        for field in loss_fields:
-            # The zone id is usually textual, but it might also be numeric
-            dlg.ui.zone_id_attr_name_loss_cbox.addItem(field.name())
-            # Accept only numeric fields to contain loss data
-            if field.typeName() in NUMERIC_FIELD_TYPES:
-                dlg.ui.loss_attrs_multisel.add_unselected_items([field.name()])
-            elif field.typeName() in TEXTUAL_FIELD_TYPES:
-                default_zone_id_loss = field.name()
-            else:
-                raise TypeError("Unknown field: type is %d, typeName is %s" % (
-                    field.type(), field.typeName()))
-        if default_zone_id_loss:
-            default_idx = dlg.ui.zone_id_attr_name_loss_cbox.findText(
-                default_zone_id_loss)
-            if default_idx != -1:  # -1 for not found
-                dlg.ui.zone_id_attr_name_loss_cbox.setCurrentIndex(default_idx)
-        zonal_dp = zonal_layer.dataProvider()
-        zonal_fields = list(zonal_dp.fields())
-        default_zone_id_zonal = None
-        for field in zonal_fields:
-            # Although the ID is usually a string, it might possibly be numeric
-            dlg.ui.zone_id_attr_name_zone_cbox.addItem(field.name())
-            # by default, set the selection to the first textual field
-            if field.typeName() in TEXTUAL_FIELD_TYPES:
-                default_zone_id_zonal = field.name()
-        if default_zone_id_zonal:
-            default_idx = dlg.ui.zone_id_attr_name_zone_cbox.findText(
-                default_zone_id_zonal)
-            if default_idx != -1:  # -1 for not found
-                dlg.ui.zone_id_attr_name_zone_cbox.setCurrentIndex(default_idx)
+        dlg = AttributeSelectionDialog(loss_layer, zonal_layer)
         # if the user presses OK
         if dlg.exec_():
             # retrieve attribute names from selections
@@ -972,8 +928,12 @@ class Svir:
             else:
                 zone_id_in_losses_attr_name = \
                     dlg.ui.zone_id_attr_name_loss_cbox.currentText()
-            zone_id_in_zones_attr_name = \
-                dlg.ui.zone_id_attr_name_zone_cbox.currentText()
+            # index 0 is for "Add field with unique zone id"
+            if dlg.ui.zone_id_attr_name_zone_cbox.currentIndex() == 0:
+                zone_id_in_zones_attr_name = None
+            else:
+                zone_id_in_zones_attr_name = \
+                    dlg.ui.zone_id_attr_name_zone_cbox.currentText()
             return (loss_attr_names,
                     zone_id_in_losses_attr_name,
                     zone_id_in_zones_attr_name)
