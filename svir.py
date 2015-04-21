@@ -61,7 +61,6 @@ from qgis.core import (QgsVectorLayer,
 
 from qgis.gui import QgsMessageBar
 
-from set_project_definition_dialog import SetProjectDefinitionDialog
 from upload_metadata_dialog import UploadMetadataDialog
 
 from calculate_utils import calculate_svi, calculate_ri, calculate_iri
@@ -77,6 +76,7 @@ from select_sv_variables_dialog import SelectSvVariablesDialog
 from settings_dialog import SettingsDialog
 from weight_data_dialog import WeightDataDialog
 from upload_settings_dialog import UploadSettingsDialog
+from projects_manager_dialog import ProjectsManagerDialog
 
 from import_sv_data import get_loggedin_downloader
 
@@ -159,13 +159,14 @@ class Svir:
                            self.transform_attribute,
                            enable=False,
                            add_to_layer_actions=True)
-        # Action to set a preexisting project definition to a layer
-        self.add_menu_item("set_project_definition",
+        # Action to manage the projects
+        self.add_menu_item("projects_manager",
                            ":/plugins/svir/copy.svg",
-                           u"&Set project definition",
-                           self.set_project_definition,
+                           u"Projects &manager",
+                           self.projects_manager,
                            enable=False,
                            add_to_layer_actions=True)
+
         # Action to activate the modal dialog to choose weighting of the
         # data from the platform
         self.add_menu_item("weight_data",
@@ -206,7 +207,7 @@ class Svir:
     def layers_removed(self, layer_ids):
         self.update_actions_status()
         for layer_id in layer_ids:
-            self.update_proj_def(layer_id)
+            self.update_proj_defs(layer_id)
 
     def sync_proj_def(self):
         # get project_definitions from the project's properties
@@ -222,12 +223,27 @@ class Svir:
             print "self.project_definitions synchronized with project, as:"
             print self.project_definitions
 
-    def update_proj_def(self, layer_id, proj_def=None):
+    def update_proj_defs(self, layer_id, proj_defs=None, selected_idx=0):
+        """
+        :param layer_id: layer identifier
+        :param proj_defs: a list of project definitions
+        :param selected_idx: the index of the selected project definition
+        """
         self.sync_proj_def()
+        # upgrade old project definitions, if found
+        for layer_id_ in self.project_definitions:
+            if 'proj_defs' not in self.project_definitions[layer_id_]:
+                proj_def = self.project_definitions[layer_id_]
+                self.project_definitions[layer_id_] = {'proj_defs': [proj_def],
+                                                       'selected_idx': 0}
         # add the project definition to the list
         # or pop the layer's project definition if no proj_def is provided
-        if proj_def is not None:
-            self.project_definitions[layer_id] = proj_def
+        if proj_defs is not None:
+            assert isinstance(proj_defs, list)
+            assert selected_idx < len(proj_defs)
+            self.project_definitions[layer_id] = {
+                'selected_idx': selected_idx,
+                'proj_defs': proj_defs}
         else:
             self.project_definitions.pop(layer_id, None)
         # set the QgsProject's property
@@ -292,11 +308,15 @@ class Svir:
             # Activate actions which require a vector layer to be selected
             if self.current_layer.type() != QgsMapLayer.VectorLayer:
                 raise AttributeError
-            self.registered_actions["set_project_definition"].setEnabled(True)
+            self.registered_actions["projects_manager"].setEnabled(True)
             self.registered_actions["weight_data"].setEnabled(True)
             self.registered_actions["transform_attribute"].setEnabled(True)
             self.sync_proj_def()
-            proj_def = self.project_definitions[self.current_layer.id()]
+            layer_dict = self.project_definitions[
+                self.current_layer.id()]
+            selected_idx = layer_dict['selected_idx']
+            proj_defs = layer_dict['proj_defs']
+            proj_def = proj_defs[selected_idx]
             self.registered_actions["upload"].setEnabled(proj_def is not None)
         except KeyError:
             # self.project_definitions[self.current_layer.id()] is not defined
@@ -307,7 +327,7 @@ class Svir:
             self.registered_actions["transform_attribute"].setEnabled(False)
             self.registered_actions["weight_data"].setEnabled(False)
             self.registered_actions["upload"].setEnabled(False)
-            self.registered_actions["set_project_definition"].setEnabled(False)
+            self.registered_actions["projects_manager"].setEnabled(False)
 
     def unload(self):
         # Remove the plugin menu items and toolbar icons
@@ -507,7 +527,7 @@ class Svir:
                     else:
                         raise RuntimeError('Layer invalid')
                 self.iface.setActiveLayer(layer)
-                self.update_proj_def(layer.id(), project_definition)
+                self.update_proj_defs(layer.id(), [project_definition])
                 self.update_actions_status()
 
         except SvNetworkError as e:
@@ -577,7 +597,7 @@ class Svir:
             request = sv_downloader.sess.get(metadata_url)
             metadata_xml = request.content
 
-            project_definition = get_supplemental_info(
+            project_definitions = get_supplemental_info(
                 metadata_xml, '{http://www.isotc211.org/2005/gmd}MD_Metadata/')
             dest_file = os.path.join(dest_dir, shp_file)
             layer = QgsVectorLayer(
@@ -616,8 +636,11 @@ class Svir:
                     error_msg, level=QgsMessageBar.WARNING,
                     duration=8)
             self.iface.setActiveLayer(layer)
-            self.update_proj_def(layer.id(), project_definition)
+            self.update_proj_defs(layer.id(), project_definitions)
             self.update_actions_status()
+            # in case of multiple project definitions, let the user select one
+            if isinstance(project_definitions, list):
+                self.projects_manager()
 
     @staticmethod
     def _add_new_theme(svi_themes,
@@ -641,29 +664,18 @@ class Svir:
         new_indicator['level'] = level
         svi_themes[theme_position]['children'].append(new_indicator)
 
-    def set_project_definition(self):
-        """
-        Open a modal dialog to select weights in a d3.js visualization
-        """
+    def projects_manager(self):
         self.sync_proj_def()
-        current_layer_id = self.iface.activeLayer().id()
-        try:
-            project_definition = self.project_definitions[current_layer_id]
-        except KeyError:
-            project_definition = PROJECT_TEMPLATE
-            self.update_proj_def(current_layer_id, project_definition)
-        old_project_definition = copy.deepcopy(project_definition)
-
-        dlg = SetProjectDefinitionDialog(self.iface, project_definition, )
-        if dlg.exec_():
-            project_definition = dlg.project_definition
-            self.update_actions_status()
-        else:
-            project_definition = old_project_definition
-        if DEBUG:
-            print project_definition
-        self.update_proj_def(current_layer_id, project_definition)
-        self.redraw_ir_layer(project_definition)
+        select_proj_def_dlg = ProjectsManagerDialog(self.iface)
+        if select_proj_def_dlg.exec_():
+            project_definitions = select_proj_def_dlg.project_definitions[
+                'proj_defs']
+            self.update_proj_defs(
+                self.iface.activeLayer().id(),
+                project_definitions,
+                select_proj_def_dlg.selected_idx)
+            self.redraw_ir_layer(
+                project_definitions[select_proj_def_dlg.selected_idx])
 
     def weight_data(self):
         """
@@ -671,10 +683,13 @@ class Svir:
         """
         current_layer_id = self.current_layer.id()
         try:
-            project_definition = self.project_definitions[current_layer_id]
+            layer_dict = self.project_definitions[current_layer_id]
+            selected_idx = layer_dict['selected_idx']
+            proj_defs = layer_dict['proj_defs']
+            project_definition = proj_defs[selected_idx]
         except KeyError:
             project_definition = PROJECT_TEMPLATE
-            self.update_proj_def(current_layer_id, project_definition)
+            self.update_proj_defs(current_layer_id, [project_definition])
         old_project_definition = copy.deepcopy(project_definition)
 
         # Save the style so the following styling can be undone
@@ -720,7 +735,10 @@ class Svir:
                 self.recalculate_indexes(project_definition)
         dlg.json_cleaned.disconnect(self.weights_changed)
         # store the correct project definitions
-        self.update_proj_def(current_layer_id, project_definition)
+        proj_defs[selected_idx] = project_definition
+        self.update_proj_defs(current_layer_id,
+                              proj_defs,
+                              selected_idx)
         self.redraw_ir_layer(project_definition)
 
     def weights_changed(self, data):
@@ -994,7 +1012,11 @@ class Svir:
         data_file = '%s%s' % (file_stem, '.shp')
         xml_file = file_stem + '.xml'
 
-        project_definition = self.project_definitions[self.current_layer.id()]
+        layer_dict = self.project_definitions[
+            self.iface.activeLayer().id()]
+        selected_idx = layer_dict['selected_idx']
+        proj_defs = layer_dict['proj_defs']
+        project_definition = proj_defs[selected_idx]
 
         QgsVectorFileWriter.writeAsVectorFormat(
             self.current_layer,

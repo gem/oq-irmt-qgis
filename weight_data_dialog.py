@@ -128,7 +128,10 @@ class WeightDataDialog(QDialog):
     @pyqtProperty(str)
     def json_str(self):
         #This method gets exposed to JS thanks to @pyqtProperty(str)
-        return json.dumps(self.project_definition)
+        return json.dumps(self.project_definition,
+                          sort_keys=False,
+                          indent=2,
+                          separators=(',', ': '))
 
     @pyqtProperty(str)
     def DEFAULT_OPERATOR(self):
