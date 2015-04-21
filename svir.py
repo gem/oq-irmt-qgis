@@ -689,7 +689,8 @@ class Svir:
             project_definition = proj_defs[selected_idx]
         except KeyError:
             project_definition = PROJECT_TEMPLATE
-            self.update_proj_defs(current_layer_id, [project_definition])
+            proj_defs = [project_definition]
+            self.update_proj_defs(current_layer_id, proj_defs)
         old_project_definition = copy.deepcopy(project_definition)
 
         # Save the style so the following styling can be undone
