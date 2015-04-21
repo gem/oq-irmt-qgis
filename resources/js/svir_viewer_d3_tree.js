@@ -89,13 +89,13 @@
         function createSpinner(id, weight, name, field, isInverted) {
             pdTempSpinnerIds.push("spinner-"+id);
             $('#projectDefWeightDialog').dialog("open");
-            var content = '<p><label style="clear: left; float: left; width: 10em;" for="spinner'+id+'">'+name;
+            var content = '<div style="clear: left; float: left;padding:10px 0"><label style="width: 10em; "for="spinner'+id+'">'+name;
             if (typeof field !== 'undefined') {
                 content += ' ('+field+')';
             }
             content += ': </label><input id="spinner-' + id + '" name="spinner" value="' + weight + '">';
             content += '<input type="checkbox" id="inverter-spinner-'+id+'"><label style="font-size: 0.8em; "for="inverter-spinner-'+id+'" title="Select to invert the contribution of the variable to the calculation">Invert</label>';
-            content += '</p>';
+            content += '</div>';
             $('#projectDefWeightDialog').append(content);
             $(function() {
                 var inverter = $("#inverter-spinner-" + id);
