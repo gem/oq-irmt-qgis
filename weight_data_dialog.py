@@ -72,7 +72,8 @@ class WeightDataDialog(QDialog):
             proj_title = self.project_definition['title']
         except KeyError:
             proj_title = 'Untitled'
-        dialog_title = 'Set weights and operators for project: %s' % proj_title
+        dialog_title = (
+            'Set weights and operators for project: "%s"' % proj_title)
         self.setWindowTitle(dialog_title)
 
         self.web_view = self.ui.web_view
