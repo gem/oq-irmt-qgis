@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'ui/ui_projects_manager_dialog.ui'
 #
-# Created: Mon Apr 20 15:34:28 2015
-#      by: PyQt4 UI code generator 4.11.2
+# Created: Tue Apr 21 10:18:06 2015
+#      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -59,7 +59,7 @@ class Ui_ProjectsManagerDialog(object):
         QtCore.QMetaObject.connectSlotsByName(ProjectsManagerDialog)
 
     def retranslateUi(self, ProjectsManagerDialog):
-        ProjectsManagerDialog.setWindowTitle(_translate("ProjectsManagerDialog", "Projects manages", None))
+        ProjectsManagerDialog.setWindowTitle(_translate("ProjectsManagerDialog", "Projects manager", None))
         self.label.setText(_translate("ProjectsManagerDialog", "Please select one of the available project definitions", None))
         self.proj_def_detail.setHtml(_translate("ProjectsManagerDialog", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
