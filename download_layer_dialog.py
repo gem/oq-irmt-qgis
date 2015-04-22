@@ -25,8 +25,9 @@
 """
 from xml.etree import ElementTree
 
+from PyQt4 import Qt
 from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import (QDialog, QDialogButtonBox)
+from PyQt4.QtGui import (QDialog, QDialogButtonBox, QListWidgetItem)
 
 from ui.ui_download_layer import Ui_DownloadLayerDialog
 from utils import WaitCursorManager, SvNetworkError
@@ -49,26 +50,28 @@ class DownloadLayerDialog(QDialog):
 
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
 
-        self.layer_id = None
+        self.ui.layer_lbl.setText('Project definition')
+
+        self.layer_id = None  # needed after ok is pressed
         self.extra_infos = {}
 
         self.set_ok_button()
         with WaitCursorManager():
             self.get_capabilities()
 
-    @pyqtSlot(str)
-    def on_layers_cbx_currentIndexChanged(self):
-        layer_id = self.ui.layers_cbx.itemData(
-            self.ui.layers_cbx.currentIndex())
-
+    @pyqtSlot()
+    def on_layers_lst_itemSelectionChanged(self):
+        layer_id = self.ui.layers_lst.currentItem().data(Qt.Qt.ToolTipRole)
         if layer_id is not None:
             self.layer_id = layer_id
+            self.ui.layer_lbl.setText('Project definition for "%s"' % layer_id)
             layer_infos = self.extra_infos[layer_id]
             self.ui.layer_detail.setText(str(layer_infos))
         self.set_ok_button()
 
     def set_ok_button(self):
-        self.ok_button.setDisabled(self.layer_id is None)
+        self.ok_button.setDisabled(
+            len(self.ui.layers_lst.selectedItems()) == 0)
 
     def get_capabilities(self):
         wfs = '/geoserver/wfs?'
@@ -88,8 +91,6 @@ class DownloadLayerDialog(QDialog):
         # this raises a IOError if the file doesn't exist
         root = ElementTree.fromstring(xml)
         layers = root.find('%sFeatureTypeList' % NS_NET_OPENGIS_WFS)
-        self.ui.layers_cbx.clear()
-        self.ui.layers_cbx.addItem(None, None)
 
         for layer in layers:
             try:
@@ -109,7 +110,9 @@ class DownloadLayerDialog(QDialog):
                         'Bounding Box': bbox}
 
                     # update combo box
-                    display_name = '%s (%s)' % (title, layer_id)
-                    self.ui.layers_cbx.addItem(display_name, layer_id)
+                    item = QListWidgetItem()
+                    item.setData(Qt.Qt.DisplayRole, title)
+                    item.setData(Qt.Qt.ToolTipRole, layer_id)
+                    self.ui.layers_lst.addItem(item)
             except AttributeError:
                 continue
