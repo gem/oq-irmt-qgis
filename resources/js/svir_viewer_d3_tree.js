@@ -89,7 +89,7 @@
         function createSpinner(id, weight, name, field, isInverted) {
             pdTempSpinnerIds.push("spinner-"+id);
             $('#projectDefWeightDialog').dialog("open");
-            var content = '<div style="clear: left; float: left;padding:10px 0"><label style="width: 10em; "for="spinner'+id+'">'+name;
+            var content = '<div style="clear: left; float: left;padding:10px 0"><label style="width: 17em; "for="spinner'+id+'">'+name;
             if (typeof field !== 'undefined') {
                 content += ' ('+field+')';
             }
