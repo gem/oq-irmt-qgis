@@ -33,6 +33,7 @@ import StringIO
 
 from math import floor, ceil
 from download_layer_dialog import DownloadLayerDialog
+from download_worker import DownloadWorker
 from metadata_utilities import write_iso_metadata_file, get_supplemental_info
 
 from PyQt4.QtCore import (QSettings,
@@ -480,69 +481,77 @@ class Svir:
 
                     assign_default_weights(svi_themes)
 
-                    try:
-                        fname, msg = sv_downloader.get_sv_data(
-                            indices_string, load_geometries, iso_codes_string,
-                            self.iface)
-                    except SvNetworkError as e:
-                        self.iface.messageBar().pushMessage(
-                            tr("Download Error"),
-                            tr(str(e)),
-                            level=QgsMessageBar.CRITICAL)
-                        return
-
-                display_msg = tr(
-                    "Socioeconomic data loaded in a new layer")
-                self.iface.messageBar().pushMessage(tr("Info"),
-                                                    tr(display_msg),
-                                                    level=QgsMessageBar.INFO,
-                                                    duration=8)
-                QgsMessageLog.logMessage(
-                    msg, 'GEM Social Vulnerability Downloader')
-                # don't remove the file, otherwise there will be concurrency
-                # problems
-
-                # count top lines in the csv starting with '#'
-                lines_to_skip_count = count_heading_commented_lines(fname)
-                if load_geometries:
-                    uri = ('file://%s?delimiter=,&crs=epsg:4326&skipLines=%s'
-                           '&trimFields=yes&wktField=geometry' % (
-                               fname, lines_to_skip_count))
-                else:
-                    uri = ('file://%s?delimiter=,&skipLines=%s'
-                           '&trimFields=yes' % (fname,
-                                                lines_to_skip_count))
-                # create vector layer from the csv file exported by the
-                # platform (it is still not editable!)
-                vlayer_csv = QgsVectorLayer(uri,
-                                            'socioeconomic_data_export',
-                                            'delimitedtext')
-                if not load_geometries:
-                    if vlayer_csv.isValid():
-                        QgsMapLayerRegistry.instance().addMapLayer(vlayer_csv)
-                    else:
-                        raise RuntimeError('Layer invalid')
-                    layer = vlayer_csv
-                else:
-                    result = QgsVectorFileWriter.writeAsVectorFormat(
-                        vlayer_csv, dest_filename, 'CP1250',
-                        None, 'ESRI Shapefile')
-                    if result != QgsVectorFileWriter.NoError:
-                        raise RuntimeError('Could not save shapefile')
-                    layer = QgsVectorLayer(
-                        dest_filename, 'Socioeconomic data', 'ogr')
-                    if layer.isValid():
-                        QgsMapLayerRegistry.instance().addMapLayer(layer)
-                    else:
-                        raise RuntimeError('Layer invalid')
-                self.iface.setActiveLayer(layer)
-                self.update_proj_defs(layer.id(), [project_definition])
-                self.update_actions_status()
-
+                    worker = DownloadWorker(
+                        sv_downloader,
+                        indices_string,
+                        load_geometries,
+                        iso_codes_string)
+                    worker.successfully_finished.connect(
+                        lambda result: self.download_successful(
+                            result,
+                            load_geometries,
+                            dest_filename,
+                            project_definition))
+                    start_worker(worker, self.iface, 'Downloading data from '
+                                                     'platform')
         except SvNetworkError as e:
             self.iface.messageBar().pushMessage(tr("Download Error"),
                                                 tr(str(e)),
                                                 level=QgsMessageBar.CRITICAL)
+
+    def download_successful(self,
+                            result,
+                            load_geometries,
+                            dest_filename,
+                            project_definition):
+        fname, msg = result
+        display_msg = tr(
+                    "Socioeconomic data loaded in a new layer")
+        self.iface.messageBar().pushMessage(tr("Info"),
+                                            tr(display_msg),
+                                            level=QgsMessageBar.INFO,
+                                            duration=8)
+        QgsMessageLog.logMessage(
+            msg, 'GEM Social Vulnerability Downloader')
+        # don't remove the file, otherwise there will be concurrency
+        # problems
+
+        # count top lines in the csv starting with '#'
+        lines_to_skip_count = count_heading_commented_lines(fname)
+        if load_geometries:
+            uri = ('file://%s?delimiter=,&crs=epsg:4326&skipLines=%s'
+                   '&trimFields=yes&wktField=geometry' % (
+                       fname, lines_to_skip_count))
+        else:
+            uri = ('file://%s?delimiter=,&skipLines=%s'
+                   '&trimFields=yes' % (fname,
+                                        lines_to_skip_count))
+        # create vector layer from the csv file exported by the
+        # platform (it is still not editable!)
+        vlayer_csv = QgsVectorLayer(uri,
+                                    'socioeconomic_data_export',
+                                    'delimitedtext')
+        if not load_geometries:
+            if vlayer_csv.isValid():
+                QgsMapLayerRegistry.instance().addMapLayer(vlayer_csv)
+            else:
+                raise RuntimeError('Layer invalid')
+            layer = vlayer_csv
+        else:
+            result = QgsVectorFileWriter.writeAsVectorFormat(
+                vlayer_csv, dest_filename, 'CP1250',
+                None, 'ESRI Shapefile')
+            if result != QgsVectorFileWriter.NoError:
+                raise RuntimeError('Could not save shapefile')
+            layer = QgsVectorLayer(
+                dest_filename, 'Socioeconomic data', 'ogr')
+            if layer.isValid():
+                QgsMapLayerRegistry.instance().addMapLayer(layer)
+            else:
+                raise RuntimeError('Layer invalid')
+        self.iface.setActiveLayer(layer)
+        self.update_proj_defs(layer.id(), [project_definition])
+        self.update_actions_status()
 
     def import_layer(self):
         sv_downloader = get_loggedin_downloader(self.iface)

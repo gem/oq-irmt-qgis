@@ -27,12 +27,14 @@ import collections
 import json
 import os
 from time import time
+from qgis.core import QgsMapLayerRegistry
+from qgis.gui import QgsMessageBar
+
 from PyQt4.QtCore import QSettings, Qt
 from PyQt4.QtGui import QApplication, QProgressBar, QToolButton, QFileDialog, \
     QMessageBox
-from qgis.core import QgsMapLayerRegistry
+
 from settings_dialog import SettingsDialog
-from qgis.gui import QgsMessageBar
 from shared import DEBUG
 
 
