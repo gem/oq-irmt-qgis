@@ -12,7 +12,7 @@
 name=OpenQuake Integrated Risk Modelling Toolkit
 qgisMinimumVersion=2.0
 description=<p>Tools for creating and editing indicators and composite indices and for combining these with estimates of physical earthquake risk (i.e. estimates of human or infrastructure loss).</p><p>The plugin enables users to directly interact with the <a href='https://platform.openquake.org'>OpenQuake Platform</a>, in order to browse and download socioeconomic data or existing projects, to edit projects locally in QGIS, then to upload and share them through the Platform.</p><p>This plugin has been created by the <a href='http://www.globalquakemodel.org'>GEM Foundation</a> and was formerly known as GEM OpenQuake Social Vulnerability and Integrated Risk (SVIR)</p>
-version=1.4.1
+version=1.4.2
 author=GEM Foundation
 email=staff.it@globalquakemodel.org
 
