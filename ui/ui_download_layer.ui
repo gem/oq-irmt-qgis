@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>459</width>
-    <height>298</height>
+    <width>705</width>
+    <height>456</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <bool>true</bool>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="3" column="0">
+   <item row="4" column="0">
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
@@ -35,9 +35,9 @@
     </widget>
    </item>
    <item row="1" column="0">
-    <widget class="QComboBox" name="layers_cbx"/>
+    <widget class="QListWidget" name="layers_lst"/>
    </item>
-   <item row="2" column="0">
+   <item row="3" column="0">
     <widget class="QTextEdit" name="layer_detail">
      <property name="readOnly">
       <bool>true</bool>
@@ -48,6 +48,13 @@
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="QLabel" name="layer_lbl">
+     <property name="text">
+      <string>Project definition</string>
      </property>
     </widget>
    </item>
