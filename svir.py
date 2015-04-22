@@ -492,8 +492,8 @@ class Svir:
                             load_geometries,
                             dest_filename,
                             project_definition))
-                    start_worker(worker, self.iface, 'Downloading data from '
-                                                     'platform')
+                    start_worker(worker, self.iface.messageBar(),
+                                 'Downloading data from platform')
         except SvNetworkError as e:
             self.iface.messageBar().pushMessage(tr("Download Error"),
                                                 tr(str(e)),

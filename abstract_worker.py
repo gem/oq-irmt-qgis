@@ -73,31 +73,31 @@ class AbstractWorker(QtCore.QObject):
         self.killed = True
 
 
-def start_worker(worker, iface, message):
+def start_worker(worker, message_bar, message):
     # configure the QgsMessageBar
-    message_bar = iface.messageBar().createMessage(message)
+    message_bar_item = message_bar.createMessage(message)
     progress_bar = QProgressBar()
     progress_bar.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
     cancel_button = QPushButton()
     cancel_button.setText('Cancel')
     cancel_button.clicked.connect(worker.kill)
-    message_bar.layout().addWidget(progress_bar)
-    message_bar.layout().addWidget(cancel_button)
-    iface.messageBar().pushWidget(message_bar, iface.messageBar().INFO)
+    message_bar_item.layout().addWidget(progress_bar)
+    message_bar_item.layout().addWidget(cancel_button)
+    message_bar.pushWidget(message_bar_item, message_bar.INFO)
 
     # start the worker in a new thread
-    thread = QThread(iface.mainWindow())
+    thread = QThread(message_bar.parent())
     worker.moveToThread(thread)
     worker.toggle_show_progress.connect(lambda show: toggle_worker_progress(
         show, progress_bar))
     worker.finished.connect(lambda result: worker_finished(
-        result, thread, worker, iface, message_bar))
+        result, thread, worker, message_bar, message_bar_item))
     worker.error.connect(lambda e, exception_str: worker_error(
-        e, exception_str, iface))
+        e, exception_str, message_bar))
     worker.progress.connect(progress_bar.setValue)
     thread.started.connect(worker.run)
     thread.start()
-    return thread, message_bar
+    return thread, message_bar_item
 
 
 def toggle_worker_progress(show_progress, progress_bar):
@@ -109,12 +109,12 @@ def toggle_worker_progress(show_progress, progress_bar):
         progress_bar.setMaximum(0)
 
 
-def worker_finished(result, thread, worker, iface, message_bar):
+def worker_finished(result, thread, worker, message_bar, message_bar_item):
         # remove widget from message bar
-        iface.messageBar().popWidget(message_bar)
+        message_bar.popWidget(message_bar_item)
         if result is not None:
             # report the result
-            iface.messageBar().pushMessage('%s.' % str(result))
+            message_bar.pushMessage('%s.' % str(result))
             worker.successfully_finished.emit(result)
 
         # clean up the worker and thread
@@ -124,9 +124,9 @@ def worker_finished(result, thread, worker, iface, message_bar):
         thread.deleteLater()
 
 
-def worker_error(e, exception_string, iface):
+def worker_error(e, exception_string, message_bar):
     # notify the user that something went wrong
-    iface.messageBar().pushMessage(
+    message_bar.pushMessage(
         'Something went wrong! See the message log for more information.',
         level=QgsMessageBar.CRITICAL,
         duration=3)
