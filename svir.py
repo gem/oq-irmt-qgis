@@ -636,10 +636,14 @@ class Svir:
                     error_msg, level=QgsMessageBar.WARNING,
                     duration=8)
             self.iface.setActiveLayer(layer)
+            # ensure backwards compatibility with projects with a single
+            # project definition
+            if not isinstance(project_definitions, list):
+                project_definitions = [project_definitions]
             self.update_proj_defs(layer.id(), project_definitions)
             self.update_actions_status()
             # in case of multiple project definitions, let the user select one
-            if isinstance(project_definitions, list):
+            if len(project_definitions) > 1:
                 self.projects_manager()
 
     @staticmethod
