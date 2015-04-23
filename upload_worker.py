@@ -25,8 +25,9 @@
 """
 
 
+import json
+
 from abstract_worker import AbstractWorker
-from utils import upload_shp
 
 
 class UploadWorker(AbstractWorker):
@@ -42,6 +43,36 @@ class UploadWorker(AbstractWorker):
     def work(self):
         self.toggle_show_progress.emit(False)
         # if success == 'False', layer_url will contain the error message
-        layer_url, success = upload_shp(
-            self.hostname, self.session, self.file_stem, self.username)
-        return str(layer_url), str(success)
+        return self.upload_shp()
+
+    def upload_shp(self):
+        files = {'layer_title': self.file_stem,
+                 'base_file': ('%s.shp' % self.file_stem,
+                               open('%s.shp' % self.file_stem, 'rb')),
+                 'dbf_file': ('%s.dbf' % self.file_stem,
+                              open('%s.dbf' % self.file_stem, 'rb')),
+                 'shx_file': ('%s.shx' % self.file_stem,
+                              open('%s.shx' % self.file_stem, 'rb')),
+                 'prj_file': ('%s.prj' % self.file_stem,
+                              open('%s.prj' % self.file_stem, 'rb')),
+                 'xml_file': ('%s.xml' % self.file_stem,
+                              open('%s.xml' % self.file_stem, 'r')),
+                 }
+        permissions = ('{"authenticated":"_none",'
+                       '"anonymous":"_none",'
+                       '"users":[["%s","layer_readwrite"],["%s","layer_admin"]]'
+                       '}') % (self.username, self.username)
+        payload = {'charset': ['UTF-8'],
+                   'permissions': [permissions]}
+
+        r = self.session.post(
+            self.hostname + '/layers/upload', data=payload, files=files)
+
+        response = json.loads(r.text)
+        try:
+            return self.hostname + response['url'], True
+        except KeyError:
+            if 'errors' in response:
+                raise KeyError(response['errors'])
+            else:
+                raise KeyError("The server did not provide error messages")

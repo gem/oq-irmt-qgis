@@ -48,7 +48,7 @@ class AbstractWorker(QtCore.QObject):
 
     def __init__(self):
         QtCore.QObject.__init__(self)
-        self.killed = False
+        self.is_killed = False
 
     def run(self):
         try:
@@ -70,7 +70,7 @@ class AbstractWorker(QtCore.QObject):
         raise NotImplementedError
 
     def kill(self):
-        self.killed = True
+        self.is_killed = True
 
 
 def start_worker(worker, message_bar, message):
@@ -88,12 +88,16 @@ def start_worker(worker, message_bar, message):
     # start the worker in a new thread
     thread = QThread(message_bar.parent())
     worker.moveToThread(thread)
+
     worker.toggle_show_progress.connect(lambda show: toggle_worker_progress(
         show, progress_bar))
+
     worker.finished.connect(lambda result: worker_finished(
         result, thread, worker, message_bar, message_bar_item))
+
     worker.error.connect(lambda e, exception_str: worker_error(
         e, exception_str, message_bar))
+
     worker.progress.connect(progress_bar.setValue)
     thread.started.connect(worker.run)
     thread.start()

@@ -44,11 +44,7 @@ from upload_worker import UploadWorker
 
 from utils import (get_credentials,
                    platform_login,
-                   upload_shp,
-                   create_progress_message_bar,
-                   clear_progress_message_bar,
-                   SvNetworkError,
-                   )
+                   create_progress_message_bar, clear_progress_message_bar)
 from shared import DEBUG
 
 
@@ -88,6 +84,7 @@ class UploadMetadataDialog(QDialog):
         self.frame.javaScriptWindowObjectCleared.connect(self._setup_js)
 
         self.file_stem = file_stem
+        self.project_definition = project_definition
 
         self.layout().setContentsMargins(0, 0, 0, 0)
 
