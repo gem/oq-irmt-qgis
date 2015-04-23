@@ -114,7 +114,6 @@ def worker_finished(result, thread, worker, message_bar, message_bar_item):
         message_bar.popWidget(message_bar_item)
         if result is not None:
             # report the result
-            message_bar.pushMessage('%s.' % str(result))
             worker.successfully_finished.emit(result)
 
         # clean up the worker and thread
