@@ -32,8 +32,14 @@ from qgis.gui import QgsMessageBar
 from third_party.requests import Session
 from third_party.requests.exceptions import ConnectionError
 
-from utils import (SvNetworkError, platform_login, get_credentials,
-                   WaitCursorManager, tr)
+from utils import (SvNetworkError,
+                   platform_login,
+                   get_credentials,
+                   WaitCursorManager,
+                   tr,
+                   create_progress_message_bar,
+                   clear_progress_message_bar,
+                   )
 
 PLATFORM_EXPORT_SV_THEMES = "/svir/list_themes"
 PLATFORM_EXPORT_SV_SUBTHEMES = "/svir/list_subthemes_by_theme"
@@ -137,12 +143,12 @@ class SvDownloader(object):
         return countries_info
 
     def get_sv_data(
-            self, sv_variables_ids, load_geometries, country_iso_codes):
+            self, sv_variables_ids, load_geometries, country_iso_codes, iface):
         page = self.host + PLATFORM_EXPORT_VARIABLES_DATA
         data = dict(sv_variables_ids=sv_variables_ids,
                     export_geometries=load_geometries,
                     country_iso_codes=country_iso_codes)
-        result = self.sess.post(page, data=data)
+        result = self.sess.post(page, data=data, stream=True)
         if result.status_code == 200:
             # save csv on a temporary file
             fd, fname = tempfile.mkstemp(suffix='.csv')
@@ -161,10 +167,18 @@ class SvDownloader(object):
                 types_string += ',"String"'
             with open(fname_types, 'w') as csvt:
                 csvt.write(types_string)
-            with open(fname, 'w') as csv:
-                csv.write(result.content)
-                msg = 'Downloaded %d lines into %s' % (
-                    result.content.count('\n'), fname)
+            with open(fname, 'w') as csv_file:
+                n_countries_to_download = len(country_iso_codes)
+                n_downloaded_countries = 0
+                msg_bar_item, progress = create_progress_message_bar(
+                    iface.messageBar(), 'Downloading socioeconomic data...')
+                for line in result.iter_lines():
+                    csv_file.write(line + '\n')
+                    n_downloaded_countries += 1
+                    progress.setValue(
+                        n_downloaded_countries / n_countries_to_download * 100)
+                clear_progress_message_bar(iface.messageBar(), msg_bar_item)
+                msg = 'The socioeconomic data has been saved into %s' % fname
                 return fname, msg
         else:
             raise SvNetworkError(result.content)
