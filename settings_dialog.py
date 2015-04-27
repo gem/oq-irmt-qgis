@@ -72,10 +72,8 @@ class SettingsDialog(QtGui.QDialog, Ui_SettingsDialog):
         Store the options into the user's stored session info.
         """
         mySettings = QtCore.QSettings()
-        # if the hostname ends with '/', remove it
-        hostname = self.ui.hostnameEdit.text().strip()
-        if hostname.endswith('/'):
-            hostname = hostname[:-1]
+        # if the (stripped) hostname ends with '/', remove it
+        hostname = self.ui.hostnameEdit.text().strip().rstrip('/')
         mySettings.setValue('svir/platform_hostname', hostname)
         mySettings.setValue('svir/platform_username',
                             self.ui.usernameEdit.text())
