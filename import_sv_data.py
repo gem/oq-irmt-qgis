@@ -144,11 +144,16 @@ class SvDownloader(object):
 
     def get_sv_data(
             self, sv_variables_ids, load_geometries, country_iso_codes, iface):
+        msg_bar_item, progress_ = create_progress_message_bar(
+            iface.messageBar(),
+            'Waiting for the OpenQuake Platform to export the data...',
+            no_percentage=True)
         page = self.host + PLATFORM_EXPORT_VARIABLES_DATA
         data = dict(sv_variables_ids=sv_variables_ids,
                     export_geometries=load_geometries,
                     country_iso_codes=country_iso_codes)
         result = self.sess.post(page, data=data, stream=True)
+        clear_progress_message_bar(iface.messageBar(), msg_bar_item)
         if result.status_code == 200:
             # save csv on a temporary file
             fd, fname = tempfile.mkstemp(suffix='.csv')
