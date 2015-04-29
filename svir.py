@@ -199,6 +199,7 @@ class Svir:
                            self.show_settings,
                            enable=True)
 
+        self.current_layer = self.iface.activeLayer()
         self.update_actions_status()
 
     def layers_added(self):
