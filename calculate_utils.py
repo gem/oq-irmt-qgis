@@ -46,9 +46,8 @@ def calculate_svi(iface, current_layer, project_definition):
     """
     add an SVI attribute to the current layer
     """
-
-    svi_node = project_definition['children'][1]
     try:
+        svi_node = project_definition['children'][1]
         themes = svi_node['children']
         # calculate the SVI only if all themes contain at least one indicator
         for theme in themes:
@@ -227,9 +226,9 @@ def calculate_ri(iface, current_layer, project_definition):
     """
     add an RI attribute to the current layer
     """
-    # get the risk index node, starting from the tree root
-    ri_node = project_definition['children'][0]
     try:
+        # get the risk index node, starting from the tree root
+        ri_node = project_definition['children'][0]
         # calculate the RI only if there is at least one risk indicator
         indicators = ri_node['children']
     except KeyError:
