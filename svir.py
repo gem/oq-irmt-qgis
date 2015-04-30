@@ -1055,8 +1055,8 @@ class Svir:
             write_iso_metadata_file(xml_file,
                                     project_definition)
             metadata_dialog = UploadMetadataDialog(
-                self.iface, file_stem, project_definition)
+                self.iface, file_stem)
             if metadata_dialog.exec_():
                 QDesktopServices.openUrl(QUrl(metadata_dialog.layer_url))
-        else:
-            print "metadata_dialog cancelled"
+            elif DEBUG:
+                print "metadata_dialog cancelled"

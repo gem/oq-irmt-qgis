@@ -29,6 +29,10 @@ from shared import PLATFORM_REGISTRATION_URL
 
 
 class SettingsDialog(QtGui.QDialog, Ui_SettingsDialog):
+    """
+    Dialog used to specify the connection settings used to interact with the
+    OpenQuake Platform
+    """
     def __init__(self, iface, parent=None):
         QtGui.QDialog.__init__(self, parent)
         self.iface = iface

@@ -327,6 +327,9 @@ class Register(collections.OrderedDict):
 
 
 class TraceTimeManager(object):
+    """
+    Wrapper to check how much time is needed to complete a block of code
+    """
     def __init__(self, message, debug=False):
         self.debug = debug
         self.message = message
@@ -345,6 +348,10 @@ class TraceTimeManager(object):
 
 
 class LayerEditingManager(object):
+    """
+    Wrapper to be used to edit a layer,
+    that executes startEditing and commitChanges
+    """
     def __init__(self, layer, message, debug=False):
         self.layer = layer
         self.message = message
@@ -363,6 +370,10 @@ class LayerEditingManager(object):
 
 
 class WaitCursorManager(object):
+    """
+    Wrapper to be used for a time-consuming block of code, that changes the
+    mouse cursor and adds an info message to the messageBar
+    """
     def __init__(self, msg=None, iface=None):
         self.msg = msg
         self.iface = iface

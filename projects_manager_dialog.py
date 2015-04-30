@@ -37,8 +37,9 @@ from shared import PROJECT_TEMPLATE
 
 class ProjectsManagerDialog(QDialog):
     """
-    Modal dialog allowing to select one of the project definitions
-    available for the active layer
+    Modal dialog allowing to select (and possibly edit) one of the project
+    definitions available for the active layer, or for creating a new project
+    definition
     """
     def __init__(self, iface):
         self.iface = iface
