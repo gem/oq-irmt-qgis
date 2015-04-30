@@ -49,10 +49,10 @@ from shared import DEBUG
 
 class UploadMetadataDialog(QDialog):
     """
-    Modal dialog allowing to upload the data to a platform
+    Modal dialog allowing to upload the data to the OQ-Platform
     """
 
-    def __init__(self, iface, file_stem, project_definition):
+    def __init__(self, iface, file_stem):
         self.iface = iface
         QDialog.__init__(self)
 
@@ -80,7 +80,6 @@ class UploadMetadataDialog(QDialog):
         self.frame.javaScriptWindowObjectCleared.connect(self._setup_js)
 
         self.file_stem = file_stem
-        self.project_definition = project_definition
 
         self.layout().setContentsMargins(0, 0, 0, 0)
 

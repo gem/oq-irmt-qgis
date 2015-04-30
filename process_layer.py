@@ -42,7 +42,12 @@ from shared import DEBUG, DOUBLE_FIELD_TYPE_NAME
 
 
 class ProcessLayer():
-
+    """
+    Set of utilities to manage a layer or compare layers.
+    :param layer: Layer to be processed
+    An example of usage:
+    has_same_content = ProcessLayer(a_layer).has_same_content_as(another_layer)
+    """
     def __init__(self, layer):
         self.layer = layer
 
@@ -57,8 +62,10 @@ class ProcessLayer():
         other_dp = other_layer.dataProvider()
         len_this = self.layer.featureCount()
         len_other = other_layer.featureCount()
+        # Check if the layers have the same number of rows (features)
         if len_this != len_other:
             return False
+        # Check if the layers have the same field names (columns)
         this_fields = [field.name() for field in this_dp.fields()]
         other_fields = [field.name() for field in other_dp.fields()]
         if this_fields != other_fields:
@@ -66,6 +73,8 @@ class ProcessLayer():
         this_features = this_dp.getFeatures()
         other_features = other_dp.getFeatures()
         # we already checked that the layers have the same number of features
+        # and now we want to make sure that for each feature the contents are
+        # the same
         for i in xrange(len_this):
             this_feature = this_features.next()
             other_feature = other_features.next()
@@ -228,8 +237,8 @@ class ProcessLayer():
     def find_attribute_id(self, attribute_name):
         """
         Get the id of the attribute called attribute_name
-        @param attribute_name: name of the attribute
-        @return: id of the attribute, or raise AttributeError
+        :param attribute_name: name of the attribute
+        :return: id of the attribute, or raise AttributeError
         exception if not found
         """
         attribute_id = None
@@ -249,7 +258,7 @@ class ProcessLayer():
         :type new_name: str
 
         :param add_to_registry: if True, the new layer will be added to
-        the QgsMapRegistry
+                                the QgsMapRegistry
         :type: bool
 
         :returns: An in-memory copy of a layer.
@@ -309,9 +318,9 @@ class ProcessLayer():
 
     def is_type_in(self, type_list):
         """
-        @param type_list: we want to check if the type of the layer is
-        included in this list
-        @return: True if the layer is a VectorLayer and its type is in the list
+        :param type_list: we want to check if the type of the layer is
+                          included in this list
+        :return: True if the layer is a VectorLayer and its type is in the list
         """
         if self.layer.type() == QgsMapLayer.VectorLayer:
             v_type = self.layer.wkbType()
