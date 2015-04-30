@@ -1024,6 +1024,10 @@ class Svir:
         selected_idx = layer_dict['selected_idx']
         proj_defs = layer_dict['proj_defs']
         project_definition = proj_defs[selected_idx]
+        if 'title' in project_definition:
+            project_title = project_definition['title']
+        else:
+            project_title = None
 
         QgsVectorFileWriter.writeAsVectorFormat(
             self.current_layer,
@@ -1038,7 +1042,7 @@ class Svir:
         # convert bytes to MB
         file_size_mb = file_size_mb / 1024 / 1024
 
-        dlg = UploadSettingsDialog(file_size_mb, self.iface)
+        dlg = UploadSettingsDialog(file_size_mb, self.iface, project_title)
         if dlg.exec_():
             project_definition['title'] = dlg.ui.title_le.text()
             zone_label_field = dlg.ui.zone_label_field_cbx.currentText()
