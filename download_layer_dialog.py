@@ -37,8 +37,8 @@ NS_NET_OPENGIS_WFS = '{http://www.opengis.net/wfs}'
 
 class DownloadLayerDialog(QDialog):
     """
-    Modal dialog giving to the user the possibility to select
-    social vulnerability variables to import from the oq-platform
+    Modal dialog giving to the user the possibility to select and download one
+    of the projects available on the OQ-Platform
     """
     def __init__(self, downloader):
         QDialog.__init__(self)
