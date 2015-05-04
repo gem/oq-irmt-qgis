@@ -48,7 +48,7 @@ class UploadSettingsDialog(QDialog):
     licenses. The user must click on a confirmation checkbox, before the
     uploading of the layer can be started.
     """
-    def __init__(self, upload_size, iface):
+    def __init__(self, upload_size, iface, project_title=None):
         QDialog.__init__(self)
         # Set up the user interface from Designer.
         self.ui = Ui_UploadSettingsDialog()
@@ -60,7 +60,10 @@ class UploadSettingsDialog(QDialog):
                     '(About %s MB of data will be transmitted)'
                     % upload_size)
         self.ui.head_msg_lbl.setText(head_msg)
-        self.ui.title_le.setText(DEFAULTS['ISO19115_TITLE'])
+        if project_title:
+            self.ui.title_le.setText(project_title)
+        else:
+            self.ui.title_le.setText(DEFAULTS['ISO19115_TITLE'])
 
         # if no field is selected, whe should not allow uploading
         self.zone_label_field_is_specified = False
