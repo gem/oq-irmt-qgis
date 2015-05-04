@@ -95,6 +95,8 @@ from utils import (tr,
                    get_credentials,
                    update_platform_project,
                    )
+                   count_heading_commented_lines)
+from abstract_worker import start_worker
 from shared import (SVIR_PLUGIN_VERSION,
                     DEBUG,
                     PROJECT_TEMPLATE,
@@ -665,9 +667,6 @@ class Svir:
             # project definition
             if not isinstance(project_definitions, list):
                 project_definitions = [project_definitions]
-            for proj_def in project_definitions:
-                if 'platform_layer_id' not in proj_def:
-                    proj_def['platform_layer_id'] = dlg.layer_id
             self.update_proj_defs(layer.id(), project_definitions)
             self.update_actions_status()
             # in case of multiple project definitions, let the user select one
@@ -1059,6 +1058,10 @@ class Svir:
         selected_idx = layer_dict['selected_idx']
         proj_defs = layer_dict['proj_defs']
         project_definition = proj_defs[selected_idx]
+        if 'title' in project_definition:
+            project_title = project_definition['title']
+        else:
+            project_title = None
 
         QgsVectorFileWriter.writeAsVectorFormat(
             self.current_layer,

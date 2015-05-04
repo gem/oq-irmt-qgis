@@ -31,6 +31,7 @@ from PyQt4.QtCore import Qt, QThread
 from PyQt4.QtGui import QProgressBar, QPushButton
 from qgis.core import QgsMessageLog
 from qgis.gui import QgsMessageBar
+from utils import tr
 
 
 class AbstractWorker(QtCore.QObject):
@@ -41,6 +42,7 @@ class AbstractWorker(QtCore.QObject):
     error = QtCore.pyqtSignal(Exception, basestring)
     progress = QtCore.pyqtSignal(float)
     toggle_show_progress = QtCore.pyqtSignal(bool)
+    set_message = QtCore.pyqtSignal(str)
 
     # private signal, don't use in concrete workers this is automatically
     # emitted if the result is not None
@@ -71,6 +73,8 @@ class AbstractWorker(QtCore.QObject):
 
     def kill(self):
         self.is_killed = True
+        self.set_message.emit(tr('Aborting...'))
+        self.toggle_show_progress.emit(False)
 
 
 def start_worker(worker, message_bar, message):
@@ -88,6 +92,9 @@ def start_worker(worker, message_bar, message):
     # start the worker in a new thread
     thread = QThread(message_bar.parent())
     worker.moveToThread(thread)
+
+    worker.set_message.connect(lambda message: set_worker_message(
+        message, message_bar_item))
 
     worker.toggle_show_progress.connect(lambda show: toggle_worker_progress(
         show, progress_bar))
@@ -111,6 +118,10 @@ def toggle_worker_progress(show_progress, progress_bar):
     else:
         # show an undefined progress
         progress_bar.setMaximum(0)
+
+
+def set_worker_message(message, message_bar_item):
+    message_bar_item.setText(message)
 
 
 def worker_finished(result, thread, worker, message_bar, message_bar_item):

@@ -84,7 +84,6 @@ class UploadMetadataDialog(QDialog):
         self.frame.javaScriptWindowObjectCleared.connect(self._setup_js)
 
         self.file_stem = file_stem
-        self.project_definition = project_definition
 
         self.layout().setContentsMargins(0, 0, 0, 0)
 
