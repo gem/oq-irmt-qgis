@@ -31,7 +31,7 @@ from import_sv_data import PLATFORM_EXPORT_VARIABLES_DATA
 from utils import SvNetworkError, tr, UserAbortedNotification
 
 
-class DownloadWorker(AbstractWorker):
+class DownloadPlatformDataWorker(AbstractWorker):
     """worker, implement the work method here and raise exceptions if needed"""
 
     def __init__(self,

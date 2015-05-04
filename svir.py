@@ -33,7 +33,7 @@ import StringIO
 
 from math import floor, ceil
 from download_layer_dialog import DownloadLayerDialog
-from download_worker import DownloadWorker
+from download_platform_data_worker import DownloadPlatformDataWorker
 from metadata_utilities import write_iso_metadata_file, get_supplemental_info
 
 from PyQt4.QtCore import (QSettings,
@@ -483,7 +483,7 @@ class Svir:
 
                     assign_default_weights(svi_themes)
 
-                    worker = DownloadWorker(
+                    worker = DownloadPlatformDataWorker(
                         sv_downloader,
                         indices_string,
                         load_geometries,
