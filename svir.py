@@ -475,7 +475,8 @@ class Svir:
 
                     try:
                         fname, msg = sv_downloader.get_sv_data(
-                            indices_string, load_geometries, iso_codes_string)
+                            indices_string, load_geometries, iso_codes_string,
+                            self.iface)
                     except SvNetworkError as e:
                         self.iface.messageBar().pushMessage(
                             tr("Download Error"),
