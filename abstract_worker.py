@@ -31,7 +31,7 @@ from PyQt4.QtCore import Qt, QThread
 from PyQt4.QtGui import QProgressBar, QPushButton
 from qgis.core import QgsMessageLog
 from qgis.gui import QgsMessageBar
-from utils import tr
+from utils import tr, UserAbortedNotification
 
 
 class AbstractWorker(QtCore.QObject):
@@ -56,6 +56,8 @@ class AbstractWorker(QtCore.QObject):
         try:
             result = self.work()
             self.finished.emit(result)
+        except UserAbortedNotification:
+            self.finished.emit(None)
         except Exception, e:
             # forward the exception upstream
             self.error.emit(e, traceback.format_exc())

@@ -28,7 +28,7 @@ import tempfile
 
 from abstract_worker import AbstractWorker
 from import_sv_data import PLATFORM_EXPORT_VARIABLES_DATA
-from utils import SvNetworkError, tr
+from utils import SvNetworkError, tr, UserAbortedNotification
 
 
 class DownloadWorker(AbstractWorker):
@@ -81,7 +81,7 @@ class DownloadWorker(AbstractWorker):
                 n_downloaded_countries = 0
                 for line in result.iter_lines():
                     if self.is_killed:
-                        raise RuntimeError('USER Killed')
+                        raise UserAbortedNotification('USER Killed')
 
                     csv_file.write(line + '\n')
                     n_downloaded_countries += 1

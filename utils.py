@@ -414,6 +414,10 @@ class SvNetworkError(Exception):
     pass
 
 
+class UserAbortedNotification(Exception):
+    pass
+
+
 class ReadMetadataError(Exception):
     """When a metadata xml is not correctly formatted can't be read"""
     suggestion = (
