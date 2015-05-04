@@ -28,7 +28,7 @@
 import json
 
 from abstract_worker import AbstractWorker
-from utils import multipart_encode_for_requests
+from utils import multipart_encode_for_requests, UserAbortedNotification
 
 
 class UploadWorker(AbstractWorker):
@@ -42,31 +42,23 @@ class UploadWorker(AbstractWorker):
         self.username = username
 
     def work(self):
-        self.toggle_show_progress.emit(False)
-        # if success == 'False', layer_url will contain the error message
-        return self.upload_shp()
-
-    def upload_shp(self):
+        # self.toggle_show_progress.emit(True)
         permissions = ('{"authenticated":"_none",'
                        '"anonymous":"_none",'
                        '"users":[["%s","layer_readwrite"],["%s","layer_admin"]]'
                        '}') % (self.username, self.username)
 
         data = {'layer_title': self.file_stem,
-                'base_file': ('%s.shp' % self.file_stem,
-                              open('%s.shp' % self.file_stem, 'rb')),
-                'dbf_file': ('%s.dbf' % self.file_stem,
-                             open('%s.dbf' % self.file_stem, 'rb')),
-                'shx_file': ('%s.shx' % self.file_stem,
-                             open('%s.shx' % self.file_stem, 'rb')),
-                'prj_file': ('%s.prj' % self.file_stem,
-                             open('%s.prj' % self.file_stem, 'rb')),
-                'xml_file': ('%s.xml' % self.file_stem,
-                             open('%s.xml' % self.file_stem, 'r')),
+                'base_file': open('%s.shp' % self.file_stem, 'rb'),
+                'dbf_file': open('%s.dbf' % self.file_stem, 'rb'),
+                'shx_file': open('%s.shx' % self.file_stem, 'rb'),
+                'prj_file': open('%s.prj' % self.file_stem, 'rb'),
+                'xml_file': open('%s.xml' % self.file_stem, 'r'),
                 'charset': ['UTF-8'],
                 'permissions': [permissions]
                 }
 
+        print 'PERMISSIONS', permissions
         # generate headers and gata-generator an a requests-compatible format
         # and provide our progress-callback
         data_generator, headers = multipart_encode_for_requests(
@@ -78,8 +70,8 @@ class UploadWorker(AbstractWorker):
             data=data_generator,
             headers=headers
         )
-        print r.text
         response = json.loads(r.text)
+        print 'RESPONSE', response
         try:
             return self.hostname + response['url'], True
         except KeyError:
@@ -91,12 +83,13 @@ class UploadWorker(AbstractWorker):
     # this is your progress callback
     def progress_cb(self, param, current, total):
         if self.is_killed:
-            raise RuntimeError('USER Killed')
+            raise UserAbortedNotification('USER Killed')
         if not param:
             return
         # check out
         # http://tcd.netinf.eu/doc/classnilib_1_1encode_1_1MultipartParam.html
         # for a complete list of the properties param provides to you
-        print "{0} ({1}) - {2:d}/{3:d} - {4:.2f}%".format(
-            param.name, param.filename, current, total,
-            float(current)/float(total)*100)
+        progress = float(current) / float(total) * 100
+        self.progress.emit(progress)
+        # print "PROGRESS: {0} ({1}) - {2:d}/{3:d} - {4:.2f}%".format(
+        #   param.name, param.filename, current, total, progress)
