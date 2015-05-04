@@ -30,7 +30,10 @@ import csv
 from qgis.gui import QgsMessageBar
 
 from third_party.requests import Session
-from third_party.requests.exceptions import ConnectionError
+from third_party.requests.exceptions import (ConnectionError,
+                                             InvalidSchema,
+                                             MissingSchema
+                                             )
 
 from utils import (SvNetworkError,
                    platform_login,
@@ -57,10 +60,14 @@ def get_loggedin_downloader(iface):
         with WaitCursorManager(msg, iface):
             sv_downloader.login(username, password)
         return sv_downloader
-    except (SvNetworkError, ConnectionError) as e:
+    except (SvNetworkError, ConnectionError,
+            InvalidSchema, MissingSchema) as e:
+        err_msg = str(e)
+        if isinstance(e, InvalidSchema):
+            err_msg += ' (you could try prepending http:// or https://)'
         iface.messageBar().pushMessage(
             tr("Login Error"),
-            tr(str(e)),
+            tr(err_msg),
             level=QgsMessageBar.CRITICAL)
         return None
 
