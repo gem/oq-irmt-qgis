@@ -680,6 +680,8 @@ class Svir:
                 self.iface.activeLayer().id(),
                 project_definitions,
                 select_proj_def_dlg.selected_idx)
+            self.recalculate_indexes(
+                project_definitions[select_proj_def_dlg.selected_idx])
             self.redraw_ir_layer(
                 project_definitions[select_proj_def_dlg.selected_idx])
 
@@ -772,7 +774,10 @@ class Svir:
         return svi_attr_id, ri_attr_id, iri_attr_id
 
     def is_svi_renderable(self, proj_def):
-        svi_node = proj_def['children'][1]
+        try:
+            svi_node = proj_def['children'][1]
+        except KeyError:
+            return False
         # check that that the svi_node has a corresponding field
         if 'field' not in svi_node:
             return False
@@ -790,7 +795,10 @@ class Svir:
         return True
 
     def is_ri_renderable(self, proj_def):
-        ri_node = proj_def['children'][0]
+        try:
+            ri_node = proj_def['children'][0]
+        except KeyError:
+            return False
         # check that that the ri_node has a corresponding field
         if 'field' not in ri_node:
             return False
