@@ -95,10 +95,14 @@ class UploadSettingsDialog(QDialog):
         self.set_head_msg()
 
     def set_head_msg(self):
-        self.head_msg_update = (
-            'The current project definition will be added to the '
-            'OpenQuake Platform project\nidentified as "%s"'
-            % self.project_definition['platform_layer_id'])
+        if 'platform_layer_id' in self.project_definition:
+            platform_layer_id = self.project_definition['platform_layer_id']
+            self.head_msg_update = (
+                'The current project definition will be added to the '
+                'OpenQuake Platform project\nidentified as "%s"'
+                % platform_layer_id)
+        else:
+            self.head_msg_update = ''
         self.head_msg_new = (
             'The project will be uploaded to the OpenQuake Platform.'
             '\n\n(About %s MB of data will be transmitted)'
