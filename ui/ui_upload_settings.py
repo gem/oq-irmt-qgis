@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_upload_settings.ui'
 #
-# Created: Fri Mar  6 11:24:15 2015
+# Created: Tue May  5 11:35:42 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -26,12 +26,16 @@ except AttributeError:
 class Ui_UploadSettingsDialog(object):
     def setupUi(self, UploadSettingsDialog):
         UploadSettingsDialog.setObjectName(_fromUtf8("UploadSettingsDialog"))
-        UploadSettingsDialog.resize(454, 265)
+        UploadSettingsDialog.resize(509, 265)
         self.verticalLayout = QtGui.QVBoxLayout(UploadSettingsDialog)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.head_msg_lbl = QtGui.QLabel(UploadSettingsDialog)
         self.head_msg_lbl.setObjectName(_fromUtf8("head_msg_lbl"))
         self.verticalLayout.addWidget(self.head_msg_lbl)
+        self.update_chk = QtGui.QCheckBox(UploadSettingsDialog)
+        self.update_chk.setEnabled(False)
+        self.update_chk.setObjectName(_fromUtf8("update_chk"))
+        self.verticalLayout.addWidget(self.update_chk)
         self.formLayout = QtGui.QFormLayout()
         self.formLayout.setFieldGrowthPolicy(QtGui.QFormLayout.AllNonFixedFieldsGrow)
         self.formLayout.setObjectName(_fromUtf8("formLayout"))
@@ -79,7 +83,8 @@ class Ui_UploadSettingsDialog(object):
     def retranslateUi(self, UploadSettingsDialog):
         UploadSettingsDialog.setWindowTitle(_translate("UploadSettingsDialog", "Upload Settings", None))
         self.head_msg_lbl.setText(_translate("UploadSettingsDialog", "The active layer will be uploaded to the Openquake Platform", None))
-        self.label_4.setText(_translate("UploadSettingsDialog", "Project title", None))
+        self.update_chk.setText(_translate("UploadSettingsDialog", "Update the existing project on the Platform", None))
+        self.label_4.setText(_translate("UploadSettingsDialog", "Project definition title", None))
         self.label.setText(_translate("UploadSettingsDialog", "Zone labels field", None))
         self.label_6.setText(_translate("UploadSettingsDialog", "License", None))
         self.license_info_btn.setText(_translate("UploadSettingsDialog", "Info", None))
