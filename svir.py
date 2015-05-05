@@ -69,6 +69,9 @@ from process_layer import ProcessLayer
 
 import resources_rc  # pylint: disable=W0611  # NOQA
 
+from third_party.requests.sessions import Session
+from third_party.requests import ConnectionError
+
 from select_input_layers_dialog import SelectInputLayersDialog
 from attribute_selection_dialog import AttributeSelectionDialog
 from transformation_dialog import TransformationDialog
@@ -86,7 +89,11 @@ from utils import (tr,
                    clear_progress_message_bar,
                    SvNetworkError, ask_for_download_destination,
                    files_exist_in_destination, confirm_overwrite,
-                   count_heading_commented_lines)
+                   count_heading_commented_lines,
+                   platform_login,
+                   get_credentials,
+                   update_platform_project,
+                   )
 from shared import (SVIR_PLUGIN_VERSION,
                     DEBUG,
                     PROJECT_TEMPLATE,
@@ -596,7 +603,14 @@ class Svir:
                     level=QgsMessageBar.CRITICAL)
                 return
             metadata_url = get_metadata_url_resp.content
-            request = sv_downloader.sess.get(metadata_url)
+            try:
+                request = sv_downloader.sess.get(metadata_url)
+            except ConnectionError as e:
+                self.iface.messageBar().pushMessage(
+                    tr("Download Error"),
+                    tr(str(e)),
+                    level=QgsMessageBar.CRITICAL)
+                return
             metadata_xml = request.content
 
             project_definitions = get_supplemental_info(
@@ -642,6 +656,9 @@ class Svir:
             # project definition
             if not isinstance(project_definitions, list):
                 project_definitions = [project_definitions]
+            for proj_def in project_definitions:
+                if 'platform_layer_id' not in proj_def:
+                    proj_def['platform_layer_id'] = dlg.layer_id
             self.update_proj_defs(layer.id(), project_definitions)
             self.update_actions_status()
             # in case of multiple project definitions, let the user select one
@@ -1033,10 +1050,6 @@ class Svir:
         selected_idx = layer_dict['selected_idx']
         proj_defs = layer_dict['proj_defs']
         project_definition = proj_defs[selected_idx]
-        if 'title' in project_definition:
-            project_title = project_definition['title']
-        else:
-            project_title = None
 
         QgsVectorFileWriter.writeAsVectorFormat(
             self.current_layer,
@@ -1051,7 +1064,8 @@ class Svir:
         # convert bytes to MB
         file_size_mb = file_size_mb / 1024 / 1024
 
-        dlg = UploadSettingsDialog(file_size_mb, self.iface, project_title)
+        dlg = UploadSettingsDialog(
+            file_size_mb, self.iface, project_definition)
         if dlg.exec_():
             project_definition['title'] = dlg.ui.title_le.text()
             zone_label_field = dlg.ui.zone_label_field_cbx.currentText()
@@ -1063,13 +1077,40 @@ class Svir:
             license_txt = '%s (%s)' % (license_name, license_url)
             project_definition['license'] = license_txt
             project_definition['svir_plugin_version'] = SVIR_PLUGIN_VERSION
-            if DEBUG:
-                print 'xml_file:', xml_file
-            write_iso_metadata_file(xml_file,
-                                    project_definition)
-            metadata_dialog = UploadMetadataDialog(
-                self.iface, file_stem)
-            if metadata_dialog.exec_():
-                QDesktopServices.openUrl(QUrl(metadata_dialog.layer_url))
-            elif DEBUG:
-                print "metadata_dialog cancelled"
+            if 'platform_layer_id' in project_definition:
+                with WaitCursorManager(
+                        'Updating project on the OpenQuake Platform',
+                        self.iface):
+                    hostname, username, password = get_credentials(self.iface)
+                    session = Session()
+                    try:
+                        platform_login(hostname, username, password, session)
+                    except SvNetworkError as e:
+                        error_msg = (
+                            'Unable to login to the platform: ' + e.message)
+                        self.iface.messageBar().pushMessage(
+                            'Error', error_msg, level=QgsMessageBar.CRITICAL)
+                        return
+                    response = update_platform_project(
+                        hostname, session, project_definition)
+                    if response.ok:
+                        self.iface.messageBar().pushMessage(
+                            tr("Info"),
+                            tr(response.text),
+                            level=QgsMessageBar.INFO)
+                    else:
+                        self.iface.messageBar().pushMessage(
+                            tr("Error"),
+                            tr(response.text),
+                            level=QgsMessageBar.CRITICAL)
+            else:
+                if DEBUG:
+                    print 'xml_file:', xml_file
+                write_iso_metadata_file(xml_file,
+                                        project_definition)
+                metadata_dialog = UploadMetadataDialog(
+                    self.iface, file_stem)
+                if metadata_dialog.exec_():
+                    QDesktopServices.openUrl(QUrl(metadata_dialog.layer_url))
+                elif DEBUG:
+                    print "metadata_dialog cancelled"

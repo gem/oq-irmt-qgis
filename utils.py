@@ -247,8 +247,19 @@ def platform_login(host, username, password, session):
                                 )
     if session_resp.status_code != 200:  # 200 means successful:OK
         error_message = ('Unable to get session for login: %s' %
-                         session_resp.content)
+                         session_resp.text)
         raise SvNetworkError(error_message)
+
+
+def update_platform_project(host, session, project_definition):
+    proj_def_str = json.dumps(project_definition,
+                              sort_keys=False,
+                              indent=2,
+                              separators=(',', ': '))
+    payload = {'layer_name': project_definition['platform_layer_id'],
+               'project_definition': proj_def_str}
+    resp = session.post(host + '/svir/add_project_definition', data=payload)
+    return resp
 
 
 def upload_shp(host, session, file_stem, username):

@@ -53,6 +53,8 @@ class ProjectsManagerDialog(QDialog):
         self.project_definitions = None  # it will store the project
                                          # definitions for the active layer
         self.selected_idx = None  # index of the selected project definition
+        self.platform_layer_id = None  # id of the geonode layer on platform
+        self.zone_label_field = None  # field containing zone identifiers
         self.get_project_definitions()
         self.populate_proj_def_cbx()
 
@@ -69,6 +71,18 @@ class ProjectsManagerDialog(QDialog):
                                             'proj_defs': []}
         else:
             self.project_definitions = {'selected_idx': None, 'proj_defs': []}
+        # All project definitions are linked to the same layer on the platform
+        # So we can get such information from the first project_definition
+        # NOTE: If the "upload" button is enabled, we should always have at
+        # least one project definition defined for the active layer
+        first_proj_def = self.project_definitions['proj_defs'][0]
+        if 'platform_layer_id' in first_proj_def:
+            self.platform_layer_id = first_proj_def['platform_layer_id']
+        # The zone label field might be different for different project
+        # definitions, but it sounds reasonable to suggest the first one in the
+        # combobox and to allow the user to change it if needed
+        if 'zone_label_field' in first_proj_def:
+            self.zone_label_field = first_proj_def['zone_label_field']
 
     def populate_proj_def_cbx(self):
         self.ui.proj_def_cbx.clear()
@@ -93,6 +107,10 @@ class ProjectsManagerDialog(QDialog):
     def add_proj_def(self, title):
         proj_def_template = PROJECT_TEMPLATE
         proj_def_template['title'] = title
+        if self.platform_layer_id:
+            proj_def_template['platform_layer_id'] = self.platform_layer_id
+        if self.zone_label_field:
+            proj_def_template['zone_label_field'] = self.zone_label_field
         self.project_definitions['proj_defs'].append(proj_def_template)
         self.project_definitions['selected_idx'] = len(
             self.project_definitions['proj_defs']) - 1

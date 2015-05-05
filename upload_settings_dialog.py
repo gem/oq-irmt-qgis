@@ -48,32 +48,69 @@ class UploadSettingsDialog(QDialog):
     licenses. The user must click on a confirmation checkbox, before the
     uploading of the layer can be started.
     """
-    def __init__(self, upload_size, iface, project_title=None):
+    def __init__(self, upload_size, iface, project_definition):
         QDialog.__init__(self)
         # Set up the user interface from Designer.
         self.ui = Ui_UploadSettingsDialog()
         self.ui.setupUi(self)
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
         self.ok_button.setEnabled(False)
-        head_msg = ('The active layer and the current Project Definition'
-                    ' will be uploaded to the Openquake Platform.\n\n'
-                    '(About %s MB of data will be transmitted)'
-                    % upload_size)
-        self.ui.head_msg_lbl.setText(head_msg)
-        if project_title:
-            self.ui.title_le.setText(project_title)
+        self.upload_size = upload_size
+        self.project_definition = project_definition
+        if 'title' in self.project_definition:
+            self.ui.title_le.setText(self.project_definition['title'])
         else:
             self.ui.title_le.setText(DEFAULTS['ISO19115_TITLE'])
 
-        # if no field is selected, whe should not allow uploading
+        # if no field is selected, we should not allow uploading
         self.zone_label_field_is_specified = False
         reload_attrib_cbx(
             self.ui.zone_label_field_cbx, iface.activeLayer(), True)
+        # pre-select the field if it's specified in the project definition
+        if 'zone_label_field' in self.project_definition:
+            zone_label_idx = self.ui.zone_label_field_cbx.findText(
+                self.project_definition['zone_label_field'])
+            if zone_label_idx != -1:
+                self.ui.zone_label_field_cbx.setCurrentIndex(zone_label_idx)
+                self.zone_label_field_is_specified = True
 
         for license, link in LICENSES:
             self.ui.license_cbx.addItem(license, link)
-        self.ui.license_cbx.setCurrentIndex(
-            self.ui.license_cbx.findText(DEFAULT_LICENSE[0]))
+        if 'license' in self.project_definition:
+            license = self.project_definition['license'].split('(')[0].strip()
+            license_idx = self.ui.license_cbx.findText(license)
+            if license_idx != -1:
+                self.ui.license_cbx.setCurrentIndex(license_idx)
+            else:
+                self.ui.license_cbx.setCurrentIndex(
+                    self.ui.license_cbx.findText(DEFAULT_LICENSE[0]))
+        else:
+            self.ui.license_cbx.setCurrentIndex(
+                self.ui.license_cbx.findText(DEFAULT_LICENSE[0]))
+
+        self.ui.update_chk.setEnabled(
+            'platform_layer_id' in self.project_definition)
+        self.ui.update_chk.setChecked(
+            'platform_layer_id' in self.project_definition)
+        self.set_head_msg()
+
+    def set_head_msg(self):
+        if 'platform_layer_id' in self.project_definition:
+            platform_layer_id = self.project_definition['platform_layer_id']
+            self.head_msg_update = (
+                'The current project definition will be added to the '
+                'OpenQuake Platform project\nidentified as "%s"'
+                % platform_layer_id)
+        else:
+            self.head_msg_update = ''
+        self.head_msg_new = (
+            'The project will be uploaded to the OpenQuake Platform.'
+            '\n\n(About %s MB of data will be transmitted)'
+            % self.upload_size)
+        if self.ui.update_chk.isChecked():
+            self.ui.head_msg_lbl.setText(self.head_msg_update)
+        else:
+            self.ui.head_msg_lbl.setText(self.head_msg_new)
 
     def set_ok_button(self):
         self.ok_button.setEnabled(
@@ -85,6 +122,10 @@ class UploadSettingsDialog(QDialog):
         zone_label_field = self.ui.zone_label_field_cbx.currentText()
         self.zone_label_field_is_specified = (zone_label_field != '')
         self.set_ok_button()
+
+    @pyqtSlot(int)
+    def on_update_chk_stateChanged(self):
+        self.set_head_msg()
 
     @pyqtSlot(int)
     def on_confirm_chk_stateChanged(self):
