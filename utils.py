@@ -247,7 +247,7 @@ def platform_login(host, username, password, session):
                                 )
     if session_resp.status_code != 200:  # 200 means successful:OK
         error_message = ('Unable to get session for login: %s' %
-                         session_resp.content)
+                         session_resp.text)
         raise SvNetworkError(error_message)
 
 

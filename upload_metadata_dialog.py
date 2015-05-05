@@ -43,7 +43,10 @@ from ui.ui_upload_metadata import Ui_UploadMetadataDialog
 from utils import (get_credentials,
                    platform_login,
                    upload_shp,
-                   create_progress_message_bar, clear_progress_message_bar)
+                   create_progress_message_bar,
+                   clear_progress_message_bar,
+                   SvNetworkError,
+                   )
 from shared import DEBUG
 
 
@@ -97,7 +100,14 @@ class UploadMetadataDialog(QDialog):
         self.upload()
 
     def upload(self):
-        self._login_to_platform()
+        try:
+            self._login_to_platform()
+        except SvNetworkError as e:
+            error_msg = (
+                'Unable to login to the platform: ' + e.message)
+            self.message_bar.pushMessage(
+                'Error', error_msg, level=QgsMessageBar.CRITICAL)
+            return
 
         # adding by emitting signal in different thread
         self.uploadThread = UploaderThread(

@@ -70,6 +70,7 @@ from process_layer import ProcessLayer
 import resources_rc  # pylint: disable=W0611  # NOQA
 
 from third_party.requests.sessions import Session
+from third_party.requests import ConnectionError
 
 from select_input_layers_dialog import SelectInputLayersDialog
 from attribute_selection_dialog import AttributeSelectionDialog
@@ -602,7 +603,14 @@ class Svir:
                     level=QgsMessageBar.CRITICAL)
                 return
             metadata_url = get_metadata_url_resp.content
-            request = sv_downloader.sess.get(metadata_url)
+            try:
+                request = sv_downloader.sess.get(metadata_url)
+            except ConnectionError as e:
+                self.iface.messageBar().pushMessage(
+                    tr("Download Error"),
+                    tr(str(e)),
+                    level=QgsMessageBar.CRITICAL)
+                return
             metadata_xml = request.content
 
             project_definitions = get_supplemental_info(
@@ -1075,7 +1083,14 @@ class Svir:
                         self.iface):
                     hostname, username, password = get_credentials(self.iface)
                     session = Session()
-                    platform_login(hostname, username, password, session)
+                    try:
+                        platform_login(hostname, username, password, session)
+                    except SvNetworkError as e:
+                        error_msg = (
+                            'Unable to login to the platform: ' + e.message)
+                        self.iface.messageBar().pushMessage(
+                            'Error', error_msg, level=QgsMessageBar.CRITICAL)
+                        return
                     response = update_platform_project(
                         hostname, session, project_definition)
                     if response.ok:
