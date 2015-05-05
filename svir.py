@@ -34,6 +34,7 @@ import StringIO
 from math import floor, ceil
 from download_layer_dialog import DownloadLayerDialog
 from download_platform_data_worker import DownloadPlatformDataWorker
+from download_platform_project_worker import DownloadPlatformProjectWorker
 from metadata_utilities import write_iso_metadata_file, get_supplemental_info
 
 from PyQt4.QtCore import (QSettings,
@@ -158,7 +159,7 @@ class Svir:
         self.add_menu_item("import_layer",
                            ":/plugins/svir/load_layer.svg",
                            u"&Import project from the OpenQuake Platform",
-                           self.import_layer,
+                           self.download_layer,
                            enable=True,
                            add_to_layer_actions=False)
         # Action to activate the modal dialog to select a layer and one of its
@@ -489,7 +490,7 @@ class Svir:
                         load_geometries,
                         iso_codes_string)
                     worker.successfully_finished.connect(
-                        lambda result: self.download_successful(
+                        lambda result: self.data_download_successful(
                             result,
                             load_geometries,
                             dest_filename,
@@ -501,7 +502,7 @@ class Svir:
                                                 tr(str(e)),
                                                 level=QgsMessageBar.CRITICAL)
 
-    def download_successful(self,
+    def data_download_successful(self,
                             result,
                             load_geometries,
                             dest_filename,
@@ -555,7 +556,7 @@ class Svir:
         self.update_proj_defs(layer.id(), [project_definition])
         self.update_actions_status()
 
-    def import_layer(self):
+    def download_layer(self):
         sv_downloader = get_loggedin_downloader(self.iface)
         if sv_downloader is None:
             self.show_settings()
@@ -566,112 +567,92 @@ class Svir:
             dest_dir = ask_for_download_destination(dlg)
             if not dest_dir:
                 return
-            try:
-                #download and unzip layer
-                shape_url_fmt = (
-                    '%s/geoserver/wfs?'
-                    'format_options=charset:UTF-8'
-                    '&typename=%s'
-                    '&outputFormat=SHAPE-ZIP'
-                    '&version=1.0.0'
-                    '&service=WFS'
-                    '&request=GetFeature')
-                shape_url = shape_url_fmt % (sv_downloader.host, dlg.layer_id)
-                with WaitCursorManager("Downloading project", self.iface):
-                    request = sv_downloader.sess.get(shape_url)
 
-                downloaded_zip = zipfile.ZipFile(
-                    StringIO.StringIO(request.content))
-            except SvNetworkError as e:
-                self.iface.messageBar().pushMessage(
-                    tr("Download Error"),
-                    tr(str(e)),
-                    level=QgsMessageBar.CRITICAL)
-                return
-            files_in_zip = downloaded_zip.namelist()
-            shp_file = next(
-                filename for filename in files_in_zip if '.shp' in filename)
-            file_in_destination = files_exist_in_destination(
-                dest_dir, files_in_zip)
+            worker = DownloadPlatformProjectWorker(sv_downloader, dlg.layer_id)
+            worker.successfully_finished.connect(
+                lambda zip_file: self.import_layer(
+                    zip_file, sv_downloader, dest_dir, dlg))
+            start_worker(worker, self.iface.messageBar(),
+                         'Downloading data from platform')
 
-            if file_in_destination:
-                while confirm_overwrite(dlg, file_in_destination) == \
-                        QMessageBox.No:
-                    dest_dir = ask_for_download_destination(dlg)
-                    file_in_destination = files_exist_in_destination(
-                        dest_dir, downloaded_zip.namelist())
-                    if not file_in_destination:
-                        break
+    def import_layer(self, zip_file, sv_downloader, dest_dir, parent_dlg):
+        files_in_zip = zip_file.namelist()
+        shp_file = next(
+            filename for filename in files_in_zip if '.shp' in filename)
+        file_in_destination = files_exist_in_destination(dest_dir, files_in_zip)
 
-            downloaded_zip.extractall(dest_dir)
-            request_url = '%s/svir/get_layer_metadata_url?layer_name=%s' % (
-                sv_downloader.host, dlg.layer_id)
-            get_metadata_url_resp = sv_downloader.sess.get(request_url)
-            if not get_metadata_url_resp.ok:
-                self.iface.messageBar().pushMessage(
-                    tr("Download Error"),
-                    tr('Unable to locate the metadata'),
-                    level=QgsMessageBar.CRITICAL)
-                return
-            metadata_url = get_metadata_url_resp.content
-            try:
-                request = sv_downloader.sess.get(metadata_url)
-            except ConnectionError as e:
-                self.iface.messageBar().pushMessage(
-                    tr("Download Error"),
-                    tr(str(e)),
-                    level=QgsMessageBar.CRITICAL)
-                return
-            metadata_xml = request.content
+        if file_in_destination:
+            while confirm_overwrite(parent_dlg, file_in_destination) == \
+                    QMessageBox.No:
+                dest_dir = ask_for_download_destination(parent_dlg)
+                file_in_destination = files_exist_in_destination(
+                    dest_dir, zip_file.namelist())
+                if not file_in_destination:
+                    break
 
-            project_definitions = get_supplemental_info(
-                metadata_xml, '{http://www.isotc211.org/2005/gmd}MD_Metadata/')
-            dest_file = os.path.join(dest_dir, shp_file)
-            layer = QgsVectorLayer(
-                dest_file,
-                dlg.extra_infos[dlg.layer_id]['Title'], 'ogr')
-            if layer.isValid():
-                QgsMapLayerRegistry.instance().addMapLayer(layer)
-                self.iface.messageBar().pushMessage(
-                    tr('Download successful'),
-                    tr('Shapefile downloaded to %s' % dest_file),
-                    duration=8)
-            else:
-                self.iface.messageBar().pushMessage(
-                    tr("Download Error"),
-                    tr('Layer invalid'),
-                    level=QgsMessageBar.CRITICAL)
-                return
-            try:
-                # dlg.layer_id has the format "oqplatform:layername"
-                style_name = dlg.layer_id.split(':')[1] + '.sld'
-                request_url = '%s/gs/rest/styles/%s' % (
-                    sv_downloader.host, style_name)
-                get_style_resp = sv_downloader.sess.get(request_url)
-                if not get_style_resp.ok:
-                    raise SvNetworkError(get_style_resp.reason)
-                fd, sld_file = tempfile.mkstemp(suffix=".sld")
-                os.close(fd)
-                with open(sld_file, 'w') as f:
-                    f.write(get_style_resp.text)
-                layer.loadSldStyle(sld_file)
-            except Exception as e:
-                error_msg = ('Unable to download and apply the'
-                             ' style layer descriptor: %s' % e)
-                self.iface.messageBar().pushMessage(
-                    'Error downloading style',
-                    error_msg, level=QgsMessageBar.WARNING,
-                    duration=8)
-            self.iface.setActiveLayer(layer)
-            # ensure backwards compatibility with projects with a single
-            # project definition
-            if not isinstance(project_definitions, list):
-                project_definitions = [project_definitions]
-            self.update_proj_defs(layer.id(), project_definitions)
-            self.update_actions_status()
-            # in case of multiple project definitions, let the user select one
-            if len(project_definitions) > 1:
-                self.projects_manager()
+        zip_file.extractall(dest_dir)
+
+        request_url = '%s/svir/get_layer_metadata_url?layer_name=%s' % (
+            sv_downloader.host, parent_dlg.layer_id)
+        get_metadata_url_resp = sv_downloader.sess.get(request_url)
+        if not get_metadata_url_resp.ok:
+            self.iface.messageBar().pushMessage(
+                tr("Download Error"),
+                tr('Unable to locate the metadata'),
+                level=QgsMessageBar.CRITICAL)
+            return
+        metadata_url = get_metadata_url_resp.content
+        request = sv_downloader.sess.get(metadata_url)
+        metadata_xml = request.content
+
+        project_definitions = get_supplemental_info(
+            metadata_xml, '{http://www.isotc211.org/2005/gmd}MD_Metadata/')
+        dest_file = os.path.join(dest_dir, shp_file)
+        layer = QgsVectorLayer(
+            dest_file,
+            parent_dlg.extra_infos[parent_dlg.layer_id]['Title'], 'ogr')
+        if layer.isValid():
+            QgsMapLayerRegistry.instance().addMapLayer(layer)
+            self.iface.messageBar().pushMessage(
+                tr('Import successful'),
+                tr('Shapefile imported to %s' % dest_file),
+                duration=8)
+        else:
+            self.iface.messageBar().pushMessage(
+                tr("Import Error"),
+                tr('Layer invalid'),
+                level=QgsMessageBar.CRITICAL)
+            return
+        try:
+            # dlg.layer_id has the format "oqplatform:layername"
+            style_name = parent_dlg.layer_id.split(':')[1] + '.sld'
+            request_url = '%s/gs/rest/styles/%s' % (
+                sv_downloader.host, style_name)
+            get_style_resp = sv_downloader.sess.get(request_url)
+            if not get_style_resp.ok:
+                raise SvNetworkError(get_style_resp.reason)
+            fd, sld_file = tempfile.mkstemp(suffix=".sld")
+            os.close(fd)
+            with open(sld_file, 'w') as f:
+                f.write(get_style_resp.text)
+            layer.loadSldStyle(sld_file)
+        except Exception as e:
+            error_msg = ('Unable to download and apply the'
+                         ' style layer descriptor: %s' % e)
+            self.iface.messageBar().pushMessage(
+                'Error downloading style',
+                error_msg, level=QgsMessageBar.WARNING,
+                duration=8)
+        self.iface.setActiveLayer(layer)
+        # ensure backwards compatibility with projects with a single
+        # project definition
+        if not isinstance(project_definitions, list):
+            project_definitions = [project_definitions]
+        self.update_proj_defs(layer.id(), project_definitions)
+        self.update_actions_status()
+        # in case of multiple project definitions, let the user select one
+        if len(project_definitions) > 1:
+            self.projects_manager()
 
     @staticmethod
     def _add_new_theme(svi_themes,

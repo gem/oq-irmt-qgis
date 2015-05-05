@@ -55,11 +55,10 @@ class UploadWorker(AbstractWorker):
                 'shx_file': open('%s.shx' % self.file_stem, 'rb'),
                 'prj_file': open('%s.prj' % self.file_stem, 'rb'),
                 'xml_file': open('%s.xml' % self.file_stem, 'r'),
-                'charset': ['UTF-8'],
-                'permissions': [permissions]
+                'charset': 'UTF-8',
+                'permissions': json.dumps(permissions)
                 }
 
-        print 'PERMISSIONS', permissions
         # generate headers and gata-generator an a requests-compatible format
         # and provide our progress-callback
         data_generator, headers = multipart_encode_for_requests(
@@ -72,7 +71,6 @@ class UploadWorker(AbstractWorker):
             headers=headers
         )
         response = json.loads(r.text)
-        print 'RESPONSE', response
         try:
             return self.hostname + response['url'], True
         except KeyError:

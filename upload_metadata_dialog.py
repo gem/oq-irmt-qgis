@@ -150,7 +150,7 @@ class UploadMetadataDialog(QDialog):
     def upload_done(self, result):
         layer_url, success = result
         # In case success == 'False', layer_url contains the error message
-        if success == 'True':
+        if success or success == 'True':
             self._update_layer_style()
             self.message_bar_item, _ = create_progress_message_bar(
                 self.message_bar, 'Loading page......', no_percentage=True)
