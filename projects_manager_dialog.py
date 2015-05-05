@@ -71,11 +71,16 @@ class ProjectsManagerDialog(QDialog):
                                             'proj_defs': []}
         else:
             self.project_definitions = {'selected_idx': None, 'proj_defs': []}
-        for proj_def in self.project_definitions['proj_defs']:
-            if 'platform_layer_id' in proj_def:
-                self.platform_layer_id = proj_def['platform_layer_id']
-            if 'zone_label_field' in proj_def:
-                self.zone_label_field = proj_def['zone_label_field']
+        # All project definitions are linked to the same layer on the platform
+        # So we can get such information from the first project_definition
+        first_proj_def = self.project_definitions['proj_defs'][0]
+        if 'platform_layer_id' in first_proj_def:
+            self.platform_layer_id = first_proj_def['platform_layer_id']
+        # The zone label field might be different for different project
+        # definitions, but it sounds reasonable to suggest the first one in the
+        # combobox and to allow the user to change it if needed
+        if 'zone_label_field' in first_proj_def:
+            self.zone_label_field = first_proj_def['zone_label_field']
 
     def populate_proj_def_cbx(self):
         self.ui.proj_def_cbx.clear()
