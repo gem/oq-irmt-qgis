@@ -91,11 +91,9 @@ from utils import (tr,
                    clear_progress_message_bar,
                    SvNetworkError, ask_for_download_destination,
                    files_exist_in_destination, confirm_overwrite,
-                   count_heading_commented_lines,
                    platform_login,
                    get_credentials,
                    update_platform_project,
-                   )
                    count_heading_commented_lines)
 from abstract_worker import start_worker
 from shared import (SVIR_PLUGIN_VERSION,
