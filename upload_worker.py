@@ -43,10 +43,11 @@ class UploadWorker(AbstractWorker):
 
     def work(self):
         # self.toggle_show_progress.emit(True)
-        permissions = ('{"authenticated":"_none",'
-                       '"anonymous":"_none",'
-                       '"users":[["%s","layer_readwrite"],["%s","layer_admin"]]'
-                       '}') % (self.username, self.username)
+        permissions = {"authenticated": "_none",
+                       "anonymous": "_none",
+                       "users": [[self.username, "layer_readwrite"],
+                                 [self.username, "layer_admin"]]
+                       }
 
         data = {'layer_title': self.file_stem,
                 'base_file': open('%s.shp' % self.file_stem, 'rb'),
