@@ -26,12 +26,11 @@
 
 from PyQt4.QtCore import (Qt,
                           QUrl,
-                          QSettings, QThread, pyqtSignal)
+                          QSettings)
 
 from PyQt4.QtGui import (QDialog, QSizePolicy, QDialogButtonBox)
 from PyQt4.QtNetwork import QNetworkCookieJar, QNetworkCookie
 from PyQt4.QtWebKit import QWebSettings
-# from PyQt4.QtXml import QDomDocument
 
 from qgis.gui import QgsMessageBar
 from abstract_worker import start_worker
@@ -44,7 +43,8 @@ from upload_worker import UploadWorker
 
 from utils import (get_credentials,
                    platform_login,
-                   create_progress_message_bar, clear_progress_message_bar)
+                   create_progress_message_bar, clear_progress_message_bar,
+                   SvNetworkError)
 from shared import DEBUG
 
 
@@ -150,7 +150,7 @@ class UploadMetadataDialog(QDialog):
     def upload_done(self, result):
         layer_url, success = result
         # In case success == 'False', layer_url contains the error message
-        if success or success == 'True':
+        if success:
             self._update_layer_style()
             self.message_bar_item, _ = create_progress_message_bar(
                 self.message_bar, 'Loading page......', no_percentage=True)

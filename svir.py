@@ -28,8 +28,6 @@ import os.path
 import tempfile
 import uuid
 import copy
-import zipfile
-import StringIO
 
 from math import floor, ceil
 from download_layer_dialog import DownloadLayerDialog
@@ -72,7 +70,6 @@ from process_layer import ProcessLayer
 import resources_rc  # pylint: disable=W0611  # NOQA
 
 from third_party.requests.sessions import Session
-from third_party.requests import ConnectionError
 
 from select_input_layers_dialog import SelectInputLayersDialog
 from attribute_selection_dialog import AttributeSelectionDialog
@@ -500,20 +497,15 @@ class Svir:
                                                 tr(str(e)),
                                                 level=QgsMessageBar.CRITICAL)
 
-    def data_download_successful(self,
-                            result,
-                            load_geometries,
-                            dest_filename,
-                            project_definition):
+    def data_download_successful(
+            self, result, load_geometries, dest_filename, project_definition):
         fname, msg = result
-        display_msg = tr(
-                    "Socioeconomic data loaded in a new layer")
+        display_msg = tr("Socioeconomic data loaded in a new layer")
         self.iface.messageBar().pushMessage(tr("Info"),
                                             tr(display_msg),
                                             level=QgsMessageBar.INFO,
                                             duration=8)
-        QgsMessageLog.logMessage(
-            msg, 'GEM Social Vulnerability Downloader')
+        QgsMessageLog.logMessage(msg, 'GEM Social Vulnerability Downloader')
         # don't remove the file, otherwise there will be concurrency
         # problems
 
@@ -577,7 +569,8 @@ class Svir:
         files_in_zip = zip_file.namelist()
         shp_file = next(
             filename for filename in files_in_zip if '.shp' in filename)
-        file_in_destination = files_exist_in_destination(dest_dir, files_in_zip)
+        file_in_destination = files_exist_in_destination(
+            dest_dir, files_in_zip)
 
         if file_in_destination:
             while confirm_overwrite(parent_dlg, file_in_destination) == \
@@ -1037,10 +1030,6 @@ class Svir:
         selected_idx = layer_dict['selected_idx']
         proj_defs = layer_dict['proj_defs']
         project_definition = proj_defs[selected_idx]
-        if 'title' in project_definition:
-            project_title = project_definition['title']
-        else:
-            project_title = None
 
         QgsVectorFileWriter.writeAsVectorFormat(
             self.current_layer,
