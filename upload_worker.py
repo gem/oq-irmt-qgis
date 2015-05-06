@@ -28,7 +28,8 @@
 import json
 
 from abstract_worker import AbstractWorker
-from utils import multipart_encode_for_requests, UserAbortedNotification
+from shared import DEBUG
+from utils import multipart_encode_for_requests, UserAbortedNotification, tr
 
 
 class UploadWorker(AbstractWorker):
@@ -42,7 +43,6 @@ class UploadWorker(AbstractWorker):
         self.username = username
 
     def work(self):
-        # self.toggle_show_progress.emit(True)
         permissions = {"authenticated": "_none",
                        "anonymous": "_none",
                        "users": [[self.username, "layer_readwrite"],
@@ -70,14 +70,17 @@ class UploadWorker(AbstractWorker):
             data=data_generator,
             headers=headers
         )
-        response = json.loads(r.text)
+
         try:
+            response = json.loads(r.text)
             return self.hostname + response['url'], True
         except KeyError:
             if 'errors' in response:
                 raise KeyError(response['errors'])
             else:
                 raise KeyError("The server did not provide error messages")
+        except ValueError:
+            raise RuntimeError(r.text)
 
     # this is your progress callback
     def progress_cb(self, param, current, total):
@@ -90,5 +93,9 @@ class UploadWorker(AbstractWorker):
         # for a complete list of the properties param provides to you
         progress = float(current) / float(total) * 100
         self.progress.emit(progress)
-        # print "PROGRESS: {0} ({1}) - {2:d}/{3:d} - {4:.2f}%".format(
-        #   param.name, param.filename, current, total, progress)
+        if progress > 99:
+            self.toggle_show_progress.emit(False)
+            self.set_message.emit(tr('Processing on platform...'))
+        if DEBUG:
+            print "PROGRESS: {0} ({1}) - {2:d}/{3:d} - {4:.2f}%".format(
+                param.name, param.filename, current, total, progress)

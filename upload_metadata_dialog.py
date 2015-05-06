@@ -113,11 +113,10 @@ class UploadMetadataDialog(QDialog):
         start_worker(worker, self.message_bar, 'Uploading data')
 
     def _update_layer_style(self):
-        # file_stem contains also the path, which needs to be removed
-        # (split by '/' and get the filename after the last slash)
+        # file_stem contains also the slashes, which need to be removed
         # Since the style name is set by default substituting '-' with '_',
         # tp get the right style we need to do the same substitution
-        style_name = self.file_stem.split('/')[-1].replace('-', '_')
+        style_name = self.file_stem.replace('/', '').replace('-', '_')
         try:
             sld = getGsCompatibleSld(self.iface.activeLayer(), style_name)
         except Exception as e:
