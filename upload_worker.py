@@ -95,6 +95,7 @@ class UploadWorker(AbstractWorker):
         self.progress.emit(progress)
         if progress > 99:
             self.toggle_show_progress.emit(False)
+            self.toggle_show_cancel.emit(False)
             self.set_message.emit(tr('Processing on platform...'))
         if DEBUG:
             print "PROGRESS: {0} ({1}) - {2:d}/{3:d} - {4:.2f}%".format(

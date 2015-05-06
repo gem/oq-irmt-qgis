@@ -42,6 +42,7 @@ class AbstractWorker(QtCore.QObject):
     error = QtCore.pyqtSignal(Exception, basestring)
     progress = QtCore.pyqtSignal(float)
     toggle_show_progress = QtCore.pyqtSignal(bool)
+    toggle_show_cancel = QtCore.pyqtSignal(bool)
     set_message = QtCore.pyqtSignal(str)
 
     # private signal, don't use in concrete workers this is automatically
@@ -101,6 +102,9 @@ def start_worker(worker, message_bar, message):
     worker.toggle_show_progress.connect(lambda show: toggle_worker_progress(
         show, progress_bar))
 
+    worker.toggle_show_cancel.connect(lambda show: toggle_worker_cancel(
+        show, cancel_button))
+
     worker.finished.connect(lambda result: worker_finished(
         result, thread, worker, message_bar, message_bar_item))
 
@@ -120,6 +124,10 @@ def toggle_worker_progress(show_progress, progress_bar):
     else:
         # show an undefined progress
         progress_bar.setMaximum(0)
+
+
+def toggle_worker_cancel(show_cancel, cancel_button):
+    cancel_button.setVisible(show_cancel)
 
 
 def set_worker_message(message, message_bar_item):
