@@ -27,13 +27,17 @@ import collections
 import json
 import os
 from time import time
+from qgis.core import QgsMapLayerRegistry
+from qgis.gui import QgsMessageBar
+
 from PyQt4.QtCore import QSettings, Qt
 from PyQt4.QtGui import QApplication, QProgressBar, QToolButton, QFileDialog, \
     QMessageBox
-from qgis.core import QgsMapLayerRegistry
+
 from settings_dialog import SettingsDialog
-from qgis.gui import QgsMessageBar
 from shared import DEBUG
+
+from third_party.poster.encode import multipart_encode
 
 
 def tr(message):
@@ -410,7 +414,37 @@ class SvNetworkError(Exception):
     pass
 
 
+class UserAbortedNotification(Exception):
+    pass
+
+
 class ReadMetadataError(Exception):
     """When a metadata xml is not correctly formatted can't be read"""
     suggestion = (
         'Check that the file is correct')
+
+
+class IterableToFileAdapter(object):
+    """ an adapter which makes the multipart-generator issued by poster
+        accessible to requests. Based upon code from
+        http://stackoverflow.com/a/13911048/1659732
+        https://mazdermind.wordpress.com/2014/03/14/http-upload-with-progress-using-poster-and-requests/
+    """
+    def __init__(self, iterable):
+        self.iterator = iter(iterable)
+        self.length = iterable.total
+
+    def read(self, size=-1):
+        return next(self.iterator, b'')
+
+    def __len__(self):
+        return self.length
+
+
+def multipart_encode_for_requests(params, boundary=None, cb=None):
+    """"helper function simulating the interface of posters
+        multipart_encode()-function
+        but wrapping its generator with the file-like adapter
+    """
+    data_generator, headers = multipart_encode(params, boundary, cb)
+    return IterableToFileAdapter(data_generator), headers

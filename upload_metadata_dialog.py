@@ -26,27 +26,25 @@
 
 from PyQt4.QtCore import (Qt,
                           QUrl,
-                          QSettings, QThread, pyqtSignal)
+                          QSettings)
 
 from PyQt4.QtGui import (QDialog, QSizePolicy, QDialogButtonBox)
 from PyQt4.QtNetwork import QNetworkCookieJar, QNetworkCookie
 from PyQt4.QtWebKit import QWebSettings
-# from PyQt4.QtXml import QDomDocument
 
 from qgis.gui import QgsMessageBar
+from abstract_worker import start_worker
 from third_party.requests.sessions import Session
 from third_party.requests.utils import dict_from_cookiejar
 from sldadapter import getGsCompatibleSld
 
 from ui.ui_upload_metadata import Ui_UploadMetadataDialog
+from upload_worker import UploadWorker
 
 from utils import (get_credentials,
                    platform_login,
-                   upload_shp,
-                   create_progress_message_bar,
-                   clear_progress_message_bar,
-                   SvNetworkError,
-                   )
+                   create_progress_message_bar, clear_progress_message_bar,
+                   SvNetworkError)
 from shared import DEBUG
 
 
@@ -65,6 +63,9 @@ class UploadMetadataDialog(QDialog):
         self.message_bar = QgsMessageBar()
         self.message_bar.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
         self.layout().insertWidget(0, self.message_bar)
+
+        self.message_bar_item = None
+
         self.button_box = self.ui.buttonBox
 
         self.hostname, self.username, self.password = get_credentials(
@@ -86,12 +87,7 @@ class UploadMetadataDialog(QDialog):
 
         self.layout().setContentsMargins(0, 0, 0, 0)
 
-        self.message_bar_item, self.progress = create_progress_message_bar(
-            self.message_bar, 'Uploading data...', no_percentage=True)
-
         self.web_view.loadFinished.connect(self.load_finished)
-
-        self.uploadThread = None
 
         self.layer_url = None
 
@@ -110,17 +106,17 @@ class UploadMetadataDialog(QDialog):
             return
 
         # adding by emitting signal in different thread
-        self.uploadThread = UploaderThread(
+        worker = UploadWorker(
             self.hostname, self.session, self.file_stem, self.username)
-        self.uploadThread.upload_done.connect(self.upload_done)
-        self.uploadThread.start()
+
+        worker.successfully_finished.connect(self.upload_done)
+        start_worker(worker, self.message_bar, 'Uploading data')
 
     def _update_layer_style(self):
-        # file_stem contains also the path, which needs to be removed
-        # (split by '/' and get the filename after the last slash)
+        # file_stem contains also the slashes, which need to be removed
         # Since the style name is set by default substituting '-' with '_',
         # tp get the right style we need to do the same substitution
-        style_name = self.file_stem.split('/')[-1].replace('-', '_')
+        style_name = self.file_stem.replace('/', '').replace('-', '_')
         try:
             sld = getGsCompatibleSld(self.iface.activeLayer(), style_name)
         except Exception as e:
@@ -150,11 +146,13 @@ class UploadMetadataDialog(QDialog):
             self.message_bar.pushMessage(
                 'Style error', error_msg, level=QgsMessageBar.CRITICAL)
 
-    def upload_done(self, layer_url, success):
+    def upload_done(self, result):
+        layer_url, success = result
         # In case success == 'False', layer_url contains the error message
-        if success == 'True':
+        if success:
             self._update_layer_style()
-            self.message_bar_item.setText('Loading page...')
+            self.message_bar_item, _ = create_progress_message_bar(
+                self.message_bar, 'Loading page......', no_percentage=True)
             self.web_view.load(QUrl(layer_url))
             self.layer_url = layer_url
         else:
@@ -195,24 +193,3 @@ class UploadMetadataDialog(QDialog):
         # to expose a member of self to js you need to declare it as property
         # see for example self.json_str()
         self.frame.addToJavaScriptWindowObject('qt_page', self)
-
-
-class UploaderThread(QThread):
-    # This defines a signal called 'rangeChanged' that takes two
-    # integer arguments.
-    upload_done = pyqtSignal(str, str, name='upload_done')
-
-    def __init__(self, hostname, session, file_stem, username):
-        self.hostname = hostname
-        self.session = session
-        self.file_stem = file_stem
-        self.username = username
-
-        QThread.__init__(self)
-
-    def run(self):
-        # if success == 'False', layer_url will contain the error message
-        layer_url, success = upload_shp(
-            self.hostname, self.session, self.file_stem, self.username)
-        self.upload_done.emit(str(layer_url), str(success))
-        return

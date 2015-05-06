@@ -73,16 +73,20 @@ class ProjectsManagerDialog(QDialog):
             self.project_definitions = {'selected_idx': None, 'proj_defs': []}
         # All project definitions are linked to the same layer on the platform
         # So we can get such information from the first project_definition
-        # NOTE: If the "upload" button is enabled, we should always have at
-        # least one project definition defined for the active layer
-        first_proj_def = self.project_definitions['proj_defs'][0]
-        if 'platform_layer_id' in first_proj_def:
-            self.platform_layer_id = first_proj_def['platform_layer_id']
-        # The zone label field might be different for different project
-        # definitions, but it sounds reasonable to suggest the first one in the
-        # combobox and to allow the user to change it if needed
-        if 'zone_label_field' in first_proj_def:
-            self.zone_label_field = first_proj_def['zone_label_field']
+        try:
+            first_proj_def = self.project_definitions['proj_defs'][0]
+            if 'platform_layer_id' in first_proj_def:
+                self.platform_layer_id = first_proj_def['platform_layer_id']
+            # The zone label field might be different for different project
+            # definitions, but it sounds reasonable to suggest the first one in
+            # the combobox and to allow the user to change it if needed
+            if 'zone_label_field' in first_proj_def:
+                self.zone_label_field = first_proj_def['zone_label_field']
+        except IndexError:
+            # Attempt to “manage project definitions” and no project definition
+            # exists, (e.g. the layer has not been downloaded from the platform)
+
+            pass
 
     def populate_proj_def_cbx(self):
         self.ui.proj_def_cbx.clear()

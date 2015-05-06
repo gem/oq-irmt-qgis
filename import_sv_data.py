@@ -149,10 +149,13 @@ class SvDownloader(object):
                 countries_info[iso] = row[1].decode('utf-8')
         return countries_info
 
-    def get_sv_data(
-            self, sv_variables_ids, load_geometries, country_iso_codes, iface):
+    def get_sv_data(self,
+                    sv_variables_ids,
+                    load_geometries,
+                    country_iso_codes,
+                    message_bar):
         msg_bar_item, progress_ = create_progress_message_bar(
-            iface.messageBar(),
+            message_bar,
             'Waiting for the OpenQuake Platform to export the data...',
             no_percentage=True)
         page = self.host + PLATFORM_EXPORT_VARIABLES_DATA
@@ -160,7 +163,7 @@ class SvDownloader(object):
                     export_geometries=load_geometries,
                     country_iso_codes=country_iso_codes)
         result = self.sess.post(page, data=data, stream=True)
-        clear_progress_message_bar(iface.messageBar(), msg_bar_item)
+        clear_progress_message_bar(message_bar, msg_bar_item)
         if result.status_code == 200:
             # save csv on a temporary file
             fd, fname = tempfile.mkstemp(suffix='.csv')
@@ -183,13 +186,14 @@ class SvDownloader(object):
                 n_countries_to_download = len(country_iso_codes)
                 n_downloaded_countries = 0
                 msg_bar_item, progress = create_progress_message_bar(
-                    iface.messageBar(), 'Downloading socioeconomic data...')
+                    message_bar, 'Downloading socioeconomic data...')
                 for line in result.iter_lines():
+
                     csv_file.write(line + '\n')
                     n_downloaded_countries += 1
                     progress.setValue(
                         n_downloaded_countries / n_countries_to_download * 100)
-                clear_progress_message_bar(iface.messageBar(), msg_bar_item)
+                clear_progress_message_bar(message_bar, msg_bar_item)
                 msg = 'The socioeconomic data has been saved into %s' % fname
                 return fname, msg
         else:
