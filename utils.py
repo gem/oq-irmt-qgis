@@ -426,8 +426,7 @@ class ReadMetadataError(Exception):
 
 class IterableToFileAdapter(object):
     """ an adapter which makes the multipart-generator issued by poster
-        accessible
-        to requests based upon code from
+        accessible to requests. Based upon code from
         http://stackoverflow.com/a/13911048/1659732
         https://mazdermind.wordpress.com/2014/03/14/http-upload-with-progress-using-poster-and-requests/
     """

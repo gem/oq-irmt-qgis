@@ -32,7 +32,7 @@ from abstract_worker import AbstractWorker
 
 
 class DownloadPlatformProjectWorker(AbstractWorker):
-    """worker, implement the work method here and raise exceptions if needed"""
+    """worker, to download an existing project from a platform"""
 
     def __init__(self,
                  sv_downloader,
@@ -54,9 +54,6 @@ class DownloadPlatformProjectWorker(AbstractWorker):
             '&request=GetFeature')
         shape_url = shape_url_fmt % (self.downloader.host, self.layer_id)
         request = self.downloader.sess.get(shape_url)
-        # if self.is_killed:
-        #    raise UserAbortedNotification('USER Killed')
-        # self.progress.emit(23)
 
         downloaded_zip = zipfile.ZipFile(StringIO.StringIO(request.content))
         return downloaded_zip

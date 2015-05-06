@@ -33,7 +33,7 @@ from utils import multipart_encode_for_requests, UserAbortedNotification, tr
 
 
 class UploadWorker(AbstractWorker):
-    """worker, implement the work method here and raise exceptions if needed"""
+    """worker, to upload data to a platform"""
 
     def __init__(self, hostname, session, file_stem, username):
         AbstractWorker.__init__(self)
@@ -59,7 +59,7 @@ class UploadWorker(AbstractWorker):
                 'permissions': json.dumps(permissions)
                 }
 
-        # generate headers and gata-generator an a requests-compatible format
+        # generate headers and data-generator an a requests-compatible format
         # and provide our progress-callback
         data_generator, headers = multipart_encode_for_requests(
             data, cb=self.progress_cb)
@@ -85,7 +85,7 @@ class UploadWorker(AbstractWorker):
     # this is your progress callback
     def progress_cb(self, param, current, total):
         if self.is_killed:
-            raise UserAbortedNotification('USER Killed')
+            raise UserAbortedNotification('Upload aborted by user')
         if not param:
             return
         # check out
@@ -93,6 +93,9 @@ class UploadWorker(AbstractWorker):
         # for a complete list of the properties param provides to you
         progress = float(current) / float(total) * 100
         self.progress.emit(progress)
+        # here we remove the progress bar and the cancel button since the
+        # server side processing kicks in at 100% but we allow for some
+        # rounding.
         if progress > 99:
             self.toggle_show_progress.emit(False)
             self.toggle_show_cancel.emit(False)

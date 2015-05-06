@@ -32,7 +32,7 @@ from utils import SvNetworkError, tr, UserAbortedNotification
 
 
 class DownloadPlatformDataWorker(AbstractWorker):
-    """worker, implement the work method here and raise exceptions if needed"""
+    """worker, to download data from a platform"""
 
     def __init__(self,
                  sv_downloader,
@@ -81,7 +81,8 @@ class DownloadPlatformDataWorker(AbstractWorker):
                 n_downloaded_countries = 0
                 for line in result.iter_lines():
                     if self.is_killed:
-                        raise UserAbortedNotification('USER Killed')
+                        raise UserAbortedNotification(
+                            'Download aborted by user')
 
                     csv_file.write(line + '\n')
                     n_downloaded_countries += 1

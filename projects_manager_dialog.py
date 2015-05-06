@@ -73,8 +73,6 @@ class ProjectsManagerDialog(QDialog):
             self.project_definitions = {'selected_idx': None, 'proj_defs': []}
         # All project definitions are linked to the same layer on the platform
         # So we can get such information from the first project_definition
-        # NOTE: If the "upload" button is enabled, we should always have at
-        # least one project definition defined for the active layer
         try:
             first_proj_def = self.project_definitions['proj_defs'][0]
             if 'platform_layer_id' in first_proj_def:
