@@ -576,6 +576,8 @@ class Svir:
             while confirm_overwrite(parent_dlg, file_in_destination) == \
                     QMessageBox.No:
                 dest_dir = ask_for_download_destination(parent_dlg)
+                if not dest_dir:
+                    return
                 file_in_destination = files_exist_in_destination(
                     dest_dir, zip_file.namelist())
                 if not file_in_destination:
