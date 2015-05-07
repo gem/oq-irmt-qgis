@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_projects_manager_dialog.ui'
 #
-# Created: Tue Apr 21 10:18:06 2015
+# Created: Wed May  6 17:13:11 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -30,18 +30,9 @@ class Ui_ProjectsManagerDialog(object):
         ProjectsManagerDialog.setModal(True)
         self.gridLayout = QtGui.QGridLayout(ProjectsManagerDialog)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
-        self.buttonBox = QtGui.QDialogButtonBox(ProjectsManagerDialog)
-        self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
-        self.buttonBox.setObjectName(_fromUtf8("buttonBox"))
-        self.gridLayout.addWidget(self.buttonBox, 5, 0, 1, 1)
         self.label = QtGui.QLabel(ProjectsManagerDialog)
         self.label.setObjectName(_fromUtf8("label"))
         self.gridLayout.addWidget(self.label, 0, 0, 1, 1)
-        self.proj_def_detail = QtGui.QTextEdit(ProjectsManagerDialog)
-        self.proj_def_detail.setReadOnly(False)
-        self.proj_def_detail.setObjectName(_fromUtf8("proj_def_detail"))
-        self.gridLayout.addWidget(self.proj_def_detail, 4, 0, 1, 1)
         self.horizontalLayout = QtGui.QHBoxLayout()
         self.horizontalLayout.setContentsMargins(-1, 0, -1, -1)
         self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
@@ -52,6 +43,29 @@ class Ui_ProjectsManagerDialog(object):
         self.add_proj_def_btn.setObjectName(_fromUtf8("add_proj_def_btn"))
         self.horizontalLayout.addWidget(self.add_proj_def_btn)
         self.gridLayout.addLayout(self.horizontalLayout, 2, 0, 1, 1)
+        self.proj_def_title = QtGui.QLineEdit(ProjectsManagerDialog)
+        self.proj_def_title.setObjectName(_fromUtf8("proj_def_title"))
+        self.gridLayout.addWidget(self.proj_def_title, 10, 0, 1, 1)
+        self.label_2 = QtGui.QLabel(ProjectsManagerDialog)
+        self.label_2.setObjectName(_fromUtf8("label_2"))
+        self.gridLayout.addWidget(self.label_2, 9, 0, 1, 1)
+        self.label_3 = QtGui.QLabel(ProjectsManagerDialog)
+        self.label_3.setObjectName(_fromUtf8("label_3"))
+        self.gridLayout.addWidget(self.label_3, 11, 0, 1, 1)
+        self.buttonBox = QtGui.QDialogButtonBox(ProjectsManagerDialog)
+        self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
+        self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+        self.buttonBox.setObjectName(_fromUtf8("buttonBox"))
+        self.gridLayout.addWidget(self.buttonBox, 15, 0, 1, 1)
+        self.proj_def_raw = QtGui.QPlainTextEdit(ProjectsManagerDialog)
+        self.proj_def_raw.setObjectName(_fromUtf8("proj_def_raw"))
+        self.gridLayout.addWidget(self.proj_def_raw, 14, 0, 1, 1)
+        self.proj_def_descr = QtGui.QPlainTextEdit(ProjectsManagerDialog)
+        self.proj_def_descr.setObjectName(_fromUtf8("proj_def_descr"))
+        self.gridLayout.addWidget(self.proj_def_descr, 12, 0, 1, 1)
+        self.label_4 = QtGui.QLabel(ProjectsManagerDialog)
+        self.label_4.setObjectName(_fromUtf8("label_4"))
+        self.gridLayout.addWidget(self.label_4, 13, 0, 1, 1)
 
         self.retranslateUi(ProjectsManagerDialog)
         QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), ProjectsManagerDialog.accept)
@@ -59,12 +73,10 @@ class Ui_ProjectsManagerDialog(object):
         QtCore.QMetaObject.connectSlotsByName(ProjectsManagerDialog)
 
     def retranslateUi(self, ProjectsManagerDialog):
-        ProjectsManagerDialog.setWindowTitle(_translate("ProjectsManagerDialog", "Projects manager", None))
+        ProjectsManagerDialog.setWindowTitle(_translate("ProjectsManagerDialog", "Project definitions manager", None))
         self.label.setText(_translate("ProjectsManagerDialog", "Please select one of the available project definitions", None))
-        self.proj_def_detail.setHtml(_translate("ProjectsManagerDialog", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-"p, li { white-space: pre-wrap; }\n"
-"</style></head><body style=\" font-family:\'Ubuntu\'; font-size:11pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p></body></html>", None))
         self.add_proj_def_btn.setText(_translate("ProjectsManagerDialog", "+", None))
+        self.label_2.setText(_translate("ProjectsManagerDialog", "Title", None))
+        self.label_3.setText(_translate("ProjectsManagerDialog", "Description", None))
+        self.label_4.setText(_translate("ProjectsManagerDialog", "Raw textual representation", None))
 

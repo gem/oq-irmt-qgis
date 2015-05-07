@@ -166,10 +166,10 @@ class Svir:
                            enable=False,
                            add_to_layer_actions=True)
         # Action to manage the projects
-        self.add_menu_item("projects_manager",
+        self.add_menu_item("project_definitions_manager",
                            ":/plugins/svir/copy.svg",
-                           u"Projects &manager",
-                           self.projects_manager,
+                           u"&Manage project definitions",
+                           self.project_definitions_manager,
                            enable=False,
                            add_to_layer_actions=True)
 
@@ -315,7 +315,8 @@ class Svir:
             # Activate actions which require a vector layer to be selected
             if self.current_layer.type() != QgsMapLayer.VectorLayer:
                 raise AttributeError
-            self.registered_actions["projects_manager"].setEnabled(True)
+            self.registered_actions[
+                "project_definitions_manager"].setEnabled(True)
             self.registered_actions["weight_data"].setEnabled(True)
             self.registered_actions["transform_attribute"].setEnabled(True)
             self.sync_proj_def()
@@ -334,7 +335,8 @@ class Svir:
             self.registered_actions["transform_attribute"].setEnabled(False)
             self.registered_actions["weight_data"].setEnabled(False)
             self.registered_actions["upload"].setEnabled(False)
-            self.registered_actions["projects_manager"].setEnabled(False)
+            self.registered_actions[
+                "project_definitions_manager"].setEnabled(False)
 
     def unload(self):
         # Remove the plugin menu items and toolbar icons
@@ -641,11 +643,14 @@ class Svir:
         # project definition
         if not isinstance(project_definitions, list):
             project_definitions = [project_definitions]
+        for proj_def in project_definitions:
+            if 'platform_layer_id' not in proj_def:
+                proj_def['platform_layer_id'] = parent_dlg.layer_id
         self.update_proj_defs(layer.id(), project_definitions)
         self.update_actions_status()
         # in case of multiple project definitions, let the user select one
         if len(project_definitions) > 1:
-            self.projects_manager()
+            self.project_definitions_manager()
 
     @staticmethod
     def _add_new_theme(svi_themes,
@@ -669,7 +674,7 @@ class Svir:
         new_indicator['level'] = level
         svi_themes[theme_position]['children'].append(new_indicator)
 
-    def projects_manager(self):
+    def project_definitions_manager(self):
         self.sync_proj_def()
         select_proj_def_dlg = ProjectsManagerDialog(self.iface)
         if select_proj_def_dlg.exec_():

@@ -53,6 +53,7 @@ class ProjectsManagerDialog(QDialog):
         self.project_definitions = None  # it will store the project
                                          # definitions for the active layer
         self.selected_idx = None  # index of the selected project definition
+        self.selected_proj_def = None  # the proj_def selected from the combo
         self.platform_layer_id = None  # id of the geonode layer on platform
         self.zone_label_field = None  # field containing zone identifiers
         self.get_project_definitions()
@@ -84,8 +85,8 @@ class ProjectsManagerDialog(QDialog):
                 self.zone_label_field = first_proj_def['zone_label_field']
         except IndexError:
             # Attempt to “manage project definitions” and no project definition
-            # exists, (e.g. the layer has not been downloaded from the platform)
-
+            # exists
+            # (e.g. the layer has not been downloaded from the platform)
             pass
 
     def populate_proj_def_cbx(self):
@@ -99,14 +100,25 @@ class ProjectsManagerDialog(QDialog):
             self.ui.proj_def_cbx.setCurrentIndex(
                 self.project_definitions['selected_idx'])
 
-    def display_proj_def_details(self):
-        # display the corresponding project definition in the textedit
-        proj_def = self.project_definitions['proj_defs'][self.selected_idx]
-        proj_def_str = json.dumps(proj_def,
+    def update_proj_def_title(self):
+        try:
+            self.ui.proj_def_title.setText(self.selected_proj_def['title'])
+        except KeyError:
+            self.ui.proj_def_title.setText('')
+
+    def update_proj_def_descr(self):
+        try:
+            self.ui.proj_def_descr.setPlainText(
+                self.selected_proj_def['description'])
+        except KeyError:
+            self.ui.proj_def_descr.setPlainText('')
+
+    def display_proj_def_raw(self):
+        proj_def_str = json.dumps(self.selected_proj_def,
                                   sort_keys=False,
                                   indent=2,
                                   separators=(',', ': '))
-        self.ui.proj_def_detail.setText(proj_def_str)
+        self.ui.proj_def_raw.setPlainText(proj_def_str)
 
     def add_proj_def(self, title):
         proj_def_template = PROJECT_TEMPLATE
@@ -121,9 +133,23 @@ class ProjectsManagerDialog(QDialog):
         self.populate_proj_def_cbx()
 
     @pyqtSlot(str)
+    def on_proj_def_title_textEdited(self):
+        self.selected_proj_def['title'] = self.ui.proj_def_title.text()
+        self.display_proj_def_raw()
+
+    @pyqtSlot()
+    def on_proj_def_descr_textChanged(self):
+        self.selected_proj_def['description'] = self.ui.proj_def_descr.toPlainText()
+        self.display_proj_def_raw()
+
+    @pyqtSlot(str)
     def on_proj_def_cbx_currentIndexChanged(self):
         self.selected_idx = self.ui.proj_def_cbx.currentIndex()
-        self.display_proj_def_details()
+        self.selected_proj_def = self.project_definitions[
+            'proj_defs'][self.selected_idx]
+        self.update_proj_def_title()
+        self.update_proj_def_descr()
+        self.display_proj_def_raw()
 
     @pyqtSlot()
     def on_add_proj_def_btn_clicked(self):
@@ -133,9 +159,9 @@ class ProjectsManagerDialog(QDialog):
             self.add_proj_def(title)
 
     @pyqtSlot()
-    def on_proj_def_detail_textChanged(self):
+    def on_proj_def_raw_textChanged(self):
         try:
-            project_definition = self.ui.proj_def_detail.toPlainText()
+            project_definition = self.ui.proj_def_raw.toPlainText()
             self.project_definitions['proj_defs'][
                 self.selected_idx] = json.loads(project_definition)
             self.ok_button.setEnabled(True)
