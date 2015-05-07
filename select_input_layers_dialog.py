@@ -74,10 +74,10 @@ class SelectInputLayersDialog(QDialog):
         if dialog_type == 'loss_layer':
             text = self.tr('Select loss map to import')
             # FIXME: What should be the format of the raster maps?
-            filters = self.tr('Geojson vector loss maps (*.geojson);;'
-                              'Shapefile vector loss maps (*.shp);;'
-                              'Loss maps from the OpenQuake-engine (*.csv);;'
-                              'Raster loss maps (*.*)')
+            filters = self.tr('Geojson vector loss curves (*.geojson);;'
+                              'Shapefile vector loss curves (*.shp);;'
+                              'Loss curves from the OpenQuake-engine (*.csv);;'
+                              'Raster loss curves (*.*)')
             file_names, file_type = QFileDialog.getOpenFileNamesAndFilter(
                 self, text, QDir.homePath(), filters)
         elif dialog_type == 'zonal_layer':
@@ -95,9 +95,9 @@ class SelectInputLayersDialog(QDialog):
         elif dialog_type == 'loss_layer':
             if not file_names:
                 return None
-            if file_type == 'Raster loss maps (*.*)':
+            if file_type == 'Raster loss curves (*.*)':
                 self.loss_layer_is_vector = False
-            if file_type == 'Loss maps from the OpenQuake-engine (*.csv)':
+            if file_type == 'Loss curves from the OpenQuake-engine (*.csv)':
                 layer = self.import_loss_layer_from_csv(file_names)
             else:
                 file_name = file_names[0]
