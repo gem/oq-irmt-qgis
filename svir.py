@@ -1065,7 +1065,7 @@ class Svir:
             project_definition['license'] = license_txt
             project_definition['svir_plugin_version'] = SVIR_PLUGIN_VERSION
 
-            #TODO feedback project_definition to self.....
+            # TODO call update_proj_defs
 
             if dlg.do_update:
                 with WaitCursorManager(
