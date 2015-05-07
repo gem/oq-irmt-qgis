@@ -30,7 +30,7 @@ from PyQt4.QtGui import (QDialog,
                          QDesktopServices)
 from ui.ui_upload_settings import Ui_UploadSettingsDialog
 from defaults import DEFAULTS
-from utils import reload_attrib_cbx
+from utils import reload_attrib_cbx, tr
 
 LICENSES = (
     ('CC0', 'http://creativecommons.org/about/cc0'),
@@ -62,23 +62,12 @@ class UploadSettingsDialog(QDialog):
         else:
             self.ui.title_le.setText(DEFAULTS['ISO19115_TITLE'])
 
-        # if no field is selected, we should not allow uploading
-        self.zone_label_field_is_specified = False
-        reload_attrib_cbx(
-            self.ui.zone_label_field_cbx, iface.activeLayer(), True)
-        # pre-select the field if it's specified in the project definition
-        if 'zone_label_field' in self.project_definition:
-            zone_label_idx = self.ui.zone_label_field_cbx.findText(
-                self.project_definition['zone_label_field'])
-            if zone_label_idx != -1:
-                self.ui.zone_label_field_cbx.setCurrentIndex(zone_label_idx)
-                self.zone_label_field_is_specified = True
-
-        for license, link in LICENSES:
-            self.ui.license_cbx.addItem(license, link)
+        for license_name, license_link in LICENSES:
+            self.ui.license_cbx.addItem(license_name, license_link)
         if 'license' in self.project_definition:
-            license = self.project_definition['license'].split('(')[0].strip()
-            license_idx = self.ui.license_cbx.findText(license)
+            license_name = self.project_definition['license'].split(
+                '(')[0].strip()
+            license_idx = self.ui.license_cbx.findText(license_name)
             if license_idx != -1:
                 self.ui.license_cbx.setCurrentIndex(license_idx)
             else:
@@ -88,44 +77,49 @@ class UploadSettingsDialog(QDialog):
             self.ui.license_cbx.setCurrentIndex(
                 self.ui.license_cbx.findText(DEFAULT_LICENSE[0]))
 
-        self.ui.update_chk.setEnabled(
-            'platform_layer_id' in self.project_definition)
-        self.ui.update_chk.setChecked(
-            'platform_layer_id' in self.project_definition)
-        self.set_head_msg()
-
-    def set_head_msg(self):
+        self.platform_layer_id = False
         if 'platform_layer_id' in self.project_definition:
-            platform_layer_id = self.project_definition['platform_layer_id']
-            self.head_msg_update = (
+            self.platform_layer_id = self.project_definition[
+                'platform_layer_id']
+
+        self.exists_on_platform = bool(self.platform_layer_id)
+
+        self.ui.update_radio.setEnabled(self.exists_on_platform)
+        self.ui.update_radio.setChecked(self.exists_on_platform)
+        self.set_labels()
+
+    def set_labels(self):
+        self.ui.situation_lbl.setVisible(self.exists_on_platform)
+        self.ui.question_lbl.setVisible(self.exists_on_platform)
+        for button in self.ui.upload_action.buttons():
+            button.setVisible(self.exists_on_platform)
+
+        if self.ui.update_radio.isChecked():
+            explaination_lbl = tr(
                 'The current project definition will be added to the '
                 'OpenQuake Platform project\nidentified as "%s"'
-                % platform_layer_id)
+                % self.platform_layer_id)
+            title_lbl = tr('Project title')
+            description_lbl = tr('Project description')
         else:
-            self.head_msg_update = ''
-        self.head_msg_new = (
-            'The project will be uploaded to the OpenQuake Platform.'
-            '\n\n(About %s MB of data will be transmitted)'
-            % self.upload_size)
-        if self.ui.update_chk.isChecked():
-            self.ui.head_msg_lbl.setText(self.head_msg_update)
-        else:
-            self.ui.head_msg_lbl.setText(self.head_msg_new)
+            explaination_lbl = tr(
+                'A new layer will be created on the OpenQuake Platform.'
+                '\n(About %s MB of data will be transmitted)'
+                % self.upload_size)
+            title_lbl = tr('New layer title')
+            description_lbl = tr('New layer description')
+
+        self.ui.title_lbl.setText(title_lbl)
+        self.ui.description_lbl.setText(description_lbl)
+        self.ui.explaination_lbl.setText(explaination_lbl)
 
     def set_ok_button(self):
         self.ok_button.setEnabled(
-            self.zone_label_field_is_specified
-            and self.ui.confirm_chk.isChecked())
+            self.ui.title_le.text() and self.ui.confirm_chk.isChecked())
 
-    @pyqtSlot(str)
-    def on_zone_label_field_cbx_currentIndexChanged(self):
-        zone_label_field = self.ui.zone_label_field_cbx.currentText()
-        self.zone_label_field_is_specified = (zone_label_field != '')
-        self.set_ok_button()
-
-    @pyqtSlot(int)
-    def on_update_chk_stateChanged(self):
-        self.set_head_msg()
+    @pyqtSlot(bool)
+    def on_update_radio_toggled(self):
+        self.set_labels()
 
     @pyqtSlot(int)
     def on_confirm_chk_stateChanged(self):
