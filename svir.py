@@ -1055,6 +1055,8 @@ class Svir:
             file_size_mb, self.iface, project_definition)
         if dlg.exec_():
             project_definition['title'] = dlg.ui.title_le.text()
+            project_definition[
+                'description'] = dlg.ui.description_te.toPlainText()
 
             license_name = dlg.ui.license_cbx.currentText()
             license_idx = dlg.ui.license_cbx.currentIndex()
@@ -1062,7 +1064,10 @@ class Svir:
             license_txt = '%s (%s)' % (license_name, license_url)
             project_definition['license'] = license_txt
             project_definition['svir_plugin_version'] = SVIR_PLUGIN_VERSION
-            if dlg.ui.update_radio.isChecked():
+
+            #TODO feedback project_definition to self.....
+
+            if dlg.do_update:
                 with WaitCursorManager(
                         'Updating project on the OpenQuake Platform',
                         self.iface):

@@ -62,6 +62,10 @@ class UploadSettingsDialog(QDialog):
         else:
             self.ui.title_le.setText(DEFAULTS['ISO19115_TITLE'])
 
+        if 'description' in self.project_definition:
+            self.ui.description_te.setPlainText(self.project_definition[
+                'description'])
+
         for license_name, license_link in LICENSES:
             self.ui.license_cbx.addItem(license_name, license_link)
         if 'license' in self.project_definition:
@@ -83,6 +87,7 @@ class UploadSettingsDialog(QDialog):
                 'platform_layer_id']
 
         self.exists_on_platform = bool(self.platform_layer_id)
+        self.do_update = False
 
         self.ui.update_radio.setEnabled(self.exists_on_platform)
         self.ui.update_radio.setChecked(self.exists_on_platform)
@@ -118,7 +123,8 @@ class UploadSettingsDialog(QDialog):
             self.ui.title_le.text() and self.ui.confirm_chk.isChecked())
 
     @pyqtSlot(bool)
-    def on_update_radio_toggled(self):
+    def on_update_radio_toggled(self, on):
+        self.do_update = on
         self.set_labels()
 
     @pyqtSlot(int)

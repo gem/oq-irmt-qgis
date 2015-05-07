@@ -107,6 +107,11 @@ def generate_iso_metadata(project_definition=None):
         except KeyError:
             pass
         try:
+            template_replacements['ISO19115_ABSTRACT'] = \
+                project_definition['description']
+        except KeyError:
+            pass
+        try:
             template_replacements['ISO19115_LINEAGE'] = \
                 project_definition['source']
         except KeyError:

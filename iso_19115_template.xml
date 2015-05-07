@@ -62,7 +62,7 @@
     <gmd:identificationInfo>
         <gmd:MD_DataIdentification>
             <gmd:abstract>
-                <gco:CharacterString>$ISO19115_TITLE</gco:CharacterString>
+                <gco:CharacterString>$ISO19115_ABSTRACT</gco:CharacterString>
             </gmd:abstract>
             <gmd:citation>
                 <gmd:CI_Citation>
