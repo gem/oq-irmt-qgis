@@ -643,6 +643,9 @@ class Svir:
         # project definition
         if not isinstance(project_definitions, list):
             project_definitions = [project_definitions]
+        for proj_def in project_definitions:
+            if 'platform_layer_id' not in proj_def:
+                proj_def['platform_layer_id'] = parent_dlg.layer_id
         self.update_proj_defs(layer.id(), project_definitions)
         self.update_actions_status()
         # in case of multiple project definitions, let the user select one
