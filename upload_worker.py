@@ -24,25 +24,54 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-
+import os
+import shutil
 import json
 
 from abstract_worker import AbstractWorker
 from shared import DEBUG
 from utils import multipart_encode_for_requests, UserAbortedNotification, tr
+from qgis.core import QgsVectorFileWriter
 
 
 class UploadWorker(AbstractWorker):
     """worker, to upload data to a platform"""
 
-    def __init__(self, hostname, session, file_stem, username):
+    def __init__(self, hostname, session, file_stem, username, current_layer):
         AbstractWorker.__init__(self)
         self.hostname = hostname
         self.session = session
         self.file_stem = file_stem
         self.username = username
+        self.current_layer = current_layer
 
     def work(self):
+        # To upload the layer to the platform, we need it to be a shapefile.
+        # So we need to check if the active layer is stored as a shapefile and,
+        # if it isn't, save it as a shapefile
+        data_file = '%s%s' % (self.file_stem, '.shp')
+        if self.current_layer.storageType() == 'ESRI Shapefile':
+            # copy the shapefile (with all its files) into the temporary
+            # directory, using self.file_stem as name
+            layer_source = self.current_layer.publicSource()
+            layer_source_stem = layer_source[:-4]  # remove '.shp'
+            for ext in ['shp', 'dbf', 'shx', 'prj']:
+                src = "%s.%s" % (layer_source_stem, ext)
+                dst = "%s.%s" % (self.file_stem, ext)
+                shutil.copyfile(src, dst)
+        else:
+            # if it's not a shapefile, we need to build a shapefile from it
+            QgsVectorFileWriter.writeAsVectorFormat(
+                self.current_layer,
+                data_file,
+                'utf-8',
+                self.current_layer.crs(),
+                'ESRI Shapefile')
+        file_size_mb = os.path.getsize(data_file)
+        file_size_mb += os.path.getsize(self.file_stem + '.shx')
+        file_size_mb += os.path.getsize(self.file_stem + '.dbf')
+        # convert bytes to MB
+        file_size_mb = file_size_mb / 1024 / 1024
         permissions = {"authenticated": "_none",
                        "anonymous": "_none",
                        "users": [[self.username, "layer_readwrite"],

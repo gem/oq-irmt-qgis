@@ -48,14 +48,13 @@ class UploadSettingsDialog(QDialog):
     licenses. The user must click on a confirmation checkbox, before the
     uploading of the layer can be started.
     """
-    def __init__(self, upload_size, iface, project_definition):
+    def __init__(self, iface, project_definition):
         QDialog.__init__(self)
         # Set up the user interface from Designer.
         self.ui = Ui_UploadSettingsDialog()
         self.ui.setupUi(self)
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
         self.ok_button.setEnabled(False)
-        self.upload_size = upload_size
         self.project_definition = project_definition
         if 'title' in self.project_definition:
             self.ui.title_le.setText(self.project_definition['title'])
@@ -104,9 +103,7 @@ class UploadSettingsDialog(QDialog):
         else:
             self.head_msg_update = ''
         self.head_msg_new = (
-            'The project will be uploaded to the OpenQuake Platform.'
-            '\n\n(About %s MB of data will be transmitted)'
-            % self.upload_size)
+            'The project will be uploaded to the OpenQuake Platform.')
         if self.ui.update_chk.isChecked():
             self.ui.head_msg_lbl.setText(self.head_msg_update)
         else:

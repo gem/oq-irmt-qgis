@@ -1029,7 +1029,6 @@ class Svir:
     def upload(self):
         temp_dir = tempfile.gettempdir()
         file_stem = '%s%sqgis_svir_%s' % (temp_dir, os.path.sep, uuid.uuid4())
-        data_file = '%s%s' % (file_stem, '.shp')
         xml_file = file_stem + '.xml'
 
         layer_dict = self.project_definitions[
@@ -1038,21 +1037,7 @@ class Svir:
         proj_defs = layer_dict['proj_defs']
         project_definition = proj_defs[selected_idx]
 
-        QgsVectorFileWriter.writeAsVectorFormat(
-            self.current_layer,
-            data_file,
-            'utf-8',
-            self.current_layer.crs(),
-            'ESRI Shapefile')
-
-        file_size_mb = os.path.getsize(data_file)
-        file_size_mb += os.path.getsize(file_stem + '.shx')
-        file_size_mb += os.path.getsize(file_stem + '.dbf')
-        # convert bytes to MB
-        file_size_mb = file_size_mb / 1024 / 1024
-
-        dlg = UploadSettingsDialog(
-            file_size_mb, self.iface, project_definition)
+        dlg = UploadSettingsDialog(self.iface, project_definition)
         if dlg.exec_():
             project_definition['title'] = dlg.ui.title_le.text()
             zone_label_field = dlg.ui.zone_label_field_cbx.currentText()

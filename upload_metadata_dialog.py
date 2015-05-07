@@ -107,7 +107,8 @@ class UploadMetadataDialog(QDialog):
 
         # adding by emitting signal in different thread
         worker = UploadWorker(
-            self.hostname, self.session, self.file_stem, self.username)
+            self.hostname, self.session, self.file_stem,
+            self.username, self.iface.activeLayer())
 
         worker.successfully_finished.connect(self.upload_done)
         start_worker(worker, self.message_bar, 'Uploading data')
