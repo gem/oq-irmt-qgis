@@ -44,6 +44,7 @@ class UploadWorker(AbstractWorker):
         self.file_stem = file_stem
         self.username = username
         self.current_layer = current_layer
+        self.upload_size_msg = None
 
     def work(self):
         # To upload the layer to the platform, we need it to be a shapefile.
@@ -72,6 +73,8 @@ class UploadWorker(AbstractWorker):
         file_size_mb += os.path.getsize(self.file_stem + '.dbf')
         # convert bytes to MB
         file_size_mb = file_size_mb / 1024 / 1024
+        self.upload_size_msg = tr('Uploading ~%s MB...' % file_size_mb)
+        self.set_message.emit(self.upload_size_msg)
         permissions = {"authenticated": "_none",
                        "anonymous": "_none",
                        "users": [[self.username, "layer_readwrite"],
@@ -128,7 +131,8 @@ class UploadWorker(AbstractWorker):
         if progress > 99:
             self.toggle_show_progress.emit(False)
             self.toggle_show_cancel.emit(False)
-            self.set_message.emit(tr('Processing on platform...'))
+            self.set_message.emit(
+                self.upload_size_msg + ' ' + tr('(processing on Platform)'))
         if DEBUG:
             print "PROGRESS: {0} ({1}) - {2:d}/{3:d} - {4:.2f}%".format(
                 param.name, param.filename, current, total, progress)
