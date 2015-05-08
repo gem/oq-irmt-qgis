@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_upload_settings.ui'
 #
-# Created: Thu May  7 12:33:16 2015
+# Created: Fri May  8 17:29:49 2015
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -26,7 +26,7 @@ except AttributeError:
 class Ui_UploadSettingsDialog(object):
     def setupUi(self, UploadSettingsDialog):
         UploadSettingsDialog.setObjectName(_fromUtf8("UploadSettingsDialog"))
-        UploadSettingsDialog.resize(509, 331)
+        UploadSettingsDialog.resize(509, 369)
         self.verticalLayout = QtGui.QVBoxLayout(UploadSettingsDialog)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.situation_lbl = QtGui.QLabel(UploadSettingsDialog)
@@ -65,6 +65,12 @@ class Ui_UploadSettingsDialog(object):
         self.description_te = QtGui.QTextEdit(UploadSettingsDialog)
         self.description_te.setObjectName(_fromUtf8("description_te"))
         self.formLayout.setWidget(1, QtGui.QFormLayout.FieldRole, self.description_te)
+        self.zone_label_field_cbx = QtGui.QComboBox(UploadSettingsDialog)
+        self.zone_label_field_cbx.setObjectName(_fromUtf8("zone_label_field_cbx"))
+        self.formLayout.setWidget(2, QtGui.QFormLayout.FieldRole, self.zone_label_field_cbx)
+        self.label = QtGui.QLabel(UploadSettingsDialog)
+        self.label.setObjectName(_fromUtf8("label"))
+        self.formLayout.setWidget(2, QtGui.QFormLayout.LabelRole, self.label)
         self.verticalLayout.addLayout(self.formLayout)
         self.gridLayout = QtGui.QGridLayout()
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
@@ -103,6 +109,7 @@ class Ui_UploadSettingsDialog(object):
         self.update_radio.setText(_translate("UploadSettingsDialog", "Update the existing layer on the platform", None))
         self.title_lbl.setText(_translate("UploadSettingsDialog", "Title", None))
         self.description_lbl.setText(_translate("UploadSettingsDialog", "Description", None))
+        self.label.setText(_translate("UploadSettingsDialog", "Zone labels field", None))
         self.label_6.setText(_translate("UploadSettingsDialog", "License", None))
         self.license_info_btn.setText(_translate("UploadSettingsDialog", "Info", None))
         self.confirm_chk.setText(_translate("UploadSettingsDialog", "I confirm I have read the license conditions", None))

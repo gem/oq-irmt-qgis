@@ -66,6 +66,18 @@ class UploadSettingsDialog(QDialog):
             self.ui.description_te.setPlainText(self.project_definition[
                 'description'])
 
+        # if no field is selected, we should not allow uploading
+        self.zone_label_field_is_specified = False
+        reload_attrib_cbx(
+            self.ui.zone_label_field_cbx, iface.activeLayer(), True)
+        # pre-select the field if it's specified in the project definition
+        if 'zone_label_field' in self.project_definition:
+            zone_label_idx = self.ui.zone_label_field_cbx.findText(
+                self.project_definition['zone_label_field'])
+            if zone_label_idx != -1:
+                self.ui.zone_label_field_cbx.setCurrentIndex(zone_label_idx)
+                self.zone_label_field_is_specified = True
+
         for license_name, license_link in LICENSES:
             self.ui.license_cbx.addItem(license_name, license_link)
         if 'license' in self.project_definition:
@@ -120,7 +132,9 @@ class UploadSettingsDialog(QDialog):
 
     def set_ok_button(self):
         self.ok_button.setEnabled(
-            self.ui.title_le.text() and self.ui.confirm_chk.isChecked())
+            self.ui.title_le.text() and
+            self.ui.confirm_chk.isChecked() and
+            self.zone_label_field_is_specified)
 
     @pyqtSlot(bool)
     def on_update_radio_toggled(self, on):
@@ -129,6 +143,12 @@ class UploadSettingsDialog(QDialog):
 
     @pyqtSlot(int)
     def on_confirm_chk_stateChanged(self):
+        self.set_ok_button()
+
+    @pyqtSlot(str)
+    def on_zone_label_field_cbx_currentIndexChanged(self):
+        zone_label_field = self.ui.zone_label_field_cbx.currentText()
+        self.zone_label_field_is_specified = (zone_label_field != '')
         self.set_ok_button()
 
     @pyqtSlot()

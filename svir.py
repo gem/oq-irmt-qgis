@@ -1057,6 +1057,8 @@ class Svir:
             project_definition['title'] = dlg.ui.title_le.text()
             project_definition[
                 'description'] = dlg.ui.description_te.toPlainText()
+            zone_label_field = dlg.ui.zone_label_field_cbx.currentText()
+            project_definition['zone_label_field'] = zone_label_field
 
             license_name = dlg.ui.license_cbx.currentText()
             license_idx = dlg.ui.license_cbx.currentIndex()
