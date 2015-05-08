@@ -32,6 +32,7 @@ from PyQt4.QtGui import (QDialog, QSizePolicy, QDialogButtonBox)
 from PyQt4.QtNetwork import QNetworkCookieJar, QNetworkCookie
 from PyQt4.QtWebKit import QWebSettings
 
+from qgis.core import QgsRuleBasedRendererV2
 from qgis.gui import QgsMessageBar
 from abstract_worker import start_worker
 from third_party.requests.sessions import Session
@@ -151,7 +152,18 @@ class UploadMetadataDialog(QDialog):
         layer_url, success = result
         # In case success == 'False', layer_url contains the error message
         if success:
-            self._update_layer_style()
+            # so far, we implemented the style-converter only for the
+            # rule-based styles. Only in those cases, we should add a style to
+            # the layer to be uploaded. Otherwise, it's fine to use the default
+            # basic geonode style.
+            if isinstance(self.iface.activeLayer().rendererV2(),
+                          QgsRuleBasedRendererV2):
+                self._update_layer_style()
+            else:
+                self.message_bar.pushMessage(
+                    'Info',
+                    'Using the basic default style',
+                    level=QgsMessageBar.INFO)
             self.message_bar_item, _ = create_progress_message_bar(
                 self.message_bar, 'Loading page......', no_percentage=True)
             self.web_view.load(QUrl(layer_url))
