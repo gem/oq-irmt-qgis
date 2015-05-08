@@ -112,7 +112,7 @@ class UploadSettingsDialog(QDialog):
                 '\n(About %s MB of data will be transmitted)'
                 % self.upload_size)
             title_lbl = tr('New layer title')
-            description_lbl = tr('New layer description')
+            description_lbl = tr('New layer abstract')
 
         self.ui.title_lbl.setText(title_lbl)
         self.ui.description_lbl.setText(description_lbl)
