@@ -54,6 +54,8 @@ class UploadWorker(AbstractWorker):
         if self.current_layer.storageType() == 'ESRI Shapefile':
             # copy the shapefile (with all its files) into the temporary
             # directory, using self.file_stem as name
+            self.set_message.emit(tr(
+                'Preparing the files to be uploaded...'))
             layer_source = self.current_layer.publicSource()
             layer_source_stem = layer_source[:-4]  # remove '.shp'
             for ext in ['shp', 'dbf', 'shx', 'prj']:
@@ -62,6 +64,8 @@ class UploadWorker(AbstractWorker):
                 shutil.copyfile(src, dst)
         else:
             # if it's not a shapefile, we need to build a shapefile from it
+            self.set_message.emit(tr(
+                'Writing the shapefile to be uploaded...'))
             QgsVectorFileWriter.writeAsVectorFormat(
                 self.current_layer,
                 data_file,
