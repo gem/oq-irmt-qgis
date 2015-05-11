@@ -234,7 +234,12 @@ class Svir:
         """
         :param layer_id: layer identifier
         :param proj_defs: a list of project definitions
+                          (if it's provided, the project definitions
+                           associated to the layer will be replaced by the new
+                           list; otherwise the project definitions of the layer
+                           will be removed)
         :param selected_idx: the index of the selected project definition
+                             (default: select the first one)
         """
         self.sync_proj_def()
         # upgrade old project definitions, if found
@@ -1067,7 +1072,8 @@ class Svir:
             project_definition['license'] = license_txt
             project_definition['svir_plugin_version'] = SVIR_PLUGIN_VERSION
 
-            # TODO call update_proj_defs
+            self.update_proj_defs(
+                self.iface.activeLayer().id(), proj_defs, selected_idx)
 
             if dlg.do_update:
                 with WaitCursorManager(

@@ -132,14 +132,21 @@ class ProjectsManagerDialog(QDialog):
             self.project_definitions['proj_defs']) - 1
         self.populate_proj_def_cbx()
 
+    def update_title_in_combo(self):
+        current_index = self.ui.proj_def_cbx.currentIndex()
+        self.ui.proj_def_cbx.setItemText(
+            current_index, self.ui.proj_def_title.text())
+
     @pyqtSlot(str)
     def on_proj_def_title_textEdited(self):
         self.selected_proj_def['title'] = self.ui.proj_def_title.text()
+        self.update_title_in_combo()
         self.display_proj_def_raw()
 
     @pyqtSlot()
     def on_proj_def_descr_textChanged(self):
-        self.selected_proj_def['description'] = self.ui.proj_def_descr.toPlainText()
+        self.selected_proj_def['description'] = \
+            self.ui.proj_def_descr.toPlainText()
         self.display_proj_def_raw()
 
     @pyqtSlot(str)
