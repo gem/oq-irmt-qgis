@@ -48,7 +48,7 @@ from utils import (get_credentials,
 from shared import DEBUG
 
 
-class UploadMetadataDialog(QDialog):
+class UploadDialog(QDialog):
     """
     Modal dialog allowing to upload the data to the OQ-Platform
     """
@@ -92,7 +92,7 @@ class UploadMetadataDialog(QDialog):
         self.layer_url = None
 
     def showEvent(self, event):
-        super(UploadMetadataDialog, self).showEvent(event)
+        super(UploadDialog, self).showEvent(event)
         self.upload()
 
     def upload(self):
@@ -155,6 +155,7 @@ class UploadMetadataDialog(QDialog):
                 self.message_bar, 'Loading page......', no_percentage=True)
             self.web_view.load(QUrl(layer_url))
             self.layer_url = layer_url
+            print "HHHHHHHHHHHHHHHHHHHHHHHHH", self.layer_url
         else:
             error_msg = layer_url
             clear_progress_message_bar(self.message_bar)

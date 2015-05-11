@@ -61,7 +61,7 @@ from qgis.core import (QgsVectorLayer,
 
 from qgis.gui import QgsMessageBar
 
-from upload_metadata_dialog import UploadMetadataDialog
+from upload_dialog import UploadDialog
 
 from calculate_utils import calculate_svi, calculate_ri, calculate_iri
 
@@ -1106,7 +1106,7 @@ class Svir:
                     print 'xml_file:', xml_file
                 write_iso_metadata_file(xml_file,
                                         project_definition)
-                metadata_dialog = UploadMetadataDialog(
+                metadata_dialog = UploadDialog(
                     self.iface, file_stem)
                 if metadata_dialog.exec_():
                     QDesktopServices.openUrl(QUrl(metadata_dialog.layer_url))
