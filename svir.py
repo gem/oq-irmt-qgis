@@ -1108,7 +1108,11 @@ class Svir:
                                         project_definition)
                 metadata_dialog = UploadDialog(
                     self.iface, file_stem)
+                metadata_dialog.upload_successful.connect(self.insert_layer_url)
                 if metadata_dialog.exec_():
                     QDesktopServices.openUrl(QUrl(metadata_dialog.layer_url))
                 elif DEBUG:
                     print "metadata_dialog cancelled"
+
+    def insert_layer_url(self, url):
+        print "The upload was sucessful and I got this URL back: ", url
