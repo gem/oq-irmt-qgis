@@ -379,6 +379,17 @@ class Svir:
             zonal_layer = QgsMapLayerRegistry.instance().mapLayer(
                 zonal_layer_id)
 
+            # if the two layers have different projections, display an error
+            # message and return
+            have_same_projection, check_projection_msg = ProcessLayer(
+                loss_layer).has_same_projection_as(zonal_layer)
+            if not have_same_projection:
+                self.iface.messageBar().pushMessage(
+                    tr("Error"),
+                    check_projection_msg,
+                    level=QgsMessageBar.CRITICAL)
+                return
+
             # check if loss layer is raster or vector (aggregating by zone
             # is different in the two cases)
             loss_layer_is_vector = dlg.loss_layer_is_vector
