@@ -17,8 +17,9 @@
    <item>
     <widget class="QLabel" name="situation_lbl">
      <property name="text">
-      <string>It looks like this layer was downloaded from a platform. 
-You can create a new layer or just upload the last project definition</string>
+         <string>It looks like this layer was downloaded from the OpenQuake Platform
+or an older version was previously uploaded there.
+You can create a new layer or just upload the current project definition.</string>
      </property>
     </widget>
    </item>

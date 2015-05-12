@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'ui/ui_upload_settings.ui'
 #
-# Created: Fri May  8 17:29:49 2015
-#      by: PyQt4 UI code generator 4.11.2
+# Created: Tue May 12 11:30:03 2015
+#      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -102,8 +102,9 @@ class Ui_UploadSettingsDialog(object):
 
     def retranslateUi(self, UploadSettingsDialog):
         UploadSettingsDialog.setWindowTitle(_translate("UploadSettingsDialog", "Upload", None))
-        self.situation_lbl.setText(_translate("UploadSettingsDialog", "It looks like this layer was downloaded from a platform. \n"
-"You can create a new layer or just upload the last project definition", None))
+        self.situation_lbl.setText(_translate("UploadSettingsDialog", "It looks like this layer was downloaded from the OpenQuake Platform\n"
+"or an older version was previously uploaded there.\n"
+"You can create a new layer or just upload the current project definition.", None))
         self.question_lbl.setText(_translate("UploadSettingsDialog", "What would you like to do?", None))
         self.new_layer_radio.setText(_translate("UploadSettingsDialog", "Create a new layer on the platform", None))
         self.update_radio.setText(_translate("UploadSettingsDialog", "Update the existing layer on the platform", None))
