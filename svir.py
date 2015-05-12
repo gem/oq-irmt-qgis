@@ -1108,11 +1108,16 @@ class Svir:
                                         project_definition)
                 metadata_dialog = UploadDialog(
                     self.iface, file_stem)
-                metadata_dialog.upload_successful.connect(self.insert_layer_url)
+                metadata_dialog.upload_successful.connect(
+                    self.insert_platform_layer_id)
                 if metadata_dialog.exec_():
                     QDesktopServices.openUrl(QUrl(metadata_dialog.layer_url))
                 elif DEBUG:
                     print "metadata_dialog cancelled"
 
-    def insert_layer_url(self, url):
-        print "The upload was sucessful and I got this URL back: ", url
+    def insert_platform_layer_id(self, layer_url):
+        platform_layer_id = layer_url.split('/')[-1]
+        for proj_def in self.project_definitions[
+                self.iface.activeLayer().id()]['proj_defs']:
+            if 'platform_layer_id' not in proj_def:
+                proj_def['platform_layer_id'] = platform_layer_id
