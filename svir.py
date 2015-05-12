@@ -1117,7 +1117,12 @@ class Svir:
 
     def insert_platform_layer_id(self, layer_url):
         platform_layer_id = layer_url.split('/')[-1]
-        for proj_def in self.project_definitions[
-                self.iface.activeLayer().id()]['proj_defs']:
+        active_layer_id = self.iface.activeLayer().id()
+        proj_defs = self.project_definitions[active_layer_id]['proj_defs']
+        selected_idx = self.project_definitions[active_layer_id][
+            'selected_idx']
+        for proj_def in proj_defs:
             if 'platform_layer_id' not in proj_def:
                 proj_def['platform_layer_id'] = platform_layer_id
+        self.update_proj_defs(
+            self.iface.activeLayer().id(), proj_defs, selected_idx)
