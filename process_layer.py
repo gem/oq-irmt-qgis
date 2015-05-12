@@ -34,7 +34,7 @@ from qgis.core import (QgsMapLayer,
                        QgsVectorLayer,
                        QgsMapLayerRegistry,
                        QgsField)
-from utils import LayerEditingManager
+from utils import LayerEditingManager, tr
 
 from transformation_algs import (TRANSFORMATION_ALGS, transform)
 
@@ -56,6 +56,19 @@ class ProcessLayer():
         print [field.name() for field in self.layer.dataProvider().fields()]
         pprint([feature.attributes()
                 for feature in self.layer.dataProvider().getFeatures()])
+
+    def has_same_projection_as(self, other_layer):
+        this_layer_projection = self.layer.crs().geographicCRSAuthId()
+        other_layer_projection = other_layer.crs().geographicCRSAuthId()
+        if (this_layer_projection != other_layer_projection):
+            msg = tr("The two layers use different coordinate"
+                     " reference systems (%s vs %s)"
+                     % (this_layer_projection, other_layer_projection))
+            return False, msg
+        else:
+            msg = tr("Both layers use the following coordinate"
+                     " reference system: %s" % this_layer_projection)
+            return True, msg
 
     def has_same_content_as(self, other_layer):
         this_dp = self.layer.dataProvider()
