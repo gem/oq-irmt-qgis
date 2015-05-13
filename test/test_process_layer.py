@@ -41,6 +41,39 @@ from utilities import get_qgis_app
 QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 
 
+class CheckProjectionsTestCase(unittest.TestCase):
+    def setUp(self):
+        curr_dir_name = os.path.dirname(__file__)
+        data_dir_name = os.path.join(
+            curr_dir_name, 'data/process_layer/check_projections')
+
+        loss_layer_epsg4326_file_path = os.path.join(
+            data_dir_name, 'loss_layer_epsg4326.shp')
+        zonal_layer_epsg4326_file_path = os.path.join(
+            data_dir_name, 'zonal_layer_epsg4326.shp')
+        zonal_layer_epsg4269_file_path = os.path.join(
+            data_dir_name, 'zonal_layer_epsg4269.shp')
+
+        self.loss_layer_epsg4326 = QgsVectorLayer(
+            loss_layer_epsg4326_file_path, 'loss_layer_epsg4326', 'ogr')
+        self.zonal_layer_epsg4326 = QgsVectorLayer(
+            zonal_layer_epsg4326_file_path, 'zonal_layer_epsg4326', 'ogr')
+        self.zonal_layer_epsg4269 = QgsVectorLayer(
+            zonal_layer_epsg4269_file_path, 'zonal_layer_epsg4269', 'ogr')
+
+    def test_same_projections(self):
+        res, msg = \
+            ProcessLayer(self.loss_layer_epsg4326).has_same_projection_as(
+                self.zonal_layer_epsg4326)
+        self.assertEqual(res, True)
+
+    def test_different_projections(self):
+        res, msg = \
+            ProcessLayer(self.loss_layer_epsg4326).has_same_projection_as(
+                self.zonal_layer_epsg4269)
+        self.assertEqual(res, False)
+
+
 class CompareLayerContentTestCase(unittest.TestCase):
 
     def setUp(self):

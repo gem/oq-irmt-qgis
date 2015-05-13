@@ -384,6 +384,17 @@ class Svir:
             zonal_layer = QgsMapLayerRegistry.instance().mapLayer(
                 zonal_layer_id)
 
+            # if the two layers have different projections, display an error
+            # message and return
+            have_same_projection, check_projection_msg = ProcessLayer(
+                loss_layer).has_same_projection_as(zonal_layer)
+            if not have_same_projection:
+                self.iface.messageBar().pushMessage(
+                    tr("Error"),
+                    check_projection_msg,
+                    level=QgsMessageBar.CRITICAL)
+                return
+
             # check if loss layer is raster or vector (aggregating by zone
             # is different in the two cases)
             loss_layer_is_vector = dlg.loss_layer_is_vector
@@ -1034,7 +1045,6 @@ class Svir:
     def upload(self):
         temp_dir = tempfile.gettempdir()
         file_stem = '%s%sqgis_svir_%s' % (temp_dir, os.path.sep, uuid.uuid4())
-        data_file = '%s%s' % (file_stem, '.shp')
         xml_file = file_stem + '.xml'
 
         layer_dict = self.project_definitions[
@@ -1043,21 +1053,7 @@ class Svir:
         proj_defs = layer_dict['proj_defs']
         project_definition = proj_defs[selected_idx]
 
-        QgsVectorFileWriter.writeAsVectorFormat(
-            self.current_layer,
-            data_file,
-            'utf-8',
-            self.current_layer.crs(),
-            'ESRI Shapefile')
-
-        file_size_mb = os.path.getsize(data_file)
-        file_size_mb += os.path.getsize(file_stem + '.shx')
-        file_size_mb += os.path.getsize(file_stem + '.dbf')
-        # convert bytes to MB
-        file_size_mb = file_size_mb / 1024 / 1024
-
-        dlg = UploadSettingsDialog(
-            file_size_mb, self.iface, project_definition)
+        dlg = UploadSettingsDialog(self.iface, project_definition)
         if dlg.exec_():
             project_definition['title'] = dlg.ui.title_le.text()
             project_definition[
