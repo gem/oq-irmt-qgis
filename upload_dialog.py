@@ -26,7 +26,8 @@
 
 from PyQt4.QtCore import (Qt,
                           QUrl,
-                          QSettings)
+                          QSettings,
+                          pyqtSignal)
 
 from PyQt4.QtGui import (QDialog, QSizePolicy, QDialogButtonBox)
 from PyQt4.QtNetwork import QNetworkCookieJar, QNetworkCookie
@@ -49,10 +50,12 @@ from utils import (get_credentials,
 from shared import DEBUG
 
 
-class UploadMetadataDialog(QDialog):
+class UploadDialog(QDialog):
     """
     Modal dialog allowing to upload the data to the OQ-Platform
     """
+
+    upload_successful = pyqtSignal(str)
 
     def __init__(self, iface, file_stem):
         self.iface = iface
@@ -93,7 +96,7 @@ class UploadMetadataDialog(QDialog):
         self.layer_url = None
 
     def showEvent(self, event):
-        super(UploadMetadataDialog, self).showEvent(event)
+        super(UploadDialog, self).showEvent(event)
         self.upload()
 
     def upload(self):
@@ -168,6 +171,7 @@ class UploadMetadataDialog(QDialog):
                 self.message_bar, 'Loading page......', no_percentage=True)
             self.web_view.load(QUrl(layer_url))
             self.layer_url = layer_url
+            self.upload_successful.emit(layer_url)
         else:
             error_msg = layer_url
             clear_progress_message_bar(self.message_bar)

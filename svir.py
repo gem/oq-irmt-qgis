@@ -61,7 +61,7 @@ from qgis.core import (QgsVectorLayer,
 
 from qgis.gui import QgsMessageBar
 
-from upload_metadata_dialog import UploadMetadataDialog
+from upload_dialog import UploadDialog
 
 from calculate_utils import calculate_svi, calculate_ri, calculate_iri
 
@@ -234,7 +234,12 @@ class Svir:
         """
         :param layer_id: layer identifier
         :param proj_defs: a list of project definitions
+                          (if it's provided, the project definitions
+                           associated to the layer will be replaced by the new
+                           list; otherwise the project definitions of the layer
+                           will be removed)
         :param selected_idx: the index of the selected project definition
+                             (default: select the first one)
         """
         self.sync_proj_def()
         # upgrade old project definitions, if found
@@ -1051,6 +1056,8 @@ class Svir:
         dlg = UploadSettingsDialog(self.iface, project_definition)
         if dlg.exec_():
             project_definition['title'] = dlg.ui.title_le.text()
+            project_definition[
+                'description'] = dlg.ui.description_te.toPlainText()
             zone_label_field = dlg.ui.zone_label_field_cbx.currentText()
             project_definition['zone_label_field'] = zone_label_field
 
@@ -1060,7 +1067,11 @@ class Svir:
             license_txt = '%s (%s)' % (license_name, license_url)
             project_definition['license'] = license_txt
             project_definition['svir_plugin_version'] = SVIR_PLUGIN_VERSION
-            if 'platform_layer_id' in project_definition:
+
+            self.update_proj_defs(
+                self.iface.activeLayer().id(), proj_defs, selected_idx)
+
+            if dlg.do_update:
                 with WaitCursorManager(
                         'Updating project on the OpenQuake Platform',
                         self.iface):
@@ -1091,9 +1102,23 @@ class Svir:
                     print 'xml_file:', xml_file
                 write_iso_metadata_file(xml_file,
                                         project_definition)
-                metadata_dialog = UploadMetadataDialog(
+                metadata_dialog = UploadDialog(
                     self.iface, file_stem)
+                metadata_dialog.upload_successful.connect(
+                    self.insert_platform_layer_id)
                 if metadata_dialog.exec_():
                     QDesktopServices.openUrl(QUrl(metadata_dialog.layer_url))
                 elif DEBUG:
                     print "metadata_dialog cancelled"
+
+    def insert_platform_layer_id(self, layer_url):
+        platform_layer_id = layer_url.split('/')[-1]
+        active_layer_id = self.iface.activeLayer().id()
+        proj_defs = self.project_definitions[active_layer_id]['proj_defs']
+        selected_idx = self.project_definitions[active_layer_id][
+            'selected_idx']
+        for proj_def in proj_defs:
+            if 'platform_layer_id' not in proj_def:
+                proj_def['platform_layer_id'] = platform_layer_id
+        self.update_proj_defs(
+            self.iface.activeLayer().id(), proj_defs, selected_idx)
