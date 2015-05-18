@@ -23,7 +23,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
-
+import os
 from PyQt4.QtCore import (Qt,
                           QUrl,
                           QSettings,
@@ -118,10 +118,11 @@ class UploadDialog(QDialog):
         start_worker(worker, self.message_bar, 'Uploading data')
 
     def _update_layer_style(self):
-        # file_stem contains also the slashes, which need to be removed
+        # The file stem contains the full path. We get just the basename
+        layer_name = os.path.basename(self.file_stem)
         # Since the style name is set by default substituting '-' with '_',
         # tp get the right style we need to do the same substitution
-        style_name = self.file_stem.replace('/', '').replace('-', '_')
+        style_name = layer_name.replace('-', '_')
         try:
             sld = getGsCompatibleSld(self.iface.activeLayer(), style_name)
         except Exception as e:
@@ -132,7 +133,6 @@ class UploadDialog(QDialog):
             return
 
         if DEBUG:
-            import os
             import tempfile
             fd, fname = tempfile.mkstemp(suffix=".sld")
             os.close(fd)

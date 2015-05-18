@@ -85,7 +85,7 @@ class UploadWorker(AbstractWorker):
                                  [self.username, "layer_admin"]]
                        }
 
-        data = {'layer_title': self.file_stem,
+        data = {'layer_title': os.path.basename(self.file_stem),
                 'base_file': open('%s.shp' % self.file_stem, 'rb'),
                 'dbf_file': open('%s.dbf' % self.file_stem, 'rb'),
                 'shx_file': open('%s.shx' % self.file_stem, 'rb'),
