@@ -32,7 +32,8 @@ from qgis.gui import QgsMessageBar
 from third_party.requests import Session
 from third_party.requests.exceptions import (ConnectionError,
                                              InvalidSchema,
-                                             MissingSchema
+                                             MissingSchema,
+                                             ReadTimeout,
                                              )
 
 from utils import (SvNetworkError,
@@ -61,7 +62,7 @@ def get_loggedin_downloader(iface):
             sv_downloader.login(username, password)
         return sv_downloader
     except (SvNetworkError, ConnectionError,
-            InvalidSchema, MissingSchema) as e:
+            InvalidSchema, MissingSchema, ReadTimeout) as e:
         err_msg = str(e)
         if isinstance(e, InvalidSchema):
             err_msg += ' (you could try prepending http:// or https://)'
