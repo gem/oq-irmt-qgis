@@ -247,6 +247,18 @@
             return options;
         }
 
+        function isComputable(node) {
+            if (node.type === node_types_dict.RI || node.type === node_types_dict.SVI || node.type === node_types_dict.SV_THEME) {
+                if (typeof node.children === 'undefined' || (typeof node.children !== 'undefined' && node.children.length === 0)) {
+                    return false;
+                } else {
+                    return true;
+                }
+            } else {
+                return true;
+            }
+        }
+
         function updateButton(pdId){
             pdId = typeof pdId !== 'undefined' ? pdId : false;
             $('#projectDefWeightDialog').append(
@@ -859,6 +871,47 @@
                     // d.weight is expected to be between 0 and 1
                     // Nodes are displayed as circles of size between 1 and CIRCLE_SCALE
                     return getRadius(d);
+                })
+                .style("opacity", function(d) {
+                    if (d.type === node_types_dict.IRI) {
+                        if (typeof d.children === 'undefined') {
+                            return 0.5;
+                        }
+                        // check if both RI and SVI are computable
+                        var areRiAndSviComputable = true;
+                        for (var i = 0; i < d.children.length; i++) {
+                            if (!isComputable(d.children[i])) {
+                                areRiAndSviComputable = false;
+                            }
+                        }
+                        if (areRiAndSviComputable) {
+                            return 1;
+                        } else {
+                            return 0.5;
+                        }
+                    }
+                    if (d.type === node_types_dict.SVI) {
+                        if (typeof d.children === 'undefined') {
+                            return 0.5;
+                        }
+                        // Check if all themes are computable
+                        var areAllThemesComputable = true;
+                        for (var i = 0; i < d.children.length; i++) {
+                            if (!isComputable(d.children[i])) {
+                                areAllThemesComputable = false;
+                            }
+                        }
+                        if (areAllThemesComputable) {
+                            return 1;
+                        } else {
+                            return 0.5;
+                        }
+                    }
+                    if (isComputable(d)) {
+                        return 1;
+                    } else {
+                        return 0.5;
+                    }
                 })
                 .style("stroke", function(d) {
                     if (d.isInverted) {
