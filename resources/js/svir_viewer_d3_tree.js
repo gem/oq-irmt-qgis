@@ -909,7 +909,7 @@
                     if (isComputable(d)) {
                         return 1;
                     } else {
-                        return 0.5;
+                        return 0.3;
                     }
                 })
                 .style("stroke", function(d) {
@@ -954,6 +954,13 @@
             // Enter any new links at the parent's previous position.
             link.enter().insert("path", "g")
                 .attr("class", "link")
+                .style("opacity", function(d) {
+                    if (isComputable(d.source)) {
+                        return 1;
+                    } else {
+                        return 0.1;
+                    }
+                })
                 .attr("d", function(d) {
                   var o = {x: source.x0, y: source.y0};
                   return diagonal({source: o, target: o});
