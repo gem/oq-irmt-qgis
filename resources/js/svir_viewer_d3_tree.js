@@ -247,6 +247,51 @@
             return options;
         }
 
+        function isComputable(node) {
+            if (node.type === node_types_dict.IRI) {
+                if (typeof node.children === 'undefined') {
+                    return false;
+                }
+                // check if both RI and SVI are computable
+                var areRiAndSviComputable = true;
+                for (var i = 0; i < node.children.length; i++) {
+                    if (!isComputable(node.children[i])) {
+                        areRiAndSviComputable = false;
+                    }
+                }
+                if (areRiAndSviComputable) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+            if (node.type === node_types_dict.SVI) {
+                if (typeof node.children === 'undefined') {
+                    return false;
+                }
+                // Check if all themes are computable
+                var areAllThemesComputable = true;
+                for (var i = 0; i < node.children.length; i++) {
+                    if (!isComputable(node.children[i])) {
+                        areAllThemesComputable = false;
+                    }
+                }
+                if (areAllThemesComputable) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+            if (node.type === node_types_dict.RI || node.type === node_types_dict.SVI || node.type === node_types_dict.SV_THEME) {
+                if (typeof node.children === 'undefined' || (typeof node.children !== 'undefined' && node.children.length === 0)) {
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+            return true;
+        }
+
         function updateButton(pdId){
             pdId = typeof pdId !== 'undefined' ? pdId : false;
             $('#projectDefWeightDialog').append(
@@ -860,6 +905,13 @@
                     // Nodes are displayed as circles of size between 1 and CIRCLE_SCALE
                     return getRadius(d);
                 })
+                .style("opacity", function(d) {
+                    if (isComputable(d)) {
+                        return 1;
+                    } else {
+                        return 0.3;
+                    }
+                })
                 .style("stroke", function(d) {
                     if (d.isInverted) {
                         return "PowderBlue";
@@ -902,6 +954,13 @@
             // Enter any new links at the parent's previous position.
             link.enter().insert("path", "g")
                 .attr("class", "link")
+                .style("opacity", function(d) {
+                    if (isComputable(d.source)) {
+                        return 1;
+                    } else {
+                        return 0.1;
+                    }
+                })
                 .attr("d", function(d) {
                   var o = {x: source.x0, y: source.y0};
                   return diagonal({source: o, target: o});
