@@ -443,7 +443,7 @@ def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
                     # the latter solution)
                     iri_value = (
                         svi_value * svi_inversion_factor
-                        + ri_value * svi_inversion_factor) / 2.0
+                        + ri_value * ri_inversion_factor) / 2.0
                 # store IRI
                 current_layer.changeAttributeValue(
                     feat_id, iri_attr_id, iri_value)
