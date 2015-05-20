@@ -28,7 +28,8 @@ from qgis import QPyNullVariant
 from qgis.core import QgsField
 from qgis.gui import QgsMessageBar
 from shared import (DOUBLE_FIELD_TYPE_NAME, DEBUG, SUM_BASED_OPERATORS,
-                    MUL_BASED_OPERATORS, DEFAULT_OPERATOR, OPERATORS_DICT)
+                    MUL_BASED_OPERATORS, DEFAULT_OPERATOR, OPERATORS_DICT,
+                    IGNORING_WEIGHT_OPERATORS)
 from process_layer import ProcessLayer
 from utils import LayerEditingManager, tr, toggle_select_features_widget
 
@@ -144,9 +145,7 @@ def calculate_svi(iface, current_layer, project_definition):
                                 -1 if indicator['isInverted'] else 1
                         except KeyError:
                             inversion_factor = 1
-                        if indicators_operator in (OPERATORS_DICT['SUM_S'],
-                                                   OPERATORS_DICT['AVG'],
-                                                   OPERATORS_DICT['MUL_S']):
+                        if indicators_operator in IGNORING_WEIGHT_OPERATORS:
                             indicator_weighted = (
                                 feat[indicator['field']] * inversion_factor)
                         else:
@@ -171,6 +170,8 @@ def calculate_svi(iface, current_layer, project_definition):
                         break  # to next feature
                     if indicators_operator == OPERATORS_DICT['AVG']:
                         theme_result /= len(indicators)
+                    elif indicators_operator == OPERATORS_DICT['GEOM_MEAN']:
+                        theme_result **= 1. / len(indicators)
 
                     try:
                         inversion_factor = -1 if theme['isInverted'] else 1
@@ -181,9 +182,7 @@ def calculate_svi(iface, current_layer, project_definition):
                     # equal weights, or to sum the themes (all weights 1)
                     # and divide by the number of themes (we use
                     # the latter solution)
-                    if themes_operator in (OPERATORS_DICT['SUM_S'],
-                                           OPERATORS_DICT['AVG'],
-                                           OPERATORS_DICT['MUL_S']):
+                    if themes_operator in IGNORING_WEIGHT_OPERATORS:
                         theme_weighted = theme_result * inversion_factor
                     else:
                         theme_weighted = (
@@ -198,6 +197,8 @@ def calculate_svi(iface, current_layer, project_definition):
                 else:
                     if themes_operator == OPERATORS_DICT['AVG']:
                         svi_value /= len(themes)
+                    elif themes_operator == OPERATORS_DICT['GEOM_MEAN']:
+                        svi_value **= 1. / len(themes)
                 current_layer.changeAttributeValue(
                     feat_id, svi_attr_id, svi_value)
         msg = ('The SVI has been calculated for fields containing '
@@ -300,9 +301,7 @@ def calculate_ri(iface, current_layer, project_definition):
                         inversion_factor = -1 if indicator['isInverted'] else 1
                     except KeyError:
                         inversion_factor = 1
-                    if ri_operator in (OPERATORS_DICT['SUM_S'],
-                                       OPERATORS_DICT['AVG'],
-                                       OPERATORS_DICT['MUL_S']):
+                    if ri_operator in IGNORING_WEIGHT_OPERATORS:
                         # these operators ignore weights, but take into account
                         # the inversion
                         indicator_weighted = \
@@ -325,6 +324,8 @@ def calculate_ri(iface, current_layer, project_definition):
                     ri_value = QPyNullVariant(float)
                 elif ri_operator == OPERATORS_DICT['AVG']:
                     ri_value /= len(indicators)
+                elif ri_operator == OPERATORS_DICT['GEOM_MEAN']:
+                    ri_value **= 1. / len(indicators)
                 current_layer.changeAttributeValue(
                     feat_id, ri_attr_id, ri_value)
         msg = ('The Risk Index has been calculated for fields containing '
@@ -437,13 +438,17 @@ def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
                         svi_value * svi_weight * svi_inversion_factor
                         * ri_value * risk_weight * ri_inversion_factor)
                 elif iri_operator == OPERATORS_DICT['AVG']:
-                    # For "Average (equal weights)" it's equivalent to use
+                    # For "Average (ignore weights)" it's equivalent to use
                     # equal weights, or to sum the indices (all weights 1)
                     # and divide by the number of indices (we use
                     # the latter solution)
                     iri_value = (
                         svi_value * svi_inversion_factor
-                        + ri_value * svi_inversion_factor) / 2.0
+                        + ri_value * ri_inversion_factor) / 2.0
+                elif iri_operator == OPERATORS_DICT['GEOM_MEAN']:
+                    iri_value = (
+                        svi_value * svi_inversion_factor
+                        * ri_value * ri_inversion_factor) ** 0.5
                 # store IRI
                 current_layer.changeAttributeValue(
                     feat_id, iri_attr_id, iri_value)
