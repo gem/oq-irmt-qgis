@@ -755,7 +755,13 @@
                 .attr("class", (function(d) { return "level-" + d.level; }))
                 .attr("id", (function(d) { return 'indicator-label-' + d.name.replace(' ', '-'); }))
                 .attr("value", (function(d) { return d.weight; }))
-                .attr("x", function(d) { return -(getRadius(d) + 5); })
+                .attr("x", function(d) {
+                    if (d.type === node_types_dict.SV_INDICATOR || d.type === node_types_dict.RISK_INDICATOR) {
+                        return getRadius(d) + 5;
+                    } else {
+                        return -(getRadius(d) + 5);
+                    }
+                })
                 .attr("dy", function(d) {
                     // NOTE are x and y swapped?
                     // set te text above or below the node depending on the
@@ -765,7 +771,13 @@
                     }
                     return "-1em";
                 })
-                .attr("text-anchor", function(d) { return "end"; })
+                .attr("text-anchor", function(d) {
+                    if (d.type === node_types_dict.SV_INDICATOR || d.type === node_types_dict.RISK_INDICATOR) {
+                        return "start";
+                    } else {
+                        return "end";
+                    }
+                })
                 .text(function(d) {
                     // Render a minus before the name of a variable which weight is negative
                     if (d.isInverted) {
