@@ -28,7 +28,8 @@ from qgis import QPyNullVariant
 from qgis.core import QgsField
 from qgis.gui import QgsMessageBar
 from shared import (DOUBLE_FIELD_TYPE_NAME, DEBUG, SUM_BASED_OPERATORS,
-                    MUL_BASED_OPERATORS, DEFAULT_OPERATOR, OPERATORS_DICT)
+                    MUL_BASED_OPERATORS, DEFAULT_OPERATOR, OPERATORS_DICT,
+                    IGNORING_WEIGHT_OPERATORS)
 from process_layer import ProcessLayer
 from utils import LayerEditingManager, tr, toggle_select_features_widget
 
@@ -42,434 +43,138 @@ def add_numeric_attribute(proposed_attr_name, current_layer):
         return assigned_attr_name
 
 
-def calculate_svi(iface, current_layer, project_definition):
+def calculate_composite_variable(
+        iface, current_layer, node):
     """
-    add an SVI attribute to the current layer
+    Calculate a composite variable (a tree node having children) starting from
+    the childrens' values and inverters and using the operator defined for the
+    node
     """
     try:
-        # get the social vulnerability index node, starting from the tree root
-        svi_node = project_definition['children'][1]
-        themes = svi_node['children']
-        # calculate the SVI only if all themes contain at least one indicator
-        for theme in themes:
-            indicators = theme['children']
+        children = node['children']
     except KeyError:
-        msg = ('Something is missing in the project definition.'
-               ' The SVI could not be calculated')
-        iface.messageBar().pushMessage(tr('Warning'), tr(msg),
-                                       level=QgsMessageBar.WARNING)
+        children = []
+    if len(children) < 1:
+        # we can't calculate the values for a node that has no children
         return None, None
-    try:
-        themes_operator = svi_node['operator']
-    except KeyError:
-        themes_operator = DEFAULT_OPERATOR
-
-    if 'field' in svi_node:
-        svi_attr_name = svi_node['field']
+    else:
+        for child in children:
+            calculate_composite_variable(iface, current_layer, child)
+    operator = node.get('operator', DEFAULT_OPERATOR)
+    if 'field' in node:
+        node_attr_name = node['field']
         # check that the field is still in the layer (the user might have
         # deleted it). If it is not there anymore, add a new field
-        if current_layer.fieldNameIndex(svi_attr_name) == -1:
-            proposed_svi_attr_name = 'SVI'
-            svi_attr_name = add_numeric_attribute(
-                proposed_svi_attr_name, current_layer)
+        if current_layer.fieldNameIndex(node_attr_name) == -1:
+            proposed_node_attr_name = node_attr_name
+            node_attr_name = add_numeric_attribute(
+                proposed_node_attr_name, current_layer)
         elif DEBUG:
-            print 'Reusing %s for SVI' % svi_attr_name
+            print 'Reusing %s for node' % node_attr_name
+    elif 'name' in node:
+        proposed_node_attr_name = node['name']
+        node_attr_name = add_numeric_attribute(
+            proposed_node_attr_name, current_layer)
     else:
-        proposed_svi_attr_name = 'SVI'
-        svi_attr_name = add_numeric_attribute(
-            proposed_svi_attr_name, current_layer)
-
-    # get the id of the new attribute
-    svi_attr_id = ProcessLayer(current_layer).find_attribute_id(svi_attr_name)
-
-    discarded_feats_ids = set()
-    try:
-        with LayerEditingManager(current_layer, 'Add SVI', DEBUG):
-            for feat in current_layer.getFeatures():
-                # If a feature contains any NULL value, discard_feat will
-                # be set to True and the corresponding SVI will be set to
-                # NULL
-                discard_feat = False
-                feat_id = feat.id()
-
-                # init svi_value to the correct value depending on
-                # themes_operator
-                if themes_operator in SUM_BASED_OPERATORS:
-                    svi_value = 0
-                elif themes_operator in MUL_BASED_OPERATORS:
-                    svi_value = 1
-                if not themes:
-                    discard_feat = True
-                    discarded_feats_ids.add(feat_id)
-                # iterate all themes of SVI
-                for theme in themes:
-                    if discard_feat:
-                        break  # proceed to next feature
-                    indicators = theme['children']
-                    #set default operator
-                    try:
-                        indicators_operator = theme['operator']
-                    except KeyError:
-                        indicators_operator = DEFAULT_OPERATOR
-                    # init theme_result to the correct value depending on
-                    # indicators_operator
-                    if indicators_operator in SUM_BASED_OPERATORS:
-                        theme_result = 0
-                    elif indicators_operator in MUL_BASED_OPERATORS:
-                        theme_result = 1
-                    if not indicators:
-                        discard_feat = True
-                        discarded_feats_ids.add(feat_id)
-                        svi_value = QPyNullVariant(float)
-                        current_layer.changeAttributeValue(
-                            feat_id, svi_attr_id, svi_value)
-                        break  # proceed to next feature
-                    # iterate all indicators of a theme
-                    for indicator in indicators:
-                        if (feat[indicator['field']] ==
-                                QPyNullVariant(float)):
-                            discard_feat = True
-                            discarded_feats_ids.add(feat_id)
-                            current_layer.changeAttributeValue(
-                                feat_id, svi_attr_id, svi_value)
-                            break  # proceed to next theme, where if
-                                   # discard_feat is true it will break
-                        # For "Average (equal weights)" it's equivalent to use
-                        # equal weights, or to sum the indicators
-                        # (all weights 1)
-                        # and divide by the number of indicators (we use
-                        # the latter solution)
-                        try:
-                            inversion_factor = \
-                                -1 if indicator['isInverted'] else 1
-                        except KeyError:
-                            inversion_factor = 1
-                        if indicators_operator in (OPERATORS_DICT['SUM_S'],
-                                                   OPERATORS_DICT['AVG'],
-                                                   OPERATORS_DICT['MUL_S']):
-                            indicator_weighted = (
-                                feat[indicator['field']] * inversion_factor)
-                        else:
-                            indicator_weighted = (
-                                feat[indicator['field']] *
-                                indicator['weight'] * inversion_factor)
-
-                        if indicators_operator in \
-                                SUM_BASED_OPERATORS:
-                            theme_result += indicator_weighted
-                        elif indicators_operator in \
-                                MUL_BASED_OPERATORS:
-                            theme_result *= indicator_weighted
-                        else:
-                            error_message = (
-                                'invalid indicators_operator: %s' %
-                                indicators_operator)
-                            raise RuntimeError(error_message)
-                    if discard_feat:
-                        current_layer.changeAttributeValue(
-                            feat_id, svi_attr_id, svi_value)
-                        break  # to next feature
-                    if indicators_operator == OPERATORS_DICT['AVG']:
-                        theme_result /= len(indicators)
-
-                    try:
-                        inversion_factor = -1 if theme['isInverted'] else 1
-                    except KeyError:
-                        inversion_factor = 1
-                    # combine the indicators of each theme
-                    # For "Average (equal weights)" it's equivalent to use
-                    # equal weights, or to sum the themes (all weights 1)
-                    # and divide by the number of themes (we use
-                    # the latter solution)
-                    if themes_operator in (OPERATORS_DICT['SUM_S'],
-                                           OPERATORS_DICT['AVG'],
-                                           OPERATORS_DICT['MUL_S']):
-                        theme_weighted = theme_result * inversion_factor
-                    else:
-                        theme_weighted = (
-                            theme_result * theme['weight'] * inversion_factor)
-
-                    if themes_operator in SUM_BASED_OPERATORS:
-                        svi_value += theme_weighted
-                    elif themes_operator in MUL_BASED_OPERATORS:
-                        svi_value *= theme_weighted
-                if discard_feat:
-                    svi_value = QPyNullVariant(float)
-                else:
-                    if themes_operator == OPERATORS_DICT['AVG']:
-                        svi_value /= len(themes)
-                current_layer.changeAttributeValue(
-                    feat_id, svi_attr_id, svi_value)
-        msg = ('The SVI has been calculated for fields containing '
-               'non-NULL values and it was added to the layer as '
-               'a new attribute called %s') % svi_attr_name
-        iface.messageBar().pushMessage(
-            tr('Info'), tr(msg), level=QgsMessageBar.INFO)
-        if discarded_feats_ids:
-            widget = toggle_select_features_widget(
-                tr('Warning'),
-                tr('Invalid indicators were found in some features while '
-                   'calculating SVI'),
-                tr('Select invalid features'),
-                current_layer,
-                discarded_feats_ids,
-                current_layer.selectedFeaturesIds())
-            iface.messageBar().pushWidget(widget, QgsMessageBar.WARNING)
-
-        svi_node['field'] = svi_attr_name
-        return svi_attr_id, discarded_feats_ids
-
-    except TypeError as e:
-        ProcessLayer(current_layer).delete_attributes([svi_attr_id])
-        msg = 'Could not calculate SVI due to data problems: %s' % e
+        msg = 'This node has no name and it does not correspond to any field'
         iface.messageBar().pushMessage(tr('Error'), tr(msg),
                                        level=QgsMessageBar.CRITICAL)
-
-
-def calculate_ri(iface, current_layer, project_definition):
-    """
-    add an RI attribute to the current layer
-    """
-    try:
-        # get the risk index node, starting from the tree root
-        ri_node = project_definition['children'][0]
-        # calculate the RI only if there is at least one risk indicator
-        indicators = ri_node['children']
-    except KeyError:
-        msg = ('Something is missing in the project definition.'
-               ' The RI could not be calculated')
-        iface.messageBar().pushMessage(tr('Warning'), tr(msg),
-                                       level=QgsMessageBar.WARNING)
         return None, None
-    try:
-        ri_operator = ri_node['operator']
-    except KeyError:
-        ri_operator = DEFAULT_OPERATOR
-
-    if 'field' in ri_node:
-        ri_attr_name = ri_node['field']
-        # check that the field is still in the layer (the user might have
-        # deleted it). If it is not there anymore, add a new field
-        if current_layer.fieldNameIndex(ri_attr_name) == -1:
-            proposed_ri_attr_name = 'RI'
-            ri_attr_name = add_numeric_attribute(
-                proposed_ri_attr_name, current_layer)
-        if DEBUG:
-            print 'Reusing %s for RI' % ri_attr_name
-    else:
-        proposed_ri_attr_name = 'RI'
-        ri_attr_name = add_numeric_attribute(
-            proposed_ri_attr_name, current_layer)
-
     # get the id of the new attribute
-    ri_attr_id = ProcessLayer(current_layer).find_attribute_id(ri_attr_name)
+    node_attr_id = ProcessLayer(current_layer).find_attribute_id(
+        node_attr_name)
 
     discarded_feats_ids = set()
     try:
-        with LayerEditingManager(current_layer, 'Add RI', DEBUG):
+        with LayerEditingManager(current_layer,
+                                 'Calculating %s' % node_attr_name,
+                                 DEBUG):
             for feat in current_layer.getFeatures():
                 # If a feature contains any NULL value, discard_feat will
-                # be set to True and the corresponding RI will be set to
-                # NULL
+                # be set to True and the corresponding node value will be
+                # set to NULL
                 discard_feat = False
                 feat_id = feat.id()
 
-                # init ri_value to the correct value depending on
-                # ri_operator
-                if ri_operator in SUM_BASED_OPERATORS:
-                    ri_value = 0
-                elif ri_operator in MUL_BASED_OPERATORS:
-                    ri_value = 1
-                if not indicators:
-                    discard_feat = True
-                    discarded_feats_ids.add(feat_id)
-                for indicator in indicators:
-                    if (feat[indicator['field']] ==
-                            QPyNullVariant(float)):
+                # init node_value to the correct value depending on the
+                # node's operator
+                if operator in SUM_BASED_OPERATORS:
+                    node_value = 0
+                elif operator in MUL_BASED_OPERATORS:
+                    node_value = 1
+                else:
+                    msg = 'Invalid operator: %s' % operator
+                    iface.messageBar().pushMessage(
+                        tr('Error'), tr(msg), level=QgsMessageBar.CRITICAL)
+                    return None, None
+                # if not children:  # TODO: Check if this is correct
+                #     discard_feat = True
+                #     discarded_feats_ids.add(feat_id)
+                for child in children:
+                    if feat[child['field']] == QPyNullVariant(float):
                         discard_feat = True
                         discarded_feats_ids.add(feat_id)
-                        current_layer.changeAttributeValue(
-                            feat_id, ri_attr_id, ri_value)
-                        break  # proceed to next feature
+                        # node_value = QPyNullVariant(float)
+                        # current_layer.changeAttributeValue(
+                        #     feat_id, node_attr_id, node_value)
+                        break  # proceed to the next feature
+
                     # For "Average (equal weights)" it's equivalent to use
                     # equal weights, or to sum the indicators
                     # (all weights 1)
                     # and divide by the number of indicators (we use
                     # the latter solution)
-                    try:
-                        inversion_factor = -1 if indicator['isInverted'] else 1
-                    except KeyError:
-                        inversion_factor = 1
-                    if ri_operator in (OPERATORS_DICT['SUM_S'],
-                                       OPERATORS_DICT['AVG'],
-                                       OPERATORS_DICT['MUL_S']):
-                        # these operators ignore weights, but take into account
-                        # the inversion
-                        indicator_weighted = \
-                            feat[indicator['field']] * inversion_factor
-                    else:  # also multiply by the weight
-                        indicator_weighted = (
-                            feat[indicator['field']] *
-                            indicator['weight'] * inversion_factor)
 
-                    if ri_operator in SUM_BASED_OPERATORS:
-                        ri_value += indicator_weighted
-                    elif ri_operator in MUL_BASED_OPERATORS:
-                        ri_value *= indicator_weighted
+                    # multiply a variable by -1 if it isInverted
+                    try:
+                        inversion_factor = -1 if child['isInverted'] else 1
+                    except KeyError:  # child is not inverted
+                        inversion_factor = 1
+                    if operator in IGNORING_WEIGHT_OPERATORS:
+                        # although these operators ignore weights, they
+                        # take into account the inversion
+                        child_weighted = \
+                            feat[child['field']] * inversion_factor
+                    else:  # also multiply by the weight
+                        child_weighted = (
+                            child['weight'] *
+                            feat[child['field']] * inversion_factor)
+
+                    if operator in SUM_BASED_OPERATORS:
+                        node_value += child_weighted
+                    elif operator in MUL_BASED_OPERATORS:
+                        node_value *= child_weighted
                     else:
-                        error_message = (
-                            'invalid indicators_operator: %s' %
-                            ri_operator)
+                        error_message = 'Invalid operator: %s' % operator
                         raise RuntimeError(error_message)
                 if discard_feat:
-                    ri_value = QPyNullVariant(float)
-                elif ri_operator == OPERATORS_DICT['AVG']:
-                    ri_value /= len(indicators)
+                    node_value = QPyNullVariant(float)
+                elif operator == OPERATORS_DICT['AVG']:
+                    node_value /= len(children)  # for sure, len(children)!=0
                 current_layer.changeAttributeValue(
-                    feat_id, ri_attr_id, ri_value)
-        msg = ('The Risk Index has been calculated for fields containing '
-               'non-NULL values and it was added to the layer as '
-               'a new attribute called %s') % ri_attr_name
+                    feat_id, node_attr_id, node_value)
+        msg = ('The composite variable has been calculated for children'
+               ' containing non-NULL values and it was added to the layer as'
+               ' a new attribute called %s') % node_attr_name
         iface.messageBar().pushMessage(
             tr('Info'), tr(msg), level=QgsMessageBar.INFO)
         if discarded_feats_ids:
             widget = toggle_select_features_widget(
                 tr('Warning'),
-                tr('Invalid indicators were found in some features while '
-                   'calculating the Risk Index'),
-                tr('Select invalid features'),
+                tr('Missing values were found in some features while '
+                   'calculating the composite variable'),
+                tr('Select features with incomplete data'),
                 current_layer,
                 discarded_feats_ids,
                 current_layer.selectedFeaturesIds())
             iface.messageBar().pushWidget(widget, QgsMessageBar.WARNING)
 
-        ri_node['field'] = ri_attr_name
-        return ri_attr_id, discarded_feats_ids
+        node['field'] = node_attr_name
+        return node_attr_id, discarded_feats_ids
 
     except TypeError as e:
-        ProcessLayer(current_layer).delete_attributes([ri_attr_id])
-        msg = 'Could not calculate the Risk Index due to data problems: %s' % e
-        iface.messageBar().pushMessage(tr('Error'), tr(msg),
-                                       level=QgsMessageBar.CRITICAL)
-
-
-def calculate_iri(iface, current_layer, project_definition, svi_attr_id,
-                  ri_attr_id, discarded_feats_ids, reuse_field=False):
-    """
-    Calculate the Risk Index and calculate an IRI attribute to the
-    current layer
-    """
-
-    try:
-        project_definition['children'][0]['field']  # ri node's field
-        project_definition['children'][1]['field']  # svi node's field
-    except KeyError:
-        return None, None
-
-    try:
-        iri_operator = project_definition['operator']
-    except KeyError:
-        iri_operator = DEFAULT_OPERATOR
-
-    risk_weight = project_definition['children'][0]['weight']
-    try:
-        risk_is_inverted = project_definition['children'][0]['isInverted']
-    except KeyError:
-        risk_is_inverted = False
-    svi_weight = project_definition['children'][1]['weight']
-    try:
-        svi_is_inverted = project_definition['children'][1]['isInverted']
-    except KeyError:
-        svi_is_inverted = False
-
-    if 'field' in project_definition:  # The root is the node containing IRI
-        iri_attr_name = project_definition['field']
-        # check that the field is still in the layer (the user might have
-        # deleted it). If it is not there anymore, add a new field
-        if current_layer.fieldNameIndex(iri_attr_name) == -1:
-            proposed_iri_attr_name = 'IRI'
-            iri_attr_name = add_numeric_attribute(
-                proposed_iri_attr_name, current_layer)
-        elif DEBUG:
-            print 'Reusing %s for IRI' % iri_attr_name
-    else:
-        proposed_iri_attr_name = 'IRI'
-        iri_attr_name = add_numeric_attribute(
-            proposed_iri_attr_name, current_layer)
-
-    # get the id of the new attribute
-    iri_attr_id = ProcessLayer(current_layer).find_attribute_id(iri_attr_name)
-
-    if discarded_feats_ids is None:
-        discarded_feats_ids = set()
-
-    try:
-        with LayerEditingManager(current_layer, 'Add IRI', DEBUG):
-            for feat in current_layer.getFeatures():
-                feat_id = feat.id()
-                svi_value = feat.attributes()[svi_attr_id]
-                ri_value = feat.attributes()[ri_attr_id]
-                # For operators that ignore weights, we want anyway to get the
-                # weight's sign and to use it to invert the contribution of the
-                # item to the calculation. To do that, we multiply the value of
-                # the item by -1 if the weight is negative (do the invertion)
-                # or by 1 if the weight is positive (no invertion)
-                svi_inversion_factor = -1 if svi_is_inverted else 1
-                ri_inversion_factor = -1 if risk_is_inverted else 1
-                # ri_value = feat[iri_field_name]
-                if (ri_value == QPyNullVariant(float)
-                        or feat_id in discarded_feats_ids):
-                    iri_value = QPyNullVariant(float)
-                    discarded_feats_ids.add(feat_id)
-                # see the above comment about svi_invert and ri_invert
-                elif iri_operator == OPERATORS_DICT['SUM_S']:
-                    iri_value = (svi_value * svi_inversion_factor
-                                 + ri_value * ri_inversion_factor)
-                elif iri_operator == OPERATORS_DICT['MUL_S']:
-                    iri_value = (svi_value * svi_inversion_factor
-                                 * ri_value * ri_inversion_factor)
-                elif iri_operator == OPERATORS_DICT['SUM_W']:
-                    iri_value = (
-                        svi_value * svi_weight * svi_inversion_factor
-                        + ri_value * risk_weight * ri_inversion_factor)
-                elif iri_operator == OPERATORS_DICT['MUL_W']:
-                    iri_value = (
-                        svi_value * svi_weight * svi_inversion_factor
-                        * ri_value * risk_weight * ri_inversion_factor)
-                elif iri_operator == OPERATORS_DICT['AVG']:
-                    # For "Average (equal weights)" it's equivalent to use
-                    # equal weights, or to sum the indices (all weights 1)
-                    # and divide by the number of indices (we use
-                    # the latter solution)
-                    iri_value = (
-                        svi_value * svi_inversion_factor
-                        + ri_value * ri_inversion_factor) / 2.0
-                # store IRI
-                current_layer.changeAttributeValue(
-                    feat_id, iri_attr_id, iri_value)
-        project_definition['operator'] = iri_operator
-        # set the field name for the copied RISK layer
-        # project_definition['ri_field'] = ri_field_name
-        project_definition['field'] = iri_attr_name
-        msg = ('The IRI was calculated for non-NULL input values. '
-               'Results were stored into attribute %s') % iri_attr_name
-        iface.messageBar().pushMessage(tr('Info'), tr(msg),
-                                       level=QgsMessageBar.INFO)
-        if discarded_feats_ids:
-            widget = toggle_select_features_widget(
-                tr('Warning'),
-                tr('Invalid values were found in some features while '
-                    'calculating the IRI'),
-                tr('Select invalid features'),
-                current_layer,
-                discarded_feats_ids,
-                current_layer.selectedFeaturesIds())
-            iface.messageBar().pushWidget(widget, QgsMessageBar.WARNING)
-        return iri_attr_id, discarded_feats_ids
-
-    except TypeError as e:
-        ProcessLayer(current_layer).delete_attributes([iri_attr_id])
-        msg = 'Could not calculate IRI due to data problems: %s' % e
-
+        ProcessLayer(current_layer).delete_attributes([node_attr_id])
+        msg = ('Could not calculate the composite variable due'
+               ' to data problems: %s' % e)
         iface.messageBar().pushMessage(tr('Error'), tr(msg),
                                        level=QgsMessageBar.CRITICAL)

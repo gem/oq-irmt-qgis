@@ -62,6 +62,10 @@ OPERATORS_DICT['MUL_S'] = 'Simple multiplication (ignore weights)'
 OPERATORS_DICT['MUL_W'] = 'Weighted multiplication'
 
 DEFAULT_OPERATOR = OPERATORS_DICT['SUM_W']
+IGNORING_WEIGHT_OPERATORS = (OPERATORS_DICT['SUM_S'],
+                             OPERATORS_DICT['AVG'],
+                             OPERATORS_DICT['MUL_S'],
+                             )
 SUM_BASED_OPERATORS = (OPERATORS_DICT['SUM_S'],
                        OPERATORS_DICT['SUM_W'],
                        OPERATORS_DICT['AVG'])

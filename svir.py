@@ -63,7 +63,7 @@ from qgis.gui import QgsMessageBar
 
 from upload_dialog import UploadDialog
 
-from calculate_utils import calculate_svi, calculate_ri, calculate_iri
+from calculate_utils import calculate_composite_variable
 
 from process_layer import ProcessLayer
 
@@ -779,18 +779,18 @@ class Svir:
         project_definition = data
 
         # when updating weights, we need to recalculate the indexes
-        svi_attr_id, discarded_feats_ids_svi = calculate_svi(
-            self.iface, self.current_layer, project_definition)
-        ri_attr_id, discarded_feats_ids_ri = calculate_ri(
-            self.iface, self.current_layer, project_definition)
+        ri_node = project_definition['children'][0]
+        svi_node = project_definition['children'][1]
+        svi_attr_id, discarded_feats_ids_svi = calculate_composite_variable(
+            self.iface, self.current_layer, svi_node)
+        ri_attr_id, discarded_feats_ids_ri = calculate_composite_variable(
+            self.iface, self.current_layer, ri_node)
         if svi_attr_id is None or ri_attr_id is None:
             return None, None, None
         discarded_feats_ids = discarded_feats_ids_svi | discarded_feats_ids_ri
-        iri_attr_id, discarded_feats_ids = calculate_iri(
-            self.iface, self.current_layer,
-            project_definition,
-            svi_attr_id,
-            ri_attr_id, discarded_feats_ids)
+        iri_node = project_definition
+        iri_attr_id, discarded_feats_ids = calculate_composite_variable(
+            self.iface, self.current_layer, iri_node)
         return svi_attr_id, ri_attr_id, iri_attr_id
 
     def is_svi_renderable(self, proj_def):
