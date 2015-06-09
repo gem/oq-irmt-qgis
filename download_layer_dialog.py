@@ -66,7 +66,16 @@ class DownloadLayerDialog(QDialog):
             self.layer_id = layer_id
             self.ui.layer_lbl.setText('Project definition for "%s"' % layer_id)
             layer_infos = self.extra_infos[layer_id]
-            self.ui.layer_detail.setText(str(layer_infos))
+            bb = layer_infos['Bounding Box']
+            layer_infos_str = "Title:\n\t" + layer_infos['Title']
+            layer_infos_str += "\nAbstract:\n\t" + layer_infos['Abstract']
+            layer_infos_str += "\nBounding box:"
+            layer_infos_str += "\n\tminx = " + bb['minx']
+            layer_infos_str += "\n\tminy = " + bb['miny']
+            layer_infos_str += "\n\tmaxx = " + bb['maxx']
+            layer_infos_str += "\n\tmaxy = " + bb['maxy']
+            layer_infos_str += "\nKeywords:\n\t" + layer_infos['Keywords']
+            self.ui.layer_detail.setText(layer_infos_str)
         self.set_ok_button()
 
     def set_ok_button(self):
