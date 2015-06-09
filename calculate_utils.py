@@ -34,62 +34,84 @@ from process_layer import ProcessLayer
 from utils import LayerEditingManager, tr, toggle_select_features_widget
 
 
-def add_numeric_attribute(proposed_attr_name, current_layer):
+def add_numeric_attribute(proposed_attr_name, layer):
         field = QgsField(proposed_attr_name, QVariant.Double)
         field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
-        assigned_attr_names = ProcessLayer(current_layer).add_attributes(
+        assigned_attr_names = ProcessLayer(layer).add_attributes(
             [field])
         assigned_attr_name = assigned_attr_names[proposed_attr_name]
         return assigned_attr_name
 
 
-def calculate_composite_variable(
-        iface, current_layer, node):
+def calculate_composite_variable(iface, layer, node):
     """
     Calculate a composite variable (a tree node having children) starting from
     the childrens' values and inverters and using the operator defined for the
-    node
+    node.
+    While calculating a composite index, the tree could be modified. For
+    instance, a theme that was not associated to any field in the layer, could
+    be linked to a field. For this reason, the function must return the
+    modified tree, and the original tree needs to be modified accordingly.
+
+    :param iface: the iface, to be used to access the messageBar
+    :param layer: the layer containing the data
+    :param node: the root of the sub-tree to be calculated
+
+    :returns (added_attrs_ids, discarded_feats_ids, node):
+        added_attrs_ids: the list of ids of the attributes added to the layer
+                         during the calculation
+        discarded_feats_ids: the ids of the features that can't contribute to
+                             the calculation, because of missing data
+        node: the transformed sub-tree
     """
+    original_subtree = node
+    added_attrs_ids = []
     try:
         children = node['children']
     except KeyError:
         children = []
     if len(children) < 1:
         # we can't calculate the values for a node that has no children
-        return None, None
+        return [], [], original_subtree
     else:
-        for child in children:
-            calculate_composite_variable(iface, current_layer, child)
+        for child_idx, child in enumerate(children):
+            child_added_attrs_ids, _, child = calculate_composite_variable(
+                iface, layer, child)
+            if child_added_attrs_ids:
+                added_attrs_ids.extend(child_added_attrs_ids)
+            if child is not None:
+                node['children'][child_idx] = child
     operator = node.get('operator', DEFAULT_OPERATOR)
     if 'field' in node:
         node_attr_name = node['field']
         # check that the field is still in the layer (the user might have
         # deleted it). If it is not there anymore, add a new field
-        if current_layer.fieldNameIndex(node_attr_name) == -1:
+        if layer.fieldNameIndex(node_attr_name) == -1:
             proposed_node_attr_name = node_attr_name
             node_attr_name = add_numeric_attribute(
-                proposed_node_attr_name, current_layer)
+                proposed_node_attr_name, layer)
         elif DEBUG:
             print 'Reusing %s for node' % node_attr_name
     elif 'name' in node:
         proposed_node_attr_name = node['name']
         node_attr_name = add_numeric_attribute(
-            proposed_node_attr_name, current_layer)
+            proposed_node_attr_name, layer)
     else:
         msg = 'This node has no name and it does not correspond to any field'
         iface.messageBar().pushMessage(tr('Error'), tr(msg),
                                        level=QgsMessageBar.CRITICAL)
-        return None, None
+        return [], [], original_subtree
     # get the id of the new attribute
-    node_attr_id = ProcessLayer(current_layer).find_attribute_id(
+    node_attr_id = ProcessLayer(layer).find_attribute_id(
         node_attr_name)
+    added_attrs_ids.append(node_attr_id)
 
     discarded_feats_ids = set()
     try:
-        with LayerEditingManager(current_layer,
+        with LayerEditingManager(layer,
                                  'Calculating %s' % node_attr_name,
                                  DEBUG):
-            for feat in current_layer.getFeatures():
+            for feat in layer.getFeatures():
                 # If a feature contains any NULL value, discard_feat will
                 # be set to True and the corresponding node value will be
                 # set to NULL
@@ -106,17 +128,15 @@ def calculate_composite_variable(
                     msg = 'Invalid operator: %s' % operator
                     iface.messageBar().pushMessage(
                         tr('Error'), tr(msg), level=QgsMessageBar.CRITICAL)
-                    return None, None
-                # if not children:  # TODO: Check if this is correct
-                #     discard_feat = True
-                #     discarded_feats_ids.add(feat_id)
+                    return [], [], original_subtree
                 for child in children:
+                    if 'field' not in child:
+                        # for instance, if the RI can't be calculated, then
+                        # also the IRI can't be calculated
+                        return [], [], original_subtree
                     if feat[child['field']] == QPyNullVariant(float):
                         discard_feat = True
                         discarded_feats_ids.add(feat_id)
-                        # node_value = QPyNullVariant(float)
-                        # current_layer.changeAttributeValue(
-                        #     feat_id, node_attr_id, node_value)
                         break  # proceed to the next feature
 
                     # For "Average (equal weights)" it's equivalent to use
@@ -151,7 +171,7 @@ def calculate_composite_variable(
                     node_value = QPyNullVariant(float)
                 elif operator == OPERATORS_DICT['AVG']:
                     node_value /= len(children)  # for sure, len(children)!=0
-                current_layer.changeAttributeValue(
+                layer.changeAttributeValue(
                     feat_id, node_attr_id, node_value)
         msg = ('The composite variable has been calculated for children'
                ' containing non-NULL values and it was added to the layer as'
@@ -164,17 +184,18 @@ def calculate_composite_variable(
                 tr('Missing values were found in some features while '
                    'calculating the composite variable'),
                 tr('Select features with incomplete data'),
-                current_layer,
+                layer,
                 discarded_feats_ids,
-                current_layer.selectedFeaturesIds())
+                layer.selectedFeaturesIds())
             iface.messageBar().pushWidget(widget, QgsMessageBar.WARNING)
 
         node['field'] = node_attr_name
-        return node_attr_id, discarded_feats_ids
+        return added_attrs_ids, discarded_feats_ids, node
 
     except TypeError as e:
-        ProcessLayer(current_layer).delete_attributes([node_attr_id])
+        ProcessLayer(layer).delete_attributes([node_attr_id])
         msg = ('Could not calculate the composite variable due'
                ' to data problems: %s' % e)
         iface.messageBar().pushMessage(tr('Error'), tr(msg),
                                        level=QgsMessageBar.CRITICAL)
+        return [], [], original_subtree

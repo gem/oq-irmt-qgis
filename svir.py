@@ -696,12 +696,14 @@ class Svir:
         if select_proj_def_dlg.exec_():
             project_definitions = select_proj_def_dlg.project_definitions[
                 'proj_defs']
+            _, project_definition = self.recalculate_indexes(
+                project_definitions[select_proj_def_dlg.selected_idx])
+            project_definitions[
+                select_proj_def_dlg.selected_idx] = project_definition
             self.update_proj_defs(
                 self.iface.activeLayer().id(),
                 project_definitions,
                 select_proj_def_dlg.selected_idx)
-            self.recalculate_indexes(
-                project_definitions[select_proj_def_dlg.selected_idx])
             self.redraw_ir_layer(
                 project_definitions[select_proj_def_dlg.selected_idx])
 
@@ -741,7 +743,7 @@ class Svir:
         if 'field' not in project_definition['children'][1]:  # svi_node
             # auto generate svi field
             first_svi = True
-            svi_attr_id, ri_attr_id, iri_attr_id = self.recalculate_indexes(
+            added_attrs_ids, project_definition = self.recalculate_indexes(
                 project_definition)
 
         dlg = WeightDataDialog(self.iface, project_definition)
@@ -759,10 +761,11 @@ class Svir:
             if first_svi:
                 # delete auto generated svi field
                 ProcessLayer(self.current_layer).delete_attributes(
-                    [svi_attr_id, ri_attr_id, iri_attr_id])
+                    added_attrs_ids)
             else:
                 # recalculate with the old weights
-                self.recalculate_indexes(project_definition)
+                _, project_definition = self.recalculate_indexes(
+                    project_definition)
         dlg.json_cleaned.disconnect(self.weights_changed)
         # store the correct project definitions
         proj_defs[selected_idx] = project_definition
@@ -772,26 +775,45 @@ class Svir:
         self.redraw_ir_layer(project_definition)
 
     def weights_changed(self, data):
-        self.recalculate_indexes(data)
-        self.redraw_ir_layer(data)
+        _, project_definition = self.recalculate_indexes(data)
+        self.redraw_ir_layer(project_definition)
 
     def recalculate_indexes(self, data):
         project_definition = data
 
         # when updating weights, we need to recalculate the indexes
-        ri_node = project_definition['children'][0]
-        svi_node = project_definition['children'][1]
-        svi_attr_id, discarded_feats_ids_svi = calculate_composite_variable(
-            self.iface, self.current_layer, svi_node)
-        ri_attr_id, discarded_feats_ids_ri = calculate_composite_variable(
-            self.iface, self.current_layer, ri_node)
-        if svi_attr_id is None or ri_attr_id is None:
-            return None, None, None
-        discarded_feats_ids = discarded_feats_ids_svi | discarded_feats_ids_ri
+        # ri_node = project_definition['children'][0]
+        # svi_node = project_definition['children'][1]
+        # svi_attr_id, discarded_feats_ids_svi = calculate_composite_variable(
+        #     self.iface, self.current_layer, svi_node)
+        # ri_attr_id, discarded_feats_ids_ri = calculate_composite_variable(
+        #     self.iface, self.current_layer, ri_node)
+        # if svi_attr_id is None or ri_attr_id is None:
+        #     return None, None, None
+        # discarded_feats_ids = \
+        #     discarded_feats_ids_svi | discarded_feats_ids_ri
         iri_node = project_definition
-        iri_attr_id, discarded_feats_ids = calculate_composite_variable(
-            self.iface, self.current_layer, iri_node)
-        return svi_attr_id, ri_attr_id, iri_attr_id
+        added_attrs_ids, discarded_feats_ids, iri_node = \
+            calculate_composite_variable(self.iface,
+                                         self.current_layer,
+                                         iri_node)
+        # msg = ('The composite variable has been calculated for children'
+        #        ' containing non-NULL values and it was added to the layer as'
+        #        ' a new attribute called %s') % node_attr_name
+        # iface.messageBar().pushMessage(
+        #     tr('Info'), tr(msg), level=QgsMessageBar.INFO)
+        # if discarded_feats_ids:
+        #     widget = toggle_select_features_widget(
+        #         tr('Warning'),
+        #         tr('Missing values were found in some features while '
+        #            'calculating the composite variable'),
+        #         tr('Select features with incomplete data'),
+        #         layer,
+        #         discarded_feats_ids,
+        #         layer.selectedFeaturesIds())
+        #     iface.messageBar().pushWidget(widget, QgsMessageBar.WARNING)
+        project_definition = iri_node
+        return added_attrs_ids, project_definition
 
     def is_svi_renderable(self, proj_def):
         try:
