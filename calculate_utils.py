@@ -56,6 +56,9 @@ def calculate_composite_variable(iface, layer, node):
     be linked to a new field that is created before performing the calculation.
     For this reason, the function must return the modified tree, and the
     original tree needs to be modified accordingly.
+    If the children of the node are not final leaves of the tree, the function
+    will be called recursively to compute those children, before proceeding
+    with the calculation of the node.
 
     :param iface: the iface, to be used to access the messageBar
     :param layer: the layer that contains the data to be used in the
@@ -73,30 +76,35 @@ def calculate_composite_variable(iface, layer, node):
         any_change: True if the calculation caused any change in the
                     subtree
     """
+    # save the original subtree, so it can be restored if the calculation can
+    # not be completed
     original_subtree = node
+    # keep a list of attributes added to the layer, so they can be deleted if
+    # the calculation can not be completed, and they can be notified to the
+    # user if the calculation is done without errors
     added_attrs_ids = []
-    try:
-        children = node['children']
-    except KeyError:
-        children = []
-    if len(children) < 1:
-        # we can't calculate the values for a node that has no children
+    discarded_feats_ids = set()
+    any_change = False
+
+    children = node.get('children', [])
+    if not children:
+        # we don't calculate the values for a node that has no children
         return [], [], original_subtree, False
-    else:
-        for child_idx, child in enumerate(children):
-            child_added_attrs_ids, _, child, child_was_changed = \
-                calculate_composite_variable(iface, layer, child)
-            if child_added_attrs_ids:
-                added_attrs_ids.extend(child_added_attrs_ids)
-            if child_was_changed:
-                # update the subtree with the modified child
-                node['children'][child_idx] = child
+    for child_idx, child in enumerate(children):
+        child_added_attrs_ids, _, child, child_was_changed = \
+            calculate_composite_variable(iface, layer, child)
+        if child_added_attrs_ids:
+            added_attrs_ids.extend(child_added_attrs_ids)
+        if child_was_changed:
+            # update the subtree with the modified child
+            # e.g., a theme might have been linked to a new layer's field
+            node['children'][child_idx] = child
     operator = node.get('operator', DEFAULT_OPERATOR)
     if 'field' in node:
         node_attr_name = node['field']
         # check that the field is still in the layer (the user might have
         # deleted it). If it is not there anymore, add a new field
-        if layer.fieldNameIndex(node_attr_name) == -1:
+        if layer.fieldNameIndex(node_attr_name) == -1:  # not found
             proposed_node_attr_name = node_attr_name
             node_attr_name = add_numeric_attribute(
                 proposed_node_attr_name, layer)
@@ -118,7 +126,6 @@ def calculate_composite_variable(iface, layer, node):
         node_attr_name)
     added_attrs_ids.append(node_attr_id)
 
-    discarded_feats_ids = set()
     try:
         with LayerEditingManager(layer,
                                  'Calculating %s' % node_attr_name,
