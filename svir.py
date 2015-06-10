@@ -33,7 +33,7 @@ from math import floor, ceil
 from download_layer_dialog import DownloadLayerDialog
 from download_platform_data_worker import DownloadPlatformDataWorker
 from download_platform_project_worker import DownloadPlatformProjectWorker
-from metadata_utilities import write_iso_metadata_file, get_supplemental_info
+from metadata_utilities import write_iso_metadata_file
 
 from PyQt4.QtCore import (QSettings,
                           QTranslator,
@@ -603,21 +603,17 @@ class Svir:
 
         zip_file.extractall(dest_dir)
 
-        request_url = '%s/svir/get_layer_metadata_url?layer_name=%s' % (
+        request_url = '%s/svir/get_project_definitions?layer_name=%s' % (
             sv_downloader.host, parent_dlg.layer_id)
-        get_metadata_url_resp = sv_downloader.sess.get(request_url)
-        if not get_metadata_url_resp.ok:
+        get_project_definitions_resp = sv_downloader.sess.get(request_url)
+        if not get_project_definitions_resp.ok:
             self.iface.messageBar().pushMessage(
                 tr("Download Error"),
-                tr('Unable to locate the metadata'),
+                tr('Unable to retrieve the project definitions for the layer'),
                 level=QgsMessageBar.CRITICAL)
             return
-        metadata_url = get_metadata_url_resp.content
-        request = sv_downloader.sess.get(metadata_url)
-        metadata_xml = request.content
+        project_definitions = json.loads(get_project_definitions_resp.content)
 
-        project_definitions = get_supplemental_info(
-            metadata_xml, '{http://www.isotc211.org/2005/gmd}MD_Metadata/')
         dest_file = os.path.join(dest_dir, shp_file)
         layer = QgsVectorLayer(
             dest_file,

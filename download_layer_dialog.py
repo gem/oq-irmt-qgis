@@ -64,7 +64,7 @@ class DownloadLayerDialog(QDialog):
         layer_id = self.ui.layers_lst.currentItem().data(Qt.Qt.ToolTipRole)
         if layer_id is not None:
             self.layer_id = layer_id
-            self.ui.layer_lbl.setText('Project definition for "%s"' % layer_id)
+            self.ui.layer_lbl.setText('Project details for "%s"' % layer_id)
             layer_infos = self.extra_infos[layer_id]
             bb = layer_infos['Bounding Box']
             layer_infos_str = "Title:\n\t" + layer_infos['Title']
