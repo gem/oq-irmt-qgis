@@ -779,7 +779,7 @@ class Svir:
 
         if self.is_iri_computable(project_definition):
             iri_node = project_definition
-            added_attrs_ids, discarded_feats_ids, iri_node, was_modified = \
+            added_attrs_ids, discarded_feats_ids, iri_node, was_iri_computed = \
                 calculate_composite_variable(self.iface,
                                             self.current_layer,
                                             iri_node)
@@ -803,26 +803,28 @@ class Svir:
             #     iface.messageBar().pushWidget(widget, QgsMessageBar.WARNING)
             project_definition = iri_node
             return added_attrs_ids, project_definition
+
         svi_added_attrs_ids = []
         ri_added_attrs_ids = []
+
         was_svi_computed = False
         if self.is_svi_computable(project_definition):
             svi_node = project_definition['children'][1]
-            svi_added_attrs_ids, ri_discarded_feats_ids, svi_node, was_modified = \
+            svi_added_attrs_ids, ri_discarded_feats_ids, svi_node, was_svi_computed = \
                 calculate_composite_variable(self.iface,
                                              self.current_layer,
                                              svi_node)
             project_definition['children'][1] = svi_node
-            was_svi_computed = True
+
         was_ri_computed = False
         if self.is_ri_computable(project_definition):
             ri_node = project_definition['children'][0]
-            ri_added_attrs_ids, ri_discarded_feats_ids, ri_node, was_modified = \
+            ri_added_attrs_ids, ri_discarded_feats_ids, ri_node, was_ri_computed = \
                 calculate_composite_variable(self.iface,
                                              self.current_layer,
                                              ri_node)
             project_definition['children'][0] = ri_node
-            was_ri_computed = True
+
         if not was_svi_computed and not was_ri_computed:
             return [], data
         added_attrs_ids = []
