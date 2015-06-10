@@ -31,7 +31,7 @@ from shared import (DOUBLE_FIELD_TYPE_NAME, DEBUG, SUM_BASED_OPERATORS,
                     MUL_BASED_OPERATORS, DEFAULT_OPERATOR, OPERATORS_DICT,
                     IGNORING_WEIGHT_OPERATORS)
 from process_layer import ProcessLayer
-from utils import LayerEditingManager, tr, toggle_select_features_widget
+from utils import LayerEditingManager, tr
 
 
 def add_numeric_attribute(proposed_attr_name, layer):
@@ -45,24 +45,30 @@ def add_numeric_attribute(proposed_attr_name, layer):
 
 def calculate_composite_variable(iface, layer, node):
     """
-    Calculate a composite variable (a tree node having children) starting from
-    the childrens' values and inverters and using the operator defined for the
-    node.
-    While calculating a composite index, the tree could be modified. For
+    Calculate a composite variable (a tree node that has children) starting
+    from the children's values and inverters and using the operator defined
+    for the node.
+    While calculating a composite index, the tree can be modified. For
     instance, a theme that was not associated to any field in the layer, could
-    be linked to a field. For this reason, the function must return the
-    modified tree, and the original tree needs to be modified accordingly.
+    be linked to a new field that is created before performing the calculation.
+    For this reason, the function must return the modified tree, and the
+    original tree needs to be modified accordingly.
 
     :param iface: the iface, to be used to access the messageBar
-    :param layer: the layer containing the data
-    :param node: the root of the sub-tree to be calculated
+    :param layer: the layer that contains the data to be used in the
+                  calculation and that will be modified adding new fields if
+                  needed
+    :param node: the root node of the project definition's sub-tree to be
+                 calculated
 
     :returns (added_attrs_ids, discarded_feats_ids, node):
         added_attrs_ids: the list of ids of the attributes added to the layer
                          during the calculation
         discarded_feats_ids: the ids of the features that can't contribute to
                              the calculation, because of missing data
-        node: the transformed sub-tree
+        node: the transformed (or unmodified) sub-tree
+        any_change: True if the calculation caused any change in the
+                    subtree
     """
     original_subtree = node
     added_attrs_ids = []
@@ -72,14 +78,15 @@ def calculate_composite_variable(iface, layer, node):
         children = []
     if len(children) < 1:
         # we can't calculate the values for a node that has no children
-        return [], [], original_subtree
+        return [], [], original_subtree, False
     else:
         for child_idx, child in enumerate(children):
-            child_added_attrs_ids, _, child = calculate_composite_variable(
-                iface, layer, child)
+            child_added_attrs_ids, _, child, child_was_changed = \
+                calculate_composite_variable(iface, layer, child)
             if child_added_attrs_ids:
                 added_attrs_ids.extend(child_added_attrs_ids)
-            if child is not None:
+            if child_was_changed:
+                # update the subtree with the modified child
                 node['children'][child_idx] = child
     operator = node.get('operator', DEFAULT_OPERATOR)
     if 'field' in node:
@@ -96,11 +103,13 @@ def calculate_composite_variable(iface, layer, node):
         proposed_node_attr_name = node['name']
         node_attr_name = add_numeric_attribute(
             proposed_node_attr_name, layer)
-    else:
+    else:  # this corner case should never happen (hopefully)
         msg = 'This node has no name and it does not correspond to any field'
         iface.messageBar().pushMessage(tr('Error'), tr(msg),
                                        level=QgsMessageBar.CRITICAL)
-        return [], [], original_subtree
+        if added_attrs_ids:
+            ProcessLayer(layer).delete_attributes(added_attrs_ids)
+        return [], [], original_subtree, False
     # get the id of the new attribute
     node_attr_id = ProcessLayer(layer).find_attribute_id(
         node_attr_name)
@@ -128,12 +137,19 @@ def calculate_composite_variable(iface, layer, node):
                     msg = 'Invalid operator: %s' % operator
                     iface.messageBar().pushMessage(
                         tr('Error'), tr(msg), level=QgsMessageBar.CRITICAL)
-                    return [], [], original_subtree
+                    if added_attrs_ids:
+                        ProcessLayer(layer).delete_attributes(added_attrs_ids)
+                    return [], [], original_subtree, False
                 for child in children:
                     if 'field' not in child:
                         # for instance, if the RI can't be calculated, then
                         # also the IRI can't be calculated
-                        return [], [], original_subtree
+                        # But it shouldn't happen, because all the children
+                        # should be previously linked to corresponding fields
+                        if added_attrs_ids:
+                            ProcessLayer(layer).delete_attributes(
+                                added_attrs_ids)
+                        return [], [], original_subtree, False
                     if feat[child['field']] == QPyNullVariant(float):
                         discard_feat = True
                         discarded_feats_ids.add(feat_id)
@@ -173,24 +189,10 @@ def calculate_composite_variable(iface, layer, node):
                     node_value /= len(children)  # for sure, len(children)!=0
                 layer.changeAttributeValue(
                     feat_id, node_attr_id, node_value)
-        msg = ('The composite variable has been calculated for children'
-               ' containing non-NULL values and it was added to the layer as'
-               ' a new attribute called %s') % node_attr_name
-        iface.messageBar().pushMessage(
-            tr('Info'), tr(msg), level=QgsMessageBar.INFO)
-        if discarded_feats_ids:
-            widget = toggle_select_features_widget(
-                tr('Warning'),
-                tr('Missing values were found in some features while '
-                   'calculating the composite variable'),
-                tr('Select features with incomplete data'),
-                layer,
-                discarded_feats_ids,
-                layer.selectedFeaturesIds())
-            iface.messageBar().pushWidget(widget, QgsMessageBar.WARNING)
 
         node['field'] = node_attr_name
-        return added_attrs_ids, discarded_feats_ids, node
+        any_change = True
+        return added_attrs_ids, discarded_feats_ids, node, any_change
 
     except TypeError as e:
         ProcessLayer(layer).delete_attributes([node_attr_id])
@@ -198,4 +200,7 @@ def calculate_composite_variable(iface, layer, node):
                ' to data problems: %s' % e)
         iface.messageBar().pushMessage(tr('Error'), tr(msg),
                                        level=QgsMessageBar.CRITICAL)
-        return [], [], original_subtree
+        if added_attrs_ids:
+            ProcessLayer(layer).delete_attributes(
+                added_attrs_ids)
+        return [], [], original_subtree, False

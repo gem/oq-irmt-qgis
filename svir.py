@@ -781,47 +781,65 @@ class Svir:
     def recalculate_indexes(self, data):
         project_definition = data
 
-        # when updating weights, we need to recalculate the indexes
-        # ri_node = project_definition['children'][0]
-        # svi_node = project_definition['children'][1]
-        # svi_attr_id, discarded_feats_ids_svi = calculate_composite_variable(
-        #     self.iface, self.current_layer, svi_node)
-        # ri_attr_id, discarded_feats_ids_ri = calculate_composite_variable(
-        #     self.iface, self.current_layer, ri_node)
-        # if svi_attr_id is None or ri_attr_id is None:
-        #     return None, None, None
-        # discarded_feats_ids = \
-        #     discarded_feats_ids_svi | discarded_feats_ids_ri
-        iri_node = project_definition
-        added_attrs_ids, discarded_feats_ids, iri_node = \
-            calculate_composite_variable(self.iface,
-                                         self.current_layer,
-                                         iri_node)
-        # msg = ('The composite variable has been calculated for children'
-        #        ' containing non-NULL values and it was added to the layer as'
-        #        ' a new attribute called %s') % node_attr_name
-        # iface.messageBar().pushMessage(
-        #     tr('Info'), tr(msg), level=QgsMessageBar.INFO)
-        # if discarded_feats_ids:
-        #     widget = toggle_select_features_widget(
-        #         tr('Warning'),
-        #         tr('Missing values were found in some features while '
-        #            'calculating the composite variable'),
-        #         tr('Select features with incomplete data'),
-        #         layer,
-        #         discarded_feats_ids,
-        #         layer.selectedFeaturesIds())
-        #     iface.messageBar().pushWidget(widget, QgsMessageBar.WARNING)
-        project_definition = iri_node
+        if self.is_iri_computable(project_definition):
+            iri_node = project_definition
+            added_attrs_ids, discarded_feats_ids, iri_node, was_modified = \
+                calculate_composite_variable(self.iface,
+                                            self.current_layer,
+                                            iri_node)
+            # added_attrs_names = [self.current_layer.]
+            # msg = ('')
+
+            # msg = ('The composite variable has been calculated for children'
+            #        ' containing non-NULL values and it was added to the layer as'
+            #        ' a new attribute called %s') % node_attr_name
+            # iface.messageBar().pushMessage(
+            #     tr('Info'), tr(msg), level=QgsMessageBar.INFO)
+            # if discarded_feats_ids:
+            #     widget = toggle_select_features_widget(
+            #         tr('Warning'),
+            #         tr('Missing values were found in some features while '
+            #            'calculating the composite variable'),
+            #         tr('Select features with incomplete data'),
+            #         layer,
+            #         discarded_feats_ids,
+            #         layer.selectedFeaturesIds())
+            #     iface.messageBar().pushWidget(widget, QgsMessageBar.WARNING)
+            project_definition = iri_node
+            return added_attrs_ids, project_definition
+        svi_added_attrs_ids = []
+        ri_added_attrs_ids = []
+        was_svi_computed = False
+        if self.is_svi_computable(project_definition):
+            svi_node = project_definition['children'][1]
+            svi_added_attrs_ids, ri_discarded_feats_ids, svi_node, was_modified = \
+                calculate_composite_variable(self.iface,
+                                             self.current_layer,
+                                             svi_node)
+            project_definition['children'][1] = svi_node
+            was_svi_computed = True
+        was_ri_computed = False
+        if self.is_ri_computable(project_definition):
+            ri_node = project_definition['children'][0]
+            ri_added_attrs_ids, ri_discarded_feats_ids, ri_node, was_modified = \
+                calculate_composite_variable(self.iface,
+                                             self.current_layer,
+                                             ri_node)
+            project_definition['children'][0] = ri_node
+            was_ri_computed = True
+        if not was_svi_computed and not was_ri_computed:
+            return [], data
+        added_attrs_ids = []
+        if svi_added_attrs_ids:
+            added_attrs_ids.extend(svi_added_attrs_ids)
+        if ri_added_attrs_ids:
+            added_attrs_ids.extend(ri_added_attrs_ids)
         return added_attrs_ids, project_definition
 
-    def is_svi_renderable(self, proj_def):
+    def is_svi_computable(self, proj_def):
         try:
             svi_node = proj_def['children'][1]
         except KeyError:
-            return False
-        # check that that the svi_node has a corresponding field
-        if 'field' not in svi_node:
             return False
         # check that there is at least one theme
         if 'children' not in svi_node:
@@ -836,13 +854,22 @@ class Svir:
                 return False
         return True
 
-    def is_ri_renderable(self, proj_def):
+    def is_svi_renderable(self, proj_def):
+        if not self.is_svi_computable(proj_def):
+            return False
+        # check that that the svi_node has a corresponding field
+        try:
+            svi_node = proj_def['children'][1]
+        except KeyError:
+            return False
+        if 'field' not in svi_node:
+            return False
+        return True
+
+    def is_ri_computable(self, proj_def):
         try:
             ri_node = proj_def['children'][0]
         except KeyError:
-            return False
-        # check that that the ri_node has a corresponding field
-        if 'field' not in ri_node:
             return False
         # check that there is at least one risk indicator
         if 'children' not in ri_node:
@@ -851,15 +878,34 @@ class Svir:
             return False
         return True
 
+    def is_ri_renderable(self, proj_def):
+        if not self.is_ri_computable(proj_def):
+            return False
+        try:
+            ri_node = proj_def['children'][0]
+        except KeyError:
+            return False
+        # check that that the ri_node has a corresponding field
+        if 'field' not in ri_node:
+            return False
+        return True
+
+    def is_iri_computable(self, proj_def):
+        iri_node = proj_def
+        # check that that the iri_node has a corresponding field
+        # check that all the sub-indices are well-defined
+        if not self.is_ri_computable(proj_def):
+            return False
+        if not self.is_svi_computable(proj_def):
+            return False
+        return True
+
     def is_iri_renderable(self, proj_def):
+        if not self.is_iri_computable(proj_def):
+            return False
         iri_node = proj_def
         # check that that the iri_node has a corresponding field
         if 'field' not in iri_node:
-            return False
-        # check that all the sub-indices are well-defined
-        if not self.is_ri_renderable(proj_def):
-            return False
-        if not self.is_svi_renderable(proj_def):
             return False
         return True
 
