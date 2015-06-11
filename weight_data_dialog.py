@@ -68,6 +68,7 @@ class WeightDataDialog(QDialog):
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
 
         self.added_attrs_ids = []
+        self.discarded_feats_ids = set()
 
         self.project_definition = deepcopy(project_definition)
         try:
