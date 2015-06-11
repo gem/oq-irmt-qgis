@@ -771,9 +771,17 @@ class Svir(QObject):
             if sld_was_saved:  # was able to save the original style
                 self.iface.activeLayer().loadSldStyle(sld_file_name)
             edited_project_definition = deepcopy(orig_project_definition)
-            # recalculate with the old weights
-            _, _, edited_project_definition = self.recalculate_indexes(
-                edited_project_definition)
+            # if any of the indices were saved before starting to edit the
+            # tree, the corresponding fields might have been modified.
+            # Therefore we recalculate the indices using the old project
+            # definition
+            iri_node = edited_project_definition
+            ri_node = edited_project_definition['children'][0]
+            svi_node = edited_project_definition['children'][1]
+            if 'field' in iri_node or 'field' in ri_node or 'field' in svi_node:
+                added_attrs_ids, _, edited_project_definition = \
+                    self.recalculate_indexes(iri_node)
+                dlg.added_attrs_ids.extend(added_attrs_ids)
             # delete attributes added while the dialog was open
             ProcessLayer(self.iface.activeLayer()).delete_attributes(
                 dlg.added_attrs_ids)
