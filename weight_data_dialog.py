@@ -23,7 +23,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
-import copy
+from copy import deepcopy
 
 import json
 
@@ -67,7 +67,9 @@ class WeightDataDialog(QDialog):
         self.ui.setupUi(self)
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
 
-        self.project_definition = copy.deepcopy(project_definition)
+        self.added_attrs_ids = []
+
+        self.project_definition = deepcopy(project_definition)
         try:
             proj_title = self.project_definition['title']
         except KeyError:

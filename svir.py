@@ -39,7 +39,9 @@ from PyQt4.QtCore import (QSettings,
                           QTranslator,
                           QCoreApplication,
                           qVersion,
-                          QUrl)
+                          QUrl,
+                          QObject,
+                          )
 
 from PyQt4.QtGui import (QAction,
                          QIcon,
@@ -103,7 +105,7 @@ from aggregate_loss_by_zone import (calculate_zonal_stats,
                                     )
 
 
-class Svir:
+class Svir(QObject):
 
     def __init__(self, iface):
         # Save reference to the QGIS interface
@@ -736,14 +738,11 @@ class Svir:
                 tr(err_msg),
                 level=QgsMessageBar.WARNING)
 
-        # Try calculating the indexes if possible
-        self.recalculate_indexes(edited_project_definition)
-
         dlg = WeightDataDialog(self.iface, edited_project_definition)
         dlg.show()
         self.redraw_ir_layer(edited_project_definition)
 
-        dlg.json_cleaned.connect(self.weights_changed)
+        dlg.json_cleaned.connect(lambda data: self.weights_changed(data, dlg))
         if dlg.exec_():
             edited_project_definition = dlg.project_definition
             self.update_actions_status()
@@ -754,8 +753,10 @@ class Svir:
             # recalculate with the old weights
             _, edited_project_definition = self.recalculate_indexes(
                 edited_project_definition)
-            # TODO: delete attributes added while the dialog was open
-        dlg.json_cleaned.disconnect(self.weights_changed)
+            # delete attributes added while the dialog was open
+            ProcessLayer(self.iface.activeLayer()).delete_attributes(
+                dlg.added_attrs_ids)
+        dlg.json_cleaned.disconnect()
         # store the correct project definitions
         proj_defs[selected_idx] = deepcopy(edited_project_definition)
         self.update_proj_defs(current_layer_id,
@@ -763,8 +764,10 @@ class Svir:
                               selected_idx)
         self.redraw_ir_layer(edited_project_definition)
 
-    def weights_changed(self, data):
-        _, project_definition = self.recalculate_indexes(data)
+    def weights_changed(self, data, dlg):
+        added_attrs_ids, project_definition = self.recalculate_indexes(data)
+        dlg.added_attrs_ids.extend(added_attrs_ids)
+        dlg.project_definition = deepcopy(project_definition)
         self.redraw_ir_layer(project_definition)
 
     def recalculate_indexes(self, data):
