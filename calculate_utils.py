@@ -23,6 +23,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
+from copy import deepcopy
 from PyQt4.QtCore import QVariant
 from qgis import QPyNullVariant
 from qgis.core import QgsField
@@ -76,9 +77,9 @@ def calculate_composite_variable(iface, layer, node):
         any_change: True if the calculation caused any change in the
                     subtree
     """
-    # save the original subtree, so it can be restored if the calculation can
-    # not be completed
-    original_subtree = node
+    # Avoid touching the original node, and manipulate a copy instead.
+    # If anything fails, the original node will be returned
+    edited_node = deepcopy(node)
     # keep a list of attributes added to the layer, so they can be deleted if
     # the calculation can not be completed, and they can be notified to the
     # user if the calculation is done without errors
@@ -86,10 +87,10 @@ def calculate_composite_variable(iface, layer, node):
     discarded_feats_ids = set()
     any_change = False
 
-    children = node.get('children', [])
+    children = edited_node.get('children', [])
     if not children:
         # we don't calculate the values for a node that has no children
-        return [], [], original_subtree, False
+        return [], [], node, False
     for child_idx, child in enumerate(children):
         child_added_attrs_ids, _, child, child_was_changed = \
             calculate_composite_variable(iface, layer, child)
@@ -98,10 +99,10 @@ def calculate_composite_variable(iface, layer, node):
         if child_was_changed:
             # update the subtree with the modified child
             # e.g., a theme might have been linked to a new layer's field
-            node['children'][child_idx] = child
-    operator = node.get('operator', DEFAULT_OPERATOR)
-    if 'field' in node:
-        node_attr_name = node['field']
+            edited_node['children'][child_idx] = child
+    operator = edited_node.get('operator', DEFAULT_OPERATOR)
+    if 'field' in edited_node:
+        node_attr_name = edited_node['field']
         # check that the field is still in the layer (the user might have
         # deleted it). If it is not there anymore, add a new field
         if layer.fieldNameIndex(node_attr_name) == -1:  # not found
@@ -110,8 +111,8 @@ def calculate_composite_variable(iface, layer, node):
                 proposed_node_attr_name, layer)
         elif DEBUG:
             print 'Reusing %s for node' % node_attr_name
-    elif 'name' in node:
-        proposed_node_attr_name = node['name']
+    elif 'name' in edited_node:
+        proposed_node_attr_name = edited_node['name']
         node_attr_name = add_numeric_attribute(
             proposed_node_attr_name, layer)
     else:  # this corner case should never happen (hopefully)
@@ -120,7 +121,7 @@ def calculate_composite_variable(iface, layer, node):
                                        level=QgsMessageBar.CRITICAL)
         if added_attrs_ids:
             ProcessLayer(layer).delete_attributes(added_attrs_ids)
-        return [], [], original_subtree, False
+        return [], [], node, False
     # get the id of the new attribute
     node_attr_id = ProcessLayer(layer).find_attribute_id(
         node_attr_name)
@@ -149,7 +150,7 @@ def calculate_composite_variable(iface, layer, node):
                         tr('Error'), tr(msg), level=QgsMessageBar.CRITICAL)
                     if added_attrs_ids:
                         ProcessLayer(layer).delete_attributes(added_attrs_ids)
-                    return [], [], original_subtree, False
+                    return [], [], node, False
                 for child in children:
                     if 'field' not in child:
                         # for instance, if the RI can't be calculated, then
@@ -159,7 +160,7 @@ def calculate_composite_variable(iface, layer, node):
                         if added_attrs_ids:
                             ProcessLayer(layer).delete_attributes(
                                 added_attrs_ids)
-                        return [], [], original_subtree, False
+                        return [], [], node, False
                     if feat[child['field']] == QPyNullVariant(float):
                         discard_feat = True
                         discarded_feats_ids.add(feat_id)
@@ -200,9 +201,9 @@ def calculate_composite_variable(iface, layer, node):
                 layer.changeAttributeValue(
                     feat_id, node_attr_id, node_value)
 
-        node['field'] = node_attr_name
+        edited_node['field'] = node_attr_name
         any_change = True
-        return added_attrs_ids, discarded_feats_ids, node, any_change
+        return added_attrs_ids, discarded_feats_ids, edited_node, any_change
 
     except TypeError as e:
         ProcessLayer(layer).delete_attributes([node_attr_id])
@@ -213,4 +214,4 @@ def calculate_composite_variable(iface, layer, node):
         if added_attrs_ids:
             ProcessLayer(layer).delete_attributes(
                 added_attrs_ids)
-        return [], [], original_subtree, False
+        return [], [], node, False
