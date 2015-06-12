@@ -35,6 +35,18 @@ from process_layer import ProcessLayer
 from utils import LayerEditingManager, tr
 
 
+class InvalidNode(Exception):
+    pass
+
+
+class InvalidOperator(Exception):
+    pass
+
+
+class InvalidChild(Exception):
+    pass
+
+
 def add_numeric_attribute(proposed_attr_name, layer):
     # make the proposed name compatible with shapefiles (max 10 chars)
     # and capitalize it
@@ -99,112 +111,29 @@ def calculate_composite_variable(iface, layer, node):
         if child_was_changed:
             # update the subtree with the modified child
             # e.g., a theme might have been linked to a new layer's field
-            edited_node['children'][child_idx] = child
-    operator = edited_node.get('operator', DEFAULT_OPERATOR)
-    if 'field' in edited_node:
-        node_attr_name = edited_node['field']
-        # check that the field is still in the layer (the user might have
-        # deleted it). If it is not there anymore, add a new field
-        if layer.fieldNameIndex(node_attr_name) == -1:  # not found
-            proposed_node_attr_name = node_attr_name
-            node_attr_name = add_numeric_attribute(
-                proposed_node_attr_name, layer)
-        elif DEBUG:
-            print 'Reusing %s for node' % node_attr_name
-    elif 'name' in edited_node:
-        proposed_node_attr_name = edited_node['name']
-        node_attr_name = add_numeric_attribute(
-            proposed_node_attr_name, layer)
-    else:  # this corner case should never happen (hopefully)
-        msg = 'This node has no name and it does not correspond to any field'
-        iface.messageBar().pushMessage(tr('Error'), tr(msg),
+            edited_node['children'][child_idx] = deepcopy(child)
+    try:
+        node_attr_id, node_attr_name = get_node_attr_id_and_name(edited_node,
+                                                                 layer)
+    except InvalidNode as e:
+        iface.messageBar().pushMessage(tr('Error'), str(e),
                                        level=QgsMessageBar.CRITICAL)
         if added_attrs_ids:
             ProcessLayer(layer).delete_attributes(added_attrs_ids)
         return [], [], node, False
-    # get the id of the new attribute
-    node_attr_id = ProcessLayer(layer).find_attribute_id(
-        node_attr_name)
     added_attrs_ids.append(node_attr_id)
-
     try:
-        with LayerEditingManager(layer,
-                                 'Calculating %s' % node_attr_name,
-                                 DEBUG):
-            for feat in layer.getFeatures():
-                # If a feature contains any NULL value, discard_feat will
-                # be set to True and the corresponding node value will be
-                # set to NULL
-                discard_feat = False
-                feat_id = feat.id()
-
-                # init node_value to the correct value depending on the
-                # node's operator
-                if operator in SUM_BASED_OPERATORS:
-                    node_value = 0
-                elif operator in MUL_BASED_OPERATORS:
-                    node_value = 1
-                else:
-                    msg = 'Invalid operator: %s' % operator
-                    iface.messageBar().pushMessage(
-                        tr('Error'), tr(msg), level=QgsMessageBar.CRITICAL)
-                    if added_attrs_ids:
-                        ProcessLayer(layer).delete_attributes(added_attrs_ids)
-                    return [], [], node, False
-                for child in children:
-                    if 'field' not in child:
-                        # for instance, if the RI can't be calculated, then
-                        # also the IRI can't be calculated
-                        # But it shouldn't happen, because all the children
-                        # should be previously linked to corresponding fields
-                        if added_attrs_ids:
-                            ProcessLayer(layer).delete_attributes(
-                                added_attrs_ids)
-                        return [], [], node, False
-                    if feat[child['field']] == QPyNullVariant(float):
-                        discard_feat = True
-                        discarded_feats_ids.add(feat_id)
-                        break  # proceed to the next feature
-
-                    # For "Average (equal weights)" it's equivalent to use
-                    # equal weights, or to sum the indicators
-                    # (all weights 1)
-                    # and divide by the number of indicators (we use
-                    # the latter solution)
-
-                    # multiply a variable by -1 if it isInverted
-                    try:
-                        inversion_factor = -1 if child['isInverted'] else 1
-                    except KeyError:  # child is not inverted
-                        inversion_factor = 1
-                    if operator in IGNORING_WEIGHT_OPERATORS:
-                        # although these operators ignore weights, they
-                        # take into account the inversion
-                        child_weighted = \
-                            feat[child['field']] * inversion_factor
-                    else:  # also multiply by the weight
-                        child_weighted = (
-                            child['weight'] *
-                            feat[child['field']] * inversion_factor)
-
-                    if operator in SUM_BASED_OPERATORS:
-                        node_value += child_weighted
-                    elif operator in MUL_BASED_OPERATORS:
-                        node_value *= child_weighted
-                    else:
-                        error_message = 'Invalid operator: %s' % operator
-                        raise RuntimeError(error_message)
-                if discard_feat:
-                    node_value = QPyNullVariant(float)
-                elif operator == OPERATORS_DICT['AVG']:
-                    node_value /= len(children)  # for sure, len(children)!=0
-                layer.changeAttributeValue(
-                    feat_id, node_attr_id, node_value)
-
-        edited_node['field'] = node_attr_name
-        any_change = True
-        return added_attrs_ids, discarded_feats_ids, edited_node, any_change
-
+        discarded_feats_ids = calculate_node(edited_node,
+                                             node_attr_name,
+                                             node_attr_id,
+                                             layer,
+                                             discarded_feats_ids)
+    except (InvalidOperator, InvalidChild) as e:
+        iface.messageBar().pushMessage(
+            tr('Error'), str(e), level=QgsMessageBar.CRITICAL)
+        if added_attrs_ids:
+            ProcessLayer(layer).delete_attributes(added_attrs_ids)
+        return [], [], node, False
     except TypeError as e:
         ProcessLayer(layer).delete_attributes([node_attr_id])
         msg = ('Could not calculate the composite variable due'
@@ -215,3 +144,103 @@ def calculate_composite_variable(iface, layer, node):
             ProcessLayer(layer).delete_attributes(
                 added_attrs_ids)
         return [], [], node, False
+
+    edited_node['field'] = node_attr_name
+    any_change = True
+    return added_attrs_ids, discarded_feats_ids, edited_node, any_change
+
+
+def get_node_attr_id_and_name(node, layer):
+    if 'field' in node:
+        node_attr_name = node['field']
+        # check that the field is still in the layer (the user might have
+        # deleted it). If it is not there anymore, add a new field
+        if layer.fieldNameIndex(node_attr_name) == -1:  # not found
+            proposed_node_attr_name = node_attr_name
+            node_attr_name = add_numeric_attribute(
+                proposed_node_attr_name, layer)
+        elif DEBUG:
+            print 'Reusing %s for node' % node_attr_name
+    elif 'name' in node:
+        proposed_node_attr_name = node['name']
+        node_attr_name = add_numeric_attribute(
+            proposed_node_attr_name, layer)
+    else:  # this corner case should never happen (hopefully)
+        raise InvalidNode('This node has no name and it does'
+                          ' not correspond to any field')
+    # get the id of the new attribute
+    node_attr_id = ProcessLayer(layer).find_attribute_id(
+        node_attr_name)
+    return node_attr_id, node_attr_name
+
+
+def calculate_node(
+        node, node_attr_name, node_attr_id, layer, discarded_feats_ids):
+    operator = node.get('operator', DEFAULT_OPERATOR)
+    children = node['children']  # the existance of children should
+                                 # already be checked
+    with LayerEditingManager(layer,
+                             'Calculating %s' % node_attr_name,
+                             DEBUG):
+        for feat in layer.getFeatures():
+            # If a feature contains any NULL value, discard_feat will
+            # be set to True and the corresponding node value will be
+            # set to NULL
+            discard_feat = False
+            feat_id = feat.id()
+
+            # init node_value to the correct value depending on the
+            # node's operator
+            if operator in SUM_BASED_OPERATORS:
+                node_value = 0
+            elif operator in MUL_BASED_OPERATORS:
+                node_value = 1
+            else:
+                raise InvalidOperator('Invalid operator: %s' % operator)
+            for child in children:
+                if 'field' not in child:
+                    raise InvalidChild()
+                    # for instance, if the RI can't be calculated, then
+                    # also the IRI can't be calculated
+                    # But it shouldn't happen, because all the children
+                    # should be previously linked to corresponding fields
+                if feat[child['field']] == QPyNullVariant(float):
+                    discard_feat = True
+                    discarded_feats_ids.add(feat_id)
+                    break  # proceed to the next feature
+
+                # For "Average (equal weights)" it's equivalent to use
+                # equal weights, or to sum the indicators
+                # (all weights 1)
+                # and divide by the number of indicators (we use
+                # the latter solution)
+
+                # multiply a variable by -1 if it isInverted
+                try:
+                    inversion_factor = -1 if child['isInverted'] else 1
+                except KeyError:  # child is not inverted
+                    inversion_factor = 1
+                if operator in IGNORING_WEIGHT_OPERATORS:
+                    # although these operators ignore weights, they
+                    # take into account the inversion
+                    child_weighted = \
+                        feat[child['field']] * inversion_factor
+                else:  # also multiply by the weight
+                    child_weighted = (
+                        child['weight'] *
+                        feat[child['field']] * inversion_factor)
+
+                if operator in SUM_BASED_OPERATORS:
+                    node_value += child_weighted
+                elif operator in MUL_BASED_OPERATORS:
+                    node_value *= child_weighted
+                else:
+                    error_message = 'Invalid operator: %s' % operator
+                    raise RuntimeError(error_message)
+            if discard_feat:
+                node_value = QPyNullVariant(float)
+            elif operator == OPERATORS_DICT['AVG']:
+                node_value /= len(children)  # for sure, len(children)!=0
+            layer.changeAttributeValue(
+                feat_id, node_attr_id, node_value)
+    return discarded_feats_ids
