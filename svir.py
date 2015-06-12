@@ -719,7 +719,7 @@ class Svir(QObject):
             added_attrs_names = [all_field_names[attr_id]
                                  for attr_id in added_attrs_ids]
             msg = ('New attributes have been added to the layer: %s'
-                   % added_attrs_names)
+                   % ', '.join(added_attrs_names))
             self.iface.messageBar().pushMessage(
                 tr('Info'), tr(msg), level=QgsMessageBar.INFO)
         if discarded_feats_ids:
@@ -773,29 +773,43 @@ class Svir(QObject):
 
         dlg.json_cleaned.connect(lambda data: self.weights_changed(data, dlg))
         if dlg.exec_():
-            edited_project_definition = dlg.project_definition
+            # If the user just opens the dialog and presses OK, it probably
+            # means they want to just run the index calculation, so we
+            # recalculate the indexes. In case they have already made any
+            # change and consequent calculations, we don't need to redo the
+            # same calculation after OK is pressed.
+            if not dlg.any_changes_made:
+                (added_attrs_ids,
+                 discarded_feats_ids,
+                 edited_project_definition) = self.recalculate_indexes(
+                    dlg.project_definition)
+                dlg.added_attrs_ids.extend(added_attrs_ids)
+                dlg.discarded_feats_ids = discarded_feats_ids
+            else:
+                edited_project_definition = deepcopy(dlg.project_definition)
             self.notify_added_attrs_and_discarded_feats(
                 dlg.added_attrs_ids, dlg.discarded_feats_ids)
             self.update_actions_status()
         else:  # 'cancel' was pressed
             if sld_was_saved:  # was able to save the original style
                 self.iface.activeLayer().loadSldStyle(sld_file_name)
-            edited_project_definition = deepcopy(orig_project_definition)
             # if any of the indices were saved before starting to edit the
             # tree, the corresponding fields might have been modified.
             # Therefore we recalculate the indices using the old project
             # definition
-            iri_node = edited_project_definition
-            ri_node = edited_project_definition['children'][0]
-            svi_node = edited_project_definition['children'][1]
-            if ('field' in iri_node
-                    or 'field' in ri_node or 'field' in svi_node):
-                added_attrs_ids, _, edited_project_definition = \
-                    self.recalculate_indexes(iri_node)
-                dlg.added_attrs_ids.extend(added_attrs_ids)
-            # delete attributes added while the dialog was open
-            ProcessLayer(self.iface.activeLayer()).delete_attributes(
-                dlg.added_attrs_ids)
+            if dlg.any_changes_made:
+                edited_project_definition = deepcopy(orig_project_definition)
+                iri_node = edited_project_definition
+                ri_node = edited_project_definition['children'][0]
+                svi_node = edited_project_definition['children'][1]
+                if ('field' in iri_node
+                        or 'field' in ri_node or 'field' in svi_node):
+                    added_attrs_ids, _, edited_project_definition = \
+                        self.recalculate_indexes(iri_node)
+                    dlg.added_attrs_ids.extend(added_attrs_ids)
+                # delete attributes added while the dialog was open
+                ProcessLayer(self.iface.activeLayer()).delete_attributes(
+                    dlg.added_attrs_ids)
         dlg.json_cleaned.disconnect()
         # store the correct project definitions
         proj_defs[selected_idx] = deepcopy(edited_project_definition)

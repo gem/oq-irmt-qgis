@@ -69,6 +69,7 @@ class WeightDataDialog(QDialog):
 
         self.added_attrs_ids = []
         self.discarded_feats_ids = set()
+        self.any_changes_made = False
 
         self.project_definition = deepcopy(project_definition)
         try:
@@ -115,6 +116,7 @@ class WeightDataDialog(QDialog):
         self.frame.evaluateJavaScript('init_tree()')
 
     def handle_json_updated(self, data):
+        self.any_changes_made = True
         if DEBUG:
             import pprint
             pp = pprint.PrettyPrinter(indent=4)
