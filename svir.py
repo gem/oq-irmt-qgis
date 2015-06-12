@@ -695,8 +695,12 @@ class Svir(QObject):
         if select_proj_def_dlg.exec_():
             project_definitions = select_proj_def_dlg.project_definitions[
                 'proj_defs']
-            _, _, project_definition = self.recalculate_indexes(
-                project_definitions[select_proj_def_dlg.selected_idx])
+            selected_project_definition = project_definitions[
+                select_proj_def_dlg.selected_idx]
+            added_attrs_ids, discarded_feats_ids, project_definition = \
+                self.recalculate_indexes(selected_project_definition)
+            self.notify_added_attrs_and_discarded_feats(added_attrs_ids,
+                                                        discarded_feats_ids)
             project_definitions[
                 select_proj_def_dlg.selected_idx] = project_definition
             self.update_proj_defs(
@@ -705,6 +709,30 @@ class Svir(QObject):
                 select_proj_def_dlg.selected_idx)
             self.redraw_ir_layer(
                 project_definitions[select_proj_def_dlg.selected_idx])
+
+    def notify_added_attrs_and_discarded_feats(self,
+                                               added_attrs_ids,
+                                               discarded_feats_ids):
+        if added_attrs_ids:
+            dp = self.iface.activeLayer().dataProvider()
+            all_field_names = [field.name() for field in dp.fields()]
+            added_attrs_names = [all_field_names[attr_id]
+                                 for attr_id in added_attrs_ids]
+            msg = ('New attributes have been added to the layer: %s'
+                   % added_attrs_names)
+            self.iface.messageBar().pushMessage(
+                tr('Info'), tr(msg), level=QgsMessageBar.INFO)
+        if discarded_feats_ids:
+            widget = toggle_select_features_widget(
+                tr('Warning'),
+                tr('Missing values were found in some features while '
+                    'calculating composite variables'),
+                tr('Select features with incomplete data'),
+                self.iface.activeLayer(),
+                discarded_feats_ids,
+                self.iface.activeLayer().selectedFeaturesIds())
+            self.iface.messageBar().pushWidget(widget,
+                                               QgsMessageBar.WARNING)
 
     def weight_data(self):
         """
@@ -746,26 +774,8 @@ class Svir(QObject):
         dlg.json_cleaned.connect(lambda data: self.weights_changed(data, dlg))
         if dlg.exec_():
             edited_project_definition = dlg.project_definition
-            if dlg.added_attrs_ids:
-                dp = self.iface.activeLayer().dataProvider()
-                all_field_names = [field.name() for field in dp.fields()]
-                added_attrs_names = [all_field_names[attr_id]
-                                     for attr_id in dlg.added_attrs_ids]
-                msg = ('New attributes have been added to the layer: %s'
-                       % added_attrs_names)
-                self.iface.messageBar().pushMessage(
-                    tr('Info'), tr(msg), level=QgsMessageBar.INFO)
-            if dlg.discarded_feats_ids:
-                widget = toggle_select_features_widget(
-                    tr('Warning'),
-                    tr('Missing values were found in some features while '
-                       'calculating composite variables'),
-                    tr('Select features with incomplete data'),
-                    self.iface.activeLayer(),
-                    dlg.discarded_feats_ids,
-                    self.iface.activeLayer().selectedFeaturesIds())
-                self.iface.messageBar().pushWidget(widget,
-                                                   QgsMessageBar.WARNING)
+            self.notify_added_attrs_and_discarded_feats(
+                dlg.added_attrs_ids, dlg.discarded_feats_ids)
             self.update_actions_status()
         else:  # 'cancel' was pressed
             if sld_was_saved:  # was able to save the original style
@@ -778,7 +788,8 @@ class Svir(QObject):
             iri_node = edited_project_definition
             ri_node = edited_project_definition['children'][0]
             svi_node = edited_project_definition['children'][1]
-            if 'field' in iri_node or 'field' in ri_node or 'field' in svi_node:
+            if ('field' in iri_node
+                    or 'field' in ri_node or 'field' in svi_node):
                 added_attrs_ids, _, edited_project_definition = \
                     self.recalculate_indexes(iri_node)
                 dlg.added_attrs_ids.extend(added_attrs_ids)
