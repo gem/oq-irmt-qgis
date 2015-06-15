@@ -60,13 +60,22 @@ OPERATORS_DICT['SUM_W'] = 'Weighted sum'
 OPERATORS_DICT['AVG'] = 'Average (ignore weights)'
 OPERATORS_DICT['MUL_S'] = 'Simple multiplication (ignore weights)'
 OPERATORS_DICT['MUL_W'] = 'Weighted multiplication'
+OPERATORS_DICT['GEOM_MEAN'] = 'Geometric mean (ignore weights)'
 
 DEFAULT_OPERATOR = OPERATORS_DICT['SUM_W']
+IGNORING_WEIGHT_OPERATORS = (OPERATORS_DICT['SUM_S'],
+                             OPERATORS_DICT['AVG'],
+                             OPERATORS_DICT['MUL_S'],
+                             OPERATORS_DICT['GEOM_MEAN'],
+                             )
 SUM_BASED_OPERATORS = (OPERATORS_DICT['SUM_S'],
                        OPERATORS_DICT['SUM_W'],
-                       OPERATORS_DICT['AVG'])
+                       OPERATORS_DICT['AVG'],
+                       )
 MUL_BASED_OPERATORS = (OPERATORS_DICT['MUL_S'],
-                       OPERATORS_DICT['MUL_W'])
+                       OPERATORS_DICT['MUL_W'],
+                       OPERATORS_DICT['GEOM_MEAN'],
+                       )
 
 NODE_TYPES = {'IRI': 'Integrated Risk Index',
               'RI': 'Risk Index',
