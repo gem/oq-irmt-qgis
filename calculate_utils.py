@@ -135,7 +135,6 @@ def calculate_composite_variable(iface, layer, node):
             ProcessLayer(layer).delete_attributes(added_attrs_ids)
         return [], [], node, False
     except TypeError as e:
-        ProcessLayer(layer).delete_attributes([node_attr_id])
         msg = ('Could not calculate the composite variable due'
                ' to data problems: %s' % e)
         iface.messageBar().pushMessage(tr('Error'), tr(msg),
