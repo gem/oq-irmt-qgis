@@ -81,7 +81,7 @@ def calculate_composite_variable(iface, layer, node):
                  calculated
 
     :returns (added_attrs_ids, discarded_feats_ids, node):
-        added_attrs_ids: the list of ids of the attributes added to the layer
+        added_attrs_ids: the set of ids of the attributes added to the layer
                          during the calculation
         discarded_feats_ids: the ids of the features that can't contribute to
                              the calculation, because of missing data
@@ -95,7 +95,7 @@ def calculate_composite_variable(iface, layer, node):
     # keep a list of attributes added to the layer, so they can be deleted if
     # the calculation can not be completed, and they can be notified to the
     # user if the calculation is done without errors
-    added_attrs_ids = []
+    added_attrs_ids = set()
     discarded_feats_ids = set()
     any_change = False
 
@@ -107,7 +107,7 @@ def calculate_composite_variable(iface, layer, node):
         child_added_attrs_ids, _, child, child_was_changed = \
             calculate_composite_variable(iface, layer, child)
         if child_added_attrs_ids:
-            added_attrs_ids.extend(child_added_attrs_ids)
+            added_attrs_ids.update(child_added_attrs_ids)
         if child_was_changed:
             # update the subtree with the modified child
             # e.g., a theme might have been linked to a new layer's field
@@ -120,8 +120,8 @@ def calculate_composite_variable(iface, layer, node):
                                        level=QgsMessageBar.CRITICAL)
         if added_attrs_ids:
             ProcessLayer(layer).delete_attributes(added_attrs_ids)
-        return [], [], node, False
-    added_attrs_ids.append(node_attr_id)
+        return set(), set(), node, False
+    added_attrs_ids.add(node_attr_id)
     try:
         discarded_feats_ids = calculate_node(edited_node,
                                              node_attr_name,
@@ -133,7 +133,7 @@ def calculate_composite_variable(iface, layer, node):
             tr('Error'), str(e), level=QgsMessageBar.CRITICAL)
         if added_attrs_ids:
             ProcessLayer(layer).delete_attributes(added_attrs_ids)
-        return [], [], node, False
+        return set(), set(), node, False
     except TypeError as e:
         msg = ('Could not calculate the composite variable due'
                ' to data problems: %s' % e)
@@ -142,7 +142,7 @@ def calculate_composite_variable(iface, layer, node):
         if added_attrs_ids:
             ProcessLayer(layer).delete_attributes(
                 added_attrs_ids)
-        return [], [], node, False
+        return set(), set(), node, False
 
     edited_node['field'] = node_attr_name
     any_change = True

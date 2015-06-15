@@ -783,7 +783,7 @@ class Svir(QObject):
                  discarded_feats_ids,
                  edited_project_definition) = self.recalculate_indexes(
                     dlg.project_definition)
-                dlg.added_attrs_ids.extend(added_attrs_ids)
+                dlg.added_attrs_ids.update(added_attrs_ids)
                 dlg.discarded_feats_ids = discarded_feats_ids
             else:
                 edited_project_definition = deepcopy(dlg.project_definition)
@@ -806,7 +806,7 @@ class Svir(QObject):
                         or 'field' in ri_node or 'field' in svi_node):
                     added_attrs_ids, _, edited_project_definition = \
                         self.recalculate_indexes(iri_node)
-                    dlg.added_attrs_ids.extend(added_attrs_ids)
+                    dlg.added_attrs_ids.update(added_attrs_ids)
                 # delete attributes added while the dialog was open
                 ProcessLayer(self.iface.activeLayer()).delete_attributes(
                     dlg.added_attrs_ids)
@@ -821,7 +821,7 @@ class Svir(QObject):
     def weights_changed(self, data, dlg):
         added_attrs_ids, discarded_feats_ids, project_definition = \
             self.recalculate_indexes(data)
-        dlg.added_attrs_ids.extend(added_attrs_ids)
+        dlg.added_attrs_ids.update(added_attrs_ids)
         dlg.discarded_feats_ids = discarded_feats_ids
         dlg.project_definition = deepcopy(project_definition)
         self.redraw_ir_layer(project_definition)
@@ -837,9 +837,9 @@ class Svir(QObject):
             project_definition = deepcopy(iri_node)
             return added_attrs_ids, discarded_feats_ids, project_definition
 
-        svi_added_attrs_ids = []
+        svi_added_attrs_ids = set()
         svi_discarded_feats_ids = set()
-        ri_added_attrs_ids = []
+        ri_added_attrs_ids = set()
         ri_discarded_feats_ids = set()
 
         was_svi_computed = False
@@ -859,15 +859,15 @@ class Svir(QObject):
             project_definition['children'][0] = deepcopy(ri_node)
 
         if not was_svi_computed and not was_ri_computed:
-            return [], set(), data
-        added_attrs_ids = []
+            return set(), set(), data
+        added_attrs_ids = set()
         discarded_feats_ids = set()
         if svi_added_attrs_ids:
-            added_attrs_ids.extend(svi_added_attrs_ids)
+            added_attrs_ids.update(svi_added_attrs_ids)
         if svi_discarded_feats_ids:
             discarded_feats_ids.update(svi_discarded_feats_ids)
         if ri_added_attrs_ids:
-            added_attrs_ids.extend(ri_added_attrs_ids)
+            added_attrs_ids.update(ri_added_attrs_ids)
         if ri_discarded_feats_ids:
             discarded_feats_ids.update(ri_discarded_feats_ids)
         return added_attrs_ids, discarded_feats_ids, project_definition
