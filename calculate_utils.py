@@ -102,7 +102,7 @@ def calculate_composite_variable(iface, layer, node):
     children = edited_node.get('children', [])
     if not children:
         # we don't calculate the values for a node that has no children
-        return [], [], node, False
+        return set(), set(), node, False
     for child_idx, child in enumerate(children):
         child_added_attrs_ids, _, child, child_was_changed = \
             calculate_composite_variable(iface, layer, child)
