@@ -240,6 +240,8 @@ def calculate_node(
                 node_value = QPyNullVariant(float)
             elif operator == OPERATORS_DICT['AVG']:
                 node_value /= len(children)  # for sure, len(children)!=0
+            elif operator == OPERATORS_DICT['GEOM_MEAN']:
+                node_value **= 1. / len(children)
             layer.changeAttributeValue(
                 feat_id, node_attr_id, node_value)
     return discarded_feats_ids
