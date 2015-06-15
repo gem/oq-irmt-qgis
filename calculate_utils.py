@@ -207,13 +207,6 @@ def calculate_node(
                     discard_feat = True
                     discarded_feats_ids.add(feat_id)
                     break  # proceed to the next feature
-
-                # For "Average (equal weights)" it's equivalent to use
-                # equal weights, or to sum the indicators
-                # (all weights 1)
-                # and divide by the number of indicators (we use
-                # the latter solution)
-
                 # multiply a variable by -1 if it isInverted
                 try:
                     inversion_factor = -1 if child['isInverted'] else 1
