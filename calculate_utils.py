@@ -239,8 +239,14 @@ def calculate_node(
             if discard_feat:
                 node_value = QPyNullVariant(float)
             elif operator == OPERATORS_DICT['AVG']:
+                # it is equivalent to do a weighted sum with equal weights, or
+                # to do the simple sum (ignoring weights) and dividing by the
+                # number of children (we use the latter solution)
                 node_value /= len(children)  # for sure, len(children)!=0
             elif operator == OPERATORS_DICT['GEOM_MEAN']:
+                # the geometric mean
+                # (see http://en.wikipedia.org/wiki/Geometric_mean)
+                # is the product of the N combined items, elevated by 1/N
                 node_value **= 1. / len(children)
             layer.changeAttributeValue(
                 feat_id, node_attr_id, node_value)
