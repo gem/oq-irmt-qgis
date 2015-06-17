@@ -57,6 +57,7 @@ class WeightDataDialog(QDialog):
     json_updated = pyqtSignal(['QVariantMap'], name='json_updated')
     # Python classes should connect to json_cleaned
     json_cleaned = pyqtSignal(['QVariantMap'], name='json_cleaned')
+    # proj_def_modified = pyqtSignal(['QVariantMap'], name='proj_def_modified')
 
     def __init__(self, iface, project_definition):
         self.iface = iface
@@ -88,6 +89,7 @@ class WeightDataDialog(QDialog):
 
         self.frame.javaScriptWindowObjectCleared.connect(self.setup_js)
         self.web_view.loadFinished.connect(self.show_tree)
+        # self.proj_def_modified.connect(self.update_project_definition)
         self.json_updated.connect(self.handle_json_updated)
 
         self.active_layer_numeric_fields = [
@@ -136,6 +138,10 @@ class WeightDataDialog(QDialog):
             if 'children' in element:
                 self.clean_json(element['children'])
         return data[0]
+
+    def update_project_definition(self, project_definition):
+        self.project_definition = deepcopy(project_definition)
+        self.frame.evaluateJavaScript('update_project_definition()')
 
     @pyqtProperty(str)
     def json_str(self):

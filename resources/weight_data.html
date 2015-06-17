@@ -19,6 +19,11 @@
         function init_tree(){
             loadPD(qt_page.json_str, qt_page);
         }
+        function update_project_definition(){
+            // Qui chiamerei una function di svir_viewer_d3_tree.js che emette un signal (event)
+            // Oppure proverei ad emettere un signal (event) direttamente da qui (ma mi pare meno banale)
+            update_project_definition(qt_page.json_str);
+        }
     </script>
 
 </body>

@@ -823,7 +823,7 @@ class Svir(QObject):
             self.recalculate_indexes(data)
         dlg.added_attrs_ids.update(added_attrs_ids)
         dlg.discarded_feats_ids = discarded_feats_ids
-        dlg.project_definition = deepcopy(project_definition)
+        dlg.update_project_definition(project_definition)
         self.redraw_ir_layer(project_definition)
 
     def recalculate_indexes(self, data):

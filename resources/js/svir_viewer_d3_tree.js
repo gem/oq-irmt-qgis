@@ -19,6 +19,10 @@
     var CIRCLE_SCALE = 30;
     var MAX_STROKE_SIZE = 4;
     var MIN_CIRCLE_SIZE = 0.001;
+    
+    // Volevo creare un signal o simile, e ho trovato questo CustomEvent che mi 
+    // pare possa prestarsi allo scopo
+    var projDefModifiedEvent = new CustomEvent("projDefModifiedEvent");
 
     // For checking if a string is blank or contains only white-space
     String.prototype.isEmpty = function() {
@@ -48,6 +52,12 @@
             closeOnEscape: false
         });
     });
+
+    // Questa la posso chiamare da fuori, perche' e' nello scope esterno
+    // Da qui cercherei di emettere il segnale
+    function update_project_definition(bar) {
+        alert(bar);
+    }
 
     ////////////////////////////////////////////
     //// Project Definition Collapsible Tree ///
@@ -472,6 +482,11 @@
             //root.children.forEach(collapse);
             updateD3Tree(root);
         });
+
+        // Qui cercherei di creare lo slot. Al posto del doSomething, pensavo di
+        // chiamare una funzione che facesse qualcosa di simile al blocco da
+        // linea 476 a 484, per fare updateD3Tree con il project definition modificato
+        d3.addEventListener("projDefModifiedEvent", doSomething, false);
 
         d3.select(self.frameElement).style("height", "800px");
 
