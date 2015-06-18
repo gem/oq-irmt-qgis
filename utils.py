@@ -26,6 +26,7 @@
 import collections
 import json
 import os
+from copy import deepcopy
 from time import time
 from qgis.core import QgsMapLayerRegistry
 from qgis.gui import QgsMessageBar
@@ -58,6 +59,34 @@ def count_heading_commented_lines(fname):
         print "The file contains %s heading lines starting with #" % (
             lines_to_skip_count)
     return lines_to_skip_count
+
+
+def set_operator(sub_tree, operator):
+    # if the root of the sub_tree has children, set the operator to be used to
+    # combine the children. If any of the children have children, set also
+    # their operators to the same one applied to the root.
+    # Then return the modified sub_tree
+    node = deepcopy(sub_tree)
+    if 'children' in node:
+        for child_idx, child in enumerate(node['children']):
+            modified_child = set_operator(child, operator)
+            node['children'][child_idx] = modified_child
+        node['operator'] = operator
+    return node
+
+
+def get_node(sub_tree, name):
+    # browse the tree (recursively searching each node's children), looking for
+    # a node with a specific name. Return the node, if found, otherwise None
+    if 'name' in sub_tree and sub_tree['name'] == name:
+        found_node = sub_tree
+        return found_node
+    if 'children' in sub_tree:
+        for child in sub_tree['children']:
+            found_node = get_node(child, name)
+            if found_node:
+                return found_node
+    return None  # not found
 
 
 def get_credentials(iface):

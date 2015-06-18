@@ -159,7 +159,7 @@ def get_node_attr_id_and_name(node, layer):
             node_attr_name = add_numeric_attribute(
                 proposed_node_attr_name, layer)
         elif DEBUG:
-            print 'Reusing %s for node' % node_attr_name
+            print 'Reusing field %s' % node_attr_name
     elif 'name' in node:
         proposed_node_attr_name = node['name']
         node_attr_name = add_numeric_attribute(

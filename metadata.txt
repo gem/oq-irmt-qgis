@@ -22,6 +22,16 @@ email=staff.it@globalquakemodel.org
     
 # Uncomment the following line and add your changelog entries:
 changelog=
+    1.5.1
+    New features:
+    * Composite indices calculations refactored and unified
+    * Bidirectional updating of project definitions between python and javascript
+    * Socioeconomic themes saved into additional fields in the layer (allowing to style the layer accordingly)
+    * Render non-computable nodes and corresponding links as semi-transparent
+    * New "geometric mean" operator
+    * Primary indicators' labels rendered on the right of the D3 tree to avoid overlapping
+    * When downloading a layer from the OQ-Platform, get the "supplemental information" leveraging the ad-hoc API
+    * More readable project's details while browsing OQ-Platform's layers
     1.5.0
     New features:
     * Perform download/upload tasks as separate threads
