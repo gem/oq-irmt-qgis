@@ -501,10 +501,42 @@
             confDialog.dialog('open');
         }
 
+        function findNodeField(subtree, name) {
+            if (typeof subtree.name !== 'undefined' && subtree.name === name) {
+                if (typeof subtree.field !== 'undefined') {
+                    return subtree.field;
+                }
+            }
+            if (typeof subtree.children !== 'undefined') {
+                for (var i = 0; i < subtree.children.length; i++) {
+                    var child = subtree.children[i];
+                    var found_field = findNodeField(child, name);
+                    if (found_field) {
+                        return found_field;
+                    }
+                }
+            }
+            return false;
+        }
+
         function updateD3Tree(source) {
+            // check if meanwhile the project_definition was updated by any calculation
+            var proj_def_from_python = JSON.parse(qt_page.json_str);
+            var nodes = tree.nodes(root).reverse();
+            nodes.forEach(function(d) {
+                // if it has a name but not a field, check if project_definition contains
+                // a node with the same name, associated to a field
+                // and, in such case, associate the same field to the node 
+                if (typeof d.name !== 'undefined'){
+                    var found_field = findNodeField(proj_def_from_python, d.name);
+                    if (found_field) {
+                        d.field = found_field;
+                    }
+                }
+            });
+
             // Compute the new tree layout.
-            var nodes = tree.nodes(root).reverse(),
-                links = tree.links(nodes);
+            var links = tree.links(nodes);
 
             // Normalize for fixed-depth.
             nodes.forEach(function(d) { d.y = d.depth * 180; });

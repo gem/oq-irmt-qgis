@@ -27,7 +27,7 @@ import json
 import os.path
 import tempfile
 import uuid
-import copy
+from copy import deepcopy
 
 from math import floor, ceil
 from download_layer_dialog import DownloadLayerDialog
@@ -39,7 +39,9 @@ from PyQt4.QtCore import (QSettings,
                           QTranslator,
                           QCoreApplication,
                           qVersion,
-                          QUrl)
+                          QUrl,
+                          QObject,
+                          )
 
 from PyQt4.QtGui import (QAction,
                          QIcon,
@@ -63,7 +65,7 @@ from qgis.gui import QgsMessageBar
 
 from upload_dialog import UploadDialog
 
-from calculate_utils import calculate_svi, calculate_ri, calculate_iri
+from calculate_utils import calculate_composite_variable
 
 from process_layer import ProcessLayer
 
@@ -91,7 +93,8 @@ from utils import (tr,
                    platform_login,
                    get_credentials,
                    update_platform_project,
-                   count_heading_commented_lines)
+                   count_heading_commented_lines,
+                   toggle_select_features_widget)
 from abstract_worker import start_worker
 from shared import (SVIR_PLUGIN_VERSION,
                     DEBUG,
@@ -103,7 +106,7 @@ from aggregate_loss_by_zone import (calculate_zonal_stats,
                                     )
 
 
-class Svir:
+class Svir(QObject):
 
     def __init__(self, iface):
         # Save reference to the QGIS interface
@@ -462,7 +465,7 @@ class Svir:
                 # Retrieve the indices selected by the user
                 indices_list = []
                 iso_codes_list = []
-                project_definition = copy.deepcopy(PROJECT_TEMPLATE)
+                project_definition = deepcopy(PROJECT_TEMPLATE)
                 svi_themes = project_definition[
                     'children'][1]['children']
                 known_themes = []
@@ -672,7 +675,7 @@ class Svir:
                        indicator_field):
         """add a new theme to the project_definition"""
 
-        theme = copy.deepcopy(THEME_TEMPLATE)
+        theme = deepcopy(THEME_TEMPLATE)
         theme['name'] = indicator_theme
         if theme['name'] not in known_themes:
             known_themes.append(theme['name'])
@@ -680,7 +683,7 @@ class Svir:
         theme_position = known_themes.index(theme['name'])
         level = float('4.%d' % theme_position)
         # add a new indicator to a theme
-        new_indicator = copy.deepcopy(INDICATOR_TEMPLATE)
+        new_indicator = deepcopy(INDICATOR_TEMPLATE)
         new_indicator['name'] = indicator_name
         new_indicator['field'] = indicator_field
         new_indicator['level'] = level
@@ -692,31 +695,62 @@ class Svir:
         if select_proj_def_dlg.exec_():
             project_definitions = select_proj_def_dlg.project_definitions[
                 'proj_defs']
+            selected_project_definition = project_definitions[
+                select_proj_def_dlg.selected_idx]
+            added_attrs_ids, discarded_feats_ids, project_definition = \
+                self.recalculate_indexes(selected_project_definition)
+            self.notify_added_attrs_and_discarded_feats(added_attrs_ids,
+                                                        discarded_feats_ids)
+            project_definitions[
+                select_proj_def_dlg.selected_idx] = project_definition
             self.update_proj_defs(
                 self.iface.activeLayer().id(),
                 project_definitions,
                 select_proj_def_dlg.selected_idx)
-            self.recalculate_indexes(
-                project_definitions[select_proj_def_dlg.selected_idx])
             self.redraw_ir_layer(
                 project_definitions[select_proj_def_dlg.selected_idx])
+
+    def notify_added_attrs_and_discarded_feats(self,
+                                               added_attrs_ids,
+                                               discarded_feats_ids):
+        if added_attrs_ids:
+            dp = self.iface.activeLayer().dataProvider()
+            all_field_names = [field.name() for field in dp.fields()]
+            added_attrs_names = [all_field_names[attr_id]
+                                 for attr_id in added_attrs_ids]
+            msg = ('New attributes have been added to the layer: %s'
+                   % ', '.join(added_attrs_names))
+            self.iface.messageBar().pushMessage(
+                tr('Info'), tr(msg), level=QgsMessageBar.INFO)
+        if discarded_feats_ids:
+            widget = toggle_select_features_widget(
+                tr('Warning'),
+                tr('Missing values were found in some features while '
+                    'calculating composite variables'),
+                tr('Select features with incomplete data'),
+                self.iface.activeLayer(),
+                discarded_feats_ids,
+                self.iface.activeLayer().selectedFeaturesIds())
+            self.iface.messageBar().pushWidget(widget,
+                                               QgsMessageBar.WARNING)
 
     def weight_data(self):
         """
         Open a modal dialog to select weights in a d3.js visualization
         """
         current_layer_id = self.current_layer.id()
+        # get the project definition to work with, or create a default one
         try:
             layer_dict = self.project_definitions[current_layer_id]
             selected_idx = layer_dict['selected_idx']
             proj_defs = layer_dict['proj_defs']
-            project_definition = proj_defs[selected_idx]
+            orig_project_definition = proj_defs[selected_idx]
         except KeyError:
-            project_definition = PROJECT_TEMPLATE
+            orig_project_definition = deepcopy(PROJECT_TEMPLATE)
             selected_idx = 0
-            proj_defs = [project_definition]
+            proj_defs = [orig_project_definition]
             self.update_proj_defs(current_layer_id, proj_defs)
-        old_project_definition = copy.deepcopy(project_definition)
+        edited_project_definition = deepcopy(orig_project_definition)
 
         # Save the style so the following styling can be undone
         fd, sld_file_name = tempfile.mkstemp(suffix=".sld")
@@ -732,70 +766,116 @@ class Svir:
                 tr("Warning"),
                 tr(err_msg),
                 level=QgsMessageBar.WARNING)
-        first_svi = False
-        # if the svi_node does not contain the field name
-        if 'field' not in project_definition['children'][1]:  # svi_node
-            # auto generate svi field
-            first_svi = True
-            svi_attr_id, ri_attr_id, iri_attr_id = self.recalculate_indexes(
-                project_definition)
 
-        dlg = WeightDataDialog(self.iface, project_definition)
+        dlg = WeightDataDialog(self.iface, edited_project_definition)
         dlg.show()
-        self.redraw_ir_layer(project_definition)
+        self.redraw_ir_layer(edited_project_definition)
 
-        dlg.json_cleaned.connect(self.weights_changed)
+        dlg.json_cleaned.connect(lambda data: self.weights_changed(data, dlg))
         if dlg.exec_():
-            project_definition = dlg.project_definition
+            # If the user just opens the dialog and presses OK, it probably
+            # means they want to just run the index calculation, so we
+            # recalculate the indexes. In case they have already made any
+            # change and consequent calculations, we don't need to redo the
+            # same calculation after OK is pressed.
+            if not dlg.any_changes_made:
+                (added_attrs_ids,
+                 discarded_feats_ids,
+                 edited_project_definition) = self.recalculate_indexes(
+                    dlg.project_definition)
+                dlg.added_attrs_ids.update(added_attrs_ids)
+                dlg.discarded_feats_ids = discarded_feats_ids
+            else:
+                edited_project_definition = deepcopy(dlg.project_definition)
+            self.notify_added_attrs_and_discarded_feats(
+                dlg.added_attrs_ids, dlg.discarded_feats_ids)
             self.update_actions_status()
-        else:
+        else:  # 'cancel' was pressed
             if sld_was_saved:  # was able to save the original style
                 self.iface.activeLayer().loadSldStyle(sld_file_name)
-            project_definition = old_project_definition
-            if first_svi:
-                # delete auto generated svi field
-                ProcessLayer(self.current_layer).delete_attributes(
-                    [svi_attr_id, ri_attr_id, iri_attr_id])
-            else:
-                # recalculate with the old weights
-                self.recalculate_indexes(project_definition)
-        dlg.json_cleaned.disconnect(self.weights_changed)
+            # if any of the indices were saved before starting to edit the
+            # tree, the corresponding fields might have been modified.
+            # Therefore we recalculate the indices using the old project
+            # definition
+            if dlg.any_changes_made:
+                edited_project_definition = deepcopy(orig_project_definition)
+                iri_node = edited_project_definition
+                ri_node = edited_project_definition['children'][0]
+                svi_node = edited_project_definition['children'][1]
+                if ('field' in iri_node
+                        or 'field' in ri_node or 'field' in svi_node):
+                    added_attrs_ids, _, edited_project_definition = \
+                        self.recalculate_indexes(iri_node)
+                    dlg.added_attrs_ids.update(added_attrs_ids)
+                # delete attributes added while the dialog was open
+                ProcessLayer(self.iface.activeLayer()).delete_attributes(
+                    dlg.added_attrs_ids)
+        dlg.json_cleaned.disconnect()
         # store the correct project definitions
-        proj_defs[selected_idx] = project_definition
+        proj_defs[selected_idx] = deepcopy(edited_project_definition)
         self.update_proj_defs(current_layer_id,
                               proj_defs,
                               selected_idx)
+        self.redraw_ir_layer(edited_project_definition)
+
+    def weights_changed(self, data, dlg):
+        added_attrs_ids, discarded_feats_ids, project_definition = \
+            self.recalculate_indexes(data)
+        dlg.added_attrs_ids.update(added_attrs_ids)
+        dlg.discarded_feats_ids = discarded_feats_ids
+        dlg.project_definition = deepcopy(project_definition)
         self.redraw_ir_layer(project_definition)
 
-    def weights_changed(self, data):
-        self.recalculate_indexes(data)
-        self.redraw_ir_layer(data)
-
     def recalculate_indexes(self, data):
-        project_definition = data
+        project_definition = deepcopy(data)
 
-        # when updating weights, we need to recalculate the indexes
-        svi_attr_id, discarded_feats_ids_svi = calculate_svi(
-            self.iface, self.current_layer, project_definition)
-        ri_attr_id, discarded_feats_ids_ri = calculate_ri(
-            self.iface, self.current_layer, project_definition)
-        if svi_attr_id is None or ri_attr_id is None:
-            return None, None, None
-        discarded_feats_ids = discarded_feats_ids_svi | discarded_feats_ids_ri
-        iri_attr_id, discarded_feats_ids = calculate_iri(
-            self.iface, self.current_layer,
-            project_definition,
-            svi_attr_id,
-            ri_attr_id, discarded_feats_ids)
-        return svi_attr_id, ri_attr_id, iri_attr_id
+        if self.is_iri_computable(project_definition):
+            iri_node = deepcopy(project_definition)
+            (added_attrs_ids, discarded_feats_ids,
+             iri_node, was_iri_computed) = calculate_composite_variable(
+                self.iface, self.current_layer, iri_node)
+            project_definition = deepcopy(iri_node)
+            return added_attrs_ids, discarded_feats_ids, project_definition
 
-    def is_svi_renderable(self, proj_def):
+        svi_added_attrs_ids = set()
+        svi_discarded_feats_ids = set()
+        ri_added_attrs_ids = set()
+        ri_discarded_feats_ids = set()
+
+        was_svi_computed = False
+        if self.is_svi_computable(project_definition):
+            svi_node = deepcopy(project_definition['children'][1])
+            (svi_added_attrs_ids, svi_discarded_feats_ids,
+             svi_node, was_svi_computed) = calculate_composite_variable(
+                self.iface, self.current_layer, svi_node)
+            project_definition['children'][1] = deepcopy(svi_node)
+
+        was_ri_computed = False
+        if self.is_ri_computable(project_definition):
+            ri_node = deepcopy(project_definition['children'][0])
+            (ri_added_attrs_ids, ri_discarded_feats_ids,
+             ri_node, was_ri_computed) = calculate_composite_variable(
+                self.iface, self.current_layer, ri_node)
+            project_definition['children'][0] = deepcopy(ri_node)
+
+        if not was_svi_computed and not was_ri_computed:
+            return set(), set(), data
+        added_attrs_ids = set()
+        discarded_feats_ids = set()
+        if svi_added_attrs_ids:
+            added_attrs_ids.update(svi_added_attrs_ids)
+        if svi_discarded_feats_ids:
+            discarded_feats_ids.update(svi_discarded_feats_ids)
+        if ri_added_attrs_ids:
+            added_attrs_ids.update(ri_added_attrs_ids)
+        if ri_discarded_feats_ids:
+            discarded_feats_ids.update(ri_discarded_feats_ids)
+        return added_attrs_ids, discarded_feats_ids, project_definition
+
+    def is_svi_computable(self, proj_def):
         try:
             svi_node = proj_def['children'][1]
         except KeyError:
-            return False
-        # check that that the svi_node has a corresponding field
-        if 'field' not in svi_node:
             return False
         # check that there is at least one theme
         if 'children' not in svi_node:
@@ -810,13 +890,22 @@ class Svir:
                 return False
         return True
 
-    def is_ri_renderable(self, proj_def):
+    def is_svi_renderable(self, proj_def):
+        if not self.is_svi_computable(proj_def):
+            return False
+        # check that that the svi_node has a corresponding field
+        try:
+            svi_node = proj_def['children'][1]
+        except KeyError:
+            return False
+        if 'field' not in svi_node:
+            return False
+        return True
+
+    def is_ri_computable(self, proj_def):
         try:
             ri_node = proj_def['children'][0]
         except KeyError:
-            return False
-        # check that that the ri_node has a corresponding field
-        if 'field' not in ri_node:
             return False
         # check that there is at least one risk indicator
         if 'children' not in ri_node:
@@ -825,15 +914,32 @@ class Svir:
             return False
         return True
 
+    def is_ri_renderable(self, proj_def):
+        if not self.is_ri_computable(proj_def):
+            return False
+        try:
+            ri_node = proj_def['children'][0]
+        except KeyError:
+            return False
+        # check that that the ri_node has a corresponding field
+        if 'field' not in ri_node:
+            return False
+        return True
+
+    def is_iri_computable(self, proj_def):
+        # check that all the sub-indices are well-defined
+        if not self.is_ri_computable(proj_def):
+            return False
+        if not self.is_svi_computable(proj_def):
+            return False
+        return True
+
     def is_iri_renderable(self, proj_def):
+        if not self.is_iri_computable(proj_def):
+            return False
         iri_node = proj_def
         # check that that the iri_node has a corresponding field
         if 'field' not in iri_node:
-            return False
-        # check that all the sub-indices are well-defined
-        if not self.is_ri_renderable(proj_def):
-            return False
-        if not self.is_svi_renderable(proj_def):
             return False
         return True
 

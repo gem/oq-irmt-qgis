@@ -160,9 +160,10 @@ class ProcessLayer():
         """
         Delete attributes from the layer
 
-        :param attribute_list: list of id to remove from the layer (if a list
-                               of field names is given instead of a list of
-                               ids, then the corresponding indices are found
+        :param attribute_list: list of ids of attributes to be removed
+                               from the layer (if a list of field names
+                               is given instead of a list of ids, then
+                               the corresponding indices are found
                                and used)
         :type attribute_list: list of int (or list of str)
 
