@@ -697,10 +697,10 @@ class Svir(QObject):
                 'proj_defs']
             selected_project_definition = project_definitions[
                 select_proj_def_dlg.selected_idx]
-            added_attrs_ids, discarded_feats_ids, project_definition = \
+            added_attrs_ids, discarded_feats, project_definition = \
                 self.recalculate_indexes(selected_project_definition)
             self.notify_added_attrs_and_discarded_feats(added_attrs_ids,
-                                                        discarded_feats_ids)
+                                                        discarded_feats)
             project_definitions[
                 select_proj_def_dlg.selected_idx] = project_definition
             self.update_proj_defs(
@@ -712,7 +712,7 @@ class Svir(QObject):
 
     def notify_added_attrs_and_discarded_feats(self,
                                                added_attrs_ids,
-                                               discarded_feats_ids):
+                                               discarded_feats):
         if added_attrs_ids:
             dp = self.iface.activeLayer().dataProvider()
             all_field_names = [field.name() for field in dp.fields()]
@@ -722,17 +722,38 @@ class Svir(QObject):
                    % ', '.join(added_attrs_names))
             self.iface.messageBar().pushMessage(
                 tr('Info'), tr(msg), level=QgsMessageBar.INFO)
-        if discarded_feats_ids:
-            widget = toggle_select_features_widget(
-                tr('Warning'),
-                tr('Missing values were found in some features while '
-                    'calculating composite variables'),
-                tr('Select features with incomplete data'),
-                self.iface.activeLayer(),
-                discarded_feats_ids,
-                self.iface.activeLayer().selectedFeaturesIds())
-            self.iface.messageBar().pushWidget(widget,
-                                               QgsMessageBar.WARNING)
+        if discarded_feats:
+            discarded_feats_ids_missing = [
+                feat.feature_id for feat in discarded_feats
+                if feat.reason == 'Missing value']
+            if discarded_feats_ids_missing:
+                widget = toggle_select_features_widget(
+                    tr('Warning'),
+                    tr('Missing values were found in some features while '
+                       'calculating composite variables'),
+                    tr('Select features with incomplete data'),
+                    self.iface.activeLayer(),
+                    discarded_feats_ids_missing,
+                    self.iface.activeLayer().selectedFeaturesIds())
+                self.iface.messageBar().pushWidget(widget,
+                                                   QgsMessageBar.WARNING)
+            discarded_feats_ids_invalid = [
+                feat.feature_id for feat in discarded_feats
+                if feat.reason == 'Invalid value']
+            if discarded_feats_ids_invalid:
+                widget = toggle_select_features_widget(
+                    tr('Warning'),
+                    tr('Invalid values were found in some features while '
+                       'calculating composite variables using the chosen '
+                       'operators (e.g. the geometric mean fails when '
+                       'attempting to perform the root of a '
+                       'negative value)'),
+                    tr('Select features with invalid data'),
+                    self.iface.activeLayer(),
+                    discarded_feats_ids_invalid,
+                    self.iface.activeLayer().selectedFeaturesIds())
+                self.iface.messageBar().pushWidget(widget,
+                                                   QgsMessageBar.WARNING)
 
     def weight_data(self):
         """
@@ -780,15 +801,15 @@ class Svir(QObject):
             # same calculation after OK is pressed.
             if not dlg.any_changes_made:
                 (added_attrs_ids,
-                 discarded_feats_ids,
+                 discarded_feats,
                  edited_project_definition) = self.recalculate_indexes(
                     dlg.project_definition)
                 dlg.added_attrs_ids.update(added_attrs_ids)
-                dlg.discarded_feats_ids = discarded_feats_ids
+                dlg.discarded_feats = discarded_feats
             else:
                 edited_project_definition = deepcopy(dlg.project_definition)
             self.notify_added_attrs_and_discarded_feats(
-                dlg.added_attrs_ids, dlg.discarded_feats_ids)
+                dlg.added_attrs_ids, dlg.discarded_feats)
             self.update_actions_status()
         else:  # 'cancel' was pressed
             if sld_was_saved:  # was able to save the original style
@@ -819,10 +840,10 @@ class Svir(QObject):
         self.redraw_ir_layer(edited_project_definition)
 
     def weights_changed(self, data, dlg):
-        added_attrs_ids, discarded_feats_ids, project_definition = \
+        added_attrs_ids, discarded_feats, project_definition = \
             self.recalculate_indexes(data)
         dlg.added_attrs_ids.update(added_attrs_ids)
-        dlg.discarded_feats_ids = discarded_feats_ids
+        dlg.discarded_feats = discarded_feats
         dlg.project_definition = deepcopy(project_definition)
         self.redraw_ir_layer(project_definition)
 
@@ -831,21 +852,21 @@ class Svir(QObject):
 
         if self.is_iri_computable(project_definition):
             iri_node = deepcopy(project_definition)
-            (added_attrs_ids, discarded_feats_ids,
+            (added_attrs_ids, discarded_feats,
              iri_node, was_iri_computed) = calculate_composite_variable(
                 self.iface, self.current_layer, iri_node)
             project_definition = deepcopy(iri_node)
-            return added_attrs_ids, discarded_feats_ids, project_definition
+            return added_attrs_ids, discarded_feats, project_definition
 
         svi_added_attrs_ids = set()
-        svi_discarded_feats_ids = set()
+        svi_discarded_feats = set()
         ri_added_attrs_ids = set()
-        ri_discarded_feats_ids = set()
+        ri_discarded_feats = set()
 
         was_svi_computed = False
         if self.is_svi_computable(project_definition):
             svi_node = deepcopy(project_definition['children'][1])
-            (svi_added_attrs_ids, svi_discarded_feats_ids,
+            (svi_added_attrs_ids, svi_discarded_feats,
              svi_node, was_svi_computed) = calculate_composite_variable(
                 self.iface, self.current_layer, svi_node)
             project_definition['children'][1] = deepcopy(svi_node)
@@ -853,7 +874,7 @@ class Svir(QObject):
         was_ri_computed = False
         if self.is_ri_computable(project_definition):
             ri_node = deepcopy(project_definition['children'][0])
-            (ri_added_attrs_ids, ri_discarded_feats_ids,
+            (ri_added_attrs_ids, ri_discarded_feats,
              ri_node, was_ri_computed) = calculate_composite_variable(
                 self.iface, self.current_layer, ri_node)
             project_definition['children'][0] = deepcopy(ri_node)
@@ -861,16 +882,16 @@ class Svir(QObject):
         if not was_svi_computed and not was_ri_computed:
             return set(), set(), data
         added_attrs_ids = set()
-        discarded_feats_ids = set()
+        discarded_feats = set()
         if svi_added_attrs_ids:
             added_attrs_ids.update(svi_added_attrs_ids)
-        if svi_discarded_feats_ids:
-            discarded_feats_ids.update(svi_discarded_feats_ids)
+        if svi_discarded_feats:
+            discarded_feats.update(svi_discarded_feats)
         if ri_added_attrs_ids:
             added_attrs_ids.update(ri_added_attrs_ids)
-        if ri_discarded_feats_ids:
-            discarded_feats_ids.update(ri_discarded_feats_ids)
-        return added_attrs_ids, discarded_feats_ids, project_definition
+        if ri_discarded_feats:
+            discarded_feats.update(ri_discarded_feats)
+        return added_attrs_ids, discarded_feats, project_definition
 
     def is_svi_computable(self, proj_def):
         try:

@@ -35,6 +35,22 @@ cp.readfp(open(os.path.dirname(os.path.realpath(__file__)) + "/metadata.txt"))
 SVIR_PLUGIN_VERSION = cp.get('general', 'version')
 PLATFORM_REGISTRATION_URL = 'https://platform.openquake.org/account/signup/'
 
+
+class DiscardedFeature(object):
+    def __init__(self, feature_id, reason):
+        self.feature_id = feature_id
+        self.reason = reason
+        if self.reason not in ['Missing value', 'Invalid value']:
+            raise ValueError(
+                "The reason can be 'Missing value' or 'Invalid value'")
+
+    def __eq__(self, other):
+        self.feature_id == other.feature_id
+
+    def __repr__(self):
+        return "Feature id: %s, reason: %s" % (self.feature_id, self.reason)
+
+
 INT_FIELD_TYPE_NAME = "integer"
 REAL_FIELD_TYPE_NAME = "Real"
 DOUBLE_FIELD_TYPE_NAME = "double"

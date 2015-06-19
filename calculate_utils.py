@@ -30,7 +30,7 @@ from qgis.core import QgsField
 from qgis.gui import QgsMessageBar
 from shared import (DOUBLE_FIELD_TYPE_NAME, DEBUG, SUM_BASED_OPERATORS,
                     MUL_BASED_OPERATORS, DEFAULT_OPERATOR, OPERATORS_DICT,
-                    IGNORING_WEIGHT_OPERATORS)
+                    IGNORING_WEIGHT_OPERATORS, DiscardedFeature)
 from process_layer import ProcessLayer
 from utils import LayerEditingManager, tr
 
@@ -80,11 +80,14 @@ def calculate_composite_variable(iface, layer, node):
     :param node: the root node of the project definition's sub-tree to be
                  calculated
 
-    :returns (added_attrs_ids, discarded_feats_ids, node):
+    :returns (added_attrs_ids, discarded_feats, node):
         added_attrs_ids: the set of ids of the attributes added to the layer
                          during the calculation
-        discarded_feats_ids: the ids of the features that can't contribute to
-                             the calculation, because of missing data
+        discarded_feats: the set of DiscardedFeature that can't contribute to
+                         the calculation, because of missing data or invalid
+                         data (e.g. when it's impossible to calculate the
+                         geometric mean because it causes the calculation of
+                         the fractionary power of a negative value)
         node: the transformed (or unmodified) sub-tree
         any_change: True if the calculation caused any change in the
                     subtree
@@ -96,7 +99,7 @@ def calculate_composite_variable(iface, layer, node):
     # the calculation can not be completed, and they can be notified to the
     # user if the calculation is done without errors
     added_attrs_ids = set()
-    discarded_feats_ids = set()
+    discarded_feats = set()
     any_change = False
 
     children = edited_node.get('children', [])
@@ -123,11 +126,11 @@ def calculate_composite_variable(iface, layer, node):
         return set(), set(), node, False
     added_attrs_ids.add(node_attr_id)
     try:
-        discarded_feats_ids = calculate_node(edited_node,
-                                             node_attr_name,
-                                             node_attr_id,
-                                             layer,
-                                             discarded_feats_ids)
+        discarded_feats = calculate_node(edited_node,
+                                         node_attr_name,
+                                         node_attr_id,
+                                         layer,
+                                         discarded_feats)
     except (InvalidOperator, InvalidChild) as e:
         iface.messageBar().pushMessage(
             tr('Error'), str(e), level=QgsMessageBar.CRITICAL)
@@ -146,7 +149,7 @@ def calculate_composite_variable(iface, layer, node):
 
     edited_node['field'] = node_attr_name
     any_change = True
-    return added_attrs_ids, discarded_feats_ids, edited_node, any_change
+    return added_attrs_ids, discarded_feats, edited_node, any_change
 
 
 def get_node_attr_id_and_name(node, layer):
@@ -174,7 +177,7 @@ def get_node_attr_id_and_name(node, layer):
 
 
 def calculate_node(
-        node, node_attr_name, node_attr_id, layer, discarded_feats_ids):
+        node, node_attr_name, node_attr_id, layer, discarded_feats):
     operator = node.get('operator', DEFAULT_OPERATOR)
     children = node['children']  # the existance of children should
                                  # already be checked
@@ -205,7 +208,8 @@ def calculate_node(
                     # should be previously linked to corresponding fields
                 if feat[child['field']] == QPyNullVariant(float):
                     discard_feat = True
-                    discarded_feats_ids.add(feat_id)
+                    discarded_feat = DiscardedFeature(feat_id, 'Missing value')
+                    discarded_feats.add(discarded_feat)
                     break  # proceed to the next feature
                 # multiply a variable by -1 if it isInverted
                 try:
@@ -246,8 +250,9 @@ def calculate_node(
                 #                          to a fractional power
                 except ValueError:
                     node_value = QPyNullVariant(float)
-                    discarded_feats_ids.add(feat_id)
+                    discarded_feat = DiscardedFeature(feat_id, 'Invalid value')
+                    discarded_feats.add(discarded_feat)
 
             layer.changeAttributeValue(
                 feat_id, node_attr_id, node_value)
-    return discarded_feats_ids
+    return discarded_feats
