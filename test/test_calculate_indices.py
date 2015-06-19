@@ -27,7 +27,7 @@
 import unittest
 import os
 from copy import deepcopy
-from qgis.core import QgsVectorLayer
+from qgis.core import QgsVectorLayer, QgsVectorFileWriter
 from calculate_utils import (calculate_node,
                              get_node_attr_id_and_name,
                              )
@@ -134,36 +134,90 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         operator = OPERATORS_DICT['SUM_S']
         node_attr_id, node_attr_name, discarded_feats = \
             calculate(proj_def, operator, self.layer)
+        expected_layer_path = os.path.join(
+            self.data_dir_name, 'simple_sum.shp')
+        expected_layer = QgsVectorLayer(
+            expected_layer_path, 'simple_sum', 'ogr')
+        res = ProcessLayer(self.layer).has_same_content_as(expected_layer)
+        self.assertEqual(res, True)
+        # # to rebuild the outputs
+        # res_layer_name = 'simple_sum'
+        # write_output(self.layer, self.data_dir_name, res_layer_name)
 
     def test_weighted_sum(self):
         proj_def = deepcopy(self.project_definition)
         operator = OPERATORS_DICT['SUM_W']
         node_attr_id, node_attr_name, discarded_feats = \
             calculate(proj_def, operator, self.layer)
+        expected_layer_path = os.path.join(
+            self.data_dir_name, 'weighted_sum.shp')
+        expected_layer = QgsVectorLayer(
+            expected_layer_path, 'weighted_sum', 'ogr')
+        res = ProcessLayer(self.layer).has_same_content_as(expected_layer)
+        self.assertEqual(res, True)
+        # to rebuild the outputs
+        # res_layer_name = 'weighted_sum'
+        # write_output(self.layer, self.data_dir_name, res_layer_name)
 
     def test_simple_multiplication(self):
         proj_def = deepcopy(self.project_definition)
         operator = OPERATORS_DICT['MUL_S']
         node_attr_id, node_attr_name, discarded_feats = \
             calculate(proj_def, operator, self.layer)
+        expected_layer_path = os.path.join(
+            self.data_dir_name, 'simple_multiplication.shp')
+        expected_layer = QgsVectorLayer(
+            expected_layer_path, 'simple_multiplication', 'ogr')
+        res = ProcessLayer(self.layer).has_same_content_as(expected_layer)
+        self.assertEqual(res, True)
+        # # to rebuild the outputs
+        # res_layer_name = 'simple_multiplication'
+        # write_output(self.layer, self.data_dir_name, res_layer_name)
 
     def test_weighted_multiplication(self):
         proj_def = deepcopy(self.project_definition)
         operator = OPERATORS_DICT['MUL_W']
         node_attr_id, node_attr_name, discarded_feats = \
             calculate(proj_def, operator, self.layer)
+        expected_layer_path = os.path.join(
+            self.data_dir_name, 'weighted_multiplication.shp')
+        expected_layer = QgsVectorLayer(
+            expected_layer_path, 'weighted_multiplication', 'ogr')
+        res = ProcessLayer(self.layer).has_same_content_as(expected_layer)
+        self.assertEqual(res, True)
+        # # to rebuild the outputs
+        # res_layer_name = 'weighted_multiplication'
+        # write_output(self.layer, self.data_dir_name, res_layer_name)
 
     def test_average(self):
         proj_def = deepcopy(self.project_definition)
         operator = OPERATORS_DICT['AVG']
         node_attr_id, node_attr_name, discarded_feats = \
             calculate(proj_def, operator, self.layer)
+        expected_layer_path = os.path.join(
+            self.data_dir_name, 'average.shp')
+        expected_layer = QgsVectorLayer(
+            expected_layer_path, 'average', 'ogr')
+        res = ProcessLayer(self.layer).has_same_content_as(expected_layer)
+        self.assertEqual(res, True)
+        # # to rebuild the outputs
+        # res_layer_name = 'average'
+        # write_output(self.layer, self.data_dir_name, res_layer_name)
 
     def test_geometric_mean_positive_argument(self):
         proj_def = deepcopy(self.project_definition)
         operator = OPERATORS_DICT['GEOM_MEAN']
         node_attr_id, node_attr_name, discarded_feats = \
             calculate(proj_def, operator, self.layer)
+        expected_layer_path = os.path.join(
+            self.data_dir_name, 'geometric_mean_positive_argument.shp')
+        expected_layer = QgsVectorLayer(
+            expected_layer_path, 'geometric_mean_positive_argument', 'ogr')
+        res = ProcessLayer(self.layer).has_same_content_as(expected_layer)
+        self.assertEqual(res, True)
+        # # to rebuild the outputs
+        # res_layer_name = 'geometric_mean_positive_argument'
+        # write_output(self.layer, self.data_dir_name, res_layer_name)
 
     def test_geometric_mean_negative_argument(self):
         proj_def = deepcopy(self.project_definition)
@@ -178,6 +232,15 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         operator = OPERATORS_DICT['GEOM_MEAN']
         node_attr_id, node_attr_name, discarded_feats = \
             calculate(proj_def, operator, self.layer)
+        expected_layer_path = os.path.join(
+            self.data_dir_name, 'geometric_mean_negative_argument.shp')
+        expected_layer = QgsVectorLayer(
+            expected_layer_path, 'geometric_mean_negative_argument', 'ogr')
+        res = ProcessLayer(self.layer).has_same_content_as(expected_layer)
+        self.assertEqual(res, True)
+        # # to rebuild the outputs
+        # res_layer_name = 'geometric_mean_negative_argument'
+        # write_output(self.layer, self.data_dir_name, res_layer_name)
 
 
 def calculate(proj_def, operator, layer):
@@ -197,3 +260,12 @@ def calculate(proj_def, operator, layer):
         education_node, node_attr_name, node_attr_id,
         layer, discarded_feats)
     return node_attr_id, node_attr_name, discarded_feats
+
+
+def write_output(res_layer, data_dir_name, res_layer_name):
+    res_layer_path = os.path.join(data_dir_name, res_layer_name + '.shp')
+    write_success = QgsVectorFileWriter.writeAsVectorFormat(
+        res_layer, res_layer_path, 'CP1250', None, 'ESRI Shapefile')
+    if write_success != QgsVectorFileWriter.NoError:
+        raise RuntimeError('Could not save shapefile')
+    QgsVectorLayer(res_layer_path, res_layer_name, 'ogr')
