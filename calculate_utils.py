@@ -240,7 +240,14 @@ def calculate_node(
                 # the geometric mean
                 # (see http://en.wikipedia.org/wiki/Geometric_mean)
                 # is the product of the N combined items, elevated by 1/N
-                node_value **= 1. / len(children)
+                try:
+                    node_value **= 1. / len(children)
+                # it can raise ValueError: negative number cannot be raised
+                #                          to a fractional power
+                except ValueError:
+                    node_value = QPyNullVariant(float)
+                    discarded_feats_ids.add(feat_id)
+
             layer.changeAttributeValue(
                 feat_id, node_attr_id, node_value)
     return discarded_feats_ids
