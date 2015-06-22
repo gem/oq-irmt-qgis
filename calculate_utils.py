@@ -80,7 +80,7 @@ def calculate_composite_variable(iface, layer, node):
     :param node: the root node of the project definition's sub-tree to be
                  calculated
 
-    :returns (added_attrs_ids, discarded_feats, node):
+    :returns (added_attrs_ids, discarded_feats, node, any_change):
         added_attrs_ids: the set of ids of the attributes added to the layer
                          during the calculation
         discarded_feats: the set of DiscardedFeature that can't contribute to
@@ -116,15 +116,16 @@ def calculate_composite_variable(iface, layer, node):
             # e.g., a theme might have been linked to a new layer's field
             edited_node['children'][child_idx] = deepcopy(child)
     try:
-        node_attr_id, node_attr_name = get_node_attr_id_and_name(edited_node,
-                                                                 layer)
+        node_attr_id, node_attr_name, field_was_added = \
+            get_node_attr_id_and_name(edited_node, layer)
     except InvalidNode as e:
         iface.messageBar().pushMessage(tr('Error'), str(e),
                                        level=QgsMessageBar.CRITICAL)
         if added_attrs_ids:
             ProcessLayer(layer).delete_attributes(added_attrs_ids)
         return set(), set(), node, False
-    added_attrs_ids.add(node_attr_id)
+    if field_was_added:
+        added_attrs_ids.add(node_attr_id)
     try:
         discarded_feats = calculate_node(edited_node,
                                          node_attr_name,
@@ -153,6 +154,14 @@ def calculate_composite_variable(iface, layer, node):
 
 
 def get_node_attr_id_and_name(node, layer):
+    """
+    Get the field (id and name) to be re-used to store the results of the
+    calculation, if possible. Otherwise, add a new field to the layer and
+    return its id and name.
+    Also return True if a new field was added, or False if an old field
+    was re-used.
+    """
+    field_was_added = False
     if 'field' in node:
         node_attr_name = node['field']
         # check that the field is still in the layer (the user might have
@@ -161,19 +170,21 @@ def get_node_attr_id_and_name(node, layer):
             proposed_node_attr_name = node_attr_name
             node_attr_name = add_numeric_attribute(
                 proposed_node_attr_name, layer)
+            field_was_added = True
         elif DEBUG:
             print 'Reusing field %s' % node_attr_name
     elif 'name' in node:
         proposed_node_attr_name = node['name']
         node_attr_name = add_numeric_attribute(
             proposed_node_attr_name, layer)
+        field_was_added = True
     else:  # this corner case should never happen (hopefully)
         raise InvalidNode('This node has no name and it does'
                           ' not correspond to any field')
     # get the id of the new attribute
     node_attr_id = ProcessLayer(layer).find_attribute_id(
         node_attr_name)
-    return node_attr_id, node_attr_name
+    return node_attr_id, node_attr_name, field_was_added
 
 
 def calculate_node(
