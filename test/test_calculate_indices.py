@@ -251,33 +251,48 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         added_attrs_ids, discarded_feats, edited_node, any_change = \
             calculate_composite_variable(IFACE, self.layer, svi_node)
         proj_def['children'][1] = edited_node
-        print '\n'*5
-        print '*' * 8, 'FIRST ROUND', '*' * 8
-        print 'added_attrs_id:\n', added_attrs_ids
-        print 'discarded_feats:\n', discarded_feats
-        from pprint import pprint
-        print 'edited_node:\n', pprint(edited_node)
-        print 'edited proj_def:\n', pprint(proj_def)
-        print 'any_change:\n', any_change
-        ProcessLayer(self.layer).pprint()
-        print '\n'*5
+        self.assertEqual(added_attrs_ids, set([9, 10, 11]))
+        discarded_feats_tuples = [
+            (feat.feature_id, feat.reason) for feat in discarded_feats]
+        expected_discarded_feats_tuples = [
+            (1L, 'Missing value'), (2L, 'Missing value')]
+        self.assertEqual(discarded_feats_tuples,
+                         expected_discarded_feats_tuples)
+        self.assertEqual(any_change, True)
+        self.assertEqual(proj_def, proj_def_svi_calc_first_round)
+        expected_layer_path = os.path.join(
+            self.data_dir_name, 'svi_calculation_first_round.shp')
+        expected_layer = QgsVectorLayer(
+            expected_layer_path, 'svi_calculation_first_round', 'ogr')
+        res = ProcessLayer(self.layer).has_same_content_as(expected_layer)
+        self.assertEqual(res, True)
+        # # to rebuild the outputs
+        # res_layer_name = 'svi_calculation_first_round'
+        # write_output(self.layer, self.data_dir_name, res_layer_name)
 
         # If the attributes have already been added to the layer, they should
         # be re-used instead of adding new ones
+        # therefore the project definition should be the same as it was after
+        # the first round
         svi_node = proj_def['children'][1]
         added_attrs_ids, discarded_feats, edited_node, any_change = \
             calculate_composite_variable(IFACE, self.layer, svi_node)
         proj_def['children'][1] = edited_node
-        print '\n'*5
-        print '*' * 8, 'SECOND ROUND', '*' * 8
-        print 'added_attrs_id:\n', added_attrs_ids
-        print 'discarded_feats:\n', discarded_feats
-        from pprint import pprint
-        print 'edited_node:\n', pprint(edited_node)
-        print 'edited proj_def:\n', pprint(proj_def)
-        print 'any_change:\n', any_change
-        ProcessLayer(self.layer).pprint()
-        print '\n'*5
+        self.assertEqual(added_attrs_ids, set([]))
+        discarded_feats_tuples = [
+            (feat.feature_id, feat.reason) for feat in discarded_feats]
+        expected_discarded_feats_tuples = [
+            (1L, 'Missing value'), (2L, 'Missing value')]
+        self.assertEqual(discarded_feats_tuples,
+                         expected_discarded_feats_tuples)
+        self.assertEqual(any_change, True)
+        self.assertEqual(proj_def, proj_def_svi_calc_first_round)
+        expected_layer_path = os.path.join(
+            self.data_dir_name, 'svi_calculation_first_round.shp')
+        expected_layer = QgsVectorLayer(
+            expected_layer_path, 'svi_calculation_first_round', 'ogr')
+        res = ProcessLayer(self.layer).has_same_content_as(expected_layer)
+        self.assertEqual(res, True)
 
 
 def calculate_education_node(proj_def, operator, layer):
@@ -306,3 +321,66 @@ def write_output(res_layer, data_dir_name, res_layer_name):
     if write_success != QgsVectorFileWriter.NoError:
         raise RuntimeError('Could not save shapefile')
     QgsVectorLayer(res_layer_path, res_layer_name, 'ogr')
+
+
+proj_def_svi_calc_first_round = {
+    'children': [{'children': [],
+                  'level': '2.0',
+                  'name': 'RI',
+                  'type': 'Risk Index',
+                  'weight': 0.5},
+                 {'children': [{'children': [{'children': [],
+                                              'field': 'EDUEOCSAF',
+                                              'isInverted': True,
+                                              'level': 4.0,
+                                              'name': 'Female population without secondaryeducation or higher',
+                                              'type': 'Social Vulnerability Indicator',
+                                              'weight': 0.2},
+                                             {'children': [],
+                                              'field': 'EDUEOCSAM',
+                                              'isInverted': True,
+                                              'level': 4.0,
+                                              'name': 'Male population without secondaryeducation or higher',
+                                              'type': 'Social Vulnerability Indicator',
+                                              'weight': 0.3},
+                                             {'children': [],
+                                              'field': 'EDUEOCSTJ',
+                                              'level': 4.0,
+                                              'name': 'Scientific and technical journal articles',
+                                              'type': 'Social Vulnerability Indicator',
+                                              'weight': 0.5}],
+                                'field': u'EDUCATION',
+                                'level': '3.0',
+                                'name': 'Education',
+                                'operator': 'Weighted sum',
+                                'type': 'Social Vulnerability Theme',
+                                'weight': 0.5},
+                               {'children': [{'children': [],
+                                              'field': 'ENVDIPDFT',
+                                              'level': 4.1,
+                                              'name': 'Droughts, floods, extreme temperatures',
+                                              'type': 'Social Vulnerability Indicator',
+                                              'weight': 0.5},
+                                             {'children': [],
+                                              'field': 'ENVDIPIND',
+                                              'level': 4.1,
+                                              'name': 'Natural disasters  - Number of deaths',
+                                              'type': 'Social Vulnerability Indicator',
+                                              'weight': 0.5}],
+                                'field': u'ENVIRONMEN',
+                                'level': '3.0',
+                                'name': 'Environment',
+                                'operator': 'Weighted sum',
+                                'type': 'Social Vulnerability Theme',
+                                'weight': 0.5}],
+                  'field': u'SVI',
+                  'level': '2.0',
+                  'name': 'SVI',
+                  'type': 'Social Vulnerability Index',
+                  'weight': 0.5}],
+    'description': '',
+    'level': '1.0',
+    'name': 'IRI',
+    'operator': 'Weighted sum',
+    'type': 'Integrated Risk Index',
+    'weight': 1.0}
