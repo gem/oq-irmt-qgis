@@ -28,8 +28,11 @@ import unittest
 import os
 from copy import deepcopy
 from qgis.core import QgsVectorLayer, QgsVectorFileWriter
+from utilities import get_qgis_app
+QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 from calculate_utils import (calculate_node,
                              get_node_attr_id_and_name,
+                             calculate_composite_variable,
                              )
 from process_layer import ProcessLayer
 from utils import set_operator, get_node
@@ -133,7 +136,7 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         proj_def = deepcopy(self.project_definition)
         operator = OPERATORS_DICT['SUM_S']
         node_attr_id, node_attr_name, discarded_feats = \
-            calculate(proj_def, operator, self.layer)
+            calculate_education_node(proj_def, operator, self.layer)
         expected_layer_path = os.path.join(
             self.data_dir_name, 'simple_sum.shp')
         expected_layer = QgsVectorLayer(
@@ -148,7 +151,7 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         proj_def = deepcopy(self.project_definition)
         operator = OPERATORS_DICT['SUM_W']
         node_attr_id, node_attr_name, discarded_feats = \
-            calculate(proj_def, operator, self.layer)
+            calculate_education_node(proj_def, operator, self.layer)
         expected_layer_path = os.path.join(
             self.data_dir_name, 'weighted_sum.shp')
         expected_layer = QgsVectorLayer(
@@ -163,7 +166,7 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         proj_def = deepcopy(self.project_definition)
         operator = OPERATORS_DICT['MUL_S']
         node_attr_id, node_attr_name, discarded_feats = \
-            calculate(proj_def, operator, self.layer)
+            calculate_education_node(proj_def, operator, self.layer)
         expected_layer_path = os.path.join(
             self.data_dir_name, 'simple_multiplication.shp')
         expected_layer = QgsVectorLayer(
@@ -178,7 +181,7 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         proj_def = deepcopy(self.project_definition)
         operator = OPERATORS_DICT['MUL_W']
         node_attr_id, node_attr_name, discarded_feats = \
-            calculate(proj_def, operator, self.layer)
+            calculate_education_node(proj_def, operator, self.layer)
         expected_layer_path = os.path.join(
             self.data_dir_name, 'weighted_multiplication.shp')
         expected_layer = QgsVectorLayer(
@@ -193,7 +196,7 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         proj_def = deepcopy(self.project_definition)
         operator = OPERATORS_DICT['AVG']
         node_attr_id, node_attr_name, discarded_feats = \
-            calculate(proj_def, operator, self.layer)
+            calculate_education_node(proj_def, operator, self.layer)
         expected_layer_path = os.path.join(
             self.data_dir_name, 'average.shp')
         expected_layer = QgsVectorLayer(
@@ -208,7 +211,7 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         proj_def = deepcopy(self.project_definition)
         operator = OPERATORS_DICT['GEOM_MEAN']
         node_attr_id, node_attr_name, discarded_feats = \
-            calculate(proj_def, operator, self.layer)
+            calculate_education_node(proj_def, operator, self.layer)
         expected_layer_path = os.path.join(
             self.data_dir_name, 'geometric_mean_positive_argument.shp')
         expected_layer = QgsVectorLayer(
@@ -231,7 +234,7 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
             = False
         operator = OPERATORS_DICT['GEOM_MEAN']
         node_attr_id, node_attr_name, discarded_feats = \
-            calculate(proj_def, operator, self.layer)
+            calculate_education_node(proj_def, operator, self.layer)
         expected_layer_path = os.path.join(
             self.data_dir_name, 'geometric_mean_negative_argument.shp')
         expected_layer = QgsVectorLayer(
@@ -242,8 +245,42 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         # res_layer_name = 'geometric_mean_negative_argument'
         # write_output(self.layer, self.data_dir_name, res_layer_name)
 
+    def test_calculate_svi(self):
+        proj_def = deepcopy(self.project_definition)
+        svi_node = proj_def['children'][1]
+        added_attrs_ids, discarded_feats, edited_node, any_change = \
+            calculate_composite_variable(IFACE, self.layer, svi_node)
+        proj_def['children'][1] = edited_node
+        print '\n'*5
+        print '*' * 8, 'FIRST ROUND', '*' * 8
+        print 'added_attrs_id:\n', added_attrs_ids
+        print 'discarded_feats:\n', discarded_feats
+        from pprint import pprint
+        print 'edited_node:\n', pprint(edited_node)
+        print 'edited proj_def:\n', pprint(proj_def)
+        print 'any_change:\n', any_change
+        ProcessLayer(self.layer).pprint()
+        print '\n'*5
 
-def calculate(proj_def, operator, layer):
+        # If the attributes have already been added to the layer, they should
+        # be re-used instead of adding new ones
+        svi_node = proj_def['children'][1]
+        added_attrs_ids, discarded_feats, edited_node, any_change = \
+            calculate_composite_variable(IFACE, self.layer, svi_node)
+        proj_def['children'][1] = edited_node
+        print '\n'*5
+        print '*' * 8, 'SECOND ROUND', '*' * 8
+        print 'added_attrs_id:\n', added_attrs_ids
+        print 'discarded_feats:\n', discarded_feats
+        from pprint import pprint
+        print 'edited_node:\n', pprint(edited_node)
+        print 'edited proj_def:\n', pprint(proj_def)
+        print 'any_change:\n', any_change
+        ProcessLayer(self.layer).pprint()
+        print '\n'*5
+
+
+def calculate_education_node(proj_def, operator, layer):
     """
     Use the calculate_node function to compute the 'Education' node using the
     given project definition and operator.
@@ -253,8 +290,8 @@ def calculate(proj_def, operator, layer):
     proj_def = set_operator(proj_def, operator)
     # we are testing the calculation for a single node
     education_node = get_node(proj_def, 'Education')
-    node_attr_id, node_attr_name = get_node_attr_id_and_name(education_node,
-                                                             layer)
+    node_attr_id, node_attr_name, field_was_added = \
+        get_node_attr_id_and_name(education_node, layer)
     discarded_feats = set()
     discarded_feats = calculate_node(
         education_node, node_attr_name, node_attr_id,
