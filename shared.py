@@ -47,6 +47,9 @@ class DiscardedFeature(object):
     def __eq__(self, other):
         self.feature_id == other.feature_id
 
+    def __lt__(self, other):
+        return self.feature_id < other.feature_id
+
     def __repr__(self):
         return "Feature id: %s, reason: %s" % (self.feature_id, self.reason)
 
