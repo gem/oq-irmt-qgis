@@ -36,7 +36,7 @@ from calculate_utils import (calculate_node,
                              )
 from process_layer import ProcessLayer
 from utils import set_operator, get_node
-from shared import OPERATORS_DICT
+from shared import OPERATORS_DICT, DiscardedFeature
 
 
 class CalculateCompositeVariableTestCase(unittest.TestCase):
@@ -252,12 +252,10 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
             calculate_composite_variable(IFACE, self.layer, svi_node)
         proj_def['children'][1] = edited_node
         self.assertEqual(added_attrs_ids, set([9, 10, 11]))
-        discarded_feats_tuples = [
-            (feat.feature_id, feat.reason) for feat in discarded_feats]
-        expected_discarded_feats_tuples = [
-            (1L, 'Missing value'), (2L, 'Missing value')]
-        self.assertEqual(discarded_feats_tuples,
-                         expected_discarded_feats_tuples)
+        expected_discarded_feats = set([DiscardedFeature(1, 'Missing value'),
+                                        DiscardedFeature(2, 'Missing value')])
+        self.assertEqual(discarded_feats,
+                         expected_discarded_feats)
         self.assertEqual(any_change, True)
         self.assertEqual(proj_def, proj_def_svi_calc_first_round)
         expected_layer_path = os.path.join(
@@ -279,12 +277,10 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
             calculate_composite_variable(IFACE, self.layer, svi_node)
         proj_def['children'][1] = edited_node
         self.assertEqual(added_attrs_ids, set([]))
-        discarded_feats_tuples = [
-            (feat.feature_id, feat.reason) for feat in discarded_feats]
-        expected_discarded_feats_tuples = [
-            (1L, 'Missing value'), (2L, 'Missing value')]
-        self.assertEqual(discarded_feats_tuples,
-                         expected_discarded_feats_tuples)
+        expected_discarded_feats = set([DiscardedFeature(1, 'Missing value'),
+                                        DiscardedFeature(2, 'Missing value')])
+        self.assertEqual(discarded_feats,
+                         expected_discarded_feats)
         self.assertEqual(any_change, True)
         self.assertEqual(proj_def, proj_def_svi_calc_first_round)
         expected_layer_path = os.path.join(

@@ -107,10 +107,13 @@ def calculate_composite_variable(iface, layer, node):
         # we don't calculate the values for a node that has no children
         return set(), set(), node, False
     for child_idx, child in enumerate(children):
-        child_added_attrs_ids, _, child, child_was_changed = \
-            calculate_composite_variable(iface, layer, child)
+        child_results = calculate_composite_variable(iface, layer, child)
+        (child_added_attrs_ids, child_discarded_feats,
+         child, child_was_changed) = child_results
         if child_added_attrs_ids:
             added_attrs_ids.update(child_added_attrs_ids)
+        if child_discarded_feats:
+            discarded_feats.update(child_discarded_feats)
         if child_was_changed:
             # update the subtree with the modified child
             # e.g., a theme might have been linked to a new layer's field
@@ -127,11 +130,11 @@ def calculate_composite_variable(iface, layer, node):
     if field_was_added:
         added_attrs_ids.add(node_attr_id)
     try:
-        discarded_feats = calculate_node(edited_node,
-                                         node_attr_name,
-                                         node_attr_id,
-                                         layer,
-                                         discarded_feats)
+        node_discarded_feats = calculate_node(edited_node,
+                                              node_attr_name,
+                                              node_attr_id,
+                                              layer,
+                                              discarded_feats)
     except (InvalidOperator, InvalidChild) as e:
         iface.messageBar().pushMessage(
             tr('Error'), str(e), level=QgsMessageBar.CRITICAL)
@@ -148,6 +151,7 @@ def calculate_composite_variable(iface, layer, node):
                 added_attrs_ids)
         return set(), set(), node, False
 
+    discarded_feats.update(node_discarded_feats)
     edited_node['field'] = node_attr_name
     any_change = True
     return added_attrs_ids, discarded_feats, edited_node, any_change
