@@ -179,9 +179,11 @@ class ProjectsManagerDialog(QDialog):
     @pyqtSlot()
     def on_proj_def_raw_textChanged(self):
         try:
-            project_definition = self.ui.proj_def_raw.toPlainText()
-            self.project_definitions['proj_defs'][
-                self.selected_idx] = json.loads(project_definition)
+            project_definition_str = self.ui.proj_def_raw.toPlainText()
+            project_definition = json.loads(project_definition_str)
+            self.project_definitions['proj_defs'][self.selected_idx] = \
+                project_definition
+            self.selected_proj_def = project_definition
             self.ok_button.setEnabled(True)
         except ValueError as e:
             print e
