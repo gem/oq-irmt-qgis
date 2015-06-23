@@ -120,14 +120,13 @@ class ProjectsManagerDialog(QDialog):
                                   separators=(',', ': '))
         self.ui.proj_def_raw.setPlainText(proj_def_str)
 
-    def add_proj_def(self, title):
-        proj_def_template = PROJECT_TEMPLATE
-        proj_def_template['title'] = title
+    def add_proj_def(self, title, proj_def=PROJECT_TEMPLATE):
+        proj_def['title'] = title
         if self.platform_layer_id:
-            proj_def_template['platform_layer_id'] = self.platform_layer_id
+            proj_def['platform_layer_id'] = self.platform_layer_id
         if self.zone_label_field:
-            proj_def_template['zone_label_field'] = self.zone_label_field
-        self.project_definitions['proj_defs'].append(proj_def_template)
+            proj_def['zone_label_field'] = self.zone_label_field
+        self.project_definitions['proj_defs'].append(proj_def)
         self.project_definitions['selected_idx'] = len(
             self.project_definitions['proj_defs']) - 1
         self.populate_proj_def_cbx()
@@ -157,6 +156,18 @@ class ProjectsManagerDialog(QDialog):
         self.update_proj_def_title()
         self.update_proj_def_descr()
         self.display_proj_def_raw()
+
+    @pyqtSlot()
+    def on_clone_btn_clicked(self):
+        title = (self.selected_proj_def['title'] + ' (copy)'
+                 if 'title' in self.selected_proj_def
+                 else '(copy)')
+        title, ok = QInputDialog().getText(self,
+                                           tr('Assign a title'),
+                                           tr('Project definition title'),
+                                           text=title)
+        if ok:
+            self.add_proj_def(title, self.selected_proj_def)
 
     @pyqtSlot()
     def on_add_proj_def_btn_clicked(self):
