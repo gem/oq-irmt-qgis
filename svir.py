@@ -40,7 +40,6 @@ from PyQt4.QtCore import (QSettings,
                           QCoreApplication,
                           qVersion,
                           QUrl,
-                          QObject,
                           )
 
 from PyQt4.QtGui import (QAction,
@@ -106,7 +105,7 @@ from aggregate_loss_by_zone import (calculate_zonal_stats,
                                     )
 
 
-class Svir(QObject):
+class Svir:
 
     def __init__(self, iface):
         # Save reference to the QGIS interface
