@@ -203,7 +203,7 @@
                 </gmd:EX_Extent>
             </gmd:extent>
             <gmd:supplementalInformation>
-                <gco:CharacterString>$SVIR_PROJECT_DEFINITION
+                <gco:CharacterString>$SVIR_SUPPLEMENTAL_INFORMATION
                 </gco:CharacterString>
             </gmd:supplementalInformation>
         </gmd:MD_DataIdentification>

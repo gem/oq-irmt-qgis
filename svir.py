@@ -605,16 +605,17 @@ class Svir:
 
         zip_file.extractall(dest_dir)
 
-        request_url = '%s/svir/get_project_definitions?layer_name=%s' % (
+        request_url = '%s/svir/get_supplemental_information?layer_name=%s' % (
             sv_downloader.host, parent_dlg.layer_id)
-        get_project_definitions_resp = sv_downloader.sess.get(request_url)
-        if not get_project_definitions_resp.ok:
+        get_supplemental_information_resp = sv_downloader.sess.get(request_url)
+        if not get_supplemental_information_resp.ok:
             self.iface.messageBar().pushMessage(
                 tr("Download Error"),
                 tr('Unable to retrieve the project definitions for the layer'),
                 level=QgsMessageBar.CRITICAL)
             return
-        project_definitions = json.loads(get_project_definitions_resp.content)
+        supplemental_information = json.loads(
+            get_supplemental_information_resp.content)
 
         dest_file = os.path.join(dest_dir, shp_file)
         layer = QgsVectorLayer(
@@ -653,10 +654,17 @@ class Svir:
                 error_msg, level=QgsMessageBar.WARNING,
                 duration=8)
         self.iface.setActiveLayer(layer)
+        try:
+            project_definitions = supplemental_information[
+                'project_definitions']
+        except KeyError:
+            project_definitions = supplemental_information
         # ensure backwards compatibility with projects with a single
         # project definition
         if not isinstance(project_definitions, list):
             project_definitions = [project_definitions]
+        supplemental_information['platform_layer_id'] = parent_dlg.layer_id
+        # TODO: put the platform_layer_id outside the single proj_defs
         for proj_def in project_definitions:
             if 'platform_layer_id' not in proj_def:
                 proj_def['platform_layer_id'] = parent_dlg.layer_id

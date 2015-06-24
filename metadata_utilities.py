@@ -96,11 +96,13 @@ def generate_iso_metadata(project_definition=None):
     if project_definition is not None:
         if DEBUG:
             print project_definition
-        template_replacements['SVIR_PROJECT_DEFINITION'] = '<![CDATA[%s]]>' % \
-            json.dumps([project_definition],
-                       sort_keys=False,
-                       indent=2,
-                       separators=(',', ': '))
+        supplemental_information = dict(
+            project_definitions=[project_definition])
+        template_replacements['SVIR_SUPPLEMENTAL_INFORMATION'] = \
+            '<![CDATA[%s]]>' % json.dumps(supplemental_information,
+                                          sort_keys=False,
+                                          indent=2,
+                                          separators=(',', ': '))
         try:
             template_replacements['ISO19115_TITLE'] = \
                 project_definition['title']
@@ -138,7 +140,7 @@ def generate_iso_metadata(project_definition=None):
             template_replacements['ISO19115_URL'] = ''
 
     else:
-        template_replacements['SVIR_PROJECT_DEFINITION'] = ''
+        template_replacements['SVIR_SUPPLEMENTAL_INFORMATION'] = ''
 
     return ISO_METADATA_XML_TEMPLATE.safe_substitute(template_replacements)
 
