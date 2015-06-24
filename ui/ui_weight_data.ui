@@ -20,7 +20,17 @@
    <bool>true</bool>
   </property>
   <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0">
+    <widget class="QWebView" name="web_view" native="true"/>
+   </item>
    <item row="1" column="0">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Style the layer by</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0">
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
@@ -30,8 +40,8 @@
      </property>
     </widget>
    </item>
-   <item row="0" column="0">
-    <widget class="QWebView" name="web_view" native="true"/>
+   <item row="2" column="0">
+    <widget class="QComboBox" name="style_by_field_cbx"/>
    </item>
   </layout>
  </widget>
