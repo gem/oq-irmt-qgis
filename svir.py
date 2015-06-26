@@ -990,29 +990,37 @@ class Svir:
         if dlg.exec_():
             layer = reg.mapLayers().values()[
                 dlg.ui.layer_cbx.currentIndex()]
-            attribute_name = dlg.ui.attrib_cbx.currentText()
+            input_attr_name = dlg.ui.attrib_cbx.currentText()
             algorithm_name = dlg.ui.algorithm_cbx.currentText()
             variant = dlg.ui.variant_cbx.currentText()
             inverse = dlg.ui.inverse_ckb.isChecked()
-            new_attr_name = dlg.ui.new_field_name_txt.text()
+            if dlg.ui.overwrite_ckb.isChecked():
+                target_attr_name = input_attr_name
+            else:
+                target_attr_name = dlg.ui.new_field_name_txt.text()
             try:
                 with WaitCursorManager("Applying transformation", self.iface):
                     res_attr_name, invalid_input_values = ProcessLayer(
-                        layer).transform_attribute(attribute_name,
+                        layer).transform_attribute(input_attr_name,
                                                    algorithm_name,
                                                    variant,
                                                    inverse,
-                                                   new_attr_name)
+                                                   target_attr_name)
                 msg = ('Transformation %s has been applied to attribute %s of'
-                       ' layer %s and the resulting attribute %s has been'
-                       ' saved into the same layer.') % (algorithm_name,
-                                                         attribute_name,
-                                                         layer.name(),
-                                                         res_attr_name)
+                       ' layer %s.') % (algorithm_name,
+                                       input_attr_name,
+                                       layer.name())
+                if target_attr_name == input_attr_name:
+                    msg += (' The original values of the attribute have been'
+                            ' overwritten by the transformed values.')
+                else:
+                    msg += (' The results of the transformation'
+                            ' have been saved into the new'
+                            ' attribute %s.') % (res_attr_name)
                 if invalid_input_values:
-                    msg += (' The transformation could not '
-                            'be performed for the following '
-                            'input values: %s' % invalid_input_values)
+                    msg += (' The transformation could not'
+                            ' be performed for the following'
+                            ' input values: %s' % invalid_input_values)
                 self.iface.messageBar().pushMessage(
                     tr("Info"),
                     tr(msg),

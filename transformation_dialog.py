@@ -77,6 +77,23 @@ class TransformationDialog(QDialog):
             self.reload_variant_cbx()
         self.ui.inverse_ckb.setDisabled(
             self.ui.algorithm_cbx.currentText() in ['LOG10'])
+        self.ui.warning_lbl.setText(
+            "<font color='red'>"
+            "WARNING: the original attribute will be overwritten by the"
+            " results of the transformation (it can not be undone)"
+            "</font>")
+
+    @pyqtSlot(int)
+    def on_overwrite_ckb_stateChanged(self):
+        overwrite_checked = self.ui.overwrite_ckb.isChecked()
+        self.ui.new_field_name_lbl.setDisabled(overwrite_checked)
+        self.ui.new_field_name_txt.setDisabled(overwrite_checked)
+        if overwrite_checked:
+            self.attr_name_user_def = False
+            self.ui.warning_lbl.show()
+        else:
+            self.ui.warning_lbl.hide()
+        self.update_default_fieldname()
 
     @pyqtSlot()
     def on_calc_btn_clicked(self):
@@ -119,10 +136,16 @@ class TransformationDialog(QDialog):
     def on_variant_cbx_currentIndexChanged(self):
         self.update_default_fieldname()
 
+    @pyqtSlot(str)
+    def on_attrib_cbx_currentIndexChanged(self):
+        self.update_default_fieldname()
+
     @pyqtSlot()
     def on_new_field_name_txt_editingFinished(self):
         self.attr_name_user_def = True
-        if not self.ui.new_field_name_txt.text():
+        input_field_name = self.ui.attrib_cbx.currentText()
+        new_field_name = self.ui.new_field_name_txt.text()
+        if not new_field_name or new_field_name == input_field_name:
             self.update_default_fieldname()
 
     def reload_variant_cbx(self):
@@ -146,9 +169,12 @@ class TransformationDialog(QDialog):
             algorithm_name = self.ui.algorithm_cbx.currentText()
             variant = self.ui.variant_cbx.currentText()
             inverse = self.ui.inverse_ckb.isChecked()
-            new_attr_name = \
-                ProcessLayer(self.selected_layer).transform_attribute(
-                    attribute_name, algorithm_name, variant,
-                    inverse, simulate=True)
+            if self.ui.overwrite_ckb.isChecked():
+                new_attr_name = attribute_name
+            else:
+                new_attr_name = \
+                    ProcessLayer(self.selected_layer).transform_attribute(
+                        attribute_name, algorithm_name, variant,
+                        inverse, simulate=True)
             self.ui.new_field_name_txt.setText(new_attr_name)
             self.attr_name_user_def = False
