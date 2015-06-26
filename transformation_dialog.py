@@ -88,6 +88,7 @@ class TransformationDialog(QDialog):
         overwrite_checked = self.ui.overwrite_ckb.isChecked()
         self.ui.new_field_name_lbl.setDisabled(overwrite_checked)
         self.ui.new_field_name_txt.setDisabled(overwrite_checked)
+        self.ui.track_new_field_ckb.setDisabled(overwrite_checked)
         if overwrite_checked:
             self.attr_name_user_def = False
             self.ui.warning_lbl.show()

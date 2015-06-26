@@ -91,7 +91,9 @@ from utils import (tr,
                    platform_login,
                    get_credentials,
                    update_platform_project,
-                   count_heading_commented_lines)
+                   count_heading_commented_lines,
+                   replace_fields,
+                   )
 from abstract_worker import start_worker
 from shared import (SVIR_PLUGIN_VERSION,
                     DEBUG,
@@ -1031,7 +1033,19 @@ class Svir:
                     tr("Error"),
                     tr(e.message),
                     level=QgsMessageBar.CRITICAL)
-
+            if (dlg.ui.track_new_field_ckb.isChecked()
+                    and target_attr_name != input_attr_name):
+                self.sync_proj_def()
+                active_layer_id = self.iface.activeLayer().id()
+                layer_dict = self.project_definitions[active_layer_id]
+                selected_idx = layer_dict['selected_idx']
+                proj_defs = layer_dict['proj_defs']
+                for proj_def_idx, proj_def in enumerate(proj_defs):
+                    proj_def = replace_fields(proj_def,
+                                              input_attr_name,
+                                              target_attr_name)
+                    proj_defs[proj_def_idx] = proj_def
+                self.update_proj_defs(active_layer_id, proj_defs, selected_idx)
         elif dlg.use_advanced:
             layer = reg.mapLayers().values()[
                 dlg.ui.layer_cbx.currentIndex()]

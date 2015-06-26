@@ -26,6 +26,7 @@
 import collections
 import json
 import os
+from copy import deepcopy
 from time import time
 from qgis.core import QgsMapLayerRegistry
 from qgis.gui import QgsMessageBar
@@ -42,6 +43,18 @@ from third_party.poster.encode import multipart_encode
 
 def tr(message):
     return QApplication.translate('Svir', message)
+
+
+def replace_fields(sub_tree_root, before, after):
+    # recursively search the project definition for 'field's equal to the
+    # string before and replace the value with the string after
+    if 'field' in sub_tree_root and sub_tree_root['field'] == before:
+        sub_tree_root['field'] = after
+    if 'children' in sub_tree_root:
+        for child_idx, child in enumerate(sub_tree_root['children']):
+            modified_child = replace_fields(child, before, after)
+            sub_tree_root[child_idx] = deepcopy(modified_child)
+    return sub_tree_root
 
 
 def count_heading_commented_lines(fname):
