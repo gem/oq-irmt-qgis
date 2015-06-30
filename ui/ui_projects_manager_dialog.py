@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_projects_manager_dialog.ui'
 #
-# Created: Wed May  6 17:13:11 2015
+# Created: Tue Jun 23 15:18:54 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -66,6 +66,9 @@ class Ui_ProjectsManagerDialog(object):
         self.label_4 = QtGui.QLabel(ProjectsManagerDialog)
         self.label_4.setObjectName(_fromUtf8("label_4"))
         self.gridLayout.addWidget(self.label_4, 13, 0, 1, 1)
+        self.clone_btn = QtGui.QPushButton(ProjectsManagerDialog)
+        self.clone_btn.setObjectName(_fromUtf8("clone_btn"))
+        self.gridLayout.addWidget(self.clone_btn, 3, 0, 1, 1)
 
         self.retranslateUi(ProjectsManagerDialog)
         QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), ProjectsManagerDialog.accept)
@@ -79,4 +82,5 @@ class Ui_ProjectsManagerDialog(object):
         self.label_2.setText(_translate("ProjectsManagerDialog", "Title", None))
         self.label_3.setText(_translate("ProjectsManagerDialog", "Description", None))
         self.label_4.setText(_translate("ProjectsManagerDialog", "Raw textual representation", None))
+        self.clone_btn.setText(_translate("ProjectsManagerDialog", "Make a copy of the selected project definition", None))
 

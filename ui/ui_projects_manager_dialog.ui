@@ -81,6 +81,13 @@
      </property>
     </widget>
    </item>
+   <item row="3" column="0">
+    <widget class="QPushButton" name="clone_btn">
+     <property name="text">
+      <string>Make a copy of the selected project definition</string>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
  <resources/>
