@@ -74,7 +74,7 @@ class WeightDataDialog(QDialog):
         self.discarded_feats = set()
         self.any_changes_made = False
         self.active_layer_numeric_fields = []
-        self.set_active_layer_numeric_fields()
+        self.update_active_layer_numeric_fields()
 
         self.project_definition = deepcopy(project_definition)
         try:
@@ -100,14 +100,14 @@ class WeightDataDialog(QDialog):
         self.project_definition = deepcopy(project_definition)
         self.populate_style_by_field_cbx()
 
-    def set_active_layer_numeric_fields(self):
+    def update_active_layer_numeric_fields(self):
         self.active_layer_numeric_fields = [
             field.name()
             for field in self.iface.activeLayer().dataProvider().fields()
             if field.typeName() in NUMERIC_FIELD_TYPES]
 
     def populate_style_by_field_cbx(self):
-        self.set_active_layer_numeric_fields()
+        self.update_active_layer_numeric_fields()
         fields_in_proj_def = get_field_names(self.project_definition)
         fields_for_styling = [
             field for field in self.active_layer_numeric_fields
