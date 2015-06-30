@@ -35,6 +35,38 @@ cp.readfp(open(os.path.dirname(os.path.realpath(__file__)) + "/metadata.txt"))
 SVIR_PLUGIN_VERSION = cp.get('general', 'version')
 PLATFORM_REGISTRATION_URL = 'https://platform.openquake.org/account/signup/'
 
+
+class DiscardedFeature(object):
+
+    valid_reasons = ('Missing value', 'Invalid value')
+
+    def __init__(self, feature_id, reason):
+        self.feature_id = feature_id
+        self.reason = reason
+        if self.reason not in self.valid_reasons:
+            raise ValueError(
+                "Invalid reason. It must be one of %s"
+                % [valid_reason for valid_reason in self.valid_reasons])
+
+    def __eq__(self, other):  # two instances are equal if
+        return (self.feature_id == other.feature_id
+                and self.reason == other.reason)
+
+    def __ne__(self, other):  # python requrires to explicitly define not equal
+                              # so we implement the negation of __eq__
+        return not self.__eq__(other)
+
+    def __lt__(self, other):  # for sorting
+        return (self.feature_id < other.feature_id
+                and self.reason < other.reason)
+
+    def __hash__(self):  # what is unique
+        return hash((self.feature_id, self.reason))
+
+    def __repr__(self):
+        return "Feature id: %s, reason: %s" % (self.feature_id, self.reason)
+
+
 INT_FIELD_TYPE_NAME = "integer"
 REAL_FIELD_TYPE_NAME = "Real"
 DOUBLE_FIELD_TYPE_NAME = "double"
