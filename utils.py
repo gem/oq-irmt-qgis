@@ -89,10 +89,12 @@ def get_node(sub_tree, name):
     return None  # not found
 
 
-def get_field_names(sub_tree, field_names):
+def get_field_names(sub_tree, field_names=None):
     # return a list of all the field names defined in the project definition
-    # (browsing the tree recursively)
-    # field_names is an accumulator that needs to be passed as []
+    # field_names is an accumulator that is extended browsing the tree
+    # recursively
+    if field_names is None:
+        field_names = []
     if 'field' in sub_tree:
         field_names.append(sub_tree['field'])
     if 'children' in sub_tree:

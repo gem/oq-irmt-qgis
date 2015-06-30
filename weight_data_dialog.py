@@ -108,8 +108,7 @@ class WeightDataDialog(QDialog):
 
     def populate_style_by_field_cbx(self):
         self.set_active_layer_numeric_fields()
-        # the empty list will be filled by get_field_names
-        fields_in_proj_def = get_field_names(self.project_definition, [])
+        fields_in_proj_def = get_field_names(self.project_definition)
         fields_for_styling = [
             field for field in self.active_layer_numeric_fields
             if field in fields_in_proj_def]
