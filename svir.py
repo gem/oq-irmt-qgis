@@ -49,7 +49,8 @@ from PyQt4.QtGui import (QAction,
                          QColor,
                          QFileDialog,
                          QDesktopServices,
-                         QMessageBox)
+                         QMessageBox,
+                         )
 
 from qgis.core import (QgsVectorLayer,
                        QgsMapLayerRegistry,
@@ -60,7 +61,8 @@ from qgis.core import (QgsVectorLayer,
                        QgsSymbolV2, QgsVectorGradientColorRampV2,
                        QgsRuleBasedRendererV2,
                        QgsFillSymbolV2,
-                       QgsProject,)
+                       QgsProject,
+                       )
 
 from qgis.gui import QgsMessageBar
 
@@ -95,13 +97,16 @@ from utils import (tr,
                    get_credentials,
                    update_platform_project,
                    count_heading_commented_lines,
-                   toggle_select_features_widget)
+                   replace_fields,
+                   toggle_select_features_widget,
+                   )
 from abstract_worker import start_worker
 from shared import (SVIR_PLUGIN_VERSION,
                     DEBUG,
                     PROJECT_TEMPLATE,
                     THEME_TEMPLATE,
-                    INDICATOR_TEMPLATE)
+                    INDICATOR_TEMPLATE,
+                    )
 from aggregate_loss_by_zone import (calculate_zonal_stats,
                                     purge_zones_without_loss_points,
                                     )
@@ -1137,29 +1142,37 @@ class Svir:
         if dlg.exec_():
             layer = reg.mapLayers().values()[
                 dlg.ui.layer_cbx.currentIndex()]
-            attribute_name = dlg.ui.attrib_cbx.currentText()
+            input_attr_name = dlg.ui.attrib_cbx.currentText()
             algorithm_name = dlg.ui.algorithm_cbx.currentText()
             variant = dlg.ui.variant_cbx.currentText()
             inverse = dlg.ui.inverse_ckb.isChecked()
-            new_attr_name = dlg.ui.new_field_name_txt.text()
+            if dlg.ui.overwrite_ckb.isChecked():
+                target_attr_name = input_attr_name
+            else:
+                target_attr_name = dlg.ui.new_field_name_txt.text()
             try:
                 with WaitCursorManager("Applying transformation", self.iface):
                     res_attr_name, invalid_input_values = ProcessLayer(
-                        layer).transform_attribute(attribute_name,
+                        layer).transform_attribute(input_attr_name,
                                                    algorithm_name,
                                                    variant,
                                                    inverse,
-                                                   new_attr_name)
+                                                   target_attr_name)
                 msg = ('Transformation %s has been applied to attribute %s of'
-                       ' layer %s and the resulting attribute %s has been'
-                       ' saved into the same layer.') % (algorithm_name,
-                                                         attribute_name,
-                                                         layer.name(),
-                                                         res_attr_name)
+                       ' layer %s.') % (algorithm_name,
+                                        input_attr_name,
+                                        layer.name())
+                if target_attr_name == input_attr_name:
+                    msg += (' The original values of the attribute have been'
+                            ' overwritten by the transformed values.')
+                else:
+                    msg += (' The results of the transformation'
+                            ' have been saved into the new'
+                            ' attribute %s.') % (res_attr_name)
                 if invalid_input_values:
-                    msg += (' The transformation could not '
-                            'be performed for the following '
-                            'input values: %s' % invalid_input_values)
+                    msg += (' The transformation could not'
+                            ' be performed for the following'
+                            ' input values: %s' % invalid_input_values)
                 self.iface.messageBar().pushMessage(
                     tr("Info"),
                     tr(msg),
@@ -1170,7 +1183,19 @@ class Svir:
                     tr("Error"),
                     tr(e.message),
                     level=QgsMessageBar.CRITICAL)
-
+            if (dlg.ui.track_new_field_ckb.isChecked()
+                    and target_attr_name != input_attr_name):
+                self.sync_proj_def()
+                active_layer_id = self.iface.activeLayer().id()
+                layer_dict = self.project_definitions[active_layer_id]
+                selected_idx = layer_dict['selected_idx']
+                proj_defs = layer_dict['proj_defs']
+                for proj_def_idx, proj_def in enumerate(proj_defs):
+                    proj_def = replace_fields(proj_def,
+                                              input_attr_name,
+                                              target_attr_name)
+                    proj_defs[proj_def_idx] = proj_def
+                self.update_proj_defs(active_layer_id, proj_defs, selected_idx)
         elif dlg.use_advanced:
             layer = reg.mapLayers().values()[
                 dlg.ui.layer_cbx.currentIndex()]

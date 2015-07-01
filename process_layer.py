@@ -190,28 +190,50 @@ class ProcessLayer():
         """
         Use one of the available transformation algorithms to transform an
         attribute of the layer, and add a new attribute with the
-        transformed data
+        transformed data, or overwrite the input attribute with the results
+
+        :param input_attr_name: name of the attribute to be transformed
+        :param algorithm_name: name of the transformation algorithm
+        :param variant: name of the algorithm variant
+        :param inverse: boolean indicating if the inverse transformation
+                        has to be performed
+        :param new_attr_name: name of the target attribute that will store the
+                              results of the transformation (if it is equal to
+                              the input_attr_name, the attribute will be
+                              overwritten)
+        :param simulate: if True, the method will just simulate the creation
+                         of the target attribute and return the name that would
+                         be assigned to it
         """
         # get the id of the attribute named input_attr_name
         input_attr_id = self.find_attribute_id(input_attr_name)
-
-        # build the name of the output transformed attribute
-        # WARNING! Shape files support max 10 chars for attribute names
-        if not new_attr_name:
-            if variant:
-                new_attr_name = algorithm_name[:5] + '_' + variant[:4]
+        overwrite = (new_attr_name is not None
+                     and new_attr_name == input_attr_name)
+        if simulate or not overwrite:
+            # add a new attribute to store the results of the transformation
+            # or simulate adding a new attribute and return the name of the
+            # name that would be assigned to the new attribute if it would be
+            # added.
+            # NOTE: building the name of the output transformed attribute,
+            #       we take into account the chosen algorithm and variant and
+            #       we truncate the new name to 10 characters (max allowed for
+            #       shapefiles)
+            if not new_attr_name:
+                if variant:
+                    new_attr_name = algorithm_name[:5] + '_' + variant[:4]
+                else:
+                    new_attr_name = algorithm_name[:10]
             else:
-                new_attr_name = algorithm_name[:10]
-        else:
-            new_attr_name = new_attr_name[:10]
-        new_attr_name = new_attr_name.replace(' ', '_')
-        field = QgsField(new_attr_name, QVariant.Double)
-        field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
-        if simulate:
-            attr_names_dict = self.add_attributes([field], simulate=simulate)
-            # get the name actually assigned to the new attribute
-            actual_new_attr_name = attr_names_dict[new_attr_name]
-            return actual_new_attr_name
+                new_attr_name = new_attr_name[:10]
+            new_attr_name = new_attr_name.replace(' ', '_')
+            field = QgsField(new_attr_name, QVariant.Double)
+            field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
+            if simulate:
+                attr_names_dict = self.add_attributes([field],
+                                                      simulate=simulate)
+                # get the name actually assigned to the new attribute
+                actual_new_attr_name = attr_names_dict[new_attr_name]
+                return actual_new_attr_name
 
         # a dict will contain all the values for the chosen input attribute,
         # keeping as key, for each value, the id of the corresponding feature
@@ -232,11 +254,15 @@ class ProcessLayer():
         except NotImplementedError:
             raise
 
-        attr_names_dict = self.add_attributes([field], simulate=simulate)
-        # get the name actually assigned to the new attribute
-        actual_new_attr_name = attr_names_dict[new_attr_name]
-        # get the id of the new attribute
-        new_attr_id = self.find_attribute_id(actual_new_attr_name)
+        if overwrite:
+            actual_new_attr_name = input_attr_name
+            new_attr_id = input_attr_id
+        else:
+            attr_names_dict = self.add_attributes([field], simulate=simulate)
+            # get the name actually assigned to the new attribute
+            actual_new_attr_name = attr_names_dict[new_attr_name]
+            # get the id of the new attribute
+            new_attr_id = self.find_attribute_id(actual_new_attr_name)
 
         with LayerEditingManager(
                 self.layer, 'Write transformed values', DEBUG):
