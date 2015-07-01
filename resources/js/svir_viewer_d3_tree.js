@@ -57,10 +57,8 @@
              buttons: {
                  "Ok": function() {
                      var newDescription = $("#newDescription").val();
-                     if (newDescription !== null || newDescription == '') {
-                         var spinnerNameId = $(this).data('event').target.id;
-                         $('#' + spinnerNameId).text(newDescription);
-                     }
+                     var spinnerNameId = $(this).data('event').target.id;
+                     $('#' + spinnerNameId).text(newDescription);
                      $(this).dialog("close");
                  },
                  "Cancel": function() {
@@ -120,7 +118,6 @@
         function createSpinner(id, weight, name, field, isInverted) {
             pdTempSpinnerIds.push("spinner-"+id);
             $('#projectDefWeightDialog').dialog("open");
-            // var content = '<div style="clear: left; float: left;padding:10px 0"><label style="width: 17em; "for="spinner'+id+'"><label onclick="alert()">'+name+'</label>';
             var content = '<div style="clear: left; float: left;padding:10px 0"><label style="width: 17em; "for="spinner' + id + '">' + '<a href="#" id="name-spinner-' + id + '">' + name + '</a>';
             if (typeof field !== 'undefined') {
                 content += ' ('+field+')';
