@@ -47,6 +47,35 @@
             dialogClass: "no-close",
             closeOnEscape: false
         });
+
+        $("#setNodeDescriptionDialog").dialog({
+             title: "Set description",
+             position: {my: "left top", at: "left top", of: "#projectDefWeightDialog"},
+             autoOpen: false,
+             modal: true,
+             minWidth: 500,
+             buttons: {
+                 "Ok": function() {
+                     var newDescription = $("#newDescription").val();
+                     var spinnerNameId = $(this).data('event').target.id;
+                     $('#' + spinnerNameId).text(newDescription);
+                     $(this).dialog("close");
+                 },
+                 "Cancel": function() {
+                     $(this).dialog("close");
+                 }
+             }
+        });
+        $('#newDescription').keyup(function() {
+            var dialog = $('#setNodeDescriptionDialog').parent()
+            var okButton = $('button:contains("Ok")', dialog);
+            if ($(this).val() == ''){
+                okButton.button('disable')
+            }
+            else{
+                okButton.button('enable')
+            }
+        });
     });
 
     ////////////////////////////////////////////
@@ -89,7 +118,7 @@
         function createSpinner(id, weight, name, field, isInverted) {
             pdTempSpinnerIds.push("spinner-"+id);
             $('#projectDefWeightDialog').dialog("open");
-            var content = '<div style="clear: left; float: left;padding:10px 0"><label style="width: 17em; "for="spinner'+id+'">'+name;
+            var content = '<div style="clear: left; float: left;padding:10px 0"><label style="width: 17em; "for="spinner' + id + '">' + '<a href="#" id="name-spinner-' + id + '">' + name + '</a>';
             if (typeof field !== 'undefined') {
                 content += ' ('+field+')';
             }
@@ -112,6 +141,12 @@
                     incremental: true
                 });
             });
+
+            $('#name-spinner-' + id).click(function (event){
+                $("#newDescription").val($('#' + event.target.id).text())
+                $('#setNodeDescriptionDialog').data('event', event).dialog("open");
+            });
+
         }
 
         function operatorSelect(pdOperator){
@@ -332,13 +367,16 @@
                 pdTempWeights = [];
                 pdTempInverters = [];
                 pdTempWeightsComputed = [];
+                pdTempDescriptions = [];
 
-                // Get the values of the spinners and of the inverters
+                // Get the values of the spinners, of the inverters and of the descriptions
                 for (var i = 0; i < pdTempSpinnerIds.length; i++) {
                     var isInverted = $('#inverter-' + pdTempSpinnerIds[i]).is(':checked');
                     var spinnerValue = $('#'+pdTempSpinnerIds[i]).val();
+                    var description = $('#name-'+pdTempSpinnerIds[i]).text();
                     pdTempInverters.push(isInverted);
                     pdTempWeights.push(spinnerValue);
+                    pdTempDescriptions.push(description);
                 }
 
                 pdTempWeights = pdTempWeights.map(Number);
@@ -366,7 +404,7 @@
 
                 // Update the json with new values
                 for (var i = 0; i < pdTempWeightsComputed.length; i++) {
-                    updateTreeBranch(pdData, [pdTempIds[i]], pdTempWeightsComputed[i], pdTempInverters[i]);
+                    updateTreeBranch(pdData, [pdTempIds[i]], pdTempWeightsComputed[i], pdTempInverters[i], pdTempDescriptions[i]);
                 }
 
                 if ($('#operator').length !== 0) {
@@ -398,16 +436,17 @@
 
         }
 
-        function updateTreeBranch(pdData, id, pdWeight, pdIsInverted) {
+        function updateTreeBranch(pdData, id, pdWeight, pdIsInverted, pdName) {
             if (id.some(function(currentValue) {
                 return (pdData.id == currentValue);
             })) {
                 pdData.weight = pdWeight;
                 pdData.isInverted = pdIsInverted;
+                pdData.name = pdName;
             }
 
             (pdData.children || []).forEach(function(currentItem) {
-                updateTreeBranch(currentItem, id, pdWeight, pdIsInverted);
+                updateTreeBranch(currentItem, id, pdWeight, pdIsInverted, pdName);
             });
         }
 
