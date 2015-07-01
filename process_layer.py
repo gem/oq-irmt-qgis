@@ -124,8 +124,9 @@ class ProcessLayer():
             proposed_attribute_dict = {}
             proposed_attribute_list = []
             for input_attribute in attribute_list:
-                input_attribute_name = input_attribute.name()[:10]
-                proposed_attribute_name = input_attribute_name
+                input_attribute_name = input_attribute.name()
+                proposed_attribute_name = \
+                    input_attribute_name[:10].upper().replace(' ', '_')
                 i = 1
                 while True:
                     current_attribute_names = \
@@ -138,7 +139,8 @@ class ProcessLayer():
                         # 1 = underscore
                         max_name_len = 10 - i_num_digits - 1
                         proposed_attribute_name = '%s_%d' % (
-                            input_attribute_name[:max_name_len], i)
+                            input_attribute_name[
+                                :max_name_len].upper().replace(' ', '_'), i)
                         i += 1
                     else:
                         # If the attribute name is not already assigned,
@@ -222,10 +224,7 @@ class ProcessLayer():
                 if variant:
                     new_attr_name = algorithm_name[:5] + '_' + variant[:4]
                 else:
-                    new_attr_name = algorithm_name[:10]
-            else:
-                new_attr_name = new_attr_name[:10]
-            new_attr_name = new_attr_name.replace(' ', '_')
+                    new_attr_name = algorithm_name
             field = QgsField(new_attr_name, QVariant.Double)
             field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
             if simulate:
