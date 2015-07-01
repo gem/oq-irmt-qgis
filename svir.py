@@ -27,6 +27,8 @@ import json
 import os.path
 import tempfile
 import uuid
+import fileinput
+import re
 from copy import deepcopy
 
 from math import floor, ceil
@@ -533,6 +535,17 @@ class Svir:
         QgsMessageLog.logMessage(msg, 'GEM Social Vulnerability Downloader')
         # don't remove the file, otherwise there will be concurrency
         # problems
+
+        # fix an issue of QGIS 10, that is unable to read
+        # multipolygons if they contain spaces between two polygons.
+        # We remove those spaces from the csv file before importing it.
+        # TODO: Remove this as soon as QGIS solves that issue
+        for line in fileinput.input(fname, inplace=True):
+            line = re.sub('\)\),\s\(\(', ')),((', line.rstrip())
+            line = re.sub('\),\s\(', '),(', line.rstrip())
+            # thanks to inplace=True, 'print line' writes the line into the
+            # input file, overwriting the original line
+            print line
 
         # count top lines in the csv starting with '#'
         lines_to_skip_count = count_heading_commented_lines(fname)
