@@ -848,7 +848,7 @@ class Svir:
             self.recalculate_indexes(data)
         dlg.added_attrs_ids.update(added_attrs_ids)
         dlg.discarded_feats = discarded_feats
-        dlg.project_definition = deepcopy(project_definition)
+        dlg.update_project_definition(project_definition)
         self.redraw_ir_layer(project_definition)
 
     def recalculate_indexes(self, data):
@@ -969,21 +969,29 @@ class Svir:
         return True
 
     def redraw_ir_layer(self, data):
+        # if the user has explicitly selected a field to use for styling, use
+        # it, otherwise attempt to show the IRI, or the SVI, or the RI
+        if 'style_by_field' in data:
+            target_field = data['style_by_field']
+            printing_str = target_field
         # if an IRI has been already calculated, show it
-        # else show the SVI, else RI
-        if self.is_iri_renderable(data):
-            target_field = data['field']
+        elif self.is_iri_renderable(data):
+            iri_node = data
+            target_field = iri_node['field']
             printing_str = 'IRI'
+        # else show the SVI if possible
         elif self.is_svi_renderable(data):
             svi_node = data['children'][1]
             target_field = svi_node['field']
             printing_str = 'SVI'
+        # otherwise attempt to show the RI
         elif self.is_ri_renderable(data):
             ri_node = data['children'][0]
             target_field = ri_node['field']
             printing_str = 'RI'
-        else:
+        else:  # if none of them can be rendered, then do nothing
             return
+        # proceed only if the target field is actually a field of the layer
         if self.current_layer.fieldNameIndex(target_field) == -1:
             return
         if DEBUG:

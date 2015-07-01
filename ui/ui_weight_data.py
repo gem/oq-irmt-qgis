@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_weight_data.ui'
 #
-# Created: Wed Jan 14 12:08:46 2015
+# Created: Tue Jun 23 16:32:43 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -31,14 +31,20 @@ class Ui_WeightDataDialog(object):
         WeightDataDialog.setModal(True)
         self.gridLayout = QtGui.QGridLayout(WeightDataDialog)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
+        self.web_view = QtWebKit.QWebView(WeightDataDialog)
+        self.web_view.setObjectName(_fromUtf8("web_view"))
+        self.gridLayout.addWidget(self.web_view, 0, 0, 1, 1)
+        self.label = QtGui.QLabel(WeightDataDialog)
+        self.label.setObjectName(_fromUtf8("label"))
+        self.gridLayout.addWidget(self.label, 1, 0, 1, 1)
         self.buttonBox = QtGui.QDialogButtonBox(WeightDataDialog)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
         self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName(_fromUtf8("buttonBox"))
-        self.gridLayout.addWidget(self.buttonBox, 1, 0, 1, 1)
-        self.web_view = QtWebKit.QWebView(WeightDataDialog)
-        self.web_view.setObjectName(_fromUtf8("web_view"))
-        self.gridLayout.addWidget(self.web_view, 0, 0, 1, 1)
+        self.gridLayout.addWidget(self.buttonBox, 3, 0, 1, 1)
+        self.style_by_field_cbx = QtGui.QComboBox(WeightDataDialog)
+        self.style_by_field_cbx.setObjectName(_fromUtf8("style_by_field_cbx"))
+        self.gridLayout.addWidget(self.style_by_field_cbx, 2, 0, 1, 1)
 
         self.retranslateUi(WeightDataDialog)
         QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), WeightDataDialog.accept)
@@ -47,5 +53,6 @@ class Ui_WeightDataDialog(object):
 
     def retranslateUi(self, WeightDataDialog):
         WeightDataDialog.setWindowTitle(_translate("WeightDataDialog", "Weight Data", None))
+        self.label.setText(_translate("WeightDataDialog", "Style the layer by", None))
 
 from PyQt4 import QtWebKit
