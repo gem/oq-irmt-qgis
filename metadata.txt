@@ -34,6 +34,7 @@ changelog=
     * Primary indicators' labels rendered on the right of the D3 tree to avoid overlapping
     * When downloading a layer from the OQ-Platform, get the "supplemental information" leveraging the ad-hoc API
     * More readable project's details while browsing OQ-Platform's layers
+    * From the weighting dialog it is possible to select the field to be used to style the layer
     * In the project manager it is possible to make a copy of the currently selected project definition
 
 # tags are comma separated with spaces allowed

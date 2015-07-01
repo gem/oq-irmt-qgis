@@ -31,7 +31,9 @@ from PyQt4.QtCore import (Qt,
                           QUrl,
                           QSettings,
                           pyqtProperty,
-                          pyqtSignal)
+                          pyqtSignal,
+                          pyqtSlot,
+                          )
 
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox)
@@ -44,6 +46,7 @@ from shared import (DEFAULT_OPERATOR,
                     NUMERIC_FIELD_TYPES,
                     NODE_TYPES,
                     DEBUG)
+from utils import get_field_names
 
 
 class WeightDataDialog(QDialog):
@@ -70,12 +73,14 @@ class WeightDataDialog(QDialog):
         self.added_attrs_ids = set()
         self.discarded_feats = set()
         self.any_changes_made = False
+        self.active_layer_numeric_fields = []
+        self.update_active_layer_numeric_fields()
 
         self.project_definition = deepcopy(project_definition)
         try:
             proj_title = self.project_definition['title']
         except KeyError:
-            proj_title = 'Untitled'
+            proj_title = 'untitled'
         dialog_title = (
             'Set weights and operators for project: "%s"' % proj_title)
         self.setWindowTitle(dialog_title)
@@ -89,11 +94,36 @@ class WeightDataDialog(QDialog):
         self.frame.javaScriptWindowObjectCleared.connect(self.setup_js)
         self.web_view.loadFinished.connect(self.show_tree)
         self.json_updated.connect(self.handle_json_updated)
+        self.populate_style_by_field_cbx()
 
+    def update_project_definition(self, project_definition):
+        self.project_definition = deepcopy(project_definition)
+        self.populate_style_by_field_cbx()
+
+    def update_active_layer_numeric_fields(self):
         self.active_layer_numeric_fields = [
             field.name()
-            for field in iface.activeLayer().dataProvider().fields()
+            for field in self.iface.activeLayer().dataProvider().fields()
             if field.typeName() in NUMERIC_FIELD_TYPES]
+
+    def populate_style_by_field_cbx(self):
+        self.update_active_layer_numeric_fields()
+        fields_in_proj_def = get_field_names(self.project_definition)
+        fields_for_styling = [
+            field for field in self.active_layer_numeric_fields
+            if field in fields_in_proj_def]
+        # block signals to avoid performing the onchange actions while adding
+        # items programmatically
+        self.ui.style_by_field_cbx.blockSignals(True)
+        self.ui.style_by_field_cbx.clear()
+        self.ui.style_by_field_cbx.addItem('')
+        self.ui.style_by_field_cbx.addItems(fields_for_styling)
+        if 'style_by_field' in self.project_definition:
+            idx = self.ui.style_by_field_cbx.findText(
+                self.project_definition['style_by_field'])
+            self.ui.style_by_field_cbx.setCurrentIndex(idx)
+        # reactivate the signals, so the user's changes will trigger something
+        self.ui.style_by_field_cbx.blockSignals(False)
 
     def setup_context_menu(self):
         settings = QSettings()
@@ -136,6 +166,15 @@ class WeightDataDialog(QDialog):
             if 'children' in element:
                 self.clean_json(element['children'])
         return data[0]
+
+    @pyqtSlot(str)
+    def on_style_by_field_cbx_currentIndexChanged(self):
+        if self.ui.style_by_field_cbx.currentText():
+            self.project_definition['style_by_field'] = \
+                self.ui.style_by_field_cbx.currentText()
+        elif 'style_by_field' in self.project_definition:
+            # if the empty item is selected, clean the project definition
+            del self.project_definition['style_by_field']
 
     @pyqtProperty(str)
     def json_str(self):
