@@ -52,21 +52,19 @@ def replace_fields(sub_tree_root, before, after):
     It is useful, e.g., when we transform a field that is tracked by the
     project definition, and we obtain a new field that we want to track
     instead of the original one.
+    It works by side-effect, modifying the passed project definition.
     :param sub_tree_root: node of a project definition. From that node (used
                           as root) towards the leaves of the tree, the function
                           will recursively search for nodes with a 'field'
                           property that contains the string before
     :param before: string to be replaced
     :param after: new value for the replaced string
-    :returns: the modified subtree
     """
     if 'field' in sub_tree_root and sub_tree_root['field'] == before:
         sub_tree_root['field'] = after
     if 'children' in sub_tree_root:
-        for child_idx, child in enumerate(sub_tree_root['children']):
-            modified_child = replace_fields(child, before, after)
-            sub_tree_root[child_idx] = deepcopy(modified_child)
-    return sub_tree_root
+        for child in sub_tree_root['children']:
+            replace_fields(child, before, after)
 
 
 def count_heading_commented_lines(fname):
