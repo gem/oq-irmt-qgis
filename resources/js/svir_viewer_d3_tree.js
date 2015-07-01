@@ -48,24 +48,36 @@
             closeOnEscape: false
         });
 
-        // $("#setNodeDescriptionDialog").dialog({
-        //     title: "Set description",
-        //     position: {my: "left top", at: "left top", of: "#projectDefDialog"},
-        //     autoOpen: false,
-        //     modal: true,
-        //     minWidth: 500,
-        //     buttons: {
-        //         "Ok": function() {
-        //             var newDescription = $("#newDescription");
-        //             //Do your code here
-        //             alert(newDescription.val());
-        //             $(this).dialog("close");
-        //         },
-        //         "Cancel": function() {
-        //             $(this).dialog("close");
-        //         }
-        //     }
-        // });
+        $("#setNodeDescriptionDialog").dialog({
+             title: "Set description",
+             position: {my: "left top", at: "left top", of: "#projectDefWeightDialog"},
+             autoOpen: false,
+             modal: true,
+             minWidth: 500,
+             buttons: {
+                 "Ok": function() {
+                     var newDescription = $("#newDescription").val();
+                     if (newDescription !== null || newDescription == '') {
+                         var spinnerNameId = $(this).data('event').target.id;
+                         $('#' + spinnerNameId).text(newDescription);
+                     }
+                     $(this).dialog("close");
+                 },
+                 "Cancel": function() {
+                     $(this).dialog("close");
+                 }
+             }
+        });
+        $('#newDescription').keyup(function() {
+            var dialog = $('#setNodeDescriptionDialog').parent()
+            var okButton = $('button:contains("Ok")', dialog);
+            if ($(this).val() == ''){
+                okButton.button('disable')
+            }
+            else{
+                okButton.button('enable')
+            }
+        });
     });
 
     ////////////////////////////////////////////
@@ -134,13 +146,8 @@
             });
 
             $('#name-spinner-' + id).click(function (event){
-                var spinnerNameId = event.target.id;
-                // $("#setNodeDescriptionDialog").dialog("open");
-                var oldDescription = document.getElementById(spinnerNameId).innerHTML;
-                var newDescription = prompt("Edit description", oldDescription);
-                if (newDescription !== null) {
-                    document.getElementById(spinnerNameId).innerHTML = newDescription;
-                }
+                $("#newDescription").val($('#' + event.target.id).text())
+                $('#setNodeDescriptionDialog').data('event', event).dialog("open");
             });
 
         }
