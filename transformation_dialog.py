@@ -77,6 +77,7 @@ class TransformationDialog(QDialog):
             self.reload_variant_cbx()
         self.ui.inverse_ckb.setDisabled(
             self.ui.algorithm_cbx.currentText() in ['LOG10'])
+        self.ui.warning_lbl.hide()
         self.ui.warning_lbl.setText(
             "<font color='red'>"
             "WARNING: the original attribute will be overwritten by the"
@@ -144,10 +145,20 @@ class TransformationDialog(QDialog):
     @pyqtSlot()
     def on_new_field_name_txt_editingFinished(self):
         self.attr_name_user_def = True
+        new_field_name = self.ui.new_field_name_txt.text()
+        # if the name of the new field is empty, automatically assign a name
+        if not new_field_name:
+            self.update_default_fieldname()
+
+    @pyqtSlot(str)
+    def on_new_field_name_txt_textEdited(self):
         input_field_name = self.ui.attrib_cbx.currentText()
         new_field_name = self.ui.new_field_name_txt.text()
-        if not new_field_name or new_field_name == input_field_name:
-            self.update_default_fieldname()
+        # if the name of the new field is equal to the name of the input field,
+        # automatically check the 'overwrite' checkbox (and consequently
+        # display the warning)
+        if new_field_name == input_field_name:
+            self.ui.overwrite_ckb.setChecked(True)
 
     def reload_variant_cbx(self):
         self.ui.variant_cbx.clear()

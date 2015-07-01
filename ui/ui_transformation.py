@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_transformation.ui'
 #
-# Created: Fri Jun 26 16:24:03 2015
+# Created: Wed Jul  1 10:54:15 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -61,17 +61,17 @@ class Ui_TransformationDialog(object):
         self.inverse_ckb.setObjectName(_fromUtf8("inverse_ckb"))
         self.formLayout.setWidget(9, QtGui.QFormLayout.LabelRole, self.inverse_ckb)
         self.new_field_name_lbl = QtGui.QLabel(TransformationDialog)
-        self.new_field_name_lbl.setEnabled(False)
+        self.new_field_name_lbl.setEnabled(True)
         self.new_field_name_lbl.setObjectName(_fromUtf8("new_field_name_lbl"))
         self.formLayout.setWidget(3, QtGui.QFormLayout.LabelRole, self.new_field_name_lbl)
         self.new_field_name_txt = QtGui.QLineEdit(TransformationDialog)
-        self.new_field_name_txt.setEnabled(False)
+        self.new_field_name_txt.setEnabled(True)
         self.new_field_name_txt.setMaxLength(10)
         self.new_field_name_txt.setPlaceholderText(_fromUtf8(""))
         self.new_field_name_txt.setObjectName(_fromUtf8("new_field_name_txt"))
         self.formLayout.setWidget(3, QtGui.QFormLayout.FieldRole, self.new_field_name_txt)
         self.overwrite_ckb = QtGui.QCheckBox(TransformationDialog)
-        self.overwrite_ckb.setChecked(True)
+        self.overwrite_ckb.setChecked(False)
         self.overwrite_ckb.setObjectName(_fromUtf8("overwrite_ckb"))
         self.formLayout.setWidget(2, QtGui.QFormLayout.LabelRole, self.overwrite_ckb)
         self.warning_lbl = QtGui.QLabel(TransformationDialog)
@@ -79,7 +79,7 @@ class Ui_TransformationDialog(object):
         self.warning_lbl.setObjectName(_fromUtf8("warning_lbl"))
         self.formLayout.setWidget(2, QtGui.QFormLayout.FieldRole, self.warning_lbl)
         self.track_new_field_ckb = QtGui.QCheckBox(TransformationDialog)
-        self.track_new_field_ckb.setEnabled(False)
+        self.track_new_field_ckb.setEnabled(True)
         self.track_new_field_ckb.setChecked(True)
         self.track_new_field_ckb.setObjectName(_fromUtf8("track_new_field_ckb"))
         self.formLayout.setWidget(4, QtGui.QFormLayout.SpanningRole, self.track_new_field_ckb)

@@ -72,7 +72,7 @@
      <item row="3" column="0">
       <widget class="QLabel" name="new_field_name_lbl">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="text">
         <string>New field name</string>
@@ -82,7 +82,7 @@
      <item row="3" column="1">
       <widget class="QLineEdit" name="new_field_name_txt">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="maxLength">
         <number>10</number>
@@ -98,7 +98,7 @@
         <string>Overwrite the field</string>
        </property>
        <property name="checked">
-        <bool>true</bool>
+        <bool>false</bool>
        </property>
       </widget>
      </item>
@@ -115,7 +115,7 @@
      <item row="4" column="0" colspan="2">
       <widget class="QCheckBox" name="track_new_field_ckb">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="text">
         <string>Let the project definitions' references track the new field</string>
