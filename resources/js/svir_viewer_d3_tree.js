@@ -82,7 +82,7 @@
     //// Project Definition Collapsible Tree ///
     ////////////////////////////////////////////
 
-    function loadPD(project_definition, qt_page) {
+    function loadPD(qt_page) {
         var DEFAULT_OPERATOR = qt_page.DEFAULT_OPERATOR;
         var OPERATORS = qt_page.OPERATORS.split(';');
         var ACTIVE_LAYER_NUMERIC_FIELDS = qt_page.ACTIVE_LAYER_NUMERIC_FIELDS.split(';');
@@ -503,7 +503,7 @@
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
         d3.json('', function() {
-            data = JSON.parse(project_definition);
+            data = JSON.parse(qt_page.json_str);
             root = data;
             root.x0 = height / 2;
             root.y0 = 0;

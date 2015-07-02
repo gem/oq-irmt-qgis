@@ -27,13 +27,13 @@
             DEFAULT_OPERATOR: "Weighted sum",
             NODE_TYPES: "RISK_INDICATOR:Risk Indicator;SVI:Social Vulnerability Index;SV_INDICATOR:Social Vulnerability Indicator;SV_THEME:Social Vulnerability Theme;IRI:Integrated Risk Index;RI:Risk Index",
             OPERATORS: "Simple sum (ignore weights);Weighted sum;Average (ignore weights);Simple multiplication (ignore weights);Weighted multiplication",
+            json_str: '{"risk_field": "IRI_7", "name": "IRI", "weight": 1.0, "level": "1.0", "svi_field": "SVI_36", "operator": "Weighted sum", "type": "Integrated Risk Index", "children": [{"name": "RI", "type": "Risk Index", "children": [], "weight": 0.5, "level": "2.0"}, {"name": "SVI", "type": "Social Vulnerability Index", "children": [{"name": "ds test", "type": "Social Vulnerability Theme", "children": [{"name": "FID_1", "weight": 0.5, "level": "4.0", "field": "FID_1", "type": "Social Vulnerability Indicator", "children": []}, {"name": "haz_level", "weight": 0.5, "level": "4.0", "field": "haz_level", "type": "Social Vulnerability Indicator", "children": []}], "weight": 1.0, "level": "3.0"}], "weight": 0.5, "level": "2.0"}], "iri_field": "IRI_36"}',
             json_updated: function (updated_json_str) {
                 console.log("json_updated signal emitted with the following JSON")
                 console.log(updated_json_str)
             }
         }
-        var json_str = '{"risk_field": "IRI_7", "name": "IRI", "weight": 1.0, "level": "1.0", "svi_field": "SVI_36", "operator": "Weighted sum", "type": "Integrated Risk Index", "children": [{"name": "RI", "type": "Risk Index", "children": [], "weight": 0.5, "level": "2.0"}, {"name": "SVI", "type": "Social Vulnerability Index", "children": [{"name": "ds test", "type": "Social Vulnerability Theme", "children": [{"name": "FID_1", "weight": 0.5, "level": "4.0", "field": "FID_1", "type": "Social Vulnerability Indicator", "children": []}, {"name": "haz_level", "weight": 0.5, "level": "4.0", "field": "haz_level", "type": "Social Vulnerability Indicator", "children": []}], "weight": 1.0, "level": "3.0"}], "weight": 0.5, "level": "2.0"}], "iri_field": "IRI_36"}'
-        loadPD(json_str, qt_page);
+        loadPD(qt_page);
     </script>
 
 </body>
