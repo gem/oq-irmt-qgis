@@ -1190,11 +1190,10 @@ class Svir:
                 layer_dict = self.project_definitions[active_layer_id]
                 selected_idx = layer_dict['selected_idx']
                 proj_defs = layer_dict['proj_defs']
-                for proj_def_idx, proj_def in enumerate(proj_defs):
-                    proj_def = replace_fields(proj_def,
-                                              input_attr_name,
-                                              target_attr_name)
-                    proj_defs[proj_def_idx] = proj_def
+                for proj_def in proj_defs:
+                    replace_fields(proj_def,
+                                   input_attr_name,
+                                   target_attr_name)
                 self.update_proj_defs(active_layer_id, proj_defs, selected_idx)
         elif dlg.use_advanced:
             layer = reg.mapLayers().values()[
