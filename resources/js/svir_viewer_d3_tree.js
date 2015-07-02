@@ -26,7 +26,7 @@
     };
 
     $(document).ready(function() {
-        var longpress = false;
+
         //  Project definition weight dialog
         $("#projectDefWeightDialog").dialog({
             title: "Set weights and operator",
@@ -83,6 +83,12 @@
     ////////////////////////////////////////////
 
     function loadPD(qt_page) {
+        if (!qt_page.DEV_MODE) {
+            // Disable browser right click menu
+            $(document).bind("contextmenu", function (e) {
+                e.preventDefault();
+            });
+        }
         var DEFAULT_OPERATOR = qt_page.DEFAULT_OPERATOR;
         var OPERATORS = qt_page.OPERATORS.split(';');
         var ACTIVE_LAYER_NUMERIC_FIELDS = qt_page.ACTIVE_LAYER_NUMERIC_FIELDS.split(';');
@@ -565,7 +571,7 @@
             nodes.forEach(function(d) {
                 // if it has a name but not a field, check if project_definition contains
                 // a node with the same name, associated to a field
-                // and, in such case, associate the same field to the node 
+                // and, in such case, associate the same field to the node
                 if (typeof d.name !== 'undefined'){
                     var found_field = findNodeField(proj_def_from_python, d.name);
                     if (found_field) {
@@ -609,15 +615,9 @@
                         .duration(500)
                         .style("opacity", 0);
                     })
-                .on("mousedown", function(){
-                    startTime = new Date().getTime();
-                    })
-                .on("mouseup", function(){
-                    endTime = new Date().getTime();
-                    longpress = (endTime - startTime < 500) ? false : true;
-                    })
-                .on("click", function(clicked_node) {
-                    if (longpress) {
+                .on("mousedown", function(clicked_node) {
+                    isRightClick = (d3.event.which == 3)? true : false;
+                    if (isRightClick) {
                         // If the clicked node is the IRI, clean the whole tree
                         if (clicked_node.type === node_types_dict.IRI) {
                             pdData = data;

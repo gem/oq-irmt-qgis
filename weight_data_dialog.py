@@ -47,7 +47,7 @@ from shared import (DEFAULT_OPERATOR,
                     NUMERIC_FIELD_TYPES,
                     NODE_TYPES,
                     DEBUG)
-from utils import get_field_names, confirmation_on_close
+from utils import get_field_names
 
 
 class WeightDataDialog(QDialog):
@@ -90,8 +90,6 @@ class WeightDataDialog(QDialog):
         self.web_view.load(QUrl('qrc:/plugins/svir/weight_data.html'))
         self.frame = self.web_view.page().mainFrame()
 
-        self.setup_context_menu()
-
         self.frame.javaScriptWindowObjectCleared.connect(self.setup_js)
         self.web_view.loadFinished.connect(self.show_tree)
         self.json_updated.connect(self.handle_json_updated)
@@ -131,16 +129,6 @@ class WeightDataDialog(QDialog):
             self.ui.style_by_field_cbx.setCurrentIndex(idx)
         # reactivate the signals, so the user's changes will trigger something
         self.ui.style_by_field_cbx.blockSignals(False)
-
-    def setup_context_menu(self):
-        settings = QSettings()
-        developer_mode = settings.value(
-            '/svir/developer_mode', True, type=bool)
-        if developer_mode is True:
-            self.web_view.page().settings().setAttribute(
-                QWebSettings.DeveloperExtrasEnabled, True)
-        else:
-            self.web_view.setContextMenuPolicy(Qt.NoContextMenu)
 
     def setup_js(self):
         # pass a reference (called qt_page) of self to the JS world
@@ -194,6 +182,13 @@ class WeightDataDialog(QDialog):
     @pyqtProperty(str)
     def DEFAULT_OPERATOR(self):
         return DEFAULT_OPERATOR
+
+    @pyqtProperty(bool)
+    def DEV_MODE(self):
+        developer_mode = QSettings().value(
+            '/svir/developer_mode', True, type=bool)
+
+        return developer_mode
 
     @pyqtProperty(str)
     def OPERATORS(self):
