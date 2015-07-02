@@ -45,6 +45,20 @@ def tr(message):
     return QApplication.translate('Svir', message)
 
 
+def confirmation_on_close(parent, event=None):
+    msg = tr("WARNING: all unsaved changes will be lost. Are you sure?")
+    reply = QMessageBox.question(
+        parent, 'Message', msg, QMessageBox.Yes, QMessageBox.No)
+    if event is not None:
+        if reply == QMessageBox.Yes:
+            event.accept()
+        else:
+            event.ignore()
+    else:
+        if reply == QMessageBox.Yes:
+            parent.__class__.__base__.reject(parent)
+
+
 def replace_fields(sub_tree_root, before, after):
     """
     Recursively search the project definition for 'field's equal to the
