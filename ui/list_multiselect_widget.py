@@ -113,10 +113,11 @@ class ListMultiSelectWidget(QtGui.QGroupBox):
             toList.addItem(fromList.takeItem(fromList.row(item)))
         self.selection_changed.emit()
 
-
     def _setupUI(self):
         self.setSizePolicy(
             QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Ignored)
+
+        self.setMinimumHeight(150)
 
         self.main_horizontal_layout = QtGui.QHBoxLayout(self)
 
