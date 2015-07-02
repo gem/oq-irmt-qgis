@@ -36,7 +36,8 @@ from PyQt4.QtCore import (Qt,
                           )
 
 from PyQt4.QtGui import (QDialog,
-                         QDialogButtonBox)
+                         QDialogButtonBox,
+                         )
 from PyQt4.QtWebKit import QWebSettings
 
 from ui.ui_weight_data import Ui_WeightDataDialog
@@ -46,7 +47,7 @@ from shared import (DEFAULT_OPERATOR,
                     NUMERIC_FIELD_TYPES,
                     NODE_TYPES,
                     DEBUG)
-from utils import get_field_names
+from utils import get_field_names, confirmation_on_close
 
 
 class WeightDataDialog(QDialog):
@@ -95,6 +96,12 @@ class WeightDataDialog(QDialog):
         self.web_view.loadFinished.connect(self.show_tree)
         self.json_updated.connect(self.handle_json_updated)
         self.populate_style_by_field_cbx()
+
+    def closeEvent(self, event):
+        confirmation_on_close(self, event)
+
+    def reject(self):
+        confirmation_on_close(self)
 
     def update_project_definition(self, project_definition):
         self.project_definition = deepcopy(project_definition)
