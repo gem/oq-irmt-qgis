@@ -56,7 +56,7 @@ def confirmation_on_close(parent, event=None):
             event.ignore()
     else:
         if reply == QMessageBox.Yes:
-            parent.accept()
+            parent.__class__.__base__.reject(parent)
 
 
 def replace_fields(sub_tree_root, before, after):

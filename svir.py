@@ -828,7 +828,7 @@ class Svir:
             self.notify_added_attrs_and_discarded_feats(
                 dlg.added_attrs_ids, dlg.discarded_feats)
             self.update_actions_status()
-        else:  # 'cancel' was pressed
+        else:  # 'cancel' was pressed or the dialog was closed
             if sld_was_saved:  # was able to save the original style
                 self.iface.activeLayer().loadSldStyle(sld_file_name)
             # if any of the indices were saved before starting to edit the
