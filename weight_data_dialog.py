@@ -47,7 +47,7 @@ from shared import (DEFAULT_OPERATOR,
                     NUMERIC_FIELD_TYPES,
                     NODE_TYPES,
                     DEBUG)
-from utils import get_field_names
+from utils import get_field_names, confirmation_on_close
 
 
 class WeightDataDialog(QDialog):
@@ -94,6 +94,8 @@ class WeightDataDialog(QDialog):
         self.web_view.loadFinished.connect(self.show_tree)
         self.json_updated.connect(self.handle_json_updated)
         self.populate_style_by_field_cbx()
+
+        self.web_view.setContextMenuPolicy(Qt.NoContextMenu)
 
     def closeEvent(self, event):
         confirmation_on_close(self, event)
