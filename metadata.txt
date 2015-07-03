@@ -24,6 +24,8 @@ email=staff.it@globalquakemodel.org
 changelog=
     1.6.0
     New features:
+    * More intuitive way to delete nodes (right-click instead of long-press)
+    * Possibility to transform multiple fields at once
     * Fixed issue with CSV import in QGIS 2.10
     * Possibility to overwrite transformed fields or to set project definitions to track a transformed field
     * Node names can now be changed also through the weighting dialog
