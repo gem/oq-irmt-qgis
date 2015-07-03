@@ -1148,6 +1148,8 @@ class Svir:
             for input_attr_name in input_attr_names:
                 if dlg.ui.overwrite_ckb.isChecked():
                     target_attr_name = input_attr_name
+                elif dlg.ui.fields_multiselect.selected_widget.count() == 1:
+                    target_attr_name = dlg.ui.new_field_name_txt.text()
                 else:
                     target_attr_name = ('T_' + input_attr_name)[:10]
                 try:
