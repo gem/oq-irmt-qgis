@@ -1149,7 +1149,6 @@ class Svir:
                 if dlg.ui.overwrite_ckb.isChecked():
                     target_attr_name = input_attr_name
                 else:
-                    # target_attr_name = dlg.ui.new_field_name_txt.text()
                     target_attr_name = ('T_' + input_attr_name)[:10]
                 try:
                     with WaitCursorManager("Applying transformation",
