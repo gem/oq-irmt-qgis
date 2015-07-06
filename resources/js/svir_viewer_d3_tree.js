@@ -149,13 +149,18 @@
             });
 
             $('#name-spinner-' + id).click(function (event){
-                dialog = $('#setNodeNameDialog');
-                dialog.data('event', event).dialog("open");
-                dialog.empty();
-                dialog
+                setNodeNameDialog = $('#setNodeNameDialog');
+                setNodeNameDialog.data('event', event).dialog("open");
+                setNodeNameDialog.empty();
+                setNodeNameDialog
                     .append('<label for="newName">New name: </label>')
                     .append('<input type="text" name="newName" id="newName" class="text ui-widget-content ui-corner-all" />');
                 $("#newName").val($('#' + event.target.id).text());
+                setNodeNameDialog.keypress(function(e) {
+                    if (e.keyCode == $.ui.keyCode.ENTER) {
+                        setNodeNameDialog.dialog("option", "buttons").Ok.apply(setNodeNameDialog);
+                    }
+                });
             });
 
         }
