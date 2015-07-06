@@ -48,7 +48,7 @@
             closeOnEscape: false
         });
 
-        $("#setNameDialog").dialog({
+        $("#setNodeNameDialog").dialog({
              title: "Set name",
              position: {my: "left top", at: "left top", of: "#projectDefWeightDialog"},
              autoOpen: false,
@@ -67,7 +67,7 @@
              }
         });
         $('#newName').keyup(function() {
-            var dialog = $('#setNameDialog').parent();
+            var dialog = $('#setNodeNameDialog').parent();
             var okButton = $('button:contains("Ok")', dialog);
             if ($(this).val() === ''){
                 okButton.button('disable');
@@ -149,7 +149,7 @@
             });
 
             $('#name-spinner-' + id).click(function (event){
-                dialog = $('#setNameDialog');
+                dialog = $('#setNodeNameDialog');
                 dialog.data('event', event).dialog("open");
                 dialog.empty();
                 dialog
