@@ -48,17 +48,17 @@
             closeOnEscape: false
         });
 
-        $("#setNodeDescriptionDialog").dialog({
-             title: "Set description",
+        $("#setNameDialog").dialog({
+             title: "Set name",
              position: {my: "left top", at: "left top", of: "#projectDefWeightDialog"},
              autoOpen: false,
              modal: true,
              minWidth: 500,
              buttons: {
                  "Ok": function() {
-                     var newDescription = $("#newDescription").val();
+                     var newName = $("#newName").val();
                      var spinnerNameId = $(this).data('event').target.id;
-                     $('#' + spinnerNameId).text(newDescription);
+                     $('#' + spinnerNameId).text(newName);
                      $(this).dialog("close");
                  },
                  "Cancel": function() {
@@ -66,14 +66,14 @@
                  }
              }
         });
-        $('#newDescription').keyup(function() {
-            var dialog = $('#setNodeDescriptionDialog').parent()
+        $('#newName').keyup(function() {
+            var dialog = $('#setNameDialog').parent();
             var okButton = $('button:contains("Ok")', dialog);
-            if ($(this).val() == ''){
-                okButton.button('disable')
+            if ($(this).val() === ''){
+                okButton.button('disable');
             }
             else{
-                okButton.button('enable')
+                okButton.button('enable');
             }
         });
     });
@@ -149,8 +149,8 @@
             });
 
             $('#name-spinner-' + id).click(function (event){
-                $("#newDescription").val($('#' + event.target.id).text())
-                $('#setNodeDescriptionDialog').data('event', event).dialog("open");
+                $("#newName").val($('#' + event.target.id).text());
+                $('#setNameDialog').data('event', event).dialog("open");
             });
 
         }
@@ -189,7 +189,7 @@
             dialog.empty();
 
             dialog
-                .append('<label for="name">Description: </label>')
+                .append('<label for="name">Name: </label>')
                 .append('<input id="newNodeName" type="text" name="newNodeName" value="">');
 
             newNodeName = $('#newNodeName');
@@ -373,16 +373,16 @@
                 pdTempWeights = [];
                 pdTempInverters = [];
                 pdTempWeightsComputed = [];
-                pdTempDescriptions = [];
+                pdTempNodeNames = [];
 
-                // Get the values of the spinners, of the inverters and of the descriptions
+                // Get the values of the spinners, of the inverters and of the names
                 for (var i = 0; i < pdTempSpinnerIds.length; i++) {
                     var isInverted = $('#inverter-' + pdTempSpinnerIds[i]).is(':checked');
                     var spinnerValue = $('#'+pdTempSpinnerIds[i]).val();
-                    var description = $('#name-'+pdTempSpinnerIds[i]).text();
+                    var nodeName = $('#name-'+pdTempSpinnerIds[i]).text();
                     pdTempInverters.push(isInverted);
                     pdTempWeights.push(spinnerValue);
-                    pdTempDescriptions.push(description);
+                    pdTempNodeNames.push(nodeName);
                 }
 
                 pdTempWeights = pdTempWeights.map(Number);
@@ -410,7 +410,7 @@
 
                 // Update the json with new values
                 for (var i = 0; i < pdTempWeightsComputed.length; i++) {
-                    updateTreeBranch(pdData, [pdTempIds[i]], pdTempWeightsComputed[i], pdTempInverters[i], pdTempDescriptions[i]);
+                    updateTreeBranch(pdData, [pdTempIds[i]], pdTempWeightsComputed[i], pdTempInverters[i], pdTempNodeNames[i]);
                 }
 
                 if ($('#operator').length !== 0) {
