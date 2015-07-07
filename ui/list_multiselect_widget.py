@@ -13,7 +13,7 @@ __author__ = 'marco@opengis.ch'
 __revision__ = '$Format:%H$'
 __date__ = '9/07/2013'
 
-from PyQt4 import QtGui, QtCore
+from PyQt4 import QtGui, QtCore, Qt
 
 
 class ListMultiSelectWidget(QtGui.QGroupBox):
@@ -110,24 +110,43 @@ class ListMultiSelectWidget(QtGui.QGroupBox):
 
     def _do_move(self, fromList, toList):
         for item in fromList.selectedItems():
+            prev_from_item = fromList.item(fromList.row(item) - 1)
             toList.addItem(fromList.takeItem(fromList.row(item)))
+            fromList.scrollToItem(prev_from_item)
         self.selection_changed.emit()
 
     def _setupUI(self):
         self.setSizePolicy(
             QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Ignored)
 
-        self.setMinimumHeight(150)
+        self.setMinimumHeight(180)
 
         self.main_horizontal_layout = QtGui.QHBoxLayout(self)
+
+        italic_font = QtGui.QFont()
+        italic_font.setItalic(True)
 
         #unselected widget
         self.unselected_widget = QtGui.QListWidget(self)
         self._set_list_widget_defaults(self.unselected_widget)
+        unselected_label = QtGui.QLabel()
+        unselected_label.setText('Unselected')
+        unselected_label.setAlignment(Qt.Qt.AlignCenter)
+        unselected_label.setFont(italic_font)
+        unselected_v_layout = QtGui.QVBoxLayout()
+        unselected_v_layout.addWidget(unselected_label)
+        unselected_v_layout.addWidget(self.unselected_widget)
 
         #selected widget
         self.selected_widget = QtGui.QListWidget(self)
         self._set_list_widget_defaults(self.selected_widget)
+        selected_label = QtGui.QLabel()
+        selected_label.setText('Selected')
+        selected_label.setAlignment(Qt.Qt.AlignCenter)
+        selected_label.setFont(italic_font)
+        selected_v_layout = QtGui.QVBoxLayout()
+        selected_v_layout.addWidget(selected_label)
+        selected_v_layout.addWidget(self.selected_widget)
 
         #buttons
         self.buttons_vertical_layout = QtGui.QVBoxLayout()
@@ -141,6 +160,8 @@ class ListMultiSelectWidget(QtGui.QGroupBox):
         self.deselect_btn.setToolTip('Remove the selected items')
         self.select_all_btn.setToolTip('Add all')
         self.deselect_all_btn.setToolTip('Remove all')
+        spacer_label = QtGui.QLabel()
+        self.buttons_vertical_layout.addWidget(spacer_label)
 
         #add buttons
         self.buttons_vertical_layout.addWidget(self.select_btn)
@@ -149,9 +170,9 @@ class ListMultiSelectWidget(QtGui.QGroupBox):
         self.buttons_vertical_layout.addWidget(self.deselect_all_btn)
 
         #add sub widgets
-        self.main_horizontal_layout.addWidget(self.unselected_widget)
+        self.main_horizontal_layout.addLayout(unselected_v_layout)
         self.main_horizontal_layout.addLayout(self.buttons_vertical_layout)
-        self.main_horizontal_layout.addWidget(self.selected_widget)
+        self.main_horizontal_layout.addLayout(selected_v_layout)
 
     def _set_list_widget_defaults(self, widget):
         widget.setAlternatingRowColors(True)
