@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_weight_data.ui'
 #
-# Created: Tue Jun 23 16:32:43 2015
+# Created: Mon Jul  6 11:34:11 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -32,9 +32,19 @@ class Ui_WeightDataDialog(object):
         self.gridLayout = QtGui.QGridLayout(WeightDataDialog)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
         self.web_view = QtWebKit.QWebView(WeightDataDialog)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.web_view.sizePolicy().hasHeightForWidth())
+        self.web_view.setSizePolicy(sizePolicy)
         self.web_view.setObjectName(_fromUtf8("web_view"))
         self.gridLayout.addWidget(self.web_view, 0, 0, 1, 1)
         self.label = QtGui.QLabel(WeightDataDialog)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Minimum)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
+        self.label.setSizePolicy(sizePolicy)
         self.label.setObjectName(_fromUtf8("label"))
         self.gridLayout.addWidget(self.label, 1, 0, 1, 1)
         self.buttonBox = QtGui.QDialogButtonBox(WeightDataDialog)

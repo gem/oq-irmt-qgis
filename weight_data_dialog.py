@@ -198,7 +198,7 @@ class WeightDataDialog(QDialog):
 
     @pyqtProperty(str)
     def ACTIVE_LAYER_NUMERIC_FIELDS(self):
-        return ';'.join(self.active_layer_numeric_fields)
+        return ';'.join(sorted(self.active_layer_numeric_fields))
 
     @pyqtProperty(str)
     def NODE_TYPES(self):
