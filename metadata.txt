@@ -27,6 +27,7 @@ changelog=
     Small fixes:
     * Improved editing of an indicator's name in the weighting dialog
     * Weighting dialog's elements expand correctly on window resize
+    * Minor improvements to the multiselect widget
     1.6.0
     New features:
     * More intuitive way to delete nodes (right-click instead of long-press)
