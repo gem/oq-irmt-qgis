@@ -38,7 +38,7 @@ class ListMultiSelectWidget(QtGui.QGroupBox):
         self.unselected_widget = None
         self._setupUI()
 
-        #connect actions
+        # connect actions
         self.select_all_btn.clicked.connect(self._select_all)
         self.deselect_all_btn.clicked.connect(self._deselect_all)
         self.select_btn.clicked.connect(self._select)
@@ -126,7 +126,7 @@ class ListMultiSelectWidget(QtGui.QGroupBox):
         italic_font = QtGui.QFont()
         italic_font.setItalic(True)
 
-        #unselected widget
+        # unselected widget
         self.unselected_widget = QtGui.QListWidget(self)
         self._set_list_widget_defaults(self.unselected_widget)
         unselected_label = QtGui.QLabel()
@@ -137,7 +137,7 @@ class ListMultiSelectWidget(QtGui.QGroupBox):
         unselected_v_layout.addWidget(unselected_label)
         unselected_v_layout.addWidget(self.unselected_widget)
 
-        #selected widget
+        # selected widget
         self.selected_widget = QtGui.QListWidget(self)
         self._set_list_widget_defaults(self.selected_widget)
         selected_label = QtGui.QLabel()
@@ -148,7 +148,7 @@ class ListMultiSelectWidget(QtGui.QGroupBox):
         selected_v_layout.addWidget(selected_label)
         selected_v_layout.addWidget(self.selected_widget)
 
-        #buttons
+        # buttons
         self.buttons_vertical_layout = QtGui.QVBoxLayout()
         self.buttons_vertical_layout.setContentsMargins(0, -1, 0, -1)
 
@@ -160,16 +160,19 @@ class ListMultiSelectWidget(QtGui.QGroupBox):
         self.deselect_btn.setToolTip('Remove the selected items')
         self.select_all_btn.setToolTip('Add all')
         self.deselect_all_btn.setToolTip('Remove all')
-        spacer_label = QtGui.QLabel()
-        self.buttons_vertical_layout.addWidget(spacer_label)
 
-        #add buttons
+        # add buttons
+        spacer_label = QtGui.QLabel()  # pragmatic way to create a spacer with
+                                       # the same height of the labels on top
+                                       # of the lists, in order to align the
+                                       # buttons with the lists.
+        self.buttons_vertical_layout.addWidget(spacer_label)
         self.buttons_vertical_layout.addWidget(self.select_btn)
         self.buttons_vertical_layout.addWidget(self.deselect_btn)
         self.buttons_vertical_layout.addWidget(self.select_all_btn)
         self.buttons_vertical_layout.addWidget(self.deselect_all_btn)
 
-        #add sub widgets
+        # add sub widgets
         self.main_horizontal_layout.addLayout(unselected_v_layout)
         self.main_horizontal_layout.addLayout(self.buttons_vertical_layout)
         self.main_horizontal_layout.addLayout(selected_v_layout)
