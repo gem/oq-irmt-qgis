@@ -1186,6 +1186,7 @@ class Svir:
                         tr("Error"),
                         tr(e.message),
                         level=QgsMessageBar.CRITICAL)
+                self.sync_proj_def()
                 active_layer_id = self.iface.activeLayer().id()
                 if (dlg.ui.track_new_field_ckb.isChecked()
                         and target_attr_name != input_attr_name
