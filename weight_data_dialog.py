@@ -172,6 +172,7 @@ class WeightDataDialog(QDialog):
         elif 'style_by_field' in self.project_definition:
             # if the empty item is selected, clean the project definition
             del self.project_definition['style_by_field']
+        self.json_updated.emit(self.project_definition)
 
     @pyqtProperty(str)
     def json_str(self):
