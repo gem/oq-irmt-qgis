@@ -16,8 +16,8 @@
 */
 
     // const is not supported by all the browsers, so we are using var instead
-    var CIRCLE_SCALE = 30;
-    var MAX_STROKE_SIZE = 4;
+    var CIRCLE_SCALE = 30.0;
+    var MAX_STROKE_SIZE = 4.0;
     var MIN_CIRCLE_SIZE = 0.001;
 
     // For checking if a string is blank or contains only white-space
@@ -500,15 +500,18 @@
         }
 
         function getRadius(d) {
+            var radius = MIN_CIRCLE_SIZE;
+            if (typeof d.weight != 'undefined') {
+                radius = Math.max(d.weight * CIRCLE_SCALE, MIN_CIRCLE_SIZE);
+            }
             if (typeof d.parent != 'undefined') {
                 if (typeof d.parent.operator != 'undefined') {
                     if (d.parent.operator.indexOf('ignore weights') != -1) {
-                        radius = Math.max(1 / d.parent.children.length * CIRCLE_SCALE, MIN_CIRCLE_SIZE);
-                        return radius;
+                        radius = Math.max(1.0 / d.parent.children.length * CIRCLE_SCALE, MIN_CIRCLE_SIZE);
                     }
                 }
             }
-            return d.weight ? Math.max(d.weight * CIRCLE_SCALE, MIN_CIRCLE_SIZE): MIN_CIRCLE_SIZE;
+            return radius;
         }
 
         var svg = d3.select("#projectDefDialog").append("svg")
@@ -1014,7 +1017,7 @@
                 })
                 // Scale the stroke width, otherwise the stroke is too thick for very small nodes
                 .style("stroke-width", function(d) {
-                    return d.weight ? Math.min(getRadius(d) / 2, MAX_STROKE_SIZE): 4;
+                    return d.weight ? Math.min(getRadius(d) / 2.0, MAX_STROKE_SIZE): 4.0;
                 })
                 .style("fill", function(d) {
                     // return d.source ? d.source.linkColor: d.linkColor;
