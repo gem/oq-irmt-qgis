@@ -1186,10 +1186,11 @@ class Svir:
                         tr("Error"),
                         tr(e.message),
                         level=QgsMessageBar.CRITICAL)
+                self.sync_proj_def()
+                active_layer_id = self.iface.activeLayer().id()
                 if (dlg.ui.track_new_field_ckb.isChecked()
-                        and target_attr_name != input_attr_name):
-                    self.sync_proj_def()
-                    active_layer_id = self.iface.activeLayer().id()
+                        and target_attr_name != input_attr_name
+                        and active_layer_id in self.project_definitions):
                     layer_dict = self.project_definitions[active_layer_id]
                     selected_idx = layer_dict['selected_idx']
                     proj_defs = layer_dict['proj_defs']
