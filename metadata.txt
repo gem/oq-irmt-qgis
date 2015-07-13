@@ -26,6 +26,9 @@ changelog=
     1.6.2
     Small fixes:
     * When aggregating loss by zone, let sum and average be NULL instead of 0 for zones containing no loss points
+    * Fix issue in node's circles rendering in case an 'ignoring weights' operator is selected
+    * Style and render the layer immediately, selecting one of its fields through the weighting dialog
+    * Fix a corner case in field transformations, updating project definitions only when available
     1.6.1
     Small fixes:
     * Improved editing of an indicator's name in the weighting dialog
