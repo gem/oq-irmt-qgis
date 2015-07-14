@@ -213,9 +213,27 @@ class Svir:
                            u"&OpenQuake Platform connection settings",
                            self.show_settings,
                            enable=True)
+        # Action to open the plugin's manual
+        self.add_menu_item("help",
+                           ":/plugins/svir/manual.svg",
+                           u"Plugin's &Manual",
+                           self.show_manual,
+                           enable=True)
 
         self.current_layer = self.iface.activeLayer()
         self.update_actions_status()
+
+    def show_manual(self):
+        base_url = os.path.abspath(os.path.join(
+            __file__, os.path.pardir, 'manual'))
+        base_url = os.path.join(base_url, 'index_en.html')
+        if not os.path.exists(base_url):
+            self.iface.messageBar().pushMessage(
+                tr("Error"),
+                'Help file not found: %s' % base_url,
+                level=QgsMessageBar.CRITICAL)
+        url = QUrl.fromLocalFile(base_url)
+        QDesktopServices.openUrl(url)
 
     def layers_added(self):
         self.update_actions_status()
@@ -549,17 +567,18 @@ class Svir:
 
         # count top lines in the csv starting with '#'
         lines_to_skip_count = count_heading_commented_lines(fname)
+
+        url = QUrl.fromLocalFile(fname)
+        url.addQueryItem('delimiter', ',')
+        url.addQueryItem('skipLines', str(lines_to_skip_count))
+        url.addQueryItem('trimFields', 'yes')
         if load_geometries:
-            uri = ('file://%s?delimiter=,&crs=epsg:4326&skipLines=%s'
-                   '&trimFields=yes&wktField=geometry' % (
-                       fname, lines_to_skip_count))
-        else:
-            uri = ('file://%s?delimiter=,&skipLines=%s'
-                   '&trimFields=yes' % (fname,
-                                        lines_to_skip_count))
+            url.addQueryItem('crs', 'epsg:4326')
+            url.addQueryItem('wktField', 'geometry')
+        layer_uri = str(url.toEncoded())
         # create vector layer from the csv file exported by the
         # platform (it is still not editable!)
-        vlayer_csv = QgsVectorLayer(uri,
+        vlayer_csv = QgsVectorLayer(layer_uri,
                                     'socioeconomic_data_export',
                                     'delimitedtext')
         if not load_geometries:

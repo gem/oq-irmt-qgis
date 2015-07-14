@@ -84,7 +84,7 @@ class DownloadPlatformDataWorker(AbstractWorker):
                         raise UserAbortedNotification(
                             'Download aborted by user')
 
-                    csv_file.write(line + '\n')
+                    csv_file.write(line + os.linesep)
                     n_downloaded_countries += 1
                     progress = (1.0 * n_downloaded_countries /
                                 n_countries_to_download * 100)
