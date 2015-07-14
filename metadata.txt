@@ -26,6 +26,7 @@ changelog=
     1.6.3
     New features:
     * Added plugin's manual v1.0 (and an additional button to open it as a local html page)
+    * Make the csv importing procedure compatible with Microsoft Windows
     1.6.2
     Small fixes:
     * When aggregating loss by zone, let sum and average be NULL instead of 0 for zones containing no loss points
