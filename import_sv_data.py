@@ -189,7 +189,7 @@ class SvDownloader(object):
                 msg_bar_item, progress = create_progress_message_bar(
                     message_bar, 'Downloading socioeconomic data...')
                 for line in result.iter_lines():
-                    csv_file.write(line + '\n')
+                    csv_file.write(line + os.linesep)
                     n_downloaded_countries += 1
                     progress.setValue(
                         n_downloaded_countries / n_countries_to_download * 100)

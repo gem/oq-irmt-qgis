@@ -567,17 +567,18 @@ class Svir:
 
         # count top lines in the csv starting with '#'
         lines_to_skip_count = count_heading_commented_lines(fname)
+
+        url = QUrl.fromLocalFile(fname)
+        url.addQueryItem('delimiter', ',')
+        url.addQueryItem('skipLines', str(lines_to_skip_count))
+        url.addQueryItem('trimFields', 'yes')
         if load_geometries:
-            uri = ('file://%s?delimiter=,&crs=epsg:4326&skipLines=%s'
-                   '&trimFields=yes&wktField=geometry' % (
-                       fname, lines_to_skip_count))
-        else:
-            uri = ('file://%s?delimiter=,&skipLines=%s'
-                   '&trimFields=yes' % (fname,
-                                        lines_to_skip_count))
+            url.addQueryItem('crs', 'epsg:4326')
+            url.addQueryItem('wktField', 'geometry')
+        layer_uri = str(url.toEncoded())
         # create vector layer from the csv file exported by the
         # platform (it is still not editable!)
-        vlayer_csv = QgsVectorLayer(uri,
+        vlayer_csv = QgsVectorLayer(layer_uri,
                                     'socioeconomic_data_export',
                                     'delimitedtext')
         if not load_geometries:
