@@ -137,8 +137,6 @@ class Svir:
         # keep a list of the menu items, in order to easily unload them later
         self.registered_actions = dict()
 
-        self.current_layer = None
-
         # keep track of the supplemental information for each layer
         # layer_id -> {}
         # where each dict contains 'platform_layer_id',
@@ -226,7 +224,6 @@ class Svir:
                            self.show_manual,
                            enable=True)
 
-        self.current_layer = self.iface.activeLayer()
         self.update_actions_status()
 
     def show_manual(self):
@@ -275,7 +272,7 @@ class Svir:
         # set the QgsProject's property
         QgsProject.instance().writeEntry(
             'svir', layer_id,
-            json.dumps(self.supplemental_information[layer_id],
+            json.dumps(suppl_info,
                        sort_keys=False,
                        indent=2,
                        separators=(',', ': ')))
@@ -285,7 +282,6 @@ class Svir:
                 layer_id, QgsProject.instance().readEntry('svir', layer_id))
 
     def current_layer_changed(self, layer):
-        self.current_layer = layer
         self.update_actions_status()
 
     def add_menu_item(self,
@@ -329,28 +325,30 @@ class Svir:
             layer_count == 0)
 
         if DEBUG:
-            print 'Selected: %s' % self.current_layer
+            print 'Selected: %s' % self.iface.activeLayer()
         try:
             # Activate actions which require a vector layer to be selected
-            if self.current_layer.type() != QgsMapLayer.VectorLayer:
+            if self.iface.activeLayer().type() != QgsMapLayer.VectorLayer:
                 raise AttributeError
             self.registered_actions[
                 "project_definitions_manager"].setEnabled(True)
             self.registered_actions["weight_data"].setEnabled(True)
             self.registered_actions["transform_attributes"].setEnabled(True)
-            self.sync_proj_def()
-            layer_dict = self.project_definitions[
-                self.current_layer.id()]
-            selected_idx = layer_dict['selected_idx']
-            proj_defs = layer_dict['proj_defs']
+            self.sync_layer_suppl_info_from_qgs_project(
+                self.iface.activeLayer().id())
+            suppl_info = self.supplemental_information[
+                self.iface.activeLayer().id()]
+            selected_idx = suppl_info['selected_proj_def_idx']
+            proj_defs = suppl_info['project_definitions']
             proj_def = proj_defs[selected_idx]
             self.registered_actions["upload"].setEnabled(proj_def is not None)
         except KeyError:
-            # self.project_definitions[self.current_layer.id()] is not defined
+            # self.project_definitions[self.iface.activeLayer().id()]
+            # is not defined
             pass  # We can still use the weight_data dialog
         except AttributeError:
-            # self.current_layer.id() does not exist or self.current_layer
-            # is not vector
+            # self.iface.activeLayer().id() does not exist
+            # or self.iface.activeLayer() is not vector
             self.registered_actions["transform_attributes"].setEnabled(False)
             self.registered_actions["weight_data"].setEnabled(False)
             self.registered_actions["upload"].setEnabled(False)
@@ -723,7 +721,8 @@ class Svir:
         svi_themes[theme_position]['children'].append(new_indicator)
 
     def project_definitions_manager(self):
-        self.sync_layer_suppl_info_from_qgs_project()
+        self.sync_layer_suppl_info_from_qgs_project(
+            self.iface.activeLayer().id())
         select_proj_def_dlg = ProjectsManagerDialog(self.iface)
         if select_proj_def_dlg.exec_():
             selected_project_definition = select_proj_def_dlg.selected_proj_def
@@ -882,7 +881,7 @@ class Svir:
             iri_node = deepcopy(project_definition)
             (added_attrs_ids, discarded_feats,
              iri_node, was_iri_computed) = calculate_composite_variable(
-                self.iface, self.current_layer, iri_node)
+                self.iface, self.iface.activeLayer(), iri_node)
             project_definition = deepcopy(iri_node)
             return added_attrs_ids, discarded_feats, project_definition
 
@@ -896,7 +895,7 @@ class Svir:
             svi_node = deepcopy(project_definition['children'][1])
             (svi_added_attrs_ids, svi_discarded_feats,
              svi_node, was_svi_computed) = calculate_composite_variable(
-                self.iface, self.current_layer, svi_node)
+                self.iface, self.iface.activeLayer(), svi_node)
             project_definition['children'][1] = deepcopy(svi_node)
 
         was_ri_computed = False
@@ -904,7 +903,7 @@ class Svir:
             ri_node = deepcopy(project_definition['children'][0])
             (ri_added_attrs_ids, ri_discarded_feats,
              ri_node, was_ri_computed) = calculate_composite_variable(
-                self.iface, self.current_layer, ri_node)
+                self.iface, self.iface.activeLayer(), ri_node)
             project_definition['children'][0] = deepcopy(ri_node)
 
         if not was_svi_computed and not was_ri_computed:
@@ -1016,7 +1015,7 @@ class Svir:
         else:  # if none of them can be rendered, then do nothing
             return
         # proceed only if the target field is actually a field of the layer
-        if self.current_layer.fieldNameIndex(target_field) == -1:
+        if self.iface.activeLayer().fieldNameIndex(target_field) == -1:
             return
         if DEBUG:
             import pprint
@@ -1025,7 +1024,7 @@ class Svir:
             pp.pprint(data)
 
         rule_renderer = QgsRuleBasedRendererV2(
-            QgsSymbolV2.defaultSymbol(self.current_layer.geometryType()))
+            QgsSymbolV2.defaultSymbol(self.iface.activeLayer().geometryType()))
         root_rule = rule_renderer.rootRule()
 
         not_null_rule = root_rule.children()[0].clone()
@@ -1050,11 +1049,11 @@ class Svir:
         classes_count = 10
         ramp = QgsVectorGradientColorRampV2(color1, color2)
         graduated_renderer = QgsGraduatedSymbolRendererV2.createRenderer(
-            self.current_layer,
+            self.iface.activeLayer(),
             target_field,
             classes_count,
             QgsGraduatedSymbolRendererV2.Quantile,
-            QgsSymbolV2.defaultSymbol(self.current_layer.geometryType()),
+            QgsSymbolV2.defaultSymbol(self.iface.activeLayer().geometryType()),
             ramp)
 
         if graduated_renderer.ranges():
@@ -1085,8 +1084,9 @@ class Svir:
         # remove default rule
         root_rule.removeChildAt(0)
 
-        self.current_layer.setRendererV2(rule_renderer)
-        self.iface.legendInterface().refreshLayerSymbology(self.current_layer)
+        self.iface.activeLayer().setRendererV2(rule_renderer)
+        self.iface.legendInterface().refreshLayerSymbology(
+            self.iface.activeLayer())
         self.iface.mapCanvas().refresh()
 
         # NOTE: The following commented lines do not work, because they apply
@@ -1098,7 +1098,7 @@ class Svir:
         # root_rule.setSymbol(QgsFillSymbolV2.createSimple(
         #     {'style': 'solid',
         #      'style_border': 'solid'}))
-        # self.current_layer.setRendererV2(rule_renderer)
+        # self.iface.activeLayer().setRendererV2(rule_renderer)
 
     def show_settings(self):
         SettingsDialog(self.iface).exec_()
@@ -1197,14 +1197,17 @@ class Svir:
                         tr("Error"),
                         tr(e.message),
                         level=QgsMessageBar.CRITICAL)
-                self.sync_proj_def()
+                self.sync_layer_suppl_info_from_qgs_project(
+                    self.iface.activeLayer().id())
                 active_layer_id = self.iface.activeLayer().id()
+                project_definitions = self.supplemental_information[
+                    'project_definitions']
                 if (dlg.ui.track_new_field_ckb.isChecked()
                         and target_attr_name != input_attr_name
-                        and active_layer_id in self.project_definitions):
-                    layer_dict = self.project_definitions[active_layer_id]
-                    selected_idx = layer_dict['selected_idx']
-                    proj_defs = layer_dict['proj_defs']
+                        and active_layer_id in project_definitions):
+                    suppl_info = self.supplemental_information[active_layer_id]
+                    selected_idx = suppl_info['selected_proj_def_idx']
+                    proj_defs = suppl_info['project_definitions']
                     for proj_def in proj_defs:
                         replace_fields(proj_def,
                                        input_attr_name,

@@ -134,7 +134,7 @@ class ProjectsManagerDialog(QDialog):
         self.suppl_info['selected_project_definition_idx'] = \
             self.ui.proj_def_cbx.currentIndex()
         self.selected_proj_def = self.suppl_info['project_definitions'][
-            self.suppl_info['selected_supplemental_information_idx']]
+            self.suppl_info['selected_project_definition_idx']]
         self.update_proj_def_title()
         self.update_proj_def_descr()
         self.display_proj_def_raw()
