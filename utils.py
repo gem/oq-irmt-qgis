@@ -45,6 +45,42 @@ def tr(message):
     return QApplication.translate('Svir', message)
 
 
+def confirmation_on_close(parent, event=None):
+    msg = tr("WARNING: all unsaved changes will be lost. Are you sure?")
+    reply = QMessageBox.question(
+        parent, 'Message', msg, QMessageBox.Yes, QMessageBox.No)
+    if event is not None:
+        if reply == QMessageBox.Yes:
+            event.accept()
+        else:
+            event.ignore()
+    else:
+        if reply == QMessageBox.Yes:
+            parent.__class__.__base__.reject(parent)
+
+
+def replace_fields(sub_tree_root, before, after):
+    """
+    Recursively search the project definition for 'field's equal to the
+    string before and replace the value with the string after.
+    It is useful, e.g., when we transform a field that is tracked by the
+    project definition, and we obtain a new field that we want to track
+    instead of the original one.
+    It works by side-effect, modifying the passed project definition.
+    :param sub_tree_root: node of a project definition. From that node (used
+                          as root) towards the leaves of the tree, the function
+                          will recursively search for nodes with a 'field'
+                          property that contains the string before
+    :param before: string to be replaced
+    :param after: new value for the replaced string
+    """
+    if 'field' in sub_tree_root and sub_tree_root['field'] == before:
+        sub_tree_root['field'] = after
+    if 'children' in sub_tree_root:
+        for child in sub_tree_root['children']:
+            replace_fields(child, before, after)
+
+
 def count_heading_commented_lines(fname):
     # count top lines in the file starting with '#'
     with open(fname) as f:
@@ -87,6 +123,21 @@ def get_node(sub_tree, name):
             if found_node:
                 return found_node
     return None  # not found
+
+
+def get_field_names(sub_tree, field_names=None):
+    # return a list of all the field names defined in the project definition
+    # field_names is an accumulator that is extended browsing the tree
+    # recursively
+    if field_names is None:
+        field_names = []
+    if 'field' in sub_tree:
+        field_names.append(sub_tree['field'])
+    if 'children' in sub_tree:
+        for child in sub_tree['children']:
+            child_field_names = get_field_names(child, field_names)
+            field_names.extend(child_field_names)
+    return field_names
 
 
 def get_credentials(iface):

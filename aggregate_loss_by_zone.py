@@ -25,6 +25,7 @@
 """
 from PyQt4.QtCore import QVariant
 from PyQt4.QtGui import QProgressDialog
+from qgis import QPyNullVariant
 from qgis.core import (QgsVectorLayer,
                        QgsMapLayerRegistry,
                        QgsField,
@@ -309,18 +310,30 @@ def calculate_vector_stats_aggregating_by_zone_id(
                         # at least one point (otherwise we keep all zeros)
                         loss_avg[loss_attr_name] = (
                             loss_sum[loss_attr_name] / points_count)
-                        zone_stats[zone_id][loss_attr_name]['avg'] = loss_avg
+                        # NOTE: The following line looks redundant
+                        zone_stats[zone_id][loss_attr_name]['avg'] = (
+                            loss_avg[loss_attr_name])
                 # without casting to int and to float, it wouldn't work
                 fid = zone_feat.id()
                 zonal_layer.changeAttributeValue(
                     fid, count_idx, int(points_count))
                 for loss_attr_name in loss_attr_names:
-                    zonal_layer.changeAttributeValue(
-                        fid, sum_idx[loss_attr_name],
-                        float(loss_sum[loss_attr_name]))
-                    zonal_layer.changeAttributeValue(
-                        fid, avg_idx[loss_attr_name],
-                        float(loss_avg[loss_attr_name]))
+                    if points_count:
+                        zonal_layer.changeAttributeValue(
+                            fid, sum_idx[loss_attr_name],
+                            float(loss_sum[loss_attr_name]))
+                        zonal_layer.changeAttributeValue(
+                            fid, avg_idx[loss_attr_name],
+                            float(loss_avg[loss_attr_name]))
+                    else:
+                        # if no points were found in that region, let both
+                        # sum and average be NULL instead of 0
+                        zonal_layer.changeAttributeValue(
+                            fid, sum_idx[loss_attr_name],
+                            QPyNullVariant(float))
+                        zonal_layer.changeAttributeValue(
+                            fid, avg_idx[loss_attr_name],
+                            QPyNullVariant(float))
     clear_progress_message_bar(iface.messageBar(), msg_bar_item)
     notify_loss_aggregation_by_zone_complete(
         loss_attrs_dict, loss_attr_names, iface)

@@ -28,7 +28,7 @@
 import os.path
 import csv
 import tempfile
-from PyQt4.QtCore import pyqtSlot, QDir
+from PyQt4.QtCore import pyqtSlot, QDir, QUrl
 from PyQt4.QtGui import (QFileDialog,
                          QDialog,
                          QDialogButtonBox,
@@ -220,21 +220,19 @@ class SelectInputLayersDialog(QDialog):
         else:
             csv_file_path = csv_file_paths[0]
             lines_to_skip_count = count_heading_commented_lines(csv_file_path)
-        uri = ("file://%s?"
-               "type=csv"
-               "&xField=%s"
-               "&yField=%s"
-               "&spatialIndex=no"
-               "&subsetIndex=no"
-               "&watchFile=no"
-               "&delimiter=,"
-               "&crs=epsg:4326"
-               "&skipLines=%s"
-               "&trimFields=yes") % (csv_file_path,
-                                     longitude_field,
-                                     latitude_field,
-                                     lines_to_skip_count)
-        csv_layer = QgsVectorLayer(uri, 'Loss', "delimitedtext")
+        url = QUrl.fromLocalFile(csv_file_path)
+        url.addQueryItem('type', 'csv')
+        url.addQueryItem('xField', longitude_field)
+        url.addQueryItem('yField', latitude_field)
+        url.addQueryItem('spatialIndex', 'no')
+        url.addQueryItem('subsetIndex', 'no')
+        url.addQueryItem('watchFile', 'no')
+        url.addQueryItem('delimiter', ',')
+        url.addQueryItem('crs', 'epsg:4326')
+        url.addQueryItem('skipLines', str(lines_to_skip_count))
+        url.addQueryItem('trimFields', 'yes')
+        layer_uri = str(url.toEncoded())
+        csv_layer = QgsVectorLayer(layer_uri, 'Loss', "delimitedtext")
         dest_filename = dest_shp or QFileDialog.getSaveFileName(
             self,
             'Save loss shapefile as...',

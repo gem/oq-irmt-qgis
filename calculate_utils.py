@@ -48,9 +48,6 @@ class InvalidChild(Exception):
 
 
 def add_numeric_attribute(proposed_attr_name, layer):
-    # make the proposed name compatible with shapefiles (max 10 chars)
-    # and capitalize it
-    proposed_attr_name = proposed_attr_name[:10].upper()
     field = QgsField(proposed_attr_name, QVariant.Double)
     field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
     assigned_attr_names = ProcessLayer(layer).add_attributes(

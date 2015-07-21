@@ -27,6 +27,8 @@ import json
 import os.path
 import tempfile
 import uuid
+import fileinput
+import re
 from copy import deepcopy
 
 from math import floor, ceil
@@ -47,7 +49,8 @@ from PyQt4.QtGui import (QAction,
                          QColor,
                          QFileDialog,
                          QDesktopServices,
-                         QMessageBox)
+                         QMessageBox,
+                         )
 
 from qgis.core import (QgsVectorLayer,
                        QgsMapLayerRegistry,
@@ -58,7 +61,8 @@ from qgis.core import (QgsVectorLayer,
                        QgsSymbolV2, QgsVectorGradientColorRampV2,
                        QgsRuleBasedRendererV2,
                        QgsFillSymbolV2,
-                       QgsProject,)
+                       QgsProject,
+                       )
 
 from qgis.gui import QgsMessageBar
 
@@ -93,13 +97,16 @@ from utils import (tr,
                    get_credentials,
                    update_platform_project,
                    count_heading_commented_lines,
-                   toggle_select_features_widget)
+                   replace_fields,
+                   toggle_select_features_widget,
+                   )
 from abstract_worker import start_worker
 from shared import (SVIR_PLUGIN_VERSION,
                     DEBUG,
                     PROJECT_TEMPLATE,
                     THEME_TEMPLATE,
-                    INDICATOR_TEMPLATE)
+                    INDICATOR_TEMPLATE,
+                    )
 from aggregate_loss_by_zone import (calculate_zonal_stats,
                                     purge_zones_without_loss_points,
                                     )
@@ -161,10 +168,10 @@ class Svir:
                            add_to_layer_actions=False)
         # Action to activate the modal dialog to select a layer and one of its
         # attributes, in order to transform that attribute
-        self.add_menu_item("transform_attribute",
+        self.add_menu_item("transform_attributes",
                            ":/plugins/svir/transform.svg",
-                           u"&Transform attribute",
-                           self.transform_attribute,
+                           u"&Transform attributes",
+                           self.transform_attributes,
                            enable=False,
                            add_to_layer_actions=True)
         # Action to manage the projects
@@ -206,9 +213,27 @@ class Svir:
                            u"&OpenQuake Platform connection settings",
                            self.show_settings,
                            enable=True)
+        # Action to open the plugin's manual
+        self.add_menu_item("help",
+                           ":/plugins/svir/manual.svg",
+                           u"Plugin's &Manual",
+                           self.show_manual,
+                           enable=True)
 
         self.current_layer = self.iface.activeLayer()
         self.update_actions_status()
+
+    def show_manual(self):
+        base_url = os.path.abspath(os.path.join(
+            __file__, os.path.pardir, 'manual'))
+        base_url = os.path.join(base_url, 'index_en.html')
+        if not os.path.exists(base_url):
+            self.iface.messageBar().pushMessage(
+                tr("Error"),
+                'Help file not found: %s' % base_url,
+                level=QgsMessageBar.CRITICAL)
+        url = QUrl.fromLocalFile(base_url)
+        QDesktopServices.openUrl(url)
 
     def layers_added(self):
         self.update_actions_status()
@@ -313,7 +338,7 @@ class Svir:
         reg = QgsMapLayerRegistry.instance()
         layer_count = len(list(reg.mapLayers()))
         # Enable/disable "transform" action
-        self.registered_actions["transform_attribute"].setDisabled(
+        self.registered_actions["transform_attributes"].setDisabled(
             layer_count == 0)
 
         if DEBUG:
@@ -325,7 +350,7 @@ class Svir:
             self.registered_actions[
                 "project_definitions_manager"].setEnabled(True)
             self.registered_actions["weight_data"].setEnabled(True)
-            self.registered_actions["transform_attribute"].setEnabled(True)
+            self.registered_actions["transform_attributes"].setEnabled(True)
             self.sync_proj_def()
             layer_dict = self.project_definitions[
                 self.current_layer.id()]
@@ -339,7 +364,7 @@ class Svir:
         except AttributeError:
             # self.current_layer.id() does not exist or self.current_layer
             # is not vector
-            self.registered_actions["transform_attribute"].setEnabled(False)
+            self.registered_actions["transform_attributes"].setEnabled(False)
             self.registered_actions["weight_data"].setEnabled(False)
             self.registered_actions["upload"].setEnabled(False)
             self.registered_actions[
@@ -529,19 +554,31 @@ class Svir:
         # don't remove the file, otherwise there will be concurrency
         # problems
 
+        # fix an issue of QGIS 10, that is unable to read
+        # multipolygons if they contain spaces between two polygons.
+        # We remove those spaces from the csv file before importing it.
+        # TODO: Remove this as soon as QGIS solves that issue
+        for line in fileinput.input(fname, inplace=True):
+            line = re.sub('\)\),\s\(\(', ')),((', line.rstrip())
+            line = re.sub('\),\s\(', '),(', line.rstrip())
+            # thanks to inplace=True, 'print line' writes the line into the
+            # input file, overwriting the original line
+            print line
+
         # count top lines in the csv starting with '#'
         lines_to_skip_count = count_heading_commented_lines(fname)
+
+        url = QUrl.fromLocalFile(fname)
+        url.addQueryItem('delimiter', ',')
+        url.addQueryItem('skipLines', str(lines_to_skip_count))
+        url.addQueryItem('trimFields', 'yes')
         if load_geometries:
-            uri = ('file://%s?delimiter=,&crs=epsg:4326&skipLines=%s'
-                   '&trimFields=yes&wktField=geometry' % (
-                       fname, lines_to_skip_count))
-        else:
-            uri = ('file://%s?delimiter=,&skipLines=%s'
-                   '&trimFields=yes' % (fname,
-                                        lines_to_skip_count))
+            url.addQueryItem('crs', 'epsg:4326')
+            url.addQueryItem('wktField', 'geometry')
+        layer_uri = str(url.toEncoded())
         # create vector layer from the csv file exported by the
         # platform (it is still not editable!)
-        vlayer_csv = QgsVectorLayer(uri,
+        vlayer_csv = QgsVectorLayer(layer_uri,
                                     'socioeconomic_data_export',
                                     'delimitedtext')
         if not load_geometries:
@@ -818,7 +855,7 @@ class Svir:
             self.notify_added_attrs_and_discarded_feats(
                 dlg.added_attrs_ids, dlg.discarded_feats)
             self.update_actions_status()
-        else:  # 'cancel' was pressed
+        else:  # 'cancel' was pressed or the dialog was closed
             if sld_was_saved:  # was able to save the original style
                 self.iface.activeLayer().loadSldStyle(sld_file_name)
             # if any of the indices were saved before starting to edit the
@@ -851,7 +888,7 @@ class Svir:
             self.recalculate_indexes(data)
         dlg.added_attrs_ids.update(added_attrs_ids)
         dlg.discarded_feats = discarded_feats
-        dlg.project_definition = deepcopy(project_definition)
+        dlg.update_project_definition(project_definition)
         self.redraw_ir_layer(project_definition)
 
     def recalculate_indexes(self, data):
@@ -972,21 +1009,29 @@ class Svir:
         return True
 
     def redraw_ir_layer(self, data):
+        # if the user has explicitly selected a field to use for styling, use
+        # it, otherwise attempt to show the IRI, or the SVI, or the RI
+        if 'style_by_field' in data:
+            target_field = data['style_by_field']
+            printing_str = target_field
         # if an IRI has been already calculated, show it
-        # else show the SVI, else RI
-        if self.is_iri_renderable(data):
-            target_field = data['field']
+        elif self.is_iri_renderable(data):
+            iri_node = data
+            target_field = iri_node['field']
             printing_str = 'IRI'
+        # else show the SVI if possible
         elif self.is_svi_renderable(data):
             svi_node = data['children'][1]
             target_field = svi_node['field']
             printing_str = 'SVI'
+        # otherwise attempt to show the RI
         elif self.is_ri_renderable(data):
             ri_node = data['children'][0]
             target_field = ri_node['field']
             printing_str = 'RI'
-        else:
+        else:  # if none of them can be rendered, then do nothing
             return
+        # proceed only if the target field is actually a field of the layer
         if self.current_layer.fieldNameIndex(target_field) == -1:
             return
         if DEBUG:
@@ -1106,11 +1151,11 @@ class Svir:
         else:
             return False
 
-    def transform_attribute(self):
+    def transform_attributes(self):
         """
-        A modal dialog is displayed to the user, for the selection of a layer,
-        one of its attributes, a transformation algorithm and a variant of the
-        algorithm
+        A modal dialog is displayed to the user, enabling to transform one or
+        more attributes of the active layer, using one of the available
+        algorithms and variants
         """
         dlg = TransformationDialog(self.iface)
         reg = QgsMapLayerRegistry.instance()
@@ -1122,45 +1167,68 @@ class Svir:
                 level=QgsMessageBar.CRITICAL)
             return
         if dlg.exec_():
-            layer = reg.mapLayers().values()[
-                dlg.ui.layer_cbx.currentIndex()]
-            attribute_name = dlg.ui.attrib_cbx.currentText()
+            layer = self.iface.activeLayer()
+            input_attr_names = dlg.ui.fields_multiselect.get_selected_items()
             algorithm_name = dlg.ui.algorithm_cbx.currentText()
             variant = dlg.ui.variant_cbx.currentText()
             inverse = dlg.ui.inverse_ckb.isChecked()
-            new_attr_name = dlg.ui.new_field_name_txt.text()
-            try:
-                with WaitCursorManager("Applying transformation", self.iface):
-                    res_attr_name, invalid_input_values = ProcessLayer(
-                        layer).transform_attribute(attribute_name,
-                                                   algorithm_name,
-                                                   variant,
-                                                   inverse,
-                                                   new_attr_name)
-                msg = ('Transformation %s has been applied to attribute %s of'
-                       ' layer %s and the resulting attribute %s has been'
-                       ' saved into the same layer.') % (algorithm_name,
-                                                         attribute_name,
-                                                         layer.name(),
-                                                         res_attr_name)
-                if invalid_input_values:
-                    msg += (' The transformation could not '
-                            'be performed for the following '
-                            'input values: %s' % invalid_input_values)
-                self.iface.messageBar().pushMessage(
-                    tr("Info"),
-                    tr(msg),
-                    level=(QgsMessageBar.INFO if not invalid_input_values
-                           else QgsMessageBar.WARNING))
-            except (ValueError, NotImplementedError) as e:
-                self.iface.messageBar().pushMessage(
-                    tr("Error"),
-                    tr(e.message),
-                    level=QgsMessageBar.CRITICAL)
-
+            for input_attr_name in input_attr_names:
+                if dlg.ui.overwrite_ckb.isChecked():
+                    target_attr_name = input_attr_name
+                elif dlg.ui.fields_multiselect.selected_widget.count() == 1:
+                    target_attr_name = dlg.ui.new_field_name_txt.text()
+                else:
+                    target_attr_name = ('T_' + input_attr_name)[:10]
+                try:
+                    with WaitCursorManager("Applying transformation",
+                                           self.iface):
+                        res_attr_name, invalid_input_values = ProcessLayer(
+                            layer).transform_attribute(input_attr_name,
+                                                       algorithm_name,
+                                                       variant,
+                                                       inverse,
+                                                       target_attr_name)
+                    msg = ('Transformation %s has been applied to attribute %s'
+                           ' of layer %s.') % (algorithm_name,
+                                               input_attr_name,
+                                               layer.name())
+                    if target_attr_name == input_attr_name:
+                        msg += (' The original values of the attribute have'
+                                ' been overwritten by the transformed values.')
+                    else:
+                        msg += (' The results of the transformation'
+                                ' have been saved into the new'
+                                ' attribute %s.') % (res_attr_name)
+                    if invalid_input_values:
+                        msg += (' The transformation could not'
+                                ' be performed for the following'
+                                ' input values: %s' % invalid_input_values)
+                    self.iface.messageBar().pushMessage(
+                        tr("Info"),
+                        tr(msg),
+                        level=(QgsMessageBar.INFO if not invalid_input_values
+                               else QgsMessageBar.WARNING))
+                except (ValueError, NotImplementedError) as e:
+                    self.iface.messageBar().pushMessage(
+                        tr("Error"),
+                        tr(e.message),
+                        level=QgsMessageBar.CRITICAL)
+                self.sync_proj_def()
+                active_layer_id = self.iface.activeLayer().id()
+                if (dlg.ui.track_new_field_ckb.isChecked()
+                        and target_attr_name != input_attr_name
+                        and active_layer_id in self.project_definitions):
+                    layer_dict = self.project_definitions[active_layer_id]
+                    selected_idx = layer_dict['selected_idx']
+                    proj_defs = layer_dict['proj_defs']
+                    for proj_def in proj_defs:
+                        replace_fields(proj_def,
+                                       input_attr_name,
+                                       target_attr_name)
+                    self.update_proj_defs(
+                        active_layer_id, proj_defs, selected_idx)
         elif dlg.use_advanced:
-            layer = reg.mapLayers().values()[
-                dlg.ui.layer_cbx.currentIndex()]
+            layer = self.iface.activeLayer()
             if layer.isModified():
                 layer.commitChanges()
                 layer.triggerRepaint()

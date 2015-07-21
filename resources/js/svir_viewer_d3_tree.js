@@ -16,8 +16,8 @@
 */
 
     // const is not supported by all the browsers, so we are using var instead
-    var CIRCLE_SCALE = 30;
-    var MAX_STROKE_SIZE = 4;
+    var CIRCLE_SCALE = 30.0;
+    var MAX_STROKE_SIZE = 4.0;
     var MIN_CIRCLE_SIZE = 0.001;
 
     // For checking if a string is blank or contains only white-space
@@ -26,7 +26,7 @@
     };
 
     $(document).ready(function() {
-        var longpress = false;
+
         //  Project definition weight dialog
         $("#projectDefWeightDialog").dialog({
             title: "Set weights and operator",
@@ -47,13 +47,48 @@
             dialogClass: "no-close",
             closeOnEscape: false
         });
+
+        $("#setNodeNameDialog").dialog({
+             title: "Set name",
+             position: {my: "left top", at: "left top", of: "#projectDefWeightDialog"},
+             autoOpen: false,
+             modal: true,
+             minWidth: 500,
+             buttons: {
+                 "Ok": function() {
+                     var newName = $("#newName").val();
+                     var spinnerNameId = $(this).data('event').target.id;
+                     $('#' + spinnerNameId).text(newName);
+                     $(this).dialog("close");
+                 },
+                 "Cancel": function() {
+                     $(this).dialog("close");
+                 }
+             }
+        });
+        $('#newName').keyup(function() {
+            var dialog = $('#setNodeNameDialog').parent();
+            var okButton = $('button:contains("Ok")', dialog);
+            if ($(this).val() === ''){
+                okButton.button('disable');
+            }
+            else{
+                okButton.button('enable');
+            }
+        });
     });
 
     ////////////////////////////////////////////
     //// Project Definition Collapsible Tree ///
     ////////////////////////////////////////////
 
-    function loadPD(project_definition, qt_page) {
+    function loadPD(qt_page) {
+        if (!qt_page.DEV_MODE) {
+            // Disable browser right click menu
+            $(document).bind("contextmenu", function (e) {
+                e.preventDefault();
+            });
+        }
         var DEFAULT_OPERATOR = qt_page.DEFAULT_OPERATOR;
         var OPERATORS = qt_page.OPERATORS.split(';');
         var ACTIVE_LAYER_NUMERIC_FIELDS = qt_page.ACTIVE_LAYER_NUMERIC_FIELDS.split(';');
@@ -89,7 +124,7 @@
         function createSpinner(id, weight, name, field, isInverted) {
             pdTempSpinnerIds.push("spinner-"+id);
             $('#projectDefWeightDialog').dialog("open");
-            var content = '<div style="clear: left; float: left;padding:10px 0"><label style="width: 17em; "for="spinner'+id+'">'+name;
+            var content = '<div style="clear: left; float: left;padding:10px 0"><label style="width: 17em; "for="spinner' + id + '">' + '<a href="#" id="name-spinner-' + id + '">' + name + '</a>';
             if (typeof field !== 'undefined') {
                 content += ' ('+field+')';
             }
@@ -112,6 +147,22 @@
                     incremental: true
                 });
             });
+
+            $('#name-spinner-' + id).click(function (event){
+                setNodeNameDialog = $('#setNodeNameDialog');
+                setNodeNameDialog.data('event', event).dialog("open");
+                setNodeNameDialog.empty();
+                setNodeNameDialog
+                    .append('<label for="newName">New name: </label>')
+                    .append('<input type="text" name="newName" id="newName" class="text ui-widget-content ui-corner-all" />');
+                $("#newName").val($('#' + event.target.id).text());
+                setNodeNameDialog.keypress(function(e) {
+                    if (e.keyCode == $.ui.keyCode.ENTER) {
+                        setNodeNameDialog.dialog("option", "buttons").Ok.apply(setNodeNameDialog);
+                    }
+                });
+            });
+
         }
 
         function operatorSelect(pdOperator){
@@ -148,7 +199,7 @@
             dialog.empty();
 
             dialog
-                .append('<label for="name">Description: </label>')
+                .append('<label for="name">Name: </label>')
                 .append('<input id="newNodeName" type="text" name="newNodeName" value="">');
 
             newNodeName = $('#newNodeName');
@@ -332,13 +383,16 @@
                 pdTempWeights = [];
                 pdTempInverters = [];
                 pdTempWeightsComputed = [];
+                pdTempNodeNames = [];
 
-                // Get the values of the spinners and of the inverters
+                // Get the values of the spinners, of the inverters and of the names
                 for (var i = 0; i < pdTempSpinnerIds.length; i++) {
                     var isInverted = $('#inverter-' + pdTempSpinnerIds[i]).is(':checked');
                     var spinnerValue = $('#'+pdTempSpinnerIds[i]).val();
+                    var nodeName = $('#name-'+pdTempSpinnerIds[i]).text();
                     pdTempInverters.push(isInverted);
                     pdTempWeights.push(spinnerValue);
+                    pdTempNodeNames.push(nodeName);
                 }
 
                 pdTempWeights = pdTempWeights.map(Number);
@@ -366,7 +420,7 @@
 
                 // Update the json with new values
                 for (var i = 0; i < pdTempWeightsComputed.length; i++) {
-                    updateTreeBranch(pdData, [pdTempIds[i]], pdTempWeightsComputed[i], pdTempInverters[i]);
+                    updateTreeBranch(pdData, [pdTempIds[i]], pdTempWeightsComputed[i], pdTempInverters[i], pdTempNodeNames[i]);
                 }
 
                 if ($('#operator').length !== 0) {
@@ -398,16 +452,17 @@
 
         }
 
-        function updateTreeBranch(pdData, id, pdWeight, pdIsInverted) {
+        function updateTreeBranch(pdData, id, pdWeight, pdIsInverted, pdName) {
             if (id.some(function(currentValue) {
                 return (pdData.id == currentValue);
             })) {
                 pdData.weight = pdWeight;
                 pdData.isInverted = pdIsInverted;
+                pdData.name = pdName;
             }
 
             (pdData.children || []).forEach(function(currentItem) {
-                updateTreeBranch(currentItem, id, pdWeight, pdIsInverted);
+                updateTreeBranch(currentItem, id, pdWeight, pdIsInverted, pdName);
             });
         }
 
@@ -445,15 +500,18 @@
         }
 
         function getRadius(d) {
+            var radius = MIN_CIRCLE_SIZE;
+            if (typeof d.weight != 'undefined') {
+                radius = Math.max(d.weight * CIRCLE_SCALE, MIN_CIRCLE_SIZE);
+            }
             if (typeof d.parent != 'undefined') {
                 if (typeof d.parent.operator != 'undefined') {
                     if (d.parent.operator.indexOf('ignore weights') != -1) {
-                        radius = Math.max(1 / d.parent.children.length * CIRCLE_SCALE, MIN_CIRCLE_SIZE);
-                        return radius;
+                        radius = Math.max(1.0 / d.parent.children.length * CIRCLE_SCALE, MIN_CIRCLE_SIZE);
                     }
                 }
             }
-            return d.weight ? Math.max(d.weight * CIRCLE_SCALE, MIN_CIRCLE_SIZE): MIN_CIRCLE_SIZE;
+            return radius;
         }
 
         var svg = d3.select("#projectDefDialog").append("svg")
@@ -464,7 +522,7 @@
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
         d3.json('', function() {
-            data = JSON.parse(project_definition);
+            data = JSON.parse(qt_page.json_str);
             root = data;
             root.x0 = height / 2;
             root.y0 = 0;
@@ -526,7 +584,7 @@
             nodes.forEach(function(d) {
                 // if it has a name but not a field, check if project_definition contains
                 // a node with the same name, associated to a field
-                // and, in such case, associate the same field to the node 
+                // and, in such case, associate the same field to the node
                 if (typeof d.name !== 'undefined'){
                     var found_field = findNodeField(proj_def_from_python, d.name);
                     if (found_field) {
@@ -570,15 +628,9 @@
                         .duration(500)
                         .style("opacity", 0);
                     })
-                .on("mousedown", function(){
-                    startTime = new Date().getTime();
-                    })
-                .on("mouseup", function(){
-                    endTime = new Date().getTime();
-                    longpress = (endTime - startTime < 500) ? false : true;
-                    })
-                .on("click", function(clicked_node) {
-                    if (longpress) {
+                .on("mousedown", function(clicked_node) {
+                    isRightClick = (d3.event.which == 3)? true : false;
+                    if (isRightClick) {
                         // If the clicked node is the IRI, clean the whole tree
                         if (clicked_node.type === node_types_dict.IRI) {
                             pdData = data;
@@ -965,7 +1017,7 @@
                 })
                 // Scale the stroke width, otherwise the stroke is too thick for very small nodes
                 .style("stroke-width", function(d) {
-                    return d.weight ? Math.min(getRadius(d) / 2, MAX_STROKE_SIZE): 4;
+                    return d.weight ? Math.min(getRadius(d) / 2.0, MAX_STROKE_SIZE): 4.0;
                 })
                 .style("fill", function(d) {
                     // return d.source ? d.source.linkColor: d.linkColor;
