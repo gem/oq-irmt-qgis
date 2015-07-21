@@ -139,6 +139,12 @@ class Svir:
 
         self.current_layer = None
 
+        # keep track of the supplemental information for each layer
+        # layer_id -> {}
+        # where each dict contains 'platform_layer_id',
+        # 'selected_proj_def_idx', 'project_definitions'
+        self.supplemental_information = {}
+
         self.iface.currentLayerChanged.connect(self.current_layer_changed)
         QgsMapLayerRegistry.instance().layersAdded.connect(self.layers_added)
         QgsMapLayerRegistry.instance().layersRemoved.connect(
@@ -239,63 +245,44 @@ class Svir:
         self.update_actions_status()
 
     def layers_removed(self, layer_ids):
-        self.update_actions_status()
         for layer_id in layer_ids:
-            self.update_proj_defs(layer_id)
+            self.clear_layer_suppl_info(layer_id)
+        self.update_actions_status()
 
-    def sync_proj_def(self):
-        # get project_definitions from the project's properties
+    def sync_layer_suppl_info_from_qgs_project(self, layer_id):
+        # synchronize with the qgs project's properties
         # it returns a tuple, with the returned value and a boolean indicating
         # if such property is available
-        project_definitions_str, is_available = \
-            QgsProject.instance().readEntry('svir', 'project_definitions')
-        if is_available and project_definitions_str:
-            self.project_definitions = json.loads(project_definitions_str)
+        layer_suppl_info_str, is_available = \
+            QgsProject.instance().readEntry('svir', layer_id)
+        if is_available and layer_suppl_info_str:
+            self.supplemental_information[layer_id] = \
+                json.loads(layer_suppl_info_str)
         else:
-            self.project_definitions = {}
+            self.supplemental_information[layer_id] = {}
         if DEBUG:
-            print "self.project_definitions synchronized with project, as:"
-            print self.project_definitions
+            print ("self.supplemental_information[%s] synchronized"
+                   " with project, as: %s") % (
+                layer_id, self.supplemental_information[layer_id])
 
-    def update_proj_defs(self, layer_id, proj_defs=None, selected_idx=0):
-        """
-        :param layer_id: layer identifier
-        :param proj_defs: a list of project definitions
-                          (if it's provided, the project definitions
-                           associated to the layer will be replaced by the new
-                           list; otherwise the project definitions of the layer
-                           will be removed)
-        :param selected_idx: the index of the selected project definition
-                             (default: select the first one)
-        """
-        self.sync_proj_def()
-        # upgrade old project definitions, if found
-        for layer_id_ in self.project_definitions:
-            if 'proj_defs' not in self.project_definitions[layer_id_]:
-                proj_def = self.project_definitions[layer_id_]
-                self.project_definitions[layer_id_] = {'proj_defs': [proj_def],
-                                                       'selected_idx': 0}
-        # add the project definition to the list
-        # or pop the layer's project definition if no proj_def is provided
-        if proj_defs is not None:
-            assert isinstance(proj_defs, list)
-            assert selected_idx < len(proj_defs)
-            self.project_definitions[layer_id] = {
-                'selected_idx': selected_idx,
-                'proj_defs': proj_defs}
-        else:
-            self.project_definitions.pop(layer_id, None)
+    def clear_layer_suppl_info(self, layer_id):
+        self.supplemental_information.pop(layer_id, None)
+        QgsProject.instance().removeEntry('svir', layer_id)
+
+    def update_layer_suppl_info(self, layer_id, suppl_info):
+        self.sync_layer_suppl_info_from_qgs_project(layer_id)
+        # TODO: upgrade old project definitions
         # set the QgsProject's property
         QgsProject.instance().writeEntry(
-            'svir', 'project_definitions',
-            json.dumps(self.project_definitions,
+            'svir', layer_id,
+            json.dumps(self.supplemental_information[layer_id],
                        sort_keys=False,
                        indent=2,
                        separators=(',', ': ')))
         if DEBUG:
-            print "Project's property 'project_definitions' updated:"
-            print QgsProject.instance().readEntry(
-                'svir', 'project_definitions')[0]
+            print ("Project's property 'supplemental_information[%s]'"
+                   " updated: %s") % (
+                layer_id, QgsProject.instance().readEntry('svir', layer_id))
 
     def current_layer_changed(self, layer):
         self.current_layer = layer
@@ -600,7 +587,10 @@ class Svir:
             else:
                 raise RuntimeError('Layer invalid')
         self.iface.setActiveLayer(layer)
-        self.update_proj_defs(layer.id(), [project_definition])
+        suppl_info = {
+            'selected_project_definition_idx': 0,
+            'project_definitions': [project_definition]}
+        self.update_layer_suppl_info(layer.id(), suppl_info)
         self.update_actions_status()
 
     def download_layer(self):
@@ -700,12 +690,11 @@ class Svir:
         # project definition
         if not isinstance(project_definitions, list):
             project_definitions = [project_definitions]
+        supplemental_information['project_definitions'] = project_definitions
         supplemental_information['platform_layer_id'] = parent_dlg.layer_id
-        # TODO: put the platform_layer_id outside the single proj_defs
-        for proj_def in project_definitions:
-            if 'platform_layer_id' not in proj_def:
-                proj_def['platform_layer_id'] = parent_dlg.layer_id
-        self.update_proj_defs(layer.id(), project_definitions)
+        if 'selected_project_definition_idx' not in supplemental_information:
+            supplemental_information['selected_project_definition_idx'] = 0
+        self.update_layer_suppl_info(layer.id(), supplemental_information)
         self.update_actions_status()
         # in case of multiple project definitions, let the user select one
         if len(project_definitions) > 1:
@@ -734,25 +723,20 @@ class Svir:
         svi_themes[theme_position]['children'].append(new_indicator)
 
     def project_definitions_manager(self):
-        self.sync_proj_def()
+        self.sync_layer_suppl_info_from_qgs_project()
         select_proj_def_dlg = ProjectsManagerDialog(self.iface)
         if select_proj_def_dlg.exec_():
-            project_definitions = select_proj_def_dlg.project_definitions[
-                'proj_defs']
-            selected_project_definition = project_definitions[
-                select_proj_def_dlg.selected_idx]
+            selected_project_definition = select_proj_def_dlg.selected_proj_def
             added_attrs_ids, discarded_feats, project_definition = \
                 self.recalculate_indexes(selected_project_definition)
             self.notify_added_attrs_and_discarded_feats(added_attrs_ids,
                                                         discarded_feats)
-            project_definitions[
-                select_proj_def_dlg.selected_idx] = project_definition
-            self.update_proj_defs(
-                self.iface.activeLayer().id(),
-                project_definitions,
-                select_proj_def_dlg.selected_idx)
-            self.redraw_ir_layer(
-                project_definitions[select_proj_def_dlg.selected_idx])
+            select_proj_def_dlg.suppl_info['project_definitions'][
+                select_proj_def_dlg.suppl_info[
+                    'selected_project_definition_idx']] = project_definition
+            self.update_layer_suppl_info(self.iface.activeLayer().id(),
+                                         select_proj_def_dlg.suppl_info)
+            self.redraw_ir_layer(project_definition)
 
     def notify_added_attrs_and_discarded_feats(self,
                                                added_attrs_ids,
@@ -803,18 +787,18 @@ class Svir:
         """
         Open a modal dialog to select weights in a d3.js visualization
         """
-        current_layer_id = self.current_layer.id()
+        active_layer_id = self.iface.activeLayer().id()
         # get the project definition to work with, or create a default one
         try:
-            layer_dict = self.project_definitions[current_layer_id]
-            selected_idx = layer_dict['selected_idx']
-            proj_defs = layer_dict['proj_defs']
-            orig_project_definition = proj_defs[selected_idx]
+            suppl_info = self.supplemental_information[active_layer_id]
+            orig_project_definition = suppl_info['project_definitions'][
+                suppl_info['selected_project_definition_idx']]
         except KeyError:
             orig_project_definition = deepcopy(PROJECT_TEMPLATE)
-            selected_idx = 0
-            proj_defs = [orig_project_definition]
-            self.update_proj_defs(current_layer_id, proj_defs)
+            suppl_info = {'selected_project_definition_idx': 0,
+                          'project_definitions': [orig_project_definition]
+                          }
+            self.update_layer_suppl_info(active_layer_id, suppl_info)
         edited_project_definition = deepcopy(orig_project_definition)
 
         # Save the style so the following styling can be undone
@@ -877,10 +861,10 @@ class Svir:
                     dlg.added_attrs_ids)
         dlg.json_cleaned.disconnect()
         # store the correct project definitions
-        proj_defs[selected_idx] = deepcopy(edited_project_definition)
-        self.update_proj_defs(current_layer_id,
-                              proj_defs,
-                              selected_idx)
+        selected_idx = suppl_info['selected_project_definition_idx']
+        suppl_info['project_definitions'][selected_idx] = deepcopy(
+            edited_project_definition)
+        self.update_layer_suppl_info(active_layer_id, suppl_info)
         self.redraw_ir_layer(edited_project_definition)
 
     def weights_changed(self, data, dlg):
@@ -1245,10 +1229,10 @@ class Svir:
         file_stem = '%s%sqgis_svir_%s' % (temp_dir, os.path.sep, uuid.uuid4())
         xml_file = file_stem + '.xml'
 
-        layer_dict = self.project_definitions[
+        suppl_info = self.supplemental_information[
             self.iface.activeLayer().id()]
-        selected_idx = layer_dict['selected_idx']
-        proj_defs = layer_dict['proj_defs']
+        selected_idx = suppl_info['selected_project_definition_idx']
+        proj_defs = suppl_info['project_definitions']
         project_definition = proj_defs[selected_idx]
 
         dlg = UploadSettingsDialog(self.iface, project_definition)
@@ -1312,11 +1296,7 @@ class Svir:
     def insert_platform_layer_id(self, layer_url):
         platform_layer_id = layer_url.split('/')[-1]
         active_layer_id = self.iface.activeLayer().id()
-        proj_defs = self.project_definitions[active_layer_id]['proj_defs']
-        selected_idx = self.project_definitions[active_layer_id][
-            'selected_idx']
-        for proj_def in proj_defs:
-            if 'platform_layer_id' not in proj_def:
-                proj_def['platform_layer_id'] = platform_layer_id
-        self.update_proj_defs(
-            self.iface.activeLayer().id(), proj_defs, selected_idx)
+        suppl_info = self.supplemtnal_information[active_layer_id]
+        if 'platform_layer_id' not in suppl_info:
+            suppl_info['platform_layer_id'] = platform_layer_id
+        self.update_layer_suppl_info(active_layer_id, suppl_info)

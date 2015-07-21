@@ -50,68 +50,56 @@ class ProjectsManagerDialog(QDialog):
         self.cancel_button = self.ui.buttonBox.button(QDialogButtonBox.Cancel)
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
         self.ok_button.setEnabled(False)
-        self.project_definitions = None  # it will store the project
-                                         # definitions for the active layer
-        self.selected_idx = None  # index of the selected project definition
-        self.selected_proj_def = None  # the proj_def selected from the combo
-        self.platform_layer_id = None  # id of the geonode layer on platform
-        self.zone_label_field = None  # field containing zone identifiers
-        self.get_project_definitions()
+        self.suppl_info = {}
+        self.selected_proj_def = None
+        self.get_suppl_info()
         self.populate_proj_def_cbx()
 
-    def get_project_definitions(self):
-        all_project_definitions_str, is_available = \
-            QgsProject.instance().readEntry('svir', 'project_definitions')
-        if is_available and all_project_definitions_str:
-            all_project_definitions = json.loads(all_project_definitions_str)
-            try:
-                self.project_definitions = all_project_definitions[
-                    self.iface.activeLayer().id()]
-            except KeyError:
-                self.project_definitions = {'selected_idx': None,
-                                            'proj_defs': []}
-        else:
-            self.project_definitions = {'selected_idx': None, 'proj_defs': []}
-        # All project definitions are linked to the same layer on the platform
-        # So we can get such information from the first project_definition
+    def get_suppl_info(self):
+        active_layer_id = self.iface.activeLayer().id()
+        suppl_info_str, is_available = \
+            QgsProject.instance().readEntry('svir', active_layer_id)
+        if is_available and suppl_info_str:
+            self.suppl_info = json.loads(suppl_info_str)
+
+    def get_selected_proj_def(self):
         try:
-            first_proj_def = self.project_definitions['proj_defs'][0]
-            if 'platform_layer_id' in first_proj_def:
-                self.platform_layer_id = first_proj_def['platform_layer_id']
-            # The zone label field might be different for different project
-            # definitions, but it sounds reasonable to suggest the first one in
-            # the combobox and to allow the user to change it if needed
-            if 'zone_label_field' in first_proj_def:
-                self.zone_label_field = first_proj_def['zone_label_field']
-        except IndexError:
-            # Attempt to “manage project definitions” and no project definition
-            # exists
-            # (e.g. the layer has not been downloaded from the platform)
+            selected_idx = self.suppl_info['selected_project_definition_idx']
+        except KeyError:
+            pass
+        try:
+            self.selected_proj_def = self.suppl_info['project_definitions'][
+                selected_idx]
+        except KeyError:
             pass
 
     def populate_proj_def_cbx(self):
         self.ui.proj_def_cbx.clear()
-        for proj_def in self.project_definitions['proj_defs']:
+        for proj_def in self.suppl_info['project_definitions']:
             if 'title' in proj_def:
                 self.ui.proj_def_cbx.addItem(proj_def['title'])
             else:
                 self.ui.proj_def_cbx.addItem('Untitled project definition')
-        if self.project_definitions['selected_idx'] is not None:
+        if ('selected_project_definition_idx' in self.suppl_info
+                and self.suppl_info['selected_project_definition_idx']
+                is not None):
             self.ui.proj_def_cbx.setCurrentIndex(
-                self.project_definitions['selected_idx'])
+                self.suppl_info['selected_project_definition_idx'])
 
     def update_proj_def_title(self):
-        try:
-            self.ui.proj_def_title.setText(self.selected_proj_def['title'])
-        except KeyError:
-            self.ui.proj_def_title.setText('')
+        if self.selected_proj_def is not None:
+            try:
+                self.ui.proj_def_title.setText(self.selected_proj_def['title'])
+            except KeyError:
+                self.ui.proj_def_title.setText('')
 
     def update_proj_def_descr(self):
-        try:
-            self.ui.proj_def_descr.setPlainText(
-                self.selected_proj_def['description'])
-        except KeyError:
-            self.ui.proj_def_descr.setPlainText('')
+        if self.selected_proj_def is not None:
+            try:
+                self.ui.proj_def_descr.setPlainText(
+                    self.selected_proj_def['description'])
+            except KeyError:
+                self.ui.proj_def_descr.setPlainText('')
 
     def display_proj_def_raw(self):
         proj_def_str = json.dumps(self.selected_proj_def,
@@ -122,13 +110,9 @@ class ProjectsManagerDialog(QDialog):
 
     def add_proj_def(self, title, proj_def=PROJECT_TEMPLATE):
         proj_def['title'] = title
-        if self.platform_layer_id:
-            proj_def['platform_layer_id'] = self.platform_layer_id
-        if self.zone_label_field:
-            proj_def['zone_label_field'] = self.zone_label_field
-        self.project_definitions['proj_defs'].append(proj_def)
-        self.project_definitions['selected_idx'] = len(
-            self.project_definitions['proj_defs']) - 1
+        self.suppl_info['project_definitions'].append(proj_def)
+        self.suppl_info['selected_project_definition_idx'] = \
+            len(self.suppl_info['project_definitions']) - 1
         self.populate_proj_def_cbx()
 
     def update_title_in_combo(self):
@@ -150,9 +134,10 @@ class ProjectsManagerDialog(QDialog):
 
     @pyqtSlot(str)
     def on_proj_def_cbx_currentIndexChanged(self):
-        self.selected_idx = self.ui.proj_def_cbx.currentIndex()
-        self.selected_proj_def = self.project_definitions[
-            'proj_defs'][self.selected_idx]
+        self.suppl_info['selected_project_definition_idx'] = \
+            self.ui.proj_def_cbx.currentIndex()
+        self.selected_proj_def = self.suppl_info['project_definitions'][
+            self.suppl_info['selected_supplemental_information_idx']]
         self.update_proj_def_title()
         self.update_proj_def_descr()
         self.display_proj_def_raw()
@@ -181,9 +166,8 @@ class ProjectsManagerDialog(QDialog):
         try:
             project_definition_str = self.ui.proj_def_raw.toPlainText()
             project_definition = json.loads(project_definition_str)
-            self.project_definitions['proj_defs'][self.selected_idx] = \
-                project_definition
-            self.selected_proj_def = project_definition
+            self.suppl_info['project_definitions'][self.suppl_info[
+                'selected_project_definition_idx']] = project_definition
             self.ok_button.setEnabled(True)
         except ValueError as e:
             print e
