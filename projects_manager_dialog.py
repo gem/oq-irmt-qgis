@@ -65,13 +65,10 @@ class ProjectsManagerDialog(QDialog):
     def get_selected_proj_def(self):
         try:
             selected_idx = self.suppl_info['selected_project_definition_idx']
-        except KeyError:
-            pass
-        try:
             self.selected_proj_def = self.suppl_info['project_definitions'][
                 selected_idx]
         except KeyError:
-            pass
+            return None
 
     def populate_proj_def_cbx(self):
         self.ui.proj_def_cbx.clear()
