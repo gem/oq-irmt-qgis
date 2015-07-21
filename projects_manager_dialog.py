@@ -54,6 +54,7 @@ class ProjectsManagerDialog(QDialog):
         self.selected_proj_def = None
         self.get_suppl_info()
         self.populate_proj_def_cbx()
+        self.update_form()
 
     def get_suppl_info(self):
         active_layer_id = self.iface.activeLayer().id()
@@ -132,8 +133,7 @@ class ProjectsManagerDialog(QDialog):
             self.ui.proj_def_descr.toPlainText()
         self.display_proj_def_raw()
 
-    @pyqtSlot(str)
-    def on_proj_def_cbx_currentIndexChanged(self):
+    def update_form(self):
         self.suppl_info['selected_project_definition_idx'] = \
             self.ui.proj_def_cbx.currentIndex()
         self.selected_proj_def = self.suppl_info['project_definitions'][
@@ -141,6 +141,10 @@ class ProjectsManagerDialog(QDialog):
         self.update_proj_def_title()
         self.update_proj_def_descr()
         self.display_proj_def_raw()
+
+    @pyqtSlot(str)
+    def on_proj_def_cbx_currentIndexChanged(self):
+        self.update_form()
 
     @pyqtSlot()
     def on_clone_btn_clicked(self):
