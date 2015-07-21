@@ -62,6 +62,7 @@ class ProjectsManagerDialog(QDialog):
         if is_available and suppl_info_str:
             self.suppl_info = json.loads(suppl_info_str)
 
+    # NOTE: Still unused
     def get_selected_proj_def(self):
         try:
             selected_idx = self.suppl_info['selected_project_definition_idx']
@@ -71,6 +72,7 @@ class ProjectsManagerDialog(QDialog):
             return None
 
     def populate_proj_def_cbx(self):
+        self.ui.proj_def_cbx.blockSignals(True)
         self.ui.proj_def_cbx.clear()
         for proj_def in self.suppl_info['project_definitions']:
             if 'title' in proj_def:
@@ -82,6 +84,7 @@ class ProjectsManagerDialog(QDialog):
                 is not None):
             self.ui.proj_def_cbx.setCurrentIndex(
                 self.suppl_info['selected_project_definition_idx'])
+        self.ui.proj_def_cbx.blockSignals(False)
 
     def update_proj_def_title(self):
         if self.selected_proj_def is not None:
