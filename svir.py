@@ -1233,6 +1233,8 @@ class Svir:
         file_stem = '%s%sqgis_svir_%s' % (temp_dir, os.path.sep, uuid.uuid4())
         xml_file = file_stem + '.xml'
 
+        self.sync_layer_suppl_info_from_qgs_project(
+            self.iface.activeLayer().id())
         suppl_info = self.supplemental_information[
             self.iface.activeLayer().id()]
         selected_idx = suppl_info['selected_project_definition_idx']
