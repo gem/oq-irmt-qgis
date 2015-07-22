@@ -48,7 +48,7 @@ class UploadSettingsDialog(QDialog):
     licenses. The user must click on a confirmation checkbox, before the
     uploading of the layer can be started.
     """
-    def __init__(self, iface, project_definition):
+    def __init__(self, iface, project_definition, platform_layer_id):
         QDialog.__init__(self)
         # Set up the user interface from Designer.
         self.ui = Ui_UploadSettingsDialog()
@@ -56,6 +56,7 @@ class UploadSettingsDialog(QDialog):
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
         self.ok_button.setEnabled(False)
         self.project_definition = project_definition
+        self.platform_layer_id = platform_layer_id
         if 'title' in self.project_definition:
             self.ui.title_le.setText(self.project_definition['title'])
         else:
@@ -91,11 +92,6 @@ class UploadSettingsDialog(QDialog):
         else:
             self.ui.license_cbx.setCurrentIndex(
                 self.ui.license_cbx.findText(DEFAULT_LICENSE[0]))
-
-        self.platform_layer_id = False
-        if 'platform_layer_id' in self.project_definition:
-            self.platform_layer_id = self.project_definition[
-                'platform_layer_id']
 
         self.exists_on_platform = bool(self.platform_layer_id)
         self.do_update = False

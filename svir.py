@@ -1206,15 +1206,13 @@ class Svir:
                         and target_attr_name != input_attr_name
                         and active_layer_id in project_definitions):
                     suppl_info = self.supplemental_information[active_layer_id]
-                    selected_idx = suppl_info[
-                        'selected_project_definition_idx']
                     proj_defs = suppl_info['project_definitions']
                     for proj_def in proj_defs:
                         replace_fields(proj_def,
                                        input_attr_name,
                                        target_attr_name)
-                    self.update_proj_defs(
-                        active_layer_id, proj_defs, selected_idx)
+                    suppl_info['project_definitions'] = proj_defs
+                    self.update_layer_suppl_info(active_layer_id, suppl_info)
         elif dlg.use_advanced:
             layer = self.iface.activeLayer()
             if layer.isModified():
@@ -1240,8 +1238,13 @@ class Svir:
         selected_idx = suppl_info['selected_project_definition_idx']
         proj_defs = suppl_info['project_definitions']
         project_definition = proj_defs[selected_idx]
+        platform_layer_id = None
+        if 'platform_layer_id' in suppl_info:
+            platform_layer_id = suppl_info['platform_layer_id']
 
-        dlg = UploadSettingsDialog(self.iface, project_definition)
+        dlg = UploadSettingsDialog(self.iface,
+                                   project_definition,
+                                   platform_layer_id)
         if dlg.exec_():
             project_definition['title'] = dlg.ui.title_le.text()
             project_definition[
@@ -1256,8 +1259,10 @@ class Svir:
             project_definition['license'] = license_txt
             project_definition['svir_plugin_version'] = SVIR_PLUGIN_VERSION
 
-            self.update_proj_defs(
-                self.iface.activeLayer().id(), proj_defs, selected_idx)
+            suppl_info['project_definitions'][selected_idx] = \
+                project_definition
+            self.update_layer_suppl_info(
+                self.iface.activeLayer().id(), suppl_info)
 
             if dlg.do_update:
                 with WaitCursorManager(
@@ -1273,8 +1278,16 @@ class Svir:
                         self.iface.messageBar().pushMessage(
                             'Error', error_msg, level=QgsMessageBar.CRITICAL)
                         return
-                    response = update_platform_project(
-                        hostname, session, project_definition)
+                    if platform_layer_id is None:
+                        error_msg = ('Unable to retrieve the id of'
+                                     'the layer on the Platform')
+                        self.iface.messageBar().pushMessage(
+                            'Error', error_msg, level=QgsMessageBar.CRITICAL)
+                        return
+                    response = update_platform_project(hostname,
+                                                       session,
+                                                       project_definition,
+                                                       platform_layer_id)
                     if response.ok:
                         self.iface.messageBar().pushMessage(
                             tr("Info"),
