@@ -54,7 +54,6 @@ class ProjectsManagerDialog(QDialog):
         self.selected_proj_def = None
         self.get_suppl_info()
         self.populate_proj_def_cbx()
-        self.update_form()
 
     def get_suppl_info(self):
         active_layer_id = self.iface.activeLayer().id()
@@ -86,6 +85,7 @@ class ProjectsManagerDialog(QDialog):
             self.ui.proj_def_cbx.setCurrentIndex(
                 self.suppl_info['selected_project_definition_idx'])
         self.ui.proj_def_cbx.blockSignals(False)
+        self.update_form()
 
     def update_proj_def_title(self):
         if self.selected_proj_def is not None:
