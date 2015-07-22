@@ -140,7 +140,7 @@ class Svir:
         # keep track of the supplemental information for each layer
         # layer_id -> {}
         # where each dict contains 'platform_layer_id',
-        # 'selected_proj_def_idx', 'project_definitions'
+        # 'selected_project_definition_idx', 'project_definitions'
         self.supplemental_information = {}
 
         self.iface.currentLayerChanged.connect(self.current_layer_changed)
@@ -338,7 +338,7 @@ class Svir:
                 self.iface.activeLayer().id())
             suppl_info = self.supplemental_information[
                 self.iface.activeLayer().id()]
-            selected_idx = suppl_info['selected_proj_def_idx']
+            selected_idx = suppl_info['selected_project_definition_idx']
             proj_defs = suppl_info['project_definitions']
             proj_def = proj_defs[selected_idx]
             self.registered_actions["upload"].setEnabled(proj_def is not None)
@@ -1206,7 +1206,8 @@ class Svir:
                         and target_attr_name != input_attr_name
                         and active_layer_id in project_definitions):
                     suppl_info = self.supplemental_information[active_layer_id]
-                    selected_idx = suppl_info['selected_proj_def_idx']
+                    selected_idx = suppl_info[
+                        'selected_project_definition_idx']
                     proj_defs = suppl_info['project_definitions']
                     for proj_def in proj_defs:
                         replace_fields(proj_def,
