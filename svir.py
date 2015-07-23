@@ -1315,7 +1315,7 @@ class Svir:
     def insert_platform_layer_id(self, layer_url):
         platform_layer_id = layer_url.split('/')[-1]
         active_layer_id = self.iface.activeLayer().id()
-        suppl_info = self.supplemtnal_information[active_layer_id]
+        suppl_info = self.supplemental_information[active_layer_id]
         if 'platform_layer_id' not in suppl_info:
             suppl_info['platform_layer_id'] = platform_layer_id
         self.update_layer_suppl_info(active_layer_id, suppl_info)
