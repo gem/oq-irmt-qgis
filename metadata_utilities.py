@@ -101,43 +101,39 @@ def generate_iso_metadata(supplemental_information=None):
                                           sort_keys=False,
                                           indent=2,
                                           separators=(',', ': '))
-        selected_idx = supplemental_information[
-            'selected_project_definition_idx']
-        proj_defs = supplemental_information['project_definitions']
-        project_definition = proj_defs[selected_idx]
         try:
             template_replacements['ISO19115_TITLE'] = \
-                project_definition['title']
+                supplemental_information['title']
         except KeyError:
             pass
         try:
             template_replacements['ISO19115_ABSTRACT'] = \
-                project_definition['description']
+                supplemental_information['abstract']
         except KeyError:
             pass
         try:
             template_replacements['ISO19115_LINEAGE'] = \
-                project_definition['source']
+                supplemental_information['source']
         except KeyError:
             template_replacements['ISO19115_LINEAGE'] = ''
         try:
             template_replacements['ISO19115_ORGANIZATION'] = \
-                project_definition['organization']
+                supplemental_information['organization']
         except KeyError:
             template_replacements['ISO19115_ORGANIZATION'] = ''
         try:
             template_replacements['$ISO19115_EMAIL'] = \
-                project_definition['email']
+                supplemental_information['email']
         except KeyError:
             template_replacements['ISO19115_EMAIL'] = ''
         try:
             template_replacements['ISO19115_LICENSE'] = \
-                'licensed under ' + project_definition['license']
+                'licensed under ' + supplemental_information['license']
         except KeyError:
             template_replacements['ISO19115_LICENSE'] = 'no license specified'
         try:
             template_replacements['$ISO19115_URL'] = \
-                project_definition['$ISO19115_URL']
+                supplemental_information['$ISO19115_URL']
         except KeyError:
             template_replacements['ISO19115_URL'] = ''
 

@@ -1247,9 +1247,8 @@ class Svir:
 
         dlg = UploadSettingsDialog(self.iface, suppl_info)
         if dlg.exec_():
-            project_definition['title'] = dlg.ui.title_le.text()
-            project_definition[
-                'description'] = dlg.ui.description_te.toPlainText()
+            suppl_info['title'] = dlg.ui.title_le.text()
+            suppl_info['abstract'] = dlg.ui.description_te.toPlainText()
             zone_label_field = dlg.ui.zone_label_field_cbx.currentText()
             project_definition['zone_label_field'] = zone_label_field
 
@@ -1257,8 +1256,8 @@ class Svir:
             license_idx = dlg.ui.license_cbx.currentIndex()
             license_url = dlg.ui.license_cbx.itemData(license_idx)
             license_txt = '%s (%s)' % (license_name, license_url)
-            project_definition['license'] = license_txt
-            project_definition['svir_plugin_version'] = SVIR_PLUGIN_VERSION
+            suppl_info['license'] = license_txt
+            suppl_info['svir_plugin_version'] = SVIR_PLUGIN_VERSION
 
             suppl_info['project_definitions'][selected_idx] = \
                 project_definition

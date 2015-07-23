@@ -82,8 +82,8 @@ class UploadSettingsDialog(QDialog):
 
         for license_name, license_link in LICENSES:
             self.ui.license_cbx.addItem(license_name, license_link)
-        if 'license' in project_definition:
-            license_name = project_definition['license'].split(
+        if 'license' in self.suppl_info:
+            license_name = suppl_info['license'].split(
                 '(')[0].strip()
             license_idx = self.ui.license_cbx.findText(license_name)
             if license_idx != -1:
