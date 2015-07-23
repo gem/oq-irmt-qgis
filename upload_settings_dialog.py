@@ -72,18 +72,34 @@ class UploadSettingsDialog(QDialog):
         self.zone_label_field_is_specified = False
         reload_attrib_cbx(
             self.ui.zone_label_field_cbx, iface.activeLayer(), True)
-        # pre-select the field if it's specified in the project definition
-        if 'zone_label_field' in project_definition:
+
+        self.set_zone_label_field()
+        self.set_license()
+
+        self.exists_on_platform = 'platform_layer_id' in self.suppl_info
+        self.do_update = False
+
+        self.ui.update_radio.setEnabled(self.exists_on_platform)
+        self.ui.update_radio.setChecked(self.exists_on_platform)
+        self.set_labels()
+
+    def set_zone_label_field(self):
+        # pre-select the field if it's specified in the supplemental info
+        if 'zone_label_field' in self.suppl_info:
             zone_label_idx = self.ui.zone_label_field_cbx.findText(
-                project_definition['zone_label_field'])
+                self.suppl_info['zone_label_field'])
             if zone_label_idx != -1:
                 self.ui.zone_label_field_cbx.setCurrentIndex(zone_label_idx)
                 self.zone_label_field_is_specified = True
+        else:
+            self.ui.zone_label_field_cbx.setCurrentIndex(-1)
+            self.zone_label_field_is_specified = False
 
+    def set_license(self):
         for license_name, license_link in LICENSES:
             self.ui.license_cbx.addItem(license_name, license_link)
         if 'license' in self.suppl_info:
-            license_name = suppl_info['license'].split(
+            license_name = self.suppl_info['license'].split(
                 '(')[0].strip()
             license_idx = self.ui.license_cbx.findText(license_name)
             if license_idx != -1:
@@ -94,13 +110,6 @@ class UploadSettingsDialog(QDialog):
         else:
             self.ui.license_cbx.setCurrentIndex(
                 self.ui.license_cbx.findText(DEFAULT_LICENSE[0]))
-
-        self.exists_on_platform = 'platform_layer_id' in self.suppl_info
-        self.do_update = False
-
-        self.ui.update_radio.setEnabled(self.exists_on_platform)
-        self.ui.update_radio.setChecked(self.exists_on_platform)
-        self.set_labels()
 
     def set_labels(self):
         self.ui.situation_lbl.setVisible(self.exists_on_platform)
@@ -115,11 +124,21 @@ class UploadSettingsDialog(QDialog):
                 % self.suppl_info['platform_layer_id'])
             title_lbl = tr('Project title')
             description_lbl = tr('Project description')
+            self.ui.title_le.setEnabled(False)
+            self.ui.description_te.setEnabled(False)
+            self.ui.zone_label_field_cbx.setEnabled(False)
+            self.ui.license_cbx.setEnabled(False)
+            self.set_zone_label_field()
+            self.set_license()
         else:
             explaination_lbl = tr(
                 'A new layer will be created on the OpenQuake Platform.')
             title_lbl = tr('New layer title')
             description_lbl = tr('New layer abstract')
+            self.ui.title_le.setEnabled(True)
+            self.ui.description_te.setEnabled(True)
+            self.ui.zone_label_field_cbx.setEnabled(True)
+            self.ui.license_cbx.setEnabled(True)
 
         self.ui.title_lbl.setText(title_lbl)
         self.ui.description_lbl.setText(description_lbl)
