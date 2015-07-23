@@ -1231,20 +1231,21 @@ class Svir:
         file_stem = '%s%sqgis_svir_%s' % (temp_dir, os.path.sep, uuid.uuid4())
         xml_file = file_stem + '.xml'
 
-        self.sync_layer_suppl_info_from_qgs_project(
-            self.iface.activeLayer().id())
-        suppl_info = self.supplemental_information[
-            self.iface.activeLayer().id()]
+        active_layer_id = self.iface.activeLayer().id()
+        self.sync_layer_suppl_info_from_qgs_project(active_layer_id)
+        suppl_info = self.supplemental_information[active_layer_id]
+        # add layer's bounding box
+        extent = self.iface.activeLayer().extent()
+        bbox = {'minx': extent.xMinimum(),
+                'miny': extent.yMinimum(),
+                'maxx': extent.xMaximum(),
+                'maxy': extent.yMaximum()}
+        suppl_info['bounding_box'] = bbox
         selected_idx = suppl_info['selected_project_definition_idx']
         proj_defs = suppl_info['project_definitions']
         project_definition = proj_defs[selected_idx]
-        platform_layer_id = None
-        if 'platform_layer_id' in suppl_info:
-            platform_layer_id = suppl_info['platform_layer_id']
 
-        dlg = UploadSettingsDialog(self.iface,
-                                   project_definition,
-                                   platform_layer_id)
+        dlg = UploadSettingsDialog(self.iface, suppl_info)
         if dlg.exec_():
             project_definition['title'] = dlg.ui.title_le.text()
             project_definition[
@@ -1261,8 +1262,7 @@ class Svir:
 
             suppl_info['project_definitions'][selected_idx] = \
                 project_definition
-            self.update_layer_suppl_info(
-                self.iface.activeLayer().id(), suppl_info)
+            self.update_layer_suppl_info(active_layer_id, suppl_info)
 
             if dlg.do_update:
                 with WaitCursorManager(
@@ -1278,16 +1278,15 @@ class Svir:
                         self.iface.messageBar().pushMessage(
                             'Error', error_msg, level=QgsMessageBar.CRITICAL)
                         return
-                    if platform_layer_id is None:
+                    if not 'platform_layer_id' in suppl_info:
                         error_msg = ('Unable to retrieve the id of'
                                      'the layer on the Platform')
                         self.iface.messageBar().pushMessage(
                             'Error', error_msg, level=QgsMessageBar.CRITICAL)
                         return
-                    response = update_platform_project(hostname,
-                                                       session,
-                                                       project_definition,
-                                                       platform_layer_id)
+                    response = update_platform_project(
+                        hostname, session, project_definition,
+                        suppl_info['platform_layer_id'])
                     if response.ok:
                         self.iface.messageBar().pushMessage(
                             tr("Info"),
@@ -1302,7 +1301,7 @@ class Svir:
                 if DEBUG:
                     print 'xml_file:', xml_file
                 write_iso_metadata_file(xml_file,
-                                        project_definition)
+                                        suppl_info)
                 metadata_dialog = UploadDialog(
                     self.iface, file_stem)
                 metadata_dialog.upload_successful.connect(
