@@ -25,6 +25,7 @@
 """
 
 import json
+from copy import deepcopy
 from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox,
@@ -109,7 +110,9 @@ class ProjectsManagerDialog(QDialog):
                                   separators=(',', ': '))
         self.ui.proj_def_raw.setPlainText(proj_def_str)
 
-    def add_proj_def(self, title, proj_def=PROJECT_TEMPLATE):
+    def add_proj_def(self, title, proj_def=None):
+        if proj_def is None:
+            proj_def = deepcopy(PROJECT_TEMPLATE)
         proj_def['title'] = title
         self.suppl_info['project_definitions'].append(proj_def)
         self.suppl_info['selected_project_definition_idx'] = \
