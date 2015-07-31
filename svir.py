@@ -641,6 +641,10 @@ class Svir:
             return
         supplemental_information = json.loads(
             get_supplemental_information_resp.content)
+        # attempt to convert supplemental information in old list format
+        if isinstance(supplemental_information, list):
+            supplemental_information = {
+                'project_definitions': supplemental_information}
 
         dest_file = os.path.join(dest_dir, shp_file)
         layer = QgsVectorLayer(
@@ -679,11 +683,7 @@ class Svir:
                 error_msg, level=QgsMessageBar.WARNING,
                 duration=8)
         self.iface.setActiveLayer(layer)
-        try:
-            project_definitions = supplemental_information[
-                'project_definitions']
-        except KeyError:
-            project_definitions = supplemental_information
+        project_definitions = supplemental_information['project_definitions']
         # ensure backwards compatibility with projects with a single
         # project definition
         if not isinstance(project_definitions, list):
