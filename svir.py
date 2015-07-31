@@ -1248,7 +1248,11 @@ class Svir:
         dlg = UploadSettingsDialog(self.iface, suppl_info)
         if dlg.exec_():
             suppl_info['title'] = dlg.ui.title_le.text()
+            if 'title' not in project_definition:
+                project_definition['title'] = suppl_info['title']
             suppl_info['abstract'] = dlg.ui.description_te.toPlainText()
+            if 'description' not in project_definition:
+                project_definition['description'] = suppl_info['abstract']
             zone_label_field = dlg.ui.zone_label_field_cbx.currentText()
             suppl_info['zone_label_field'] = zone_label_field
 
