@@ -788,6 +788,7 @@ class Svir:
         """
         active_layer_id = self.iface.activeLayer().id()
         # get the project definition to work with, or create a default one
+        self.sync_layer_suppl_info_from_qgs_project(active_layer_id)
         try:
             suppl_info = self.supplemental_information[active_layer_id]
             orig_project_definition = suppl_info['project_definitions'][
