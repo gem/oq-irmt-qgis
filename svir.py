@@ -1304,6 +1304,8 @@ class Svir:
             else:
                 if DEBUG:
                     print 'xml_file:', xml_file
+                # do not upload the selected_project_definition_idx
+                suppl_info.pop('selected_project_definition_idx', None)
                 write_iso_metadata_file(xml_file,
                                         suppl_info)
                 metadata_dialog = UploadDialog(
