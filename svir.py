@@ -267,7 +267,6 @@ class Svir:
         QgsProject.instance().removeEntry('svir', layer_id)
 
     def update_layer_suppl_info(self, layer_id, suppl_info):
-        self.sync_layer_suppl_info_from_qgs_project(layer_id)
         # TODO: upgrade old project definitions
         # set the QgsProject's property
         QgsProject.instance().writeEntry(
@@ -276,6 +275,7 @@ class Svir:
                        sort_keys=False,
                        indent=2,
                        separators=(',', ': ')))
+        self.sync_layer_suppl_info_from_qgs_project(layer_id)
         if DEBUG:
             print ("Project's property 'supplemental_information[%s]'"
                    " updated: %s") % (
