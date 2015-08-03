@@ -642,7 +642,10 @@ class Svir:
         supplemental_information = json.loads(
             get_supplemental_information_resp.content)
         # attempt to convert supplemental information in old list format
-        if isinstance(supplemental_information, list):
+        # or those that did not nest project definitions into a
+        # project_definitions attribute
+        if (isinstance(supplemental_information, list)
+                or 'project_definitions' not in supplemental_information):
             supplemental_information = {
                 'project_definitions': supplemental_information}
 
