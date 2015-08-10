@@ -34,6 +34,8 @@ cp = ConfigParser()
 cp.readfp(open(os.path.dirname(os.path.realpath(__file__)) + "/metadata.txt"))
 SVIR_PLUGIN_VERSION = cp.get('general', 'version')
 PLATFORM_REGISTRATION_URL = 'https://platform.openquake.org/account/signup/'
+SUPPLEMENTAL_INFORMATION_VERSION = '1.0'
+PROJECT_DEFINITION_VERSION = '1.0'
 
 
 class DiscardedFeature(object):
@@ -119,6 +121,7 @@ NODE_TYPES = {'IRI': 'Integrated Risk Index',
 
 
 PROJECT_TEMPLATE = {
+    'project_definition_version': '1.0',
     'name': 'IRI',
     'type': NODE_TYPES['IRI'],
     'weight': 1.0,

@@ -102,6 +102,7 @@ from utils import (tr,
                    )
 from abstract_worker import start_worker
 from shared import (SVIR_PLUGIN_VERSION,
+                    SUPPLEMENTAL_INFORMATION_VERSION,
                     DEBUG,
                     PROJECT_TEMPLATE,
                     THEME_TEMPLATE,
@@ -1266,6 +1267,8 @@ class Svir:
             license_txt = '%s (%s)' % (license_name, license_url)
             suppl_info['license'] = license_txt
             suppl_info['svir_plugin_version'] = SVIR_PLUGIN_VERSION
+            suppl_info['supplemental_information_version'] = \
+                SUPPLEMENTAL_INFORMATION_VERSION
 
             suppl_info['project_definitions'][selected_idx] = \
                 project_definition
