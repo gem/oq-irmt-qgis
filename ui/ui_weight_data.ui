@@ -43,7 +43,7 @@
      </property>
     </widget>
    </item>
-   <item row="3" column="0">
+   <item row="4" column="0">
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
@@ -55,6 +55,16 @@
    </item>
    <item row="2" column="0">
     <widget class="QComboBox" name="style_by_field_cbx"/>
+   </item>
+   <item row="3" column="0">
+    <widget class="QCheckBox" name="on_the_fly_ckb">
+     <property name="text">
+      <string>Run calculations on-the-fly</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>
