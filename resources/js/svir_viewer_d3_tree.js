@@ -106,7 +106,6 @@
         var width = 960 - margin.right - margin.left;
         var height = 800 - margin.top - margin.bottom;
 
-        var i = 0;
         var duration = 750;
         var root;
 
@@ -213,6 +212,15 @@
             });
 
             if (node_type != node_types_dict.SV_THEME) {
+                if (!fieldOptions(node)) {
+                    alertDialog(
+                        'Warning',
+                        ['It is impossible to add any new node to the tree, because all',
+                         'numeric fields of the layer have already been associated to',
+                         'existing nodes.'].join('\n')
+                    );
+                    return;
+                }
                 dialog
                     .append('<br/><label for="field">Field name: </label>')
                     .append('<select id="field">' + fieldOptions(node) + '</select><br/>');
@@ -322,8 +330,8 @@
                 }
                 // Check if all themes are computable
                 var areAllThemesComputable = true;
-                for (var i = 0; i < node.children.length; i++) {
-                    if (!isComputable(node.children[i])) {
+                for (var j = 0; j < node.children.length; j++) {
+                    if (!isComputable(node.children[j])) {
                         areAllThemesComputable = false;
                     }
                 }
@@ -405,22 +413,22 @@
                 // apart from the case in which all nodes are set to weight=0
                 // In such corner case, we assume the user wants to remove the effect
                 // of all sibling nodes, so we set all weights to 0
-                for (var i = 0; i < pdTempWeights.length; i++) {
+                for (var k = 0; k < pdTempWeights.length; k++) {
                     if (totalWeights === 0) {
                         pdTempWeightsComputed.push(0);
                     } else {
-                        pdTempWeightsComputed.push(pdTempWeights[i] / totalWeights);
+                        pdTempWeightsComputed.push(pdTempWeights[k] / totalWeights);
                     }
                 }
 
                 // Update the results back into the spinners and to the d3.js chart
-                for (var i = 0; i < pdTempSpinnerIds.length; i++) {
-                    $('#'+pdTempSpinnerIds[i]).spinner("value", pdTempWeightsComputed[i]);
+                for (var l = 0; l < pdTempSpinnerIds.length; l++) {
+                    $('#'+pdTempSpinnerIds[l]).spinner("value", pdTempWeightsComputed[l]);
                 }
 
                 // Update the json with new values
-                for (var i = 0; i < pdTempWeightsComputed.length; i++) {
-                    updateTreeBranch(pdData, [pdTempIds[i]], pdTempWeightsComputed[i], pdTempInverters[i], pdTempNodeNames[i]);
+                for (var m = 0; m < pdTempWeightsComputed.length; m++) {
+                    updateTreeBranch(pdData, [pdTempIds[m]], pdTempWeightsComputed[m], pdTempInverters[m], pdTempNodeNames[m]);
                 }
 
                 if ($('#operator').length !== 0) {
@@ -532,6 +540,28 @@
         });
 
         d3.select(self.frameElement).style("height", "800px");
+
+        function alertDialog(title, message) {
+            var alDialog = $('#projectDefNewNodeDialog');
+            alDialog.dialog({
+                modal: true,
+                autoOpen: false,
+                closeOnEscape: false,
+                dialogClass: "no-close",
+                title: title,
+                buttons: [
+                    {
+                     text: "Ok",
+                     click: function() {
+                         $(this).dialog( "close" );
+                     }
+                    }
+                ]
+            });
+            alDialog.empty();
+            alDialog.html(message);
+            alDialog.dialog('open');
+        }
 
         function confirmationDialog(title, question, onOk) {
             var confDialog = $('#projectDefNewNodeDialog');
