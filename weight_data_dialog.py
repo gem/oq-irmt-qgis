@@ -38,7 +38,6 @@ from PyQt4.QtCore import (Qt,
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox,
                          )
-from PyQt4.QtWebKit import QWebSettings
 
 from ui.ui_weight_data import Ui_WeightDataDialog
 
@@ -150,8 +149,9 @@ class WeightDataDialog(QDialog):
             print 'in handle_json_updated, data='
             pp.pprint(data)
 
-        self.project_definition = self.clean_json([data])
-        self.json_cleaned.emit(self.project_definition)
+        if self.ui.on_the_fly_ckb.isChecked():
+            self.project_definition = self.clean_json([data])
+            self.json_cleaned.emit(self.project_definition)
 
     def clean_json(self, data):
         # this method takes a list of dictionaries and removes some unneeded

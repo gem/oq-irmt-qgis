@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_weight_data.ui'
 #
-# Created: Mon Jul  6 11:34:11 2015
+# Created: Mon Aug  3 17:01:35 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -51,10 +51,14 @@ class Ui_WeightDataDialog(object):
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
         self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName(_fromUtf8("buttonBox"))
-        self.gridLayout.addWidget(self.buttonBox, 3, 0, 1, 1)
+        self.gridLayout.addWidget(self.buttonBox, 4, 0, 1, 1)
         self.style_by_field_cbx = QtGui.QComboBox(WeightDataDialog)
         self.style_by_field_cbx.setObjectName(_fromUtf8("style_by_field_cbx"))
         self.gridLayout.addWidget(self.style_by_field_cbx, 2, 0, 1, 1)
+        self.on_the_fly_ckb = QtGui.QCheckBox(WeightDataDialog)
+        self.on_the_fly_ckb.setChecked(True)
+        self.on_the_fly_ckb.setObjectName(_fromUtf8("on_the_fly_ckb"))
+        self.gridLayout.addWidget(self.on_the_fly_ckb, 3, 0, 1, 1)
 
         self.retranslateUi(WeightDataDialog)
         QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), WeightDataDialog.accept)
@@ -64,5 +68,6 @@ class Ui_WeightDataDialog(object):
     def retranslateUi(self, WeightDataDialog):
         WeightDataDialog.setWindowTitle(_translate("WeightDataDialog", "Weight Data", None))
         self.label.setText(_translate("WeightDataDialog", "Style the layer by", None))
+        self.on_the_fly_ckb.setText(_translate("WeightDataDialog", "Run calculations on-the-fly", None))
 
 from PyQt4 import QtWebKit
