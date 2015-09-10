@@ -30,7 +30,8 @@ from PyQt4.QtGui import (QDialog,
                          QDesktopServices)
 from ui.ui_upload_settings import Ui_UploadSettingsDialog
 from defaults import DEFAULTS
-from utils import reload_attrib_cbx, tr
+from process_layer import ProcessLayer
+from utils import reload_attrib_cbx, tr, WaitCursorManager
 
 LICENSES = (
     ('CC0', 'http://creativecommons.org/about/cc0'),
@@ -103,6 +104,10 @@ class UploadSettingsDialog(QDialog):
         self.ui.update_radio.setEnabled(self.exists_on_platform)
         self.ui.update_radio.setChecked(self.exists_on_platform)
         self.set_labels()
+
+        with WaitCursorManager("Counting layer's vertices", iface):
+            tot_vertices = ProcessLayer(iface.activeLayer()).count_vertices()
+            print "Total vertices:", tot_vertices
 
     def set_labels(self):
         self.ui.situation_lbl.setVisible(self.exists_on_platform)
