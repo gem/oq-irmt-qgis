@@ -380,3 +380,49 @@ class ProcessLayer():
             return type_str in type_list
         else:
             return False
+
+    def count_vertices(self):
+        """
+        Inspired by "https://github.com/GeospatialEnablingTechnologies/
+                             GET-Qgis-plugins/blob/master/Vertices_Counter/
+                             Vertices_Counter.py"
+
+        Count the total number of vertices in the layer.
+        In DEBUG mode, also print vertices count for each single feature
+
+        :return: The total number of vertices in the layer
+        """
+        layer_vertices = 0
+        for feat in self.layer.getFeatures():
+            feature_vertices = 0
+            geom = feat.geometry()
+            geom_type = geom.type()
+            if geom_type == QGis.Polygon:
+                if geom.isMultipart():
+                    polygons = geom.asMultiPolygon()
+                else:
+                    polygons = [geom.asPolygon()]
+                for polygon in polygons:
+                    for ring in polygon:
+                        feature_vertices += len(ring)
+            elif geom_type == QGis.Line:
+                if geom.isMultipart():
+                    lines = geom.asMultiPolyline()
+                else:
+                    lines = [geom.asPolyline()]
+                for line in lines:
+                    feature_vertices += len(line)
+            elif geom_type == QGis.Point:
+                if geom.isMultipart():
+                    points = geom.asMultiPoint()
+                else:
+                    points = [geom.asPoint()]
+                for point in points:
+                    feature_vertices += 1
+            else:
+                raise TypeError(
+                    'Geometry type %s can not be accepted' % geom_type)
+            layer_vertices += feature_vertices
+            if DEBUG:
+                print "Feature %d, %d vertices" % (feat.id(), feature_vertices)
+        return layer_vertices

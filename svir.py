@@ -1269,6 +1269,7 @@ class Svir:
             suppl_info['svir_plugin_version'] = SVIR_PLUGIN_VERSION
             suppl_info['supplemental_information_version'] = \
                 SUPPLEMENTAL_INFORMATION_VERSION
+            suppl_info['vertices_count'] = dlg.vertices_count
 
             suppl_info['project_definitions'][selected_idx] = \
                 project_definition
