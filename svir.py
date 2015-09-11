@@ -1257,6 +1257,7 @@ class Svir:
             license_txt = '%s (%s)' % (license_name, license_url)
             project_definition['license'] = license_txt
             project_definition['svir_plugin_version'] = SVIR_PLUGIN_VERSION
+            project_definition['vertices_count'] = dlg.vertices_count
 
             self.update_proj_defs(
                 self.iface.activeLayer().id(), proj_defs, selected_idx)
