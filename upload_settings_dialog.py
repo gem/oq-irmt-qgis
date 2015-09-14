@@ -30,7 +30,8 @@ from PyQt4.QtGui import (QDialog,
                          QDesktopServices)
 from ui.ui_upload_settings import Ui_UploadSettingsDialog
 from defaults import DEFAULTS
-from utils import reload_attrib_cbx, tr
+from process_layer import ProcessLayer
+from utils import reload_attrib_cbx, tr, WaitCursorManager
 
 LICENSES = (
     ('CC0', 'http://creativecommons.org/about/cc0'),
@@ -55,6 +56,7 @@ class UploadSettingsDialog(QDialog):
         self.ui.setupUi(self)
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
         self.ok_button.setEnabled(False)
+        self.vertices_count = None
         self.suppl_info = suppl_info
         selected_idx = self.suppl_info['selected_project_definition_idx']
         proj_defs = self.suppl_info['project_definitions']
@@ -82,6 +84,10 @@ class UploadSettingsDialog(QDialog):
         self.ui.update_radio.setEnabled(self.exists_on_platform)
         self.ui.update_radio.setChecked(self.exists_on_platform)
         self.set_labels()
+
+        with WaitCursorManager("Counting layer's vertices", iface):
+            self.vertices_count = ProcessLayer(
+                iface.activeLayer()).count_vertices()
 
     def set_zone_label_field(self):
         # pre-select the field if it's specified in the supplemental info
