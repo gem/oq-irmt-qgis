@@ -48,13 +48,13 @@ except:
 
 from calculations.process_layer import ProcessLayer
 
-from utils import (LayerEditingManager,
+from utilities.utils import (LayerEditingManager,
                    tr,
                    TraceTimeManager,
                    clear_progress_message_bar,
                    create_progress_message_bar,
                    )
-from shared import (INT_FIELD_TYPE_NAME,
+from utilities.shared import (INT_FIELD_TYPE_NAME,
                     DOUBLE_FIELD_TYPE_NAME,
                     DEBUG,
                     )

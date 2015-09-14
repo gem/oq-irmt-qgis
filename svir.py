@@ -78,7 +78,7 @@ from dialogs.weight_data_dialog import WeightDataDialog
 from dialogs.upload_settings_dialog import UploadSettingsDialog
 from dialogs.projects_manager_dialog import ProjectsManagerDialog
 from calculations.import_sv_data import get_loggedin_downloader
-from utils import (tr,
+from utilities.utils import (tr,
                    WaitCursorManager,
                    assign_default_weights,
                    clear_progress_message_bar,
@@ -92,7 +92,7 @@ from utils import (tr,
                    toggle_select_features_widget,
                    )
 from thread_worker.abstract_worker import start_worker
-from shared import (SVIR_PLUGIN_VERSION,
+from utilities.shared import (SVIR_PLUGIN_VERSION,
                     SUPPLEMENTAL_INFORMATION_VERSION,
                     DEBUG,
                     PROJECT_TEMPLATE,
@@ -102,6 +102,7 @@ from shared import (SVIR_PLUGIN_VERSION,
 from calculations.aggregate_loss_by_zone import (calculate_zonal_stats,
                                     purge_zones_without_loss_points,
                                     )
+
 
 class Svir:
 

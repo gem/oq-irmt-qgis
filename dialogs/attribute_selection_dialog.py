@@ -24,9 +24,10 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 from PyQt4.QtGui import QDialog, QDialogButtonBox
+
 from ui.ui_attribute_selection import Ui_AttributeSelctionDialog
-from utils import tr
-from shared import NUMERIC_FIELD_TYPES, TEXTUAL_FIELD_TYPES
+from utilities.utils import tr
+from utilities.shared import NUMERIC_FIELD_TYPES, TEXTUAL_FIELD_TYPES
 
 
 class AttributeSelectionDialog(QDialog):

@@ -32,11 +32,12 @@ from qgis.core import QgsMapLayerRegistry
 from qgis.gui import QgsMessageBar
 
 from PyQt4.QtCore import QSettings, Qt
+
 from PyQt4.QtGui import QApplication, QProgressBar, QToolButton, QFileDialog, \
     QMessageBox
 
 from dialogs.settings_dialog import SettingsDialog
-from shared import DEBUG
+from utilities.shared import DEBUG
 from third_party.poster.encode import multipart_encode
 
 

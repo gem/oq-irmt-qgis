@@ -31,7 +31,8 @@ from ConfigParser import ConfigParser
 DEBUG = QSettings().value('/svir/developer_mode', False, type=bool)
 
 cp = ConfigParser()
-cp.readfp(open(os.path.dirname(os.path.realpath(__file__)) + "/metadata.txt"))
+cp.readfp(open(os.path.dirname(os.path.realpath(__file__)) +
+               "/../metadata.txt"))
 SVIR_PLUGIN_VERSION = cp.get('general', 'version')
 PLATFORM_REGISTRATION_URL = 'https://platform.openquake.org/account/signup/'
 SUPPLEMENTAL_INFORMATION_VERSION = '1.0'

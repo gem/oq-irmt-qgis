@@ -24,13 +24,13 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 from xml.etree import ElementTree
-
 from PyQt4 import Qt
+
 from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import (QDialog, QDialogButtonBox, QListWidgetItem)
 
 from ui.ui_download_layer import Ui_DownloadLayerDialog
-from utils import WaitCursorManager, SvNetworkError
+from utilities.utils import WaitCursorManager, SvNetworkError
 
 NS_NET_OPENGIS_WFS = '{http://www.opengis.net/wfs}'
 

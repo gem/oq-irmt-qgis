@@ -27,7 +27,8 @@ import math
 from numpy import mean, std, argwhere, amax, amin, log10, log
 from types import NoneType
 import qgis
-from utils import Register
+
+from utilities.utils import Register
 
 TRANSFORMATION_ALGS = Register()
 RANK_VARIANTS = ('AVERAGE', 'MIN', 'MAX', 'DENSE', 'ORDINAL')

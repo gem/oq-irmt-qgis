@@ -30,8 +30,8 @@ import json
 from qgis.core import QgsVectorFileWriter
 
 from thread_worker.abstract_worker import AbstractWorker
-from shared import DEBUG
-from utils import multipart_encode_for_requests, UserAbortedNotification, tr
+from utilities.shared import DEBUG
+from utilities.utils import multipart_encode_for_requests, UserAbortedNotification, tr
 
 
 class UploadWorker(AbstractWorker):

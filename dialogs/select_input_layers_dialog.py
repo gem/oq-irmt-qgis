@@ -44,7 +44,7 @@ from PyQt4.QtGui import (QFileDialog,
 
 from calculations.process_layer import ProcessLayer
 from ui.ui_select_input_layers import Ui_SelectInputLayersDialog
-from utils import tr, count_heading_commented_lines
+from utilities.utils import tr, count_heading_commented_lines
 
 
 class SelectInputLayersDialog(QDialog):

@@ -36,9 +36,9 @@ from qgis.core import (QgsMapLayer,
 
 from PyQt4.QtCore import QVariant
 
-from utils import LayerEditingManager, tr
+from utilities.utils import LayerEditingManager, tr
 from calculations.transformation_algs import (TRANSFORMATION_ALGS, transform)
-from shared import DEBUG, DOUBLE_FIELD_TYPE_NAME
+from utilities.shared import DEBUG, DOUBLE_FIELD_TYPE_NAME
 
 
 class ProcessLayer():

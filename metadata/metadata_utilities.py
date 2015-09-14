@@ -13,8 +13,8 @@ Contact : ole.moller.nielsen@gmail.com
      (at your option) any later version.
 
 """
-from defaults import get_defaults
-from utils import ReadMetadataError
+from utilities.defaults import get_defaults
+from utilities.utils import ReadMetadataError
 
 __author__ = 'marco@opengis.ch'
 __revision__ = '$Format:%H$'
@@ -31,7 +31,7 @@ import time
 from xml.etree import ElementTree
 
 from metadata.iso_19115_template import ISO_METADATA_XML_TEMPLATE
-from shared import DEBUG
+from utilities.shared import DEBUG
 
 
 # list of tags to get to the svir project definition.

@@ -26,14 +26,17 @@
 
 import json
 from copy import deepcopy
+from qgis.core import QgsProject
+
 from PyQt4.QtCore import pyqtSlot
+
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox,
                          QInputDialog)
-from qgis.core import QgsProject
+
 from ui.ui_projects_manager_dialog import Ui_ProjectsManagerDialog
-from utils import tr
-from shared import PROJECT_TEMPLATE
+from utilities.utils import tr
+from utilities.shared import PROJECT_TEMPLATE
 
 
 class ProjectsManagerDialog(QDialog):

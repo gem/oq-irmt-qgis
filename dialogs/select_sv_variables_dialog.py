@@ -28,7 +28,7 @@ from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox)
 
 from ui.ui_select_sv_variables import Ui_SelectSvVariablesDialog
-from utils import WaitCursorManager, SvNetworkError
+from utilities.utils import WaitCursorManager, SvNetworkError
 
 
 class SelectSvVariablesDialog(QDialog):
