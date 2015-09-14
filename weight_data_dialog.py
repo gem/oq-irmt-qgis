@@ -156,12 +156,17 @@ class WeightDataDialog(QDialog):
     def clean_json(self, data):
         # this method takes a list of dictionaries and removes some unneeded
         # keys. It recurses into the children elements
+
+        if data == []:
+            return data
+
         ignore_keys = ['depth', 'x', 'y', 'id', 'x0', 'y0', 'parent']
         for element in data:
             for key in ignore_keys:
                 element.pop(key, None)
             if 'children' in element:
                 self.clean_json(element['children'])
+        # return the main element
         return data[0]
 
     @pyqtSlot(str)
