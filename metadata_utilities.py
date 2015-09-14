@@ -73,7 +73,7 @@ ElementTree._serialize_xml = ElementTree._serialize['xml'] = _serialize_xml
 # END MONKEYPATCH CDATA
 
 
-def generate_iso_metadata(project_definition=None):
+def generate_iso_metadata(supplemental_information=None):
     """Make a valid ISO 19115 XML using the values of get_defaults
 
     This method will create XML based on the iso_19115_template.py template
@@ -81,8 +81,8 @@ def generate_iso_metadata(project_definition=None):
     defaults.get_defaults. Note that get_defaults takes care of using the
     values set in QGIS settings if available.
 
-    :param project_definition: The project definition to write.
-    :type project_definition: dict
+    :param supplemental_information: The supplemental information to write.
+    :type supplemental_information: dict
 
     :return: str valid XML
     """
@@ -93,57 +93,57 @@ def generate_iso_metadata(project_definition=None):
     # create runtime based replacement values
     template_replacements['ISO19115_TODAY_DATETIME'] = time.strftime(
         "%Y-%m-%dT%H:%M:%SZ")
-    if project_definition is not None:
+    if supplemental_information is not None:
         if DEBUG:
-            print project_definition
-        template_replacements['SVIR_PROJECT_DEFINITION'] = '<![CDATA[%s]]>' % \
-            json.dumps([project_definition],
-                       sort_keys=False,
-                       indent=2,
-                       separators=(',', ': '))
+            print supplemental_information
+        template_replacements['SVIR_SUPPLEMENTAL_INFORMATION'] = \
+            '<![CDATA[%s]]>' % json.dumps(supplemental_information,
+                                          sort_keys=False,
+                                          indent=2,
+                                          separators=(',', ': '))
         try:
             template_replacements['ISO19115_TITLE'] = \
-                project_definition['title']
+                supplemental_information['title']
         except KeyError:
             pass
         try:
             template_replacements['ISO19115_ABSTRACT'] = \
-                project_definition['description']
+                supplemental_information['abstract']
         except KeyError:
             pass
         try:
             template_replacements['ISO19115_LINEAGE'] = \
-                project_definition['source']
+                supplemental_information['source']
         except KeyError:
             template_replacements['ISO19115_LINEAGE'] = ''
         try:
             template_replacements['ISO19115_ORGANIZATION'] = \
-                project_definition['organization']
+                supplemental_information['organization']
         except KeyError:
             template_replacements['ISO19115_ORGANIZATION'] = ''
         try:
             template_replacements['$ISO19115_EMAIL'] = \
-                project_definition['email']
+                supplemental_information['email']
         except KeyError:
             template_replacements['ISO19115_EMAIL'] = ''
         try:
             template_replacements['ISO19115_LICENSE'] = \
-                'licensed under ' + project_definition['license']
+                'licensed under ' + supplemental_information['license']
         except KeyError:
             template_replacements['ISO19115_LICENSE'] = 'no license specified'
         try:
             template_replacements['$ISO19115_URL'] = \
-                project_definition['$ISO19115_URL']
+                supplemental_information['$ISO19115_URL']
         except KeyError:
             template_replacements['ISO19115_URL'] = ''
 
     else:
-        template_replacements['SVIR_PROJECT_DEFINITION'] = ''
+        template_replacements['SVIR_SUPPLEMENTAL_INFORMATION'] = ''
 
     return ISO_METADATA_XML_TEMPLATE.safe_substitute(template_replacements)
 
 
-def write_iso_metadata_file(xml_filename, project_definition=None):
+def write_iso_metadata_file(xml_filename, supplemental_information=None):
     """
     Make a valid ISO 19115 XML file using the values of defaults.get_defaults
 
@@ -155,7 +155,7 @@ def write_iso_metadata_file(xml_filename, project_definition=None):
     :param xml_filename: full path to the file to be generated
     :return:
     """
-    xml = generate_iso_metadata(project_definition)
+    xml = generate_iso_metadata(supplemental_information)
     with open(xml_filename, 'w') as f:
         f.write(xml)
     return xml

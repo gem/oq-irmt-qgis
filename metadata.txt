@@ -13,7 +13,7 @@ name=OpenQuake Integrated Risk Modelling Toolkit
 qgisMinimumVersion=2.0
 description=Tools for the development of composite indicators measuring societal characteristics and the integration of these with physical risk estimations
 about=<p>Tools for creating and editing indicators and composite indices to measure social characteristics and for combining these with estimates of physical earthquake risk (i.e. estimates of human or infrastructure loss).</p><p>The plugin enables users to directly interact with the <a href='https://platform.openquake.org'>OpenQuake Platform</a>, in order to browse and download socioeconomic data or existing projects, to edit projects locally in QGIS, then to upload and share them through the Platform.</p><p>This plugin was designed as a collaborative effort between the <a href='http://www.globalquakemodel.org'>GEM Foundation</a> and the <a href='http://www.cedim.de/english/'>Center for Disaster Management and Risk Reduction Technology</a>, and it has been developed by the GEM Foundation. It was formerly named GEM OpenQuake Social Vulnerability and Integrated Risk (SVIR)</p>
-version=1.6.3
+version=1.7.0
 author=GEM Foundation
 email=staff.it@globalquakemodel.org
 
@@ -23,40 +23,9 @@ email=staff.it@globalquakemodel.org
     
 # Uncomment the following line and add your changelog entries:
 changelog=
-    1.6.3
+    1.7.0
     New features:
-    * Added plugin's manual v1.0 (and an additional button to open it as a local html page)
-    * Make the csv importing procedure compatible with Microsoft Windows
-    1.6.2
-    Small fixes:
-    * When aggregating loss by zone, let sum and average be NULL instead of 0 for zones containing no loss points
-    * Fix issue in node's circles rendering in case an 'ignoring weights' operator is selected
-    * Style and render the layer immediately, selecting one of its fields through the weighting dialog
-    * Fix a corner case in field transformations, updating project definitions only when available
-    1.6.1
-    Small fixes:
-    * Improved editing of an indicator's name in the weighting dialog
-    * Weighting dialog's elements expand correctly on window resize
-    * Minor improvements to the multiselect widget
-    1.6.0
-    New features:
-    * More intuitive way to delete nodes (right-click instead of long-press)
-    * Possibility to transform multiple fields at once
-    * Fixed issue with CSV import in QGIS 2.10
-    * Possibility to overwrite transformed fields or to set project definitions to track a transformed field
-    * Node names can now be changed also through the weighting dialog
-    * Composite indices calculations refactored and unified
-    * Tests implemented for all operators on single node calculations
-    * Tests implemented for multiple composite variables calculations
-    * Bidirectional updating of project definitions between python and javascript
-    * Socioeconomic themes saved into additional fields in the layer (allowing to style the layer accordingly)
-    * Render non-computable nodes and corresponding links as semi-transparent
-    * New "geometric mean" operator
-    * Primary indicators' labels rendered on the right of the D3 tree to avoid overlapping
-    * When downloading a layer from the OQ-Platform, get the "supplemental information" leveraging the ad-hoc API
-    * More readable project's details while browsing OQ-Platform's layers
-    * From the weighting dialog it is possible to select the field to be used to style the layer
-    * In the project manager it is possible to make a copy of the currently selected project definition
+    * Refactoring of the 'supplemental information' structure, to hold also variables shared by all project definitions
 
 # tags are comma separated with spaces allowed
 tags=GEM, SVIR, OpenQuake, Social Vulnerability, Integrated Risk

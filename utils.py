@@ -335,12 +335,15 @@ def platform_login(host, username, password, session):
         raise SvNetworkError(error_message)
 
 
-def update_platform_project(host, session, project_definition):
+def update_platform_project(host,
+                            session,
+                            project_definition,
+                            platform_layer_id):
     proj_def_str = json.dumps(project_definition,
                               sort_keys=False,
                               indent=2,
                               separators=(',', ': '))
-    payload = {'layer_name': project_definition['platform_layer_id'],
+    payload = {'layer_name': platform_layer_id,
                'project_definition': proj_def_str}
     resp = session.post(host + '/svir/add_project_definition', data=payload)
     return resp
@@ -508,7 +511,7 @@ class IterableToFileAdapter(object):
     """ an adapter which makes the multipart-generator issued by poster
         accessible to requests. Based upon code from
         http://stackoverflow.com/a/13911048/1659732
-        https://mazdermind.wordpress.com/2014/03/14/http-upload-with-progress-using-poster-and-requests/
+        https://goo.gl/zgLx0T
     """
     def __init__(self, iterable):
         self.iterator = iter(iterable)
