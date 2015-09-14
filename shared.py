@@ -121,7 +121,7 @@ NODE_TYPES = {'IRI': 'Integrated Risk Index',
 
 
 PROJECT_TEMPLATE = {
-    'project_definition_version': '1.0',
+    'project_definition_version': PROJECT_DEFINITION_VERSION,
     'name': 'IRI',
     'type': NODE_TYPES['IRI'],
     'weight': 1.0,
