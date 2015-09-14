@@ -81,8 +81,8 @@ def generate_iso_metadata(supplemental_information=None):
     defaults.get_defaults. Note that get_defaults takes care of using the
     values set in QGIS settings if available.
 
-    :param suppl_info: The supplemental information to write.
-    :type suppl_info: dict
+    :param supplemental_information: The supplemental information to write.
+    :type supplemental_information: dict
 
     :return: str valid XML
     """
