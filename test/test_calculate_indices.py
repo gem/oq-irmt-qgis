@@ -37,8 +37,8 @@ from calculations.calculate_utils import (calculate_node,
                              calculate_composite_variable,
                              )
 from calculations.process_layer import ProcessLayer
-from utils import set_operator, get_node
-from shared import OPERATORS_DICT, DiscardedFeature
+from utilities.utils import set_operator, get_node
+from utilities.shared import OPERATORS_DICT, DiscardedFeature
 
 
 class CalculateCompositeVariableTestCase(unittest.TestCase):

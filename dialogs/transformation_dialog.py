@@ -32,7 +32,7 @@ from calculations.transformation_algs import (RANK_VARIANTS,
                                  QUADRATIC_VARIANTS,
                                  LOG10_VARIANTS,
                                  TRANSFORMATION_ALGS)
-from shared import NUMERIC_FIELD_TYPES
+from utilities.shared import NUMERIC_FIELD_TYPES
 from calculations.process_layer import ProcessLayer
 
 

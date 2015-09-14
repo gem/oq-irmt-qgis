@@ -40,7 +40,7 @@ RESOURCE_SRC=$(shell grep '^ *<file' resources.qrc | sed 's@</file>@@g;s/.*>//g'
 
 HELP = help/build/html
 
-PLUGIN_UPLOAD = ./plugin_upload.py
+PLUGIN_UPLOAD = ./scripts/plugin_upload.py
 
 QGISDIR=.qgis2
 

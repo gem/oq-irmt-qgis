@@ -24,8 +24,9 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 from PyQt4 import QtGui, QtCore
+
 from ui.ui_settings import Ui_SettingsDialog
-from shared import PLATFORM_REGISTRATION_URL
+from utilities.shared import PLATFORM_REGISTRATION_URL
 
 
 class SettingsDialog(QtGui.QDialog, Ui_SettingsDialog):
