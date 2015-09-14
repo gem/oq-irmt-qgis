@@ -24,14 +24,16 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 from copy import deepcopy
-from PyQt4.QtCore import QVariant
 from qgis import QPyNullVariant
 from qgis.core import QgsField
 from qgis.gui import QgsMessageBar
+
+from PyQt4.QtCore import QVariant
+
 from shared import (DOUBLE_FIELD_TYPE_NAME, DEBUG, SUM_BASED_OPERATORS,
                     MUL_BASED_OPERATORS, DEFAULT_OPERATOR, OPERATORS_DICT,
                     IGNORING_WEIGHT_OPERATORS, DiscardedFeature)
-from process_layer import ProcessLayer
+from calculations.process_layer import ProcessLayer
 from utils import LayerEditingManager, tr
 
 

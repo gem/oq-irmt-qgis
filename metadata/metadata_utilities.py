@@ -30,7 +30,7 @@ import time
 
 from xml.etree import ElementTree
 
-from iso_19115_template import ISO_METADATA_XML_TEMPLATE
+from metadata.iso_19115_template import ISO_METADATA_XML_TEMPLATE
 from shared import DEBUG
 
 

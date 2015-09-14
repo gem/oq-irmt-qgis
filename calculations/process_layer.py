@@ -27,17 +27,17 @@ import uuid
 from numpy.testing import assert_almost_equal
 from pprint import pprint
 from types import NoneType
-from PyQt4.QtCore import QVariant
 import qgis
 from qgis.core import (QgsMapLayer,
                        QGis,
                        QgsVectorLayer,
                        QgsMapLayerRegistry,
                        QgsField)
+
+from PyQt4.QtCore import QVariant
+
 from utils import LayerEditingManager, tr
-
-from transformation_algs import (TRANSFORMATION_ALGS, transform)
-
+from calculations.transformation_algs import (TRANSFORMATION_ALGS, transform)
 from shared import DEBUG, DOUBLE_FIELD_TYPE_NAME
 
 

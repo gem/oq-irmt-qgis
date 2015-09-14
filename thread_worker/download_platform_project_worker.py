@@ -24,11 +24,10 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-
 import StringIO
 import zipfile
 
-from abstract_worker import AbstractWorker
+from thread_worker.abstract_worker import AbstractWorker
 
 
 class DownloadPlatformProjectWorker(AbstractWorker):

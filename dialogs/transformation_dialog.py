@@ -28,13 +28,12 @@ from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox)
 
 from ui.ui_transformation import Ui_TransformationDialog
-from transformation_algs import (RANK_VARIANTS,
+from calculations.transformation_algs import (RANK_VARIANTS,
                                  QUADRATIC_VARIANTS,
                                  LOG10_VARIANTS,
                                  TRANSFORMATION_ALGS)
-
 from shared import NUMERIC_FIELD_TYPES
-from process_layer import ProcessLayer
+from calculations.process_layer import ProcessLayer
 
 
 class TransformationDialog(QDialog):

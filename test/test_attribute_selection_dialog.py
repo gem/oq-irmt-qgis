@@ -17,13 +17,13 @@ __copyright__ = 'Copyright 2014, GEM Foundation'
 
 import unittest
 import os.path
-
 from qgis.core import QgsVectorLayer
+
 from PyQt4.QtGui import QDialogButtonBox, QDialog
 
-from attribute_selection_dialog import AttributeSelectionDialog
-
+from dialogs.attribute_selection_dialog import AttributeSelectionDialog
 from utilities import get_qgis_app
+
 QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 
 

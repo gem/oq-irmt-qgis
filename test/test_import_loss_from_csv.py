@@ -24,16 +24,16 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 # import qgis libs so that we set the correct sip api version
-import qgis  # pylint: disable=W0611  # noqa
 
 import unittest
 import os.path
 
 from utilities import get_qgis_app
+
 QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 
 from collections import namedtuple
-from select_input_layers_dialog import SelectInputLayersDialog
+from dialogs.select_input_layers_dialog import SelectInputLayersDialog
 
 
 class ImportLossFromCsvTestCase(unittest.TestCase):

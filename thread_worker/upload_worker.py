@@ -27,11 +27,11 @@
 import os
 import shutil
 import json
+from qgis.core import QgsVectorFileWriter
 
-from abstract_worker import AbstractWorker
+from thread_worker.abstract_worker import AbstractWorker
 from shared import DEBUG
 from utils import multipart_encode_for_requests, UserAbortedNotification, tr
-from qgis.core import QgsVectorFileWriter
 
 
 class UploadWorker(AbstractWorker):

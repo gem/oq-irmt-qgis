@@ -35,9 +35,8 @@ from PyQt4.QtCore import QSettings, Qt
 from PyQt4.QtGui import QApplication, QProgressBar, QToolButton, QFileDialog, \
     QMessageBox
 
-from settings_dialog import SettingsDialog
+from dialogs.settings_dialog import SettingsDialog
 from shared import DEBUG
-
 from third_party.poster.encode import multipart_encode
 
 
