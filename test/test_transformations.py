@@ -25,9 +25,9 @@
 """
 
 import unittest
-
 import qgis
-from transformation_algs import transform, TRANSFORMATION_ALGS
+
+from calculations.transformation_algs import transform, TRANSFORMATION_ALGS
 
 
 class MissingValuesTestCase(unittest.TestCase):

@@ -24,30 +24,28 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 import os
+from qgis.core import QgsRuleBasedRendererV2
+from qgis.gui import QgsMessageBar
+
 from PyQt4.QtCore import (Qt,
                           QUrl,
                           QSettings,
                           pyqtSignal)
-
 from PyQt4.QtGui import (QDialog, QSizePolicy, QDialogButtonBox)
 from PyQt4.QtNetwork import QNetworkCookieJar, QNetworkCookie
 from PyQt4.QtWebKit import QWebSettings
 
-from qgis.core import QgsRuleBasedRendererV2
-from qgis.gui import QgsMessageBar
-from abstract_worker import start_worker
+from thread_worker.abstract_worker import start_worker
 from third_party.requests.sessions import Session
 from third_party.requests.utils import dict_from_cookiejar
-from sldadapter import getGsCompatibleSld
-
+from utilities.sldadapter import getGsCompatibleSld
 from ui.ui_upload_metadata import Ui_UploadMetadataDialog
-from upload_worker import UploadWorker
-
-from utils import (get_credentials,
+from thread_worker.upload_worker import UploadWorker
+from utilities.utils import (get_credentials,
                    platform_login,
                    create_progress_message_bar, clear_progress_message_bar,
                    SvNetworkError)
-from shared import DEBUG
+from utilities.shared import DEBUG
 
 
 class UploadDialog(QDialog):

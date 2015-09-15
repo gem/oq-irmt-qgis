@@ -30,12 +30,19 @@ import uuid
 import fileinput
 import re
 from copy import deepcopy
-
 from math import floor, ceil
-from download_layer_dialog import DownloadLayerDialog
-from download_platform_data_worker import DownloadPlatformDataWorker
-from download_platform_project_worker import DownloadPlatformProjectWorker
-from metadata_utilities import write_iso_metadata_file
+from qgis.core import (QgsVectorLayer,
+                       QgsMapLayerRegistry,
+                       QgsMessageLog,
+                       QgsMapLayer,
+                       QgsVectorFileWriter,
+                       QgsGraduatedSymbolRendererV2,
+                       QgsSymbolV2, QgsVectorGradientColorRampV2,
+                       QgsRuleBasedRendererV2,
+                       QgsFillSymbolV2,
+                       QgsProject,
+                       )
+from qgis.gui import QgsMessageBar
 
 from PyQt4.QtCore import (QSettings,
                           QTranslator,
@@ -52,42 +59,26 @@ from PyQt4.QtGui import (QAction,
                          QMessageBox,
                          )
 
-from qgis.core import (QgsVectorLayer,
-                       QgsMapLayerRegistry,
-                       QgsMessageLog,
-                       QgsMapLayer,
-                       QgsVectorFileWriter,
-                       QgsGraduatedSymbolRendererV2,
-                       QgsSymbolV2, QgsVectorGradientColorRampV2,
-                       QgsRuleBasedRendererV2,
-                       QgsFillSymbolV2,
-                       QgsProject,
-                       )
+import resources_rc
 
-from qgis.gui import QgsMessageBar
-
-from upload_dialog import UploadDialog
-
-from calculate_utils import calculate_composite_variable
-
-from process_layer import ProcessLayer
-
-import resources_rc  # pylint: disable=W0611  # NOQA
-
+from dialogs.download_layer_dialog import DownloadLayerDialog
+from thread_worker.download_platform_data_worker import DownloadPlatformDataWorker
+from thread_worker.download_platform_project_worker import DownloadPlatformProjectWorker
+from metadata.metadata_utilities import write_iso_metadata_file
+from dialogs.upload_dialog import UploadDialog
+from calculations.calculate_utils import calculate_composite_variable
+from calculations.process_layer import ProcessLayer
 from third_party.requests.sessions import Session
-
-from select_input_layers_dialog import SelectInputLayersDialog
-from attribute_selection_dialog import AttributeSelectionDialog
-from transformation_dialog import TransformationDialog
-from select_sv_variables_dialog import SelectSvVariablesDialog
-from settings_dialog import SettingsDialog
-from weight_data_dialog import WeightDataDialog
-from upload_settings_dialog import UploadSettingsDialog
-from projects_manager_dialog import ProjectsManagerDialog
-
-from import_sv_data import get_loggedin_downloader
-
-from utils import (tr,
+from dialogs.select_input_layers_dialog import SelectInputLayersDialog
+from dialogs.attribute_selection_dialog import AttributeSelectionDialog
+from dialogs.transformation_dialog import TransformationDialog
+from dialogs.select_sv_variables_dialog import SelectSvVariablesDialog
+from dialogs.settings_dialog import SettingsDialog
+from dialogs.weight_data_dialog import WeightDataDialog
+from dialogs.upload_settings_dialog import UploadSettingsDialog
+from dialogs.projects_manager_dialog import ProjectsManagerDialog
+from calculations.import_sv_data import get_loggedin_downloader
+from utilities.utils import (tr,
                    WaitCursorManager,
                    assign_default_weights,
                    clear_progress_message_bar,
@@ -100,15 +91,15 @@ from utils import (tr,
                    replace_fields,
                    toggle_select_features_widget,
                    )
-from abstract_worker import start_worker
-from shared import (SVIR_PLUGIN_VERSION,
+from thread_worker.abstract_worker import start_worker
+from utilities.shared import (SVIR_PLUGIN_VERSION,
                     SUPPLEMENTAL_INFORMATION_VERSION,
                     DEBUG,
                     PROJECT_TEMPLATE,
                     THEME_TEMPLATE,
                     INDICATOR_TEMPLATE,
                     )
-from aggregate_loss_by_zone import (calculate_zonal_stats,
+from calculations.aggregate_loss_by_zone import (calculate_zonal_stats,
                                     purge_zones_without_loss_points,
                                     )
 

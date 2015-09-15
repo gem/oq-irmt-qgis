@@ -24,18 +24,16 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 # import qgis libs so that we set the correct sip api version
-import qgis   # pylint: disable=W0611  # NOQA
 import os.path
-
 import unittest
-
 from qgis.core import QgsVectorLayer
 
 from utilities import get_qgis_app
+
 QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 
-from process_layer import ProcessLayer
-from aggregate_loss_by_zone import (calculate_zonal_stats,
+from calculations.process_layer import ProcessLayer
+from calculations.aggregate_loss_by_zone import (calculate_zonal_stats,
                                     purge_zones_without_loss_points,)
 
 

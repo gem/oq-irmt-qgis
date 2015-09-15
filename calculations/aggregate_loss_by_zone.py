@@ -23,8 +23,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
-from PyQt4.QtCore import QVariant
-from PyQt4.QtGui import QProgressDialog
 from qgis import QPyNullVariant
 from qgis.core import (QgsVectorLayer,
                        QgsMapLayerRegistry,
@@ -33,10 +31,12 @@ from qgis.core import (QgsVectorLayer,
                        QgsSpatialIndex,
                        QgsFeatureRequest,
                        )
-
 from qgis.gui import QgsMessageBar
-
 from qgis.analysis import QgsZonalStatistics
+
+from PyQt4.QtCore import QVariant
+from PyQt4.QtGui import QProgressDialog
+
 import processing
 
 try:
@@ -46,17 +46,15 @@ except:
     print "Unable to import SagaUtils module from processing.algs.saga"
     saga_was_imported = False
 
-from process_layer import ProcessLayer
+from calculations.process_layer import ProcessLayer
 
-import resources_rc  # pylint: disable=W0611  # NOQA
-
-from utils import (LayerEditingManager,
+from utilities.utils import (LayerEditingManager,
                    tr,
                    TraceTimeManager,
                    clear_progress_message_bar,
                    create_progress_message_bar,
                    )
-from shared import (INT_FIELD_TYPE_NAME,
+from utilities.shared import (INT_FIELD_TYPE_NAME,
                     DOUBLE_FIELD_TYPE_NAME,
                     DEBUG,
                     )

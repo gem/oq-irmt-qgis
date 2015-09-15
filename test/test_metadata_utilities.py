@@ -20,14 +20,13 @@ __date__ = '12/10/2014'
 __copyright__ = ('Copyright 2012, Australia Indonesia Facility for '
                  'Disaster Reduction')
 
-
 import os
 import time
 import unittest
 import tempfile
 import uuid
 
-from metadata_utilities import (
+from metadata.metadata_utilities import (
     valid_iso_xml,
     ISO_METADATA_KEYWORD_TAG,
     ISO_METADATA_KEYWORD_NESTING, generate_iso_metadata)

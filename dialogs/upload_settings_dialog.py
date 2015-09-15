@@ -28,10 +28,11 @@ from PyQt4.QtCore import pyqtSlot, QUrl
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox,
                          QDesktopServices)
+
 from ui.ui_upload_settings import Ui_UploadSettingsDialog
-from defaults import DEFAULTS
-from process_layer import ProcessLayer
-from utils import reload_attrib_cbx, tr, WaitCursorManager
+from utilities.defaults import DEFAULTS
+from calculations.process_layer import ProcessLayer
+from utilities.utils import reload_attrib_cbx, tr, WaitCursorManager
 
 LICENSES = (
     ('CC0', 'http://creativecommons.org/about/cc0'),

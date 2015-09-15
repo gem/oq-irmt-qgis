@@ -24,7 +24,6 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 from copy import deepcopy
-
 import json
 
 from PyQt4.QtCore import (Qt,
@@ -34,19 +33,17 @@ from PyQt4.QtCore import (Qt,
                           pyqtSignal,
                           pyqtSlot,
                           )
-
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox,
                          )
 
 from ui.ui_weight_data import Ui_WeightDataDialog
-
-from shared import (DEFAULT_OPERATOR,
+from utilities.shared import (DEFAULT_OPERATOR,
                     OPERATORS_DICT,
                     NUMERIC_FIELD_TYPES,
                     NODE_TYPES,
                     DEBUG)
-from utils import get_field_names, confirmation_on_close
+from utilities.utils import get_field_names, confirmation_on_close
 
 
 class WeightDataDialog(QDialog):

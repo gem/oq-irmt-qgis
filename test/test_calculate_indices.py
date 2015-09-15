@@ -28,15 +28,17 @@ import unittest
 import os
 from copy import deepcopy
 from qgis.core import QgsVectorLayer, QgsVectorFileWriter
+
 from utilities import get_qgis_app
+
 QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
-from calculate_utils import (calculate_node,
+from calculations.calculate_utils import (calculate_node,
                              get_node_attr_id_and_name,
                              calculate_composite_variable,
                              )
-from process_layer import ProcessLayer
-from utils import set_operator, get_node
-from shared import OPERATORS_DICT, DiscardedFeature
+from calculations.process_layer import ProcessLayer
+from utilities.utils import set_operator, get_node
+from utilities.shared import OPERATORS_DICT, DiscardedFeature
 
 
 class CalculateCompositeVariableTestCase(unittest.TestCase):

@@ -26,9 +26,9 @@
 import os
 import tempfile
 
-from abstract_worker import AbstractWorker
-from import_sv_data import PLATFORM_EXPORT_VARIABLES_DATA
-from utils import SvNetworkError, tr, UserAbortedNotification
+from thread_worker.abstract_worker import AbstractWorker
+from calculations.import_sv_data import PLATFORM_EXPORT_VARIABLES_DATA
+from utilities.utils import SvNetworkError, tr, UserAbortedNotification
 
 
 class DownloadPlatformDataWorker(AbstractWorker):

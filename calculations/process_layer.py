@@ -27,18 +27,18 @@ import uuid
 from numpy.testing import assert_almost_equal
 from pprint import pprint
 from types import NoneType
-from PyQt4.QtCore import QVariant
 import qgis
 from qgis.core import (QgsMapLayer,
                        QGis,
                        QgsVectorLayer,
                        QgsMapLayerRegistry,
                        QgsField)
-from utils import LayerEditingManager, tr
 
-from transformation_algs import (TRANSFORMATION_ALGS, transform)
+from PyQt4.QtCore import QVariant
 
-from shared import DEBUG, DOUBLE_FIELD_TYPE_NAME
+from utilities.utils import LayerEditingManager, tr
+from calculations.transformation_algs import (TRANSFORMATION_ALGS, transform)
+from utilities.shared import DEBUG, DOUBLE_FIELD_TYPE_NAME
 
 
 class ProcessLayer():

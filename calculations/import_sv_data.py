@@ -35,8 +35,7 @@ from third_party.requests.exceptions import (ConnectionError,
                                              MissingSchema,
                                              ReadTimeout,
                                              )
-
-from utils import (SvNetworkError,
+from utilities.utils import (SvNetworkError,
                    platform_login,
                    get_credentials,
                    WaitCursorManager,

@@ -28,11 +28,6 @@
 import os.path
 import csv
 import tempfile
-from PyQt4.QtCore import pyqtSlot, QDir, QUrl
-from PyQt4.QtGui import (QFileDialog,
-                         QDialog,
-                         QDialogButtonBox,
-                         QMessageBox)
 from qgis.core import (QgsVectorLayer,
                        QGis,
                        QgsRasterLayer,
@@ -40,9 +35,16 @@ from qgis.core import (QgsVectorLayer,
                        QgsVectorFileWriter,
                        )
 from qgis.gui import QgsMessageBar
-from process_layer import ProcessLayer
+
+from PyQt4.QtCore import pyqtSlot, QDir, QUrl
+from PyQt4.QtGui import (QFileDialog,
+                         QDialog,
+                         QDialogButtonBox,
+                         QMessageBox)
+
+from calculations.process_layer import ProcessLayer
 from ui.ui_select_input_layers import Ui_SelectInputLayersDialog
-from utils import tr, count_heading_commented_lines
+from utilities.utils import tr, count_heading_commented_lines
 
 
 class SelectInputLayersDialog(QDialog):
