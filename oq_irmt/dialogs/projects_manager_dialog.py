@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 /***************************************************************************
- Svir
+ Irmt
                                  A QGIS plugin
  OpenQuake Social Vulnerability and Integrated Risk
                               -------------------
@@ -61,7 +61,7 @@ class ProjectsManagerDialog(QDialog):
     def get_suppl_info(self):
         active_layer_id = self.iface.activeLayer().id()
         suppl_info_str, is_available = \
-            QgsProject.instance().readEntry('svir', active_layer_id)
+            QgsProject.instance().readEntry('irmt', active_layer_id)
         if is_available and suppl_info_str:
             self.suppl_info = json.loads(suppl_info_str)
 

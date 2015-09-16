@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 /***************************************************************************
- Svir
+ Irmt
                                  A QGIS plugin
  OpenQuake Social Vulnerability and Integrated Risk
                               -------------------
@@ -157,5 +157,5 @@ def worker_error(e, exception_string, message_bar):
         duration=3)
     QgsMessageLog.logMessage(
         'Worker thread raised an exception: %s' % exception_string,
-        'SVIR worker',
+        'IRMT worker',
         level=QgsMessageLog.CRITICAL)

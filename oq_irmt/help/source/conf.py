@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# svir documentation build configuration file, created by
+# irmt documentation build configuration file, created by
 # sphinx-quickstart on Sun Feb 12 17:11:03 2012.
 #
 # This file is execfile()d with the current directory set to its containing dir
@@ -41,7 +41,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'svir'
+project = u'irmt'
 copyright = u'2013, GEM Foundation'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -180,7 +180,7 @@ htmlhelp_basename = 'templateclassdoc'
 # (source start file, target name, title, author,
 #  documentclass [howto/manual]).
 latex_documents = [
-    ('index', 'svir.tex', u'svir Documentation',
+    ('index', 'irmt.tex', u'irmt Documentation',
      u'GEM Foundation', 'manual'),
 ]
 
@@ -213,6 +213,6 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'templateclass', u'svir Documentation',
+    ('index', 'templateclass', u'irmt Documentation',
      [u'GEM Foundation'], 1)
 ]

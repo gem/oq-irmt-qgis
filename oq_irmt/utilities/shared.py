@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 /***************************************************************************
- Svir
+ Irmt
                                  A QGIS plugin
  OpenQuake Social Vulnerability and Integrated Risk
                               -------------------
@@ -28,12 +28,12 @@ from collections import OrderedDict
 from PyQt4.QtCore import QSettings
 from ConfigParser import ConfigParser
 
-DEBUG = QSettings().value('/svir/developer_mode', False, type=bool)
+DEBUG = QSettings().value('/irmt/developer_mode', False, type=bool)
 
 cp = ConfigParser()
 cp.readfp(open(os.path.dirname(os.path.realpath(__file__)) +
                "/../metadata.txt"))
-SVIR_PLUGIN_VERSION = cp.get('general', 'version')
+IRMT_PLUGIN_VERSION = cp.get('general', 'version')
 PLATFORM_REGISTRATION_URL = 'https://platform.openquake.org/account/signup/'
 SUPPLEMENTAL_INFORMATION_VERSION = '1.0'
 PROJECT_DEFINITION_VERSION = '1.0'

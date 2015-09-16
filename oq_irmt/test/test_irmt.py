@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 /***************************************************************************
- Svir
+ Irmt
                                  A QGIS plugin
  OpenQuake Social Vulnerability and Integrated Risk
                               -------------------
@@ -33,13 +33,13 @@ from PyQt4.QtGui import QIcon
 from oq_irmt.test.utilities import get_qgis_app
 QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 
-#import svir
-#SVIR = svir.classFactory(IFACE)
-#SVIR.ui = svir.plugin.dlg.ui  # useful for shorthand later
+#import irmt
+#IRMT = irmt.classFactory(IFACE)
+#IRMT.ui = irmt.plugin.dlg.ui  # useful for shorthand later
 
 
-class SvirTest(unittest.TestCase):
-    """Test SVIR works."""
+class IrmtTest(unittest.TestCase):
+    """Test IRMT works."""
 
     def setUp(self):
         """Runs before each test."""
@@ -51,16 +51,16 @@ class SvirTest(unittest.TestCase):
 
     def test_icon_png(self):
         """Test we can click OK."""
-        path = ':/plugins/SVIR/icon.png'
+        path = ':/plugins/IRMT/icon.png'
         icon = QIcon(path)
         self.assertFalse(icon.isNull())
 
     def test_toggle_active_actions(self):
-        #print SVIR.registered_actions()
+        #print IRMT.registered_actions()
         #self.assertFalse()
         pass
 
 if __name__ == "__main__":
-    suite = unittest.makeSuite(SvirTest)
+    suite = unittest.makeSuite(IrmtTest)
     runner = unittest.TextTestRunner(verbosity=2)
     runner.run(suite)

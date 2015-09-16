@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 /***************************************************************************
- Svir
+ Irmt
                                  A QGIS plugin
  OpenQuake Social Vulnerability and Integrated Risk
                               -------------------

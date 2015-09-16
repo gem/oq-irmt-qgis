@@ -35,7 +35,7 @@ from oq_irmt.metadata.iso_19115_template import ISO_METADATA_XML_TEMPLATE
 from oq_irmt.utilities.shared import DEBUG
 
 
-# list of tags to get to the svir project definition.
+# list of tags to get to the irmt project definition.
 # this is stored in a list so it can be easily used in a for loop
 ISO_METADATA_KEYWORD_NESTING = [
     '{http://www.isotc211.org/2005/gmd}identificationInfo',
@@ -97,7 +97,7 @@ def generate_iso_metadata(supplemental_information=None):
     if supplemental_information is not None:
         if DEBUG:
             print supplemental_information
-        template_replacements['SVIR_SUPPLEMENTAL_INFORMATION'] = \
+        template_replacements['IRMT_SUPPLEMENTAL_INFORMATION'] = \
             '<![CDATA[%s]]>' % json.dumps(supplemental_information,
                                           sort_keys=False,
                                           indent=2,
@@ -139,7 +139,7 @@ def generate_iso_metadata(supplemental_information=None):
             template_replacements['ISO19115_URL'] = ''
 
     else:
-        template_replacements['SVIR_SUPPLEMENTAL_INFORMATION'] = ''
+        template_replacements['IRMT_SUPPLEMENTAL_INFORMATION'] = ''
 
     return ISO_METADATA_XML_TEMPLATE.safe_substitute(template_replacements)
 

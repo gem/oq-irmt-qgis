@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 /***************************************************************************
- Svir
+ Irmt
                                  A QGIS plugin
  OpenQuake Social Vulnerability and Integrated Risk
                               -------------------
@@ -102,15 +102,19 @@ from oq_irmt.utilities.utils import (tr,
                                      toggle_select_features_widget,
                                      )
 from oq_irmt.utilities.shared import (
-    SVIR_PLUGIN_VERSION,
+    IRMT_PLUGIN_VERSION,
     SUPPLEMENTAL_INFORMATION_VERSION,
     DEBUG,
     PROJECT_TEMPLATE,
     THEME_TEMPLATE,
     INDICATOR_TEMPLATE, )
 
+# DO NOT REMOVE THIS
+# noinspection PyUnresolvedReferences
+import resources_rc  # pylint: disable=unused-import
 
-class Svir:
+
+class Irmt:
     def __init__(self, iface):
         # Save reference to the QGIS interface
         self.iface = iface
@@ -120,7 +124,7 @@ class Svir:
         # initialize locale
         locale = QSettings().value("locale/userLocale")[0:2]
         locale_path = os.path.join(self.plugin_dir, 'i18n',
-                                   'svir_{}.qm'.format(locale))
+                                   'irmt_{}.qm'.format(locale))
 
         if os.path.exists(locale_path):
             self.translator = QTranslator()
@@ -147,13 +151,13 @@ class Svir:
 
     def initGui(self):
         # create our own toolbar
-        self.toolbar = self.iface.addToolBar('SVIR')
-        self.toolbar.setObjectName('SVIRToolBar')
+        self.toolbar = self.iface.addToolBar('IRMT')
+        self.toolbar.setObjectName('IRMTToolBar')
 
         # Action to activate the modal dialog to import socioeconomic
         # data from the platform
         self.add_menu_item("import_sv_variables",
-                           ":/plugins/svir/load.svg",
+                           ":/plugins/irmt/load.svg",
                            u"&Load socioeconomic indicators"
                            " from the OpenQuake Platform",
                            self.import_sv_variables,
@@ -162,7 +166,7 @@ class Svir:
         # Action to activate the modal dialog to import socioeconomic
         # data from the platform
         self.add_menu_item("import_layer",
-                           ":/plugins/svir/load_layer.svg",
+                           ":/plugins/irmt/load_layer.svg",
                            u"&Import project from the OpenQuake Platform",
                            self.download_layer,
                            enable=True,
@@ -170,14 +174,14 @@ class Svir:
         # Action to activate the modal dialog to select a layer and one of its
         # attributes, in order to transform that attribute
         self.add_menu_item("transform_attributes",
-                           ":/plugins/svir/transform.svg",
+                           ":/plugins/irmt/transform.svg",
                            u"&Transform attributes",
                            self.transform_attributes,
                            enable=False,
                            add_to_layer_actions=True)
         # Action to manage the projects
         self.add_menu_item("project_definitions_manager",
-                           ":/plugins/svir/copy.svg",
+                           ":/plugins/irmt/copy.svg",
                            u"&Manage project definitions",
                            self.project_definitions_manager,
                            enable=False,
@@ -186,7 +190,7 @@ class Svir:
         # Action to activate the modal dialog to choose weighting of the
         # data from the platform
         self.add_menu_item("weight_data",
-                           ":/plugins/svir/weights.svg",
+                           ":/plugins/irmt/weights.svg",
                            u"&Weight data and calculate indices",
                            self.weight_data,
                            enable=False,
@@ -194,7 +198,7 @@ class Svir:
         # Action to activate the modal dialog to guide the user through loss
         # aggregation by zone
         self.add_menu_item("aggregate_losses",
-                           ":/plugins/svir/aggregate.svg",
+                           ":/plugins/irmt/aggregate.svg",
                            u"&Aggregate loss by zone",
                            self.aggregate_losses,
                            enable=True,
@@ -202,7 +206,7 @@ class Svir:
 
         # Action to upload
         self.add_menu_item("upload",
-                           ":/plugins/svir/upload.svg",
+                           ":/plugins/irmt/upload.svg",
                            u"&Upload project to the OpenQuake Platform",
                            self.upload,
                            enable=False,
@@ -210,13 +214,13 @@ class Svir:
         # Action to activate the modal dialog to set up show_settings for the
         # connection with the platform
         self.add_menu_item("show_settings",
-                           ":/plugins/svir/settings.svg",
+                           ":/plugins/irmt/settings.svg",
                            u"&OpenQuake Platform connection settings",
                            self.show_settings,
                            enable=True)
         # Action to open the plugin's manual
         self.add_menu_item("help",
-                           ":/plugins/svir/manual.svg",
+                           ":/plugins/irmt/manual.svg",
                            u"Plugin's &Manual",
                            self.show_manual,
                            enable=True)
@@ -248,7 +252,7 @@ class Svir:
         # it returns a tuple, with the returned value and a boolean indicating
         # if such property is available
         layer_suppl_info_str, is_available = \
-            QgsProject.instance().readEntry('svir', layer_id)
+            QgsProject.instance().readEntry('irmt', layer_id)
         if is_available and layer_suppl_info_str:
             self.supplemental_information[layer_id] = \
                 json.loads(layer_suppl_info_str)
@@ -261,13 +265,13 @@ class Svir:
 
     def clear_layer_suppl_info(self, layer_id):
         self.supplemental_information.pop(layer_id, None)
-        QgsProject.instance().removeEntry('svir', layer_id)
+        QgsProject.instance().removeEntry('irmt', layer_id)
 
     def update_layer_suppl_info(self, layer_id, suppl_info):
         # TODO: upgrade old project definitions
         # set the QgsProject's property
         QgsProject.instance().writeEntry(
-            'svir', layer_id,
+            'irmt', layer_id,
             json.dumps(suppl_info,
                        sort_keys=False,
                        indent=2,
@@ -277,7 +281,7 @@ class Svir:
             print ("Project's property 'supplemental_information[%s]'"
                    " updated: %s") % (
                       layer_id,
-                      QgsProject.instance().readEntry('svir', layer_id))
+                      QgsProject.instance().readEntry('irmt', layer_id))
 
     def current_layer_changed(self, layer):
         self.update_actions_status()
@@ -292,7 +296,7 @@ class Svir:
                       layers_type=QgsMapLayer.VectorLayer
                       ):
         """
-        Add an item to the SVIR plugin menu and a corresponding toolbar icon
+        Add an item to the IRMT plugin menu and a corresponding toolbar icon
         @param icon_path: Path of the icon associated to the action
         @param label: Name of the action, visible to the user
         @param corresponding_method: Method called when the action is triggered
@@ -303,13 +307,13 @@ class Svir:
         action.setEnabled(enable)
         action.triggered.connect(corresponding_method)
         self.toolbar.addAction(action)
-        self.iface.addPluginToMenu(u"&SVIR", action)
+        self.iface.addPluginToMenu(u"&IRMT", action)
         self.registered_actions[action_name] = action
 
         if add_to_layer_actions:
             self.iface.legendInterface().addLegendLayerAction(
                 action,
-                u"SVIR",
+                u"IRMT",
                 action_name,
                 layers_type,
                 True)
@@ -359,7 +363,7 @@ class Svir:
             action = self.registered_actions[action_name]
             # Remove the actions in the layer legend
             self.iface.legendInterface().removeLegendLayerAction(action)
-            self.iface.removePluginMenu(u"&SVIR", action)
+            self.iface.removePluginMenu(u"&IRMT", action)
             self.iface.removeToolBarIcon(action)
         clear_progress_message_bar(self.iface.messageBar())
 
@@ -628,7 +632,7 @@ class Svir:
 
         zip_file.extractall(dest_dir)
 
-        request_url = '%s/svir/get_supplemental_information?layer_name=%s' % (
+        request_url = '%s/irmt/get_supplemental_information?layer_name=%s' % (
             sv_downloader.host, parent_dlg.layer_id)
         get_supplemental_information_resp = sv_downloader.sess.get(request_url)
         if not get_supplemental_information_resp.ok:
@@ -1228,7 +1232,7 @@ class Svir:
 
     def upload(self):
         temp_dir = tempfile.gettempdir()
-        file_stem = '%s%sqgis_svir_%s' % (temp_dir, os.path.sep, uuid.uuid4())
+        file_stem = '%s%sqgis_irmt_%s' % (temp_dir, os.path.sep, uuid.uuid4())
         xml_file = file_stem + '.xml'
 
         active_layer_id = self.iface.activeLayer().id()
@@ -1261,7 +1265,7 @@ class Svir:
             license_url = dlg.ui.license_cbx.itemData(license_idx)
             license_txt = '%s (%s)' % (license_name, license_url)
             suppl_info['license'] = license_txt
-            suppl_info['svir_plugin_version'] = SVIR_PLUGIN_VERSION
+            suppl_info['irmt_plugin_version'] = IRMT_PLUGIN_VERSION
             suppl_info['supplemental_information_version'] = \
                 SUPPLEMENTAL_INFORMATION_VERSION
             suppl_info['vertices_count'] = dlg.vertices_count

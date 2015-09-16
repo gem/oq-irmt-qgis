@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 /***************************************************************************
- Svir
+ Irmt
                                  A QGIS plugin
  OpenQuake Social Vulnerability and Integrated Risk
                               -------------------
@@ -196,7 +196,7 @@ class UploadDialog(QDialog):
     def _setup_context_menu(self):
         settings = QSettings()
         developer_mode = settings.value(
-            '/svir/developer_mode', True, type=bool)
+            '/irmt/developer_mode', True, type=bool)
         if developer_mode is True:
             self.web_view.page().settings().setAttribute(
                 QWebSettings.DeveloperExtrasEnabled, True)

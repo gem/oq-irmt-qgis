@@ -14,27 +14,27 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="svir.py"; line="418"/>
+        <location filename="irmt.py"; line="418"/>
         <source>Login; Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="svir.py"; line="495"/>
+        <location filename="irmt.py"; line="495"/>
         <source>Download; Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="svir.py"; line="468"/>
+        <location filename="irmt.py"; line="468"/>
         <source>Socioeconomic; data; loaded in a; new layer</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="svir.py"; line="651"/>
+        <location filename="irmt.py"; line="651"/>
         <source>Invalid; value</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="svir.py"; line="728"/>
+        <location filename="irmt.py"; line="728"/>
         <source>Use; zonal; geometries</source>
         <translation type="unfinished"></translation>
     </message>
@@ -44,37 +44,37 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="svir.py"; line="904"/>
+        <location filename="irmt.py"; line="904"/>
         <source> In; order; to; cope; with complex geometries, a; working; installation; of; SAGA; is; recommended.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="svir.py"; line="945"/>
+        <location filename="irmt.py"; line="945"/>
         <source>Step; 2; of; 3: aggregating; losses; by; zone; id...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="svir.py"; line="972"/>
+        <location filename="irmt.py"; line="972"/>
         <source>Step; 3; of; 3: writing; point; counts, loss; sums; and; averages; into; the; zonal; layer...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="svir.py"; line="1040"/>
+        <location filename="irmt.py"; line="1040"/>
         <source>Step; 2; of; 3: creating; spatial; index; for loss points...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="svir.py"; line="1045"/>
+        <location filename="irmt.py"; line="1045"/>
         <source>Creating; spatial; index; for loss points...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="svir.py"; line="1056"/>
+        <location filename="irmt.py"; line="1056"/>
         <source>Calculate; point; counts, sums; and; averages; by; zone</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="svir.py"; line="1062"/>
+        <location filename="irmt.py"; line="1062"/>
         <source>Step; 3; of; 3: aggregating; points; by; zone...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -84,52 +84,52 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="svir.py"; line="1146"/>
+        <location filename="irmt.py"; line="1146"/>
         <source>Calculating; zonal; statistics</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="svir.py"; line="1146"/>
+        <location filename="irmt.py"; line="1146"/>
         <source>Abort...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="svir.py"; line="1155"/>
+        <location filename="irmt.py"; line="1155"/>
         <source>ZonalStats; Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="svir.py"; line="1155"/>
+        <location filename="irmt.py"; line="1155"/>
         <source>You; aborted; aggregation, so; there; are; no; data; for analysis. Exiting...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="svir.py"; line="1172"/>
+        <location filename="irmt.py"; line="1172"/>
         <source>Purging; zones; containing; no; loss; points...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="svir.py"; line="1210"/>
+        <location filename="irmt.py"; line="1210"/>
         <source>Populating; zonal; layer; with loss values...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="svir.py"; line="1213"/>
+        <location filename="irmt.py"; line="1213"/>
         <source>Add; loss; values; to; zonal; layer</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="svir.py"; line="1273"/>
-        <source>Calculating; some; common; SVIR; indices...</source>
+        <location filename="irmt.py"; line="1273"/>
+        <source>Calculating; some; common; IRMT; indices...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="svir.py"; line="1276"/>
-        <source>Calculate; some; common; SVIR; indices</source>
+        <location filename="irmt.py"; line="1276"/>
+        <source>Calculate; some; common; IRMT; indices</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="svir.py"; line="1337"/>
+        <location filename="irmt.py"; line="1337"/>
         <source>Uploading; to; platform</source>
         <translation type="unfinished"></translation>
     </message>
@@ -398,7 +398,7 @@ files( *
     </message>
     <message>
         <location filename="ui_settings.ui"; line="63"/>
-        <source>SVIR; settings</source>
+        <source>IRMT; settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

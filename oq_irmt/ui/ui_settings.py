@@ -85,6 +85,6 @@ class Ui_SettingsDialog(object):
         self.label.setText(_translate("SettingsDialog", "User", None))
         self.label_2.setText(_translate("SettingsDialog", "Password", None))
         self.registration_link_lbl.setText(_translate("SettingsDialog", "Link to the OQ-Platform registration", None))
-        self.groupBox_2.setTitle(_translate("SettingsDialog", "SVIR settings", None))
+        self.groupBox_2.setTitle(_translate("SettingsDialog", "IRMT settings", None))
         self.developermodeCheck.setText(_translate("SettingsDialog", "Developer mode (requires restart)", None))
 

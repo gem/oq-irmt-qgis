@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 /***************************************************************************
- Svir
+ Irmt
                                  A QGIS plugin
  OpenQuake Social Vulnerability and Integrated Risk
                               -------------------
@@ -41,7 +41,7 @@ from oq_irmt.utilities.shared import DEBUG
 
 
 def tr(message):
-    return QApplication.translate('Svir', message)
+    return QApplication.translate('Irmt', message)
 
 
 def confirmation_on_close(parent, event=None):
@@ -141,14 +141,14 @@ def get_field_names(sub_tree, field_names=None):
 
 def get_credentials(iface):
     qs = QSettings()
-    hostname = qs.value('svir/platform_hostname', '')
-    username = qs.value('svir/platform_username', '')
-    password = qs.value('svir/platform_password', '')
+    hostname = qs.value('irmt/platform_hostname', '')
+    username = qs.value('irmt/platform_username', '')
+    password = qs.value('irmt/platform_password', '')
     if not (hostname and username and password):
         SettingsDialog(iface).exec_()
-        hostname = qs.value('svir/platform_hostname', '')
-        username = qs.value('svir/platform_username', '')
-        password = qs.value('svir/platform_password', '')
+        hostname = qs.value('irmt/platform_hostname', '')
+        username = qs.value('irmt/platform_username', '')
+        password = qs.value('irmt/platform_password', '')
     return hostname, username, password
 
 
@@ -344,7 +344,7 @@ def update_platform_project(host,
                               separators=(',', ': '))
     payload = {'layer_name': platform_layer_id,
                'project_definition': proj_def_str}
-    resp = session.post(host + '/svir/add_project_definition', data=payload)
+    resp = session.post(host + '/irmt/add_project_definition', data=payload)
     return resp
 
 

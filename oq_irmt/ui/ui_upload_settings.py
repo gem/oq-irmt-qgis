@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui/ui_upload_settings.ui'
+# Form implementation generated from reading ui file 'oq_irmt/ui/ui_upload_settings.ui'
 #
-# Created: Mon May 18 15:55:36 2015
-#      by: PyQt4 UI code generator 4.10.4
+# Created: Wed Sep 16 10:38:19 2015
+#      by: PyQt4 UI code generator 4.11.3
 #
 # WARNING! All changes made in this file will be lost!
 

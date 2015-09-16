@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 /***************************************************************************
- Svir
+ Irmt
                                  A QGIS plugin
  OpenQuake Social Vulnerability and Integrated Risk
                               -------------------
@@ -83,7 +83,7 @@ class WeightDataDialog(QDialog):
         self.setWindowTitle(dialog_title)
 
         self.web_view = self.ui.web_view
-        self.web_view.load(QUrl('qrc:/plugins/svir/weight_data.html'))
+        self.web_view.load(QUrl('qrc:/plugins/irmt/weight_data.html'))
         self.frame = self.web_view.page().mainFrame()
 
         self.frame.javaScriptWindowObjectCleared.connect(self.setup_js)
@@ -191,7 +191,7 @@ class WeightDataDialog(QDialog):
     @pyqtProperty(bool)
     def DEV_MODE(self):
         developer_mode = QSettings().value(
-            '/svir/developer_mode', True, type=bool)
+            '/irmt/developer_mode', True, type=bool)
 
         return developer_mode
 

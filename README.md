@@ -1,4 +1,4 @@
-# QGIS plugin for Social Vulnerability and Integrated Risk (SVIR)
+# QGIS plugin for Social Vulnerability and Integrated Risk (IRMT)
 
 Tools for creating and editing indicators and composite indices and for combining
 these with estimates of physical earthquake risk (i.e. estimates of human or

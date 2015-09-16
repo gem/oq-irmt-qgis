@@ -140,7 +140,7 @@
             <gmd:descriptiveKeywords>
                 <gmd:MD_Keywords>
                     <gmd:keyword>
-                        <gco:CharacterString>SVIR
+                        <gco:CharacterString>IRMT
                         </gco:CharacterString>
                     </gmd:keyword>
                     <gmd:keyword>
@@ -148,7 +148,7 @@
                         </gco:CharacterString>
                     </gmd:keyword>
                     <gmd:keyword>
-                        <gco:CharacterString>SVIR_QGIS_Plugin
+                        <gco:CharacterString>IRMT_QGIS_Plugin
                         </gco:CharacterString>
                     </gmd:keyword>
                     <gmd:thesaurusName>
@@ -195,7 +195,7 @@
                 </gmd:LanguageCode>
             </gmd:language>
             <gmd:topicCategory>
-                <gmd:MD_TopicCategoryCode>SVIR
+                <gmd:MD_TopicCategoryCode>IRMT
                 </gmd:MD_TopicCategoryCode>
             </gmd:topicCategory>
             <gmd:extent>
@@ -203,7 +203,7 @@
                 </gmd:EX_Extent>
             </gmd:extent>
             <gmd:supplementalInformation>
-                <gco:CharacterString>$SVIR_SUPPLEMENTAL_INFORMATION
+                <gco:CharacterString>$IRMT_SUPPLEMENTAL_INFORMATION
                 </gco:CharacterString>
             </gmd:supplementalInformation>
         </gmd:MD_DataIdentification>

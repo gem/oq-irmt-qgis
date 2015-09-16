@@ -219,7 +219,7 @@
       <DefaultSnapTolerance type="double">0</DefaultSnapTolerance>
       <LayerSnappingToleranceList type="QStringList"/>
     </Digitizing>
-    <svir>
+    <irmt>
       <project_definitions type="QString">{
   "Socioeconomic_data20150619102647168": {
     "proj_defs": [
@@ -309,7 +309,7 @@
     "selected_idx": 0
   }
 }</project_definitions>
-    </svir>
+    </irmt>
     <PositionPrecision>
       <DecimalPlaces type="int">2</DecimalPlaces>
       <Automatic type="bool">true</Automatic>

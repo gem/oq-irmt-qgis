@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 /***************************************************************************
- Svir
+ Irmt
                                  A QGIS plugin
  OpenQuake Social Vulnerability and Integrated Risk
                               -------------------
@@ -28,9 +28,9 @@
 
 
 def classFactory(iface):
-    # load Svir class from file Svir
-    from oq_irmt.svir import Svir
-    return Svir(iface)
+    # load Irmt class from file Irmt
+    from oq_irmt.irmt import Irmt
+    return Irmt(iface)
 
 
 __import__('pkg_resources').declare_namespace(__name__)

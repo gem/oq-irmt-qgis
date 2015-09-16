@@ -28,7 +28,7 @@ from mock import Mock
 from PyQt4.QtCore import QObject, pyqtSlot, pyqtSignal
 from qgis.core import QgsMapLayerRegistry
 from qgis.gui import QgsMapCanvasLayer
-LOGGER = logging.getLogger('SVIR')
+LOGGER = logging.getLogger('IRMT')
 
 
 #noinspection PyMethodMayBeStatic,PyPep8Naming

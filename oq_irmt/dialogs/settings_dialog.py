@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 /***************************************************************************
- Svir
+ Irmt
                                  A QGIS plugin
  OpenQuake Social Vulnerability and Integrated Risk
                               -------------------
@@ -52,10 +52,10 @@ class SettingsDialog(QtGui.QDialog, Ui_SettingsDialog):
         Reinstate the options based on the user's stored session info.
         """
         mySettings = QtCore.QSettings()
-        platform_username = mySettings.value('svir/platform_username', '')
-        platform_password = mySettings.value('svir/platform_password', '')
+        platform_username = mySettings.value('irmt/platform_username', '')
+        platform_password = mySettings.value('irmt/platform_password', '')
         platform_hostname = mySettings.value(
-            'svir/platform_hostname', 'https://platform.openquake.org')
+            'irmt/platform_hostname', 'https://platform.openquake.org')
 
         # hack for strange mac behaviour
         if not platform_username:
@@ -70,7 +70,7 @@ class SettingsDialog(QtGui.QDialog, Ui_SettingsDialog):
         self.ui.hostnameEdit.setText(platform_hostname)
 
         self.ui.developermodeCheck.setChecked(
-            mySettings.value('svir/developer_mode', False, type=bool))
+            mySettings.value('irmt/developer_mode', False, type=bool))
 
     def saveState(self):
         """
@@ -79,12 +79,12 @@ class SettingsDialog(QtGui.QDialog, Ui_SettingsDialog):
         mySettings = QtCore.QSettings()
         # if the (stripped) hostname ends with '/', remove it
         hostname = self.ui.hostnameEdit.text().strip().rstrip('/')
-        mySettings.setValue('svir/platform_hostname', hostname)
-        mySettings.setValue('svir/platform_username',
+        mySettings.setValue('irmt/platform_hostname', hostname)
+        mySettings.setValue('irmt/platform_username',
                             self.ui.usernameEdit.text())
-        mySettings.setValue('svir/platform_password',
+        mySettings.setValue('irmt/platform_password',
                             self.ui.passwordEdit.text())
-        mySettings.setValue('svir/developer_mode',
+        mySettings.setValue('irmt/developer_mode',
                             self.ui.developermodeCheck.isChecked())
 
     def accept(self):
