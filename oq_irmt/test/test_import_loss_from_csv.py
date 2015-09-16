@@ -3,7 +3,7 @@
 /***************************************************************************
  Irmt
                                  A QGIS plugin
- OpenQuake Social Vulnerability and Integrated Risk
+ OpenQuake Integrated Risk Modelling Toolkit
                               -------------------
         begin                : 2013-10-24
         copyright            : (C) 2015 by GEM Foundation
