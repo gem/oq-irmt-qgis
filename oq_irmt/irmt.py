@@ -32,22 +32,6 @@ import fileinput
 import re
 from copy import deepcopy
 from math import floor, ceil
-
-from PyQt4.QtCore import (QSettings,
-                          QTranslator,
-                          QCoreApplication,
-                          qVersion,
-                          QUrl,
-                          )
-
-from PyQt4.QtGui import (QAction,
-                         QIcon,
-                         QColor,
-                         QFileDialog,
-                         QDesktopServices,
-                         QMessageBox,
-                         )
-
 from qgis.core import (QgsVectorLayer,
                        QgsMapLayerRegistry,
                        QgsMessageLog,
@@ -61,11 +45,24 @@ from qgis.core import (QgsVectorLayer,
                        )
 from qgis.gui import QgsMessageBar
 
+from PyQt4.QtCore import (QSettings,
+                          QTranslator,
+                          QCoreApplication,
+                          qVersion,
+                          QUrl,
+                          )
+from PyQt4.QtGui import (QAction,
+                         QIcon,
+                         QColor,
+                         QFileDialog,
+                         QDesktopServices,
+                         QMessageBox,
+                         )
+
 from oq_irmt.calculations.aggregate_loss_by_zone import (
     purge_zones_without_loss_points, calculate_zonal_stats)
-from oq_irmt.calculations.import_sv_data import get_loggedin_downloader
+from oq_irmt.utilities.import_sv_data import get_loggedin_downloader
 from oq_irmt.dialogs.attribute_selection_dialog import AttributeSelectionDialog
-
 from oq_irmt.dialogs.download_layer_dialog import DownloadLayerDialog
 from oq_irmt.dialogs.projects_manager_dialog import ProjectsManagerDialog
 from oq_irmt.dialogs.select_input_layers_dialog import SelectInputLayersDialog
@@ -106,6 +103,7 @@ from oq_irmt.utilities.shared import (
     PROJECT_TEMPLATE,
     THEME_TEMPLATE,
     INDICATOR_TEMPLATE, )
+
 
 # DO NOT REMOVE THIS
 # noinspection PyUnresolvedReferences

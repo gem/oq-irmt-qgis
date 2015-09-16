@@ -25,8 +25,8 @@
 """
 import os
 import tempfile
-from oq_irmt.calculations.import_sv_data import PLATFORM_EXPORT_VARIABLES_DATA
 
+from oq_irmt.utilities.import_sv_data import PLATFORM_EXPORT_VARIABLES_DATA
 from oq_irmt.thread_worker.abstract_worker import AbstractWorker
 from oq_irmt.utilities.utils import SvNetworkError, tr, UserAbortedNotification
 
