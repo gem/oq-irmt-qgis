@@ -44,11 +44,11 @@ from oq_irmt.utilities.utils import (SvNetworkError,
                    clear_progress_message_bar,
                    )
 
-PLATFORM_EXPORT_SV_THEMES = "/irmt/list_themes"
-PLATFORM_EXPORT_SV_SUBTHEMES = "/irmt/list_subthemes_by_theme"
-PLATFORM_EXPORT_SV_NAMES = "/irmt/export_variables_info"
-PLATFORM_EXPORT_VARIABLES_DATA = "/irmt/export_variables_data"
-PLATFORM_EXPORT_COUNTRIES_INFO = "/irmt/export_countries_info"
+PLATFORM_EXPORT_SV_THEMES = "/svir/list_themes"
+PLATFORM_EXPORT_SV_SUBTHEMES = "/svir/list_subthemes_by_theme"
+PLATFORM_EXPORT_SV_NAMES = "/svir/export_variables_info"
+PLATFORM_EXPORT_VARIABLES_DATA = "/svir/export_variables_data"
+PLATFORM_EXPORT_COUNTRIES_INFO = "/svir/export_countries_info"
 
 
 def get_loggedin_downloader(iface):

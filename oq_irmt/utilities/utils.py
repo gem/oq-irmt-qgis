@@ -344,7 +344,7 @@ def update_platform_project(host,
                               separators=(',', ': '))
     payload = {'layer_name': platform_layer_id,
                'project_definition': proj_def_str}
-    resp = session.post(host + '/irmt/add_project_definition', data=payload)
+    resp = session.post(host + '/svir/add_project_definition', data=payload)
     return resp
 
 

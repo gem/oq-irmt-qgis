@@ -140,7 +140,7 @@
             <gmd:descriptiveKeywords>
                 <gmd:MD_Keywords>
                     <gmd:keyword>
-                        <gco:CharacterString>IRMT
+                        <gco:CharacterString>SVIR
                         </gco:CharacterString>
                     </gmd:keyword>
                     <gmd:keyword>
@@ -195,7 +195,7 @@
                 </gmd:LanguageCode>
             </gmd:language>
             <gmd:topicCategory>
-                <gmd:MD_TopicCategoryCode>IRMT
+                <gmd:MD_TopicCategoryCode>SVIR
                 </gmd:MD_TopicCategoryCode>
             </gmd:topicCategory>
             <gmd:extent>

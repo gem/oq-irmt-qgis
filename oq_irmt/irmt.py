@@ -632,7 +632,7 @@ class Irmt:
 
         zip_file.extractall(dest_dir)
 
-        request_url = '%s/irmt/get_supplemental_information?layer_name=%s' % (
+        request_url = '%s/svir/get_supplemental_information?layer_name=%s' % (
             sv_downloader.host, parent_dlg.layer_id)
         get_supplemental_information_resp = sv_downloader.sess.get(request_url)
         if not get_supplemental_information_resp.ok:

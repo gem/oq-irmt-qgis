@@ -31,7 +31,7 @@ changelog=
 tags=GEM, IRMT, SVIR, OpenQuake, Social Vulnerability, Integrated Risk
 
 homepage=https://github.com/gem/oq-irmt-qgis
-tracker=https://launchpad.net/oq-irmt
+tracker=https://github.com/gem/oq-irmt-qgis/issues
 repository=https://github.com/gem/oq-irmt-qgis
 icon=resources/icon.svg
 # experimental flag
