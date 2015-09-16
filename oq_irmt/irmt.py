@@ -61,8 +61,6 @@ from qgis.core import (QgsVectorLayer,
                        )
 from qgis.gui import QgsMessageBar
 
-import oq_irmt.resources_rc
-
 from oq_irmt.calculations.aggregate_loss_by_zone import (
     purge_zones_without_loss_points, calculate_zonal_stats)
 from oq_irmt.calculations.import_sv_data import get_loggedin_downloader
@@ -111,7 +109,7 @@ from oq_irmt.utilities.shared import (
 
 # DO NOT REMOVE THIS
 # noinspection PyUnresolvedReferences
-import resources_rc  # pylint: disable=unused-import
+import oq_irmt.resources_rc  # pylint: disable=unused-import
 
 
 class Irmt:
