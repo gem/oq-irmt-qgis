@@ -334,16 +334,13 @@ class Irmt:
             self.registered_actions["transform_attributes"].setEnabled(True)
             self.sync_layer_suppl_info_from_qgs_project(
                 self.iface.activeLayer().id())
-            suppl_info = self.supplemental_information[
-                self.iface.activeLayer().id()]
-            selected_idx = suppl_info['selected_project_definition_idx']
-            proj_defs = suppl_info['project_definitions']
-            proj_def = proj_defs[selected_idx]
-            self.registered_actions["upload"].setEnabled(proj_def is not None)
+            self.registered_actions["upload"].setEnabled(True)
         except KeyError:
             # self.project_definitions[self.iface.activeLayer().id()]
             # is not defined
-            pass  # We can still use the weight_data dialog
+            self.registered_actions["upload"].setEnabled(False)
+            self.registered_actions[
+                "project_definitions_manager"].setEnabled(False)
         except AttributeError:
             # self.iface.activeLayer().id() does not exist
             # or self.iface.activeLayer() is not vector
