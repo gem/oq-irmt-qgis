@@ -19,9 +19,9 @@
 #Add iso code for any locales you want to support here (space separated)
 LOCALES = it
 
-PLUGINNAME = svir
+PLUGINNAME = irmt
 
-PY_FILES = svir.py select_input_layers_dialog.py __init__.py attribute_selection_dialog.py transformation_dialog.py select_sv_variables_dialog.py settings_dialog.py projects_manager_dialog.py
+PY_FILES = irmt.py select_input_layers_dialog.py __init__.py attribute_selection_dialog.py transformation_dialog.py select_sv_variables_dialog.py settings_dialog.py projects_manager_dialog.py
 
 UI_FILES = ui/ui_select_input_layers.py ui/ui_attribute_selection.py ui/ui_transformation.py ui/ui_select_sv_variables.py ui/ui_settings.py ui/ui_weight_data.py ui/ui_calculate_iri.py ui/ui_upload_metadata.py ui/ui_upload_settings.py ui/ui_download_layer.py ui/ui_projects_manager_dialog.py
 
