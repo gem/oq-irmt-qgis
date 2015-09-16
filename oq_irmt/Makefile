@@ -19,7 +19,7 @@
 #Add iso code for any locales you want to support here (space separated)
 LOCALES = it
 
-PLUGINNAME = irmt
+PLUGINNAME = svir
 
 PY_FILES = irmt.py select_input_layers_dialog.py __init__.py attribute_selection_dialog.py transformation_dialog.py select_sv_variables_dialog.py settings_dialog.py projects_manager_dialog.py
 
@@ -40,7 +40,7 @@ RESOURCE_SRC=$(shell grep '^ *<file' resources.qrc | sed 's@</file>@@g;s/.*>//g'
 
 HELP = help/build/html
 
-PLUGIN_UPLOAD = ./scripts/plugin_upload.py
+PLUGIN_UPLOAD = ../scripts/plugin_upload.py
 
 QGISDIR=.qgis2
 
@@ -125,6 +125,10 @@ package: compile
 	# git repository).
 	# To use, pass a valid commit or tag as follows:
 	#   make package VERSION=Version_0.3.2
+	@echo
+	@echo usage: make package VERSION=HEAD
+	@echo or: make package VERSION=Version_0.3.2
+	@echo or: make package VERSION=YOUR_TAG_OR_COMMIT
 	@echo
 	@echo "------------------------------------"
 	@echo "Exporting plugin to zip package.	"
