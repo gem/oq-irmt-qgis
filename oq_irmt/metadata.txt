@@ -28,7 +28,7 @@ changelog=
     * Refactoring of the 'supplemental information' structure, to hold also variables shared by all project definitions
 
 # tags are comma separated with spaces allowed
-tags=GEM, IRMT, OpenQuake, Social Vulnerability, Integrated Risk
+tags=GEM, IRMT, SVIR, OpenQuake, Social Vulnerability, Integrated Risk
 
 homepage=https://github.com/gem/oq-irmt-qgis
 tracker=https://launchpad.net/oq-irmt
