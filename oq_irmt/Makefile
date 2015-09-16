@@ -72,7 +72,7 @@ test: compile transcompile
 	@echo "----------------------"
 	@echo "If you get 'no module...' errors, try sourcing"
 	@echo "the helper script we have provided first then run make test."
-	@echo "e.g. source scripts/run-env-linux.sh <path to qgis install>; make test"
+	@echo "e.g. source ../scripts/run-env-linux.sh <path to qgis install>; make test"
 	@echo "----------------------"
 
 deploy: compile doc transcompile
@@ -149,16 +149,16 @@ transup:
 	@echo "------------------------------------------------"
 	@echo "Updating translation files with any new strings."
 	@echo "------------------------------------------------"
-	@chmod +x scripts/update-strings.sh
-	@scripts/update-strings.sh $(LOCALES)
+	@chmod +x ../scripts/update-strings.sh
+	@../scripts/update-strings.sh $(LOCALES)
 
 transcompile:
 	@echo
 	@echo "----------------------------------------"
 	@echo "Compiled translation files to .qm files."
 	@echo "----------------------------------------"
-	@chmod +x scripts/compile-strings.sh
-	@scripts/compile-strings.sh $(LOCALES)
+	@chmod +x ../scripts/compile-strings.sh
+	@../scripts/compile-strings.sh $(LOCALES)
 
 transclean:
 	@echo
