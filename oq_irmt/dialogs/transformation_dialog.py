@@ -29,9 +29,9 @@ from PyQt4.QtGui import (QDialog,
 
 from oq_irmt.ui.ui_transformation import Ui_TransformationDialog
 from oq_irmt.calculations.transformation_algs import (RANK_VARIANTS,
-                                 QUADRATIC_VARIANTS,
-                                 LOG10_VARIANTS,
-                                 TRANSFORMATION_ALGS)
+                                                      QUADRATIC_VARIANTS,
+                                                      LOG10_VARIANTS,
+                                                      TRANSFORMATION_ALGS)
 from oq_irmt.utilities.shared import NUMERIC_FIELD_TYPES
 from oq_irmt.calculations.process_layer import ProcessLayer
 

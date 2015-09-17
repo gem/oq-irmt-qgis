@@ -33,8 +33,10 @@ from oq_irmt.test.utilities import get_qgis_app
 QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 
 from oq_irmt.calculations.process_layer import ProcessLayer
-from oq_irmt.calculations.aggregate_loss_by_zone import (calculate_zonal_stats,
-                                    purge_zones_without_loss_points,)
+from oq_irmt.calculations.aggregate_loss_by_zone import (
+    calculate_zonal_stats,
+    purge_zones_without_loss_points,
+    )
 
 
 class AggregateLossByZoneTestCase(unittest.TestCase):

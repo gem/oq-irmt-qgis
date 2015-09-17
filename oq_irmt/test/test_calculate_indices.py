@@ -33,9 +33,9 @@ from utilities import get_qgis_app
 
 QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 from oq_irmt.calculations.calculate_utils import (calculate_node,
-                             get_node_attr_id_and_name,
-                             calculate_composite_variable,
-                             )
+                                                  get_node_attr_id_and_name,
+                                                  calculate_composite_variable,
+                                                  )
 from oq_irmt.calculations.process_layer import ProcessLayer
 from oq_irmt.utilities.utils import set_operator, get_node
 from oq_irmt.utilities.shared import OPERATORS_DICT, DiscardedFeature
