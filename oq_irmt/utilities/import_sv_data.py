@@ -123,12 +123,7 @@ class SvDownloader(object):
                 indicators_info[code]['theme'] = row[2].decode('utf-8')
                 indicators_info[code]['subtheme'] = row[3].decode('utf-8')
                 indicators_info[code]['description'] = row[4].decode('utf-8')
-                indicators_info[code]['measurement_type'] = \
-                    row[5].decode('utf-8')
-                indicators_info[code]['source'] = row[6].decode('utf-8')
-                indicators_info[code]['aggregation_method'] = \
-                    row[7].decode('utf-8')
-                indicators_info[code]['keywords_str'] = row[8].decode('utf-8')
+                indicators_info[code]['keywords_str'] = row[5].decode('utf-8')
                 # names.append(indicators_main_info[code])
         return indicators_info
 

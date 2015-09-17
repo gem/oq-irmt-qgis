@@ -127,9 +127,6 @@ class SelectSvVariablesDialog(QDialog):
         indicator_info_dict = self.indicators_info_dict[indicator_code]
         hint_text += '\n\n' + 'Description:\n' + indicator_info_dict[
             'description']
-        hint_text += '\n\n' + 'Source:\n' + indicator_info_dict['source']
-        hint_text += '\n\n' + 'Aggregation method:\n' + indicator_info_dict[
-            'aggregation_method']
         self.ui.indicator_details.setText(hint_text)
 
     def fill_countries(self):
