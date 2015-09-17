@@ -44,6 +44,7 @@ from oq_irmt.utilities.utils import (SvNetworkError,
                                      clear_progress_message_bar,
                                      )
 
+PLATFORM_EXPORT_SV_STUDIES = "/svir/list_studies"
 PLATFORM_EXPORT_SV_THEMES = "/svir/list_themes"
 PLATFORM_EXPORT_SV_SUBTHEMES = "/svir/list_subthemes_by_theme"
 PLATFORM_EXPORT_SV_NAMES = "/svir/export_variables_info"
@@ -79,6 +80,15 @@ class SvDownloader(object):
 
     def login(self, username, password):
         platform_login(self.host, username, password, self.sess)
+
+    def get_studies(self):
+        page = self.host + PLATFORM_EXPORT_SV_STUDIES
+        studies = []
+        result = self.sess.get(page)
+        if result.status_code == 200:
+            reader = csv.reader(StringIO.StringIO(result.content))
+            studies = reader.next()
+        return studies
 
     def get_themes(self):
         page = self.host + PLATFORM_EXPORT_SV_THEMES

@@ -47,6 +47,7 @@ class SelectSvVariablesDialog(QDialog):
         self.sv_downloader = downloader
         self.indicators_info_dict = {}
         with WaitCursorManager():
+            self.fill_studies()
             self.fill_themes()
             self.fill_countries()
         self.ui.list_multiselect.unselected_widget.itemClicked.connect(
@@ -73,6 +74,17 @@ class SelectSvVariablesDialog(QDialog):
         self.ok_button.setEnabled(
             self.ui.list_multiselect.selected_widget.count() > 0
             and self.ui.country_select.selected_widget.count() > 0)
+
+    def fill_studies(self):
+        try:
+            studies = self.sv_downloader.get_studies()
+            self.ui.study_cbx.addItems(studies)
+        except SvNetworkError as e:
+            raise SvNetworkError(
+                "Unable to download social vulnerability studies: %s" % e)
+        current_study = self.ui.study_cbx.currentText()
+        print current_study
+        # TODO: drive other parts of the dialog
 
     def fill_themes(self):
         self.ui.theme_cbx.clear()
