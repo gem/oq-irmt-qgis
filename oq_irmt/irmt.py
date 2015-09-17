@@ -71,14 +71,11 @@ from oq_irmt.dialogs.settings_dialog import SettingsDialog
 from oq_irmt.dialogs.transformation_dialog import TransformationDialog
 from oq_irmt.dialogs.upload_settings_dialog import UploadSettingsDialog
 from oq_irmt.dialogs.weight_data_dialog import WeightDataDialog
-from oq_irmt.third_party.requests.sessions import Session
 from oq_irmt.thread_worker.abstract_worker import start_worker
 from oq_irmt.thread_worker.download_platform_data_worker import (
     DownloadPlatformDataWorker)
 from oq_irmt.thread_worker.download_platform_project_worker import (
     DownloadPlatformProjectWorker)
-from oq_irmt.metadata.metadata_utilities import write_iso_metadata_file
-from oq_irmt.dialogs.upload_dialog import UploadDialog
 from oq_irmt.calculations.calculate_utils import calculate_composite_variable
 from oq_irmt.calculations.process_layer import ProcessLayer
 from oq_irmt.utilities.utils import (tr,
@@ -89,20 +86,17 @@ from oq_irmt.utilities.utils import (tr,
                                      ask_for_download_destination,
                                      files_exist_in_destination,
                                      confirm_overwrite,
-                                     platform_login,
-                                     get_credentials,
-                                     update_platform_project,
                                      count_heading_commented_lines,
                                      replace_fields,
                                      toggle_select_features_widget,
-                                     )
+                                     read_layer_suppl_info_from_qgs,
+                                     write_layer_suppl_info_to_qgs)
 from oq_irmt.utilities.shared import (
-    IRMT_PLUGIN_VERSION,
-    SUPPLEMENTAL_INFORMATION_VERSION,
     DEBUG,
     PROJECT_TEMPLATE,
     THEME_TEMPLATE,
     INDICATOR_TEMPLATE, )
+
 
 
 # DO NOT REMOVE THIS
@@ -243,41 +237,9 @@ class Irmt:
             self.clear_layer_suppl_info(layer_id)
         self.update_actions_status()
 
-    def sync_layer_suppl_info_from_qgs_project(self, layer_id):
-        # synchronize with the qgs project's properties
-        # it returns a tuple, with the returned value and a boolean indicating
-        # if such property is available
-        layer_suppl_info_str, is_available = \
-            QgsProject.instance().readEntry('irmt', layer_id)
-        if is_available and layer_suppl_info_str:
-            self.supplemental_information[layer_id] = \
-                json.loads(layer_suppl_info_str)
-        else:
-            self.supplemental_information[layer_id] = {}
-        if DEBUG:
-            print ("self.supplemental_information[%s] synchronized"
-                   " with project, as: %s") % (
-                      layer_id, self.supplemental_information[layer_id])
-
     def clear_layer_suppl_info(self, layer_id):
         self.supplemental_information.pop(layer_id, None)
         QgsProject.instance().removeEntry('irmt', layer_id)
-
-    def update_layer_suppl_info(self, layer_id, suppl_info):
-        # TODO: upgrade old project definitions
-        # set the QgsProject's property
-        QgsProject.instance().writeEntry(
-            'irmt', layer_id,
-            json.dumps(suppl_info,
-                       sort_keys=False,
-                       indent=2,
-                       separators=(',', ': ')))
-        self.sync_layer_suppl_info_from_qgs_project(layer_id)
-        if DEBUG:
-            print ("Project's property 'supplemental_information[%s]'"
-                   " updated: %s") % (
-                      layer_id,
-                      QgsProject.instance().readEntry('irmt', layer_id))
 
     def current_layer_changed(self, layer):
         self.update_actions_status()
@@ -332,8 +294,8 @@ class Irmt:
                 "project_definitions_manager"].setEnabled(True)
             self.registered_actions["weight_data"].setEnabled(True)
             self.registered_actions["transform_attributes"].setEnabled(True)
-            self.sync_layer_suppl_info_from_qgs_project(
-                self.iface.activeLayer().id())
+            read_layer_suppl_info_from_qgs(
+                self.iface.activeLayer().id(), self.supplemental_information)
             self.registered_actions["upload"].setEnabled(True)
         except KeyError:
             # self.project_definitions[self.iface.activeLayer().id()]
@@ -583,7 +545,7 @@ class Irmt:
         suppl_info = {
             'selected_project_definition_idx': 0,
             'project_definitions': [project_definition]}
-        self.update_layer_suppl_info(layer.id(), suppl_info)
+        write_layer_suppl_info_to_qgs(layer.id(), suppl_info)
         self.update_actions_status()
 
     def download_layer(self):
@@ -690,7 +652,7 @@ class Irmt:
         supplemental_information['platform_layer_id'] = parent_dlg.layer_id
         if 'selected_project_definition_idx' not in supplemental_information:
             supplemental_information['selected_project_definition_idx'] = 0
-        self.update_layer_suppl_info(layer.id(), supplemental_information)
+        write_layer_suppl_info_to_qgs(layer.id(), supplemental_information)
         self.update_actions_status()
         # in case of multiple project definitions, let the user select one
         if len(project_definitions) > 1:
@@ -719,8 +681,8 @@ class Irmt:
         svi_themes[theme_position]['children'].append(new_indicator)
 
     def project_definitions_manager(self):
-        self.sync_layer_suppl_info_from_qgs_project(
-            self.iface.activeLayer().id())
+        read_layer_suppl_info_from_qgs(
+            self.iface.activeLayer().id(), self.supplemental_information)
         select_proj_def_dlg = ProjectsManagerDialog(self.iface)
         if select_proj_def_dlg.exec_():
             selected_project_definition = select_proj_def_dlg.selected_proj_def
@@ -731,8 +693,8 @@ class Irmt:
             select_proj_def_dlg.suppl_info['project_definitions'][
                 select_proj_def_dlg.suppl_info[
                     'selected_project_definition_idx']] = project_definition
-            self.update_layer_suppl_info(self.iface.activeLayer().id(),
-                                         select_proj_def_dlg.suppl_info)
+            write_layer_suppl_info_to_qgs(
+                self.iface.activeLayer().id(), select_proj_def_dlg.suppl_info)
             self.redraw_ir_layer(project_definition)
 
     def notify_added_attrs_and_discarded_feats(self,
@@ -786,7 +748,8 @@ class Irmt:
         """
         active_layer_id = self.iface.activeLayer().id()
         # get the project definition to work with, or create a default one
-        self.sync_layer_suppl_info_from_qgs_project(active_layer_id)
+        read_layer_suppl_info_from_qgs(
+            active_layer_id, self.supplemental_information)
         try:
             suppl_info = self.supplemental_information[active_layer_id]
             orig_project_definition = suppl_info['project_definitions'][
@@ -796,7 +759,7 @@ class Irmt:
             suppl_info = {'selected_project_definition_idx': 0,
                           'project_definitions': [orig_project_definition]
                           }
-            self.update_layer_suppl_info(active_layer_id, suppl_info)
+            write_layer_suppl_info_to_qgs(active_layer_id, suppl_info)
         edited_project_definition = deepcopy(orig_project_definition)
 
         # Save the style so the following styling can be undone
@@ -862,7 +825,7 @@ class Irmt:
         selected_idx = suppl_info['selected_project_definition_idx']
         suppl_info['project_definitions'][selected_idx] = deepcopy(
             edited_project_definition)
-        self.update_layer_suppl_info(active_layer_id, suppl_info)
+        write_layer_suppl_info_to_qgs(active_layer_id, suppl_info)
         self.redraw_ir_layer(edited_project_definition)
 
     def weights_changed(self, data, dlg):
@@ -1198,7 +1161,8 @@ class Irmt:
                         tr(e.message),
                         level=QgsMessageBar.CRITICAL)
                 active_layer_id = self.iface.activeLayer().id()
-                self.sync_layer_suppl_info_from_qgs_project(active_layer_id)
+                read_layer_suppl_info_from_qgs(
+                    active_layer_id, self.supplemental_information)
                 if (dlg.ui.track_new_field_ckb.isChecked()
                     and target_attr_name != input_attr_name
                     and active_layer_id in self.supplemental_information):
@@ -1209,7 +1173,7 @@ class Irmt:
                                        input_attr_name,
                                        target_attr_name)
                     suppl_info['project_definitions'] = proj_defs
-                    self.update_layer_suppl_info(active_layer_id, suppl_info)
+                    write_layer_suppl_info_to_qgs(active_layer_id, suppl_info)
         elif dlg.use_advanced:
             layer = self.iface.activeLayer()
             if layer.isModified():
@@ -1229,7 +1193,8 @@ class Irmt:
         xml_file = file_stem + '.xml'
 
         active_layer_id = self.iface.activeLayer().id()
-        self.sync_layer_suppl_info_from_qgs_project(active_layer_id)
+        read_layer_suppl_info_from_qgs(
+            active_layer_id, self.supplemental_information)
         suppl_info = self.supplemental_information[active_layer_id]
         # add layer's bounding box
         extent = self.iface.activeLayer().extent()
@@ -1238,88 +1203,6 @@ class Irmt:
                 'maxx': extent.xMaximum(),
                 'maxy': extent.yMaximum()}
         suppl_info['bounding_box'] = bbox
-        selected_idx = suppl_info['selected_project_definition_idx']
-        proj_defs = suppl_info['project_definitions']
-        project_definition = proj_defs[selected_idx]
 
-        dlg = UploadSettingsDialog(self.iface, suppl_info)
-        if dlg.exec_():
-            suppl_info['title'] = dlg.ui.title_le.text()
-            if 'title' not in project_definition:
-                project_definition['title'] = suppl_info['title']
-            suppl_info['abstract'] = dlg.ui.description_te.toPlainText()
-            if 'description' not in project_definition:
-                project_definition['description'] = suppl_info['abstract']
-            zone_label_field = dlg.ui.zone_label_field_cbx.currentText()
-            suppl_info['zone_label_field'] = zone_label_field
-
-            license_name = dlg.ui.license_cbx.currentText()
-            license_idx = dlg.ui.license_cbx.currentIndex()
-            license_url = dlg.ui.license_cbx.itemData(license_idx)
-            license_txt = '%s (%s)' % (license_name, license_url)
-            suppl_info['license'] = license_txt
-            suppl_info['irmt_plugin_version'] = IRMT_PLUGIN_VERSION
-            suppl_info['supplemental_information_version'] = \
-                SUPPLEMENTAL_INFORMATION_VERSION
-            suppl_info['vertices_count'] = dlg.vertices_count
-
-            suppl_info['project_definitions'][selected_idx] = \
-                project_definition
-            self.update_layer_suppl_info(active_layer_id, suppl_info)
-
-            if dlg.do_update:
-                with WaitCursorManager(
-                        'Updating project on the OpenQuake Platform',
-                        self.iface):
-                    hostname, username, password = get_credentials(self.iface)
-                    session = Session()
-                    try:
-                        platform_login(hostname, username, password, session)
-                    except SvNetworkError as e:
-                        error_msg = (
-                            'Unable to login to the platform: ' + e.message)
-                        self.iface.messageBar().pushMessage(
-                            'Error', error_msg, level=QgsMessageBar.CRITICAL)
-                        return
-                    if not 'platform_layer_id' in suppl_info:
-                        error_msg = ('Unable to retrieve the id of'
-                                     'the layer on the Platform')
-                        self.iface.messageBar().pushMessage(
-                            'Error', error_msg, level=QgsMessageBar.CRITICAL)
-                        return
-                    response = update_platform_project(
-                        hostname, session, project_definition,
-                        suppl_info['platform_layer_id'])
-                    if response.ok:
-                        self.iface.messageBar().pushMessage(
-                            tr("Info"),
-                            tr(response.text),
-                            level=QgsMessageBar.INFO)
-                    else:
-                        self.iface.messageBar().pushMessage(
-                            tr("Error"),
-                            tr(response.text),
-                            level=QgsMessageBar.CRITICAL)
-            else:
-                if DEBUG:
-                    print 'xml_file:', xml_file
-                # do not upload the selected_project_definition_idx
-                suppl_info.pop('selected_project_definition_idx', None)
-                write_iso_metadata_file(xml_file,
-                                        suppl_info)
-                metadata_dialog = UploadDialog(
-                    self.iface, file_stem)
-                metadata_dialog.upload_successful.connect(
-                    self.insert_platform_layer_id)
-                if metadata_dialog.exec_():
-                    QDesktopServices.openUrl(QUrl(metadata_dialog.layer_url))
-                elif DEBUG:
-                    print "metadata_dialog cancelled"
-
-    def insert_platform_layer_id(self, layer_url):
-        platform_layer_id = layer_url.split('/')[-1]
-        active_layer_id = self.iface.activeLayer().id()
-        suppl_info = self.supplemental_information[active_layer_id]
-        if 'platform_layer_id' not in suppl_info:
-            suppl_info['platform_layer_id'] = platform_layer_id
-        self.update_layer_suppl_info(active_layer_id, suppl_info)
+        dlg = UploadSettingsDialog(self.iface, suppl_info, file_stem)
+        dlg.exec_()
