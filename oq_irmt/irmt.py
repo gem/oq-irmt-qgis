@@ -59,8 +59,6 @@ from PyQt4.QtGui import (QAction,
                          QMessageBox,
                          )
 
-from oq_irmt.calculations.aggregate_loss_by_zone import (
-    purge_zones_without_loss_points, calculate_zonal_stats)
 from oq_irmt.utilities.import_sv_data import get_loggedin_downloader
 from oq_irmt.dialogs.attribute_selection_dialog import AttributeSelectionDialog
 from oq_irmt.dialogs.download_layer_dialog import DownloadLayerDialog
@@ -96,6 +94,7 @@ from oq_irmt.utilities.shared import (DEBUG,
                                       THEME_TEMPLATE,
                                       INDICATOR_TEMPLATE,
                                       )
+
 
 
 # DO NOT REMOVE THIS
@@ -342,58 +341,8 @@ class Irmt:
         dlg = SelectInputLayersDialog(self.iface)
         # Run the dialog event loop
         # See if OK was pressed
-        if dlg.exec_():
-            loss_layer_id = dlg.ui.loss_layer_cbx.itemData(
-                dlg.ui.loss_layer_cbx.currentIndex())
-            loss_layer = QgsMapLayerRegistry.instance().mapLayer(
-                loss_layer_id)
-            zonal_layer_id = dlg.ui.zonal_layer_cbx.itemData(
-                dlg.ui.zonal_layer_cbx.currentIndex())
-            zonal_layer = QgsMapLayerRegistry.instance().mapLayer(
-                zonal_layer_id)
-
-            # if the two layers have different projections, display an error
-            # message and return
-            have_same_projection, check_projection_msg = ProcessLayer(
-                loss_layer).has_same_projection_as(zonal_layer)
-            if not have_same_projection:
-                self.iface.messageBar().pushMessage(
-                    tr("Error"),
-                    check_projection_msg,
-                    level=QgsMessageBar.CRITICAL)
-                return
-
-            # check if loss layer is raster or vector (aggregating by zone
-            # is different in the two cases)
-            loss_layer_is_vector = dlg.loss_layer_is_vector
-
-            # Open dialog to ask the user to specify attributes
-            # * loss from loss_layer
-            # * zone_id from loss_layer
-            # * svi from zonal_layer
-            # * zone_id from zonal_layer
-            ret_val = self.attribute_selection(
-                loss_layer, zonal_layer)
-            if not ret_val:
-                return
-            (loss_attr_names,
-             zone_id_in_losses_attr_name,
-             zone_id_in_zones_attr_name) = ret_val
-            # aggregate losses by zone (calculate count of points in the
-            # zone, sum and average loss values for the same zone)
-            res = calculate_zonal_stats(loss_layer,
-                                        zonal_layer,
-                                        loss_attr_names,
-                                        loss_layer_is_vector,
-                                        zone_id_in_losses_attr_name,
-                                        zone_id_in_zones_attr_name,
-                                        self.iface)
-            (loss_layer, zonal_layer, loss_attrs_dict) = res
-
-            if dlg.ui.purge_chk.isChecked():
-                zonal_layer = purge_zones_without_loss_points(
-                    zonal_layer, loss_attrs_dict, self.iface)
-            self.update_actions_status()
+        dlg.exec_()
+        self.update_actions_status()
 
     def import_sv_variables(self):
         """
@@ -1064,38 +1013,6 @@ class Irmt:
 
     def show_settings(self):
         SettingsDialog(self.iface).exec_()
-
-    def attribute_selection(self, loss_layer, zonal_layer):
-        """
-        Open a modal dialog containing combo boxes, allowing the user
-        to select what are the attribute names for
-        * loss values (from loss layer)
-        * zone id (from loss layer)
-        * zone id (from zonal layer)
-        """
-        dlg = AttributeSelectionDialog(loss_layer, zonal_layer)
-        # if the user presses OK
-        if dlg.exec_():
-            # retrieve attribute names from selections
-            loss_attr_names = \
-                list(dlg.ui.loss_attrs_multisel.get_selected_items())
-            # index 0 is for "use zonal geometries" (no zone id available)
-            if dlg.ui.zone_id_attr_name_loss_cbox.currentIndex() == 0:
-                zone_id_in_losses_attr_name = None
-            else:
-                zone_id_in_losses_attr_name = \
-                    dlg.ui.zone_id_attr_name_loss_cbox.currentText()
-            # index 0 is for "Add field with unique zone id"
-            if dlg.ui.zone_id_attr_name_zone_cbox.currentIndex() == 0:
-                zone_id_in_zones_attr_name = None
-            else:
-                zone_id_in_zones_attr_name = \
-                    dlg.ui.zone_id_attr_name_zone_cbox.currentText()
-            return (loss_attr_names,
-                    zone_id_in_losses_attr_name,
-                    zone_id_in_zones_attr_name)
-        else:
-            return False
 
     def transform_attributes(self):
         """
