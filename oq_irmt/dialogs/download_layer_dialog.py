@@ -92,6 +92,10 @@ class DownloadLayerDialog(QDialog):
             self.ui.layer_detail.setText(layer_infos_str)
         self.set_ok_button()
 
+    @pyqtSlot(QListWidgetItem)
+    def on_layers_lst_itemDoubleClicked(self, item):
+        self.accept()
+
     def set_ok_button(self):
         self.ok_button.setDisabled(
             len(self.ui.layers_lst.selectedItems()) == 0)
