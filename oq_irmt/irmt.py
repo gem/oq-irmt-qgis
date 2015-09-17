@@ -107,7 +107,7 @@ from oq_irmt.utilities.shared import (
 
 # DO NOT REMOVE THIS
 # noinspection PyUnresolvedReferences
-import oq_irmt.resources_rc  # pylint: disable=unused-import
+import oq_irmt.resources_rc  # pylint: disable=unused-import  # NOQA
 
 
 class Irmt:
@@ -255,9 +255,10 @@ class Irmt:
         else:
             self.supplemental_information[layer_id] = {}
         if DEBUG:
-            print ("self.supplemental_information[%s] synchronized"
-                   " with project, as: %s") % (
-                      layer_id, self.supplemental_information[layer_id])
+            print ("self.supplemental_information[%s] synchronized with"
+                   " project, as: %s") % (layer_id,
+                                          self.supplemental_information[
+                                              layer_id])
 
     def clear_layer_suppl_info(self, layer_id):
         self.supplemental_information.pop(layer_id, None)
@@ -275,9 +276,9 @@ class Irmt:
         self.sync_layer_suppl_info_from_qgs_project(layer_id)
         if DEBUG:
             print ("Project's property 'supplemental_information[%s]'"
-                   " updated: %s") % (
-                      layer_id,
-                      QgsProject.instance().readEntry('irmt', layer_id))
+                   " updated: %s") % (layer_id,
+                                      QgsProject.instance().readEntry(
+                                          'irmt', layer_id))
 
     def current_layer_changed(self, layer):
         self.update_actions_status()
@@ -640,7 +641,7 @@ class Irmt:
         # or those that did not nest project definitions into a
         # project_definitions attribute
         if (isinstance(supplemental_information, list)
-            or 'project_definitions' not in supplemental_information):
+                or 'project_definitions' not in supplemental_information):
             supplemental_information = {
                 'project_definitions': supplemental_information}
 
@@ -850,7 +851,7 @@ class Irmt:
                 ri_node = edited_project_definition['children'][0]
                 svi_node = edited_project_definition['children'][1]
                 if ('field' in iri_node
-                    or 'field' in ri_node or 'field' in svi_node):
+                        or 'field' in ri_node or 'field' in svi_node):
                     added_attrs_ids, _, edited_project_definition = \
                         self.recalculate_indexes(iri_node)
                     dlg.added_attrs_ids.update(added_attrs_ids)
@@ -1200,8 +1201,8 @@ class Irmt:
                 active_layer_id = self.iface.activeLayer().id()
                 self.sync_layer_suppl_info_from_qgs_project(active_layer_id)
                 if (dlg.ui.track_new_field_ckb.isChecked()
-                    and target_attr_name != input_attr_name
-                    and active_layer_id in self.supplemental_information):
+                        and target_attr_name != input_attr_name
+                        and active_layer_id in self.supplemental_information):
                     suppl_info = self.supplemental_information[active_layer_id]
                     proj_defs = suppl_info['project_definitions']
                     for proj_def in proj_defs:

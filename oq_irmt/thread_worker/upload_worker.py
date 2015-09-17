@@ -31,7 +31,10 @@ from qgis.core import QgsVectorFileWriter
 
 from oq_irmt.thread_worker.abstract_worker import AbstractWorker
 from oq_irmt.utilities.shared import DEBUG
-from oq_irmt.utilities.utils import multipart_encode_for_requests, UserAbortedNotification, tr
+from oq_irmt.utilities.utils import (multipart_encode_for_requests,
+                                     UserAbortedNotification,
+                                     tr,
+                                     )
 
 
 class UploadWorker(AbstractWorker):

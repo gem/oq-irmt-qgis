@@ -39,10 +39,10 @@ from PyQt4.QtGui import (QDialog,
 
 from oq_irmt.ui.ui_weight_data import Ui_WeightDataDialog
 from oq_irmt.utilities.shared import (DEFAULT_OPERATOR,
-                    OPERATORS_DICT,
-                    NUMERIC_FIELD_TYPES,
-                    NODE_TYPES,
-                    DEBUG)
+                                      OPERATORS_DICT,
+                                      NUMERIC_FIELD_TYPES,
+                                      NODE_TYPES,
+                                      DEBUG)
 from oq_irmt.utilities.utils import get_field_names, confirmation_on_close
 
 

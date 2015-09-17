@@ -26,6 +26,10 @@ changelog=
     1.7.0
     New features:
     * Refactoring of the 'supplemental information' structure, to hold also variables shared by all project definitions
+    * Re-organization of plugin's modules
+    * Count layer's vertices and write the count into the supplemental information before uploading project to the OQ-Platform
+    * Show a warning when attempting to add a node to the project definition and no more numeric fields are available
+    * Additional checkbox to toggle on-the-fly calculations while building the weighting tree
 
 # tags are comma separated with spaces allowed
 tags=GEM, IRMT, SVIR, OpenQuake, Social Vulnerability, Integrated Risk

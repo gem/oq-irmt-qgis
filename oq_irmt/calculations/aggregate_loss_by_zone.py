@@ -49,15 +49,15 @@ except:
 from oq_irmt.calculations.process_layer import ProcessLayer
 
 from oq_irmt.utilities.utils import (LayerEditingManager,
-                   tr,
-                   TraceTimeManager,
-                   clear_progress_message_bar,
-                   create_progress_message_bar,
-                   )
+                                     tr,
+                                     TraceTimeManager,
+                                     clear_progress_message_bar,
+                                     create_progress_message_bar,
+                                     )
 from oq_irmt.utilities.shared import (INT_FIELD_TYPE_NAME,
-                    DOUBLE_FIELD_TYPE_NAME,
-                    DEBUG,
-                    )
+                                      DOUBLE_FIELD_TYPE_NAME,
+                                      DEBUG,
+                                      )
 
 
 def calculate_zonal_stats(loss_layer,

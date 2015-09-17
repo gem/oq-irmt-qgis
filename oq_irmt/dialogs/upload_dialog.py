@@ -42,9 +42,10 @@ from oq_irmt.third_party.requests.utils import dict_from_cookiejar
 from oq_irmt.utilities.sldadapter import getGsCompatibleSld
 from oq_irmt.ui.ui_upload_metadata import Ui_UploadMetadataDialog
 from oq_irmt.utilities.utils import (get_credentials,
-                   platform_login,
-                   create_progress_message_bar, clear_progress_message_bar,
-                   SvNetworkError)
+                                     platform_login,
+                                     create_progress_message_bar,
+                                     clear_progress_message_bar,
+                                     SvNetworkError)
 from oq_irmt.utilities.shared import DEBUG
 
 
