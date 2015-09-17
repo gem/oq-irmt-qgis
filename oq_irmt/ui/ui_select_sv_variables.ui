@@ -36,14 +36,45 @@
       </property>
       <layout class="QVBoxLayout" name="verticalLayout">
        <item>
+        <layout class="QFormLayout" name="formLayout_3">
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <item row="0" column="0">
+          <widget class="QLabel" name="study_lbl">
+           <property name="text">
+            <string>Study</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QComboBox" name="study_cbx"/>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="ListMultiSelectWidget" name="country_select">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="title">
+          <string>Select zones</string>
+         </property>
+         <zorder>formLayoutWidget</zorder>
+        </widget>
+       </item>
+       <item>
         <widget class="QGroupBox" name="filters_group">
          <property name="title">
-          <string>Filters</string>
+          <string>Filter indicators</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="label">
+        <widget class="QLabel" name="filters_help_lbl">
          <property name="text">
           <string>All filters are optional. If no filter is set, the whole set of indicators will be retrieved.</string>
          </property>
@@ -134,19 +165,6 @@
        <item>
         <widget class="QTextBrowser" name="indicator_details"/>
        </item>
-       <item>
-        <widget class="ListMultiSelectWidget" name="country_select">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="title">
-          <string>Select countries</string>
-         </property>
-        </widget>
-       </item>
       </layout>
       <zorder>list_multiselect</zorder>
       <zorder></zorder>
@@ -154,16 +172,9 @@
       <zorder>indicator_info</zorder>
       <zorder>filters_group</zorder>
       <zorder>indicator_details</zorder>
+      <zorder>filters_help_lbl</zorder>
       <zorder>country_select</zorder>
-      <zorder>label</zorder>
-      <zorder>list_multiselect</zorder>
-      <zorder></zorder>
-      <zorder>filter_btn</zorder>
-      <zorder>indicator_info</zorder>
-      <zorder>filters_group</zorder>
-      <zorder>indicator_details</zorder>
-      <zorder>country_select</zorder>
-      <zorder>label</zorder>
+      <zorder>formLayoutWidget</zorder>
      </widget>
     </widget>
    </item>
