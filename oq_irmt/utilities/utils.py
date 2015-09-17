@@ -563,6 +563,7 @@ def read_layer_suppl_info_from_qgs(layer_id, supplemental_information):
                " with project, as: %s") % (
             layer_id, supplemental_information[layer_id])
 
+
 def insert_platform_layer_id(
         layer_url, active_layer_id, supplemental_information):
     platform_layer_id = layer_url.split('/')[-1]

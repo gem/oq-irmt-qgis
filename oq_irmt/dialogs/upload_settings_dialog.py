@@ -36,11 +36,20 @@ from oq_irmt.third_party.requests.sessions import Session
 from oq_irmt.ui.ui_upload_settings import Ui_UploadSettingsDialog
 from oq_irmt.utilities.defaults import DEFAULTS
 from oq_irmt.calculations.process_layer import ProcessLayer
-from oq_irmt.utilities.shared import IRMT_PLUGIN_VERSION, \
-    SUPPLEMENTAL_INFORMATION_VERSION, DEBUG
-from oq_irmt.utilities.utils import reload_attrib_cbx, tr, WaitCursorManager, \
-    platform_login, SvNetworkError, get_credentials, update_platform_project, \
-    write_layer_suppl_info_to_qgs, insert_platform_layer_id
+from oq_irmt.utilities.shared import (IRMT_PLUGIN_VERSION,
+                                      SUPPLEMENTAL_INFORMATION_VERSION,
+                                      DEBUG,
+                                      )
+from oq_irmt.utilities.utils import (reload_attrib_cbx,
+                                     tr,
+                                     WaitCursorManager,
+                                     platform_login,
+                                     SvNetworkError,
+                                     get_credentials,
+                                     update_platform_project,
+                                     write_layer_suppl_info_to_qgs,
+                                     insert_platform_layer_id,
+                                     )
 
 LICENSES = (
     ('CC0', 'http://creativecommons.org/about/cc0'),
@@ -174,7 +183,8 @@ class UploadSettingsDialog(QDialog):
             self.project_definition['title'] = self.suppl_info['title']
         self.suppl_info['abstract'] = self.ui.description_te.toPlainText()
         if 'description' not in self.project_definition:
-            self.project_definition['description'] = self.suppl_info['abstract']
+            self.project_definition['description'] = self.suppl_info[
+                'abstract']
         zone_label_field = self.ui.zone_label_field_cbx.currentText()
         self.suppl_info['zone_label_field'] = zone_label_field
 

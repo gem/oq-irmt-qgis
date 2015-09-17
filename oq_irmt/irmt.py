@@ -91,17 +91,16 @@ from oq_irmt.utilities.utils import (tr,
                                      toggle_select_features_widget,
                                      read_layer_suppl_info_from_qgs,
                                      write_layer_suppl_info_to_qgs)
-from oq_irmt.utilities.shared import (
-    DEBUG,
-    PROJECT_TEMPLATE,
-    THEME_TEMPLATE,
-    INDICATOR_TEMPLATE, )
-
+from oq_irmt.utilities.shared import (DEBUG,
+                                      PROJECT_TEMPLATE,
+                                      THEME_TEMPLATE,
+                                      INDICATOR_TEMPLATE,
+                                      )
 
 
 # DO NOT REMOVE THIS
 # noinspection PyUnresolvedReferences
-import oq_irmt.resources_rc  # pylint: disable=unused-import
+import oq_irmt.resources_rc  # pylint: disable=unused-import  # NOQA
 
 
 class Irmt:
@@ -602,7 +601,7 @@ class Irmt:
         # or those that did not nest project definitions into a
         # project_definitions attribute
         if (isinstance(supplemental_information, list)
-            or 'project_definitions' not in supplemental_information):
+                or 'project_definitions' not in supplemental_information):
             supplemental_information = {
                 'project_definitions': supplemental_information}
 
@@ -813,7 +812,7 @@ class Irmt:
                 ri_node = edited_project_definition['children'][0]
                 svi_node = edited_project_definition['children'][1]
                 if ('field' in iri_node
-                    or 'field' in ri_node or 'field' in svi_node):
+                        or 'field' in ri_node or 'field' in svi_node):
                     added_attrs_ids, _, edited_project_definition = \
                         self.recalculate_indexes(iri_node)
                     dlg.added_attrs_ids.update(added_attrs_ids)
@@ -1164,8 +1163,8 @@ class Irmt:
                 read_layer_suppl_info_from_qgs(
                     active_layer_id, self.supplemental_information)
                 if (dlg.ui.track_new_field_ckb.isChecked()
-                    and target_attr_name != input_attr_name
-                    and active_layer_id in self.supplemental_information):
+                        and target_attr_name != input_attr_name
+                        and active_layer_id in self.supplemental_information):
                     suppl_info = self.supplemental_information[active_layer_id]
                     proj_defs = suppl_info['project_definitions']
                     for proj_def in proj_defs:
@@ -1190,7 +1189,6 @@ class Irmt:
     def upload(self):
         temp_dir = tempfile.gettempdir()
         file_stem = '%s%sqgis_irmt_%s' % (temp_dir, os.path.sep, uuid.uuid4())
-        xml_file = file_stem + '.xml'
 
         active_layer_id = self.iface.activeLayer().id()
         read_layer_suppl_info_from_qgs(
