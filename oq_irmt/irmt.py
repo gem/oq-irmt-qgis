@@ -527,18 +527,25 @@ class Irmt:
     def project_definitions_manager(self):
         read_layer_suppl_info_from_qgs(
             self.iface.activeLayer().id(), self.supplemental_information)
+
         select_proj_def_dlg = ProjectsManagerDialog(self.iface)
         if select_proj_def_dlg.exec_():
             selected_project_definition = select_proj_def_dlg.selected_proj_def
+
             added_attrs_ids, discarded_feats, project_definition = \
                 self.recalculate_indexes(selected_project_definition)
-            self.notify_added_attrs_and_discarded_feats(added_attrs_ids,
-                                                        discarded_feats)
-            select_proj_def_dlg.suppl_info['project_definitions'][
-                select_proj_def_dlg.suppl_info[
-                    'selected_project_definition_idx']] = project_definition
+            self.notify_added_attrs_and_discarded_feats(
+                added_attrs_ids, discarded_feats)
+
+            suppl_info = select_proj_def_dlg.suppl_info
+            selected_project_definition_idx = suppl_info[
+                'selected_project_definition_idx']
+            suppl_info['project_definitions'][
+                selected_project_definition_idx] = project_definition
+
             write_layer_suppl_info_to_qgs(
-                self.iface.activeLayer().id(), select_proj_def_dlg.suppl_info)
+                self.iface.activeLayer().id(), suppl_info)
+
             self.redraw_ir_layer(project_definition)
 
     def notify_added_attrs_and_discarded_feats(self,
