@@ -35,13 +35,18 @@ from PyQt4.QtGui import (QDialog, QDialogButtonBox, QListWidgetItem,
 from qgis.gui import QgsMessageBar
 from qgis.core import QgsVectorLayer,  QgsMapLayerRegistry
 from oq_irmt.thread_worker.abstract_worker import start_worker
-from oq_irmt.thread_worker.download_platform_project_worker import \
-    DownloadPlatformProjectWorker
+from oq_irmt.thread_worker.download_platform_project_worker import (
+    DownloadPlatformProjectWorker)
 
 from oq_irmt.ui.ui_download_layer import Ui_DownloadLayerDialog
-from oq_irmt.utilities.utils import WaitCursorManager, SvNetworkError, \
-    ask_for_download_destination, files_exist_in_destination, confirm_overwrite, \
-    tr, write_layer_suppl_info_to_qgs, read_layer_suppl_info_from_qgs
+from oq_irmt.utilities.utils import (WaitCursorManager,
+                                     SvNetworkError,
+                                     ask_for_download_destination,
+                                     files_exist_in_destination,
+                                     confirm_overwrite,
+                                     tr,
+                                     write_layer_suppl_info_to_qgs,
+                                     )
 
 NS_NET_OPENGIS_WFS = '{http://www.opengis.net/wfs}'
 

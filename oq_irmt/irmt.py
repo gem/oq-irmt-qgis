@@ -24,7 +24,6 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import json
 import os.path
 import tempfile
 import uuid
@@ -56,11 +55,9 @@ from PyQt4.QtGui import (QAction,
                          QColor,
                          QFileDialog,
                          QDesktopServices,
-                         QMessageBox,
                          )
 
 from oq_irmt.utilities.import_sv_data import get_loggedin_downloader
-from oq_irmt.dialogs.attribute_selection_dialog import AttributeSelectionDialog
 from oq_irmt.dialogs.download_layer_dialog import DownloadLayerDialog
 from oq_irmt.dialogs.projects_manager_dialog import ProjectsManagerDialog
 from oq_irmt.dialogs.select_input_layers_dialog import SelectInputLayersDialog
@@ -72,8 +69,6 @@ from oq_irmt.dialogs.weight_data_dialog import WeightDataDialog
 from oq_irmt.thread_worker.abstract_worker import start_worker
 from oq_irmt.thread_worker.download_platform_data_worker import (
     DownloadPlatformDataWorker)
-from oq_irmt.thread_worker.download_platform_project_worker import (
-    DownloadPlatformProjectWorker)
 from oq_irmt.calculations.calculate_utils import calculate_composite_variable
 from oq_irmt.calculations.process_layer import ProcessLayer
 from oq_irmt.utilities.utils import (tr,
@@ -81,9 +76,6 @@ from oq_irmt.utilities.utils import (tr,
                                      assign_default_weights,
                                      clear_progress_message_bar,
                                      SvNetworkError,
-                                     ask_for_download_destination,
-                                     files_exist_in_destination,
-                                     confirm_overwrite,
                                      count_heading_commented_lines,
                                      replace_fields,
                                      toggle_select_features_widget,
@@ -94,7 +86,6 @@ from oq_irmt.utilities.shared import (DEBUG,
                                       THEME_TEMPLATE,
                                       INDICATOR_TEMPLATE,
                                       )
-
 
 
 # DO NOT REMOVE THIS

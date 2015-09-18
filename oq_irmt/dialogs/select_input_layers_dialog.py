@@ -42,8 +42,9 @@ from PyQt4.QtGui import (QFileDialog,
                          QDialog,
                          QDialogButtonBox,
                          QMessageBox)
-from oq_irmt.calculations.aggregate_loss_by_zone import calculate_zonal_stats, \
-    purge_zones_without_loss_points
+from oq_irmt.calculations.aggregate_loss_by_zone import (
+    calculate_zonal_stats,
+    purge_zones_without_loss_points)
 
 from oq_irmt.calculations.process_layer import ProcessLayer
 from oq_irmt.dialogs.attribute_selection_dialog import AttributeSelectionDialog
@@ -115,7 +116,7 @@ class SelectInputLayersDialog(QDialog):
         else:
             raise RuntimeError
         return layer
-    
+
     def accept(self):
         loss_layer_id = self.ui.loss_layer_cbx.itemData(
             self.ui.loss_layer_cbx.currentIndex())
