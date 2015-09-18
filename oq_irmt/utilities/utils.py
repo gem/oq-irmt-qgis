@@ -28,7 +28,7 @@ import json
 import os
 from copy import deepcopy
 from time import time
-from qgis.core import QgsMapLayerRegistry
+from qgis.core import QgsMapLayerRegistry, QgsProject
 from qgis.gui import QgsMessageBar
 
 from PyQt4.QtCore import QSettings, Qt
@@ -530,3 +530,44 @@ def multipart_encode_for_requests(params, boundary=None, cb=None):
     """
     data_generator, headers = multipart_encode(params, boundary, cb)
     return IterableToFileAdapter(data_generator), headers
+
+
+def write_layer_suppl_info_to_qgs(layer_id, suppl_info):
+    # TODO: upgrade old project definitions
+    # set the QgsProject's property
+    QgsProject.instance().writeEntry(
+        'irmt', layer_id,
+        json.dumps(suppl_info,
+                   sort_keys=False,
+                   indent=2,
+                   separators=(',', ': ')))
+
+    # avoids not finding the layer_id in supplemental_info
+    read_layer_suppl_info_from_qgs(layer_id, suppl_info)
+    if DEBUG:
+        print ("Project's property 'supplemental_information[%s]'"
+               " updated: %s") % (
+            layer_id, QgsProject.instance().readEntry('irmt', layer_id))
+
+
+def read_layer_suppl_info_from_qgs(layer_id, supplemental_information):
+    # synchronize with the qgs project's properties
+    # it returns a tuple, with the returned value and a boolean indicating
+    # if such property is available
+    layer_suppl_info_str, _ = QgsProject.instance().readEntry(
+        'irmt', layer_id, '{}')
+    supplemental_information[layer_id] = json.loads(layer_suppl_info_str)
+
+    if DEBUG:
+        print ("self.supplemental_information[%s] synchronized"
+               " with project, as: %s") % (
+            layer_id, supplemental_information[layer_id])
+
+
+def insert_platform_layer_id(
+        layer_url, active_layer_id, supplemental_information):
+    platform_layer_id = layer_url.split('/')[-1]
+    suppl_info = supplemental_information[active_layer_id]
+    if 'platform_layer_id' not in suppl_info:
+        suppl_info['platform_layer_id'] = platform_layer_id
+    write_layer_suppl_info_to_qgs(active_layer_id, suppl_info)

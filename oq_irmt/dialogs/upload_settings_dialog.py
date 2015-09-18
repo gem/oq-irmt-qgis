@@ -28,11 +28,28 @@ from PyQt4.QtCore import pyqtSlot, QUrl
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox,
                          QDesktopServices)
+from qgis.gui import QgsMessageBar
+from oq_irmt.dialogs.upload_dialog import UploadDialog
+from oq_irmt.metadata.metadata_utilities import write_iso_metadata_file
+from oq_irmt.third_party.requests.sessions import Session
 
 from oq_irmt.ui.ui_upload_settings import Ui_UploadSettingsDialog
 from oq_irmt.utilities.defaults import DEFAULTS
 from oq_irmt.calculations.process_layer import ProcessLayer
-from oq_irmt.utilities.utils import reload_attrib_cbx, tr, WaitCursorManager
+from oq_irmt.utilities.shared import (IRMT_PLUGIN_VERSION,
+                                      SUPPLEMENTAL_INFORMATION_VERSION,
+                                      DEBUG,
+                                      )
+from oq_irmt.utilities.utils import (reload_attrib_cbx,
+                                     tr,
+                                     WaitCursorManager,
+                                     platform_login,
+                                     SvNetworkError,
+                                     get_credentials,
+                                     update_platform_project,
+                                     write_layer_suppl_info_to_qgs,
+                                     insert_platform_layer_id,
+                                     )
 
 LICENSES = (
     ('CC0', 'http://creativecommons.org/about/cc0'),
@@ -50,25 +67,28 @@ class UploadSettingsDialog(QDialog):
     licenses. The user must click on a confirmation checkbox, before the
     uploading of the layer can be started.
     """
-    def __init__(self, iface, suppl_info):
+    def __init__(self, iface, suppl_info, file_stem):
         QDialog.__init__(self)
         # Set up the user interface from Designer.
         self.ui = Ui_UploadSettingsDialog()
         self.ui.setupUi(self)
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
         self.ok_button.setEnabled(False)
+        self.iface = iface
         self.vertices_count = None
+        self.file_stem = file_stem
+        self.xml_file = file_stem + '.xml'
         self.suppl_info = suppl_info
-        selected_idx = self.suppl_info['selected_project_definition_idx']
-        proj_defs = self.suppl_info['project_definitions']
-        project_definition = proj_defs[selected_idx]
-        if 'title' in project_definition:
-            self.ui.title_le.setText(project_definition['title'])
+        self.selected_idx = self.suppl_info['selected_project_definition_idx']
+        self.project_definition = self.suppl_info['project_definitions'][
+            self.selected_idx]
+        if 'title' in self.project_definition:
+            self.ui.title_le.setText(self.project_definition['title'])
         else:
             self.ui.title_le.setText(DEFAULTS['ISO19115_TITLE'])
 
-        if 'description' in project_definition:
-            self.ui.description_te.setPlainText(project_definition[
+        if 'description' in self.project_definition:
+            self.ui.description_te.setPlainText(self.project_definition[
                 'description'])
 
         # if no field is selected, we should not allow uploading
@@ -156,6 +176,86 @@ class UploadSettingsDialog(QDialog):
             self.ui.title_le.text() and
             self.ui.confirm_chk.isChecked() and
             self.zone_label_field_is_specified)
+
+    def accept(self):
+        self.suppl_info['title'] = self.ui.title_le.text()
+        if 'title' not in self.project_definition:
+            self.project_definition['title'] = self.suppl_info['title']
+        self.suppl_info['abstract'] = self.ui.description_te.toPlainText()
+        if 'description' not in self.project_definition:
+            self.project_definition['description'] = self.suppl_info[
+                'abstract']
+        zone_label_field = self.ui.zone_label_field_cbx.currentText()
+        self.suppl_info['zone_label_field'] = zone_label_field
+
+        license_name = self.ui.license_cbx.currentText()
+        license_idx = self.ui.license_cbx.currentIndex()
+        license_url = self.ui.license_cbx.itemData(license_idx)
+        license_txt = '%s (%s)' % (license_name, license_url)
+        self.suppl_info['license'] = license_txt
+        self.suppl_info['irmt_plugin_version'] = IRMT_PLUGIN_VERSION
+        self.suppl_info['supplemental_information_version'] = \
+            SUPPLEMENTAL_INFORMATION_VERSION
+        self.suppl_info['vertices_count'] = self.vertices_count
+
+        self.suppl_info['project_definitions'][self.selected_idx] = \
+            self.project_definition
+        active_layer_id = self.iface.activeLayer().id()
+        write_layer_suppl_info_to_qgs(active_layer_id, self.suppl_info)
+
+        if self.do_update:
+            with WaitCursorManager(
+                    'Updating project on the OpenQuake Platform',
+                    self.iface):
+                hostname, username, password = get_credentials(self.iface)
+                session = Session()
+                try:
+                    platform_login(hostname, username, password, session)
+                except SvNetworkError as e:
+                    error_msg = (
+                        'Unable to login to the platform: ' + e.message)
+                    self.iface.messageBar().pushMessage(
+                        'Error', error_msg, level=QgsMessageBar.CRITICAL)
+                    return
+                if 'platform_layer_id' not in self.suppl_info:
+                    error_msg = ('Unable to retrieve the id of'
+                                 'the layer on the Platform')
+                    self.iface.messageBar().pushMessage(
+                        'Error', error_msg, level=QgsMessageBar.CRITICAL)
+                    return
+                response = update_platform_project(
+                    hostname, session, self.project_definition,
+                    self.suppl_info['platform_layer_id'])
+                if response.ok:
+                    self.iface.messageBar().pushMessage(
+                        tr("Info"),
+                        tr(response.text),
+                        level=QgsMessageBar.INFO)
+                else:
+                    self.iface.messageBar().pushMessage(
+                        tr("Error"),
+                        tr(response.text),
+                        level=QgsMessageBar.CRITICAL)
+        else:
+            if DEBUG:
+                print 'xml_file:', self.xml_file
+            # do not upload the selected_project_definition_idx
+            self.suppl_info.pop('selected_project_definition_idx', None)
+            write_iso_metadata_file(self.xml_file,
+                                    self.suppl_info)
+            metadata_dialog = UploadDialog(
+                self.iface, self.file_stem)
+            metadata_dialog.upload_successful.connect(
+                lambda layer_url: insert_platform_layer_id(
+                    layer_url,
+                    active_layer_id,
+                    self.suppl_info))
+            if metadata_dialog.exec_():
+                QDesktopServices.openUrl(QUrl(metadata_dialog.layer_url))
+            elif DEBUG:
+                print "metadata_dialog cancelled"
+
+        super(UploadSettingsDialog, self).accept()
 
     @pyqtSlot(bool)
     def on_update_radio_toggled(self, on):
