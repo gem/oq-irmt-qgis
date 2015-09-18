@@ -42,8 +42,12 @@ from PyQt4.QtGui import (QFileDialog,
                          QDialog,
                          QDialogButtonBox,
                          QMessageBox)
+from oq_irmt.calculations.aggregate_loss_by_zone import (
+    calculate_zonal_stats,
+    purge_zones_without_loss_points)
 
 from oq_irmt.calculations.process_layer import ProcessLayer
+from oq_irmt.dialogs.attribute_selection_dialog import AttributeSelectionDialog
 from oq_irmt.ui.ui_select_input_layers import Ui_SelectInputLayersDialog
 from oq_irmt.utilities.utils import tr, count_heading_commented_lines
 
@@ -112,6 +116,75 @@ class SelectInputLayersDialog(QDialog):
         else:
             raise RuntimeError
         return layer
+
+    def accept(self):
+        loss_layer_id = self.ui.loss_layer_cbx.itemData(
+            self.ui.loss_layer_cbx.currentIndex())
+        loss_layer = QgsMapLayerRegistry.instance().mapLayer(
+            loss_layer_id)
+        zonal_layer_id = self.ui.zonal_layer_cbx.itemData(
+            self.ui.zonal_layer_cbx.currentIndex())
+        zonal_layer = QgsMapLayerRegistry.instance().mapLayer(
+            zonal_layer_id)
+
+        # if the two layers have different projections, display an error
+        # message and return
+        have_same_projection, check_projection_msg = ProcessLayer(
+            loss_layer).has_same_projection_as(zonal_layer)
+        if not have_same_projection:
+            self.iface.messageBar().pushMessage(
+                tr("Error"),
+                check_projection_msg,
+                level=QgsMessageBar.CRITICAL)
+            return
+
+        # check if loss layer is raster or vector (aggregating by zone
+        # is different in the two cases)
+        loss_layer_is_vector = self.loss_layer_is_vector
+
+        # Open dialog to ask the user to specify attributes
+        # * loss from loss_layer
+        # * zone_id from loss_layer
+        # * svi from zonal_layer
+        # * zone_id from zonal_layer
+        ret_val = self.attribute_selection(
+            loss_layer, zonal_layer)
+        if not ret_val:
+            return
+        (loss_attr_names,
+         zone_id_in_losses_attr_name,
+         zone_id_in_zones_attr_name) = ret_val
+        # aggregate losses by zone (calculate count of points in the
+        # zone, sum and average loss values for the same zone)
+        res = calculate_zonal_stats(loss_layer,
+                                    zonal_layer,
+                                    loss_attr_names,
+                                    loss_layer_is_vector,
+                                    zone_id_in_losses_attr_name,
+                                    zone_id_in_zones_attr_name,
+                                    self.iface)
+        (loss_layer, zonal_layer, loss_attrs_dict) = res
+
+        if self.ui.purge_chk.isChecked():
+            purge_zones_without_loss_points(
+                zonal_layer, loss_attrs_dict, self.iface)
+        super(SelectInputLayersDialog, self).accept()
+
+    @staticmethod
+    def attribute_selection(loss_layer, zonal_layer):
+        """
+        Open a modal dialog containing combo boxes, allowing the user
+        to select what are the attribute names for
+        * loss values (from loss layer)
+        * zone id (from loss layer)
+        * zone id (from zonal layer)
+        """
+        dlg = AttributeSelectionDialog(loss_layer, zonal_layer)
+        # if the user presses OK
+        if dlg.exec_():
+            return dlg.selected_attributes
+        else:
+            return False
 
     @pyqtSlot(int)
     def on_purge_chk_stateChanged(self, state):

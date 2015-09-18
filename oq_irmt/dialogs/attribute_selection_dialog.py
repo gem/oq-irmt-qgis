@@ -97,3 +97,25 @@ class AttributeSelectionDialog(QDialog):
     def set_ok_button(self):
         self.ok_button.setEnabled(
             self.ui.loss_attrs_multisel.selected_widget.count() > 0)
+
+    def accept(self):
+        # retrieve attribute names from selections
+        loss_attr_names = \
+            list(self.ui.loss_attrs_multisel.get_selected_items())
+        # index 0 is for "use zonal geometries" (no zone id available)
+        if self.ui.zone_id_attr_name_loss_cbox.currentIndex() == 0:
+            zone_id_in_losses_attr_name = None
+        else:
+            zone_id_in_losses_attr_name = \
+                self.ui.zone_id_attr_name_loss_cbox.currentText()
+        # index 0 is for "Add field with unique zone id"
+        if self.ui.zone_id_attr_name_zone_cbox.currentIndex() == 0:
+            zone_id_in_zones_attr_name = None
+        else:
+            zone_id_in_zones_attr_name = \
+                self.ui.zone_id_attr_name_zone_cbox.currentText()
+        self.selected_attributes = (loss_attr_names,
+                                    zone_id_in_losses_attr_name,
+                                    zone_id_in_zones_attr_name)
+
+        super(AttributeSelectionDialog, self).accept()
