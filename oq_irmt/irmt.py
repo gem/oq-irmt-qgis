@@ -279,6 +279,7 @@ class Irmt:
             # Activate actions which require a vector layer to be selected
             if self.iface.activeLayer().type() != QgsMapLayer.VectorLayer:
                 raise AttributeError
+            self.supplemental_information[self.iface.activeLayer().id()]
             self.registered_actions[
                 "project_definitions_manager"].setEnabled(True)
             self.registered_actions["weight_data"].setEnabled(True)
@@ -287,11 +288,12 @@ class Irmt:
                 self.iface.activeLayer().id(), self.supplemental_information)
             self.registered_actions["upload"].setEnabled(True)
         except KeyError:
-            # self.project_definitions[self.iface.activeLayer().id()]
+            # self.supplemental_information[self.iface.activeLayer().id()]
             # is not defined
             self.registered_actions["upload"].setEnabled(False)
             self.registered_actions[
                 "project_definitions_manager"].setEnabled(False)
+            self.registered_actions["weight_data"].setEnabled(True)
         except AttributeError:
             # self.iface.activeLayer().id() does not exist
             # or self.iface.activeLayer() is not vector
