@@ -110,12 +110,14 @@ class SvDownloader(object):
         return subthemes
 
     def get_indicators_info(
-            self, name_filter=None, keywords=None, theme=None, subtheme=None):
+            self, name_filter=None, keywords=None, theme=None,
+            subtheme=None, study=None):
         page = self.host + PLATFORM_EXPORT_SV_NAMES
         params = dict(name=name_filter,
                       keywords=keywords,
                       theme=theme,
-                      subtheme=subtheme)
+                      subtheme=subtheme,
+                      study=study)
         result = self.sess.get(page, params=params)
         indicators_info = {}
         if result.status_code == 200:

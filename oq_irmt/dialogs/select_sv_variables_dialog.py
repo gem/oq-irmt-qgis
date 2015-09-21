@@ -46,7 +46,6 @@ class SelectSvVariablesDialog(QDialog):
         # login to platform, to be able to retrieve sv indices
         self.sv_downloader = downloader
         self.indicators_info_dict = {}
-        self.study_name = None
         with WaitCursorManager():
             self.fill_studies()
             self.fill_themes()
@@ -68,13 +67,13 @@ class SelectSvVariablesDialog(QDialog):
     @pyqtSlot()
     def on_filter_btn_clicked(self):
         with WaitCursorManager():
-            self.fill_names()
+            self.fill_indicators()
 
     @pyqtSlot(str)
     def on_study_cbx_currentIndexChanged(self):
-        self.study_name = self.ui.study_cbx.currentText()
         with WaitCursorManager():
             self.fill_zones()
+            self.fill_indicators()
 
     def set_ok_button(self):
         self.ok_button.setEnabled(
@@ -117,16 +116,17 @@ class SelectSvVariablesDialog(QDialog):
                     "Unable to download social vulnerability"
                     " subthemes: %s" % e)
 
-    def fill_names(self):
+    def fill_indicators(self):
         self.ui.list_multiselect.set_unselected_items([])
         # load list of social vulnerability variable names from the platform
         name_filter = self.ui.name_filter_le.text()
         keywords = self.ui.keywords_le.text()
         theme = self.ui.theme_cbx.currentText()
         subtheme = self.ui.subtheme_cbx.currentText()
+        study = self.ui.study_cbx.currentText()
         try:
             filter_result_dict = self.sv_downloader.get_indicators_info(
-                name_filter, keywords, theme, subtheme)
+                name_filter, keywords, theme, subtheme, study)
             self.indicators_info_dict.update(filter_result_dict)
             names = sorted(
                 [code + ': ' + filter_result_dict[code]['name']
@@ -146,8 +146,9 @@ class SelectSvVariablesDialog(QDialog):
 
     def fill_zones(self):
         # load from platform a list of zones belonging to the selected study
+        study_name = self.ui.study_cbx.currentText()
         try:
-            zones_dict = self.sv_downloader.get_zones_info(self.study_name)
+            zones_dict = self.sv_downloader.get_zones_info(study_name)
             names = sorted(
                 [zones_dict[iso] + ' (' + iso + ')'
                     for iso in zones_dict])

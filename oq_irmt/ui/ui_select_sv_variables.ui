@@ -137,7 +137,7 @@
        <item>
         <widget class="QPushButton" name="filter_btn">
          <property name="text">
-          <string>Get indicators</string>
+          <string>Filter</string>
          </property>
         </widget>
        </item>
