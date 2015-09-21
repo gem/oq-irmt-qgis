@@ -392,9 +392,9 @@ class Irmt:
                                             sv_field)
 
                         indices_list.append(sv_field)
-                    while dlg.ui.country_select.selected_widget.count() > 0:
+                    while dlg.ui.zone_select.selected_widget.count() > 0:
                         item = \
-                            dlg.ui.country_select.selected_widget.takeItem(0)
+                            dlg.ui.zone_select.selected_widget.takeItem(0)
                         # get the iso from something like:
                         # country_name (iso_code)
                         iso_code = item.text().split('(')[1].split(')')[0]

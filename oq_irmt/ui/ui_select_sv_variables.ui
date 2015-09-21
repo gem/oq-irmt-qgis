@@ -53,7 +53,7 @@
         </layout>
        </item>
        <item>
-        <widget class="ListMultiSelectWidget" name="country_select">
+        <widget class="ListMultiSelectWidget" name="zone_select">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
            <horstretch>0</horstretch>
@@ -63,7 +63,6 @@
          <property name="title">
           <string>Select zones</string>
          </property>
-         <zorder>formLayoutWidget</zorder>
         </widget>
        </item>
        <item>
@@ -173,8 +172,7 @@
       <zorder>filters_group</zorder>
       <zorder>indicator_details</zorder>
       <zorder>filters_help_lbl</zorder>
-      <zorder>country_select</zorder>
-      <zorder>formLayoutWidget</zorder>
+      <zorder>zone_select</zorder>
      </widget>
     </widget>
    </item>

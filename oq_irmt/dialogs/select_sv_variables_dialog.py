@@ -46,17 +46,17 @@ class SelectSvVariablesDialog(QDialog):
         # login to platform, to be able to retrieve sv indices
         self.sv_downloader = downloader
         self.indicators_info_dict = {}
+        self.study_name = None
         with WaitCursorManager():
             self.fill_studies()
             self.fill_themes()
-            self.fill_countries()
         self.ui.list_multiselect.unselected_widget.itemClicked.connect(
             self.update_indicator_info)
         self.ui.list_multiselect.selected_widget.itemClicked.connect(
             self.update_indicator_info)
         self.ui.list_multiselect.selection_changed.connect(
             self.set_ok_button)
-        self.ui.country_select.selection_changed.connect(
+        self.ui.zone_select.selection_changed.connect(
             self.set_ok_button)
 
     @pyqtSlot(str)
@@ -70,10 +70,15 @@ class SelectSvVariablesDialog(QDialog):
         with WaitCursorManager():
             self.fill_names()
 
+    @pyqtSlot(str)
+    def on_study_cbx_currentIndexChanged(self):
+        self.study_name = self.ui.study_cbx.currentText()
+        self.fill_zones()
+
     def set_ok_button(self):
         self.ok_button.setEnabled(
             self.ui.list_multiselect.selected_widget.count() > 0
-            and self.ui.country_select.selected_widget.count() > 0)
+            and self.ui.zone_select.selected_widget.count() > 0)
 
     def fill_studies(self):
         try:
@@ -82,9 +87,6 @@ class SelectSvVariablesDialog(QDialog):
         except SvNetworkError as e:
             raise SvNetworkError(
                 "Unable to download social vulnerability studies: %s" % e)
-        current_study = self.ui.study_cbx.currentText()
-        print current_study
-        # TODO: drive other parts of the dialog
 
     def fill_themes(self):
         self.ui.theme_cbx.clear()
@@ -141,15 +143,14 @@ class SelectSvVariablesDialog(QDialog):
             'description']
         self.ui.indicator_details.setText(hint_text)
 
-    def fill_countries(self):
-        # load from platform a list of countries for which socioeconomic data
-        # are available
+    def fill_zones(self):
+        # load from platform a list of zones belonging to the selected study
         try:
-            countries_dict = self.sv_downloader.get_countries_info()
+            zones_dict = self.sv_downloader.get_zones_info(self.study_name)
             names = sorted(
-                [countries_dict[iso] + ' (' + iso + ')'
-                    for iso in countries_dict])
-            self.ui.country_select.set_unselected_items(names)
+                [zones_dict[iso] + ' (' + iso + ')'
+                    for iso in zones_dict])
+            self.ui.zone_select.set_unselected_items(names)
         except SvNetworkError as e:
             raise SvNetworkError(
-                "Unable to download the list of countries: %s" % e)
+                "Unable to download the list of zones: %s" % e)

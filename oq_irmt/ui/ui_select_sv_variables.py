@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_select_sv_variables.ui'
 #
-# Created: Thu Sep 17 17:53:14 2015
+# Created: Mon Sep 21 10:49:56 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -49,14 +49,14 @@ class Ui_SelectSvVariablesDialog(object):
         self.study_cbx.setObjectName(_fromUtf8("study_cbx"))
         self.formLayout_3.setWidget(0, QtGui.QFormLayout.FieldRole, self.study_cbx)
         self.verticalLayout.addLayout(self.formLayout_3)
-        self.country_select = ListMultiSelectWidget(self.scrollAreaWidgetContents)
+        self.zone_select = ListMultiSelectWidget(self.scrollAreaWidgetContents)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.MinimumExpanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.country_select.sizePolicy().hasHeightForWidth())
-        self.country_select.setSizePolicy(sizePolicy)
-        self.country_select.setObjectName(_fromUtf8("country_select"))
-        self.verticalLayout.addWidget(self.country_select)
+        sizePolicy.setHeightForWidth(self.zone_select.sizePolicy().hasHeightForWidth())
+        self.zone_select.setSizePolicy(sizePolicy)
+        self.zone_select.setObjectName(_fromUtf8("zone_select"))
+        self.verticalLayout.addWidget(self.zone_select)
         self.filters_group = QtGui.QGroupBox(self.scrollAreaWidgetContents)
         self.filters_group.setObjectName(_fromUtf8("filters_group"))
         self.verticalLayout.addWidget(self.filters_group)
@@ -124,7 +124,7 @@ class Ui_SelectSvVariablesDialog(object):
     def retranslateUi(self, SelectSvVariablesDialog):
         SelectSvVariablesDialog.setWindowTitle(_translate("SelectSvVariablesDialog", "Select socioeconomic indicators", None))
         self.study_lbl.setText(_translate("SelectSvVariablesDialog", "Study", None))
-        self.country_select.setTitle(_translate("SelectSvVariablesDialog", "Select zones", None))
+        self.zone_select.setTitle(_translate("SelectSvVariablesDialog", "Select zones", None))
         self.filters_group.setTitle(_translate("SelectSvVariablesDialog", "Filter indicators", None))
         self.filters_help_lbl.setText(_translate("SelectSvVariablesDialog", "All filters are optional. If no filter is set, the whole set of indicators will be retrieved.", None))
         self.name_filter_lbl.setText(_translate("SelectSvVariablesDialog", "Name", None))
