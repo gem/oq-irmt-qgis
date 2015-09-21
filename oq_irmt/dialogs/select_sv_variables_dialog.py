@@ -73,7 +73,8 @@ class SelectSvVariablesDialog(QDialog):
     @pyqtSlot(str)
     def on_study_cbx_currentIndexChanged(self):
         self.study_name = self.ui.study_cbx.currentText()
-        self.fill_zones()
+        with WaitCursorManager():
+            self.fill_zones()
 
     def set_ok_button(self):
         self.ok_button.setEnabled(
