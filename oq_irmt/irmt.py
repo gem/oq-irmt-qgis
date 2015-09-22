@@ -376,9 +376,10 @@ class Irmt:
                     'children'][1]['children']
                 known_themes = []
                 with WaitCursorManager(msg, self.iface):
-                    while dlg.ui.list_multiselect.selected_widget.count() > 0:
-                        item = \
-                            dlg.ui.list_multiselect.selected_widget.takeItem(0)
+                    while (dlg.ui.indicator_multiselect.selected_widget.count()
+                           > 0):
+                        item = dlg.ui.indicator_multiselect.selected_widget\
+                            .takeItem(0)
                         ind_code = item.text().split(':')[0]
                         ind_info = dlg.indicators_info_dict[ind_code]
                         sv_theme = ind_info['theme']
@@ -392,9 +393,9 @@ class Irmt:
                                             sv_field)
 
                         indices_list.append(sv_field)
-                    while dlg.ui.zone_select.selected_widget.count() > 0:
+                    while dlg.ui.zone_multiselect.selected_widget.count() > 0:
                         item = \
-                            dlg.ui.zone_select.selected_widget.takeItem(0)
+                            dlg.ui.zone_multiselect.selected_widget.takeItem(0)
                         # get the iso from something like:
                         # country_name (iso_code)
                         iso_code = item.text().split('(')[1].split(')')[0]

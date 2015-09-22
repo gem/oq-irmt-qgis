@@ -49,13 +49,13 @@ class SelectSvVariablesDialog(QDialog):
         with WaitCursorManager():
             self.fill_studies()
             self.fill_themes()
-        self.ui.list_multiselect.unselected_widget.itemClicked.connect(
+        self.ui.indicator_multiselect.unselected_widget.itemClicked.connect(
             self.update_indicator_info)
-        self.ui.list_multiselect.selected_widget.itemClicked.connect(
+        self.ui.indicator_multiselect.selected_widget.itemClicked.connect(
             self.update_indicator_info)
-        self.ui.list_multiselect.selection_changed.connect(
+        self.ui.indicator_multiselect.selection_changed.connect(
             self.set_ok_button)
-        self.ui.zone_select.selection_changed.connect(
+        self.ui.zone_multiselect.selection_changed.connect(
             self.set_ok_button)
 
     @pyqtSlot(str)
@@ -77,8 +77,8 @@ class SelectSvVariablesDialog(QDialog):
 
     def set_ok_button(self):
         self.ok_button.setEnabled(
-            self.ui.list_multiselect.selected_widget.count() > 0
-            and self.ui.zone_select.selected_widget.count() > 0)
+            self.ui.indicator_multiselect.selected_widget.count() > 0
+            and self.ui.zone_multiselect.selected_widget.count() > 0)
 
     def fill_studies(self):
         try:
@@ -117,7 +117,7 @@ class SelectSvVariablesDialog(QDialog):
                     " subthemes: %s" % e)
 
     def fill_indicators(self):
-        self.ui.list_multiselect.set_unselected_items([])
+        self.ui.indicator_multiselect.set_unselected_items([])
         # load list of social vulnerability variable names from the platform
         name_filter = self.ui.name_filter_le.text()
         keywords = self.ui.keywords_le.text()
@@ -131,7 +131,7 @@ class SelectSvVariablesDialog(QDialog):
             names = sorted(
                 [code + ': ' + filter_result_dict[code]['name']
                     for code in filter_result_dict])
-            self.ui.list_multiselect.add_unselected_items(names)
+            self.ui.indicator_multiselect.add_unselected_items(names)
         except SvNetworkError as e:
             raise SvNetworkError(
                 "Unable to download social vulnerability names: %s" % e)
@@ -152,7 +152,7 @@ class SelectSvVariablesDialog(QDialog):
             names = sorted(
                 [zones_dict[iso] + ' (' + iso + ')'
                     for iso in zones_dict])
-            self.ui.zone_select.set_unselected_items(names)
+            self.ui.zone_multiselect.set_unselected_items(names)
         except SvNetworkError as e:
             raise SvNetworkError(
                 "Unable to download the list of zones: %s" % e)

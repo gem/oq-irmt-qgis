@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_select_sv_variables.ui'
 #
-# Created: Mon Sep 21 16:38:52 2015
+# Created: Tue Sep 22 10:09:19 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -49,14 +49,22 @@ class Ui_SelectSvVariablesDialog(object):
         self.study_cbx.setObjectName(_fromUtf8("study_cbx"))
         self.formLayout_3.setWidget(0, QtGui.QFormLayout.FieldRole, self.study_cbx)
         self.verticalLayout.addLayout(self.formLayout_3)
-        self.zone_select = ListMultiSelectWidget(self.scrollAreaWidgetContents)
+        self.country_multiselect = ListMultiSelectWidget(self.scrollAreaWidgetContents)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.MinimumExpanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.zone_select.sizePolicy().hasHeightForWidth())
-        self.zone_select.setSizePolicy(sizePolicy)
-        self.zone_select.setObjectName(_fromUtf8("zone_select"))
-        self.verticalLayout.addWidget(self.zone_select)
+        sizePolicy.setHeightForWidth(self.country_multiselect.sizePolicy().hasHeightForWidth())
+        self.country_multiselect.setSizePolicy(sizePolicy)
+        self.country_multiselect.setObjectName(_fromUtf8("country_multiselect"))
+        self.verticalLayout.addWidget(self.country_multiselect)
+        self.zone_multiselect = ListMultiSelectWidget(self.scrollAreaWidgetContents)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.MinimumExpanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.zone_multiselect.sizePolicy().hasHeightForWidth())
+        self.zone_multiselect.setSizePolicy(sizePolicy)
+        self.zone_multiselect.setObjectName(_fromUtf8("zone_multiselect"))
+        self.verticalLayout.addWidget(self.zone_multiselect)
         self.filters_group = QtGui.QGroupBox(self.scrollAreaWidgetContents)
         self.filters_group.setObjectName(_fromUtf8("filters_group"))
         self.verticalLayout.addWidget(self.filters_group)
@@ -94,14 +102,14 @@ class Ui_SelectSvVariablesDialog(object):
         self.filter_btn = QtGui.QPushButton(self.scrollAreaWidgetContents)
         self.filter_btn.setObjectName(_fromUtf8("filter_btn"))
         self.verticalLayout.addWidget(self.filter_btn)
-        self.list_multiselect = ListMultiSelectWidget(self.scrollAreaWidgetContents)
+        self.indicator_multiselect = ListMultiSelectWidget(self.scrollAreaWidgetContents)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.MinimumExpanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.list_multiselect.sizePolicy().hasHeightForWidth())
-        self.list_multiselect.setSizePolicy(sizePolicy)
-        self.list_multiselect.setObjectName(_fromUtf8("list_multiselect"))
-        self.verticalLayout.addWidget(self.list_multiselect)
+        sizePolicy.setHeightForWidth(self.indicator_multiselect.sizePolicy().hasHeightForWidth())
+        self.indicator_multiselect.setSizePolicy(sizePolicy)
+        self.indicator_multiselect.setObjectName(_fromUtf8("indicator_multiselect"))
+        self.verticalLayout.addWidget(self.indicator_multiselect)
         self.indicator_info = QtGui.QGroupBox(self.scrollAreaWidgetContents)
         self.indicator_info.setObjectName(_fromUtf8("indicator_info"))
         self.verticalLayout.addWidget(self.indicator_info)
@@ -124,7 +132,8 @@ class Ui_SelectSvVariablesDialog(object):
     def retranslateUi(self, SelectSvVariablesDialog):
         SelectSvVariablesDialog.setWindowTitle(_translate("SelectSvVariablesDialog", "Select socioeconomic indicators", None))
         self.study_lbl.setText(_translate("SelectSvVariablesDialog", "Study", None))
-        self.zone_select.setTitle(_translate("SelectSvVariablesDialog", "Select zones", None))
+        self.country_multiselect.setTitle(_translate("SelectSvVariablesDialog", "Select countries", None))
+        self.zone_multiselect.setTitle(_translate("SelectSvVariablesDialog", "Select zones", None))
         self.filters_group.setTitle(_translate("SelectSvVariablesDialog", "Filter indicators", None))
         self.filters_help_lbl.setText(_translate("SelectSvVariablesDialog", "All filters are optional. If no filter is set, the whole set of indicators will be retrieved.", None))
         self.name_filter_lbl.setText(_translate("SelectSvVariablesDialog", "Name", None))
@@ -134,7 +143,7 @@ class Ui_SelectSvVariablesDialog(object):
         self.theme_lbl.setText(_translate("SelectSvVariablesDialog", "Theme", None))
         self.subtheme_lbl.setText(_translate("SelectSvVariablesDialog", "Subtheme", None))
         self.filter_btn.setText(_translate("SelectSvVariablesDialog", "Filter", None))
-        self.list_multiselect.setTitle(_translate("SelectSvVariablesDialog", "Select indicators", None))
+        self.indicator_multiselect.setTitle(_translate("SelectSvVariablesDialog", "Select indicators", None))
         self.indicator_info.setTitle(_translate("SelectSvVariablesDialog", "Indicator details", None))
 
 from list_multiselect_widget import ListMultiSelectWidget
