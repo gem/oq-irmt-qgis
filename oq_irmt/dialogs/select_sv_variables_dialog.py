@@ -74,6 +74,12 @@ class SelectSvVariablesDialog(QDialog):
         with WaitCursorManager():
             self.fill_zones()
             self.fill_indicators()
+            admin_levels = self.sv_downloader.get_admin_levels_for_study(
+                self.ui.study_cbx.currentText())
+            if not any(int(level) > 0 for level in admin_levels):
+                self.ui.country_multiselect.hide()
+            else:
+                self.ui.country_multiselect.show()
 
     def set_ok_button(self):
         self.ok_button.setEnabled(

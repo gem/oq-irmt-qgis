@@ -50,6 +50,7 @@ PLATFORM_EXPORT_SV_SUBTHEMES = "/svir/list_subthemes_by_theme"
 PLATFORM_EXPORT_SV_NAMES = "/svir/export_variables_info"
 PLATFORM_EXPORT_VARIABLES_DATA = "/svir/export_variables_data"
 PLATFORM_EXPORT_ZONES_INFO = "/svir/export_zones_info"
+PLATFORM_EXPORT_ADMIN_LEVELS_FOR_STUDY = "/svir/list_admin_levels_for_study"
 
 
 def get_loggedin_downloader(iface):
@@ -89,6 +90,15 @@ class SvDownloader(object):
             reader = csv.reader(StringIO.StringIO(result.content))
             studies = reader.next()
         return studies
+
+    def get_admin_levels_for_study(self, study_name):
+        page = self.host + PLATFORM_EXPORT_ADMIN_LEVELS_FOR_STUDY
+        params = dict(study_name=study_name)
+        result = self.sess.get(page, params=params)
+        if result.status_code == 200:
+            reader = csv.reader(StringIO.StringIO(result.content))
+            admin_levels = reader.next()
+        return admin_levels
 
     def get_themes(self):
         page = self.host + PLATFORM_EXPORT_SV_THEMES
