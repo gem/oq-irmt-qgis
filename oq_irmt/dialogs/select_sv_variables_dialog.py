@@ -42,6 +42,7 @@ class SelectSvVariablesDialog(QDialog):
         self.ui = Ui_SelectSvVariablesDialog()
         self.ui.setupUi(self)
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
+        self.is_subnational_study = False  # National is the default one
         self.set_ok_button()
         # login to platform, to be able to retrieve sv indices
         self.sv_downloader = downloader
@@ -58,6 +59,10 @@ class SelectSvVariablesDialog(QDialog):
         self.ui.zone_multiselect.selection_changed.connect(
             self.set_ok_button)
 
+    @pyqtSlot()
+    def on_fill_zones_btn_clicked(self):
+        self.fill_zones()
+
     @pyqtSlot(str)
     def on_theme_cbx_currentIndexChanged(self):
         theme = self.ui.theme_cbx.currentText()
@@ -72,19 +77,29 @@ class SelectSvVariablesDialog(QDialog):
     @pyqtSlot(str)
     def on_study_cbx_currentIndexChanged(self):
         with WaitCursorManager():
-            self.fill_zones()
+            self.fill_countries()
             self.fill_indicators()
             admin_levels = self.sv_downloader.get_admin_levels_for_study(
                 self.ui.study_cbx.currentText())
-            if not any(int(level) > 0 for level in admin_levels):
-                self.ui.country_multiselect.hide()
+            self.is_subnational_study = any(
+                int(admin_level) > 0 for admin_level in admin_levels)
+            if self.is_subnational_study:
+                self.ui.zone_multiselect.show()
+                self.ui.fill_zones_btn.show()
             else:
-                self.ui.country_multiselect.show()
+                self.ui.zone_multiselect.hide()
+                self.ui.fill_zones_btn.hide()
+            self.set_ok_button()
 
     def set_ok_button(self):
-        self.ok_button.setEnabled(
-            self.ui.indicator_multiselect.selected_widget.count() > 0
-            and self.ui.zone_multiselect.selected_widget.count() > 0)
+        if self.is_subnational_study:
+            self.ok_button.setEnabled(
+                self.ui.indicator_multiselect.selected_widget.count() > 0
+                and self.ui.zone_multiselect.selected_widget.count() > 0)
+        else:
+            self.ok_button.setEnabled(
+                self.ui.indicator_multiselect.selected_widget.count() > 0
+                and self.ui.country_multiselect.selected_widget.count() > 0)
 
     def fill_studies(self):
         try:
@@ -150,14 +165,32 @@ class SelectSvVariablesDialog(QDialog):
             'description']
         self.ui.indicator_details.setText(hint_text)
 
+    def fill_countries(self):
+        # load from platform a list of countries belonging to the
+        # selected study
+        study_name = self.ui.study_cbx.currentText()
+        try:
+            countries_dict = self.sv_downloader.get_countries_info(study_name)
+            names = sorted(
+                [countries_dict[iso] + ' (' + iso + ')'
+                    for iso in countries_dict])
+            self.ui.country_multiselect.set_unselected_items(names)
+        except SvNetworkError as e:
+            raise SvNetworkError(
+                "Unable to download the list of zones: %s" % e)
+
     def fill_zones(self):
         # load from platform a list of zones belonging to the selected study
         study_name = self.ui.study_cbx.currentText()
+        country_str = self.ui.country_multiselect.selected_widget.takeItem(0)
+        country_iso = country_str.text().split('(')[1].split(')')[0]
         try:
-            zones_dict = self.sv_downloader.get_zones_info(study_name)
-            names = sorted(
-                [zones_dict[iso] + ' (' + iso + ')'
-                    for iso in zones_dict])
+            zones_list = self.sv_downloader.get_zones_info(study_name,
+                                                           country_iso)
+            names = ['%s (%s: %s)' % (zone['name'],
+                                      zone['country_iso'],
+                                      zone['parent_label'])
+                     for zone in zones_list]
             self.ui.zone_multiselect.set_unselected_items(names)
         except SvNetworkError as e:
             raise SvNetworkError(

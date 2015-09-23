@@ -66,6 +66,13 @@
         </widget>
        </item>
        <item>
+        <widget class="QPushButton" name="fill_zones_btn">
+         <property name="text">
+          <string>Fill subnational zones</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="ListMultiSelectWidget" name="zone_multiselect">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
@@ -74,7 +81,7 @@
           </sizepolicy>
          </property>
          <property name="title">
-          <string>Select zones</string>
+          <string>Select sub-national zones</string>
          </property>
         </widget>
        </item>
@@ -187,6 +194,7 @@
       <zorder>filters_help_lbl</zorder>
       <zorder>zone_multiselect</zorder>
       <zorder>country_multiselect</zorder>
+      <zorder>fill_zones_btn</zorder>
      </widget>
     </widget>
    </item>

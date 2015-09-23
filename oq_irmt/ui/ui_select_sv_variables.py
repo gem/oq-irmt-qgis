@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_select_sv_variables.ui'
 #
-# Created: Tue Sep 22 10:09:19 2015
+# Created: Tue Sep 22 16:07:30 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -57,6 +57,9 @@ class Ui_SelectSvVariablesDialog(object):
         self.country_multiselect.setSizePolicy(sizePolicy)
         self.country_multiselect.setObjectName(_fromUtf8("country_multiselect"))
         self.verticalLayout.addWidget(self.country_multiselect)
+        self.fill_zones_btn = QtGui.QPushButton(self.scrollAreaWidgetContents)
+        self.fill_zones_btn.setObjectName(_fromUtf8("fill_zones_btn"))
+        self.verticalLayout.addWidget(self.fill_zones_btn)
         self.zone_multiselect = ListMultiSelectWidget(self.scrollAreaWidgetContents)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.MinimumExpanding)
         sizePolicy.setHorizontalStretch(0)
@@ -133,7 +136,8 @@ class Ui_SelectSvVariablesDialog(object):
         SelectSvVariablesDialog.setWindowTitle(_translate("SelectSvVariablesDialog", "Select socioeconomic indicators", None))
         self.study_lbl.setText(_translate("SelectSvVariablesDialog", "Study", None))
         self.country_multiselect.setTitle(_translate("SelectSvVariablesDialog", "Select countries", None))
-        self.zone_multiselect.setTitle(_translate("SelectSvVariablesDialog", "Select zones", None))
+        self.fill_zones_btn.setText(_translate("SelectSvVariablesDialog", "Fill subnational zones", None))
+        self.zone_multiselect.setTitle(_translate("SelectSvVariablesDialog", "Select sub-national zones", None))
         self.filters_group.setTitle(_translate("SelectSvVariablesDialog", "Filter indicators", None))
         self.filters_help_lbl.setText(_translate("SelectSvVariablesDialog", "All filters are optional. If no filter is set, the whole set of indicators will be retrieved.", None))
         self.name_filter_lbl.setText(_translate("SelectSvVariablesDialog", "Name", None))

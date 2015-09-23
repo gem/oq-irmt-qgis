@@ -370,7 +370,6 @@ class Irmt:
                        "Platform...")
                 # Retrieve the indices selected by the user
                 indices_list = []
-                iso_codes_list = []
                 project_definition = deepcopy(PROJECT_TEMPLATE)
                 svi_themes = project_definition[
                     'children'][1]['children']
@@ -393,33 +392,64 @@ class Irmt:
                                             sv_field)
 
                         indices_list.append(sv_field)
-                    while dlg.ui.zone_multiselect.selected_widget.count() > 0:
-                        item = \
-                            dlg.ui.zone_multiselect.selected_widget.takeItem(0)
-                        # get the iso from something like:
-                        # country_name (iso_code)
-                        iso_code = item.text().split('(')[1].split(')')[0]
-                        iso_codes_list.append(iso_code)
+                    if dlg.is_subnational_study:
+                        zone_ids_list = []
+                        while dlg.ui.zone_multiselect\
+                                .selected_widget.count() > 0:
+                            zone_id = dlg.ui.zone_multiselect\
+                                .selected_widget.takeItem(0).text()
+                            zone_ids_list.append(zone_id)
+                        # create string for DB query
+                        indices_string = ",".join(indices_list)
+                        zone_ids_string = "|".join(zone_ids_list)
 
-                    # create string for DB query
-                    indices_string = ",".join(indices_list)
-                    iso_codes_string = ",".join(iso_codes_list)
+                        assign_default_weights(svi_themes)
 
-                    assign_default_weights(svi_themes)
-
-                    worker = DownloadPlatformDataWorker(
-                        sv_downloader,
-                        indices_string,
-                        load_geometries,
-                        iso_codes_string)
-                    worker.successfully_finished.connect(
-                        lambda result: self.data_download_successful(
-                            result,
+                        worker = DownloadPlatformDataWorker(
+                            sv_downloader,
+                            indices_string,
                             load_geometries,
-                            dest_filename,
-                            project_definition))
-                    start_worker(worker, self.iface.messageBar(),
-                                 'Downloading data from platform')
+                            zone_ids_string,
+                            is_subnational_study=True)
+                        worker.successfully_finished.connect(
+                            lambda result: self.data_download_successful(
+                                result,
+                                load_geometries,
+                                dest_filename,
+                                project_definition))
+                        start_worker(worker, self.iface.messageBar(),
+                                     'Downloading data from platform')
+                    else:  # national-level study
+                        iso_codes_list = []
+                        while dlg.ui.country_multiselect\
+                                .selected_widget.count() > 0:
+                            item = dlg.ui.country_multiselect\
+                                .selected_widget.takeItem(0)
+                            # get the iso from something like:
+                            # country_name (iso_code)
+                            iso_code = item.text().split('(')[1].split(')')[0]
+                            iso_codes_list.append(iso_code)
+
+                        # create string for DB query
+                        indices_string = ",".join(indices_list)
+                        iso_codes_string = ",".join(iso_codes_list)
+
+                        assign_default_weights(svi_themes)
+
+                        worker = DownloadPlatformDataWorker(
+                            sv_downloader,
+                            indices_string,
+                            load_geometries,
+                            iso_codes_string,
+                            is_subnational_study=False)
+                        worker.successfully_finished.connect(
+                            lambda result: self.data_download_successful(
+                                result,
+                                load_geometries,
+                                dest_filename,
+                                project_definition))
+                        start_worker(worker, self.iface.messageBar(),
+                                     'Downloading data from platform')
         except SvNetworkError as e:
             self.iface.messageBar().pushMessage(tr("Download Error"),
                                                 tr(str(e)),

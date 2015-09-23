@@ -26,7 +26,9 @@
 import os
 import tempfile
 
-from oq_irmt.utilities.import_sv_data import PLATFORM_EXPORT_VARIABLES_DATA
+from oq_irmt.utilities.import_sv_data import (
+    PLATFORM_EXPORT_VARIABLES_DATA_NATIONAL,
+    PLATFORM_EXPORT_VARIABLES_DATA_SUBNATIONAL)
 from oq_irmt.thread_worker.abstract_worker import AbstractWorker
 from oq_irmt.utilities.utils import SvNetworkError, tr, UserAbortedNotification
 
@@ -38,21 +40,30 @@ class DownloadPlatformDataWorker(AbstractWorker):
                  sv_downloader,
                  sv_variables_ids,
                  load_geometries,
-                 country_iso_codes):
+                 zone_ids,
+                 is_subnational_study):
         AbstractWorker.__init__(self)
         self.downloader = sv_downloader
         self.sv_variables_ids = sv_variables_ids
         self.load_geometries = load_geometries
-        self.country_iso_codes = country_iso_codes
+        self.zone_ids = zone_ids
+        self.is_subnational_study = is_subnational_study
 
     def work(self):
         self.set_message.emit(
             tr('Waiting for the OpenQuake Platform to export the data...'))
         self.toggle_show_progress.emit(False)
-        page = self.downloader.host + PLATFORM_EXPORT_VARIABLES_DATA
-        data = dict(sv_variables_ids=self.sv_variables_ids,
-                    export_geometries=self.load_geometries,
-                    country_iso_codes=self.country_iso_codes)
+        if self.is_subnational_study:
+            platform_api = PLATFORM_EXPORT_VARIABLES_DATA_SUBNATIONAL
+            data = dict(sv_variables_ids=self.sv_variables_ids,
+                        export_geometries=self.load_geometries,
+                        zone_ids=self.zone_ids)
+        else:
+            platform_api = PLATFORM_EXPORT_VARIABLES_DATA_NATIONAL
+            data = dict(sv_variables_ids=self.sv_variables_ids,
+                        export_geometries=self.load_geometries,
+                        country_iso_codes=self.zone_ids)
+        page = self.downloader.host + platform_api
         result = self.downloader.sess.post(page, data=data, stream=True)
 
         self.set_message.emit(tr('Downloading data from platform'))
@@ -67,27 +78,35 @@ class DownloadPlatformDataWorker(AbstractWorker):
             # to specify the field types.
             # For the type descriptor, use the same name as the csv file
             fname_types = fname.split('.')[0] + '.csvt'
-            # We expect iso, country_name, v1, v2, ... vn
             # Count variables ids
             sv_variables_count = len(self.sv_variables_ids.split(','))
             # build the string that describes data types for the csv
-            types_string = '"String","String"' + ',"Real"' * sv_variables_count
+            if self.is_subnational_study:
+                # in case of subnational study, we expect:
+                # zone_name, country_iso, parent_label, v1, v2, ... vn
+                types_string = ('"String","String","String","String"'
+                                + ',"Real"' * sv_variables_count)
+            else:  # national study
+                # in case of national study, we expect:
+                # iso, country_name, v1, v2, ... vn
+                types_string = ('"String","String"'
+                                + ',"Real"' * sv_variables_count)
             if self.load_geometries:
                 types_string += ',"String"'
             with open(fname_types, 'w') as csvt:
                 csvt.write(types_string)
             with open(fname, 'w') as csv_file:
-                n_countries_to_download = len(self.country_iso_codes)
-                n_downloaded_countries = 0
+                n_zones_to_download = len(self.zone_ids)
+                n_downloaded_zones = 0
                 for line in result.iter_lines():
                     if self.is_killed:
                         raise UserAbortedNotification(
                             'Download aborted by user')
 
                     csv_file.write(line + os.linesep)
-                    n_downloaded_countries += 1
-                    progress = (1.0 * n_downloaded_countries /
-                                n_countries_to_download * 100)
+                    n_downloaded_zones += 1
+                    progress = (1.0 * n_downloaded_zones /
+                                n_zones_to_download * 100)
                     self.progress.emit(progress)
 
                 msg = 'The socioeconomic data has been saved into %s' % fname

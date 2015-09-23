@@ -48,8 +48,12 @@ PLATFORM_EXPORT_SV_STUDIES = "/svir/list_studies"
 PLATFORM_EXPORT_SV_THEMES = "/svir/list_themes"
 PLATFORM_EXPORT_SV_SUBTHEMES = "/svir/list_subthemes_by_theme"
 PLATFORM_EXPORT_SV_NAMES = "/svir/export_variables_info"
-PLATFORM_EXPORT_VARIABLES_DATA = "/svir/export_variables_data"
+PLATFORM_EXPORT_VARIABLES_DATA_SUBNATIONAL = \
+    "/svir/export_variables_data_subnational"
+PLATFORM_EXPORT_VARIABLES_DATA_NATIONAL = \
+    "/svir/export_variables_data_national"
 PLATFORM_EXPORT_ZONES_INFO = "/svir/export_zones_info"
+PLATFORM_EXPORT_COUNTRIES_INFO = "/svir/export_countries_info"
 PLATFORM_EXPORT_ADMIN_LEVELS_FOR_STUDY = "/svir/list_admin_levels_for_study"
 
 
@@ -149,11 +153,11 @@ class SvDownloader(object):
                 # names.append(indicators_main_info[code])
         return indicators_info
 
-    def get_zones_info(self, study_name):
-        page = self.host + PLATFORM_EXPORT_ZONES_INFO
+    def get_countries_info(self, study_name):
+        page = self.host + PLATFORM_EXPORT_COUNTRIES_INFO
         params = dict(study_name=study_name)
         result = self.sess.get(page, params=params)
-        zones_info = {}
+        countries_info = {}
         if result.status_code == 200:
             reader = csv.reader(StringIO.StringIO(result.content))
             header = None
@@ -164,19 +168,94 @@ class SvDownloader(object):
                     header = row
                     continue
                 iso = row[0]
-                zones_info[iso] = row[1].decode('utf-8')
+                countries_info[iso] = row[1].decode('utf-8')
+        return countries_info
+
+    def get_zones_info(self, study_name, country_iso):
+        page = self.host + PLATFORM_EXPORT_ZONES_INFO
+        params = dict(study_name=study_name, country_iso=country_iso)
+        result = self.sess.get(page, params=params)
+        zones_info = list()
+        if result.status_code == 200:
+            reader = csv.reader(StringIO.StringIO(result.content))
+            header = None
+            for row in reader:
+                if row[0].startswith('#'):
+                    continue
+                if not header:
+                    header = row
+                    continue
+                # name, country_iso, parent_label, admin_level
+                name = row[0].decode('utf-8')
+                country_iso = row[1]
+                parent_label = row[2].decode('utf-8')
+                admin_level = row[3]
+                zone_info_dict = dict(name=name,
+                                      country_iso=country_iso,
+                                      parent_label=parent_label,
+                                      admin_level=admin_level)
+                zones_info.append(zone_info_dict)
         return zones_info
 
-    def get_sv_data(self,
-                    sv_variables_ids,
-                    load_geometries,
-                    country_iso_codes,
-                    message_bar):
+    def get_sv_data_subnational(self,
+                                sv_variables_ids,
+                                load_geometries,
+                                zone_ids,
+                                message_bar):
         msg_bar_item, progress_ = create_progress_message_bar(
             message_bar,
             'Waiting for the OpenQuake Platform to export the data...',
             no_percentage=True)
-        page = self.host + PLATFORM_EXPORT_VARIABLES_DATA
+        page = self.host + PLATFORM_EXPORT_VARIABLES_DATA_SUBNATIONAL
+        data = dict(sv_variables_ids=sv_variables_ids,
+                    export_geometries=load_geometries,
+                    zone_ids=zone_ids)
+        result = self.sess.post(page, data=data, stream=True)
+        clear_progress_message_bar(message_bar, msg_bar_item)
+        if result.status_code == 200:
+            # save csv on a temporary file
+            fd, fname = tempfile.mkstemp(suffix='.csv')
+            os.close(fd)
+            # All the fields of the csv file will be considered as text fields
+            # unless a .csvt file with the same name as the .csv file is used
+            # to specify the field types.
+            # For the type descriptor, use the same name as the csv file
+            fname_types = fname.split('.')[0] + '.csvt'
+            # We expect iso, country_name, v1, v2, ... vn
+            # Count variables ids
+            sv_variables_count = len(sv_variables_ids.split(','))
+            # build the string that describes data types for the csv
+            types_string = '"String","String"' + ',"Real"' * sv_variables_count
+            if load_geometries:
+                types_string += ',"String"'
+            with open(fname_types, 'w') as csvt:
+                csvt.write(types_string)
+            with open(fname, 'w') as csv_file:
+                n_zones_to_download = len(zone_ids)
+                n_downloaded_zones = 0
+                msg_bar_item, progress = create_progress_message_bar(
+                    message_bar, 'Downloading socioeconomic data...')
+                for line in result.iter_lines():
+                    csv_file.write(line + os.linesep)
+                    n_downloaded_zones += 1
+                    progress.setValue(
+                        n_downloaded_zones / n_zones_to_download * 100)
+                clear_progress_message_bar(message_bar, msg_bar_item)
+                msg = 'The socioeconomic data has been saved into %s' % fname
+                return fname, msg
+        else:
+            raise SvNetworkError(result.content)
+
+    def get_sv_data_national(self,
+                             sv_variables_ids,
+                             load_geometries,
+                             country_iso_codes,
+                             message_bar):
+        msg_bar_item, progress_ = create_progress_message_bar(
+            message_bar,
+            'Waiting for the OpenQuake Platform to export the data...',
+            no_percentage=True)
+        page = self.host + PLATFORM_EXPORT_VARIABLES_DATA_NATIONAL
         data = dict(sv_variables_ids=sv_variables_ids,
                     export_geometries=load_geometries,
                     country_iso_codes=country_iso_codes)
