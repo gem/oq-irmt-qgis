@@ -934,66 +934,10 @@ class Irmt:
 
         dlg = TransformationDialog(self.iface)
         if dlg.exec_():
-            layer = self.iface.activeLayer()
-            input_attr_names = dlg.ui.fields_multiselect.get_selected_items()
-            algorithm_name = dlg.ui.algorithm_cbx.currentText()
-            variant = dlg.ui.variant_cbx.currentText()
-            inverse = dlg.ui.inverse_ckb.isChecked()
-            for input_attr_name in input_attr_names:
-                if dlg.ui.overwrite_ckb.isChecked():
-                    target_attr_name = input_attr_name
-                elif dlg.ui.fields_multiselect.selected_widget.count() == 1:
-                    target_attr_name = dlg.ui.new_field_name_txt.text()
-                else:
-                    target_attr_name = ('T_' + input_attr_name)[:10]
-                try:
-                    with WaitCursorManager("Applying transformation",
-                                           self.iface):
-                        res_attr_name, invalid_input_values = ProcessLayer(
-                            layer).transform_attribute(input_attr_name,
-                                                       algorithm_name,
-                                                       variant,
-                                                       inverse,
-                                                       target_attr_name)
-                    msg = ('Transformation %s has been applied to attribute %s'
-                           ' of layer %s.') % (algorithm_name,
-                                               input_attr_name,
-                                               layer.name())
-                    if target_attr_name == input_attr_name:
-                        msg += (' The original values of the attribute have'
-                                ' been overwritten by the transformed values.')
-                    else:
-                        msg += (' The results of the transformation'
-                                ' have been saved into the new'
-                                ' attribute %s.') % (res_attr_name)
-                    if invalid_input_values:
-                        msg += (' The transformation could not'
-                                ' be performed for the following'
-                                ' input values: %s' % invalid_input_values)
-                    self.iface.messageBar().pushMessage(
-                        tr("Info"),
-                        tr(msg),
-                        level=(QgsMessageBar.INFO if not invalid_input_values
-                               else QgsMessageBar.WARNING))
-                except (ValueError, NotImplementedError) as e:
-                    self.iface.messageBar().pushMessage(
-                        tr("Error"),
-                        tr(e.message),
-                        level=QgsMessageBar.CRITICAL)
-                active_layer_id = self.iface.activeLayer().id()
-                read_layer_suppl_info_from_qgs(
-                    active_layer_id, self.supplemental_information)
-                if (dlg.ui.track_new_field_ckb.isChecked()
-                        and target_attr_name != input_attr_name
-                        and active_layer_id in self.supplemental_information):
-                    suppl_info = self.supplemental_information[active_layer_id]
-                    proj_defs = suppl_info['project_definitions']
-                    for proj_def in proj_defs:
-                        replace_fields(proj_def,
-                                       input_attr_name,
-                                       target_attr_name)
-                    suppl_info['project_definitions'] = proj_defs
-                    write_layer_suppl_info_to_qgs(active_layer_id, suppl_info)
+            active_layer_id = self.iface.activeLayer().id()
+            read_layer_suppl_info_from_qgs(
+                active_layer_id, self.supplemental_information)
+
         elif dlg.use_advanced:
             layer = self.iface.activeLayer()
             if layer.isModified():

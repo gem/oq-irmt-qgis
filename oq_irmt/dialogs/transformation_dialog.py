@@ -26,6 +26,7 @@
 from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox)
+from qgis.gui import QgsMessageBar
 
 from oq_irmt.ui.ui_transformation import Ui_TransformationDialog
 from oq_irmt.calculations.transformation_algs import (RANK_VARIANTS,
@@ -34,6 +35,9 @@ from oq_irmt.calculations.transformation_algs import (RANK_VARIANTS,
                                                       TRANSFORMATION_ALGS)
 from oq_irmt.utilities.shared import NUMERIC_FIELD_TYPES
 from oq_irmt.calculations.process_layer import ProcessLayer
+from oq_irmt.utilities.utils import WaitCursorManager, tr, \
+    read_layer_suppl_info_from_qgs, replace_fields, \
+    write_layer_suppl_info_to_qgs
 
 
 class TransformationDialog(QDialog):
@@ -98,7 +102,6 @@ class TransformationDialog(QDialog):
 
     @pyqtSlot()
     def on_calc_btn_clicked(self):
-        self.close()
         # layer is put in editing mode. If the user clicks on ok, the field
         # calculator will update the layers attributes.
         # if the user clicks cancel, the field calculator does nothing.
@@ -106,6 +109,7 @@ class TransformationDialog(QDialog):
         # the calling code should take care of doing layer.commitChanges()
         # if the flag is set to true.
         self.use_advanced = True
+        self.close()
         self.iface.activeLayer().startEditing()
         self.iface.actionOpenFieldCalculator().trigger()
 
@@ -180,3 +184,66 @@ class TransformationDialog(QDialog):
             for field in self.iface.activeLayer().dataProvider().fields()
             if field.typeName() in NUMERIC_FIELD_TYPES]
         self.ui.fields_multiselect.set_unselected_items(field_names)
+
+    def accept(self):
+        layer = self.iface.activeLayer()
+        input_attr_names = self.ui.fields_multiselect.get_selected_items()
+        algorithm_name = self.ui.algorithm_cbx.currentText()
+        variant = self.ui.variant_cbx.currentText()
+        inverse = self.ui.inverse_ckb.isChecked()
+        for input_attr_name in input_attr_names:
+            if self.ui.overwrite_ckb.isChecked():
+                target_attr_name = input_attr_name
+            elif self.ui.fields_multiselect.selected_widget.count() == 1:
+                target_attr_name = self.ui.new_field_name_txt.text()
+            else:
+                target_attr_name = ('T_' + input_attr_name)[:10]
+            try:
+                with WaitCursorManager("Applying transformation",
+                                       self.iface):
+                    res_attr_name, invalid_input_values = ProcessLayer(
+                        layer).transform_attribute(input_attr_name,
+                                                   algorithm_name,
+                                                   variant,
+                                                   inverse,
+                                                   target_attr_name)
+                msg = ('Transformation %s has been applied to attribute %s'
+                       ' of layer %s.') % (algorithm_name,
+                                           input_attr_name,
+                                           layer.name())
+                if target_attr_name == input_attr_name:
+                    msg += (' The original values of the attribute have'
+                            ' been overwritten by the transformed values.')
+                else:
+                    msg += (' The results of the transformation'
+                            ' have been saved into the new'
+                            ' attribute %s.') % (res_attr_name)
+                if invalid_input_values:
+                    msg += (' The transformation could not'
+                            ' be performed for the following'
+                            ' input values: %s' % invalid_input_values)
+                self.iface.messageBar().pushMessage(
+                    tr("Info"),
+                    tr(msg),
+                    level=(QgsMessageBar.INFO if not invalid_input_values
+                           else QgsMessageBar.WARNING))
+            except (ValueError, NotImplementedError) as e:
+                self.iface.messageBar().pushMessage(
+                    tr("Error"),
+                    tr(e.message),
+                    level=QgsMessageBar.CRITICAL)
+            active_layer_id = self.iface.activeLayer().id()
+            read_layer_suppl_info_from_qgs(
+                active_layer_id, self.supplemental_information)
+            if (self.ui.track_new_field_ckb.isChecked()
+                    and target_attr_name != input_attr_name
+                    and active_layer_id in self.supplemental_information):
+                suppl_info = self.supplemental_information[active_layer_id]
+                proj_defs = suppl_info['project_definitions']
+                for proj_def in proj_defs:
+                    replace_fields(proj_def,
+                                   input_attr_name,
+                                   target_attr_name)
+                suppl_info['project_definitions'] = proj_defs
+                write_layer_suppl_info_to_qgs(active_layer_id, suppl_info)
+
