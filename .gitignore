@@ -1,11 +1,11 @@
 *.py[cod]
 *~
 .idea/*
-oq_irmt/.coverage
-oq_irmt/.noseids
-oq_irmt/.ropeproject/*
-oq_irmt/build/
-oq_irmt/help/build/*
+svir/.coverage
+svir/.noseids
+svir/.ropeproject/*
+svir/build/
+svir/help/build/*
 *.rdb
 *.db
 .\#*
