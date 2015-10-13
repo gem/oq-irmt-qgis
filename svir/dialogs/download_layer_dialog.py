@@ -40,13 +40,13 @@ from svir.thread_worker.download_platform_project_worker import (
 
 from svir.ui.ui_download_layer import Ui_DownloadLayerDialog
 from svir.utilities.utils import (WaitCursorManager,
-                                     SvNetworkError,
-                                     ask_for_download_destination,
-                                     files_exist_in_destination,
-                                     confirm_overwrite,
-                                     tr,
-                                     write_layer_suppl_info_to_qgs,
-                                     )
+                                  SvNetworkError,
+                                  ask_for_download_destination,
+                                  files_exist_in_destination,
+                                  confirm_overwrite,
+                                  tr,
+                                  write_layer_suppl_info_to_qgs,
+                                  )
 
 NS_NET_OPENGIS_WFS = '{http://www.opengis.net/wfs}'
 

@@ -37,19 +37,19 @@ from svir.ui.ui_upload_settings import Ui_UploadSettingsDialog
 from svir.utilities.defaults import DEFAULTS
 from svir.calculations.process_layer import ProcessLayer
 from svir.utilities.shared import (IRMT_PLUGIN_VERSION,
-                                      SUPPLEMENTAL_INFORMATION_VERSION,
-                                      DEBUG,
-                                      )
+                                   SUPPLEMENTAL_INFORMATION_VERSION,
+                                   DEBUG,
+                                   )
 from svir.utilities.utils import (reload_attrib_cbx,
-                                     tr,
-                                     WaitCursorManager,
-                                     platform_login,
-                                     SvNetworkError,
-                                     get_credentials,
-                                     update_platform_project,
-                                     write_layer_suppl_info_to_qgs,
-                                     insert_platform_layer_id,
-                                     )
+                                  tr,
+                                  WaitCursorManager,
+                                  platform_login,
+                                  SvNetworkError,
+                                  get_credentials,
+                                  update_platform_project,
+                                  write_layer_suppl_info_to_qgs,
+                                  insert_platform_layer_id,
+                                  )
 
 LICENSES = (
     ('CC0', 'http://creativecommons.org/about/cc0'),

@@ -32,9 +32,9 @@ from qgis.core import QgsVectorFileWriter
 from svir.thread_worker.abstract_worker import AbstractWorker
 from svir.utilities.shared import DEBUG
 from svir.utilities.utils import (multipart_encode_for_requests,
-                                     UserAbortedNotification,
-                                     tr,
-                                     )
+                                  UserAbortedNotification,
+                                  tr,
+                                  )
 
 
 class UploadWorker(AbstractWorker):

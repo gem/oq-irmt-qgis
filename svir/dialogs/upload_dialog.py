@@ -42,10 +42,10 @@ from svir.third_party.requests.utils import dict_from_cookiejar
 from svir.utilities.sldadapter import getGsCompatibleSld
 from svir.ui.ui_upload_metadata import Ui_UploadMetadataDialog
 from svir.utilities.utils import (get_credentials,
-                                     platform_login,
-                                     create_progress_message_bar,
-                                     clear_progress_message_bar,
-                                     SvNetworkError)
+                                  platform_login,
+                                  create_progress_message_bar,
+                                  clear_progress_message_bar,
+                                  SvNetworkError)
 from svir.utilities.shared import DEBUG
 
 

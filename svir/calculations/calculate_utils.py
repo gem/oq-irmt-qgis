@@ -31,11 +31,11 @@ from qgis.gui import QgsMessageBar
 from PyQt4.QtCore import QVariant
 
 from svir.utilities.shared import (DOUBLE_FIELD_TYPE_NAME, DEBUG,
-                                      SUM_BASED_OPERATORS,
-                                      MUL_BASED_OPERATORS, DEFAULT_OPERATOR,
-                                      OPERATORS_DICT,
-                                      IGNORING_WEIGHT_OPERATORS,
-                                      DiscardedFeature)
+                                   SUM_BASED_OPERATORS,
+                                   MUL_BASED_OPERATORS, DEFAULT_OPERATOR,
+                                   OPERATORS_DICT,
+                                   IGNORING_WEIGHT_OPERATORS,
+                                   DiscardedFeature)
 from svir.calculations.process_layer import ProcessLayer
 from svir.utilities.utils import LayerEditingManager, tr
 

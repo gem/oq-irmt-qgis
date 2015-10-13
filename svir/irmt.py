@@ -72,20 +72,20 @@ from svir.thread_worker.download_platform_data_worker import (
 from svir.calculations.calculate_utils import calculate_composite_variable
 from svir.calculations.process_layer import ProcessLayer
 from svir.utilities.utils import (tr,
-                                     WaitCursorManager,
-                                     assign_default_weights,
-                                     clear_progress_message_bar,
-                                     SvNetworkError,
-                                     count_heading_commented_lines,
-                                     replace_fields,
-                                     toggle_select_features_widget,
-                                     read_layer_suppl_info_from_qgs,
-                                     write_layer_suppl_info_to_qgs)
+                                  WaitCursorManager,
+                                  assign_default_weights,
+                                  clear_progress_message_bar,
+                                  SvNetworkError,
+                                  count_heading_commented_lines,
+                                  replace_fields,
+                                  toggle_select_features_widget,
+                                  read_layer_suppl_info_from_qgs,
+                                  write_layer_suppl_info_to_qgs)
 from svir.utilities.shared import (DEBUG,
-                                      PROJECT_TEMPLATE,
-                                      THEME_TEMPLATE,
-                                      INDICATOR_TEMPLATE,
-                                      )
+                                   PROJECT_TEMPLATE,
+                                   THEME_TEMPLATE,
+                                   INDICATOR_TEMPLATE,
+                                   )
 
 
 # DO NOT REMOVE THIS
