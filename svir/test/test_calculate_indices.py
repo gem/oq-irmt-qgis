@@ -33,9 +33,9 @@ from utilities import get_qgis_app
 
 QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 from svir.calculations.calculate_utils import (calculate_node,
-                                                  get_node_attr_id_and_name,
-                                                  calculate_composite_variable,
-                                                  )
+                                               get_node_attr_id_and_name,
+                                               calculate_composite_variable,
+                                               )
 from svir.calculations.process_layer import ProcessLayer
 from svir.utilities.utils import set_operator, get_node
 from svir.utilities.shared import OPERATORS_DICT, DiscardedFeature

@@ -31,18 +31,18 @@ from qgis.gui import QgsMessageBar
 
 from svir.third_party.requests import Session
 from svir.third_party.requests.exceptions import (ConnectionError,
-                                                     InvalidSchema,
-                                                     MissingSchema,
-                                                     ReadTimeout,
-                                                     )
+                                                  InvalidSchema,
+                                                  MissingSchema,
+                                                  ReadTimeout,
+                                                  )
 from svir.utilities.utils import (SvNetworkError,
-                                     platform_login,
-                                     get_credentials,
-                                     WaitCursorManager,
-                                     tr,
-                                     create_progress_message_bar,
-                                     clear_progress_message_bar,
-                                     )
+                                  platform_login,
+                                  get_credentials,
+                                  WaitCursorManager,
+                                  tr,
+                                  create_progress_message_bar,
+                                  clear_progress_message_bar,
+                                  )
 
 PLATFORM_EXPORT_SV_THEMES = "/svir/list_themes"
 PLATFORM_EXPORT_SV_SUBTHEMES = "/svir/list_subthemes_by_theme"

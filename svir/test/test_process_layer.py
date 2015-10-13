@@ -33,7 +33,7 @@ from PyQt4.QtCore import QVariant
 
 from svir.calculations.process_layer import ProcessLayer
 from svir.utilities.shared import (INT_FIELD_TYPE_NAME,
-                                      STRING_FIELD_TYPE_NAME)
+                                   STRING_FIELD_TYPE_NAME)
 from utilities import get_qgis_app
 
 QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()

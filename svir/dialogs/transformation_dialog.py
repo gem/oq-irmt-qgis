@@ -29,9 +29,9 @@ from PyQt4.QtGui import (QDialog,
 
 from svir.ui.ui_transformation import Ui_TransformationDialog
 from svir.calculations.transformation_algs import (RANK_VARIANTS,
-                                                      QUADRATIC_VARIANTS,
-                                                      LOG10_VARIANTS,
-                                                      TRANSFORMATION_ALGS)
+                                                   QUADRATIC_VARIANTS,
+                                                   LOG10_VARIANTS,
+                                                   TRANSFORMATION_ALGS)
 from svir.utilities.shared import NUMERIC_FIELD_TYPES
 from svir.calculations.process_layer import ProcessLayer
 

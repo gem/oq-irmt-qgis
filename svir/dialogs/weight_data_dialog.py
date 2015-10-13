@@ -39,10 +39,10 @@ from PyQt4.QtGui import (QDialog,
 
 from svir.ui.ui_weight_data import Ui_WeightDataDialog
 from svir.utilities.shared import (DEFAULT_OPERATOR,
-                                      OPERATORS_DICT,
-                                      NUMERIC_FIELD_TYPES,
-                                      NODE_TYPES,
-                                      DEBUG)
+                                   OPERATORS_DICT,
+                                   NUMERIC_FIELD_TYPES,
+                                   NODE_TYPES,
+                                   DEBUG)
 from svir.utilities.utils import get_field_names, confirmation_on_close
 
 
