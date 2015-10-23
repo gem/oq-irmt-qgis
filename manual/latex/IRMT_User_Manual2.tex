@@ -1,0 +1,447 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% The Legrand Orange Book
+% LaTeX Template
+% Version 1.4 (12/4/14)
+%
+% This template has been downloaded from:
+% http://www.LaTeXTemplates.com
+%
+% Original author:
+% Mathias Legrand (legrand.mathias@gmail.com)
+%
+% License:
+% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+%
+% Compiling this template:
+% This template uses biber for its bibliography and makeindex for its index.
+% When you first open the template, compile it from the command line with the 
+% commands below to make sure your LaTeX distribution is configured correctly:
+%
+% 1) pdflatex oqhbt
+% 2) makeindex oqhbt.idx -s StyleInd.ist
+% 3) biber oqhbt
+% 4  makeglossaries oqhbt
+% 4) pdflatex oqhbt x 2
+%
+% After this, when you wish to update the bibliography/index use the appropriate
+% command above and make sure to compile with pdflatex several times 
+% afterwards to propagate your changes to the document.
+%
+% This template also uses a number of packages which may need to be
+% updated to the newest versions for the template to compile. It is strongly
+% recommended you update your LaTeX distribution if you have any
+% compilation errors.
+%
+% Important note:
+% Chapter heading images should have a 2:1 width:height ratio,
+% e.g. 920px width and 460px height.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+
+\documentclass[11pt,fleqn]{book} % Default font size and left-justified equations
+
+\usepackage[top=3cm,bottom=3cm,left=3.2cm,right=3.2cm,headsep=10pt,a4paper]{geometry} % Page margins
+
+\usepackage{xcolor} % Required for specifying colors by name
+\definecolor{ocre}{RGB}{243,102,25} % Define the orange color used for highlighting throughout the book
+\usepackage{setspace}
+
+% Font Settings
+\usepackage{avant} % Use the Avantgarde font for headings
+%\usepackage{times} % Use the Times font for headings
+\usepackage{mathptmx} % Use the Adobe Times Roman as the default text font together with math symbols from the Sym­bol, Chancery and Com­puter Modern fonts
+
+\usepackage{microtype} % Slightly tweak font spacing for aesthetics
+\usepackage[utf8]{inputenc} % Required for including letters with accents
+\usepackage[T1]{fontenc} % Use 8-bit encoding that has 256 glyphs
+
+% % Bibliography
+% \usepackage{csquotes}
+% \usepackage[style=alphabetic,
+%             sorting=nyt,
+%             sortcites=true,
+%             natbib=true,
+%             style=authoryear,
+%             maxcitenames=2,
+%             maxbibnames=100,
+%             autopunct=true,
+%             babel=hyphen,
+%             hyperref=true,
+%             doi=true,
+%             abbreviate=false,
+%             backref=true,
+%             uniquename=false,
+%             uniquelist=false,
+%             backend=biber]{biblatex}
+% \addbibresource{./bibliography/hazard.bib} % BibTeX bibliography file
+% \defbibheading{bibempty}{}
+
+% Figure caption settings
+\usepackage[textfont=it,margin=10pt,font=small,labelfont=bf,labelsep=endash]{caption}
+\usepackage{subcaption}
+\usepackage{rotating}
+
+% Table
+\usepackage{color, colortbl}
+\definecolor{almond}{rgb}{0.94, 0.87, 0.8}
+\definecolor{ashgrey}{rgb}{0.7, 0.75, 0.71}
+\definecolor{anti-flashwhite}{rgb}{0.95, 0.95, 0.96}
+
+% % Index
+% \usepackage{calc} % For simpler calculation - used for spacing the index letter headings correctly
+% \usepackage{makeidx} % Required to make an index
+% \makeindex % Tells LaTeX to create the files required for indexing
+
+\usepackage{todonotes}
+
+%
+% Package to create a glossary - It must be uploaded after hyperref
+% to produce the glossary: makeglossaries OQB
+% \usepackage[acronym,nonumberlist,style=altlist]{glossaries}
+% \glstoctrue
+% \makeglossaries
+
+% package for bold symbols
+\usepackage{bm}
+
+%----------------------------------------------------------------------------------------
+% Insert the commands.tex file which contains the majority of the structure 
+% behind the template
+\input{structure} 
+
+
+\begin{document}
+\lstset{language=Python} % For listings environment - use python
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  Load the glossary
+%\input{./book/glossary.tex}
+
+%----------------------------------------------------------------------------------------
+%	TITLE PAGE
+%----------------------------------------------------------------------------------------
+
+\begingroup
+\thispagestyle{empty}
+%\AddToShipoutPicture*{\put(6,5){\includegraphics[scale=1]{background}}} % Image background
+\par\normalfont\fontsize{15}{15}\sffamily\selectfont
+“OpenQuake: Calculate, share, explore”
+\centering
+\vspace*{9cm}
+\par\normalfont\fontsize{35}{35}\sffamily\selectfont
+Integrated Risk Modelling Toolkit - User Guide\par % Book title
+\endgroup
+
+%----------------------------------------------------------------------------------------
+%	COPYRIGHT PAGE
+%----------------------------------------------------------------------------------------
+
+\newpage
+~\vfill
+\thispagestyle{empty}
+
+\noindent Copyright \copyright\ 2014 GEM Foundation\\ % Copyright notice
+
+\noindent \textsc{Published by GEM Foundation}\\ % Publisher
+
+\noindent \textsc{globalquakemodel.org/openquake}\\ % URL
+
+\noindent 
+   {\textbf{Citation}} \hfill \\
+   Please cite this document as:\\
+   Burton, C. and Tormene, P. (2015) OpenQuake Integrated Risk Modelling
+   Toolkit - User Guide. \textit{Global Earthquake Model (GEM). Technical
+   Report}\\
+   
+   {\bf{Disclaimer}} \hfill \\
+\noindent
+   The ``Integrated Risk Modelling Tookit - User Guide'' is distributed in the hope that it will be useful, but without any warranty: without 
+   even the implied warranty of merchantability or fitness for a 
+   particular purpose. While every 
+   precaution has been taken in the preparation of this document, in 
+   no event shall the authors of the manual and the GEM Foundation be 
+   liable to any party for direct, indirect, special, incidental, or 
+   consequential damages, including lost profits, arising out of the 
+   use of information contained in this document or from the use of 
+   programs and source code that may accompany it, even if the authors 
+   and GEM Foundation have been advised of the possibility of such damage. 
+   The Book provided hereunder is on as "as is" basis, and the authors 
+   and GEM Foundation have no obligations to provide maintenance, support,
+   updates, enhancements, or modifications. 
+   \hfill \\
+   The current version of the book has been revised only by members of 
+   the GEM model facility and it must be considered a draft copy. 
+   %
+   \vspace{0.4cm} \hfill \\
+   {\bf{License}} \hfill \\
+   This Book is distributed under the Creative Common License 
+   Attribution-NonCommercial-NoDerivs 3.0 Unported (CC BY-NC-ND 3.0) 
+   (see link below). You can download this Book and share it with 
+   others as long as you provide proper credit, but you cannot change 
+   it in any way or use it commercially. 
+   \hfill \\
+
+\noindent \textit{First printing, August 2015} % Printing/edition date
+
+%----------------------------------------------------------------------------------------
+%	TABLE OF CONTENTS
+%----------------------------------------------------------------------------------------
+
+% \chapterimage{../images/cover.pdf} % Table of contents heading image
+
+\pagestyle{empty} % No headers
+
+\tableofcontents % Print the table of contents itself
+
+\cleardoublepage % Forces the first chapter to start on an odd page so it's on the right
+
+\pagestyle{fancy} % Print headers again
+
+% Include chapters
+\include{01_introduction}
+\include{02_definitions}
+\include{03_connection_settings}
+\include{04_load_indicators_from_platform}
+\include{05_download_project_from_platform}
+\include{06_transform_attribute}
+\include{07_project_definitions_manager}
+\include{08_weighting_and_calculating}
+\include{09_aggregate_loss_by_zone}
+\include{10_upload_project_to_platform}
+
+% %----------------------------------------------------------------------------------------
+% %	CHAPTER 1
+% %----------------------------------------------------------------------------------------
+% \chapterimage{./figures/chapter_head_2.pdf} % Chapter heading image
+% \chapter{Introduction}
+% \label{chap:intro}
+% \input{./mtk_setup.tex}
+
+% %----------------------------------------------------------------------------------------
+% %	CHAPTER 2
+% %----------------------------------------------------------------------------------------
+% \chapterimage{./figures/chapter_head_2.pdf} % Chapter heading image
+% \chapter{Catalogue Tools}
+% \label{chap:catalogue}
+% \input{./catalogue_tools.tex}
+
+% %----------------------------------------------------------------------------------------
+% %	CHAPTER 3
+% %----------------------------------------------------------------------------------------
+% \chapterimage{./figures/chapter_head_1.pdf} % Chapter heading image
+% \chapter{Hazard Tools}
+% \label{chap:hazard}
+% \input{./hazard_tools.tex}
+
+% %----------------------------------------------------------------------------------------
+% %	CHAPTER 4
+% %----------------------------------------------------------------------------------------
+% \chapterimage{./figures/chapter_head_1.pdf} % Chapter heading image
+% \chapter{Geology Tools}
+% \label{chap:geology}
+% \input{./geology_tools.tex}
+
+% %----------------------------------------------------------------------------------------
+% %	CHAPTER 5
+% %----------------------------------------------------------------------------------------
+% \chapterimage{./figures/chapter_head_1.pdf} % Chapter heading image
+% \chapter{Geodetic Tools}
+% \label{chap:geodesy}
+% \input{./geodetic_tools.tex}
+
+% %----------------------------------------------------------------------------------------
+% %	CHAPTER 6
+% %----------------------------------------------------------------------------------------
+% %\chapterimage{./figures/chapter_head_1.pdf} % Chapter heading image
+% %\chapter{Hazard Applications}
+% %\label{chap:hazard}
+% %\input{./hazard.tex}
+
+
+% %----------------------------------------------------------------------------------------
+% %	BIBLIOGRAPHY
+% %----------------------------------------------------------------------------------------
+% \chapter*{Bibliography}
+% \addcontentsline{toc}{chapter}{\textcolor{ocre}{Bibliography}}
+% \section*{Books}
+% \addcontentsline{toc}{section}{Books}
+% \printbibliography[heading=bibempty,type=book]
+% \section*{Articles}
+% \addcontentsline{toc}{section}{Articles}
+% \printbibliography[heading=bibempty,type=article]
+% \section*{Other Sources}
+% \addcontentsline{toc}{section}{Reports}
+% \printbibliography[heading=bibempty,nottype=book,nottype=article]
+
+
+% %----------------------------------------------------------------------------------------
+% %	INDEX
+% %----------------------------------------------------------------------------------------
+
+% \cleardoublepage
+% \phantomsection
+% \setlength{\columnsep}{0.75cm}
+% \addcontentsline{toc}{chapter}{\textcolor{ocre}{Index}}
+% \printindex
+% \printglossary
+
+% %----------------------------------------------------------------------------------------
+
+
+% \part{Appendices}
+% \appendix
+% % -----------------------------------------------------------------------------
+% % -----------------------------------------------------------------------------
+% \chapter{The 10 Minute Guide to Python!}
+% \label{sec:python_guide}
+% %\begin{myfancybox}
+% % The objectives of this chapter are:
+% %\begin{itemize}
+% %     \item To introduce Python data types to facilitate use of the HMTK for Python beginners
+% % \end{itemize}
+% %\end{myfancybox}
+% \input{python_guide.tex}
+
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%\documentclass[11pt,a4paper,headings=small,dvips]{scrbook}
+%\input{configuration.tex}
+%\usepackage{xcolor}
+%\usepackage{framed}
+%\usepackage[utf8]{inputenc}
+%\usepackage{listings}
+%
+%\newenvironment{myfancybox}{%
+%  \def\FrameCommand{\fboxsep=\FrameSep \fcolorbox{blue01}{honeydew}}%
+%  \color{black}\MakeFramed {\FrameRestore}}%
+% {\endMakeFramed}
+%
+%\setlength{\parskip}{2.5mm}
+%\setlength{\parindent}{0.0mm}
+%
+%\begin{document}
+%\setcounter{page}{1}
+%\lstset{language=Python}
+%
+%\begin{titlepage}
+%	\title{ \textcolor{blue01}{\textsf{\bfseries\Huge 
+%        Hazard Modeller's Toolkit
+%        }}}
+%	\subtitle{ \textcolor{blue01}{\textsf{\bfseries\LARGE
+%        Documentation \& Tutorial}}}
+%	\date{June 2014}
+% 
+%	\publishers{GEM Foundation, Pavia}
+%\end{titlepage}
+%\pagestyle{scrheadings}
+%\maketitle
+%% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  Load the glossary
+%%\input{glossary.tex}
+%% -----------------------------------------------------------------------------
+%% -----------------------------------------------------------------------------
+%%\chapter*{Introduction}
+%%\cleardoublepage
+%% -----------------------------------------------------------------------------
+%% -----------------------------------------------------------------------------
+%\tableofcontents
+%\cleardoublepage
+%% 
+%% % -----------------------------------------------------------------------------
+%\chapter{Introduction to the Hazard Modeller's Toolkit}
+%\begin{myfancybox}
+%The objectives of this chapter are:
+%\begin{itemize}
+%    \item Outline the purpose and creation of the Hazard Modeller's Toolkit 
+%    \item Setup and installation of the software
+%    \item Introduction to the visualisation and mapping functions
+%\end{itemize}
+%\end{myfancybox}
+%  \input{mtk_setup.tex}
+%\cleardoublepage
+%% % -----------------------------------------------------------------------------
+%% % -----------------------------------------------------------------------------
+%
+%\chapter{Seismicity Tools}
+%\begin{myfancybox}
+%The objectives of this chapter are:
+%\begin{itemize}
+%    \item Describe features of the seismicity tools of the Hazard Modeller's Toolkit 
+%    \item Run simple calculations using the seismicity tools
+%\end{itemize}
+%\end{myfancybox}
+%  \input{catalogue_tools.tex}
+%\cleardoublepage
+%
+%
+%% \cleardoublepage
+%% %
+%\chapter{Hazard Tools}
+%\begin{myfancybox}
+%The objectives of this chapter are:
+%\begin{itemize}
+%    \item Introduction to the HMTK source model classes
+%    \item Understand how to link source models to seismicity
+%    \item Run simple PSHA calculations in OpenQuake, using the HMTK
+%\end{itemize}
+%\end{myfancybox}
+%  \input{hazard_tools.tex}
+%\cleardoublepage
+% 
+%
+%-----------------------------------------------------------------------------
+%\chapter{Geological Tools}
+%\begin{myfancybox}
+%The objectives of this chapter are:
+%\begin{itemize}
+%    \item Describe features of the geological tools Hazard Modeller's Toolkit 
+%    \item Run simple calculations using the geological tools 
+%\end{itemize}
+%\end{myfancybox}
+%  \input{geology_tools.tex}
+%\cleardoublepage
+%
+%
+%% \cleardoublepage
+%% % -----------------------------------------------------------------------------
+%\chapter{Geodetic Tools}
+%\begin{myfancybox}
+%The objectives of this chapter are:
+%\begin{itemize}
+%    \item Describe features of the geodetic tools Hazard Modeller's Toolkit 
+%    \item Run simple calculations using the geodetic tools 
+%\end{itemize}
+%\end{myfancybox}
+%  \input{geodetic_tools.tex}
+%\cleardoublepage
+
+
+% -----------------------------------------------------------------------------
+
+% -----------------------------------------------------------------------------
+% -----------------------------------------------------------------------------
+%%\cleardoublepage
+%\bibliographystyle{apalike}
+%\bibliography{./bibliography/hazard}
+%\cleardoublepage
+%\printglossaries
+%\printindex
+%% -----------------------------------------------------------------------------
+% --------------------------------------------------------------------------
