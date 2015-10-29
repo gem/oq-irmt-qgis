@@ -27,7 +27,7 @@ import uuid
 from numpy.testing import assert_almost_equal
 from pprint import pprint
 from types import NoneType
-import qgis
+from PyQt4.QtCore import QPyNullVariant
 from qgis.core import (QgsMapLayer,
                        QGis,
                        QgsVectorLayer,
@@ -269,7 +269,7 @@ class ProcessLayer():
             for feat in self.layer.getFeatures():
                 feat_id = feat.id()
                 value = transformed_dict[feat_id]
-                if type(value) not in (qgis.QPyNullVariant, NoneType):
+                if type(value) not in (QPyNullVariant, NoneType):
                     value = float(value)
                 self.layer.changeAttributeValue(feat_id, new_attr_id, value)
         return actual_new_attr_name, invalid_input_values
