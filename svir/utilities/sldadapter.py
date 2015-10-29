@@ -339,7 +339,8 @@ def getStyleAsSld(layer, styleName):
 
 
 def rule_to_sld(rule, document, element, props):
-    if rule.symbols():
+    if (hasattr(rule, 'symbols') and rule.symbols
+            or hasattr(rule, 'symbols2') and rule.symbols2()):
         if rule.filterExpression():
             if filter in props:
                 props['filter'] += " AND "
