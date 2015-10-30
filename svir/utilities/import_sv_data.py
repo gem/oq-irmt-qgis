@@ -225,7 +225,8 @@ class SvDownloader(object):
             # Count variables ids
             sv_variables_count = len(sv_variables_ids.split(','))
             # build the string that describes data types for the csv
-            types_string = '"String","String"' + ',"Real"' * sv_variables_count
+            types_string = ('"String","String","String"'
+                            + ',"Real"' * sv_variables_count)
             if load_geometries:
                 types_string += ',"String"'
             with open(fname_types, 'w') as csvt:
