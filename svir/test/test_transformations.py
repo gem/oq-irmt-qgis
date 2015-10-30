@@ -25,11 +25,11 @@
 """
 
 import unittest
-import qgis
 
 from svir.calculations.transformation_algs import (
     transform,
     TRANSFORMATION_ALGS)
+from PyQt4.QtCore import QPyNullVariant
 
 
 class MissingValuesTestCase(unittest.TestCase):
@@ -39,7 +39,7 @@ class MissingValuesTestCase(unittest.TestCase):
         # NULL in case of missing values, where the type of those NULL elements
         # is QPyNullVariant
         # Here we test that case and the case of simple None elements
-        null_values = (qgis.QPyNullVariant(float), None)
+        null_values = (QPyNullVariant(float), None)
         for null_value in null_values:
             features_dict = {'0': 7,
                              '1': 6,
@@ -245,8 +245,8 @@ class Log10TestCase(unittest.TestCase):
             input_list, variant_name='IGNORE ZEROS')
         expected_list = [5.005391,
                          4.973507,
-                         qgis.QPyNullVariant(float),
-                         qgis.QPyNullVariant(float),
+                         QPyNullVariant(float),
+                         QPyNullVariant(float),
                          5.241965]
         for i in range(len(input_list)):
             self.assertAlmostEqual(log10_list[i], expected_list[i], places=6)
@@ -357,12 +357,12 @@ class SigmoidTestCase(unittest.TestCase):
         sigmoid_list, invalid_input_values = self.alg(input_list, inverse=True)
         expected_list = [-1,
                          0,
-                         qgis.QPyNullVariant(float),
+                         QPyNullVariant(float),
                          -0.3,
                          0.3]
         self.assertEqual(invalid_input_values, [1])
         for i in range(len(input_list)):
-            if expected_list[i] != qgis.QPyNullVariant(float):
+            if expected_list[i] != QPyNullVariant(float):
                 self.assertAlmostEqual(
                     sigmoid_list[i], expected_list[i], places=4)
 

@@ -24,11 +24,10 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 from copy import deepcopy
-from qgis import QPyNullVariant
 from qgis.core import QgsField
 from qgis.gui import QgsMessageBar
 
-from PyQt4.QtCore import QVariant
+from PyQt4.QtCore import QVariant, QPyNullVariant
 
 from svir.utilities.shared import (DOUBLE_FIELD_TYPE_NAME, DEBUG,
                                    SUM_BASED_OPERATORS,

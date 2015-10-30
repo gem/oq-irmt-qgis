@@ -26,7 +26,7 @@
 import math
 from numpy import mean, std, argwhere, amax, amin, log10, log
 from types import NoneType
-import qgis
+from PyQt4.QtCore import QPyNullVariant
 
 from svir.utilities.utils import Register
 
@@ -50,7 +50,7 @@ def transform(features_dict, algorithm, variant_name="", inverse=False):
     # re-added afterwards
     dict_of_null_values = {}
     for key, value in f_dict_copy.iteritems():
-        if type(value) in (qgis.QPyNullVariant, NoneType):
+        if type(value) in (QPyNullVariant, NoneType):
             dict_of_null_values[key] = value
     for key in dict_of_null_values.keys():
         del f_dict_copy[key]
@@ -247,7 +247,7 @@ def log10_(input_list,
             output_list = []
             for input_value in input_list:
                 if input_value == 0:
-                    output_value = qgis.QPyNullVariant(float)
+                    output_value = QPyNullVariant(float)
                     output_list.append(output_value)
                 else:
                     output_list.append(log10(input_value))
@@ -307,7 +307,7 @@ def sigmoid(input_list, variant_name="", inverse=False):
             try:
                 output = log(y / (1 - y))
             except:
-                output = qgis.QPyNullVariant(float)
+                output = QPyNullVariant(float)
                 invalid_input_values.append(y)
             output_list.append(output)
     else:  # direct
@@ -315,7 +315,7 @@ def sigmoid(input_list, variant_name="", inverse=False):
             try:
                 output = 1 / (1 + math.exp(-x))
             except:
-                output = qgis.QPyNullVariant(float)
+                output = QPyNullVariant(float)
                 invalid_input_values.append(x)
             output_list.append(output)
     return output_list, invalid_input_values

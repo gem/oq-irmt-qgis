@@ -23,7 +23,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
-from qgis import QPyNullVariant
 from qgis.core import (QgsVectorLayer,
                        QgsMapLayerRegistry,
                        QgsField,
@@ -34,7 +33,7 @@ from qgis.core import (QgsVectorLayer,
 from qgis.gui import QgsMessageBar
 from qgis.analysis import QgsZonalStatistics
 
-from PyQt4.QtCore import QVariant
+from PyQt4.QtCore import QVariant, QPyNullVariant
 from PyQt4.QtGui import QProgressDialog
 
 import processing

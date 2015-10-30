@@ -339,7 +339,9 @@ def getStyleAsSld(layer, styleName):
 
 
 def rule_to_sld(rule, document, element, props):
-    if rule.symbols():
+    if (hasattr(rule, 'symbols') and rule.symbols()  # working before QGIS 2.12
+            or hasattr(rule, 'symbols2') and rule.symbols2()):  # working after
+                                                                # QGIS 2.12
         if rule.filterExpression():
             if filter in props:
                 props['filter'] += " AND "
@@ -448,7 +450,8 @@ def encodeSldUom(outputUnit, scaleFactor):
 
 
 def symbolLayer_to_sld(symbolLayer, document, element, props):
-    if (symbolLayer.brushStyle() == Qt.Qt.NoBrush
+    if (not hasattr(symbolLayer, 'brushStyle')
+            or symbolLayer.brushStyle() == Qt.Qt.NoBrush
             and symbolLayer.borderStyle() == Qt.Qt.NoPen):
         return
     symbolizerElem = document.createElement('sld:PolygonSymbolizer')
