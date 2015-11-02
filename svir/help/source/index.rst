@@ -3,13 +3,24 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to irmt's documentation!
-============================================
+IRMT: Integrated Risk Modelling Toolkit
+=======================================
 
 Contents:
 
 .. toctree::
    :maxdepth: 2
+
+   01_introduction.rst
+   02_definitions.rst
+   03_connection_settings.rst
+   04_load_indicators_from_platform.rst
+   05_download_project_from_platform.rst
+   06_transform_attribute.rst
+   07_project_definitions_manager.rst
+   08_weighting_and_calculating.rst
+   09_aggregate_loss_by_zone.rst
+   10_upload_project_to_platform.rst
 
 Indices and tables
 ==================
@@ -17,4 +28,5 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
 
