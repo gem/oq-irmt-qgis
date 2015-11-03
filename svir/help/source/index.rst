@@ -6,6 +6,8 @@
 IRMT: Integrated Risk Modelling Toolkit
 =======================================
 
+:download:`PDF version of this user manual <../build/latex/irmt.pdf>`
+
 Contents:
 
 .. toctree::

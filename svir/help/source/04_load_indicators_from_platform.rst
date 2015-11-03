@@ -8,7 +8,7 @@ Loading socioeconomic indicators from the OpenQuake Platform
     :align: center
     :scale: 60%
     
-    Socio-economic indicators selection portal
+    |icon-load-indicators| Socio-economic indicators selection portal
 
 The selection of data comprises an essential step for an assessment of risk
 from an integrated and holistic perspective using indicators. The strengths and
@@ -93,3 +93,6 @@ capacities; and 7) the environment.
     Assessment. Proceedings of the Second European Conference on Earthquake
     Engineering and Seismology, European Association of Earthquake Engineering
     and European Seismological Commission, Istanbul, Turkey.
+
+
+.. |icon-load-indicators| image:: images/image17.png

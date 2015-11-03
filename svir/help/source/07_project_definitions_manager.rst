@@ -10,7 +10,7 @@ Project definitions manager
     :align: center
     :scale: 60%
     
-    Project definitions manager
+    |icon-project-definitions-manager| Project definitions manager
 
 The *Project Definitions Manager* is a module that was developed to allow users
 to create multiple models that can be accessed with a click of a button using a
@@ -54,3 +54,6 @@ accordingly with the project definition and the layer is styled as a
 consequence via a default classification and symbolization that is adjustable
 within the QGIS. This computation can take some time, depending on the
 complexity of the layer.
+
+
+.. |icon-project-definitions-manager| image:: images/image24.png

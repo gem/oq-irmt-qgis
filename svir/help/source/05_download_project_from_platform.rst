@@ -8,7 +8,7 @@ Downloading a project from the OpenQuake Platform
     :align: center
     :scale: 60%
     
-    Downloading a project from the OpenQuake Platform
+    |icon-import-project| Downloading a project from the OpenQuake Platform
 
 An additional option to access data is by downloading projects shared by others
 on the OQ-Platform. By clicking the *Download project from the OpenQuake
@@ -30,3 +30,6 @@ to choose one of the available project definitions. Once a project definition
 is selected, the composite indicators delineated within the project definition
 are re-calculated, and the layer is styled and rendered accordingly. This
 process may take some time, depending on the complexity of the project.
+
+
+.. |icon-import-project| image:: images/image16.png

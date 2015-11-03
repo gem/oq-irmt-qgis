@@ -13,7 +13,7 @@ Uploading a project to the OpenQuake Platform
 
 Once an integrated risk model is complete, and the user is satisfied with
 results such as those obtained for the example displayed in
-Figure~\ref{fig:before_uploading}, it is possible to upload projects through
+Figure :ref:`fig-before-uploading`, it is possible to upload projects through
 the OQ-Platform. Projects are uploaded in order to share them with the wider
 earthquake risk assessment, earthquake risk reduction, GIS communities, etc.
 Uploading to the OQ-Platform also  supports the ability to visualize models
@@ -52,7 +52,7 @@ a general description of the project.
     :align: center
     :scale: 60%
     
-    Uploading a project to the OpenQuake Platform
+    |icon-upload| Uploading a project to the OpenQuake Platform
 
 In order to be able to correctly utilize the advanced visualization tools found
 on the OQ-Platform, the selection of a *Zone labels field* is required (see
@@ -89,3 +89,7 @@ consists of adding the current project definition to the set of project
 definitions associated to that layer on the OQ-Platform. This is a much faster
 procedure because no geometries need to be uploaded, and only the metadata of
 the Geonode layer will be changed.
+
+
+.. |icon-upload| image:: images/image12.png
+

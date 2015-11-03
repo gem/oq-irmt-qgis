@@ -8,7 +8,7 @@ Transforming attributes
     :align: center
     :scale: 60%
 
-    Variable transformation and batch transformation functionality
+    |icon-transform-attributes| Variable transformation and batch transformation functionality
 
 Once variables are selected, they should be standardized or normalized before
 they are aggregated into composite indicators. This is because variables are
@@ -131,3 +131,5 @@ is opened.  Please refer to
 for the detailed documentation of all the agorithms and variants provided by
 the IRMT.
 
+
+.. |icon-transform-attributes| image:: images/image18.png

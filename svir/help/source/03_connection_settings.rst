@@ -8,7 +8,7 @@ OpenQuake Platform connection settings
     :align: center
     :scale: 60%
     
-    OQ-Platform connection settings
+    |icon-connection-settings| OQ-Platform connection settings
 
 Some of the functionalities provided by the plugin, such as the ability to work
 with GEM data, require the interaction between the plugin itself and the
@@ -25,3 +25,6 @@ This will open a new web browser and a `sign up page
 *Developer mode (requires restart)* can be used to increase the verbosity of
 logging. The latter is useful for developers or advanced users because logging
 is critical for troubleshooting, but it is not recommended for standard users.
+
+
+.. |icon-connection-settings| image:: images/image20.png

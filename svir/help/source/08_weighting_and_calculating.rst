@@ -10,7 +10,7 @@ Weighting data and calculating indices
     :align: center
     :scale: 60%
     
-    Tree chart structure for the development of composite indicators
+    |icon-weight-and-calculate| Tree chart structure for the development of composite indicators
 
 Central to the construction of composite indicators is the need to meaningfully
 combine different data dimensions, and consideration must be given to weighting
@@ -27,7 +27,7 @@ another). Each technique has specific consequences, implies different
 assumptions, and could ignore or incorporate weights.
 
 The *Weight data and calculate indices* application
-(:ref:`Figure 8.1 <fig-weighting-and-calculating>`) is the key module of the IMRT. It
+(Figure :ref:`fig-weighting-and-calculating`) is the key module of the IMRT. It
 contains the model building functionality of the IRMT, and it is used to
 create, edit, and manage composite indicator(s) and integrated risk model
 development. The *Weight data and calculate indices* application provides users
@@ -45,7 +45,7 @@ combined together to obtain the composite indices.  
 
 .. figure:: images/image19.png
     :align: center
-    :scale: 60%
+    :scale: 100%
     
     Composite indicator types (adapted from: Tate, E.C. 2012.
     Social vulnerability indices: a comparative assessment using uncertainty
@@ -69,7 +69,7 @@ Index* (IRI) which is a function of the aggregation of a *Social Vulnerability
 Index* (SVI) and a *Risk Index* (RI); or 2) a *Social Vulnerability Index*
 (SVI) that is the result of the aggregation of various sub-indicators defined
 by the user (e.g.\ Economy, Education, and Environment as shown within
-:ref:`Figure 8.1 <fig-weighting-and-calculating>`).  The tree can be modified
+Figure :ref:`fig-weighting-and-calculating`).  The tree can be modified
 dynamically by adding or removing nodes, *inverting* variables, setting a
 weight to each variable or node and choosing the operators to be used to
 combine variables together.
@@ -131,7 +131,7 @@ into account the weights applied to the child nodes. Other operators (e.g.,
 *Average (ignore weights)*) do not take into account weights. When the chosen
 operator is one of the latter, the child nodes will be rendered on the
 graphical display all with the same radius and their weights will not be
-rendered (see :ref:`Figure 8.1 <fig-weighting-and-calculating>` for a demonstration of
+rendered (see Figure :ref:`fig-weighting-and-calculating` for a demonstration of
 how the radius of nodes corresponds with the respective weights of variables).
 Otherwise, the radius of a node is proportional to its weight, and the weight
 is rendered next to the node.
@@ -143,7 +143,7 @@ Setting weights
 Central to the construction of composite indicators in the need to combine data
 into meaningful dimensions which implies decisions on weighting. The dialog to
 set weights is opened in the same way as described in
-:ref:`Section 8.3 <sec-setting-operators>`. Several weighting techniques are
+:ref:`sec-setting-operators`. Several weighting techniques are
 available, and some make use of statistical models.  For the IRMT we
 implemented a simple solution to weighting that is often based on the results
 of participatory approaches. A weight can be edited manually by clicking on its
@@ -160,7 +160,7 @@ Inverting a variable
 ====================
 
 The dialog to invert variables is opened in the same way as described in
-:ref:`Section 8.3 <sec-setting-operators>`. If a variable contributes in a
+:ref:`sec-setting-operators`. If a variable contributes in a
 *negative* way to the composite indicator (e.g., a higher education
 corresponding to a lower social vulnerability), it is possible to indicate such
 an inverse relationship by pressing the *Invert* button next to the variable
@@ -176,7 +176,7 @@ Assigning a new name to a variable
 ==================================
 
 The dialog to assign a new name to a variable is also opened in the same way as
-described in :ref:`Section 8.3 <sec-setting-operators>`. By clicking on the
+described in :ref:`sec-setting-operators`. By clicking on the
 variable's name, a popup dialog asks users to insert the new name. The project
 definition will be updated accordingly, linking the layer's fieldname with the
 modified description.
@@ -198,3 +198,6 @@ for symbolization in the absence of IRI; 3) otherwise, the convention will
 apply with respect to the RI; and 4) if none of main sub-indicators can be
 calculated, then the layer will not be re-styled unless the user uses the
 dropdown menu to specify a specific symbolization field.
+
+
+.. |icon-weight-and-calculate| image:: images/image27.png
