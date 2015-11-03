@@ -11,7 +11,7 @@ container that acts like a folder storing information on file locations of
 layers and how these layers are displayed in a map. It is the main QGIS
 datafile. A *layer* is the mechanism used to display geographic datasets in the
 QGIS software, and layers provide the data that is manipulated within the
-IRMT\@.  Each layer references a specific dataset and specifies how that
+IRMT. Each layer references a specific dataset and specifies how that
 dataset is portrayed within the map. The standard layer format for the IRMT is
 the ESRI Shapefile [ESRI1998]_ which can be imported
 within the QGIS software using the default *add data* functionality, or layers

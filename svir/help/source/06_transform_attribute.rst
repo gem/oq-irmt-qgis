@@ -21,14 +21,14 @@ can be used to update existing fields, or to create new ones, in order to to
 perform a wide variety of mathematical operations for the
 standardization/transformation of data. In addition, the  IRMT provides a
 number of transformation functions found in popular statistical and
-mathematical modelling packages (:ref:`Table 6.1 <tab-transformation-functions>`).
+mathematical modelling packages (Table :ref:`tab-transformation-functions`).
 
 .. _tab-transformation-functions:
 
 .. table:: Selection of transformation functions with equations found in the IRMT.
 
   =============================  =================================================================================================================================
-  Standardization (or Z-scores)  :math:`Z(x_i) = \frac{x_i-\mu_x}{\sigma_x}`
+  Standardization (or Z-scores)  :math:`Z(x_i) = \frac{x_i-\mu_x}{\sigma_x} \; (\mu_x = mean \; \sigma_x = stddev)`
   Min-Max                        :math:`M(x_i) = \frac{x_i - \min_{i \in \{1,\dots,n\}}(x_i)}{\max_{i \in \{1,\dots,n\}}(x_i) - \min_{i \in \{1,\dots,n\}}(x_i)}` 
   Logistig Sigmoid               :math:`S(x_i) = \frac{1}{1 + e^{-x_i}}`
   Simple Quadratic               :math:`Q(x_i) = \frac{x^2}{\max_{i \in \{1,\dots,n\}}(x_i)}`
@@ -86,7 +86,7 @@ application of transformation functions to data. Although not feasible within
 the plugin at this point, we intend to build data plotting and curve
 manipulating functionalities into into future versions of the toolkit.   
 
-The *Transform attribute* dialog (:ref:`Figure 6.1 <fig-transform-attribute>`) was
+The *Transform attribute* dialog (Figure :ref:`fig-transform-attribute`) was
 designed to be quite straightforward. The user is required to select one or
 more numeric fields (variables) available in the active layer. For the
 selection to be completed, the user must move the variables (either one at a

@@ -119,8 +119,8 @@ delete the corresponding field from the layer.
 
 .. _sec-setting-operators:
 
-Setting the operators to be used to combine nodes together (variable aggregation)
-=================================================================================
+Setting the operators to be used to aggregate variables
+=======================================================
 
 On the right of each node, the tree indicates the name of the operator to be
 used to combine (or aggregate) the *children* of such node. By clicking on the

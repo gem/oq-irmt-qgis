@@ -1,6 +1,6 @@
-========================================
-Upload project to the OpenQuake Platform
-========================================
+=============================================
+Uploading a project to the OpenQuake Platform
+=============================================
 
 .. _fig-before-uploading:
 
@@ -20,10 +20,11 @@ Uploading to the OQ-Platform also  supports the ability to visualize models
 using advanced visualization tools and the mapping of the data over the web. In
 addition, sharing the models on the OQ-Platform allows users that are not QGIS
 savvy to dynamically interact with the data. The mapping and visualization over
-the web is accomplished using the OQ-Platform
-(:ref:`Figure 10.1 <fig-after-uploading>`) and the Social Vulnerability and Integrated
-Risk Viewer (see the `web application <http://www.globalquakemodel.org/openquake/support/documentation/platform/irv/>`_
-and the corresponding `documentation <https://platform.openquake.org/irv_viewer/>`_).
+the web is accomplished using the OQ-Platform (Figure
+:ref:`fig-after-uploading`) and the Social Vulnerability and Integrated Risk
+Viewer (see the `web application <https://platform.openquake.org/irv_viewer/>`_
+and the corresponding `documentation
+<http://www.globalquakemodel.org/openquake/support/documentation/platform/irv/>`_).
 
 .. _fig-after-uploading:
 
@@ -38,7 +39,7 @@ and the corresponding `documentation <https://platform.openquake.org/irv_viewer/
 To upload a project to the OQ-Platform, click *Upload project to the OpenQuake
 Platform*. This will result in the opening of a dialog window in which,
 depending on the context, the window will look like those delineated in
-:ref:`Figure 10.3 <fig-upload-dialog>` or :ref:`Figure 10.4 <fig-update-dialog>`. The former
+Figures :ref:`fig-upload-dialog` or :ref:`fig-update-dialog`. The former
 will be displayed if the current project has never been uploaded to the
 OQ-Platform. In such cases, the user is invited to provide a project title that
 will become the title of the Geonode layer that will be created on the
@@ -55,7 +56,7 @@ a general description of the project.
 
 In order to be able to correctly utilize the advanced visualization tools found
 on the OQ-Platform, the selection of a *Zone labels field* is required (see
-Figure~\ref{fig:upload_dialog}). The user must designate the *Zone labels
+Figure :ref:`fig-upload-dialog`). The user must designate the *Zone labels
 field* within their dataset. The latter is a field containing unique labels (or
 identifiers) whether these be individual country names, district names, or
 census block numbers. Delineating a zone field when uploading to the

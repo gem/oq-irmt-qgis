@@ -10,6 +10,7 @@ Contents:
 
 .. toctree::
    :maxdepth: 2
+   :numbered:
 
    01_introduction.rst
    02_definitions.rst
@@ -22,11 +23,10 @@ Contents:
    09_aggregate_loss_by_zone.rst
    10_upload_project_to_platform.rst
 
-Indices and tables
-==================
+..
+    Indices and tables
+    ==================
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
-
+    * :ref:`genindex`
+    * :ref:`modindex`
+    * :ref:`search`

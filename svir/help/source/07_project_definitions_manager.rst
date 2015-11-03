@@ -14,7 +14,7 @@ Project definitions manager
 
 The *Project Definitions Manager* is a module that was developed to allow users
 to create multiple models that can be accessed with a click of a button using a
-single layer. Each *project definition* (see :ref:`Chapter 2 <chap-definitions>`) can
+single layer. Each *project definition* (see :ref:`chap-definitions`) can
 define a different model structure, weighting and aggregation scheme, and
 variable selections among data available in the underlying layer. It allows
 users to seamlessly toggle through various integrated risk assessment projects
@@ -33,7 +33,7 @@ directly inside the *raw textual representation* portion of the project
 definition manager, although it is not forbidden. This especially applies to
 variable names (field names) and sub-indicators (also field names) defined by
 nodes within the weighting and aggregation tree (see
-Chapter~\ref{chap:weighting_and_calculating}). Manual adjustments can be useful
+:ref:`chap-weighting-and-calculating`). Manual adjustments can be useful
 in some corner cases, by experienced users, but manual adjustments can cause
 the toolkit to behave unexpectedly and can cause shapefiles to behave
 unexpectedly. Users performing these adjustments are at risk of compromise
