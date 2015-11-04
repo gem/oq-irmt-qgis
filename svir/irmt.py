@@ -208,7 +208,7 @@ class Irmt:
 
     def show_manual(self):
         base_url = os.path.abspath(os.path.join(
-            __file__, os.pardir, 'help', 'build', 'htmlhelp', 'index.html'))
+            __file__, os.pardir, 'help', 'build', 'html', 'index.html'))
         if not os.path.exists(base_url):
             self.iface.messageBar().pushMessage(
                 tr("Error"),
