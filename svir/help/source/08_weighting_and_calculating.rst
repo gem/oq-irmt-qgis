@@ -6,7 +6,7 @@ Weighting data and calculating indices
 
 .. _fig-weighting-and-calculating:
 
-.. figure:: images/image06.png
+.. figure:: images/weightingdialog.png
     :align: center
     :scale: 60%
     
@@ -79,7 +79,11 @@ updated and the composite indices are re-calculated. As a consequence, the map
 is rendered and styled accordingly. This allows the user to have an immediate
 feedback on how the map changes depending on how the project definition is set.
 Such automatic re-calculations and rendering can take some time, depending on
-the complexity of the project and number of enumerations units analysed.
+the complexity of the project and number of enumeration units analysed.
+Sometimes it is more convenient to disable the on-the-fly calculations while
+changing the project's structure, and enable it again once the project has been
+built. In order to do so, it is sufficient to toggle the :guilabel:`Run
+calculations on-the-fly` checkbox.
 
 The main functional elements of the weighting and aggregation tree are
 discussed in the subsections below.
@@ -185,19 +189,20 @@ modified description.
 Styling the layer by a chosen field
 ===================================
 
-The dropdown menu on the bottom of the *Set weights and operators* module can
-be used to choose fields within a layer, i.e., fields other than those
-delineated within the project definition to be symbolized, allowing all fields
-in a layer to be to be symbolized on-the-fly.  This can be useful, for
-instance, to map the values calculated for different sub-indicators, or even
-individual variables if they are of interest. By default, the selection is
-blank. In the default case, the tool will adopt the following convention: 1) if
-the IRI can be computed, then the layer will be symbolized according to it; 2)
-otherwise, if the SVI can be computed, then it will be used as the default case
-for symbolization in the absence of IRI; 3) otherwise, the convention will
-apply with respect to the RI; and 4) if none of main sub-indicators can be
-calculated, then the layer will not be re-styled unless the user uses the
-dropdown menu to specify a specific symbolization field.
+The dropdown menu :guilabel:`Style layer by` on the bottom of the *Set weights
+and operators* module can be used to choose fields within a layer, i.e., fields
+other than those delineated within the project definition to be symbolized,
+allowing all fields in a layer to be to be symbolized on-the-fly.  This can be
+useful, for instance, to map the values calculated for different
+sub-indicators, or even individual variables if they are of interest. By
+default, the selection is blank. In the default case, the tool will adopt the
+following convention: 1) if the IRI can be computed, then the layer will be
+symbolized according to it; 2) otherwise, if the SVI can be computed, then it
+will be used as the default case for symbolization in the absence of IRI; 3)
+otherwise, the convention will apply with respect to the RI; and 4) if none of
+main sub-indicators can be calculated, then the layer will not be re-styled
+unless the user uses the dropdown menu to specify a specific symbolization
+field.
 
 
 .. |icon-weight-and-calculate| image:: images/image27.png
