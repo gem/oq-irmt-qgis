@@ -36,7 +36,7 @@ selected project definition through the use of a dynamic graphical interface
 that was developed explicitly to guide the construction of composite indicators
 in a manner that is simple, visual, and straight-forward. The latter is
 accomplished through a window that embeds a web browser in which a javascript
-D3 tree chart is rendered (see :ref:`Figure 8.1 <fig-weighting-and-calculating>`).
+D3 tree chart is rendered (see Figure :ref:`fig-weighting-and-calculating`).
 This tree chart structure (or weighting and aggregation tree) defines a
 workflow that strings together sequences of steps to describe how variables are
 combined together to obtain the composite indices.  
@@ -47,12 +47,10 @@ combined together to obtain the composite indices.  
     :align: center
     :scale: 100%
     
-    Composite indicator types (adapted from: Tate, E.C. 2012.
-    Social vulnerability indices: a comparative assessment using uncertainty
-    and sensitivity analysis, Natural Hazards, 63(2): 325-347)
+    Composite indicator types (adapted from [TAT2012]_)
 
 Currently, the IRMT supports the development of two composite model types: a)
-deductive and, b) hierarchical (:ref:`Figure 8.2 <fig-composite-indicator-types>`).
+deductive and, b) hierarchical (Figure :ref:`fig-composite-indicator-types`).
 Deductive models typically contain fewer than ten indicators that are
 normalized and aggregated to create an index. Hierarchical models typically
 employ ten to twenty indicators that are separated into groups (sub-indices)
@@ -206,3 +204,9 @@ field.
 
 
 .. |icon-weight-and-calculate| image:: images/image27.png
+
+
+.. [TAT2012]
+    Tate, E.C. 2012.
+    Social vulnerability indices: a comparative assessment using uncertainty
+    and sensitivity analysis, Natural Hazards, 63(2): 325-347

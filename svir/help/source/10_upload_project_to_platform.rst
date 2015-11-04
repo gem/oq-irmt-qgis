@@ -32,9 +32,9 @@ and the corresponding `documentation
     :align: center
     :scale: 60%
     
-    The same simple example shown in
-    :ref:`Figure 10.1 <fig-before-uploading>`, visualized through a web browser after
-    it has been uploaded to the OpenQuake Platform
+    The same simple example shown in Figure :ref:`fig-before-uploading`,
+    visualized through a web browser after it has been uploaded to the
+    OpenQuake Platform
 
 To upload a project to the OQ-Platform, click *Upload project to the OpenQuake
 Platform*. This will result in the opening of a dialog window in which,
