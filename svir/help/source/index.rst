@@ -25,10 +25,10 @@ Contents:
    09_aggregate_loss_by_zone.rst
    10_upload_project_to_platform.rst
 
-..
-    Indices and tables
-    ==================
 
-    * :ref:`genindex`
-    * :ref:`modindex`
-    * :ref:`search`
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
