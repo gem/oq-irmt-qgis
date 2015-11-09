@@ -241,9 +241,10 @@ class Irmt:
                       ):
         """
         Add an item to the IRMT plugin menu and a corresponding toolbar icon
-        @param icon_path: Path of the icon associated to the action
-        @param label: Name of the action, visible to the user
-        @param corresponding_method: Method called when the action is triggered
+
+        :param icon_path: path of the icon associated to the action
+        :param label: name of the action, visible to the user
+        :param corresponding_method: method called when the action is triggered
         """
         if action_name in self.registered_actions:
             raise NameError("Action %s already registered" % action_name)
@@ -263,7 +264,9 @@ class Irmt:
                 True)
 
     def update_actions_status(self):
-        # Check if actions can be enabled
+        """
+        Enable plugin's actions depending on the current status of the workflow
+        """
         reg = QgsMapLayerRegistry.instance()
         layer_count = len(list(reg.mapLayers()))
         # Enable/disable "transform" action
@@ -301,6 +304,9 @@ class Irmt:
                 "project_definitions_manager"].setEnabled(False)
 
     def unload(self):
+        """
+        Remove all plugin's actions and corresponding buttons and connects
+        """
         # Remove the plugin menu items and toolbar icons
         for action_name in self.registered_actions:
             action = self.registered_actions[action_name]
@@ -320,12 +326,12 @@ class Irmt:
     def aggregate_losses(self):
         """
         Open a modal dialog to select a layer containing zonal data for social
-        vulnerability and a layer containing loss data points. After data are
-        loaded, calculate_zonal_stats()
-        is automatically called, in order to aggregate loss points with
-        respect to the same geometries defined for the socioeconomic
-        data, and to compute zonal statistics (point count, loss sum,
-        and average for each zone)
+        vulnerability and a layer containing loss data points.
+
+        After data are loaded, calculate_zonal_stats() is automatically called,
+        in order to aggregate loss points with respect to the same geometries
+        defined for the socioeconomic data, and to compute zonal statistics
+        (point count, loss sum, and average for each zone)
         """
         # Create the dialog (after translation) and keep reference
         dlg = SelectInputLayersDialog(self.iface)
@@ -338,13 +344,11 @@ class Irmt:
         Open a modal dialog to select socioeconomic variables to
         download from the openquake platform
         """
-
         # login to platform, to be able to retrieve sv indices
         sv_downloader = get_loggedin_downloader(self.iface)
         if sv_downloader is None:
             self.show_settings()
             return
-
         try:
             dlg = SelectSvVariablesDialog(sv_downloader)
             if dlg.exec_():
@@ -409,7 +413,7 @@ class Irmt:
                         load_geometries,
                         iso_codes_string)
                     worker.successfully_finished.connect(
-                        lambda result: self.data_download_successful(
+                        lambda result: self._data_download_successful(
                             result,
                             load_geometries,
                             dest_filename,
@@ -421,8 +425,22 @@ class Irmt:
                                                 tr(str(e)),
                                                 level=QgsMessageBar.CRITICAL)
 
-    def data_download_successful(
+    def _data_download_successful(
             self, result, load_geometries, dest_filename, project_definition):
+        """
+        Called once the DonloadPlatformDataWorker has successfully downloaded
+        socioeconomic data as a csv file.
+
+        :param result: a tuple (fname, msg) where fname is the name of the csv
+            file exported by the OQ-Platform and msg is the message
+            returned
+        :param load_geometries: if True, also geometries were downloaded
+        :type load_geometries: bool
+        :param dest_filename: name of the file that will store the vector layer
+            containing the downloaded data
+        :param project_definition: the project definition that was
+            automatically built based on the DB structure
+        """
         fname, msg = result
         display_msg = tr("Socioeconomic data loaded in a new layer")
         self.iface.messageBar().pushMessage(tr("Info"),
@@ -486,6 +504,10 @@ class Irmt:
         self.update_actions_status()
 
     def download_layer(self):
+        """
+        Open dialog to select one of the integrated risk projects available on
+        the OQ-Platform and download it as a qgis project
+        """
         sv_downloader = get_loggedin_downloader(self.iface)
         if sv_downloader is None:
             self.show_settings()
@@ -524,13 +546,17 @@ class Irmt:
         svi_themes[theme_position]['children'].append(new_indicator)
 
     def project_definitions_manager(self):
+        """
+        Open a dialog to manage one or multiple project definitions for the
+        selected layer.
+        """
         read_layer_suppl_info_from_qgs(
             self.iface.activeLayer().id(), self.supplemental_information)
         select_proj_def_dlg = ProjectsManagerDialog(self.iface)
         if select_proj_def_dlg.exec_():
             selected_project_definition = select_proj_def_dlg.selected_proj_def
             added_attrs_ids, discarded_feats, project_definition = \
-                self.recalculate_indexes(selected_project_definition)
+                self._recalculate_indexes(selected_project_definition)
             self.notify_added_attrs_and_discarded_feats(added_attrs_ids,
                                                         discarded_feats)
             select_proj_def_dlg.suppl_info['project_definitions'][
@@ -543,6 +569,10 @@ class Irmt:
     def notify_added_attrs_and_discarded_feats(self,
                                                added_attrs_ids,
                                                discarded_feats):
+        """
+        Notify through the message bar that new attributes have been added
+        to the layer and specify if missing or invalid values were found.
+        """
         if added_attrs_ids:
             dp = self.iface.activeLayer().dataProvider()
             all_field_names = [field.name() for field in dp.fields()]
@@ -587,7 +617,8 @@ class Irmt:
 
     def weight_data(self):
         """
-        Open a modal dialog to select weights in a d3.js visualization
+        Open a modal dialog to select weights in a d3.js visualization and to
+        run integrated risk calculations.
         """
         active_layer_id = self.iface.activeLayer().id()
         # get the project definition to work with, or create a default one
@@ -624,7 +655,7 @@ class Irmt:
         dlg.show()
         self.redraw_ir_layer(edited_project_definition)
 
-        dlg.json_cleaned.connect(lambda data: self.weights_changed(data, dlg))
+        dlg.json_cleaned.connect(lambda data: self._weights_changed(data, dlg))
         if dlg.exec_():
             # If the user just opens the dialog and presses OK, it probably
             # means they want to just run the index calculation, so we
@@ -634,7 +665,7 @@ class Irmt:
             if not dlg.any_changes_made:
                 (added_attrs_ids,
                  discarded_feats,
-                 edited_project_definition) = self.recalculate_indexes(
+                 edited_project_definition) = self._recalculate_indexes(
                     dlg.project_definition)
                 dlg.added_attrs_ids.update(added_attrs_ids)
                 dlg.discarded_feats = discarded_feats
@@ -658,7 +689,7 @@ class Irmt:
                 if ('field' in iri_node
                         or 'field' in ri_node or 'field' in svi_node):
                     added_attrs_ids, _, edited_project_definition = \
-                        self.recalculate_indexes(iri_node)
+                        self._recalculate_indexes(iri_node)
                     dlg.added_attrs_ids.update(added_attrs_ids)
                 # delete attributes added while the dialog was open
                 ProcessLayer(self.iface.activeLayer()).delete_attributes(
@@ -671,15 +702,15 @@ class Irmt:
         write_layer_suppl_info_to_qgs(active_layer_id, suppl_info)
         self.redraw_ir_layer(edited_project_definition)
 
-    def weights_changed(self, data, dlg):
+    def _weights_changed(self, data, dlg):
         added_attrs_ids, discarded_feats, project_definition = \
-            self.recalculate_indexes(data)
+            self._recalculate_indexes(data)
         dlg.added_attrs_ids.update(added_attrs_ids)
         dlg.discarded_feats = discarded_feats
         dlg.update_project_definition(project_definition)
         self.redraw_ir_layer(project_definition)
 
-    def recalculate_indexes(self, data):
+    def _recalculate_indexes(self, data):
         project_definition = deepcopy(data)
 
         if self.is_iri_computable(project_definition):
@@ -726,6 +757,10 @@ class Irmt:
         return added_attrs_ids, discarded_feats, project_definition
 
     def is_svi_computable(self, proj_def):
+        """
+        Check if is it possible to compute the social vulnerability index,
+        depending on the current project definition structure.
+        """
         try:
             svi_node = proj_def['children'][1]
         except KeyError:
@@ -744,6 +779,10 @@ class Irmt:
         return True
 
     def is_svi_renderable(self, proj_def):
+        """
+        Check if is it possible to render the social vulnerability index,
+        depending on the current project definition structure.
+        """
         if not self.is_svi_computable(proj_def):
             return False
         # check that that the svi_node has a corresponding field
@@ -756,6 +795,10 @@ class Irmt:
         return True
 
     def is_ri_computable(self, proj_def):
+        """
+        Check if is it possible to compute the risk index,
+        depending on the current project definition structure.
+        """
         try:
             ri_node = proj_def['children'][0]
         except KeyError:
@@ -768,6 +811,10 @@ class Irmt:
         return True
 
     def is_ri_renderable(self, proj_def):
+        """
+        Check if is it possible to render the risk index,
+        depending on the current project definition structure.
+        """
         if not self.is_ri_computable(proj_def):
             return False
         try:
@@ -780,6 +827,10 @@ class Irmt:
         return True
 
     def is_iri_computable(self, proj_def):
+        """
+        Check if is it possible to compute the integrated risk index,
+        depending on the current project definition structure.
+        """
         # check that all the sub-indices are well-defined
         if not self.is_ri_computable(proj_def):
             return False
@@ -788,6 +839,10 @@ class Irmt:
         return True
 
     def is_iri_renderable(self, proj_def):
+        """
+        Check if is it possible to render the integrated risk index,
+        depending on the current project definition structure.
+        """
         if not self.is_iri_computable(proj_def):
             return False
         iri_node = proj_def
@@ -797,8 +852,10 @@ class Irmt:
         return True
 
     def redraw_ir_layer(self, data):
-        # if the user has explicitly selected a field to use for styling, use
-        # it, otherwise attempt to show the IRI, or the SVI, or the RI
+        """
+        If the user has explicitly selected a field to use for styling, use
+        it, otherwise attempt to show the IRI, or the SVI, or the RI
+        """
         if 'style_by_field' in data:
             target_field = data['style_by_field']
             printing_str = target_field
@@ -907,6 +964,10 @@ class Irmt:
         # self.iface.activeLayer().setRendererV2(rule_renderer)
 
     def show_settings(self):
+        """
+        Open a dialog to specify the connection settings used to interact
+        with the OpenQuake Platform
+        """
         SettingsDialog(self.iface).exec_()
 
     def transform_attributes(self):
@@ -1000,6 +1061,9 @@ class Irmt:
         self.update_actions_status()
 
     def upload(self):
+        """
+        Open a dialog to upload the current project to the OpenQuake Platform
+        """
         temp_dir = tempfile.gettempdir()
         file_stem = '%s%sqgis_irmt_%s' % (temp_dir, os.path.sep, uuid.uuid4())
 

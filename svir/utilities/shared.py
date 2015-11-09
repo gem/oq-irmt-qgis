@@ -39,6 +39,13 @@ PROJECT_DEFINITION_VERSION = '1.0'
 
 
 class DiscardedFeature(object):
+    """
+    Class storing information about a discarded feature
+
+    :param feature_id: unique feature identifier
+    :param reason: indicating if the feature is being discarded because of a
+                   missing value or an invalid value
+    """
 
     valid_reasons = ('Missing value', 'Invalid value')
 
