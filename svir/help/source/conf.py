@@ -174,17 +174,25 @@ htmlhelp_basename = 'templateclassdoc'
 
 # -- Options for LaTeX output -------------------------------------------------
 
-# The paper size ('letter' or 'a4').
-#latex_paper_size = 'letter'
+latex_elements = {
+    # The paper size ('letterpaper' or 'a4paper').
+    'papersize': 'a4paper',
 
-# The font size ('10pt', '11pt' or '12pt').
-#latex_font_size = '10pt'
+    # The font size ('10pt', '11pt' or '12pt').
+    'pointsize': '11pt',
+
+    # Additional stuff for the LaTeX preamble.
+    #'preamble': '',
+
+    # Latex figure (float) alignment
+    #'figure_align': 'htbp',
+}
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author,
 #  documentclass [howto/manual]).
 latex_documents = [
-    ('index', 'irmt.tex', u'Integrated Risk Modelling Toolkit Documentation',
+    ('index', 'irmt.tex', u'Integrated Risk Modelling Toolkit - User Manual',
      u'GEM Foundation', 'manual'),
 ]
 
@@ -203,9 +211,6 @@ latex_logo = 'images/cover.pdf'
 # If true, show URL addresses after external links.
 #latex_show_urls = False
 
-# Additional stuff for the LaTeX preamble.
-#latex_preamble = ''
-
 # Documents to append as an appendix to all manuals.
 #latex_appendices = []
 
@@ -219,6 +224,6 @@ latex_logo = 'images/cover.pdf'
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('index', 'templateclass',
-     u'Integrated Risk Modelling Toolkit Documentation',
+     u'Integrated Risk Modelling Toolkit - User Manual',
      [u'GEM Foundation'], 1)
 ]
