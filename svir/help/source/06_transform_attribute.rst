@@ -125,11 +125,16 @@ project definition to be replaced on-the-fly (and automatically) by transformed
 variables.  This saves the user from having to augment the model manually.  
 
 By clicking the *Advanced Calculator* button, the native QGIS field calculator
-is opened.  Please refer to
-`transformation_algs.py
-<https://github.com/gem/oq-irmt-qgis/blob/master/svir/calculations/transformation_algs.py>`_
-for the detailed documentation of all the agorithms and variants provided by
+is opened. Please refer to the `code documentation
+<../../../../apidoc/_build/html/svir.calculations.html#module-svir.calculations.transformation_algs>`_
+for the detailed description of all the agorithms and variants provided by
 the IRMT.
+
+.. Please refer to
+.. `transformation_algs.py
+.. <https://github.com/gem/oq-irmt-qgis/blob/master/svir/calculations/transformation_algs.py>`_
+.. for the detailed documentation of all the agorithms and variants provided by
+.. the IRMT.
 
 
 .. |icon-transform-attributes| image:: images/image18.png
