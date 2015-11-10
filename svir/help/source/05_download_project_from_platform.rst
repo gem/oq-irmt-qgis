@@ -12,15 +12,15 @@ Downloading a project from the OpenQuake Platform
 
 An additional option to access data is by downloading projects shared by others
 on the OQ-Platform. By clicking the *Download project from the OpenQuake
-Platform*, the above dialog is opened (Figure
-:ref:`fig-download-project-from-platform`). Here, a list of available projects
-is displayed. The list will contain the titles of projects for which the user
-has been granted editing privileges (their own projects or those shared with
-them by other users). When a project is selected from the list, its title,
-abstract, bounding box and keywords are displayed in the lower textbox that is
-utilized to delineate important attributes of the project's definition.  The
-label directly above the textbox displays an ID that uniquely identifies the
-layer used in the OpenQuake-platform.
+Platform*, the above dialog is opened
+(:numref:`fig-download-project-from-platform`). Here, a list of available
+projects is displayed. The list will contain the titles of projects for which
+the user has been granted editing privileges (their own projects or those
+shared with them by other users). When a project is selected from the list, its
+title, abstract, bounding box and keywords are displayed in the lower textbox
+that is utilized to delineate important attributes of the project's definition.
+The label directly above the textbox displays an ID that uniquely identifies
+the layer used in the OpenQuake-platform.
 
 By pressing *OK*, the layer will be downloaded into the QGIS. If the associated
 project only contains one *project definition*, it will be automatically be

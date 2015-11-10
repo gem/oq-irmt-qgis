@@ -27,7 +27,7 @@ another). Each technique has specific consequences, implies different
 assumptions, and could ignore or incorporate weights.
 
 The *Weight data and calculate indices* application
-(Figure :ref:`fig-weighting-and-calculating`) is the key module of the IMRT. It
+(:numref:`fig-weighting-and-calculating`) is the key module of the IMRT. It
 contains the model building functionality of the IRMT, and it is used to
 create, edit, and manage composite indicator(s) and integrated risk model
 development. The *Weight data and calculate indices* application provides users
@@ -36,7 +36,7 @@ selected project definition through the use of a dynamic graphical interface
 that was developed explicitly to guide the construction of composite indicators
 in a manner that is simple, visual, and straight-forward. The latter is
 accomplished through a window that embeds a web browser in which a javascript
-D3 tree chart is rendered (see Figure :ref:`fig-weighting-and-calculating`).
+D3 tree chart is rendered (see :numref:`fig-weighting-and-calculating`).
 This tree chart structure (or weighting and aggregation tree) defines a
 workflow that strings together sequences of steps to describe how variables are
 combined together to obtain the composite indices.  
@@ -46,11 +46,12 @@ combined together to obtain the composite indices.  
 .. figure:: images/image19.png
     :align: center
     :scale: 100%
-    
-    Composite indicator types (adapted from [TAT2012]_)
+
+    Composite indicator types
 
 Currently, the IRMT supports the development of two composite model types: a)
-deductive and, b) hierarchical (Figure :ref:`fig-composite-indicator-types`).
+deductive and, b) hierarchical (:numref:`fig-composite-indicator-types`
+[#citation]_).
 Deductive models typically contain fewer than ten indicators that are
 normalized and aggregated to create an index. Hierarchical models typically
 employ ten to twenty indicators that are separated into groups (sub-indices)
@@ -67,7 +68,7 @@ Index* (IRI) which is a function of the aggregation of a *Social Vulnerability
 Index* (SVI) and a *Risk Index* (RI); or 2) a *Social Vulnerability Index*
 (SVI) that is the result of the aggregation of various sub-indicators defined
 by the user (e.g.\ Economy, Education, and Environment as shown within
-Figure :ref:`fig-weighting-and-calculating`).  The tree can be modified
+:numref:`fig-weighting-and-calculating`).  The tree can be modified
 dynamically by adding or removing nodes, *inverting* variables, setting a
 weight to each variable or node and choosing the operators to be used to
 combine variables together.
@@ -133,7 +134,7 @@ into account the weights applied to the child nodes. Other operators (e.g.,
 *Average (ignore weights)*) do not take into account weights. When the chosen
 operator is one of the latter, the child nodes will be rendered on the
 graphical display all with the same radius and their weights will not be
-rendered (see Figure :ref:`fig-weighting-and-calculating` for a demonstration of
+rendered (see :numref:`fig-weighting-and-calculating` for a demonstration of
 how the radius of nodes corresponds with the respective weights of variables).
 Otherwise, the radius of a node is proportional to its weight, and the weight
 is rendered next to the node.
@@ -201,6 +202,9 @@ otherwise, the convention will apply with respect to the RI; and 4) if none of
 main sub-indicators can be calculated, then the layer will not be re-styled
 unless the user uses the dropdown menu to specify a specific symbolization
 field.
+
+
+.. [#citation] Adapted from [TAT2012]_
 
 
 .. |icon-weight-and-calculate| image:: images/image27.png

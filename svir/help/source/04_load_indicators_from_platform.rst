@@ -28,7 +28,7 @@ access to data at gadm level 2 (L2) for a selection of countries and regions.
 This will include the eight Andean countries of South America and countries
 within Sub-Saharan Africa.
 
-Figure :ref:`fig-load-indicators-from-platform`. displays the *Select
+:numref:`fig-load-indicators-from-platform`. displays the *Select
 Socioeconomic Indicators* dialog that was developed to allow users to select
 indicators based on a number of factors and filtering mechanisms. A
 *Filters* section was developed to enable users to filter indicators by
@@ -75,7 +75,7 @@ within an area's topology without destroying its essential shape.
     
     Layer attribute table
 
-Figure :ref:`fig-attribute-table` shows the attribute table of a sample vector
+:numref:`fig-attribute-table` shows the attribute table of a sample vector
 layer compiled and downloaded within the IRMT. Note that for some countries the
 values of indicators might be unavailable (or NULL). When the tool downloads
 the socioeconomic data, a project definition is automatically built taking into

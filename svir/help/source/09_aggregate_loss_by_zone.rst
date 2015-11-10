@@ -15,7 +15,7 @@ of two main components: 1) estimations of physical risk (RI), and 2) a social
 vulnerability index (SVI). The convolution of earthquake physical risk and
 social vulnerability parameters can be accomplished by, first, importing risk
 assessments from OpenQuake (or some other source) using the toolkit's risk
-import tool (Figure :ref:`fig-aggregate-loss-by-zone`). As a subsequent step,
+import tool (:numref:`fig-aggregate-loss-by-zone`). As a subsequent step,
 earthquake risk data imported into the tool should be standardized to render
 the data commensurate to the socioeconomic indicators created within the tool.
 
@@ -52,7 +52,7 @@ Loss data from the OQ-Engine is rendered as points containing X,Y locational
 coordinates and the loss values for the different assets represented at a given
 location. Once both a loss layer and a zonal layer have been selected, the
 above dialog window is opened
-(Figure :ref:`fig-zonal-aggregation-of-loss-values`). In the *Loss Layer*
+(:numref:`fig-zonal-aggregation-of-loss-values`). In the *Loss Layer*
 section of the dialog window, the user is invited to select one or more
 attributes from the loss layer. This selection is because the toolkit will
 calculate the sum and average values for each of the zonal layer's features,

@@ -14,7 +14,7 @@ Some of the functionalities provided by the plugin, such as the ability to work
 with GEM data, require the interaction between the plugin itself and the
 OpenQuake Platform (OQ-Platform). The OQ-Platform is a web-based portal to
 visualize, explore and share GEM's datasets, tools and models. In the *Platform
-Settings* dialog displayed in Figure :ref:`fig-connection-settings`,
+Settings* dialog displayed in :numref:`fig-connection-settings`,
 credentials must be inserted to authenticate the user and to allow the user to
 log into the OQ-Platform. In the *Host* field insert the URL of GEM's
 production installation of the `OQ-Platform <https://platform.openquake.org>`_

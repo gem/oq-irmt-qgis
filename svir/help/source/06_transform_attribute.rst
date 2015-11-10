@@ -21,7 +21,7 @@ can be used to update existing fields, or to create new ones, in order to to
 perform a wide variety of mathematical operations for the
 standardization/transformation of data. In addition, the  IRMT provides a
 number of transformation functions found in popular statistical and
-mathematical modelling packages (Table :ref:`tab-transformation-functions`).
+mathematical modelling packages (:numref:`tab-transformation-functions`).
 
 .. _tab-transformation-functions:
 
@@ -86,7 +86,7 @@ application of transformation functions to data. Although not feasible within
 the plugin at this point, we intend to build data plotting and curve
 manipulating functionalities into into future versions of the toolkit.   
 
-The *Transform attribute* dialog (Figure :ref:`fig-transform-attribute`) was
+The *Transform attribute* dialog (:numref:`fig-transform-attribute`) was
 designed to be quite straightforward. The user is required to select one or
 more numeric fields (variables) available in the active layer. For the
 selection to be completed, the user must move the variables (either one at a
@@ -117,7 +117,7 @@ Otherwise, they will keep the links to the original selected attributes. In
 most cases it is recommended to keep this checkbox checked. This automatic
 update of field references simplifies the workflow because it avoids the need
 to manually remove the original nodes from the weighting and aggregation tree
-(discussed in detail in Chapter~\ref{chap:weighting_and_calculating}) in
+(discussed in detail in :ref:`chap-weighting-and-calculating`) in
 order to add the transformed nodes and to set again the nodes' weights. In
 other words, if a project was developed by weighting and aggregating
 untransformed indicators, this functionality allows for variables used in the
