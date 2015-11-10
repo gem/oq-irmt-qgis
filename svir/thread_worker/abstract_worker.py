@@ -80,6 +80,14 @@ class AbstractWorker(QtCore.QObject):
 
 
 def start_worker(worker, message_bar, message):
+    """
+    Configure the QgsMessageBar with a :guilabel:`Cancel` button and start
+    the worker in a new thread
+
+    :param worker: the worker to be started
+    :param message_bar: the message bar to be used to display progress
+    :param message: a message describing the task to be performed
+    """
     # configure the QgsMessageBar
     message_bar_item = message_bar.createMessage(message)
     progress_bar = QProgressBar()
@@ -117,6 +125,14 @@ def start_worker(worker, message_bar, message):
 
 
 def toggle_worker_progress(show_progress, progress_bar):
+    """
+    Set the progress to the given progress bar
+
+    :param show_progress:
+        if `True`, a 0 to 100 progress will be displayed;
+        otherwise, an unquantified progress
+    :type show_progress: bool
+    """
     progress_bar.setMinimum(0)
     if show_progress:
         progress_bar.setMaximum(100)
@@ -126,29 +142,45 @@ def toggle_worker_progress(show_progress, progress_bar):
 
 
 def toggle_worker_cancel(show_cancel, cancel_button):
+    """
+    Show or hide the cancel button
+
+    :param show_cancel: indicating if the :guilabel:`Cancel` button has to 
+                        be shown
+    :type show_cancel: bool
+    :param cancel_button: the button to be shown or hidden
+    """
     cancel_button.setVisible(show_cancel)
 
 
 def set_worker_message(message, message_bar_item):
+    """
+    Set the message bar to display the given message
+    """
     message_bar_item.setText(message)
 
 
 def worker_finished(result, thread, worker, message_bar, message_bar_item):
-        # remove widget from message bar
-        message_bar.popWidget(message_bar_item)
-        if result is not None:
-            # report the result
-            worker.successfully_finished.emit(result)
+    """
+    Cleanup to be executed when the worker has completed its task
+    """
+    # remove widget from message bar
+    message_bar.popWidget(message_bar_item)
+    if result is not None:
+        # report the result
+        worker.successfully_finished.emit(result)
 
-        # clean up the worker and thread
-        worker.deleteLater()
-        thread.quit()
-        thread.wait()
-        thread.deleteLater()
+    # clean up the worker and thread
+    worker.deleteLater()
+    thread.quit()
+    thread.wait()
+    thread.deleteLater()
 
 
 def worker_error(e, exception_string, message_bar):
-    # notify the user that something went wrong
+    """
+    Notify the user that something went wrong
+    """
     message_bar.pushMessage(
         'Something went wrong! See the message log for more information.',
         level=QgsMessageBar.CRITICAL,
