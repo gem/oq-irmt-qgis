@@ -119,7 +119,11 @@ class ProcessLayer():
         passed as input argument, and as values the actual names of the
         assigned attributes
         """
-        with LayerEditingManager(self.layer, 'Add attributes', DEBUG):
+        if simulate:
+            description = 'Simulate add attributes'
+        else:
+            description = 'Add attributes'
+        with LayerEditingManager(self.layer, description, DEBUG):
             # add attributes
             layer_pr = self.layer.dataProvider()
             proposed_attribute_dict = {}
