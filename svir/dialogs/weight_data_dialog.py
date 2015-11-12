@@ -72,6 +72,11 @@ class WeightDataDialog(QDialog):
         self.any_changes_made = False
         self.active_layer_numeric_fields = []
         self.update_active_layer_numeric_fields()
+        # keep track of the fact that the user has explicitly selected a field
+        # to base the style on. Note that also the selection of the empty item
+        # means that the user explicitly wants the system to use the default
+        # behavior.
+        self.style_by_field_selected = False
 
         self.project_definition = deepcopy(project_definition)
         try:
@@ -148,7 +153,17 @@ class WeightDataDialog(QDialog):
 
         if self.ui.on_the_fly_ckb.isChecked():
             self.project_definition = self.clean_json([data])
+            self._manage_style_by_field()
             self.json_cleaned.emit(self.project_definition)
+
+    def _manage_style_by_field(self):
+        if self.style_by_field_selected:
+            if self.ui.style_by_field_cbx.currentText():
+                self.project_definition['style_by_field'] = \
+                    self.ui.style_by_field_cbx.currentText()
+            elif 'style_by_field' in self.project_definition:
+                # if the empty item is selected, clean the project definition
+                del self.project_definition['style_by_field']
 
     def clean_json(self, data):
         # this method takes a list of dictionaries and removes some unneeded
@@ -168,12 +183,8 @@ class WeightDataDialog(QDialog):
 
     @pyqtSlot(str)
     def on_style_by_field_cbx_currentIndexChanged(self):
-        if self.ui.style_by_field_cbx.currentText():
-            self.project_definition['style_by_field'] = \
-                self.ui.style_by_field_cbx.currentText()
-        elif 'style_by_field' in self.project_definition:
-            # if the empty item is selected, clean the project definition
-            del self.project_definition['style_by_field']
+        self.style_by_field_selected = True
+        self._manage_style_by_field()
         self.json_updated.emit(self.project_definition)
 
     @pyqtProperty(str)
