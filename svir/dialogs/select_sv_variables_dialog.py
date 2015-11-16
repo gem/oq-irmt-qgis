@@ -182,16 +182,22 @@ class SelectSvVariablesDialog(QDialog):
     def fill_zones(self):
         # load from platform a list of zones belonging to the selected study
         study_name = self.ui.study_cbx.currentText()
-        country_str = self.ui.country_multiselect.selected_widget.takeItem(0)
-        country_iso = country_str.text().split('(')[1].split(')')[0]
-        try:
-            zones_list = self.sv_downloader.get_zones_info(study_name,
-                                                           country_iso)
-            names = ['%s (%s: %s)' % (zone['name'],
-                                      zone['country_iso'],
-                                      zone['parent_label'])
-                     for zone in zones_list]
-            self.ui.zone_multiselect.set_unselected_items(names)
-        except SvNetworkError as e:
-            raise SvNetworkError(
-                "Unable to download the list of zones: %s" % e)
+        country_count = self.ui.country_multiselect.selected_widget.count()
+        all_names = []
+        for country_idx in range(country_count):
+            country_item = self.ui.country_multiselect.selected_widget.item(
+                country_idx)
+            country_iso = country_item.text().split('(')[1].split(')')[0]
+            try:
+                zones_list = self.sv_downloader.get_zones_info(study_name,
+                                                               country_iso)
+            except SvNetworkError as e:
+                raise SvNetworkError(
+                    "Unable to download the list of zones: %s" % e)
+            else:
+                names = ['%s (%s: %s)' % (zone['name'],
+                                          zone['country_iso'],
+                                          zone['parent_label'])
+                         for zone in zones_list]
+                all_names.extend(names)
+        self.ui.zone_multiselect.set_unselected_items(all_names)
