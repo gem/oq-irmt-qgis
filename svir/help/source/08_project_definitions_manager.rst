@@ -6,7 +6,7 @@ Project definitions manager
 
 .. _fig-project-definitions-manager:
 
-.. figure:: images/image13.png
+.. figure:: images/dialogProjectDefinitionManager.png
     :align: center
     :scale: 60%
     
@@ -56,4 +56,4 @@ within the QGIS. This computation can take some time, depending on the
 complexity of the layer.
 
 
-.. |icon-project-definitions-manager| image:: images/image24.png
+.. |icon-project-definitions-manager| image:: images/iconProjectDefinitionManager.png

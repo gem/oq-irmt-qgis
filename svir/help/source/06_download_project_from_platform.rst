@@ -1,10 +1,12 @@
+.. _chap-download-project:
+
 *************************************************
 Downloading a project from the OpenQuake Platform
 *************************************************
 
 .. _fig-download-project-from-platform:
 
-.. figure:: images/image15.png
+.. figure:: images/dialogImportProject.png
     :align: center
     :scale: 60%
     
@@ -32,4 +34,4 @@ are re-calculated, and the layer is styled and rendered accordingly. This
 process may take some time, depending on the complexity of the project.
 
 
-.. |icon-import-project| image:: images/image16.png
+.. |icon-import-project| image:: images/iconImportProject.png

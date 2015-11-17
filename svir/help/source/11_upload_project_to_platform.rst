@@ -1,10 +1,12 @@
+.. _chap-uploading-project-to-platform:
+
 =============================================
 Uploading a project to the OpenQuake Platform
 =============================================
 
 .. _fig-before-uploading:
 
-.. figure:: images/image22.png
+.. figure:: images/beforeUploading.png
     :align: center
     :scale: 60%
     
@@ -28,7 +30,7 @@ and the corresponding `documentation
 
 .. _fig-after-uploading:
 
-.. figure:: images/image10.png
+.. figure:: images/afterUploading.png
     :align: center
     :scale: 60%
     
@@ -48,7 +50,7 @@ a general description of the project.
 
 .. _fig-upload-dialog:
 
-.. figure:: images/image25.png
+.. figure:: images/dialogUploadProject.png
     :align: center
     :scale: 60%
     
@@ -74,7 +76,7 @@ inside the *Supplemental information* field.
 
 .. _fig-update-dialog:
 
-.. figure:: images/image21.png
+.. figure:: images/dialogUpdateProject.png
     :align: center
     :scale: 60%
     
@@ -91,5 +93,5 @@ procedure because no geometries need to be uploaded, and only the metadata of
 the Geonode layer will be changed.
 
 
-.. |icon-upload| image:: images/image12.png
+.. |icon-upload| image:: images/iconUpload.png
 

@@ -1,10 +1,12 @@
+.. _chap-transform-attribute:
+
 ***********************
 Transforming attributes
 ***********************
 
 .. _fig-transform-attribute:
 
-.. figure:: images/image14.png
+.. figure:: images/dialogTransformAttribute.png
     :align: center
     :scale: 60%
 
@@ -137,4 +139,4 @@ the IRMT.
 .. the IRMT.
 
 
-.. |icon-transform-attributes| image:: images/image18.png
+.. |icon-transform-attributes| image:: images/iconTransformAttribute.png

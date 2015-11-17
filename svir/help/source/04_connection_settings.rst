@@ -1,10 +1,12 @@
+.. _chap-connection-settings:
+
 **************************************
 OpenQuake Platform connection settings
 **************************************
 
 .. _fig-connection-settings:
 
-.. figure:: images/image07.png
+.. figure:: images/dialogConnectionSettings.png
     :align: center
     :scale: 60%
     
@@ -27,4 +29,4 @@ logging. The latter is useful for developers or advanced users because logging
 is critical for troubleshooting, but it is not recommended for standard users.
 
 
-.. |icon-connection-settings| image:: images/image20.png
+.. |icon-connection-settings| image:: images/iconConnectionSettings.png

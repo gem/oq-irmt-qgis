@@ -1,10 +1,12 @@
+.. _chap-load-indicators:
+
 ************************************************************
 Loading socioeconomic indicators from the OpenQuake Platform
 ************************************************************
 
 .. _fig-load-indicators-from-platform:
 
-.. figure:: images/image23.png
+.. figure:: images/dialogLoadIndicators.png
     :align: center
     :scale: 60%
     
@@ -69,7 +71,7 @@ within an area's topology without destroying its essential shape.
 
 .. _fig-attribute-table:
 
-.. figure:: images/image11.png
+.. figure:: images/attributeTable.png
     :align: center
     :scale: 60%
     
@@ -95,4 +97,4 @@ capacities; and 7) the environment.
     and European Seismological Commission, Istanbul, Turkey.
 
 
-.. |icon-load-indicators| image:: images/image17.png
+.. |icon-load-indicators| image:: images/iconLoadIndicators.png

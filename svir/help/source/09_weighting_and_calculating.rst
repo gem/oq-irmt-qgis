@@ -6,7 +6,7 @@ Weighting data and calculating indices
 
 .. _fig-weighting-and-calculating:
 
-.. figure:: images/weightingdialog.png
+.. figure:: images/dialogWeightAndCalculate.png
     :align: center
     :scale: 60%
     
@@ -43,7 +43,7 @@ combined together to obtain the composite indices.  
 
 .. _fig-composite-indicator-types:
 
-.. figure:: images/image19.png
+.. figure:: images/compositeIndicatorTypes.png
     :align: center
     :scale: 100%
 
@@ -207,7 +207,7 @@ field.
 .. [#citation] Adapted from [TAT2012]_
 
 
-.. |icon-weight-and-calculate| image:: images/image27.png
+.. |icon-weight-and-calculate| image:: images/iconWeightAndCalculate.png
 
 
 .. [TAT2012]

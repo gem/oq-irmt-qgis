@@ -1,10 +1,12 @@
+.. _chap-aggregating-loss-by-zone:
+
 ========================
 Aggregating loss by zone
 ========================
 
 .. _fig-aggregate-loss-by-zone:
 
-.. figure:: images/image08.png
+.. figure:: images/dialogAggregateLossByZone.png
     :align: center
     :scale: 60%
     
@@ -42,7 +44,7 @@ type.
 
 .. _fig-zonal-aggregation-of-loss-values:
 
-.. figure:: images/image09.png
+.. figure:: images/dialogAggregateLossByZone2.png
     :align: center
     :scale: 60%
     
@@ -84,4 +86,4 @@ will be used as unique id of the feature, to perform the loss aggregation by
 zone.
 
 
-.. |icon-aggregate-loss-by-zone| image:: images/image26.png
+.. |icon-aggregate-loss-by-zone| image:: images/iconAggregateLossByZone.png
