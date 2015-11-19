@@ -103,6 +103,9 @@ class UploadWorker(AbstractWorker):
         data_generator, headers = multipart_encode_for_requests(
             data, cb=self.progress_cb)
 
+        headers['User-Agent'] = ('Mozilla/5.0 (Windows NT 6.0; WOW64;'
+                                 ' rv:24.0) Gecko/20100101 Firefox/24.0')
+
         # use the requests-lib to issue a post-request with out data attached
         r = self.session.post(
             self.hostname + '/layers/upload',
