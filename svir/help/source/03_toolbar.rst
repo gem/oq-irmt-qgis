@@ -25,6 +25,8 @@ corresponding documentation.
 
 |icon-upload| :ref:`chap-uploading-project-to-platform`
 
+|icon-manual| A web browser will be opened, showing the html version of this manual
+
 
 .. |icon-connection-settings| image:: images/iconConnectionSettings.png
 .. |icon-load-indicators| image:: images/iconLoadIndicators.png
@@ -34,3 +36,4 @@ corresponding documentation.
 .. |icon-weight-and-calculate| image:: images/iconWeightAndCalculate.png
 .. |icon-aggregate-loss-by-zone| image:: images/iconAggregateLossByZone.png
 .. |icon-upload| image:: images/iconUpload.png
+.. |icon-manual| image:: images/iconManual.png
