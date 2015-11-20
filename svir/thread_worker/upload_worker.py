@@ -93,7 +93,7 @@ class UploadWorker(AbstractWorker):
                 'dbf_file': open('%s.dbf' % self.file_stem, 'rb'),
                 'shx_file': open('%s.shx' % self.file_stem, 'rb'),
                 'prj_file': open('%s.prj' % self.file_stem, 'rb'),
-                'xml_file': open('%s.xml' % self.file_stem, 'r'),
+                'xml_file': open('%s.xml' % self.file_stem, 'rb'),
                 'charset': 'UTF-8',
                 'permissions': json.dumps(permissions)
                 }
