@@ -83,10 +83,12 @@ These include:
    horizontal translations and the respective inverses of the two for vertical
    translations.
 
-Please note that it may be desirable to visualize the results of the
-application of transformation functions to data. Although not feasible within
-the plugin at this point, we intend to build data plotting and curve
-manipulating functionalities into into future versions of the toolkit.   
+.. note::
+
+    It may be desirable to visualize the results of the
+    application of transformation functions to data. Although not feasible
+    within the plugin at this point, we intend to build data plotting and curve
+    manipulating functionalities into into future versions of the toolkit.   
 
 The *Transform attribute* dialog (:numref:`fig-transform-attribute`) was
 designed to be quite straightforward. The user is required to select one or

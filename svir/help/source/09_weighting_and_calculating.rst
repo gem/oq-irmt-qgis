@@ -95,15 +95,25 @@ Individual nodes correspond to aggregated composite indicators within the
 weighting and aggregation tree. To add a node (i.e.\ a composite sub-indicator)
 within the tree, it is possible to begin by left-clicking on the default node
 (i.e.\ SVI).  Clicking on the default SVI node allows the addition of multiple
-new sub-indicators, each with its own user-provided name (note that it is not
-possible to add nodes stemming from the IRI). When a newly created node is
+new sub-indicators, each with its own user-provided name.
+
+.. note::
+
+    It is not possible to add nodes stemming from the IRI.
+
+When a newly created node is
 clicked, a new dialog is initiated to give users the option to select the
 variables available in the layer (and not already used in the node) to populate
-the sub-indicator being under construction. Please note that the SVI can be
-calculated if each socioeconomic sub-indicator has at least one variable. In
-order to add an indicator to one of the socioeconomic sub-indicators, you can
-click on the corresponding node. When adding an indicator to the RI, or to one
-of the socioeconomic sub-indicators, the description of the node will be
+the sub-indicator being under construction.
+
+.. note::
+
+    The SVI can be calculated if each socioeconomic sub-indicator has at least
+    one variable.
+
+In order to add an indicator to one of the socioeconomic sub-indicators, you
+can click on the corresponding node. When adding an indicator to the RI, or to
+one of the socioeconomic sub-indicators, the description of the node will be
 automatically set to be equal to the name of the corresponding layer's
 variable. Users can edit this description, however, by clicking on the text
 displayed next to the node in the tree and then by clicking within the
@@ -116,8 +126,12 @@ Removing a node
 In order to remove one of the nodes from the tree, users can perform a
 right-click on that node. A popup dialog window will ask you to confirm if you
 really intend to delete the node and all of its *children* (the lower level
-nodes connected to it). Please note that removing a node from the tree will not
-delete the corresponding field from the layer.
+nodes connected to it).
+
+.. note::
+
+    Removing a node from the tree will *not* delete the corresponding field
+    from the layer.
 
 
 .. _sec-setting-operators:
@@ -170,9 +184,12 @@ an inverse relationship by pressing the *Invert* button next to the variable
 name. The effect on a composite indicator in response to this decision process
 and setting is that each value of the *inverted* variables will be to
 multiplied by -1 each time the variables themselves are used in a calculation.
-Please note that the layer's field will keep holding the original value of the
-variable, and that the inversion will be performed on-the-fly for the purpose
-of the calculation.
+
+.. note::
+
+    Please note that the layer's field will keep holding the original value of
+    the variable, and that the inversion will be performed on-the-fly for the
+    purpose of the calculation.
 
 
 Assigning a new name to a variable

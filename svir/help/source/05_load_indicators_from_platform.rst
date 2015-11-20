@@ -78,8 +78,14 @@ within an area's topology without destroying its essential shape.
     Layer attribute table
 
 :numref:`fig-attribute-table` shows the attribute table of a sample vector
-layer compiled and downloaded within the IRMT. Note that for some countries the
-values of indicators might be unavailable (or NULL). When the tool downloads
+layer compiled and downloaded within the IRMT.
+
+.. note::
+
+    For some countries the values of indicators might be unavailable (displayed
+    in the attribute table as ``NULL``).
+
+When the tool downloads
 the socioeconomic data, a project definition is automatically built taking into
 account how the data was organized in the socioeconomic database. At the
 country level data was grouped together by these meaning that indicators

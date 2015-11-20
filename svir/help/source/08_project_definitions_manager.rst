@@ -28,16 +28,19 @@ definition, or to clone an existing project definition.
 
 While contributing to the *Title* and *Description* textbox of the project
 definitions manager, the *Raw textual representation* is updated accordingly.
-Please note that it is not recommended for users to edit the parameters
-directly inside the *raw textual representation* portion of the project
-definition manager, although it is not forbidden. This especially applies to
-variable names (field names) and sub-indicators (also field names) defined by
-nodes within the weighting and aggregation tree (see
-:ref:`chap-weighting-and-calculating`). Manual adjustments can be useful
-in some corner cases, by experienced users, but manual adjustments can cause
-the toolkit to behave unexpectedly and can cause shapefiles to behave
-unexpectedly. Users performing these adjustments are at risk of compromise
-their data.
+
+.. warning::
+
+    It is not recommended for users to edit the parameters directly inside the
+    *raw textual representation* portion of the project definition manager,
+    although it is not forbidden. This especially applies to variable names
+    (field names) and sub-indicators (also field names) defined by nodes within
+    the weighting and aggregation tree (see
+    :ref:`chap-weighting-and-calculating`). Manual adjustments can be useful in
+    some corner cases, by experienced users, but manual adjustments can cause
+    the toolkit to behave unexpectedly and can cause shapefiles to behave
+    unexpectedly. Users performing these adjustments are at risk of compromise
+    their data.
 
 The *+* button at the right of the dropdown menu can be used to associate the
 current layer with a new project definition. By clicking it, a new basic
