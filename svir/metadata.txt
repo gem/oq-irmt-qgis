@@ -13,7 +13,7 @@ name=OpenQuake Integrated Risk Modelling Toolkit
 qgisMinimumVersion=2.4
 description=Tools for the development of composite indicators measuring societal characteristics and the integration of these with physical risk estimations
 about=Tools for creating and editing indicators and composite indices to measure social characteristics and for combining these with estimates of physical earthquake risk (i.e. estimates of human or infrastructure loss). The plugin enables users to directly interact with the OpenQuake Platform (https://platform.openquake.org), in order to browse and download socioeconomic data or existing projects, to edit projects locally in QGIS, then to upload and share them through the Platform. This plugin was designed as a collaborative effort between the GEM Foundation (http://www.globalquakemodel.org) and the Center for Disaster Management and Risk Reduction Technology (http://www.cedim.de/english/), and it has been developed by the GEM Foundation. It was formerly named GEM OpenQuake Social Vulnerability and Integrated Risk (SVIR).
-version=1.7.3
+version=1.7.4
 author=GEM Foundation
 email=staff.it@globalquakemodel.org
 
@@ -23,10 +23,9 @@ email=staff.it@globalquakemodel.org
 
 # Uncomment the following line and add your changelog entries:
 changelog=
-    1.7.3
-    * Don't break when OpenSSL has SSLv3_METHOD disabled
-    * Fix windows missing 'pkg_resources' (no setuptools installed)
-    * Remove html tags from the 'about' property in metadata.txt
+    1.7.4
+    * Fix uploading issue on windows
+    * Don't attempt to update project definitions after a transformation if no project definitions are available
 
 # tags are comma separated with spaces allowed
 tags=GEM, IRMT, SVIR, OpenQuake, Social Vulnerability, Integrated Risk
@@ -36,7 +35,7 @@ tracker=https://github.com/gem/oq-irmt-qgis/issues
 repository=https://github.com/gem/oq-irmt-qgis
 icon=resources/icon.svg
 # experimental flag
-experimental=True
+experimental=False
 
 # deprecated flag (applies to the whole plugin, not just a single version
 deprecated=False
