@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-IRMT: Integrated Risk Modelling Toolkit
-=======================================
+|icon-plugin| IRMT: Integrated Risk Modelling Toolkit
+=====================================================
 
 .. only:: html
 
@@ -35,3 +35,6 @@ Contents:
 .. * :ref:`genindex`
 .. * :ref:`modindex`
 .. * :ref:`search`
+
+
+.. |icon-plugin| image:: images/iconPlugin.png
