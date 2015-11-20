@@ -25,6 +25,7 @@ email=staff.it@globalquakemodel.org
 changelog=
     1.7.4
     * Fix uploading issue on windows
+    * Don't attempt to update project definitions after a transformation if no project definitions are available
 
 # tags are comma separated with spaces allowed
 tags=GEM, IRMT, SVIR, OpenQuake, Social Vulnerability, Integrated Risk
