@@ -975,27 +975,30 @@ class Irmt:
                         tr("Error"),
                         tr(e.message),
                         level=QgsMessageBar.CRITICAL)
-                active_layer_id = self.iface.activeLayer().id()
-                read_layer_suppl_info_from_qgs(
-                    active_layer_id, self.supplemental_information)
-                if (dlg.ui.track_new_field_ckb.isChecked()
-                        and target_attr_name != input_attr_name
-                        and active_layer_id in self.supplemental_information):
-                    suppl_info = self.supplemental_information[active_layer_id]
-                    try:
-                        proj_defs = suppl_info['project_definitions']
-                    except KeyError:
-                        # do nothing if the project still has no project
-                        # definitions to update
-                        pass
-                    else:
-                        for proj_def in proj_defs:
-                            replace_fields(proj_def,
-                                           input_attr_name,
-                                           target_attr_name)
-                        suppl_info['project_definitions'] = proj_defs
-                        write_layer_suppl_info_to_qgs(active_layer_id,
-                                                      suppl_info)
+                else:  # only if the transformation was performed successfully
+                    active_layer_id = self.iface.activeLayer().id()
+                    read_layer_suppl_info_from_qgs(
+                        active_layer_id, self.supplemental_information)
+                    if (dlg.ui.track_new_field_ckb.isChecked()
+                            and target_attr_name != input_attr_name
+                            and (active_layer_id
+                                 in self.supplemental_information)):
+                        suppl_info = self.supplemental_information[
+                            active_layer_id]
+                        try:
+                            proj_defs = suppl_info['project_definitions']
+                        except KeyError:
+                            # do nothing if the project still has no project
+                            # definitions to update
+                            pass
+                        else:
+                            for proj_def in proj_defs:
+                                replace_fields(proj_def,
+                                               input_attr_name,
+                                               target_attr_name)
+                            suppl_info['project_definitions'] = proj_defs
+                            write_layer_suppl_info_to_qgs(active_layer_id,
+                                                          suppl_info)
         elif dlg.use_advanced:
             layer = self.iface.activeLayer()
             if layer.isModified():
