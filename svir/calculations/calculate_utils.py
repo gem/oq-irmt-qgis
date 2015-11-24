@@ -196,7 +196,7 @@ def calculate_node(
         node, node_attr_name, node_attr_id, layer, discarded_feats):
     operator = node.get('operator', DEFAULT_OPERATOR)
     children = node['children']  # the existance of children should
-    # already be checked
+                                 # already be checked
     with LayerEditingManager(layer,
                              'Calculating %s' % node_attr_name,
                              DEBUG):
