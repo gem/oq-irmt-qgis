@@ -940,7 +940,7 @@ class Irmt:
                 elif dlg.ui.fields_multiselect.selected_widget.count() == 1:
                     target_attr_name = dlg.ui.new_field_name_txt.text()
                 else:
-                    target_attr_name = ('T_' + input_attr_name)[:10]
+                    target_attr_name = ('_' + input_attr_name)[:10]
                 try:
                     with WaitCursorManager("Applying transformation",
                                            self.iface):
