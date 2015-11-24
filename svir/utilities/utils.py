@@ -135,7 +135,7 @@ def get_field_names(sub_tree, field_names=None):
     if 'children' in sub_tree:
         for child in sub_tree['children']:
             child_field_names = get_field_names(child, field_names)
-            field_names.union(child_field_names)
+            field_names = field_names.union(child_field_names)
     return field_names
 
 
