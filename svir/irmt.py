@@ -641,6 +641,16 @@ class Irmt:
                     dlg.project_definition)
                 dlg.added_attrs_ids.update(added_attrs_ids)
                 dlg.discarded_feats = discarded_feats
+            # But if changes were made to the tree while the on-the-fly
+            # calculation was disabled, then we need to recalculate indices
+            # using the modified project definition
+            elif dlg.modified_project_definition:
+                (added_attrs_ids,
+                 discarded_feats,
+                 edited_project_definition) = self.recalculate_indexes(
+                    dlg.modified_project_definition)
+                dlg.added_attrs_ids.update(added_attrs_ids)
+                dlg.discarded_feats = discarded_feats
             else:
                 edited_project_definition = deepcopy(dlg.project_definition)
             self.notify_added_attrs_and_discarded_feats(

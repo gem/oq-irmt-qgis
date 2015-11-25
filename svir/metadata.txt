@@ -28,6 +28,8 @@ changelog=
     * Fix corner case in tracking transformed fields when transformation can not be completed
     * Set transformed field names automatically to _ORIGNAME instead of T_ORIGNAME
       (names up to 9 characters will not be truncated by the max 10 characters constraint of shapefiles)
+    * Do not lose the modified project definition while on-the-fly index calculation is disabled and
+      Ok is pressed
 
 # tags are comma separated with spaces allowed
 tags=GEM, IRMT, SVIR, OpenQuake, Social Vulnerability, Integrated Risk
