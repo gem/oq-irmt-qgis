@@ -47,9 +47,8 @@ def get_irmt_version():
     """
     global _IRMT_VERSION
     if _IRMT_VERSION is None:
-        # metadata_path = os.path.join('..', 'metadata.txt')
-        metadata_path = os.path.abspath(
-            '/home/paolo/projects/oq-irmt-qgis/svir/metadata.txt')
+        metadata_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), '..', 'metadata.txt')
         with open(metadata_path, 'r') as f:
             for line in f:
                 if line.startswith('version='):
