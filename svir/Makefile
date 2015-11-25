@@ -136,7 +136,9 @@ package: compile doc
 	rm -f $(PLUGINNAME)/$(PLUGINNAME).zip
 	git archive --prefix=$(PLUGINNAME)/ -o $(PLUGINNAME).zip $(VERSION)
 	mkdir -p svir/help; mv help/build svir/help/build
+	mkdir -p svir/apidoc; mv apidoc/build svir/apidoc/build
 	zip -r $(PLUGINNAME).zip svir/help/build
+	zip -r $(PLUGINNAME).zip svir/apidoc/build
 	rm -r svir/
 	echo "Created package: $(PLUGINNAME).zip"
 
@@ -184,6 +186,7 @@ doc:
 	@echo "Building documentation using sphinx."
 	@echo "------------------------------------"
 	cd help; make latexpdf html
+	cd apidoc; make html
 
 pylint:
 	@echo
