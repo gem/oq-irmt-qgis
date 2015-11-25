@@ -38,6 +38,24 @@ from svir.dialogs.settings_dialog import SettingsDialog
 from svir.third_party.poster.encode import multipart_encode
 from svir.utilities.shared import DEBUG
 
+_IRMT_VERSION = None
+
+
+def get_irmt_version():
+    """
+    Get the plugin's version from metadata.txt
+    """
+    global _IRMT_VERSION
+    if _IRMT_VERSION is None:
+        # metadata_path = os.path.join('..', 'metadata.txt')
+        metadata_path = os.path.abspath(
+            '/home/paolo/projects/oq-irmt-qgis/svir/metadata.txt')
+        with open(metadata_path, 'r') as f:
+            for line in f:
+                if line.startswith('version='):
+                    _IRMT_VERSION = line.split('=')[1]
+    return _IRMT_VERSION
+
 
 def tr(message):
     """
