@@ -129,13 +129,13 @@ def get_field_names(sub_tree, field_names=None):
     # field_names is an accumulator that is extended browsing the tree
     # recursively
     if field_names is None:
-        field_names = []
+        field_names = set()
     if 'field' in sub_tree:
-        field_names.append(sub_tree['field'])
+        field_names.add(sub_tree['field'])
     if 'children' in sub_tree:
         for child in sub_tree['children']:
             child_field_names = get_field_names(child, field_names)
-            field_names.extend(child_field_names)
+            field_names = field_names.union(child_field_names)
     return field_names
 
 
