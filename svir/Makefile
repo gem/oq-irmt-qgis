@@ -119,7 +119,7 @@ zip: deploy dclean
 	rm -f $(PLUGINNAME).zip
 	cd $(HOME)/$(QGISDIR)/python/plugins; zip -9r $(CURDIR)/$(PLUGINNAME).zip $(PLUGINNAME)
 
-package: compile
+package: compile doc
 	# Create a zip package of the plugin named $(PLUGINNAME).zip.
 	# This requires use of git (your plugin development directory must be a
 	# git repository).
@@ -135,6 +135,9 @@ package: compile
 	@echo "------------------------------------"
 	rm -f $(PLUGINNAME)/$(PLUGINNAME).zip
 	git archive --prefix=$(PLUGINNAME)/ -o $(PLUGINNAME).zip $(VERSION)
+	mkdir -p svir/help; mv help/build svir/help/build
+	zip -r $(PLUGINNAME).zip svir/help/build
+	rm -r svir/
 	echo "Created package: $(PLUGINNAME).zip"
 
 upload: package
@@ -180,7 +183,7 @@ doc:
 	@echo "------------------------------------"
 	@echo "Building documentation using sphinx."
 	@echo "------------------------------------"
-	cd help; make html
+	cd help; make latexpdf html
 
 pylint:
 	@echo
