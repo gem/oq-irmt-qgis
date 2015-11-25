@@ -697,7 +697,7 @@ class Irmt:
 
         if self.is_iri_computable(project_definition):
             iri_node = deepcopy(project_definition)
-            msg = 'Calculating %s' % iri_node['field']
+            msg = 'Calculating %s' % iri_node['name']
             with WaitCursorManager(msg, self.iface):
                 (added_attrs_ids, discarded_feats,
                  iri_node, was_iri_computed) = calculate_composite_variable(
@@ -713,7 +713,7 @@ class Irmt:
         was_svi_computed = False
         if self.is_svi_computable(project_definition):
             svi_node = deepcopy(project_definition['children'][1])
-            msg = 'Calculating %s' % svi_node['field']
+            msg = 'Calculating %s' % svi_node['name']
             with WaitCursorManager(msg, self.iface):
                 (svi_added_attrs_ids, svi_discarded_feats,
                  svi_node, was_svi_computed) = calculate_composite_variable(
@@ -723,7 +723,7 @@ class Irmt:
         was_ri_computed = False
         if self.is_ri_computable(project_definition):
             ri_node = deepcopy(project_definition['children'][0])
-            msg = 'Calculating %s' % ri_node['field']
+            msg = 'Calculating %s' % ri_node['name']
             with WaitCursorManager(msg, self.iface):
                 (ri_added_attrs_ids, ri_discarded_feats,
                  ri_node, was_ri_computed) = calculate_composite_variable(
