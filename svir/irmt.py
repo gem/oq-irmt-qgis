@@ -697,9 +697,11 @@ class Irmt:
 
         if self.is_iri_computable(project_definition):
             iri_node = deepcopy(project_definition)
-            (added_attrs_ids, discarded_feats,
-             iri_node, was_iri_computed) = calculate_composite_variable(
-                self.iface, self.iface.activeLayer(), iri_node)
+            msg = 'Calculating %s' % iri_node['field']
+            with WaitCursorManager(msg, self.iface):
+                (added_attrs_ids, discarded_feats,
+                 iri_node, was_iri_computed) = calculate_composite_variable(
+                    self.iface, self.iface.activeLayer(), iri_node)
             project_definition = deepcopy(iri_node)
             return added_attrs_ids, discarded_feats, project_definition
 
@@ -711,17 +713,21 @@ class Irmt:
         was_svi_computed = False
         if self.is_svi_computable(project_definition):
             svi_node = deepcopy(project_definition['children'][1])
-            (svi_added_attrs_ids, svi_discarded_feats,
-             svi_node, was_svi_computed) = calculate_composite_variable(
-                self.iface, self.iface.activeLayer(), svi_node)
+            msg = 'Calculating %s' % svi_node['field']
+            with WaitCursorManager(msg, self.iface):
+                (svi_added_attrs_ids, svi_discarded_feats,
+                 svi_node, was_svi_computed) = calculate_composite_variable(
+                    self.iface, self.iface.activeLayer(), svi_node)
             project_definition['children'][1] = deepcopy(svi_node)
 
         was_ri_computed = False
         if self.is_ri_computable(project_definition):
             ri_node = deepcopy(project_definition['children'][0])
-            (ri_added_attrs_ids, ri_discarded_feats,
-             ri_node, was_ri_computed) = calculate_composite_variable(
-                self.iface, self.iface.activeLayer(), ri_node)
+            msg = 'Calculating %s' % ri_node['field']
+            with WaitCursorManager(msg, self.iface):
+                (ri_added_attrs_ids, ri_discarded_feats,
+                 ri_node, was_ri_computed) = calculate_composite_variable(
+                    self.iface, self.iface.activeLayer(), ri_node)
             project_definition['children'][0] = deepcopy(ri_node)
 
         if not was_svi_computed and not was_ri_computed:
@@ -952,8 +958,9 @@ class Irmt:
                 else:
                     target_attr_name = ('_' + input_attr_name)[:10]
                 try:
-                    with WaitCursorManager("Applying transformation",
-                                           self.iface):
+                    msg = "Applying '%s' transformation to field '%s'" % (
+                        algorithm_name, input_attr_name)
+                    with WaitCursorManager(msg, self.iface):
                         res_attr_name, invalid_input_values = ProcessLayer(
                             layer).transform_attribute(input_attr_name,
                                                        algorithm_name,
