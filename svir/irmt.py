@@ -29,6 +29,7 @@ import tempfile
 import uuid
 import fileinput
 import re
+
 from copy import deepcopy
 from math import floor, ceil
 from qgis.core import (QgsVectorLayer,
@@ -57,6 +58,7 @@ from PyQt4.QtGui import (QAction,
                          QDesktopServices,
                          )
 
+from svir.ui.tool_button_with_help_link import QToolButtonWithHelpLink
 from svir.utilities.import_sv_data import get_loggedin_downloader
 from svir.dialogs.download_layer_dialog import DownloadLayerDialog
 from svir.dialogs.projects_manager_dialog import ProjectsManagerDialog
@@ -253,7 +255,12 @@ class Irmt:
         action = QAction(QIcon(icon_path), label, self.iface.mainWindow())
         action.setEnabled(enable)
         action.triggered.connect(corresponding_method)
-        self.toolbar.addAction(action)
+
+        help_url = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'help', 'build', 'html', action_name)
+        help_url += '.html'
+        button = QToolButtonWithHelpLink(action, help_url)
+        self.toolbar.addWidget(button)
+
         self.iface.addPluginToMenu(u"&IRMT", action)
         self.registered_actions[action_name] = action
 
