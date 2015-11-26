@@ -188,6 +188,20 @@ doc:
 	cd help; make latexpdf html
 	cd apidoc; make html
 
+manual:
+	@echo
+	@echo "-----------------------------"
+	@echo "Building manual using sphinx."
+	@echo "-----------------------------"
+	cd help; make latexpdf html
+
+apidoc:
+	@echo
+	@echo "-----------------------------------------"
+	@echo "Building code documentation using sphinx."
+	@echo "-----------------------------------------"
+	cd apidoc; make html
+
 pylint:
 	@echo
 	@echo "-----------------"
