@@ -180,13 +180,7 @@ clean:
 	rm $(COMPILED_UI_FILES) $(COMPILED_RESOURCE_FILES)
 
 # build documentation with sphinx
-doc:
-	@echo
-	@echo "------------------------------------"
-	@echo "Building documentation using sphinx."
-	@echo "------------------------------------"
-	cd help; make latexpdf html
-	cd apidoc; make html
+doc: manual apidoc
 
 manual:
 	@echo
