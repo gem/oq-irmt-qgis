@@ -130,7 +130,7 @@ variables.  This saves the user from having to augment the model manually.  
 
 By clicking the *Advanced Calculator* button, the native QGIS field calculator
 is opened. Please refer to the `code documentation
-<../../../../apidoc/_build/html/svir.calculations.html#module-svir.calculations.transformation_algs>`_
+<../../../apidoc/build/html/svir.calculations.html#module-svir.calculations.transformation_algs>`_
 for the detailed description of all the agorithms and variants provided by
 the IRMT.
 
