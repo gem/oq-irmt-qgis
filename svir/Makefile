@@ -44,6 +44,10 @@ PLUGIN_UPLOAD = ../scripts/plugin_upload.py
 
 QGISDIR=.qgis2
 
+ifndef VERSION
+	VERSION=HEAD
+endif
+
 default: compile
 
 compile: $(UI_FILES) $(COMPILED_RESOURCE_FILES)
@@ -142,7 +146,14 @@ package: compile doc
 	rm -r svir/
 	echo "Created package: $(PLUGINNAME).zip"
 
-upload: package
+upload_doc: doc
+	@echo
+	@echo "--------------------------------------"
+	@echo "Uploading documentation to GEM server."
+	@echo "--------------------------------------"
+	VERSION=$(VERSION) ../scripts/doc_upload.sh
+
+upload: package upload_doc
 	@echo
 	@echo "-------------------------------------"
 	@echo "Uploading plugin to QGIS Plugin repo."
