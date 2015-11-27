@@ -25,14 +25,6 @@ svir.irmt module
     :undoc-members:
     :show-inheritance:
 
-svir.resources_rc module
-------------------------
-
-.. automodule:: svir.resources_rc
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 
 Module contents
 ---------------
