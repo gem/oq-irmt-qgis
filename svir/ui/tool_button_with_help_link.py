@@ -8,6 +8,7 @@ Contact : marco@opengis.ch
      the Free Software Foundation; either version 2 of the License, or
      (at your option) any later version.
 """
+from svir.utilities.shared import DEBUG
 
 __author__ = 'marco@opengis.ch'
 __revision__ = '$Format:%H$'
@@ -21,7 +22,6 @@ from PyQt4.QtGui import QToolButton, QWhatsThis, QDesktopServices
 class QToolButtonWithHelpLink(QToolButton):
     def __init__(self, action, help_url):
         super(QToolButtonWithHelpLink, self).__init__()
-        #self.setAttribute(Qt.WA_CustomWhatsThis)
         self.setDefaultAction(action)
         self.help_url = help_url
         self.setWhatsThis('<a href="%s">Click for documentation</a>' % help_url)
@@ -32,13 +32,8 @@ class QToolButtonWithHelpLink(QToolButton):
             return True
         return super(QToolButtonWithHelpLink, self).event(event)
 
-    def mousePressEvent(self, event):
-        if QWhatsThis.inWhatsThisMode() and event.button() == Qt.LeftButton:
-            self.open_doc()
-        else:
-            super(QToolButtonWithHelpLink, self).mousePressEvent(event)
-
     def open_doc(self):
-        print 'Opening : %s' % self.help_url
+        if DEBUG:
+            print 'Opening : %s' % self.help_url
         QDesktopServices.openUrl(QUrl(self.help_url))
         QWhatsThis.leaveWhatsThisMode()
