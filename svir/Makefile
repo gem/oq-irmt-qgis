@@ -139,8 +139,8 @@ package: compile doc
 	@echo "------------------------------------"
 	rm -f $(PLUGINNAME)/$(PLUGINNAME).zip
 	git archive --prefix=$(PLUGINNAME)/ -o $(PLUGINNAME).zip $(VERSION)
-	mkdir -p svir/help; mv help/build svir/help/build
-	mkdir -p svir/apidoc; mv apidoc/build svir/apidoc/build
+	mkdir -p svir/help; rm -r svir/help/build; cp -r help/build svir/help/build
+	mkdir -p svir/apidoc; rm -r svir/apidoc/build; cp -r apidoc/build svir/apidoc/build
 	zip -r $(PLUGINNAME).zip svir/help/build
 	zip -r $(PLUGINNAME).zip svir/apidoc/build
 	rm -r svir/
@@ -159,6 +159,24 @@ upload: package upload_doc
 	@echo "Uploading plugin to QGIS Plugin repo."
 	@echo "-------------------------------------"
 	$(PLUGIN_UPLOAD) $(PLUGINNAME).zip
+
+tag:
+ifndef NEW_VERSION
+	$(error NEW_VERSION is not defined)
+endif
+	$(eval VERSION := $(NEW_VERSION))
+	@echo
+	@echo "------------------------------------------------"
+	@echo "Tagging version $(VERSION).                   "
+	@echo "------------------------------------------------"
+	@git tag -a $(VERSION) -m"Tagging $(VERSION)"
+
+release: tag upload
+	@echo
+	@echo "------------------------------------------------"
+	@echo "Released version $(VERSION).                   "
+	@echo "------------------------------------------------"
+
 
 transup:
 	@echo
@@ -191,16 +209,16 @@ clean:
 	rm $(COMPILED_UI_FILES) $(COMPILED_RESOURCE_FILES)
 
 # build documentation with sphinx
-doc: manual apidoc
+doc: build_manual build_apidoc
 
-manual:
+build_manual:
 	@echo
 	@echo "-----------------------------"
 	@echo "Building manual using sphinx."
 	@echo "-----------------------------"
 	cd help; make latexpdf html
 
-apidoc:
+build_apidoc:
 	@echo
 	@echo "-----------------------------------------"
 	@echo "Building code documentation using sphinx."
