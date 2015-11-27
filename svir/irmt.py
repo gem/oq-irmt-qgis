@@ -87,7 +87,7 @@ from svir.utilities.shared import (DEBUG,
                                    PROJECT_TEMPLATE,
                                    THEME_TEMPLATE,
                                    INDICATOR_TEMPLATE,
-                                   )
+                                   HELP_PAGES_LOOKUP)
 
 
 # DO NOT REMOVE THIS
@@ -256,8 +256,8 @@ class Irmt:
         action.setEnabled(enable)
         action.triggered.connect(corresponding_method)
 
-        help_url = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'help', 'build', 'html', action_name)
-        help_url += '.html'
+        help_page = HELP_PAGES_LOOKUP[action_name]
+        help_url = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'help', 'build', 'html', help_page)
         button = QToolButtonWithHelpLink(action, help_url)
         self.toolbar.addWidget(button)
 
