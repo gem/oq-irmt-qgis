@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
-"""
-/***************************************************************************
- Irmt
-                                 A QGIS plugin
- OpenQuake Integrated Risk Modelling Toolkit
-                              -------------------
-        begin                : 2013-10-24
-        copyright            : (C) 2013-2015 by GEM Foundation
-        email                : devops@openquake.org
- ***************************************************************************/
-
+#/***************************************************************************
+# Irmt
+#                                 A QGIS plugin
+# OpenQuake Integrated Risk Modelling Toolkit
+#                              -------------------
+#        begin                : 2013-10-24
+#        copyright            : (C) 2013-2015 by GEM Foundation
+#        email                : devops@openquake.org
+# ***************************************************************************/
+#
 # OpenQuake is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Affero General Public License as published
 # by the Free Software Foundation, either version 3 of the License, or
@@ -22,7 +21,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
-"""
+
 import collections
 import json
 import os
@@ -39,12 +38,41 @@ from svir.dialogs.settings_dialog import SettingsDialog
 from svir.third_party.poster.encode import multipart_encode
 from svir.utilities.shared import DEBUG
 
+_IRMT_VERSION = None
+
+
+def get_irmt_version():
+    """
+    Get the plugin's version from metadata.txt
+    """
+    global _IRMT_VERSION
+    if _IRMT_VERSION is None:
+        metadata_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), '..', 'metadata.txt')
+        with open(metadata_path, 'r') as f:
+            for line in f:
+                if line.startswith('version='):
+                    _IRMT_VERSION = line.split('=')[1]
+    return _IRMT_VERSION
+
 
 def tr(message):
+    """
+    Leverage QApplication.translate to translate a message
+
+    :param message: the message to be translated
+    :returns: the return value of `QApplication.translate('Irmt', message)`
+    """
     return QApplication.translate('Irmt', message)
 
 
 def confirmation_on_close(parent, event=None):
+    """
+    Open a QMessageBox to confirm closing a dialog discarding changes
+
+    :param parent: the parent dialog that is being closed
+    :param event: event that triggered this dialog (e.g. reject or closeEvent)
+    """
     msg = tr("WARNING: all unsaved changes will be lost. Are you sure?")
     reply = QMessageBox.question(
         parent, 'Message', msg, QMessageBox.Yes, QMessageBox.No)
@@ -81,7 +109,9 @@ def replace_fields(sub_tree_root, before, after):
 
 
 def count_heading_commented_lines(fname):
-    # count top lines in the file starting with '#'
+    """
+    count top lines in the file starting with '#'
+    """
     with open(fname) as f:
         lines_to_skip_count = 0
         for line in f:
@@ -97,10 +127,15 @@ def count_heading_commented_lines(fname):
 
 
 def set_operator(sub_tree, operator):
-    # if the root of the sub_tree has children, set the operator to be used to
-    # combine the children. If any of the children have children, set also
-    # their operators to the same one applied to the root.
-    # Then return the modified sub_tree
+    """
+    if the root of the sub_tree has children, set the operator to be used to
+    combine the children. If any of the children have children, set also
+    their operators to the same one applied to the root.
+
+    :param sub_tree: root of the subtree to which we want to set the operator
+    :param operator: the operator to be applied
+    :returns: the modified subtree
+    """
     node = deepcopy(sub_tree)
     if 'children' in node:
         for child_idx, child in enumerate(node['children']):
@@ -111,8 +146,14 @@ def set_operator(sub_tree, operator):
 
 
 def get_node(sub_tree, name):
-    # browse the tree (recursively searching each node's children), looking for
-    # a node with a specific name. Return the node, if found, otherwise None
+    """
+    Browse the tree (recursively searching each node's children), looking for
+    a node with a specific name.
+
+    :param sub_tree: root of the subtree through which we want to search
+    :param name: name of the node to be searched
+    :returns: the node, if found, otherwise None
+    """
     if 'name' in sub_tree and sub_tree['name'] == name:
         found_node = sub_tree
         return found_node
@@ -125,9 +166,15 @@ def get_node(sub_tree, name):
 
 
 def get_field_names(sub_tree, field_names=None):
-    # return a list of all the field names defined in the project definition
-    # field_names is an accumulator that is extended browsing the tree
-    # recursively
+    """
+    Return a list of all the field names defined in the project definition
+
+    :sub_tree: root of the subtree for which we want to collect field names
+    :param field_names: an accumulator that is extended browsing the tree
+                        recursively (if None, a list will be created) and
+                        collecting the field names
+    :returns: the accumulator
+    """
     if field_names is None:
         field_names = set()
     if 'field' in sub_tree:
@@ -140,6 +187,12 @@ def get_field_names(sub_tree, field_names=None):
 
 
 def get_credentials(iface):
+    """
+    Get from the QSettings the credentials to access the OpenQuake Platform
+
+    :returns: tuple (hostname, username, password)
+
+    """
     qs = QSettings()
     hostname = qs.value('irmt/platform_hostname', '')
     username = qs.value('irmt/platform_username', '')
@@ -153,10 +206,13 @@ def get_credentials(iface):
 
 
 def clear_progress_message_bar(msg_bar, msg_bar_item=None):
-        if msg_bar_item:
-            msg_bar.popWidget(msg_bar_item)
-        else:
-            msg_bar.clearWidgets()
+    """
+    Clear the progress messsage bar
+    """
+    if msg_bar_item:
+        msg_bar.popWidget(msg_bar_item)
+    else:
+        msg_bar.clearWidgets()
 
 
 def create_progress_message_bar(msg_bar, msg, no_percentage=False):
@@ -169,7 +225,7 @@ def create_progress_message_bar(msg_bar, msg, no_percentage=False):
     :type: str
 
     :returns: progress object on which we can set the percentage of
-    completion of the task through progress.setValue(percentage)
+              completion of the task through progress.setValue(percentage)
     :rtype: QProgressBar
     """
     progress_message_bar = msg_bar.createMessage(msg)
@@ -182,8 +238,12 @@ def create_progress_message_bar(msg_bar, msg, no_percentage=False):
 
 
 def assign_default_weights(svi_themes):
-    # count themes and indicators and assign default weights
-    # using 2 decimal points (%.2f)
+    """
+    Count themes and indicators and assign default weights
+    using 2 decimal points (%.2f)
+
+    :param svi_themes: list of nodes corresponding to socioeconomic themes
+    """
     themes_count = len(svi_themes)
     theme_weight = float('%.2f' % (1.0 / themes_count))
     for i, theme in enumerate(svi_themes):
@@ -288,6 +348,8 @@ def toggle_select_features_widget(title, text, button_text, layer,
     :type new_feature_ids: QgsFeatureIds
     :param old_feature_ids: The list to select if use_new is false
     :type old_feature_ids: QgsFeatureIds
+
+    :returns: the widget
     """
     widget = QgsMessageBar.createMessage(title, text)
     button = QToolButton(widget)
@@ -338,6 +400,17 @@ def update_platform_project(host,
                             session,
                             project_definition,
                             platform_layer_id):
+    """
+    Add a project definition to one of the available projects on the
+    OpenQuake Platform
+
+    :param host: url of the OpenQuake Platform server
+    :param session: authenticated session to be used
+    :param project_definition: the project definition to be added
+    :param platform_layer_id: the id of the platform layer to be updated
+
+    :returns: the server's response
+    """
     proj_def_str = json.dumps(project_definition,
                               sort_keys=False,
                               indent=2,
@@ -349,6 +422,18 @@ def update_platform_project(host,
 
 
 def upload_shp(host, session, file_stem, username):
+    # FIXME: It looks like this function is never called
+    """
+    Upload a shapefile to the OpenQuake Platform
+
+    :param host: url of the OpenQuake Platform server
+    :param session: authenticated session to be used
+    :param file_stem: the name of the shapefile (without the extension)
+    :param username: the name of the user attempting to perform the action
+
+    :returns: a tuple containing the server's response and a boolean indicating
+              if the uploading was successful
+    """
     files = {'layer_title': file_stem,
              'base_file': ('%s.shp' % file_stem,
                            open('%s.shp' % file_stem, 'rb')),
@@ -380,29 +465,43 @@ def upload_shp(host, session, file_stem, username):
 
 
 def ask_for_download_destination(parent, text='Download destination'):
+    """
+    Open a dialog to ask for a download destination folder
+    """
     return QFileDialog.getExistingDirectory(
         parent,
         text,
         os.path.expanduser("~"))
 
 
-def files_exist_in_destination(destination, file_names,):
-        file_exists_in_destination = []
-        for file_name in file_names:
-            file_path = os.path.join(destination, file_name)
-            if os.path.isfile(file_path):
-                file_exists_in_destination.append(file_path)
-        return file_exists_in_destination
+def files_exist_in_destination(destination, file_names):
+    """
+    Check if any of the provided file names exist in the destination folder
+
+    :param destination: destination folder
+    :param file_names: list of file names
+
+    :returns: list of file names that already exist in the destination folder
+    """
+    file_exists_in_destination = []
+    for file_name in file_names:
+        file_path = os.path.join(destination, file_name)
+        if os.path.isfile(file_path):
+            file_exists_in_destination.append(file_path)
+    return file_exists_in_destination
 
 
 def confirm_overwrite(parent, files):
-        return QMessageBox.question(
-            parent,
-            'Overwrite existing files?',
-            'If you continue the following files will be '
-            'overwritten: %s\n\n'
-            'Continue?' % '\n'.join(files),
-            QMessageBox.Yes | QMessageBox.No)
+    """
+    Open a dialog to ask for user's confirmation on file overwriting
+    """
+    return QMessageBox.question(
+        parent,
+        'Overwrite existing files?',
+        'If you continue the following files will be '
+        'overwritten: %s\n\n'
+        'Continue?' % '\n'.join(files),
+        QMessageBox.Yes | QMessageBox.No)
 
 
 class Register(collections.OrderedDict):
@@ -426,6 +525,10 @@ class Register(collections.OrderedDict):
 class TraceTimeManager(object):
     """
     Wrapper to check how much time is needed to complete a block of code
+
+    :param message: message describing the task to be monitored
+    :param debug: if False, nothing will be done. Otherwise, times will be
+                  measured and logged
     """
     def __init__(self, message, debug=False):
         self.debug = debug
@@ -448,6 +551,10 @@ class LayerEditingManager(object):
     """
     Wrapper to be used to edit a layer,
     that executes startEditing and commitChanges
+
+    :param layer: the layer that is being edited
+    :param message: description of the task that is being performed
+    :param debug: if False, nothing will be logged
     """
     def __init__(self, layer, message, debug=False):
         self.layer = layer
@@ -533,6 +640,14 @@ def multipart_encode_for_requests(params, boundary=None, cb=None):
 
 
 def write_layer_suppl_info_to_qgs(layer_id, suppl_info):
+    """
+    Write into the QgsProject the given supplemental information, associating
+    it with the given layer id.
+
+    :param layer_id: id of the layer for which we want to update the
+                     corresponding supplemental_information
+    :param suppl_info: the supplemental information
+    """
     # TODO: upgrade old project definitions
     # set the QgsProject's property
     QgsProject.instance().writeEntry(
@@ -551,9 +666,17 @@ def write_layer_suppl_info_to_qgs(layer_id, suppl_info):
 
 
 def read_layer_suppl_info_from_qgs(layer_id, supplemental_information):
-    # synchronize with the qgs project's properties
-    # it returns a tuple, with the returned value and a boolean indicating
-    # if such property is available
+    """
+    Read from the QgsProject the supplemental information associated to the
+    given layer
+
+    :param layer_id: the layer id for which we want to retrieve the
+                     supplemental information
+    :param supplemental_information: the supplemental information to be updated
+
+    :returns: a tuple, with the returned supplemental information and a
+              boolean indicating if such property is available
+    """
     layer_suppl_info_str, _ = QgsProject.instance().readEntry(
         'irmt', layer_id, '{}')
     supplemental_information[layer_id] = json.loads(layer_suppl_info_str)
@@ -566,6 +689,13 @@ def read_layer_suppl_info_from_qgs(layer_id, supplemental_information):
 
 def insert_platform_layer_id(
         layer_url, active_layer_id, supplemental_information):
+    """
+    Insert the platform layer id into the supplemental information
+
+    :param layer_url: url of the OpenQuake Platform layer
+    :param active_layer_id: id of the QGIS layer that is currently selected
+    :param supplemental_information: the supplemental information
+    """
     platform_layer_id = layer_url.split('/')[-1]
     suppl_info = supplemental_information[active_layer_id]
     if 'platform_layer_id' not in suppl_info:

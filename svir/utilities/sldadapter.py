@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
-"""
-/***************************************************************************
- Irmt
-                                 A QGIS plugin
- OpenQuake Integrated Risk Modelling Toolkit
-                              -------------------
-        begin                : 2015-03-27
-        copyright            : (C) 2015 by GEM Foundation
-        email                : devops@openquake.org
- ***************************************************************************/
-
+#/***************************************************************************
+# Irmt
+#                                 A QGIS plugin
+# OpenQuake Integrated Risk Modelling Toolkit
+#                              -------------------
+#        begin                : 2015-03-27
+#        copyright            : (C) 2015 by GEM Foundation
+#        email                : devops@openquake.org
+# ***************************************************************************/
+#
 # OpenQuake is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Affero General Public License as published
 # by the Free Software Foundation, either version 3 of the License, or
@@ -22,7 +21,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
-"""
+
 # Part of this code was taken and re-adapted from
 # https://github.com/boundlessgeo/suite-qgis-plugin/blob/master/src/opengeo/qgis/sldadapter.py
 # methods to convert the SLD produced by GeoServer (1.0) to the SLD produced

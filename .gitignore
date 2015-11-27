@@ -6,6 +6,7 @@ svir/.noseids
 svir/.ropeproject/*
 svir/build/
 svir/help/build/*
+svir/apidoc/build/*
 *.rdb
 *.db
 .\#*

@@ -1,0 +1,1 @@
+ls | xargs -I {} inkscape -z -e {}.png {}

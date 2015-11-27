@@ -44,6 +44,10 @@ PLUGIN_UPLOAD = ../scripts/plugin_upload.py
 
 QGISDIR=.qgis2
 
+ifndef VERSION
+	VERSION=HEAD
+endif
+
 default: compile
 
 compile: $(UI_FILES) $(COMPILED_RESOURCE_FILES)
@@ -119,7 +123,7 @@ zip: deploy dclean
 	rm -f $(PLUGINNAME).zip
 	cd $(HOME)/$(QGISDIR)/python/plugins; zip -9r $(CURDIR)/$(PLUGINNAME).zip $(PLUGINNAME)
 
-package: compile
+package: compile doc
 	# Create a zip package of the plugin named $(PLUGINNAME).zip.
 	# This requires use of git (your plugin development directory must be a
 	# git repository).
@@ -135,9 +139,21 @@ package: compile
 	@echo "------------------------------------"
 	rm -f $(PLUGINNAME)/$(PLUGINNAME).zip
 	git archive --prefix=$(PLUGINNAME)/ -o $(PLUGINNAME).zip $(VERSION)
+	mkdir -p svir/help; mv help/build svir/help/build
+	mkdir -p svir/apidoc; mv apidoc/build svir/apidoc/build
+	zip -r $(PLUGINNAME).zip svir/help/build
+	zip -r $(PLUGINNAME).zip svir/apidoc/build
+	rm -r svir/
 	echo "Created package: $(PLUGINNAME).zip"
 
-upload: package
+upload_doc: doc
+	@echo
+	@echo "--------------------------------------"
+	@echo "Uploading documentation to GEM server."
+	@echo "--------------------------------------"
+	VERSION=$(VERSION) ../scripts/doc_upload.sh
+
+upload: package upload_doc
 	@echo
 	@echo "-------------------------------------"
 	@echo "Uploading plugin to QGIS Plugin repo."
@@ -175,12 +191,21 @@ clean:
 	rm $(COMPILED_UI_FILES) $(COMPILED_RESOURCE_FILES)
 
 # build documentation with sphinx
-doc:
+doc: manual apidoc
+
+manual:
 	@echo
-	@echo "------------------------------------"
-	@echo "Building documentation using sphinx."
-	@echo "------------------------------------"
-	cd help; make html
+	@echo "-----------------------------"
+	@echo "Building manual using sphinx."
+	@echo "-----------------------------"
+	cd help; make latexpdf html
+
+apidoc:
+	@echo
+	@echo "-----------------------------------------"
+	@echo "Building code documentation using sphinx."
+	@echo "-----------------------------------------"
+	cd apidoc; make html
 
 pylint:
 	@echo

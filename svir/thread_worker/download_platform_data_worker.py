@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
-"""
-/***************************************************************************
- Irmt
-                                 A QGIS plugin
- OpenQuake Integrated Risk Modelling Toolkit
-                              -------------------
-        begin                : 2013-10-24
-        copyright            : (C) 2014-2015 by GEM Foundation
-        email                : devops@openquake.org
- ***************************************************************************/
+#/***************************************************************************
+# Irmt
+#                                 A QGIS plugin
+# OpenQuake Integrated Risk Modelling Toolkit
+#                              -------------------
+#        begin                : 2013-10-24
+#        copyright            : (C) 2014-2015 by GEM Foundation
+#        email                : devops@openquake.org
+# ***************************************************************************/
 #
 # OpenQuake is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Affero General Public License as published
@@ -22,7 +21,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
-"""
+
 import os
 import tempfile
 
@@ -32,7 +31,20 @@ from svir.utilities.utils import SvNetworkError, tr, UserAbortedNotification
 
 
 class DownloadPlatformDataWorker(AbstractWorker):
-    """worker, to download data from a platform"""
+    """
+    Worker, to download data from a platform
+
+    :param sv_downloader:
+        instance of :class:`svir.utilities.import_sv_data.SvDownloader`
+    :param sv_variables_ids:
+        comma-separated indicator codes to be downloaded
+    :param load_geometries:
+        indicating if also zonal geometries have to be downloaded
+    :type load_geometries: bool
+    :param country_iso_codes:
+        comma-separated iso codes of the countries for which we want to
+        download socioeconomic data
+    """
 
     def __init__(self,
                  sv_downloader,
@@ -46,6 +58,13 @@ class DownloadPlatformDataWorker(AbstractWorker):
         self.country_iso_codes = country_iso_codes
 
     def work(self):
+        """
+        :returns:
+            (fname, msg), where fname is the name of the target csv file that
+            will store the downloaded data, and msg is a message describing if
+            the download is performed successfully
+        :raises: SvNetworkError
+        """
         self.set_message.emit(
             tr('Waiting for the OpenQuake Platform to export the data...'))
         self.toggle_show_progress.emit(False)
