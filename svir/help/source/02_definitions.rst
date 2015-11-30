@@ -13,7 +13,7 @@ datafile. A *layer* is the mechanism used to display geographic datasets in the
 QGIS software, and layers provide the data that is manipulated within the
 IRMT. Each layer references a specific dataset and specifies how that
 dataset is portrayed within the map. The standard layer format for the IRMT is
-the ESRI Shapefile [ESRI1998]_ which can be imported
+the ESRI Shapefile [ESRI98]_ which can be imported
 within the QGIS software using the default *add data* functionality, or layers
 may be created on-the-fly within the IRMT using GEM's socio-economic databases.
 A QGIS project can include multiple layers that can be utilized to provide the
@@ -47,6 +47,6 @@ using layers. The project definition:
   example of a characteristic that may detract from social vulnerability,
   thereby warranting a negative directionality within an index.
   
-.. [ESRI1998]
+.. [ESRI98]
     ESRI Shapefile Technical Description,
     Environmental Systems Research Institute, Redlands, C.A.

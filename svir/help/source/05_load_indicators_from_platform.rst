@@ -17,10 +17,10 @@ from an integrated and holistic perspective using indicators. The strengths and
 weaknesses of composite indicators are derived to a great extent by the quality
 of the underlying variables. Ideally, variables should be selected based on
 their relevance to the phenomenon being measured, analytical soundness,
-accessibility, and completeness [NAR2008]_. Proxy measures for
+accessibility, and completeness [NSST08]_. Proxy measures for
 social and economic vulnerability have been provided by the Global Earthquake
 Model that have been stringently tested for representativeness, robustness,
-coverage and analytical soundness [KHA2014]_. Integrated Risk
+coverage and analytical soundness [KBT+14]_. Integrated Risk
 Modelling Toolkit and Database for Earthquake Risk Assessment. Proceedings of
 the Second European Conference on Earthquake Engineering and Seismology,
 European Association of Earthquake Engineering and European Seismological
@@ -94,7 +94,7 @@ structure. This structure considers: 1) vulnerable populations; 2) economies;
 3) education; 4) infrastructure; 5) health; 6) governance and institutional
 capacities; and 7) the environment.
 
-.. [KHA2014]
+.. [KBT+14]
     Khazai B, Burton C.G., Tormene, P., Power, C., Bernasocchi, M., Daniell,
     J., and Wyss, B. (2014)
     Integrated Risk Modelling Toolkit and Database for Earthquake Risk

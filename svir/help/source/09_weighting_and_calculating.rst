@@ -221,13 +221,13 @@ unless the user uses the dropdown menu to specify a specific symbolization
 field.
 
 
-.. [#citation] Adapted from [TAT2012]_
+.. [#citation] Adapted from [TAT12]_
 
 
 .. |icon-weight-and-calculate| image:: images/iconWeightAndCalculate.png
 
 
-.. [TAT2012]
+.. [TAT12]
     Tate, E.C. 2012.
     Social vulnerability indices: a comparative assessment using uncertainty
     and sensitivity analysis, Natural Hazards, 63(2): 325-347
