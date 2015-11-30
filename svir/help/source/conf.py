@@ -216,6 +216,7 @@ latex_logo = 'images/cover.pdf'
 
 # If true, show URL addresses after external links.
 #latex_show_urls = False
+latex_show_urls = 'footnote'
 
 # Documents to append as an appendix to all manuals.
 #latex_appendices = []
