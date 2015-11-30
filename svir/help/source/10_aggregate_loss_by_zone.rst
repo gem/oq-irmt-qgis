@@ -17,27 +17,24 @@ of two main components: 1) estimations of physical risk (RI), and 2) a social
 vulnerability index (SVI). The convolution of earthquake physical risk and
 social vulnerability parameters can be accomplished by, first, importing risk
 assessments from OpenQuake (or some other source) using the toolkit's risk
-import tool (:numref:`fig-aggregate-loss-by-zone`). As a subsequent step,
-earthquake risk data imported into the tool should be standardized to render
-the data commensurate to the socioeconomic indicators created within the tool.
-
-To import data, users can click the *Aggregate loss by zone* button which
-prompts a dialog window to open. Here, it is possible to select layers
-containing estimations of physical risk, (*Loss layer*) or some other type of
-risk model, and to combine these with a layer containing zonal geometries of
-the study area (e.g.\ country borders, district borders) and socioeconomic
-indicators. The top dropdown menu is pre-populated with the names of the
-available vector layers containing point geometries (a native output of the
-OQ-Engine), while the second dropdown menu is pre-populated with the names of
-the available vector layers containing polygonal geometries. If those menus do
-not contain the desired layers, it is possible to click one of the *\dots*
-buttons, to load another layer from the file system. As soon as a new layer is
-loaded, it will be available in the QGIS table of contents and its name will
-become available and pre-selected in the corresponding dropdown menu.
+import tool (:numref:`fig-aggregate-loss-by-zone`). To import data, users can
+click the :guilabel:`Aggregate loss by zone` button that prompts a dialog
+window to open. Here, it is possible to select layers containing estimations of
+physical risk, (*Loss layer*) or some other type of risk model, and to combine
+these with a layer containing zonal geometries of the study area (e.g., country
+borders, district borders) and socioeconomic indicators. The top dropdown menu
+is pre-populated with the names of the available vector layers containing point
+geometries (a native output of the OQ-Engine), while the second dropdown menu
+is pre-populated with the names of the available vector layers containing
+polygonal geometries. If those menus do not contain the desired layers, it is
+possible to click one of the :guilabel:`...` buttons, to load another layer
+from the file system. As soon as a new layer is loaded, it will be available in
+the QGIS table of contents and its name will become available and pre-selected
+in the corresponding dropdown menu.
 
 Estimations of physical risk can be made available from the OQ-Engine as one or
-multiple CSV files. By selecting the file type *Loss curves from the
-OpenQuake-engine*, such files become available and can be (multi)selected. The
+multiple CSV files. By selecting the file type :guilabel:`Loss curves from the
+OpenQuake-engine`, such files become available and can be (multi)selected. The
 resulting loss layer will contain a number of attributes equal to the number of
 CSV files imported, and each attribute will correspond to a different loss
 type.
@@ -84,6 +81,10 @@ in the corresponding layer, and it will set the values of that attribute to be
 equal to the unique id of the corresponding feature. Then the new attribute
 will be used as unique id of the feature, to perform the loss aggregation by
 zone.
+
+As a subsequent step, earthquake risk data imported into the tool should be
+standardized to render the data commensurate to the socioeconomic indicators
+created within the tool.
 
 
 .. |icon-aggregate-loss-by-zone| image:: images/iconAggregateLossByZone.png

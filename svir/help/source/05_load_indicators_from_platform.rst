@@ -17,14 +17,10 @@ from an integrated and holistic perspective using indicators. The strengths and
 weaknesses of composite indicators are derived to a great extent by the quality
 of the underlying variables. Ideally, variables should be selected based on
 their relevance to the phenomenon being measured, analytical soundness,
-accessibility, and completeness [NSST08]_. Proxy measures for
-social and economic vulnerability have been provided by the Global Earthquake
-Model that have been stringently tested for representativeness, robustness,
-coverage and analytical soundness [KBT+14]_. Integrated Risk
-Modelling Toolkit and Database for Earthquake Risk Assessment. Proceedings of
-the Second European Conference on Earthquake Engineering and Seismology,
-European Association of Earthquake Engineering and European Seismological
-Commission, Istanbul, Turkey}. These are currently accessible in the IRMT at
+accessibility, and completeness [NSST08]_. Proxy measures for social and
+economic vulnerability have been provided by the Global Earthquake Model that
+have been stringently tested for representativeness, robustness, coverage and
+analytical soundness [KBT+14]_. These are currently accessible in the IRMT at
 the national level of geography (gadm L1). Future software releases will add
 access to data at gadm level 2 (L2) for a selection of countries and regions.
 This will include the eight Andean countries of South America and countries
@@ -88,7 +84,7 @@ layer compiled and downloaded within the IRMT.
 When the tool downloads
 the socioeconomic data, a project definition is automatically built taking into
 account how the data was organized in the socioeconomic database. At the
-country level data was grouped together by these meaning that indicators
+country level data was grouped together by theme meaning that indicators
 belonging to the same theme will be grouped together in a hierarchical
 structure. This structure considers: 1) vulnerable populations; 2) economies;
 3) education; 4) infrastructure; 5) health; 6) governance and institutional

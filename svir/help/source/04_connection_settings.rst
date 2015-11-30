@@ -20,8 +20,8 @@ Settings* dialog displayed in :numref:`fig-connection-settings`,
 credentials must be inserted to authenticate the user and to allow the user to
 log into the OQ-Platform. In the *Host* field insert the URL of GEM's
 production installation of the `OQ-Platform <https://platform.openquake.org>`_
-or a different installation if you have URL access. If you still haven't signed
-up to the OQ-Platform, you can do so by clicking *Register to the OQ-Platform*.
+or a different installation if you have URL access. If you still haven't registered
+to use the OQ-Platform, you can do so by clicking *Register to the OQ-Platform*.
 This will open a new web browser and a `sign up page
 <https://platform.openquake.org/account/signup/>`_. The checkbox labeled
 *Developer mode (requires restart)* can be used to increase the verbosity of

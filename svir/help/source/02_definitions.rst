@@ -10,19 +10,19 @@ means as well as its use. In QGIS, a *project* or *project file* is a kind of
 container that acts like a folder storing information on file locations of
 layers and how these layers are displayed in a map. It is the main QGIS
 datafile. A *layer* is the mechanism used to display geographic datasets in the
-QGIS software, and layers provide the data that is manipulated within the
-IRMT. Each layer references a specific dataset and specifies how that
-dataset is portrayed within the map. The standard layer format for the IRMT is
-the ESRI Shapefile [ESRI98]_ which can be imported
-within the QGIS software using the default *add data* functionality, or layers
-may be created on-the-fly within the IRMT using GEM's socio-economic databases.
-A QGIS project can include multiple layers that can be utilized to provide the
-variables and maps necessary for an integrated risk assessment. For each layer,
-multiple *project definitions* can be saved. A *project definition* is a
-tree-shaped model that is created within the IRMT to define the integrated risk
-assessment's workflow. The project definition allows users to create, edit, and
-manage the workflow needed to systematically develop integrated risk models
-using layers. The project definition:
+QGIS software, and layers provide the data that is manipulated within the IRMT.
+Each layer references a specific dataset and specifies how that dataset is
+portrayed within the map. The standard layer format for the IRMT is the ESRI
+Shapefile [ESRI98]_ that can be imported within the QGIS software using the
+default *add data* functionality, or layers may be created on-the-fly within
+the IRMT using GEM's socio-economic databases.  A QGIS project can include
+multiple layers that can be utilized to provide the variables and maps
+necessary for an integrated risk assessment. For each layer, multiple *project
+definitions* can be saved. A *project definition* is a set of parameters that
+are defined within the IRMT to define the integrated risk assessment's
+workflow. It allows users to create, edit, and manage the workflow needed to
+systematically develop integrated risk models using layers. The project
+definition:
 
 * distinguishes which variables within a dataset are to be combined
   together to obtain a composite indicator;
@@ -41,7 +41,7 @@ using layers. The project definition:
   variables or sub-indices; and
 * delimits the directionality of variables when the intent is to
   consider that some variables may add to an index outcome; whereas some
-  variables may may need to detract from it. When considering the social
+  variables may need to detract from it. When considering the social
   vulnerability of populations, a socio-economic status indicator such as
   the percentage of population with a college education provides an
   example of a characteristic that may detract from social vulnerability,

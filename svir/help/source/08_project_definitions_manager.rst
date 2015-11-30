@@ -49,7 +49,7 @@ project definition with a title and, possibly, a description.  The button *Make
 a copy of the selected project definition*, assigns to the active layer within
 the QGIS a new project definition that is an exact clone of the selected one.
 Having two similar project definitions can be useful to easily visualize how
-the output of a project is changed based on  updated variable selections,
+the output of a project is changed based on updated variable selections,
 weighting, and aggregation schemes. This visualization is possible because a
 simple click is sufficient to switch between *before* and *after* project
 definitions. When *OK* is pressed, the composite indices are re-calculated
