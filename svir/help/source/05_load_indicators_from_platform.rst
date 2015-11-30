@@ -26,33 +26,34 @@ access to data at gadm level 2 (L2) for a selection of countries and regions.
 This will include the eight Andean countries of South America and countries
 within Sub-Saharan Africa.
 
-:numref:`fig-load-indicators-from-platform`. displays the *Select
-Socioeconomic Indicators* dialog that was developed to allow users to select
+:numref:`fig-load-indicators-from-platform`. displays the :guilabel:`Select
+Socioeconomic Indicators` dialog that was developed to allow users to select
 indicators based on a number of factors and filtering mechanisms. A
-*Filters* section was developed to enable users to filter indicators by
+:guilabel:`Filters` section was developed to enable users to filter indicators by
 name, keywords, theme (e.g. Economy) and subtheme (e.g Resource Distribution
-and Poverty). The *subtheme* dropdown menu is automatically populated depending
-on the selection of a respective theme. When *Get indicators* is
+and Poverty). The :guilabel:`subtheme` dropdown menu is automatically populated depending
+on the selection of a respective theme. When :guilabel:`Get indicators` is
 pressed, a list of filtered indicators is populated on the left side of the
-dialog within the *Select indicators* window. If no filters are set, then the
+dialog within the :guilabel:`Select indicators` window. If no filters are set, then the
 whole list of indicators available within the database is retrieved and
-displayed within the *Select indicators* window.
+displayed within the :guilabel:`Select indicators` window.
 
-From the *Select indicators* window, it is possible to select one or more
-indicators by single-clicking them in the *Unselected* list on the left.
-Double-clicking the selected indicator(s) moves them to the *Selected* list on
+From the :guilabel:`Select indicators` window, it is possible to select one or more
+indicators by single-clicking them in the :guilabel:`Unselected` list on the left.
+Double-clicking the selected indicator(s) moves them to the :guilabel:`Selected` list on
 the right, and the corresponding data will be downloaded from the OQ-Platform.
 Another way to move items to the right, or back to the left, is to use the four
-central buttons (*add the selected items*, *remove the selected items*, *add
-all*, *remove all*). The *Indicator details* section displays information about
+central buttons (:guilabel:`add the selected items`, :guilabel:`remove the selected items`,
+:guilabel:`add all`, :guilabel:`remove all`). The :guilabel:`Indicator details`
+section displays information about
 the last selected indicator: code, short name, longer description, source and
 aggregation method.
 
-The *Select countries* dialog contains the list of enumeration types (in this
+The :guilabel:`Select countries` dialog contains the list of enumeration types (in this
 case countries) that socioeconomic data is available for within the database.
 Countries can be selected from the list in the same manner that indicators are
-selected using *Select indicators*. Once at least one indicator and one country
-has been selected, the *OK* button will be enabled. By pressing the *OK*
+selected using :guilabel:`Select indicators`. Once at least one indicator and one country
+has been selected, the :guilabel:`OK` button will be enabled. By pressing the :guilabel:`OK`
 button, data will be downloaded from the OQ-Platform and compiled into a vector
 shapefile for display and manipulation within QGIS (another dialog will ask you
 where to save the shapefile that will be obtained). The layer will contain

@@ -1,8 +1,8 @@
 .. _chap-aggregating-loss-by-zone:
 
-========================
+************************
 Aggregating loss by zone
-========================
+************************
 
 .. _fig-aggregate-loss-by-zone:
 
@@ -68,14 +68,14 @@ zonal layer, and let the tool perform a simple join. In this case, the
 aggregation is fast because it does not require spatial analysis.
 
 If a common zonal ID does not exist, a spatial join using zonal geometries may
-be utilized. This is accomplished, first, by selecting *Use zonal geometries*
-within the *Zone ID attribute name* dropdown menu that contains also the names
+be utilized. This is accomplished, first, by selecting :guilabel:`Use zonal geometries`
+within the :guilabel:`Zone ID attribute name` dropdown menu that contains also the names
 of all the attributes of the loss layer. As a consequence, the tool will
 perform a spatial search to detect to which zone each of the loss points
-belongs. The *Zone ID attribute name* in the zonal layer is the attribute that
+belongs. The :guilabel:`Zone ID attribute name` in the zonal layer is the attribute that
 uniquely identifies each of the zones. If the user is not sure if features are
 uniquely identified by any of the available attributes in the zonal layer, then
-it is possible to select the additional item *Add field with unique zone id*.
+it is possible to select the additional item :guilabel:`Add field with unique zone id`.
 As a consequence of this choice, the tool will produce an additional attribute
 in the corresponding layer, and it will set the values of that attribute to be
 equal to the unique id of the corresponding feature. Then the new attribute

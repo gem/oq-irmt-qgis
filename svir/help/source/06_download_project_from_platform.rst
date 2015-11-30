@@ -13,8 +13,8 @@ Downloading a project from the OpenQuake Platform
     |icon-import-project| Downloading a project from the OpenQuake Platform
 
 An additional option to access data is by downloading projects shared by others
-on the OQ-Platform. By clicking the *Download project from the OpenQuake
-Platform*, the above dialog is opened
+on the OQ-Platform. By clicking the :guilabel:`Download project from the OpenQuake
+Platform`, the above dialog is opened
 (:numref:`fig-download-project-from-platform`). Here, a list of available
 projects is displayed. The list will contain the titles of projects for which
 the user has been granted editing privileges (their own projects or those
