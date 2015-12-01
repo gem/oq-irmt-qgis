@@ -3,8 +3,8 @@ The plugin's toolbar
 ********************
 
 When the IRMT plugin is installed, it adds its own toolbar to those available
-on the QGIS graphical user interface.  The plugin's toolbar contains the
-buttons listed below.  For each button, this manual provides a separate chapter
+on the QGIS graphical user interface. The plugin's toolbar contains the
+buttons listed below. For each button, this manual provides a separate chapter
 with the description of its functionality and of the typical workflow in which
 it is used. Please follow the links next to the button icons, to reach the
 corresponding documentation.

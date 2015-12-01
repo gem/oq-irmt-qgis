@@ -1,0 +1,5 @@
+.guilabel, .menuselection {
+    color: blue;
+    font-style: italic;
+    font-family: sans-serif;
+}

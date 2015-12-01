@@ -39,7 +39,7 @@ indicator (or composite index or indices).
 As part of the workflow, the IRMT facilitates the integration of composite
 indicators of socio-economic characteristics with measures of physical risk
 (i.e. estimations of human or economic loss) from the OpenQuake Engine
-(OQ-engine) [SIL2014]_, or other sources, to form what is referred to
+(OQ-engine) [SCP+14]_, or other sources, to form what is referred to
 as an integrated risk assessment. Although the tool may be utilized for any
 type of indicator development, it is encouraged that composite indicators of
 social vulnerability are developed within this integrated risk framework.
@@ -76,7 +76,7 @@ The development of composite indicators is not new to research fields and
 occupations requiring empirical measurement, and a vast literature on composite
 indicators exists that outline methodological approaches for index construction
 and validation. To accompany this manual we suggest the use of two popular
-resources ([NAR2005]_ and [NAR2008]_) aimed at providing a guide for the
+resources ([NSST05]_ and [NSST08]_) aimed at providing a guide for the
 construction and use of composite indicators.
 
 
@@ -89,18 +89,18 @@ OpenQuake risk estimates; and 5) the presentation of the results. Brief
 descriptions of the tool’s components and the workflow to develop integrated
 risk models are outlined in the sections below.
 
-.. [SIL2014]
+.. [SCP+14]
     Silva, V., Crowley, H., Pagani, M., Monelli, D., and Pinho, R., 2014.
     Development of the OpenQuake engine, the Global Earthquake Model’s
     open-source software for seismic risk assessment. Natural Hazards 72(3),
     1409-1427.
 
-.. [NAR2005]
+.. [NSST05]
     Nardo, M., Saisana, M., Saltelli, A. and Tarantola, S. 2005. Tools for
     composite indicators Building. Ispara, Italy: Joint Research Center of the
     European Commission.
 
-.. [NAR2008]
+.. [NSST08]
     Nardo, M., Saisana, M., Saltelli, A. and Tarantola, S. 2008. Handbook on
     constructing composite indicators: Methodology and user guide. Paris,
     France: OECD Publishing.

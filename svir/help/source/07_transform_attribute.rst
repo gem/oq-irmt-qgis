@@ -18,8 +18,8 @@ delineated in a number of statistical units that could easily consist of
 incommensurate ranges or scales. Variables are standardized to avoid problems
 inherent when mixing measurement units, and normalization is employed to avoid
 having extreme values dominate an indicator, and to partially correct for data
-quality problems. The QGIS platform natively provides a *Field calculator* that
-can be used to update existing fields, or to create new ones, in order to to
+quality problems. The QGIS platform natively provides a :guilabel:`Field calculator` that
+can be used to update existing fields, or to create new ones, in order to
 perform a wide variety of mathematical operations for the
 standardization/transformation of data. In addition, the  IRMT provides a
 number of transformation functions found in popular statistical and
@@ -61,7 +61,7 @@ These include:
 4. **Log10** is one of a class of logarithmic transformations that
    include natural log, log2, log3, log4, etc. Within the current plugin, we
    offer functionality for log10 only, yet these transformations are possible
-   within the advanced *field calculator*. A logarithm of any negative number
+   within the advanced :guilabel:`field calculator`. A logarithm of any negative number
    or zero is undefined. It is not possible to log transform values within the
    plugin if the data contains negative values or a zero. For values of zero,
    the tool will warn users and suggest that a :math:`1.0` constant be added to move
@@ -88,21 +88,21 @@ These include:
     It may be desirable to visualize the results of the
     application of transformation functions to data. Although not feasible
     within the plugin at this point, we intend to build data plotting and curve
-    manipulating functionalities into into future versions of the toolkit.   
+    manipulating functionalities into future versions of the toolkit.   
 
-The *Transform attribute* dialog (:numref:`fig-transform-attribute`) was
+The :guilabel:`Transform attribute` dialog (:numref:`fig-transform-attribute`) was
 designed to be quite straightforward. The user is required to select one or
 more numeric fields (variables) available in the active layer. For the
 selection to be completed, the user must move the variables (either one at a
-time, or in a batch) to the *Selected variables* window on the right side of
+time, or in a batch) to the :guilabel:`Selected variables` window on the right side of
 the interface. The user must then select the function necessary to transform
 the selected variables. For some functions, more than one variant is available.
 For functions that have an implementation of an inverse transformation, the
-*Inverse* checkbox will be enabled to allow users to invert the outcome of the
+:guilabel:`Inverse` checkbox will be enabled to allow users to invert the outcome of the
 transformation.
 
-The *New field(s)* section contains two checkboxes and a text field. If the
-first checkbox *Overwrite the field(s)* is selected, the original values of the
+The :guilabel:`New field(s)` section contains two checkboxes and a text field. If the
+first checkbox :guilabel:`Overwrite the field(s)` is selected, the original values of the
 transformed fields will be overwritten by the results of the calculations;
 otherwise, a new field for each transformed variable will be created to store
 the results. In situations in which a user may desire to transform variables
@@ -110,12 +110,12 @@ one at a time rather than using a batch transformation process, it is possible
 for the user to name each respective new field (editing the default one
 proposed by the tool). Otherwise, the names of the new fields will be
 automatically assigned using the following convention: if the original
-attribute is named *ORIG\_NAME*, the name of the transformed attribute becomes
-*T\_ORIG\_NAM* (prepending *T\_* and truncating to 10 characters which is the
+attribute is named *ORIGINALNA*, the name of the transformed attribute becomes
+*\_ORIGINALN* (prepending "*\_*" and truncating to 10 characters which is the
 maximum length permitted for field names in shapefiles).
 
-If the checkbox *Let the project definitions* references track the new FIXME
-field(s)' is checked, all the project definitions associated with the active
+If the checkbox :guilabel:`Let all project definitions utilize transformed
+values` is checked, all the project definitions associated with the active
 layer will reference the transformed fields instead of the original ones.
 Otherwise, they will keep the links to the original selected attributes. In
 most cases it is recommended to keep this checkbox checked. This automatic
@@ -128,17 +128,11 @@ untransformed indicators, this functionality allows for variables used in the
 project definition to be replaced on-the-fly (and automatically) by transformed
 variables.  This saves the user from having to augment the model manually.  
 
-By clicking the *Advanced Calculator* button, the native QGIS field calculator
+By clicking the :guilabel:`Advanced Calculator` button, the native QGIS field calculator
 is opened. Please refer to the `code documentation
 <../../../apidoc/build/html/svir.calculations.html#module-svir.calculations.transformation_algs>`_
 for the detailed description of all the agorithms and variants provided by
 the IRMT.
-
-.. Please refer to
-.. `transformation_algs.py
-.. <https://github.com/gem/oq-irmt-qgis/blob/master/svir/calculations/transformation_algs.py>`_
-.. for the detailed documentation of all the agorithms and variants provided by
-.. the IRMT.
 
 
 .. |icon-transform-attributes| image:: images/iconTransformAttribute.png

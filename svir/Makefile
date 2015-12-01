@@ -139,11 +139,12 @@ package: compile doc
 	@echo "------------------------------------"
 	rm -f $(PLUGINNAME)/$(PLUGINNAME).zip
 	git archive --prefix=$(PLUGINNAME)/ -o $(PLUGINNAME).zip $(VERSION)
-	mkdir -p svir/help; rm -r svir/help/build; cp -r help/build svir/help/build
-	mkdir -p svir/apidoc; rm -r svir/apidoc/build; cp -r apidoc/build svir/apidoc/build
-	zip -r $(PLUGINNAME).zip svir/help/build
-	zip -r $(PLUGINNAME).zip svir/apidoc/build
-	rm -r svir/
+	mkdir -p $(PLUGINNAME)/help/build; rm -r $(PLUGINNAME)/help/build/html; cp -r help/build/html $(PLUGINNAME)/help/build/html
+	mkdir -p $(PLUGINNAME)/apidoc/build; rm -r $(PLUGINNAME)/apidoc/build/html; cp -r apidoc/build/html $(PLUGINNAME)/apidoc/build/html
+	zip -r $(PLUGINNAME).zip $(PLUGINNAME)/help/build/html
+	zip -r $(PLUGINNAME).zip $(PLUGINNAME)/apidoc/build/html
+	zip --delete $(PLUGINNAME).zip $(PLUGINNAME)/test/\* $(PLUGINNAME)/help/source/\* $(PLUGINNAME)/apidoc/source/\*
+	rm -r $(PLUGINNAME)/
 	echo "Created package: $(PLUGINNAME).zip"
 
 upload_doc: doc

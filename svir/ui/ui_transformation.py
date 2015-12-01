@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_transformation.ui'
 #
-# Created: Fri Jul  3 10:56:45 2015
+# Created: Mon Nov 30 17:05:11 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -27,7 +27,7 @@ class Ui_TransformationDialog(object):
     def setupUi(self, TransformationDialog):
         TransformationDialog.setObjectName(_fromUtf8("TransformationDialog"))
         TransformationDialog.setWindowModality(QtCore.Qt.ApplicationModal)
-        TransformationDialog.resize(472, 355)
+        TransformationDialog.resize(472, 391)
         TransformationDialog.setModal(True)
         self.gridLayout = QtGui.QGridLayout(TransformationDialog)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
@@ -111,10 +111,10 @@ class Ui_TransformationDialog(object):
         self.overwrite_ckb.setText(_translate("TransformationDialog", "Overwrite the field(s)", None))
         self.warning_lbl.setText(_translate("TransformationDialog", "WarningLabel", None))
         self.new_field_name_lbl.setText(_translate("TransformationDialog", "Name", None))
-        self.track_new_field_ckb.setText(_translate("TransformationDialog", "Let the project definitions\' references track the new field(s)", None))
+        self.track_new_field_ckb.setText(_translate("TransformationDialog", "Let all project definitions utilize transformed values", None))
         self.formGroupBox.setTitle(_translate("TransformationDialog", "Transformation", None))
         self.algorithm_lbl.setText(_translate("TransformationDialog", "Function", None))
         self.variant_lbl.setText(_translate("TransformationDialog", "Variant", None))
         self.inverse_ckb.setText(_translate("TransformationDialog", "Inverse", None))
 
-from svir.ui.list_multiselect_widget import ListMultiSelectWidget
+from list_multiselect_widget import ListMultiSelectWidget
