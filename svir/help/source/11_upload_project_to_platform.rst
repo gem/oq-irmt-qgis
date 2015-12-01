@@ -63,21 +63,21 @@ a general description of the project.
     found on the OQ-Platform, the selection of a *Zone labels field* is
     required (see :numref:`fig-upload-dialog`). 
 
-The user must designate the :guilabel:`Zone labels
-field` within their dataset. The latter is a field containing unique labels (or
-identifiers) whether these are individual country names, district names, or
-census block numbers, etc. Delineating a zone field when uploading to the
-OQ-Platform is imperative to allow the graphing components of the Social
-Vulnerability and Integrated Risk Viewer to render the visualization using the
-zone's labels.  Without the latter, comparisons among places within the
-graphing tools are not possible. It is also mandatory to choose a license and
-to click on the checkbox to confirm to be informed about the license
-conditions. By clicking the :guilabel:`Info` button, a web browser will be opened,
-pointing to a page that describes the license selected in the :guilabel:`License`
-dropdown menu. When :guilabel:`OK` is pressed, the active layer is uploaded to the
-OQ-Platform and it is applied in the same style visible in QGIS. Furthermore,
-the current project definition is saved into the layer's metadata,
-inside the *Supplemental information* field.
+The user must designate the :guilabel:`Zone labels field` within their dataset.
+The latter is a field containing unique labels (or identifiers) whether these
+are individual country names, district names, or census block numbers, etc.
+Delineating a zone field when uploading to the OQ-Platform is imperative to
+allow the graphing components of the Social Vulnerability and Integrated Risk
+Viewer to render the visualization using the zone's labels.  Without the
+latter, comparisons among places within the graphing tools are not possible. It
+is also mandatory to choose a license and to click on the checkbox to confirm
+to be informed about the license conditions. By clicking the :guilabel:`Info`
+button, a web browser will be opened, pointing to a page that describes the
+license selected in the :guilabel:`License` dropdown menu. When :guilabel:`OK`
+is pressed, the active layer is uploaded to the OQ-Platform and it is applied
+in the same style visible in QGIS. Furthermore, the current project definition
+is saved into the layer's metadata, inside the *Supplemental information*
+field.
 
 .. _fig-update-dialog:
 
