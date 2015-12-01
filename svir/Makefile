@@ -143,7 +143,7 @@ package: compile doc
 	mkdir -p $(PLUGINNAME)/apidoc/build; rm -r $(PLUGINNAME)/apidoc/build/html; cp -r apidoc/build/html $(PLUGINNAME)/apidoc/build/html
 	zip -r $(PLUGINNAME).zip $(PLUGINNAME)/help/build/html
 	zip -r $(PLUGINNAME).zip $(PLUGINNAME)/apidoc/build/html
-	zip --delete $(PLUGINNAME).zip $(PLUGINNAME)/test/\* $(PLUGINNAME)/resources/\* $(PLUGINNAME)/help/source/\* $(PLUGINNAME)/apidoc/source/\*
+	zip --delete $(PLUGINNAME).zip $(PLUGINNAME)/test/\* $(PLUGINNAME)/help/source/\* $(PLUGINNAME)/apidoc/source/\*
 	rm -r $(PLUGINNAME)/
 	echo "Created package: $(PLUGINNAME).zip"
 
