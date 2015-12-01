@@ -173,6 +173,7 @@ endif
 	@git tag -a $(VERSION) -m"Tagging $(VERSION)"
 
 release: tag upload
+	@git push origin --tags
 	@echo
 	@echo "------------------------------------------------"
 	@echo "Released version $(VERSION).                   "
