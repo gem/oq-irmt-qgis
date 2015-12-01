@@ -9,6 +9,13 @@ with the description of its functionality and of the typical workflow in which
 it is used. Please follow the links next to the button icons, to reach the
 corresponding documentation.
 
+.. note::
+
+    The toolbar's buttons are disabled when the corresponding
+    functionalities can not be performed. For instance, the
+    *Transform attributes* button will be available only as long as
+    one of the loaded layers is activated.
+
 |icon-connection-settings| :ref:`chap-connection-settings`
 
 |icon-load-indicators| :ref:`chap-load-indicators`
