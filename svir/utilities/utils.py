@@ -52,7 +52,7 @@ def get_irmt_version():
         with open(metadata_path, 'r') as f:
             for line in f:
                 if line.startswith('version='):
-                    _IRMT_VERSION = line.split('=')[1]
+                    _IRMT_VERSION = line.split('=')[1].strip()
     return _IRMT_VERSION
 
 
