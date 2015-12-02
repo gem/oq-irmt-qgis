@@ -23,17 +23,9 @@ email=staff.it@globalquakemodel.org
 
 # Uncomment the following line and add your changelog entries:
 changelog=
-    1.7.5
-    * User manual aligned with plugin's version 1.7.5
-    * User manual produced via sphinx (html and pdf)
-    * Add "What's this" to plugin's toolbar buttons, pointing to specific html help pages
-    * Fix memory leak in weighting dialog
-    * Fix corner case in tracking transformed fields when transformation can not be completed
-    * Set transformed field names automatically to _ORIGNAME instead of T_ORIGNAME
-      (names up to 9 characters will not be truncated by the max 10 characters constraint of shapefiles)
-    * Do not lose the modified project definition while on-the-fly index calculation is disabled and
-      Ok is pressed
-    * Show informative messages in the messageBar during field transformations and index calculations
+    1.7.6
+    * Fix "What's This?" functionality on Windows
+    * Fix searching functionality in the documentation
 
 # tags are comma separated with spaces allowed
 tags=GEM, IRMT, SVIR, OpenQuake, Social Vulnerability, Integrated Risk
