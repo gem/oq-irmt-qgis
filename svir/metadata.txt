@@ -26,6 +26,7 @@ changelog=
     1.7.6
     * Fix "What's This?" functionality on Windows
     * Fix searching functionality in the documentation
+    * Minor improvements to the user manual
 
 # tags are comma separated with spaces allowed
 tags=GEM, IRMT, SVIR, OpenQuake, Social Vulnerability, Integrated Risk
