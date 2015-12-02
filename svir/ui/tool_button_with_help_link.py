@@ -15,7 +15,7 @@ __revision__ = '$Format:%H$'
 __date__ = '26/11/2015'
 
 
-from PyQt4.QtCore import Qt, QUrl, QEvent
+from PyQt4.QtCore import QUrl, QEvent
 from PyQt4.QtGui import QToolButton, QWhatsThis, QDesktopServices
 
 
@@ -24,7 +24,8 @@ class QToolButtonWithHelpLink(QToolButton):
         super(QToolButtonWithHelpLink, self).__init__()
         self.setDefaultAction(action)
         self.help_url = help_url
-        self.setWhatsThis('<a href="%s">Click for documentation</a>' % help_url)
+        self.setWhatsThis(
+            '<a href="%s">Click for documentation</a>' % help_url)
 
     def event(self, event):
         if event.type() == QEvent.WhatsThis:
@@ -35,5 +36,5 @@ class QToolButtonWithHelpLink(QToolButton):
     def open_doc(self):
         if DEBUG:
             print 'Opening : %s' % self.help_url
-        QDesktopServices.openUrl(QUrl(self.help_url))
+        QDesktopServices.openUrl(QUrl.fromLocalFile(self.help_url))
         QWhatsThis.leaveWhatsThisMode()
