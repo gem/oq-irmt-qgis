@@ -9,6 +9,10 @@ with the description of its functionality and of the typical workflow in which
 it is used. Please follow the links next to the button icons, to reach the
 corresponding documentation.
 
+By pressing the QGIS :guilabel:`What's This?` button and then clicking one of
+the buttons of the IRMT toolbar, the user will be redirected to the corresponding
+explanation in this user manual.
+
 .. note::
 
     The toolbar's buttons are disabled when the corresponding

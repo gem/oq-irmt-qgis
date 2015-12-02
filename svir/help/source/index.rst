@@ -28,6 +28,11 @@ Contents:
     10_aggregate_loss_by_zone.rst
     11_upload_project_to_platform.rst
 
+.. note::
+
+    This documentation is distributed within the plugin's package and it is
+    also available online at `<http://docs.openquake.org/oq-irmt-qgis/>`_
+
 
 .. Indices and tables
 .. ==================
