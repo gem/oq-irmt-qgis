@@ -421,7 +421,7 @@ class Irmt:
                             zone_ids_string,
                             is_subnational_study=True)
                         worker.successfully_finished.connect(
-                            lambda result: self.data_download_successful(
+                            lambda result: self._data_download_successful(
                                 result,
                                 load_geometries,
                                 dest_filename,
@@ -452,7 +452,7 @@ class Irmt:
                             iso_codes_string,
                             is_subnational_study=False)
                         worker.successfully_finished.connect(
-                            lambda result: self.data_download_successful(
+                            lambda result: self._data_download_successful(
                                 result,
                                 load_geometries,
                                 dest_filename,
