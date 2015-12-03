@@ -44,6 +44,10 @@ PLUGIN_UPLOAD = ../scripts/plugin_upload.py
 
 QGISDIR=.qgis2
 
+ifndef VERSION
+	VERSION=HEAD
+endif
+
 default: compile
 
 compile: $(UI_FILES) $(COMPILED_RESOURCE_FILES)
@@ -119,7 +123,7 @@ zip: deploy dclean
 	rm -f $(PLUGINNAME).zip
 	cd $(HOME)/$(QGISDIR)/python/plugins; zip -9r $(CURDIR)/$(PLUGINNAME).zip $(PLUGINNAME)
 
-package: compile
+package: compile doc
 	# Create a zip package of the plugin named $(PLUGINNAME).zip.
 	# This requires use of git (your plugin development directory must be a
 	# git repository).
@@ -135,14 +139,46 @@ package: compile
 	@echo "------------------------------------"
 	rm -f $(PLUGINNAME)/$(PLUGINNAME).zip
 	git archive --prefix=$(PLUGINNAME)/ -o $(PLUGINNAME).zip $(VERSION)
+	mkdir -p $(PLUGINNAME)/help/build; rm -r $(PLUGINNAME)/help/build/html; cp -r help/build/html $(PLUGINNAME)/help/build/html
+	mkdir -p $(PLUGINNAME)/apidoc/build; rm -r $(PLUGINNAME)/apidoc/build/html; cp -r apidoc/build/html $(PLUGINNAME)/apidoc/build/html
+	zip -r $(PLUGINNAME).zip $(PLUGINNAME)/help/build/html
+	zip -r $(PLUGINNAME).zip $(PLUGINNAME)/apidoc/build/html
+	zip --delete $(PLUGINNAME).zip $(PLUGINNAME)/test/\* $(PLUGINNAME)/help/source/\* $(PLUGINNAME)/apidoc/source/\*
+	rm -r $(PLUGINNAME)/
 	echo "Created package: $(PLUGINNAME).zip"
 
-upload: package
+upload_doc: doc
+	@echo
+	@echo "--------------------------------------"
+	@echo "Uploading documentation to GEM server."
+	@echo "--------------------------------------"
+	VERSION=$(VERSION) ../scripts/doc_upload.sh
+
+upload: package upload_doc
 	@echo
 	@echo "-------------------------------------"
 	@echo "Uploading plugin to QGIS Plugin repo."
 	@echo "-------------------------------------"
 	$(PLUGIN_UPLOAD) $(PLUGINNAME).zip
+
+tag:
+ifndef NEW_VERSION
+	$(error NEW_VERSION is not defined)
+endif
+	$(eval VERSION := $(NEW_VERSION))
+	@echo
+	@echo "------------------------------------------------"
+	@echo "Tagging version $(VERSION).                   "
+	@echo "------------------------------------------------"
+	@git tag -a $(VERSION) -m"Tagging $(VERSION)"
+
+release: tag upload
+	@git push origin --tags
+	@echo
+	@echo "------------------------------------------------"
+	@echo "Released version $(VERSION).                   "
+	@echo "------------------------------------------------"
+
 
 transup:
 	@echo
@@ -175,12 +211,21 @@ clean:
 	rm $(COMPILED_UI_FILES) $(COMPILED_RESOURCE_FILES)
 
 # build documentation with sphinx
-doc:
+doc: build_manual build_apidoc
+
+build_manual:
 	@echo
-	@echo "------------------------------------"
-	@echo "Building documentation using sphinx."
-	@echo "------------------------------------"
-	cd help; make html
+	@echo "-----------------------------"
+	@echo "Building manual using sphinx."
+	@echo "-----------------------------"
+	cd help; make latexpdf html
+
+build_apidoc:
+	@echo
+	@echo "-----------------------------------------"
+	@echo "Building code documentation using sphinx."
+	@echo "-----------------------------------------"
+	cd apidoc; make html
 
 pylint:
 	@echo

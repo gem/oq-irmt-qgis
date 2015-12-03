@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
-"""
-/***************************************************************************
- Irmt
-                                 A QGIS plugin
- OpenQuake Integrated Risk Modelling Toolkit
-                              -------------------
-        begin                : 2013-10-24
-        copyright            : (C) 2013 by GEM Foundation
-        email                : devops@openquake.org
- ***************************************************************************/
-
+#/***************************************************************************
+# Irmt
+#                                 A QGIS plugin
+# OpenQuake Integrated Risk Modelling Toolkit
+#                              -------------------
+#        begin                : 2013-10-24
+#        copyright            : (C) 2013 by GEM Foundation
+#        email                : devops@openquake.org
+# ***************************************************************************/
+#
 # Copyright (c) 2013-2014, GEM Foundation.
 #
 # OpenQuake is free software: you can redistribute it and/or modify it
@@ -24,7 +23,6 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
-"""
 
 
 def classFactory(iface):

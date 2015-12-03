@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>472</width>
-    <height>355</height>
+    <height>391</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -98,7 +98,7 @@
            <bool>true</bool>
           </property>
           <property name="text">
-           <string>Let the project definitions' references track the new field(s)</string>
+           <string>Let all project definitions utilize transformed values</string>
           </property>
           <property name="checked">
            <bool>true</bool>

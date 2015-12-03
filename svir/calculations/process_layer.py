@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
-"""
-/***************************************************************************
- Irmt
-                                 A QGIS plugin
- OpenQuake Integrated Risk Modelling Toolkit
-                              -------------------
-        begin                : 2013-10-24
-        copyright            : (C) 2013-2014 by GEM Foundation
-        email                : devops@openquake.org
- ***************************************************************************/
-
+#/***************************************************************************
+# Irmt
+#                                 A QGIS plugin
+# OpenQuake Integrated Risk Modelling Toolkit
+#                              -------------------
+#        begin                : 2013-10-24
+#        copyright            : (C) 2013-2014 by GEM Foundation
+#        email                : devops@openquake.org
+# ***************************************************************************/
+#
 # OpenQuake is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Affero General Public License as published
 # by the Free Software Foundation, either version 3 of the License, or
@@ -22,7 +21,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
-"""
+
 import uuid
 from numpy.testing import assert_almost_equal
 from pprint import pprint
@@ -45,20 +44,46 @@ from svir.utilities.utils import LayerEditingManager, tr
 class ProcessLayer():
     """
     Set of utilities to manage a layer or compare layers.
-    :param layer: Layer to be processed
+
+    :param layer: layer to be processed
+    :type layer: QgsVectorLayer
+
     An example of usage:
-    has_same_content = ProcessLayer(a_layer).has_same_content_as(another_layer)
+
+    .. code-block:: python
+
+       has_same_content = \\
+           ProcessLayer(a_layer).has_same_content_as(another_layer)
+
     """
     def __init__(self, layer):
         self.layer = layer
 
     def pprint(self):
+        """
+        Pretty print the contents of the layer
+        """
         print 'Layer: %s' % self.layer.name()
         print [field.name() for field in self.layer.dataProvider().fields()]
         pprint([feature.attributes()
                 for feature in self.layer.dataProvider().getFeatures()])
 
     def has_same_projection_as(self, other_layer):
+        """
+        Check if the layer uses the same projection as another layer
+
+        :param other_layer: layer to compare with
+        :type other_layer: QgsVectorLayer
+        :returns: (bool, str):
+
+            (True, msg)
+                if the layers use the same coordinates,
+                specifying the projection in the message
+
+            (False, msg)
+                if they use different projections,
+                specifying the projections in the message
+        """
         this_layer_projection = self.layer.crs().geographicCRSAuthId()
         other_layer_projection = other_layer.crs().geographicCRSAuthId()
         if (this_layer_projection != other_layer_projection):
@@ -72,6 +97,12 @@ class ProcessLayer():
             return True, msg
 
     def has_same_content_as(self, other_layer):
+        """
+        Check if the layer has the same content as another layer
+
+        :param other_layer: layer to compare with
+        :type other_layer: QgsVectorLayer
+        """
         this_dp = self.layer.dataProvider()
         other_dp = other_layer.dataProvider()
         len_this = self.layer.featureCount()
@@ -116,8 +147,8 @@ class ProcessLayer():
         :type attribute_list: list of QgsField
 
         :return: dict having as keys the elements of the list of attributes
-        passed as input argument, and as values the actual names of the
-        assigned attributes
+                 passed as input argument, and as values the actual names of
+                 the assigned attributes
         """
         if simulate:
             description = 'Simulate add attributes'
@@ -211,6 +242,7 @@ class ProcessLayer():
         :param simulate: if True, the method will just simulate the creation
                          of the target attribute and return the name that would
                          be assigned to it
+        :returns: (actual_new_attr_name, invalid_input_values)
         """
         # get the id of the attribute named input_attr_name
         input_attr_id = self.find_attribute_id(input_attr_name)

@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
-"""
-/***************************************************************************
- Irmt
-                                 A QGIS plugin
- OpenQuake Integrated Risk Modelling Toolkit
-                              -------------------
-        begin                : 2013-10-24
-        copyright            : (C) 2014-2015 by GEM Foundation
-        email                : devops@openquake.org
- ***************************************************************************/
+#/***************************************************************************
+# Irmt
+#                                 A QGIS plugin
+# OpenQuake Integrated Risk Modelling Toolkit
+#                              -------------------
+#        begin                : 2013-10-24
+#        copyright            : (C) 2014-2015 by GEM Foundation
+#        email                : devops@openquake.org
+# ***************************************************************************/
 #
 # OpenQuake is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Affero General Public License as published
@@ -22,7 +21,6 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
-"""
 
 import os
 import shutil
@@ -93,7 +91,7 @@ class UploadWorker(AbstractWorker):
                 'dbf_file': open('%s.dbf' % self.file_stem, 'rb'),
                 'shx_file': open('%s.shx' % self.file_stem, 'rb'),
                 'prj_file': open('%s.prj' % self.file_stem, 'rb'),
-                'xml_file': open('%s.xml' % self.file_stem, 'r'),
+                'xml_file': open('%s.xml' % self.file_stem, 'rb'),
                 'charset': 'UTF-8',
                 'permissions': json.dumps(permissions)
                 }

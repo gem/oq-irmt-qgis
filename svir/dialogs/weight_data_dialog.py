@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
-"""
-/***************************************************************************
- Irmt
-                                 A QGIS plugin
- OpenQuake Integrated Risk Modelling Toolkit
-                              -------------------
-        begin                : 2013-10-24
-        copyright            : (C) 2014 by GEM Foundation
-        email                : devops@openquake.org
- ***************************************************************************/
+#/***************************************************************************
+# Irmt
+#                                 A QGIS plugin
+# OpenQuake Integrated Risk Modelling Toolkit
+#                              -------------------
+#        begin                : 2013-10-24
+#        copyright            : (C) 2014 by GEM Foundation
+#        email                : devops@openquake.org
+# ***************************************************************************/
 #
 # OpenQuake is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Affero General Public License as published
@@ -22,7 +21,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
-"""
+
 from copy import deepcopy
 import json
 
@@ -70,6 +69,11 @@ class WeightDataDialog(QDialog):
         self.added_attrs_ids = set()
         self.discarded_feats = set()
         self.any_changes_made = False
+
+        # keep track of changes made to the tree while on-the-fly calculations
+        # are off (the tree has changed, but indices haven't been recalculated)
+        self.modified_project_definition = None
+
         self.active_layer_numeric_fields = []
         self.update_active_layer_numeric_fields()
         # keep track of the fact that the user has explicitly selected a field
@@ -155,6 +159,13 @@ class WeightDataDialog(QDialog):
             self.project_definition = self.clean_json([data])
             self._manage_style_by_field()
             self.json_cleaned.emit(self.project_definition)
+
+            # nothing has changed since the last recalculation
+            self.modified_project_definition = None
+        else:
+            # keep track of the current status of the project definition
+            # as it is in the d3 tree, so it can be used when OK is pressed
+            self.modified_project_definition = self.clean_json([data])
 
     def _manage_style_by_field(self):
         if self.style_by_field_selected:

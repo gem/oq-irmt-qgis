@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
-"""
-/***************************************************************************
- Irmt
-                                 A QGIS plugin
- OpenQuake Integrated Risk Modelling Toolkit
-                              -------------------
-        begin                : 2013-10-24
-        copyright            : (C) 2014-2015 by GEM Foundation
-        email                : devops@openquake.org
- ***************************************************************************/
-
+#
+#/***************************************************************************
+# Irmt
+#                                 A QGIS plugin
+# OpenQuake Integrated Risk Modelling Toolkit
+#                              -------------------
+#        begin                : 2013-10-24
+#        copyright            : (C) 2014-2015 by GEM Foundation
+#        email                : devops@openquake.org
+# ***************************************************************************/
+#
 # OpenQuake is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Affero General Public License as published
 # by the Free Software Foundation, either version 3 of the License, or
@@ -22,7 +22,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
-"""
+
 import math
 from numpy import mean, std, argwhere, amax, amin, log10, log
 from types import NoneType
@@ -39,8 +39,17 @@ LOG10_VARIANTS = ('INCREMENT BY ONE IF ZEROS ARE FOUND',
 
 def transform(features_dict, algorithm, variant_name="", inverse=False):
     """
-    Use the chosen algorithm (and optional variant) on the input dict, and
+    Use the chosen algorithm (and optional variant and/or inversion)
+    on the input dict, and
     return a dict containing the transformed values with the original ids
+    and the list of invalid input values (or None)
+
+    :param features_dict: dictionary containing the features to transform
+    :param algorithm: the function to be used to transform the data
+    :param variant_name: the (optional) variant to be used
+    :param inverse: a boolean (default False) to run the inverse function
+                    if available
+    :returns: (transformed_dict, invalid_input_values)
     """
     # make a copy of the dictionary containing features (ids and values) and
     # remove elements containing missing values, so the transformation is
@@ -66,17 +75,17 @@ def transform(features_dict, algorithm, variant_name="", inverse=False):
 def rank(input_list, variant_name="AVERAGE", inverse=False):
     """Assign ranks to data, dealing with ties appropriately.
 
-    Args:
-        input_list: the list of numbers to rank
-        variant_name: available variants are
-            [AVERAGE, MIN, MAX, DENSE, ORDINAL] and they correspond to
-            different strategies on how to cope with ties (default: AVERAGE)
-        inverse: instead of giving the highest rank to the biggest input value,
-            give the highest rank to the smallest input value
-    Returns:
-        list of ranks corresponding to the input data
-    Raises:
-        NotImplementedError: if variant_name is not implemented
+    :param input_list: the list of numbers to rank
+    :param variant_name: available variants are
+                         [AVERAGE, MIN, MAX, DENSE, ORDINAL]
+                         and they correspond to
+                         different strategies on how to cope with ties
+                         (default: AVERAGE)
+    :param inverse: instead of giving the highest rank to the biggest
+                    input value, give the highest rank to the smallest
+                    input value
+    :returns: list of ranks corresponding to the input data
+    :raises: NotImplementedError if variant_name is not implemented
     """
     input_copy = input_list[:]
     len_input_list = len(input_list)
@@ -168,9 +177,9 @@ def rank(input_list, variant_name="AVERAGE", inverse=False):
 
 @TRANSFORMATION_ALGS.add('Z_SCORE')
 def z_score(input_list, variant_name=None, inverse=False):
-    """
+    r"""
     Direct:
-        Transformed(e_i) = (e_i - mean(e)) / stddev(e)
+        :math:`f(x_i) = \frac{x_i - \mu_x}{\sigma_x}`
     Inverse:
         Multiply each input by -1, before doing exactly the same
     """
@@ -189,11 +198,11 @@ def z_score(input_list, variant_name=None, inverse=False):
 
 @TRANSFORMATION_ALGS.add('MIN_MAX')
 def min_max(input_list, variant_name=None, inverse=False):
-    """
+    r"""
     Direct:
-        Transformed(e_i) = (e_i - min(e)) / (max(e) - min(e))
+        :math:`f(x_i) = \frac{x_i - \min(x)}{\max(x) - \min(x)}`
     Inverse:
-        Transformed(e_i) = 1 - [(e_i - min(e)) / (max(e) - min(e))]
+        :math:`f(x_i) = 1 - \frac{x_i - \min(x)}{\max(x) - \min(x)}`
 
     """
     if variant_name:
@@ -258,11 +267,12 @@ def log10_(input_list,
 
 @TRANSFORMATION_ALGS.add('QUADRATIC')
 def simple_quadratic(input_list, variant_name="INCREASING", inverse=False):
-    """
-    Simple quadratic transformation (bottom = 0)
-        quadratic(e_i) = (e_i - bottom)^2 / (max(e) - bottom)^2
-    ==>
-        simple_quadratic(e_i) = e_i^2 / max(e)^2
+    r"""
+    Simple quadratic transformation :math:`(bottom = 0)`
+
+    :math:`quadratic(x_i) = \frac{(x_i - bottom)^2}{(\max(x) - bottom)^2}`
+    :math:`\Rightarrow`
+    :math:`simple\_quadratic(x_i) = \frac{x_i^2}{\max(x)^2}`
 
     Inverse:
         For each output x, the final output will be 1 - x
@@ -291,12 +301,12 @@ def simple_quadratic(input_list, variant_name="INCREASING", inverse=False):
 
 @TRANSFORMATION_ALGS.add('SIGMOID')
 def sigmoid(input_list, variant_name="", inverse=False):
-    """
+    r"""
     Logistic sigmoid function:
-        f(x) = 1 / [1 + e^(-x)]
+        :math:`f(x) = \frac{1}{1 + e^{-x}}`
 
     Inverse function:
-        f(y) =  ln[y / (1 - y)]
+        :math:`f(x) = \ln(\frac{x}{1-x})`
     """
     if variant_name:
         raise NotImplementedError("%s variant not implemented" % variant_name)

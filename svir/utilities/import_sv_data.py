@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
-"""
-/***************************************************************************
- Irmt
-                                 A QGIS plugin
- OpenQuake Integrated Risk Modelling Toolkit
-                              -------------------
-        begin                : 2013-10-24
-        copyright            : (C) 2014 by GEM Foundation
-        email                : devops@openquake.org
- ***************************************************************************/
-
+#/***************************************************************************
+# Irmt
+#                                 A QGIS plugin
+# OpenQuake Integrated Risk Modelling Toolkit
+#                              -------------------
+#        begin                : 2013-10-24
+#        copyright            : (C) 2014-2015 by GEM Foundation
+#        email                : devops@openquake.org
+# ***************************************************************************/
+#
 # OpenQuake is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Affero General Public License as published
 # by the Free Software Foundation, either version 3 of the License, or
@@ -22,7 +21,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
-"""
+
 import os
 import tempfile
 import StringIO
@@ -58,6 +57,13 @@ PLATFORM_EXPORT_ADMIN_LEVELS_FOR_STUDY = "/svir/list_admin_levels_for_study"
 
 
 def get_loggedin_downloader(iface):
+    """
+    Attempt to login to the OpenQuake Platform
+
+    :param iface: needed to get the credentials and to use the messageBar
+
+    :returns: a :class:`svir.utilities.SvDownloader` instance
+    """
     hostname, username, password = get_credentials(iface)
     sv_downloader = SvDownloader(hostname)
 
@@ -79,6 +85,12 @@ def get_loggedin_downloader(iface):
 
 
 class SvDownloader(object):
+    """
+    Utility to use the OpenQuake Platform's API to download socioecioeconomic
+    data.
+
+    :param host: url of the OpenQuake Platform instance to use
+    """
     def __init__(self, host):
         self.host = host
         self.sess = Session()
@@ -105,6 +117,11 @@ class SvDownloader(object):
         return admin_levels
 
     def get_themes(self):
+        """
+        Get the list of socioeconomic themes
+
+        :returns: list of themes
+        """
         page = self.host + PLATFORM_EXPORT_SV_THEMES
         themes = []
         result = self.sess.get(page)
@@ -114,6 +131,12 @@ class SvDownloader(object):
         return themes
 
     def get_subthemes_by_theme(self, theme):
+        """
+        Get the list of subthemes of a given socioeconomic theme
+
+        :param theme: a socioeconomic theme
+        :returns: list of subthemes
+        """
         page = self.host + PLATFORM_EXPORT_SV_SUBTHEMES
         params = dict(theme=theme)
         subthemes = []
@@ -126,6 +149,19 @@ class SvDownloader(object):
     def get_indicators_info(
             self, name_filter=None, keywords=None, theme=None,
             subtheme=None, study=None):
+        """
+        Get information about indicators that comply with the provided
+        filtering parameters
+
+        :param name_filter: indicator name (or part of it)
+        :param keywords: comma-separated keywords
+        :param theme: socioeconomic theme
+        :subtheme: socioeconomic subtheme
+        :study: scientific study for which data was collected
+
+        :returns: a dictionary code -> name, theme, subtheme, description,
+            measurement_type, source, aggregation_method, keywords_str
+        """
         page = self.host + PLATFORM_EXPORT_SV_NAMES
         params = dict(name=name_filter,
                       keywords=keywords,
@@ -154,6 +190,15 @@ class SvDownloader(object):
         return indicators_info
 
     def get_countries_info(self, study_name):
+        """
+        Get information about countries for which socioeconomic data is
+        available in the OpenQuake Platform's database
+
+        :param study_name:
+            name of the scientific study for which we want to retrieve data
+
+        :returns: a dictionary iso -> name
+        """
         page = self.host + PLATFORM_EXPORT_COUNTRIES_INFO
         params = dict(study_name=study_name)
         result = self.sess.get(page, params=params)
@@ -172,6 +217,18 @@ class SvDownloader(object):
         return countries_info
 
     def get_zones_info(self, study_name, country_iso):
+        """
+        Get information about zones for which socioeconomic data is
+        available in the OpenQuake Platform's database
+
+        :param study_name:
+            name of the scientific study for which we want to retrieve data
+        :param country_iso:
+            iso code of the country to which zones of interest belong
+
+        :returns: a list containing for each zone a dictionary with
+                  name, country_iso, parent_label and admin_level
+        """
         page = self.host + PLATFORM_EXPORT_ZONES_INFO
         params = dict(study_name=study_name, country_iso=country_iso)
         result = self.sess.get(page, params=params)
@@ -202,6 +259,20 @@ class SvDownloader(object):
                                 load_geometries,
                                 zone_ids,
                                 message_bar):
+        """
+        Get a csv file containing data corresponding to the social
+        vulnerability variables which ids are given in input If country iso
+        codes are also provided, only the corresponding data will be exported
+
+        :param sv_variables_ids: a string of comma-separated ids of social
+                                 vulnerability variables
+        :param load_geometries: 'True' or 'False', indicating if also the
+                                geometries of countries have to be exported
+                                (optional - default: 'False')
+        :param country_iso_codes: a string of comma-separated country iso
+                                  codes (optional - default: all countries)
+        :message_bar: the message bar to be used for notifications
+        """
         msg_bar_item, progress_ = create_progress_message_bar(
             message_bar,
             'Waiting for the OpenQuake Platform to export the data...',
@@ -252,6 +323,20 @@ class SvDownloader(object):
                              load_geometries,
                              country_iso_codes,
                              message_bar):
+        """
+        Get a csv file containing data corresponding to the social
+        vulnerability variables which ids are given in input If country iso
+        codes are also provided, only the corresponding data will be exported
+
+        :param sv_variables_ids: a string of comma-separated ids of social
+                                 vulnerability variables
+        :param load_geometries: 'True' or 'False', indicating if also the
+                                geometries of countries have to be exported
+                                (optional - default: 'False')
+        :param country_iso_codes: a string of comma-separated country iso
+                                  codes (optional - default: all countries)
+        :message_bar: the message bar to be used for notifications
+        """
         msg_bar_item, progress_ = create_progress_message_bar(
             message_bar,
             'Waiting for the OpenQuake Platform to export the data...',
