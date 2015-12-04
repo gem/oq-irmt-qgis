@@ -590,6 +590,9 @@
         }
 
         function findNodeField(subtree, name) {
+            // recursively search in the tree if there is any node with the
+            // given name. Return such node, if found, or false otherwise.
+
             if (typeof subtree.name !== 'undefined' && subtree.name === name) {
                 if (typeof subtree.field !== 'undefined') {
                     return subtree.field;
@@ -607,18 +610,49 @@
             return false;
         }
 
+        function nodeFieldAlreadyAssigned(subtree, field) {
+            // recursively search in the tree if there is any node associated
+            // to the given field, and return a boolean.
+
+            if (typeof subtree.field !== 'undefined' && subtree.field === field) {
+                return true;
+            }
+            if (typeof subtree.children !== 'undefined') {
+                for (var i = 0; i < subtree.children.length; i++) {
+                    var child = subtree.children[i];
+                    var found_field = nodeFieldAlreadyAssigned(child, field);
+                    if (found_field) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
         function updateD3Tree(source) {
             // check if meanwhile the project_definition was updated by any calculation
             var proj_def_from_python = JSON.parse(qt_page.json_str);
             var nodes = tree.nodes(root).reverse();
+            // reading nodes as they currently are in the d3 tree
             nodes.forEach(function(d) {
-                // if it has a name but not a field, check if project_definition contains
-                // a node with the same name, associated to a field
-                // and, in such case, associate the same field to the node
-                if (typeof d.name !== 'undefined'){
-                    var found_field = findNodeField(proj_def_from_python, d.name);
-                    if (found_field) {
-                        d.field = found_field;
+                // if this node has a name but is not stored into a layer's field yet,
+                // check if proj_def_from_python contains a node with the same name
+                // associated to a field. If it has, it means that the field was assigned
+                // by a on-the-fly calculation. In such case, align the d3 version of the
+                // tree associating the same field to the node.
+                // But... If the field is already taken by another node in the current d3
+                // version, it means that there are 2 nodes with the same name. In this
+                // corner case, we don't want to assign the same field to the current
+                // node, otherwise we would have a duplication.
+                if (typeof d.name !== 'undefined' && typeof d.field === 'undefined'){
+                    var found_field_from_python = findNodeField(proj_def_from_python, d.name);
+                    if (found_field_from_python) {
+                        // assign the field to the node only if the field is not already
+                        // assigned to a different node
+                        var found_field_from_js = nodeFieldAlreadyAssigned(root, found_field_from_python);
+                        if (!found_field_from_js) {
+                            d.field = found_field_from_python;
+                        }
                     }
                 }
             });
