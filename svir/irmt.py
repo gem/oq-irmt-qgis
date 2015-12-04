@@ -683,7 +683,7 @@ class Irmt:
             elif dlg.modified_project_definition:
                 (added_attrs_ids,
                  discarded_feats,
-                 edited_project_definition) = self.recalculate_indexes(
+                 edited_project_definition) = self._recalculate_indexes(
                     dlg.modified_project_definition)
                 dlg.added_attrs_ids.update(added_attrs_ids)
                 dlg.discarded_feats = discarded_feats
