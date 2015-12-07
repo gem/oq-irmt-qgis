@@ -148,7 +148,7 @@ class SvDownloader(object):
 
     def get_indicators_info(
             self, name_filter=None, keywords=None, theme=None,
-            subtheme=None, study=None):
+            subtheme=None, zone_ids=None, study=None):
         """
         Get information about indicators that comply with the provided
         filtering parameters
@@ -157,6 +157,7 @@ class SvDownloader(object):
         :param keywords: comma-separated keywords
         :param theme: socioeconomic theme
         :subtheme: socioeconomic subtheme
+        :zone_ids: zones for which data was collected
         :study: scientific study for which data was collected
 
         :returns: a dictionary code -> name, theme, subtheme, description,
@@ -167,6 +168,7 @@ class SvDownloader(object):
                       keywords=keywords,
                       theme=theme,
                       subtheme=subtheme,
+                      zone_ids=zone_ids,
                       study=study)
         result = self.sess.get(page, params=params)
         indicators_info = {}

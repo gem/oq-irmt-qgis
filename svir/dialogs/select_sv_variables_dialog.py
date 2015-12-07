@@ -60,7 +60,8 @@ class SelectSvVariablesDialog(QDialog):
 
     @pyqtSlot()
     def on_fill_zones_btn_clicked(self):
-        self.fill_zones()
+        with WaitCursorManager():
+            self.fill_zones()
 
     @pyqtSlot(str)
     def on_theme_cbx_currentIndexChanged(self):
@@ -76,8 +77,10 @@ class SelectSvVariablesDialog(QDialog):
     @pyqtSlot(str)
     def on_study_cbx_currentIndexChanged(self):
         with WaitCursorManager():
+            self.ui.country_multiselect.clear()
+            self.ui.indicator_multiselect.clear()
+            self.ui.zone_multiselect.clear()
             self.fill_countries()
-            self.fill_indicators()
             admin_levels = self.sv_downloader.get_admin_levels_for_study(
                 self.ui.study_cbx.currentText())
             self.is_subnational_study = any(
@@ -143,10 +146,29 @@ class SelectSvVariablesDialog(QDialog):
         keywords = self.ui.keywords_le.text()
         theme = self.ui.theme_cbx.currentText()
         subtheme = self.ui.subtheme_cbx.currentText()
+        zones_count = self.ui.zone_multiselect.selected_widget.count()
+        zone_ids_list = []
+        for zone_idx in range(zones_count):
+            zone_id = \
+                self.ui.zone_multiselect.selected_widget.item(zone_idx).text()
+            zone_ids_list.append(zone_id)
+        zone_ids_string = "|".join(zone_ids_list)
         study = self.ui.study_cbx.currentText()
         try:
-            filter_result_dict = self.sv_downloader.get_indicators_info(
-                name_filter, keywords, theme, subtheme, study)
+            if zone_ids_string:  # filter by the selected zones
+                filter_result_dict = self.sv_downloader.get_indicators_info(
+                    name_filter=name_filter,
+                    keywords=keywords,
+                    theme=theme,
+                    subtheme=subtheme,
+                    zone_ids=zone_ids_string)
+            else:  # filter by study
+                filter_result_dict = self.sv_downloader.get_indicators_info(
+                    name_filter=name_filter,
+                    keywords=keywords,
+                    theme=theme,
+                    subtheme=subtheme,
+                    study=study)
             self.indicators_info_dict.update(filter_result_dict)
             names = sorted(
                 [code + ': ' + filter_result_dict[code]['name']

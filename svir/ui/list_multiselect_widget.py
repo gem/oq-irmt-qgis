@@ -83,6 +83,10 @@ class ListMultiSelectWidget(QtGui.QGroupBox):
         """
         self._set_items(self.unselected_widget, items)
 
+    def clear(self):
+        self.unselected_widget.clear()
+        self.selected_widget.clear()
+
     def _get_items(self, widget):
         for i in range(widget.count()):
             yield widget.item(i).text()

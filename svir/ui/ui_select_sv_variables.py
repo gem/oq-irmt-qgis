@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_select_sv_variables.ui'
 #
-# Created: Thu Nov 12 10:04:59 2015
+# Created: Mon Dec  7 16:05:50 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -146,7 +146,7 @@ class Ui_SelectSvVariablesDialog(object):
         self.keywords_le.setPlaceholderText(_translate("SelectSvVariablesDialog", "Type one or more keywords (comma-separated)", None))
         self.theme_lbl.setText(_translate("SelectSvVariablesDialog", "Theme", None))
         self.subtheme_lbl.setText(_translate("SelectSvVariablesDialog", "Subtheme", None))
-        self.filter_btn.setText(_translate("SelectSvVariablesDialog", "Filter", None))
+        self.filter_btn.setText(_translate("SelectSvVariablesDialog", "Fill indicators", None))
         self.indicator_multiselect.setTitle(_translate("SelectSvVariablesDialog", "Select indicators", None))
         self.indicator_info.setTitle(_translate("SelectSvVariablesDialog", "Indicator details", None))
 
