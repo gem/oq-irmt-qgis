@@ -24,6 +24,7 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     1.7.6
+    * Enable zooming the project definition tree, and no overlapping in the text labels
     * Fix corner case occurring when two nodes in a project definition had the same name and were incorrectly pointing to the same field
     * Fix refactoring-related issue that was breaking the plugin in case on-the-fly calculations were disabled
     * Fix "What's This?" functionality on Windows

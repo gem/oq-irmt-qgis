@@ -113,7 +113,11 @@
             .attr("class", "tooltip")
             .style("opacity", 0);
 
-        var tree = d3.layout.tree().size([height, width]);
+        var tree = d3.layout.tree()
+            .size([height, width])
+            .separation(function separation(a,b) {
+                return getRadius(a) + getRadius(b);
+            });
 
         var nodeEnter;
 
@@ -522,10 +526,14 @@
             return radius;
         }
 
-        var svg = d3.select("#projectDefDialog").append("svg")
-            .attr("width", width + margin.right + margin.left)
-            .attr("height", height + margin.top + margin.bottom)
+        var svg = d3.select("#projectDefDialog")
+            .append("svg")
+            .attr("width", "100%")
+            .attr("height", "100%")
             .attr("id", "project-definition-svg")
+            .call(d3.behavior.zoom().on("zoom", function () {
+                svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")");
+            }))
             .append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -911,13 +919,8 @@
                     }
                 })
                 .attr("dy", function(d) {
-                    // NOTE are x and y swapped?
-                    // set te text above or below the node depending on the
-                    // parent position
-                    if (typeof d.parent != 'undefined' && d.x > d.parent.x){
-                        return "2em";
-                    }
-                    return "-1em";
+                    // Place the label always at the same height of the node
+                    return "0.3em";
                 })
                 .attr("text-anchor", function(d) {
                     if (d.type === node_types_dict.SV_INDICATOR || d.type === node_types_dict.RISK_INDICATOR) {
@@ -974,7 +977,8 @@
                     }
                 })
                 .attr("id", function(d) {return "operator-label-" + d.level;})
-                .attr("x", function(d) { return getRadius(d) + 15; })
+                .attr("x", function(d) { return getRadius(d) + 5; })
+                .attr("dy", function(d) { return "0.3em"; })
                 .on("click", function(d) { openWeightingDialog(d); });
 
             // Render '(ignore weights)' in a new line, if present
@@ -1006,13 +1010,13 @@
             // Render the weight next to the node, as a percentage
             nodeEnter.append("text")
                 .attr("id", (function(d) {return 'node-weight-' + d.name.replace(' ', '-'); }))
-                .attr("x", function(d) { return "-1em"; })
+                .style("font-size", function(d) {
+                    return "8px";
+                })
+                .attr("x", function(d) { return "-1.1em"; })
                 .attr("dy", function(d) {
-                    if (typeof d.parent != 'undefined' && d.x > d.parent.x){
-                        return -(getRadius(d) + 5);
-                    } else {
-                        return getRadius(d) + 12;
-                    }})
+                    return -(getRadius(d) + 3);
+                    })
                 .text(function(d) {
                     if (typeof d.parent == 'undefined') {
                         return "";
