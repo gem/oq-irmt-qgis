@@ -158,13 +158,13 @@ class DownloadLayerDialog(QDialog):
         if not dest_file:
             return
         # ignoring file extension
-        dest_file_name, _dest_file_ext = os.path.splitext(dest_file)
+        dest_file_stem_path, _dest_file_ext = os.path.splitext(dest_file)
 
         worker = DownloadPlatformProjectWorker(self.sv_downloader,
                                                self.layer_id)
         worker.successfully_finished.connect(
             lambda zip_file: self._import_layer(
-                zip_file, self.sv_downloader, dest_file_name, self))
+                zip_file, self.sv_downloader, dest_file_stem_path, self))
         start_worker(worker, self.iface.messageBar(),
                      'Downloading data from platform')
 
@@ -178,25 +178,28 @@ class DownloadLayerDialog(QDialog):
         return dest_file_names
 
     def _import_layer(
-            self, zip_file, sv_downloader, dest_file_name, parent_dlg):
+            self, zip_file, sv_downloader, dest_file_stem_path, parent_dlg):
         files_in_zip = zip_file.namelist()
         shp_file_in_zip = next(
             filename for filename in files_in_zip if '.shp' in filename)
-        dest_dir = os.path.dirname(dest_file_name)
+        dest_dir = os.path.dirname(dest_file_stem_path)
         files_to_create = self._replace_file_names(files_in_zip,
-                                                   dest_file_name)
+                                                   dest_file_stem_path)
         files_in_destination = files_exist_in_destination(
             dest_dir, files_to_create)
 
         if files_in_destination:
             while confirm_overwrite(parent_dlg, files_in_destination) == \
                     QMessageBox.No:
-                dest_file_name = ask_for_destination_filename(parent_dlg)
-                if not dest_file_name:
-                    return
-                dest_dir = os.path.dirname(dest_file_name)
+                dest_file = ask_for_destination_filename(parent_dlg)
+                if not dest_file:
+                    continue
+                # ignoring file extension
+                dest_file_stem_path, _dest_file_ext = os.path.splitext(
+                    dest_file)
+                dest_dir = os.path.dirname(dest_file_stem_path)
                 files_to_create = self._replace_file_names(files_in_zip,
-                                                           dest_file_name)
+                                                           dest_file_stem_path)
                 files_in_destination = files_exist_in_destination(
                     dest_dir, files_to_create)
                 if not files_in_destination:
@@ -215,7 +218,7 @@ class DownloadLayerDialog(QDialog):
         zip_file.extractall(temp_dir)
         for the_file in os.listdir(temp_dir):
             _name, ext = os.path.splitext(the_file)
-            new_file_path = dest_file_name + ext
+            new_file_path = dest_file_stem_path + ext
             if ext == '.shp':
                 new_shp_file_path = new_file_path
             shutil.move(os.path.join(temp_dir, the_file), new_file_path)
