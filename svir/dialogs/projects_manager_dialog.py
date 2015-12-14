@@ -62,6 +62,11 @@ class ProjectsManagerDialog(QDialog):
             QgsProject.instance().readEntry('irmt', active_layer_id)
         if is_available and suppl_info_str:
             self.suppl_info = json.loads(suppl_info_str)
+        else:
+            project_definition = deepcopy(PROJECT_TEMPLATE)
+            self.suppl_info = {'selected_project_definition_idx': 0,
+                               'project_definitions': [project_definition]
+                               }
 
     # NOTE: Still unused
     def get_selected_proj_def(self):
