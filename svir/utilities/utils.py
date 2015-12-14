@@ -464,20 +464,20 @@ def upload_shp(host, session, file_stem, username):
             return "The server did not provide error messages", False
 
 
-def ask_for_destination_filename(parent, text='Save File'):
+def ask_for_destination_full_path_name(parent, text='Save File'):
     """
-    Open a dialog to ask for a destination file name
+    Open a dialog to ask for a destination full path name
     :param parent: the parent dialog
     :param text: the dialog's title text
 
-    :returns: full path of the destination file name
+    :returns: full path name of the destination file
     """
     return QFileDialog.getSaveFileName(
         parent, text, directory=os.path.expanduser("~"),
         filter='Shapefiles (*.shp)')
 
 
-def ask_for_download_destination(parent, text='Download destination'):
+def ask_for_download_destination_folder(parent, text='Download destination'):
     """
     Open a dialog to ask for a download destination folder
     """
