@@ -216,9 +216,13 @@ class DownloadLayerDialog(QDialog):
         else:
             temp_dir = os.makedirs(temp_path)
         zip_file.extractall(temp_dir)
+        # copy extracted files to the destination directory chosen by the user,
+        # substituting the file names with the name chosen by the user
         for the_file in os.listdir(temp_dir):
             _name, ext = os.path.splitext(the_file)
             new_file_path = dest_file_stem_path + ext
+            # the full file name of the shapefile will be used to create the
+            # vector layer
             if ext == '.shp':
                 new_shp_file_path = new_file_path
             shutil.move(os.path.join(temp_dir, the_file), new_file_path)
