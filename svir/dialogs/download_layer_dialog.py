@@ -41,8 +41,7 @@ from svir.thread_worker.download_platform_project_worker import (
 from svir.ui.ui_download_layer import Ui_DownloadLayerDialog
 from svir.utilities.utils import (WaitCursorManager,
                                   SvNetworkError,
-                                  # ask_for_download_destination,
-                                  ask_for_destination_filename,
+                                  ask_for_destination_full_path_name,
                                   files_exist_in_destination,
                                   confirm_overwrite,
                                   tr,
@@ -154,11 +153,12 @@ class DownloadLayerDialog(QDialog):
                 continue
 
     def accept(self):
-        dest_file = ask_for_destination_filename(self)
-        if not dest_file:
+        dest_full_path_name = ask_for_destination_full_path_name(self)
+        if not dest_full_path_name:
             return
         # ignoring file extension
-        dest_file_stem_path, _dest_file_ext = os.path.splitext(dest_file)
+        dest_file_stem_path, _dest_file_ext = os.path.splitext(
+            dest_full_path_name)
 
         worker = DownloadPlatformProjectWorker(self.sv_downloader,
                                                self.layer_id)
@@ -169,10 +169,10 @@ class DownloadLayerDialog(QDialog):
                      'Downloading data from platform')
 
     def _replace_file_names(self, source_files, dest_file_stem):
-        # the name from the zip_file will be replaced with dest_file_name
+        # the name from the zip_file will be replaced with dest_file_stem
         dest_file_names = []
         for source_file in source_files:
-            name, ext = os.path.splitext(source_file)
+            _name, ext = os.path.splitext(source_file)
             dest_file_name = dest_file_stem + ext
             dest_file_names.append(dest_file_name)
         return dest_file_names
@@ -185,24 +185,26 @@ class DownloadLayerDialog(QDialog):
         dest_dir = os.path.dirname(dest_file_stem_path)
         files_to_create = self._replace_file_names(files_in_zip,
                                                    dest_file_stem_path)
-        files_in_destination = files_exist_in_destination(
+        existing_files_in_destination = files_exist_in_destination(
             dest_dir, files_to_create)
 
-        if files_in_destination:
-            while confirm_overwrite(parent_dlg, files_in_destination) == \
-                    QMessageBox.No:
-                dest_file = ask_for_destination_filename(parent_dlg)
-                if not dest_file:
+        if existing_files_in_destination:
+            while confirm_overwrite(
+                    parent_dlg,
+                    existing_files_in_destination) == QMessageBox.No:
+                dest_full_path_name = ask_for_destination_full_path_name(
+                    parent_dlg)
+                if not dest_full_path_name:
                     continue
                 # ignoring file extension
                 dest_file_stem_path, _dest_file_ext = os.path.splitext(
-                    dest_file)
+                    dest_full_path_name)
                 dest_dir = os.path.dirname(dest_file_stem_path)
                 files_to_create = self._replace_file_names(files_in_zip,
                                                            dest_file_stem_path)
-                files_in_destination = files_exist_in_destination(
+                existing_files_in_destination = files_exist_in_destination(
                     dest_dir, files_to_create)
-                if not files_in_destination:
+                if not existing_files_in_destination:
                     break
 
         temp_path = os.path.join(tempfile.gettempdir(), shp_file_in_zip[:-4])
