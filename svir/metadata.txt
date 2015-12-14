@@ -24,6 +24,7 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     1.7.6
+    * When downloading a project from the OQ-Platform, enable setting the destination file name
     * Fix corner case occurring when two nodes in a project definition had the same name and were incorrectly pointing to the same field
     * Fix refactoring-related issue that was breaking the plugin in case on-the-fly calculations were disabled
     * Fix "What's This?" functionality on Windows
