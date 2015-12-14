@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_weight_data.ui'
 #
-# Created: Mon Aug  3 17:01:35 2015
+# Created: Mon Dec 14 18:06:42 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -31,6 +31,18 @@ class Ui_WeightDataDialog(object):
         WeightDataDialog.setModal(True)
         self.gridLayout = QtGui.QGridLayout(WeightDataDialog)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
+        self.on_the_fly_ckb = QtGui.QCheckBox(WeightDataDialog)
+        self.on_the_fly_ckb.setChecked(True)
+        self.on_the_fly_ckb.setObjectName(_fromUtf8("on_the_fly_ckb"))
+        self.gridLayout.addWidget(self.on_the_fly_ckb, 4, 0, 1, 1)
+        self.buttonBox = QtGui.QDialogButtonBox(WeightDataDialog)
+        self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
+        self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+        self.buttonBox.setObjectName(_fromUtf8("buttonBox"))
+        self.gridLayout.addWidget(self.buttonBox, 6, 0, 1, 1)
+        self.style_by_field_cbx = QtGui.QComboBox(WeightDataDialog)
+        self.style_by_field_cbx.setObjectName(_fromUtf8("style_by_field_cbx"))
+        self.gridLayout.addWidget(self.style_by_field_cbx, 3, 0, 1, 1)
         self.web_view = QtWebKit.QWebView(WeightDataDialog)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
@@ -46,19 +58,10 @@ class Ui_WeightDataDialog(object):
         sizePolicy.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
         self.label.setSizePolicy(sizePolicy)
         self.label.setObjectName(_fromUtf8("label"))
-        self.gridLayout.addWidget(self.label, 1, 0, 1, 1)
-        self.buttonBox = QtGui.QDialogButtonBox(WeightDataDialog)
-        self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
-        self.buttonBox.setObjectName(_fromUtf8("buttonBox"))
-        self.gridLayout.addWidget(self.buttonBox, 4, 0, 1, 1)
-        self.style_by_field_cbx = QtGui.QComboBox(WeightDataDialog)
-        self.style_by_field_cbx.setObjectName(_fromUtf8("style_by_field_cbx"))
-        self.gridLayout.addWidget(self.style_by_field_cbx, 2, 0, 1, 1)
-        self.on_the_fly_ckb = QtGui.QCheckBox(WeightDataDialog)
-        self.on_the_fly_ckb.setChecked(True)
-        self.on_the_fly_ckb.setObjectName(_fromUtf8("on_the_fly_ckb"))
-        self.gridLayout.addWidget(self.on_the_fly_ckb, 3, 0, 1, 1)
+        self.gridLayout.addWidget(self.label, 2, 0, 1, 1)
+        self.print_btn = QtGui.QPushButton(WeightDataDialog)
+        self.print_btn.setObjectName(_fromUtf8("print_btn"))
+        self.gridLayout.addWidget(self.print_btn, 1, 0, 1, 1)
 
         self.retranslateUi(WeightDataDialog)
         QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), WeightDataDialog.accept)
@@ -67,7 +70,8 @@ class Ui_WeightDataDialog(object):
 
     def retranslateUi(self, WeightDataDialog):
         WeightDataDialog.setWindowTitle(_translate("WeightDataDialog", "Weight Data", None))
-        self.label.setText(_translate("WeightDataDialog", "Style the layer by", None))
         self.on_the_fly_ckb.setText(_translate("WeightDataDialog", "Run calculations on-the-fly", None))
+        self.label.setText(_translate("WeightDataDialog", "Style the layer by", None))
+        self.print_btn.setText(_translate("WeightDataDialog", "Save as PDF", None))
 
 from PyQt4 import QtWebKit

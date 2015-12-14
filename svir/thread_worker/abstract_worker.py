@@ -145,7 +145,7 @@ def toggle_worker_cancel(show_cancel, cancel_button):
     """
     Show or hide the cancel button
 
-    :param show_cancel: indicating if the :guilabel:`Cancel` button has to 
+    :param show_cancel: indicating if the :guilabel:`Cancel` button has to
                         be shown
     :type show_cancel: bool
     :param cancel_button: the button to be shown or hidden

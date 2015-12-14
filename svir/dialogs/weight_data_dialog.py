@@ -24,6 +24,7 @@
 
 from copy import deepcopy
 import json
+from qgis.gui import QgsMessageBar
 
 from PyQt4.QtCore import (Qt,
                           QUrl,
@@ -34,6 +35,7 @@ from PyQt4.QtCore import (Qt,
                           )
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox,
+                         QPrinter,
                          )
 
 from svir.ui.ui_weight_data import Ui_WeightDataDialog
@@ -42,7 +44,11 @@ from svir.utilities.shared import (DEFAULT_OPERATOR,
                                    NUMERIC_FIELD_TYPES,
                                    NODE_TYPES,
                                    DEBUG)
-from svir.utilities.utils import get_field_names, confirmation_on_close
+from svir.utilities.utils import (get_field_names,
+                                  confirmation_on_close,
+                                  ask_for_destination_full_path_name,
+                                  tr,
+                                  )
 
 
 class WeightDataDialog(QDialog):
@@ -93,6 +99,9 @@ class WeightDataDialog(QDialog):
 
         self.web_view = self.ui.web_view
         self.web_view.load(QUrl('qrc:/plugins/irmt/weight_data.html'))
+        self.printer = QPrinter(QPrinter.HighResolution)
+        self.printer.setPageSize(QPrinter.A4)
+        self.printer.setOutputFormat(QPrinter.PdfFormat)
         self.frame = self.web_view.page().mainFrame()
 
         self.frame.javaScriptWindowObjectCleared.connect(self.setup_js)
@@ -191,6 +200,28 @@ class WeightDataDialog(QDialog):
                 self.clean_json(element['children'])
         # return the main element
         return data[0]
+
+    @pyqtSlot()
+    def on_print_btn_clicked(self):
+        dest_full_path_name = ask_for_destination_full_path_name(
+            self, filter='Pdf files (*.pdf)')
+        if not dest_full_path_name:
+            return
+        self.printer.setOutputFileName(dest_full_path_name)
+        try:
+            self.web_view.print_(self.printer)
+        except:
+            self.iface.messageBar().pushMessage(
+                tr("Error"),
+                'It was impossible to create the pdf',
+                level=QgsMessageBar.CRITICAL)
+        else:
+            self.iface.messageBar().pushMessage(
+                tr("Info"),
+                'Project definition printed as pdf and saved to: %s'
+                % dest_full_path_name,
+                level=QgsMessageBar.INFO,
+                duration=8)
 
     @pyqtSlot(str)
     def on_style_by_field_cbx_currentIndexChanged(self):
