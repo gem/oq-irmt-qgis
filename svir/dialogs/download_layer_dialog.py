@@ -40,7 +40,7 @@ from svir.thread_worker.download_platform_project_worker import (
 from svir.ui.ui_download_layer import Ui_DownloadLayerDialog
 from svir.utilities.utils import (WaitCursorManager,
                                   SvNetworkError,
-                                  ask_for_download_destination,
+                                  ask_for_download_destination_folder,
                                   files_exist_in_destination,
                                   confirm_overwrite,
                                   tr,
@@ -152,7 +152,7 @@ class DownloadLayerDialog(QDialog):
                 continue
 
     def accept(self):
-        dest_dir = ask_for_download_destination(self)
+        dest_dir = ask_for_download_destination_folder(self)
         if not dest_dir:
             return
 
@@ -174,7 +174,7 @@ class DownloadLayerDialog(QDialog):
         if file_in_destination:
             while confirm_overwrite(parent_dlg, file_in_destination) == \
                     QMessageBox.No:
-                dest_dir = ask_for_download_destination(parent_dlg)
+                dest_dir = ask_for_download_destination_folder(parent_dlg)
                 if not dest_dir:
                     return
                 file_in_destination = files_exist_in_destination(
