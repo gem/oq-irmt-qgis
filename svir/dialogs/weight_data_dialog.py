@@ -92,16 +92,23 @@ class WeightDataDialog(QDialog):
         try:
             proj_title = self.project_definition['title']
         except KeyError:
-            proj_title = 'untitled'
+            proj_title = 'Untitled'
         dialog_title = (
             'Set weights and operators for project: "%s"' % proj_title)
         self.setWindowTitle(dialog_title)
 
         self.web_view = self.ui.web_view
         self.web_view.load(QUrl('qrc:/plugins/irmt/weight_data.html'))
+
         self.printer = QPrinter(QPrinter.HighResolution)
         self.printer.setPageSize(QPrinter.A4)
         self.printer.setOutputFormat(QPrinter.PdfFormat)
+        self.printer.setPrintRange(QPrinter.AllPages)
+        self.printer.setOrientation(QPrinter.Portrait)
+        self.printer.setDocName(proj_title)
+        self.printer.setCreator(
+            'GEM Integrated Risk Modelling Toolkit QGIS Plugin')
+
         self.frame = self.web_view.page().mainFrame()
 
         self.frame.javaScriptWindowObjectCleared.connect(self.setup_js)
