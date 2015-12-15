@@ -209,25 +209,24 @@ class DownloadLayerDialog(QDialog):
 
         temp_path = os.path.join(tempfile.gettempdir(), shp_file_in_zip[:-4])
         if os.path.exists(temp_path):
-            temp_dir = temp_path
-            # clearing the temp_dir should be safe
-            for the_file in os.listdir(temp_dir):
-                file_path = os.path.join(temp_dir, the_file)
+            # clearing the temporary directory should be safe
+            for the_file in os.listdir(temp_path):
+                file_path = os.path.join(temp_path, the_file)
                 if os.path.isfile(file_path):
                     os.unlink(file_path)
         else:
-            temp_dir = os.makedirs(temp_path)
-        zip_file.extractall(temp_dir)
+            os.makedirs(temp_path)  # it returns None if successful
+        zip_file.extractall(temp_path)
         # copy extracted files to the destination directory chosen by the user,
         # substituting the file names with the name chosen by the user
-        for the_file in os.listdir(temp_dir):
+        for the_file in os.listdir(temp_path):
             _name, ext = os.path.splitext(the_file)
             new_file_path = dest_file_stem_path + ext
             # the full file name of the shapefile will be used to create the
             # vector layer
             if ext == '.shp':
                 new_shp_file_path = new_file_path
-            shutil.move(os.path.join(temp_dir, the_file), new_file_path)
+            shutil.move(os.path.join(temp_path, the_file), new_file_path)
 
         request_url = '%s/svir/get_supplemental_information?layer_name=%s' % (
             sv_downloader.host, parent_dlg.layer_id)
