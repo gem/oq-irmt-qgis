@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_weight_data.ui'
 #
-# Created: Mon Aug  3 17:01:35 2015
+# Created: Wed Dec 16 14:02:37 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -32,7 +32,7 @@ class Ui_WeightDataDialog(object):
         self.gridLayout = QtGui.QGridLayout(WeightDataDialog)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
         self.web_view = QtWebKit.QWebView(WeightDataDialog)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Expanding)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.web_view.sizePolicy().hasHeightForWidth())
