@@ -116,7 +116,8 @@
         var tree = d3.layout.tree()
             .size([height, width])
             .separation(function separation(a,b) {
-                return getRadius(a) + getRadius(b);
+                // at least the sum of radius of two sibling nodes, plus the text for weight
+                return getRadius(a) + getRadius(b) + 8;
             });
 
         var nodeEnter;
