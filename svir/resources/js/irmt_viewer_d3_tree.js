@@ -103,8 +103,8 @@
         }
 
         var margin = {top: 20, right: 120, bottom: 20, left: 60};
-        var width = 960 - margin.right - margin.left;
-        var height = 800 - margin.top - margin.bottom;
+        var width = $(window).width() - margin.right - margin.left;
+        var height = $(window).height() - margin.top - margin.bottom;
 
         var duration = 750;
         var root;
