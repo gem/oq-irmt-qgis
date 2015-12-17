@@ -92,6 +92,10 @@ class WeightDataDialog(QDialog):
         self.setWindowTitle(dialog_title)
 
         self.web_view = self.ui.web_view
+        self.web_view.page().mainFrame().setScrollBarPolicy(
+            Qt.Vertical, Qt.ScrollBarAlwaysOff)
+        self.web_view.page().mainFrame().setScrollBarPolicy(
+            Qt.Horizontal, Qt.ScrollBarAlwaysOff)
         self.web_view.load(QUrl('qrc:/plugins/irmt/weight_data.html'))
         self.frame = self.web_view.page().mainFrame()
 
@@ -141,6 +145,12 @@ class WeightDataDialog(QDialog):
         # pass a reference (called qt_page) of self to the JS world
         # to expose a member of self to js you need to declare it as property
         # see for example self.json_str()
+
+        if DEBUG:
+            print "########################## for weight_data_debug.html"
+            self.print_self_for_debug()
+            print "########################## end for weight_data_debug.html"
+
         self.frame.addToJavaScriptWindowObject('qt_page', self)
 
     def show_tree(self):
@@ -228,3 +238,23 @@ class WeightDataDialog(QDialog):
     @pyqtProperty(str)
     def NODE_TYPES(self):
         return ';'.join(["%s:%s" % (k, v) for k, v in NODE_TYPES.iteritems()])
+
+    def print_self_for_debug(self):
+        print """
+        var qt_page = {
+            ACTIVE_LAYER_NUMERIC_FIELDS: "%s",
+            DEFAULT_OPERATOR: "%s",
+            NODE_TYPES: "%s",
+            OPERATORS: "%s",
+            json_str: '%s',
+            json_updated: function (updated_json_str) {
+                console.log("json_updated signal emitted with the following JSON");
+                console.log(updated_json_str)
+            },
+            DEV_MODE: %s
+        };""" % (self.ACTIVE_LAYER_NUMERIC_FIELDS,
+                 self.DEFAULT_OPERATOR,
+                 self.NODE_TYPES,
+                 self.OPERATORS,
+                 self.json_str.replace('\n', ''),
+                 str(self.DEV_MODE).lower())
