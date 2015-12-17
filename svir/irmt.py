@@ -300,7 +300,7 @@ class Irmt:
             # is not defined
             self.registered_actions["upload"].setEnabled(False)
             self.registered_actions[
-                "project_definitions_manager"].setEnabled(False)
+                "project_definitions_manager"].setEnabled(True)
             self.registered_actions["weight_data"].setEnabled(True)
         except AttributeError:
             # self.iface.activeLayer().id() does not exist

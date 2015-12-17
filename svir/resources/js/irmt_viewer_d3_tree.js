@@ -103,8 +103,8 @@
         }
 
         var margin = {top: 20, right: 120, bottom: 20, left: 60};
-        var width = 960 - margin.right - margin.left;
-        var height = 800 - margin.top - margin.bottom;
+        var width = $(window).width() - margin.right - margin.left;
+        var height = $(window).height() - margin.top - margin.bottom;
 
         var duration = 750;
         var root;
@@ -116,7 +116,8 @@
         var tree = d3.layout.tree()
             .size([height, width])
             .separation(function separation(a,b) {
-                return getRadius(a) + getRadius(b);
+                // at least the sum of radius of two sibling nodes, plus the text for weight
+                return getRadius(a) + getRadius(b) + 8;
             });
 
         var nodeEnter;

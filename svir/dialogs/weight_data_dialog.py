@@ -92,6 +92,10 @@ class WeightDataDialog(QDialog):
         self.setWindowTitle(dialog_title)
 
         self.web_view = self.ui.web_view
+        self.web_view.page().mainFrame().setScrollBarPolicy(
+            Qt.Vertical, Qt.ScrollBarAlwaysOff)
+        self.web_view.page().mainFrame().setScrollBarPolicy(
+            Qt.Horizontal, Qt.ScrollBarAlwaysOff)
         self.web_view.load(QUrl('qrc:/plugins/irmt/weight_data.html'))
         self.frame = self.web_view.page().mainFrame()
 
