@@ -24,6 +24,7 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     1.7.6
+    * Enable printing the project definition as PDF, through a new button added to the weighting dialog
     * When downloading a project from the OQ-Platform, enable setting the destination file name (not only the destination folder)
     * Enable zooming the project definition tree, and no overlapping in the text labels
     * Enable the 'Project definitions manager' also for projects that are not associated to any project definitions yet
