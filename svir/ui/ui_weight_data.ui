@@ -30,16 +30,6 @@
      </property>
     </widget>
    </item>
-   <item row="6" column="0">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-     </property>
-    </widget>
-   </item>
    <item row="3" column="0">
     <widget class="QComboBox" name="style_by_field_cbx"/>
    </item>
@@ -66,20 +56,33 @@
      </property>
     </widget>
    </item>
-   <item row="1" column="0">
-    <widget class="QPushButton" name="print_btn">
-     <property name="text">
-      <string>Save as PDF</string>
-     </property>
-    </widget>
+   <item row="5" column="0">
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QPushButton" name="print_btn">
+       <property name="text">
+        <string>Save as PDF</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDialogButtonBox" name="buttonBox">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="standardButtons">
+        <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
   </layout>
   <zorder>web_view</zorder>
   <zorder>label</zorder>
-  <zorder>buttonBox</zorder>
   <zorder>on_the_fly_ckb</zorder>
   <zorder>style_by_field_cbx</zorder>
-  <zorder>print_btn</zorder>
+  <zorder>horizontalLayoutWidget</zorder>
  </widget>
  <customwidgets>
   <customwidget>
