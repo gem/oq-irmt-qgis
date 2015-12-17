@@ -25,6 +25,7 @@
 import json
 import os
 import tempfile
+import shutil
 from xml.etree import ElementTree
 from PyQt4 import Qt
 
@@ -40,7 +41,7 @@ from svir.thread_worker.download_platform_project_worker import (
 from svir.ui.ui_download_layer import Ui_DownloadLayerDialog
 from svir.utilities.utils import (WaitCursorManager,
                                   SvNetworkError,
-                                  ask_for_download_destination_folder,
+                                  ask_for_destination_full_path_name,
                                   files_exist_in_destination,
                                   confirm_overwrite,
                                   tr,
@@ -152,37 +153,80 @@ class DownloadLayerDialog(QDialog):
                 continue
 
     def accept(self):
-        dest_dir = ask_for_download_destination_folder(self)
-        if not dest_dir:
+        dest_full_path_name = ask_for_destination_full_path_name(self)
+        if not dest_full_path_name:
             return
+        # ignoring file extension
+        dest_file_stem_path, _dest_file_ext = os.path.splitext(
+            dest_full_path_name)
 
         worker = DownloadPlatformProjectWorker(self.sv_downloader,
                                                self.layer_id)
         worker.successfully_finished.connect(
             lambda zip_file: self._import_layer(
-                zip_file, self.sv_downloader, dest_dir, self))
+                zip_file, self.sv_downloader, dest_file_stem_path, self))
         start_worker(worker, self.iface.messageBar(),
                      'Downloading data from platform')
 
-    def _import_layer(self, zip_file, sv_downloader, dest_dir, parent_dlg):
-        files_in_zip = zip_file.namelist()
-        shp_file = next(
-            filename for filename in files_in_zip if '.shp' in filename)
-        file_in_destination = files_exist_in_destination(
-            dest_dir, files_in_zip)
+    def _replace_file_names(self, source_files, dest_file_stem):
+        # the name from the zip_file will be replaced with dest_file_stem
+        dest_file_names = []
+        for source_file in source_files:
+            _name, ext = os.path.splitext(source_file)
+            dest_file_name = dest_file_stem + ext
+            dest_file_names.append(dest_file_name)
+        return dest_file_names
 
-        if file_in_destination:
-            while confirm_overwrite(parent_dlg, file_in_destination) == \
-                    QMessageBox.No:
-                dest_dir = ask_for_download_destination_folder(parent_dlg)
-                if not dest_dir:
-                    return
-                file_in_destination = files_exist_in_destination(
-                    dest_dir, zip_file.namelist())
-                if not file_in_destination:
+    def _import_layer(
+            self, zip_file, sv_downloader, dest_file_stem_path, parent_dlg):
+        files_in_zip = zip_file.namelist()
+        shp_file_in_zip = next(
+            filename for filename in files_in_zip if '.shp' in filename)
+        dest_dir = os.path.dirname(dest_file_stem_path)
+        files_to_create = self._replace_file_names(files_in_zip,
+                                                   dest_file_stem_path)
+        existing_files_in_destination = files_exist_in_destination(
+            dest_dir, files_to_create)
+
+        if existing_files_in_destination:
+            while confirm_overwrite(
+                    parent_dlg,
+                    existing_files_in_destination) == QMessageBox.No:
+                dest_full_path_name = ask_for_destination_full_path_name(
+                    parent_dlg)
+                if not dest_full_path_name:
+                    continue
+                # ignoring file extension
+                dest_file_stem_path, _dest_file_ext = os.path.splitext(
+                    dest_full_path_name)
+                dest_dir = os.path.dirname(dest_file_stem_path)
+                files_to_create = self._replace_file_names(files_in_zip,
+                                                           dest_file_stem_path)
+                existing_files_in_destination = files_exist_in_destination(
+                    dest_dir, files_to_create)
+                if not existing_files_in_destination:
                     break
 
-        zip_file.extractall(dest_dir)
+        temp_path = os.path.join(tempfile.gettempdir(), shp_file_in_zip[:-4])
+        if os.path.exists(temp_path):
+            # clearing the temporary directory should be safe
+            for the_file in os.listdir(temp_path):
+                file_path = os.path.join(temp_path, the_file)
+                if os.path.isfile(file_path):
+                    os.unlink(file_path)
+        else:
+            os.makedirs(temp_path)  # it returns None if successful
+        zip_file.extractall(temp_path)
+        # copy extracted files to the destination directory chosen by the user,
+        # substituting the file names with the name chosen by the user
+        for the_file in os.listdir(temp_path):
+            _name, ext = os.path.splitext(the_file)
+            new_file_path = dest_file_stem_path + ext
+            # the full file name of the shapefile will be used to create the
+            # vector layer
+            if ext == '.shp':
+                new_shp_file_path = new_file_path
+            shutil.move(os.path.join(temp_path, the_file), new_file_path)
 
         request_url = '%s/svir/get_supplemental_information?layer_name=%s' % (
             sv_downloader.host, parent_dlg.layer_id)
@@ -203,15 +247,14 @@ class DownloadLayerDialog(QDialog):
             supplemental_information = {
                 'project_definitions': supplemental_information}
 
-        dest_file = os.path.join(dest_dir, shp_file)
         layer = QgsVectorLayer(
-            dest_file,
+            new_shp_file_path,
             parent_dlg.extra_infos[parent_dlg.layer_id]['Title'], 'ogr')
         if layer.isValid():
             QgsMapLayerRegistry.instance().addMapLayer(layer)
             self.iface.messageBar().pushMessage(
                 tr('Import successful'),
-                tr('Shapefile imported to %s' % dest_file),
+                tr('Shapefile imported to %s' % new_shp_file_path),
                 duration=8)
         else:
             self.iface.messageBar().pushMessage(
