@@ -464,9 +464,36 @@ def upload_shp(host, session, file_stem, username):
             return "The server did not provide error messages", False
 
 
-def ask_for_download_destination(parent, text='Download destination'):
+def ask_for_destination_full_path_name(
+        parent, text='Save File', filter='Shapefiles (*.shp)'):
     """
-    Open a dialog to ask for a download destination folder
+    Open a dialog to ask for a destination full path name, initially pointing
+    to the home directory.
+    QFileDialog by defaults asks for confirmation if an existing file is
+    selected and it automatically resolves symlinks.
+
+    :param parent: the parent dialog
+    :param text: the dialog's title text
+    :param filter:
+        filter files by specific formats. Default: 'Shapefiles (*.shp)'
+        A more elaborate example:
+        "Images (*.png *.xpm *.jpg);;Text files (*.txt);;XML files (*.xml)"
+
+    :returns: full path name of the destination file
+    """
+    return QFileDialog.getSaveFileName(
+        parent, text, directory=os.path.expanduser("~"), filter=filter)
+
+
+def ask_for_download_destination_folder(parent, text='Download destination'):
+    """
+    Open a dialog to ask for a download destination folder, initially pointing
+    to the home directory.
+
+    :param parent: the parent dialog
+    :param text: the dialog's title text
+
+    :returns: full path of the destination folder
     """
     return QFileDialog.getExistingDirectory(
         parent,
@@ -483,12 +510,12 @@ def files_exist_in_destination(destination, file_names):
 
     :returns: list of file names that already exist in the destination folder
     """
-    file_exists_in_destination = []
+    existing_files_in_destination = []
     for file_name in file_names:
         file_path = os.path.join(destination, file_name)
         if os.path.isfile(file_path):
-            file_exists_in_destination.append(file_path)
-    return file_exists_in_destination
+            existing_files_in_destination.append(file_path)
+    return existing_files_in_destination
 
 
 def confirm_overwrite(parent, files):
