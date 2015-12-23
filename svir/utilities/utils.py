@@ -710,8 +710,11 @@ def write_layer_suppl_info_to_qgs(layer_id, suppl_info):
     # avoids not finding the layer_id in supplemental_info
     read_layer_suppl_info_from_qgs(layer_id, suppl_info)
     if DEBUG:
-        prop_suppl_info = QgsProject.instance().readEntry('irmt', layer_id)
-        prop_suppl_info_str = pformat(prop_suppl_info, indent=4)
+        prop_suppl_info, found = QgsProject.instance().readEntry('irmt',
+                                                                 layer_id)
+        assert found, 'After writeEntry, readEntry did not find the same item!'
+        prop_suppl_info_obj = json.loads(prop_suppl_info)
+        prop_suppl_info_str = pformat(prop_suppl_info_obj, indent=4)
         log_msg(("Project's property 'supplemental_information[%s]'"
                  " updated: \n%s") % (layer_id, prop_suppl_info_str))
 
