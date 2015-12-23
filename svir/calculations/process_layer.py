@@ -22,9 +22,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
+import sys
+
 import uuid
 from numpy.testing import assert_almost_equal
-from pprint import pprint
+from pprint import pformat
 from types import NoneType
 from PyQt4.QtCore import QPyNullVariant
 from qgis.core import (QgsMapLayer,
@@ -38,7 +40,7 @@ from svir.calculations.transformation_algs import TRANSFORMATION_ALGS, \
     transform
 from svir.utilities.shared import DEBUG, DOUBLE_FIELD_TYPE_NAME
 
-from svir.utilities.utils import LayerEditingManager, tr
+from svir.utilities.utils import LayerEditingManager, tr, log_msg
 
 
 class ProcessLayer():
@@ -59,14 +61,30 @@ class ProcessLayer():
     def __init__(self, layer):
         self.layer = layer
 
-    def pprint(self):
+    def pprint(self, usage='gui'):
         """
         Pretty print the contents of the layer
+
+        :param usage:
+            it can be either 'gui' or 'testing', indicating if the output has
+            to be written to the QGIS logging system (default) or to stderr as
+            it is useful for testing
         """
-        print 'Layer: %s' % self.layer.name()
-        print [field.name() for field in self.layer.dataProvider().fields()]
-        pprint([feature.attributes()
-                for feature in self.layer.dataProvider().getFeatures()])
+        if usage == 'gui':
+            logger_func = log_msg
+            spacer = ''
+        elif usage == 'testing':
+            logger_func = sys.stderr.write
+            spacer = '\n'
+        else:
+            raise ValueError('Usage "%s" is not implemented')
+        logger_func(spacer + 'Layer: %s' % self.layer.name())
+        logger_func(spacer + str(
+            [field.name() for field in self.layer.dataProvider().fields()]))
+        ppdata = pformat(
+            [feature.attributes()
+             for feature in self.layer.dataProvider().getFeatures()])
+        logger_func(spacer + ppdata)
 
     def has_same_projection_as(self, other_layer):
         """
@@ -218,8 +236,8 @@ class ProcessLayer():
                 attr_idx_list.append(attr_idx)
             # remove attributes
             if DEBUG:
-                print "REMOVING %s, (indices %s)" % (
-                    attribute_list, attr_idx_list)
+                log_msg("REMOVING %s, (indices %s)" % (
+                    attribute_list, attr_idx_list))
             return layer_pr.deleteAttributes(attr_idx_list)
 
     def transform_attribute(
@@ -461,5 +479,6 @@ class ProcessLayer():
                     'Geometry type %s can not be accepted' % geom_type)
             layer_vertices += feature_vertices
             if DEBUG:
-                print "Feature %d, %d vertices" % (feat.id(), feature_vertices)
+                log_msg("Feature %d, %d vertices"
+                        % (feat.id(), feature_vertices))
         return layer_vertices

@@ -35,7 +35,7 @@ from svir.utilities.shared import (DOUBLE_FIELD_TYPE_NAME, DEBUG,
                                    IGNORING_WEIGHT_OPERATORS,
                                    DiscardedFeature)
 from svir.calculations.process_layer import ProcessLayer
-from svir.utilities.utils import LayerEditingManager, tr
+from svir.utilities.utils import LayerEditingManager, tr, log_msg
 
 
 class InvalidNode(Exception):
@@ -176,7 +176,7 @@ def get_node_attr_id_and_name(node, layer):
                 proposed_node_attr_name, layer)
             field_was_added = True
         elif DEBUG:
-            print 'Reusing field %s' % node_attr_name
+            log_msg('Reusing field %s' % node_attr_name)
     elif 'name' in node:
         proposed_node_attr_name = node['name']
         node_attr_name = add_numeric_attribute(

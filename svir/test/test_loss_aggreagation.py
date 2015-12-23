@@ -143,7 +143,7 @@ class AggregateLossByZoneTestCase(unittest.TestCase):
     def _check_output_layer(self, output_layer, expected_layer):
         if not ProcessLayer(output_layer).has_same_content_as(
                 expected_layer):
-            ProcessLayer(output_layer).pprint()
-            ProcessLayer(expected_layer).pprint()
+            ProcessLayer(output_layer).pprint(usage='testing')
+            ProcessLayer(expected_layer).pprint(usage='testing')
             raise Exception(
                 'The output layer is different than expected')

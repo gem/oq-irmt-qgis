@@ -44,7 +44,9 @@ from svir.utilities.utils import (get_credentials,
                                   platform_login,
                                   create_progress_message_bar,
                                   clear_progress_message_bar,
-                                  SvNetworkError)
+                                  SvNetworkError,
+                                  log_msg,
+                                  )
 from svir.utilities.shared import DEBUG
 
 
@@ -142,7 +144,7 @@ class UploadDialog(QDialog):
             self.hostname + '/gs/rest/styles/%s' % style_name,
             data=sld, headers=headers)
         if DEBUG:
-            print 'Style upload response:', resp
+            log_msg('Style upload response: %s' % resp)
         if not resp.ok:
             error_msg = (
                 'Error while styling the uploaded layer: ' + resp.reason)

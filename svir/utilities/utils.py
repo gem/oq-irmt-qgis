@@ -27,7 +27,11 @@ import json
 import os
 from copy import deepcopy
 from time import time
-from qgis.core import QgsMapLayerRegistry, QgsProject
+from pprint import pformat
+from qgis.core import (QgsMapLayerRegistry,
+                       QgsProject,
+                       QgsMessageLog,
+                       )
 from qgis.gui import QgsMessageBar
 
 from PyQt4.QtCore import QSettings, Qt
@@ -54,6 +58,25 @@ def get_irmt_version():
                 if line.startswith('version='):
                     _IRMT_VERSION = line.split('=')[1].strip()
     return _IRMT_VERSION
+
+
+def log_msg(message, tag='GEM IRMT Plugin', level='I'):
+    """
+    Add a message to the QGIS message log
+
+    :param message: the message
+    :param tag: the log topic
+    :param level: the importance level
+        ('I' -> QgsMessageLog.INFO,
+         'W' -> QgsMessageLog.WARNING,
+         'C' -> QgsMessageLog.CRITICAL)
+    """
+    levels = {'I': QgsMessageLog.INFO,
+              'W': QgsMessageLog.WARNING,
+              'C': QgsMessageLog.CRITICAL}
+    if level not in levels.keys():
+        raise ValueError('Level must be one of %s' % levels.keys())
+    QgsMessageLog.logMessage(message, tag, levels[level])
 
 
 def tr(message):
@@ -121,8 +144,8 @@ def count_heading_commented_lines(fname):
             else:
                 break
     if DEBUG:
-        print "The file contains %s heading lines starting with #" % (
-            lines_to_skip_count)
+        log_msg("The file contains %s heading lines starting with #" % (
+            lines_to_skip_count))
     return lines_to_skip_count
 
 
@@ -565,13 +588,13 @@ class TraceTimeManager(object):
 
     def __enter__(self):
         if self.debug:
-            print self.message
+            log_msg(self.message)
             self.t_start = time()
 
     def __exit__(self, type, value, traceback):
         if self.debug:
             self.t_stop = time()
-            print "Completed in %f" % (self.t_stop - self.t_start)
+            log_msg("Completed in %f" % (self.t_stop - self.t_start))
 
 
 class LayerEditingManager(object):
@@ -591,13 +614,13 @@ class LayerEditingManager(object):
     def __enter__(self):
         self.layer.startEditing()
         if self.debug:
-            print "BEGIN", self.message
+            log_msg("BEGIN %s" % self.message)
 
     def __exit__(self, type, value, traceback):
         self.layer.commitChanges()
         self.layer.updateExtents()
         if self.debug:
-            print "END", self.message
+            log_msg("END %s" % self.message)
 
 
 class WaitCursorManager(object):
@@ -687,9 +710,10 @@ def write_layer_suppl_info_to_qgs(layer_id, suppl_info):
     # avoids not finding the layer_id in supplemental_info
     read_layer_suppl_info_from_qgs(layer_id, suppl_info)
     if DEBUG:
-        print ("Project's property 'supplemental_information[%s]'"
-               " updated: %s") % (
-            layer_id, QgsProject.instance().readEntry('irmt', layer_id))
+        prop_suppl_info = QgsProject.instance().readEntry('irmt', layer_id)
+        prop_suppl_info_str = pformat(prop_suppl_info, indent=4)
+        log_msg(("Project's property 'supplemental_information[%s]'"
+                 " updated: \n%s") % (layer_id, prop_suppl_info_str))
 
 
 def read_layer_suppl_info_from_qgs(layer_id, supplemental_information):
@@ -709,9 +733,9 @@ def read_layer_suppl_info_from_qgs(layer_id, supplemental_information):
     supplemental_information[layer_id] = json.loads(layer_suppl_info_str)
 
     if DEBUG:
-        print ("self.supplemental_information[%s] synchronized"
-               " with project, as: %s") % (
-            layer_id, supplemental_information[layer_id])
+        suppl_info_str = pformat(supplemental_information[layer_id], indent=4)
+        log_msg(("self.supplemental_information[%s] synchronized"
+                 " with project, as: \n%s") % (layer_id, suppl_info_str))
 
 
 def insert_platform_layer_id(
