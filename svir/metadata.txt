@@ -13,7 +13,7 @@ name=OpenQuake Integrated Risk Modelling Toolkit
 qgisMinimumVersion=2.4
 description=Tools for the development of composite indicators measuring societal characteristics and the integration of these with physical risk estimations
 about=Tools for creating and editing indicators and composite indices to measure social characteristics and for combining these with estimates of physical earthquake risk (i.e. estimates of human or infrastructure loss). The plugin enables users to directly interact with the OpenQuake Platform (https://platform.openquake.org), in order to browse and download socioeconomic data or existing projects, to edit projects locally in QGIS, then to upload and share them through the Platform. This plugin was designed as a collaborative effort between the GEM Foundation (http://www.globalquakemodel.org) and the Center for Disaster Management and Risk Reduction Technology (http://www.cedim.de/english/), and it has been developed by the GEM Foundation. It was formerly named GEM OpenQuake Social Vulnerability and Integrated Risk (SVIR).
-version=1.7.6
+version=1.7.7
 author=GEM Foundation
 email=staff.it@globalquakemodel.org
 
@@ -23,16 +23,8 @@ email=staff.it@globalquakemodel.org
 
 # Uncomment the following line and add your changelog entries:
 changelog=
-    1.7.6
-    * Enable printing the project definition as PDF, through a new button added to the weighting dialog
-    * When downloading a project from the OQ-Platform, enable setting the destination file name (not only the destination folder)
-    * Enable zooming the project definition tree, and no overlapping in the text labels
-    * Enable the 'Project definitions manager' also for projects that are not associated to any project definitions yet
-    * Fix corner case occurring when two nodes in a project definition had the same name and were incorrectly pointing to the same field
-    * Fix refactoring-related issue that was breaking the plugin in case on-the-fly calculations were disabled
-    * Fix "What's This?" functionality on Windows
-    * Fix searching functionality in the documentation
-    * Minor improvements to the user manual
+    1.7.7
+    * Write log messages to the QGIS logging system
 
 # tags are comma separated with spaces allowed
 tags=GEM, IRMT, SVIR, OpenQuake, Social Vulnerability, Integrated Risk
