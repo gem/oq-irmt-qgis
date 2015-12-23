@@ -28,11 +28,14 @@ import json
 import os
 import time
 
+from pprint import pformat
+
 from xml.etree import ElementTree
 
 from svir.metadata.iso_19115_template import ISO_METADATA_XML_TEMPLATE
 
 from svir.utilities.shared import DEBUG
+from svir.utilities.utils import log_msg
 
 
 # list of tags to get to the irmt project definition.
@@ -64,7 +67,7 @@ ElementTree._original_serialize_xml = ElementTree._serialize_xml
 
 
 def _serialize_xml(write, elem, encoding, qnames, namespaces):
-    # print "MONKEYPATCHED CDATA support into Element tree called"
+    # log_msg("MONKEYPATCHED CDATA support into Element tree called")
     if elem.tag == '![CDATA[':
         write("\n<%s%s]]>\n" % (elem.tag, elem.text))
         return
@@ -96,7 +99,7 @@ def generate_iso_metadata(supplemental_information=None):
         "%Y-%m-%dT%H:%M:%SZ")
     if supplemental_information is not None:
         if DEBUG:
-            print supplemental_information
+            log_msg(pformat(supplemental_information, indent=4))
         template_replacements['IRMT_SUPPLEMENTAL_INFORMATION'] = \
             '<![CDATA[%s]]>' % json.dumps(supplemental_information,
                                           sort_keys=False,
@@ -206,8 +209,7 @@ def get_supplemental_info(xml, prefix=None):
         raise ReadMetadataError
     supplemental_info = json.loads(keyword_element.text)
     if DEBUG:
-        print "keyword_element.text"
-        print keyword_element.text
-        print "Downloaded supplemental information"
-        print supplemental_info
+        log_msg("keyword_element.text: %s" % keyword_element.text)
+        log_msg("Downloaded supplemental information:")
+        log_msg(pformat(supplemental_info, indent=4))
     return supplemental_info
