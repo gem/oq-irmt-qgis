@@ -74,7 +74,7 @@ def log_msg(message, tag='GEM IRMT Plugin', level='I'):
     levels = {'I': QgsMessageLog.INFO,
               'W': QgsMessageLog.WARNING,
               'C': QgsMessageLog.CRITICAL}
-    if level not in levels.keys():
+    if level not in levels:
         raise ValueError('Level must be one of %s' % levels.keys())
     QgsMessageLog.logMessage(message, tag, levels[level])
 
