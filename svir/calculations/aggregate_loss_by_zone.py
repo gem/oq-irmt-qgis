@@ -37,13 +37,6 @@ from PyQt4.QtGui import QProgressDialog
 
 import processing
 
-try:
-    from processing.algs.saga import SagaUtils
-    saga_was_imported = True
-except:
-    print "Unable to import SagaUtils module from processing.algs.saga"
-    saga_was_imported = False
-
 from svir.calculations.process_layer import ProcessLayer
 
 from svir.utilities.utils import (LayerEditingManager,
@@ -51,11 +44,19 @@ from svir.utilities.utils import (LayerEditingManager,
                                   TraceTimeManager,
                                   clear_progress_message_bar,
                                   create_progress_message_bar,
+                                  log_msg,
                                   )
 from svir.utilities.shared import (INT_FIELD_TYPE_NAME,
                                    DOUBLE_FIELD_TYPE_NAME,
                                    DEBUG,
                                    )
+
+try:
+    from processing.algs.saga import SagaUtils
+    saga_was_imported = True
+except:
+    log_msg("Unable to import SagaUtils module from processing.algs.saga")
+    saga_was_imported = False
 
 
 def calculate_zonal_stats(loss_layer,

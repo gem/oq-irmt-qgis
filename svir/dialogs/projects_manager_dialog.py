@@ -32,7 +32,7 @@ from PyQt4.QtGui import (QDialog,
                          QInputDialog)
 
 from svir.ui.ui_projects_manager_dialog import Ui_ProjectsManagerDialog
-from svir.utilities.utils import tr
+from svir.utilities.utils import tr, log_msg
 from svir.utilities.shared import PROJECT_TEMPLATE
 
 
@@ -181,6 +181,10 @@ class ProjectsManagerDialog(QDialog):
             self.suppl_info['project_definitions'][self.suppl_info[
                 'selected_project_definition_idx']] = project_definition
             self.ok_button.setEnabled(True)
-        except ValueError as e:
-            print e
+        except ValueError as exc:
+            # get the exception message
+            exc_msg = exc.args[0]
+            if isinstance(exc_msg, bytes):
+                exc_msg = exc_msg.decode('utf-8')   # make it a unicode object
+            log_msg(exc_msg)
             self.ok_button.setEnabled(False)

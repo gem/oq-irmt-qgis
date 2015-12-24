@@ -48,6 +48,7 @@ from svir.utilities.utils import (get_field_names,
                                   confirmation_on_close,
                                   ask_for_destination_full_path_name,
                                   tr,
+                                  log_msg,
                                   )
 
 
@@ -163,9 +164,9 @@ class WeightDataDialog(QDialog):
         # see for example self.json_str()
 
         if DEBUG:
-            print "########################## for weight_data_debug.html"
+            log_msg("######################### for weight_data_debug.html")
             self.print_self_for_debug()
-            print "########################## end for weight_data_debug.html"
+            log_msg("######################### end for weight_data_debug.html")
 
         self.frame.addToJavaScriptWindowObject('qt_page', self)
 
@@ -177,9 +178,8 @@ class WeightDataDialog(QDialog):
         self.any_changes_made = True
         if DEBUG:
             import pprint
-            pp = pprint.PrettyPrinter(indent=4)
-            print 'in handle_json_updated, data='
-            pp.pprint(data)
+            ppdata = pprint.pformat(data, indent=4)
+            log_msg('in handle_json_updated, data=\n%s' % ppdata)
 
         if self.ui.on_the_fly_ckb.isChecked():
             self.project_definition = self.clean_json([data])
@@ -278,7 +278,7 @@ class WeightDataDialog(QDialog):
         return ';'.join(["%s:%s" % (k, v) for k, v in NODE_TYPES.iteritems()])
 
     def print_self_for_debug(self):
-        print """
+        msg = """
         var qt_page = {
             ACTIVE_LAYER_NUMERIC_FIELDS: "%s",
             DEFAULT_OPERATOR: "%s",
@@ -286,7 +286,7 @@ class WeightDataDialog(QDialog):
             OPERATORS: "%s",
             json_str: '%s',
             json_updated: function (updated_json_str) {
-                console.log("json_updated signal emitted with the following JSON");
+                console.log("json_updated signal emitted with this JSON:");
                 console.log(updated_json_str)
             },
             DEV_MODE: %s
@@ -296,3 +296,4 @@ class WeightDataDialog(QDialog):
                  self.OPERATORS,
                  self.json_str.replace('\n', ''),
                  str(self.DEV_MODE).lower())
+        log_msg(msg)

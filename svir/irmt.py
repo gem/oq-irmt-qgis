@@ -32,7 +32,6 @@ from copy import deepcopy
 from math import floor, ceil
 from qgis.core import (QgsVectorLayer,
                        QgsMapLayerRegistry,
-                       QgsMessageLog,
                        QgsMapLayer,
                        QgsVectorFileWriter,
                        QgsGraduatedSymbolRendererV2,
@@ -80,7 +79,9 @@ from svir.utilities.utils import (tr,
                                   replace_fields,
                                   toggle_select_features_widget,
                                   read_layer_suppl_info_from_qgs,
-                                  write_layer_suppl_info_to_qgs)
+                                  write_layer_suppl_info_to_qgs,
+                                  log_msg,
+                                  )
 from svir.utilities.shared import (DEBUG,
                                    PROJECT_TEMPLATE,
                                    THEME_TEMPLATE,
@@ -282,7 +283,7 @@ class Irmt:
             layer_count == 0)
 
         if DEBUG:
-            print 'Selected: %s' % self.iface.activeLayer()
+            log_msg('Selected: %s' % self.iface.activeLayer())
         try:
             # Activate actions which require a vector layer to be selected
             if self.iface.activeLayer().type() != QgsMapLayer.VectorLayer:
@@ -455,7 +456,7 @@ class Irmt:
                                             tr(display_msg),
                                             level=QgsMessageBar.INFO,
                                             duration=8)
-        QgsMessageLog.logMessage(msg, 'GEM Social Vulnerability Downloader')
+        log_msg(msg)
         # don't remove the file, otherwise there will be concurrency
         # problems
 
@@ -651,7 +652,7 @@ class Irmt:
             self.iface.activeLayer().saveSldStyle(sld_file_name)
         if sld_was_saved:
             if DEBUG:
-                print 'original sld saved in %s' % sld_file_name
+                log_msg('original sld saved in %s' % sld_file_name)
         else:
             err_msg = 'Unable to save the sld: %s' % resp_text
             self.iface.messageBar().pushMessage(
@@ -905,10 +906,8 @@ class Irmt:
             return
         if DEBUG:
             import pprint
-
-            pp = pprint.PrettyPrinter(indent=4)
-            print 'REDRAWING %s using:' % printing_str
-            pp.pprint(data)
+            ppdata = pprint.pformat(data, indent=4)
+            log_msg('REDRAWING %s using: \n%s' % (printing_str, ppdata))
 
         rule_renderer = QgsRuleBasedRendererV2(
             QgsSymbolV2.defaultSymbol(self.iface.activeLayer().geometryType()))
@@ -960,7 +959,7 @@ class Irmt:
             graduated_renderer.updateRangeUpperValue(
                 last_range_index, increased_upper_value)
         elif DEBUG:
-            print 'All features are NULL'
+            log_msg('All features are NULL')
 
         # create value ranges
         rule_renderer.refineRuleRanges(not_null_rule, graduated_renderer)

@@ -47,6 +47,7 @@ from svir.utilities.utils import (reload_attrib_cbx,
                                   update_platform_project,
                                   write_layer_suppl_info_to_qgs,
                                   insert_platform_layer_id,
+                                  log_msg,
                                   )
 
 LICENSES = (
@@ -236,7 +237,7 @@ class UploadSettingsDialog(QDialog):
                         level=QgsMessageBar.CRITICAL)
         else:
             if DEBUG:
-                print 'xml_file:', self.xml_file
+                log_msg('xml_file: %s' % self.xml_file)
             # do not upload the selected_project_definition_idx
             self.suppl_info.pop('selected_project_definition_idx', None)
             write_iso_metadata_file(self.xml_file,
@@ -251,7 +252,7 @@ class UploadSettingsDialog(QDialog):
             if metadata_dialog.exec_():
                 QDesktopServices.openUrl(QUrl(metadata_dialog.layer_url))
             elif DEBUG:
-                print "metadata_dialog cancelled"
+                log_msg("metadata_dialog cancelled")
 
         super(UploadSettingsDialog, self).accept()
 

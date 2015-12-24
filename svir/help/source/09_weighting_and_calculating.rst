@@ -73,6 +73,13 @@ dynamically by adding or removing nodes, *inverting* variables, setting a
 weight to each variable or node and choosing the operators to be used to
 combine variables together.
 
+.. note::
+
+    The dialog can be resized, and it is possible to pan and zoom within the
+    tree area using your mouse. By pressing :guilabel:`Save as PDF`, and
+    specifying the destination file, the project representation can be printed
+    as PDF.
+
 Whenever :guilabel:`Update` or :guilabel:`Update and close` are clicked, the project definition is
 updated and the composite indices are re-calculated. As a consequence, the map
 is rendered and styled accordingly. This allows the user to have an immediate
