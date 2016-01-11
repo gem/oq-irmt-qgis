@@ -532,7 +532,7 @@
             .attr("width", "100%")
             .attr("height", "100%")
             .attr("id", "project-definition-svg")
-            .call(d3.behavior.zoom().on("zoom", function () {
+            .call(d3.behavior.zoom().scaleExtent([0.1, 5]).on("zoom", function () {
                 svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")");
             }))
             .append("g")
