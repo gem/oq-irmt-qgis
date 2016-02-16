@@ -231,9 +231,21 @@ class UploadSettingsDialog(QDialog):
                         tr(response.text),
                         level=QgsMessageBar.INFO)
                 else:
+                    error_msg = response.text
+                    # example of response text:
+                    # "The title 'No incomplete data' was already assigned to
+                    # another project definition. Please provide a new unique
+                    # one."
+                    # NOTE: if the api response message changes, this might
+                    # stop working
+                    if 'Please provide a new unique' in response.text:
+                        error_msg += (' Please consider using the "Manage'
+                                      ' project definitions" functionality'
+                                      ' to save the current project definition'
+                                      ' as a new one having a unique title.')
                     self.iface.messageBar().pushMessage(
                         tr("Error"),
-                        tr(response.text),
+                        tr(error_msg),
                         level=QgsMessageBar.CRITICAL)
         else:
             if DEBUG:
