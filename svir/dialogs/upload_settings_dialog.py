@@ -237,7 +237,7 @@ class UploadSettingsDialog(QDialog):
                     # another project definition. Please provide a new unique
                     # one."
                     # NOTE: if the api response message changes, this might
-                    # stop working
+                    # not work properly
                     if 'Please provide a new unique' in response.text:
                         error_msg += (' Please consider using the "Manage'
                                       ' project definitions" functionality'
