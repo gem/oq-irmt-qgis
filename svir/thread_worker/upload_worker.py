@@ -25,7 +25,7 @@
 import os
 import shutil
 import json
-from qgis.core import QgsVectorFileWriter
+from qgis.core import QgsVectorFileWriter, QgsCoordinateReferenceSystem
 
 from svir.thread_worker.abstract_worker import AbstractWorker
 from svir.utilities.shared import DEBUG
@@ -53,6 +53,12 @@ class UploadWorker(AbstractWorker):
         # if it isn't, save it as a shapefile
         data_file = '%s%s' % (self.file_stem, '.shp')
         if self.current_layer.storageType() == 'ESRI Shapefile':
+            # make sure that the layer has the standard projection
+            projection = self.current_layer.crs().geographicCRSAuthId()
+            if projection != 'EPSG:4326':
+                self.current_layer.setCrs(
+                    QgsCoordinateReferenceSystem(
+                        4326, QgsCoordinateReferenceSystem.EpsgCrsId))
             # copy the shapefile (with all its files) into the temporary
             # directory, using self.file_stem as name
             self.set_message.emit(tr(
@@ -71,7 +77,7 @@ class UploadWorker(AbstractWorker):
                 self.current_layer,
                 data_file,
                 'utf-8',
-                self.current_layer.crs(),
+                QgsCoordinateReferenceSystem.createFromUserInput("EPSG:4326"),
                 'ESRI Shapefile')
         file_size_mb = os.path.getsize(data_file)
         file_size_mb += os.path.getsize(self.file_stem + '.shx')
