@@ -915,8 +915,8 @@ class Irmt:
 
         not_null_rule = root_rule.children()[0].clone()
         not_null_rule.setSymbol(QgsFillSymbolV2.createSimple(
-            {'style': 'no',
-             'style_border': 'no'}))
+            {'color': '255,0,0,255',
+             'color_border': '0,0,0,255'}))
         not_null_rule.setFilterExpression('%s IS NOT NULL' % target_field)
         not_null_rule.setLabel('%s:' % target_field)
         root_rule.appendChild(not_null_rule)
@@ -974,17 +974,6 @@ class Irmt:
         self.iface.legendInterface().refreshLayerSymbology(
             self.iface.activeLayer())
         self.iface.mapCanvas().refresh()
-
-        # NOTE: The following commented lines do not work, because they apply
-        # to the active layer a solid fill and the null features are therefore
-        # colored in blue instead of being transparent
-        # The intent was to reset default symbol, otherwise if the user
-        # attempts to re-style the layer, they will need to explicitly
-        # set the border and fill). I am commenting this out for the moment.
-        # root_rule.setSymbol(QgsFillSymbolV2.createSimple(
-        #     {'style': 'solid',
-        #      'style_border': 'solid'}))
-        # self.iface.activeLayer().setRendererV2(rule_renderer)
 
     def show_settings(self):
         """
