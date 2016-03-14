@@ -25,7 +25,7 @@
 import os
 import shutil
 import json
-from qgis.core import QgsVectorFileWriter
+from qgis.core import QgsVectorFileWriter, QgsCoordinateReferenceSystem
 
 from svir.thread_worker.abstract_worker import AbstractWorker
 from svir.utilities.shared import DEBUG
@@ -52,7 +52,9 @@ class UploadWorker(AbstractWorker):
         # So we need to check if the active layer is stored as a shapefile and,
         # if it isn't, save it as a shapefile
         data_file = '%s%s' % (self.file_stem, '.shp')
-        if self.current_layer.storageType() == 'ESRI Shapefile':
+        projection = self.current_layer.crs().geographicCRSAuthId()
+        if (self.current_layer.storageType() == 'ESRI Shapefile'
+                and projection == 'EPSG:4326'):
             # copy the shapefile (with all its files) into the temporary
             # directory, using self.file_stem as name
             self.set_message.emit(tr(
@@ -64,14 +66,16 @@ class UploadWorker(AbstractWorker):
                 dst = "%s.%s" % (self.file_stem, ext)
                 shutil.copyfile(src, dst)
         else:
-            # if it's not a shapefile, we need to build a shapefile from it
+            # if it's not a shapefile or it is in a bad projection,
+            # we need to build a shapefile from it
             self.set_message.emit(tr(
                 'Writing the shapefile to be uploaded...'))
             QgsVectorFileWriter.writeAsVectorFormat(
                 self.current_layer,
                 data_file,
                 'utf-8',
-                self.current_layer.crs(),
+                QgsCoordinateReferenceSystem(
+                    4326, QgsCoordinateReferenceSystem.EpsgCrsId),
                 'ESRI Shapefile')
         file_size_mb = os.path.getsize(data_file)
         file_size_mb += os.path.getsize(self.file_stem + '.shx')
