@@ -26,6 +26,7 @@ changelog=
     1.7.7
     * Write log messages to the QGIS logging system
     * Limit weighting tree zooming scaleExtent to the interval [0.1, 5]
+    * Before uploading a layer to the OQ-Platform, convert its projection to EPSG:4326
 
 # tags are comma separated with spaces allowed
 tags=GEM, IRMT, SVIR, OpenQuake, Social Vulnerability, Integrated Risk
