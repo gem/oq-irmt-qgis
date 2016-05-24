@@ -168,8 +168,8 @@ as follows:
 
 When the script is executed, the dialog shown in :numref:`fig-boxplotDialog` allows
 the user select one of the available layers, then one of its fields. In the
-`Unit` text field, the user can write the measurement unit to be displayed in
-the y label in the plot.  By pressing `Run`, R is started, running the
+:guilabel:`Unit` text field, the user can write the measurement unit to be displayed in
+the y label in the plot.  By pressing :guilabel:`Run`, R is started, running the
 `boxplot` function on the selected data and setting the plot labels accordingly
 (see :numref:`fig-boxplotOutput`).
 
