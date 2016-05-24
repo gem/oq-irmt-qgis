@@ -27,6 +27,7 @@ Contents:
     09_weighting_and_calculating.rst
     10_aggregate_loss_by_zone.rst
     11_upload_project_to_platform.rst
+    12_using_r_scripts.rst
 
 .. note::
 
