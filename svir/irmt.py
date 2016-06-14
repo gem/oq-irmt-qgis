@@ -65,6 +65,7 @@ from svir.dialogs.settings_dialog import SettingsDialog
 from svir.dialogs.transformation_dialog import TransformationDialog
 from svir.dialogs.upload_settings_dialog import UploadSettingsDialog
 from svir.dialogs.weight_data_dialog import WeightDataDialog
+from svir.dialogs.visualize_oq_output_dialog import VisualizeOqOutputDialog
 from svir.thread_worker.abstract_worker import start_worker
 from svir.thread_worker.download_platform_data_worker import (
     DownloadPlatformDataWorker)
@@ -205,8 +206,164 @@ class Irmt:
                            u"Plugin's &Manual",
                            self.show_manual,
                            enable=True)
+        # Action to visualize data from the oq-engine
+        self.add_menu_item("visualize_oq_output",
+                           ":/plugins/irmt/manual.svg",  # FIXME
+                           u"Visualize &Output of oq-engine",
+                           self.visualize_oq_output,
+                           enable=True)
 
         self.update_actions_status()
+
+    def visualize_oq_output(self):
+        # FIXME
+
+        # PLAN:
+        # 1) select file -> extract rlz
+        # 2) get set of imts
+        # 3) for each imt, get set of poes
+
+        dlg = VisualizeOqOutputDialog(self.iface)
+        dlg.exec_()
+        # csv_file_path = "/tmp/hazard_map-rlz-000_18.csv"
+        # rlz, imts_poes = self.get_info_from_csv_file(csv_file_path)
+        # from pprint import pprint
+        # print rlz
+        # pprint(imts_poes)
+        # self.import_loss_layer_from_csv([csv_file_path],
+        #                                 dest_shp=None,
+        #                                 from_oqengine=True)
+
+    # def get_info_from_csv_file(self, csv_file_path):
+    #     # get the realization from the file name
+    #     # with name like "/tmp/hazard_map-rlz-000_18.csv"
+    #     rlz = int(csv_file_path.split('rlz-')[1].split('_')[0])
+    #     with open(csv_file_path, "rb") as source:
+    #         reader = csv.reader(source)
+    #         header = reader.next()
+    #         # read imt and poe from the header
+    #         # (each imt has many poes)
+    #         imts_poes = {}
+    #         for col_name in header[2:]:
+    #             imt, poe = col_name.split('-')
+    #             if imt not in imts_poes:
+    #                 imts_poes[imt] = [poe]
+    #             else:
+    #                 imts_poes[imt].append(poe)
+    #     return rlz, imts_poes
+
+
+    # def import_loss_layer_from_csv(self,
+    #                                csv_file_paths,
+    #                                dest_shp=None,
+    #                                from_oqengine=True):
+
+    #     # FIXME: hardcoded field names
+    #     longitude_field = 'lon'
+    #     latitude_field = 'lat'
+    #     if from_oqengine:
+    #         lines_to_skip_count = 0
+    #         loss_types = []
+    #         # get the loss type names from the csv files
+    #         row_counts = []
+    #         for csv_file_path in csv_file_paths:
+    #             with open(csv_file_path, "rb") as source:
+    #                 reader = csv.reader(source)
+    #                 header = reader.next()
+    #                 # read imt and poe from the header
+    #                 # (each imt has many poes)
+    #                 # imts = set(name.split('-')[0] for name in header[2:])
+    #                 # poes = set()
+    #                 imts_poes = {}
+    #                 for col_name in header[2:]:
+    #                     imt, poe = col_name.split('-')
+    #                     if imt not in imts_poes:
+    #                         imts_poes[imt] = [poe]
+    #                     else:
+    #                         imts_poes[imt].append(poe)
+    #     import pdb
+    #     pdb.set_trace()
+
+                    # loss_types.append(second_row[6])
+                    # row_count = 2 + sum(1 for row in reader)
+                    # row_counts.append(row_count)
+            # if any(row_counts[0] != row_count for row_count in row_counts):
+                # raise Exception('Input csv fields have different lengths')
+            # header = ['LON', 'LAT']
+            # header.extend([loss_type.upper() for loss_type in loss_types])
+            # fd, reduced_csv_path = tempfile.mkstemp(suffix='csv')
+            # os.close(fd)
+            # source_files = []
+            # source_readers = []
+            # for csv_file_path in csv_file_paths:
+                # source_file = open(csv_file_path, "rb")
+                # source_files.append(source_file)
+                # source_reader = csv.reader(source_file)
+                # source_readers.append(source_reader)
+                # source_reader.next()  # ignore first row
+            # with open(reduced_csv_path, "wb") as reduced:
+                # writer = csv.writer(reduced)
+                # writer.writerow(header)
+                # # iterate while there are rows in the first csv file
+                # for first_source_row in source_readers[0]:
+                    # # add lon, lat and average_loss from the first source
+                    # lon = first_source_row[0]
+                    # lat = first_source_row[1]
+                    # first_loss = first_source_row[4]
+                    # row = [lon, lat, first_loss]
+                    # # append the average_loss from the other sources
+                    # for source_reader in source_readers[1:]:
+                    #     loss = source_reader.next()[4]
+                    #     row.append(loss)
+                    # writer.writerow(row)
+            # for source_file in source_files:
+                # source_file.close()
+            # csv_file_path = reduced_csv_path
+        # else:
+            # csv_file_path = csv_file_paths[0]
+            # lines_to_skip_count = count_heading_commented_lines(csv_file_path)
+        # url = QUrl.fromLocalFile(csv_file_path)
+        # url.addQueryItem('type', 'csv')
+        # url.addQueryItem('xField', longitude_field)
+        # url.addQueryItem('yField', latitude_field)
+        # url.addQueryItem('spatialIndex', 'no')
+        # url.addQueryItem('subsetIndex', 'no')
+        # url.addQueryItem('watchFile', 'no')
+        # url.addQueryItem('delimiter', ',')
+        # url.addQueryItem('crs', 'epsg:4326')
+        # url.addQueryItem('skipLines', str(lines_to_skip_count))
+        # url.addQueryItem('trimFields', 'yes')
+        # layer_uri = str(url.toEncoded())
+        # csv_layer = QgsVectorLayer(layer_uri, 'Loss', "delimitedtext")
+        # dest_filename = dest_shp or QFileDialog.getSaveFileName(
+            # self,
+            # 'Save loss shapefile as...',
+            # os.path.expanduser("~"),
+            # 'Shapefiles (*.shp)')
+        # if dest_filename:
+            # if dest_filename[-4:] != ".shp":
+                # dest_filename += ".shp"
+        # else:
+            # return
+        # result = QgsVectorFileWriter.writeAsVectorFormat(
+            # csv_layer, dest_filename, 'CP1250',
+            # None, 'ESRI Shapefile')
+        # if result != QgsVectorFileWriter.NoError:
+            # raise RuntimeError('Could not save shapefile')
+        # shp_layer = QgsVectorLayer(
+            # dest_filename, 'Loss data', 'ogr')
+        # ProcessLayer(shp_layer).delete_attributes(
+            # [longitude_field, latitude_field]),
+        # if shp_layer.isValid():
+            # QgsMapLayerRegistry.instance().addMapLayer(shp_layer)
+        # else:
+            # msg = 'Invalid loss map'
+            # self.iface.messageBar().pushMessage(
+                # tr("Error"),
+                # tr(msg),
+                # level=QgsMessageBar.CRITICAL)
+            # return None
+        # return shp_layer
 
     def show_manual(self):
         base_url = os.path.abspath(os.path.join(
