@@ -177,5 +177,6 @@ HELP_PAGES_LOOKUP = {
     'aggregate_losses': '10_aggregate_loss_by_zone.html',
     'upload': '11_upload_project_to_platform.html',
     'show_settings': '04_connection_settings.html',
+    'visualize_oq_output': 'FIXME',
     'help': 'index.html',
 }
