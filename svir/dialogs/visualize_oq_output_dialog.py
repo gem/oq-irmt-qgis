@@ -25,14 +25,23 @@
 
 import os
 import h5py
+from qgis.core import (QgsVectorLayer,
+                       QgsFeature,
+                       QgsPoint,
+                       QgsGeometry,
+                       QgsMapLayerRegistry,
+                       )
 from PyQt4.QtCore import pyqtSlot, QDir
 
 from PyQt4.QtGui import (QDialogButtonBox,
                          QDialog,
                          QFileDialog,
                          )
-# from openquake.baselib import h5py
+# from openquake.baselib import h5py  # FIXME: we should import this instead
 from svir.ui.ui_visualize_oq_output import Ui_VisualizeOqOutputDialog
+from svir.utilities.shared import DEBUG
+from svir.utilities.utils import LayerEditingManager
+from svir.calculations.calculate_utils import add_numeric_attribute
 
 
 class VisualizeOqOutputDialog(QDialog):
@@ -45,38 +54,27 @@ class VisualizeOqOutputDialog(QDialog):
         # Set up the user interface from Designer.
         self.ui = Ui_VisualizeOqOutputDialog()
         self.ui.setupUi(self)
-        # Disable ok_button until... FIXME
+        # Disable ok_button until all comboboxes are filled
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
         self.ok_button.setDisabled(True)
-        # self.populate_cbx()
+        self.ui.open_hdfview_btn.setDisabled(True)
 
-        # FIXME temporary
-        # self.hdf5_path = os.path.join(
-        #     '~', '/oq-downloads', 'hmaps_10282.1.hdf5')
-        # self.hdf5_path = '~/oq-downloads/hmaps_10282.1.hdf5'
-        # import pdb
-        # pdb.set_trace()
-        # self.populate_rlz_cbx()
+    @pyqtSlot(str)
+    def on_hdf5_path_le_textChanged(self):
+        self.ui.open_hdfview_btn.setDisabled(
+            self.ui.hdf5_path_le.text() == '')
 
     @pyqtSlot()
     def on_open_hdfview_btn_clicked(self):
-        if self.hdf5_path:
-            to_run = "hdfview " + self.hdf5_path
+        file_path = self.ui.hdf5_path_le.text()
+        if file_path:
+            to_run = "hdfview " + file_path
             # FIXME make system independent
             os.system(to_run)
 
     @pyqtSlot()
     def on_file_browser_tbn_clicked(self):
         self.hdf5_path = self.open_file_dialog()
-        # layer = self.open_file_dialog('zonal_layer')
-        # if layer and ProcessLayer(layer).is_type_in(
-        #         ["polygon", "multipolygon"]):
-        #     cbx = self.ui.zonal_layer_cbx
-        #     cbx.addItem(layer.name())
-        #     last_index = cbx.count() - 1
-        #     cbx.setItemData(last_index, layer.id())
-        #     cbx.setCurrentIndex(last_index)
-        # self.enable_ok_button_if_both_layers_are_specified()
 
     @pyqtSlot(str)
     def on_rlz_cbx_currentIndexChanged(self):
@@ -123,5 +121,34 @@ class VisualizeOqOutputDialog(QDialog):
     def accept(self):
         imt = self.ui.imt_cbx.currentText()
         poe = self.ui.poe_cbx.currentText()
-        array = self.dataset.value[['lon', 'lat', '%s~%s' % (imt, poe)]]
+        field_name = '%s~%s' % (imt, poe)
+        array = self.dataset.value[['lon', 'lat', field_name]]
+
+        # create layer
+        vl = QgsVectorLayer("Point", "points", "memory")
+        pr = vl.dataProvider()
+
+        with LayerEditingManager(vl,
+                                 'Reading hdf5',
+                                 DEBUG):
+            add_numeric_attribute(field_name, vl)
+
+            # counter = 0
+            for row in array:
+                # counter += 1
+                # if counter > 1000:
+                #     break
+
+                # add a feature
+                feat = QgsFeature(vl.pendingFields())
+                lon, lat, value = row
+                # NOTE: without casting to float, it produces a null
+                #       because it does not recognize the numpy type
+                feat.setAttribute(field_name, float(value))
+                feat.setGeometry(QgsGeometry.fromPoint(QgsPoint(lon, lat)))
+                (res, outFeats) = pr.addFeatures([feat])
+
+        # add layer to the legend
+        QgsMapLayerRegistry.instance().addMapLayer(vl)
+
         self.close()
