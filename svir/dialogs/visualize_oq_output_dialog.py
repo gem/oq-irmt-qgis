@@ -126,13 +126,11 @@ class VisualizeOqOutputDialog(QDialog):
 
         # create layer
         vl = QgsVectorLayer("Point", "points", "memory")
+        add_numeric_attribute(field_name, vl)  # it uses LayerEditingManager
         pr = vl.dataProvider()
-
         with LayerEditingManager(vl,
                                  'Reading hdf5',
                                  DEBUG):
-            add_numeric_attribute(field_name, vl)
-
             # counter = 0
             for row in array:
                 # counter += 1
@@ -147,8 +145,6 @@ class VisualizeOqOutputDialog(QDialog):
                 feat.setAttribute(field_name, float(value))
                 feat.setGeometry(QgsGeometry.fromPoint(QgsPoint(lon, lat)))
                 (res, outFeats) = pr.addFeatures([feat])
-
         # add layer to the legend
         QgsMapLayerRegistry.instance().addMapLayer(vl)
-
         self.close()
