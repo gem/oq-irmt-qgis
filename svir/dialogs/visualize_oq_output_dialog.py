@@ -132,7 +132,8 @@ class VisualizeOqOutputDialog(QDialog):
 
         layer_name = "%s_%s_%s" % (rlz, imt, poe)
         # create layer
-        self.layer = QgsVectorLayer("Point", layer_name, "memory")
+        self.layer = QgsVectorLayer(
+            "Point?crs=epsg:4326", layer_name, "memory")
         # NOTE: if we use shapefiles, we need to make sure ~ is fine,
         #       otherwise we have to replace it with something like _
         # NOTE: add_numeric_attribute uses LayerEditingManager
@@ -152,6 +153,8 @@ class VisualizeOqOutputDialog(QDialog):
             (res, outFeats) = pr.addFeatures(feats)
         # add self.layer to the legend
         QgsMapLayerRegistry.instance().addMapLayer(self.layer)
+        self.iface.setActiveLayer(self.layer)
+        self.iface.zoomToActiveLayer()
 
     def style_layer(self):
         color1 = QColor("#FFEBEB")
@@ -171,7 +174,7 @@ class VisualizeOqOutputDialog(QDialog):
         graduated_renderer.updateRangeLowerValue(0, 0.0001)
         symbol_zeros = QgsSymbolV2.defaultSymbol(self.layer.geometryType())
         symbol_zeros.setColor(QColor("green"))
-        symbol_zeros.setAlpha(0.4)  # opacity
+        symbol_zeros.setAlpha(0.3)  # opacity
         zeros_min = 0.0
         zeros_max = 0.0001
         range_zeros = QgsRendererRangeV2(
