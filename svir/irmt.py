@@ -208,7 +208,7 @@ class Irmt:
         # Action to visualize data from the oq-engine
         self.add_menu_item("visualize_oq_output",
                            ":/plugins/irmt/manual.svg",  # FIXME
-                           u"Visualize &Output of oq-engine",
+                           u"Visualize oq-engine &output",
                            self.visualize_oq_output,
                            enable=True)
 
