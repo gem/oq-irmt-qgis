@@ -171,18 +171,20 @@ class VisualizeOqOutputDialog(QDialog):
             QgsGraduatedSymbolRendererV2.EqualInterval,
             symbol,
             ramp)
-        graduated_renderer.updateRangeLowerValue(0, 0.0001)
+        graduated_renderer.updateRangeLowerValue(0, 0.0)
         symbol_zeros = QgsSymbolV2.defaultSymbol(self.layer.geometryType())
         symbol_zeros.setColor(QColor("green"))
         symbol_zeros.setAlpha(0.3)  # opacity
         zeros_min = 0.0
-        zeros_max = 0.0001
+        zeros_max = 0.0
         range_zeros = QgsRendererRangeV2(
             zeros_min, zeros_max, symbol_zeros,
             " %.4f - %.4f" % (zeros_min, zeros_max), True)
         graduated_renderer.addClassRange(range_zeros)
         graduated_renderer.moveClass(classes_count, 0)
         self.layer.setRendererV2(graduated_renderer)
+        self.layer.setLayerTransparency(20)
+        self.layer.triggerRepaint()
         self.iface.legendInterface().refreshLayerSymbology(
             self.layer)
         self.iface.mapCanvas().refresh()
