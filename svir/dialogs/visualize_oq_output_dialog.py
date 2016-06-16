@@ -30,12 +30,17 @@ from qgis.core import (QgsVectorLayer,
                        QgsPoint,
                        QgsGeometry,
                        QgsMapLayerRegistry,
+                       QgsSymbolV2,
+                       QgsVectorGradientColorRampV2,
+                       QgsGraduatedSymbolRendererV2,
+                       QgsRendererRangeV2,
                        )
 from PyQt4.QtCore import pyqtSlot, QDir
 
 from PyQt4.QtGui import (QDialogButtonBox,
                          QDialog,
                          QFileDialog,
+                         QColor,
                          )
 # from openquake.baselib import h5py  # FIXME: we should import this instead
 from svir.ui.ui_visualize_oq_output import Ui_VisualizeOqOutputDialog
@@ -118,35 +123,68 @@ class VisualizeOqOutputDialog(QDialog):
     def set_ok_button(self):
         self.ok_button.setEnabled(self.ui.poe_cbx.currentIndex != -1)
 
-    def accept(self):
+    def build_layer(self):
+        rlz = self.ui.rlz_cbx.currentText()
         imt = self.ui.imt_cbx.currentText()
         poe = self.ui.poe_cbx.currentText()
-        field_name = '%s~%s' % (imt, poe)
-        array = self.dataset.value[['lon', 'lat', field_name]]
+        self.field_name = '%s~%s' % (imt, poe)
+        array = self.dataset.value[['lon', 'lat', self.field_name]]
 
+        layer_name = "%s_%s_%s" % (rlz, imt, poe)
         # create layer
-        vl = QgsVectorLayer("Point", "points", "memory")
+        self.layer = QgsVectorLayer("Point", layer_name, "memory")
         # NOTE: if we use shapefiles, we need to make sure ~ is fine,
         #       otherwise we have to replace it with something like _
-        add_numeric_attribute(field_name, vl)  # it uses LayerEditingManager
-        pr = vl.dataProvider()
-        with LayerEditingManager(vl, 'Reading hdf5', DEBUG):
+        # NOTE: add_numeric_attribute uses LayerEditingManager
+        add_numeric_attribute(self.field_name, self.layer)
+        pr = self.layer.dataProvider()
+        with LayerEditingManager(self.layer, 'Reading hdf5', DEBUG):
             feats = []
-            # counter = 0
             for row in array:
-                # counter += 1
-                # if counter > 1000:
-                #     break
-
                 # add a feature
-                feat = QgsFeature(vl.pendingFields())
+                feat = QgsFeature(self.layer.pendingFields())
                 lon, lat, value = row
                 # NOTE: without casting to float, it produces a null
                 #       because it does not recognize the numpy type
-                feat.setAttribute(field_name, float(value))
+                feat.setAttribute(self.field_name, float(value))
                 feat.setGeometry(QgsGeometry.fromPoint(QgsPoint(lon, lat)))
                 feats.append(feat)
             (res, outFeats) = pr.addFeatures(feats)
-        # add layer to the legend
-        QgsMapLayerRegistry.instance().addMapLayer(vl)
+        # add self.layer to the legend
+        QgsMapLayerRegistry.instance().addMapLayer(self.layer)
+
+    def style_layer(self):
+        color1 = QColor("#FFEBEB")
+        color2 = QColor("red")
+        classes_count = 10
+        ramp = QgsVectorGradientColorRampV2(color1, color2)
+        symbol = QgsSymbolV2.defaultSymbol(self.layer.geometryType())
+        symbol.setAlpha(1)  # opacity
+        graduated_renderer = QgsGraduatedSymbolRendererV2.createRenderer(
+            self.layer,
+            self.field_name,
+            classes_count,
+            # QgsGraduatedSymbolRendererV2.Quantile,
+            QgsGraduatedSymbolRendererV2.EqualInterval,
+            symbol,
+            ramp)
+        graduated_renderer.updateRangeLowerValue(0, 0.0001)
+        symbol_zeros = QgsSymbolV2.defaultSymbol(self.layer.geometryType())
+        symbol_zeros.setColor(QColor("green"))
+        symbol_zeros.setAlpha(0.4)  # opacity
+        zeros_min = 0.0
+        zeros_max = 0.0001
+        range_zeros = QgsRendererRangeV2(
+            zeros_min, zeros_max, symbol_zeros,
+            " %.4f - %.4f" % (zeros_min, zeros_max), True)
+        graduated_renderer.addClassRange(range_zeros)
+        graduated_renderer.moveClass(classes_count, 0)
+        self.layer.setRendererV2(graduated_renderer)
+        self.iface.legendInterface().refreshLayerSymbology(
+            self.layer)
+        self.iface.mapCanvas().refresh()
+
+    def accept(self):
+        self.build_layer()
+        self.style_layer()
         self.close()
