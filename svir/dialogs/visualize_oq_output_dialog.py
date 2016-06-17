@@ -24,7 +24,6 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
-import h5py
 from qgis.core import (QgsVectorLayer,
                        QgsFeature,
                        QgsPoint,
@@ -42,10 +41,10 @@ from PyQt4.QtGui import (QDialogButtonBox,
                          QFileDialog,
                          QColor,
                          )
-# from openquake.baselib import h5py  # FIXME: we should import this instead
+from openquake.baselib import hdf5
 from svir.ui.ui_visualize_oq_output import Ui_VisualizeOqOutputDialog
 from svir.utilities.shared import DEBUG
-from svir.utilities.utils import LayerEditingManager
+from svir.utilities.utils import LayerEditingManager, WaitCursorManager
 from svir.calculations.calculate_utils import add_numeric_attribute
 
 
@@ -91,11 +90,15 @@ class VisualizeOqOutputDialog(QDialog):
                 self.imts[imt] = [poe]
             else:
                 self.imts[imt].append(poe)
+        self.ui.imt_cbx.clear()
+        self.ui.imt_cbx.setEnabled(True)
         self.ui.imt_cbx.addItems(self.imts.keys())
 
     @pyqtSlot(str)
     def on_imt_cbx_currentIndexChanged(self):
         imt = self.ui.imt_cbx.currentText()
+        self.ui.poe_cbx.clear()
+        self.ui.poe_cbx.setEnabled(True)
         self.ui.poe_cbx.addItems(self.imts[imt])
 
     @pyqtSlot(str)
@@ -108,16 +111,21 @@ class VisualizeOqOutputDialog(QDialog):
         """
         text = self.tr('Select oq-engine output to import')
         filters = self.tr('HDF5 files (*.hdf5)')
-        self.hdf5_path, _ = QFileDialog.getOpenFileNameAndFilter(
+        hdf5_path = QFileDialog.getOpenFileName(
             self, text, QDir.homePath(), filters)
-        self.ui.hdf5_path_le.setText(self.hdf5_path)
-        self.populate_rlz_cbx()
+        if hdf5_path:
+            self.hdf5_path = hdf5_path
+            self.ui.hdf5_path_le.setText(self.hdf5_path)
+            self.populate_rlz_cbx()
 
     def populate_rlz_cbx(self):
-        # with h5py.File(self.hdf5_path, 'r') as hf:
-        self.hfile = h5py.File(self.hdf5_path, 'r')
+        # FIXME: will the file be closed correctly?
+        # with hdf5.File(self.hdf5_path, 'r') as hf:
+        self.hfile = hdf5.File(self.hdf5_path, 'r')
         self.hmaps = self.hfile.get('hmaps')
         self.rlzs = self.hmaps.keys()
+        self.ui.rlz_cbx.clear()
+        self.ui.rlz_cbx.setEnabled(True)
         self.ui.rlz_cbx.addItems(self.rlzs)
 
     def set_ok_button(self):
@@ -183,13 +191,17 @@ class VisualizeOqOutputDialog(QDialog):
         graduated_renderer.addClassRange(range_zeros)
         graduated_renderer.moveClass(classes_count, 0)
         self.layer.setRendererV2(graduated_renderer)
-        self.layer.setLayerTransparency(20)
+        self.layer.setLayerTransparency(30)  # percent
         self.layer.triggerRepaint()
         self.iface.legendInterface().refreshLayerSymbology(
             self.layer)
         self.iface.mapCanvas().refresh()
 
     def accept(self):
-        self.build_layer()
+        with WaitCursorManager('Creating layer...', self.iface):
+            self.build_layer()
+        self.hfile.close()
         self.style_layer()
         self.close()
+
+    # FIXME: also cancel should close the hdf5 file
