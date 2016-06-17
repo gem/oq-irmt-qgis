@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_visualize_oq_output.ui'
 #
-# Created: Wed Jun 15 15:36:33 2016
+# Created: Fri Jun 17 15:12:57 2016
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -51,6 +51,7 @@ class Ui_VisualizeOqOutputDialog(object):
         self.hdf5_path_le.setObjectName(_fromUtf8("hdf5_path_le"))
         self.horizontalLayout.addWidget(self.hdf5_path_le)
         self.open_hdfview_btn = QtGui.QPushButton(self.layoutWidget)
+        self.open_hdfview_btn.setEnabled(False)
         self.open_hdfview_btn.setObjectName(_fromUtf8("open_hdfview_btn"))
         self.horizontalLayout.addWidget(self.open_hdfview_btn)
         self.verticalLayout.addLayout(self.horizontalLayout)
@@ -58,18 +59,21 @@ class Ui_VisualizeOqOutputDialog(object):
         self.rlz_lbl.setObjectName(_fromUtf8("rlz_lbl"))
         self.verticalLayout.addWidget(self.rlz_lbl)
         self.rlz_cbx = QtGui.QComboBox(self.layoutWidget)
+        self.rlz_cbx.setEnabled(False)
         self.rlz_cbx.setObjectName(_fromUtf8("rlz_cbx"))
         self.verticalLayout.addWidget(self.rlz_cbx)
         self.imt_lbl = QtGui.QLabel(self.layoutWidget)
         self.imt_lbl.setObjectName(_fromUtf8("imt_lbl"))
         self.verticalLayout.addWidget(self.imt_lbl)
         self.imt_cbx = QtGui.QComboBox(self.layoutWidget)
+        self.imt_cbx.setEnabled(False)
         self.imt_cbx.setObjectName(_fromUtf8("imt_cbx"))
         self.verticalLayout.addWidget(self.imt_cbx)
         self.poe_lbl = QtGui.QLabel(self.layoutWidget)
         self.poe_lbl.setObjectName(_fromUtf8("poe_lbl"))
         self.verticalLayout.addWidget(self.poe_lbl)
         self.poe_cbx = QtGui.QComboBox(self.layoutWidget)
+        self.poe_cbx.setEnabled(False)
         self.poe_cbx.setObjectName(_fromUtf8("poe_cbx"))
         self.verticalLayout.addWidget(self.poe_cbx)
 

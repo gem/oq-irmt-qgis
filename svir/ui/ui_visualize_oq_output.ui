@@ -64,6 +64,9 @@
       </item>
       <item>
        <widget class="QPushButton" name="open_hdfview_btn">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
         <property name="text">
          <string>Open with HDFView</string>
         </property>
@@ -79,7 +82,11 @@
      </widget>
     </item>
     <item>
-     <widget class="QComboBox" name="rlz_cbx"/>
+     <widget class="QComboBox" name="rlz_cbx">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+     </widget>
     </item>
     <item>
      <widget class="QLabel" name="imt_lbl">
@@ -89,7 +96,11 @@
      </widget>
     </item>
     <item>
-     <widget class="QComboBox" name="imt_cbx"/>
+     <widget class="QComboBox" name="imt_cbx">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+     </widget>
     </item>
     <item>
      <widget class="QLabel" name="poe_lbl">
@@ -99,7 +110,11 @@
      </widget>
     </item>
     <item>
-     <widget class="QComboBox" name="poe_cbx"/>
+     <widget class="QComboBox" name="poe_cbx">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>
