@@ -170,6 +170,9 @@ class VisualizeOqOutputDialog(QDialog):
         classes_count = 10
         ramp = QgsVectorGradientColorRampV2(color1, color2)
         symbol = QgsSymbolV2.defaultSymbol(self.layer.geometryType())
+        # see properties at:
+        # https://qgis.org/api/qgsmarkersymbollayerv2_8cpp_source.html#l01073
+        symbol = symbol.createSimple({'outline_width': '0.000001'})
         symbol.setAlpha(1)  # opacity
         graduated_renderer = QgsGraduatedSymbolRendererV2.createRenderer(
             self.layer,
@@ -181,8 +184,8 @@ class VisualizeOqOutputDialog(QDialog):
             ramp)
         graduated_renderer.updateRangeLowerValue(0, 0.0)
         symbol_zeros = QgsSymbolV2.defaultSymbol(self.layer.geometryType())
-        symbol_zeros.setColor(QColor("green"))
-        symbol_zeros.setAlpha(0.3)  # opacity
+        symbol_zeros = symbol.createSimple({'outline_width': '0.000001'})
+        symbol_zeros.setColor(QColor(222, 255, 222))
         zeros_min = 0.0
         zeros_max = 0.0
         range_zeros = QgsRendererRangeV2(
