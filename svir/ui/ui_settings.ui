@@ -11,11 +11,11 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>OpenQuake Platform settings</string>
+   <string>Connection Settings</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QGroupBox" name="groupBox">
+    <widget class="QGroupBox" name="topGroupBox">
      <property name="title">
       <string>OpenQuake Platform connection settings</string>
      </property>
@@ -74,7 +74,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="groupBox_2">
+    <widget class="QGroupBox" name="bottomGroupBox">
      <property name="title">
       <string>SVIR settings</string>
      </property>

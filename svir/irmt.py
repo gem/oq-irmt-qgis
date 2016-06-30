@@ -66,6 +66,8 @@ from svir.dialogs.transformation_dialog import TransformationDialog
 from svir.dialogs.upload_settings_dialog import UploadSettingsDialog
 from svir.dialogs.weight_data_dialog import WeightDataDialog
 from svir.dialogs.visualize_oq_output_dialog import VisualizeOqOutputDialog
+from svir.dialogs.drive_oq_engine_server_dialog import (
+    DriveOqEngineServerDialog)
 from svir.thread_worker.abstract_worker import start_worker
 from svir.thread_worker.download_platform_data_worker import (
     DownloadPlatformDataWorker)
@@ -194,10 +196,17 @@ class Irmt:
                            add_to_layer_actions=True)
         # Action to activate the modal dialog to set up show_settings for the
         # connection with the platform
-        self.add_menu_item("show_settings",
+        self.add_menu_item("show_platform_settings",
                            ":/plugins/irmt/settings.svg",
                            u"&OpenQuake Platform connection settings",
-                           self.show_settings,
+                           self.show_platform_settings,
+                           enable=True)
+        # Action to activate the modal dialog to set up show_settings for the
+        # connection with the engine
+        self.add_menu_item("show_engine_settings",
+                           ":/plugins/irmt/settings.svg",
+                           u"&OpenQuake Engine connection settings",
+                           self.show_engine_settings,
                            enable=True)
         # Action to open the plugin's manual
         self.add_menu_item("help",
@@ -211,11 +220,21 @@ class Irmt:
                            u"Visualize oq-engine &output",
                            self.visualize_oq_output,
                            enable=True)
+        # Action to drive the oq-engine server
+        self.add_menu_item("drive_engine_server",
+                           ":/plugins/irmt/manual.svg",  # FIXME
+                           u"Drive oq-engine &server",
+                           self.drive_oq_engine_server,
+                           enable=True)
 
         self.update_actions_status()
 
     def visualize_oq_output(self):
         dlg = VisualizeOqOutputDialog(self.iface)
+        dlg.exec_()
+
+    def drive_oq_engine_server(self):
+        dlg = DriveOqEngineServerDialog(self.iface)
         dlg.exec_()
 
     def show_manual(self):
@@ -367,7 +386,7 @@ class Irmt:
         # login to platform, to be able to retrieve sv indices
         sv_downloader = get_loggedin_downloader(self.iface)
         if sv_downloader is None:
-            self.show_settings()
+            self.show_platform_settings()
             return
         try:
             dlg = SelectSvVariablesDialog(sv_downloader)
@@ -530,7 +549,7 @@ class Irmt:
         """
         sv_downloader = get_loggedin_downloader(self.iface)
         if sv_downloader is None:
-            self.show_settings()
+            self.show_platform_settings()
             return
 
         dlg = DownloadLayerDialog(self.iface, sv_downloader)
@@ -986,12 +1005,19 @@ class Irmt:
             self.iface.activeLayer())
         self.iface.mapCanvas().refresh()
 
-    def show_settings(self):
+    def show_platform_settings(self):
         """
         Open a dialog to specify the connection settings used to interact
         with the OpenQuake Platform
         """
-        SettingsDialog(self.iface).exec_()
+        SettingsDialog(self.iface, server='platform').exec_()
+
+    def show_engine_settings(self):
+        """
+        Open a dialog to specify the connection settings used to interact
+        with the OpenQuake Engine
+        """
+        SettingsDialog(self.iface, server='engine').exec_()
 
     def transform_attributes(self):
         """

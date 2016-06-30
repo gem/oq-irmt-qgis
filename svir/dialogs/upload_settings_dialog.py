@@ -43,7 +43,7 @@ from svir.utilities.utils import (reload_attrib_cbx,
                                   WaitCursorManager,
                                   platform_login,
                                   SvNetworkError,
-                                  get_credentials,
+                                  get_platform_credentials,
                                   update_platform_project,
                                   write_layer_suppl_info_to_qgs,
                                   insert_platform_layer_id,
@@ -206,7 +206,8 @@ class UploadSettingsDialog(QDialog):
             with WaitCursorManager(
                     'Updating project on the OpenQuake Platform',
                     self.iface):
-                hostname, username, password = get_credentials(self.iface)
+                hostname, username, password = get_platform_credentials(
+                    self.iface)
                 session = Session()
                 try:
                     platform_login(hostname, username, password, session)

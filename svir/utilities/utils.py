@@ -209,7 +209,7 @@ def get_field_names(sub_tree, field_names=None):
     return field_names
 
 
-def get_credentials(iface):
+def get_platform_credentials(iface):
     """
     Get from the QSettings the credentials to access the OpenQuake Platform
 
@@ -225,6 +225,25 @@ def get_credentials(iface):
         hostname = qs.value('irmt/platform_hostname', '')
         username = qs.value('irmt/platform_username', '')
         password = qs.value('irmt/platform_password', '')
+    return hostname, username, password
+
+
+def get_engine_credentials(iface):
+    """
+    Get from the QSettings the credentials to access the OpenQuake Engine
+
+    :returns: tuple (hostname, username, password)
+
+    """
+    qs = QSettings()
+    hostname = qs.value('irmt/engine_hostname', '')
+    username = qs.value('irmt/engine_username', '')
+    password = qs.value('irmt/engine_password', '')
+    if not (hostname and username and password):
+        SettingsDialog(iface).exec_()
+        hostname = qs.value('irmt/engine_hostname', '')
+        username = qs.value('irmt/engine_username', '')
+        password = qs.value('irmt/engine_password', '')
     return hostname, username, password
 
 
@@ -406,6 +425,34 @@ def platform_login(host, username, password, session):
     """
 
     login_url = host + '/account/ajax_login'
+    session_resp = session.post(login_url,
+                                data={
+                                    "username": username,
+                                    "password": password
+                                },
+                                timeout=10,
+                                )
+    if session_resp.status_code != 200:  # 200 means successful:OK
+        error_message = ('Unable to get session for login: %s' %
+                         session_resp.text)
+        raise SvNetworkError(error_message)
+
+
+def engine_login(host, username, password, session):
+    """
+    Logs in a session to a platform
+
+    :param host: The host url
+    :type host: str
+    :param username: The username
+    :type username: str
+    :param password: The password
+    :type password: str
+    :param session: The session to be autenticated
+    :type session: Session
+    """
+
+    login_url = host + '/accounts/ajax_login/'
     session_resp = session.post(login_url,
                                 data={
                                     "username": username,
