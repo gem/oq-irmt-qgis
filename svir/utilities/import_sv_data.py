@@ -36,7 +36,7 @@ from svir.third_party.requests.exceptions import (ConnectionError,
                                                   )
 from svir.utilities.utils import (SvNetworkError,
                                   platform_login,
-                                  get_credentials,
+                                  get_platform_credentials,
                                   WaitCursorManager,
                                   tr,
                                   create_progress_message_bar,
@@ -58,7 +58,7 @@ def get_loggedin_downloader(iface):
 
     :returns: a :class:`svir.utilities.SvDownloader` instance
     """
-    hostname, username, password = get_credentials(iface)
+    hostname, username, password = get_platform_credentials(iface)
     sv_downloader = SvDownloader(hostname)
 
     try:

@@ -40,7 +40,7 @@ from svir.third_party.requests.sessions import Session
 from svir.third_party.requests.utils import dict_from_cookiejar
 from svir.utilities.sldadapter import getGsCompatibleSld
 from svir.ui.ui_upload_metadata import Ui_UploadMetadataDialog
-from svir.utilities.utils import (get_credentials,
+from svir.utilities.utils import (get_platform_credentials,
                                   platform_login,
                                   create_progress_message_bar,
                                   clear_progress_message_bar,
@@ -72,7 +72,7 @@ class UploadDialog(QDialog):
 
         self.button_box = self.ui.buttonBox
 
-        self.hostname, self.username, self.password = get_credentials(
+        self.hostname, self.username, self.password = get_platform_credentials(
             self.iface)
 
         self.web_view = self.ui.web_view

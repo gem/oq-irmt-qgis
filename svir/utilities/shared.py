@@ -179,7 +179,9 @@ HELP_PAGES_LOOKUP = {
     'weight_data': '09_weighting_and_calculating.html',
     'aggregate_losses': '10_aggregate_loss_by_zone.html',
     'upload': '11_upload_project_to_platform.html',
-    'show_settings': '04_connection_settings.html',
+    'show_platform_settings': '04_connection_settings.html',
+    'show_engine_settings': 'FIXME',
     'visualize_oq_output': 'FIXME',
+    'drive_engine_server': 'FIXME',
     'help': 'index.html',
 }

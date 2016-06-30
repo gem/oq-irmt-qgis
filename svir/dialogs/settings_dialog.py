@@ -31,19 +31,28 @@ from svir.utilities.shared import PLATFORM_REGISTRATION_URL
 class SettingsDialog(QtGui.QDialog, Ui_SettingsDialog):
     """
     Dialog used to specify the connection settings used to interact with the
-    OpenQuake Platform
+    OpenQuake Platform or the OpenQuake Engine
     """
-    def __init__(self, iface, parent=None):
+    def __init__(self, iface, parent=None, server='platform'):
         QtGui.QDialog.__init__(self, parent)
         self.iface = iface
         self.parent = parent
+        self.server = server
         # Set up the user interface from Designer.
         self.ui = Ui_SettingsDialog()
         self.ui.setupUi(self)
-        link_text = ('<a href="%s">Register to the OpenQuake Platform</a>'
-                     % PLATFORM_REGISTRATION_URL)
-        self.ui.registration_link_lbl.setText(link_text)
-
+        if self.server == 'platform':
+            self.ui.topGroupBox.setTitle(
+                'OpenQuake Platform connection settings')
+            link_text = ('<a href="%s">Register to the OpenQuake Platform</a>'
+                         % PLATFORM_REGISTRATION_URL)
+            self.ui.registration_link_lbl.setText(link_text)
+        elif self.server == 'engine':
+            self.ui.topGroupBox.setTitle(
+                'OpenQuake Engine connection settings')
+            self.ui.registration_link_lbl.setText('FIXME Link')
+        else:
+            raise ValueError(self.server)
         self.restoreState()
 
     def restoreState(self):
@@ -51,22 +60,32 @@ class SettingsDialog(QtGui.QDialog, Ui_SettingsDialog):
         Reinstate the options based on the user's stored session info.
         """
         mySettings = QtCore.QSettings()
-        platform_username = mySettings.value('irmt/platform_username', '')
-        platform_password = mySettings.value('irmt/platform_password', '')
-        platform_hostname = mySettings.value(
-            'irmt/platform_hostname', 'https://platform.openquake.org')
+
+        if self.server == 'platform':
+            username = mySettings.value('irmt/platform_username', '')
+            password = mySettings.value('irmt/platform_password', '')
+            hostname = mySettings.value(
+                'irmt/platform_hostname', 'https://platform.openquake.org')
+
+        elif self.server == 'engine':
+            username = mySettings.value('irmt/engine_username', '')
+            password = mySettings.value('irmt/engine_password', '')
+            hostname = mySettings.value('irmt/engine_hostname',
+                                        'localhost:8000')
+        else:
+            raise ValueError(self.server)
 
         # hack for strange mac behaviour
-        if not platform_username:
-            platform_username = ''
-        if not platform_password:
-            platform_password = ''
-        if not platform_hostname:
-            platform_hostname = ''
+        if not username:
+            username = ''
+        if not password:
+            password = ''
+        if not hostname:
+            hostname = ''
 
-        self.ui.usernameEdit.setText(platform_username)
-        self.ui.passwordEdit.setText(platform_password)
-        self.ui.hostnameEdit.setText(platform_hostname)
+        self.ui.usernameEdit.setText(username)
+        self.ui.passwordEdit.setText(password)
+        self.ui.hostnameEdit.setText(hostname)
 
         self.ui.developermodeCheck.setChecked(
             mySettings.value('irmt/developer_mode', False, type=bool))
@@ -78,13 +97,24 @@ class SettingsDialog(QtGui.QDialog, Ui_SettingsDialog):
         mySettings = QtCore.QSettings()
         # if the (stripped) hostname ends with '/', remove it
         hostname = self.ui.hostnameEdit.text().strip().rstrip('/')
-        mySettings.setValue('irmt/platform_hostname', hostname)
-        mySettings.setValue('irmt/platform_username',
-                            self.ui.usernameEdit.text())
-        mySettings.setValue('irmt/platform_password',
-                            self.ui.passwordEdit.text())
-        mySettings.setValue('irmt/developer_mode',
-                            self.ui.developermodeCheck.isChecked())
+        if self.server == 'platform':
+            mySettings.setValue('irmt/platform_hostname', hostname)
+            mySettings.setValue('irmt/platform_username',
+                                self.ui.usernameEdit.text())
+            mySettings.setValue('irmt/platform_password',
+                                self.ui.passwordEdit.text())
+            mySettings.setValue('irmt/developer_mode',
+                                self.ui.developermodeCheck.isChecked())
+        elif self.server == 'engine':
+            mySettings.setValue('irmt/engine_hostname', hostname)
+            mySettings.setValue('irmt/engine_username',
+                                self.ui.usernameEdit.text())
+            mySettings.setValue('irmt/engine_password',
+                                self.ui.passwordEdit.text())
+            mySettings.setValue('irmt/developer_mode',
+                                self.ui.developermodeCheck.isChecked())
+        else:
+            raise ValueError(self.server)
 
     def accept(self):
         """
