@@ -52,8 +52,9 @@ class VisualizeOqOutputDialog(QDialog):
     """
     FIXME
     """
-    def __init__(self, iface):
+    def __init__(self, iface, hdf5_path=None):
         self.iface = iface
+        self.hdf5_path = hdf5_path
         QDialog.__init__(self)
         # Set up the user interface from Designer.
         self.ui = Ui_VisualizeOqOutputDialog()
@@ -62,6 +63,12 @@ class VisualizeOqOutputDialog(QDialog):
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
         self.ok_button.setDisabled(True)
         self.ui.open_hdfview_btn.setDisabled(True)
+        if self.hdf5_path:
+            self.ui.hdf5_path_le.setText(self.hdf5_path)
+            self.ui.rlz_cbx.setEnabled(True)
+            self.ui.imt_cbx.setEnabled(True)
+            self.ui.poe_cbx.setEnabled(True)
+            self.populate_rlz_cbx()
 
     @pyqtSlot(str)
     def on_hdf5_path_le_textChanged(self):
@@ -85,7 +92,7 @@ class VisualizeOqOutputDialog(QDialog):
         self.dataset = self.hmaps.get(self.ui.rlz_cbx.currentText())
         self.imts = {}
         for name in self.dataset.dtype.names[2:]:
-            imt, poe = name.split('~')
+            imt, poe = name.split('-')
             if imt not in self.imts:
                 self.imts[imt] = [poe]
             else:
@@ -135,17 +142,15 @@ class VisualizeOqOutputDialog(QDialog):
         rlz = self.ui.rlz_cbx.currentText()
         imt = self.ui.imt_cbx.currentText()
         poe = self.ui.poe_cbx.currentText()
-        self.field_name = '%s~%s' % (imt, poe)
+        self.field_name = '%s-%s' % (imt, poe)
         array = self.dataset.value[['lon', 'lat', self.field_name]]
 
         layer_name = "%s_%s_%s" % (rlz, imt, poe)
         # create layer
         self.layer = QgsVectorLayer(
             "Point?crs=epsg:4326", layer_name, "memory")
-        # NOTE: if we use shapefiles, we need to make sure ~ is fine,
-        #       otherwise we have to replace it with something like _
         # NOTE: add_numeric_attribute uses LayerEditingManager
-        add_numeric_attribute(self.field_name, self.layer)
+        self.field_name = add_numeric_attribute(self.field_name, self.layer)
         pr = self.layer.dataProvider()
         with LayerEditingManager(self.layer, 'Reading hdf5', DEBUG):
             feats = []
