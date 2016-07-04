@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_drive_engine_server.ui'
 #
-# Created: Mon Jul  4 14:37:00 2016
+# Created: Mon Jul  4 15:43:39 2016
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -62,6 +62,6 @@ class Ui_DriveEngineServerDialog(object):
     def retranslateUi(self, DriveEngineServerDialog):
         DriveEngineServerDialog.setWindowTitle(_translate("DriveEngineServerDialog", "Drive the OpenQuake Engine", None))
         self.list_of_calcs_lbl.setText(_translate("DriveEngineServerDialog", "List of calculations", None))
-        self.reload_calcs_btn.setText(_translate("DriveEngineServerDialog", "Reload list of calculations", None))
+        self.reload_calcs_btn.setText(_translate("DriveEngineServerDialog", "Refresh list of calculations", None))
         self.list_of_outputs_lbl.setText(_translate("DriveEngineServerDialog", "List of outputs", None))
 
