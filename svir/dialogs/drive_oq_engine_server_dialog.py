@@ -25,6 +25,7 @@
 import os
 import json
 import tempfile
+import zipfile
 from qgis.gui import QgsMessageBar
 # from qgis.core import (QgsVectorLayer,
 #                        QgsFeature,
@@ -36,7 +37,7 @@ from qgis.gui import QgsMessageBar
 #                        QgsGraduatedSymbolRendererV2,
 #                        QgsRendererRangeV2,
 #                        )
-from PyQt4.QtCore import pyqtSlot  # , QDir
+from PyQt4.QtCore import pyqtSlot, QDir
 from PyQt4.QtCore import Qt, QObject, SIGNAL
 
 from PyQt4.QtGui import (QDialogButtonBox,
@@ -44,7 +45,7 @@ from PyQt4.QtGui import (QDialogButtonBox,
                          QTableWidgetItem,
                          QAbstractItemView,
                          QPushButton,
-                         # QFileDialog,
+                         QFileDialog,
                          # QColor,
                          )
 # from openquake.baselib import hdf5
@@ -150,7 +151,7 @@ class DriveOqEngineServerDialog(QDialog):
             output_list = self.get_output_list(calc_id)
             self.show_output_list(output_list)
         elif action == 'Run Risk':
-            pass
+            self.run_risk(calc_id)
         else:
             raise NotImplementedError(action)
 
@@ -185,6 +186,30 @@ class DriveOqEngineServerDialog(QDialog):
                 'Unable to remove calculation %s' % calc_id,
                 level=QgsMessageBar.CRITICAL)
         return
+
+    def run_risk(self, calc_id):
+        text = self.tr('Select the files needed to run the calculation')
+        file_names = QFileDialog.getOpenFileNames(self, text, QDir.homePath())
+        if not file_names:
+            return
+        _, zipped_file_name = tempfile.mkstemp()
+        with zipfile.ZipFile(zipped_file_name, 'w') as zipped_file:
+            for file_name in file_names:
+                zipped_file.write(file_name)
+        run_risk_url = "%s/v1/calc/run" % self.hostname
+        with WaitCursorManager('Starting risk calculation...', self.iface):
+            data = {'hazard_job_id': calc_id}
+            files = {'archive': open(zipped_file_name, 'rb')}
+            resp = self.session.post(
+                run_risk_url, files=files, data=data, timeout=20)
+        if resp.ok:
+            calc_list = self.get_calc_list()
+            self.show_calc_list(calc_list)
+        else:
+            self.iface.messageBar().pushMessage(
+                tr("Error"),
+                resp.text,
+                level=QgsMessageBar.CRITICAL)
 
     def get_output_list(self, calc_id):
         output_list_url = "%s/v1/calc/%s/results" % (self.hostname, calc_id)
