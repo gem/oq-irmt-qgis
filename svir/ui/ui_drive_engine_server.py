@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_drive_engine_server.ui'
 #
-# Created: Fri Jul  1 14:21:09 2016
+# Created: Mon Jul  4 14:37:00 2016
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -43,9 +43,6 @@ class Ui_DriveEngineServerDialog(object):
         self.list_of_outputs_lbl = QtGui.QLabel(DriveEngineServerDialog)
         self.list_of_outputs_lbl.setObjectName(_fromUtf8("list_of_outputs_lbl"))
         self.verticalLayout.addWidget(self.list_of_outputs_lbl)
-        self.reload_outs_btn = QtGui.QPushButton(DriveEngineServerDialog)
-        self.reload_outs_btn.setObjectName(_fromUtf8("reload_outs_btn"))
-        self.verticalLayout.addWidget(self.reload_outs_btn)
         self.output_list_tbl = QtGui.QTableWidget(DriveEngineServerDialog)
         self.output_list_tbl.setObjectName(_fromUtf8("output_list_tbl"))
         self.output_list_tbl.setColumnCount(0)
@@ -67,5 +64,4 @@ class Ui_DriveEngineServerDialog(object):
         self.list_of_calcs_lbl.setText(_translate("DriveEngineServerDialog", "List of calculations", None))
         self.reload_calcs_btn.setText(_translate("DriveEngineServerDialog", "Reload list of calculations", None))
         self.list_of_outputs_lbl.setText(_translate("DriveEngineServerDialog", "List of outputs", None))
-        self.reload_outs_btn.setText(_translate("DriveEngineServerDialog", "Reload list of outputs", None))
 

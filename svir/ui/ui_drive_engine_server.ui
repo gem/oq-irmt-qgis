@@ -24,7 +24,7 @@
    <item>
     <widget class="QPushButton" name="reload_calcs_btn">
      <property name="text">
-      <string>Reload list of calculations</string>
+      <string>Refresh list of calculations</string>
      </property>
     </widget>
    </item>
@@ -35,13 +35,6 @@
     <widget class="QLabel" name="list_of_outputs_lbl">
      <property name="text">
       <string>List of outputs</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QPushButton" name="reload_outs_btn">
-     <property name="text">
-      <string>Reload list of outputs</string>
      </property>
     </widget>
    </item>
