@@ -37,8 +37,7 @@ from qgis.gui import QgsMessageBar
 #                        QgsGraduatedSymbolRendererV2,
 #                        QgsRendererRangeV2,
 #                        )
-from PyQt4.QtCore import pyqtSlot, QDir
-from PyQt4.QtCore import Qt, QObject, SIGNAL
+from PyQt4.QtCore import pyqtSlot, QDir, Qt, QObject, SIGNAL, QTimer
 
 from PyQt4.QtGui import (QDialogButtonBox,
                          QDialog,
@@ -82,8 +81,10 @@ class DriveOqEngineServerDialog(QDialog):
         self.session = None
         self.hostname = None
         self.login()
-        calc_list = self.get_calc_list()
-        self.show_calc_list(calc_list)
+        self.refresh_calc_list()
+        self.timer = QTimer()
+        QObject.connect(self.timer, SIGNAL('timeout()'), self.refresh_calc_list)
+        self.timer.start(4000)  # refresh calc time in milliseconds
 
     def login(self):
         self.session = Session()
