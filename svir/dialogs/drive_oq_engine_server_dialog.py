@@ -226,10 +226,17 @@ class DriveOqEngineServerDialog(QDialog):
         output_list_url = "%s/v1/calc/%s/results" % (self.hostname, calc_id)
         with WaitCursorManager('Getting list of outputs...', self.iface):
             resp = self.session.get(output_list_url, timeout=10)
+        if resp.ok:
             output_list = json.loads(resp.text)
-        return output_list
+            return output_list
+        else:
+            return []
 
     def show_output_list(self, output_list):
+        if not output_list:
+            self.ui.output_list_tbl.setRowCount(0)
+            self.ui.output_list_tbl.setColumnCount(0)
+            return
         exclude = ['url', 'outtypes']
         selected_keys = [key for key in sorted(output_list[0].keys())
                          if key not in exclude]
