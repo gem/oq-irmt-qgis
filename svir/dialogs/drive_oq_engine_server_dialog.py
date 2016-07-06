@@ -91,14 +91,11 @@ class DriveOqEngineServerDialog(QDialog):
         with WaitCursorManager('Logging in...', self.iface):
             engine_login(self.hostname, username, password, self.session)
 
-    def get_calc_list(self):
+    def refresh_calc_list(self):
         calc_list_url = "%s/v1/calc/list?relevant=true" % self.hostname
         with WaitCursorManager('Getting list of calculations...', self.iface):
             resp = self.session.get(calc_list_url, timeout=10)
             calc_list = json.loads(resp.text)
-        return calc_list
-
-    def show_calc_list(self, calc_list):
         if not calc_list:
             # empty list
             while self.ui.calc_list_tbl.rowCount() > 0:
@@ -189,8 +186,7 @@ class DriveOqEngineServerDialog(QDialog):
                 'Calculation %s successfully removed' % calc_id,
                 level=QgsMessageBar.INFO,
                 duration=8)
-            calc_list = self.get_calc_list()
-            self.show_calc_list(calc_list)
+            self.refresh_calc_list()
         else:
             self.iface.messageBar().pushMessage(
                 tr("Error"),
@@ -214,8 +210,7 @@ class DriveOqEngineServerDialog(QDialog):
             resp = self.session.post(
                 run_risk_url, files=files, data=data, timeout=20)
         if resp.ok:
-            calc_list = self.get_calc_list()
-            self.show_calc_list(calc_list)
+            self.refresh_calc_list()
         else:
             self.iface.messageBar().pushMessage(
                 tr("Error"),
@@ -322,8 +317,7 @@ class DriveOqEngineServerDialog(QDialog):
 
     @pyqtSlot()
     def on_reload_calcs_btn_clicked(self):
-        calc_list = self.get_calc_list()
-        self.show_calc_list(calc_list)
+        self.refresh_calc_list()
 
     # @pyqtSlot(str)
     # def on_hdf5_path_le_textChanged(self):
