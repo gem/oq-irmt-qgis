@@ -236,6 +236,7 @@ class Irmt:
     def drive_oq_engine_server(self):
         dlg = DriveOqEngineServerDialog(self.iface)
         dlg.exec_()
+        dlg.timer.stop()
 
     def show_manual(self):
         base_url = os.path.abspath(os.path.join(
