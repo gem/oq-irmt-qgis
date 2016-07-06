@@ -122,6 +122,17 @@ class DriveOqEngineServerDialog(QDialog):
                 item = QTableWidgetItem()
                 value = calc_list[row][key]
                 item.setData(Qt.DisplayRole, value)
+                # set default colors
+                row_bg_color = Qt.white
+                row_txt_color = Qt.black
+                if calc['status'] == 'failed':
+                    row_bg_color = Qt.red
+                    row_txt_color = Qt.white
+                elif calc['status'] == 'complete':
+                    row_bg_color = Qt.green
+                    row_txt_color = Qt.white
+                item.setBackgroundColor(row_bg_color)
+                item.setTextColor(row_txt_color)
                 self.ui.calc_list_tbl.setItem(row, col, item)
             for col, action in enumerate(actions, len(selected_keys)):
                 button = QPushButton()
