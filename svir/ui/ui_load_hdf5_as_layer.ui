@@ -77,7 +77,7 @@
     <item>
      <widget class="QLabel" name="rlz_lbl">
       <property name="text">
-       <string>Realization</string>
+       <string>Realization (only the chosen realization will be loaded into the layer)</string>
       </property>
      </widget>
     </item>
@@ -91,7 +91,7 @@
     <item>
      <widget class="QLabel" name="imt_lbl">
       <property name="text">
-       <string>Intensity Measure Type</string>
+       <string>Intensity Measure Type (used for default styling)</string>
       </property>
      </widget>
     </item>
@@ -105,7 +105,7 @@
     <item>
      <widget class="QLabel" name="poe_lbl">
       <property name="text">
-       <string>Probability of Exceedance to display</string>
+       <string>Probability of Exceedance (used for default styling)</string>
       </property>
      </widget>
     </item>

@@ -144,26 +144,41 @@ class LoadHdf5AsLayerDialog(QDialog):
         rlz = self.ui.rlz_cbx.currentText()
         imt = self.ui.imt_cbx.currentText()
         poe = self.ui.poe_cbx.currentText()
-        self.field_name = '%s-%s' % (imt, poe)
-        array = self.dataset.value[['lon', 'lat', self.field_name]]
+        self.default_field_name = '%s-%s' % (imt, poe)
+        field_names = list(self.dataset.dtype.names)
 
-        layer_name = "%s_%s_%s" % (rlz, imt, poe)
+        layer_name = "hazard_map_%s" % rlz
         # create layer
         self.layer = QgsVectorLayer(
             "Point?crs=epsg:4326", layer_name, "memory")
-        # NOTE: add_numeric_attribute uses LayerEditingManager
-        self.field_name = add_numeric_attribute(self.field_name, self.layer)
+        for field_name in field_names:
+            if field_name in ['lon', 'lat']:
+                continue
+            # NOTE: add_numeric_attribute uses LayerEditingManager
+            added_field_name = add_numeric_attribute(
+                field_name, self.layer)
+            if field_name == self.default_field_name:
+                self.default_field_name = added_field_name
+            if field_name != added_field_name:
+                # replace field_name with the actual added_field_name
+                field_name_idx = field_names.index(field_name)
+                field_names.remove(field_name)
+                field_names.insert(field_name_idx, added_field_name)
         pr = self.layer.dataProvider()
         with LayerEditingManager(self.layer, 'Reading hdf5', DEBUG):
             feats = []
-            for row in array:
+            for row in self.dataset:
                 # add a feature
                 feat = QgsFeature(self.layer.pendingFields())
-                lon, lat, value = row
-                # NOTE: without casting to float, it produces a null
-                #       because it does not recognize the numpy type
-                feat.setAttribute(self.field_name, float(value))
-                feat.setGeometry(QgsGeometry.fromPoint(QgsPoint(lon, lat)))
+                for field_name_idx, field_name in enumerate(field_names):
+                    if field_name in ['lon', 'lat']:
+                        continue
+                    # NOTE: without casting to float, it produces a null
+                    #       because it does not recognize the numpy type
+                    value = float(row[field_name_idx])
+                    feat.setAttribute(field_name, value)
+                feat.setGeometry(QgsGeometry.fromPoint(
+                    QgsPoint(row[0], row[1])))
                 feats.append(feat)
             (res, outFeats) = pr.addFeatures(feats)
         # add self.layer to the legend
@@ -183,7 +198,7 @@ class LoadHdf5AsLayerDialog(QDialog):
         symbol.setAlpha(1)  # opacity
         graduated_renderer = QgsGraduatedSymbolRendererV2.createRenderer(
             self.layer,
-            self.field_name,
+            self.default_field_name,
             classes_count,
             # QgsGraduatedSymbolRendererV2.Quantile,
             QgsGraduatedSymbolRendererV2.EqualInterval,
