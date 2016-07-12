@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>VisualizeOqOutputDialog</class>
- <widget class="QDialog" name="VisualizeOqOutputDialog">
+ <class>LoadHdf5AsLayerDialog</class>
+ <widget class="QDialog" name="LoadHdf5AsLayerDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Visualize oq-engine output</string>
+   <string>Load hdf5 as layer</string>
   </property>
   <widget class="QDialogButtonBox" name="buttonBox">
    <property name="geometry">
@@ -105,7 +105,7 @@
     <item>
      <widget class="QLabel" name="poe_lbl">
       <property name="text">
-       <string>Probability of Exceedance</string>
+       <string>Probability of Exceedance to display</string>
       </property>
      </widget>
     </item>
@@ -124,7 +124,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>VisualizeOqOutputDialog</receiver>
+   <receiver>LoadHdf5AsLayerDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -140,7 +140,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>VisualizeOqOutputDialog</receiver>
+   <receiver>LoadHdf5AsLayerDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

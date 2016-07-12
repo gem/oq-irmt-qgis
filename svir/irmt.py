@@ -65,7 +65,8 @@ from svir.dialogs.settings_dialog import SettingsDialog
 from svir.dialogs.transformation_dialog import TransformationDialog
 from svir.dialogs.upload_settings_dialog import UploadSettingsDialog
 from svir.dialogs.weight_data_dialog import WeightDataDialog
-from svir.dialogs.visualize_oq_output_dialog import VisualizeOqOutputDialog
+from svir.dialogs.load_hdf5_as_layer_dialog import LoadHdf5AsLayerDialog
+from svir.dialogs.load_geojson_as_layer_dialog import LoadGeoJsonAsLayerDialog
 from svir.dialogs.drive_oq_engine_server_dialog import (
     DriveOqEngineServerDialog)
 from svir.thread_worker.abstract_worker import start_worker
@@ -214,11 +215,17 @@ class Irmt:
                            u"Plugin's &Manual",
                            self.show_manual,
                            enable=True)
-        # Action to visualize data from the oq-engine
-        self.add_menu_item("visualize_oq_output",
+        # Action to load as layer an hdf5 produced by the oq-engine
+        self.add_menu_item("load_hdf5_as_layer",
                            ":/plugins/irmt/manual.svg",  # FIXME
-                           u"Visualize oq-engine &output",
-                           self.visualize_oq_output,
+                           u"Load HDF5 as layer",
+                           self.load_hdf5_as_layer,
+                           enable=True)
+        # Action to load as layer a geojson produced by the oq-engine
+        self.add_menu_item("load_geojson_as_layer",
+                           ":/plugins/irmt/manual.svg",  # FIXME
+                           u"Load GeoJson as layer",
+                           self.load_geojson_as_layer,
                            enable=True)
         # Action to drive the oq-engine server
         self.add_menu_item("drive_engine_server",
@@ -229,14 +236,17 @@ class Irmt:
 
         self.update_actions_status()
 
-    def visualize_oq_output(self):
-        dlg = VisualizeOqOutputDialog(self.iface)
+    def load_hdf5_as_layer(self):
+        dlg = LoadHdf5AsLayerDialog(self.iface)
+        dlg.exec_()
+
+    def load_geojson_as_layer(self):
+        dlg = LoadGeoJsonAsLayerDialog(self.iface)
         dlg.exec_()
 
     def drive_oq_engine_server(self):
         dlg = DriveOqEngineServerDialog(self.iface)
-        dlg.exec_()
-        dlg.timer.stop()
+        dlg.show()
 
     def show_manual(self):
         base_url = os.path.abspath(os.path.join(

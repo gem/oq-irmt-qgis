@@ -21,9 +21,9 @@ LOCALES = it
 
 PLUGINNAME = svir
 
-# PY_FILES = irmt.py select_input_layers_dialog.py __init__.py attribute_selection_dialog.py transformation_dialog.py select_sv_variables_dialog.py settings_dialog.py projects_manager_dialog.py visualize_oq_output_dialog.py drive_engine_server_dialog.py
+# PY_FILES = irmt.py select_input_layers_dialog.py __init__.py attribute_selection_dialog.py transformation_dialog.py select_sv_variables_dialog.py settings_dialog.py projects_manager_dialog.py load_hdf5_as_layer_dialog.py load_geojson_as_layer_dialog.py drive_engine_server_dialog.py
 
-UI_FILES = ui/ui_select_input_layers.py ui/ui_attribute_selection.py ui/ui_transformation.py ui/ui_select_sv_variables.py ui/ui_settings.py ui/ui_weight_data.py ui/ui_calculate_iri.py ui/ui_upload_metadata.py ui/ui_upload_settings.py ui/ui_download_layer.py ui/ui_projects_manager_dialog.py ui/ui_visualize_oq_output.py ui/ui_drive_engine_server.py
+UI_FILES = ui/ui_select_input_layers.py ui/ui_attribute_selection.py ui/ui_transformation.py ui/ui_select_sv_variables.py ui/ui_settings.py ui/ui_weight_data.py ui/ui_calculate_iri.py ui/ui_upload_metadata.py ui/ui_upload_settings.py ui/ui_download_layer.py ui/ui_projects_manager_dialog.py ui/ui_load_hdf5_as_layer.py ui/ui_load_geojson_as_layer.py ui/ui_drive_engine_server.py
 
 EXTRAS = resources/start_plugin_icon.png metadata.txt
 
