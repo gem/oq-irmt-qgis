@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui/ui_visualize_oq_output.ui'
+# Form implementation generated from reading ui file 'ui/ui_load_hdf5_as_layer.ui'
 #
-# Created: Fri Jun 17 15:12:57 2016
+# Created: Tue Jul 12 14:05:55 2016
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -23,16 +23,16 @@ except AttributeError:
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig)
 
-class Ui_VisualizeOqOutputDialog(object):
-    def setupUi(self, VisualizeOqOutputDialog):
-        VisualizeOqOutputDialog.setObjectName(_fromUtf8("VisualizeOqOutputDialog"))
-        VisualizeOqOutputDialog.resize(586, 309)
-        self.buttonBox = QtGui.QDialogButtonBox(VisualizeOqOutputDialog)
+class Ui_LoadHdf5AsLayerDialog(object):
+    def setupUi(self, LoadHdf5AsLayerDialog):
+        LoadHdf5AsLayerDialog.setObjectName(_fromUtf8("LoadHdf5AsLayerDialog"))
+        LoadHdf5AsLayerDialog.resize(586, 309)
+        self.buttonBox = QtGui.QDialogButtonBox(LoadHdf5AsLayerDialog)
         self.buttonBox.setGeometry(QtCore.QRect(30, 240, 341, 32))
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
         self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName(_fromUtf8("buttonBox"))
-        self.layoutWidget = QtGui.QWidget(VisualizeOqOutputDialog)
+        self.layoutWidget = QtGui.QWidget(LoadHdf5AsLayerDialog)
         self.layoutWidget.setGeometry(QtCore.QRect(30, 20, 531, 211))
         self.layoutWidget.setObjectName(_fromUtf8("layoutWidget"))
         self.verticalLayout = QtGui.QVBoxLayout(self.layoutWidget)
@@ -77,17 +77,17 @@ class Ui_VisualizeOqOutputDialog(object):
         self.poe_cbx.setObjectName(_fromUtf8("poe_cbx"))
         self.verticalLayout.addWidget(self.poe_cbx)
 
-        self.retranslateUi(VisualizeOqOutputDialog)
-        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), VisualizeOqOutputDialog.accept)
-        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("rejected()")), VisualizeOqOutputDialog.reject)
-        QtCore.QMetaObject.connectSlotsByName(VisualizeOqOutputDialog)
+        self.retranslateUi(LoadHdf5AsLayerDialog)
+        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), LoadHdf5AsLayerDialog.accept)
+        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("rejected()")), LoadHdf5AsLayerDialog.reject)
+        QtCore.QMetaObject.connectSlotsByName(LoadHdf5AsLayerDialog)
 
-    def retranslateUi(self, VisualizeOqOutputDialog):
-        VisualizeOqOutputDialog.setWindowTitle(_translate("VisualizeOqOutputDialog", "Visualize oq-engine output", None))
-        self.hdf5_lbl.setText(_translate("VisualizeOqOutputDialog", "Hdf5 file", None))
-        self.file_browser_tbn.setText(_translate("VisualizeOqOutputDialog", "...", None))
-        self.open_hdfview_btn.setText(_translate("VisualizeOqOutputDialog", "Open with HDFView", None))
-        self.rlz_lbl.setText(_translate("VisualizeOqOutputDialog", "Realization", None))
-        self.imt_lbl.setText(_translate("VisualizeOqOutputDialog", "Intensity Measure Type", None))
-        self.poe_lbl.setText(_translate("VisualizeOqOutputDialog", "Probability of Exceedance", None))
+    def retranslateUi(self, LoadHdf5AsLayerDialog):
+        LoadHdf5AsLayerDialog.setWindowTitle(_translate("LoadHdf5AsLayerDialog", "Load hdf5 as layer", None))
+        self.hdf5_lbl.setText(_translate("LoadHdf5AsLayerDialog", "Hdf5 file", None))
+        self.file_browser_tbn.setText(_translate("LoadHdf5AsLayerDialog", "...", None))
+        self.open_hdfview_btn.setText(_translate("LoadHdf5AsLayerDialog", "Open with HDFView", None))
+        self.rlz_lbl.setText(_translate("LoadHdf5AsLayerDialog", "Realization", None))
+        self.imt_lbl.setText(_translate("LoadHdf5AsLayerDialog", "Intensity Measure Type", None))
+        self.poe_lbl.setText(_translate("LoadHdf5AsLayerDialog", "Probability of Exceedance to display", None))
 

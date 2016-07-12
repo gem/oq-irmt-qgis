@@ -24,6 +24,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import zipfile
 from qgis.core import (QgsVectorLayer,
                        QgsFeature,
                        QgsPoint,
@@ -34,6 +35,7 @@ from qgis.core import (QgsVectorLayer,
                        QgsGraduatedSymbolRendererV2,
                        QgsRendererRangeV2,
                        )
+from qgis.gui import QgsMessageBar
 from PyQt4.QtCore import pyqtSlot, QDir
 
 from PyQt4.QtGui import (QDialogButtonBox,
@@ -41,43 +43,36 @@ from PyQt4.QtGui import (QDialogButtonBox,
                          QFileDialog,
                          QColor,
                          )
-from openquake.baselib import hdf5
-from svir.ui.ui_visualize_oq_output import Ui_VisualizeOqOutputDialog
+from svir.ui.ui_load_geojson_as_layer import Ui_LoadGeoJsonAsLayerDialog
 from svir.utilities.shared import DEBUG
 from svir.utilities.utils import LayerEditingManager, WaitCursorManager
 from svir.calculations.calculate_utils import add_numeric_attribute
 
 
-class VisualizeOqOutputDialog(QDialog):
+class LoadGeoJsonAsLayerDialog(QDialog):
     """
     FIXME
     """
-    def __init__(self, iface, hdf5_path=None):
+    def __init__(self, iface, geojson_path=None):
         self.iface = iface
-        self.hdf5_path = hdf5_path
+        self.geojson_path = geojson_path
         QDialog.__init__(self)
         # Set up the user interface from Designer.
-        self.ui = Ui_VisualizeOqOutputDialog()
+        self.ui = Ui_LoadGeoJsonAsLayerDialog()
         self.ui.setupUi(self)
         # Disable ok_button until all comboboxes are filled
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
         self.ok_button.setDisabled(True)
-        self.ui.open_hdfview_btn.setDisabled(True)
-        if self.hdf5_path:
-            self.ui.hdf5_path_le.setText(self.hdf5_path)
+        if self.geojson_path:
+            self.ui.geojson_path_le.setText(self.geojson_path)
             self.ui.rlz_cbx.setEnabled(True)
             self.ui.imt_cbx.setEnabled(True)
             self.ui.poe_cbx.setEnabled(True)
             self.populate_rlz_cbx()
 
-    @pyqtSlot(str)
-    def on_hdf5_path_le_textChanged(self):
-        self.ui.open_hdfview_btn.setDisabled(
-            self.ui.hdf5_path_le.text() == '')
-
     @pyqtSlot()
     def on_open_hdfview_btn_clicked(self):
-        file_path = self.ui.hdf5_path_le.text()
+        file_path = self.ui.geojson_path_le.text()
         if file_path:
             to_run = "hdfview " + file_path
             # FIXME make system independent
@@ -85,7 +80,7 @@ class VisualizeOqOutputDialog(QDialog):
 
     @pyqtSlot()
     def on_file_browser_tbn_clicked(self):
-        self.hdf5_path = self.open_file_dialog()
+        self.geojson_path = self.open_file_dialog()
 
     @pyqtSlot(str)
     def on_rlz_cbx_currentIndexChanged(self):
@@ -116,21 +111,49 @@ class VisualizeOqOutputDialog(QDialog):
         """
         Open a file dialog to select the data file to be loaded
         """
-        text = self.tr('Select oq-engine output to import')
-        filters = self.tr('HDF5 files (*.hdf5)')
-        hdf5_path = QFileDialog.getOpenFileName(
+        text = self.tr('Select GeoJson file or archive to import')
+        filters = self.tr('GeoJson maps (*.geojson);;'
+                          'Zip archives (*.zip)')
+        geojson_path, file_type = QFileDialog.getOpenFileNameAndFilter(
             self, text, QDir.homePath(), filters)
-        if hdf5_path:
-            self.hdf5_path = hdf5_path
-            self.ui.hdf5_path_le.setText(self.hdf5_path)
+        if not geojson_path:
+            return
+        self.geojson_path = geojson_path
+        self.ui.geojson_path_le.setText(self.geojson_path)
+        if file_type == self.tr('Zip archives (*.zip)'):
+            self.rlzs = set()
+            zz = zipfile.ZipFile(self.geojson_path)
+            for name in zz.namelist():
+                # Example: hazard_map-0.1-SA(0.2)-rlz-000_24.geojson
+                rlz = name.split('rlz-')[1].split('_')[0]
+                self.rlzs.add(rlz)
+            zz.close()
             self.populate_rlz_cbx()
+        self.load_layer(geojson_path)
+
+    def load_layer(self, geojson_path):
+        base_name = os.path.basename(geojson_path)
+        layer_name, ext = os.path.splitext(base_name)
+        self.layer = QgsVectorLayer(geojson_path, layer_name, 'ogr')
+        if self.layer.isValid():
+            QgsMapLayerRegistry.instance().addMapLayer(self.layer)
+            self.field_name = self.layer.dataProvider().fields()[0].name()
+            self.style_layer()
+            msg = 'Layer [%s] successfully loaded' % layer_name
+            self.iface.messageBar().pushMessage(
+                self.tr("Info"),
+                self.tr(msg),
+                level=QgsMessageBar.INFO,
+                duration=8)
+            self.accept()
+        else:
+            msg = 'Invalid geojson'
+            self.iface.messageBar().pushMessage(
+                self.tr("Error"),
+                self.tr(msg),
+                level=QgsMessageBar.CRITICAL)
 
     def populate_rlz_cbx(self):
-        # FIXME: will the file be closed correctly?
-        # with hdf5.File(self.hdf5_path, 'r') as hf:
-        self.hfile = hdf5.File(self.hdf5_path, 'r')
-        self.hmaps = self.hfile.get('hmaps')
-        self.rlzs = self.hmaps.keys()
         self.ui.rlz_cbx.clear()
         self.ui.rlz_cbx.setEnabled(True)
         self.ui.rlz_cbx.addItems(self.rlzs)
@@ -152,7 +175,7 @@ class VisualizeOqOutputDialog(QDialog):
         # NOTE: add_numeric_attribute uses LayerEditingManager
         self.field_name = add_numeric_attribute(self.field_name, self.layer)
         pr = self.layer.dataProvider()
-        with LayerEditingManager(self.layer, 'Reading hdf5', DEBUG):
+        with LayerEditingManager(self.layer, 'Reading geojson', DEBUG):
             feats = []
             for row in array:
                 # add a feature
@@ -204,12 +227,3 @@ class VisualizeOqOutputDialog(QDialog):
         self.iface.legendInterface().refreshLayerSymbology(
             self.layer)
         self.iface.mapCanvas().refresh()
-
-    def accept(self):
-        with WaitCursorManager('Creating layer...', self.iface):
-            self.build_layer()
-        self.hfile.close()
-        self.style_layer()
-        self.close()
-
-    # FIXME: also cancel should close the hdf5 file

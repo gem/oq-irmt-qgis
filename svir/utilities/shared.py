@@ -181,7 +181,8 @@ HELP_PAGES_LOOKUP = {
     'upload': '11_upload_project_to_platform.html',
     'show_platform_settings': '04_connection_settings.html',
     'show_engine_settings': 'FIXME',
-    'visualize_oq_output': 'FIXME',
+    'load_hdf5_as_layer': 'FIXME',
+    'load_geojson_as_layer': 'FIXME',
     'drive_engine_server': 'FIXME',
     'help': 'index.html',
 }

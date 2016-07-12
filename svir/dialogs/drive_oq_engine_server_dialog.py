@@ -57,7 +57,8 @@ from svir.utilities.utils import (WaitCursorManager,
                                   log_msg,
                                   tr,
                                   )
-from svir.dialogs.visualize_oq_output_dialog import VisualizeOqOutputDialog
+from svir.dialogs.load_hdf5_as_layer_dialog import LoadHdf5AsLayerDialog
+from svir.dialogs.load_geojson_as_layer_dialog import LoadGeoJsonAsLayerDialog
 # from svir.calculations.calculate_utils import add_numeric_attribute
 
 
@@ -83,8 +84,10 @@ class DriveOqEngineServerDialog(QDialog):
         self.login()
         self.refresh_calc_list()
         self.timer = QTimer()
-        QObject.connect(self.timer, SIGNAL('timeout()'), self.refresh_calc_list)
-        self.timer.start(4000)  # refresh calc time in milliseconds
+        QObject.connect(
+            self.timer, SIGNAL('timeout()'), self.refresh_calc_list)
+        self.timer.start(4000)  # refresh calc list time in milliseconds
+        self.finished.connect(self.stop_timer)
 
     def login(self):
         self.session = Session()
@@ -94,7 +97,8 @@ class DriveOqEngineServerDialog(QDialog):
 
     def refresh_calc_list(self):
         calc_list_url = "%s/v1/calc/list?relevant=true" % self.hostname
-        with WaitCursorManager('Getting list of calculations...', self.iface):
+        # with WaitCursorManager('Getting list of calculations...', self.iface):
+        with WaitCursorManager():
             resp = self.session.get(calc_list_url, timeout=10)
             calc_list = json.loads(resp.text)
         if not calc_list:
@@ -279,7 +283,7 @@ class DriveOqEngineServerDialog(QDialog):
         if action != 'Load as layer':
             button.setText("%s %s" % (action, outtype))
         else:
-            # otherwise it would look ugly (Load as layer hdf5)
+            # otherwise it would look ugly, e.g. 'Load as layer hdf5'
             button.setText(action)
         QObject.connect(
             button, SIGNAL("clicked()"),
@@ -290,7 +294,11 @@ class DriveOqEngineServerDialog(QDialog):
         if action == 'Load as layer':
             if outtype == 'hdf5':
                 filepath = self.download_output(output_id, outtype)
-                dlg = VisualizeOqOutputDialog(self.iface, filepath)
+                dlg = LoadHdf5AsLayerDialog(self.iface, filepath)
+                dlg.exec_()
+            elif outtype == 'geojson':
+                filepath = self.download_output(output_id, outtype)
+                dlg = LoadGeoJsonAsLayerDialog(self.iface, filepath)
                 dlg.exec_()
             else:
                 raise NotImplementedError("%s %s" % (action, outtype))
@@ -319,6 +327,9 @@ class DriveOqEngineServerDialog(QDialog):
     @pyqtSlot()
     def on_reload_calcs_btn_clicked(self):
         self.refresh_calc_list()
+
+    def stop_timer(self):
+        self.timer.stop()
 
     # @pyqtSlot(str)
     # def on_hdf5_path_le_textChanged(self):
