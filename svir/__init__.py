@@ -26,6 +26,7 @@
 
 try:
     import sys
+    # FIXME: hardcoded paths
     oq_hazardlib_path = '/home/paolo/projects/oq-hazardlib'
     oq_engine_path = '/home/paolo/projects/oq-engine'
     if oq_hazardlib_path not in sys.path:
