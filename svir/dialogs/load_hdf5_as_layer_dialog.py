@@ -54,9 +54,10 @@ class LoadHdf5AsLayerDialog(QDialog):
     """
     FIXME
     """
-    def __init__(self, iface, hdf5_path=None):
+    def __init__(self, iface, hdf5_path=None, output_type='hmaps'):
         self.iface = iface
         self.hdf5_path = hdf5_path
+        self.output_type = output_type
         QDialog.__init__(self)
         # Set up the user interface from Designer.
         self.ui = Ui_LoadHdf5AsLayerDialog()
@@ -65,6 +66,9 @@ class LoadHdf5AsLayerDialog(QDialog):
         self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
         self.ok_button.setDisabled(True)
         self.ui.open_hdfview_btn.setDisabled(True)
+        if output_type == 'hcurves':
+            self.ui.poe_lbl.hide()
+            self.ui.poe_cbx.hide()
         if self.hdf5_path:
             self.ui.hdf5_path_le.setText(self.hdf5_path)
             self.ui.rlz_cbx.setEnabled(True)
@@ -91,20 +95,27 @@ class LoadHdf5AsLayerDialog(QDialog):
 
     @pyqtSlot(str)
     def on_rlz_cbx_currentIndexChanged(self):
-        self.dataset = self.hmaps.get(self.ui.rlz_cbx.currentText())
+        self.dataset = self.hdata.get(self.ui.rlz_cbx.currentText())
         self.imts = {}
         for name in self.dataset.dtype.names[2:]:
-            imt, poe = name.split('-')
-            if imt not in self.imts:
-                self.imts[imt] = [poe]
-            else:
-                self.imts[imt].append(poe)
+            if self.output_type == 'hmaps':
+                imt, poe = name.split('-')
+                if imt not in self.imts:
+                    self.imts[imt] = [poe]
+                else:
+                    self.imts[imt].append(poe)
+            elif self.output_type == 'hcurves':
+                imt = name
+                self.imts[imt] = []
         self.ui.imt_cbx.clear()
         self.ui.imt_cbx.setEnabled(True)
         self.ui.imt_cbx.addItems(self.imts.keys())
 
     @pyqtSlot(str)
     def on_imt_cbx_currentIndexChanged(self):
+        if self.output_type == 'hcurves':
+            self.set_ok_button()
+            return
         imt = self.ui.imt_cbx.currentText()
         self.ui.poe_cbx.clear()
         self.ui.poe_cbx.setEnabled(True)
@@ -131,23 +142,30 @@ class LoadHdf5AsLayerDialog(QDialog):
         # FIXME: will the file be closed correctly?
         # with hdf5.File(self.hdf5_path, 'r') as hf:
         self.hfile = hdf5.File(self.hdf5_path, 'r')
-        self.hmaps = self.hfile.get('hmaps')
-        self.rlzs = self.hmaps.keys()
+        self.hdata = self.hfile.get(self.output_type)
+        self.rlzs = self.hdata.keys()
         self.ui.rlz_cbx.clear()
         self.ui.rlz_cbx.setEnabled(True)
         self.ui.rlz_cbx.addItems(self.rlzs)
 
     def set_ok_button(self):
-        self.ok_button.setEnabled(self.ui.poe_cbx.currentIndex != -1)
+        if self.output_type == 'hmaps':
+            self.ok_button.setEnabled(self.ui.poe_cbx.currentIndex != -1)
+        elif self.output_type == 'hcurves':
+            self.ok_button.setEnabled(self.ui.imt_cbx.currentIndex != -1)
 
     def build_layer(self):
         rlz = self.ui.rlz_cbx.currentText()
         imt = self.ui.imt_cbx.currentText()
-        poe = self.ui.poe_cbx.currentText()
-        self.default_field_name = '%s-%s' % (imt, poe)
+        if self.output_type == 'hmaps':
+            poe = self.ui.poe_cbx.currentText()
+            self.default_field_name = '%s-%s' % (imt, poe)
+            layer_name = "hazard_map_%s" % rlz
+        elif self.output_type == 'hcurves':
+            self.default_field_name = imt
+            layer_name = "hazard_curves_%s" % rlz
         field_names = list(self.dataset.dtype.names)
 
-        layer_name = "hazard_map_%s" % rlz
         # create layer
         self.layer = QgsVectorLayer(
             "Point?crs=epsg:4326", layer_name, "memory")
@@ -173,9 +191,12 @@ class LoadHdf5AsLayerDialog(QDialog):
                 for field_name_idx, field_name in enumerate(field_names):
                     if field_name in ['lon', 'lat']:
                         continue
-                    # NOTE: without casting to float, it produces a null
-                    #       because it does not recognize the numpy type
-                    value = float(row[field_name_idx])
+                    if self.output_type == 'hmaps':
+                        # NOTE: without casting to float, it produces a null
+                        #       because it does not recognize the numpy type
+                        value = float(row[field_name_idx])
+                    elif self.output_type == 'hcurves':
+                        value = str(row[field_name_idx])
                     feat.setAttribute(field_name, value)
                 feat.setGeometry(QgsGeometry.fromPoint(
                     QgsPoint(row[0], row[1])))
@@ -226,7 +247,8 @@ class LoadHdf5AsLayerDialog(QDialog):
         with WaitCursorManager('Creating layer...', self.iface):
             self.build_layer()
         self.hfile.close()
-        self.style_layer()
+        if self.output_type == 'hmaps':
+            self.style_layer()
         self.close()
 
     # FIXME: also cancel should close the hdf5 file

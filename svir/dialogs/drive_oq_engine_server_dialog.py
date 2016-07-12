@@ -267,7 +267,7 @@ class DriveOqEngineServerDialog(QDialog):
                 button = QPushButton()
                 self.connect_button_to_action(button, action, output, outtype)
                 self.ui.output_list_tbl.setCellWidget(row, col, button)
-            if output['type'] == 'hmaps':
+            if output['type'] in ['hmaps', 'hcurves']:
                 action = 'Load as layer'
                 button = QPushButton()
                 self.connect_button_to_action(button, action, output, outtype)
@@ -287,14 +287,16 @@ class DriveOqEngineServerDialog(QDialog):
             button.setText(action)
         QObject.connect(
             button, SIGNAL("clicked()"),
-            lambda output_id=output['id'], action=action, outtype=outtype: self.on_output_action_btn_clicked(output_id, action, outtype)
+            lambda output=output, action=action, outtype=outtype: self.on_output_action_btn_clicked(output, action, outtype)
         )
 
-    def on_output_action_btn_clicked(self, output_id, action, outtype):
+    def on_output_action_btn_clicked(self, output, action, outtype):
+        output_id = output['id']
+        output_type = output['type']
         if action == 'Load as layer':
             if outtype == 'hdf5':
                 filepath = self.download_output(output_id, outtype)
-                dlg = LoadHdf5AsLayerDialog(self.iface, filepath)
+                dlg = LoadHdf5AsLayerDialog(self.iface, filepath, output_type)
                 dlg.exec_()
             elif outtype == 'geojson':
                 filepath = self.download_output(output_id, outtype)
