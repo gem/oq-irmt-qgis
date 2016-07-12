@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_load_hdf5_as_layer.ui'
 #
-# Created: Tue Jul 12 14:05:55 2016
+# Created: Tue Jul 12 15:51:17 2016
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -87,7 +87,7 @@ class Ui_LoadHdf5AsLayerDialog(object):
         self.hdf5_lbl.setText(_translate("LoadHdf5AsLayerDialog", "Hdf5 file", None))
         self.file_browser_tbn.setText(_translate("LoadHdf5AsLayerDialog", "...", None))
         self.open_hdfview_btn.setText(_translate("LoadHdf5AsLayerDialog", "Open with HDFView", None))
-        self.rlz_lbl.setText(_translate("LoadHdf5AsLayerDialog", "Realization", None))
-        self.imt_lbl.setText(_translate("LoadHdf5AsLayerDialog", "Intensity Measure Type", None))
-        self.poe_lbl.setText(_translate("LoadHdf5AsLayerDialog", "Probability of Exceedance to display", None))
+        self.rlz_lbl.setText(_translate("LoadHdf5AsLayerDialog", "Realization (only the chosen realization will be loaded into the layer)", None))
+        self.imt_lbl.setText(_translate("LoadHdf5AsLayerDialog", "Intensity Measure Type (used for default styling)", None))
+        self.poe_lbl.setText(_translate("LoadHdf5AsLayerDialog", "Probability of Exceedance (used for default styling)", None))
 
