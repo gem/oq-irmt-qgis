@@ -24,22 +24,22 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-try:
-    import sys
-    # FIXME: hardcoded paths
-    oq_hazardlib_path = '/home/paolo/projects/oq-hazardlib'
-    oq_engine_path = '/home/paolo/projects/oq-engine'
-    if oq_hazardlib_path not in sys.path:
-        sys.path.append(oq_hazardlib_path)
-    if oq_engine_path not in sys.path:
-        sys.path.append(oq_engine_path)
-    import h5py
-    from openquake.baselib import hdf5
-except ImportError:
-    print 'Please install h5py, oq-hazardlib and oq-engine'
-
 
 def classFactory(iface):
+    # check dependencies
+    try:
+        import sys
+        oq_hazardlib_path = '/home/marco/dev/GEM/oq-hazardlib'
+        oq_engine_path = '/home/marco/dev/GEM/oq-engine'
+        if oq_hazardlib_path not in sys.path:
+            sys.path.append(oq_hazardlib_path)
+        if oq_engine_path not in sys.path:
+            sys.path.append(oq_engine_path)
+        import h5py
+        from openquake.baselib import hdf5
+    except ImportError:
+        raise ImportError('Please install h5py, oq-hazardlib and oq-engine')
+
     # load Irmt class from file Irmt
     from svir.irmt import Irmt
     return Irmt(iface)
