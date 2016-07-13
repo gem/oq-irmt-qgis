@@ -22,6 +22,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
+import numpy as np
 
 from PyQt4 import QtGui
 
@@ -51,18 +52,25 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.setupUi(self)
         self.iface = iface
 
-        self.test()
+        self.active_layer = None
+        self.figure = Figure()
+        self.canvas = FigureCanvas(self.figure)
+        self.main_layout.addWidget(self.canvas)
+        self.plot = self.figure.add_subplot(111)
 
-    def addmpl(self, fig):
-        self.canvas = FigureCanvas(fig)
-        self.dockWidgetContents.addWidget(self.canvas)
+    def test(self, count):
+        self.plot.clear()
+        self.plot.plot(np.random.rand(count))
         self.canvas.draw()
 
-    def test(self):
-        import numpy as np
-        fig1 = Figure()
-        ax1f1 = fig1.add_subplot(111)
-        ax1f1.plot(np.random.rand(5))
+    def layer_changed(self):
+        if self.active_layer is not None:
+            self.active_layer.selectionChanged.disconnect(
+                    self.selection_changed)
+        self.active_layer = self.iface.activeLayer()
+        self.active_layer.selectionChanged.connect(self.selection_changed)
 
-        self.addmpl(fig1)
-        self.show()
+    def selection_changed(self, selected, deselected, clearAndSelect):
+        self.test(len(selected))
+        print ("selection changed")
+        print (selected, deselected, clearAndSelect)
