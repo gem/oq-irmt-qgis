@@ -130,6 +130,8 @@ class Irmt:
         self.supplemental_information = {}
 
         self.iface.currentLayerChanged.connect(self.current_layer_changed)
+        self.iface.newProjectCreated.connect(self.current_layer_changed)
+        self.iface.projectRead.connect(self.current_layer_changed)
         QgsMapLayerRegistry.instance().layersAdded.connect(self.layers_added)
         QgsMapLayerRegistry.instance().layersRemoved.connect(
             self.layers_removed)
@@ -274,7 +276,7 @@ class Irmt:
         self.supplemental_information.pop(layer_id, None)
         QgsProject.instance().removeEntry('irmt', layer_id)
 
-    def current_layer_changed(self, layer):
+    def current_layer_changed(self, layer=None):
         self.update_actions_status()
         self.viewer_dock.layer_changed()
 
