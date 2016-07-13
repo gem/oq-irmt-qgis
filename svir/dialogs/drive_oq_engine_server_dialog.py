@@ -56,6 +56,7 @@ from svir.utilities.utils import (WaitCursorManager,
                                   engine_login,
                                   log_msg,
                                   tr,
+                                  ask_for_download_destination_folder,
                                   )
 from svir.dialogs.load_hdf5_as_layer_dialog import LoadHdf5AsLayerDialog
 from svir.dialogs.load_geojson_as_layer_dialog import LoadGeoJsonAsLayerDialog
@@ -294,35 +295,47 @@ class DriveOqEngineServerDialog(QDialog):
         output_id = output['id']
         output_type = output['type']
         if action == 'Load as layer':
+            dest_folder = tempfile.gettempdir()
             if outtype == 'hdf5':
-                filepath = self.download_output(output_id, outtype)
+                filepath = self.download_output(
+                    output_id, outtype, dest_folder)
                 dlg = LoadHdf5AsLayerDialog(self.iface, filepath, output_type)
                 dlg.exec_()
             elif outtype == 'geojson':
-                filepath = self.download_output(output_id, outtype)
+                filepath = self.download_output(
+                    output_id, outtype, dest_folder)
                 dlg = LoadGeoJsonAsLayerDialog(self.iface, filepath)
                 dlg.exec_()
             else:
                 raise NotImplementedError("%s %s" % (action, outtype))
         elif action == 'Download':
             filepath = self.download_output(output_id, outtype)
+            if not filepath:
+                return
+            self.iface.messageBar().pushMessage(
+                tr("Info"),
+                'Calculation %s was saved as %s' % (output_id, filepath),
+                level=QgsMessageBar.INFO)
             if outtype == 'hdf5':
                 # FIXME make system independent
                 os.system("hdfview %s" % filepath)
         else:
             raise NotImplementedError(action)
 
-    def download_output(self, output_id, outtype):
+    def download_output(self, output_id, outtype, dest_folder=None):
+        if not dest_folder:
+            dest_folder = ask_for_download_destination_folder(self)
+            if not dest_folder:
+                return
         output_download_url = (
             "%s/v1/calc/result/%s?export_type=%s&dload=true" % (self.hostname,
                                                                 output_id,
                                                                 outtype))
-        filepath = None
         with WaitCursorManager('Downloading output...', self.iface):
             resp = self.session.get(output_download_url, timeout=10)
             filename = resp.headers['content-disposition'].split(
                 'filename=')[1]
-            filepath = os.path.join(tempfile.gettempdir(), filename)
+            filepath = os.path.join(dest_folder, filename)
             open(filepath, "wb").write(resp.content)
         return filepath
 
