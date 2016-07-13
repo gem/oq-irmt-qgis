@@ -79,8 +79,10 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                     self.selection_changed)
         except (TypeError, AttributeError):
             pass
-        finally:
-            self.active_layer = self.iface.activeLayer()
+
+        self.active_layer = self.iface.activeLayer()
+
+        if self.active_layer is not None:
             self.active_layer.selectionChanged.connect(self.selection_changed)
 
     def selection_changed(self, selected, deselected, _):
