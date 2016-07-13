@@ -71,18 +71,18 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
     def draw(self):
         self.plot.clear()
-        for index, line in self.current_selection.iteritems():
+        for site, curve in self.current_selection.iteritems():
 
-            ordinates = line['ordinates']
+            ordinates = curve['ordinates']
             # FIXME use abscissa values from hdf5 file
             abscissa = np.linspace(0.0, 1.0, num=len(ordinates))
 
             self.plot.plot(
                     abscissa,
                     ordinates,
-                    color=line['color'],
+                    color=curve['color'],
                     linestyle='solid',
-                    label='site ' + str(index)
+                    label='site ' + str(site)
             )
             self.plot.legend()
 
@@ -108,7 +108,6 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
             if self.active_layer.selectedFeatureCount() > 0:
                 self.set_selection(self.active_layer.selectedFeaturesIds())
-
 
     def set_selection(self, selected):
         self.selection_changed(selected, [], None)
@@ -148,7 +147,13 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 '*.csv')
 
         if filename:
-            print filename
+            with open(filename, 'w') as csv_file:
+                # csv_file.write(line + os.linesep)
+
+                for site, curve in self.current_selection.iteritems():
+                    line = '%s,%s' % (
+                        site, ','.join(map(str, curve['ordinates'])))
+                    csv_file.write(line + os.linesep)
 
     @pyqtSlot()
     def on_export_image_button_clicked(self):
@@ -159,4 +164,4 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 '*.png')
 
         if filename:
-            print filename
+            self.figure.savefig(filename)
