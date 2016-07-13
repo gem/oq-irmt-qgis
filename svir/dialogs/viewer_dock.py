@@ -37,6 +37,9 @@ from matplotlib.backends.backend_qt4agg import (
 from qgis.core import QgsFeatureRequest
 
 from PyQt4.QtCore import pyqtSlot
+from qgis.gui import QgsVertexMarker
+
+from PyQt4.QtGui import QColor
 
 from svir.utilities.shared import TEXTUAL_FIELD_TYPES
 from svir.utilities.utils import get_ui_class, reload_attrib_cbx
@@ -65,10 +68,20 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.current_imt = None
         self.current_abscissa = []
 
+        # Marker for hovering
+        self.vertex_marker = QgsVertexMarker(iface.mapCanvas())
+        self.vertex_marker.hide()
+        self.vertex_marker.setColor(QColor('red'))
+        self.vertex_marker.setIconSize(6)
+        self.vertex_marker.setIconType(QgsVertexMarker.ICON_CIRCLE)
+        self.vertex_marker.setPenWidth(3)
+
         self.figure = Figure()
         self.canvas = FigureCanvas(self.figure)
         self.central_layout.addWidget(self.canvas)
         self.plot = self.figure.add_subplot(111)
+
+        self.canvas.mpl_connect('pick_event', self.on_plot_pick)
 
     def draw(self):
         self.plot.clear()
@@ -79,7 +92,9 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                     curve['ordinates'],
                     color=curve['color'],
                     linestyle='solid',
-                    label='site ' + str(site)
+                    label='site ' + str(site),
+                    gid=site,
+                    picker=5  # 5 points tolerance
             )
             self.plot.legend()
 
@@ -146,6 +161,24 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
     def clear_plot(self):
         self.plot.clear()
         self.canvas.draw()
+        self.vertex_marker.hide()
+
+    def on_plot_pick(self, event):
+        picked_line = event.artist
+        fid = picked_line.get_gid()
+        picked_feature = self.active_layer.getFeatures(
+                QgsFeatureRequest().setFilterFids([fid]))
+
+        for f in picked_feature:
+            picked_feature = f
+            break  # we filtered on one fid
+
+        print str(picked_feature.geometry().asPoint())
+        self.vertex_marker.setCenter(picked_feature.geometry().asPoint())
+        self.vertex_marker.show()
+
+
+
 
     @pyqtSlot(int)
     def on_imt_cbx_currentIndexChanged(self):
