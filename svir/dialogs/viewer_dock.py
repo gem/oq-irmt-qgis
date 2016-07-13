@@ -76,7 +76,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
         try:
             self.active_layer.selectionChanged.disconnect(
-                    self.selection_changed)
+                self.selection_changed)
         except (TypeError, AttributeError):
             pass
 
@@ -87,12 +87,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
     def selection_changed(self, selected, deselected, _):
         arg = 'PGA'
-
-        print ('Selected: ', selected)
-        print ('Deselected: ', deselected)
-
         selected_features = self.active_layer.getFeatures(
-                QgsFeatureRequest().setFilterFids(selected))
+            QgsFeatureRequest().setFilterFids(selected))
 
         for fid in deselected:
             try:
@@ -109,7 +105,3 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 }
 
         self.draw()
-
-
-
-
