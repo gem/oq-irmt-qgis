@@ -63,6 +63,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
         self.current_selection = {}
         self.current_imt = None
+        self.current_abscissa = []
 
         self.figure = Figure()
         self.canvas = FigureCanvas(self.figure)
@@ -73,13 +74,9 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.plot.clear()
         for site, curve in self.current_selection.iteritems():
 
-            ordinates = curve['ordinates']
-            # FIXME use abscissa values from hdf5 file
-            abscissa = np.linspace(0.0, 1.0, num=len(ordinates))
-
             self.plot.plot(
-                    abscissa,
-                    ordinates,
+                    self.current_abscissa,
+                    curve['ordinates'],
                     color=curve['color'],
                     linestyle='solid',
                     label='site ' + str(site)
@@ -88,33 +85,17 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
         self.canvas.draw()
 
-    def layer_changed(self):
-        self.current_selection = {}
-        self.plot.clear()
-
-        try:
-            self.active_layer.selectionChanged.disconnect(
-                    self.selection_changed)
-        except (TypeError, AttributeError):
-            pass
-
-        self.active_layer = self.iface.activeLayer()
-
-        if self.active_layer is not None:
-            self.active_layer.selectionChanged.connect(self.selection_changed)
-
-            reload_attrib_cbx(
-                    self.imt_cbx, self.active_layer, False, TEXTUAL_FIELD_TYPES)
-
-            if self.active_layer.selectedFeatureCount() > 0:
-                self.set_selection(self.active_layer.selectedFeaturesIds())
-
-    def set_selection(self, selected):
-        self.selection_changed(selected, [], None)
-
-    def selection_changed(self, selected, deselected, _):
+    def redraw(self, selected, deselected, _):
         selected_features = self.active_layer.getFeatures(
                 QgsFeatureRequest().setFilterFids(selected))
+
+        # FIXME use abscissa values from hdf5 file
+        x_count = 0
+        for feature in self.active_layer.selectedFeatures():
+            x_count = len(json.loads(feature[self.current_imt]))
+            break
+        self.current_abscissa = np.linspace(0.0, 1.0, num=x_count)
+        # FIXME END use abscissa values from hdf5 file
 
         for fid in deselected:
             try:
@@ -132,6 +113,31 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
         self.draw()
 
+    def layer_changed(self):
+        print('here')
+        self.current_selection = {}
+        self.plot.clear()
+
+        try:
+            self.active_layer.selectionChanged.disconnect(
+                    self.redraw)
+        except (TypeError, AttributeError):
+            pass
+
+        self.active_layer = self.iface.activeLayer()
+
+        if self.active_layer is not None:
+            self.active_layer.selectionChanged.connect(self.redraw)
+
+            reload_attrib_cbx(
+                    self.imt_cbx, self.active_layer, False, TEXTUAL_FIELD_TYPES)
+
+            if self.active_layer.selectedFeatureCount() > 0:
+                self.set_selection(self.active_layer.selectedFeaturesIds())
+
+    def set_selection(self, selected):
+        self.redraw(selected, [], None)
+
     @pyqtSlot(int)
     def on_imt_cbx_currentIndexChanged(self):
         self.current_imt = self.imt_cbx.currentText()
@@ -148,7 +154,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
         if filename:
             with open(filename, 'w') as csv_file:
-                # csv_file.write(line + os.linesep)
+                line = 'site,'
+                csv_file.write(line + os.linesep)
 
                 for site, curve in self.current_selection.iteritems():
                     line = '%s,%s' % (
