@@ -47,14 +47,15 @@ from PyQt4.QtCore import (QSettings,
                           QCoreApplication,
                           qVersion,
                           QUrl,
-                          )
+                          Qt)
 from PyQt4.QtGui import (QAction,
                          QIcon,
                          QColor,
                          QFileDialog,
                          QDesktopServices,
-                         )
+                         QApplication)
 
+from svir.dialogs.viewer_dock import ViewerDock
 from svir.ui.tool_button_with_help_link import QToolButtonWithHelpLink
 from svir.utilities.import_sv_data import get_loggedin_downloader
 from svir.dialogs.download_layer_dialog import DownloadLayerDialog
@@ -234,6 +235,8 @@ class Irmt:
                            self.drive_oq_engine_server,
                            enable=True)
 
+        self._create_viewer_dock()
+
         self.update_actions_status()
 
     def load_hdf5_as_layer(self):
@@ -273,6 +276,7 @@ class Irmt:
 
     def current_layer_changed(self, layer):
         self.update_actions_status()
+        self.viewer_dock.layer_changed()
 
     def add_menu_item(self,
                       action_name,
@@ -281,7 +285,9 @@ class Irmt:
                       corresponding_method,
                       enable=False,
                       add_to_layer_actions=False,
-                      layers_type=QgsMapLayer.VectorLayer
+                      layers_type=QgsMapLayer.VectorLayer,
+                      set_checkable=False,
+                      set_checked=False
                       ):
         """
         Add an item to the IRMT plugin menu and a corresponding toolbar icon
@@ -294,6 +300,8 @@ class Irmt:
             raise NameError("Action %s already registered" % action_name)
         action = QAction(QIcon(icon_path), label, self.iface.mainWindow())
         action.setEnabled(enable)
+        action.setCheckable(set_checkable)
+        action.setChecked(set_checked)
         action.triggered.connect(corresponding_method)
 
         help_page = HELP_PAGES_LOOKUP[action_name]
@@ -1152,3 +1160,32 @@ class Irmt:
 
         dlg = UploadSettingsDialog(self.iface, suppl_info, file_stem)
         dlg.exec_()
+
+    def toggle_dock_visibility(self):
+        """Show or hide the dock widget."""
+        if self.viewer_dock.isVisible():
+            self.viewer_dock.setVisible(False)
+        else:
+            self.viewer_dock.setVisible(True)
+            self.viewer_dock.raise_()
+
+    def _create_viewer_dock(self):
+        """Create dockwidget and tabify it with the legend."""
+
+        # Action to drive the oq-engine server
+        self.add_menu_item("toggle_viewer_dock",
+                           ":/plugins/irmt/manual.svg",  # FIXME
+                           u"Toggle viewer dock",
+                           self.toggle_dock_visibility,
+                           enable=True,
+                           set_checkable=True,
+                           set_checked=True)
+
+        self.viewer_dock = ViewerDock(self.iface)
+        self.viewer_dock.setObjectName('IRMT-Dock')
+        self.iface.addDockWidget(Qt.RightDockWidgetArea, self.viewer_dock)
+        legend_tab = self.iface.mainWindow().findChild(QApplication, 'Legend')
+        if legend_tab:
+            self.iface.mainWindow().tabifyDockWidget(
+                    legend_tab, self.viewer_dock)
+            self.viewer_dock.raise_()

@@ -34,6 +34,7 @@ from qgis.core import (QgsMapLayerRegistry,
                        )
 from qgis.gui import QgsMessageBar
 
+from PyQt4 import uic
 from PyQt4.QtCore import QSettings, Qt
 from PyQt4.QtGui import QApplication, QProgressBar, QToolButton, QFileDialog, \
     QMessageBox
@@ -802,3 +803,21 @@ def insert_platform_layer_id(
     if 'platform_layer_id' not in suppl_info:
         suppl_info['platform_layer_id'] = platform_layer_id
     write_layer_suppl_info_to_qgs(active_layer_id, suppl_info)
+
+
+def get_ui_class(ui_file):
+    """Get UI Python class from .ui file.
+       Can be filename.ui or subdirectory/filename.ui
+    :param ui_file: The file of the ui in svir.ui
+    :type ui_file: str
+    """
+    os.path.sep.join(ui_file.split('/'))
+    ui_file_path = os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__),
+            os.pardir,
+            'ui',
+            ui_file
+        )
+    )
+    return uic.loadUiType(ui_file_path)[0]
