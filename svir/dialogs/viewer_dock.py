@@ -22,7 +22,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-import numpy as np
+import json
 
 from PyQt4 import QtGui
 
@@ -31,6 +31,8 @@ from matplotlib.backends.backend_qt4agg import (
     FigureCanvasQTAgg as FigureCanvas,
     #NavigationToolbar2QT as NavigationToolbar
 )
+
+from qgis.core import QgsFeatureRequest
 
 from svir.utilities.utils import get_ui_class
 
@@ -52,25 +54,60 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.setupUi(self)
         self.iface = iface
 
-        self.active_layer = None
+        self.active_layer = self.iface.activeLayer()
+
+        self.current_selection = {}
+
         self.figure = Figure()
         self.canvas = FigureCanvas(self.figure)
         self.main_layout.addWidget(self.canvas)
         self.plot = self.figure.add_subplot(111)
 
-    def test(self, count):
+    def draw(self):
         self.plot.clear()
-        self.plot.plot(np.random.rand(count))
+        for index, line in self.current_selection.iteritems():
+            # print (index, line)
+            self.plot.plot(line['ordinates'])
+
         self.canvas.draw()
 
     def layer_changed(self):
-        if self.active_layer is not None:
+        self.current_selection = {}
+
+        try:
             self.active_layer.selectionChanged.disconnect(
                     self.selection_changed)
-        self.active_layer = self.iface.activeLayer()
-        self.active_layer.selectionChanged.connect(self.selection_changed)
+        except (TypeError, AttributeError):
+            pass
+        finally:
+            self.active_layer = self.iface.activeLayer()
+            self.active_layer.selectionChanged.connect(self.selection_changed)
 
-    def selection_changed(self, selected, deselected, clearAndSelect):
-        self.test(len(selected))
-        print ("selection changed")
-        print (selected, deselected, clearAndSelect)
+    def selection_changed(self, selected, deselected, _):
+        arg = 'PGA'
+
+        print ('Selected: ', selected)
+        print ('Deselected: ', deselected)
+
+        selected_features = self.active_layer.getFeatures(
+                QgsFeatureRequest().setFilterFids(selected))
+
+        for fid in deselected:
+            try:
+                del self.current_selection[fid]
+            except KeyError:
+                pass
+
+        for feature in selected_features:
+            ordinates = json.loads(feature[arg])
+            if feature.id() not in self.current_selection:
+                self.current_selection[feature.id()] = {
+                    'ordinates': ordinates,
+                    'color': 'blue'
+                }
+
+        self.draw()
+
+
+
+
