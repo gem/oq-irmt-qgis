@@ -31,6 +31,9 @@ from qgis.core import (QgsVectorLayer,
                        QgsGeometry,
                        QgsMapLayerRegistry,
                        QgsSymbolV2,
+                       QgsSymbolLayerV2Registry,
+                       QgsOuterGlowEffect,
+                       QgsSingleSymbolRendererV2,
                        QgsVectorGradientColorRampV2,
                        QgsGraduatedSymbolRendererV2,
                        QgsRendererRangeV2,
@@ -166,7 +169,6 @@ class LoadHdf5AsLayerDialog(QDialog):
             self.default_field_name = imt
             layer_name = "hazard_curves_%s" % rlz
         field_names = list(self.dataset.dtype.names)
-
         # create layer
         self.layer = QgsVectorLayer(
             "Point?crs=epsg:4326", layer_name, "memory")
@@ -176,9 +178,9 @@ class LoadHdf5AsLayerDialog(QDialog):
             # NOTE: add_numeric_attribute uses LayerEditingManager
             added_field_name = add_numeric_attribute(
                 field_name, self.layer)
-            if field_name == self.default_field_name:
-                self.default_field_name = added_field_name
             if field_name != added_field_name:
+                if field_name == self.default_field_name:
+                    self.default_field_name = added_field_name
                 # replace field_name with the actual added_field_name
                 field_name_idx = field_names.index(field_name)
                 field_names.remove(field_name)
@@ -208,7 +210,7 @@ class LoadHdf5AsLayerDialog(QDialog):
         self.iface.setActiveLayer(self.layer)
         self.iface.zoomToActiveLayer()
 
-    def style_layer(self):
+    def style_hmaps(self):
         color1 = QColor("#FFEBEB")
         color2 = QColor("red")
         classes_count = 10
@@ -244,12 +246,37 @@ class LoadHdf5AsLayerDialog(QDialog):
             self.layer)
         self.iface.mapCanvas().refresh()
 
+    def style_hcurves(self):
+        registry = QgsSymbolLayerV2Registry.instance()
+        cross = registry.symbolLayerMetadata("SimpleMarker").createSymbolLayer(
+            {'name': 'cross2', 'color': '0,0,0', 'color_border': '0,0,0',
+             'offset': '0,0', 'size': '1.5', 'angle': '0'})
+        symbol = QgsSymbolV2.defaultSymbol(self.layer.geometryType())
+        symbol.deleteSymbolLayer(0)
+        symbol.appendSymbolLayer(cross)
+        renderer = QgsSingleSymbolRendererV2(symbol)
+        effect = QgsOuterGlowEffect()
+        effect.setSpread(0.5)
+        effect.setTransparency(0)
+        effect.setColor(QColor(255, 255, 255))
+        effect.setBlurLevel(1)
+        renderer.paintEffect().appendEffect(effect)
+        renderer.paintEffect().setEnabled(True)
+        self.layer.setRendererV2(renderer)
+        self.layer.setLayerTransparency(30)  # percent
+        self.layer.triggerRepaint()
+        self.iface.legendInterface().refreshLayerSymbology(
+            self.layer)
+        self.iface.mapCanvas().refresh()
+
     def accept(self):
         with WaitCursorManager('Creating layer...', self.iface):
             self.build_layer()
         self.hfile.close()
         if self.output_type == 'hmaps':
-            self.style_layer()
+            self.style_hmaps()
+        elif self.output_type == 'hcurves':
+            self.style_hcurves()
         self.close()
 
     # FIXME: also cancel should close the hdf5 file
