@@ -89,34 +89,39 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         selected_features = self.active_layer.getFeatures(
                 QgsFeatureRequest().setFilterFids(selected))
 
-        # FIXME use abscissa values from hdf5 file
-        x_count = 0
-        for feature in self.active_layer.selectedFeatures():
-            x_count = len(json.loads(feature[self.current_imt]))
-            break
-        self.current_abscissa = np.linspace(0.0, 1.0, num=x_count)
-        # FIXME END use abscissa values from hdf5 file
-
         for fid in deselected:
             try:
                 del self.current_selection[fid]
             except KeyError:
                 pass
+        try:
+            # FIXME use abscissa values from hdf5 file
+            x_count = 0
+            for feature in self.active_layer.selectedFeatures():
+                x_count = len(json.loads(feature[self.current_imt]))
+                break
+            self.current_abscissa = np.linspace(0.0, 1.0, num=x_count)
+            # FIXME END use abscissa values from hdf5 file
 
-        for feature in selected_features:
-            ordinates = json.loads(feature[self.current_imt])
-            if feature.id() not in self.current_selection:
-                self.current_selection[feature.id()] = {
-                    'ordinates': ordinates,
-                    'color': 'blue'
-                }
+            for feature in selected_features:
+                ordinates = json.loads(feature[self.current_imt])
+                if feature.id() not in self.current_selection:
+                    self.current_selection[feature.id()] = {
+                        'ordinates': ordinates,
+                        'color': 'blue'
+                    }
 
-        self.draw()
+            self.draw()
+        except TypeError:
+            self.clear_plot()
+            self.iface.messageBar().pushWarning(
+                self.tr('Invalid IMT: %s') % self.current_imt,
+                self.tr('The selected IMT seems to contain invalid data')
+            )
 
     def layer_changed(self):
-        print('here')
         self.current_selection = {}
-        self.plot.clear()
+        self.clear_plot()
 
         try:
             self.active_layer.selectionChanged.disconnect(
@@ -137,6 +142,10 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
     def set_selection(self, selected):
         self.redraw(selected, [], None)
+
+    def clear_plot(self):
+        self.plot.clear()
+        self.canvas.draw()
 
     @pyqtSlot(int)
     def on_imt_cbx_currentIndexChanged(self):
