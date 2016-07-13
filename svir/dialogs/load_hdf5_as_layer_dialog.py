@@ -24,6 +24,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import json
 from qgis.core import (QgsVectorLayer,
                        QgsFeature,
                        QgsPoint,
@@ -196,7 +197,7 @@ class LoadHdf5AsLayerDialog(QDialog):
                         #       because it does not recognize the numpy type
                         value = float(row[field_name_idx])
                     elif self.output_type == 'hcurves':
-                        value = str(row[field_name_idx])
+                        value = json.dumps(list(row[field_name_idx]))
                     feat.setAttribute(field_name, value)
                 feat.setGeometry(QgsGeometry.fromPoint(
                     QgsPoint(row[0], row[1])))
