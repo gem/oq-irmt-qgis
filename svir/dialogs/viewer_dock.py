@@ -96,6 +96,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                     gid=site,
                     picker=5  # 5 points tolerance
             )
+            self.plot.set_xscale('log')
+            self.plot.set_yscale('log')
             self.plot.legend()
 
         self.canvas.draw()
@@ -173,7 +175,6 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             picked_feature = f
             break  # we filtered on one fid
 
-        print str(picked_feature.geometry().asPoint())
         self.vertex_marker.setCenter(picked_feature.geometry().asPoint())
         self.vertex_marker.show()
 
