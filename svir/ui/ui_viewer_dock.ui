@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ViewerDock</class>
+ <widget class="QDockWidget" name="ViewerDock">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>422</width>
+    <height>657</height>
+   </rect>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>:/plugins/inasafe/icon.png</normaloff>:/plugins/inasafe/icon.png</iconset>
+  </property>
+  <property name="windowTitle">
+   <string>Hazard Curves Viewer</string>
+  </property>
+  <widget class="QWidget" name="container">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <property name="margin">
+     <number>0</number>
+    </property>
+    <item>
+     <layout class="QVBoxLayout" name="main_layout"/>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
