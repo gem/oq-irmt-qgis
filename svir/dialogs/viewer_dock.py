@@ -143,11 +143,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.clear_plot()
         self.clear_imt_cbx()
 
-        try:
-            self.active_layer.selectionChanged.disconnect(
-                    self.redraw)
-        except (TypeError, AttributeError):
-            pass
+        self.remove_connects()
 
         self.active_layer = self.iface.activeLayer()
 
@@ -164,6 +160,12 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 self.set_selection(self.active_layer.selectedFeaturesIds())
         else:
             self.setDisabled(True)
+
+    def remove_connects(self):
+        try:
+            self.active_layer.selectionChanged.disconnect(self.redraw)
+        except (TypeError, AttributeError):
+            pass
 
     def set_selection(self, selected):
         self.redraw(selected, [], None)

@@ -377,6 +377,10 @@ class Irmt:
             self.iface.removeToolBarIcon(action)
         clear_progress_message_bar(self.iface.messageBar())
 
+        # remove the dock
+        self.viewer_dock.remove_connects()
+        self.viewer_dock.deleteLater()
+
         # remove connects
         self.iface.currentLayerChanged.disconnect(self.current_layer_changed)
         QgsMapLayerRegistry.instance().layersAdded.disconnect(
