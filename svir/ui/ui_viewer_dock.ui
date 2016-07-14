@@ -41,17 +41,10 @@
      </layout>
     </item>
     <item>
-     <layout class="QVBoxLayout" name="central_layout"/>
+     <layout class="QVBoxLayout" name="plot_layout"/>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_2">
-      <item>
-       <widget class="QPushButton" name="export_image_button">
-        <property name="text">
-         <string>Export plot</string>
-        </property>
-       </widget>
-      </item>
+     <layout class="QHBoxLayout" name="toolbar_layout">
       <item>
        <widget class="QPushButton" name="export_data_button">
         <property name="text">

@@ -31,7 +31,7 @@ from PyQt4 import QtGui
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import (
     FigureCanvasQTAgg as FigureCanvas,
-    # NavigationToolbar2QT as NavigationToolbar
+    NavigationToolbar2QT as NavigationToolbar
 )
 
 from qgis.core import QgsFeatureRequest
@@ -76,12 +76,16 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.vertex_marker.setIconType(QgsVertexMarker.ICON_CIRCLE)
         self.vertex_marker.setPenWidth(3)
 
-        self.figure = Figure()
-        self.canvas = FigureCanvas(self.figure)
-        self.central_layout.addWidget(self.canvas)
-        self.plot = self.figure.add_subplot(111)
+        self.plot_figure = Figure()
+        self.plot_canvas = FigureCanvas(self.plot_figure)
+        self.plot_toolbar = NavigationToolbar(self.plot_canvas, self)
+        self.plot = self.plot_figure.add_subplot(111)
 
-        self.canvas.mpl_connect('pick_event', self.on_plot_pick)
+        self.plot_layout.addWidget(self.plot_canvas)
+        self.toolbar_layout.insertWidget(0, self.plot_toolbar)
+
+        self.plot_canvas.mpl_connect('motion_notify_event', self.on_plot_hover)
+        self.plot_canvas.mpl_connect('pick_event', self.on_plot_pick)
 
     def draw(self):
         self.plot.clear()
@@ -98,9 +102,9 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             )
             self.plot.set_xscale('log')
             self.plot.set_yscale('log')
-            self.plot.legend()
+            self.plot.legend(loc='lower left', fancybox=True, shadow=True)
 
-        self.canvas.draw()
+        self.plot_canvas.draw()
 
     def redraw(self, selected, deselected, _):
         selected_features = self.active_layer.getFeatures(
@@ -162,8 +166,25 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
     def clear_plot(self):
         self.plot.clear()
-        self.canvas.draw()
+        self.plot_canvas.draw()
         self.vertex_marker.hide()
+
+    def on_plot_hover(self, event):
+        collisionFound = False
+        # if mouse is inside
+        if event.xdata is not None and event.ydata is not None:
+            # the axes
+            for i in xrange(len(self.dataX)):
+                radius = 1
+                if abs(event.xdata - self.dataX[i]) < radius and abs(
+                        event.ydata - self.dataY[i]) < radius:
+                    top = tip = 'x=%f\ny=%f' % (event.xdata, event.ydata)
+                    self.tooltip.SetTip(tip)
+                    self.tooltip.Enable(True)
+                    collisionFound = True
+                    break
+        if not collisionFound:
+            self.tooltip.Enable(False)
 
     def on_plot_pick(self, event):
         picked_line = event.artist
@@ -201,14 +222,3 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                     line = '%s,%s' % (
                         site, ','.join(map(str, curve['ordinates'])))
                     csv_file.write(line + os.linesep)
-
-    @pyqtSlot()
-    def on_export_image_button_clicked(self):
-        filename = QtGui.QFileDialog.getSaveFileName(
-            self,
-            self.tr('Export plot'),
-            os.path.expanduser('~/hazard_curves_%s.png' % self.current_imt),
-            '*.png')
-
-        if filename:
-            self.figure.savefig(filename)
