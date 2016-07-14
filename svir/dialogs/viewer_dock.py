@@ -83,7 +83,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.plot_layout.addWidget(self.plot_canvas)
         self.toolbar_layout.insertWidget(0, self.plot_toolbar)
 
-        self.plot_canvas.mpl_connect('pick_event', self.on_plot_pick)
+        self.plot_canvas.mpl_connect('motion_notify_event', self.on_plot_hover)
 
     def draw(self):
         self.plot.clear()
@@ -149,11 +149,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.clear_plot()
         self.clear_imt_cbx()
 
-        try:
-            self.active_layer.selectionChanged.disconnect(
-                self.redraw)
-        except (TypeError, AttributeError):
-            pass
+        self.remove_connects()
 
         self.active_layer = self.iface.activeLayer()
 
@@ -171,6 +167,12 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         else:
             self.setDisabled(True)
 
+    def remove_connects(self):
+        try:
+            self.active_layer.selectionChanged.disconnect(self.redraw)
+        except (TypeError, AttributeError):
+            pass
+
     def set_selection(self, selected):
         self.redraw(selected, [], None)
 
@@ -184,14 +186,24 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.imt_cbx.clear()
         self.imt_cbx.blockSignals(False)
 
-    def on_plot_pick(self, event):
-        picked_line = event.artist
-        fid = picked_line.get_gid()
-        picked_feature = next(self.active_layer.getFeatures(
-            QgsFeatureRequest().setFilterFid(fid)))
+    def on_plot_hover(self, event):
+        self.on_container_hover(event, self.plot)
+        if hasattr(self.legend, 'get_lines'):
+            self.on_container_hover(event, self.legend)
 
-        self.vertex_marker.setCenter(picked_feature.geometry().asPoint())
-        self.vertex_marker.show()
+    def on_container_hover(self, event, container):
+        for line in container.get_lines():
+            if line.contains(event)[0]:
+                fid = line.get_gid()
+                feature = next(self.active_layer.getFeatures(
+                    QgsFeatureRequest().setFilterFid(fid)))
+
+                self.vertex_marker.setCenter(feature.geometry().asPoint())
+                self.vertex_marker.show()
+                return True
+            else:
+                self.vertex_marker.hide()
+                return False
 
     @pyqtSlot(int)
     def on_imt_cbx_currentIndexChanged(self):
