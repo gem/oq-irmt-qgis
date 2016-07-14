@@ -34,12 +34,11 @@ from matplotlib.backends.backend_qt4agg import (
     NavigationToolbar2QT as NavigationToolbar
 )
 
-from qgis.core import QgsFeatureRequest
 
 from PyQt4.QtCore import pyqtSlot
-from qgis.gui import QgsVertexMarker
-
 from PyQt4.QtGui import QColor
+from qgis.gui import QgsVertexMarker
+from qgis.core import QGis, QgsMapLayer, QgsFeatureRequest
 
 from svir.utilities.shared import TEXTUAL_FIELD_TYPES
 from svir.utilities.utils import get_ui_class, reload_attrib_cbx
@@ -151,7 +150,9 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
         self.active_layer = self.iface.activeLayer()
 
-        if self.active_layer is not None:
+        if (self.active_layer is not None
+            and self.active_layer.type() == QgsMapLayer.VectorLayer
+            and self.active_layer.geometryType() == QGis.Point):
             self.active_layer.selectionChanged.connect(self.redraw)
 
             reload_attrib_cbx(
