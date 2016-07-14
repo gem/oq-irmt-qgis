@@ -131,9 +131,11 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 ordinates = json.loads(feature[self.current_imt])
                 if feature.id() not in self.current_selection:
                     color_name = color_names[feature.id() % len(color_names)]
+                    color = QColor(color_name)
+                    color_rgb = color.getRgbF()
                     self.current_selection[feature.id()] = {
                         'ordinates': ordinates,
-                        'color': color_name,
+                        'color': color_rgb,
                     }
 
             self.draw()
