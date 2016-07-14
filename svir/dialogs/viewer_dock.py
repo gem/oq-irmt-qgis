@@ -84,6 +84,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.toolbar_layout.insertWidget(0, self.plot_toolbar)
 
         self.plot_canvas.mpl_connect('pick_event', self.on_plot_pick)
+        self.plot_canvas.mpl_connect('motion_notify_event', self.on_plot_hover)
 
     def draw(self):
         self.plot.clear()
@@ -185,6 +186,18 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.imt_cbx.blockSignals(True)
         self.imt_cbx.clear()
         self.imt_cbx.blockSignals(False)
+
+    def on_plot_hover(self, event):
+        for curve in self.plot.get_lines():
+            if curve.contains(event)[0]:
+                fid = curve.get_gid()
+                feature = next(self.active_layer.getFeatures(
+                        QgsFeatureRequest().setFilterFid(fid)))
+
+                self.vertex_marker.setCenter(feature.geometry().asPoint())
+                self.vertex_marker.show()
+            else:
+                self.vertex_marker.show()
 
     def on_plot_pick(self, event):
         picked_line = event.artist
