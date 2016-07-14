@@ -214,7 +214,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
         if filename:
             with open(filename, 'w') as csv_file:
-                line = 'site,'
+                line = 'site,', ','.join(map(str, self.current_abscissa))
                 csv_file.write(line + os.linesep)
 
                 for site, curve in self.current_selection.iteritems():
