@@ -6,118 +6,106 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>586</width>
-    <height>309</height>
+    <width>474</width>
+    <height>250</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Load hdf5 as layer</string>
   </property>
-  <widget class="QDialogButtonBox" name="buttonBox">
-   <property name="geometry">
-    <rect>
-     <x>30</x>
-     <y>240</y>
-     <width>341</width>
-     <height>32</height>
-    </rect>
-   </property>
-   <property name="orientation">
-    <enum>Qt::Horizontal</enum>
-   </property>
-   <property name="standardButtons">
-    <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-   </property>
-  </widget>
-  <widget class="QWidget" name="layoutWidget">
-   <property name="geometry">
-    <rect>
-     <x>30</x>
-     <y>20</y>
-     <width>531</width>
-     <height>211</height>
-    </rect>
-   </property>
-   <layout class="QVBoxLayout" name="verticalLayout">
-    <item>
-     <layout class="QHBoxLayout" name="horizontalLayout">
-      <item>
-       <widget class="QLabel" name="hdf5_lbl">
-        <property name="text">
-         <string>Hdf5 file</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QToolButton" name="file_browser_tbn">
-        <property name="text">
-         <string>...</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="hdf5_path_le">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="open_hdfview_btn">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="text">
-         <string>Open with HDFView</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </item>
-    <item>
-     <widget class="QLabel" name="rlz_lbl">
-      <property name="text">
-       <string>Realization (only the chosen realization will be loaded into the layer)</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QComboBox" name="rlz_cbx">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QLabel" name="imt_lbl">
-      <property name="text">
-       <string>Intensity Measure Type (used for default styling)</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QComboBox" name="imt_cbx">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QLabel" name="poe_lbl">
-      <property name="text">
-       <string>Probability of Exceedance (used for default styling)</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QComboBox" name="poe_cbx">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-     </widget>
-    </item>
-   </layout>
-  </widget>
+  <layout class="QVBoxLayout" name="verticalLayout_2">
+   <item>
+    <layout class="QVBoxLayout" name="verticalLayout">
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QLabel" name="hdf5_lbl">
+         <property name="text">
+          <string>Hdf5 file</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="file_browser_tbn">
+         <property name="text">
+          <string>...</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="hdf5_path_le">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="open_hdfview_btn">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="text">
+          <string>Open with HDFView</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QLabel" name="rlz_lbl">
+       <property name="text">
+        <string>Realization (only the chosen realization will be loaded into the layer)</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="rlz_cbx">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="imt_lbl">
+       <property name="text">
+        <string>Intensity Measure Type (used for default styling)</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="imt_cbx">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="poe_lbl">
+       <property name="text">
+        <string>Probability of Exceedance (used for default styling)</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="poe_cbx">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
  </widget>
  <resources/>
  <connections>
