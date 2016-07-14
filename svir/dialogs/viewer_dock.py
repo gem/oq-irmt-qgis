@@ -132,7 +132,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                     }
 
             self.draw()
-        except TypeError:
+        except (TypeError, ValueError):
             self.clear_plot()
             self.iface.messageBar().pushWarning(
                 self.tr('Invalid IMT: %s') % self.current_imt,
