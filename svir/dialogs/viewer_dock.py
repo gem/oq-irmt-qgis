@@ -122,12 +122,14 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             self.current_abscissa = np.linspace(0.0, 1.0, num=x_count)
             # FIXME END use abscissa values from hdf5 file
 
+            color_names = QColor.colorNames()
             for feature in selected_features:
                 ordinates = json.loads(feature[self.current_imt])
                 if feature.id() not in self.current_selection:
+                    color_name = color_names[feature.id() % len(color_names)]
                     self.current_selection[feature.id()] = {
                         'ordinates': ordinates,
-                        'color': 'blue'
+                        'color': color_name,
                     }
 
             self.draw()
@@ -148,8 +150,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.active_layer = self.iface.activeLayer()
 
         if (self.active_layer is not None
-            and self.active_layer.type() == QgsMapLayer.VectorLayer
-            and self.active_layer.geometryType() == QGis.Point):
+                and self.active_layer.type() == QgsMapLayer.VectorLayer
+                and self.active_layer.geometryType() == QGis.Point):
             self.active_layer.selectionChanged.connect(self.redraw)
             self.setEnabled(True)
 
@@ -179,6 +181,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.imt_cbx.blockSignals(True)
         self.imt_cbx.clear()
         self.imt_cbx.blockSignals(False)
+
     def on_plot_pick(self, event):
         picked_line = event.artist
         fid = picked_line.get_gid()
