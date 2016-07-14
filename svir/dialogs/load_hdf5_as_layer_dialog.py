@@ -73,8 +73,11 @@ class LoadHdf5AsLayerDialog(QDialog):
         self.ok_button.setDisabled(True)
         self.ui.open_hdfview_btn.setDisabled(True)
         if output_type == 'hcurves':
+            self.ui.imt_lbl.hide()
+            self.ui.imt_cbx.hide()
             self.ui.poe_lbl.hide()
             self.ui.poe_cbx.hide()
+            self.adjustSize()
         if self.hdf5_path:
             self.ui.hdf5_path_le.setText(self.hdf5_path)
             self.ui.rlz_cbx.setEnabled(True)
