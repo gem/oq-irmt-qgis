@@ -88,7 +88,6 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
     def draw(self):
         self.plot.clear()
         for site, curve in self.current_selection.iteritems():
-
             self.plot.plot(
                 self.current_abscissa,
                 curve['ordinates'],
@@ -98,10 +97,15 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 gid=site,
                 picker=5  # 5 points tolerance
             )
-            self.plot.set_xscale('log')
-            self.plot.set_yscale('log')
-            self.plot.legend(loc='lower left', fancybox=True, shadow=True)
-
+        self.plot.set_xscale('log')
+        self.plot.set_yscale('log')
+        self.legend = self.plot.legend(
+            loc='lower left', fancybox=True, shadow=True)
+        gids = self.current_selection.keys()
+        if hasattr(self.legend, 'get_lines'):
+            for i, legend_line in enumerate(self.legend.get_lines()):
+                legend_line.set_picker(5)  # 5 points tolerance
+                legend_line.set_gid(gids[i])
         self.plot_canvas.draw()
 
     def redraw(self, selected, deselected, _):
