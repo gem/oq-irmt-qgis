@@ -188,25 +188,22 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.imt_cbx.blockSignals(False)
 
     def on_plot_hover(self, event):
-        for curve in self.plot.get_lines():
-            if curve.contains(event)[0]:
-                fid = curve.get_gid()
+        if not self.on_container_hover(event, self.plot):
+            if hasattr(self.legend, 'get_lines'):
+                self.on_container_hover(event, self.legend)
+
+    def on_container_hover(self, event, container):
+        for line in container.get_lines():
+            if line.contains(event)[0]:
+                fid = line.get_gid()
                 feature = next(self.active_layer.getFeatures(
                         QgsFeatureRequest().setFilterFid(fid)))
 
                 self.vertex_marker.setCenter(feature.geometry().asPoint())
                 self.vertex_marker.show()
             else:
-                self.vertex_marker.show()
-
-    def on_plot_pick(self, event):
-        picked_line = event.artist
-        fid = picked_line.get_gid()
-        picked_feature = next(self.active_layer.getFeatures(
-            QgsFeatureRequest().setFilterFid(fid)))
-
-        self.vertex_marker.setCenter(picked_feature.geometry().asPoint())
-        self.vertex_marker.show()
+                self.vertex_marker.hide()
+        return False
 
     @pyqtSlot(int)
     def on_imt_cbx_currentIndexChanged(self):
