@@ -202,7 +202,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
         if filename:
             with open(filename, 'w') as csv_file:
-                line = 'siteID,lon,lat,%s' % (
+                line = 'lon,lat,%s' % (
                     ','.join(map(str, list(self.current_abscissa))))
                 csv_file.write(line + os.linesep)
 
@@ -213,5 +213,5 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
                     lon = feature.geometry().asPoint().x()
                     lat = feature.geometry().asPoint().y()
-                    line = '%s,%s,%s,%s' % (site, lon, lat, poes)
+                    line = '%s,%s,%s' % (lon, lat, poes)
                     csv_file.write(line + os.linesep)
