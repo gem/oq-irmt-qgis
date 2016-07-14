@@ -44,7 +44,7 @@
      <layout class="QVBoxLayout" name="plot_layout"/>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <layout class="QHBoxLayout" name="toolbar_layout">
       <item>
        <widget class="QPushButton" name="export_data_button">
         <property name="text">

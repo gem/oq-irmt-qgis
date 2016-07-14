@@ -82,7 +82,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.plot = self.plot_figure.add_subplot(111)
 
         self.plot_layout.addWidget(self.plot_canvas)
-        self.plot_layout.addWidget(self.plot_toolbar)
+        self.toolbar_layout.insertWidget(0, self.plot_toolbar)
 
         self.plot_canvas.mpl_connect('motion_notify_event', self.on_plot_hover)
         self.plot_canvas.mpl_connect('pick_event', self.on_plot_pick)
@@ -197,9 +197,6 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
         self.vertex_marker.setCenter(picked_feature.geometry().asPoint())
         self.vertex_marker.show()
-
-
-
 
     @pyqtSlot(int)
     def on_imt_cbx_currentIndexChanged(self):
