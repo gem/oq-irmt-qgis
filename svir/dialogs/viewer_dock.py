@@ -141,6 +141,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
     def layer_changed(self):
         self.current_selection = {}
         self.clear_plot()
+        self.clear_imt_cbx()
 
         try:
             self.active_layer.selectionChanged.disconnect(
@@ -154,12 +155,15 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             and self.active_layer.type() == QgsMapLayer.VectorLayer
             and self.active_layer.geometryType() == QGis.Point):
             self.active_layer.selectionChanged.connect(self.redraw)
+            self.setEnabled(True)
 
             reload_attrib_cbx(
                     self.imt_cbx, self.active_layer, False, TEXTUAL_FIELD_TYPES)
 
             if self.active_layer.selectedFeatureCount() > 0:
                 self.set_selection(self.active_layer.selectedFeaturesIds())
+        else:
+            self.setDisabled(True)
 
     def set_selection(self, selected):
         self.redraw(selected, [], None)
@@ -169,6 +173,10 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.plot_canvas.draw()
         self.vertex_marker.hide()
 
+    def clear_imt_cbx(self):
+        self.imt_cbx.blockSignals(True)
+        self.imt_cbx.clear()
+        self.imt_cbx.blockSignals(False)
     def on_plot_pick(self, event):
         picked_line = event.artist
         fid = picked_line.get_gid()
