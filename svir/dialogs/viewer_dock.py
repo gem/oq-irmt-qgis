@@ -168,16 +168,11 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.plot_canvas.draw()
         self.vertex_marker.hide()
 
-
     def on_plot_pick(self, event):
         picked_line = event.artist
         fid = picked_line.get_gid()
-        picked_feature = self.active_layer.getFeatures(
-                QgsFeatureRequest().setFilterFids([fid]))
-
-        for f in picked_feature:
-            picked_feature = f
-            break  # we filtered on one fid
+        picked_feature = next(self.active_layer.getFeatures(
+            QgsFeatureRequest().setFilterFid(fid)))
 
         self.vertex_marker.setCenter(picked_feature.geometry().asPoint())
         self.vertex_marker.show()
@@ -198,10 +193,16 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
         if filename:
             with open(filename, 'w') as csv_file:
-                line = 'site,', ','.join(map(str, self.current_abscissa))
+                line = 'siteID,lon,lat,%s' % (
+                    ','.join(map(str, list(self.current_abscissa))))
                 csv_file.write(line + os.linesep)
 
                 for site, curve in self.current_selection.iteritems():
-                    line = '%s,%s' % (
-                        site, ','.join(map(str, curve['ordinates'])))
+                    poes = ','.join(map(str, curve['ordinates']))
+                    feature = next(self.active_layer.getFeatures(
+                            QgsFeatureRequest().setFilterFid(site)))
+
+                    lon = feature.geometry().asPoint().x()
+                    lat = feature.geometry().asPoint().y()
+                    line = '%s,%s,%s,%s' % (site, lon, lat, poes)
                     csv_file.write(line + os.linesep)
