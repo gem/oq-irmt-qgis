@@ -187,9 +187,9 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.imt_cbx.blockSignals(False)
 
     def on_plot_hover(self, event):
-        self.on_container_hover(event, self.plot)
-        if hasattr(self.legend, 'get_lines'):
-            self.on_container_hover(event, self.legend)
+        if not self.on_container_hover(event, self.plot):
+            if hasattr(self.legend, 'get_lines'):
+                self.on_container_hover(event, self.legend)
 
     def on_container_hover(self, event, container):
         for line in container.get_lines():
@@ -203,7 +203,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 return True
             else:
                 self.vertex_marker.hide()
-                return False
+        return False
 
     @pyqtSlot(int)
     def on_imt_cbx_currentIndexChanged(self):
