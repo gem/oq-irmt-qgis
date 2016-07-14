@@ -51,7 +51,9 @@ from openquake.baselib import hdf5
 from svir.ui.ui_load_hdf5_as_layer import Ui_LoadHdf5AsLayerDialog
 from svir.utilities.shared import DEBUG
 from svir.utilities.utils import LayerEditingManager, WaitCursorManager
-from svir.calculations.calculate_utils import add_numeric_attribute
+from svir.calculations.calculate_utils import (add_numeric_attribute,
+                                               add_textual_attribute,
+                                               )
 
 
 class LoadHdf5AsLayerDialog(QDialog):
@@ -175,9 +177,13 @@ class LoadHdf5AsLayerDialog(QDialog):
         for field_name in field_names:
             if field_name in ['lon', 'lat']:
                 continue
-            # NOTE: add_numeric_attribute uses LayerEditingManager
-            added_field_name = add_numeric_attribute(
-                field_name, self.layer)
+            if self.output_type == 'hmaps':
+                # NOTE: add_numeric_attribute uses LayerEditingManager
+                added_field_name = add_numeric_attribute(
+                    field_name, self.layer)
+            elif self.output_type == 'hcurves':
+                added_field_name = add_textual_attribute(
+                    field_name, self.layer)
             if field_name != added_field_name:
                 if field_name == self.default_field_name:
                     self.default_field_name = added_field_name

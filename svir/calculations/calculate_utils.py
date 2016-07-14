@@ -28,7 +28,9 @@ from qgis.gui import QgsMessageBar
 
 from PyQt4.QtCore import QVariant, QPyNullVariant
 
-from svir.utilities.shared import (DOUBLE_FIELD_TYPE_NAME, DEBUG,
+from svir.utilities.shared import (DOUBLE_FIELD_TYPE_NAME,
+                                   STRING_FIELD_TYPE_NAME,
+                                   DEBUG,
                                    SUM_BASED_OPERATORS,
                                    MUL_BASED_OPERATORS, DEFAULT_OPERATOR,
                                    OPERATORS_DICT,
@@ -53,6 +55,15 @@ class InvalidChild(Exception):
 def add_numeric_attribute(proposed_attr_name, layer):
     field = QgsField(proposed_attr_name, QVariant.Double)
     field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
+    assigned_attr_names = ProcessLayer(layer).add_attributes(
+        [field])
+    assigned_attr_name = assigned_attr_names[proposed_attr_name]
+    return assigned_attr_name
+
+
+def add_textual_attribute(proposed_attr_name, layer):
+    field = QgsField(proposed_attr_name, QVariant.String)
+    field.setTypeName(STRING_FIELD_TYPE_NAME)
     assigned_attr_names = ProcessLayer(layer).add_attributes(
         [field])
     assigned_attr_name = assigned_attr_names[proposed_attr_name]
