@@ -84,7 +84,6 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.plot_layout.addWidget(self.plot_canvas)
         self.toolbar_layout.insertWidget(0, self.plot_toolbar)
 
-        self.plot_canvas.mpl_connect('motion_notify_event', self.on_plot_hover)
         self.plot_canvas.mpl_connect('pick_event', self.on_plot_pick)
 
     def draw(self):
@@ -169,21 +168,6 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.plot_canvas.draw()
         self.vertex_marker.hide()
 
-    def on_plot_hover(self, event):
-        collisionFound = False
-        if event.xdata is not None and event.ydata is not None:  # mouse is inside
-            # the axes
-            for i in xrange(len(self.dataX)):
-                radius = 1
-                if abs(event.xdata - self.dataX[i]) < radius and abs(
-                                event.ydata - self.dataY[i]) < radius:
-                    top = tip = 'x=%f\ny=%f' % (event.xdata, event.ydata)
-                    self.tooltip.SetTip(tip)
-                    self.tooltip.Enable(True)
-                    collisionFound = True
-                    break
-        if not collisionFound:
-            self.tooltip.Enable(False)
 
     def on_plot_pick(self, event):
         picked_line = event.artist
