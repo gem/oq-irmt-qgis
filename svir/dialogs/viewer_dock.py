@@ -96,7 +96,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.plot.clear()
         for site, curve in self.current_selection.iteritems():
             feature = next(self.active_layer.getFeatures(
-                    QgsFeatureRequest().setFilterFid(site)))
+                QgsFeatureRequest().setFilterFid(site)))
 
             lon = feature.geometry().asPoint().x()
             lat = feature.geometry().asPoint().y()
@@ -112,6 +112,18 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             )
         self.plot.set_xscale('log')
         self.plot.set_yscale('log')
+        self.plot.set_xlabel('Intensity Measure Level')
+        self.plot.set_ylabel('Probability of Exceedance')
+        count_selected = len(self.current_selection.keys())
+        imt = self.imt_cbx.currentText()
+        if count_selected == 0:
+            title = ''
+        elif count_selected == 1:
+            title = 'Hazard Curve for IMT = %s' % imt
+        else:
+            title = 'Hazard Curves for IMT = %s' % imt
+        self.plot.set_title(title)
+        self.plot.grid()
 
         if len(self.current_selection) <= 10:
             self.legend = self.plot.legend(
