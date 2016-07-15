@@ -90,6 +90,12 @@ class SettingsDialog(QtGui.QDialog, Ui_SettingsDialog):
         self.ui.developermodeCheck.setChecked(
             mySettings.value('irmt/developer_mode', False, type=bool))
 
+        self.ui.oq_hazardlib_path_edit.setText(
+                mySettings.value('irmt/oq_hazardlib_path', ''))
+
+        self.ui.oq_engine_path_edit.setText(
+                mySettings.value('irmt/oq_engine_path', ''))
+
     def saveState(self):
         """
         Store the options into the user's stored session info.
