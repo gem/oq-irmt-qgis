@@ -71,23 +71,18 @@ class LoadGeoJsonAsLayerDialog(QDialog):
             self.populate_rlz_cbx()
 
     @pyqtSlot()
-    def on_open_hdfview_btn_clicked(self):
-        file_path = self.ui.geojson_path_le.text()
-        if file_path:
-            to_run = "hdfview " + file_path
-            # FIXME make system independent
-            os.system(to_run)
-
-    @pyqtSlot()
     def on_file_browser_tbn_clicked(self):
         self.geojson_path = self.open_file_dialog()
 
     @pyqtSlot(str)
     def on_rlz_cbx_currentIndexChanged(self):
-        self.dataset = self.hmaps.get(self.ui.rlz_cbx.currentText())
+        rlz = self.ui.rlz_cbx.currentText()
         self.imts = {}
-        for name in self.dataset.dtype.names[2:]:
-            imt, poe = name.split('-')
+        for pars in self.names_params.values():
+            if pars['rlz'] != rlz:
+                continue
+            imt = pars['imt']
+            poe = pars['poe']
             if imt not in self.imts:
                 self.imts[imt] = [poe]
             else:
@@ -121,12 +116,15 @@ class LoadGeoJsonAsLayerDialog(QDialog):
         self.geojson_path = geojson_path
         self.ui.geojson_path_le.setText(self.geojson_path)
         if file_type == self.tr('Zip archives (*.zip)'):
-            self.rlzs = set()
             zz = zipfile.ZipFile(self.geojson_path)
-            for name in zz.namelist():
+            namelist = zz.namelist()
+            self.names_params = {}
+            for name in namelist:
                 # Example: hazard_map-0.1-SA(0.2)-rlz-000_24.geojson
-                rlz = name.split('rlz-')[1].split('_')[0]
-                self.rlzs.add(rlz)
+                _, poe, imt, _, end = name.split('-')
+                rlz = end.split('_')[0]
+                self.names_params[name] = dict(rlz=rlz, imt=imt, poe=poe)
+            # rlzs = set(value['rlz'] for value in names_params.values())
             zz.close()
             self.populate_rlz_cbx()
         self.load_layer(geojson_path)
@@ -156,7 +154,8 @@ class LoadGeoJsonAsLayerDialog(QDialog):
     def populate_rlz_cbx(self):
         self.ui.rlz_cbx.clear()
         self.ui.rlz_cbx.setEnabled(True)
-        self.ui.rlz_cbx.addItems(self.rlzs)
+        rlzs = list(set(value['rlz'] for value in self.names_params.values()))
+        self.ui.rlz_cbx.addItems(rlzs)
 
     def set_ok_button(self):
         self.ok_button.setEnabled(self.ui.poe_cbx.currentIndex != -1)
