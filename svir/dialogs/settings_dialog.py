@@ -97,22 +97,25 @@ class SettingsDialog(QtGui.QDialog, Ui_SettingsDialog):
         mySettings = QtCore.QSettings()
         # if the (stripped) hostname ends with '/', remove it
         hostname = self.ui.hostnameEdit.text().strip().rstrip('/')
+        mySettings.setValue('irmt/oq_hazardlib_path',
+                            self.ui.oq_hazardlib_path_edit.text())
+        mySettings.setValue('irmt/oq_engine_path',
+                            self.ui.oq_engine_path_edit.text())
+        mySettings.setValue('irmt/developer_mode',
+                            self.ui.developermodeCheck.isChecked())
         if self.server == 'platform':
             mySettings.setValue('irmt/platform_hostname', hostname)
             mySettings.setValue('irmt/platform_username',
                                 self.ui.usernameEdit.text())
             mySettings.setValue('irmt/platform_password',
                                 self.ui.passwordEdit.text())
-            mySettings.setValue('irmt/developer_mode',
-                                self.ui.developermodeCheck.isChecked())
+
         elif self.server == 'engine':
             mySettings.setValue('irmt/engine_hostname', hostname)
             mySettings.setValue('irmt/engine_username',
                                 self.ui.usernameEdit.text())
             mySettings.setValue('irmt/engine_password',
                                 self.ui.passwordEdit.text())
-            mySettings.setValue('irmt/developer_mode',
-                                self.ui.developermodeCheck.isChecked())
         else:
             raise ValueError(self.server)
 

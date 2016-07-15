@@ -26,21 +26,6 @@
 
 
 def classFactory(iface):
-    # check dependencies
-    try:
-        import sys
-        # FIXME: hardcoded paths
-        oq_hazardlib_path = '/home/paolo/projects/oq-hazardlib'
-        oq_engine_path = '/home/paolo/projects/oq-engine'
-        if oq_hazardlib_path not in sys.path:
-            sys.path.append(oq_hazardlib_path)
-        if oq_engine_path not in sys.path:
-            sys.path.append(oq_engine_path)
-        import h5py
-        from openquake.baselib import hdf5
-    except ImportError:
-        raise ImportError('Please install h5py, oq-hazardlib and oq-engine')
-
     # load Irmt class from file Irmt
     from svir.irmt import Irmt
     return Irmt(iface)
