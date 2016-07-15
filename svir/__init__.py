@@ -30,8 +30,8 @@ def classFactory(iface):
     try:
         import sys
         # FIXME: hardcoded paths
-        oq_hazardlib_path = '/home/paolo/projects/oq-hazardlib'
-        oq_engine_path = '/home/paolo/projects/oq-engine'
+        oq_hazardlib_path = '/home/marco/dev/GEM/oq-hazardlib'
+        oq_engine_path = '/home/marco/dev/GEM/oq-engine'
         if oq_hazardlib_path not in sys.path:
             sys.path.append(oq_hazardlib_path)
         if oq_engine_path not in sys.path:
