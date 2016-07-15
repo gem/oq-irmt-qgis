@@ -286,6 +286,6 @@ class LoadHdf5AsLayerDialog(QDialog):
             self.style_hmaps()
         elif self.output_type == 'hcurves':
             self.style_hcurves()
-        self.close()
+        super(LoadHdf5AsLayerDialog, self).accept()
 
     # FIXME: also cancel should close the hdf5 file

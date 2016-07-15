@@ -25,10 +25,8 @@
 
 import os
 import zipfile
+import tempfile
 from qgis.core import (QgsVectorLayer,
-                       QgsFeature,
-                       QgsPoint,
-                       QgsGeometry,
                        QgsMapLayerRegistry,
                        QgsSymbolV2,
                        QgsVectorGradientColorRampV2,
@@ -44,9 +42,6 @@ from PyQt4.QtGui import (QDialogButtonBox,
                          QColor,
                          )
 from svir.ui.ui_load_geojson_as_layer import Ui_LoadGeoJsonAsLayerDialog
-from svir.utilities.shared import DEBUG
-from svir.utilities.utils import LayerEditingManager, WaitCursorManager
-from svir.calculations.calculate_utils import add_numeric_attribute
 
 
 class LoadGeoJsonAsLayerDialog(QDialog):
@@ -109,14 +104,14 @@ class LoadGeoJsonAsLayerDialog(QDialog):
         text = self.tr('Select GeoJson file or archive to import')
         filters = self.tr('GeoJson maps (*.geojson);;'
                           'Zip archives (*.zip)')
-        geojson_path, file_type = QFileDialog.getOpenFileNameAndFilter(
+        geojson_path, self.file_type = QFileDialog.getOpenFileNameAndFilter(
             self, text, QDir.homePath(), filters)
         if not geojson_path:
             return
         self.geojson_path = geojson_path
         self.ui.geojson_path_le.setText(self.geojson_path)
-        if file_type == self.tr('Zip archives (*.zip)'):
-            zz = zipfile.ZipFile(self.geojson_path)
+        if self.file_type == self.tr('Zip archives (*.zip)'):
+            zz = zipfile.ZipFile(self.geojson_path, 'r')
             namelist = zz.namelist()
             self.names_params = {}
             for name in namelist:
@@ -160,37 +155,6 @@ class LoadGeoJsonAsLayerDialog(QDialog):
     def set_ok_button(self):
         self.ok_button.setEnabled(self.ui.poe_cbx.currentIndex != -1)
 
-    def build_layer(self):
-        rlz = self.ui.rlz_cbx.currentText()
-        imt = self.ui.imt_cbx.currentText()
-        poe = self.ui.poe_cbx.currentText()
-        self.field_name = '%s-%s' % (imt, poe)
-        array = self.dataset.value[['lon', 'lat', self.field_name]]
-
-        layer_name = "%s_%s_%s" % (rlz, imt, poe)
-        # create layer
-        self.layer = QgsVectorLayer(
-            "Point?crs=epsg:4326", layer_name, "memory")
-        # NOTE: add_numeric_attribute uses LayerEditingManager
-        self.field_name = add_numeric_attribute(self.field_name, self.layer)
-        pr = self.layer.dataProvider()
-        with LayerEditingManager(self.layer, 'Reading geojson', DEBUG):
-            feats = []
-            for row in array:
-                # add a feature
-                feat = QgsFeature(self.layer.pendingFields())
-                lon, lat, value = row
-                # NOTE: without casting to float, it produces a null
-                #       because it does not recognize the numpy type
-                feat.setAttribute(self.field_name, float(value))
-                feat.setGeometry(QgsGeometry.fromPoint(QgsPoint(lon, lat)))
-                feats.append(feat)
-            (res, outFeats) = pr.addFeatures(feats)
-        # add self.layer to the legend
-        QgsMapLayerRegistry.instance().addMapLayer(self.layer)
-        self.iface.setActiveLayer(self.layer)
-        self.iface.zoomToActiveLayer()
-
     def style_layer(self):
         color1 = QColor("#FFEBEB")
         color2 = QColor("red")
@@ -226,3 +190,21 @@ class LoadGeoJsonAsLayerDialog(QDialog):
         self.iface.legendInterface().refreshLayerSymbology(
             self.layer)
         self.iface.mapCanvas().refresh()
+
+    def accept(self):
+        if self.file_type == self.tr('Zip archives (*.zip)'):
+            rlz = self.ui.rlz_cbx.currentText()
+            imt = self.ui.imt_cbx.currentText()
+            poe = self.ui.poe_cbx.currentText()
+            [filename] = [
+                name for name, params in self.names_params.iteritems()
+                if params['rlz'] == rlz
+                and params['imt'] == imt
+                and params['poe'] == poe]
+            self.geojson_path = self.ui.geojson_path_le.text()
+            zz = zipfile.ZipFile(self.geojson_path, 'r')
+            dest_folder = tempfile.gettempdir()
+            dest_file = zz.extract(filename, dest_folder)
+            zz.close()
+            self.load_layer(dest_file)
+        super(LoadGeoJsonAsLayerDialog, self).accept()
