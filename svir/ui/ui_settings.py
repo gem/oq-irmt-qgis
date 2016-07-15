@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_settings.ui'
 #
-# Created: Thu Jun 30 11:30:21 2016
+# Created: Fri Jul 15 15:46:39 2016
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -26,7 +26,7 @@ except AttributeError:
 class Ui_SettingsDialog(object):
     def setupUi(self, SettingsDialog):
         SettingsDialog.setObjectName(_fromUtf8("SettingsDialog"))
-        SettingsDialog.resize(399, 280)
+        SettingsDialog.resize(443, 389)
         self.verticalLayout = QtGui.QVBoxLayout(SettingsDialog)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.topGroupBox = QtGui.QGroupBox(SettingsDialog)
@@ -61,11 +61,23 @@ class Ui_SettingsDialog(object):
         self.verticalLayout.addWidget(self.registration_link_lbl)
         self.bottomGroupBox = QtGui.QGroupBox(SettingsDialog)
         self.bottomGroupBox.setObjectName(_fromUtf8("bottomGroupBox"))
-        self.verticalLayout_2 = QtGui.QVBoxLayout(self.bottomGroupBox)
-        self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
+        self.formLayout_2 = QtGui.QFormLayout(self.bottomGroupBox)
+        self.formLayout_2.setObjectName(_fromUtf8("formLayout_2"))
         self.developermodeCheck = QtGui.QCheckBox(self.bottomGroupBox)
         self.developermodeCheck.setObjectName(_fromUtf8("developermodeCheck"))
-        self.verticalLayout_2.addWidget(self.developermodeCheck)
+        self.formLayout_2.setWidget(0, QtGui.QFormLayout.LabelRole, self.developermodeCheck)
+        self.label_4 = QtGui.QLabel(self.bottomGroupBox)
+        self.label_4.setObjectName(_fromUtf8("label_4"))
+        self.formLayout_2.setWidget(1, QtGui.QFormLayout.LabelRole, self.label_4)
+        self.oq_engine_path_edit = QtGui.QLineEdit(self.bottomGroupBox)
+        self.oq_engine_path_edit.setObjectName(_fromUtf8("oq_engine_path_edit"))
+        self.formLayout_2.setWidget(1, QtGui.QFormLayout.FieldRole, self.oq_engine_path_edit)
+        self.label_5 = QtGui.QLabel(self.bottomGroupBox)
+        self.label_5.setObjectName(_fromUtf8("label_5"))
+        self.formLayout_2.setWidget(2, QtGui.QFormLayout.LabelRole, self.label_5)
+        self.oq_hazardlib_path_edit = QtGui.QLineEdit(self.bottomGroupBox)
+        self.oq_hazardlib_path_edit.setObjectName(_fromUtf8("oq_hazardlib_path_edit"))
+        self.formLayout_2.setWidget(2, QtGui.QFormLayout.FieldRole, self.oq_hazardlib_path_edit)
         self.verticalLayout.addWidget(self.bottomGroupBox)
         self.buttonBox = QtGui.QDialogButtonBox(SettingsDialog)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
@@ -87,4 +99,6 @@ class Ui_SettingsDialog(object):
         self.registration_link_lbl.setText(_translate("SettingsDialog", "Link to the OQ-Platform registration", None))
         self.bottomGroupBox.setTitle(_translate("SettingsDialog", "SVIR settings", None))
         self.developermodeCheck.setText(_translate("SettingsDialog", "Developer mode (requires restart)", None))
+        self.label_4.setText(_translate("SettingsDialog", "oq-engine path", None))
+        self.label_5.setText(_translate("SettingsDialog", "oq-hazardlib path", None))
 
