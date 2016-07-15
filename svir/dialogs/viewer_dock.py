@@ -47,7 +47,7 @@ FORM_CLASS = get_ui_class('ui_viewer_dock.ui')
 
 
 class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
-    def __init__(self, iface):
+    def __init__(self, iface, action):
         """Constructor for the viewer dock.
 
         :param iface: A QGisAppInterface instance we use to access QGIS via.
@@ -60,6 +60,9 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         QtGui.QDockWidget.__init__(self, None)
         self.setupUi(self)
         self.iface = iface
+
+        # this is the action in the plugin (i.e. the button in the toolbar)
+        self.action = action
 
         self.active_layer = self.iface.activeLayer()
 
@@ -263,3 +266,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                     lat = feature.geometry().asPoint().y()
                     line = '%s,%s,%s' % (lon, lat, poes)
                     csv_file.write(line + os.linesep)
+
+    def closeEvent(self, event):
+        self.action.setChecked(False)
+        event.accept()
