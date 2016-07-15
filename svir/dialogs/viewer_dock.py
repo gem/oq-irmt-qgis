@@ -79,6 +79,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.plot_canvas = FigureCanvas(self.plot_figure)
         self.plot_toolbar = NavigationToolbar(self.plot_canvas, self)
         self.plot = self.plot_figure.add_subplot(111)
+        self.legend = None
 
         self.plot_layout.addWidget(self.plot_canvas)
         self.toolbar_layout.insertWidget(0, self.plot_toolbar)
