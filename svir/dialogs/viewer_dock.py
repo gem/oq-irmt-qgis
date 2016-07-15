@@ -124,6 +124,10 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             title = 'Hazard Curves for IMT = %s' % imt
         self.plot.set_title(title)
         self.plot.grid()
+        ylim_bottom, ylim_top = self.plot.get_ylim()
+        self.plot.set_ylim(ylim_bottom, ylim_top * 1.5)
+        xlim_left, xlim_right = self.plot.get_xlim()
+        self.plot.set_xlim(xlim_left, xlim_right * 1.1)
 
         if len(self.current_selection) <= 10:
             self.legend = self.plot.legend(
