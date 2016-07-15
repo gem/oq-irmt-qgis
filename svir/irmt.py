@@ -322,6 +322,7 @@ class Irmt:
                 action_name,
                 layers_type,
                 True)
+        return action
 
     def update_actions_status(self):
         """
@@ -1179,15 +1180,15 @@ class Irmt:
         """Create dockwidget and tabify it with the legend."""
 
         # Action to drive the oq-engine server
-        self.add_menu_item("toggle_viewer_dock",
-                           ":/plugins/irmt/manual.svg",  # FIXME
-                           u"Toggle viewer dock",
-                           self.toggle_dock_visibility,
-                           enable=True,
-                           set_checkable=True,
-                           set_checked=True)
+        action = self.add_menu_item("toggle_viewer_dock",
+                                    ":/plugins/irmt/manual.svg",  # FIXME
+                                    u"Toggle viewer dock",
+                                    self.toggle_dock_visibility,
+                                    enable=True,
+                                    set_checkable=True,
+                                    set_checked=True)
 
-        self.viewer_dock = ViewerDock(self.iface)
+        self.viewer_dock = ViewerDock(self.iface, action)
         self.viewer_dock.setObjectName('IRMT-Dock')
         self.iface.addDockWidget(Qt.RightDockWidgetArea, self.viewer_dock)
         legend_tab = self.iface.mainWindow().findChild(QApplication, 'Legend')
