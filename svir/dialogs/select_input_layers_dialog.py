@@ -50,16 +50,6 @@ from svir.ui.ui_select_input_layers import Ui_SelectInputLayersDialog
 from svir.utilities.utils import tr, count_heading_commented_lines
 
 
-# NOTE: I would like to use the qgis.core.QGis.GeometryType enum, but for some
-#       reason I can't, so I am re-defining it
-class GeometryType(object):
-    Point = 0
-    Line = 1
-    Polygon = 2
-    UnknownGeometry = 3
-    NoGeometry = 4
-
-
 class SelectInputLayersDialog(QDialog):
     """
     Modal dialog allowing to select a raster or vector layer
@@ -207,7 +197,7 @@ class SelectInputLayersDialog(QDialog):
     @pyqtSlot()
     def on_loss_layer_tbn_clicked(self):
         layer = self.open_file_dialog('loss_layer')
-        if layer and layer.geometryType() == GeometryType.Point:
+        if layer and layer.geometryType() == QGis.Point:
             cbx = self.ui.loss_layer_cbx
             cbx.addItem(layer.name())
             last_index = cbx.count() - 1
@@ -218,7 +208,7 @@ class SelectInputLayersDialog(QDialog):
     @pyqtSlot()
     def on_zonal_layer_tbn_clicked(self):
         layer = self.open_file_dialog('zonal_layer')
-        if layer and layer.geometryType() == GeometryType.Polygon:
+        if layer and layer.geometryType() == QGis.Polygon:
             cbx = self.ui.zonal_layer_cbx
             cbx.addItem(layer.name())
             last_index = cbx.count() - 1
@@ -230,11 +220,11 @@ class SelectInputLayersDialog(QDialog):
         for key, layer in \
                 QgsMapLayerRegistry.instance().mapLayers().iteritems():
             # populate loss cbx only with layers containing points
-            if layer.geometryType() == GeometryType.Point:
+            if layer.geometryType() == QGis.Point:
                 self.ui.loss_layer_cbx.addItem(layer.name())
                 self.ui.loss_layer_cbx.setItemData(
                     self.ui.loss_layer_cbx.count()-1, layer.id())
-            if layer.geometryType() == GeometryType.Polygon:
+            if layer.geometryType() == QGis.Polygon:
                 self.ui.zonal_layer_cbx.addItem(layer.name())
                 self.ui.zonal_layer_cbx.setItemData(
                     self.ui.zonal_layer_cbx.count()-1, layer.id())
