@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>399</width>
-    <height>280</height>
+    <width>443</width>
+    <height>389</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -78,13 +78,33 @@
      <property name="title">
       <string>SVIR settings</string>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout_2">
-      <item>
+     <layout class="QFormLayout" name="formLayout_2">
+      <item row="0" column="0">
        <widget class="QCheckBox" name="developermodeCheck">
         <property name="text">
          <string>Developer mode (requires restart)</string>
         </property>
        </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>oq-engine path</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="oq_engine_path_edit"/>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>oq-hazardlib path</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLineEdit" name="oq_hazardlib_path_edit"/>
       </item>
      </layout>
     </widget>
