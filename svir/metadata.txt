@@ -24,6 +24,7 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     1.7.8
+    * Additional section of the manual, about using R scripts from QGIS
     * Fix the "aggregate loss by zone" checks on layer types
 
 # tags are comma separated with spaces allowed
