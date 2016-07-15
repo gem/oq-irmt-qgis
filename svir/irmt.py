@@ -72,6 +72,33 @@ from svir.dialogs.load_geojson_as_layer_dialog import LoadGeoJsonAsLayerDialog
 from svir.dialogs.drive_oq_engine_server_dialog import (
     DriveOqEngineServerDialog)
 from svir.dialogs.recovery_modeling_dialog import RecoveryModelingDialog
+
+# check dependencies
+try:
+    import h5py
+except ImportError:
+    raise ImportError('Please install h5py')
+
+try:
+    import sys
+    settings = QSettings()
+    oq_hazardlib_path = settings.value('irmt/oq_hazardlib_path', '')
+    oq_engine_path = settings.value('irmt/oq_engine_path', '')
+
+    if oq_hazardlib_path and oq_hazardlib_path not in sys.path:
+        sys.path.append(oq_hazardlib_path)
+    if oq_engine_path and oq_engine_path not in sys.path:
+        sys.path.append(oq_engine_path)
+    from openquake.baselib import hdf5
+
+    from svir.dialogs.load_hdf5_as_layer_dialog import LoadHdf5AsLayerDialog
+    from svir.dialogs.drive_oq_engine_server_dialog import (
+        DriveOqEngineServerDialog)
+
+    OQ_DEPENDENCIES_OK = True
+except ImportError:
+    OQ_DEPENDENCIES_OK = False
+
 from svir.thread_worker.abstract_worker import start_worker
 from svir.thread_worker.download_platform_data_worker import (
     DownloadPlatformDataWorker)
@@ -281,6 +308,24 @@ class Irmt:
                            u"Load GeoJson as layer",
                            self.load_geojson_as_layer,
                            enable=True)
+
+        if OQ_DEPENDENCIES_OK:
+            # Action to load as layer an hdf5 produced by the oq-engine
+            self.add_menu_item("load_hdf5_as_layer",
+                               ":/plugins/irmt/manual.svg",  # FIXME
+                               u"Load HDF5 as layer",
+                               self.load_hdf5_as_layer,
+                               enable=True)
+            # Action to drive the oq-engine server
+            self.add_menu_item("drive_engine_server",
+                               ":/plugins/irmt/manual.svg",  # FIXME
+                               u"Drive oq-engine &server",
+                               self.drive_oq_engine_server,
+                               enable=True)
+        else:
+            self.iface.messageBar().pushInfo(tr('Missing dependencies for extra features'),
+                                             tr('To enable extra features install and set the oq-engine and oq-hazardlib path'))
+
         # Action to drive the oq-engine server
         self.add_menu_item("drive_engine_server",
                            ":/plugins/irmt/define.svg",  # FIXME

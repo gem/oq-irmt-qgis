@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# /***************************************************************************
+#/***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
@@ -99,6 +99,12 @@ class SettingsDialog(QtGui.QDialog, FORM_CLASS):
         mySettings = QtCore.QSettings()
         # if the (stripped) hostname ends with '/', remove it
         hostname = self.hostnameEdit.text().strip().rstrip('/')
+        mySettings.setValue('irmt/oq_hazardlib_path',
+                            self.ui.oq_hazardlib_path_edit.text())
+        mySettings.setValue('irmt/oq_engine_path',
+                            self.ui.oq_engine_path_edit.text())
+        mySettings.setValue('irmt/developer_mode',
+                            self.ui.developermodeCheck.isChecked())
         if self.server == 'platform':
             mySettings.setValue('irmt/platform_hostname', hostname)
             mySettings.setValue('irmt/platform_username',
