@@ -92,19 +92,27 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
     def draw(self):
         self.plot.clear()
         for site, curve in self.current_selection.iteritems():
+            feature = next(self.active_layer.getFeatures(
+                    QgsFeatureRequest().setFilterFid(site)))
+
+            lon = feature.geometry().asPoint().x()
+            lat = feature.geometry().asPoint().y()
+
             self.plot.plot(
-                    self.current_abscissa,
-                    curve['ordinates'],
-                    color=curve['color'],
-                    linestyle='solid',
-                    label='site ' + str(site),
-                    gid=site,
-                    picker=5  # 5 points tolerance
+                self.current_abscissa,
+                curve['ordinates'],
+                color=curve['color'],
+                linestyle='solid',
+                label='%s, %s' % (lon, lat),
+                gid=site,
+                picker=5  # 5 points tolerance
             )
         self.plot.set_xscale('log')
         self.plot.set_yscale('log')
-        self.legend = self.plot.legend(
-            loc='lower left', fancybox=True, shadow=True)
+
+        if len(self.current_selection) <= 10:
+            self.legend = self.plot.legend(
+                loc='lower left', fancybox=True, shadow=True)
         gids = self.current_selection.keys()
         if hasattr(self.legend, 'get_lines'):
             for i, legend_line in enumerate(self.legend.get_lines()):
