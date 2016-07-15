@@ -29,6 +29,7 @@ def classFactory(iface):
     # check dependencies
     try:
         import sys
+        # FIXME: hardcoded paths
         oq_hazardlib_path = '/home/marco/dev/GEM/oq-hazardlib'
         oq_engine_path = '/home/marco/dev/GEM/oq-engine'
         if oq_hazardlib_path not in sys.path:

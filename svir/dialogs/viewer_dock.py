@@ -70,10 +70,12 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         # Marker for hovering
         self.vertex_marker = QgsVertexMarker(iface.mapCanvas())
         self.vertex_marker.hide()
-        self.vertex_marker.setColor(QColor('red'))
+        self.vertex_marker.setColor(QColor('cyan'))
         self.vertex_marker.setIconSize(6)
         self.vertex_marker.setIconType(QgsVertexMarker.ICON_CIRCLE)
-        self.vertex_marker.setPenWidth(3)
+        self.vertex_marker.setPenWidth(6)
+
+        self.iface.mapCanvas().setSelectionColor(QColor('magenta'))
 
         self.plot_figure = Figure()
         self.plot_canvas = FigureCanvas(self.plot_figure)
