@@ -46,7 +46,7 @@ from svir.ui.ui_load_geojson_as_layer import Ui_LoadGeoJsonAsLayerDialog
 
 class LoadGeoJsonAsLayerDialog(QDialog):
     """
-    FIXME
+    FIXME This is not working for zipfiles yet
     """
     def __init__(self, iface, geojson_path=None):
         self.iface = iface
@@ -102,8 +102,10 @@ class LoadGeoJsonAsLayerDialog(QDialog):
         Open a file dialog to select the data file to be loaded
         """
         text = self.tr('Select GeoJson file or archive to import')
-        filters = self.tr('GeoJson maps (*.geojson);;'
-                          'Zip archives (*.zip)')
+        # FIXME: still not working for zip archives
+        # filters = self.tr('GeoJson maps (*.geojson);;'
+        #                   'Zip archives (*.zip)')
+        filters = self.tr('GeoJson maps (*.geojson)')
         geojson_path, self.file_type = QFileDialog.getOpenFileNameAndFilter(
             self, text, QDir.homePath(), filters)
         if not geojson_path:
