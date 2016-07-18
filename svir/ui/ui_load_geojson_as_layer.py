@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_load_geojson_as_layer.ui'
 #
-# Created: Thu Jul  7 11:27:22 2016
+# Created: Mon Jul 18 10:44:19 2016
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
