@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1222</width>
-    <height>480</height>
+    <height>555</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,15 +16,15 @@
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QLabel" name="list_of_calcs_lbl">
+     <property name="font">
+      <font>
+       <weight>75</weight>
+       <italic>false</italic>
+       <bold>true</bold>
+      </font>
+     </property>
      <property name="text">
       <string>List of calculations</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QPushButton" name="reload_calcs_btn">
-     <property name="text">
-      <string>Refresh list of calculations</string>
      </property>
     </widget>
    </item>
@@ -33,6 +33,12 @@
    </item>
    <item>
     <widget class="QLabel" name="list_of_outputs_lbl">
+     <property name="font">
+      <font>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
      <property name="text">
       <string>List of outputs</string>
      </property>

@@ -37,7 +37,7 @@ from qgis.gui import QgsMessageBar
 #                        QgsGraduatedSymbolRendererV2,
 #                        QgsRendererRangeV2,
 #                        )
-from PyQt4.QtCore import pyqtSlot, QDir, Qt, QObject, SIGNAL, QTimer
+from PyQt4.QtCore import QDir, Qt, QObject, SIGNAL, QTimer
 
 from PyQt4.QtGui import (QDialogButtonBox,
                          QDialog,
@@ -45,11 +45,11 @@ from PyQt4.QtGui import (QDialogButtonBox,
                          QAbstractItemView,
                          QPushButton,
                          QFileDialog,
-                         # QColor,
+                         QColor,
                          )
 # from openquake.baselib import hdf5
 from svir.third_party.requests import Session
-from svir.ui.ui_drive_engine_server import Ui_DriveEngineServerDialog
+# from svir.ui.ui_drive_engine_server import Ui_DriveEngineServerDialog
 # from svir.utilities.shared import DEBUG
 from svir.utilities.utils import (WaitCursorManager,
                                   get_engine_credentials,
@@ -57,13 +57,16 @@ from svir.utilities.utils import (WaitCursorManager,
                                   log_msg,
                                   tr,
                                   ask_for_download_destination_folder,
+                                  get_ui_class,
                                   )
 from svir.dialogs.load_hdf5_as_layer_dialog import LoadHdf5AsLayerDialog
 from svir.dialogs.load_geojson_as_layer_dialog import LoadGeoJsonAsLayerDialog
 # from svir.calculations.calculate_utils import add_numeric_attribute
 
+FORM_CLASS = get_ui_class('ui_drive_engine_server.ui')
 
-class DriveOqEngineServerDialog(QDialog):
+
+class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     """
     FIXME
     """
@@ -71,10 +74,11 @@ class DriveOqEngineServerDialog(QDialog):
         self.iface = iface
         QDialog.__init__(self)
         # Set up the user interface from Designer.
-        self.ui = Ui_DriveEngineServerDialog()
-        self.ui.setupUi(self)
+        # self.ui = Ui_DriveEngineServerDialog()
+        # self.ui.setupUi(self)
+        self.setupUi(self)
         # Disable ok_button until all comboboxes are filled
-        self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
+        self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         # self.ok_button.setDisabled(True)
         # self.ui.open_hdfview_btn.setDisabled(True)
 
@@ -103,22 +107,22 @@ class DriveOqEngineServerDialog(QDialog):
             calc_list = json.loads(resp.text)
         if not calc_list:
             # empty list
-            while self.ui.calc_list_tbl.rowCount() > 0:
-                self.ui.calc_list_tbl.removeRow(0)
+            while self.calc_list_tbl.rowCount() > 0:
+                self.calc_list_tbl.removeRow(0)
             return
         exclude = ['url', 'is_running']
         selected_keys = [key for key in sorted(calc_list[0].keys())
                          if key not in exclude]
         actions = [
-            {'label': 'Console', 'bg_color': 'blue', 'txt_color': 'white'},
-            {'label': 'Remove', 'bg_color': 'red', 'txt_color': 'white'},
-            {'label': 'Outputs', 'bg_color': 'blue', 'txt_color': 'white'},
+            {'label': 'Console', 'bg_color': '#3cb3c5', 'txt_color': 'white'},
+            {'label': 'Remove', 'bg_color': '#d9534f', 'txt_color': 'white'},
+            {'label': 'Outputs', 'bg_color': '#3cb3c5', 'txt_color': 'white'},
             {'label': 'Run Risk', 'bg_color': 'white', 'txt_color': 'black'}
         ]
-        self.ui.calc_list_tbl.setRowCount(len(calc_list))
-        self.ui.calc_list_tbl.setColumnCount(
+        self.calc_list_tbl.setRowCount(len(calc_list))
+        self.calc_list_tbl.setColumnCount(
             len(selected_keys) + len(actions))
-        self.ui.calc_list_tbl.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.calc_list_tbl.setEditTriggers(QAbstractItemView.NoEditTriggers)
         for row, calc in enumerate(calc_list):
             for col, key in enumerate(selected_keys):
                 item = QTableWidgetItem()
@@ -128,14 +132,12 @@ class DriveOqEngineServerDialog(QDialog):
                 row_bg_color = Qt.white
                 row_txt_color = Qt.black
                 if calc['status'] == 'failed':
-                    row_bg_color = Qt.red
-                    row_txt_color = Qt.white
+                    row_bg_color = QColor('#f2dede')
                 elif calc['status'] == 'complete':
-                    row_bg_color = Qt.green
-                    row_txt_color = Qt.white
+                    row_bg_color = QColor('#dff0d8')
                 item.setBackgroundColor(row_bg_color)
                 item.setTextColor(row_txt_color)
-                self.ui.calc_list_tbl.setItem(row, col, item)
+                self.calc_list_tbl.setItem(row, col, item)
             for col, action in enumerate(actions, len(selected_keys)):
                 button = QPushButton()
                 button.setText(action['label'])
@@ -146,13 +148,15 @@ class DriveOqEngineServerDialog(QDialog):
                     button, SIGNAL("clicked()"),
                     lambda calc_id=calc['id'], action=action['label']: (
                         self.on_calc_action_btn_clicked(calc_id, action)))
-                self.ui.calc_list_tbl.setCellWidget(row, col, button)
+                self.calc_list_tbl.setCellWidget(row, col, button)
         col_names = [key.capitalize() for key in selected_keys]
         empty_col_names = ['' for action in actions]
         headers = col_names + empty_col_names
-        self.ui.calc_list_tbl.setHorizontalHeaderLabels(headers)
-        self.ui.calc_list_tbl.resizeColumnsToContents()
-        self.ui.calc_list_tbl.resizeRowsToContents()
+        self.calc_list_tbl.setHorizontalHeaderLabels(headers)
+        self.calc_list_tbl.horizontalHeader().setStyleSheet(
+            "font-weight: bold;")
+        self.calc_list_tbl.resizeColumnsToContents()
+        self.calc_list_tbl.resizeRowsToContents()
 
     def on_calc_action_btn_clicked(self, calc_id, action):
         if action == 'Console':
@@ -234,8 +238,8 @@ class DriveOqEngineServerDialog(QDialog):
 
     def show_output_list(self, output_list):
         if not output_list:
-            self.ui.output_list_tbl.setRowCount(0)
-            self.ui.output_list_tbl.setColumnCount(0)
+            self.output_list_tbl.setRowCount(0)
+            self.output_list_tbl.setColumnCount(0)
             return
         exclude = ['url', 'outtypes']
         selected_keys = [key for key in sorted(output_list[0].keys())
@@ -250,41 +254,47 @@ class DriveOqEngineServerDialog(QDialog):
                 max_actions = num_actions
         if has_hmaps:
             max_actions += 1
-        self.ui.output_list_tbl.setRowCount(len(output_list))
-        self.ui.output_list_tbl.setColumnCount(
+        self.output_list_tbl.setRowCount(len(output_list))
+        self.output_list_tbl.setColumnCount(
             len(selected_keys) + max_actions)
-        self.ui.output_list_tbl.setEditTriggers(
+        self.output_list_tbl.setEditTriggers(
             QAbstractItemView.NoEditTriggers)
         for row, output in enumerate(output_list):
             for col, key in enumerate(selected_keys):
                 item = QTableWidgetItem()
                 value = output_list[row][key]
                 item.setData(Qt.DisplayRole, value)
-                self.ui.output_list_tbl.setItem(row, col, item)
+                self.output_list_tbl.setItem(row, col, item)
             outtypes = output_list[row]['outtypes']
             for col, outtype in enumerate(outtypes, len(selected_keys)):
                 action = 'Download'
                 button = QPushButton()
                 self.connect_button_to_action(button, action, output, outtype)
-                self.ui.output_list_tbl.setCellWidget(row, col, button)
+                self.output_list_tbl.setCellWidget(row, col, button)
             if output['type'] in ['hmaps', 'hcurves']:
                 action = 'Load as layer'
                 button = QPushButton()
                 self.connect_button_to_action(button, action, output, outtype)
-                self.ui.output_list_tbl.setCellWidget(row, col + 1, button)
+                self.output_list_tbl.setCellWidget(row, col + 1, button)
         col_names = [key.capitalize() for key in selected_keys]
         empty_col_names = ['' for outtype in range(max_actions)]
         headers = col_names + empty_col_names
-        self.ui.output_list_tbl.setHorizontalHeaderLabels(headers)
-        self.ui.output_list_tbl.resizeColumnsToContents()
-        self.ui.output_list_tbl.resizeRowsToContents()
+        self.output_list_tbl.setHorizontalHeaderLabels(headers)
+        self.output_list_tbl.horizontalHeader().setStyleSheet(
+            "font-weight: bold;")
+        self.output_list_tbl.resizeColumnsToContents()
+        self.output_list_tbl.resizeRowsToContents()
 
     def connect_button_to_action(self, button, action, output, outtype):
         if action != 'Load as layer':
             button.setText("%s %s" % (action, outtype))
+            style = 'background-color: #3cb3c5; color: white;'
+            button.setStyleSheet(style)
         else:
             # otherwise it would look ugly, e.g. 'Load as layer hdf5'
             button.setText(action)
+            style = 'background-color: blue; color: white;'
+            button.setStyleSheet(style)
         QObject.connect(
             button, SIGNAL("clicked()"),
             lambda output=output, action=action, outtype=outtype: self.on_output_action_btn_clicked(output, action, outtype)
@@ -337,10 +347,6 @@ class DriveOqEngineServerDialog(QDialog):
             filepath = os.path.join(dest_folder, filename)
             open(filepath, "wb").write(resp.content)
         return filepath
-
-    @pyqtSlot()
-    def on_reload_calcs_btn_clicked(self):
-        self.refresh_calc_list()
 
     def stop_timer(self):
         self.timer.stop()
