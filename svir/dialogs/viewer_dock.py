@@ -25,6 +25,7 @@
 import json
 import numpy as np
 import os
+import random
 
 from PyQt4 import QtGui
 
@@ -105,7 +106,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 self.current_abscissa,
                 curve['ordinates'],
                 color=curve['color'],
-                linestyle='solid',
+                linestyle=curve['line_style'],
                 label='%.4f, %.4f' % (lon, lat),
                 gid=site,
                 picker=5  # 5 points tolerance
@@ -159,15 +160,18 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             # FIXME END use abscissa values from hdf5 file
 
             color_names = QColor.colorNames()
+            line_styles = ["-", "--", "-.", ":"]
             for feature in selected_features:
                 ordinates = json.loads(feature[self.current_imt])
                 if feature.id() not in self.current_selection:
-                    color_name = color_names[feature.id() % len(color_names)]
+                    color_name = random.choice(color_names)
+                    line_style = random.choice(line_styles)
                     color = QColor(color_name)
                     color_rgb = color.getRgbF()
                     self.current_selection[feature.id()] = {
                         'ordinates': ordinates,
                         'color': color_rgb,
+                        'line_style': line_style,
                     }
 
             self.draw()
