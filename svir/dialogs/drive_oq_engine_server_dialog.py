@@ -168,7 +168,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             output_list = self.get_output_list(calc_id)
             self.show_output_list(output_list)
         elif action == 'Run Risk':
-            self.run_risk(calc_id)
+            self.run_calc(calc_id)
         else:
             raise NotImplementedError(action)
 
@@ -203,7 +203,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 level=QgsMessageBar.CRITICAL)
         return
 
-    def run_risk(self, calc_id):
+    def run_calc(self, calc_id=None):
         text = self.tr('Select the files needed to run the calculation')
         file_names = QFileDialog.getOpenFileNames(self, text, QDir.homePath())
         if not file_names:
@@ -212,34 +212,15 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         with zipfile.ZipFile(zipped_file_name, 'w') as zipped_file:
             for file_name in file_names:
                 zipped_file.write(file_name)
-        run_risk_url = "%s/v1/calc/run" % self.hostname
-        with WaitCursorManager('Starting risk calculation...', self.iface):
-            data = {'hazard_job_id': calc_id}
+        run_calc_url = "%s/v1/calc/run" % self.hostname
+        with WaitCursorManager('Starting calculation...', self.iface):
+            if calc_id is not None:
+                data = {'hazard_job_id': calc_id}
+            else:
+                data = {}
             files = {'archive': open(zipped_file_name, 'rb')}
             resp = self.session.post(
-                run_risk_url, files=files, data=data, timeout=20)
-        if resp.ok:
-            self.refresh_calc_list()
-        else:
-            self.iface.messageBar().pushMessage(
-                tr("Error"),
-                resp.text,
-                level=QgsMessageBar.CRITICAL)
-
-    def run_hazard(self):
-        text = self.tr('Select the files needed to run the calculation')
-        file_names = QFileDialog.getOpenFileNames(self, text, QDir.homePath())
-        if not file_names:
-            return
-        _, zipped_file_name = tempfile.mkstemp()
-        with zipfile.ZipFile(zipped_file_name, 'w') as zipped_file:
-            for file_name in file_names:
-                zipped_file.write(file_name)
-        run_hazard_url = "%s/v1/calc/run" % self.hostname
-        with WaitCursorManager('Starting hazard calculation...', self.iface):
-            files = {'archive': open(zipped_file_name, 'rb')}
-            resp = self.session.post(
-                run_hazard_url, files=files, data={}, timeout=20)
+                run_calc_url, files=files, data=data, timeout=20)
         if resp.ok:
             self.refresh_calc_list()
         else:
@@ -374,5 +355,5 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.timer.stop()
 
     @pyqtSlot()
-    def on_run_hazard_btn_clicked(self):
-        self.run_hazard()
+    def on_run_calc_btn_clicked(self):
+        self.run_calc()
