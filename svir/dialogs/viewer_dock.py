@@ -94,6 +94,10 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
     def draw(self):
         self.plot.clear()
+        gids = self.current_selection.keys()
+        count_selected = len(gids)
+        if count_selected == 0:
+            return
         for site, curve in self.current_selection.iteritems():
             feature = next(self.active_layer.getFeatures(
                 QgsFeatureRequest().setFilterFid(site)))
@@ -114,7 +118,6 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.plot.set_yscale('log')
         self.plot.set_xlabel('Intensity Measure Level')
         self.plot.set_ylabel('Probability of Exceedance')
-        count_selected = len(self.current_selection.keys())
         imt = self.imt_cbx.currentText()
         if count_selected == 0:
             title = ''
@@ -129,11 +132,10 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         xlim_left, xlim_right = self.plot.get_xlim()
         self.plot.set_xlim(xlim_left, xlim_right * 1.1)
 
-        if len(self.current_selection) <= 20:
+        if count_selected <= 20:
             self.legend = self.plot.legend(
                 loc='lower left', fancybox=True, shadow=True,
                 fontsize='small')
-        gids = self.current_selection.keys()
         if hasattr(self.legend, 'get_lines'):
             for i, legend_line in enumerate(self.legend.get_lines()):
                 legend_line.set_picker(5)  # 5 points tolerance
