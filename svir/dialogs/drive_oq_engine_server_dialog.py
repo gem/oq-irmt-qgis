@@ -37,7 +37,7 @@ from qgis.gui import QgsMessageBar
 #                        QgsGraduatedSymbolRendererV2,
 #                        QgsRendererRangeV2,
 #                        )
-from PyQt4.QtCore import QDir, Qt, QObject, SIGNAL, QTimer
+from PyQt4.QtCore import QDir, Qt, QObject, SIGNAL, QTimer, pyqtSlot
 
 from PyQt4.QtGui import (QDialogButtonBox,
                          QDialog,
@@ -226,6 +226,28 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 resp.text,
                 level=QgsMessageBar.CRITICAL)
 
+    def run_hazard(self):
+        text = self.tr('Select the files needed to run the calculation')
+        file_names = QFileDialog.getOpenFileNames(self, text, QDir.homePath())
+        if not file_names:
+            return
+        _, zipped_file_name = tempfile.mkstemp()
+        with zipfile.ZipFile(zipped_file_name, 'w') as zipped_file:
+            for file_name in file_names:
+                zipped_file.write(file_name)
+        run_hazard_url = "%s/v1/calc/run" % self.hostname
+        with WaitCursorManager('Starting hazard calculation...', self.iface):
+            files = {'archive': open(zipped_file_name, 'rb')}
+            resp = self.session.post(
+                run_hazard_url, files=files, data={}, timeout=20)
+        if resp.ok:
+            self.refresh_calc_list()
+        else:
+            self.iface.messageBar().pushMessage(
+                tr("Error"),
+                resp.text,
+                level=QgsMessageBar.CRITICAL)
+
     def get_output_list(self, calc_id):
         output_list_url = "%s/v1/calc/%s/results" % (self.hostname, calc_id)
         with WaitCursorManager('Getting list of outputs...', self.iface):
@@ -350,3 +372,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
     def stop_timer(self):
         self.timer.stop()
+
+    @pyqtSlot()
+    def on_run_hazard_btn_clicked(self):
+        self.run_hazard()
