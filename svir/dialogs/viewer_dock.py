@@ -159,7 +159,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             self.current_abscissa = np.linspace(0.0, 1.0, num=x_count)
             # FIXME END use abscissa values from hdf5 file
 
-            color_names = QColor.colorNames()
+            color_names = [name for name in QColor.colorNames()
+                           if name != 'white']
             line_styles = ["-", "--", "-.", ":"]
             for feature in selected_features:
                 ordinates = json.loads(feature[self.current_imt])
