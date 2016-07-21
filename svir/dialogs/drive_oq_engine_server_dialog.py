@@ -249,13 +249,16 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                          if key not in exclude]
         max_actions = 0
         has_hmaps = False
+        has_hcurves = False
         for row in output_list:
             if row['type'] == 'hmaps':
                 has_hmaps = True
+            if row['type'] == 'hcurves':
+                has_hcurves = True
             num_actions = len(row['outtypes'])
             if num_actions > max_actions:
                 max_actions = num_actions
-        if has_hmaps:
+        if has_hmaps or has_hcurves:
             max_actions += 1
         self.output_list_tbl.setRowCount(len(output_list))
         self.output_list_tbl.setColumnCount(
