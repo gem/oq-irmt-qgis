@@ -15,6 +15,13 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
+    <widget class="QPushButton" name="run_hazard_btn">
+     <property name="text">
+      <string>Run Hazard Calculation</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QLabel" name="list_of_calcs_lbl">
      <property name="font">
       <font>
