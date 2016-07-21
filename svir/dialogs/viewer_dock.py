@@ -105,7 +105,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 curve['ordinates'],
                 color=curve['color'],
                 linestyle='solid',
-                label='%s, %s' % (lon, lat),
+                label='%.4f, %.4f' % (lon, lat),
                 gid=site,
                 picker=5  # 5 points tolerance
             )
@@ -118,9 +118,9 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         if count_selected == 0:
             title = ''
         elif count_selected == 1:
-            title = 'Hazard Curve for IMT = %s' % imt
+            title = 'Hazard Curve for %s' % imt
         else:
-            title = 'Hazard Curves for IMT = %s' % imt
+            title = 'Hazard Curves for %s' % imt
         self.plot.set_title(title)
         self.plot.grid()
         ylim_bottom, ylim_top = self.plot.get_ylim()
@@ -128,9 +128,10 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         xlim_left, xlim_right = self.plot.get_xlim()
         self.plot.set_xlim(xlim_left, xlim_right * 1.1)
 
-        if len(self.current_selection) <= 10:
+        if len(self.current_selection) <= 20:
             self.legend = self.plot.legend(
-                loc='lower left', fancybox=True, shadow=True)
+                loc='lower left', fancybox=True, shadow=True,
+                fontsize='small')
         gids = self.current_selection.keys()
         if hasattr(self.legend, 'get_lines'):
             for i, legend_line in enumerate(self.legend.get_lines()):
