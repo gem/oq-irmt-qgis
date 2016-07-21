@@ -15,9 +15,9 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QPushButton" name="run_hazard_btn">
+    <widget class="QPushButton" name="run_calc_btn">
      <property name="text">
-      <string>Run Hazard Calculation</string>
+      <string>Run Calculation</string>
      </property>
     </widget>
    </item>
