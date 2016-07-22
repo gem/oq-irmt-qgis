@@ -111,7 +111,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 color=curve['color'],
                 linestyle=curve['line_style'],
                 label='%.4f, %.4f' % (lon, lat),
-                gid=site,
+                gid=str(site),  # matplotlib needs a string when exporting svg
                 picker=5  # 5 points tolerance
             )
         self.plot.set_xscale('log')
@@ -139,7 +139,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         if hasattr(self.legend, 'get_lines'):
             for i, legend_line in enumerate(self.legend.get_lines()):
                 legend_line.set_picker(5)  # 5 points tolerance
-                legend_line.set_gid(gids[i])
+                legend_line.set_gid(str(gids[i]))  # matplotlib needs a string
+                                                   # when exporting to svg
         self.plot_canvas.draw()
 
     def redraw(self, selected, deselected, _):
@@ -234,7 +235,9 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
     def on_container_hover(self, event, container):
         for line in container.get_lines():
             if line.contains(event)[0]:
-                fid = line.get_gid()
+                fid = long(line.get_gid())  # matplotlib needs a string when
+                                            # exporting to svg, so here we
+                                            # must cast back to long
                 feature = next(self.active_layer.getFeatures(
                     QgsFeatureRequest().setFilterFid(fid)))
 
