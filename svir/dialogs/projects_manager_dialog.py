@@ -31,12 +31,13 @@ from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox,
                          QInputDialog)
 
-from svir.ui.ui_projects_manager_dialog import Ui_ProjectsManagerDialog
-from svir.utilities.utils import tr, log_msg
+from svir.utilities.utils import tr, log_msg, get_ui_class
 from svir.utilities.shared import PROJECT_TEMPLATE
 
+FORM_CLASS = get_ui_class('ui_projects_manager_dialog.ui')
 
-class ProjectsManagerDialog(QDialog):
+
+class ProjectsManagerDialog(QDialog, FORM_CLASS):
     """
     Modal dialog allowing to select (and possibly edit) one of the project
     definitions available for the active layer, or for creating a new project
@@ -46,10 +47,9 @@ class ProjectsManagerDialog(QDialog):
         self.iface = iface
         QDialog.__init__(self)
         # Set up the user interface from Designer.
-        self.ui = Ui_ProjectsManagerDialog()
-        self.ui.setupUi(self)
-        self.cancel_button = self.ui.buttonBox.button(QDialogButtonBox.Cancel)
-        self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
+        self.setupUi(self)
+        self.cancel_button = self.buttonBox.button(QDialogButtonBox.Cancel)
+        self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         self.ok_button.setEnabled(False)
         self.suppl_info = {}
         self.selected_proj_def = None
@@ -78,42 +78,42 @@ class ProjectsManagerDialog(QDialog):
             return None
 
     def populate_proj_def_cbx(self):
-        self.ui.proj_def_cbx.blockSignals(True)
-        self.ui.proj_def_cbx.clear()
+        self.proj_def_cbx.blockSignals(True)
+        self.proj_def_cbx.clear()
         for proj_def in self.suppl_info['project_definitions']:
             if 'title' in proj_def:
-                self.ui.proj_def_cbx.addItem(proj_def['title'])
+                self.proj_def_cbx.addItem(proj_def['title'])
             else:
-                self.ui.proj_def_cbx.addItem('Untitled project definition')
+                self.proj_def_cbx.addItem('Untitled project definition')
         if ('selected_project_definition_idx' in self.suppl_info
                 and self.suppl_info['selected_project_definition_idx']
                 is not None):
-            self.ui.proj_def_cbx.setCurrentIndex(
+            self.proj_def_cbx.setCurrentIndex(
                 self.suppl_info['selected_project_definition_idx'])
-        self.ui.proj_def_cbx.blockSignals(False)
+        self.proj_def_cbx.blockSignals(False)
         self.update_form()
 
     def update_proj_def_title(self):
         if self.selected_proj_def is not None:
             try:
-                self.ui.proj_def_title.setText(self.selected_proj_def['title'])
+                self.proj_def_title.setText(self.selected_proj_def['title'])
             except KeyError:
-                self.ui.proj_def_title.setText('')
+                self.proj_def_title.setText('')
 
     def update_proj_def_descr(self):
         if self.selected_proj_def is not None:
             try:
-                self.ui.proj_def_descr.setPlainText(
+                self.proj_def_descr.setPlainText(
                     self.selected_proj_def['description'])
             except KeyError:
-                self.ui.proj_def_descr.setPlainText('')
+                self.proj_def_descr.setPlainText('')
 
     def display_proj_def_raw(self):
         proj_def_str = json.dumps(self.selected_proj_def,
                                   sort_keys=False,
                                   indent=2,
                                   separators=(',', ': '))
-        self.ui.proj_def_raw.setPlainText(proj_def_str)
+        self.proj_def_raw.setPlainText(proj_def_str)
 
     def add_proj_def(self, title, proj_def=None):
         if proj_def is None:
@@ -125,25 +125,25 @@ class ProjectsManagerDialog(QDialog):
         self.populate_proj_def_cbx()
 
     def update_title_in_combo(self):
-        current_index = self.ui.proj_def_cbx.currentIndex()
-        self.ui.proj_def_cbx.setItemText(
-            current_index, self.ui.proj_def_title.text())
+        current_index = self.proj_def_cbx.currentIndex()
+        self.proj_def_cbx.setItemText(
+            current_index, self.proj_def_title.text())
 
     @pyqtSlot(str)
     def on_proj_def_title_textEdited(self):
-        self.selected_proj_def['title'] = self.ui.proj_def_title.text()
+        self.selected_proj_def['title'] = self.proj_def_title.text()
         self.update_title_in_combo()
         self.display_proj_def_raw()
 
     @pyqtSlot()
     def on_proj_def_descr_textChanged(self):
         self.selected_proj_def['description'] = \
-            self.ui.proj_def_descr.toPlainText()
+            self.proj_def_descr.toPlainText()
         self.display_proj_def_raw()
 
     def update_form(self):
         self.suppl_info['selected_project_definition_idx'] = \
-            self.ui.proj_def_cbx.currentIndex()
+            self.proj_def_cbx.currentIndex()
         self.selected_proj_def = self.suppl_info['project_definitions'][
             self.suppl_info['selected_project_definition_idx']]
         self.update_proj_def_title()
@@ -176,7 +176,7 @@ class ProjectsManagerDialog(QDialog):
     @pyqtSlot()
     def on_proj_def_raw_textChanged(self):
         try:
-            project_definition_str = self.ui.proj_def_raw.toPlainText()
+            project_definition_str = self.proj_def_raw.toPlainText()
             project_definition = json.loads(project_definition_str)
             self.suppl_info['project_definitions'][self.suppl_info[
                 'selected_project_definition_idx']] = project_definition

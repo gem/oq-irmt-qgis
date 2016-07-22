@@ -49,10 +49,9 @@ from PyQt4.QtGui import (QDialogButtonBox,
                          )
 # from openquake.baselib import hdf5
 from svir.third_party.requests import Session
-# from svir.ui.ui_drive_engine_server import Ui_DriveEngineServerDialog
 # from svir.utilities.shared import DEBUG
+from svir.utilities.settings import get_engine_credentials
 from svir.utilities.utils import (WaitCursorManager,
-                                  get_engine_credentials,
                                   engine_login,
                                   log_msg,
                                   tr,
@@ -74,13 +73,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.iface = iface
         QDialog.__init__(self)
         # Set up the user interface from Designer.
-        # self.ui = Ui_DriveEngineServerDialog()
-        # self.ui.setupUi(self)
         self.setupUi(self)
         # Disable ok_button until all comboboxes are filled
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         # self.ok_button.setDisabled(True)
-        # self.ui.open_hdfview_btn.setDisabled(True)
+        # self.open_hdfview_btn.setDisabled(True)
 
         # keep track of the log lines acquired for each calculation
         self.calc_log_line = {}

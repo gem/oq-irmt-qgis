@@ -26,11 +26,16 @@ from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox)
 
-from svir.ui.ui_select_sv_variables import Ui_SelectSvVariablesDialog
-from svir.utilities.utils import WaitCursorManager, SvNetworkError
+from svir.utilities.utils import (WaitCursorManager,
+                                  SvNetworkError,
+                                  get_ui_class,
+                                  )
+from svir.ui.list_multiselect_widget import ListMultiSelectWidget
+
+FORM_CLASS = get_ui_class('ui_select_sv_variables.ui')
 
 
-class SelectSvVariablesDialog(QDialog):
+class SelectSvVariablesDialog(QDialog, FORM_CLASS):
     """
     Modal dialog giving to the user the possibility to select
     social vulnerability variables to import from the oq-platform
@@ -38,9 +43,14 @@ class SelectSvVariablesDialog(QDialog):
     def __init__(self, downloader):
         QDialog.__init__(self)
         # Set up the user interface from Designer.
-        self.ui = Ui_SelectSvVariablesDialog()
-        self.ui.setupUi(self)
-        self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
+        self.setupUi(self)
+        self.indicator_multiselect = ListMultiSelectWidget(
+            title='Select Indicators')
+        self.vertical_layout.insertWidget(4, self.indicator_multiselect)
+        self.country_multiselect = ListMultiSelectWidget(
+            title='Select Countries')
+        self.vertical_layout.insertWidget(7, self.country_multiselect)
+        self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         self.set_ok_button()
         # login to platform, to be able to retrieve sv indices
         self.sv_downloader = downloader
@@ -48,18 +58,18 @@ class SelectSvVariablesDialog(QDialog):
         with WaitCursorManager():
             self.fill_themes()
             self.fill_countries()
-        self.ui.list_multiselect.unselected_widget.itemClicked.connect(
+        self.indicator_multiselect.unselected_widget.itemClicked.connect(
             self.update_indicator_info)
-        self.ui.list_multiselect.selected_widget.itemClicked.connect(
+        self.indicator_multiselect.selected_widget.itemClicked.connect(
             self.update_indicator_info)
-        self.ui.list_multiselect.selection_changed.connect(
+        self.indicator_multiselect.selection_changed.connect(
             self.set_ok_button)
-        self.ui.country_select.selection_changed.connect(
+        self.country_multiselect.selection_changed.connect(
             self.set_ok_button)
 
     @pyqtSlot(str)
     def on_theme_cbx_currentIndexChanged(self):
-        theme = self.ui.theme_cbx.currentText()
+        theme = self.theme_cbx.currentText()
         with WaitCursorManager():
             self.fill_subthemes(theme)
 
@@ -70,44 +80,44 @@ class SelectSvVariablesDialog(QDialog):
 
     def set_ok_button(self):
         self.ok_button.setEnabled(
-            self.ui.list_multiselect.selected_widget.count() > 0
-            and self.ui.country_select.selected_widget.count() > 0)
+            self.indicator_multiselect.selected_widget.count() > 0
+            and self.country_multiselect.selected_widget.count() > 0)
 
     def fill_themes(self):
-        self.ui.theme_cbx.clear()
+        self.theme_cbx.clear()
         # load list of themes from the platform
-        self.ui.theme_cbx.addItems([None])
+        self.theme_cbx.addItems([None])
         try:
             themes = self.sv_downloader.get_themes()
-            self.ui.theme_cbx.addItems(themes)
+            self.theme_cbx.addItems(themes)
         except SvNetworkError as e:
             raise SvNetworkError(
                 "Unable to download social vulnerability themes: %s" % e)
         # populate the subsequent combo boxes accordingly with the currently
         # selected item
-        current_theme = self.ui.theme_cbx.currentText()
+        current_theme = self.theme_cbx.currentText()
         self.fill_subthemes(current_theme)
 
     def fill_subthemes(self, theme):
-        self.ui.subtheme_cbx.clear()
+        self.subtheme_cbx.clear()
         # load list of subthemes from the platform
-        self.ui.subtheme_cbx.addItems([None])
+        self.subtheme_cbx.addItems([None])
         if theme:
             try:
                 subthemes = self.sv_downloader.get_subthemes_by_theme(theme)
-                self.ui.subtheme_cbx.addItems(subthemes)
+                self.subtheme_cbx.addItems(subthemes)
             except SvNetworkError as e:
                 raise SvNetworkError(
                     "Unable to download social vulnerability"
                     " subthemes: %s" % e)
 
     def fill_names(self):
-        self.ui.list_multiselect.set_unselected_items([])
+        self.indicator_multiselect.set_unselected_items([])
         # load list of social vulnerability variable names from the platform
-        name_filter = self.ui.name_filter_le.text()
-        keywords = self.ui.keywords_le.text()
-        theme = self.ui.theme_cbx.currentText()
-        subtheme = self.ui.subtheme_cbx.currentText()
+        name_filter = self.name_filter_le.text()
+        keywords = self.keywords_le.text()
+        theme = self.theme_cbx.currentText()
+        subtheme = self.subtheme_cbx.currentText()
         try:
             filter_result_dict = self.sv_downloader.get_indicators_info(
                 name_filter, keywords, theme, subtheme)
@@ -115,7 +125,7 @@ class SelectSvVariablesDialog(QDialog):
             names = sorted(
                 [code + ': ' + filter_result_dict[code]['name']
                     for code in filter_result_dict])
-            self.ui.list_multiselect.add_unselected_items(names)
+            self.indicator_multiselect.add_unselected_items(names)
         except SvNetworkError as e:
             raise SvNetworkError(
                 "Unable to download social vulnerability names: %s" % e)
@@ -129,7 +139,7 @@ class SelectSvVariablesDialog(QDialog):
         hint_text += '\n\n' + 'Source:\n' + indicator_info_dict['source']
         hint_text += '\n\n' + 'Aggregation method:\n' + indicator_info_dict[
             'aggregation_method']
-        self.ui.indicator_details.setText(hint_text)
+        self.indicator_details.setText(hint_text)
 
     def fill_countries(self):
         # load from platform a list of countries for which socioeconomic data
@@ -139,7 +149,7 @@ class SelectSvVariablesDialog(QDialog):
             names = sorted(
                 [countries_dict[iso] + ' (' + iso + ')'
                     for iso in countries_dict])
-            self.ui.country_select.set_unselected_items(names)
+            self.country_multiselect.set_unselected_items(names)
         except SvNetworkError as e:
             raise SvNetworkError(
                 "Unable to download the list of countries: %s" % e)

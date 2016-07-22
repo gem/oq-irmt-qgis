@@ -24,11 +24,13 @@
 
 from PyQt4 import QtGui, QtCore
 
-from svir.ui.ui_settings import Ui_SettingsDialog
+from svir.utilities.utils import get_ui_class
 from svir.utilities.shared import PLATFORM_REGISTRATION_URL
 
+FORM_CLASS = get_ui_class('ui_settings.ui')
 
-class SettingsDialog(QtGui.QDialog, Ui_SettingsDialog):
+
+class SettingsDialog(QtGui.QDialog, FORM_CLASS):
     """
     Dialog used to specify the connection settings used to interact with the
     OpenQuake Platform or the OpenQuake Engine
@@ -39,18 +41,17 @@ class SettingsDialog(QtGui.QDialog, Ui_SettingsDialog):
         self.parent = parent
         self.server = server
         # Set up the user interface from Designer.
-        self.ui = Ui_SettingsDialog()
-        self.ui.setupUi(self)
+        self.setupUi(self)
         if self.server == 'platform':
-            self.ui.topGroupBox.setTitle(
+            self.topGroupBox.setTitle(
                 'OpenQuake Platform connection settings')
             link_text = ('<a href="%s">Register to the OpenQuake Platform</a>'
                          % PLATFORM_REGISTRATION_URL)
-            self.ui.registration_link_lbl.setText(link_text)
+            self.registration_link_lbl.setText(link_text)
         elif self.server == 'engine':
-            self.ui.topGroupBox.setTitle(
+            self.topGroupBox.setTitle(
                 'OpenQuake Engine connection settings')
-            self.ui.registration_link_lbl.setText('FIXME Link')
+            self.registration_link_lbl.setText('FIXME Link')
         else:
             raise ValueError(self.server)
         self.restoreState()
@@ -83,11 +84,11 @@ class SettingsDialog(QtGui.QDialog, Ui_SettingsDialog):
         if not hostname:
             hostname = ''
 
-        self.ui.usernameEdit.setText(username)
-        self.ui.passwordEdit.setText(password)
-        self.ui.hostnameEdit.setText(hostname)
+        self.usernameEdit.setText(username)
+        self.passwordEdit.setText(password)
+        self.hostnameEdit.setText(hostname)
 
-        self.ui.developermodeCheck.setChecked(
+        self.developermodeCheck.setChecked(
             mySettings.value('irmt/developer_mode', False, type=bool))
 
     def saveState(self):
@@ -96,23 +97,23 @@ class SettingsDialog(QtGui.QDialog, Ui_SettingsDialog):
         """
         mySettings = QtCore.QSettings()
         # if the (stripped) hostname ends with '/', remove it
-        hostname = self.ui.hostnameEdit.text().strip().rstrip('/')
+        hostname = self.hostnameEdit.text().strip().rstrip('/')
         if self.server == 'platform':
             mySettings.setValue('irmt/platform_hostname', hostname)
             mySettings.setValue('irmt/platform_username',
-                                self.ui.usernameEdit.text())
+                                self.usernameEdit.text())
             mySettings.setValue('irmt/platform_password',
-                                self.ui.passwordEdit.text())
+                                self.passwordEdit.text())
             mySettings.setValue('irmt/developer_mode',
-                                self.ui.developermodeCheck.isChecked())
+                                self.developermodeCheck.isChecked())
         elif self.server == 'engine':
             mySettings.setValue('irmt/engine_hostname', hostname)
             mySettings.setValue('irmt/engine_username',
-                                self.ui.usernameEdit.text())
+                                self.usernameEdit.text())
             mySettings.setValue('irmt/engine_password',
-                                self.ui.passwordEdit.text())
+                                self.passwordEdit.text())
             mySettings.setValue('irmt/developer_mode',
-                                self.ui.developermodeCheck.isChecked())
+                                self.developermodeCheck.isChecked())
         else:
             raise ValueError(self.server)
 
