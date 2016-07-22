@@ -171,10 +171,10 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                     color_name = random.choice(color_names)
                     line_style = random.choice(line_styles)
                     color = QColor(color_name)
-                    color_rgb = color.darker(150).getRgbF()
+                    color_hex = color.darker(120).name()
                     self.current_selection[feature.id()] = {
                         'ordinates': ordinates,
-                        'color': color_rgb,
+                        'color': color_hex,
                         'line_style': line_style,
                     }
 
