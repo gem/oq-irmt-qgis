@@ -34,9 +34,9 @@ from svir.third_party.requests.exceptions import (ConnectionError,
                                                   MissingSchema,
                                                   ReadTimeout,
                                                   )
+from svir.utilities.settings import get_platform_credentials
 from svir.utilities.utils import (SvNetworkError,
                                   platform_login,
-                                  get_platform_credentials,
                                   WaitCursorManager,
                                   tr,
                                   create_progress_message_bar,

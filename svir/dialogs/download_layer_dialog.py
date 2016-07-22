@@ -38,7 +38,6 @@ from svir.thread_worker.abstract_worker import start_worker
 from svir.thread_worker.download_platform_project_worker import (
     DownloadPlatformProjectWorker)
 
-from svir.ui.ui_download_layer import Ui_DownloadLayerDialog
 from svir.utilities.utils import (WaitCursorManager,
                                   SvNetworkError,
                                   ask_for_destination_full_path_name,
@@ -46,12 +45,15 @@ from svir.utilities.utils import (WaitCursorManager,
                                   confirm_overwrite,
                                   tr,
                                   write_layer_suppl_info_to_qgs,
+                                  get_ui_class,
                                   )
 
 NS_NET_OPENGIS_WFS = '{http://www.opengis.net/wfs}'
 
+FORM_CLASS = get_ui_class('ui_download_layer.ui')
 
-class DownloadLayerDialog(QDialog):
+
+class DownloadLayerDialog(QDialog, FORM_CLASS):
     """
     Modal dialog giving to the user the possibility to select and download one
     of the projects available on the OQ-Platform
@@ -59,16 +61,15 @@ class DownloadLayerDialog(QDialog):
     def __init__(self, iface, downloader):
         QDialog.__init__(self)
         # Set up the user interface from Designer.
-        self.ui = Ui_DownloadLayerDialog()
-        self.ui.setupUi(self)
+        self.setupUi(self)
 
         self.iface = iface
         # login to platform, to be able to retrieve sv indices
         self.sv_downloader = downloader
 
-        self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
+        self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
 
-        self.ui.layer_lbl.setText('Project definition')
+        self.layer_lbl.setText('Project definition')
 
         self.layer_id = None  # needed after ok is pressed
         self.downloaded_layer_id = None  # the id of the layer created
@@ -80,10 +81,10 @@ class DownloadLayerDialog(QDialog):
 
     @pyqtSlot()
     def on_layers_lst_itemSelectionChanged(self):
-        layer_id = self.ui.layers_lst.currentItem().data(Qt.Qt.ToolTipRole)
+        layer_id = self.layers_lst.currentItem().data(Qt.Qt.ToolTipRole)
         if layer_id is not None:
             self.layer_id = layer_id
-            self.ui.layer_lbl.setText('Project details for "%s"' % layer_id)
+            self.layer_lbl.setText('Project details for "%s"' % layer_id)
             layer_infos = self.extra_infos[layer_id]
             bb = layer_infos['Bounding Box']
             layer_infos_str = "Title:\n\t" + layer_infos['Title']
@@ -94,7 +95,7 @@ class DownloadLayerDialog(QDialog):
             layer_infos_str += "\n\tmaxx = " + bb['maxx']
             layer_infos_str += "\n\tmaxy = " + bb['maxy']
             layer_infos_str += "\nKeywords:\n\t" + layer_infos['Keywords']
-            self.ui.layer_detail.setText(layer_infos_str)
+            self.layer_detail.setText(layer_infos_str)
         self.set_ok_button()
 
     @pyqtSlot(QListWidgetItem)
@@ -103,7 +104,7 @@ class DownloadLayerDialog(QDialog):
 
     def set_ok_button(self):
         self.ok_button.setDisabled(
-            len(self.ui.layers_lst.selectedItems()) == 0)
+            len(self.layers_lst.selectedItems()) == 0)
 
     def get_capabilities(self):
         wfs = '/geoserver/wfs?'
@@ -148,7 +149,7 @@ class DownloadLayerDialog(QDialog):
                     item = QListWidgetItem()
                     item.setData(Qt.Qt.DisplayRole, title)
                     item.setData(Qt.Qt.ToolTipRole, layer_id)
-                    self.ui.layers_lst.addItem(item)
+                    self.layers_lst.addItem(item)
             except AttributeError:
                 continue
 

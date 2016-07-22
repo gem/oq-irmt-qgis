@@ -39,18 +39,20 @@ from svir.thread_worker.upload_worker import UploadWorker
 from svir.third_party.requests.sessions import Session
 from svir.third_party.requests.utils import dict_from_cookiejar
 from svir.utilities.sldadapter import getGsCompatibleSld
-from svir.ui.ui_upload_metadata import Ui_UploadMetadataDialog
-from svir.utilities.utils import (get_platform_credentials,
-                                  platform_login,
+from svir.utilities.settings import get_platform_credentials
+from svir.utilities.utils import (platform_login,
                                   create_progress_message_bar,
                                   clear_progress_message_bar,
                                   SvNetworkError,
                                   log_msg,
+                                  get_ui_class,
                                   )
 from svir.utilities.shared import DEBUG
 
+FORM_CLASS = get_ui_class('ui_upload_metadata.ui')
 
-class UploadDialog(QDialog):
+
+class UploadDialog(QDialog, FORM_CLASS):
     """
     Modal dialog allowing to upload the data to the OQ-Platform
     """
@@ -62,20 +64,19 @@ class UploadDialog(QDialog):
         QDialog.__init__(self)
 
         # Set up the user interface from Designer.
-        self.ui = Ui_UploadMetadataDialog()
-        self.ui.setupUi(self)
+        self.setupUi(self)
         self.message_bar = QgsMessageBar()
         self.message_bar.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
         self.layout().insertWidget(0, self.message_bar)
 
         self.message_bar_item = None
 
-        self.button_box = self.ui.buttonBox
+        self.button_box = self.buttonBox
 
         self.hostname, self.username, self.password = get_platform_credentials(
             self.iface)
 
-        self.web_view = self.ui.web_view
+        self.web_view = self.web_view
         self.page = self.web_view.page()
         self.frame = self.page.mainFrame()
 

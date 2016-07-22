@@ -48,15 +48,19 @@ from PyQt4.QtGui import (QDialogButtonBox,
 
 from openquake.baselib import hdf5
 
-from svir.ui.ui_load_hdf5_as_layer import Ui_LoadHdf5AsLayerDialog
 from svir.utilities.shared import DEBUG
-from svir.utilities.utils import LayerEditingManager, WaitCursorManager
+from svir.utilities.utils import (LayerEditingManager,
+                                  WaitCursorManager,
+                                  get_ui_class,
+                                  )
 from svir.calculations.calculate_utils import (add_numeric_attribute,
                                                add_textual_attribute,
                                                )
 
+FORM_CLASS = get_ui_class('ui_load_hdf5_as_layer.ui')
 
-class LoadHdf5AsLayerDialog(QDialog):
+
+class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
     """
     FIXME
     """
@@ -66,33 +70,32 @@ class LoadHdf5AsLayerDialog(QDialog):
         self.output_type = output_type
         QDialog.__init__(self)
         # Set up the user interface from Designer.
-        self.ui = Ui_LoadHdf5AsLayerDialog()
-        self.ui.setupUi(self)
+        self.setupUi(self)
         # Disable ok_button until all comboboxes are filled
-        self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
+        self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         self.ok_button.setDisabled(True)
-        self.ui.open_hdfview_btn.setDisabled(True)
+        self.open_hdfview_btn.setDisabled(True)
         if output_type == 'hcurves':
-            self.ui.imt_lbl.hide()
-            self.ui.imt_cbx.hide()
-            self.ui.poe_lbl.hide()
-            self.ui.poe_cbx.hide()
+            self.imt_lbl.hide()
+            self.imt_cbx.hide()
+            self.poe_lbl.hide()
+            self.poe_cbx.hide()
             self.adjustSize()
         if self.hdf5_path:
-            self.ui.hdf5_path_le.setText(self.hdf5_path)
-            self.ui.rlz_cbx.setEnabled(True)
-            self.ui.imt_cbx.setEnabled(True)
-            self.ui.poe_cbx.setEnabled(True)
+            self.hdf5_path_le.setText(self.hdf5_path)
+            self.rlz_cbx.setEnabled(True)
+            self.imt_cbx.setEnabled(True)
+            self.poe_cbx.setEnabled(True)
             self.populate_rlz_cbx()
 
     @pyqtSlot(str)
     def on_hdf5_path_le_textChanged(self):
-        self.ui.open_hdfview_btn.setDisabled(
-            self.ui.hdf5_path_le.text() == '')
+        self.open_hdfview_btn.setDisabled(
+            self.hdf5_path_le.text() == '')
 
     @pyqtSlot()
     def on_open_hdfview_btn_clicked(self):
-        file_path = self.ui.hdf5_path_le.text()
+        file_path = self.hdf5_path_le.text()
         if file_path:
             to_run = "hdfview " + file_path
             # FIXME make system independent
@@ -104,7 +107,7 @@ class LoadHdf5AsLayerDialog(QDialog):
 
     @pyqtSlot(str)
     def on_rlz_cbx_currentIndexChanged(self):
-        self.dataset = self.hdata.get(self.ui.rlz_cbx.currentText())
+        self.dataset = self.hdata.get(self.rlz_cbx.currentText())
         self.imts = {}
         for name in self.dataset.dtype.names[2:]:
             if self.output_type == 'hmaps':
@@ -116,19 +119,19 @@ class LoadHdf5AsLayerDialog(QDialog):
             elif self.output_type == 'hcurves':
                 imt = name
                 self.imts[imt] = []
-        self.ui.imt_cbx.clear()
-        self.ui.imt_cbx.setEnabled(True)
-        self.ui.imt_cbx.addItems(self.imts.keys())
+        self.imt_cbx.clear()
+        self.imt_cbx.setEnabled(True)
+        self.imt_cbx.addItems(self.imts.keys())
 
     @pyqtSlot(str)
     def on_imt_cbx_currentIndexChanged(self):
         if self.output_type == 'hcurves':
             self.set_ok_button()
             return
-        imt = self.ui.imt_cbx.currentText()
-        self.ui.poe_cbx.clear()
-        self.ui.poe_cbx.setEnabled(True)
-        self.ui.poe_cbx.addItems(self.imts[imt])
+        imt = self.imt_cbx.currentText()
+        self.poe_cbx.clear()
+        self.poe_cbx.setEnabled(True)
+        self.poe_cbx.addItems(self.imts[imt])
 
     @pyqtSlot(str)
     def on_poe_cbx_currentIndexChanged(self):
@@ -144,7 +147,7 @@ class LoadHdf5AsLayerDialog(QDialog):
             self, text, QDir.homePath(), filters)
         if hdf5_path:
             self.hdf5_path = hdf5_path
-            self.ui.hdf5_path_le.setText(self.hdf5_path)
+            self.hdf5_path_le.setText(self.hdf5_path)
             self.populate_rlz_cbx()
 
     def populate_rlz_cbx(self):
@@ -153,21 +156,21 @@ class LoadHdf5AsLayerDialog(QDialog):
         self.hfile = hdf5.File(self.hdf5_path, 'r')
         self.hdata = self.hfile.get(self.output_type)
         self.rlzs = self.hdata.keys()
-        self.ui.rlz_cbx.clear()
-        self.ui.rlz_cbx.setEnabled(True)
-        self.ui.rlz_cbx.addItems(self.rlzs)
+        self.rlz_cbx.clear()
+        self.rlz_cbx.setEnabled(True)
+        self.rlz_cbx.addItems(self.rlzs)
 
     def set_ok_button(self):
         if self.output_type == 'hmaps':
-            self.ok_button.setEnabled(self.ui.poe_cbx.currentIndex != -1)
+            self.ok_button.setEnabled(self.poe_cbx.currentIndex != -1)
         elif self.output_type == 'hcurves':
-            self.ok_button.setEnabled(self.ui.imt_cbx.currentIndex != -1)
+            self.ok_button.setEnabled(self.imt_cbx.currentIndex != -1)
 
     def build_layer(self):
-        rlz = self.ui.rlz_cbx.currentText()
-        imt = self.ui.imt_cbx.currentText()
+        rlz = self.rlz_cbx.currentText()
+        imt = self.imt_cbx.currentText()
         if self.output_type == 'hmaps':
-            poe = self.ui.poe_cbx.currentText()
+            poe = self.poe_cbx.currentText()
             self.default_field_name = '%s-%s' % (imt, poe)
             layer_name = "hazard_map_%s" % rlz
         elif self.output_type == 'hcurves':

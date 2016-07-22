@@ -35,11 +35,14 @@ from qgis.core import (QgsMapLayerRegistry,
 from qgis.gui import QgsMessageBar
 
 from PyQt4 import uic
-from PyQt4.QtCore import QSettings, Qt
-from PyQt4.QtGui import QApplication, QProgressBar, QToolButton, QFileDialog, \
-    QMessageBox
+from PyQt4.QtCore import Qt
+from PyQt4.QtGui import (QApplication,
+                         QProgressBar,
+                         QToolButton,
+                         QFileDialog,
+                         QMessageBox,
+                         )
 
-from svir.dialogs.settings_dialog import SettingsDialog
 from svir.third_party.poster.encode import multipart_encode
 from svir.utilities.shared import DEBUG
 
@@ -208,44 +211,6 @@ def get_field_names(sub_tree, field_names=None):
             child_field_names = get_field_names(child, field_names)
             field_names = field_names.union(child_field_names)
     return field_names
-
-
-def get_platform_credentials(iface):
-    """
-    Get from the QSettings the credentials to access the OpenQuake Platform
-
-    :returns: tuple (hostname, username, password)
-
-    """
-    qs = QSettings()
-    hostname = qs.value('irmt/platform_hostname', '')
-    username = qs.value('irmt/platform_username', '')
-    password = qs.value('irmt/platform_password', '')
-    if not (hostname and username and password):
-        SettingsDialog(iface).exec_()
-        hostname = qs.value('irmt/platform_hostname', '')
-        username = qs.value('irmt/platform_username', '')
-        password = qs.value('irmt/platform_password', '')
-    return hostname, username, password
-
-
-def get_engine_credentials(iface):
-    """
-    Get from the QSettings the credentials to access the OpenQuake Engine
-
-    :returns: tuple (hostname, username, password)
-
-    """
-    qs = QSettings()
-    hostname = qs.value('irmt/engine_hostname', '')
-    username = qs.value('irmt/engine_username', '')
-    password = qs.value('irmt/engine_password', '')
-    if not (hostname and username and password):
-        SettingsDialog(iface).exec_()
-        hostname = qs.value('irmt/engine_hostname', '')
-        username = qs.value('irmt/engine_username', '')
-        password = qs.value('irmt/engine_password', '')
-    return hostname, username, password
 
 
 def clear_progress_message_bar(msg_bar, msg_bar_item=None):

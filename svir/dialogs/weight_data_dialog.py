@@ -38,7 +38,6 @@ from PyQt4.QtGui import (QDialog,
                          QPrinter,
                          )
 
-from svir.ui.ui_weight_data import Ui_WeightDataDialog
 from svir.utilities.shared import (DEFAULT_OPERATOR,
                                    OPERATORS_DICT,
                                    NUMERIC_FIELD_TYPES,
@@ -49,10 +48,13 @@ from svir.utilities.utils import (get_field_names,
                                   ask_for_destination_full_path_name,
                                   tr,
                                   log_msg,
+                                  get_ui_class,
                                   )
 
+FORM_CLASS = get_ui_class('ui_weight_data.ui')
 
-class WeightDataDialog(QDialog):
+
+class WeightDataDialog(QDialog, FORM_CLASS):
     """
     Modal dialog allowing to select weights in a d3.js visualization
     """
@@ -69,9 +71,8 @@ class WeightDataDialog(QDialog):
         QDialog.__init__(self)
 
         # Set up the user interface from Designer.
-        self.ui = Ui_WeightDataDialog()
-        self.ui.setupUi(self)
-        self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
+        self.setupUi(self)
+        self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
 
         self.added_attrs_ids = set()
         self.discarded_feats = set()
@@ -98,7 +99,7 @@ class WeightDataDialog(QDialog):
             'Set weights and operators for project: "%s"' % proj_title)
         self.setWindowTitle(dialog_title)
 
-        self.web_view = self.ui.web_view
+        self.web_view = self.web_view
         self.web_view.page().mainFrame().setScrollBarPolicy(
             Qt.Vertical, Qt.ScrollBarAlwaysOff)
         self.web_view.page().mainFrame().setScrollBarPolicy(
@@ -147,16 +148,16 @@ class WeightDataDialog(QDialog):
             if field in fields_in_proj_def]
         # block signals to avoid performing the onchange actions while adding
         # items programmatically
-        self.ui.style_by_field_cbx.blockSignals(True)
-        self.ui.style_by_field_cbx.clear()
-        self.ui.style_by_field_cbx.addItem('')
-        self.ui.style_by_field_cbx.addItems(fields_for_styling)
+        self.style_by_field_cbx.blockSignals(True)
+        self.style_by_field_cbx.clear()
+        self.style_by_field_cbx.addItem('')
+        self.style_by_field_cbx.addItems(fields_for_styling)
         if 'style_by_field' in self.project_definition:
-            idx = self.ui.style_by_field_cbx.findText(
+            idx = self.style_by_field_cbx.findText(
                 self.project_definition['style_by_field'])
-            self.ui.style_by_field_cbx.setCurrentIndex(idx)
+            self.style_by_field_cbx.setCurrentIndex(idx)
         # reactivate the signals, so the user's changes will trigger something
-        self.ui.style_by_field_cbx.blockSignals(False)
+        self.style_by_field_cbx.blockSignals(False)
 
     def setup_js(self):
         # pass a reference (called qt_page) of self to the JS world
@@ -181,7 +182,7 @@ class WeightDataDialog(QDialog):
             ppdata = pprint.pformat(data, indent=4)
             log_msg('in handle_json_updated, data=\n%s' % ppdata)
 
-        if self.ui.on_the_fly_ckb.isChecked():
+        if self.on_the_fly_ckb.isChecked():
             self.project_definition = self.clean_json([data])
             self._manage_style_by_field()
             self.json_cleaned.emit(self.project_definition)
@@ -195,9 +196,9 @@ class WeightDataDialog(QDialog):
 
     def _manage_style_by_field(self):
         if self.style_by_field_selected:
-            if self.ui.style_by_field_cbx.currentText():
+            if self.style_by_field_cbx.currentText():
                 self.project_definition['style_by_field'] = \
-                    self.ui.style_by_field_cbx.currentText()
+                    self.style_by_field_cbx.currentText()
             elif 'style_by_field' in self.project_definition:
                 # if the empty item is selected, clean the project definition
                 del self.project_definition['style_by_field']
