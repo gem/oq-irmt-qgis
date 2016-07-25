@@ -27,30 +27,17 @@ import json
 import tempfile
 import zipfile
 from qgis.gui import QgsMessageBar
-# from qgis.core import (QgsVectorLayer,
-#                        QgsFeature,
-#                        QgsPoint,
-#                        QgsGeometry,
-#                        QgsMapLayerRegistry,
-#                        QgsSymbolV2,
-#                        QgsVectorGradientColorRampV2,
-#                        QgsGraduatedSymbolRendererV2,
-#                        QgsRendererRangeV2,
-#                        )
 from PyQt4.QtCore import QDir, Qt, QObject, SIGNAL, QTimer, pyqtSlot
 
-from PyQt4.QtGui import (QDialogButtonBox,
-                         QDialog,
+from PyQt4.QtGui import (QDialog,
                          QTableWidgetItem,
                          QAbstractItemView,
                          QPushButton,
                          QFileDialog,
                          QColor,
+                         QDockWidget,
                          )
-# from openquake.baselib import hdf5
 from svir.third_party.requests import Session
-# from svir.utilities.shared import DEBUG
-from svir.utilities.settings import get_engine_credentials
 from svir.utilities.utils import (WaitCursorManager,
                                   engine_login,
                                   log_msg,
@@ -159,6 +146,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         if action == 'Console':
             calc_log = self.get_calc_log(calc_id)
             log_msg(calc_log, tag='Calculation %s' % calc_id)
+            logDock = self.iface.mainWindow().findChild(QDockWidget,
+                                                        'MessageLog')
+            logDock.show()
         elif action == 'Remove':
             self.remove_calc(calc_id)
         elif action == 'Outputs':
