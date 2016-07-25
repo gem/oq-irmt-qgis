@@ -51,7 +51,7 @@ class SettingsDialog(QtGui.QDialog, Ui_SettingsDialog):
         elif self.server == 'engine':
             self.ui.topGroupBox.setTitle(
                 'OpenQuake Engine connection settings')
-            self.ui.registration_link_lbl.setText('FIXME Link')
+            self.ui.registration_link_lbl.hide()
         else:
             raise ValueError(self.server)
         self.restoreState()
