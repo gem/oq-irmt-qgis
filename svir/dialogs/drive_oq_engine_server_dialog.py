@@ -48,33 +48,29 @@ from svir.utilities.utils import (WaitCursorManager,
                                   )
 from svir.dialogs.load_hdf5_as_layer_dialog import LoadHdf5AsLayerDialog
 from svir.dialogs.load_geojson_as_layer_dialog import LoadGeoJsonAsLayerDialog
-# from svir.calculations.calculate_utils import add_numeric_attribute
 
 FORM_CLASS = get_ui_class('ui_drive_engine_server.ui')
 
 
 class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     """
-    FIXME
+    Non-modal dialog to drive the OpenQuake Engine Server's API. Through this,
+    it is possible to run calculations, delete them, list them, visualize
+    their outputs and loading them as vector layers.
     """
     def __init__(self, iface):
         self.iface = iface
         QDialog.__init__(self)
         # Set up the user interface from Designer.
-        # self.ui = Ui_DriveEngineServerDialog()
-        # self.ui.setupUi(self)
         self.setupUi(self)
-        # Disable ok_button until all comboboxes are filled
-        self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
-        # self.ok_button.setDisabled(True)
-        # self.ui.open_hdfview_btn.setDisabled(True)
-
         # keep track of the log lines acquired for each calculation
         self.calc_log_line = {}
         self.session = None
         self.hostname = None
         self.login()
         self.refresh_calc_list()
+        # Keep retrieving the list of calculations (especially important to
+        # update the status of the calculation)
         self.timer = QTimer()
         QObject.connect(
             self.timer, SIGNAL('timeout()'), self.refresh_calc_list)
@@ -194,6 +190,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         return
 
     def run_calc(self, calc_id=None):
+        """
+        Run a calculation. If `calc_id` is given, it means we want to run
+        a risk calculation re-using the output of the given hazard calculation
+        """
         text = self.tr('Select the files needed to run the calculation')
         file_names = QFileDialog.getOpenFileNames(self, text, QDir.homePath())
         if not file_names:

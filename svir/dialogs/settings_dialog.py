@@ -31,7 +31,8 @@ from svir.utilities.shared import PLATFORM_REGISTRATION_URL
 class SettingsDialog(QtGui.QDialog, Ui_SettingsDialog):
     """
     Dialog used to specify the connection settings used to interact with the
-    OpenQuake Platform or the OpenQuake Engine
+    OpenQuake Platform or the OpenQuake Engine, and to toggle the
+    developer mode option.
     """
     def __init__(self, iface, parent=None, server='platform'):
         QtGui.QDialog.__init__(self, parent)
