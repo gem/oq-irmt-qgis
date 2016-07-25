@@ -213,32 +213,31 @@ class Irmt:
                            u"&OpenQuake Engine connection settings",
                            self.show_engine_settings,
                            enable=True)
+        # Action to load as layer an hdf5 produced by the oq-engine
+        self.add_menu_item("load_hdf5_as_layer",
+                           ":/plugins/irmt/calculate.svg",  # FIXME
+                           u"Load HDF5 as layer",
+                           self.load_hdf5_as_layer,
+                           enable=True)
+        # Action to load as layer a geojson produced by the oq-engine
+        self.add_menu_item("load_geojson_as_layer",
+                           ":/plugins/irmt/calculate.svg",  # FIXME
+                           u"Load GeoJson as layer",
+                           self.load_geojson_as_layer,
+                           enable=True)
+        # Action to drive the oq-engine server
+        self.add_menu_item("drive_engine_server",
+                           ":/plugins/irmt/define.svg",  # FIXME
+                           u"Drive oq-engine &server",
+                           self.drive_oq_engine_server,
+                           enable=True)
+        self._create_viewer_dock()
         # Action to open the plugin's manual
         self.add_menu_item("help",
                            ":/plugins/irmt/manual.svg",
                            u"Plugin's &Manual",
                            self.show_manual,
                            enable=True)
-        # Action to load as layer an hdf5 produced by the oq-engine
-        self.add_menu_item("load_hdf5_as_layer",
-                           ":/plugins/irmt/manual.svg",  # FIXME
-                           u"Load HDF5 as layer",
-                           self.load_hdf5_as_layer,
-                           enable=True)
-        # Action to load as layer a geojson produced by the oq-engine
-        self.add_menu_item("load_geojson_as_layer",
-                           ":/plugins/irmt/manual.svg",  # FIXME
-                           u"Load GeoJson as layer",
-                           self.load_geojson_as_layer,
-                           enable=True)
-        # Action to drive the oq-engine server
-        self.add_menu_item("drive_engine_server",
-                           ":/plugins/irmt/manual.svg",  # FIXME
-                           u"Drive oq-engine &server",
-                           self.drive_oq_engine_server,
-                           enable=True)
-
-        self._create_viewer_dock()
 
         self.update_actions_status()
 
@@ -1189,7 +1188,7 @@ class Irmt:
 
         # Action to drive the oq-engine server
         action = self.add_menu_item("toggle_viewer_dock",
-                                    ":/plugins/irmt/manual.svg",  # FIXME
+                                    ":/plugins/irmt/plot.svg",
                                     u"Toggle viewer dock",
                                     self.toggle_dock_visibility,
                                     enable=True,
@@ -1202,5 +1201,5 @@ class Irmt:
         legend_tab = self.iface.mainWindow().findChild(QApplication, 'Legend')
         if legend_tab:
             self.iface.mainWindow().tabifyDockWidget(
-                    legend_tab, self.viewer_dock)
+                legend_tab, self.viewer_dock)
             self.viewer_dock.raise_()
