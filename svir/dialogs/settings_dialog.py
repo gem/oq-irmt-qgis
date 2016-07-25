@@ -33,7 +33,8 @@ FORM_CLASS = get_ui_class('ui_settings.ui')
 class SettingsDialog(QtGui.QDialog, FORM_CLASS):
     """
     Dialog used to specify the connection settings used to interact with the
-    OpenQuake Platform or the OpenQuake Engine
+    OpenQuake Platform or the OpenQuake Engine, and to toggle the
+    developer mode option.
     """
     def __init__(self, iface, parent=None, server='platform'):
         QtGui.QDialog.__init__(self, parent)
