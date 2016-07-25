@@ -213,11 +213,19 @@ class Irmt:
                            u"&OpenQuake Engine connection settings",
                            self.show_engine_settings,
                            enable=True)
-        # Action to load as layer an hdf5 produced by the oq-engine
-        self.add_menu_item("load_hdf5_as_layer",
+        # Action to load as layer hazard maps from hdf5 produced by the
+        # oq-engine
+        self.add_menu_item("load_hmaps_from_hdf5_as_layer",
                            ":/plugins/irmt/calculate.svg",  # FIXME
-                           u"Load HDF5 as layer",
-                           self.load_hdf5_as_layer,
+                           u"Load hazard maps from HDF5 as layer",
+                           self.load_hmaps_from_hdf5_as_layer,
+                           enable=True)
+        # Action to load as layer hazard curves from hdf5 produced by the
+        # oq-engine
+        self.add_menu_item("load_hcurves_from_hdf5_as_layer",
+                           ":/plugins/irmt/calculate.svg",  # FIXME
+                           u"Load hazard curves from HDF5 as layer",
+                           self.load_hcurves_from_hdf5_as_layer,
                            enable=True)
         # Action to load as layer a geojson produced by the oq-engine
         self.add_menu_item("load_geojson_as_layer",
@@ -241,8 +249,12 @@ class Irmt:
 
         self.update_actions_status()
 
-    def load_hdf5_as_layer(self):
-        dlg = LoadHdf5AsLayerDialog(self.iface)
+    def load_hmaps_from_hdf5_as_layer(self):
+        dlg = LoadHdf5AsLayerDialog(self.iface, 'hmaps')
+        dlg.exec_()
+
+    def load_hcurves_from_hdf5_as_layer(self):
+        dlg = LoadHdf5AsLayerDialog(self.iface, 'hcurves')
         dlg.exec_()
 
     def load_geojson_as_layer(self):

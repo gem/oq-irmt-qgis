@@ -303,7 +303,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             if outtype == 'hdf5':
                 filepath = self.download_output(
                     output_id, outtype, dest_folder)
-                dlg = LoadHdf5AsLayerDialog(self.iface, filepath, output_type)
+                dlg = LoadHdf5AsLayerDialog(self.iface, output_type, filepath)
                 dlg.exec_()
             elif outtype == 'geojson':
                 filepath = self.download_output(

@@ -62,9 +62,13 @@ FORM_CLASS = get_ui_class('ui_load_hdf5_as_layer.ui')
 
 class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
     """
-    FIXME
+    Modal dialog to load hazard maps or hazard curves from hdf5 files exported
+    by the oq-engine
     """
-    def __init__(self, iface, hdf5_path=None, output_type='hmaps'):
+    def __init__(self, iface, output_type, hdf5_path=None):
+        # sanity check
+        if output_type not in ['hcurves', 'hmaps']:
+            raise NotImplementedError(output_type)
         self.iface = iface
         self.hdf5_path = hdf5_path
         self.output_type = output_type
