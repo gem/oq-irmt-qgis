@@ -263,7 +263,8 @@ class Irmt:
 
     def drive_oq_engine_server(self):
         dlg = DriveOqEngineServerDialog(self.iface)
-        dlg.show()
+        # dlg.show()  # FIXME: non-modal breaks if tables are empty
+        dlg.exec_()
 
     def show_manual(self):
         base_url = os.path.abspath(os.path.join(
