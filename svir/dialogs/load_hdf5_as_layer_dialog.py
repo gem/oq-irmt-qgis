@@ -207,6 +207,8 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
         pr = self.layer.dataProvider()
         with LayerEditingManager(self.layer, 'Reading hdf5', DEBUG):
             feats = []
+            if self.output_type == 'hcurves':
+                imtls = self.hfile.get('imtls')
             for row in self.dataset:
                 # add a feature
                 feat = QgsFeature(self.layer.pendingFields())
@@ -218,7 +220,10 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
                         #       because it does not recognize the numpy type
                         value = float(row[field_name_idx])
                     elif self.output_type == 'hcurves':
-                        value = json.dumps(list(row[field_name_idx]))
+                        poes = row[field_name_idx].tolist()
+                        imls = imtls[field_name].tolist()
+                        dic = dict(poes=poes, imls=imls)
+                        value = json.dumps(dic)
                     feat.setAttribute(field_name, value)
                 feat.setGeometry(QgsGeometry.fromPoint(
                     QgsPoint(row[0], row[1])))
