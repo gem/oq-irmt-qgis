@@ -23,7 +23,6 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import json
-import numpy as np
 import os
 import random
 
@@ -106,7 +105,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             lat = feature.geometry().asPoint().y()
 
             self.plot.plot(
-                self.current_abscissa,
+                curve['abscissa'],
                 curve['ordinates'],
                 color=curve['color'],
                 linestyle=curve['line_style'],
@@ -144,46 +143,47 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.plot_canvas.draw()
 
     def redraw(self, selected, deselected, _):
-        selected_features = self.active_layer.getFeatures(
-            QgsFeatureRequest().setFilterFids(selected))
-
         for fid in deselected:
             try:
                 del self.current_selection[fid]
             except KeyError:
                 pass
-        try:
-            # FIXME use abscissa values from hdf5 file
-            x_count = 0
-            for feature in self.active_layer.selectedFeatures():
-                x_count = len(json.loads(feature[self.current_imt]))
-                break
-            self.current_abscissa = np.linspace(0.0, 1.0, num=x_count)
-            # FIXME END use abscissa values from hdf5 file
+        # try:
+        self.current_abscissa = []
+        for feature in self.active_layer.getFeatures(
+                QgsFeatureRequest().setFilterFids(selected)):
+            data_dic = json.loads(feature[self.current_imt])
+            self.current_abscissa = data_dic['imls']
+            # for a single intensity measure type, the imls are always
+            # the same, so we can break the loop after the first feature
+            break
 
-            color_names = [name for name in QColor.colorNames()
-                           if name != 'white']
-            line_styles = ["-", "--", "-.", ":"]
-            for feature in selected_features:
-                ordinates = json.loads(feature[self.current_imt])
-                if feature.id() not in self.current_selection:
-                    color_name = random.choice(color_names)
-                    line_style = random.choice(line_styles)
-                    color = QColor(color_name)
-                    color_hex = color.darker(120).name()
-                    self.current_selection[feature.id()] = {
-                        'ordinates': ordinates,
-                        'color': color_hex,
-                        'line_style': line_style,
-                    }
+        color_names = [name for name in QColor.colorNames()
+                       if name != 'white']
+        line_styles = ["-", "--", "-.", ":"]
+        for feature in self.active_layer.getFeatures(
+                QgsFeatureRequest().setFilterFids(selected)):
+            data_dic = json.loads(feature[self.current_imt])
+            ordinates = data_dic['poes']
+            if feature.id() not in self.current_selection:
+                color_name = random.choice(color_names)
+                line_style = random.choice(line_styles)
+                color = QColor(color_name)
+                color_hex = color.darker(120).name()
+                self.current_selection[feature.id()] = {
+                    'abscissa': self.current_abscissa,
+                    'ordinates': ordinates,
+                    'color': color_hex,
+                    'line_style': line_style,
+                }
 
-            self.draw()
-        except (TypeError, ValueError):
-            self.clear_plot()
-            self.iface.messageBar().pushWarning(
-                self.tr('Invalid IMT: %s') % self.current_imt,
-                self.tr('The selected IMT seems to contain invalid data')
-            )
+        self.draw()
+        # except (TypeError, ValueError):
+        #     self.clear_plot()
+        #     self.iface.messageBar().pushWarning(
+        #         self.tr('Invalid IMT: %s') % self.current_imt,
+        #         self.tr('The selected IMT seems to contain invalid data')
+        #     )
 
     def layer_changed(self):
         self.current_selection = {}
