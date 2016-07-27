@@ -189,8 +189,11 @@ class LoadHdf5AsLayerDialog(QDialog):
                 added_field_name = add_numeric_attribute(
                     field_name, self.layer)
             elif self.output_type == 'hcurves':
+                # FIXME: probably we need a different type with more capacity
                 added_field_name = add_textual_attribute(
                     field_name, self.layer)
+            else:
+                raise NotImplementedError(self.output_type)
             if field_name != added_field_name:
                 if field_name == self.default_field_name:
                     self.default_field_name = added_field_name

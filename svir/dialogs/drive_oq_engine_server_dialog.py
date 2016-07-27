@@ -88,14 +88,21 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         with WaitCursorManager():
             resp = self.session.get(calc_list_url, timeout=10)
             calc_list = json.loads(resp.text)
+        selected_keys = ['description', 'id', 'job_type', 'owner', 'status']
+        col_names = ['Description', 'ID', 'Job Type', 'Owner', 'Status']
         if not calc_list:
-            # empty list
-            while self.calc_list_tbl.rowCount() > 0:
-                self.calc_list_tbl.removeRow(0)
+            if self.calc_list_tbl.rowCount() > 0:
+                self.calc_list_tbl.clearContents()
+                self.calc_list_tbl.setRowCount(0)
+            else:
+                self.calc_list_tbl.setRowCount(0)
+                self.calc_list_tbl.setColumnCount(len(col_names))
+                self.calc_list_tbl.setHorizontalHeaderLabels(col_names)
+                self.calc_list_tbl.horizontalHeader().setStyleSheet(
+                    "font-weight: bold;")
+                self.calc_list_tbl.resizeColumnsToContents()
+                self.calc_list_tbl.resizeRowsToContents()
             return
-        exclude = ['url', 'is_running']
-        selected_keys = [key for key in sorted(calc_list[0].keys())
-                         if key not in exclude]
         actions = [
             {'label': 'Console', 'bg_color': '#3cb3c5', 'txt_color': 'white'},
             {'label': 'Remove', 'bg_color': '#d9534f', 'txt_color': 'white'},
@@ -103,8 +110,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             {'label': 'Run Risk', 'bg_color': 'white', 'txt_color': 'black'}
         ]
         self.calc_list_tbl.setRowCount(len(calc_list))
-        self.calc_list_tbl.setColumnCount(
-            len(selected_keys) + len(actions))
+        self.calc_list_tbl.setColumnCount(len(selected_keys) + len(actions))
         self.calc_list_tbl.setEditTriggers(QAbstractItemView.NoEditTriggers)
         for row, calc in enumerate(calc_list):
             for col, key in enumerate(selected_keys):
@@ -132,8 +138,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     lambda calc_id=calc['id'], action=action['label']: (
                         self.on_calc_action_btn_clicked(calc_id, action)))
                 self.calc_list_tbl.setCellWidget(row, col, button)
-        col_names = [key.capitalize() for key in selected_keys]
-        empty_col_names = ['' for action in actions]
+        empty_col_names = [''] * len(actions)
         headers = col_names + empty_col_names
         self.calc_list_tbl.setHorizontalHeaderLabels(headers)
         self.calc_list_tbl.horizontalHeader().setStyleSheet(
@@ -150,6 +155,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             logDock.show()
         elif action == 'Remove':
             self.remove_calc(calc_id)
+            if self.current_output_calc_id == calc_id:
+                self.output_list_tbl.clearContents()
+                self.output_list_tbl.setRowCount(0)
+                self.output_list_tbl.setColumnCount(0)
         elif action == 'Outputs':
             output_list = self.get_output_list(calc_id)
             self.show_output_list(output_list)
@@ -225,6 +234,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             resp = self.session.get(output_list_url, timeout=10)
         if resp.ok:
             output_list = json.loads(resp.text)
+            self.current_output_calc_id = calc_id
             return output_list
         else:
             return []
