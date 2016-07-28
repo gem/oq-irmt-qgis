@@ -66,6 +66,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.calc_log_line = {}
         self.session = None
         self.hostname = None
+        self.current_output_calc_id = None
         self.login()
         self.refresh_calc_list()
         # Keep retrieving the list of calculations (especially important to
