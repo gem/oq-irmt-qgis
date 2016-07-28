@@ -168,8 +168,12 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             ordinates = data_dic['poes']
             if (self.was_imt_switched
                     or feature.id() not in self.current_selection):
-                color_name = random.choice(color_names)
-                line_style = random.choice(line_styles)
+                if self.bw_chk.isChecked():
+                    color_name = "#000000"
+                    line_style = random.choice(line_styles)
+                else:
+                    color_name = random.choice(color_names)
+                    line_style = "-"
                 color = QColor(color_name)
                 color_hex = color.darker(120).name()
                 self.current_selection[feature.id()] = {
@@ -281,6 +285,10 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                     lat = feature.geometry().asPoint().y()
                     line = '%s,%s,%s' % (lon, lat, poes)
                     csv_file.write(line + os.linesep)
+
+    @pyqtSlot()
+    def on_bw_chk_clicked(self):
+        self.layer_changed()
 
     def closeEvent(self, event):
         self.action.setChecked(False)

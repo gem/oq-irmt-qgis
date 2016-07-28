@@ -20,6 +20,13 @@
   <widget class="QWidget" name="container">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
+     <widget class="QCheckBox" name="bw_chk">
+      <property name="text">
+       <string>Optimize line style for black&amp;white printing</string>
+      </property>
+     </widget>
+    </item>
+    <item>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
        <widget class="QLabel" name="imt_label">
