@@ -174,8 +174,14 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                     r = g = b = format(
                         (85 * line_styles_whole_cycles) % 256, '02x')
                     color_hex = "#%s%s%s" % (r, g, b)
+                    # here I am using i in order to cycle through all the line
+                    # styles, regardless from the feature id (otherwise I might
+                    # easily repeat styles, that are a small set of 4 items)
                     line_style = self.line_styles[i % len(self.line_styles)]
                 else:
+                    # here I am using the feature id in order to keep a
+                    # matching between a curve and the corresponding point in
+                    # the map
                     color_name = self.color_names[
                         feature.id() % len(self.color_names)]
                     color = QColor(color_name)
