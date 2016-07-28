@@ -154,7 +154,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             logDock.show()
         elif action == 'Remove':
             self.remove_calc(calc_id)
-            if self.current_output_calc_id == calc_id:
+            if (self.current_output_calc_id is not None
+                    and self.current_output_calc_id == calc_id):
                 self.output_list_tbl.clearContents()
                 self.output_list_tbl.setRowCount(0)
                 self.output_list_tbl.setColumnCount(0)
