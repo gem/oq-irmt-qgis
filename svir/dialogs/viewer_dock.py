@@ -68,6 +68,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
         self.current_selection = {}
         self.current_imt = None
+        self.was_imt_switched = False
         self.current_abscissa = []
 
         # Marker for hovering
@@ -165,7 +166,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 QgsFeatureRequest().setFilterFids(selected)):
             data_dic = json.loads(feature[self.current_imt])
             ordinates = data_dic['poes']
-            if feature.id() not in self.current_selection:
+            if (self.was_imt_switched
+                    or feature.id() not in self.current_selection):
                 color_name = random.choice(color_names)
                 line_style = random.choice(line_styles)
                 color = QColor(color_name)
@@ -176,6 +178,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                     'color': color_hex,
                     'line_style': line_style,
                 }
+        self.was_imt_switched = False
 
         self.draw()
         # except (TypeError, ValueError):
@@ -251,6 +254,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
     @pyqtSlot(int)
     def on_imt_cbx_currentIndexChanged(self):
         self.current_imt = self.imt_cbx.currentText()
+        self.was_imt_switched = True
         self.set_selection(self.current_selection.keys())
 
     @pyqtSlot()
