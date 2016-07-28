@@ -24,7 +24,6 @@
 
 import json
 import os
-import random
 
 from PyQt4 import QtGui
 
@@ -70,6 +69,10 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.current_imt = None
         self.was_imt_switched = False
         self.current_abscissa = []
+        self.color_names = [
+            name for name in QColor.colorNames() if name != 'white']
+        # shuffle(self.color_names)  # NOTE: this works in place, returning None
+        self.line_styles = ["-", "--", "-.", ":"]
 
         # Marker for hovering
         self.vertex_marker = QgsVertexMarker(iface.mapCanvas())
@@ -159,23 +162,25 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             # the same, so we can break the loop after the first feature
             break
 
-        color_names = [name for name in QColor.colorNames()
-                       if name != 'white']
-        line_styles = ["-", "--", "-.", ":"]
-        for feature in self.active_layer.getFeatures(
-                QgsFeatureRequest().setFilterFids(selected)):
+        for i, feature in enumerate(self.active_layer.getFeatures(
+                QgsFeatureRequest().setFilterFids(selected))):
             data_dic = json.loads(feature[self.current_imt])
             ordinates = data_dic['poes']
             if (self.was_imt_switched
                     or feature.id() not in self.current_selection):
                 if self.bw_chk.isChecked():
-                    color_name = "#000000"
-                    line_style = random.choice(line_styles)
+                    line_styles_whole_cycles = i / len(self.line_styles)
+                    # NOTE: 85 is approximately 256 / 3
+                    r = g = b = format(
+                        (85 * line_styles_whole_cycles) % 256, '02x')
+                    color_hex = "#%s%s%s" % (r, g, b)
+                    line_style = self.line_styles[i % len(self.line_styles)]
                 else:
-                    color_name = random.choice(color_names)
-                    line_style = "-"
-                color = QColor(color_name)
-                color_hex = color.darker(120).name()
+                    color_name = self.color_names[
+                        feature.id() % len(self.color_names)]
+                    color = QColor(color_name)
+                    color_hex = color.darker(120).name()
+                    line_style = "-"  # solid
                 self.current_selection[feature.id()] = {
                     'abscissa': self.current_abscissa,
                     'ordinates': ordinates,
