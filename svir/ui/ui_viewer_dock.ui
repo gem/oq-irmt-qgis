@@ -22,7 +22,7 @@
     <item>
      <widget class="QCheckBox" name="bw_chk">
       <property name="text">
-       <string>Optimize line style for black&amp;white printing</string>
+       <string>Optimize line style for black and white printing</string>
       </property>
      </widget>
     </item>
