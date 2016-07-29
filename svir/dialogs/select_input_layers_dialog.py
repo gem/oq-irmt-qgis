@@ -46,11 +46,15 @@ from svir.calculations.aggregate_loss_by_zone import (
 
 from svir.calculations.process_layer import ProcessLayer
 from svir.dialogs.attribute_selection_dialog import AttributeSelectionDialog
-from svir.ui.ui_select_input_layers import Ui_SelectInputLayersDialog
-from svir.utilities.utils import tr, count_heading_commented_lines
+from svir.utilities.utils import (tr,
+                                  count_heading_commented_lines,
+                                  get_ui_class,
+                                  )
+
+FORM_CLASS = get_ui_class('ui_select_input_layers.ui')
 
 
-class SelectInputLayersDialog(QDialog):
+class SelectInputLayersDialog(QDialog, FORM_CLASS):
     """
     Modal dialog allowing to select a raster or vector layer
     containing loss data points and a vector layer containing polygons
@@ -61,10 +65,9 @@ class SelectInputLayersDialog(QDialog):
         self.iface = iface
         QDialog.__init__(self)
         # Set up the user interface from Designer.
-        self.ui = Ui_SelectInputLayersDialog()
-        self.ui.setupUi(self)
+        self.setupUi(self)
         # Disable ok_button until loss and zonal layers are selected
-        self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
+        self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         self.ok_button.setDisabled(True)
         self.loss_layer_is_vector = True
         self.populate_cbx()
@@ -116,12 +119,12 @@ class SelectInputLayersDialog(QDialog):
         return layer
 
     def accept(self):
-        loss_layer_id = self.ui.loss_layer_cbx.itemData(
-            self.ui.loss_layer_cbx.currentIndex())
+        loss_layer_id = self.loss_layer_cbx.itemData(
+            self.loss_layer_cbx.currentIndex())
         loss_layer = QgsMapLayerRegistry.instance().mapLayer(
             loss_layer_id)
-        zonal_layer_id = self.ui.zonal_layer_cbx.itemData(
-            self.ui.zonal_layer_cbx.currentIndex())
+        zonal_layer_id = self.zonal_layer_cbx.itemData(
+            self.zonal_layer_cbx.currentIndex())
         zonal_layer = QgsMapLayerRegistry.instance().mapLayer(
             zonal_layer_id)
 
@@ -163,7 +166,7 @@ class SelectInputLayersDialog(QDialog):
                                     self.iface)
         (loss_layer, zonal_layer, loss_attrs_dict) = res
 
-        if self.ui.purge_chk.isChecked():
+        if self.purge_chk.isChecked():
             purge_zones_without_loss_points(
                 zonal_layer, loss_attrs_dict, self.iface)
         super(SelectInputLayersDialog, self).accept()
@@ -192,13 +195,13 @@ class SelectInputLayersDialog(QDialog):
                 "Are you sure to delete the empty zones from the zonal layer?",
                 QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if reply == QMessageBox.No:
-                self.ui.purge_chk.setCheckState(0)
+                self.purge_chk.setCheckState(0)
 
     @pyqtSlot()
     def on_loss_layer_tbn_clicked(self):
         layer = self.open_file_dialog('loss_layer')
         if layer and ProcessLayer(layer).is_type_in(["point", "multipoint"]):
-            cbx = self.ui.loss_layer_cbx
+            cbx = self.loss_layer_cbx
             cbx.addItem(layer.name())
             last_index = cbx.count() - 1
             cbx.setItemData(last_index, layer.id())
@@ -210,7 +213,7 @@ class SelectInputLayersDialog(QDialog):
         layer = self.open_file_dialog('zonal_layer')
         if layer and ProcessLayer(layer).is_type_in(
                 ["polygon", "multipolygon"]):
-            cbx = self.ui.zonal_layer_cbx
+            cbx = self.zonal_layer_cbx
             cbx.addItem(layer.name())
             last_index = cbx.count() - 1
             cbx.setItemData(last_index, layer.id())
@@ -222,18 +225,18 @@ class SelectInputLayersDialog(QDialog):
                 QgsMapLayerRegistry.instance().mapLayers().iteritems():
             # populate loss cbx only with layers containing points
             if ProcessLayer(layer).is_type_in(["point", "multipoint"]):
-                self.ui.loss_layer_cbx.addItem(layer.name())
-                self.ui.loss_layer_cbx.setItemData(
-                    self.ui.loss_layer_cbx.count()-1, layer.id())
+                self.loss_layer_cbx.addItem(layer.name())
+                self.loss_layer_cbx.setItemData(
+                    self.loss_layer_cbx.count()-1, layer.id())
             if ProcessLayer(layer).is_type_in(["polygon", "multipolygon"]):
-                self.ui.zonal_layer_cbx.addItem(layer.name())
-                self.ui.zonal_layer_cbx.setItemData(
-                    self.ui.zonal_layer_cbx.count()-1, layer.id())
+                self.zonal_layer_cbx.addItem(layer.name())
+                self.zonal_layer_cbx.setItemData(
+                    self.zonal_layer_cbx.count()-1, layer.id())
         self.enable_ok_button_if_both_layers_are_specified()
 
     def enable_ok_button_if_both_layers_are_specified(self):
-        if self.ui.loss_layer_cbx.currentText() and \
-                self.ui.zonal_layer_cbx.currentText():
+        if self.loss_layer_cbx.currentText() and \
+                self.zonal_layer_cbx.currentText():
             self.ok_button.setEnabled(True)
         else:
             self.ok_button.setEnabled(False)

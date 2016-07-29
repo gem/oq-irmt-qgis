@@ -41,10 +41,12 @@ from PyQt4.QtGui import (QDialogButtonBox,
                          QFileDialog,
                          QColor,
                          )
-from svir.ui.ui_load_geojson_as_layer import Ui_LoadGeoJsonAsLayerDialog
+from svir.utilities.utils import get_ui_class
+
+FORM_CLASS = get_ui_class('ui_load_geojson_as_layer.ui')
 
 
-class LoadGeoJsonAsLayerDialog(QDialog):
+class LoadGeoJsonAsLayerDialog(QDialog, FORM_CLASS):
     """
     FIXME This is not working for zipfiles yet
     """
@@ -53,16 +55,15 @@ class LoadGeoJsonAsLayerDialog(QDialog):
         self.geojson_path = geojson_path
         QDialog.__init__(self)
         # Set up the user interface from Designer.
-        self.ui = Ui_LoadGeoJsonAsLayerDialog()
-        self.ui.setupUi(self)
+        self.setupUi(self)
         # Disable ok_button until all comboboxes are filled
-        self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
+        self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         self.ok_button.setDisabled(True)
         if self.geojson_path:
-            self.ui.geojson_path_le.setText(self.geojson_path)
-            self.ui.rlz_cbx.setEnabled(True)
-            self.ui.imt_cbx.setEnabled(True)
-            self.ui.poe_cbx.setEnabled(True)
+            self.geojson_path_le.setText(self.geojson_path)
+            self.rlz_cbx.setEnabled(True)
+            self.imt_cbx.setEnabled(True)
+            self.poe_cbx.setEnabled(True)
             self.populate_rlz_cbx()
 
     @pyqtSlot()
@@ -71,7 +72,7 @@ class LoadGeoJsonAsLayerDialog(QDialog):
 
     @pyqtSlot(str)
     def on_rlz_cbx_currentIndexChanged(self):
-        rlz = self.ui.rlz_cbx.currentText()
+        rlz = self.rlz_cbx.currentText()
         self.imts = {}
         for pars in self.names_params.values():
             if pars['rlz'] != rlz:
@@ -82,16 +83,16 @@ class LoadGeoJsonAsLayerDialog(QDialog):
                 self.imts[imt] = [poe]
             else:
                 self.imts[imt].append(poe)
-        self.ui.imt_cbx.clear()
-        self.ui.imt_cbx.setEnabled(True)
-        self.ui.imt_cbx.addItems(self.imts.keys())
+        self.imt_cbx.clear()
+        self.imt_cbx.setEnabled(True)
+        self.imt_cbx.addItems(self.imts.keys())
 
     @pyqtSlot(str)
     def on_imt_cbx_currentIndexChanged(self):
-        imt = self.ui.imt_cbx.currentText()
-        self.ui.poe_cbx.clear()
-        self.ui.poe_cbx.setEnabled(True)
-        self.ui.poe_cbx.addItems(self.imts[imt])
+        imt = self.imt_cbx.currentText()
+        self.poe_cbx.clear()
+        self.poe_cbx.setEnabled(True)
+        self.poe_cbx.addItems(self.imts[imt])
 
     @pyqtSlot(str)
     def on_poe_cbx_currentIndexChanged(self):
@@ -111,7 +112,7 @@ class LoadGeoJsonAsLayerDialog(QDialog):
         if not geojson_path:
             return
         self.geojson_path = geojson_path
-        self.ui.geojson_path_le.setText(self.geojson_path)
+        self.geojson_path_le.setText(self.geojson_path)
         if self.file_type == self.tr('Zip archives (*.zip)'):
             zz = zipfile.ZipFile(self.geojson_path, 'r')
             namelist = zz.namelist()
@@ -149,13 +150,13 @@ class LoadGeoJsonAsLayerDialog(QDialog):
                 level=QgsMessageBar.CRITICAL)
 
     def populate_rlz_cbx(self):
-        self.ui.rlz_cbx.clear()
-        self.ui.rlz_cbx.setEnabled(True)
+        self.rlz_cbx.clear()
+        self.rlz_cbx.setEnabled(True)
         rlzs = list(set(value['rlz'] for value in self.names_params.values()))
-        self.ui.rlz_cbx.addItems(rlzs)
+        self.rlz_cbx.addItems(rlzs)
 
     def set_ok_button(self):
-        self.ok_button.setEnabled(self.ui.poe_cbx.currentIndex != -1)
+        self.ok_button.setEnabled(self.poe_cbx.currentIndex != -1)
 
     def style_layer(self):
         color1 = QColor("#FFEBEB")
@@ -195,15 +196,15 @@ class LoadGeoJsonAsLayerDialog(QDialog):
 
     def accept(self):
         if self.file_type == self.tr('Zip archives (*.zip)'):
-            rlz = self.ui.rlz_cbx.currentText()
-            imt = self.ui.imt_cbx.currentText()
-            poe = self.ui.poe_cbx.currentText()
+            rlz = self.rlz_cbx.currentText()
+            imt = self.imt_cbx.currentText()
+            poe = self.poe_cbx.currentText()
             [filename] = [
                 name for name, params in self.names_params.iteritems()
                 if params['rlz'] == rlz
                 and params['imt'] == imt
                 and params['poe'] == poe]
-            self.geojson_path = self.ui.geojson_path_le.text()
+            self.geojson_path = self.geojson_path_le.text()
             zz = zipfile.ZipFile(self.geojson_path, 'r')
             dest_folder = tempfile.gettempdir()
             dest_file = zz.extract(filename, dest_folder)

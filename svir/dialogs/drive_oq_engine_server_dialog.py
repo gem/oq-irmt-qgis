@@ -38,8 +38,8 @@ from PyQt4.QtGui import (QDialog,
                          QDockWidget,
                          )
 from svir.third_party.requests import Session
+from svir.utilities.settings import get_engine_credentials
 from svir.utilities.utils import (WaitCursorManager,
-                                  get_engine_credentials,
                                   engine_login,
                                   log_msg,
                                   tr,
