@@ -123,6 +123,9 @@ class Irmt:
         # keep a list of the menu items, in order to easily unload them later
         self.registered_actions = dict()
 
+        # avoid dialog to be deleted right after showing it
+        self.drive_oq_engine_server_dlg = None
+
         # keep track of the supplemental information for each layer
         # layer_id -> {}
         # where each dict contains 'platform_layer_id',
@@ -261,9 +264,8 @@ class Irmt:
         dlg.exec_()
 
     def drive_oq_engine_server(self):
-        dlg = DriveOqEngineServerDialog(self.iface)
-        # dlg.show()  # FIXME: non-modal breaks if tables are empty
-        dlg.exec_()
+        self.drive_oq_engine_server_dlg = DriveOqEngineServerDialog(self.iface)
+        self.drive_oq_engine_server_dlg.show()
 
     def show_manual(self):
         base_url = os.path.abspath(os.path.join(

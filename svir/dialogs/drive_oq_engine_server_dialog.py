@@ -112,7 +112,6 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         ]
         self.calc_list_tbl.setRowCount(len(calc_list))
         self.calc_list_tbl.setColumnCount(len(selected_keys) + len(actions))
-        self.calc_list_tbl.setEditTriggers(QAbstractItemView.NoEditTriggers)
         for row, calc in enumerate(calc_list):
             for col, key in enumerate(selected_keys):
                 item = QTableWidgetItem()
@@ -265,8 +264,6 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.output_list_tbl.setRowCount(len(output_list))
         self.output_list_tbl.setColumnCount(
             len(selected_keys) + max_actions)
-        self.output_list_tbl.setEditTriggers(
-            QAbstractItemView.NoEditTriggers)
         for row, output in enumerate(output_list):
             for col, key in enumerate(selected_keys):
                 item = QTableWidgetItem()

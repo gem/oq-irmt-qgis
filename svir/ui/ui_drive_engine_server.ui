@@ -36,7 +36,17 @@
     </widget>
    </item>
    <item>
-    <widget class="QTableWidget" name="calc_list_tbl"/>
+    <widget class="QTableWidget" name="calc_list_tbl">
+     <property name="editTriggers">
+      <set>QAbstractItemView::NoEditTriggers</set>
+     </property>
+     <property name="rowCount">
+      <number>0</number>
+     </property>
+     <property name="columnCount">
+      <number>0</number>
+     </property>
+    </widget>
    </item>
    <item>
     <widget class="QLabel" name="list_of_outputs_lbl">
@@ -52,7 +62,17 @@
     </widget>
    </item>
    <item>
-    <widget class="QTableWidget" name="output_list_tbl"/>
+    <widget class="QTableWidget" name="output_list_tbl">
+     <property name="editTriggers">
+      <set>QAbstractItemView::NoEditTriggers</set>
+     </property>
+     <property name="rowCount">
+      <number>0</number>
+     </property>
+     <property name="columnCount">
+      <number>0</number>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>
