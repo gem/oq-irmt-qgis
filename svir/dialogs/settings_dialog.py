@@ -52,7 +52,7 @@ class SettingsDialog(QtGui.QDialog, FORM_CLASS):
         elif self.server == 'engine':
             self.topGroupBox.setTitle(
                 'OpenQuake Engine connection settings')
-            self.ui.registration_link_lbl.hide()
+            self.registration_link_lbl.hide()
         else:
             raise ValueError(self.server)
         self.restoreState()

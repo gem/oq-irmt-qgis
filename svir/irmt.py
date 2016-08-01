@@ -444,7 +444,7 @@ class Irmt:
                 # TODO: We should fix the workflow in case no geometries are
                 # downloaded. Currently we must download them, so the checkbox
                 # to let the user choose has been temporarily removed.
-                # load_geometries = dlg.ui.load_geometries_chk.isChecked()
+                # load_geometries = dlg.load_geometries_chk.isChecked()
                 load_geometries = True
                 msg = ("Loading socioeconomic data from the OpenQuake "
                        "Platform...")
@@ -456,9 +456,11 @@ class Irmt:
                     'children'][1]['children']
                 known_themes = []
                 with WaitCursorManager(msg, self.iface):
-                    while dlg.ui.list_multiselect.selected_widget.count() > 0:
+                    while dlg.indicator_multiselect.selected_widget.count(
+                            ) > 0:
                         item = \
-                            dlg.ui.list_multiselect.selected_widget.takeItem(0)
+                            dlg.indicator_multiselect.selected_widget.takeItem(
+                                0)
                         ind_code = item.text().split(':')[0]
                         ind_info = dlg.indicators_info_dict[ind_code]
                         sv_theme = ind_info['theme']
@@ -472,9 +474,9 @@ class Irmt:
                                             sv_field)
 
                         indices_list.append(sv_field)
-                    while dlg.ui.country_select.selected_widget.count() > 0:
+                    while dlg.country_multiselect.selected_widget.count() > 0:
                         item = \
-                            dlg.ui.country_select.selected_widget.takeItem(0)
+                            dlg.country_multiselect.selected_widget.takeItem(0)
                         # get the iso from something like:
                         # country_name (iso_code)
                         iso_code = item.text().split('(')[1].split(')')[0]
@@ -1077,15 +1079,15 @@ class Irmt:
         dlg = TransformationDialog(self.iface)
         if dlg.exec_():
             layer = self.iface.activeLayer()
-            input_attr_names = dlg.ui.fields_multiselect.get_selected_items()
-            algorithm_name = dlg.ui.algorithm_cbx.currentText()
-            variant = dlg.ui.variant_cbx.currentText()
-            inverse = dlg.ui.inverse_ckb.isChecked()
+            input_attr_names = dlg.fields_multiselect.get_selected_items()
+            algorithm_name = dlg.algorithm_cbx.currentText()
+            variant = dlg.variant_cbx.currentText()
+            inverse = dlg.inverse_ckb.isChecked()
             for input_attr_name in input_attr_names:
-                if dlg.ui.overwrite_ckb.isChecked():
+                if dlg.overwrite_ckb.isChecked():
                     target_attr_name = input_attr_name
-                elif dlg.ui.fields_multiselect.selected_widget.count() == 1:
-                    target_attr_name = dlg.ui.new_field_name_txt.text()
+                elif dlg.fields_multiselect.selected_widget.count() == 1:
+                    target_attr_name = dlg.new_field_name_txt.text()
                 else:
                     target_attr_name = ('_' + input_attr_name)[:10]
                 try:
@@ -1127,7 +1129,7 @@ class Irmt:
                     active_layer_id = self.iface.activeLayer().id()
                     read_layer_suppl_info_from_qgs(
                         active_layer_id, self.supplemental_information)
-                    if (dlg.ui.track_new_field_ckb.isChecked()
+                    if (dlg.track_new_field_ckb.isChecked()
                             and target_attr_name != input_attr_name
                             and (active_layer_id
                                  in self.supplemental_information)):
