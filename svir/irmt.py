@@ -264,8 +264,11 @@ class Irmt:
         dlg.exec_()
 
     def drive_oq_engine_server(self):
-        self.drive_oq_engine_server_dlg = DriveOqEngineServerDialog(self.iface)
+        if self.drive_oq_engine_server_dlg is None:
+            self.drive_oq_engine_server_dlg = DriveOqEngineServerDialog(
+                self.iface)
         self.drive_oq_engine_server_dlg.show()
+        self.drive_oq_engine_server_dlg.raise_()
 
     def show_manual(self):
         base_url = os.path.abspath(os.path.join(
