@@ -269,6 +269,7 @@ class Irmt:
                 self.iface)
         self.drive_oq_engine_server_dlg.show()
         self.drive_oq_engine_server_dlg.raise_()
+        self.drive_oq_engine_server_dlg.start_polling()
 
     def show_manual(self):
         base_url = os.path.abspath(os.path.join(
