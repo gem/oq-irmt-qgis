@@ -51,48 +51,6 @@
        </item>
       </layout>
      </item>
-     <item>
-      <widget class="QLabel" name="rlz_lbl">
-       <property name="text">
-        <string>Realization (only the chosen realization will be loaded into the layer)</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QComboBox" name="rlz_cbx">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="imt_lbl">
-       <property name="text">
-        <string>Intensity Measure Type (used for default styling)</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QComboBox" name="imt_cbx">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="poe_lbl">
-       <property name="text">
-        <string>Probability of Exceedance (used for default styling)</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QComboBox" name="poe_cbx">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-      </widget>
-     </item>
     </layout>
    </item>
    <item>
