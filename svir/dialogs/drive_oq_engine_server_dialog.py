@@ -31,7 +31,6 @@ from PyQt4.QtCore import QDir, Qt, QObject, SIGNAL, QTimer, pyqtSlot
 
 from PyQt4.QtGui import (QDialog,
                          QTableWidgetItem,
-                         QAbstractItemView,
                          QPushButton,
                          QFileDialog,
                          QColor,
@@ -71,11 +70,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.refresh_calc_list()
         # Keep retrieving the list of calculations (especially important to
         # update the status of the calculation)
-        self.timer = QTimer()
-        QObject.connect(
-            self.timer, SIGNAL('timeout()'), self.refresh_calc_list)
-        self.timer.start(4000)  # refresh calc list time in milliseconds
-        self.finished.connect(self.stop_timer)
+        # NOTE: start_polling() is called from outside, in order to reset
+        #       the timer whenever the button to open the dialog is pressed
+        self.timer = None
+        self.finished.connect(self.stop_polling)
 
     def login(self):
         self.session = Session()
@@ -352,7 +350,14 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             open(filepath, "wb").write(resp.content)
         return filepath
 
-    def stop_timer(self):
+    def start_polling(self):
+        self.timer = QTimer()
+        QObject.connect(
+            self.timer, SIGNAL('timeout()'), self.refresh_calc_list)
+        self.timer.start(4000)  # refresh calc list time in milliseconds
+
+    def stop_polling(self):
+        # NOTE: perhaps we should disconnect the timeout signal here?
         self.timer.stop()
 
     @pyqtSlot()
