@@ -201,14 +201,30 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         Run a calculation. If `calc_id` is given, it means we want to run
         a risk calculation re-using the output of the given hazard calculation
         """
-        text = self.tr('Select the files needed to run the calculation')
+        text = self.tr('Select the files needed to run the calculation,'
+                       ' or the zip archive containing those files.')
         file_names = QFileDialog.getOpenFileNames(self, text, QDir.homePath())
         if not file_names:
             return
-        _, zipped_file_name = tempfile.mkstemp()
-        with zipfile.ZipFile(zipped_file_name, 'w') as zipped_file:
-            for file_name in file_names:
-                zipped_file.write(file_name)
+        elif len(file_names) == 1:
+            file_full_path = file_names[0]
+            _, file_ext = os.path.splitext(file_full_path)
+            if file_ext == '.zip':
+                zipped_file_name = file_full_path
+            else:
+                # NOTE: an alternative solution could be to check if the single
+                # file is .ini, to look for all the files specified in the .ini
+                # and to build a zip archive with all them
+                self.iface.messageBar().pushMessage(
+                    tr("Error"),
+                    tr("Please select all the files needed, or a zip archive"),
+                    level=QgsMessageBar.CRITICAL)
+                return
+        else:
+            _, zipped_file_name = tempfile.mkstemp()
+            with zipfile.ZipFile(zipped_file_name, 'w') as zipped_file:
+                for file_name in file_names:
+                    zipped_file.write(file_name)
         run_calc_url = "%s/v1/calc/run" % self.hostname
         with WaitCursorManager('Starting calculation...', self.iface):
             if calc_id is not None:
