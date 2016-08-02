@@ -123,4 +123,4 @@ class SettingsDialog(QtGui.QDialog, FORM_CLASS):
         Method invoked when OK button is clicked.
         """
         self.saveState()
-        self.close()
+        super(SettingsDialog, self).accept()

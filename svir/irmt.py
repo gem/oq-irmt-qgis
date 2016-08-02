@@ -267,8 +267,12 @@ class Irmt:
         if self.drive_oq_engine_server_dlg is None:
             self.drive_oq_engine_server_dlg = DriveOqEngineServerDialog(
                 self.iface)
+        else:
+            # if the dialog was new, we don't need to login twice
+            self.drive_oq_engine_server_dlg.login()
         self.drive_oq_engine_server_dlg.show()
         self.drive_oq_engine_server_dlg.raise_()
+        self.drive_oq_engine_server_dlg.refresh_calc_list()
         self.drive_oq_engine_server_dlg.start_polling()
 
     def show_manual(self):
@@ -1063,7 +1067,10 @@ class Irmt:
         Open a dialog to specify the connection settings used to interact
         with the OpenQuake Engine
         """
-        SettingsDialog(self.iface, server='engine').exec_()
+        if SettingsDialog(self.iface, server='engine').exec_():
+            if self.drive_oq_engine_server_dlg is not None:
+                self.drive_oq_engine_server_dlg.close()
+                self.drive_oq_engine_server()
 
     def transform_attributes(self):
         """
