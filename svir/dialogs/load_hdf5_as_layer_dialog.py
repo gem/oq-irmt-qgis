@@ -44,6 +44,8 @@ from PyQt4.QtGui import (QDialogButtonBox,
                          QDialog,
                          QFileDialog,
                          QColor,
+                         QComboBox,
+                         QLabel,
                          )
 
 from openquake.baselib import hdf5
@@ -67,7 +69,7 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
     """
     def __init__(self, iface, output_type, hdf5_path=None):
         # sanity check
-        if output_type not in ['hcurves', 'hmaps']:
+        if output_type not in ['hcurves', 'hmaps', 'loss_maps', 'rcurves']:
             raise NotImplementedError(output_type)
         self.iface = iface
         self.hdf5_path = hdf5_path
@@ -79,17 +81,60 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         self.ok_button.setDisabled(True)
         self.open_hdfview_btn.setDisabled(True)
-        if output_type == 'hcurves':
-            self.imt_lbl.hide()
-            self.imt_cbx.hide()
-            self.poe_lbl.hide()
-            self.poe_cbx.hide()
+        self.rlz_lbl = QLabel('Realization (only the chosen realization'
+                              ' will be loaded into the layer)')
+        self.rlz_cbx = QComboBox()
+        self.rlz_cbx.currentIndexChanged['QString'].connect(
+            self.on_rlz_changed)
+        self.imt_lbl = QLabel(
+            'Intensity Measure Type (used for default styling)')
+        self.imt_cbx = QComboBox()
+        self.imt_cbx.currentIndexChanged['QString'].connect(
+            self.on_imt_changed)
+        self.poe_lbl = QLabel(
+            'Probability of Exceedance (used for default styling)')
+        self.poe_cbx = QComboBox()
+        self.poe_cbx.currentIndexChanged['QString'].connect(
+            self.on_poe_changed)
+        self.loss_type_lbl = QLabel(
+            'Loss Type (used for default styling)')
+        self.loss_type_cbx = QComboBox()
+        self.loss_type_cbx.currentIndexChanged['QString'].connect(
+            self.on_loss_type_changed)
+        if output_type == 'hmaps':
+            self.setWindowTitle('Load hazard maps from HDF5, as layer')
+            self.verticalLayout.addWidget(self.rlz_lbl)
+            self.verticalLayout.addWidget(self.rlz_cbx)
+            self.verticalLayout.addWidget(self.imt_lbl)
+            self.verticalLayout.addWidget(self.imt_cbx)
+            self.verticalLayout.addWidget(self.poe_lbl)
+            self.verticalLayout.addWidget(self.poe_cbx)
+            self.adjustSize()
+        elif output_type == 'hcurves':
+            self.setWindowTitle('Load hazard curves from HDF5, as layer')
+            self.verticalLayout.addWidget(self.rlz_lbl)
+            self.verticalLayout.addWidget(self.rlz_cbx)
+            self.adjustSize()
+        elif output_type == 'loss_maps':
+            self.setWindowTitle('Load loss maps from HDF5, as layer')
+            self.verticalLayout.addWidget(self.rlz_lbl)
+            self.verticalLayout.addWidget(self.rlz_cbx)
+            self.verticalLayout.addWidget(self.loss_type_lbl)
+            self.verticalLayout.addWidget(self.loss_type_cbx)
+            self.verticalLayout.addWidget(self.poe_lbl)
+            self.verticalLayout.addWidget(self.poe_cbx)
+            self.adjustSize()
+        elif output_type == 'rcurves':
+            self.setWindowTitle('Load loss curves from HDF5, as layer')
+            self.verticalLayout.addWidget(self.rlz_lbl)
+            self.verticalLayout.addWidget(self.rlz_cbx)
             self.adjustSize()
         if self.hdf5_path:
             self.hdf5_path_le.setText(self.hdf5_path)
             self.rlz_cbx.setEnabled(True)
             self.imt_cbx.setEnabled(True)
             self.poe_cbx.setEnabled(True)
+            self.loss_type_cbx.setEnabled(True)
             self.populate_rlz_cbx()
 
     @pyqtSlot(str)
@@ -109,8 +154,7 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
     def on_file_browser_tbn_clicked(self):
         self.hdf5_path = self.open_file_dialog()
 
-    @pyqtSlot(str)
-    def on_rlz_cbx_currentIndexChanged(self):
+    def on_rlz_changed(self):
         self.dataset = self.hdata.get(self.rlz_cbx.currentText())
         self.imts = {}
         for name in self.dataset.dtype.names[2:]:
@@ -127,8 +171,7 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
         self.imt_cbx.setEnabled(True)
         self.imt_cbx.addItems(self.imts.keys())
 
-    @pyqtSlot(str)
-    def on_imt_cbx_currentIndexChanged(self):
+    def on_imt_changed(self):
         if self.output_type == 'hcurves':
             self.set_ok_button()
             return
@@ -137,8 +180,10 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
         self.poe_cbx.setEnabled(True)
         self.poe_cbx.addItems(self.imts[imt])
 
-    @pyqtSlot(str)
-    def on_poe_cbx_currentIndexChanged(self):
+    def on_poe_changed(self):
+        self.set_ok_button()
+
+    def on_loss_type_changed(self):
         self.set_ok_button()
 
     def open_file_dialog(self):
