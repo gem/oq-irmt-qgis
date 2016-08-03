@@ -69,7 +69,7 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
     """
     def __init__(self, iface, output_type, hdf5_path=None):
         # sanity check
-        if output_type not in ['hcurves', 'hmaps', 'loss_maps', 'rcurves']:
+        if output_type not in ['hcurves', 'hmaps', 'loss_maps', 'loss_curves']:
             raise NotImplementedError(output_type)
         self.iface = iface
         self.hdf5_path = hdf5_path
@@ -124,10 +124,12 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             self.verticalLayout.addWidget(self.poe_lbl)
             self.verticalLayout.addWidget(self.poe_cbx)
             self.adjustSize()
-        elif output_type == 'rcurves':
+        elif output_type == 'loss_curves':
             self.setWindowTitle('Load loss curves from HDF5, as layer')
             self.verticalLayout.addWidget(self.rlz_lbl)
             self.verticalLayout.addWidget(self.rlz_cbx)
+            self.verticalLayout.addWidget(self.loss_type_lbl)
+            self.verticalLayout.addWidget(self.loss_type_cbx)
             self.adjustSize()
         if self.hdf5_path:
             self.hdf5_path_le.setText(self.hdf5_path)

@@ -15,7 +15,7 @@
     <normaloff>:/plugins/inasafe/icon.png</normaloff>:/plugins/inasafe/icon.png</iconset>
   </property>
   <property name="windowTitle">
-   <string>Hazard Curves Viewer</string>
+   <string>OQ-Engine Outputs Viewer</string>
   </property>
   <widget class="QWidget" name="container">
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -27,25 +27,7 @@
      </widget>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout">
-      <item>
-       <widget class="QLabel" name="imt_label">
-        <property name="text">
-         <string>IMT</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QComboBox" name="imt_cbx">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-       </widget>
-      </item>
-     </layout>
+     <layout class="QHBoxLayout" name="horizontalLayout"/>
     </item>
     <item>
      <layout class="QVBoxLayout" name="plot_layout"/>
