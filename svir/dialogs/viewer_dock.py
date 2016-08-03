@@ -35,7 +35,7 @@ from matplotlib.backends.backend_qt4agg import (
 
 
 from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QColor
+from PyQt4.QtGui import QColor, QLabel, QComboBox, QSizePolicy
 from qgis.gui import QgsVertexMarker
 from qgis.core import QGis, QgsMapLayer, QgsFeatureRequest
 
@@ -67,11 +67,11 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
         self.current_selection = {}
         self.current_imt = None
+        self.current_loss_type = None
         self.was_imt_switched = False
         self.current_abscissa = []
         self.color_names = [
             name for name in QColor.colorNames() if name != 'white']
-        # shuffle(self.color_names)  # NOTE: this works in place, returning None
         self.line_styles = ["-", "--", "-.", ":"]
 
         # Marker for hovering
@@ -83,6 +83,14 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.vertex_marker.setPenWidth(6)
 
         self.iface.mapCanvas().setSelectionColor(QColor('magenta'))
+
+        self.imt_lbl = QLabel('Intensity Measure Type')
+        self.imt_lbl.setSizePolicy(QSizePolicy(QSizePolicy.Minimum))
+        self.imt_cbx = QComboBox()
+        self.imt_cbx.currentIndexChanged['QString'].connect(
+            self.on_imt_changed)
+        self.horizontalLayout.addWidget(self.imt_lbl)
+        self.horizontalLayout.addWidget(self.imt_cbx)
 
         self.plot_figure = Figure()
         self.plot_canvas = FigureCanvas(self.plot_figure)
@@ -267,7 +275,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         return False
 
     @pyqtSlot(int)
-    def on_imt_cbx_currentIndexChanged(self):
+    def on_imt_changed(self):
         self.current_imt = self.imt_cbx.currentText()
         self.was_imt_switched = True
         self.set_selection(self.current_selection.keys())

@@ -230,6 +230,13 @@ class Irmt:
                            u"Load hazard curves from HDF5 as layer",
                            self.load_hcurves_from_hdf5_as_layer,
                            enable=True)
+        # Action to load as layer loss curves from hdf5 produced by the
+        # oq-engine
+        self.add_menu_item("load_loss_curves_from_hdf5_as_layer",
+                           ":/plugins/irmt/calculate.svg",  # FIXME
+                           u"Load loss curves from HDF5 as layer",
+                           self.load_loss_curves_from_hdf5_as_layer,
+                           enable=True)
         # Action to load as layer a geojson produced by the oq-engine
         self.add_menu_item("load_geojson_as_layer",
                            ":/plugins/irmt/calculate.svg",  # FIXME
@@ -258,6 +265,10 @@ class Irmt:
 
     def load_hcurves_from_hdf5_as_layer(self):
         dlg = LoadHdf5AsLayerDialog(self.iface, 'hcurves')
+        dlg.exec_()
+
+    def load_loss_curves_from_hdf5_as_layer(self):
+        dlg = LoadHdf5AsLayerDialog(self.iface, 'loss_curves')
         dlg.exec_()
 
     def load_geojson_as_layer(self):
