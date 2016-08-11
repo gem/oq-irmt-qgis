@@ -315,7 +315,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             button.setStyleSheet(style)
         QObject.connect(
             button, SIGNAL("clicked()"),
-            lambda output=output, action=action, outtype=outtype: self.on_output_action_btn_clicked(output, action, outtype)
+            lambda output=output, action=action, outtype=outtype: (
+                self.on_output_action_btn_clicked(output, action, outtype))
         )
 
     def on_output_action_btn_clicked(self, output, action, outtype):
