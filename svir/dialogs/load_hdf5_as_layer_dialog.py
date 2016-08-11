@@ -73,6 +73,7 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             raise NotImplementedError(output_type)
         self.iface = iface
         self.hdf5_path = hdf5_path
+        self.hfile = None
         self.output_type = output_type
         QDialog.__init__(self)
         # Set up the user interface from Designer.
@@ -84,21 +85,31 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
         self.rlz_lbl = QLabel('Realization (only the chosen realization'
                               ' will be loaded into the layer)')
         self.rlz_cbx = QComboBox()
+        self.rlz_cbx.setEnabled(False)
         self.rlz_cbx.currentIndexChanged['QString'].connect(
             self.on_rlz_changed)
+        self.taxonomy_lbl = QLabel('Taxonomy (only the chosen taxonomy'
+                                   ' will be loaded into the layer)')
+        self.taxonomy_cbx = QComboBox()
+        self.taxonomy_cbx.setEnabled(False)
+        self.taxonomy_cbx.currentIndexChanged['QString'].connect(
+            self.on_taxonomy_changed)
         self.imt_lbl = QLabel(
             'Intensity Measure Type (used for default styling)')
         self.imt_cbx = QComboBox()
+        self.imt_cbx.setEnabled(False)
         self.imt_cbx.currentIndexChanged['QString'].connect(
             self.on_imt_changed)
         self.poe_lbl = QLabel(
             'Probability of Exceedance (used for default styling)')
         self.poe_cbx = QComboBox()
+        self.poe_cbx.setEnabled(False)
         self.poe_cbx.currentIndexChanged['QString'].connect(
             self.on_poe_changed)
         self.loss_type_lbl = QLabel(
             'Loss Type (used for default styling)')
         self.loss_type_cbx = QComboBox()
+        self.loss_type_cbx.setEnabled(False)
         self.loss_type_cbx.currentIndexChanged['QString'].connect(
             self.on_loss_type_changed)
         if output_type == 'hmaps':
@@ -126,6 +137,8 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             self.adjustSize()
         elif output_type == 'loss_curves':
             self.setWindowTitle('Load loss curves from HDF5, as layer')
+            self.verticalLayout.addWidget(self.taxonomy_lbl)
+            self.verticalLayout.addWidget(self.taxonomy_cbx)
             self.verticalLayout.addWidget(self.rlz_lbl)
             self.verticalLayout.addWidget(self.rlz_cbx)
             self.verticalLayout.addWidget(self.loss_type_lbl)
@@ -133,10 +146,13 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             self.adjustSize()
         if self.hdf5_path:
             self.hdf5_path_le.setText(self.hdf5_path)
+            self.taxonomy_cbx.setEnabled(True)
             self.rlz_cbx.setEnabled(True)
             self.imt_cbx.setEnabled(True)
             self.poe_cbx.setEnabled(True)
             self.loss_type_cbx.setEnabled(True)
+            self.hfile = self.get_hdf5_file_handler()
+            self.populate_taxonomy_cbx()
             self.populate_rlz_cbx()
 
     @pyqtSlot(str)
@@ -156,22 +172,31 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
     def on_file_browser_tbn_clicked(self):
         self.hdf5_path = self.open_file_dialog()
 
+    def on_taxonomy_changed(self):
+        self.taxonomy = self.taxonomy_cbx.currentText()
+
     def on_rlz_changed(self):
-        self.dataset = self.hdata.get(self.rlz_cbx.currentText())
-        self.imts = {}
-        for name in self.dataset.dtype.names[2:]:
-            if self.output_type == 'hmaps':
-                imt, poe = name.split('-')
-                if imt not in self.imts:
-                    self.imts[imt] = [poe]
-                else:
-                    self.imts[imt].append(poe)
-            elif self.output_type == 'hcurves':
-                imt = name
-                self.imts[imt] = []
-        self.imt_cbx.clear()
-        self.imt_cbx.setEnabled(True)
-        self.imt_cbx.addItems(self.imts.keys())
+        if self.output_type in ['hcurves', 'hmaps']:
+            self.dataset = self.hdata.get(self.rlz_cbx.currentText())
+            self.imts = {}
+            for name in self.dataset.dtype.names[2:]:
+                if self.output_type == 'hmaps':
+                    imt, poe = name.split('-')
+                    if imt not in self.imts:
+                        self.imts[imt] = [poe]
+                    else:
+                        self.imts[imt].append(poe)
+                elif self.output_type == 'hcurves':
+                    imt = name
+                    self.imts[imt] = []
+            self.imt_cbx.clear()
+            self.imt_cbx.setEnabled(True)
+            self.imt_cbx.addItems(self.imts.keys())
+        elif self.output_type == 'loss_curves':
+            self.loss_types = self.hdata.dtype.names
+            self.loss_type_cbx.clear()
+            self.loss_type_cbx.setEnabled(True)
+            self.loss_type_cbx.addItems(self.loss_types)
 
     def on_imt_changed(self):
         if self.output_type == 'hcurves':
@@ -199,14 +224,30 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
         if hdf5_path:
             self.hdf5_path = hdf5_path
             self.hdf5_path_le.setText(self.hdf5_path)
+            self.hfile = self.get_hdf5_file_handler()
+            self.populate_taxonomy_cbx()
             self.populate_rlz_cbx()
 
-    def populate_rlz_cbx(self):
+    def get_hdf5_file_handler(self):
         # FIXME: will the file be closed correctly?
         # with hdf5.File(self.hdf5_path, 'r') as hf:
-        self.hfile = hdf5.File(self.hdf5_path, 'r')
-        self.hdata = self.hfile.get(self.output_type)
-        self.rlzs = self.hdata.keys()
+        return hdf5.File(self.hdf5_path, 'r')
+
+    def populate_taxonomy_cbx(self):
+        if self.output_type == 'loss_curves':
+            self.taxonomies = self.hfile.get('assetcol/taxonomies')[:].tolist()
+            self.taxonomy_cbx.clear()
+            self.taxonomy_cbx.setEnabled(True)
+            self.taxonomy_cbx.addItems(self.taxonomies)
+
+    def populate_rlz_cbx(self):
+        if self.output_type in ('hcurves', 'hmaps'):
+            self.hdata = self.hfile.get(self.output_type)
+            self.rlzs = self.hdata.keys()
+        elif self.output_type == 'loss_curves':
+            self.hdata = self.hfile.get('loss_curves-rlzs')
+            _, n_rlzs = self.hdata.shape
+            self.rlzs = [str(i+1) for i in range(n_rlzs)]
         self.rlz_cbx.clear()
         self.rlz_cbx.setEnabled(True)
         self.rlz_cbx.addItems(self.rlzs)
@@ -216,18 +257,33 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             self.ok_button.setEnabled(self.poe_cbx.currentIndex != -1)
         elif self.output_type == 'hcurves':
             self.ok_button.setEnabled(self.imt_cbx.currentIndex != -1)
+        elif self.output_type == 'loss_curves':
+            self.ok_button.setEnabled(self.loss_type_cbx.currentIndex != -1)
 
     def build_layer(self):
         rlz = self.rlz_cbx.currentText()
-        imt = self.imt_cbx.currentText()
+        if self.output_type == 'loss_curves':
+            # NOTE: realizations in the hdf5 file start counting from 1, but
+            #       we need to refer to column indices that start from 0
+            rlz_idx = int(rlz) - 1
         if self.output_type == 'hmaps':
+            imt = self.imt_cbx.currentText()
             poe = self.poe_cbx.currentText()
             self.default_field_name = '%s-%s' % (imt, poe)
-            layer_name = "hazard_map_%s" % rlz
+            layer_name = "hazard_map_rlz-%s" % rlz
         elif self.output_type == 'hcurves':
+            imt = self.imt_cbx.currentText()
             self.default_field_name = imt
-            layer_name = "hazard_curves_%s" % rlz
-        field_names = list(self.dataset.dtype.names)
+            layer_name = "hazard_curves_rlz-%s" % rlz
+        elif self.output_type == 'loss_curves':
+            loss_type = self.loss_type_cbx.currentText()
+            self.default_field_name = loss_type
+            layer_name = "loss_curves_rlz-%s" % rlz
+        if self.output_type in ['hcurves', 'hmaps']:
+            field_names = list(self.dataset.dtype.names)
+        elif self.output_type == 'loss_curves':
+            field_names = list(self.loss_types)
+            taxonomy_idx = self.taxonomies.index(self.taxonomy)
         # create layer
         self.layer = QgsVectorLayer(
             "Point?crs=epsg:4326", layer_name, "memory")
@@ -238,7 +294,7 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
                 # NOTE: add_numeric_attribute uses LayerEditingManager
                 added_field_name = add_numeric_attribute(
                     field_name, self.layer)
-            elif self.output_type == 'hcurves':
+            elif self.output_type in ['hcurves', 'loss_curves']:
                 # FIXME: probably we need a different type with more capacity
                 added_field_name = add_textual_attribute(
                     field_name, self.layer)
@@ -256,25 +312,55 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             feats = []
             if self.output_type == 'hcurves':
                 imtls = self.hfile.get('imtls')
-            for row in self.dataset:
-                # add a feature
-                feat = QgsFeature(self.layer.pendingFields())
-                for field_name_idx, field_name in enumerate(field_names):
-                    if field_name in ['lon', 'lat']:
+            if self.output_type in ['hcurves', 'hmaps']:
+                for row in self.dataset:
+                    # add a feature
+                    feat = QgsFeature(self.layer.pendingFields())
+                    for field_name_idx, field_name in enumerate(field_names):
+                        if field_name in ['lon', 'lat']:
+                            continue
+                        if self.output_type == 'hmaps':
+                            # NOTE: without casting to float, it produces a
+                            #       null because it does not recognize the
+                            #       numpy type
+                            value = float(row[field_name_idx])
+                        elif self.output_type == 'hcurves':
+                            poes = row[field_name_idx].tolist()
+                            imls = imtls[field_name].tolist()
+                            dic = dict(poes=poes, imls=imls)
+                            value = json.dumps(dic)
+                        feat.setAttribute(field_name, value)
+                    feat.setGeometry(QgsGeometry.fromPoint(
+                        QgsPoint(row[0], row[1])))
+                    feats.append(feat)
+            elif self.output_type == 'loss_curves':
+                # We need to select rows from loss_curves-rlzs where the
+                # row index (the asset idx) has the chosen taxonomy. The
+                # taxonomy is found in the assetcol/array, together with
+                # the coordinates lon and lat of the asset.
+                # From the selected rows, we extract loss_type -> losses
+                #                                and loss_type -> poes
+                asset_array = self.hfile.get('assetcol/array')
+                loss_curves = self.hfile.get('loss_curves-rlzs')[:, rlz_idx]
+                for asset_idx, row in enumerate(loss_curves):
+                    asset = asset_array[asset_idx]
+                    if asset['taxonomy'] != taxonomy_idx:
                         continue
-                    if self.output_type == 'hmaps':
-                        # NOTE: without casting to float, it produces a null
-                        #       because it does not recognize the numpy type
-                        value = float(row[field_name_idx])
-                    elif self.output_type == 'hcurves':
-                        poes = row[field_name_idx].tolist()
-                        imls = imtls[field_name].tolist()
-                        dic = dict(poes=poes, imls=imls)
+                    else:
+                        lon = asset['lon']
+                        lat = asset['lat']
+                    # add a feature
+                    feat = QgsFeature(self.layer.pendingFields())
+                    # NOTE: field names are loss types (normalized to 10 chars)
+                    for field_name_idx, field_name in enumerate(field_names):
+                        losses = row[field_name_idx]['losses'].tolist()
+                        poes = row[field_name_idx]['poes'].tolist()
+                        dic = dict(losses=losses, poes=poes)
                         value = json.dumps(dic)
-                    feat.setAttribute(field_name, value)
-                feat.setGeometry(QgsGeometry.fromPoint(
-                    QgsPoint(row[0], row[1])))
-                feats.append(feat)
+                        feat.setAttribute(field_name, value)
+                    feat.setGeometry(QgsGeometry.fromPoint(
+                        QgsPoint(lon, lat)))
+                    feats.append(feat)
             (res, outFeats) = pr.addFeatures(feats)
         # add self.layer to the legend
         QgsMapLayerRegistry.instance().addMapLayer(self.layer)
@@ -317,7 +403,7 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             self.layer)
         self.iface.mapCanvas().refresh()
 
-    def style_hcurves(self):
+    def style_curves(self):
         registry = QgsSymbolLayerV2Registry.instance()
         cross = registry.symbolLayerMetadata("SimpleMarker").createSymbolLayer(
             {'name': 'cross2', 'color': '0,0,0', 'color_border': '0,0,0',
@@ -346,8 +432,8 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
         self.hfile.close()
         if self.output_type == 'hmaps':
             self.style_hmaps()
-        elif self.output_type == 'hcurves':
-            self.style_hcurves()
+        elif self.output_type in ['hcurves', 'loss_curves']:
+            self.style_curves()
         super(LoadHdf5AsLayerDialog, self).accept()
 
     # FIXME: also cancel should close the hdf5 file

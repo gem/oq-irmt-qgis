@@ -65,6 +65,12 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
         self.active_layer = self.iface.activeLayer()
 
+        self.output_type = None
+        self.loss_type_lbl = None
+        self.loss_type_cbx = None
+        self.imt_lbl = None
+        self.imt_cbx = None
+
         self.current_selection = {}
         self.current_imt = None
         self.current_loss_type = None
@@ -84,13 +90,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
         self.iface.mapCanvas().setSelectionColor(QColor('magenta'))
 
-        self.imt_lbl = QLabel('Intensity Measure Type')
-        self.imt_lbl.setSizePolicy(QSizePolicy(QSizePolicy.Minimum))
-        self.imt_cbx = QComboBox()
-        self.imt_cbx.currentIndexChanged['QString'].connect(
-            self.on_imt_changed)
-        self.horizontalLayout.addWidget(self.imt_lbl)
-        self.horizontalLayout.addWidget(self.imt_cbx)
+        self.output_type_cbx.addItems(['', 'Hazard Curves', 'Loss Curves'])
 
         self.plot_figure = Figure()
         self.plot_canvas = FigureCanvas(self.plot_figure)
@@ -102,6 +102,58 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.toolbar_layout.insertWidget(0, self.plot_toolbar)
 
         self.plot_canvas.mpl_connect('motion_notify_event', self.on_plot_hover)
+
+    def create_loss_type_selector(self):
+        self.loss_type_lbl = QLabel('Loss Type')
+        self.loss_type_lbl.setSizePolicy(QSizePolicy(QSizePolicy.Minimum))
+        self.loss_type_cbx = QComboBox()
+        self.loss_type_cbx.currentIndexChanged['QString'].connect(
+            self.on_loss_type_changed)
+        self.horizontalLayout.addWidget(self.loss_type_lbl)
+        self.horizontalLayout.addWidget(self.loss_type_cbx)
+
+    def create_imt_selector(self):
+        self.imt_lbl = QLabel('Intensity Measure Type')
+        self.imt_lbl.setSizePolicy(QSizePolicy(QSizePolicy.Minimum))
+        self.imt_cbx = QComboBox()
+        self.imt_cbx.currentIndexChanged['QString'].connect(
+            self.on_imt_changed)
+        self.horizontalLayout.addWidget(self.imt_lbl)
+        self.horizontalLayout.addWidget(self.imt_cbx)
+
+    def set_output_type_and_its_gui(self, new_output_type):
+        if self.output_type is None:
+            if new_output_type == 'hcurves':
+                self.create_imt_selector()
+            elif new_output_type == 'loss_curves':
+                self.create_loss_type_selector()
+        else:
+            if self.output_type == new_output_type:
+                return
+            if new_output_type == 'hcurves':
+                self.remove_gui_widget()
+                self.loss_type_lbl.hide()
+                self.horizontalLayout.removeWidget(self.loss_type_lbl)
+                self.loss_type_cbx.hide()
+                self.horizontalLayout.removeWidget(self.loss_type_cbx)
+                self.create_imt_selector()
+            elif new_output_type == 'loss_curves':
+                self.imt_lbl.hide()
+                self.horizontalLayout.removeWidget(self.imt_lbl)
+                self.imt_cbx.hide()
+                self.horizontalLayout.removeWidget(self.imt_cbx)
+                self.create_loss_type_selector()
+            elif not new_output_type:  # None or ''
+                self.loss_type_lbl.hide()
+                self.horizontalLayout.removeWidget(self.loss_type_lbl)
+                self.loss_type_cbx.hide()
+                self.horizontalLayout.removeWidget(self.loss_type_cbx)
+                self.imt_lbl.hide()
+                self.horizontalLayout.removeWidget(self.imt_lbl)
+                self.imt_cbx.hide()
+                self.horizontalLayout.removeWidget(self.imt_cbx)
+        self.adjustSize()
+        self.output_type = new_output_type
 
     def draw(self):
         self.plot.clear()
@@ -125,23 +177,37 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 gid=str(site),  # matplotlib needs a string when exporting svg
                 picker=5  # 5 points tolerance
             )
-        self.plot.set_xscale('log')
-        self.plot.set_yscale('log')
-        self.plot.set_xlabel('Intensity Measure Level')
-        self.plot.set_ylabel('Probability of Exceedance')
-        imt = self.imt_cbx.currentText()
-        if count_selected == 0:
-            title = ''
-        elif count_selected == 1:
-            title = 'Hazard Curve for %s' % imt
-        else:
-            title = 'Hazard Curves for %s' % imt
+        if self.output_type == 'hcurves':
+            self.plot.set_xscale('log')
+            self.plot.set_yscale('log')
+            self.plot.set_xlabel('Intensity Measure Level')
+            self.plot.set_ylabel('Probability of Exceedance')
+            imt = self.imt_cbx.currentText()
+            if count_selected == 0:
+                title = ''
+            elif count_selected == 1:
+                title = 'Hazard Curve for %s' % imt
+            else:
+                title = 'Hazard Curves for %s' % imt
+        elif self.output_type == 'loss_curves':
+            self.plot.set_xscale('log')
+            self.plot.set_yscale('linear')
+            self.plot.set_xlabel('Losses')
+            self.plot.set_ylabel('Probability of Exceedance')
+            loss_type = self.loss_type_cbx.currentText()
+            if count_selected == 0:
+                title = ''
+            elif count_selected == 1:
+                title = 'Loss Curve for %s' % loss_type
+            else:
+                title = 'Loss Curves for %s' % loss_type
         self.plot.set_title(title)
         self.plot.grid()
-        ylim_bottom, ylim_top = self.plot.get_ylim()
-        self.plot.set_ylim(ylim_bottom, ylim_top * 1.5)
-        xlim_left, xlim_right = self.plot.get_xlim()
-        self.plot.set_xlim(xlim_left, xlim_right * 1.1)
+        if self.output_type == 'hcurves':
+            ylim_bottom, ylim_top = self.plot.get_ylim()
+            self.plot.set_ylim(ylim_bottom, ylim_top * 1.5)
+            xlim_left, xlim_right = self.plot.get_xlim()
+            self.plot.set_xlim(xlim_left, xlim_right * 1.1)
 
         if count_selected <= 20:
             self.legend = self.plot.legend(
@@ -155,6 +221,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.plot_canvas.draw()
 
     def redraw(self, selected, deselected, _):
+        if self.output_type is None:
+            return
         for fid in deselected:
             try:
                 del self.current_selection[fid]
@@ -164,17 +232,28 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.current_abscissa = []
         for feature in self.active_layer.getFeatures(
                 QgsFeatureRequest().setFilterFids(selected)):
-            data_dic = json.loads(feature[self.current_imt])
-            self.current_abscissa = data_dic['imls']
-            # for a single intensity measure type, the imls are always
-            # the same, so we can break the loop after the first feature
-            break
+            if self.output_type == 'hcurves':
+                data_dic = json.loads(feature[self.current_imt])
+                self.current_abscissa = data_dic['imls']
+                # for a single intensity measure type, the imls are always
+                # the same, so we can break the loop after the first feature
+                break
+            elif self.output_type == 'loss_curves':
+                data_dic = json.loads(feature[self.current_loss_type])
+                self.current_abscissa = data_dic['losses']
+                # for a single loss type, the losses are always
+                # the same, so we can break the loop after the first feature
+                break
 
         for i, feature in enumerate(self.active_layer.getFeatures(
                 QgsFeatureRequest().setFilterFids(selected))):
-            data_dic = json.loads(feature[self.current_imt])
+            if self.output_type == 'hcurves':
+                data_dic = json.loads(feature[self.current_imt])
+            elif self.output_type == 'loss_curves':
+                data_dic = json.loads(feature[self.current_loss_type])
             ordinates = data_dic['poes']
             if (self.was_imt_switched
+                    or self.was_loss_type_switched
                     or feature.id() not in self.current_selection):
                 if self.bw_chk.isChecked():
                     line_styles_whole_cycles = i / len(self.line_styles)
@@ -182,14 +261,16 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                     r = g = b = format(
                         (85 * line_styles_whole_cycles) % 256, '02x')
                     color_hex = "#%s%s%s" % (r, g, b)
-                    # here I am using i in order to cycle through all the line
-                    # styles, regardless from the feature id (otherwise I might
-                    # easily repeat styles, that are a small set of 4 items)
-                    line_style = self.line_styles[i % len(self.line_styles)]
+                    # here I am using i in order to cycle through all the
+                    # line styles, regardless from the feature id
+                    # (otherwise I might easily repeat styles, that are a
+                    # small set of 4 items)
+                    line_style = self.line_styles[
+                        i % len(self.line_styles)]
                 else:
                     # here I am using the feature id in order to keep a
-                    # matching between a curve and the corresponding point in
-                    # the map
+                    # matching between a curve and the corresponding point
+                    # in the map
                     color_name = self.color_names[
                         feature.id() % len(self.color_names)]
                     color = QColor(color_name)
@@ -201,7 +282,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                     'color': color_hex,
                     'line_style': line_style,
                 }
-        self.was_imt_switched = False
+            self.was_imt_switched = False
+            self.was_loss_type_switched = False
 
         self.draw()
         # except (TypeError, ValueError):
@@ -214,7 +296,10 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
     def layer_changed(self):
         self.current_selection = {}
         self.clear_plot()
-        self.clear_imt_cbx()
+        if hasattr(self, 'self.imt_cbx'):
+            self.clear_imt_cbx()
+        if hasattr(self, 'loss_type_cbx'):
+            self.clear_loss_type_cbx()
 
         self.remove_connects()
 
@@ -226,9 +311,16 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             self.active_layer.selectionChanged.connect(self.redraw)
             self.setEnabled(True)
 
-            reload_attrib_cbx(
-                self.imt_cbx, self.active_layer, False, TEXTUAL_FIELD_TYPES)
-
+            if self.output_type == 'hcurves':
+                reload_attrib_cbx(self.imt_cbx,
+                                  self.active_layer,
+                                  False,
+                                  TEXTUAL_FIELD_TYPES)
+            elif self.output_type == 'loss_curves':
+                reload_attrib_cbx(self.loss_type_cbx,
+                                  self.active_layer,
+                                  False,
+                                  TEXTUAL_FIELD_TYPES)
             if self.active_layer.selectedFeatureCount() > 0:
                 self.set_selection(self.active_layer.selectedFeaturesIds())
         else:
@@ -244,14 +336,22 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.redraw(selected, [], None)
 
     def clear_plot(self):
-        self.plot.clear()
-        self.plot_canvas.draw()
-        self.vertex_marker.hide()
+        if hasattr(self, 'plot'):
+            self.plot.clear()
+            self.plot_canvas.draw()
+            self.vertex_marker.hide()
 
     def clear_imt_cbx(self):
-        self.imt_cbx.blockSignals(True)
-        self.imt_cbx.clear()
-        self.imt_cbx.blockSignals(False)
+        if self.imt_cbx is not None:
+            self.imt_cbx.blockSignals(True)
+            self.imt_cbx.clear()
+            self.imt_cbx.blockSignals(False)
+
+    def clear_loss_type_cbx(self):
+        if self.loss_type_cbx is not None:
+            self.loss_type_cbx.blockSignals(True)
+            self.loss_type_cbx.clear()
+            self.loss_type_cbx.blockSignals(False)
 
     def on_plot_hover(self, event):
         if not self.on_container_hover(event, self.plot):
@@ -274,21 +374,32 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 self.vertex_marker.hide()
         return False
 
-    @pyqtSlot(int)
     def on_imt_changed(self):
         self.current_imt = self.imt_cbx.currentText()
         self.was_imt_switched = True
         self.set_selection(self.current_selection.keys())
 
+    def on_loss_type_changed(self):
+        self.current_loss_type = self.loss_type_cbx.currentText()
+        self.was_loss_type_switched = True
+        self.set_selection(self.current_selection.keys())
+
     @pyqtSlot()
     def on_export_data_button_clicked(self):
-
-        filename = QtGui.QFileDialog.getSaveFileName(
-            self,
-            self.tr('Export data'),
-            os.path.expanduser('~/hazard_curves_%s.csv' % self.current_imt),
-            '*.csv')
-
+        if self.output_type == 'hcurves':
+            filename = QtGui.QFileDialog.getSaveFileName(
+                self,
+                self.tr('Export data'),
+                os.path.expanduser(
+                    '~/hazard_curves_%s.csv' % self.current_imt),
+                '*.csv')
+        elif self.output_type == 'loss_curves':
+            filename = QtGui.QFileDialog.getSaveFileName(
+                self,
+                self.tr('Export data'),
+                os.path.expanduser(
+                    '~/loss_curves_%s.csv' % self.current_loss_type),
+                '*.csv')
         if filename:
             with open(filename, 'w') as csv_file:
                 line = 'lon,lat,%s' % (
@@ -309,6 +420,25 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
     def on_bw_chk_clicked(self):
         self.layer_changed()
 
+    @pyqtSlot(int)
+    def on_output_type_cbx_currentIndexChanged(self):
+        otype = self.output_type_cbx.currentText()
+        if otype == 'Hazard Curves':
+            output_type = 'hcurves'
+        elif otype == 'Loss Curves':
+            output_type = 'loss_curves'
+        else:
+            output_type = None
+        self.set_output_type_and_its_gui(output_type)
+        self.layer_changed()
+
     def closeEvent(self, event):
         self.action.setChecked(False)
         event.accept()
+
+    def change_output_type(self, output_type):
+        # get the index of the item that has the given string
+        # and set the combobox to that item
+        index = self.output_type_cbx.findData(output_type)
+        if index != -1:
+            self.output_type_cbx.setCurrentIndex(index)
