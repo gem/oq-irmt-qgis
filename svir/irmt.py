@@ -262,14 +262,17 @@ class Irmt:
     def load_hmaps_from_hdf5_as_layer(self):
         dlg = LoadHdf5AsLayerDialog(self.iface, 'hmaps')
         dlg.exec_()
+        self.viewer_dock.change_output_type('')
 
     def load_hcurves_from_hdf5_as_layer(self):
         dlg = LoadHdf5AsLayerDialog(self.iface, 'hcurves')
         dlg.exec_()
+        self.viewer_dock.change_output_type('Hazard Curves')
 
     def load_loss_curves_from_hdf5_as_layer(self):
         dlg = LoadHdf5AsLayerDialog(self.iface, 'loss_curves')
         dlg.exec_()
+        self.viewer_dock.change_output_type('Loss Curves')
 
     def load_geojson_as_layer(self):
         dlg = LoadGeoJsonAsLayerDialog(self.iface)
