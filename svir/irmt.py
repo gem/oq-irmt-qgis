@@ -315,6 +315,7 @@ class Irmt:
 
     def current_layer_changed(self, layer=None):
         self.update_actions_status()
+        self.viewer_dock.change_output_type('')
         self.viewer_dock.layer_changed()
 
     def add_menu_item(self,
