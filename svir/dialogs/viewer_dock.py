@@ -121,6 +121,12 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.horizontalLayout.addWidget(self.imt_lbl)
         self.horizontalLayout.addWidget(self.imt_cbx)
 
+    def remove_widgets_from_layout(self, widgets, layout):
+        for widget in widgets:
+            if widget is not None:
+                widget.hide()
+                layout.removeWidget(widget)
+
     def set_output_type_and_its_gui(self, new_output_type):
         if self.output_type is None:
             if new_output_type == 'hcurves':
@@ -131,27 +137,20 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             if self.output_type == new_output_type:
                 return
             if new_output_type == 'hcurves':
-                self.remove_gui_widget()
-                self.loss_type_lbl.hide()
-                self.horizontalLayout.removeWidget(self.loss_type_lbl)
-                self.loss_type_cbx.hide()
-                self.horizontalLayout.removeWidget(self.loss_type_cbx)
+                self.remove_widgets_from_layout(
+                    [self.loss_type_lbl, self.loss_type_cbx],
+                    self.horizontalLayout)
                 self.create_imt_selector()
             elif new_output_type == 'loss_curves':
-                self.imt_lbl.hide()
-                self.horizontalLayout.removeWidget(self.imt_lbl)
-                self.imt_cbx.hide()
-                self.horizontalLayout.removeWidget(self.imt_cbx)
+                self.remove_widgets_from_layout(
+                    [self.imt_lbl, self.imt_cbx],
+                    self.horizontalLayout)
                 self.create_loss_type_selector()
             elif not new_output_type:  # None or ''
-                self.loss_type_lbl.hide()
-                self.horizontalLayout.removeWidget(self.loss_type_lbl)
-                self.loss_type_cbx.hide()
-                self.horizontalLayout.removeWidget(self.loss_type_cbx)
-                self.imt_lbl.hide()
-                self.horizontalLayout.removeWidget(self.imt_lbl)
-                self.imt_cbx.hide()
-                self.horizontalLayout.removeWidget(self.imt_cbx)
+                self.remove_widgets_from_layout(
+                    [self.loss_type_lbl, self.loss_type_cbx,
+                     self.imt_lbl, self.imt_cbx],
+                    self.horizontalLayout)
         self.adjustSize()
         self.output_type = new_output_type
 
@@ -439,6 +438,6 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
     def change_output_type(self, output_type):
         # get the index of the item that has the given string
         # and set the combobox to that item
-        index = self.output_type_cbx.findData(output_type)
+        index = self.output_type_cbx.findText(output_type)
         if index != -1:
             self.output_type_cbx.setCurrentIndex(index)
