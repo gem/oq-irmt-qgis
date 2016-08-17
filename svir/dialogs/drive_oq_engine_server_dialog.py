@@ -37,6 +37,8 @@ from PyQt4.QtGui import (QDialog,
                          QDockWidget,
                          )
 from svir.third_party.requests import Session
+from svir.third_party.requests.exceptions import ConnectionError
+from svir.utilities.settings import get_engine_credentials
 from svir.utilities.utils import (WaitCursorManager,
                                   engine_login,
                                   log_msg,
@@ -79,12 +81,28 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.session = Session()
         self.hostname, username, password = get_engine_credentials(self.iface)
         with WaitCursorManager('Logging in...', self.iface):
-            engine_login(self.hostname, username, password, self.session)
+            try:
+                engine_login(self.hostname, username, password, self.session)
+            except ConnectionError as exc:
+                self.iface.messageBar().pushMessage(
+                    tr("Error"),
+                    str(exc.message),
+                    level=QgsMessageBar.CRITICAL)
+                self.reject()
+                return
 
     def refresh_calc_list(self):
         calc_list_url = "%s/v1/calc/list?relevant=true" % self.hostname
         with WaitCursorManager():
-            resp = self.session.get(calc_list_url, timeout=10)
+            try:
+                resp = self.session.get(calc_list_url, timeout=10)
+            except ConnectionError as exc:
+                self.iface.messageBar().pushMessage(
+                    tr("Error"),
+                    str(exc.message),
+                    level=QgsMessageBar.CRITICAL)
+                self.reject()
+                return
             calc_list = json.loads(resp.text)
         selected_keys = ['description', 'id', 'job_type', 'owner', 'status']
         col_names = ['Description', 'ID', 'Job Type', 'Owner', 'Status']
@@ -173,7 +191,15 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         calc_log_url = "%s/v1/calc/%s/log/%s:%s" % (
             self.hostname, calc_id, start, stop)
         with WaitCursorManager('Getting list of outputs...', self.iface):
-            resp = self.session.get(calc_log_url, timeout=10)
+            try:
+                resp = self.session.get(calc_log_url, timeout=10)
+            except ConnectionError as exc:
+                self.iface.messageBar().pushMessage(
+                    tr("Error"),
+                    str(exc.message),
+                    level=QgsMessageBar.CRITICAL)
+                self.reject()
+                return
             calc_log = json.loads(resp.text)
             self.calc_log_line[calc_id] = start + len(calc_log)
             return '\n'.join([','.join(row) for row in calc_log])
@@ -181,7 +207,15 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     def remove_calc(self, calc_id):
         calc_remove_url = "%s/v1/calc/%s/remove" % (self.hostname, calc_id)
         with WaitCursorManager('Removing calculation...', self.iface):
-            resp = self.session.post(calc_remove_url, timeout=10)
+            try:
+                resp = self.session.post(calc_remove_url, timeout=10)
+            except ConnectionError as exc:
+                self.iface.messageBar().pushMessage(
+                    tr("Error"),
+                    str(exc.message),
+                    level=QgsMessageBar.CRITICAL)
+                self.reject()
+                return
         if resp.ok:
             self.iface.messageBar().pushMessage(
                 tr("Info"),
@@ -232,8 +266,16 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             else:
                 data = {}
             files = {'archive': open(zipped_file_name, 'rb')}
-            resp = self.session.post(
-                run_calc_url, files=files, data=data, timeout=20)
+            try:
+                resp = self.session.post(
+                    run_calc_url, files=files, data=data, timeout=20)
+            except ConnectionError as exc:
+                self.iface.messageBar().pushMessage(
+                    tr("Error"),
+                    str(exc.message),
+                    level=QgsMessageBar.CRITICAL)
+                self.reject()
+                return
         if resp.ok:
             self.refresh_calc_list()
         else:
@@ -245,7 +287,15 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     def get_output_list(self, calc_id):
         output_list_url = "%s/v1/calc/%s/results" % (self.hostname, calc_id)
         with WaitCursorManager('Getting list of outputs...', self.iface):
-            resp = self.session.get(output_list_url, timeout=10)
+            try:
+                resp = self.session.get(output_list_url, timeout=10)
+            except ConnectionError as exc:
+                self.iface.messageBar().pushMessage(
+                    tr("Error"),
+                    str(exc.message),
+                    level=QgsMessageBar.CRITICAL)
+                self.reject()
+                return
         if resp.ok:
             output_list = json.loads(resp.text)
             self.current_output_calc_id = calc_id
@@ -360,7 +410,15 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                                                                 output_id,
                                                                 outtype))
         with WaitCursorManager('Downloading output...', self.iface):
-            resp = self.session.get(output_download_url, timeout=10)
+            try:
+                resp = self.session.get(output_download_url, timeout=10)
+            except ConnectionError as exc:
+                self.iface.messageBar().pushMessage(
+                    tr("Error"),
+                    str(exc.message),
+                    level=QgsMessageBar.CRITICAL)
+                self.reject()
+                return
             filename = resp.headers['content-disposition'].split(
                 'filename=')[1]
             filepath = os.path.join(dest_folder, filename)
@@ -375,7 +433,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
     def stop_polling(self):
         # NOTE: perhaps we should disconnect the timeout signal here?
-        self.timer.stop()
+        if self.timer is not None:
+            self.timer.stop()
 
     @pyqtSlot()
     def on_run_calc_btn_clicked(self):
