@@ -266,8 +266,15 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
         elif self.output_type == 'loss_curves':
             self.ok_button.setEnabled(self.rlz_cbx.currentIndex != -1)
 
-    def build_layer(self, rlz_group, taxonomy=None):
-        rlz = self.rlz_cbx.currentText()
+    def build_layer(self, rlz, taxonomy=None):
+        # get the root of layerTree, in order to add groups of layers
+        # (one group for each realization)
+        root = QgsProject.instance().layerTreeRoot()
+        group_name = 'Realization %s' % rlz
+        rlz_group = root.findGroup(group_name)
+        if not rlz_group:
+            rlz_group = root.addGroup('Realization %s' % rlz)
+        # rlz = self.rlz_cbx.currentText()
         if self.output_type in ('loss_maps', 'loss_curves'):
             # NOTE: realizations in the hdf5 file start counting from 1, but
             #       we need to refer to column indices that start from 0
@@ -465,18 +472,14 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
         self.iface.mapCanvas().refresh()
 
     def accept(self):
-        # get the root of layerTree, in order to add groups of layers
-        # (one group for each realization)
-        root = QgsProject.instance().layerTreeRoot()
         for rlz in self.rlzs:
-            rlz_group = root.addGroup('Realization %s' % rlz)
             if self.output_type in ('loss_curves', 'loss_maps'):
                 for taxonomy in self.taxonomies:
                     with WaitCursorManager(
                             'Creating layer for realization "%s" '
                             ' and taxonomy "%s"...' % (rlz, taxonomy),
                             self.iface):
-                        self.build_layer(rlz_group, taxonomy)
+                        self.build_layer(rlz, taxonomy)
                         if self.output_type == 'loss_curves':
                             self.style_curves()
                         elif self.output_type == 'loss_maps':
@@ -485,7 +488,7 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
                 with WaitCursorManager('Creating layer for '
                                        ' realization "%s"...' % rlz,
                                        self.iface):
-                    self.build_layer(rlz_group)
+                    self.build_layer(rlz)
                     if self.output_type == 'hmaps':
                         self.style_maps()
                     elif self.output_type == 'hcurves':
