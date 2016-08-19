@@ -281,8 +281,8 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             rlz_idx = int(rlz) - 1
         if self.output_type == 'loss_maps':
             loss_type = self.loss_type_cbx.currentText()
-            poe = self.poe_cbx.currentText()
-            self.default_field_name = '%s-%s' % (loss_type, poe)  # FIXME
+            poe = "poe-%s" % self.poe_cbx.currentText()
+            self.default_field_name = loss_type
         if self.output_type == 'hmaps':
             imt = self.imt_cbx.currentText()
             poe = self.poe_cbx.currentText()
@@ -400,8 +400,8 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
                     feat = QgsFeature(self.layer.pendingFields())
                     # NOTE: field names are loss types (normalized to 10 chars)
                     for field_name_idx, field_name in enumerate(field_names):
-                        loss = row[field_name_idx]
-                        feat.setAttribute(field_name, loss)
+                        loss = row[field_name_idx][poe]
+                        feat.setAttribute(field_name, float(loss))
                     feat.setGeometry(QgsGeometry.fromPoint(
                         QgsPoint(lon, lat)))
                     feats.append(feat)
