@@ -37,6 +37,7 @@ from qgis.core import (QgsVectorLayer,
                        QgsVectorGradientColorRampV2,
                        QgsGraduatedSymbolRendererV2,
                        QgsRendererRangeV2,
+                       QgsProject,
                        )
 from PyQt4.QtCore import pyqtSlot, QDir
 
@@ -163,6 +164,15 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
         self.hdf5_path = self.open_file_dialog()
 
     def on_rlz_changed(self):
+        # rlz = self.rlz_cbx.currentText()
+        # if rlz == 'All':
+        #     self.imt_cbx.clear()
+        #     self.imt_cbx.setEnabled(False)
+        #     self.loss_type_cbx.clear()
+        #     self.loss_type_cbx.setEnabled(False)
+        #     self.poe_cbx.clear()
+        #     self.poe_cbx.setEnabled(False)
+        #     return
         if self.output_type in ['hcurves', 'hmaps']:
             self.dataset = self.hdata.get(self.rlz_cbx.currentText())
             self.imts = {}
@@ -243,6 +253,7 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             self.rlzs = [str(i+1) for i in range(n_rlzs)]
         self.rlz_cbx.clear()
         self.rlz_cbx.setEnabled(True)
+        # self.rlz_cbx.addItem('All')
         self.rlz_cbx.addItems(self.rlzs)
 
     def set_ok_button(self):
@@ -255,7 +266,7 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
         elif self.output_type == 'loss_curves':
             self.ok_button.setEnabled(self.rlz_cbx.currentIndex != -1)
 
-    def build_layer(self, taxonomy=None):
+    def build_layer(self, rlz_group, taxonomy=None):
         rlz = self.rlz_cbx.currentText()
         if self.output_type in ('loss_maps', 'loss_curves'):
             # NOTE: realizations in the hdf5 file start counting from 1, but
@@ -389,7 +400,8 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
                     feats.append(feat)
             (res, outFeats) = pr.addFeatures(feats)
         # add self.layer to the legend
-        QgsMapLayerRegistry.instance().addMapLayer(self.layer)
+        QgsMapLayerRegistry.instance().addMapLayer(self.layer, False)
+        rlz_group.addLayer(self.layer)
         self.iface.setActiveLayer(self.layer)
         self.iface.zoomToActiveLayer()
 
@@ -453,23 +465,31 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
         self.iface.mapCanvas().refresh()
 
     def accept(self):
-        if self.output_type in ('loss_curves', 'loss_maps'):
-            for taxonomy in self.taxonomies:
-                with WaitCursorManager(
-                        'Creating layer for taxonomy "%s"' % taxonomy,
-                        self.iface):
-                    self.build_layer(taxonomy)
-                    if self.output_type == 'loss_curves':
+        # get the root of layerTree, in order to add groups of layers
+        # (one group for each realization)
+        root = QgsProject.instance().layerTreeRoot()
+        for rlz in self.rlzs:
+            rlz_group = root.addGroup('Realization %s' % rlz)
+            if self.output_type in ('loss_curves', 'loss_maps'):
+                for taxonomy in self.taxonomies:
+                    with WaitCursorManager(
+                            'Creating layer for realization "%s" '
+                            ' and taxonomy "%s"...' % (rlz, taxonomy),
+                            self.iface):
+                        self.build_layer(rlz_group, taxonomy)
+                        if self.output_type == 'loss_curves':
+                            self.style_curves()
+                        elif self.output_type == 'loss_maps':
+                            self.style_maps()  # FIXME rename called function
+            else:
+                with WaitCursorManager('Creating layer for '
+                                       ' realization "%s"...' % rlz,
+                                       self.iface):
+                    self.build_layer(rlz_group)
+                    if self.output_type == 'hmaps':
+                        self.style_maps()
+                    elif self.output_type == 'hcurves':
                         self.style_curves()
-                    elif self.output_type == 'loss_maps':
-                        self.style_maps()  # FIXME rename called function
-        else:
-            with WaitCursorManager('Creating layer...', self.iface):
-                self.build_layer()
-                if self.output_type == 'hmaps':
-                    self.style_maps()
-                elif self.output_type == 'hcurves':
-                    self.style_curves()
         self.hfile.close()
         super(LoadHdf5AsLayerDialog, self).accept()
 
