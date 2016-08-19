@@ -70,7 +70,9 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
     """
     def __init__(self, iface, output_type, hdf5_path=None):
         # sanity check
-        if output_type not in ['hcurves', 'hmaps', 'loss_maps', 'loss_curves']:
+        if output_type not in (
+                'hcurves', 'hmaps', 'loss_maps', 'loss_curves',
+                'scenario_damage_gmfs'):
             raise NotImplementedError(output_type)
         self.iface = iface
         self.hdf5_path = hdf5_path
@@ -83,6 +85,20 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         self.ok_button.setDisabled(True)
         self.open_hdfview_btn.setDisabled(True)
+        self.define_gui_elements()
+        self.adjust_gui_for_output_type()
+        if self.hdf5_path:
+            self.hdf5_path_le.setText(self.hdf5_path)
+            self.rlz_cbx.setEnabled(True)
+            self.imt_cbx.setEnabled(True)
+            self.poe_cbx.setEnabled(True)
+            self.loss_type_cbx.setEnabled(True)
+            self.hfile = self.get_hdf5_file_handler()
+            self.get_taxonomies()
+            self.populate_rlz_cbx()
+        self.default_field_name = None
+
+    def define_gui_elements(self):
         self.rlz_lbl = QLabel('Realization (only the chosen realization'
                               ' will be loaded into the layer)')
         self.rlz_cbx = QComboBox()
@@ -107,7 +123,21 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
         self.loss_type_cbx.setEnabled(False)
         self.loss_type_cbx.currentIndexChanged['QString'].connect(
             self.on_loss_type_changed)
-        if output_type == 'hmaps':
+        self.imti_lbl = QLabel(
+            'IMTI (used for default styling)')  # FIXME: complete name?
+        self.imti_cbx = QComboBox()
+        self.imti_cbx.setEnabled(False)
+        self.imti_cbx.currentIndexChanged['QString'].connect(
+            self.on_imti_changed)
+        self.eid_lbl = QLabel(
+            'Event ID (used for default styling)')
+        self.eid_cbx = QComboBox()  # FIXME: turn into a textbox
+        self.eid_cbx.setEnabled(False)
+        self.eid_cbx.currentIndexChanged['QString'].connect(
+            self.on_eid_changed)
+
+    def adjust_gui_for_output_type(self):
+        if self.output_type == 'hmaps':
             self.setWindowTitle('Load hazard maps from HDF5, as layer')
             self.verticalLayout.addWidget(self.rlz_lbl)
             self.verticalLayout.addWidget(self.rlz_cbx)
@@ -116,12 +146,12 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             self.verticalLayout.addWidget(self.poe_lbl)
             self.verticalLayout.addWidget(self.poe_cbx)
             self.adjustSize()
-        elif output_type == 'hcurves':
+        elif self.output_type == 'hcurves':
             self.setWindowTitle('Load hazard curves from HDF5, as layer')
             self.verticalLayout.addWidget(self.rlz_lbl)
             self.verticalLayout.addWidget(self.rlz_cbx)
             self.adjustSize()
-        elif output_type == 'loss_maps':
+        elif self.output_type == 'loss_maps':
             self.setWindowTitle('Load loss maps from HDF5, as layer')
             self.verticalLayout.addWidget(self.rlz_lbl)
             self.verticalLayout.addWidget(self.rlz_cbx)
@@ -130,21 +160,21 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             self.verticalLayout.addWidget(self.poe_lbl)
             self.verticalLayout.addWidget(self.poe_cbx)
             self.adjustSize()
-        elif output_type == 'loss_curves':
+        elif self.output_type == 'loss_curves':
             self.setWindowTitle('Load loss curves from HDF5, as layer')
             self.verticalLayout.addWidget(self.rlz_lbl)
             self.verticalLayout.addWidget(self.rlz_cbx)
             self.adjustSize()
-        if self.hdf5_path:
-            self.hdf5_path_le.setText(self.hdf5_path)
-            self.rlz_cbx.setEnabled(True)
-            self.imt_cbx.setEnabled(True)
-            self.poe_cbx.setEnabled(True)
-            self.loss_type_cbx.setEnabled(True)
-            self.hfile = self.get_hdf5_file_handler()
-            self.get_taxonomies()
-            self.populate_rlz_cbx()
-        self.default_field_name = None
+        elif self.output_type == 'scenario_damage_gmfs':
+            self.setWindowTitle(
+                'Load scenario damage GMFs from HDF5, as layer')
+            self.verticalLayout.addWidget(self.rlz_lbl)
+            self.verticalLayout.addWidget(self.rlz_cbx)
+            self.verticalLayout.addWidget(self.imti_lbl)
+            self.verticalLayout.addWidget(self.imti_cbx)
+            self.verticalLayout.addWidget(self.eid_lbl)
+            self.verticalLayout.addWidget(self.eid_cbx)
+            self.adjustSize()
 
     @pyqtSlot(str)
     def on_hdf5_path_le_textChanged(self):
@@ -196,6 +226,12 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             self.loss_type_cbx.addItems(self.loss_types.keys())
         elif self.output_type == 'loss_curves':
             self.loss_types = self.hdata.dtype.names
+        elif self.output_type == 'scenario_damage_gmfs':
+            self.dataset = self.hdata.get(self.rlz_cbx.currentText())
+            imtis = list(set(self.dataset['imti']))
+            self.imti_cbx.clear()
+            self.imti_cbx.setEnabled(True)
+            self.imti_cbx.addItems([str(imti) for imti in imtis])
         if self.output_type in ('hcurves', 'loss_curves'):
             self.set_ok_button()
 
@@ -215,6 +251,16 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
 
     def on_poe_changed(self):
         self.set_ok_button()
+
+    def on_imti_changed(self):
+        eids = list(set(self.dataset['eid']))  # FIXME: get only those that
+                                               #        have the selected imti
+        self.eid_cbx.clear()
+        self.eid_cbx.setEnabled(True)
+        self.eid_cbx.addItems([str(eid) for eid in eids])
+
+    def on_eid_changed(self):
+        pass
 
     def open_file_dialog(self):
         """
@@ -251,6 +297,9 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
                 self.hdata = self.hfile.get('loss_maps-rlzs')
             _, n_rlzs = self.hdata.shape
             self.rlzs = [str(i+1) for i in range(n_rlzs)]
+        elif self.output_type == 'scenario_damage_gmfs':
+            self.hdata = self.hfile.get('gmf_data')
+            self.rlzs = self.hdata.keys()
         self.rlz_cbx.clear()
         self.rlz_cbx.setEnabled(True)
         # self.rlz_cbx.addItem('All')

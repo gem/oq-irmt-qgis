@@ -182,6 +182,7 @@ HELP_PAGES_LOOKUP = {
     'load_loss_curves_from_hdf5_as_layer': 'FIXME',
     'load_hmaps_from_hdf5_as_layer': 'FIXME',
     'load_loss_maps_from_hdf5_as_layer': 'FIXME',
+    'load_scenario_damage_gmfs_from_hdf5_as_layer': 'FIXME',
     'load_geojson_as_layer': 'FIXME',
     'drive_engine_server': 'FIXME',
     'toggle_viewer_dock': 'FIXME',
