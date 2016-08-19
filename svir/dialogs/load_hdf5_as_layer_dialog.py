@@ -133,8 +133,6 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             self.setWindowTitle('Load loss curves from HDF5, as layer')
             self.verticalLayout.addWidget(self.rlz_lbl)
             self.verticalLayout.addWidget(self.rlz_cbx)
-            self.verticalLayout.addWidget(self.loss_type_lbl)
-            self.verticalLayout.addWidget(self.loss_type_cbx)
             self.adjustSize()
         if self.hdf5_path:
             self.hdf5_path_le.setText(self.hdf5_path)
@@ -145,6 +143,7 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             self.hfile = self.get_hdf5_file_handler()
             self.get_taxonomies()
             self.populate_rlz_cbx()
+        self.default_field_name = None
 
     @pyqtSlot(str)
     def on_hdf5_path_le_textChanged(self):
@@ -180,25 +179,31 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             self.imt_cbx.clear()
             self.imt_cbx.setEnabled(True)
             self.imt_cbx.addItems(self.imts.keys())
-        elif self.output_type == 'loss_curves':
-            self.loss_types = self.hdata.dtype.names
+        elif self.output_type == 'loss_maps':
+            self.loss_types = self.hdata.dtype.fields
             self.loss_type_cbx.clear()
             self.loss_type_cbx.setEnabled(True)
-            self.loss_type_cbx.addItems(self.loss_types)
+            self.loss_type_cbx.addItems(self.loss_types.keys())
+        elif self.output_type == 'loss_curves':
+            self.loss_types = self.hdata.dtype.names
+        if self.output_type in ('hcurves', 'loss_curves'):
+            self.set_ok_button()
+
+    def on_loss_type_changed(self):
+        loss_type = self.loss_type_cbx.currentText()
+        poe_names = self.loss_types[loss_type][0].names
+        poe_thresholds = [name.split('poe-')[1] for name in poe_names]
+        self.poe_cbx.clear()
+        self.poe_cbx.setEnabled(True)
+        self.poe_cbx.addItems(poe_thresholds)
 
     def on_imt_changed(self):
-        if self.output_type == 'hcurves':
-            self.set_ok_button()
-            return
         imt = self.imt_cbx.currentText()
         self.poe_cbx.clear()
         self.poe_cbx.setEnabled(True)
         self.poe_cbx.addItems(self.imts[imt])
 
     def on_poe_changed(self):
-        self.set_ok_button()
-
-    def on_loss_type_changed(self):
         self.set_ok_button()
 
     def open_file_dialog(self):
@@ -222,15 +227,18 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
         return hdf5.File(self.hdf5_path, 'r')
 
     def get_taxonomies(self):
-        if self.output_type == 'loss_curves':
+        if self.output_type in ('loss_curves', 'loss_maps'):
             self.taxonomies = self.hfile.get('assetcol/taxonomies')[:].tolist()
 
     def populate_rlz_cbx(self):
         if self.output_type in ('hcurves', 'hmaps'):
             self.hdata = self.hfile.get(self.output_type)
             self.rlzs = self.hdata.keys()
-        elif self.output_type == 'loss_curves':
-            self.hdata = self.hfile.get('loss_curves-rlzs')
+        elif self.output_type in ('loss_curves', 'loss_maps'):
+            if self.output_type == 'loss_curves':
+                self.hdata = self.hfile.get('loss_curves-rlzs')
+            elif self.output_type == 'loss_maps':
+                self.hdata = self.hfile.get('loss_maps-rlzs')
             _, n_rlzs = self.hdata.shape
             self.rlzs = [str(i+1) for i in range(n_rlzs)]
         self.rlz_cbx.clear()
@@ -242,15 +250,21 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             self.ok_button.setEnabled(self.poe_cbx.currentIndex != -1)
         elif self.output_type == 'hcurves':
             self.ok_button.setEnabled(self.imt_cbx.currentIndex != -1)
+        elif self.output_type == 'loss_maps':
+            self.ok_button.setEnabled(self.poe_cbx.currentIndex != -1)
         elif self.output_type == 'loss_curves':
-            self.ok_button.setEnabled(self.loss_type_cbx.currentIndex != -1)
+            self.ok_button.setEnabled(self.rlz_cbx.currentIndex != -1)
 
     def build_layer(self, taxonomy=None):
         rlz = self.rlz_cbx.currentText()
-        if self.output_type == 'loss_curves':
+        if self.output_type in ('loss_maps', 'loss_curves'):
             # NOTE: realizations in the hdf5 file start counting from 1, but
             #       we need to refer to column indices that start from 0
             rlz_idx = int(rlz) - 1
+        if self.output_type == 'loss_maps':
+            loss_type = self.loss_type_cbx.currentText()
+            poe = self.poe_cbx.currentText()
+            self.default_field_name = '%s-%s' % (loss_type, poe)  # FIXME
         if self.output_type == 'hmaps':
             imt = self.imt_cbx.currentText()
             poe = self.poe_cbx.currentText()
@@ -261,13 +275,16 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             self.default_field_name = imt
             layer_name = "hazard_curves_rlz-%s" % rlz
         elif self.output_type == 'loss_curves':
-            loss_type = self.loss_type_cbx.currentText()
-            self.default_field_name = loss_type
             layer_name = "loss_curves_rlz-%s_%s" % (rlz, taxonomy)
+        elif self.output_type == 'loss_maps':
+            layer_name = "loss_maps_rlz-%s_%s" % (rlz, taxonomy)
         if self.output_type in ['hcurves', 'hmaps']:
             field_names = list(self.dataset.dtype.names)
+        elif self.output_type == 'loss_maps':
+            field_names = self.loss_types.keys()
         elif self.output_type == 'loss_curves':
             field_names = list(self.loss_types)
+        if self.output_type in ('loss_curves', 'loss_maps'):
             taxonomy_idx = self.taxonomies.index(taxonomy)
         # create layer
         self.layer = QgsVectorLayer(
@@ -275,7 +292,7 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
         for field_name in field_names:
             if field_name in ['lon', 'lat']:
                 continue
-            if self.output_type == 'hmaps':
+            if self.output_type in ('hmaps', 'loss_maps'):
                 # NOTE: add_numeric_attribute uses LayerEditingManager
                 added_field_name = add_numeric_attribute(
                     field_name, self.layer)
@@ -346,13 +363,37 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
                     feat.setGeometry(QgsGeometry.fromPoint(
                         QgsPoint(lon, lat)))
                     feats.append(feat)
+            elif self.output_type == 'loss_maps':
+                # We need to select rows from loss_maps-rlzs where the
+                # row index (the asset idx) has the given taxonomy. The
+                # taxonomy is found in the assetcol/array, together with
+                # the coordinates lon and lat of the asset.
+                # From the selected rows, we extract loss_type -> poes
+                asset_array = self.hfile.get('assetcol/array')
+                loss_maps = self.hfile.get('loss_maps-rlzs')[:, rlz_idx]
+                for asset_idx, row in enumerate(loss_maps):
+                    asset = asset_array[asset_idx]
+                    if asset['taxonomy'] != taxonomy_idx:
+                        continue
+                    else:
+                        lon = asset['lon']
+                        lat = asset['lat']
+                    # add a feature
+                    feat = QgsFeature(self.layer.pendingFields())
+                    # NOTE: field names are loss types (normalized to 10 chars)
+                    for field_name_idx, field_name in enumerate(field_names):
+                        loss = row[field_name_idx]
+                        feat.setAttribute(field_name, loss)
+                    feat.setGeometry(QgsGeometry.fromPoint(
+                        QgsPoint(lon, lat)))
+                    feats.append(feat)
             (res, outFeats) = pr.addFeatures(feats)
         # add self.layer to the legend
         QgsMapLayerRegistry.instance().addMapLayer(self.layer)
         self.iface.setActiveLayer(self.layer)
         self.iface.zoomToActiveLayer()
 
-    def style_hmaps(self):
+    def style_maps(self):
         color1 = QColor("#FFEBEB")
         color2 = QColor("red")
         classes_count = 10
@@ -412,20 +453,23 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
         self.iface.mapCanvas().refresh()
 
     def accept(self):
-        if self.output_type == 'loss_curves':
+        if self.output_type in ('loss_curves', 'loss_maps'):
             for taxonomy in self.taxonomies:
                 with WaitCursorManager(
-                        'Creating layr for taxonomy "%s"' % taxonomy,
+                        'Creating layer for taxonomy "%s"' % taxonomy,
                         self.iface):
                     self.build_layer(taxonomy)
-                self.style_curves()
+                    if self.output_type == 'loss_curves':
+                        self.style_curves()
+                    elif self.output_type == 'loss_maps':
+                        self.style_maps()  # FIXME rename called function
         else:
             with WaitCursorManager('Creating layer...', self.iface):
                 self.build_layer()
-            if self.output_type == 'hmaps':
-                self.style_hmaps()
-            elif self.output_type == 'hcurves':
-                self.style_curves()
+                if self.output_type == 'hmaps':
+                    self.style_maps()
+                elif self.output_type == 'hcurves':
+                    self.style_curves()
         self.hfile.close()
         super(LoadHdf5AsLayerDialog, self).accept()
 

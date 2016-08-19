@@ -230,6 +230,13 @@ class Irmt:
                            u"Load hazard curves from HDF5 as layer",
                            self.load_hcurves_from_hdf5_as_layer,
                            enable=True)
+        # Action to load as layer loss maps from hdf5 produced by the
+        # oq-engine
+        self.add_menu_item("load_loss_maps_from_hdf5_as_layer",
+                           ":/plugins/irmt/calculate.svg",  # FIXME
+                           u"Load loss maps from HDF5 as layer",
+                           self.load_loss_maps_from_hdf5_as_layer,
+                           enable=True)
         # Action to load as layer loss curves from hdf5 produced by the
         # oq-engine
         self.add_menu_item("load_loss_curves_from_hdf5_as_layer",
@@ -268,6 +275,11 @@ class Irmt:
         dlg = LoadHdf5AsLayerDialog(self.iface, 'hcurves')
         dlg.exec_()
         self.viewer_dock.change_output_type('Hazard Curves')
+
+    def load_loss_maps_from_hdf5_as_layer(self):
+        dlg = LoadHdf5AsLayerDialog(self.iface, 'loss_maps')
+        dlg.exec_()
+        self.viewer_dock.change_output_type('')
 
     def load_loss_curves_from_hdf5_as_layer(self):
         dlg = LoadHdf5AsLayerDialog(self.iface, 'loss_curves')
