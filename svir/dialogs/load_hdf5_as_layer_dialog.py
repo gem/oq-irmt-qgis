@@ -46,6 +46,7 @@ from PyQt4.QtGui import (QDialogButtonBox,
                          QFileDialog,
                          QColor,
                          QComboBox,
+                         QSpinBox,
                          QLabel,
                          )
 
@@ -131,10 +132,10 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             self.on_imti_changed)
         self.eid_lbl = QLabel(
             'Event ID (used for default styling)')
-        self.eid_cbx = QComboBox()  # FIXME: turn into a textbox
-        self.eid_cbx.setEnabled(False)
-        self.eid_cbx.currentIndexChanged['QString'].connect(
-            self.on_eid_changed)
+        self.eid_sbx = QSpinBox()  # FIXME: turn into a textbox
+        self.eid_sbx.setEnabled(False)
+        # self.eid_sbx.valueChanged['int'].connect(
+        #     self.on_eid_changed)
 
     def adjust_gui_for_output_type(self):
         if self.output_type == 'hmaps':
@@ -173,7 +174,7 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             self.verticalLayout.addWidget(self.imti_lbl)
             self.verticalLayout.addWidget(self.imti_cbx)
             self.verticalLayout.addWidget(self.eid_lbl)
-            self.verticalLayout.addWidget(self.eid_cbx)
+            self.verticalLayout.addWidget(self.eid_sbx)
             self.adjustSize()
 
     @pyqtSlot(str)
@@ -253,14 +254,19 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
         self.set_ok_button()
 
     def on_imti_changed(self):
-        eids = list(set(self.dataset['eid']))  # FIXME: get only those that
-                                               #        have the selected imti
-        self.eid_cbx.clear()
-        self.eid_cbx.setEnabled(True)
-        self.eid_cbx.addItems([str(eid) for eid in eids])
+        eids = set(self.dataset['eid'])
+        min_eid = min(eids)
+        max_eid = max(eids)
+        self.eid_sbx.cleanText()
+        self.eid_sbx.setEnabled(True)
+        self.eid_lbl.setText(
+            'Event ID (used for default styling) (range %s-%s)' % (min_eid,
+                                                                   max_eid))
+        self.eid_sbx.setRange(min_eid, max_eid)
+        self.set_ok_button()
 
-    def on_eid_changed(self):
-        pass
+    # def on_eid_changed(self):
+    #     self.set_ok_button()
 
     def open_file_dialog(self):
         """
@@ -307,13 +313,15 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
 
     def set_ok_button(self):
         if self.output_type == 'hmaps':
-            self.ok_button.setEnabled(self.poe_cbx.currentIndex != -1)
+            self.ok_button.setEnabled(self.poe_cbx.currentIndex() != -1)
         elif self.output_type == 'hcurves':
-            self.ok_button.setEnabled(self.imt_cbx.currentIndex != -1)
+            self.ok_button.setEnabled(self.imt_cbx.currentIndex() != -1)
         elif self.output_type == 'loss_maps':
-            self.ok_button.setEnabled(self.poe_cbx.currentIndex != -1)
+            self.ok_button.setEnabled(self.poe_cbx.currentIndex() != -1)
         elif self.output_type == 'loss_curves':
-            self.ok_button.setEnabled(self.rlz_cbx.currentIndex != -1)
+            self.ok_button.setEnabled(self.rlz_cbx.currentIndex() != -1)
+        elif self.output_type == 'scenario_damage_gmfs':
+            self.ok_button.setEnabled(self.imti_cbx.currentIndex() != -1)
 
     def build_layer(self, rlz, taxonomy=None):
         # get the root of layerTree, in order to add groups of layers
