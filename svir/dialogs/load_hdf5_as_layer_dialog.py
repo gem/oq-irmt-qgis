@@ -25,6 +25,7 @@
 
 import os
 import json
+import numpy as np
 from qgis.core import (QgsVectorLayer,
                        QgsFeature,
                        QgsPoint,
@@ -340,6 +341,8 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             loss_type = self.loss_type_cbx.currentText()
             poe = "poe-%s" % self.poe_cbx.currentText()
             self.default_field_name = loss_type
+
+        # build layer name
         if self.output_type == 'hmaps':
             imt = self.imt_cbx.currentText()
             poe = self.poe_cbx.currentText()
@@ -353,21 +356,32 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             layer_name = "loss_curves_rlz-%s_%s" % (rlz, taxonomy)
         elif self.output_type == 'loss_maps':
             layer_name = "loss_maps_rlz-%s_%s" % (rlz, taxonomy)
+        elif self.output_type == 'scenario_damage_gmfs':
+            layer_name = "scenario_damage_gmfs_rlz-%s" % rlz
+            self.default_field_name = 'GMV'
+
+        # get field names
         if self.output_type in ['hcurves', 'hmaps']:
             field_names = list(self.dataset.dtype.names)
         elif self.output_type == 'loss_maps':
             field_names = self.loss_types.keys()
         elif self.output_type == 'loss_curves':
             field_names = list(self.loss_types)
+        elif self.output_type == 'scenario_damage_gmfs':
+            field_names = ['GMV']
+
         if self.output_type in ('loss_curves', 'loss_maps'):
             taxonomy_idx = self.taxonomies.index(taxonomy)
+
         # create layer
         self.layer = QgsVectorLayer(
             "Point?crs=epsg:4326", layer_name, "memory")
         for field_name in field_names:
             if field_name in ['lon', 'lat']:
                 continue
-            if self.output_type in ('hmaps', 'loss_maps'):
+            if self.output_type in ('hmaps',
+                                    'loss_maps',
+                                    'scenario_damage_gmfs'):
                 # NOTE: add_numeric_attribute uses LayerEditingManager
                 added_field_name = add_numeric_attribute(
                     field_name, self.layer)
@@ -462,6 +476,25 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
                     feat.setGeometry(QgsGeometry.fromPoint(
                         QgsPoint(lon, lat)))
                     feats.append(feat)
+            elif self.output_type == 'scenario_damage_gmfs':
+                # select rows for the given taxonomy table, that satisfy
+                # constraints imti and eid, then get the corresponding sid and
+                # gmv. Use the sid to retrieve the lon and lat
+                gmf_data = self.hfile.get('gmf_data')
+                gmf_data_rlz = gmf_data.get(rlz)
+                asset_array = self.hfile.get('assetcol/array')
+                for row in gmf_data_rlz:
+                    sid, eid, imti, gmv = row
+                    asset_idx = np.where(asset_array['site_id'] == sid)[0][0]
+                    asset = asset_array[asset_idx]
+                    lon = asset['lon']
+                    lat = asset['lat']
+                    # add a feature
+                    feat = QgsFeature(self.layer.pendingFields())
+                    feat.setAttribute(field_names[0], float(gmv))
+                    feat.setGeometry(QgsGeometry.fromPoint(
+                        QgsPoint(lon, lat)))
+                    feats.append(feat)
             (res, outFeats) = pr.addFeatures(feats)
         # add self.layer to the legend
         QgsMapLayerRegistry.instance().addMapLayer(self.layer, False)
@@ -546,7 +579,7 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
                                        ' realization "%s"...' % rlz,
                                        self.iface):
                     self.build_layer(rlz)
-                    if self.output_type == 'hmaps':
+                    if self.output_type in ('hmaps', 'scenario_damage_gmfs'):
                         self.style_maps()
                     elif self.output_type == 'hcurves':
                         self.style_curves()
