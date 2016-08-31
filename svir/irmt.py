@@ -252,6 +252,13 @@ class Irmt:
                            "fields from HDF5 as layer",
                            self.load_scenario_damage_gmfs_from_hdf5_as_layer,
                            enable=True)
+        # Action to load as layer damage by asset from hdf5 produced by
+        # the oq-engine with a scenario damage risk calculation
+        self.add_menu_item("load_scenario_damage_by_asset_from_hdf5_as_layer",
+                           ":/plugins/irmt/calculate.svg",  # FIXME
+                           u"Load scenario damage by asset from HDF5 as layer",
+                           self.load_scenario_damage_by_asset_from_hdf5_as_layer,
+                           enable=True)
         # Action to load as layer a geojson produced by the oq-engine
         self.add_menu_item("load_geojson_as_layer",
                            ":/plugins/irmt/calculate.svg",  # FIXME
@@ -296,6 +303,11 @@ class Irmt:
 
     def load_scenario_damage_gmfs_from_hdf5_as_layer(self):
         dlg = LoadHdf5AsLayerDialog(self.iface, 'scenario_damage_gmfs')
+        dlg.exec_()
+        self.viewer_dock.change_output_type('')
+
+    def load_scenario_damage_by_asset_from_hdf5_as_layer(self):
+        dlg = LoadHdf5AsLayerDialog(self.iface, 'scenario_damage_by_asset')
         dlg.exec_()
         self.viewer_dock.change_output_type('')
 
