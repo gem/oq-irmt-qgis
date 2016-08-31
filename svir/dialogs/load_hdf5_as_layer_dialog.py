@@ -74,7 +74,7 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
         # sanity check
         if output_type not in (
                 'hcurves', 'hmaps', 'loss_maps', 'loss_curves',
-                'scenario_damage_gmfs'):
+                'scenario_damage_gmfs', 'scenario_damage_by_asset'):
             raise NotImplementedError(output_type)
         self.iface = iface
         self.hdf5_path = hdf5_path
@@ -98,6 +98,7 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             self.hfile = self.get_hdf5_file_handler()
             self.get_taxonomies()
             self.populate_rlz_cbx()
+            self.populate_damage_states()
         self.default_field_name = None
 
     def define_gui_elements(self):
@@ -135,8 +136,12 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             'Event ID (used for default styling)')
         self.eid_sbx = QSpinBox()  # FIXME: turn into a textbox
         self.eid_sbx.setEnabled(False)
-        # self.eid_sbx.valueChanged['int'].connect(
-        #     self.on_eid_changed)
+        self.damage_state_lbl = QLabel(
+            'Damage state')
+        self.damage_state_cbx = QComboBox()
+        self.damage_state_cbx.setEnabled(False)
+        self.damage_state_cbx.currentIndexChanged['QString'].connect(
+            self.on_damage_state_changed)
 
     def adjust_gui_for_output_type(self):
         if self.output_type == 'hmaps':
@@ -177,6 +182,17 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             self.verticalLayout.addWidget(self.eid_lbl)
             self.verticalLayout.addWidget(self.eid_sbx)
             self.adjustSize()
+        elif self.output_type == 'scenario_damage_by_asset':
+            self.setWindowTitle(
+                'Load scenario damage by asset from HDF5, as layer')
+            self.verticalLayout.addWidget(self.rlz_lbl)
+            self.verticalLayout.addWidget(self.rlz_cbx)
+            self.verticalLayout.addWidget(self.loss_type_lbl)
+            self.verticalLayout.addWidget(self.loss_type_cbx)
+            self.verticalLayout.addWidget(self.damage_state_lbl)
+            self.verticalLayout.addWidget(self.damage_state_cbx)
+            self.adjustSize()
+
 
     @pyqtSlot(str)
     def on_hdf5_path_le_textChanged(self):
@@ -221,7 +237,7 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             self.imt_cbx.clear()
             self.imt_cbx.setEnabled(True)
             self.imt_cbx.addItems(self.imts.keys())
-        elif self.output_type == 'loss_maps':
+        elif self.output_type in ('loss_maps', 'scenario_damage_by_asset'):
             self.loss_types = self.hdata.dtype.fields
             self.loss_type_cbx.clear()
             self.loss_type_cbx.setEnabled(True)
@@ -238,12 +254,13 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             self.set_ok_button()
 
     def on_loss_type_changed(self):
-        loss_type = self.loss_type_cbx.currentText()
-        poe_names = self.loss_types[loss_type][0].names
-        poe_thresholds = [name.split('poe-')[1] for name in poe_names]
-        self.poe_cbx.clear()
-        self.poe_cbx.setEnabled(True)
-        self.poe_cbx.addItems(poe_thresholds)
+        self.loss_type = self.loss_type_cbx.currentText()
+        if self.output_type == 'loss_maps':
+            poe_names = self.loss_types[self.loss_type][0].names
+            poe_thresholds = [name.split('poe-')[1] for name in poe_names]
+            self.poe_cbx.clear()
+            self.poe_cbx.setEnabled(True)
+            self.poe_cbx.addItems(poe_thresholds)
 
     def on_imt_changed(self):
         imt = self.imt_cbx.currentText()
@@ -269,6 +286,9 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
     # def on_eid_changed(self):
     #     self.set_ok_button()
 
+    def on_damage_state_changed(self):
+        pass
+
     def open_file_dialog(self):
         """
         Open a file dialog to select the data file to be loaded
@@ -283,6 +303,7 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             self.hfile = self.get_hdf5_file_handler()
             self.get_taxonomies()
             self.populate_rlz_cbx()
+            self.populate_damage_states()
 
     def get_hdf5_file_handler(self):
         # FIXME: will the file be closed correctly?
@@ -292,6 +313,14 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
     def get_taxonomies(self):
         if self.output_type in ('loss_curves', 'loss_maps'):
             self.taxonomies = self.hfile.get('assetcol/taxonomies')[:].tolist()
+
+    def populate_damage_states(self):
+        if self.output_type == 'scenario_damage_by_asset':
+            self.damage_states = ['no damage']
+            self.damage_states.extend(self.hfile.get('oqparam').limit_states)
+            self.damage_state_cbx.clear()
+            self.damage_state_cbx.setEnabled(True)
+            self.damage_state_cbx.addItems(self.damage_states)
 
     def populate_rlz_cbx(self):
         if self.output_type in ('hcurves', 'hmaps'):
@@ -307,6 +336,10 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
         elif self.output_type == 'scenario_damage_gmfs':
             self.hdata = self.hfile.get('gmf_data')
             self.rlzs = self.hdata.keys()
+        elif self.output_type == 'scenario_damage_by_asset':
+            self.hdata = self.hfile.get('dmg_by_asset')
+            _, n_rlzs = self.hdata.shape
+            self.rlzs = [str(i+1) for i in range(n_rlzs)]
         self.rlz_cbx.clear()
         self.rlz_cbx.setEnabled(True)
         # self.rlz_cbx.addItem('All')
