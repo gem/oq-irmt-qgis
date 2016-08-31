@@ -105,7 +105,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
     def create_loss_type_selector(self):
         self.loss_type_lbl = QLabel('Loss Type')
-        self.loss_type_lbl.setSizePolicy(QSizePolicy(QSizePolicy.Minimum))
+        self.loss_type_lbl.setSizePolicy(
+            QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.loss_type_cbx = QComboBox()
         self.loss_type_cbx.currentIndexChanged['QString'].connect(
             self.on_loss_type_changed)
@@ -114,7 +115,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
     def create_imt_selector(self):
         self.imt_lbl = QLabel('Intensity Measure Type')
-        self.imt_lbl.setSizePolicy(QSizePolicy(QSizePolicy.Minimum))
+        self.imt_lbl.setSizePolicy(
+            QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.imt_cbx = QComboBox()
         self.imt_cbx.currentIndexChanged['QString'].connect(
             self.on_imt_changed)
