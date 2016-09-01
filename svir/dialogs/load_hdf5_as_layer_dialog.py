@@ -97,6 +97,7 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             self.loss_type_cbx.setEnabled(True)
             self.hfile = self.get_hdf5_file_handler()
             self.get_taxonomies()
+            self.populate_taxonomies()
             self.populate_rlz_cbx()
             self.populate_damage_states()
         self.default_field_name = None
@@ -142,6 +143,11 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
         self.damage_state_cbx.setEnabled(False)
         self.damage_state_cbx.currentIndexChanged['QString'].connect(
             self.on_damage_state_changed)
+        self.taxonomy_lbl = QLabel('Taxonomy')
+        self.taxonomy_cbx = QComboBox()
+        self.taxonomy_cbx.setEnabled(False)
+        # self.taxonomy_cbx.currentIndexChanged['QString'].connect(
+        #     self.on_taxonomy_changed)
 
     def adjust_gui_for_output_type(self):
         if self.output_type == 'hmaps':
@@ -189,6 +195,8 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             self.verticalLayout.addWidget(self.rlz_cbx)
             self.verticalLayout.addWidget(self.loss_type_lbl)
             self.verticalLayout.addWidget(self.loss_type_cbx)
+            self.verticalLayout.addWidget(self.taxonomy_lbl)
+            self.verticalLayout.addWidget(self.taxonomy_cbx)
             self.verticalLayout.addWidget(self.damage_state_lbl)
             self.verticalLayout.addWidget(self.damage_state_cbx)
             self.adjustSize()
@@ -261,6 +269,8 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             self.poe_cbx.clear()
             self.poe_cbx.setEnabled(True)
             self.poe_cbx.addItems(poe_thresholds)
+        elif self.output_type == 'scenario_damage_by_asset':
+            self.set_ok_button()
 
     def on_imt_changed(self):
         imt = self.imt_cbx.currentText()
@@ -302,6 +312,7 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             self.hdf5_path_le.setText(self.hdf5_path)
             self.hfile = self.get_hdf5_file_handler()
             self.get_taxonomies()
+            self.populate_taxonomies()
             self.populate_rlz_cbx()
             self.populate_damage_states()
 
@@ -311,8 +322,17 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
         return hdf5.File(self.hdf5_path, 'r')
 
     def get_taxonomies(self):
-        if self.output_type in ('loss_curves', 'loss_maps'):
+        if self.output_type in (
+                'loss_curves', 'loss_maps', 'scenario_damage_by_asset'):
             self.taxonomies = self.hfile.get('assetcol/taxonomies')[:].tolist()
+
+    def populate_taxonomies(self):
+        if self.output_type == 'scenario_damage_by_asset':
+            self.taxonomies.insert(0, 'Sum')
+            self.taxonomy_cbx.clear()
+            self.taxonomy_cbx.addItems(self.taxonomies)
+            self.taxonomy_cbx.setEnabled(True)
+
 
     def populate_damage_states(self):
         if self.output_type == 'scenario_damage_by_asset':
@@ -356,6 +376,8 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             self.ok_button.setEnabled(self.rlz_cbx.currentIndex() != -1)
         elif self.output_type == 'scenario_damage_gmfs':
             self.ok_button.setEnabled(self.imti_cbx.currentIndex() != -1)
+        elif self.output_type == 'scenario_damage_by_asset':
+            self.ok_button.setEnabled(self.loss_type_cbx.currentIndex() != -1)
 
     def build_layer(self, rlz, taxonomy=None):
         # get the root of layerTree, in order to add groups of layers
@@ -366,7 +388,9 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
         if not rlz_group:
             rlz_group = root.addGroup('Realization %s' % rlz)
         # rlz = self.rlz_cbx.currentText()
-        if self.output_type in ('loss_maps', 'loss_curves'):
+        if self.output_type in ('loss_maps',
+                                'loss_curves',
+                                'scenario_damage_by_asset'):
             # NOTE: realizations in the hdf5 file start counting from 1, but
             #       we need to refer to column indices that start from 0
             rlz_idx = int(rlz) - 1
@@ -392,6 +416,8 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
         elif self.output_type == 'scenario_damage_gmfs':
             layer_name = "scenario_damage_gmfs_rlz-%s" % rlz
             self.default_field_name = 'GMV'
+        elif self.output_type == 'scenario_damage_by_asset':
+            layer_name = "scenario_damage_by_asset_rlz-%s_%s" % (rlz, taxonomy)
 
         # get field names
         if self.output_type in ['hcurves', 'hmaps']:
