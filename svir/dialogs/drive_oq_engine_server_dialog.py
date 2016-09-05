@@ -383,6 +383,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 dlg = LoadHdf5AsLayerDialog(self.iface, output_type, filepath)
                 dlg.exec_()
             elif outtype == 'geojson':
+                # FIXME: hazard maps do not produce an hdf5. Currently, it is
+                #        possible to read from geojson, but it doesn't work
+                #        pressing "load as layer" for the hmap
                 filepath = self.download_output(
                     output_id, outtype, dest_folder)
                 dlg = LoadGeoJsonAsLayerDialog(self.iface, filepath)
