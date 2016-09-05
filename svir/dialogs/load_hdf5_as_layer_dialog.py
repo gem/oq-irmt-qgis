@@ -74,7 +74,7 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
         # sanity check
         if output_type not in (
                 'hcurves', 'hmaps', 'loss_maps', 'loss_curves',
-                'scenario_damage_gmfs', 'scenario_damage_by_asset'):
+                'gmf_data', 'scenario_damage_by_asset'):
             raise NotImplementedError(output_type)
         self.iface = iface
         self.hdf5_path = hdf5_path
@@ -103,8 +103,8 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
         self.default_field_name = None
 
     def define_gui_elements(self):
-        self.rlz_lbl = QLabel('Realization (only the chosen realization'
-                              ' will be loaded into the layer)')
+        self.rlz_lbl = QLabel('Realization (different realizations'
+                              ' will be loaded into separate layer groups)')
         self.rlz_cbx = QComboBox()
         self.rlz_cbx.setEnabled(False)
         self.rlz_cbx.currentIndexChanged['QString'].connect(
@@ -127,12 +127,12 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
         self.loss_type_cbx.setEnabled(False)
         self.loss_type_cbx.currentIndexChanged['QString'].connect(
             self.on_loss_type_changed)
-        self.imti_lbl = QLabel(
+        self.imt_lbl = QLabel(
             'IMTI (used for default styling)')  # FIXME: complete name?
-        self.imti_cbx = QComboBox()
-        self.imti_cbx.setEnabled(False)
-        self.imti_cbx.currentIndexChanged['QString'].connect(
-            self.on_imti_changed)
+        self.imt_cbx = QComboBox()
+        self.imt_cbx.setEnabled(False)
+        self.imt_cbx.currentIndexChanged['QString'].connect(
+            self.on_imt_changed)
         self.eid_lbl = QLabel(
             'Event ID (used for default styling)')
         self.eid_sbx = QSpinBox()  # FIXME: turn into a textbox
@@ -178,13 +178,13 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             self.verticalLayout.addWidget(self.rlz_lbl)
             self.verticalLayout.addWidget(self.rlz_cbx)
             self.adjustSize()
-        elif self.output_type == 'scenario_damage_gmfs':
+        elif self.output_type == 'gmf_data':
             self.setWindowTitle(
                 'Load scenario damage GMFs from HDF5, as layer')
             self.verticalLayout.addWidget(self.rlz_lbl)
             self.verticalLayout.addWidget(self.rlz_cbx)
-            self.verticalLayout.addWidget(self.imti_lbl)
-            self.verticalLayout.addWidget(self.imti_cbx)
+            self.verticalLayout.addWidget(self.imt_lbl)
+            self.verticalLayout.addWidget(self.imt_cbx)
             self.verticalLayout.addWidget(self.eid_lbl)
             self.verticalLayout.addWidget(self.eid_sbx)
             self.adjustSize()
@@ -252,12 +252,19 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             self.loss_type_cbx.addItems(self.loss_types.keys())
         elif self.output_type == 'loss_curves':
             self.loss_types = self.hdata.dtype.names
-        elif self.output_type == 'scenario_damage_gmfs':
-            self.dataset = self.hdata.get(self.rlz_cbx.currentText())
-            imtis = list(set(self.dataset['imti']))
-            self.imti_cbx.clear()
-            self.imti_cbx.setEnabled(True)
-            self.imti_cbx.addItems([str(imti) for imti in imtis])
+        elif self.output_type == 'gmf_data':
+            self.dataset = self.hfile.get(self.rlz_cbx.currentText())
+            self.imts = {}
+            for name in self.dataset.dtype.names[2:]:
+                imt, eid = name.split('-')
+                eid = int(eid)
+                if imt not in self.imts:
+                    self.imts[imt] = [eid]
+                else:
+                    self.imts[imt].append(eid)
+            self.imt_cbx.clear()
+            self.imt_cbx.setEnabled(True)
+            self.imt_cbx.addItems(self.imts.keys())
         if self.output_type in ('hcurves', 'loss_curves'):
             self.set_ok_button()
 
@@ -273,24 +280,36 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             self.set_ok_button()
 
     def on_imt_changed(self):
-        imt = self.imt_cbx.currentText()
-        self.poe_cbx.clear()
-        self.poe_cbx.setEnabled(True)
-        self.poe_cbx.addItems(self.imts[imt])
+        if self.output_type == 'gmf_data':
+            imt = self.imt_cbx.currentText()
+            eids = self.imts[imt]
+            min_eid = min(eids)
+            max_eid = max(eids)
+            self.eid_sbx.cleanText()
+            self.eid_sbx.setEnabled(True)
+            self.eid_lbl.setText(
+                'Event ID (used for default styling) (range %d-%d)' % (
+                    min_eid, max_eid))
+            self.eid_sbx.setRange(min_eid, max_eid)
+            self.set_ok_button()
+        elif self.output_type == 'FIXME':
+            imt = self.imt_cbx.currentText()
+            self.poe_cbx.clear()
+            self.poe_cbx.setEnabled(True)
+            self.poe_cbx.addItems(self.imts[imt])
+        elif self.output_type == 'FIXME':
+            eids = set(self.dataset['eid'])
+            min_eid = min(eids)
+            max_eid = max(eids)
+            self.eid_sbx.cleanText()
+            self.eid_sbx.setEnabled(True)
+            self.eid_lbl.setText(
+                'Event ID (used for default styling) (range %s-%s)' % (min_eid,
+                                                                    max_eid))
+            self.eid_sbx.setRange(min_eid, max_eid)
+            self.set_ok_button()
 
     def on_poe_changed(self):
-        self.set_ok_button()
-
-    def on_imti_changed(self):
-        eids = set(self.dataset['eid'])
-        min_eid = min(eids)
-        max_eid = max(eids)
-        self.eid_sbx.cleanText()
-        self.eid_sbx.setEnabled(True)
-        self.eid_lbl.setText(
-            'Event ID (used for default styling) (range %s-%s)' % (min_eid,
-                                                                   max_eid))
-        self.eid_sbx.setRange(min_eid, max_eid)
         self.set_ok_button()
 
     # def on_eid_changed(self):
@@ -353,9 +372,8 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
                 self.hdata = self.hfile.get('loss_maps-rlzs')
             _, n_rlzs = self.hdata.shape
             self.rlzs = [str(i+1) for i in range(n_rlzs)]
-        elif self.output_type == 'scenario_damage_gmfs':
-            self.hdata = self.hfile.get('gmf_data')
-            self.rlzs = self.hdata.keys()
+        elif self.output_type == 'gmf_data':
+            self.rlzs = [item[0] for item in self.hfile.items()]
         elif self.output_type == 'scenario_damage_by_asset':
             self.hdata = self.hfile.get('dmg_by_asset')
             _, n_rlzs = self.hdata.shape
@@ -368,14 +386,12 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
     def set_ok_button(self):
         if self.output_type == 'hmaps':
             self.ok_button.setEnabled(self.poe_cbx.currentIndex() != -1)
-        elif self.output_type == 'hcurves':
+        elif self.output_type in ('hcurves', 'gmf_data'):
             self.ok_button.setEnabled(self.imt_cbx.currentIndex() != -1)
         elif self.output_type == 'loss_maps':
             self.ok_button.setEnabled(self.poe_cbx.currentIndex() != -1)
         elif self.output_type == 'loss_curves':
             self.ok_button.setEnabled(self.rlz_cbx.currentIndex() != -1)
-        elif self.output_type == 'scenario_damage_gmfs':
-            self.ok_button.setEnabled(self.imti_cbx.currentIndex() != -1)
         elif self.output_type == 'scenario_damage_by_asset':
             self.ok_button.setEnabled(self.loss_type_cbx.currentIndex() != -1)
 
@@ -413,22 +429,21 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             layer_name = "loss_curves_rlz-%s_%s" % (rlz, taxonomy)
         elif self.output_type == 'loss_maps':
             layer_name = "loss_maps_rlz-%s_%s" % (rlz, taxonomy)
-        elif self.output_type == 'scenario_damage_gmfs':
+        elif self.output_type == 'gmf_data':
+            imt = self.imt_cbx.currentText()
+            eid = self.eid_sbx.value()
+            self.default_field_name = '%s-%03d' % (imt, eid)
             layer_name = "scenario_damage_gmfs_rlz-%s" % rlz
-            self.default_field_name = 'GMV'
         elif self.output_type == 'scenario_damage_by_asset':
             layer_name = "scenario_damage_by_asset_rlz-%s_%s" % (rlz, taxonomy)
 
         # get field names
-        if self.output_type in ['hcurves', 'hmaps']:
+        if self.output_type in ['hcurves', 'hmaps', 'gmf_data']:
             field_names = list(self.dataset.dtype.names)
         elif self.output_type == 'loss_maps':
             field_names = self.loss_types.keys()
         elif self.output_type == 'loss_curves':
             field_names = list(self.loss_types)
-        elif self.output_type == 'scenario_damage_gmfs':
-            field_names = ['GMV']
-
         if self.output_type in ('loss_curves', 'loss_maps'):
             taxonomy_idx = self.taxonomies.index(taxonomy)
 
@@ -440,7 +455,7 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
                 continue
             if self.output_type in ('hmaps',
                                     'loss_maps',
-                                    'scenario_damage_gmfs'):
+                                    'gmf_data'):
                 # NOTE: add_numeric_attribute uses LayerEditingManager
                 added_field_name = add_numeric_attribute(
                     field_name, self.layer)
@@ -535,24 +550,17 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
                     feat.setGeometry(QgsGeometry.fromPoint(
                         QgsPoint(lon, lat)))
                     feats.append(feat)
-            elif self.output_type == 'scenario_damage_gmfs':
-                # select rows for the given taxonomy table, that satisfy
-                # constraints imti and eid, then get the corresponding sid and
-                # gmv. Use the sid to retrieve the lon and lat
-                gmf_data = self.hfile.get('gmf_data')
-                gmf_data_rlz = gmf_data.get(rlz)
-                asset_array = self.hfile.get('assetcol/array')
-                for row in gmf_data_rlz:
-                    sid, eid, imti, gmv = row
-                    asset_idx = np.where(asset_array['site_id'] == sid)[0][0]
-                    asset = asset_array[asset_idx]
-                    lon = asset['lon']
-                    lat = asset['lat']
+            elif self.output_type == 'gmf_data':
+                for row in self.dataset:
                     # add a feature
                     feat = QgsFeature(self.layer.pendingFields())
-                    feat.setAttribute(field_names[0], float(gmv))
+                    for field_name_idx, field_name in enumerate(field_names):
+                        if field_name in ['lon', 'lat']:
+                            continue
+                        value = float(row[field_name_idx])
+                        feat.setAttribute(field_name, value)
                     feat.setGeometry(QgsGeometry.fromPoint(
-                        QgsPoint(lon, lat)))
+                        QgsPoint(row[0], row[1])))
                     feats.append(feat)
             (res, outFeats) = pr.addFeatures(feats)
         # add self.layer to the legend
@@ -638,7 +646,7 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
                                        ' realization "%s"...' % rlz,
                                        self.iface):
                     self.build_layer(rlz)
-                    if self.output_type in ('hmaps', 'scenario_damage_gmfs'):
+                    if self.output_type in ('hmaps', 'gmf_data'):
                         self.style_maps()
                     elif self.output_type == 'hcurves':
                         self.style_curves()
