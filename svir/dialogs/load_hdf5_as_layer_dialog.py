@@ -135,7 +135,7 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             self.on_imt_changed)
         self.eid_lbl = QLabel(
             'Event ID (used for default styling)')
-        self.eid_sbx = QSpinBox()  # FIXME: turn into a textbox
+        self.eid_sbx = QSpinBox()
         self.eid_sbx.setEnabled(False)
         self.damage_state_lbl = QLabel(
             'Damage state')
