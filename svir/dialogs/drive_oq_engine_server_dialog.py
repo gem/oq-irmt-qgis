@@ -315,6 +315,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         has_hmaps = False
         has_hcurves = False
         has_gmf_data = False
+        has_uhf = False
         for row in output_list:
             if row['type'] == 'hmaps':
                 has_hmaps = True
@@ -322,10 +323,12 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 has_hcurves = True
             if row['type'] == 'gmf_data':
                 has_gmf_data = True
+            if row['type'] == 'uhs':
+                has_uhs = True
             num_actions = len(row['outtypes'])
             if num_actions > max_actions:
                 max_actions = num_actions
-        if has_hmaps or has_hcurves or has_gmf_data:
+        if has_hmaps or has_hcurves or has_gmf_data or has_uhs:
             max_actions += 1
         self.output_list_tbl.setRowCount(len(output_list))
         self.output_list_tbl.setColumnCount(
@@ -342,7 +345,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 button = QPushButton()
                 self.connect_button_to_action(button, action, output, outtype)
                 self.output_list_tbl.setCellWidget(row, col, button)
-            if output['type'] in ['hmaps', 'hcurves', 'gmf_data']:
+            if output['type'] in ['hmaps', 'hcurves', 'gmf_data', 'uhs']:
                 action = 'Load as layer'
                 button = QPushButton()
                 self.connect_button_to_action(button, action, output, outtype)

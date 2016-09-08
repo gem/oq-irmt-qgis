@@ -73,7 +73,7 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
     def __init__(self, iface, output_type, hdf5_path=None):
         # sanity check
         if output_type not in (
-                'hcurves', 'hmaps', 'loss_maps', 'loss_curves',
+                'hcurves', 'hmaps', 'uhs', 'loss_maps', 'loss_curves',
                 'gmf_data', 'scenario_damage_by_asset'):
             raise NotImplementedError(output_type)
         self.iface = iface
@@ -164,6 +164,14 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             self.verticalLayout.addWidget(self.rlz_lbl)
             self.verticalLayout.addWidget(self.rlz_cbx)
             self.adjustSize()
+        elif self.output_type == 'uhs':
+            self.setWindowTitle(
+                'Load uniform hazard spectra from HDF5, as layer')
+            self.verticalLayout.addWidget(self.rlz_lbl)
+            self.verticalLayout.addWidget(self.rlz_cbx)
+            self.verticalLayout.addWidget(self.poe_lbl)
+            self.verticalLayout.addWidget(self.poe_cbx)
+            self.adjustSize()
         elif self.output_type == 'loss_maps':
             self.setWindowTitle('Load loss maps from HDF5, as layer')
             self.verticalLayout.addWidget(self.rlz_lbl)
@@ -245,6 +253,12 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             self.imt_cbx.clear()
             self.imt_cbx.setEnabled(True)
             self.imt_cbx.addItems(self.imts.keys())
+        elif self.output_type == 'uhs':
+            self.dataset = self.hdata.get(self.rlz_cbx.currentText())
+            self.poes = self.dataset.dtype.names[2:]
+            self.poe_cbx.clear()
+            self.poe_cbx.setEnabled(True)
+            self.poe_cbx.addItems(self.poes)
         elif self.output_type in ('loss_maps', 'scenario_damage_by_asset'):
             self.loss_types = self.hdata.dtype.fields
             self.loss_type_cbx.clear()
@@ -362,7 +376,7 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             self.damage_state_cbx.addItems(self.damage_states)
 
     def populate_rlz_cbx(self):
-        if self.output_type in ('hcurves', 'hmaps'):
+        if self.output_type in ('hcurves', 'hmaps', 'uhs'):
             self.hdata = self.hfile.get(self.output_type)
             self.rlzs = self.hdata.keys()
         elif self.output_type in ('loss_curves', 'loss_maps'):
@@ -388,14 +402,14 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             self.ok_button.setEnabled(self.poe_cbx.currentIndex() != -1)
         elif self.output_type in ('hcurves', 'gmf_data'):
             self.ok_button.setEnabled(self.imt_cbx.currentIndex() != -1)
-        elif self.output_type == 'loss_maps':
+        elif self.output_type in ['loss_maps', 'uhs']:
             self.ok_button.setEnabled(self.poe_cbx.currentIndex() != -1)
         elif self.output_type == 'loss_curves':
             self.ok_button.setEnabled(self.rlz_cbx.currentIndex() != -1)
         elif self.output_type == 'scenario_damage_by_asset':
             self.ok_button.setEnabled(self.loss_type_cbx.currentIndex() != -1)
 
-    def build_layer(self, rlz, taxonomy=None):
+    def build_layer(self, rlz, taxonomy=None, poe=None):
         # get the root of layerTree, in order to add groups of layers
         # (one group for each realization)
         root = QgsProject.instance().layerTreeRoot()
@@ -414,6 +428,8 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             loss_type = self.loss_type_cbx.currentText()
             poe = "poe-%s" % self.poe_cbx.currentText()
             self.default_field_name = loss_type
+        # if self.output_type == 'uhs':
+            # poe = self.poe_cbx.currentText()
 
         # build layer name
         if self.output_type == 'hmaps':
@@ -436,6 +452,8 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             layer_name = "scenario_damage_gmfs_rlz-%s" % rlz
         elif self.output_type == 'scenario_damage_by_asset':
             layer_name = "scenario_damage_by_asset_rlz-%s_%s" % (rlz, taxonomy)
+        elif self.output_type == 'uhs':
+            layer_name = "uhs_rlz-%s_poe-%s" % (rlz, poe)
 
         # get field names
         if self.output_type in ['hcurves', 'hmaps', 'gmf_data']:
@@ -446,6 +464,8 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             field_names = list(self.loss_types)
         if self.output_type in ('loss_curves', 'loss_maps'):
             taxonomy_idx = self.taxonomies.index(taxonomy)
+        if self.output_type == 'uhs':
+            field_names = self.dataset[poe].dtype.names
 
         # create layer
         self.layer = QgsVectorLayer(
@@ -455,6 +475,7 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
                 continue
             if self.output_type in ('hmaps',
                                     'loss_maps',
+                                    'uhs',
                                     'gmf_data'):
                 # NOTE: add_numeric_attribute uses LayerEditingManager
                 added_field_name = add_numeric_attribute(
@@ -562,6 +583,18 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
                     feat.setGeometry(QgsGeometry.fromPoint(
                         QgsPoint(row[0], row[1])))
                     feats.append(feat)
+            elif self.output_type == 'uhs':
+                for row in self.dataset:
+                    # add a feature
+                    feat = QgsFeature(self.layer.pendingFields())
+                    for field_name_idx, field_name in enumerate(field_names):
+                        if field_name in ['lon', 'lat']:
+                            continue
+                        value = float(row[poe][field_name_idx])
+                        feat.setAttribute(field_name, value)
+                    feat.setGeometry(QgsGeometry.fromPoint(
+                        QgsPoint(row['lon'], row['lat'])))
+                    feats.append(feat)
             (res, outFeats) = pr.addFeatures(feats)
         # add self.layer to the legend
         QgsMapLayerRegistry.instance().addMapLayer(self.layer, False)
@@ -636,11 +669,19 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
                             'Creating layer for realization "%s" '
                             ' and taxonomy "%s"...' % (rlz, taxonomy),
                             self.iface):
-                        self.build_layer(rlz, taxonomy)
+                        self.build_layer(rlz, taxonomy=taxonomy)
                         if self.output_type == 'loss_curves':
                             self.style_curves()
                         elif self.output_type == 'loss_maps':
                             self.style_maps()  # FIXME rename called function
+            elif self.output_type == 'uhs':
+                for poe in self.poes:
+                    with WaitCursorManager(
+                            'Creating layer for realization "%s" '
+                            ' and poe "%s"...' % (rlz, poe),
+                            self.iface):
+                        self.build_layer(rlz, poe=poe)
+                        self.style_curves()
             else:
                 with WaitCursorManager('Creating layer for '
                                        ' realization "%s"...' % rlz,

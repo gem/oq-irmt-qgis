@@ -70,11 +70,15 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.loss_type_cbx = None
         self.imt_lbl = None
         self.imt_cbx = None
+        self.poe_lbl = None
+        self.poe_cbx = None
 
         self.current_selection = {}
         self.current_imt = None
         self.current_loss_type = None
         self.was_imt_switched = False
+        self.was_loss_type_switched = False
+        self.was_poe_switched = False
         self.current_abscissa = []
         self.color_names = [
             name for name in QColor.colorNames() if name != 'white']
@@ -90,7 +94,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
         self.iface.mapCanvas().setSelectionColor(QColor('magenta'))
 
-        self.output_type_cbx.addItems(['', 'Hazard Curves', 'Loss Curves'])
+        self.output_type_cbx.addItems(
+            ['', 'Hazard Curves', 'Uniform Hazard Spectra', 'Loss Curves'])
 
         self.plot_figure = Figure()
         self.plot_canvas = FigureCanvas(self.plot_figure)
@@ -123,6 +128,16 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.horizontalLayout.addWidget(self.imt_lbl)
         self.horizontalLayout.addWidget(self.imt_cbx)
 
+    def create_poe_selector(self):
+        self.poe_lbl = QLabel('Probability of Exceedance')
+        self.poe_lbl.setSizePolicy(
+            QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.poe_cbx = QComboBox()
+        self.poe_cbx.currentIndexChanged['QString'].connect(
+            self.on_poe_changed)
+        self.horizontalLayout.addWidget(self.poe_lbl)
+        self.horizontalLayout.addWidget(self.poe_cbx)
+
     def remove_widgets_from_layout(self, widgets, layout):
         for widget in widgets:
             if widget is not None:
@@ -135,23 +150,34 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 self.create_imt_selector()
             elif new_output_type == 'loss_curves':
                 self.create_loss_type_selector()
+            elif new_output_type == 'uhs':
+                self.create_poe_selector()
         else:
             if self.output_type == new_output_type:
                 return
             if new_output_type == 'hcurves':
                 self.remove_widgets_from_layout(
-                    [self.loss_type_lbl, self.loss_type_cbx],
+                    [self.loss_type_lbl, self.loss_type_cbx,
+                     self.poe_lbl, self.poe_cbx],
                     self.horizontalLayout)
                 self.create_imt_selector()
             elif new_output_type == 'loss_curves':
                 self.remove_widgets_from_layout(
-                    [self.imt_lbl, self.imt_cbx],
+                    [self.imt_lbl, self.imt_cbx,
+                     self.poe_lbl, self.poe_cbx],
                     self.horizontalLayout)
                 self.create_loss_type_selector()
+            elif new_output_type == 'uhs':
+                self.remove_widgets_from_layout(
+                    [self.imt_lbl, self.imt_cbx,
+                     self.loss_type_lbl, self.loss_type_cbx],
+                    self.horizontalLayout)
+                self.create_poe_selector()
             elif not new_output_type:  # None or ''
                 self.remove_widgets_from_layout(
                     [self.loss_type_lbl, self.loss_type_cbx,
-                     self.imt_lbl, self.imt_cbx],
+                     self.imt_lbl, self.imt_cbx,
+                     self.poe_lbl, self.poe_cbx],
                     self.horizontalLayout)
         self.adjustSize()
         self.output_type = new_output_type
@@ -202,6 +228,18 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 title = 'Loss Curve for %s' % loss_type
             else:
                 title = 'Loss Curves for %s' % loss_type
+        elif self.output_type == 'uhs':
+            self.plot.set_xscale('linear')
+            self.plot.set_yscale('linear')
+            self.plot.set_xlabel('Period [s]')
+            self.plot.set_ylabel('Spectral acceleration [g]')
+            poe = self.poe_cbx.currentText()
+            if count_selected == 0:
+                title = ''
+            elif count_selected == 1:
+                title = 'Uniform Hazard Spectrum'
+            else:
+                title = 'Uniform Hazard Spectra'
         self.plot.set_title(title)
         self.plot.grid()
         if self.output_type == 'hcurves':
@@ -211,8 +249,12 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             self.plot.set_xlim(xlim_left, xlim_right * 1.1)
 
         if count_selected <= 20:
+            if self.output_type == 'uhs':
+                location = 'upper right'
+            else:
+                location = 'lower left'
             self.legend = self.plot.legend(
-                loc='lower left', fancybox=True, shadow=True,
+                loc=location, fancybox=True, shadow=True,
                 fontsize='small')
         if hasattr(self.legend, 'get_lines'):
             for i, legend_line in enumerate(self.legend.get_lines()):
@@ -245,6 +287,16 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 # for a single loss type, the losses are always
                 # the same, so we can break the loop after the first feature
                 break
+            elif self.output_type == 'uhs':
+                field_names = [field.name() for field in feature.fields()]
+                # reading from something like
+                # [u'PGA', u'SA(0.025)', u'SA(0.05)', ...]
+                periods = [0.0]  # Use 0.0 for PGA
+                # get the number between parenthesis
+                periods.extend([float(name[name.find("(") + 1: name.find(")")])
+                               for name in field_names[1:]])
+                self.current_abscissa = periods
+                break
 
         for i, feature in enumerate(self.active_layer.getFeatures(
                 QgsFeatureRequest().setFilterFids(selected))):
@@ -252,10 +304,14 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 data_dic = json.loads(feature[self.current_imt])
             elif self.output_type == 'loss_curves':
                 data_dic = json.loads(feature[self.current_loss_type])
-            ordinates = data_dic['poes']
+            if self.output_type in ['hcurves', 'loss_curves']:
+                ordinates = data_dic['poes']
+            elif self.output_type == 'uhs':
+                ordinates = [value for value in feature]
             if (self.was_imt_switched
                     or self.was_loss_type_switched
-                    or feature.id() not in self.current_selection):
+                    or feature.id() not in self.current_selection
+                    or self.output_type == 'uhs'):
                 if self.bw_chk.isChecked():
                     line_styles_whole_cycles = i / len(self.line_styles)
                     # NOTE: 85 is approximately 256 / 3
@@ -385,6 +441,11 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.was_loss_type_switched = True
         self.set_selection(self.current_selection.keys())
 
+    def on_poe_changed(self):
+        self.current_poe = self.poe_cbx.currentText()
+        self.was_poe_switched = True
+        self.set_selection(self.current_selection.keys())
+
     @pyqtSlot()
     def on_export_data_button_clicked(self):
         if self.output_type == 'hcurves':
@@ -428,6 +489,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             output_type = 'hcurves'
         elif otype == 'Loss Curves':
             output_type = 'loss_curves'
+        elif otype == 'Uniform Hazard Spectra':
+            output_type = 'uhs'
         else:
             output_type = None
         self.set_output_type_and_its_gui(output_type)
