@@ -315,7 +315,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         has_hmaps = False
         has_hcurves = False
         has_gmf_data = False
-        has_uhf = False
+        has_uhs = False
         for row in output_list:
             if row['type'] == 'hmaps':
                 has_hmaps = True
