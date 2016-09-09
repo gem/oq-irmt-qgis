@@ -143,6 +143,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 item.setTextColor(row_txt_color)
                 self.calc_list_tbl.setItem(row, col, item)
             for col, action in enumerate(actions, len(selected_keys)):
+                # do not display 'Run Risk' button, if this is already a risk
+                # calculation
+                if (calc['job_type'] == 'risk'
+                    and action['label'] == 'Run Risk'):
+                    continue
                 button = QPushButton()
                 button.setText(action['label'])
                 style = 'background-color: %s; color: %s' % (
