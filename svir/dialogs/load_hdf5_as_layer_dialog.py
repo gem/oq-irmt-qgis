@@ -530,7 +530,7 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
                 loss_curves = self.hfile.get('loss_curves-rlzs')[:, rlz_idx]
                 for asset_idx, row in enumerate(loss_curves):
                     asset = asset_array[asset_idx]
-                    if asset['taxonomy'] != taxonomy_idx:
+                    if asset['taxonomy_id'] != taxonomy_idx:
                         continue
                     else:
                         lon = asset['lon']
@@ -557,7 +557,7 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
                 loss_maps = self.hfile.get('loss_maps-rlzs')[:, rlz_idx]
                 for asset_idx, row in enumerate(loss_maps):
                     asset = asset_array[asset_idx]
-                    if asset['taxonomy'] != taxonomy_idx:
+                    if asset['taxonomy_id'] != taxonomy_idx:
                         continue
                     else:
                         lon = asset['lon']
