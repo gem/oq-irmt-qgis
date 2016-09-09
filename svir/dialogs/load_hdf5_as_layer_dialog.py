@@ -306,7 +306,7 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
                     min_eid, max_eid))
             self.eid_sbx.setRange(min_eid, max_eid)
             self.set_ok_button()
-        elif self.output_type == 'FIXME':
+        elif self.output_type == 'hmaps':
             imt = self.imt_cbx.currentText()
             self.poe_cbx.clear()
             self.poe_cbx.setEnabled(True)
@@ -436,7 +436,7 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             imt = self.imt_cbx.currentText()
             poe = self.poe_cbx.currentText()
             self.default_field_name = '%s-%s' % (imt, poe)
-            layer_name = "hazard_map_rlz-%s" % rlz
+            layer_name = "hazard_map_%s" % rlz
         elif self.output_type == 'hcurves':
             imt = self.imt_cbx.currentText()
             self.default_field_name = imt
