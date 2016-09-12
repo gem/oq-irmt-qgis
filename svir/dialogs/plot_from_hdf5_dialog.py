@@ -25,6 +25,7 @@
 
 import os
 import numpy as np
+from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 from qgis.core import (QgsVectorLayer,
                        QgsFeature,
@@ -184,13 +185,10 @@ class PlotFromHdf5Dialog(QDialog, FORM_CLASS):
     def set_ok_button(self):
         self.ok_button.setEnabled(self.loss_type_cbx.currentIndex() != -1)
 
-    def plot_dmg_total(self):
+    def plot_dmg_total(self, loss_type, dmg_states):
         self.dataset = self.hfile.get('dmg_total')
-        loss_type = self.loss_type_cbx.currentText()
         means = self.dataset[loss_type]['mean'].tolist()[0]
         stddevs = self.dataset[loss_type]['stddev'].tolist()[0]
-        dmg_states = self.hfile.get('composite_risk_model').attrs[
-            'damage_states'].tolist()
         if self.exclude_no_dmg_ckb.isChecked():
             # exclude the first element, that is 'no damage'
             means = means[1:]
@@ -224,15 +222,40 @@ class PlotFromHdf5Dialog(QDialog, FORM_CLASS):
         # ax.legend( (rects1[0], ), ('Men', ) )
         plt.show()
 
-    def plot_dmg_by_taxon(self):
-        # TODO
-        pass
+    def plot_dmg_by_taxon(self, loss_type, dmg_states):
+        taxonomies = self.hfile.get('assetcol/taxonomies').value.tolist()
+        # discard stddev (do not show error bars)
+        dmg_by_taxon = self.hfile.get('dmg_by_taxon')[loss_type]['mean']
+        # build a 3d plot, where:
+        # x: damage states
+        # y: taxonomies
+        # z: damage fractions
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        # for taxonomy_id, dmg in enumerate(dmg_by_taxon):
+        #     taxonomy = taxonomies[taxonomy_id]
+        #     ax.bar(ta)
+        # for taxonomy_id, taxonomy in enumerate(taxonomies):
+        for taxonomy_id, dmg in enumerate(dmg_by_taxon):
+            for dmg_state_id, dmg_state in enumerate(dmg_states):
+                # the 0 is to workaround a strange structure in the data
+                dmg_fraction = dmg_by_taxon[taxonomy_id][0][dmg_state_id]
+                ax.bar(dmg_state_id, dmg_fraction,
+                    zs=range(len(taxonomies)), zdir='y', alpha=0.8)
+        ax.set_xlabel('Damage States')
+        ax.set_ylabel('Taxonomies')
+        ax.set_zlabel('Damage Fractions')
+        ax.set_title('Damage Distribution')
+        plt.show()
 
     def accept(self):
+        loss_type = self.loss_type_cbx.currentText()
+        dmg_states = self.hfile.get('composite_risk_model').attrs[
+            'damage_states'].tolist()
         if self.output_type == 'dmg_total':
-            self.plot_dmg_total()
+            self.plot_dmg_total(loss_type, dmg_states)
         elif self.output_type == 'dmg_by_taxon':
-            self.plot_dmg_by_taxon()
+            self.plot_dmg_by_taxon(loss_type, dmg_states)
         self.hfile.close()
         super(PlotFromHdf5Dialog, self).accept()
 
