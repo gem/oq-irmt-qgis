@@ -67,6 +67,7 @@ from svir.dialogs.transformation_dialog import TransformationDialog
 from svir.dialogs.upload_settings_dialog import UploadSettingsDialog
 from svir.dialogs.weight_data_dialog import WeightDataDialog
 from svir.dialogs.load_hdf5_as_layer_dialog import LoadHdf5AsLayerDialog
+from svir.dialogs.plot_from_hdf5_dialog import PlotFromHdf5Dialog
 from svir.dialogs.load_geojson_as_layer_dialog import LoadGeoJsonAsLayerDialog
 from svir.dialogs.drive_oq_engine_server_dialog import (
     DriveOqEngineServerDialog)
@@ -259,6 +260,20 @@ class Irmt:
                            u"Load scenario damage by asset from HDF5 as layer",
                            self.load_scenario_damage_by_asset_from_hdf5_as_layer,
                            enable=True)
+        # Action to plot total damage reading it from a HDF5 produced by a
+        # scenario damage calculation
+        self.add_menu_item("plot_dmg_total",
+                           ":/plugins/irmt/calculate.svg",  # FIXME
+                           u"Plot total damage",
+                           self.plot_dmg_total_from_hdf5,
+                           enable=True)
+        # Action to plot damage by taxonomy reading it from a HDF5 produced by a
+        # scenario damage calculation
+        self.add_menu_item("plot_dmg_by_taxon",
+                           ":/plugins/irmt/calculate.svg",  # FIXME
+                           u"Plot damage by taxonomy",
+                           self.plot_dmg_by_taxon_from_hdf5,
+                           enable=True)
         # Action to load as layer a geojson produced by the oq-engine
         self.add_menu_item("load_geojson_as_layer",
                            ":/plugins/irmt/calculate.svg",  # FIXME
@@ -310,6 +325,14 @@ class Irmt:
         dlg = LoadHdf5AsLayerDialog(self.iface, 'scenario_damage_by_asset')
         dlg.exec_()
         self.viewer_dock.change_output_type('')
+
+    def plot_dmg_total_from_hdf5(self):
+        dlg = PlotFromHdf5Dialog(self.iface, 'dmg_total')
+        dlg.exec_()
+
+    def plot_dmg_by_taxon_from_hdf5(self):
+        dlg = PlotFromHdf5Dialog(self.iface, 'dmg_by_taxon')
+        dlg.exec_()
 
     def load_geojson_as_layer(self):
         dlg = LoadGeoJsonAsLayerDialog(self.iface)
