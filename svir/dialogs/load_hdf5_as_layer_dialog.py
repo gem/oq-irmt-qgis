@@ -1,6 +1,6 @@
 
 # -*- coding: utf-8 -*-
-#/***************************************************************************
+# /***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
@@ -25,7 +25,6 @@
 
 import os
 import json
-import numpy as np
 from qgis.core import (QgsVectorLayer,
                        QgsFeature,
                        QgsPoint,
@@ -209,7 +208,6 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             self.verticalLayout.addWidget(self.damage_state_cbx)
             self.adjustSize()
 
-
     @pyqtSlot(str)
     def on_hdf5_path_le_textChanged(self):
         self.open_hdfview_btn.setDisabled(
@@ -318,8 +316,8 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             self.eid_sbx.cleanText()
             self.eid_sbx.setEnabled(True)
             self.eid_lbl.setText(
-                'Event ID (used for default styling) (range %s-%s)' % (min_eid,
-                                                                    max_eid))
+                'Event ID (used for default styling)'
+                ' (range %s-%s)' % (min_eid, max_eid))
             self.eid_sbx.setRange(min_eid, max_eid)
             self.set_ok_button()
 
@@ -365,7 +363,6 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             self.taxonomy_cbx.clear()
             self.taxonomy_cbx.addItems(self.taxonomies)
             self.taxonomy_cbx.setEnabled(True)
-
 
     def populate_damage_states(self):
         if self.output_type == 'scenario_damage_by_asset':

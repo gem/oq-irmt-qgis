@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#/***************************************************************************
+# /***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
@@ -24,7 +24,6 @@
 
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox,
-                         QLabel,
                          QComboBox,
                          QFormLayout,
                          )

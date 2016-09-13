@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#/***************************************************************************
+# /***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
@@ -146,7 +146,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 # do not display 'Run Risk' button, if this is already a risk
                 # calculation
                 if (calc['job_type'] == 'risk'
-                    and action['label'] == 'Run Risk'):
+                        and action['label'] == 'Run Risk'):
                     continue
                 button = QPushButton()
                 button.setText(action['label'])
