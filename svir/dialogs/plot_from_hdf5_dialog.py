@@ -236,12 +236,19 @@ class PlotFromHdf5Dialog(QDialog, FORM_CLASS):
         #     taxonomy = taxonomies[taxonomy_id]
         #     ax.bar(ta)
         # for taxonomy_id, taxonomy in enumerate(taxonomies):
+        # for taxonomy_id, dmg in enumerate(dmg_by_taxon):
+        #     for dmg_state_id, dmg_state in enumerate(dmg_states):
+        #         # the 0 is to workaround a strange structure in the data
+        #         dmg_fraction = dmg_by_taxon[taxonomy_id][0][dmg_state_id]
+        #         ax.bar(dmg_state_id, dmg_fraction,
+        #                zs=range(len(taxonomies)),
+        #                zdir='y', alpha=0.8)
         for taxonomy_id, dmg in enumerate(dmg_by_taxon):
-            for dmg_state_id, dmg_state in enumerate(dmg_states):
-                # the 0 is to workaround a strange structure in the data
-                dmg_fraction = dmg_by_taxon[taxonomy_id][0][dmg_state_id]
-                ax.bar(dmg_state_id, dmg_fraction,
-                    zs=range(len(taxonomies)), zdir='y', alpha=0.8)
+            # the 0 is to workaround a strange structure in the data
+            dmg_fractions = dmg_by_taxon[taxonomy_id][0]
+            ax.bar(range(len(dmg_states)), dmg_fractions,
+                   zs=range(len(taxonomies)),
+                   zdir='y', alpha=0.8)
         ax.set_xlabel('Damage States')
         ax.set_ylabel('Taxonomies')
         ax.set_zlabel('Damage Fractions')
