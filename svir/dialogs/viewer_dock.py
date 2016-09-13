@@ -233,7 +233,6 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             self.plot.set_yscale('linear')
             self.plot.set_xlabel('Period [s]')
             self.plot.set_ylabel('Spectral acceleration [g]')
-            poe = self.poe_cbx.currentText()
             if count_selected == 0:
                 title = ''
             elif count_selected == 1:
@@ -259,8 +258,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         if hasattr(self.legend, 'get_lines'):
             for i, legend_line in enumerate(self.legend.get_lines()):
                 legend_line.set_picker(5)  # 5 points tolerance
-                legend_line.set_gid(str(gids[i]))  # matplotlib needs a string
-                                                   # when exporting to svg
+                # matplotlib needs a string when exporting to svg
+                legend_line.set_gid(str(gids[i]))
         self.plot_canvas.draw()
 
     def redraw(self, selected, deselected, _):
@@ -418,9 +417,9 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
     def on_container_hover(self, event, container):
         for line in container.get_lines():
             if line.contains(event)[0]:
-                fid = long(line.get_gid())  # matplotlib needs a string when
-                                            # exporting to svg, so here we
-                                            # must cast back to long
+                # matplotlib needs a string when exporting to svg, so here we
+                # must cast back to long
+                fid = long(line.get_gid())
                 feature = next(self.active_layer.getFeatures(
                     QgsFeatureRequest().setFilterFid(fid)))
 
