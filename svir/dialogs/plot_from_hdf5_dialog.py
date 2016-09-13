@@ -1,6 +1,6 @@
 
 # -*- coding: utf-8 -*-
-#/***************************************************************************
+# /***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
@@ -25,44 +25,21 @@
 
 import os
 import numpy as np
-from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 (works by side effect)
 import matplotlib.pyplot as plt
-from qgis.core import (QgsVectorLayer,
-                       QgsFeature,
-                       QgsPoint,
-                       QgsGeometry,
-                       QgsMapLayerRegistry,
-                       QgsSymbolV2,
-                       QgsSymbolLayerV2Registry,
-                       QgsOuterGlowEffect,
-                       QgsSingleSymbolRendererV2,
-                       QgsVectorGradientColorRampV2,
-                       QgsGraduatedSymbolRendererV2,
-                       QgsRendererRangeV2,
-                       QgsProject,
-                       )
 from PyQt4.QtCore import pyqtSlot, QDir
 
 from PyQt4.QtGui import (QDialogButtonBox,
                          QDialog,
                          QFileDialog,
-                         QColor,
                          QComboBox,
-                         QSpinBox,
                          QLabel,
                          QCheckBox,
                          )
 
 from openquake.baselib import hdf5
 
-from svir.utilities.shared import DEBUG
-from svir.utilities.utils import (LayerEditingManager,
-                                  WaitCursorManager,
-                                  get_ui_class,
-                                  )
-from svir.calculations.calculate_utils import (add_numeric_attribute,
-                                               add_textual_attribute,
-                                               )
+from svir.utilities.utils import get_ui_class
 
 FORM_CLASS = get_ui_class('ui_load_hdf5_as_layer.ui')
 
@@ -128,7 +105,6 @@ class PlotFromHdf5Dialog(QDialog, FORM_CLASS):
         self.verticalLayout.addWidget(self.exclude_no_dmg_ckb)
         self.adjustSize()
 
-
     @pyqtSlot(str)
     def on_hdf5_path_le_textChanged(self):
         self.open_hdfview_btn.setDisabled(
@@ -189,8 +165,6 @@ class PlotFromHdf5Dialog(QDialog, FORM_CLASS):
         '''
         Plots the damage distribution for the specified taxonomies
         '''
-
-        ####
         taxonomies = self.hfile.get('assetcol/taxonomies').value.tolist()
         # discard stddev (do not show error bars)
         dmg_by_taxon = self.hfile.get('dmg_by_taxon')[loss_type]['mean']
@@ -203,35 +177,32 @@ class PlotFromHdf5Dialog(QDialog, FORM_CLASS):
         # z: damage fractions
         indX = np.arange(len(dmg_states))  # the x locations for the groups
         indZ = np.arange(len(taxonomies))  # the y locations for the groups
-        error_config = {'ecolor': '0.3', 'linewidth': '2'}
         bar_width = 0.3
         padding_left = 0
 
-        fig = plt.figure(figsize = (16, 9))
+        fig = plt.figure(figsize=(16, 9))
         ax = fig.add_subplot(111, projection='3d')
         bar_width = 0.5
 
         for z, dmg_dist in enumerate(dmg_by_taxon):
-            xs = indX
             dmg_dist = dmg_dist[0]  # nested structure
             if self.exclude_no_dmg_ckb.isChecked():
                 # exclude the first element, that is 'no damage'
                 dmg_dist = dmg_dist[1:]
             ys = dmg_dist
-            zs = z
             ax.bar(indX, height=ys, zs=z, zdir='y', width=bar_width,
                    color='IndianRed', linewidth=1.5, alpha=0.6)
-            
+
         ax.set_xticks(indX+padding_left+bar_width/2, minor=False)
         ax.set_xticklabels(dmg_states)
-        ax.set_xlabel('Damage States', fontsize = 16)
+        ax.set_xlabel('Damage States', fontsize=16)
 
         ax.set_yticks(indZ+1, minor=False)
         ax.set_yticklabels(taxonomies)
-        ax.set_ylabel('Taxonomies', fontsize = 16)
+        ax.set_ylabel('Taxonomies', fontsize=16)
 
-        ax.set_zlabel('Damage Fractions', fontsize = 16)
-        plt.title('Damage distribution by taxonomy', fontsize = 20)
+        ax.set_zlabel('Damage Fractions', fontsize=16)
+        plt.title('Damage distribution by taxonomy', fontsize=20)
 
         plt.show()
 
@@ -254,16 +225,16 @@ class PlotFromHdf5Dialog(QDialog, FORM_CLASS):
         bar_width = 0.3
         padding_left = 0
 
-        fig = plt.figure(figsize = (16, 9))
+        plt.figure(figsize=(16, 9))
 
         plt.bar(indX+padding_left, height=means, width=bar_width,
                 yerr=stddevs, error_kw=error_config, color='IndianRed',
                 linewidth=1.5, alpha=0.6)
-        plt.title('Damage distribution (all taxonomies)', fontsize = 20)
-        plt.xlabel('Damage state', fontsize = 16)
-        plt.ylabel('Number of assets in damage state', fontsize = 16)
+        plt.title('Damage distribution (all taxonomies)', fontsize=20)
+        plt.xlabel('Damage state', fontsize=16)
+        plt.ylabel('Number of assets in damage state', fontsize=16)
         plt.xticks(indX+padding_left+bar_width/2., dmg_states)
-        plt.margins(.25,0)
+        plt.margins(.25, 0)
         plt.show()
 
     def accept(self):
