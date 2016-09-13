@@ -185,7 +185,60 @@ class PlotFromHdf5Dialog(QDialog, FORM_CLASS):
     def set_ok_button(self):
         self.ok_button.setEnabled(self.loss_type_cbx.currentIndex() != -1)
 
-    def plot_dmg_total(self, loss_type, dmg_states):
+    def plot_taxonomy_damage_dist(self, loss_type, dmg_states):
+        '''
+        Plots the damage distribution for the specified taxonomies
+        '''
+
+        ####
+        taxonomies = self.hfile.get('assetcol/taxonomies').value.tolist()
+        # discard stddev (do not show error bars)
+        dmg_by_taxon = self.hfile.get('dmg_by_taxon')[loss_type]['mean']
+        if self.exclude_no_dmg_ckb.isChecked():
+            # exclude the first element, that is 'no damage'
+            dmg_states = dmg_states[1:]
+        # build a 3d plot, where:
+        # x: damage states
+        # y: taxonomies
+        # z: damage fractions
+        indX = np.arange(len(dmg_states))  # the x locations for the groups
+        indZ = np.arange(len(taxonomies))  # the y locations for the groups
+        error_config = {'ecolor': '0.3', 'linewidth': '2'}
+        bar_width = 0.3
+        padding_left = 0
+
+        fig = plt.figure(figsize = (16, 9))
+        ax = fig.add_subplot(111, projection='3d')
+        bar_width = 0.5
+
+        for z, dmg_dist in enumerate(dmg_by_taxon):
+            xs = indX
+            dmg_dist = dmg_dist[0]  # nested structure
+            if self.exclude_no_dmg_ckb.isChecked():
+                # exclude the first element, that is 'no damage'
+                dmg_dist = dmg_dist[1:]
+            ys = dmg_dist
+            zs = z
+            ax.bar(indX, height=ys, zs=z, zdir='y', width=bar_width,
+                   color='IndianRed', linewidth=1.5, alpha=0.6)
+            
+        ax.set_xticks(indX+padding_left+bar_width/2, minor=False)
+        ax.set_xticklabels(dmg_states)
+        ax.set_xlabel('Damage States', fontsize = 16)
+
+        ax.set_yticks(indZ+1, minor=False)
+        ax.set_yticklabels(taxonomies)
+        ax.set_ylabel('Taxonomies', fontsize = 16)
+
+        ax.set_zlabel('Damage Fractions', fontsize = 16)
+        plt.title('Damage distribution by taxonomy', fontsize = 20)
+
+        plt.show()
+
+    def plot_total_damage_dist(self, loss_type, dmg_states):
+        '''
+        Plots the total damage distribution
+        '''
         self.dataset = self.hfile.get('dmg_total')
         means = self.dataset[loss_type]['mean'].tolist()[0]
         stddevs = self.dataset[loss_type]['stddev'].tolist()[0]
@@ -194,65 +247,23 @@ class PlotFromHdf5Dialog(QDialog, FORM_CLASS):
             means = means[1:]
             stddevs = stddevs[1:]
             dmg_states = dmg_states[1:]
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        ## the data
-        N = len(means)
-        ## necessary variables
-        ind = np.arange(N)                # the x locations for the groups
-        width = 0.35                      # the width of the bars
-        ## the bars
-        rects1 = ax.bar(ind, means, width,
-                        color='white',
-                        yerr=stddevs,
-                        error_kw=dict(elinewidth=2,ecolor='black'))
-        # axes and labels
-        # ax.set_xlim(-width,len(ind)+width)
-        ax.set_xlim(-width,len(ind))
-        # ax.set_ylim(0, 45)
-        ax.set_xlabel('Damage state')
-        ax.set_ylabel('Number of assets in damage state')
-        ax.set_title('Damage distribution (all taxonomies)')
-        xTickMarks = dmg_states
-        # ax.set_xticks(ind+width)
-        ax.set_xticks(ind + width/2.)
-        xtickNames = ax.set_xticklabels(xTickMarks)
-        # plt.setp(xtickNames, rotation=45, fontsize=10)
-        ## add a legend
-        # ax.legend( (rects1[0], ), ('Men', ) )
-        plt.show()
 
-    def plot_dmg_by_taxon(self, loss_type, dmg_states):
-        taxonomies = self.hfile.get('assetcol/taxonomies').value.tolist()
-        # discard stddev (do not show error bars)
-        dmg_by_taxon = self.hfile.get('dmg_by_taxon')[loss_type]['mean']
-        # build a 3d plot, where:
-        # x: damage states
-        # y: taxonomies
-        # z: damage fractions
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        # for taxonomy_id, dmg in enumerate(dmg_by_taxon):
-        #     taxonomy = taxonomies[taxonomy_id]
-        #     ax.bar(ta)
-        # for taxonomy_id, taxonomy in enumerate(taxonomies):
-        # for taxonomy_id, dmg in enumerate(dmg_by_taxon):
-        #     for dmg_state_id, dmg_state in enumerate(dmg_states):
-        #         # the 0 is to workaround a strange structure in the data
-        #         dmg_fraction = dmg_by_taxon[taxonomy_id][0][dmg_state_id]
-        #         ax.bar(dmg_state_id, dmg_fraction,
-        #                zs=range(len(taxonomies)),
-        #                zdir='y', alpha=0.8)
-        for taxonomy_id, dmg in enumerate(dmg_by_taxon):
-            # the 0 is to workaround a strange structure in the data
-            dmg_fractions = dmg_by_taxon[taxonomy_id][0]
-            ax.bar(range(len(dmg_states)), dmg_fractions,
-                   zs=range(len(taxonomies)),
-                   zdir='y', alpha=0.8)
-        ax.set_xlabel('Damage States')
-        ax.set_ylabel('Taxonomies')
-        ax.set_zlabel('Damage Fractions')
-        ax.set_title('Damage Distribution')
+        indX = np.arange(len(dmg_states))  # the x locations for the groups
+        # indZ = np.arange(len(taxonomies))  # the y locations for the groups
+        error_config = {'ecolor': '0.3', 'linewidth': '2'}
+        bar_width = 0.3
+        padding_left = 0
+
+        fig = plt.figure(figsize = (16, 9))
+
+        plt.bar(indX+padding_left, height=means, width=bar_width,
+                yerr=stddevs, error_kw=error_config, color='IndianRed',
+                linewidth=1.5, alpha=0.6)
+        plt.title('Damage distribution (all taxonomies)', fontsize = 20)
+        plt.xlabel('Damage state', fontsize = 16)
+        plt.ylabel('Number of assets in damage state', fontsize = 16)
+        plt.xticks(indX+padding_left+bar_width/2., dmg_states)
+        plt.margins(.25,0)
         plt.show()
 
     def accept(self):
@@ -260,9 +271,11 @@ class PlotFromHdf5Dialog(QDialog, FORM_CLASS):
         dmg_states = self.hfile.get('composite_risk_model').attrs[
             'damage_states'].tolist()
         if self.output_type == 'dmg_total':
-            self.plot_dmg_total(loss_type, dmg_states)
+            # self.plot_dmg_total(loss_type, dmg_states)
+            self.plot_total_damage_dist(loss_type, dmg_states)
         elif self.output_type == 'dmg_by_taxon':
-            self.plot_dmg_by_taxon(loss_type, dmg_states)
+            # self.plot_dmg_by_taxon(loss_type, dmg_states)
+            self.plot_taxonomy_damage_dist(loss_type, dmg_states)
         self.hfile.close()
         super(PlotFromHdf5Dialog, self).accept()
 
