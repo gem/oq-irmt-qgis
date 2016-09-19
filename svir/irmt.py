@@ -76,6 +76,8 @@ from svir.thread_worker.download_platform_data_worker import (
     DownloadPlatformDataWorker)
 from svir.calculations.calculate_utils import calculate_composite_variable
 from svir.calculations.process_layer import ProcessLayer
+from svir.recovery_modeling.recovery_modeling import (
+    plot_community_based_recovery_curve)
 from svir.utilities.utils import (tr,
                                   WaitCursorManager,
                                   assign_default_weights,
@@ -286,6 +288,12 @@ class Irmt:
                            self.drive_oq_engine_server,
                            enable=True)
         self._create_viewer_dock()
+        # Action to run the recovery analysis
+        self.add_menu_item("recovery_modeling",
+                           ":/plugins/irmt/calculate.svg",  # FIXME
+                           u"Run recovery modeling",
+                           self.run_recovery_modeling,
+                           enable=True)
         # Action to open the plugin's manual
         self.add_menu_item("help",
                            ":/plugins/irmt/manual.svg",
@@ -294,6 +302,9 @@ class Irmt:
                            enable=True)
 
         self.update_actions_status()
+
+    def run_recovery_modeling(self):
+        plot_community_based_recovery_curve()
 
     def load_hmaps_from_hdf5_as_layer(self):
         dlg = LoadHdf5AsLayerDialog(self.iface, 'hmaps')
