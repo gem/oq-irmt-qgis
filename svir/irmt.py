@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#/***************************************************************************
+# /***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
@@ -71,13 +71,12 @@ from svir.dialogs.plot_from_hdf5_dialog import PlotFromHdf5Dialog
 from svir.dialogs.load_geojson_as_layer_dialog import LoadGeoJsonAsLayerDialog
 from svir.dialogs.drive_oq_engine_server_dialog import (
     DriveOqEngineServerDialog)
+from svir.dialogs.recovery_modeling_dialog import RecoveryModelingDialog
 from svir.thread_worker.abstract_worker import start_worker
 from svir.thread_worker.download_platform_data_worker import (
     DownloadPlatformDataWorker)
 from svir.calculations.calculate_utils import calculate_composite_variable
 from svir.calculations.process_layer import ProcessLayer
-from svir.recovery_modeling.recovery_modeling import (
-    plot_community_based_recovery_curve)
 from svir.utilities.utils import (tr,
                                   WaitCursorManager,
                                   assign_default_weights,
@@ -256,11 +255,12 @@ class Irmt:
                            enable=True)
         # Action to load as layer damage by asset from hdf5 produced by
         # the oq-engine with a scenario damage risk calculation
-        self.add_menu_item("load_scenario_damage_by_asset_from_hdf5_as_layer",
-                           ":/plugins/irmt/calculate.svg",  # FIXME
-                           u"Load scenario damage by asset from HDF5 as layer",
-                           self.load_scenario_damage_by_asset_from_hdf5_as_layer,
-                           enable=True)
+        self.add_menu_item(
+            "load_scenario_damage_by_asset_from_hdf5_as_layer",
+            ":/plugins/irmt/calculate.svg",  # FIXME
+            u"Load scenario damage by asset from HDF5 as layer",
+            self.load_scenario_damage_by_asset_from_hdf5_as_layer,
+            enable=True)
         # Action to plot total damage reading it from a HDF5 produced by a
         # scenario damage calculation
         self.add_menu_item("plot_dmg_total",
@@ -268,8 +268,8 @@ class Irmt:
                            u"Plot total damage",
                            self.plot_dmg_total_from_hdf5,
                            enable=True)
-        # Action to plot damage by taxonomy reading it from a HDF5 produced by a
-        # scenario damage calculation
+        # Action to plot damage by taxonomy reading it from a HDF5 produced by
+        # a scenario damage calculation
         self.add_menu_item("plot_dmg_by_taxon",
                            ":/plugins/irmt/calculate.svg",  # FIXME
                            u"Plot damage by taxonomy",
@@ -290,9 +290,9 @@ class Irmt:
         self._create_viewer_dock()
         # Action to run the recovery analysis
         self.add_menu_item("recovery_modeling",
-                           ":/plugins/irmt/calculate.svg",  # FIXME
+                           ":/plugins/irmt/plot.svg",  # FIXME
                            u"Run recovery modeling",
-                           self.run_recovery_modeling,
+                           self.recovery_modeling,
                            enable=True)
         # Action to open the plugin's manual
         self.add_menu_item("help",
@@ -303,8 +303,9 @@ class Irmt:
 
         self.update_actions_status()
 
-    def run_recovery_modeling(self):
-        plot_community_based_recovery_curve()
+    def recovery_modeling(self):
+        dlg = RecoveryModelingDialog(self.iface)
+        dlg.exec_()
 
     def load_hmaps_from_hdf5_as_layer(self):
         dlg = LoadHdf5AsLayerDialog(self.iface, 'hmaps')

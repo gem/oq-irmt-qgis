@@ -9,7 +9,7 @@ class Building(object):
                  inspectionTimes, recoveryTimes,
                  repairTimes, leadTimeDispersion, repairTimeDispersion,
                  currentSimulationBuildingLevelDamageStateProbabilities,
-                 timeList):
+                 timeList, assessmentTimes, mobilizationTimes):
         # PAOLO: buildingNumber is not used anywhere
         # self.buildingNumber = buildingNumber
         # PAOLO
@@ -21,6 +21,8 @@ class Building(object):
         self.currentSimulationBuildingLevelDamageStateProbabilities = \
             currentSimulationBuildingLevelDamageStateProbabilities
         self.timeList = timeList
+        self.assessmentTimes = assessmentTimes
+        self.mobilizationTimes = mobilizationTimes
 
     # Generate Building Level Recovery Functions
     def aggregateApproachToGenerateBuildingLevelRecoveryFunctions(self):
@@ -69,19 +71,20 @@ class Building(object):
     # Generate Building Level Recovery Functions
     def disaggregateApproachToGenerateBuildingLevelRecoveryFunctions(self):
 
-        # Initialize lead time dispersion
-        self.leadTimeDispersion = []
+        # PAOLO: should we pass it to the class or to this method?
+        # # Initialize lead time dispersion
+        # self.leadTimeDispersion = []
 
-        # Load lead time dispersion and repair time dispersion
-        leadTimeDispersionData = r'LeadTimeDispersion.txt'
+        # # Load lead time dispersion and repair time dispersion
+        # leadTimeDispersionData = r'LeadTimeDispersion.txt'
 
-        repairTimeDispersionData = r'RepairTimeDispersion.txt'
+        # repairTimeDispersionData = r'RepairTimeDispersion.txt'
 
-        for line in open(leadTimeDispersionData, 'r+').readlines():
-            self.leadTimeDispersion = float(line.split()[0])
+        # for line in open(leadTimeDispersionData, 'r+').readlines():
+        #     self.leadTimeDispersion = float(line.split()[0])
 
-        for line in open(repairTimeDispersionData, 'r+').readlines():
-            self.repairTimeDispersion = float(line.split()[0])
+        # for line in open(repairTimeDispersionData, 'r+').readlines():
+        #     self.repairTimeDispersion = float(line.split()[0])
 
         # Simulate lead time dispersions
         randomNumber = random.random()
