@@ -42,9 +42,10 @@ def plot_community_based_recovery_curve():
 
     # Define Attributes of Constructuon & Engineering Service Class
 
-    # data_dir = os.path.join('recovery_modeling', 'input_data')
-    data_dir = os.path.join(
+    input_data_dir = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), 'input_data')
+    output_data_dir = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), 'output_data')
 
     # Initialize assessment times
     inspectionTimes = []
@@ -54,7 +55,7 @@ def plot_community_based_recovery_curve():
     recoveryTimes = []
 
     # load assessment times
-    inspectionTimesData = os.path.join(data_dir, 'InspectionTimes.txt')
+    inspectionTimesData = os.path.join(input_data_dir, 'InspectionTimes.txt')
 
     # Seperate data in different lines so that inspection time of each damage
     # state has its own line.
@@ -62,7 +63,7 @@ def plot_community_based_recovery_curve():
         New_line = line.split()
         inspectionTimes.append(New_line[0])
 
-    assessmentTimesData = os.path.join(data_dir, 'AssessmentTimes.txt')
+    assessmentTimesData = os.path.join(input_data_dir, 'AssessmentTimes.txt')
 
     # Seperate data in different lines so that assessment time of each damage
     # state has its own line.
@@ -70,7 +71,8 @@ def plot_community_based_recovery_curve():
         New_line = line.split()
         assessmentTimes.append(New_line[0])
 
-    mobilizationTimesData = os.path.join(data_dir, 'MobilizationTimes.txt')
+    mobilizationTimesData = os.path.join(
+        input_data_dir, 'MobilizationTimes.txt')
 
     # Seperate data in different lines so that mobilization time of each damage
     # state has its own line.
@@ -78,7 +80,7 @@ def plot_community_based_recovery_curve():
         New_line = line.split()
         mobilizationTimes.append(New_line[0])
 
-    repairTimesData = os.path.join(data_dir, 'RepairTimes.txt')
+    repairTimesData = os.path.join(input_data_dir, 'RepairTimes.txt')
 
     # Seperate data in different lines so that mobilization time of each damage
     # state has its own line.
@@ -86,7 +88,7 @@ def plot_community_based_recovery_curve():
         New_line = line.split()
         repairTimes.append(New_line[0])
 
-    recoveryTimesData = os.path.join(data_dir, 'RecoveryTimes.txt')
+    recoveryTimesData = os.path.join(input_data_dir, 'RecoveryTimes.txt')
 
     # Seperate data in different lines so that mobilization time of each damage
     # state has its own line.
@@ -99,7 +101,8 @@ def plot_community_based_recovery_curve():
     # leadTimeDispersion = []
 
     # Load lead time dispersion
-    leadTimeDispersionData = os.path.join(data_dir, 'LeadTimeDispersion.txt')
+    leadTimeDispersionData = os.path.join(
+        input_data_dir, 'LeadTimeDispersion.txt')
 
     for line in open(leadTimeDispersionData, 'r+').readlines():
         leadTimeDispersion = float(line.split()[0])
@@ -109,7 +112,7 @@ def plot_community_based_recovery_curve():
 
     # Load repair time dispersion
     repairTimeDispersionData = os.path.join(
-        data_dir, 'RepairTimeDispersion.txt')
+        input_data_dir, 'RepairTimeDispersion.txt')
 
     for line in open(repairTimeDispersionData, 'r+').readlines():
         repairTimeDispersion = float(line.split()[0])
@@ -123,13 +126,13 @@ def plot_community_based_recovery_curve():
 
     # Load number of damage simulations
     numberOfDamageSimulationsData = os.path.join(
-        data_dir, 'NumberOfDamageSimulations.txt')
+        input_data_dir, 'NumberOfDamageSimulations.txt')
 
     for line in open(numberOfDamageSimulationsData, 'r+').readlines():
         numberOfDamageSimulations = int(line.split()[0])
 
     dmgByAssetBayAreaData = os.path.join(
-        data_dir, 'dmg_by_asset_bay_area.csv')
+        input_data_dir, 'dmg_by_asset_bay_area.csv')
 
     # Load Loss-based damage state probabilities
     with open(dmgByAssetBayAreaData, 'r') as f:
@@ -153,7 +156,7 @@ def plot_community_based_recovery_curve():
     # damage state i
 
     transferProbabilitiesData = os.path.join(
-        data_dir, 'transferProbabilities.csv')
+        input_data_dir, 'transferProbabilities.csv')
 
     with open(transferProbabilitiesData, 'r') as f:
         reader = csv.reader(f)
@@ -259,7 +262,8 @@ def plot_community_based_recovery_curve():
     # PAOLO: what to save?
     # Save community recovery function
     f3 = open(
-        os.path.join(data_dir, "communityLevelRecoveryFunction.txt"), "w")
+        os.path.join(output_data_dir,
+                     "communityLevelRecoveryFunction.txt"), "w")
     f3.write(str(communityRecoveryFunction))
     f3.close()
 
