@@ -191,6 +191,7 @@ HELP_PAGES_LOOKUP = {
     'plot_dmg_by_taxon': 'FIXME',
     'load_geojson_as_layer': 'FIXME',
     'drive_engine_server': 'FIXME',
+    'recovery_modeling': 'FIXME',
     'toggle_viewer_dock': 'FIXME',
     'help': 'index.html',
 }

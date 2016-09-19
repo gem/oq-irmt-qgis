@@ -1,0 +1,2 @@
+The entry in row n is the assessment time for the (n - 1)th 
+damage state
