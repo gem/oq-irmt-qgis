@@ -48,6 +48,7 @@ from svir.utilities.utils import (WaitCursorManager,
                                   )
 from svir.dialogs.load_hdf5_as_layer_dialog import LoadHdf5AsLayerDialog
 from svir.dialogs.load_geojson_as_layer_dialog import LoadGeoJsonAsLayerDialog
+from svir.dialogs.load_csv_as_layer_dialog import LoadCsvAsLayerDialog
 
 FORM_CLASS = get_ui_class('ui_drive_engine_server.ui')
 
@@ -321,6 +322,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         has_hcurves = False
         has_gmf_data = False
         has_uhs = False
+        has_dmg_by_asset = False
         for row in output_list:
             if row['type'] == 'hmaps':
                 has_hmaps = True
@@ -330,10 +332,13 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 has_gmf_data = True
             if row['type'] == 'uhs':
                 has_uhs = True
+            if row['type'] == 'dmg_by_asset':
+                has_dmg_by_asset = True
             num_actions = len(row['outtypes'])
             if num_actions > max_actions:
                 max_actions = num_actions
-        if has_hmaps or has_hcurves or has_gmf_data or has_uhs:
+        if (has_hmaps or has_hcurves or has_gmf_data or has_uhs or
+                has_dmg_by_asset):
             max_actions += 1
         self.output_list_tbl.setRowCount(len(output_list))
         self.output_list_tbl.setColumnCount(
@@ -350,7 +355,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 button = QPushButton()
                 self.connect_button_to_action(button, action, output, outtype)
                 self.output_list_tbl.setCellWidget(row, col, button)
-            if output['type'] in ['hmaps', 'hcurves', 'gmf_data', 'uhs']:
+            if output['type'] in [
+                    'hmaps', 'hcurves', 'gmf_data', 'uhs', 'dmg_by_asset']:
                 action = 'Load as layer'
                 button = QPushButton()
                 self.connect_button_to_action(button, action, output, outtype)
@@ -397,6 +403,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 filepath = self.download_output(
                     output_id, outtype, dest_folder)
                 dlg = LoadGeoJsonAsLayerDialog(self.iface, filepath)
+                dlg.exec_()
+            elif outtype == 'csv':
+                filepath = self.download_output(
+                    output_id, outtype, dest_folder)
+                dlg = LoadCsvAsLayerDialog(self.iface, filepath)
                 dlg.exec_()
             else:
                 raise NotImplementedError("%s %s" % (action, outtype))
