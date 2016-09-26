@@ -85,7 +85,9 @@ NUMERIC_FIELD_TYPES = (INT_FIELD_TYPE_NAME,
                        REAL_FIELD_TYPE_NAME,
                        REAL_FIELD_TYPE_NAME.lower(),
                        DOUBLE_FIELD_TYPE_NAME,
-                       DOUBLE_FIELD_TYPE_NAME.capitalize())
+                       DOUBLE_FIELD_TYPE_NAME.capitalize(),
+                       'qint8', 'qint16', 'qint32', 'qint64',
+                       'qlonglong', 'qreal')
 
 STRING_FIELD_TYPE_NAME = 'String'
 TEXT_FIELD_TYPE_NAME = 'text'
