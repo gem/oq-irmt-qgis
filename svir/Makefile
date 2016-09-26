@@ -147,6 +147,9 @@ package: compile doc
 	rm -r $(PLUGINNAME)/
 	echo "Created package: $(PLUGINNAME).zip"
 
+package_no_compile:
+	git archive --prefix=$(PLUGINNAME)/ -o $(PLUGINNAME).zip $(VERSION)
+
 upload_doc: doc
 	@echo
 	@echo "--------------------------------------"
