@@ -52,11 +52,15 @@ default: compile
 
 compile: $(UI_FILES) $(COMPILED_RESOURCE_FILES)
 
-%_rc.py : %.qrc $(RESOURCE_SRC)
-	pyrcc4 -o $*_rc.py  $<
-
 %.py : %.ui
-	pyuic4 -o $@ $<
+	pyuic5 -o $@ $<
+	#from PyQt5 import >> from qgis.PyQt import
+	sed -i 's/from PyQt5 import/from qgis.PyQt import/' $@
+
+%_rc.py : %.qrc
+	pyrcc5 -o $*_rc.py  $<
+	#from PyQt5 import >> from qgis.PyQt import
+	sed -i 's/from PyQt5 import/from qgis.PyQt import/' $@
 
 %.qm : %.ts
 	lrelease $<
