@@ -93,7 +93,6 @@ try:
     from svir.dialogs.plot_from_hdf5_dialog import PlotFromHdf5Dialog
     from svir.dialogs.drive_oq_engine_server_dialog import (
         DriveOqEngineServerDialog)
-    raise ImportError('FAAAAAAAAAAAAAAAAAAAAAAAAAKE')
     OQ_DEPENDENCIES_OK = True
 except ImportError:
     OQ_DEPENDENCIES_OK = False
