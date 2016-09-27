@@ -31,7 +31,9 @@ from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox)
 
-from svir.utilities.utils import get_ui_class
+from svir.utilities.utils import (get_ui_class,
+                                  read_config_file,
+                                  )
 from svir.recovery_modeling.building import Building
 
 FORM_CLASS = get_ui_class('ui_recovery_modeling.ui')
@@ -79,7 +81,7 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         self.ok_button.setEnabled(True)
 
     def populate_approach_cbx(self):
-        self.approach_cbx.addItems(['Aggregated', 'Disaggregated'])
+        self.approach_cbx.addItems(['Aggregate', 'Disaggregate'])
 
     @pyqtSlot(str)
     def on_approach_cbx_currentIndexChanged(self):
@@ -92,6 +94,12 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         # Adapted to work within this plugin by: Paolo Tormene
         # Objective: GenerateCommunityLevelRecoveryCurve
         # Date: August 26, 2016
+        DAYS_BEFORE_EVENT = 200
+        WHY_400 = DAYS_BEFORE_EVENT * 2
+        WHY_231 = 2.31
+        WHY_022 = 0.22
+        WHY_05 = 0.5
+        WHY_100 = 100
         start = time.clock()  # FIXME
         # Step 1: Define attributes of objects in each class
 
@@ -103,84 +111,22 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         input_data_dir = os.path.join(recovery_modeling_dir, 'input_data')
         output_data_dir = os.path.join(recovery_modeling_dir, 'output_data')
 
-        # Initialize assessment times
-        inspectionTimes = []
-        assessmentTimes = []
-        mobilizationTimes = []
-        repairTimes = []
-        recoveryTimes = []
-
-        # load assessment times
-        inspectionTimesData = os.path.join(
-            input_data_dir, 'InspectionTimes.txt')
-
-        # Seperate data in different lines so that inspection time of each
-        # damage state has its own line.
-        for line in open(inspectionTimesData, 'r+').readlines():
-            New_line = line.split()
-            inspectionTimes.append(New_line[0])
-
-        assessmentTimesData = os.path.join(
-            input_data_dir, 'AssessmentTimes.txt')
-
-        # Seperate data in different lines so that assessment time of each
-        # damage state has its own line.
-        for line in open(assessmentTimesData, 'r+').readlines():
-            New_line = line.split()
-            assessmentTimes.append(New_line[0])
-
-        mobilizationTimesData = os.path.join(
-            input_data_dir, 'MobilizationTimes.txt')
-
-        # Seperate data in different lines so that mobilization time of each
-        # damage state has its own line.
-        for line in open(mobilizationTimesData, 'r+').readlines():
-            New_line = line.split()
-            mobilizationTimes.append(New_line[0])
-
-        repairTimesData = os.path.join(input_data_dir, 'RepairTimes.txt')
-
-        # Seperate data in different lines so that mobilization time of each
-        # damage state has its own line.
-        for line in open(repairTimesData, 'r+').readlines():
-            New_line = line.split()
-            repairTimes.append(New_line[0])
-
-        recoveryTimesData = os.path.join(input_data_dir, 'RecoveryTimes.txt')
-
-        # Seperate data in different lines so that mobilization time of each
-        # damage state has its own line.
-        for line in open(recoveryTimesData, 'r+').readlines():
-            New_line = line.split()
-            recoveryTimes.append(New_line[0])
-
-        # Load lead time dispersion
-        leadTimeDispersionData = os.path.join(
-            input_data_dir, 'LeadTimeDispersion.txt')
-
-        for line in open(leadTimeDispersionData, 'r+').readlines():
-            leadTimeDispersion = float(line.split()[0])
-
-        # Load repair time dispersion
-        repairTimeDispersionData = os.path.join(
-            input_data_dir, 'RepairTimeDispersion.txt')
-
-        for line in open(repairTimeDispersionData, 'r+').readlines():
-            repairTimeDispersion = float(line.split()[0])
+        # read configuration files
+        inspectionTimes = read_config_file('InspectionTimes.txt')
+        assessmentTimes = read_config_file('AssessmentTimes.txt')
+        mobilizationTimes = read_config_file('MobilizationTimes.txt')
+        repairTimes = read_config_file('RepairTimes.txt')
+        recoveryTimes = read_config_file('RecoveryTimes.txt')
+        leadTimeDispersion = read_config_file(
+            'LeadTimeDispersion.txt', float)
+        repairTimeDispersion = read_config_file(
+            'RepairTimeDispersion.txt', float)
 
         # Step 3: Incorporate Napa Data to community recovery model
 
         # ############# MAIN #################################################
-
-        # Initialize number of damage simulations
-        numberOfDamageSimulations = []
-
-        # Load number of damage simulations
-        numberOfDamageSimulationsData = os.path.join(
-            input_data_dir, 'NumberOfDamageSimulations.txt')
-
-        for line in open(numberOfDamageSimulationsData, 'r+').readlines():
-            numberOfDamageSimulations = int(line.split()[0])
+        numberOfDamageSimulations = read_config_file(
+            'NumberOfDamageSimulations.txt', int)[0]
 
         dmgByAssetBayAreaData = os.path.join(
             input_data_dir, 'dmg_by_asset_bay_area.csv')
@@ -217,18 +163,35 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         RecoveryBasedDamageStateProbabilities = [
             [0 for x in range(6)] for y in range(len(dmg_by_asset_bay_area)-1)]
 
+        fractionCollapsedAndIrreparableBuildings = 0
         for i in range(len(LossBasedDamageStateProbabilities)):
             for j in range(len(transferProbabilities[0])):
                 for s in range(len(transferProbabilities)):
-                    RecoveryBasedDamageStateProbabilities[i][j] += float(
-                        LossBasedDamageStateProbabilities[i][s]) \
-                        * float(transferProbabilities[s][j])
+                    RecoveryBasedDamageStateProbabilities[i][j] += (
+                        float(LossBasedDamageStateProbabilities[i][s])
+                        * float(transferProbabilities[s][j]))
+                    if j == 4 or j == 5:
+                        fractionCollapsedAndIrreparableBuildings += \
+                            RecoveryBasedDamageStateProbabilities[i][j]
 
-        # PAOLO: adjusted or not?
+        fractionCollapsedAndIrreparableBuildings = \
+            fractionCollapsedAndIrreparableBuildings / (
+                len(dmg_by_asset_bay_area)-1)
+
+        # PAOLO and VENETIA: the paper refers to a metodology by Comerio
+        # (2006): "a performance index can be developed to relate the fraction
+        # of collapsed buildings within a particular region, and used to
+        # account for delays caused by regional socioeconomic effects" Since we
+        # will multiply results by a social vulnerability index, we are
+        # wondering if this correction is still needed.  Otherwise, we can keep
+        # this, and add a further correction when we take into account the
+        # socioeconomic index.
+
         # Compute lead time adjustment factor
-        # leadTimeFactor = 0.5 * (
-        #     2.31 + 0.22*fractionCollapsedAndIrreparableBuildings*100)/2.31;
-        leadTimeFactor = 1.0
+        leadTimeFactor = WHY_05 * (
+            WHY_231 + WHY_022 * fractionCollapsedAndIrreparableBuildings
+            * WHY_100) / WHY_231
+
         # Generate Time Vector Used for Recovery Function
         # Maximum time in days
 
@@ -264,24 +227,14 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
                 # PAOLO: building number is not used. Instead, we need to make
                 # available to the building all the imported data
                 # Napa = Building(bldg)
-                Napa = Building(
+                napa_bldg = Building(
                     inspectionTimes, recoveryTimes, repairTimes,
                     leadTimeDispersion, repairTimeDispersion,
                     currentSimulationBuildingLevelDamageStateProbabilities,
                     timeList, assessmentTimes, mobilizationTimes)
                 approach = self.approach_cbx.currentText()
-                if approach == 'Disaggregated':
-                    # Call for
-                    # disaggregateApproachToGenerateBuildingLevelRecoveryFunctions
-                    # in building class
-                    z = Napa.disaggregateApproachToGenerateBuildingLevelRecoveryFunctions()
-                elif approach == 'Aggregated':
-                    # Call for
-                    # aggregateApproachToGenerateBuildingLevelRecoveryFunctions in
-                    # building class
-                    z = Napa.aggregateApproachToGenerateBuildingLevelRecoveryFunctions()
-                else:
-                    raise NotImplementedError(approach)
+                # approach can be aggregate or disaggregate
+                z = napa_bldg.generateBldgLevelRecoveryFunction(approach)
                 # Assign buidling level recovery function
                 for timePoint in range(len(timeList)):
                     buildingLevelRecoveryFunction[timePoint] += z[timePoint]
@@ -289,6 +242,16 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
             for timePoint in range(len(timeList)):
                 communityRecoveryFunction[timePoint] \
                     += buildingLevelRecoveryFunction[timePoint]
+
+        # PAOLO: instead of calculating the community level recovery function
+        # on all points, we should aggregate points by the same zones defined
+        # for the socioeconomic dataset, and then we should produce a community
+        # recovery function for each zone.
+        # This has to be done on the damage by asset layer
+        # (For the aggregation we can use SAGA:
+        #  "Add Polygon Attributes to Points", i.e.
+        #  processing.runalg('saga:addpolygonattributestopoints', input,
+        #                    polygons, field, output))
 
         # Calculate community level recovery function
         for timePoint in range(len(timeList)):
@@ -310,6 +273,10 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
                     i - 200] / len(LossBasedDamageStateProbabilities)
 
         plt.plot(New_timeList, New_communityRecoveryFunction)
+        plt.xlabel('Time (days)')
+        plt.ylabel('Normalized recovery level')
+        plt.title('Community level recovery curve')
+        plt.ylim((0.0, 1.2))
         plt.show()
 
         # PAOLO: what to save?

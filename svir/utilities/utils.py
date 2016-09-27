@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#/***************************************************************************
+# /***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
@@ -786,3 +786,14 @@ def get_ui_class(ui_file):
         )
     )
     return uic.loadUiType(ui_file_path)[0]
+
+
+def read_config_file(filename, cast_func=None):
+    filename = os.path.join(
+        os.path.dirname(__file__), '..', 'recovery_modeling',
+        'input_data', filename)
+    with open(filename, 'r') as f:
+        lines = [line.strip() for line in f.readlines()]
+        if cast_func:
+            lines = [cast_func(line) for line in lines]
+        return lines
