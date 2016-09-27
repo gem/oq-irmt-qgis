@@ -90,7 +90,11 @@ class SettingsDialog(QtGui.QDialog, FORM_CLASS):
         self.hostnameEdit.setText(hostname)
 
         self.developermodeCheck.setChecked(
-            mySettings.value('irmt/developer_mode', False, type=bool))
+                mySettings.value('irmt/developer_mode', False, type=bool))
+        self.ui.oq_hazardlib_path_edit.setText(
+                mySettings.value('irmt/oq_hazardlib_path', ''))
+        self.ui.oq_engine_path_edit.setText(
+                mySettings.value('irmt/oq_engine_path', ''))
 
     def saveState(self):
         """
