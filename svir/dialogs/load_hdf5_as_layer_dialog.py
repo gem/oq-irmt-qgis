@@ -698,4 +698,6 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
         self.hfile.close()
         super(LoadHdf5AsLayerDialog, self).accept()
 
-    # FIXME: also cancel should close the hdf5 file
+    def reject(self):
+        self.hfile.close()
+        super(LoadHdf5AsLayerDialog, self).reject()

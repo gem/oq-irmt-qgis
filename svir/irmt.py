@@ -92,7 +92,7 @@ try:
     from svir.dialogs.drive_oq_engine_server_dialog import (
         DriveOqEngineServerDialog)
 
-    OQ_DEPENDENCIES_OK = False
+    OQ_DEPENDENCIES_OK = True
 except ImportError:
     OQ_DEPENDENCIES_OK = False
 
