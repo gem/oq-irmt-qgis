@@ -229,20 +229,6 @@ class Irmt:
                            self.upload,
                            enable=False,
                            add_to_layer_actions=True)
-        # Action to activate the modal dialog to set up show_settings for the
-        # connection with the platform
-        self.add_menu_item("show_platform_settings",
-                           ":/plugins/irmt/settings.svg",
-                           u"&OpenQuake Platform connection settings",
-                           self.show_platform_settings,
-                           enable=True)
-        # Action to activate the modal dialog to set up show_settings for the
-        # connection with the engine
-        self.add_menu_item("show_engine_settings",
-                           ":/plugins/irmt/settings.svg",
-                           u"&OpenQuake Engine connection settings",
-                           self.show_engine_settings,
-                           enable=True)
 
         # Action to plot total damage reading it from a HDF5 produced by a
         # scenario damage calculation
@@ -268,7 +254,7 @@ class Irmt:
         if OQ_DEPENDENCIES_OK:
             # Action to load as layer an hdf5 produced by the oq-engine
             self.add_menu_item("load_hdf5_as_layer",
-                               ":/plugins/irmt/manual.svg",  # FIXME
+                               ":/plugins/irmt/calculate.svg",  # FIXME
                                u"Load HDF5 as layer",
                                self.load_hdf5_as_layer,
                                enable=True)
@@ -322,15 +308,32 @@ class Irmt:
                     u"Load scenario damage by asset from HDF5 as layer",
                     self.load_scenario_damage_by_asset_from_hdf5_as_layer,
                     enable=True)
+            # Action to run the recovery analysis
+            self.add_menu_item("recovery_modeling",
+                               ":/plugins/irmt/plot.svg",  # FIXME
+                               u"Run recovery modeling",
+                               self.recovery_modeling,
+                               enable=True)
+            # Action to activate the modal dialog to set up show_settings for
+            #  the
+            # connection with the engine
+            self.add_menu_item("show_engine_settings",
+                               ":/plugins/irmt/settings.svg",
+                               u"&OpenQuake Engine connection settings",
+                               self.show_engine_settings,
+                               enable=True)
         else:
             self.warn_missing_features()
 
-        # Action to run the recovery analysis
-        self.add_menu_item("recovery_modeling",
-                           ":/plugins/irmt/plot.svg",  # FIXME
-                           u"Run recovery modeling",
-                           self.recovery_modeling,
+
+        # Action to activate the modal dialog to set up show_settings for the
+        # connection with the platform
+        self.add_menu_item("show_platform_settings",
+                           ":/plugins/irmt/settings.svg",
+                           u"&OpenQuake Platform connection settings",
+                           self.show_platform_settings,
                            enable=True)
+
         # Action to open the plugin's manual
         self.add_menu_item("help",
                            ":/plugins/irmt/manual.svg",
