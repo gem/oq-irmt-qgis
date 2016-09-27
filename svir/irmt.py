@@ -53,7 +53,7 @@ from PyQt4.QtGui import (QAction,
                          QColor,
                          QFileDialog,
                          QDesktopServices,
-                         QApplication)
+                         QApplication, QMessageBox)
 
 from svir.dialogs.viewer_dock import ViewerDock
 from svir.ui.tool_button_with_help_link import QToolButtonWithHelpLink
@@ -75,23 +75,25 @@ try:
 except ImportError:
     raise ImportError('Please install h5py')
 
-try:
-    import sys
-    settings = QSettings()
-    oq_hazardlib_path = settings.value('irmt/oq_hazardlib_path', '')
-    oq_engine_path = settings.value('irmt/oq_engine_path', '')
+import sys
 
-    if oq_hazardlib_path and oq_hazardlib_path not in sys.path:
-        sys.path.append(oq_hazardlib_path)
-    if oq_engine_path and oq_engine_path not in sys.path:
-        sys.path.append(oq_engine_path)
+settings = QSettings()
+oq_hazardlib_path = settings.value('irmt/oq_hazardlib_path', '')
+oq_engine_path = settings.value('irmt/oq_engine_path', '')
+
+if oq_hazardlib_path and oq_hazardlib_path not in sys.path:
+    sys.path.append(oq_hazardlib_path)
+if oq_engine_path and oq_engine_path not in sys.path:
+    sys.path.append(oq_engine_path)
+
+try:
     from openquake.baselib import hdf5
 
     from svir.dialogs.load_hdf5_as_layer_dialog import LoadHdf5AsLayerDialog
     from svir.dialogs.plot_from_hdf5_dialog import PlotFromHdf5Dialog
     from svir.dialogs.drive_oq_engine_server_dialog import (
         DriveOqEngineServerDialog)
-
+    raise ImportError('FAAAAAAAAAAAAAAAAAAAAAAAAAKE')
     OQ_DEPENDENCIES_OK = True
 except ImportError:
     OQ_DEPENDENCIES_OK = False
@@ -322,10 +324,8 @@ class Irmt:
                     self.load_scenario_damage_by_asset_from_hdf5_as_layer,
                     enable=True)
         else:
-            self.iface.messageBar().pushInfo(tr('Missing dependencies for extra features'),
-                                             tr('To enable extra features install and set the oq-engine and oq-hazardlib path'))
+            self.warn_missing_features()
 
-        self._create_viewer_dock()
         # Action to run the recovery analysis
         self.add_menu_item("recovery_modeling",
                            ":/plugins/irmt/plot.svg",  # FIXME
@@ -339,7 +339,23 @@ class Irmt:
                            self.show_manual,
                            enable=True)
 
+        self._create_viewer_dock()
         self.update_actions_status()
+
+    def warn_missing_features(self):
+        title = tr('Missing dependencies for extra features')
+        text = tr('To enable extra features install and set the oq-engine and'
+                  ' oq-hazardlib path in the settings panel')
+
+        if QSettings().value('irmt/oq_deps_warn', True, type=bool):
+            answer = QMessageBox.information(
+                    None, title, text, tr("Close"), tr("Dont't warn me again"))
+            if answer == 1:
+                # Dont't warn me again clicked
+                QSettings().setValue('irmt/oq_deps_warn', False)
+
+        else:
+            self.iface.messageBar().pushInfo(title, text)
 
     def recovery_modeling(self):
         dlg = RecoveryModelingDialog(self.iface)
