@@ -91,9 +91,11 @@ class SettingsDialog(QtGui.QDialog, FORM_CLASS):
 
         self.developermodeCheck.setChecked(
                 mySettings.value('irmt/developer_mode', False, type=bool))
-        self.ui.oq_hazardlib_path_edit.setText(
+        self.warnOQDepsCheck.setChecked(
+                mySettings.value('irmt/oq_deps_warn', True, type=bool))
+        self.oq_hazardlib_path_edit.setText(
                 mySettings.value('irmt/oq_hazardlib_path', ''))
-        self.ui.oq_engine_path_edit.setText(
+        self.oq_engine_path_edit.setText(
                 mySettings.value('irmt/oq_engine_path', ''))
 
     def saveState(self):
@@ -104,11 +106,13 @@ class SettingsDialog(QtGui.QDialog, FORM_CLASS):
         # if the (stripped) hostname ends with '/', remove it
         hostname = self.hostnameEdit.text().strip().rstrip('/')
         mySettings.setValue('irmt/oq_hazardlib_path',
-                            self.ui.oq_hazardlib_path_edit.text())
+                            self.oq_hazardlib_path_edit.text())
         mySettings.setValue('irmt/oq_engine_path',
-                            self.ui.oq_engine_path_edit.text())
+                            self.oq_engine_path_edit.text())
+        mySettings.setValue('irmt/oq_deps_warn',
+                            self.warnOQDepsCheck.isChecked())
         mySettings.setValue('irmt/developer_mode',
-                            self.ui.developermodeCheck.isChecked())
+                            self.developermodeCheck.isChecked())
         if self.server == 'platform':
             mySettings.setValue('irmt/platform_hostname', hostname)
             mySettings.setValue('irmt/platform_username',
