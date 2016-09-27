@@ -8,7 +8,7 @@ class Building(object):
     def __init__(self,  # buildingNumber,
                  inspectionTimes, recoveryTimes,
                  repairTimes, leadTimeDispersion, repairTimeDispersion,
-                 currentSimulationBuildingLevelDamageStateProbabilities,
+                 currentDamageStateProbabilities,
                  timeList, assessmentTimes, mobilizationTimes):
         # PAOLO: buildingNumber is not used anywhere
         # self.buildingNumber = buildingNumber
@@ -18,24 +18,27 @@ class Building(object):
         self.repairTimes = repairTimes
         self.leadTimeDispersion = leadTimeDispersion
         self.repairTimeDispersion = repairTimeDispersion
-        self.currentSimulationBuildingLevelDamageStateProbabilities = \
-            currentSimulationBuildingLevelDamageStateProbabilities
+        self.currentDamageStateProbabilities = currentDamageStateProbabilities
         self.timeList = timeList
         self.assessmentTimes = assessmentTimes
         self.mobilizationTimes = mobilizationTimes
 
-    # Generate Building Level Recovery Functions
-    def aggregateApproachToGenerateBuildingLevelRecoveryFunctions(self):
+    def generateBldgLevelRecoveryFunction(self, approach):
+        if approach == 'Disaggregate':
+            return \
+                self.disaggregateBuildingLevelRecoveryFunction()
+        elif approach == 'Aggregate':
+            return self.aggregateBuildingLevelRecoveryFunction()
+        else:
+            raise NotImplementedError(approach)
 
+    def aggregateBuildingLevelRecoveryFunction(self):
         # Simulate lead time dispersions
         randomNumber = random.random()
-
         # Simulate lead times
         simulateRecoveryTimes = []
-
         for i in range(len(self.inspectionTimes)):
             simulateRecoveryTimes.append("")
-
         # Calculate simulated inspection time/assessment time/mobilization time
         # based on lead time dispersion
         for i in range(len(self.recoveryTimes)):
@@ -46,7 +49,6 @@ class Building(object):
                              scale=self.repairTimeDispersion))
             else:
                 simulateRecoveryTimes[i] = 0
-
         # Inititalize array that stores the recovery function
         Functionality = [[0 for x in range(len(self.inspectionTimes))]
                          for y in range(len(self.timeList))]
@@ -61,16 +63,14 @@ class Building(object):
                     Functionality[i][j] = 0
                 else:
                     Functionality[i][j] = 1
-
-                expectedFunctionality += \
-                    Functionality[i][j] * self.currentSimulationBuildingLevelDamageStateProbabilities[j]
+                expectedFunctionality += (
+                    Functionality[i][j]
+                    * self.currentDamageStateProbabilities[j])
             # Expected functionality
             buildingLevelRecoveryFunction[i] = expectedFunctionality
         return buildingLevelRecoveryFunction
 
-    # Generate Building Level Recovery Functions
-    def disaggregateApproachToGenerateBuildingLevelRecoveryFunctions(self):
-
+    def disaggregateBuildingLevelRecoveryFunction(self):
         # PAOLO: should we pass it to the class or to this method?
         # # Initialize lead time dispersion
         # self.leadTimeDispersion = []
@@ -176,8 +176,9 @@ class Building(object):
                     else:
                         Functionality[i][j] = 1
 
-                expectedFunctionality += \
-                    Functionality[i][j] * self.currentSimulationBuildingLevelDamageStateProbabilities[j]
+                expectedFunctionality += (
+                    Functionality[i][j]
+                    * self.currentDamageStateProbabilities[j])
             # Expected functionality
             buildingLevelRecoveryFunction[i] = expectedFunctionality
         return buildingLevelRecoveryFunction
