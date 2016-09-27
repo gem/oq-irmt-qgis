@@ -181,6 +181,7 @@ HELP_PAGES_LOOKUP = {
     'upload': '11_upload_project_to_platform.html',
     'show_platform_settings': '04_connection_settings.html',
     'show_engine_settings': 'FIXME',
+    'load_hdf5_as_layer': 'FIXME',
     'load_hcurves_from_hdf5_as_layer': 'FIXME',
     'load_loss_curves_from_hdf5_as_layer': 'FIXME',
     'load_hmaps_from_hdf5_as_layer': 'FIXME',

@@ -66,11 +66,7 @@ from svir.dialogs.settings_dialog import SettingsDialog
 from svir.dialogs.transformation_dialog import TransformationDialog
 from svir.dialogs.upload_settings_dialog import UploadSettingsDialog
 from svir.dialogs.weight_data_dialog import WeightDataDialog
-from svir.dialogs.load_hdf5_as_layer_dialog import LoadHdf5AsLayerDialog
-from svir.dialogs.plot_from_hdf5_dialog import PlotFromHdf5Dialog
 from svir.dialogs.load_geojson_as_layer_dialog import LoadGeoJsonAsLayerDialog
-from svir.dialogs.drive_oq_engine_server_dialog import (
-    DriveOqEngineServerDialog)
 from svir.dialogs.recovery_modeling_dialog import RecoveryModelingDialog
 
 # check dependencies
@@ -92,10 +88,11 @@ try:
     from openquake.baselib import hdf5
 
     from svir.dialogs.load_hdf5_as_layer_dialog import LoadHdf5AsLayerDialog
+    from svir.dialogs.plot_from_hdf5_dialog import PlotFromHdf5Dialog
     from svir.dialogs.drive_oq_engine_server_dialog import (
         DriveOqEngineServerDialog)
 
-    OQ_DEPENDENCIES_OK = True
+    OQ_DEPENDENCIES_OK = False
 except ImportError:
     OQ_DEPENDENCIES_OK = False
 
@@ -245,50 +242,7 @@ class Irmt:
                            u"&OpenQuake Engine connection settings",
                            self.show_engine_settings,
                            enable=True)
-        # Action to load as layer hazard maps from hdf5 produced by the
-        # oq-engine
-        self.add_menu_item("load_hmaps_from_hdf5_as_layer",
-                           ":/plugins/irmt/calculate.svg",  # FIXME
-                           u"Load hazard maps from HDF5 as layer",
-                           self.load_hmaps_from_hdf5_as_layer,
-                           enable=True)
-        # Action to load as layer hazard curves from hdf5 produced by the
-        # oq-engine
-        self.add_menu_item("load_hcurves_from_hdf5_as_layer",
-                           ":/plugins/irmt/calculate.svg",  # FIXME
-                           u"Load hazard curves from HDF5 as layer",
-                           self.load_hcurves_from_hdf5_as_layer,
-                           enable=True)
-        # Action to load as layer loss maps from hdf5 produced by the
-        # oq-engine
-        self.add_menu_item("load_loss_maps_from_hdf5_as_layer",
-                           ":/plugins/irmt/calculate.svg",  # FIXME
-                           u"Load loss maps from HDF5 as layer",
-                           self.load_loss_maps_from_hdf5_as_layer,
-                           enable=True)
-        # Action to load as layer loss curves from hdf5 produced by the
-        # oq-engine
-        self.add_menu_item("load_loss_curves_from_hdf5_as_layer",
-                           ":/plugins/irmt/calculate.svg",  # FIXME
-                           u"Load loss curves from HDF5 as layer",
-                           self.load_loss_curves_from_hdf5_as_layer,
-                           enable=True)
-        # Action to load as layer ground motion fields from hdf5 produced by
-        # the oq-engine with a scenario damage hazard calculation
-        self.add_menu_item("load_scenario_damage_gmfs_from_hdf5_as_layer",
-                           ":/plugins/irmt/calculate.svg",  # FIXME
-                           u"Load scenario damage ground motion "
-                           "fields from HDF5 as layer",
-                           self.load_scenario_damage_gmfs_from_hdf5_as_layer,
-                           enable=True)
-        # Action to load as layer damage by asset from hdf5 produced by
-        # the oq-engine with a scenario damage risk calculation
-        self.add_menu_item(
-            "load_scenario_damage_by_asset_from_hdf5_as_layer",
-            ":/plugins/irmt/calculate.svg",  # FIXME
-            u"Load scenario damage by asset from HDF5 as layer",
-            self.load_scenario_damage_by_asset_from_hdf5_as_layer,
-            enable=True)
+
         # Action to plot total damage reading it from a HDF5 produced by a
         # scenario damage calculation
         self.add_menu_item("plot_dmg_total",
@@ -323,16 +277,54 @@ class Irmt:
                                u"Drive oq-engine &server",
                                self.drive_oq_engine_server,
                                enable=True)
+            # Action to load as layer hazard maps from hdf5 produced by the
+            # oq-engine
+            self.add_menu_item("load_hmaps_from_hdf5_as_layer",
+                               ":/plugins/irmt/calculate.svg",  # FIXME
+                               u"Load hazard maps from HDF5 as layer",
+                               self.load_hmaps_from_hdf5_as_layer,
+                               enable=True)
+            # Action to load as layer hazard curves from hdf5 produced by the
+            # oq-engine
+            self.add_menu_item("load_hcurves_from_hdf5_as_layer",
+                               ":/plugins/irmt/calculate.svg",  # FIXME
+                               u"Load hazard curves from HDF5 as layer",
+                               self.load_hcurves_from_hdf5_as_layer,
+                               enable=True)
+            # Action to load as layer loss maps from hdf5 produced by the
+            # oq-engine
+            self.add_menu_item("load_loss_maps_from_hdf5_as_layer",
+                               ":/plugins/irmt/calculate.svg",  # FIXME
+                               u"Load loss maps from HDF5 as layer",
+                               self.load_loss_maps_from_hdf5_as_layer,
+                               enable=True)
+            # Action to load as layer loss curves from hdf5 produced by the
+            # oq-engine
+            self.add_menu_item("load_loss_curves_from_hdf5_as_layer",
+                               ":/plugins/irmt/calculate.svg",  # FIXME
+                               u"Load loss curves from HDF5 as layer",
+                               self.load_loss_curves_from_hdf5_as_layer,
+                               enable=True)
+            # Action to load as layer ground motion fields from hdf5 produced by
+            # the oq-engine with a scenario damage hazard calculation
+            self.add_menu_item("load_scenario_damage_gmfs_from_hdf5_as_layer",
+                               ":/plugins/irmt/calculate.svg",  # FIXME
+                               u"Load scenario damage ground motion "
+                               "fields from HDF5 as layer",
+                               self.load_scenario_damage_gmfs_from_hdf5_as_layer,
+                               enable=True)
+            # Action to load as layer damage by asset from hdf5 produced by
+            # the oq-engine with a scenario damage risk calculation
+            self.add_menu_item(
+                    "load_scenario_damage_by_asset_from_hdf5_as_layer",
+                    ":/plugins/irmt/calculate.svg",  # FIXME
+                    u"Load scenario damage by asset from HDF5 as layer",
+                    self.load_scenario_damage_by_asset_from_hdf5_as_layer,
+                    enable=True)
         else:
             self.iface.messageBar().pushInfo(tr('Missing dependencies for extra features'),
                                              tr('To enable extra features install and set the oq-engine and oq-hazardlib path'))
 
-        # Action to drive the oq-engine server
-        self.add_menu_item("drive_engine_server",
-                           ":/plugins/irmt/define.svg",  # FIXME
-                           u"Drive oq-engine &server",
-                           self.drive_oq_engine_server,
-                           enable=True)
         self._create_viewer_dock()
         # Action to run the recovery analysis
         self.add_menu_item("recovery_modeling",
@@ -351,6 +343,10 @@ class Irmt:
 
     def recovery_modeling(self):
         dlg = RecoveryModelingDialog(self.iface)
+        dlg.exec_()
+
+    def load_hdf5_as_layer(self):
+        dlg = LoadHdf5AsLayerDialog(self.iface)
         dlg.exec_()
 
     def load_hmaps_from_hdf5_as_layer(self):

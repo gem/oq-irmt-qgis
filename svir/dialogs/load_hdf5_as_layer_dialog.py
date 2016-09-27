@@ -50,7 +50,6 @@ from PyQt4.QtGui import (QDialogButtonBox,
                          QLabel,
                          )
 
-from openquake.baselib import hdf5
 
 from svir.utilities.shared import DEBUG
 from svir.utilities.utils import (LayerEditingManager,
@@ -60,6 +59,11 @@ from svir.utilities.utils import (LayerEditingManager,
 from svir.calculations.calculate_utils import (add_numeric_attribute,
                                                add_textual_attribute,
                                                )
+try:
+    from openquake.baselib import hdf5
+    OQ_DEPENDENCIES_OK = True
+except ImportError:
+    OQ_DEPENDENCIES_OK = False
 
 FORM_CLASS = get_ui_class('ui_load_hdf5_as_layer.ui')
 
@@ -70,6 +74,9 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
     by the oq-engine
     """
     def __init__(self, iface, output_type, hdf5_path=None):
+
+        if not OQ_DEPENDENCIES_OK:
+            raise NotImplementedError('Missing Openquake dependencies')
         # sanity check
         if output_type not in (
                 'hcurves', 'hmaps', 'uhs', 'loss_maps', 'loss_curves',
