@@ -71,7 +71,6 @@ from svir.dialogs.load_geojson_as_layer_dialog import LoadGeoJsonAsLayerDialog
 from svir.dialogs.recovery_modeling_dialog import RecoveryModelingDialog
 
 # check dependencies
-
 settings = QSettings()
 oq_hazardlib_path = settings.value('irmt/oq_hazardlib_path', '')
 oq_engine_path = settings.value('irmt/oq_engine_path', '')
