@@ -22,22 +22,23 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-from PyQt4 import QtGui, QtCore
 
+from PyQt4.QtCore import QDir, QSettings, pyqtSlot
+from PyQt4.QtGui import QFileDialog, QDialog
 from svir.utilities.utils import get_ui_class
 from svir.utilities.shared import PLATFORM_REGISTRATION_URL
 
 FORM_CLASS = get_ui_class('ui_settings.ui')
 
 
-class SettingsDialog(QtGui.QDialog, FORM_CLASS):
+class SettingsDialog(QDialog, FORM_CLASS):
     """
     Dialog used to specify the connection settings used to interact with the
     OpenQuake Platform or the OpenQuake Engine, and to toggle the
     developer mode option.
     """
     def __init__(self, iface, parent=None, server='platform'):
-        QtGui.QDialog.__init__(self, parent)
+        QDialog.__init__(self, parent)
         self.iface = iface
         self.parent = parent
         self.server = server
@@ -45,13 +46,13 @@ class SettingsDialog(QtGui.QDialog, FORM_CLASS):
         self.setupUi(self)
         if self.server == 'platform':
             self.topGroupBox.setTitle(
-                'OpenQuake Platform connection settings')
+                    'OpenQuake Platform connection settings')
             link_text = ('<a href="%s">Register to the OpenQuake Platform</a>'
                          % PLATFORM_REGISTRATION_URL)
             self.registration_link_lbl.setText(link_text)
         elif self.server == 'engine':
             self.topGroupBox.setTitle(
-                'OpenQuake Engine connection settings')
+                    'OpenQuake Engine connection settings')
             self.registration_link_lbl.hide()
         else:
             raise ValueError(self.server)
@@ -61,13 +62,13 @@ class SettingsDialog(QtGui.QDialog, FORM_CLASS):
         """
         Reinstate the options based on the user's stored session info.
         """
-        mySettings = QtCore.QSettings()
+        mySettings = QSettings()
 
         if self.server == 'platform':
             username = mySettings.value('irmt/platform_username', '')
             password = mySettings.value('irmt/platform_password', '')
             hostname = mySettings.value(
-                'irmt/platform_hostname', 'https://platform.openquake.org')
+                    'irmt/platform_hostname', 'https://platform.openquake.org')
 
         elif self.server == 'engine':
             username = mySettings.value('irmt/engine_username', '')
@@ -102,7 +103,7 @@ class SettingsDialog(QtGui.QDialog, FORM_CLASS):
         """
         Store the options into the user's stored session info.
         """
-        mySettings = QtCore.QSettings()
+        mySettings = QSettings()
         # if the (stripped) hostname ends with '/', remove it
         hostname = self.hostnameEdit.text().strip().rstrip('/')
         mySettings.setValue('irmt/oq_hazardlib_path',
@@ -138,3 +139,17 @@ class SettingsDialog(QtGui.QDialog, FORM_CLASS):
         """
         self.saveState()
         super(SettingsDialog, self).accept()
+
+    @pyqtSlot()
+    def on_oq_hazardlib_path_btn_clicked(self):
+        path = QFileDialog.getExistingDirectory(
+                self, self.tr('Choose OQ hazardlib directory'), QDir.homePath())
+        if path:
+            self.oq_hazardlib_path_edit.setText(path)
+
+    @pyqtSlot()
+    def on_oq_engine_path_btn_clicked(self):
+        path = QFileDialog.getExistingDirectory(
+                self, self.tr('Choose OQ engine directory'), QDir.homePath())
+        if path:
+            self.oq_engine_path_edit.setText(path)
