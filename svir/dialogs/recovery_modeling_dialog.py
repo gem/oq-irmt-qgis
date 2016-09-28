@@ -198,7 +198,7 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         maxTime = (int(max(inspectionTimes))
                    + int(max(assessmentTimes))
                    + int(max(mobilizationTimes))
-                   + int(max(repairTimes)) + 400)
+                   + int(max(repairTimes)) + WHY_400)
 
         # Time List
         timeList = [x for x in range(maxTime)]
@@ -211,7 +211,8 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
 
         # Initialize community recovery function
         communityRecoveryFunction = [0 for x in range(len(timeList))]
-        New_communityRecoveryFunction = [0 for x in range(len(timeList)+200)]
+        New_communityRecoveryFunction = [0 for x in
+                range(len(timeList)+DAYS_BEFORE_EVENT)]
 
         # Looping over all damage simulations
         for sim in range(numberOfDamageSimulations):
@@ -264,13 +265,13 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
 
         # Plot community level recovery curve which can presents the number of
         # occupants before earthquake
-        New_timeList = [x for x in range(len(timeList)+200)]
-        for i in range(len(timeList)+200):
-            if i < 200:
+        New_timeList = [x for x in range(len(timeList)+DAYS_BEFORE_EVENT)]
+        for i in range(len(timeList)+DAYS_BEFORE_EVENT):
+            if i < DAYS_BEFORE_EVENT:
                 New_communityRecoveryFunction[i] = 1
             else:
                 New_communityRecoveryFunction[i] = communityRecoveryFunction[
-                    i - 200] / len(LossBasedDamageStateProbabilities)
+                    i - DAYS_BEFORE_EVENT] / len(LossBasedDamageStateProbabilities)
 
         plt.plot(New_timeList, New_communityRecoveryFunction)
         plt.xlabel('Time (days)')
