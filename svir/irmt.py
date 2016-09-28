@@ -27,6 +27,7 @@ import tempfile
 import uuid
 import fileinput
 import re
+import sys
 
 from copy import deepcopy
 from math import floor, ceil
@@ -70,12 +71,6 @@ from svir.dialogs.load_geojson_as_layer_dialog import LoadGeoJsonAsLayerDialog
 from svir.dialogs.recovery_modeling_dialog import RecoveryModelingDialog
 
 # check dependencies
-try:
-    import h5py
-except ImportError:
-    raise ImportError('Please install h5py')
-
-import sys
 
 settings = QSettings()
 oq_hazardlib_path = settings.value('irmt/oq_hazardlib_path', '')
@@ -87,7 +82,7 @@ if oq_engine_path and oq_engine_path not in sys.path:
     sys.path.append(oq_engine_path)
 
 try:
-    from openquake.baselib import hdf5
+    from openquake.baselib import hdf5  # noqa: F401
 
     from svir.dialogs.load_hdf5_as_layer_dialog import LoadHdf5AsLayerDialog
     from svir.dialogs.plot_from_hdf5_dialog import PlotFromHdf5Dialog
@@ -291,14 +286,15 @@ class Irmt:
                                u"Load loss curves from HDF5 as layer",
                                self.load_loss_curves_from_hdf5_as_layer,
                                enable=True)
-            # Action to load as layer ground motion fields from hdf5 produced by
-            # the oq-engine with a scenario damage hazard calculation
-            self.add_menu_item("load_scenario_damage_gmfs_from_hdf5_as_layer",
-                               ":/plugins/irmt/calculate.svg",  # FIXME
-                               u"Load scenario damage ground motion "
-                               "fields from HDF5 as layer",
-                               self.load_scenario_damage_gmfs_from_hdf5_as_layer,
-                               enable=True)
+            # Action to load as layer ground motion fields from hdf5 produced
+            # by the oq-engine with a scenario damage hazard calculation
+            self.add_menu_item(
+                "load_scenario_damage_gmfs_from_hdf5_as_layer",
+                ":/plugins/irmt/calculate.svg",  # FIXME
+                u"Load scenario damage ground motion "
+                "fields from HDF5 as layer",
+                self.load_scenario_damage_gmfs_from_hdf5_as_layer,
+                enable=True)
             # Action to load as layer damage by asset from hdf5 produced by
             # the oq-engine with a scenario damage risk calculation
             self.add_menu_item(
@@ -323,7 +319,6 @@ class Irmt:
                                enable=True)
         else:
             self.warn_missing_features()
-
 
         # Action to activate the modal dialog to set up show_settings for the
         # connection with the platform
