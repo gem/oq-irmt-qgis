@@ -30,10 +30,12 @@ import matplotlib.pyplot as plt
 from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox)
+from qgis.core import QgsMapLayer
 
 from svir.utilities.utils import (get_ui_class,
                                   read_config_file,
-                                  )
+                                  reload_layers_in_cbx,
+                                  reload_attrib_cbx)
 from svir.recovery_modeling.building import Building
 
 FORM_CLASS = get_ui_class('ui_recovery_modeling.ui')
@@ -76,6 +78,7 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         self.set_ok_button()
         self.populate_approach_cbx()
+        reload_layers_in_cbx(self.iri_layer_cbx, [QgsMapLayer.VectorLayer])
 
     def set_ok_button(self):
         self.ok_button.setEnabled(True)
@@ -84,9 +87,15 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         self.approach_cbx.addItems(['Aggregate', 'Disaggregate'])
 
     @pyqtSlot(str)
-    def on_approach_cbx_currentIndexChanged(self):
+    def on_approach_cbx_currentIndexChanged(self, selected_text):
         # we might need to ask the user to provide the necessary files
         pass
+
+    @pyqtSlot(int)
+    def on_iri_layer_cbx_currentIndexChanged(self, selected_index):
+        layer = self.iri_layer_cbx.itemData(selected_index)
+        reload_attrib_cbx(self.iri_field_name_cbx, layer)
+        reload_attrib_cbx(self.zone_field_name_cbx, layer)
 
     def generate_community_level_recovery_curve(self):
         # Developed By: Henry Burton
@@ -226,7 +235,8 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
             # Looping over all buildings in community
             # Initialize building level recovery function
             buildingLevelRecoveryFunction = [0 for x in range(len(timeList))]
-            for bldg in range(len(LossBasedDamageStateProbabilities)):
+            #for bldg in range(len(LossBasedDamageStateProbabilities)):
+            for bldg in range(1):
                 # Generate recovery function for current building/simulation
                 # using the given damage state probability distribution
                 currentSimulationBuildingLevelDamageStateProbabilities = \
@@ -300,5 +310,16 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         print (end - start)
 
     def accept(self):
-        self.generate_community_level_recovery_curve()
+        if not self.integrate_iri_check.isChecked():
+            self.generate_community_level_recovery_curve()
+        else:
+            iri_layer = self.iri_layer_cbx.itemData(
+                    self.iri_layer_cbx.currentIndex())
+            iri_field_name = self.iri_field_name_cbx.currentText()
+            zone_field_name = self.zone_field_name_cbx.currentText()
+
+            print iri_field_name
+            print zone_field_name
+            print iri_layer
+            return
         super(RecoveryModelingDialog, self).accept()

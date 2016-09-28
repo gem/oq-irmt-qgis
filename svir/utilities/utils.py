@@ -282,7 +282,7 @@ def reload_layers_in_cbx(combo, layer_types=None, skip_layer_ids=None):
         layer_id_allowed = bool(skip_layer_ids is None
                                 or l.id() not in skip_layer_ids)
         if layer_type_allowed and layer_id_allowed:
-            combo.addItem(l.name())
+            combo.addItem(l.name(), l)
 
 
 def reload_attrib_cbx(
@@ -317,7 +317,7 @@ def reload_attrib_cbx(
     for field in fields:
         # add if in field_types
         if not field_types or field.typeName() in field_types:
-            combo.addItem(field.name())
+            combo.addItem(field.name(), field)
 
 
 def toggle_select_features(layer, use_new, new_feature_ids, old_feature_ids):
