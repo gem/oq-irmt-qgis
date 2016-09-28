@@ -139,6 +139,13 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         LossBasedDamageStateProbabilities = [
             [0 for x in range(5)] for y in range(len(dmg_by_asset_bay_area)-1)]
 
+        # the header of dmg_by_asset_bay_area.csv is something like:
+        # 'asset_ref', 'taxonomy', 'lon', 'lat',
+        # 'probability(structural-no_damage)',
+        # 'probability(structural-slight)', 'probability(structural-moderate)',
+        # 'probability(structural-extensive)',
+        # 'probability(structural-complete)'
+        # Therefore, we need to read probabilities from the fifth column
         for i in range(len(dmg_by_asset_bay_area)-1):
             for j in range(5):
                 LossBasedDamageStateProbabilities[i][j] = \
@@ -211,8 +218,8 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
 
         # Initialize community recovery function
         communityRecoveryFunction = [0 for x in range(len(timeList))]
-        New_communityRecoveryFunction = [0 for x in
-                range(len(timeList)+DAYS_BEFORE_EVENT)]
+        New_communityRecoveryFunction = [
+            0 for x in range(len(timeList)+DAYS_BEFORE_EVENT)]
 
         # Looping over all damage simulations
         for sim in range(numberOfDamageSimulations):
@@ -270,8 +277,9 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
             if i < DAYS_BEFORE_EVENT:
                 New_communityRecoveryFunction[i] = 1
             else:
-                New_communityRecoveryFunction[i] = communityRecoveryFunction[
-                    i - DAYS_BEFORE_EVENT] / len(LossBasedDamageStateProbabilities)
+                New_communityRecoveryFunction[i] = (
+                    communityRecoveryFunction[i - DAYS_BEFORE_EVENT]
+                    / len(LossBasedDamageStateProbabilities))
 
         plt.plot(New_timeList, New_communityRecoveryFunction)
         plt.xlabel('Time (days)')
