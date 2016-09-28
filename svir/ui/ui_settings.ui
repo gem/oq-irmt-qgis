@@ -96,7 +96,7 @@
       <item>
        <widget class="QLabel" name="label_4">
         <property name="text">
-         <string>oq-engine path</string>
+         <string>OQ engine path</string>
         </property>
        </widget>
       </item>
@@ -117,7 +117,7 @@
       <item>
        <widget class="QLabel" name="label_5">
         <property name="text">
-         <string>oq-hazardlib path</string>
+         <string>OQ hazardlib path</string>
         </property>
        </widget>
       </item>
