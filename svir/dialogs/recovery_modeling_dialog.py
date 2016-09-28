@@ -78,7 +78,7 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         self.set_ok_button()
         self.populate_approach_cbx()
-        reload_layers_in_cbx(self.iri_layer_cbx, [QgsMapLayer.VectorLayer])
+        reload_layers_in_cbx(self.svi_layer_cbx, [QgsMapLayer.VectorLayer])
 
     def set_ok_button(self):
         self.ok_button.setEnabled(True)
@@ -92,9 +92,9 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         pass
 
     @pyqtSlot(int)
-    def on_iri_layer_cbx_currentIndexChanged(self, selected_index):
-        layer = self.iri_layer_cbx.itemData(selected_index)
-        reload_attrib_cbx(self.iri_field_name_cbx, layer)
+    def on_svi_layer_cbx_currentIndexChanged(self, selected_index):
+        layer = self.svi_layer_cbx.itemData(selected_index)
+        reload_attrib_cbx(self.svi_field_name_cbx, layer)
         reload_attrib_cbx(self.zone_field_name_cbx, layer)
 
     def generate_community_level_recovery_curve(self):
@@ -310,16 +310,19 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         print (end - start)
 
     def accept(self):
-        if not self.integrate_iri_check.isChecked():
+        if not self.integrate_svi_check.isChecked():
             self.generate_community_level_recovery_curve()
         else:
-            iri_layer = self.iri_layer_cbx.itemData(
-                    self.iri_layer_cbx.currentIndex())
-            iri_field_name = self.iri_field_name_cbx.currentText()
-            zone_field_name = self.zone_field_name_cbx.currentText()
-
-            print iri_field_name
-            print zone_field_name
-            print iri_layer
+            self.generate_zone_level_recovery_curve()
+            # TODO remove this return
             return
         super(RecoveryModelingDialog, self).accept()
+
+    def generate_zone_level_recovery_curve(self):
+        svi_layer = self.svi_layer_cbx.itemData(
+                self.svi_layer_cbx.currentIndex())
+        svi_field_name = self.svi_field_name_cbx.currentText()
+        zone_field_name = self.zone_field_name_cbx.currentText()
+        dmg_by_asset_layer = self.iface.activeLayer()
+
+        # call saga

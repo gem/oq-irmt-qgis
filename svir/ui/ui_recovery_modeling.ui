@@ -35,9 +35,9 @@
     </layout>
    </item>
    <item>
-    <widget class="QGroupBox" name="integrate_iri_check">
+    <widget class="QGroupBox" name="integrate_svi_check">
      <property name="title">
-      <string>Integrate with IRI</string>
+      <string>Integrate with SVI</string>
      </property>
      <property name="checkable">
       <bool>true</bool>
@@ -46,22 +46,22 @@
       <item>
        <widget class="QLabel" name="label">
         <property name="text">
-         <string>IRI Layer</string>
+         <string>SVI Layer</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QComboBox" name="iri_layer_cbx"/>
+       <widget class="QComboBox" name="svi_layer_cbx"/>
       </item>
       <item>
        <widget class="QLabel" name="label_2">
         <property name="text">
-         <string>IRI field</string>
+         <string>SVI field</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QComboBox" name="iri_field_name_cbx"/>
+       <widget class="QComboBox" name="svi_field_name_cbx"/>
       </item>
       <item>
        <widget class="QLabel" name="label_3">
