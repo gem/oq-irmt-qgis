@@ -30,7 +30,7 @@ from qgis.core import (QgsVectorLayer,
                        QGis,
                        QgsRasterLayer,
                        QgsMapLayerRegistry,
-                       QgsVectorFileWriter,
+                       QgsVectorFileWriter, QgsMapLayer
                        )
 from qgis.gui import QgsMessageBar
 
@@ -223,6 +223,8 @@ class SelectInputLayersDialog(QDialog, FORM_CLASS):
         for key, layer in \
                 QgsMapLayerRegistry.instance().mapLayers().iteritems():
             # populate loss cbx only with layers containing points
+            if layer.type() != QgsMapLayer.VectorLayer:
+                continue
             if layer.geometryType() == QGis.Point:
                 self.loss_layer_cbx.addItem(layer.name())
                 self.loss_layer_cbx.setItemData(
