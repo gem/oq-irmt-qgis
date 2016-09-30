@@ -143,60 +143,83 @@ def calculate_zonal_stats(loss_layer,
                         zonal_layer.changeAttributeValue(
                                 feat.id(), unique_id_idx, feat.id())
 
-            saga_install_err = get_saga_install_error()
-            use_fallback_calculation = False
+            loss_attrs_dict, loss_layer_plus_zones, zonal_layer, \
+            zone_id_in_losses_attr_name = add_zone_id_to_points(
+                iface, loss_attrs_dict, loss_layer, zonal_layer,
+                zone_id_in_losses_attr_name, zone_id_in_zones_attr_name)
 
-            if saga_install_err is None:
-                try:
-                    loss_attrs_dict, loss_layer, res, zonal_layer, \
-                    zone_id_in_losses_attr_name, loss_layer_plus_zones = \
-                        add_zone_id_to_points_saga(loss_attrs_dict, loss_layer,
-                                                   zonal_layer,
-                                                   zone_id_in_zones_attr_name)
-                except RuntimeError:
-                    msg = ("An error occurred while attempting to"
-                           " compute zonal statistics with SAGA. Therefore"
-                           " an alternative algorithm is used.")
-                    iface.messageBar().pushMessage(
-                            tr("Error"),
-                            tr(msg),
-                            level=QgsMessageBar.CRITICAL)
-                    use_fallback_calculation = True
-                else:
-                    res = calculate_vector_stats_aggregating_by_zone_id(
-                            loss_layer_plus_zones, zonal_layer,
-                            zone_id_in_losses_attr_name,
-                            zone_id_in_zones_attr_name,
-                            loss_attr_names, loss_attrs_dict, iface)
-                    (loss_layer, zonal_layer, loss_attrs_dict) = res
+            res = calculate_vector_stats_aggregating_by_zone_id(
+                    loss_layer_plus_zones, zonal_layer,
+                    zone_id_in_losses_attr_name,
+                    zone_id_in_zones_attr_name,
+                    loss_attr_names, loss_attrs_dict, iface)
+            (loss_layer, zonal_layer, loss_attrs_dict) = res
 
-            else:
-                saga_install_err += tr(
-                    " In order to cope with complex geometries, "
-                    "a working installation of SAGA is "
-                    "recommended.")
-                iface.messageBar().pushMessage(
-                        tr("Warning"),
-                        tr(saga_install_err),
-                        level=QgsMessageBar.WARNING)
-                use_fallback_calculation = True
-
-            if use_fallback_calculation:
-                res = calculate_vector_stats_using_geometries(loss_layer,
-                                                              zonal_layer,
-                                                              zone_id_in_zones_attr_name,
-                                                              loss_attr_names,
-                                                              loss_attrs_dict,
-                                                              iface)
-                (loss_layer, zonal_layer, loss_attrs_dict) = res
     else:
         (loss_layer, zonal_layer) = \
             calculate_raster_stats(loss_layer, zonal_layer)
     return (loss_layer, zonal_layer, loss_attrs_dict)
 
 
-def add_zone_id_to_points(iface, loss_layer, zonal_layer,
+def add_zone_id_to_points(iface, loss_attrs_dict, loss_layer, zonal_layer,
+                          zone_id_in_losses_attr_name,
                           zone_id_in_zones_attr_name):
+    saga_install_err = get_saga_install_error()
+    use_fallback_calculation = False
+    if saga_install_err is None:
+        try:
+            loss_attrs_dict, loss_layer, res, zonal_layer, \
+            zone_id_in_losses_attr_name, loss_layer_plus_zones = \
+                _add_zone_id_to_points_saga(loss_attrs_dict, loss_layer,
+                                            zonal_layer,
+                                            zone_id_in_zones_attr_name)
+        except RuntimeError:
+            msg = ("An error occurred while attempting to"
+                   " compute zonal statistics with SAGA. Therefore"
+                   " an alternative algorithm is used.")
+            iface.messageBar().pushMessage(
+                    tr("Error"),
+                    tr(msg),
+                    level=QgsMessageBar.CRITICAL)
+            use_fallback_calculation = True
+
+    else:
+        saga_install_err += tr(
+                " In order to cope with complex geometries, "
+                "a working installation of SAGA is "
+                "recommended.")
+        iface.messageBar().pushMessage(
+                tr("Warning"),
+                tr(saga_install_err),
+                level=QgsMessageBar.WARNING)
+        use_fallback_calculation = True
+    if use_fallback_calculation:
+        loss_layer_plus_zones, zone_id_in_losses_attr_name = \
+            _add_zone_id_to_points_internal(
+                    iface, loss_layer, zonal_layer,
+                    zone_id_in_zones_attr_name)
+    return loss_attrs_dict, loss_layer_plus_zones, zonal_layer, \
+           zone_id_in_losses_attr_name
+
+
+def _add_zone_id_to_points_internal(iface, loss_layer, zonal_layer,
+                                    zone_id_in_zones_attr_name):
+    """
+       On the hypothesis that we don't know what is the zone in which
+       each point was collected (and if we can't use SAGA),
+       we use an alternative implementation of what SAGA does, i.e.,
+       we add a field to the loss layer, containing the id of the zone
+       to which it belongs. In order to achieve that:
+       * we create a spatial index of the loss points
+       * for each zone (in the layer containing zonally-aggregated SVI
+           * we identify points that are inside the zone's bounding box
+           * we check if each of these points is actually inside the
+               zone's geometry; if it is:
+               * copy the zone id into the new field of the loss point
+       Notes:
+       * loss_layer contains the not aggregated loss points
+       * zonal_layer contains the zone geometries
+       """
     # make a copy of the loss layer and use that from now on
     add_to_registry = True if DEBUG else False
     loss_layer_plus_zones = \
@@ -284,8 +307,8 @@ def add_zone_id_to_points(iface, loss_layer, zonal_layer,
     return loss_layer_plus_zones, zone_id_in_losses_attr_name
 
 
-def add_zone_id_to_points_saga(loss_attrs_dict, loss_layer, zonal_layer,
-                               zone_id_in_zones_attr_name):
+def _add_zone_id_to_points_saga(loss_attrs_dict, loss_layer, zonal_layer,
+                                zone_id_in_zones_attr_name):
     # using SAGA to find out in which zone each point is
     # (it does not compute any other statistics)
     # NOTE: The algorithm builds a new loss layer, in which
@@ -468,36 +491,6 @@ def notify_loss_aggregation_by_zone_complete(
             tr(msg),
             level=QgsMessageBar.INFO,
             duration=8)
-
-
-def calculate_vector_stats_using_geometries(loss_layer, zonal_layer,
-                                            zone_id_in_zones_attr_name,
-                                            loss_attr_names, loss_attrs_dict,
-                                            iface):
-    """
-    On the hypothesis that we don't know what is the zone in which
-    each point was collected (and if we can't use SAGA),
-    we use an alternative implementation of what SAGA does, i.e.,
-    we add a field to the loss layer, containing the id of the zone
-    to which it belongs. In order to achieve that:
-    * we create a spatial index of the loss points
-    * for each zone (in the layer containing zonally-aggregated SVI
-        * we identify points that are inside the zone's bounding box
-        * we check if each of these points is actually inside the
-            zone's geometry; if it is:
-            * copy the zone id into the new field of the loss point
-    * then we calculate_vector_stats_aggregating_by_zone_id
-    Notes:
-    * loss_layer contains the not aggregated loss points
-    * zonal_layer contains the zone geometries
-    """
-    loss_layer_plus_zones, zone_id_in_losses_attr_name = add_zone_id_to_points(
-        iface, loss_layer, zonal_layer, zone_id_in_zones_attr_name)
-    return calculate_vector_stats_aggregating_by_zone_id(
-            loss_layer_plus_zones,
-            zonal_layer, zone_id_in_losses_attr_name,
-            zone_id_in_zones_attr_name, loss_attr_names,
-            loss_attrs_dict, iface)
 
 
 def calculate_raster_stats(loss_layer, zonal_layer, iface):
