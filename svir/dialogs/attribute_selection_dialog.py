@@ -22,6 +22,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
+from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox,
                          QComboBox,
@@ -30,7 +31,6 @@ from PyQt4.QtGui import (QDialog,
 
 from svir.utilities.utils import tr, get_ui_class
 from svir.utilities.shared import NUMERIC_FIELD_TYPES, TEXTUAL_FIELD_TYPES
-from svir.ui.list_multiselect_widget import ListMultiSelectWidget
 
 FORM_CLASS = get_ui_class('ui_attribute_selection.ui')
 
@@ -45,13 +45,6 @@ class AttributeSelectionDialog(QDialog, FORM_CLASS):
         QDialog.__init__(self)
         # Set up the user interface from Designer.
         self.setupUi(self)
-        self.loss_attrs_multisel = ListMultiSelectWidget(title='Loss Layer')
-        self.zone_id_attr_name_loss_cbox = QComboBox()
-        self.form_layout = QFormLayout()
-        self.form_layout.addRow('Zone ID attribute name',
-                                self.zone_id_attr_name_loss_cbox)
-        self.vertical_layout.insertWidget(1, self.loss_attrs_multisel)
-        self.vertical_layout.insertLayout(2, self.form_layout)
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         self.set_ok_button()
 
@@ -69,7 +62,6 @@ class AttributeSelectionDialog(QDialog, FORM_CLASS):
         # Load in the comboboxes only the names of the attributes compatible
         # with the following analyses: only numeric for losses and only
         # string for zone ids
-        default_zone_id_loss = None
         for field in loss_layer.dataProvider().fields():
             # for the zone id accept both numeric or textual fields
             self.zone_id_attr_name_loss_cbox.addItem(field.name())
@@ -77,30 +69,15 @@ class AttributeSelectionDialog(QDialog, FORM_CLASS):
             if field.typeName() in NUMERIC_FIELD_TYPES:
                 self.loss_attrs_multisel.add_unselected_items(
                     [field.name()])
-            elif field.typeName() in TEXTUAL_FIELD_TYPES:
-                default_zone_id_loss = field.name()
-            else:
-                raise TypeError("Unknown field: type is %d, typeName is %s" % (
-                    field.type(), field.typeName()))
-        if default_zone_id_loss:
-            default_idx = self.zone_id_attr_name_loss_cbox.findText(
-                default_zone_id_loss)
-            if default_idx != -1:  # -1 for not found
-                self.zone_id_attr_name_loss_cbox.setCurrentIndex(
-                    default_idx)
-        default_zone_id_zonal = None
+
+        self.zone_id_attr_name_loss_cbox.setCurrentIndex(0)
+
         for field in zonal_layer.dataProvider().fields():
             # for the zone id accept both numeric or textual fields
             self.zone_id_attr_name_zone_cbox.addItem(field.name())
             # by default, set the selection to the first textual field
-            if field.typeName() in TEXTUAL_FIELD_TYPES:
-                default_zone_id_zonal = field.name()
-        if default_zone_id_zonal:
-            default_idx = self.zone_id_attr_name_zone_cbox.findText(
-                default_zone_id_zonal)
-            if default_idx != -1:  # -1 for not found
-                self.zone_id_attr_name_zone_cbox.setCurrentIndex(
-                    default_idx)
+
+        self.zone_id_attr_name_zone_cbox.setCurrentIndex(0)
 
         self.loss_attrs_multisel.selection_changed.connect(
             self.set_ok_button)
@@ -130,3 +107,11 @@ class AttributeSelectionDialog(QDialog, FORM_CLASS):
                                     zone_id_in_zones_attr_name)
 
         super(AttributeSelectionDialog, self).accept()
+
+    @pyqtSlot(int)
+    def on_zone_id_attr_name_zone_cbox_currentIndexChanged(self, new_index):
+        if new_index == 0:
+            self.zone_id_attr_name_loss_cbox.setCurrentIndex(0)
+            self.zone_id_attr_name_loss_cbox.setDisabled(True)
+        else:
+            self.zone_id_attr_name_loss_cbox.setDisabled(False)
