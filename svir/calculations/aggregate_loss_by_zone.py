@@ -209,8 +209,8 @@ def add_zone_id_to_points(iface, loss_attrs_dict, point_layer, zonal_layer,
             _add_zone_id_to_points_internal(
                     iface, point_layer, zonal_layer,
                     zones_id_attr_name)
-    return loss_attrs_dict, loss_layer_plus_zones, zonal_layer, \
-           points_zone_id_attr_name
+    return (loss_attrs_dict, loss_layer_plus_zones, zonal_layer,
+            points_zone_id_attr_name)
 
 
 def _add_zone_id_to_points_internal(iface, loss_layer, zonal_layer,

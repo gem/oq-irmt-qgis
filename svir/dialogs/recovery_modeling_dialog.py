@@ -32,6 +32,7 @@ from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox)
 from qgis.core import QgsMapLayer
+from svir.calculations.aggregate_loss_by_zone import add_zone_id_to_points
 
 from svir.utilities.utils import (get_ui_class,
                                   read_config_file,
@@ -367,6 +368,7 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
             print (end - start)
 
     def accept(self):
+        # add_zone_id_to_points()
         self.generate_community_level_recovery_curve(
             self.integrate_svi_check.isChecked())
         super(RecoveryModelingDialog, self).accept()
