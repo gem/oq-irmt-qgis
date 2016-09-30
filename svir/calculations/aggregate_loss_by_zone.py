@@ -145,8 +145,8 @@ def calculate_zonal_stats(loss_layer,
 
             loss_attrs_dict, loss_layer_plus_zones, zonal_layer, \
             zone_id_in_losses_attr_name = add_zone_id_to_points(
-                iface, loss_attrs_dict, loss_layer, zonal_layer,
-                zone_id_in_losses_attr_name, zone_id_in_zones_attr_name)
+                    iface, loss_attrs_dict, loss_layer, zonal_layer,
+                    zone_id_in_losses_attr_name, zone_id_in_zones_attr_name)
 
             res = calculate_vector_stats_aggregating_by_zone_id(
                     loss_layer_plus_zones, zonal_layer,
@@ -158,21 +158,32 @@ def calculate_zonal_stats(loss_layer,
     else:
         (loss_layer, zonal_layer) = \
             calculate_raster_stats(loss_layer, zonal_layer)
-    return (loss_layer, zonal_layer, loss_attrs_dict)
+    return loss_layer, zonal_layer, loss_attrs_dict
 
 
-def add_zone_id_to_points(iface, loss_attrs_dict, loss_layer, zonal_layer,
-                          zone_id_in_losses_attr_name,
-                          zone_id_in_zones_attr_name):
+def add_zone_id_to_points(iface, loss_attrs_dict, point_layer, zonal_layer,
+                          points_zone_id_attr_name, zones_id_attr_name):
+    """
+    this is the metod to use for getting points with an id of the containing
+    zone
+    :param iface:
+    :param loss_attrs_dict:
+    :param point_layer:
+    :param zonal_layer:
+    :param points_zone_id_attr_name:
+    :param zones_id_attr_name:
+    :return:
+    """
+
     saga_install_err = get_saga_install_error()
     use_fallback_calculation = False
     if saga_install_err is None:
         try:
-            loss_attrs_dict, loss_layer, res, zonal_layer, \
-            zone_id_in_losses_attr_name, loss_layer_plus_zones = \
-                _add_zone_id_to_points_saga(loss_attrs_dict, loss_layer,
+            loss_attrs_dict, point_layer, res, zonal_layer, \
+            points_zone_id_attr_name, loss_layer_plus_zones = \
+                _add_zone_id_to_points_saga(loss_attrs_dict, point_layer,
                                             zonal_layer,
-                                            zone_id_in_zones_attr_name)
+                                            zones_id_attr_name)
         except RuntimeError:
             msg = ("An error occurred while attempting to"
                    " compute zonal statistics with SAGA. Therefore"
@@ -194,12 +205,12 @@ def add_zone_id_to_points(iface, loss_attrs_dict, loss_layer, zonal_layer,
                 level=QgsMessageBar.WARNING)
         use_fallback_calculation = True
     if use_fallback_calculation:
-        loss_layer_plus_zones, zone_id_in_losses_attr_name = \
+        loss_layer_plus_zones, points_zone_id_attr_name = \
             _add_zone_id_to_points_internal(
-                    iface, loss_layer, zonal_layer,
-                    zone_id_in_zones_attr_name)
+                    iface, point_layer, zonal_layer,
+                    zones_id_attr_name)
     return loss_attrs_dict, loss_layer_plus_zones, zonal_layer, \
-           zone_id_in_losses_attr_name
+           points_zone_id_attr_name
 
 
 def _add_zone_id_to_points_internal(iface, loss_layer, zonal_layer,
