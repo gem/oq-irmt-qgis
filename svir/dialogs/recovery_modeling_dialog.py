@@ -26,6 +26,7 @@ import csv
 import os
 import time
 import matplotlib.pyplot as plt
+from collections import defaultdict
 
 from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import (QDialog,
@@ -97,18 +98,28 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         reload_attrib_cbx(self.svi_field_name_cbx, layer)
         reload_attrib_cbx(self.zone_field_name_cbx, layer)
 
-    def generate_community_level_recovery_curve(self):
+    def generate_community_level_recovery_curve(self, integrate_svi=True):
         # Developed By: Henry Burton
         # Edited by: Hua Kang
-        # Adapted to work within this plugin by: Paolo Tormene
+        # Reimplemented for this plugin by: Paolo Tormene and Marco Bernasocchi
         # Objective: GenerateCommunityLevelRecoveryCurve
-        # Date: August 26, 2016
+        # Initial date: August 26, 2016
         DAYS_BEFORE_EVENT = 200
         WHY_400 = DAYS_BEFORE_EVENT * 2
         WHY_231 = 2.31
         WHY_022 = 0.22
         WHY_05 = 0.5
         WHY_100 = 100
+        RENAME_ME_COEFFICIENT = 1
+
+        if integrate_svi:
+            self.svi_layer = self.svi_layer_cbx.itemData(
+                    self.svi_layer_cbx.currentIndex())
+            self.svi_field_name = self.svi_field_name_cbx.currentText()
+            self.zone_field_name = self.zone_field_name_cbx.currentText()
+        self.dmg_by_asset_layer = self.iface.activeLayer()
+        # call saga
+
         start = time.clock()  # FIXME
         # Step 1: Define attributes of objects in each class
 
@@ -137,192 +148,225 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         numberOfDamageSimulations = read_config_file(
             'NumberOfDamageSimulations.txt', int)[0]
 
-        dmgByAssetBayAreaData = os.path.join(
-            input_data_dir, 'dmg_by_asset_bay_area.csv')
+        # PAOLO: instead of reading from CSV, we should select the layer
+        #        that was loaded from the CSV produced by the oq-engine
+        # dmgByAssetData = os.path.join(
+        #     input_data_dir, 'dmg_by_asset_bay_area.csv')
+        # # Load Loss-based damage state probabilities
+        # with open(dmgByAssetData, 'r') as f:
+        #     reader = csv.reader(f)
+        #     dmg_by_asset = list(reader)
+        #     # let's assume the zone id is in the last column
+        #     # dmg_by_asset = list(sorted(reader, key=lambda row: row[-1]))
 
-        # Load Loss-based damage state probabilities
-        with open(dmgByAssetBayAreaData, 'r') as f:
-            reader = csv.reader(f)
-            dmg_by_asset_bay_area = list(reader)
+        # build dictionary zone_id -> dmg_by_asset
+        zonal_dmg_by_asset = defaultdict(list)
+        if integrate_svi:
+            svi_by_zone = dict()
+            for zone_feat in self.svi_layer.getFeatures():
+                zone_id = zone_feat[self.zone_field_name]
+                svi_value = zone_feat[self.svi_field_name]
+                svi_by_zone[zone_id] = svi_value
+                for dmg_by_asset_feat in self.dmg_by_asset_layer.getFeatures():
+                    if dmg_by_asset_feat[self.zone_field_name] == zone_id:
+                        # select fields that contain probabilities
+                        # i.e., ignore asset id and taxonomy (first 2 items)
+                        # and get only columns containing means, discarding
+                        # those containing stddevs, therefore getting one item
+                        # out of two for the remaining columns
+                        # Also discard the last field, containing zone ids
+                        dmg_by_asset_probs = dmg_by_asset_feat.attributes()[
+                            2:-1:2]
+                        zonal_dmg_by_asset[zone_id].append(dmg_by_asset_probs)
+        else:  # ignore svi
+            for dmg_by_asset_feat in self.dmg_by_asset_layer.getFeatures():
+                # we don't have any field containing zone ids, to be discarded
+                dmg_by_asset_probs = dmg_by_asset_feat.attributes()[2::2]
+                zonal_dmg_by_asset['ALL'].append(dmg_by_asset_probs)
 
-        LossBasedDamageStateProbabilities = [
-            [0 for x in range(5)] for y in range(len(dmg_by_asset_bay_area)-1)]
+        # for each zone, calculate a zone-level recovery function
+        for zone_id in zonal_dmg_by_asset.keys():
 
-        # the header of dmg_by_asset_bay_area.csv is something like:
-        # 'asset_ref', 'taxonomy', 'lon', 'lat',
-        # 'probability(structural-no_damage)',
-        # 'probability(structural-slight)', 'probability(structural-moderate)',
-        # 'probability(structural-extensive)',
-        # 'probability(structural-complete)'
-        # Therefore, we need to read probabilities from the fifth column
-        for i in range(len(dmg_by_asset_bay_area)-1):
-            for j in range(5):
-                LossBasedDamageStateProbabilities[i][j] = \
-                    dmg_by_asset_bay_area[i+1][j+4]
+            # TODO: use svi_by_zone[zone_id] to adjust recovery times (how?)
 
-        # Load Transfer Probability
-        # Note: There is a 5*6 matrix where rows describe loss-based damage
-        # states (No damage/Slight/Moderate/Extensive/Complete) and columns
-        # present recovery-based damage states(No damage/Trigger
-        # inspection/Loss Function /Not Occupiable/Irreparable/Collapse). The
-        # element(i,j) in the matrix is the probability of recovery-based
-        # damage state j occurs given loss-based damage state i
+            dmg_by_asset = zonal_dmg_by_asset[zone_id]
 
-        transferProbabilitiesData = os.path.join(
-            input_data_dir, 'transferProbabilities.csv')
+            LossBasedDamageStateProbabilities = [
+                [0 for x in range(5)] for y in range(len(dmg_by_asset)-1)]
 
-        with open(transferProbabilitiesData, 'r') as f:
-            reader = csv.reader(f)
-            transferProbabilities = list(reader)
+            for i in range(len(dmg_by_asset)-1):
+                for j in range(5):
+                    LossBasedDamageStateProbabilities[i][j] = \
+                        dmg_by_asset[i+1][j]  # was dmg_by_asset[i+1][j+4]
 
-        # Mapping from Loss-based to recovery-based building damage states
-        RecoveryBasedDamageStateProbabilities = [
-            [0 for x in range(6)] for y in range(len(dmg_by_asset_bay_area)-1)]
+            # Load Transfer Probability Note: There is a 5*6 matrix where rows
+            # describe loss-based damage states (No
+            # damage/Slight/Moderate/Extensive/Complete) and columns present
+            # recovery-based damage states(No damage/Trigger inspection/Loss
+            # Function /Not Occupiable/Irreparable/Collapse). The element(i,j)
+            # in the matrix is the probability of recovery-based damage state j
+            # occurs given loss-based damage state i
 
-        fractionCollapsedAndIrreparableBuildings = 0
-        for i in range(len(LossBasedDamageStateProbabilities)):
-            for j in range(len(transferProbabilities[0])):
-                for s in range(len(transferProbabilities)):
-                    RecoveryBasedDamageStateProbabilities[i][j] += (
-                        float(LossBasedDamageStateProbabilities[i][s])
-                        * float(transferProbabilities[s][j]))
-                    if j == 4 or j == 5:
-                        fractionCollapsedAndIrreparableBuildings += \
-                            RecoveryBasedDamageStateProbabilities[i][j]
+            transferProbabilitiesData = os.path.join(
+                input_data_dir, 'transferProbabilities.csv')
 
-        fractionCollapsedAndIrreparableBuildings = \
-            fractionCollapsedAndIrreparableBuildings / (
-                len(dmg_by_asset_bay_area)-1)
+            with open(transferProbabilitiesData, 'r') as f:
+                reader = csv.reader(f)
+                transferProbabilities = list(reader)
 
-        # PAOLO and VENETIA: the paper refers to a metodology by Comerio
-        # (2006): "a performance index can be developed to relate the fraction
-        # of collapsed buildings within a particular region, and used to
-        # account for delays caused by regional socioeconomic effects" Since we
-        # will multiply results by a social vulnerability index, we are
-        # wondering if this correction is still needed.  Otherwise, we can keep
-        # this, and add a further correction when we take into account the
-        # socioeconomic index.
+            # Mapping from Loss-based to recovery-based building damage states
+            RecoveryBasedDamageStateProbabilities = [
+                [0 for x in range(6)] for y in range(len(dmg_by_asset)-1)]
 
-        # Compute lead time adjustment factor
-        leadTimeFactor = WHY_05 * (
-            WHY_231 + WHY_022 * fractionCollapsedAndIrreparableBuildings
-            * WHY_100) / WHY_231
+            fractionCollapsedAndIrreparableBuildings = 0
+            # TODO: use enumerate instead
+            for i in range(len(LossBasedDamageStateProbabilities)):
+                for j in range(len(transferProbabilities[0])):
+                    for s in range(len(transferProbabilities)):
+                        RecoveryBasedDamageStateProbabilities[i][j] += (
+                            float(LossBasedDamageStateProbabilities[i][s])
+                            * float(transferProbabilities[s][j]))
+                        if j == 4 or j == 5:
+                            fractionCollapsedAndIrreparableBuildings += \
+                                RecoveryBasedDamageStateProbabilities[i][j]
 
-        # Generate Time Vector Used for Recovery Function
-        # Maximum time in days
+            fractionCollapsedAndIrreparableBuildings = \
+                fractionCollapsedAndIrreparableBuildings / (
+                    len(dmg_by_asset)-1)
 
-        maxTime = (int(max(inspectionTimes))
-                   + int(max(assessmentTimes))
-                   + int(max(mobilizationTimes))
-                   + int(max(repairTimes)) + WHY_400)
+            # PAOLO and VENETIA: the paper refers to a metodology by Comerio
+            # (2006): "a performance index can be developed to relate the
+            # fraction of collapsed buildings within a particular region, and
+            # used to account for delays caused by regional socioeconomic
+            # effects" Since we will multiply results by a social vulnerability
+            # index, we are wondering if this correction is still needed.
+            # Otherwise, we can keep this, and add a further correction when we
+            # take into account the socioeconomic index.
 
-        # Time List
-        timeList = [x for x in range(maxTime)]
+            # Compute lead time adjustment factor
+            leadTimeFactor = WHY_05 * (
+                WHY_231 + WHY_022 * fractionCollapsedAndIrreparableBuildings
+                * WHY_100) / WHY_231
 
-        # Calculate lead time by mutiply lead time factor
-        for i in range(len(inspectionTimes)):
-            inspectionTimes[i] = leadTimeFactor * float(inspectionTimes[i])
-            assessmentTimes[i] = leadTimeFactor * float(assessmentTimes[i])
-            mobilizationTimes[i] = leadTimeFactor * float(mobilizationTimes[i])
+            # Generate Time Vector Used for Recovery Function
+            # Maximum time in days
 
-        # Initialize community recovery function
-        communityRecoveryFunction = [0 for x in range(len(timeList))]
-        New_communityRecoveryFunction = [
-            0 for x in range(len(timeList)+DAYS_BEFORE_EVENT)]
+            maxTime = (int(max(inspectionTimes))
+                       + int(max(assessmentTimes))
+                       + int(max(mobilizationTimes))
+                       + int(max(repairTimes)) + WHY_400)
 
-        # Looping over all damage simulations
-        for sim in range(numberOfDamageSimulations):
-            # Looping over all buildings in community
-            # Initialize building level recovery function
-            buildingLevelRecoveryFunction = [0 for x in range(len(timeList))]
-            #for bldg in range(len(LossBasedDamageStateProbabilities)):
-            for bldg in range(1):
-                # Generate recovery function for current building/simulation
-                # using the given damage state probability distribution
-                currentSimulationBuildingLevelDamageStateProbabilities = \
-                    RecoveryBasedDamageStateProbabilities[bldg]
-                # call building class within Napa Data
-                # PAOLO: building number is not used. Instead, we need to make
-                # available to the building all the imported data
-                # Napa = Building(bldg)
-                napa_bldg = Building(
-                    inspectionTimes, recoveryTimes, repairTimes,
-                    leadTimeDispersion, repairTimeDispersion,
-                    currentSimulationBuildingLevelDamageStateProbabilities,
-                    timeList, assessmentTimes, mobilizationTimes)
-                approach = self.approach_cbx.currentText()
-                # approach can be aggregate or disaggregate
-                z = napa_bldg.generateBldgLevelRecoveryFunction(approach)
-                # Assign buidling level recovery function
+            # PAOLO: I guess we could use svi_by_zone[zone_id] to adjust
+            # the leadTimeFactor, for instance:
+            if integrate_svi:
+                # FIXME to build timeList we need an integer, but it sounds bad
+                maxTime = int(
+                    maxTime * RENAME_ME_COEFFICIENT * svi_by_zone[zone_id])
+
+            # Time List
+            timeList = range(maxTime)
+
+            # Calculate lead time by mutiply lead time factor
+            # TODO: use enumerate instead
+            for i in range(len(inspectionTimes)):
+                inspectionTimes[i] = leadTimeFactor * float(inspectionTimes[i])
+                assessmentTimes[i] = leadTimeFactor * float(assessmentTimes[i])
+                mobilizationTimes[i] = (
+                    leadTimeFactor * float(mobilizationTimes[i]))
+
+            # Initialize community recovery function
+            communityRecoveryFunction = [0 for x in range(len(timeList))]
+            New_communityRecoveryFunction = [
+                0 for x in range(len(timeList)+DAYS_BEFORE_EVENT)]
+
+            # Looping over all damage simulations
+            for sim in range(numberOfDamageSimulations):
+                # Looping over all buildings in community
+                # Initialize building level recovery function
+                buildingLevelRecoveryFunction = [
+                    0 for x in range(len(timeList))]
+                # TODO: use enumerate instead
+                for bldg in range(len(LossBasedDamageStateProbabilities)):
+                    # Generate recovery function for current
+                    # building/simulation using the given damage state
+                    # probability distribution
+                    currentSimulationBuildingLevelDamageStateProbabilities = \
+                        RecoveryBasedDamageStateProbabilities[bldg]
+                    # call building class within Napa Data
+                    # PAOLO: building number is not used. Instead, we need to
+                    # make available to the building all the imported data
+                    napa_bldg = Building(
+                        inspectionTimes, recoveryTimes, repairTimes,
+                        leadTimeDispersion, repairTimeDispersion,
+                        currentSimulationBuildingLevelDamageStateProbabilities,
+                        timeList, assessmentTimes, mobilizationTimes)
+                    approach = self.approach_cbx.currentText()
+                    # approach can be aggregate or disaggregate
+                    z = napa_bldg.generateBldgLevelRecoveryFunction(approach)
+                    # Assign buidling level recovery function
+                    # TODO: use enumerate instead
+                    for timePoint in range(len(timeList)):
+                        buildingLevelRecoveryFunction[timePoint] += z[
+                            timePoint]
+                        # Sum up all building level recovery function
+                # TODO: use enumerate instead
                 for timePoint in range(len(timeList)):
-                    buildingLevelRecoveryFunction[timePoint] += z[timePoint]
-                    # Sum up all building level recovery function
+                    communityRecoveryFunction[timePoint] \
+                        += buildingLevelRecoveryFunction[timePoint]
+
+            # PAOLO: instead of calculating the community level recovery
+            # function on all points, we should aggregate points by the same
+            # zones defined for the socioeconomic dataset, and then we should
+            # produce a community recovery function for each zone.
+            # This has to be done on the damage by asset layer
+            # (For the aggregation we can use SAGA:
+            #  "Add Polygon Attributes to Points", i.e.
+            #  processing.runalg('saga:addpolygonattributestopoints', input,
+            #                    polygons, field, output))
+
+            # Calculate community level recovery function
+            # TODO: use enumerate instead
             for timePoint in range(len(timeList)):
-                communityRecoveryFunction[timePoint] \
-                    += buildingLevelRecoveryFunction[timePoint]
+                communityRecoveryFunction[timePoint] /= \
+                    numberOfDamageSimulations
 
-        # PAOLO: instead of calculating the community level recovery function
-        # on all points, we should aggregate points by the same zones defined
-        # for the socioeconomic dataset, and then we should produce a community
-        # recovery function for each zone.
-        # This has to be done on the damage by asset layer
-        # (For the aggregation we can use SAGA:
-        #  "Add Polygon Attributes to Points", i.e.
-        #  processing.runalg('saga:addpolygonattributestopoints', input,
-        #                    polygons, field, output))
+            # PAOLO: should we plot this?
+            # Plot community level recovery curve
+            # plt.plot(timeList, communityRecoveryFunction)
+            # plt.show()
 
-        # Calculate community level recovery function
-        for timePoint in range(len(timeList)):
-            communityRecoveryFunction[timePoint] /= numberOfDamageSimulations
+            # Plot community level recovery curve which can presents the number
+            # of occupants before earthquake
+            New_timeList = [x for x in range(len(timeList)+DAYS_BEFORE_EVENT)]
+            # TODO: use enumerate instead
+            for i in range(len(timeList)+DAYS_BEFORE_EVENT):
+                if i < DAYS_BEFORE_EVENT:
+                    New_communityRecoveryFunction[i] = 1
+                else:
+                    New_communityRecoveryFunction[i] = (
+                        communityRecoveryFunction[i - DAYS_BEFORE_EVENT]
+                        / len(LossBasedDamageStateProbabilities))
 
-        # PAOLO: should we plot this?
-        # Plot community level recovery curve
-        # plt.plot(timeList, communityRecoveryFunction)
-        # plt.show()
+            fig = plt.figure()
+            plt.plot(New_timeList, New_communityRecoveryFunction)
+            plt.xlabel('Time (days)')
+            plt.ylabel('Normalized recovery level')
+            plt.title('Community level recovery curve for zone %s' % zone_id)
+            plt.ylim((0.0, 1.2))
+            plt.show()
+            filestem = os.path.join(
+                output_data_dir, "recovery_function_zone_%s" % zone_id)
+            fig.savefig(filestem + '.pdf')
 
-        # Plot community level recovery curve which can presents the number of
-        # occupants before earthquake
-        New_timeList = [x for x in range(len(timeList)+DAYS_BEFORE_EVENT)]
-        for i in range(len(timeList)+DAYS_BEFORE_EVENT):
-            if i < DAYS_BEFORE_EVENT:
-                New_communityRecoveryFunction[i] = 1
-            else:
-                New_communityRecoveryFunction[i] = (
-                    communityRecoveryFunction[i - DAYS_BEFORE_EVENT]
-                    / len(LossBasedDamageStateProbabilities))
+            # Save community recovery function
+            f3 = open(filestem + '.txt', "w")
+            f3.write(str(communityRecoveryFunction))
+            f3.close()
 
-        plt.plot(New_timeList, New_communityRecoveryFunction)
-        plt.xlabel('Time (days)')
-        plt.ylabel('Normalized recovery level')
-        plt.title('Community level recovery curve')
-        plt.ylim((0.0, 1.2))
-        plt.show()
-
-        # PAOLO: what to save?
-        # Save community recovery function
-        f3 = open(
-            os.path.join(output_data_dir,
-                         "communityLevelRecoveryFunction.txt"), "w")
-        f3.write(str(communityRecoveryFunction))
-        f3.close()
-
-        end = time.clock()
-        print (end - start)
+            end = time.clock()
+            print (end - start)
 
     def accept(self):
-        if not self.integrate_svi_check.isChecked():
-            self.generate_community_level_recovery_curve()
-        else:
-            self.generate_zone_level_recovery_curve()
-            # TODO remove this return
-            return
+        self.generate_community_level_recovery_curve(
+            self.integrate_svi_check.isChecked())
         super(RecoveryModelingDialog, self).accept()
-
-    def generate_zone_level_recovery_curve(self):
-        svi_layer = self.svi_layer_cbx.itemData(
-                self.svi_layer_cbx.currentIndex())
-        svi_field_name = self.svi_field_name_cbx.currentText()
-        zone_field_name = self.zone_field_name_cbx.currentText()
-        dmg_by_asset_layer = self.iface.activeLayer()
-
-        # call saga
