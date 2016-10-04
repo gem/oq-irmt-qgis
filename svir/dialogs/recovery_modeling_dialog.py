@@ -154,28 +154,34 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         zonal_dmg_by_asset = defaultdict(list)
         if integrate_svi:
             svi_by_zone = dict()
+            for zone_feat in self.svi_layer.getFeatures():
+                zone_id = str(zone_feat[self.zone_field_name])
+                svi_value = zone_feat[self.svi_field_name]
+                svi_by_zone[zone_id] = svi_value
             msg = 'Reading damage state probabilities...'
             msg_bar_item, progress = create_progress_message_bar(
                 self.iface.messageBar(), msg)
-            # FIXME: swap the loops
-            tot_features = self.svi_layer.featureCount()
-            for idx, zone_feat in enumerate(self.svi_layer.getFeatures()):
-                progress_perc = idx / float(tot_features) * 100
+            tot_features = self.dmg_by_asset_layer.featureCount()
+            for feat_idx, dmg_by_asset_feat in enumerate(
+                    self.dmg_by_asset_layer.getFeatures()):
+                progress_perc = feat_idx / float(tot_features) * 100
                 progress.setValue(progress_perc)
-                zone_id = zone_feat[self.zone_field_name]
-                svi_value = zone_feat[self.svi_field_name]
-                svi_by_zone[zone_id] = svi_value
-                for dmg_by_asset_feat in self.dmg_by_asset_layer.getFeatures():
-                    if dmg_by_asset_feat[self.zone_field_name] == zone_id:
-                        # select fields that contain probabilities
-                        # i.e., ignore asset id and taxonomy (first 2 items)
-                        # and get only columns containing means, discarding
-                        # those containing stddevs, therefore getting one item
-                        # out of two for the remaining columns
-                        # Also discard the last field, containing zone ids
-                        dmg_by_asset_probs = dmg_by_asset_feat.attributes()[
-                            2:-1:2]
-                        zonal_dmg_by_asset[zone_id].append(dmg_by_asset_probs)
+                zone_id = dmg_by_asset_feat[self.zone_field_name]
+                # FIXME: hack to handle case in which the zone id is an integer
+                # but it is stored as Real
+                try:
+                    zone_id = str(int(zone_id))
+                except:
+                    zone_id = str(zone_id)
+                # select fields that contain probabilities
+                # i.e., ignore asset id and taxonomy (first 2 items)
+                # and get only columns containing means, discarding
+                # those containing stddevs, therefore getting one item
+                # out of two for the remaining columns
+                # Also discard the last field, containing zone ids
+                dmg_by_asset_probs = dmg_by_asset_feat.attributes()[
+                    2:-1:2]
+                zonal_dmg_by_asset[zone_id].append(dmg_by_asset_probs)
             clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
         else:  # ignore svi
             msg = 'Reading damage state probabilities...'
