@@ -26,14 +26,14 @@ changelog=
     2.0.0
     * Additional features for driving the oq-engine and recovery modeling
 # tags are comma separated with spaces allowed
-tags=GEM, IRMT, SVIR, OpenQuake, Social Vulnerability, Integrated Risk, Recovery Modelling
+tags=GEM, IRMT, SVIR, OpenQuake, Social Vulnerability, Integrated Risk, Recovery, Resilience
 
 homepage=https://github.com/gem/oq-irmt-qgis
 tracker=https://github.com/gem/oq-irmt-qgis/issues
 repository=https://github.com/gem/oq-irmt-qgis
 icon=resources/icon.svg
 # experimental flag
-experimental=False
+experimental=True
 
 # deprecated flag (applies to the whole plugin, not just a single version
 deprecated=False
