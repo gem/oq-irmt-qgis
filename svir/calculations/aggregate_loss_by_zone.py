@@ -143,8 +143,8 @@ def calculate_zonal_stats(loss_layer,
                         zonal_layer.changeAttributeValue(
                                 feat.id(), unique_id_idx, feat.id())
 
-            loss_attrs_dict, loss_layer_plus_zones, zonal_layer, \
-            zone_id_in_losses_attr_name = add_zone_id_to_points(
+            (loss_attrs_dict, loss_layer_plus_zones, zonal_layer,
+             zone_id_in_losses_attr_name) = add_zone_id_to_points(
                     iface, loss_attrs_dict, loss_layer, zonal_layer,
                     zone_id_in_losses_attr_name, zone_id_in_zones_attr_name)
 
@@ -179,8 +179,8 @@ def add_zone_id_to_points(iface, loss_attrs_dict, point_layer, zonal_layer,
     use_fallback_calculation = False
     if saga_install_err is None:
         try:
-            loss_attrs_dict, point_layer, res, zonal_layer, \
-            points_zone_id_attr_name, loss_layer_plus_zones = \
+            (loss_attrs_dict, point_layer, res, zonal_layer,
+             points_zone_id_attr_name, loss_layer_plus_zones) = \
                 _add_zone_id_to_points_saga(loss_attrs_dict, point_layer,
                                             zonal_layer,
                                             zones_id_attr_name)
@@ -358,8 +358,8 @@ def _add_zone_id_to_points_saga(loss_attrs_dict, loss_layer, zonal_layer,
     else:
         zone_id_in_losses_attr_name = zone_id_in_zones_attr_name
 
-    return loss_attrs_dict, loss_layer, res, zonal_layer, \
-           zone_id_in_losses_attr_name, loss_layer_plus_zones
+    return (loss_attrs_dict, loss_layer, res, zonal_layer,
+            zone_id_in_losses_attr_name, loss_layer_plus_zones)
 
 
 def get_saga_install_error():
@@ -419,6 +419,7 @@ def calculate_vector_stats_aggregating_by_zone_id(
             "Step 3 of 3: writing point counts, loss sums and averages into "
             "the zonal layer...")
     with TraceTimeManager(msg, DEBUG):
+        # FIXME: use zonal_layer.featureCount() here and in every other cases
         tot_zones = len(list(zonal_layer.getFeatures()))
         msg_bar_item, progress = create_progress_message_bar(
                 iface.messageBar(), msg)

@@ -95,7 +95,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.iface.mapCanvas().setSelectionColor(QColor('magenta'))
 
         self.output_type_cbx.addItems(
-            ['', 'Hazard Curves', 'Uniform Hazard Spectra', 'Loss Curves'])
+            ['', 'Hazard Curves', 'Uniform Hazard Spectra', 'Loss Curves',
+             'Recovery Curves'])
 
         self.plot_figure = Figure()
         self.plot_canvas = FigureCanvas(self.plot_figure)
@@ -240,6 +241,18 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 title = 'Uniform Hazard Spectrum'
             else:
                 title = 'Uniform Hazard Spectra'
+        elif self.output_type == 'recovery_curves':
+            self.plot.set_xscale('linear')
+            self.plot.set_yscale('linear')
+            self.plot.set_xlabel('Time [days]')
+            self.plot.set_ylabel('Normalized recovery level')
+            self.plot.set_ylim((0.0, 1.2))
+            if count_selected == 0:
+                title = ''
+            elif count_selected == 1:
+                title = 'Building level recovery curve'
+            else:
+                title = 'Building level recovery curves'
         self.plot.set_title(title)
         self.plot.grid()
         if self.output_type == 'hcurves':
@@ -297,6 +310,9 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                                for name in field_names[1:]])
                 self.current_abscissa = periods
                 break
+            elif self.output_type == 'recovery_curves':
+                # discard asset id, taxonomy and stddevs
+                dmg_by_asset_probs = feature.attributes()[2::2]
 
         for i, feature in enumerate(self.active_layer.getFeatures(
                 QgsFeatureRequest().setFilterFids(selected))):
