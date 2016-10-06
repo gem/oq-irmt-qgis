@@ -7,20 +7,13 @@
     <x>0</x>
     <y>0</y>
     <width>443</width>
-    <height>479</height>
+    <height>512</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>IRMT Settings</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
-   <item>
-    <widget class="QCheckBox" name="developermodeCheck">
-     <property name="text">
-      <string>Developer mode (requires restart)</string>
-     </property>
-    </widget>
-   </item>
    <item>
     <widget class="QGroupBox" name="platform_settings_gbx">
      <property name="title">
@@ -186,6 +179,13 @@
        </layout>
       </item>
      </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="developermodeCheck">
+     <property name="text">
+      <string>Developer mode (requires restart)</string>
+     </property>
     </widget>
    </item>
    <item>

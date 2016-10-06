@@ -28,8 +28,9 @@ import time
 import matplotlib.pyplot as plt
 from collections import defaultdict
 
-from PyQt4.QtCore import pyqtSlot
+from PyQt4.QtCore import pyqtSlot, QSettings, QDir
 from PyQt4.QtGui import (QDialog,
+                         QFileDialog,
                          QDialogButtonBox)
 from qgis.core import QgsMapLayer
 from qgis.gui import QgsMessageBar
@@ -87,33 +88,75 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         # Set up the user interface from Designer.
         self.setupUi(self)
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
-        self.set_ok_button()
         self.populate_approach_cbx()
+        reload_layers_in_cbx(
+            self.dmg_by_asset_layer_cbx, [QgsMapLayer.VectorLayer])
         reload_layers_in_cbx(self.svi_layer_cbx, [QgsMapLayer.VectorLayer])
         recovery_modeling_dir = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
             '..', 'recovery_modeling')
         self.input_data_dir = os.path.join(recovery_modeling_dir, 'input_data')
-        self.output_data_dir = os.path.join(
-            recovery_modeling_dir, 'output_data')
-        self.dmg_by_asset_layer = self.iface.activeLayer()
+        self.restoreState()
+        self.set_ok_button()
+
+    def restoreState(self):
+        """
+        Reinstate the options based on the user's stored session info.
+        """
+        mySettings = QSettings()
+        output_data_dir = mySettings.value('irmt/recovery_output_data_dir', '')
+        # hack for strange mac behaviour
+        if not output_data_dir:
+            output_data_dir = ''
+        self.output_data_dir_le.setText(output_data_dir)
+
+    def saveState(self):
+        """
+        Store the options into the user's stored session info.
+        """
+        mySettings = QSettings()
+        mySettings.setValue('irmt/recovery_output_data_dir',
+                            self.output_data_dir_le.text())
 
     def set_ok_button(self):
-        self.ok_button.setEnabled(True)
+        self.ok_button.setEnabled(
+            os.path.isdir(self.output_data_dir_le.text())
+            and self.approach_cbx.currentIndex != -1)
+        # and self.dmg_by_asset_layer_cbx.currentIndex != -1
+        # and self.svi_layer_cbx.currentIndex != -1
+        # and self.svi_field_name_cbx.currentIndex != -1
+        # and self.zone_field_name_cbx.currentIndex != -1)
 
     def populate_approach_cbx(self):
         self.approach_cbx.addItems(['Aggregate', 'Disaggregate'])
 
     @pyqtSlot(str)
+    def on_output_data_dir_le_textChanged(self, text):
+        self.output_data_dir = self.output_data_dir_le.text()
+        self.set_ok_button()
+
+    @pyqtSlot(str)
     def on_approach_cbx_currentIndexChanged(self, selected_text):
-        # we might need to ask the user to provide the necessary files
-        pass
+        # TODO: we might need to ask the user to provide the necessary files
+        self.set_ok_button()
+
+    @pyqtSlot(int)
+    def on_dmg_by_asset_layer_cbx_currentIndexChanged(self, selected_index):
+        self.dmg_by_asset_layer = self.dmg_by_asset_layer_cbx.itemData(
+            selected_index)
 
     @pyqtSlot(int)
     def on_svi_layer_cbx_currentIndexChanged(self, selected_index):
         self.svi_layer = self.svi_layer_cbx.itemData(selected_index)
         reload_attrib_cbx(self.svi_field_name_cbx, self.svi_layer)
         reload_attrib_cbx(self.zone_field_name_cbx, self.svi_layer)
+
+    @pyqtSlot()
+    def on_output_data_dir_btn_clicked(self):
+        path = QFileDialog.getExistingDirectory(
+            self, self.tr('Choose output directory'), QDir.homePath())
+        if path:
+            self.output_data_dir_le.setText(path)
 
     def generate_community_level_recovery_curve(self, integrate_svi=True):
         # Developed By: Henry Burton
@@ -431,4 +474,5 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
             tr("Info"),
             'Recovery curves have been saved to [%s]' % self.output_data_dir,
             level=QgsMessageBar.INFO, duration=0)
+        self.saveState()
         super(RecoveryModelingDialog, self).accept()
