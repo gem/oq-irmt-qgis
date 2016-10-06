@@ -70,36 +70,61 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.session = None
         self.hostname = None
         self.current_output_calc_id = None
+        self.is_logged_in = False
+        self.timer = None
         self.login()
-        self.refresh_calc_list()
+        if self.is_logged_in:
+            self.refresh_calc_list()
         # Keep retrieving the list of calculations (especially important to
         # update the status of the calculation)
         # NOTE: start_polling() is called from outside, in order to reset
         #       the timer whenever the button to open the dialog is pressed
-        self.timer = None
         self.finished.connect(self.stop_polling)
 
     def login(self):
         self.session = Session()
         self.hostname, username, password = get_engine_credentials(self.iface)
-        with WaitCursorManager('Logging in...', self.iface):
-            if username and password:
+        # try without authentication (if authentication is disabled server
+        # side)
+        if not self.is_lockdown():
+            self.is_logged_in = True
+            return
+        if username and password:
+            with WaitCursorManager('Logging in...', self.iface):
                 try:
                     engine_login(self.hostname, username,
                                  password, self.session)
+                    self.is_logged_in = True
                 except (ConnectionError, SvNetworkError) as exc:
                     self.iface.messageBar().pushMessage(
                         tr("Error"),
                         str(exc.message),
                         level=QgsMessageBar.CRITICAL)
-                    self.reject()
-                    return
-            else:
-                # if username or password are not specified, try using the
-                # engine server without authentication
+        if not self.is_logged_in:
+            self.iface.messageBar().pushMessage(
+                tr("Error"),
+                tr("Please check OpenQuake Engine connection settings and"
+                    " credentials"),
+                level=QgsMessageBar.CRITICAL)
+            self.reject()
+            return
+
+    def is_lockdown(self):
+        # try retrieving the list of calculations and see if the server
+        # redirects you to the login page
+        # TODO: call something that is quicker than this
+        calc_list_url = "%s/v1/calc/list?relevant=true" % self.hostname
+        with WaitCursorManager():
+            try:
+                resp = self.session.get(calc_list_url, timeout=10)
+            except (ConnectionError, SvNetworkError):
                 return
+            # handle case of redirection to the login page
+            if resp.url != calc_list_url and 'login' in resp.url:
+                return True
 
     def refresh_calc_list(self):
+        # returns True if the list is correctly retrieved
         calc_list_url = "%s/v1/calc/list?relevant=true" % self.hostname
         with WaitCursorManager():
             try:
@@ -182,6 +207,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             "font-weight: bold;")
         self.calc_list_tbl.resizeColumnsToContents()
         self.calc_list_tbl.resizeRowsToContents()
+        return True
 
     def on_calc_action_btn_clicked(self, calc_id, action):
         if action == 'Console':
@@ -467,6 +493,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         return filepath
 
     def start_polling(self):
+        if not self.is_logged_in:
+            self.login()
+        if not self.is_logged_in:
+            return
+        self.refresh_calc_list()
         self.timer = QTimer()
         QObject.connect(
             self.timer, SIGNAL('timeout()'), self.refresh_calc_list)
@@ -474,9 +505,15 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
     def stop_polling(self):
         # NOTE: perhaps we should disconnect the timeout signal here?
-        if self.timer is not None:
+        if hasattr(self, 'timer') and self.timer is not None:
             self.timer.stop()
+        # QObject.disconnect(self.timer, SIGNAL('timeout()'))
 
     @pyqtSlot()
     def on_run_calc_btn_clicked(self):
         self.run_calc()
+
+    def reject(self):
+        self.stop_polling()
+        self.is_logged_in = False
+        super(DriveOqEngineServerDialog, self).reject()

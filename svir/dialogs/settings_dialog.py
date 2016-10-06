@@ -37,10 +37,12 @@ class SettingsDialog(QDialog, FORM_CLASS):
     OpenQuake Platform or the OpenQuake Engine, and to toggle the
     developer mode option.
     """
-    def __init__(self, iface, parent=None):
+    def __init__(self, iface, irmt_main, parent=None):
         QDialog.__init__(self, parent)
         self.iface = iface
         self.parent = parent
+        # in order to reset login when new credentials are saved
+        self.irmt_main = irmt_main
         # Set up the user interface from Designer.
         self.setupUi(self)
         link_text = ('<a href="%s">Register to the OpenQuake Platform</a>'
@@ -131,6 +133,7 @@ class SettingsDialog(QDialog, FORM_CLASS):
         Method invoked when OK button is clicked.
         """
         self.saveState()
+        self.irmt_main.reset_engine_login()
         super(SettingsDialog, self).accept()
 
     @pyqtSlot()
