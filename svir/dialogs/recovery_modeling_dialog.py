@@ -442,11 +442,11 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
                    + int(max(mobilizationTimes))
                    + int(max(repairTimes)) + DAYS_BEFORE_EVENT * 2)
 
-        # PAOLO: I guess we could use svi_by_zone[zone_id] to adjust
-        # the leadTimeFactor, for instance:
-        if svi_value:
-            # FIXME to build timeList we need an integer, but it sounds bad
-            maxTime = int(round(maxTime * SVI_WEIGHT_COEFF * svi_value))
+        # PAOLO: TODO We have to find a proper way to use the SVI to adjust the
+        # recovery times. For now we are not using it, but we are aggregating
+        # assets by the same zones for which the SVI is defined
+        # if svi_value:
+        #     maxTime = int(round(maxTime * SVI_WEIGHT_COEFF * svi_value))
 
         # Time List
         timeList = range(maxTime)
