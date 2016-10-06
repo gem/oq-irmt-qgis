@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#/***************************************************************************
+# /***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
@@ -37,25 +37,15 @@ class SettingsDialog(QDialog, FORM_CLASS):
     OpenQuake Platform or the OpenQuake Engine, and to toggle the
     developer mode option.
     """
-    def __init__(self, iface, parent=None, server='platform'):
+    def __init__(self, iface, parent=None):
         QDialog.__init__(self, parent)
         self.iface = iface
         self.parent = parent
-        self.server = server
         # Set up the user interface from Designer.
         self.setupUi(self)
-        if self.server == 'platform':
-            self.topGroupBox.setTitle(
-                    'OpenQuake Platform connection settings')
-            link_text = ('<a href="%s">Register to the OpenQuake Platform</a>'
-                         % PLATFORM_REGISTRATION_URL)
-            self.registration_link_lbl.setText(link_text)
-        elif self.server == 'engine':
-            self.topGroupBox.setTitle(
-                    'OpenQuake Engine connection settings')
-            self.registration_link_lbl.hide()
-        else:
-            raise ValueError(self.server)
+        link_text = ('<a href="%s">Register to the OpenQuake Platform</a>'
+                     % PLATFORM_REGISTRATION_URL)
+        self.registration_link_lbl.setText(link_text)
         self.restoreState()
 
     def restoreState(self):
@@ -64,31 +54,36 @@ class SettingsDialog(QDialog, FORM_CLASS):
         """
         mySettings = QSettings()
 
-        if self.server == 'platform':
-            username = mySettings.value('irmt/platform_username', '')
-            password = mySettings.value('irmt/platform_password', '')
-            hostname = mySettings.value(
-                    'irmt/platform_hostname', 'https://platform.openquake.org')
+        platform_username = mySettings.value('irmt/platform_username', '')
+        platform_password = mySettings.value('irmt/platform_password', '')
+        platform_hostname = mySettings.value(
+                'irmt/platform_hostname', 'https://platform.openquake.org')
 
-        elif self.server == 'engine':
-            username = mySettings.value('irmt/engine_username', '')
-            password = mySettings.value('irmt/engine_password', '')
-            hostname = mySettings.value('irmt/engine_hostname',
-                                        'localhost:8000')
-        else:
-            raise ValueError(self.server)
+        engine_username = mySettings.value('irmt/engine_username', '')
+        engine_password = mySettings.value('irmt/engine_password', '')
+        engine_hostname = mySettings.value(
+                'irmt/engine_hostname', 'localhost:8000')
 
         # hack for strange mac behaviour
-        if not username:
-            username = ''
-        if not password:
-            password = ''
-        if not hostname:
-            hostname = ''
+        if not platform_username:
+            platform_username = ''
+        if not platform_password:
+            platform_password = ''
+        if not platform_hostname:
+            platform_hostname = ''
+        if not engine_username:
+            engine_username = ''
+        if not engine_password:
+            engine_password = ''
+        if not engine_hostname:
+            engine_hostname = ''
 
-        self.usernameEdit.setText(username)
-        self.passwordEdit.setText(password)
-        self.hostnameEdit.setText(hostname)
+        self.platformUsernameEdit.setText(platform_username)
+        self.platformPasswordEdit.setText(platform_password)
+        self.platformHostnameEdit.setText(platform_hostname)
+        self.engineUsernameEdit.setText(engine_username)
+        self.enginePasswordEdit.setText(engine_password)
+        self.engineHostnameEdit.setText(engine_hostname)
 
         self.developermodeCheck.setChecked(
                 mySettings.value('irmt/developer_mode', False, type=bool))
@@ -105,7 +100,9 @@ class SettingsDialog(QDialog, FORM_CLASS):
         """
         mySettings = QSettings()
         # if the (stripped) hostname ends with '/', remove it
-        hostname = self.hostnameEdit.text().strip().rstrip('/')
+        platform_hostname = \
+            self.platformHostnameEdit.text().strip().rstrip('/')
+        engine_hostname = self.engineHostnameEdit.text().strip().rstrip('/')
         mySettings.setValue('irmt/oq_hazardlib_path',
                             self.oq_hazardlib_path_edit.text())
         mySettings.setValue('irmt/oq_engine_path',
@@ -114,24 +111,20 @@ class SettingsDialog(QDialog, FORM_CLASS):
                             self.warnOQDepsCheck.isChecked())
         mySettings.setValue('irmt/developer_mode',
                             self.developermodeCheck.isChecked())
-        if self.server == 'platform':
-            mySettings.setValue('irmt/platform_hostname', hostname)
-            mySettings.setValue('irmt/platform_username',
-                                self.usernameEdit.text())
-            mySettings.setValue('irmt/platform_password',
-                                self.passwordEdit.text())
-            mySettings.setValue('irmt/developer_mode',
-                                self.developermodeCheck.isChecked())
-        elif self.server == 'engine':
-            mySettings.setValue('irmt/engine_hostname', hostname)
-            mySettings.setValue('irmt/engine_username',
-                                self.usernameEdit.text())
-            mySettings.setValue('irmt/engine_password',
-                                self.passwordEdit.text())
-            mySettings.setValue('irmt/developer_mode',
-                                self.developermodeCheck.isChecked())
-        else:
-            raise ValueError(self.server)
+        mySettings.setValue('irmt/platform_hostname', platform_hostname)
+        mySettings.setValue('irmt/platform_username',
+                            self.platformUsernameEdit.text())
+        mySettings.setValue('irmt/platform_password',
+                            self.platformPasswordEdit.text())
+        mySettings.setValue('irmt/developer_mode',
+                            self.developermodeCheck.isChecked())
+        mySettings.setValue('irmt/engine_hostname', engine_hostname)
+        mySettings.setValue('irmt/engine_username',
+                            self.engineUsernameEdit.text())
+        mySettings.setValue('irmt/engine_password',
+                            self.enginePasswordEdit.text())
+        mySettings.setValue('irmt/developer_mode',
+                            self.developermodeCheck.isChecked())
 
     def accept(self):
         """
@@ -143,7 +136,7 @@ class SettingsDialog(QDialog, FORM_CLASS):
     @pyqtSlot()
     def on_oq_hazardlib_path_btn_clicked(self):
         path = QFileDialog.getExistingDirectory(
-                self, self.tr('Choose OQ hazardlib directory'), QDir.homePath())
+            self, self.tr('Choose OQ hazardlib directory'), QDir.homePath())
         if path:
             self.oq_hazardlib_path_edit.setText(path)
 

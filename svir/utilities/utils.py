@@ -406,7 +406,7 @@ def platform_login(host, username, password, session):
 
 def engine_login(host, username, password, session):
     """
-    Logs in a session to a platform
+    Logs in a session to a engine server
 
     :param host: The host url
     :type host: str

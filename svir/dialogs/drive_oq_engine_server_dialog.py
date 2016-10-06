@@ -45,6 +45,7 @@ from svir.utilities.utils import (WaitCursorManager,
                                   tr,
                                   ask_for_download_destination_folder,
                                   get_ui_class,
+                                  SvNetworkError,
                                   )
 from svir.dialogs.load_hdf5_as_layer_dialog import LoadHdf5AsLayerDialog
 from svir.dialogs.load_geojson_as_layer_dialog import LoadGeoJsonAsLayerDialog
@@ -82,14 +83,20 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.session = Session()
         self.hostname, username, password = get_engine_credentials(self.iface)
         with WaitCursorManager('Logging in...', self.iface):
-            try:
-                engine_login(self.hostname, username, password, self.session)
-            except ConnectionError as exc:
-                self.iface.messageBar().pushMessage(
-                    tr("Error"),
-                    str(exc.message),
-                    level=QgsMessageBar.CRITICAL)
-                self.reject()
+            if username and password:
+                try:
+                    engine_login(self.hostname, username,
+                                 password, self.session)
+                except (ConnectionError, SvNetworkError) as exc:
+                    self.iface.messageBar().pushMessage(
+                        tr("Error"),
+                        str(exc.message),
+                        level=QgsMessageBar.CRITICAL)
+                    self.reject()
+                    return
+            else:
+                # if username or password are not specified, try using the
+                # engine server without authentication
                 return
 
     def refresh_calc_list(self):
@@ -97,10 +104,17 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         with WaitCursorManager():
             try:
                 resp = self.session.get(calc_list_url, timeout=10)
-            except ConnectionError as exc:
+            except (ConnectionError, SvNetworkError) as exc:
                 self.iface.messageBar().pushMessage(
                     tr("Error"),
                     str(exc.message),
+                    level=QgsMessageBar.CRITICAL)
+                self.reject()
+                return
+            if resp.url != calc_list_url:
+                self.iface.messageBar().pushMessage(
+                    tr("Error"),
+                    tr("Please check OpenQuake Engine connection settings"),
                     level=QgsMessageBar.CRITICAL)
                 self.reject()
                 return
@@ -199,7 +213,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         with WaitCursorManager('Getting list of outputs...', self.iface):
             try:
                 resp = self.session.get(calc_log_url, timeout=10)
-            except ConnectionError as exc:
+            except (ConnectionError, SvNetworkError) as exc:
                 self.iface.messageBar().pushMessage(
                     tr("Error"),
                     str(exc.message),
@@ -215,7 +229,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         with WaitCursorManager('Removing calculation...', self.iface):
             try:
                 resp = self.session.post(calc_remove_url, timeout=10)
-            except ConnectionError as exc:
+            except (ConnectionError, SvNetworkError) as exc:
                 self.iface.messageBar().pushMessage(
                     tr("Error"),
                     str(exc.message),
@@ -275,7 +289,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             try:
                 resp = self.session.post(
                     run_calc_url, files=files, data=data, timeout=20)
-            except ConnectionError as exc:
+            except (ConnectionError, SvNetworkError) as exc:
                 self.iface.messageBar().pushMessage(
                     tr("Error"),
                     str(exc.message),
@@ -295,7 +309,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         with WaitCursorManager('Getting list of outputs...', self.iface):
             try:
                 resp = self.session.get(output_list_url, timeout=10)
-            except ConnectionError as exc:
+            except (ConnectionError, SvNetworkError) as exc:
                 self.iface.messageBar().pushMessage(
                     tr("Error"),
                     str(exc.message),
@@ -437,7 +451,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         with WaitCursorManager('Downloading output...', self.iface):
             try:
                 resp = self.session.get(output_download_url, timeout=10)
-            except ConnectionError as exc:
+            except (ConnectionError, SvNetworkError) as exc:
                 self.iface.messageBar().pushMessage(
                     tr("Error"),
                     str(exc.message),
