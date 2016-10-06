@@ -57,7 +57,7 @@ def get_engine_credentials(iface):
     hostname = qs.value('irmt/engine_hostname', '')
     username = qs.value('irmt/engine_username', '')
     password = qs.value('irmt/engine_password', '')
-    if not (hostname and username and password):
+    if not hostname:
         SettingsDialog(iface).exec_()
         hostname = qs.value('irmt/engine_hostname', '')
         username = qs.value('irmt/engine_username', '')

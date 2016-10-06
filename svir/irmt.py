@@ -308,23 +308,15 @@ class Irmt:
                                u"Run recovery modeling",
                                self.recovery_modeling,
                                enable=True)
-            # Action to activate the modal dialog to set up show_settings for
-            #  the
-            # connection with the engine
-            self.add_menu_item("show_engine_settings",
-                               ":/plugins/irmt/settings.svg",
-                               u"&OpenQuake Engine connection settings",
-                               self.show_engine_settings,
-                               enable=True)
         else:
             self.warn_missing_features()
 
         # Action to activate the modal dialog to set up show_settings for the
         # connection with the platform
-        self.add_menu_item("show_platform_settings",
+        self.add_menu_item("show_settings",
                            ":/plugins/irmt/settings.svg",
-                           u"&OpenQuake Platform connection settings",
-                           self.show_platform_settings,
+                           u"&IRMT settings",
+                           self.show_settings,
                            enable=True)
 
         # Action to open the plugin's manual
@@ -574,7 +566,7 @@ class Irmt:
         # login to platform, to be able to retrieve sv indices
         sv_downloader = get_loggedin_downloader(self.iface)
         if sv_downloader is None:
-            self.show_platform_settings()
+            self.show_settings()
             return
         try:
             dlg = SelectSvVariablesDialog(sv_downloader)
@@ -739,7 +731,7 @@ class Irmt:
         """
         sv_downloader = get_loggedin_downloader(self.iface)
         if sv_downloader is None:
-            self.show_platform_settings()
+            self.show_settings()
             return
 
         dlg = DownloadLayerDialog(self.iface, sv_downloader)
@@ -1195,22 +1187,12 @@ class Irmt:
             self.iface.activeLayer())
         self.iface.mapCanvas().refresh()
 
-    def show_platform_settings(self):
+    def show_settings(self):
         """
         Open a dialog to specify the connection settings used to interact
         with the OpenQuake Platform
         """
-        SettingsDialog(self.iface, server='platform').exec_()
-
-    def show_engine_settings(self):
-        """
-        Open a dialog to specify the connection settings used to interact
-        with the OpenQuake Engine
-        """
-        if SettingsDialog(self.iface, server='engine').exec_():
-            if self.drive_oq_engine_server_dlg is not None:
-                self.drive_oq_engine_server_dlg.close()
-                self.drive_oq_engine_server()
+        SettingsDialog(self.iface).exec_()
 
     def transform_attributes(self):
         """
