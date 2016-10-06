@@ -47,7 +47,7 @@
    <item>
     <widget class="QGroupBox" name="integrate_svi_check">
      <property name="title">
-      <string>Integrate with SVI</string>
+      <string>Aggregate by the same zones for which SVI is available</string>
      </property>
      <property name="checkable">
       <bool>true</bool>
