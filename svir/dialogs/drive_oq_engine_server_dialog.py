@@ -111,10 +111,12 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     level=QgsMessageBar.CRITICAL)
                 self.reject()
                 return
-            if resp.url != calc_list_url:
+            # handle case of redirection to the login page
+            if resp.url != calc_list_url and 'login' in resp.url:
                 self.iface.messageBar().pushMessage(
                     tr("Error"),
-                    tr("Please check OpenQuake Engine connection settings"),
+                    tr("Please check OpenQuake Engine connection settings and"
+                       " credentials"),
                     level=QgsMessageBar.CRITICAL)
                 self.reject()
                 return
