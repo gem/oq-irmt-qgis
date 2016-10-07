@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>457</width>
-    <height>398</height>
+    <height>342</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -62,16 +62,6 @@
       </item>
       <item>
        <widget class="QComboBox" name="svi_layer_cbx"/>
-      </item>
-      <item>
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>SVI field</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QComboBox" name="svi_field_name_cbx"/>
       </item>
       <item>
        <widget class="QLabel" name="label_3">
