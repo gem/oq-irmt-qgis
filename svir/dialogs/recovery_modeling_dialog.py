@@ -159,6 +159,22 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         if path:
             self.output_data_dir_le.setText(path)
 
+    def read_all_configuration_files(self):
+        inspectionTimes = read_config_file('InspectionTimes.txt')
+        assessmentTimes = read_config_file('AssessmentTimes.txt')
+        mobilizationTimes = read_config_file('MobilizationTimes.txt')
+        repairTimes = read_config_file('RepairTimes.txt')
+        recoveryTimes = read_config_file('RecoveryTimes.txt')
+        leadTimeDispersion = read_config_file(
+            'LeadTimeDispersion.txt', float)
+        repairTimeDispersion = read_config_file(
+            'RepairTimeDispersion.txt', float)
+        numberOfDamageSimulations = read_config_file(
+            'NumberOfDamageSimulations.txt', int)[0]
+        return (inspectionTimes, assessmentTimes, mobilizationTimes,
+                repairTimes, recoveryTimes, leadTimeDispersion,
+                repairTimeDispersion, numberOfDamageSimulations)
+
     def generate_community_level_recovery_curve(self, integrate_svi=True):
         # Developed By: Henry Burton
         # Edited by: Hua Kang
@@ -178,22 +194,11 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
 
         # Define Attributes of Constructuon & Engineering Service Class
 
-        # read configuration files
-        inspectionTimes = read_config_file('InspectionTimes.txt')
-        assessmentTimes = read_config_file('AssessmentTimes.txt')
-        mobilizationTimes = read_config_file('MobilizationTimes.txt')
-        repairTimes = read_config_file('RepairTimes.txt')
-        recoveryTimes = read_config_file('RecoveryTimes.txt')
-        leadTimeDispersion = read_config_file(
-            'LeadTimeDispersion.txt', float)
-        repairTimeDispersion = read_config_file(
-            'RepairTimeDispersion.txt', float)
+        (inspectionTimes, assessmentTimes, mobilizationTimes, repairTimes,
+         recoveryTimes, leadTimeDispersion, repairTimeDispersion,
+         numberOfDamageSimulations) = self.read_all_configuration_files()
 
         # Step 3: Incorporate Napa Data to community recovery model
-
-        # ############# MAIN #################################################
-        numberOfDamageSimulations = read_config_file(
-            'NumberOfDamageSimulations.txt', int)[0]
 
         # build dictionary zone_id -> dmg_by_asset
         zonal_dmg_by_asset = defaultdict(list)
