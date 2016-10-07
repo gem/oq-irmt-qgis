@@ -148,7 +148,8 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
     @pyqtSlot(int)
     def on_svi_layer_cbx_currentIndexChanged(self, selected_index):
         self.svi_layer = self.svi_layer_cbx.itemData(selected_index)
-        reload_attrib_cbx(self.svi_field_name_cbx, self.svi_layer)
+        # FIXME self.svi_field_name is temporarily ignored
+        # reload_attrib_cbx(self.svi_field_name_cbx, self.svi_layer)
         reload_attrib_cbx(self.zone_field_name_cbx, self.svi_layer)
 
     @pyqtSlot()
@@ -168,7 +169,8 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         if integrate_svi:
             self.svi_layer = self.svi_layer_cbx.itemData(
                     self.svi_layer_cbx.currentIndex())
-            self.svi_field_name = self.svi_field_name_cbx.currentText()
+            # FIXME self.svi_field_name is temporarily ignored
+            # self.svi_field_name = self.svi_field_name_cbx.currentText()
             self.zone_field_name = self.zone_field_name_cbx.currentText()
 
         start = time.clock()  # FIXME
@@ -196,11 +198,13 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         # build dictionary zone_id -> dmg_by_asset
         zonal_dmg_by_asset = defaultdict(list)
         if integrate_svi:
-            svi_by_zone = dict()
+            # FIXME self.svi_field_name is temporarily ignored
+            # svi_by_zone = dict()
             for zone_feat in self.svi_layer.getFeatures():
                 zone_id = str(zone_feat[self.zone_field_name])
-                svi_value = zone_feat[self.svi_field_name]
-                svi_by_zone[zone_id] = svi_value
+                # FIXME self.svi_field_name is temporarily ignored
+                # svi_value = zone_feat[self.svi_field_name]
+                # svi_by_zone[zone_id] = svi_value
             msg = 'Reading damage state probabilities...'
             msg_bar_item, progress = create_progress_message_bar(
                 self.iface.messageBar(), msg)
@@ -258,11 +262,13 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
              fractionCollapsedAndIrreparableBuildings) = \
                 self.loss_based_to_recovery_based_probs(dmg_by_asset)
 
-            svi_value = svi_by_zone[zone_id] if integrate_svi else None
+            # FIXME self.svi_field_name is temporarily ignored
+            # svi_value = svi_by_zone[zone_id] if integrate_svi else None
             (timeList, inspectionTimes,
              assessmentTimes, mobilizationTimes) = self.calculate_times(
                 fractionCollapsedAndIrreparableBuildings, inspectionTimes,
-                assessmentTimes, mobilizationTimes, repairTimes, svi_value)
+                assessmentTimes, mobilizationTimes, repairTimes)
+            # assessmentTimes, mobilizationTimes, repairTimes, svi_value)
 
             # Initialize community recovery function
             communityRecoveryFunction = [0 for x in range(len(timeList))]
@@ -416,7 +422,8 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
     def calculate_times(
             self, fractionCollapsedAndIrreparableBuildings,
             inspectionTimes, assessmentTimes, mobilizationTimes,
-            repairTimes, svi_value):
+            repairTimes):  # FIXME self.svi_field_name is temporarily ignored
+            # repairTimes, svi_value):
         # PAOLO and VENETIA: the paper refers to a metodology by Comerio
         # (2006): "a performance index can be developed to relate the
         # fraction of collapsed buildings within a particular region, and
