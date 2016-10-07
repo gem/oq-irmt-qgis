@@ -283,41 +283,13 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
             # self.generate_building_level_recovery_curve()  # FIXME
             # Looping over all damage simulations
             for sim in range(numberOfDamageSimulations):
-                # Looping over all buildings in community
-                # Initialize building level recovery function
-                buildingLevelRecoveryFunction = [
-                    0 for x in range(len(timeList))]
-                # TODO: use enumerate instead
-                for bldg in range(len(LossBasedDamageStateProbabilities)):
-                    # Generate recovery function for current
-                    # building/simulation using the given damage state
-                    # probability distribution
-                    currentSimulationBuildingLevelDamageStateProbabilities = \
-                        RecoveryBasedDamageStateProbabilities[bldg]
-                    # call building class within Napa Data
-                    # PAOLO: building number is not used. Instead, we need to
-                    # make available to the building all the imported data
-                    napa_bldg = Building(
-                        inspectionTimes, recoveryTimes, repairTimes,
-                        leadTimeDispersion, repairTimeDispersion,
-                        currentSimulationBuildingLevelDamageStateProbabilities,
-                        timeList, assessmentTimes, mobilizationTimes)
-                    approach = self.approach_cbx.currentText()
-                    # approach can be aggregate or disaggregate
-                    z = napa_bldg.generateBldgLevelRecoveryFunction(approach)
-                    # The following lines plot building level curves
-                    # fig = plt.figure()
-                    # plt.plot(timeList, z)
-                    # plt.xlabel('Time (days)')
-                    # plt.ylabel('Normalized recovery level')
-                    # plt.title('Building level recovery curve')
-                    # plt.ylim((0.0, 1.2))
-                    # plt.show()
-                    # Assign buidling level recovery function
-                    # TODO: use enumerate instead
-                    for timePoint in range(len(timeList)):
-                        buildingLevelRecoveryFunction[timePoint] += z[
-                            timePoint]
+                buildingLevelRecoveryFunction = \
+                    self.generate_building_level_recovery_curve(
+                        timeList, LossBasedDamageStateProbabilities,
+                        RecoveryBasedDamageStateProbabilities, inspectionTimes,
+                        recoveryTimes, repairTimes, leadTimeDispersion,
+                        repairTimeDispersion, assessmentTimes,
+                        mobilizationTimes)
                 # Sum up all building level recovery function
                 # TODO: use enumerate instead
                 for timePoint in range(len(timeList)):
@@ -376,6 +348,48 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
             end = time.clock()
             print (end - start)
         clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
+
+    def generate_building_level_recovery_curve(
+            self, timeList, LossBasedDamageStateProbabilities,
+            RecoveryBasedDamageStateProbabilities, inspectionTimes,
+            recoveryTimes, repairTimes, leadTimeDispersion,
+            repairTimeDispersion, assessmentTimes, mobilizationTimes):
+        # Looping over all buildings in community
+        # Initialize building level recovery function
+        buildingLevelRecoveryFunction = [
+            0 for x in range(len(timeList))]
+        # TODO: use enumerate instead
+        for bldg in range(len(LossBasedDamageStateProbabilities)):
+            # Generate recovery function for current
+            # building/simulation using the given damage state
+            # probability distribution
+            currentSimulationBuildingLevelDamageStateProbabilities = \
+                RecoveryBasedDamageStateProbabilities[bldg]
+            # call building class within Napa Data
+            # PAOLO: building number is not used. Instead, we need to
+            # make available to the building all the imported data
+            napa_bldg = Building(
+                inspectionTimes, recoveryTimes, repairTimes,
+                leadTimeDispersion, repairTimeDispersion,
+                currentSimulationBuildingLevelDamageStateProbabilities,
+                timeList, assessmentTimes, mobilizationTimes)
+            approach = self.approach_cbx.currentText()
+            # approach can be aggregate or disaggregate
+            z = napa_bldg.generateBldgLevelRecoveryFunction(approach)
+            # The following lines plot building level curves
+            # fig = plt.figure()
+            # plt.plot(timeList, z)
+            # plt.xlabel('Time (days)')
+            # plt.ylabel('Normalized recovery level')
+            # plt.title('Building level recovery curve')
+            # plt.ylim((0.0, 1.2))
+            # plt.show()
+            # Assign buidling level recovery function
+            # TODO: use enumerate instead
+            for timePoint in range(len(timeList)):
+                buildingLevelRecoveryFunction[timePoint] += z[
+                    timePoint]
+        return buildingLevelRecoveryFunction
 
     def loss_based_to_recovery_based_probs(self, dmg_by_asset):
         LossBasedDamageStateProbabilities = [
