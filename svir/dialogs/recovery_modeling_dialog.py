@@ -22,6 +22,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
+import sys
 import csv
 import os
 import time
@@ -84,6 +85,8 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
     """
     def __init__(self, iface):
         QDialog.__init__(self)
+        self.phlog=open(os.path.join(os.path.expanduser('~'),'irmt-ph-pt.log'),'w') 
+        self.phlog.write('START sys.path=%s\n' % sys.path)
         self.iface = iface
         # Set up the user interface from Designer.
         self.setupUi(self)
@@ -160,6 +163,8 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
             self.output_data_dir_le.setText(path)
 
     def read_all_configuration_files(self):
+        self.phlog.write('read_all_configuration_files\n' % sys.path)
+        self.phlog.flush()
         inspectionTimes = read_config_file('InspectionTimes.txt')
         assessmentTimes = read_config_file('AssessmentTimes.txt')
         mobilizationTimes = read_config_file('MobilizationTimes.txt')
@@ -181,6 +186,8 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         # Reimplemented for this plugin by: Paolo Tormene and Marco Bernasocchi
         # Objective: GenerateCommunityLevelRecoveryCurve
         # Initial date: August 26, 2016
+
+        self.phlog.write('generate_community_level_recovery_curve, integrate_svi=%s\n' % integrate_svi)
 
         if integrate_svi:
             self.svi_layer = self.svi_layer_cbx.itemData(
@@ -214,9 +221,12 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
             msg_bar_item, progress = create_progress_message_bar(
                 self.iface.messageBar(), msg)
             tot_features = self.dmg_by_asset_layer.featureCount()
+            self.phlog.write('generate_community_level_recovery_curve, tot_features=%s\n' % tot_features)
             for feat_idx, dmg_by_asset_feat in enumerate(
                     self.dmg_by_asset_layer.getFeatures()):
                 progress_perc = feat_idx / float(tot_features) * 100
+                self.phlog.write('generate_community_level_recovery_curve, progress=%s\n' % progress_perc)
+                self.phlog.flush()
                 progress.setValue(progress_perc)
                 zone_id = dmg_by_asset_feat[self.zone_field_name]
                 # FIXME: hack to handle case in which the zone id is an integer
@@ -225,6 +235,8 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
                     zone_id = str(int(zone_id))
                 except:
                     zone_id = str(zone_id)
+                self.phlog.write('generate_community_level_recovery_curve, zone_id=%s\n' % zone_id)
+                self.phlog.flush()
                 # select fields that contain probabilities
                 # i.e., ignore asset id and taxonomy (first 2 items)
                 # and get only columns containing means, discarding
@@ -233,7 +245,13 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
                 # Also discard the last field, containing zone ids
                 dmg_by_asset_probs = dmg_by_asset_feat.attributes()[
                     2:-1:2]
+                self.phlog.write('generate_community_level_recovery_curve, len(dmg_by_asset_probs)=%s \n' % len(dmg_by_asset_probs))
+                self.phlog.flush()
                 zonal_dmg_by_asset[zone_id].append(dmg_by_asset_probs)
+                self.phlog.write('generate_community_level_recovery_curve, appended probs to zonal_dmg_by_asset\n')
+                self.phlog.flush()
+            self.phlog.write('generate_community_level_recovery_curve 526\n')
+            self.phlog.flush()
             clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
         else:  # ignore svi
             msg = 'Reading damage state probabilities...'
@@ -250,6 +268,8 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
             clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
 
         tot_zones = len(zonal_dmg_by_asset)
+        self.phlog.write('generate_community_level_recovery_curve, tot_zones=%s\n' % tot_zones)
+        self.phlog.flush()
         msg = 'Calculating zone-level recovery curves...'
         msg_bar_item, progress = create_progress_message_bar(
             self.iface.messageBar(), msg)
@@ -260,6 +280,8 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
 
             # TODO: use svi_by_zone[zone_id] to adjust recovery times (how?)
 
+            self.phlog.write('generate_community_level_recovery_curve, 514 zone_id=%s idx=%s\n' % (zone_id,idx))
+            self.phlog.flush()
             dmg_by_asset = zonal_dmg_by_asset[zone_id]
 
             (LossBasedDamageStateProbabilities,
@@ -267,8 +289,21 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
              fractionCollapsedAndIrreparableBuildings) = \
                 self.loss_based_to_recovery_based_probs(dmg_by_asset)
 
+            self.phlog.write('generate_community_level_recovery_curve, 516 zone_id=%s, fractionCollapsedAndIrreparableBuildings=%s\n' % (zone_id,fractionCollapsedAndIrreparableBuildings))
+            self.phlog.flush()
             # FIXME self.svi_field_name is temporarily ignored
             # svi_value = svi_by_zone[zone_id] if integrate_svi else None
+
+            # FIXME PH this brutal hack is here to fix problem with 
+            # times increasing accross zones, there must be a better solution
+            self.phlog.write('generate_community_level_recovery_curve, 556 zone_id=%s, re-reading config files\n' % zone_id)
+            self.phlog.flush()
+            (inspectionTimes, assessmentTimes, mobilizationTimes, repairTimes,
+             recoveryTimes, leadTimeDispersion, repairTimeDispersion,
+             numberOfDamageSimulations) = self.read_all_configuration_files()
+
+            # FIXME - when aggregating by zone we are constantly increasing 
+            # the times with this approach
             (timeList, inspectionTimes,
              assessmentTimes, mobilizationTimes) = self.calculate_times(
                 fractionCollapsedAndIrreparableBuildings, inspectionTimes,
@@ -325,9 +360,14 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
                 if i < DAYS_BEFORE_EVENT:
                     New_communityRecoveryFunction[i] = 1
                 else:
-                    New_communityRecoveryFunction[i] = (
-                        communityRecoveryFunction[i - DAYS_BEFORE_EVENT]
-                        / len(LossBasedDamageStateProbabilities))
+                    # FIXME - PH ugly check for 0 length: zones with < 2 assets
+                    if len(LossBasedDamageStateProbabilities) < 1:
+                        New_communityRecoveryFunction[i] = \
+                            communityRecoveryFunction[i - DAYS_BEFORE_EVENT]
+                    else:
+                        New_communityRecoveryFunction[i] = (
+                            communityRecoveryFunction[i - DAYS_BEFORE_EVENT]
+                            / len(LossBasedDamageStateProbabilities))
 
             fig = plt.figure()
             plt.plot(New_timeList, New_communityRecoveryFunction)
@@ -392,6 +432,9 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         return buildingLevelRecoveryFunction
 
     def loss_based_to_recovery_based_probs(self, dmg_by_asset):
+        self.phlog.write('loss_based_to_recovery_based_probs, len dmg_by_asset=%s\n' % len(dmg_by_asset))
+        self.phlog.flush()
+
         LossBasedDamageStateProbabilities = [
             [0 for x in range(5)] for y in range(len(dmg_by_asset)-1)]
 
@@ -431,9 +474,13 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
                         fractionCollapsedAndIrreparableBuildings += \
                             RecoveryBasedDamageStateProbabilities[i][j]
 
-        fractionCollapsedAndIrreparableBuildings = \
-            fractionCollapsedAndIrreparableBuildings / (
-                len(dmg_by_asset)-1)
+        if len(dmg_by_asset) < 2:
+            self.phlog.write('loss_based_to_recovery_based_probs, dmg_by_asset len <2 fractionCollapsedAndIrreparableBuildings=%s \n' % fractionCollapsedAndIrreparableBuildings)
+            self.phlog.flush()
+	else:
+            fractionCollapsedAndIrreparableBuildings = \
+                fractionCollapsedAndIrreparableBuildings / (
+                    len(dmg_by_asset)-1)
         return (LossBasedDamageStateProbabilities,
                 RecoveryBasedDamageStateProbabilities,
                 fractionCollapsedAndIrreparableBuildings)
@@ -460,6 +507,8 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
             2.31 + 0.22 * fractionCollapsedAndIrreparableBuildings
             * 100) / 2.31
 
+        self.phlog.write('calculate_times: leadTimeFactor=%s\n' % leadTimeFactor)
+        self.phlog.flush()
         # Generate Time Vector Used for Recovery Function
         # Maximum time in days
 
@@ -468,6 +517,14 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
                    + int(max(mobilizationTimes))
                    + int(max(repairTimes)) + DAYS_BEFORE_EVENT * 2)
 
+        self.phlog.write('calculate_times: maxTime=%s\n' % maxTime)
+	self.phlog.write(' max(inspectionTimes)=%s\n ' % int(max(inspectionTimes)) )
+	self.phlog.write(' max(assessmentTimes)=%s\n ' % int(max(assessmentTimes)) )
+	self.phlog.write(' max(mobilizationTimes)=%s\n ' % int(max(mobilizationTimes)) )
+	self.phlog.write(' max(repairTimes)=%s\n ' % int(max(repairTimes)) )
+        self.phlog.flush()
+        self.phlog.write('calculate_times: len(inspectionTimes)=%s\n' % len(inspectionTimes))
+        self.phlog.flush()
         # PAOLO: TODO We have to find a proper way to use the SVI to adjust the
         # recovery times. For now we are not using it, but we are aggregating
         # assets by the same zones for which the SVI is defined
@@ -478,7 +535,10 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         timeList = range(maxTime)
 
         # Calculate lead time by mutiply lead time factor
-        # TODO: use enumerate instead
+        # TODO: use enumerate instead4
+        # FIXME: PH is it really correct to modify inspectionTimes et al here?  
+        # The effect is to constantly increase the times in the lists
+        # (see also below)
         for i in range(len(inspectionTimes)):
             inspectionTimes[i] = leadTimeFactor * float(inspectionTimes[i])
             assessmentTimes[i] = leadTimeFactor * float(assessmentTimes[i])
@@ -496,6 +556,7 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         with WaitCursorManager('Generating recovery curves...', self.iface):
             self.generate_community_level_recovery_curve(
                 self.integrate_svi_check.isChecked())
+        self.phlog.flush()
         self.iface.messageBar().pushMessage(
             tr("Info"),
             'Recovery curves have been saved to [%s]' % self.output_data_dir,
