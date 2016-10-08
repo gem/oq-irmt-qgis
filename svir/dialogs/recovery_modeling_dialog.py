@@ -370,7 +370,18 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
                             / len(LossBasedDamageStateProbabilities))
 
             fig = plt.figure()
+            # highlight values at observation days (after 6, 12 and 18 months)
+            obs_days = [DAYS_BEFORE_EVENT + day for day in (180, 360, 540)]
             plt.plot(New_timeList, New_communityRecoveryFunction)
+            for obs_day in obs_days:
+                plt.axvline(x=obs_day, linestyle='dotted')
+                i = obs_day
+                j = New_communityRecoveryFunction[obs_day]
+                plt.annotate(
+                    '%.3f' % j,
+                    xy=(i, j),
+                    xytext=(0, 30),
+                    textcoords='offset points')
             plt.xlabel('Time (days)')
             plt.ylabel('Normalized recovery level')
             plt.title('Community level recovery curve for zone %s' % zone_id)
@@ -382,7 +393,7 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
 
             # Save community recovery function
             f3 = open(filestem + '.txt', "w")
-            f3.write(str(communityRecoveryFunction))
+            f3.write(str(New_communityRecoveryFunction))
             f3.close()
 
             end = time.clock()
