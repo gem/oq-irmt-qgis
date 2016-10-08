@@ -214,7 +214,6 @@ class Irmt:
                            self.aggregate_losses,
                            enable=True,
                            add_to_layer_actions=False)
-
         # Action to upload
         self.add_menu_item("upload",
                            ":/plugins/irmt/upload.svg",
@@ -223,20 +222,6 @@ class Irmt:
                            enable=False,
                            add_to_layer_actions=True)
 
-        # Action to plot total damage reading it from a HDF5 produced by a
-        # scenario damage calculation
-        self.add_menu_item("plot_dmg_total",
-                           ":/plugins/irmt/calculate.svg",  # FIXME
-                           u"Plot total damage",
-                           self.plot_dmg_total_from_hdf5,
-                           enable=True)
-        # Action to plot damage by taxonomy reading it from a HDF5 produced by
-        # a scenario damage calculation
-        self.add_menu_item("plot_dmg_by_taxon",
-                           ":/plugins/irmt/calculate.svg",  # FIXME
-                           u"Plot damage by taxonomy",
-                           self.plot_dmg_by_taxon_from_hdf5,
-                           enable=True)
         # Action to load as layer a geojson produced by the oq-engine
         self.add_menu_item("load_geojson_as_layer",
                            ":/plugins/irmt/calculate.svg",  # FIXME
@@ -285,6 +270,20 @@ class Irmt:
                                u"Load loss curves from HDF5 as layer",
                                self.load_loss_curves_from_hdf5_as_layer,
                                enable=True)
+            # Action to plot total damage reading it from a HDF5 produced by a
+            # scenario damage calculation
+            self.add_menu_item("plot_dmg_total",
+                               ":/plugins/irmt/calculate.svg",  # FIXME
+                               u"Plot total damage",
+                               self.plot_dmg_total_from_hdf5,
+                               enable=True)
+            # Action to plot damage by taxonomy reading it from a HDF5 produced
+            # by a scenario damage calculation
+            self.add_menu_item("plot_dmg_by_taxon",
+                               ":/plugins/irmt/calculate.svg",  # FIXME
+                               u"Plot damage by taxonomy",
+                               self.plot_dmg_by_taxon_from_hdf5,
+                               enable=True)
             # Action to load as layer ground motion fields from hdf5 produced
             # by the oq-engine with a scenario damage hazard calculation
             self.add_menu_item(
@@ -297,11 +296,11 @@ class Irmt:
             # Action to load as layer damage by asset from hdf5 produced by
             # the oq-engine with a scenario damage risk calculation
             self.add_menu_item(
-                    "load_scenario_damage_by_asset_from_hdf5_as_layer",
-                    ":/plugins/irmt/calculate.svg",  # FIXME
-                    u"Load scenario damage by asset from HDF5 as layer",
-                    self.load_scenario_damage_by_asset_from_hdf5_as_layer,
-                    enable=True)
+                "load_scenario_damage_by_asset_from_hdf5_as_layer",
+                ":/plugins/irmt/calculate.svg",  # FIXME
+                u"Load scenario damage by asset from HDF5 as layer",
+                self.load_scenario_damage_by_asset_from_hdf5_as_layer,
+                enable=True)
             # Action to run the recovery analysis
             self.add_menu_item("recovery_modeling",
                                ":/plugins/irmt/plot.svg",  # FIXME
