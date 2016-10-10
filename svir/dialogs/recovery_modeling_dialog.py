@@ -210,9 +210,7 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
                 self.iface.messageBar(), msg)
             tot_features = self.dmg_by_asset_layer.featureCount()
             for feat_idx, dmg_by_asset_feat in enumerate(
-                    self.dmg_by_asset_layer.getFeatures()):
-                progress_perc = feat_idx / float(tot_features) * 100
-                progress.setValue(progress_perc)
+                    self.dmg_by_asset_layer.getFeatures(), start=1):
                 zone_id = dmg_by_asset_feat[self.zone_field_name]
                 # FIXME: hack to handle case in which the zone id is an integer
                 # but it is stored as Real
@@ -229,6 +227,8 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
                 dmg_by_asset_probs = dmg_by_asset_feat.attributes()[
                     2:-1:2]
                 zonal_dmg_by_asset[zone_id].append(dmg_by_asset_probs)
+                progress_perc = feat_idx / float(tot_features) * 100
+                progress.setValue(progress_perc)
             clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
         else:  # ignore svi
             msg = 'Reading damage state probabilities...'
@@ -236,12 +236,12 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
                 self.iface.messageBar(), msg)
             tot_features = self.dmg_by_asset_layer.featureCount()
             for idx, dmg_by_asset_feat in enumerate(
-                    self.dmg_by_asset_layer.getFeatures()):
-                progress_perc = idx / float(tot_features) * 100
-                progress.setValue(progress_perc)
+                    self.dmg_by_asset_layer.getFeatures(), start=1):
                 # we don't have any field containing zone ids, to be discarded
                 dmg_by_asset_probs = dmg_by_asset_feat.attributes()[2::2]
                 zonal_dmg_by_asset['ALL'].append(dmg_by_asset_probs)
+                progress_perc = idx / float(tot_features) * 100
+                progress.setValue(progress_perc)
             clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
 
         tot_zones = len(zonal_dmg_by_asset)
@@ -249,10 +249,7 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         msg_bar_item, progress = create_progress_message_bar(
             self.iface.messageBar(), msg)
         # for each zone, calculate a zone-level recovery function
-        for idx, zone_id in enumerate(zonal_dmg_by_asset.keys()):
-            progress_perc = idx / float(tot_zones) * 100
-            progress.setValue(progress_perc)
-
+        for idx, zone_id in enumerate(zonal_dmg_by_asset.keys(), start=1):
             # TODO: use svi_by_zone[zone_id] to adjust recovery times (how?)
 
             dmg_by_asset = zonal_dmg_by_asset[zone_id]
@@ -371,6 +368,9 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
 
             end = time.clock()
             print (end - start)
+            progress_perc = idx / float(tot_zones) * 100
+            progress.setValue(progress_perc)
+
         clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
 
     def generate_building_level_recovery_curve(
