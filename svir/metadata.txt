@@ -25,7 +25,7 @@ email=staff.it@globalquakemodel.org
 changelog=
     1.7.12
     * Fix times that were increasing across zones
-    * Avoid division by zero in some corner cases
+    * Fix indices that were producing division by zero for zones containing only 1 asset
     1.7.11
     * Annotate plots
     * Remove selector for SVI field
