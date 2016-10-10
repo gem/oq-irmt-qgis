@@ -193,8 +193,9 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
 
         # Incorporate Napa Data to community recovery model
 
-        # build dictionary zone_id -> dmg_by_asset
-        zonal_dmg_by_asset = defaultdict(list)
+        # build dictionary zone_id -> dmg_by_asset_probs
+        zonal_dmg_by_asset_probs = defaultdict(list)
+        zonal_asset_refs = defaultdict(list)
         if integrate_svi:
             # FIXME self.svi_field_name is temporarily ignored
             # svi_by_zone = dict()
@@ -224,7 +225,9 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
                 # Also discard the last field, containing zone ids
                 dmg_by_asset_probs = dmg_by_asset_feat.attributes()[
                     2:-1:2]
-                zonal_dmg_by_asset[zone_id].append(dmg_by_asset_probs)
+                asset_ref = dmg_by_asset_feat['asset_ref']
+                zonal_dmg_by_asset_probs[zone_id].append(dmg_by_asset_probs)
+                zonal_asset_refs[zone_id].append(asset_ref)
                 progress_perc = feat_idx / float(tot_features) * 100
                 progress.setValue(progress_perc)
             clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
@@ -237,25 +240,29 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
                     self.dmg_by_asset_layer.getFeatures(), start=1):
                 # we don't have any field containing zone ids, to be discarded
                 dmg_by_asset_probs = dmg_by_asset_feat.attributes()[2::2]
-                zonal_dmg_by_asset['ALL'].append(dmg_by_asset_probs)
+                asset_ref = dmg_by_asset_feat['asset_ref']
+                zonal_dmg_by_asset_probs['ALL'].append(dmg_by_asset_probs)
+                zonal_asset_refs['ALL'].append(asset_ref)
                 progress_perc = idx / float(tot_features) * 100
                 progress.setValue(progress_perc)
             clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
 
-        tot_zones = len(zonal_dmg_by_asset)
+        tot_zones = len(zonal_dmg_by_asset_probs)
         msg = 'Calculating zone-level recovery curves...'
         msg_bar_item, progress = create_progress_message_bar(
             self.iface.messageBar(), msg)
         # for each zone, calculate a zone-level recovery function
-        for idx, zone_id in enumerate(zonal_dmg_by_asset.keys(), start=1):
+        for idx, zone_id in enumerate(zonal_dmg_by_asset_probs.keys(),
+                                      start=1):
             # TODO: use svi_by_zone[zone_id] to adjust recovery times (how?)
 
-            dmg_by_asset = zonal_dmg_by_asset[zone_id]
+            dmg_by_asset_probs = zonal_dmg_by_asset_probs[zone_id]
+            asset_refs = zonal_asset_refs[zone_id]
 
             (LossBasedDamageStateProbabilities,
              RecoveryBasedDamageStateProbabilities,
              fractionCollapsedAndIrreparableBuildings) = \
-                self.loss_based_to_recovery_based_probs(dmg_by_asset)
+                self.loss_based_to_recovery_based_probs(dmg_by_asset_probs)
 
             # FIXME self.svi_field_name is temporarily ignored
             # svi_value = svi_by_zone[zone_id] if integrate_svi else None
@@ -280,21 +287,20 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
             New_communityRecoveryFunction = [
                 0 for x in range(len(timeList)+DAYS_BEFORE_EVENT)]
 
-            # self.generate_building_level_recovery_curve()  # FIXME
             # Looping over all damage simulations
             for sim in range(numberOfDamageSimulations):
-                buildingLevelRecoveryFunction = \
-                    self.generate_building_level_recovery_curve(
+                simulationRecoveryFunction = \
+                    self.generate_simulation_recovery_curve(
                         timeList, LossBasedDamageStateProbabilities,
                         RecoveryBasedDamageStateProbabilities, inspectionTimes,
                         recoveryTimes, repairTimes, leadTimeDispersion,
                         repairTimeDispersion, assessmentTimes,
-                        mobilizationTimes)
+                        mobilizationTimes, zone_id, asset_refs)
                 # Sum up all building level recovery function
                 # TODO: use enumerate instead
                 for timePoint in range(len(timeList)):
                     communityRecoveryFunction[timePoint] \
-                        += buildingLevelRecoveryFunction[timePoint]
+                        += simulationRecoveryFunction[timePoint]
 
             # PAOLO: instead of calculating the community level recovery
             # function on all points, we should aggregate points by the same
@@ -363,22 +369,24 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
 
         clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
 
-    def generate_building_level_recovery_curve(
+    def generate_simulation_recovery_curve(
             self, timeList, LossBasedDamageStateProbabilities,
             RecoveryBasedDamageStateProbabilities, inspectionTimes,
             recoveryTimes, repairTimes, leadTimeDispersion,
-            repairTimeDispersion, assessmentTimes, mobilizationTimes):
+            repairTimeDispersion, assessmentTimes, mobilizationTimes,
+            zone_id, asset_refs):
         # Looping over all buildings in community
         # Initialize building level recovery function
-        buildingLevelRecoveryFunction = [
+        simulationRecoveryFunction = [
             0 for x in range(len(timeList))]
         # TODO: use enumerate instead
-        for bldg in range(len(LossBasedDamageStateProbabilities)):
+        # TODO: perhaps iterate enumerating by asset_ref
+        for bldg_idx in range(len(LossBasedDamageStateProbabilities)):
             # Generate recovery function for current
             # building/simulation using the given damage state
             # probability distribution
             currentSimulationBuildingLevelDamageStateProbabilities = \
-                RecoveryBasedDamageStateProbabilities[bldg]
+                RecoveryBasedDamageStateProbabilities[bldg_idx]
             # call building class within Napa Data
             # PAOLO: building number is not used. Instead, we need to
             # make available to the building all the imported data
@@ -389,10 +397,21 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
                 timeList, assessmentTimes, mobilizationTimes)
             approach = self.approach_cbx.currentText()
             # approach can be aggregate or disaggregate
-            z = napa_bldg.generateBldgLevelRecoveryFunction(approach)
+            building_level_recovery_function = \
+                napa_bldg.generateBldgLevelRecoveryFunction(approach)
+            output_by_building_dir = os.path.join(
+                self.output_data_dir, 'by_building')
+            if not os.path.exists(output_by_building_dir):
+                os.makedirs(output_by_building_dir)
+            asset_ref = asset_refs[bldg_idx]
+            output_filename = os.path.join(
+                output_by_building_dir,
+                "zone_%s_bldg_%s.txt" % (zone_id, asset_ref))
+            with open(output_filename, 'w') as f:
+                f.write(str(building_level_recovery_function))
             # The following lines plot building level curves
             # fig = plt.figure()
-            # plt.plot(timeList, z)
+            # plt.plot(timeList, building_level_recovery_function)
             # plt.xlabel('Time (days)')
             # plt.ylabel('Normalized recovery level')
             # plt.title('Building level recovery curve')
@@ -401,18 +420,18 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
             # Assign buidling level recovery function
             # TODO: use enumerate instead
             for timePoint in range(len(timeList)):
-                buildingLevelRecoveryFunction[timePoint] += z[
-                    timePoint]
-        return buildingLevelRecoveryFunction
+                simulationRecoveryFunction[timePoint] += \
+                    building_level_recovery_function[timePoint]
+        return simulationRecoveryFunction
 
-    def loss_based_to_recovery_based_probs(self, dmg_by_asset):
+    def loss_based_to_recovery_based_probs(self, dmg_by_asset_probs):
         LossBasedDamageStateProbabilities = [
-            [0 for x in range(5)] for y in range(len(dmg_by_asset))]
+            [0 for x in range(5)] for y in range(len(dmg_by_asset_probs))]
 
-        for i in range(len(dmg_by_asset)):
+        for i in range(len(dmg_by_asset_probs)):
             for j in range(5):
                 LossBasedDamageStateProbabilities[i][j] = \
-                    dmg_by_asset[i][j]  # was dmg_by_asset[i+1][j+4]
+                    dmg_by_asset_probs[i][j]  # ex dmg_by_asset_probs[i+1][j+4]
 
         # Load Transfer Probability Note: There is a 5*6 matrix where rows
         # describe loss-based damage states (No
@@ -431,7 +450,7 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
 
         # Mapping from Loss-based to recovery-based building damage states
         RecoveryBasedDamageStateProbabilities = [
-            [0 for x in range(6)] for y in range(len(dmg_by_asset))]
+            [0 for x in range(6)] for y in range(len(dmg_by_asset_probs))]
 
         fractionCollapsedAndIrreparableBuildings = 0
         # TODO: use enumerate instead
@@ -446,7 +465,7 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
                             RecoveryBasedDamageStateProbabilities[i][j]
 
         fractionCollapsedAndIrreparableBuildings = \
-            fractionCollapsedAndIrreparableBuildings / len(dmg_by_asset)
+            fractionCollapsedAndIrreparableBuildings / len(dmg_by_asset_probs)
         return (LossBasedDamageStateProbabilities,
                 RecoveryBasedDamageStateProbabilities,
                 fractionCollapsedAndIrreparableBuildings)
