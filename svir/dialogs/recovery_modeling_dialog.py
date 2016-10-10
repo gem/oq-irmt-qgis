@@ -217,6 +217,12 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
                     zone_id = str(int(zone_id))
                 except:
                     zone_id = str(zone_id)
+                # FIXME: same hack as above
+                asset_ref = dmg_by_asset_feat['asset_ref']
+                try:
+                    asset_ref = str(int(asset_ref))
+                except:
+                    asset_ref = str(asset_ref)
                 # select fields that contain probabilities
                 # i.e., ignore asset id and taxonomy (first 2 items)
                 # and get only columns containing means, discarding
@@ -225,7 +231,6 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
                 # Also discard the last field, containing zone ids
                 dmg_by_asset_probs = dmg_by_asset_feat.attributes()[
                     2:-1:2]
-                asset_ref = dmg_by_asset_feat['asset_ref']
                 zonal_dmg_by_asset_probs[zone_id].append(dmg_by_asset_probs)
                 zonal_asset_refs[zone_id].append(asset_ref)
                 progress_perc = feat_idx / float(tot_features) * 100
