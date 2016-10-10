@@ -84,6 +84,8 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
     """
     def __init__(self, iface):
         QDialog.__init__(self)
+        self.phlog = open(
+            os.path.join(os.path.expanduser('~'), 'irmt-ph-pt.log'), 'w')
         self.iface = iface
         # Set up the user interface from Designer.
         self.setupUi(self)
@@ -190,15 +192,8 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
             self.zone_field_name = self.zone_field_name_cbx.currentText()
 
         start = time.clock()  # FIXME
-        # Step 1: Define attributes of objects in each class
 
-        # Define Attributes of Constructuon & Engineering Service Class
-
-        (inspectionTimes, assessmentTimes, mobilizationTimes, repairTimes,
-         recoveryTimes, leadTimeDispersion, repairTimeDispersion,
-         numberOfDamageSimulations) = self.read_all_configuration_files()
-
-        # Step 3: Incorporate Napa Data to community recovery model
+        # Incorporate Napa Data to community recovery model
 
         # build dictionary zone_id -> dmg_by_asset
         zonal_dmg_by_asset = defaultdict(list)
@@ -269,6 +264,16 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
 
             # FIXME self.svi_field_name is temporarily ignored
             # svi_value = svi_by_zone[zone_id] if integrate_svi else None
+
+            # FIXME If we don't read files again for each zone, time increases
+            # across zones. This is not optimal, but configuration files are
+            # very small, so reading them is almost instantaneous.
+            (inspectionTimes, assessmentTimes, mobilizationTimes, repairTimes,
+             recoveryTimes, leadTimeDispersion, repairTimeDispersion,
+             numberOfDamageSimulations) = self.read_all_configuration_files()
+
+            # FIXME - when aggregating by zone we are constantly increasing
+            # the times with this approach
             (timeList, inspectionTimes,
              assessmentTimes, mobilizationTimes) = self.calculate_times(
                 fractionCollapsedAndIrreparableBuildings, inspectionTimes,
@@ -325,9 +330,17 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
                 if i < DAYS_BEFORE_EVENT:
                     New_communityRecoveryFunction[i] = 1
                 else:
-                    New_communityRecoveryFunction[i] = (
-                        communityRecoveryFunction[i - DAYS_BEFORE_EVENT]
-                        / len(LossBasedDamageStateProbabilities))
+                    # FIXME - PH ugly check for 0 length: zones with < 2 assets
+                    #         PT I would expect zones with no assets to be
+                    #         discarded, and zones with one asset to have
+                    #         len(LossBasedDamageStateProbabilities) == 1
+                    if len(LossBasedDamageStateProbabilities) < 1:
+                        New_communityRecoveryFunction[i] = \
+                            communityRecoveryFunction[i - DAYS_BEFORE_EVENT]
+                    else:
+                        New_communityRecoveryFunction[i] = (
+                            communityRecoveryFunction[i - DAYS_BEFORE_EVENT]
+                            / len(LossBasedDamageStateProbabilities))
 
             fig = plt.figure()
             # highlight values at observation days (after 6, 12 and 18 months)
@@ -442,9 +455,19 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
                         fractionCollapsedAndIrreparableBuildings += \
                             RecoveryBasedDamageStateProbabilities[i][j]
 
-        fractionCollapsedAndIrreparableBuildings = \
-            fractionCollapsedAndIrreparableBuildings / (
-                len(dmg_by_asset)-1)
+        # FIXME: PT perhaps it shouldn't be len(dmg_by_asset)-1 but just
+        # len(dmg_by_asset). Otherwise, it breaks when we have a zone with a
+        # single asset
+        if len(dmg_by_asset) < 2:
+            self.phlog.write(
+                'loss_based_to_recovery_based_probs, dmg_by_asset len <2 '
+                'fractionCollapsedAndIrreparableBuildings=%s \n'
+                % fractionCollapsedAndIrreparableBuildings)
+            self.phlog.flush()
+        else:
+            fractionCollapsedAndIrreparableBuildings = \
+                fractionCollapsedAndIrreparableBuildings / (
+                    len(dmg_by_asset)-1)
         return (LossBasedDamageStateProbabilities,
                 RecoveryBasedDamageStateProbabilities,
                 fractionCollapsedAndIrreparableBuildings)
