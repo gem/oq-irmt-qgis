@@ -84,8 +84,6 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
     """
     def __init__(self, iface):
         QDialog.__init__(self)
-        self.phlog = open(
-            os.path.join(os.path.expanduser('~'), 'irmt-ph-pt.log'), 'w')
         self.iface = iface
         # Set up the user interface from Designer.
         self.setupUi(self)
