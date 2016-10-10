@@ -327,17 +327,9 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
                 if i < DAYS_BEFORE_EVENT:
                     New_communityRecoveryFunction[i] = 1
                 else:
-                    # FIXME - PH ugly check for 0 length: zones with < 2 assets
-                    #         PT I would expect zones with no assets to be
-                    #         discarded, and zones with one asset to have
-                    #         len(LossBasedDamageStateProbabilities) == 1
-                    if len(LossBasedDamageStateProbabilities) < 1:
-                        New_communityRecoveryFunction[i] = \
-                            communityRecoveryFunction[i - DAYS_BEFORE_EVENT]
-                    else:
-                        New_communityRecoveryFunction[i] = (
-                            communityRecoveryFunction[i - DAYS_BEFORE_EVENT]
-                            / len(LossBasedDamageStateProbabilities))
+                    New_communityRecoveryFunction[i] = (
+                        communityRecoveryFunction[i - DAYS_BEFORE_EVENT]
+                        / len(LossBasedDamageStateProbabilities))
 
             fig = plt.figure()
             # highlight values at observation days (after 6, 12 and 18 months)
@@ -417,12 +409,12 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
 
     def loss_based_to_recovery_based_probs(self, dmg_by_asset):
         LossBasedDamageStateProbabilities = [
-            [0 for x in range(5)] for y in range(len(dmg_by_asset)-1)]
+            [0 for x in range(5)] for y in range(len(dmg_by_asset))]
 
-        for i in range(len(dmg_by_asset)-1):
+        for i in range(len(dmg_by_asset)):
             for j in range(5):
                 LossBasedDamageStateProbabilities[i][j] = \
-                    dmg_by_asset[i+1][j]  # was dmg_by_asset[i+1][j+4]
+                    dmg_by_asset[i][j]  # was dmg_by_asset[i+1][j+4]
 
         # Load Transfer Probability Note: There is a 5*6 matrix where rows
         # describe loss-based damage states (No
@@ -441,7 +433,7 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
 
         # Mapping from Loss-based to recovery-based building damage states
         RecoveryBasedDamageStateProbabilities = [
-            [0 for x in range(6)] for y in range(len(dmg_by_asset)-1)]
+            [0 for x in range(6)] for y in range(len(dmg_by_asset))]
 
         fractionCollapsedAndIrreparableBuildings = 0
         # TODO: use enumerate instead
@@ -455,19 +447,8 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
                         fractionCollapsedAndIrreparableBuildings += \
                             RecoveryBasedDamageStateProbabilities[i][j]
 
-        # FIXME: PT perhaps it shouldn't be len(dmg_by_asset)-1 but just
-        # len(dmg_by_asset). Otherwise, it breaks when we have a zone with a
-        # single asset
-        if len(dmg_by_asset) < 2:
-            self.phlog.write(
-                'loss_based_to_recovery_based_probs, dmg_by_asset len <2 '
-                'fractionCollapsedAndIrreparableBuildings=%s \n'
-                % fractionCollapsedAndIrreparableBuildings)
-            self.phlog.flush()
-        else:
-            fractionCollapsedAndIrreparableBuildings = \
-                fractionCollapsedAndIrreparableBuildings / (
-                    len(dmg_by_asset)-1)
+        fractionCollapsedAndIrreparableBuildings = \
+            fractionCollapsedAndIrreparableBuildings / len(dmg_by_asset)
         return (LossBasedDamageStateProbabilities,
                 RecoveryBasedDamageStateProbabilities,
                 fractionCollapsedAndIrreparableBuildings)
