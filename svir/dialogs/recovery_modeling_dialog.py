@@ -256,6 +256,12 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         msg = 'Calculating zone-level recovery curves...'
         msg_bar_item, progress = create_progress_message_bar(
             self.iface.messageBar(), msg)
+        at_observed_days_filename = os.path.join(
+            self.output_data_dir, 'at_observed_days.csv')
+        at_observed_days = open(at_observed_days_filename, 'w')
+        writer = csv.writer(at_observed_days)
+        header = ['zone_id', '6months', '12months', '18months']
+        writer.writerow(header)
         # for each zone, calculate a zone-level recovery function
         for idx, zone_id in enumerate(zonal_dmg_by_asset_probs.keys(),
                                       start=1):
@@ -344,15 +350,19 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
             # highlight values at observation days (after 6, 12 and 18 months)
             obs_days = [DAYS_BEFORE_EVENT + day for day in (180, 360, 540)]
             plt.plot(New_timeList, New_communityRecoveryFunction)
+            row = [zone_id]
             for obs_day in obs_days:
+                value_at_obs_day = New_communityRecoveryFunction[obs_day]
+                row.append(value_at_obs_day)
                 plt.axvline(x=obs_day, linestyle='dotted')
                 i = obs_day
-                j = New_communityRecoveryFunction[obs_day]
+                j = value_at_obs_day
                 plt.annotate(
                     '%.3f' % j,
                     xy=(i, j),
                     xytext=(0, 30),
                     textcoords='offset points')
+            writer.writerow(row)
             plt.xlabel('Time (days)')
             plt.ylabel('Normalized recovery level')
             plt.title('Community level recovery curve for zone %s' % zone_id)
@@ -373,6 +383,7 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
             progress.setValue(progress_perc)
 
         clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
+        at_observed_days.close()
 
     def generate_simulation_recovery_curve(
             self, timeList, LossBasedDamageStateProbabilities,
