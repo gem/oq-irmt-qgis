@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#/***************************************************************************
+# /***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
@@ -31,6 +31,7 @@ from qgis.core import (QgsVectorLayer,
                        QgsRasterLayer,
                        QgsMapLayerRegistry,
                        QgsVectorFileWriter,
+                       QgsMapLayer,
                        )
 from qgis.gui import QgsMessageBar
 
@@ -220,6 +221,8 @@ class SelectInputLayersDialog(QDialog):
         for key, layer in \
                 QgsMapLayerRegistry.instance().mapLayers().iteritems():
             # populate loss cbx only with layers containing points
+            if layer.type() != QgsMapLayer.VectorLayer:
+                continue
             if layer.geometryType() == QGis.Point:
                 self.ui.loss_layer_cbx.addItem(layer.name())
                 self.ui.loss_layer_cbx.setItemData(
