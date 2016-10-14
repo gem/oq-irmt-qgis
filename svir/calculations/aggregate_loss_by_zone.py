@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#/***************************************************************************
+# /***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
@@ -57,6 +57,8 @@ try:
 except:
     log_msg("Unable to import SagaUtils module from processing.algs.saga")
     saga_was_imported = False
+# FIXME: re-enable SAGA after fixing the case with long field names
+saga_was_imported = False
 
 
 def calculate_zonal_stats(loss_layer,
@@ -151,18 +153,20 @@ def calculate_zonal_stats(loss_layer,
             else:
                 err_msg = 'SagaUtils was not imported.'
             if err_msg is not None:
-                err_msg += tr(" In order to cope with complex geometries, "
-                              "a working installation of SAGA is "
-                              "recommended.")
-                iface.messageBar().pushMessage(
-                    tr("Warning"),
-                    tr(err_msg),
-                    level=QgsMessageBar.WARNING)
+                # FIXME: uncomment these lines when re-activating SAGA
+                # err_msg += tr(" In order to cope with complex geometries, "
+                #               "a working installation of SAGA is "
+                #               "recommended.")
+                # iface.messageBar().pushMessage(
+                #     tr("Warning"),
+                #     tr(err_msg),
+                #     level=QgsMessageBar.WARNING)
                 res = calculate_vector_stats_using_geometries(
                     loss_layer, zonal_layer, zone_id_in_zones_attr_name,
                     zone_id_in_losses_attr_name, loss_attr_names,
                     loss_attrs_dict, iface)
                 (loss_layer, zonal_layer, loss_attrs_dict) = res
+            # FIXME: the following never happens if we don't re-activate SAGA
             else:
                 # using SAGA to find out in which zone each point is
                 # (it does not compute any other statistics)
