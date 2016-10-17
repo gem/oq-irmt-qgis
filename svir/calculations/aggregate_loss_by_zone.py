@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#/***************************************************************************
+# /***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
@@ -197,28 +197,45 @@ def calculate_zonal_stats(loss_layer,
                     if DEBUG:
                         QgsMapLayerRegistry.instance().addMapLayer(
                             loss_layer_plus_zones)
-                    # If the zone id attribute name was already taken in
-                    # the loss layer, when SAGA added the new attribute, it
-                    # was given a different name by default. We need to get
-                    # the new attribute name (as the difference between the
-                    # loss_layer and the loss_layer_plus_zones)
-                    new_fields = set(
-                        field.name() for field in
-                        loss_layer_plus_zones.dataProvider().fields())
-                    orig_fields = set(
-                        field.name() for field in
-                        loss_layer.dataProvider().fields())
-                    zone_field_name = (new_fields - orig_fields).pop()
-                    if zone_field_name:
+                    # NOTE: In previous versions, we were identifying the
+                    # zone_field_name as the difference between the sets of
+                    # field names before and after running the
+                    # clippointswithpolygons algorithm (supposing that the only
+                    # difference was an additional field with the zone ids). It
+                    # was good also for the corner case in which the field name
+                    # for zone ids was already taken in the loss layer, and it
+                    # was therefore modified by saga). BUT... it was not taking
+                    # into account the case of long field names in the loss
+                    # layer (for instance, using a csv-based layer instead of a
+                    # shapefile). In such case, saga produces a shapefile with
+                    # laundered names, and the "difference" approach does not
+                    # work anymore. THEREFORE... we are forced to make a little
+                    # hack, assuming that the field added by saga (the one
+                    # containing zone ids) will be the last one.
+                    if (len(loss_layer_plus_zones.fields())
+                            - len(loss_layer.fields()) == 1):
+                        # NOTE: we are assuming that the field containing zone
+                        # ids will be added by saga as the last field in the
+                        # layer
+                        zone_field_name = \
+                            loss_layer_plus_zones.fields()[-1].name()
+                    else:
+                        zone_field_name = None
+                    if zone_field_name is not None:
                         zone_id_in_losses_attr_name = zone_field_name
                     else:
                         zone_id_in_losses_attr_name = \
                             zone_id_in_zones_attr_name
+                    old_field_to_new_field = {}
+                    for idx, field in enumerate(loss_layer.fields()):
+                        old_field_to_new_field[field.name()] = \
+                            loss_layer_plus_zones.fields()[idx].name()
                     res = calculate_vector_stats_aggregating_by_zone_id(
                         loss_layer_plus_zones, zonal_layer,
                         zone_id_in_losses_attr_name,
                         zone_id_in_zones_attr_name,
-                        loss_attr_names, loss_attrs_dict, iface)
+                        loss_attr_names, loss_attrs_dict, iface,
+                        old_field_to_new_field)
                     (loss_layer, zonal_layer, loss_attrs_dict) = res
     else:
         (loss_layer, zonal_layer) = \
@@ -228,7 +245,8 @@ def calculate_zonal_stats(loss_layer,
 
 def calculate_vector_stats_aggregating_by_zone_id(
         loss_layer, zonal_layer, zone_id_in_losses_attr_name,
-        zone_id_in_zones_attr_name, loss_attr_names, loss_attrs_dict, iface):
+        zone_id_in_zones_attr_name, loss_attr_names, loss_attrs_dict,
+        iface, old_field_to_new_field=None):
     """
     Once we know the zone id of each point in the loss map, we
     can count how many points are in each zone, sum and average their values
@@ -255,7 +273,11 @@ def calculate_vector_stats_aggregating_by_zone_id(
                 if loss_attr_name not in zone_stats[zone_id]:
                     zone_stats[zone_id][loss_attr_name] = {
                         'count': 0, 'sum': 0.0}
-                loss_value = point_feat[loss_attr_name]
+                if old_field_to_new_field:
+                    loss_value = point_feat[
+                        old_field_to_new_field[loss_attr_name]]
+                else:
+                    loss_value = point_feat[loss_attr_name]
                 zone_stats[zone_id][loss_attr_name]['count'] += 1
                 zone_stats[zone_id][loss_attr_name]['sum'] += loss_value
     clear_progress_message_bar(iface.messageBar(), msg_bar_item)
