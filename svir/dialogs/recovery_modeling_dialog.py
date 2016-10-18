@@ -155,12 +155,12 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         msg = 'Calculating zone-level recovery curves...'
         msg_bar_item, progress = create_progress_message_bar(
             self.iface.messageBar(), msg)
-        at_observed_days_filename = os.path.join(
-            self.output_data_dir, 'at_observed_days.csv')
-        at_observed_days = open(at_observed_days_filename, 'w')
-        writer = csv.writer(at_observed_days)
-        header = ['zone_id', 'event_time', 'after_6_months', 'after_12_months',
-                  'after_18_months']
+        summary_filename = os.path.join(
+            self.output_data_dir, 'summary.csv')
+        summary = open(summary_filename, 'w')
+        writer = csv.writer(summary)
+        header = ['zone_id', 'days_to_recover_95_perc', 'event_time',
+                  'after_6_months', 'after_12_months', 'after_18_months']
         writer.writerow(header)
         # for each zone, calculate a zone-level recovery function
         for idx, zone_id in enumerate(zonal_dmg_by_asset_probs.keys(),
@@ -176,7 +176,7 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
             progress.setValue(progress_perc)
 
         clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
-        at_observed_days.close()
+        summary.close()
 
     def accept(self):
         if self.integrate_svi_check.isChecked():
