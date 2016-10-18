@@ -25,6 +25,7 @@
 
 import os
 import csv
+import bisect
 import matplotlib.pyplot as plt
 from collections import defaultdict
 from svir.recovery_modeling.building import Building
@@ -228,6 +229,7 @@ class RecoveryModeling(object):
         fig = plt.figure()
         # highlight values at observation days (after 6, 12 and 18 months)
         obs_days = [DAYS_BEFORE_EVENT + day for day in (0, 180, 360, 540)]
+        xlabels = ['event', '6 months', '12 months', '18 months']
         plt.plot(New_timeList, New_communityRecoveryFunction)
         row = [zone_id]
         for obs_day in obs_days:
@@ -240,14 +242,32 @@ class RecoveryModeling(object):
             plt.annotate(
                 '%.3f' % j,
                 xy=(i, j),
-                xytext=(0, 30),
+                xytext=(-35, 5),
                 textcoords='offset points')
         # TODO: add x value and vertical line when y is 95% recovery
+        for day in [DAYS_BEFORE_EVENT + day for day in timeList]:
+            value = New_communityRecoveryFunction[day]
+            if value > 0.95:
+                plt.axvline(x=day, linestyle='dashed')
+                # insert day in obs_days at the right ordered index
+                position = bisect.bisect(obs_days, day)
+                bisect.insort(obs_days, day)
+                xlabels.insert(position, "%s days" % (day - DAYS_BEFORE_EVENT))
+                break
         writer.writerow(row)
+        plt.xticks(obs_days, xlabels, rotation='vertical')
         plt.xlabel('Time (days)')
+        # plt.set_xticklabels(labels)
         plt.ylabel('Normalized recovery level')
         plt.title('Community level recovery curve for zone %s' % zone_id)
         plt.ylim((0.0, 1.2))
+        plt.tight_layout()
+        # plot_margin = 1.25
+        # x0, x1, y0, y1 = plt.axis()
+        # plt.axis((x0 - plot_margin,
+        #           x1 + plot_margin,
+        #           y0 - plot_margin,
+        #           y1 + plot_margin))
         # plt.show()
         filestem = os.path.join(
             self.output_data_dir, "recovery_function_zone_%s" % zone_id)
