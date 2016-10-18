@@ -41,8 +41,7 @@ SVI_WEIGHT_COEFF = 1  # FIXME: Let the user set this parameter
 
 class RecoveryModeling(object):
     """
-    Object-oriented Programming(OOP) is used to model post-earthquake community
-    recovery of residential community.
+    Modeling post-earthquake community recovery of residential community.
 
     Methodology:
     Time-based method is utilized which characterize a probability density
@@ -245,6 +244,7 @@ class RecoveryModeling(object):
                 xytext=(-35, 5),
                 textcoords='offset points')
         # TODO: add x value and vertical line when y is 95% recovery
+        days_to_recover_95_perc = 'NA'
         for day in [DAYS_BEFORE_EVENT + day for day in timeList]:
             value = New_communityRecoveryFunction[day]
             if value > 0.95:
@@ -252,22 +252,17 @@ class RecoveryModeling(object):
                 # insert day in obs_days at the right ordered index
                 position = bisect.bisect(obs_days, day)
                 bisect.insort(obs_days, day)
-                xlabels.insert(position, "%s days" % (day - DAYS_BEFORE_EVENT))
+                days_to_recover_95_perc = day - DAYS_BEFORE_EVENT
+                xlabels.insert(position, "%s days" % days_to_recover_95_perc)
                 break
+        row.insert(1, days_to_recover_95_perc)
         writer.writerow(row)
         plt.xticks(obs_days, xlabels, rotation='vertical')
         plt.xlabel('Time (days)')
-        # plt.set_xticklabels(labels)
         plt.ylabel('Normalized recovery level')
         plt.title('Community level recovery curve for zone %s' % zone_id)
         plt.ylim((0.0, 1.2))
         plt.tight_layout()
-        # plot_margin = 1.25
-        # x0, x1, y0, y1 = plt.axis()
-        # plt.axis((x0 - plot_margin,
-        #           x1 + plot_margin,
-        #           y0 - plot_margin,
-        #           y1 + plot_margin))
         # plt.show()
         filestem = os.path.join(
             self.output_data_dir, "recovery_function_zone_%s" % zone_id)
