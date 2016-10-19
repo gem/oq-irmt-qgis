@@ -136,6 +136,7 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         # Objective: GenerateCommunityLevelRecoveryCurve
         # Initial date: August 26, 2016
 
+        zone_field_name = None
         if integrate_svi:
             self.svi_layer = self.svi_layer_cbx.itemData(
                     self.svi_layer_cbx.currentIndex())
@@ -144,8 +145,10 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
             zone_field_name = self.zone_field_name_cbx.currentText()
 
         approach = self.approach_cbx.currentText()
-        recovery = RecoveryModeling(self.dmg_by_asset_layer, self.svi_layer,
-                                    approach, self.output_data_dir, self.iface)
+        dmg_by_asset_features = list(self.dmg_by_asset_layer.getFeatures())
+        recovery = RecoveryModeling(
+            dmg_by_asset_features, approach, self.iface, self.svi_layer,
+            self.output_data_dir)
 
         zonal_dmg_by_asset_probs, zonal_asset_refs = \
             recovery.collect_zonal_data(integrate_svi, zone_field_name)
