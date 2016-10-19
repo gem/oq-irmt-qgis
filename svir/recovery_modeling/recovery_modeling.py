@@ -35,6 +35,8 @@ from svir.utilities.utils import (
                                   clear_progress_message_bar,
                                   )
 
+NUM_LOSS_BASED_DMG_STATES = 5
+HEADING_FIELDS_TO_DISCARD = 2
 DAYS_BEFORE_EVENT = 200
 SVI_WEIGHT_COEFF = 1  # FIXME: Let the user set this parameter
 
@@ -50,11 +52,11 @@ class RecoveryModeling(object):
     building.
     """
 
-    def __init__(self, dmg_by_asset_layer, svi_layer, approach,
-                 output_data_dir, iface):
+    def __init__(self, dmg_by_asset_features, approach, iface,
+                 svi_layer=None, output_data_dir=None):
         self.iface = iface
         self.svi_layer = svi_layer
-        self.dmg_by_asset_layer = dmg_by_asset_layer
+        self.dmg_by_asset_features = dmg_by_asset_features
         self.approach = approach
         self.output_data_dir = output_data_dir
         recovery_modeling_dir = os.path.join(
@@ -67,7 +69,18 @@ class RecoveryModeling(object):
         # build dictionary zone_id -> dmg_by_asset_probs
         zonal_dmg_by_asset_probs = defaultdict(list)
         zonal_asset_refs = defaultdict(list)
-        if integrate_svi:
+        # select fields that contain probabilities
+        # i.e., ignore asset id and taxonomy (first
+        # HEADING_FIELDS_TO_DISCARD items)
+        # and get only columns containing means, discarding
+        # those containing stddevs, therefore getting one item
+        # out of two for the remaining columns
+        # Other fields can be safely added to the tail of the layer,
+        # without affecting this calculation
+        probs_slice = slice(
+            HEADING_FIELDS_TO_DISCARD,
+            HEADING_FIELDS_TO_DISCARD + 2*NUM_LOSS_BASED_DMG_STATES, 2)
+        if integrate_svi and self.svi_layer is not None:
             # FIXME self.svi_field_name is temporarily ignored
             # svi_by_zone = dict()
             for zone_feat in self.svi_layer.getFeatures():
@@ -78,9 +91,9 @@ class RecoveryModeling(object):
             msg = 'Reading damage state probabilities...'
             msg_bar_item, progress = create_progress_message_bar(
                 self.iface.messageBar(), msg)
-            tot_features = self.dmg_by_asset_layer.featureCount()
+            tot_features = len(self.dmg_by_asset_features)
             for feat_idx, dmg_by_asset_feat in enumerate(
-                    self.dmg_by_asset_layer.getFeatures(), start=1):
+                    self.dmg_by_asset_features, start=1):
                 zone_id = dmg_by_asset_feat[zone_field_name]
                 # FIXME: hack to handle case in which the zone id is an integer
                 # but it is stored as Real
@@ -94,14 +107,8 @@ class RecoveryModeling(object):
                     asset_ref = str(int(asset_ref))
                 except:
                     asset_ref = str(asset_ref)
-                # select fields that contain probabilities
-                # i.e., ignore asset id and taxonomy (first 2 items)
-                # and get only columns containing means, discarding
-                # those containing stddevs, therefore getting one item
-                # out of two for the remaining columns
-                # Also discard the last field, containing zone ids
-                dmg_by_asset_probs = dmg_by_asset_feat.attributes()[
-                    2:-1:2]
+                dmg_by_asset_probs = \
+                    dmg_by_asset_feat.attributes()[probs_slice]
                 zonal_dmg_by_asset_probs[zone_id].append(dmg_by_asset_probs)
                 zonal_asset_refs[zone_id].append(asset_ref)
                 progress_perc = feat_idx / float(tot_features) * 100
@@ -111,11 +118,11 @@ class RecoveryModeling(object):
             msg = 'Reading damage state probabilities...'
             msg_bar_item, progress = create_progress_message_bar(
                 self.iface.messageBar(), msg)
-            tot_features = self.dmg_by_asset_layer.featureCount()
+            tot_features = len(self.dmg_by_asset_features)
             for idx, dmg_by_asset_feat in enumerate(
-                    self.dmg_by_asset_layer.getFeatures(), start=1):
-                # we don't have any field containing zone ids, to be discarded
-                dmg_by_asset_probs = dmg_by_asset_feat.attributes()[2::2]
+                    self.dmg_by_asset_features, start=1):
+                dmg_by_asset_probs = \
+                    dmg_by_asset_feat.attributes()[probs_slice]
                 asset_ref = dmg_by_asset_feat['asset_ref']
                 zonal_dmg_by_asset_probs['ALL'].append(dmg_by_asset_probs)
                 zonal_asset_refs['ALL'].append(asset_ref)
@@ -142,7 +149,7 @@ class RecoveryModeling(object):
 
     def generate_community_level_recovery_curve(
             self, zone_id, zonal_dmg_by_asset_probs,
-            zonal_asset_refs, writer, integrate_svi=True):
+            zonal_asset_refs, writer=None, integrate_svi=True):
 
         # TODO: use svi_by_zone[zone_id] to adjust recovery times (how?)
 
@@ -230,10 +237,12 @@ class RecoveryModeling(object):
         obs_days = [DAYS_BEFORE_EVENT + day for day in (0, 180, 360, 540)]
         xlabels = ['event', '6 months', '12 months', '18 months']
         plt.plot(New_timeList, New_communityRecoveryFunction)
-        row = [zone_id]
+        if writer is not None:
+            row = [zone_id]
         for obs_day in obs_days:
             value_at_obs_day = New_communityRecoveryFunction[obs_day]
-            row.append(value_at_obs_day)
+            if writer is not None:
+                row.append(value_at_obs_day)
             if obs_day != DAYS_BEFORE_EVENT:  # no vertical line at event time
                 plt.axvline(x=obs_day, linestyle='dotted')
             i = obs_day
@@ -255,23 +264,27 @@ class RecoveryModeling(object):
                 days_to_recover_95_perc = day - DAYS_BEFORE_EVENT
                 xlabels.insert(position, "%s days" % days_to_recover_95_perc)
                 break
-        row.insert(1, days_to_recover_95_perc)
-        writer.writerow(row)
-        plt.xticks(obs_days, xlabels, rotation='vertical')
-        plt.xlabel('Time (days)')
-        plt.ylabel('Normalized recovery level')
-        plt.title('Community level recovery curve for zone %s' % zone_id)
-        plt.ylim((0.0, 1.2))
-        plt.tight_layout()
-        # plt.show()
-        filestem = os.path.join(
-            self.output_data_dir, "recovery_function_zone_%s" % zone_id)
-        fig.savefig(filestem + '.png')
+        if writer is not None:
+            row.insert(1, days_to_recover_95_perc)
+            writer.writerow(row)
+        if self.output_data_dir is not None:
+            plt.xticks(obs_days, xlabels, rotation='vertical')
+            plt.xlabel('Time (days)')
+            plt.ylabel('Normalized recovery level')
+            plt.title('Community level recovery curve for zone %s' % zone_id)
+            plt.ylim((0.0, 1.2))
+            plt.tight_layout()
+            # plt.show()
+            filestem = os.path.join(
+                self.output_data_dir, "recovery_function_zone_%s" % zone_id)
+            fig.savefig(filestem + '.png')
 
-        # Save community recovery function
-        f3 = open(filestem + '.txt', "w")
-        f3.write(str(New_communityRecoveryFunction))
-        f3.close()
+        if self.output_data_dir is not None:
+            # Save community recovery function
+            f3 = open(filestem + '.txt', "w")
+            f3.write(str(New_communityRecoveryFunction))
+            f3.close()
+        return New_communityRecoveryFunction
 
     def generate_simulation_recovery_curve(
             self, timeList, LossBasedDamageStateProbabilities,
@@ -303,16 +316,17 @@ class RecoveryModeling(object):
             # approach can be aggregate or disaggregate
             building_level_recovery_function = \
                 napa_bldg.generateBldgLevelRecoveryFunction(approach)
-            output_by_building_dir = os.path.join(
-                self.output_data_dir, 'by_building')
-            if not os.path.exists(output_by_building_dir):
-                os.makedirs(output_by_building_dir)
-            asset_ref = asset_refs[bldg_idx]
-            output_filename = os.path.join(
-                output_by_building_dir,
-                "zone_%s_bldg_%s.txt" % (zone_id, asset_ref))
-            with open(output_filename, 'w') as f:
-                f.write(str(building_level_recovery_function))
+            if self.output_data_dir is not None:
+                output_by_building_dir = os.path.join(
+                    self.output_data_dir, 'by_building')
+                if not os.path.exists(output_by_building_dir):
+                    os.makedirs(output_by_building_dir)
+                asset_ref = asset_refs[bldg_idx]
+                output_filename = os.path.join(
+                    output_by_building_dir,
+                    "zone_%s_bldg_%s.txt" % (zone_id, asset_ref))
+                with open(output_filename, 'w') as f:
+                    f.write(str(building_level_recovery_function))
             # The following lines plot building level curves
             # fig = plt.figure()
             # plt.plot(timeList, building_level_recovery_function)

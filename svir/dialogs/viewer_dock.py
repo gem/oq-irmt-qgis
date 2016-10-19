@@ -41,6 +41,7 @@ from qgis.core import QGis, QgsMapLayer, QgsFeatureRequest
 
 from svir.utilities.shared import TEXTUAL_FIELD_TYPES
 from svir.utilities.utils import get_ui_class, reload_attrib_cbx
+from svir.recovery_modeling.recovery_modeling import RecoveryModeling
 
 FORM_CLASS = get_ui_class('ui_viewer_dock.ui')
 
@@ -72,6 +73,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.imt_cbx = None
         self.poe_lbl = None
         self.poe_cbx = None
+        self.approach_cbx = None
 
         self.current_selection = {}
         self.current_imt = None
@@ -140,6 +142,17 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.horizontalLayout.addWidget(self.poe_lbl)
         self.horizontalLayout.addWidget(self.poe_cbx)
 
+    def create_approach_selector(self):
+        self.approach_lbl = QLabel('Approach')
+        self.approach_lbl.setSizePolicy(
+            QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.approach_cbx = QComboBox()
+        self.approach_cbx.addItems(['Aggregate', 'Disaggregate'])
+        self.approach_cbx.currentIndexChanged['QString'].connect(
+            self.on_approach_changed)
+        self.horizontalLayout.addWidget(self.approach_lbl)
+        self.horizontalLayout.addWidget(self.approach_cbx)
+
     def remove_widgets_from_layout(self, widgets, layout):
         for widget in widgets:
             if widget is not None:
@@ -154,32 +167,43 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 self.create_loss_type_selector()
             elif new_output_type == 'uhs':
                 self.create_poe_selector()
+            elif new_output_type == 'recovery_curves':
+                self.create_approach_selector()
         else:
             if self.output_type == new_output_type:
                 return
             if new_output_type == 'hcurves':
                 self.remove_widgets_from_layout(
                     [self.loss_type_lbl, self.loss_type_cbx,
-                     self.poe_lbl, self.poe_cbx],
+                     self.poe_lbl, self.poe_cbx, self.approach_cbx],
                     self.horizontalLayout)
                 self.create_imt_selector()
             elif new_output_type == 'loss_curves':
                 self.remove_widgets_from_layout(
                     [self.imt_lbl, self.imt_cbx,
-                     self.poe_lbl, self.poe_cbx],
+                     self.poe_lbl, self.poe_cbx,
+                     self.approach_lbl, self.approach_cbx],
                     self.horizontalLayout)
                 self.create_loss_type_selector()
             elif new_output_type == 'uhs':
                 self.remove_widgets_from_layout(
                     [self.imt_lbl, self.imt_cbx,
-                     self.loss_type_lbl, self.loss_type_cbx],
+                     self.loss_type_lbl, self.loss_type_cbx,
+                     self.approach_lbl, self.approach_cbx],
                     self.horizontalLayout)
                 self.create_poe_selector()
+            elif new_output_type == 'recovery_curves':
+                self.remove_widgets_from_layout(
+                    [self.loss_type_lbl, self.loss_type_cbx,
+                     self.imt_lbl, self.imt_cbx, self.poe_lbl, self.poe_cbx],
+                    self.horizontalLayout)
+                self.create_approach_selector()
             elif not new_output_type:  # None or ''
                 self.remove_widgets_from_layout(
                     [self.loss_type_lbl, self.loss_type_cbx,
                      self.imt_lbl, self.imt_cbx,
-                     self.poe_lbl, self.poe_cbx],
+                     self.poe_lbl, self.poe_cbx,
+                     self.approach_lbl, self.approach_cbx],
                     self.horizontalLayout)
         self.adjustSize()
         self.output_type = new_output_type
@@ -190,7 +214,12 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         count_selected = len(gids)
         if count_selected == 0:
             return
+        i = 0
         for site, curve in self.current_selection.iteritems():
+            # FIXME: we associated the same cumulative curve to all the
+            # selected points (ugly), and here we need to get only one
+            if self.output_type == 'recovery_curves' and i > 1:
+                break
             feature = next(self.active_layer.getFeatures(
                 QgsFeatureRequest().setFilterFid(site)))
 
@@ -206,6 +235,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 gid=str(site),  # matplotlib needs a string when exporting svg
                 picker=5  # 5 points tolerance
             )
+            i += 1
         if self.output_type == 'hcurves':
             self.plot.set_xscale('log')
             self.plot.set_yscale('log')
@@ -252,7 +282,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             elif count_selected == 1:
                 title = 'Building level recovery curve'
             else:
-                title = 'Building level recovery curves'
+                title = 'Community level recovery curve'
         self.plot.set_title(title)
         self.plot.grid()
         if self.output_type == 'hcurves':
@@ -261,7 +291,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             xlim_left, xlim_right = self.plot.get_xlim()
             self.plot.set_xlim(xlim_left, xlim_right * 1.1)
 
-        if count_selected <= 20:
+        if self.output_type != 'recovery_curves' and count_selected <= 20:
             if self.output_type == 'uhs':
                 location = 'upper right'
             else:
@@ -284,7 +314,10 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 del self.current_selection[fid]
             except KeyError:
                 pass
-        # try:
+        if self.output_type == 'recovery_curves':
+            if len(selected) > 0:
+                self.redraw_recovery_curve(selected)
+            return
         self.current_abscissa = []
         for feature in self.active_layer.getFeatures(
                 QgsFeatureRequest().setFilterFids(selected)):
@@ -310,9 +343,6 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                                for name in field_names[1:]])
                 self.current_abscissa = periods
                 break
-            elif self.output_type == 'recovery_curves':
-                # discard asset id, taxonomy and stddevs
-                dmg_by_asset_probs = feature.attributes()[2::2]
 
         for i, feature in enumerate(self.active_layer.getFeatures(
                 QgsFeatureRequest().setFilterFids(selected))):
@@ -359,12 +389,33 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             self.was_loss_type_switched = False
 
         self.draw()
-        # except (TypeError, ValueError):
-        #     self.clear_plot()
-        #     self.iface.messageBar().pushWarning(
-        #         self.tr('Invalid IMT: %s') % self.current_imt,
-        #         self.tr('The selected IMT seems to contain invalid data')
-        #     )
+
+    def redraw_recovery_curve(self, selected):
+        features = list(self.active_layer.getFeatures(
+            QgsFeatureRequest().setFilterFids(selected)))
+        approach = self.approach_cbx.currentText()
+        recovery = RecoveryModeling(features, approach, self.iface)
+        integrate_svi = False
+        zonal_dmg_by_asset_probs, zonal_asset_refs = \
+            recovery.collect_zonal_data(integrate_svi)
+        recovery_function = \
+            recovery.generate_community_level_recovery_curve(
+                'ALL', zonal_dmg_by_asset_probs, zonal_asset_refs)
+        self.current_abscissa = range(len(recovery_function))
+        color = QColor('black')
+        color_hex = color.name()
+        line_style = "-"  # solid
+        # FIXME: only for the sake of consistency with other approaches, we are
+        # associating all features with the same curve, instead of picking one
+        # single feature and a single curve. This is inefficient.
+        for feature in features:
+            self.current_selection[feature.id()] = {
+                'abscissa': self.current_abscissa,
+                'ordinates': recovery_function,
+                'color': color_hex,
+                'line_style': line_style,
+            }
+        self.draw()
 
     def layer_changed(self):
         self.current_selection = {}
@@ -461,6 +512,10 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.was_poe_switched = True
         self.set_selection(self.current_selection.keys())
 
+    def on_approach_changed(self):
+        self.current_approach = self.approach_cbx.currentText()
+        self.set_selection(self.current_selection.keys())
+
     @pyqtSlot()
     def on_export_data_button_clicked(self):
         if self.output_type == 'hcurves':
@@ -475,32 +530,16 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 self,
                 self.tr('Export data'),
                 os.path.expanduser(
-                '*.csv')
-
-||||||| merged common ancestors
-
-        filename = QtGui.QFileDialog.getSaveFileName(
-            self,
-            self.tr('Export data'),
-            os.path.expanduser('~/hazard_curves_%s.csv' % self.current_imt),
-            '*.csv')
-
-=======
-        if self.output_type == 'hcurves':
-            filename = QtGui.QFileDialog.getSaveFileName(
-                self,
-                self.tr('Export data'),
-                os.path.expanduser(
-                    '~/hazard_curves_%s.csv' % self.current_imt),
-                '*.csv')
-        elif self.output_type == 'loss_curves':
-            filename = QtGui.QFileDialog.getSaveFileName(
-                self,
-                self.tr('Export data'),
-                os.path.expanduser(
                     '~/loss_curves_%s.csv' % self.current_loss_type),
                 '*.csv')
->>>>>>> Visualize loss curves for any number of rlzs, building layer only for a chosen taxonomy
+        elif self.output_type == 'recovery_curves':
+            filename = QtGui.QFileDialog.getSaveFileName(
+                self,
+                self.tr('Export data'),
+                os.path.expanduser(
+                    '~/recovery_curves_%s.csv' %
+                    self.approach_cbx.currentText()),
+                '*.csv')
         if filename:
             with open(filename, 'w') as csv_file:
                 line = 'lon,lat,%s' % (
@@ -515,7 +554,26 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                     lon = feature.geometry().asPoint().x()
                     lat = feature.geometry().asPoint().y()
                     line = '%s,%s,%s' % (lon, lat, poes)
+
+                if self.output_type == 'recovery_curves':
+                    # FIXME: taking the first element, because they are all the
+                    # same
+                    curve = self.current_selection.values()[0]
+                    csv_file.write(str(curve['ordinates']))
+                else:
+                    line = 'lon,lat,%s' % (
+                        ','.join(map(str, list(self.current_abscissa))))
                     csv_file.write(line + os.linesep)
+
+                    for site, curve in self.current_selection.iteritems():
+                        poes = ','.join(map(str, curve['ordinates']))
+                        feature = next(self.active_layer.getFeatures(
+                            QgsFeatureRequest().setFilterFid(site)))
+
+                        lon = feature.geometry().asPoint().x()
+                        lat = feature.geometry().asPoint().y()
+                        line = '%s,%s,%s' % (lon, lat, poes)
+                        csv_file.write(line + os.linesep)
 
     @pyqtSlot()
     def on_bw_chk_clicked(self):
@@ -530,6 +588,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             output_type = 'loss_curves'
         elif otype == 'Uniform Hazard Spectra':
             output_type = 'uhs'
+        elif otype == 'Recovery Curves':
+            output_type = 'recovery_curves'
         else:
             output_type = None
         self.set_output_type_and_its_gui(output_type)
