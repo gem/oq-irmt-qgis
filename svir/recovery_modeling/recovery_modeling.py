@@ -278,6 +278,7 @@ class RecoveryModeling(object):
             filestem = os.path.join(
                 self.output_data_dir, "recovery_function_zone_%s" % zone_id)
             fig.savefig(filestem + '.png')
+        plt.close(fig)
 
         if self.output_data_dir is not None:
             # Save community recovery function
@@ -335,6 +336,7 @@ class RecoveryModeling(object):
             # plt.title('Building level recovery curve')
             # plt.ylim((0.0, 1.2))
             # plt.show()
+            # plt.close(fig)
             # Assign buidling level recovery function
             # TODO: use enumerate instead
             for timePoint in range(len(timeList)):
