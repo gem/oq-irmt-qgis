@@ -60,8 +60,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     it is possible to run calculations, delete them, list them, visualize
     their outputs and loading them as vector layers.
     """
-    def __init__(self, iface):
+    def __init__(self, iface, OQ_DEPENDENCIES_OK):
         self.iface = iface
+        self.OQ_DEPENDENCIES_OK = OQ_DEPENDENCIES_OK
         QDialog.__init__(self)
         # Set up the user interface from Designer.
         self.setupUi(self)
@@ -238,7 +239,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         stop = ''  # get until the end
         calc_log_url = "%s/v1/calc/%s/log/%s:%s" % (
             self.hostname, calc_id, start, stop)
-        with WaitCursorManager('Getting list of outputs...', self.iface):
+        with WaitCursorManager(
+                'Getting log for output %s...' % calc_id, self.iface):
             try:
                 resp = self.session.get(calc_log_url, timeout=10)
             except (ConnectionError, SvNetworkError) as exc:
@@ -379,9 +381,13 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             num_actions = len(row['outtypes'])
             if num_actions > max_actions:
                 max_actions = num_actions
-        if (has_hmaps or has_hcurves or has_gmf_data or has_uhs or
-                has_dmg_by_asset):
-            max_actions += 1
+        if self.OQ_DEPENDENCIES_OK:
+            if (has_hmaps or has_hcurves or has_gmf_data or has_uhs or
+                    has_dmg_by_asset):
+                max_actions += 1
+        else:
+            if has_dmg_by_asset:
+                max_actions += 1
         self.output_list_tbl.setRowCount(len(output_list))
         self.output_list_tbl.setColumnCount(
             len(selected_keys) + max_actions)
@@ -397,12 +403,21 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 button = QPushButton()
                 self.connect_button_to_action(button, action, output, outtype)
                 self.output_list_tbl.setCellWidget(row, col, button)
-            if output['type'] in [
-                    'hmaps', 'hcurves', 'gmf_data', 'uhs', 'dmg_by_asset']:
-                action = 'Load as layer'
-                button = QPushButton()
-                self.connect_button_to_action(button, action, output, outtype)
-                self.output_list_tbl.setCellWidget(row, col + 1, button)
+            if self.OQ_DEPENDENCIES_OK:
+                if output['type'] in [
+                        'hmaps', 'hcurves', 'gmf_data', 'uhs', 'dmg_by_asset']:
+                    action = 'Load as layer'
+                    button = QPushButton()
+                    self.connect_button_to_action(
+                        button, action, output, outtype)
+                    self.output_list_tbl.setCellWidget(row, col + 1, button)
+            else:
+                if output['type'] in ['dmg_by_asset']:
+                    action = 'Load as layer'
+                    button = QPushButton()
+                    self.connect_button_to_action(
+                        button, action, output, outtype)
+                    self.output_list_tbl.setCellWidget(row, col + 1, button)
         col_names = [key.capitalize() for key in selected_keys]
         empty_col_names = ['' for outtype in range(max_actions)]
         headers = col_names + empty_col_names
@@ -413,15 +428,12 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.output_list_tbl.resizeRowsToContents()
 
     def connect_button_to_action(self, button, action, output, outtype):
-        if action != 'Load as layer':
-            button.setText("%s %s" % (action, outtype))
-            style = 'background-color: #3cb3c5; color: white;'
-            button.setStyleSheet(style)
-        else:
-            # otherwise it would look ugly, e.g. 'Load as layer hdf5'
-            button.setText(action)
+        button.setText("%s %s" % (action, outtype))
+        if action == 'Load as layer':
             style = 'background-color: blue; color: white;'
-            button.setStyleSheet(style)
+        else:
+            style = 'background-color: #3cb3c5; color: white;'
+        button.setStyleSheet(style)
         QObject.connect(
             button, SIGNAL("clicked()"),
             lambda output=output, action=action, outtype=outtype: (
@@ -461,9 +473,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 tr("Info"),
                 'Calculation %s was saved as %s' % (output_id, filepath),
                 level=QgsMessageBar.INFO)
-            if outtype == 'hdf5':
-                # FIXME make system independent
-                os.system("hdfview %s" % filepath)
+            # FIXME: let it be system independent
+            # if outtype == 'hdf5':
+            #     os.system("hdfview %s" % filepath)
         else:
             raise NotImplementedError(action)
 
