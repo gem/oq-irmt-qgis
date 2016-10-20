@@ -70,27 +70,6 @@ from svir.dialogs.weight_data_dialog import WeightDataDialog
 from svir.dialogs.load_geojson_as_layer_dialog import LoadGeoJsonAsLayerDialog
 from svir.dialogs.recovery_modeling_dialog import RecoveryModelingDialog
 
-# check dependencies
-settings = QSettings()
-oq_hazardlib_path = settings.value('irmt/oq_hazardlib_path', '')
-oq_engine_path = settings.value('irmt/oq_engine_path', '')
-
-if oq_hazardlib_path and oq_hazardlib_path not in sys.path:
-    sys.path.append(oq_hazardlib_path)
-if oq_engine_path and oq_engine_path not in sys.path:
-    sys.path.append(oq_engine_path)
-
-try:
-    from openquake.baselib import hdf5  # noqa: F401
-
-    from svir.dialogs.load_hdf5_as_layer_dialog import LoadHdf5AsLayerDialog
-    from svir.dialogs.plot_from_hdf5_dialog import PlotFromHdf5Dialog
-    from svir.dialogs.drive_oq_engine_server_dialog import (
-        DriveOqEngineServerDialog)
-    OQ_DEPENDENCIES_OK = True
-except ImportError:
-    OQ_DEPENDENCIES_OK = False
-
 from svir.thread_worker.abstract_worker import start_worker
 from svir.thread_worker.download_platform_data_worker import (
     DownloadPlatformDataWorker)
@@ -114,10 +93,30 @@ from svir.utilities.shared import (DEBUG,
                                    INDICATOR_TEMPLATE,
                                    HELP_PAGES_LOOKUP)
 
-
 # DO NOT REMOVE THIS
 # noinspection PyUnresolvedReferences
 import svir.resources_rc  # pylint: disable=unused-import  # NOQA
+
+# check dependencies
+settings = QSettings()
+oq_hazardlib_path = settings.value('irmt/oq_hazardlib_path', '')
+oq_engine_path = settings.value('irmt/oq_engine_path', '')
+
+if oq_hazardlib_path and oq_hazardlib_path not in sys.path:
+    sys.path.append(oq_hazardlib_path)
+if oq_engine_path and oq_engine_path not in sys.path:
+    sys.path.append(oq_engine_path)
+
+try:
+    from openquake.baselib import hdf5  # noqa: F401
+
+    from svir.dialogs.load_hdf5_as_layer_dialog import LoadHdf5AsLayerDialog
+    from svir.dialogs.plot_from_hdf5_dialog import PlotFromHdf5Dialog
+    from svir.dialogs.drive_oq_engine_server_dialog import (
+        DriveOqEngineServerDialog)
+    OQ_DEPENDENCIES_OK = True
+except ImportError:
+    OQ_DEPENDENCIES_OK = False
 
 
 class Irmt:
@@ -197,7 +196,6 @@ class Irmt:
                            self.project_definitions_manager,
                            enable=False,
                            add_to_layer_actions=True)
-
         # Action to activate the modal dialog to choose weighting of the
         # data from the platform
         self.add_menu_item("weight_data",
@@ -221,12 +219,23 @@ class Irmt:
                            self.upload,
                            enable=False,
                            add_to_layer_actions=True)
-
         # Action to load as layer a geojson produced by the oq-engine
         self.add_menu_item("load_geojson_as_layer",
                            ":/plugins/irmt/calculate.svg",  # FIXME
                            u"Load GeoJson as layer",
                            self.load_geojson_as_layer,
+                           enable=True)
+        # Action to drive the oq-engine server
+        self.add_menu_item("drive_engine_server",
+                           ":/plugins/irmt/manual.svg",  # FIXME
+                           u"Drive oq-engine &server",
+                           self.drive_oq_engine_server,
+                           enable=True)
+        # Action to run the recovery analysis
+        self.add_menu_item("recovery_modeling",
+                           ":/plugins/irmt/plot.svg",  # FIXME
+                           u"Run recovery modeling",
+                           self.recovery_modeling,
                            enable=True)
 
         if OQ_DEPENDENCIES_OK:
@@ -235,12 +244,6 @@ class Irmt:
                                ":/plugins/irmt/calculate.svg",  # FIXME
                                u"Load HDF5 as layer",
                                self.load_hdf5_as_layer,
-                               enable=True)
-            # Action to drive the oq-engine server
-            self.add_menu_item("drive_engine_server",
-                               ":/plugins/irmt/manual.svg",  # FIXME
-                               u"Drive oq-engine &server",
-                               self.drive_oq_engine_server,
                                enable=True)
             # Action to load as layer hazard maps from hdf5 produced by the
             # oq-engine
@@ -301,12 +304,6 @@ class Irmt:
                 u"Load scenario damage by asset from HDF5 as layer",
                 self.load_scenario_damage_by_asset_from_hdf5_as_layer,
                 enable=True)
-            # Action to run the recovery analysis
-            self.add_menu_item("recovery_modeling",
-                               ":/plugins/irmt/plot.svg",  # FIXME
-                               u"Run recovery modeling",
-                               self.recovery_modeling,
-                               enable=True)
         else:
             self.warn_missing_features()
 
