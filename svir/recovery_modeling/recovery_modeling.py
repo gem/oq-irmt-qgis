@@ -38,6 +38,8 @@ from svir.utilities.utils import (
 NUM_LOSS_BASED_DMG_STATES = 5
 HEADING_FIELDS_TO_DISCARD = 2
 DAYS_BEFORE_EVENT = 200
+MIN_SAMPLES = 250
+#DAYS_BEFORE_EVENT = 0
 SVI_WEIGHT_COEFF = 1  # FIXME: Let the user set this parameter
 
 
@@ -184,6 +186,12 @@ class RecoveryModeling(object):
         New_communityRecoveryFunction = [
             0 for x in range(len(timeList)+DAYS_BEFORE_EVENT)]
 
+	# PH,PT: we want to ensure we perform at least MIN_SAMPLES samples
+	# in order to reduce variation in values due to a small 
+	# sample space.
+	if numberOfDamageSimulations * len(asset_refs) < MIN_SAMPLES:
+	    numberOfDamageSimulations = MIN_SAMPLES / len(asset_refs)
+
         # Looping over all damage simulations
         for sim in range(numberOfDamageSimulations):
             simulationRecoveryFunction = \
@@ -278,6 +286,7 @@ class RecoveryModeling(object):
             filestem = os.path.join(
                 self.output_data_dir, "recovery_function_zone_%s" % zone_id)
             fig.savefig(filestem + '.png')
+        plt.close(fig)
 
         if self.output_data_dir is not None:
             # Save community recovery function
@@ -335,6 +344,7 @@ class RecoveryModeling(object):
             # plt.title('Building level recovery curve')
             # plt.ylim((0.0, 1.2))
             # plt.show()
+            # plt.close(fig)
             # Assign buidling level recovery function
             # TODO: use enumerate instead
             for timePoint in range(len(timeList)):
