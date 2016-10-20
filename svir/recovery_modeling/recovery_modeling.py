@@ -39,7 +39,6 @@ NUM_LOSS_BASED_DMG_STATES = 5
 HEADING_FIELDS_TO_DISCARD = 2
 DAYS_BEFORE_EVENT = 200
 MIN_SAMPLES = 250
-#DAYS_BEFORE_EVENT = 0
 SVI_WEIGHT_COEFF = 1  # FIXME: Let the user set this parameter
 
 
@@ -186,11 +185,10 @@ class RecoveryModeling(object):
         New_communityRecoveryFunction = [
             0 for x in range(len(timeList)+DAYS_BEFORE_EVENT)]
 
-	# PH,PT: we want to ensure we perform at least MIN_SAMPLES samples
-	# in order to reduce variation in values due to a small 
-	# sample space.
-	if numberOfDamageSimulations * len(asset_refs) < MIN_SAMPLES:
-	    numberOfDamageSimulations = MIN_SAMPLES / len(asset_refs)
+        # PH,PT: we want to ensure we perform at least MIN_SAMPLES samples
+        # in order to reduce variation in values due to a small sample space.
+        if numberOfDamageSimulations * len(asset_refs) < MIN_SAMPLES:
+            numberOfDamageSimulations = MIN_SAMPLES / len(asset_refs)
 
         # Looping over all damage simulations
         for sim in range(numberOfDamageSimulations):
