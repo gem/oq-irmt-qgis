@@ -69,6 +69,8 @@ from svir.dialogs.upload_settings_dialog import UploadSettingsDialog
 from svir.dialogs.weight_data_dialog import WeightDataDialog
 from svir.dialogs.load_geojson_as_layer_dialog import LoadGeoJsonAsLayerDialog
 from svir.dialogs.recovery_modeling_dialog import RecoveryModelingDialog
+from svir.dialogs.drive_oq_engine_server_dialog import (
+    DriveOqEngineServerDialog)
 
 from svir.thread_worker.abstract_worker import start_worker
 from svir.thread_worker.download_platform_data_worker import (
@@ -113,8 +115,6 @@ try:
 
     from svir.dialogs.load_hdf5_as_layer_dialog import LoadHdf5AsLayerDialog
     from svir.dialogs.plot_from_hdf5_dialog import PlotFromHdf5Dialog
-    from svir.dialogs.drive_oq_engine_server_dialog import (
-        DriveOqEngineServerDialog)
     OQ_DEPENDENCIES_OK = True
 except ImportError:
     OQ_DEPENDENCIES_OK = False
@@ -394,7 +394,7 @@ class Irmt:
     def drive_oq_engine_server(self):
         if self.drive_oq_engine_server_dlg is None:
             self.drive_oq_engine_server_dlg = DriveOqEngineServerDialog(
-                self.iface)
+                self.iface, OQ_DEPENDENCIES_OK)
         # else:
         #     # if the dialog was new, we don't need to login twice
         #     self.drive_oq_engine_server_dlg.login()
