@@ -47,7 +47,7 @@
    <item>
     <widget class="QGroupBox" name="integrate_svi_check">
      <property name="title">
-      <string>Aggregate by the same zones for which SVI is available</string>
+      <string>Aggregate assets by zone</string>
      </property>
      <property name="checkable">
       <bool>true</bool>
@@ -56,7 +56,7 @@
       <item>
        <widget class="QLabel" name="label">
         <property name="text">
-         <string>SVI Layer</string>
+         <string>Layer with zonal geometries</string>
         </property>
        </widget>
       </item>
