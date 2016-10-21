@@ -13,7 +13,7 @@ name=OpenQuake Integrated Risk Modelling Toolkit
 qgisMinimumVersion=2.4
 description=Tools for the development of composite indicators measuring societal characteristics and the integration of these with physical risk estimations
 about=Tools for creating and editing indicators and composite indices to measure social characteristics and for combining these with estimates of physical earthquake risk (i.e. estimates of human or infrastructure loss). The plugin enables users to directly interact with the OpenQuake Platform (https://platform.openquake.org), in order to browse and download socioeconomic data or existing projects, to edit projects locally in QGIS, then to upload and share them through the Platform. This plugin was designed as a collaborative effort between the GEM Foundation (http://www.globalquakemodel.org) and the Center for Disaster Management and Risk Reduction Technology (http://www.cedim.de/english/), and it has been developed by the GEM Foundation. It was formerly named GEM OpenQuake Social Vulnerability and Integrated Risk (SVIR).
-version=1.8.1
+version=1.8.2
 author=GEM Foundation
 email=staff.it@globalquakemodel.org
 
@@ -23,6 +23,12 @@ email=staff.it@globalquakemodel.org
 
 # Uncomment the following line and add your changelog entries:
 changelog=
+    1.8.2
+    * Manage DAYS_BEFORE_EVENT (changed to 0) and MARGIN_DAYS_AFTER
+    * Read leadTimeDispersion and repairTimeDispersion in Buidling init
+    * Warn about missing installation of h5py
+    * Make buttons available depending on dependencies ok or ko
+    * Enable driving engine and recovery modeling even if oq dependencies are missing
     1.8.1
     * Show recovery curves in dock window, when clicking on one (building-level) or multiple (community-level) points in the map
     * Save a csv with recovery predictions at observed days and quantifying days to reach 95% recovery
