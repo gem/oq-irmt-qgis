@@ -37,7 +37,8 @@ from svir.utilities.utils import (
 
 NUM_LOSS_BASED_DMG_STATES = 5
 HEADING_FIELDS_TO_DISCARD = 2
-DAYS_BEFORE_EVENT = 200
+DAYS_BEFORE_EVENT = 0
+MARGIN_DAYS_AFTER = 400
 MIN_SAMPLES = 250
 SVI_WEIGHT_COEFF = 1  # FIXME: Let the user set this parameter
 
@@ -230,18 +231,21 @@ class RecoveryModeling(object):
         if writer is not None:
             row = [zone_id]
         for obs_day in obs_days:
-            value_at_obs_day = New_communityRecoveryFunction[obs_day]
+            if obs_day < len(New_communityRecoveryFunction):
+                value_at_obs_day = New_communityRecoveryFunction[obs_day]
+                if obs_day != DAYS_BEFORE_EVENT:  # no vert. line at event time
+                    plt.axvline(x=obs_day, linestyle='dotted')
+                i = obs_day
+                j = value_at_obs_day
+                plt.annotate(
+                    '%.3f' % j,
+                    xy=(i, j),
+                    xytext=(-35, 5),
+                    textcoords='offset points')
+            else:
+                value_at_obs_day = 'NA'
             if writer is not None:
                 row.append(value_at_obs_day)
-            if obs_day != DAYS_BEFORE_EVENT:  # no vertical line at event time
-                plt.axvline(x=obs_day, linestyle='dotted')
-            i = obs_day
-            j = value_at_obs_day
-            plt.annotate(
-                '%.3f' % j,
-                xy=(i, j),
-                xytext=(-35, 5),
-                textcoords='offset points')
         # TODO: add x value and vertical line when y is 95% recovery
         days_to_recover_95_perc = 'NA'
         for day in [DAYS_BEFORE_EVENT + day for day in timeList]:
@@ -406,7 +410,7 @@ class RecoveryModeling(object):
         maxTime = (int(max(inspectionTimes))
                    + int(max(assessmentTimes))
                    + int(max(mobilizationTimes))
-                   + int(max(repairTimes)) + DAYS_BEFORE_EVENT * 2)
+                   + int(max(repairTimes)) + MARGIN_DAYS_AFTER)
 
         # PAOLO: TODO We have to find a proper way to use the SVI to adjust the
         # recovery times. For now we are not using it, but we are aggregating
