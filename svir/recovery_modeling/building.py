@@ -1,27 +1,27 @@
 import random
 from scipy.stats import norm
 import math
+from svir.utilities.utils import read_config_file
 
 
 class Building(object):
 
     def __init__(self,  # buildingNumber,
                  inspectionTimes, recoveryTimes,
-                 repairTimes, leadTimeDispersion, repairTimeDispersion,
-                 currentDamageStateProbabilities,
+                 repairTimes, currentDamageStateProbabilities,
                  timeList, assessmentTimes, mobilizationTimes):
-        # PAOLO: buildingNumber is not used anywhere
-        # self.buildingNumber = buildingNumber
-        # PAOLO
         self.inspectionTimes = inspectionTimes
         self.recoveryTimes = recoveryTimes
         self.repairTimes = repairTimes
-        self.leadTimeDispersion = leadTimeDispersion
-        self.repairTimeDispersion = repairTimeDispersion
         self.currentDamageStateProbabilities = currentDamageStateProbabilities
         self.timeList = timeList
         self.assessmentTimes = assessmentTimes
         self.mobilizationTimes = mobilizationTimes
+        # PAOLO: how many of these files whould be read from here?
+        self.leadTimeDispersion = read_config_file(
+            'LeadTimeDispersion.txt', float)
+        self.repairTimeDispersion = read_config_file(
+            'RepairTimeDispersion.txt', float)
 
     def generateBldgLevelRecoveryFunction(self, approach):
         if approach == 'Disaggregate':
@@ -71,20 +71,8 @@ class Building(object):
         return buildingLevelRecoveryFunction
 
     def disaggregateBuildingLevelRecoveryFunction(self):
-        # PAOLO: should we pass it to the class or to this method?
-        # # Initialize lead time dispersion
-        # self.leadTimeDispersion = []
-
-        # # Load lead time dispersion and repair time dispersion
-        # leadTimeDispersionData = r'LeadTimeDispersion.txt'
-
-        # repairTimeDispersionData = r'RepairTimeDispersion.txt'
-
-        # for line in open(leadTimeDispersionData, 'r+').readlines():
-        #     self.leadTimeDispersion = float(line.split()[0])
-
-        # for line in open(repairTimeDispersionData, 'r+').readlines():
-        #     self.repairTimeDispersion = float(line.split()[0])
+        # PAOLO: moved leadTimeDispersion and repairTimeDispersion to the
+        # building init
 
         # Simulate lead time dispersions
         randomNumber = random.random()
