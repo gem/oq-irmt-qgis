@@ -138,15 +138,10 @@ class RecoveryModeling(object):
         mobilizationTimes = read_config_file('MobilizationTimes.txt')
         repairTimes = read_config_file('RepairTimes.txt')
         recoveryTimes = read_config_file('RecoveryTimes.txt')
-        leadTimeDispersion = read_config_file(
-            'LeadTimeDispersion.txt', float)
-        repairTimeDispersion = read_config_file(
-            'RepairTimeDispersion.txt', float)
         numberOfDamageSimulations = read_config_file(
             'NumberOfDamageSimulations.txt', int)[0]
         return (inspectionTimes, assessmentTimes, mobilizationTimes,
-                repairTimes, recoveryTimes, leadTimeDispersion,
-                repairTimeDispersion, numberOfDamageSimulations)
+                repairTimes, recoveryTimes, numberOfDamageSimulations)
 
     def generate_community_level_recovery_curve(
             self, zone_id, zonal_dmg_by_asset_probs,
@@ -168,8 +163,8 @@ class RecoveryModeling(object):
         # FIXME If we don't read files again for each zone, time increases
         # across zones. This is not optimal, but configuration files are
         # very small, so reading them is almost instantaneous.
-        (inspectionTimes, assessmentTimes, mobilizationTimes, repairTimes,
-            recoveryTimes, leadTimeDispersion, repairTimeDispersion,
+        (inspectionTimes, assessmentTimes,
+            mobilizationTimes, repairTimes, recoveryTimes,
             numberOfDamageSimulations) = self.read_all_configuration_files()
 
         # FIXME - when aggregating by zone we are constantly increasing
@@ -196,24 +191,13 @@ class RecoveryModeling(object):
                 self.generate_simulation_recovery_curve(
                     timeList, LossBasedDamageStateProbabilities,
                     RecoveryBasedDamageStateProbabilities, inspectionTimes,
-                    recoveryTimes, repairTimes, leadTimeDispersion,
-                    repairTimeDispersion, assessmentTimes,
+                    recoveryTimes, repairTimes, assessmentTimes,
                     mobilizationTimes, zone_id, asset_refs)
             # Sum up all building level recovery function
             # TODO: use enumerate instead
             for timePoint in range(len(timeList)):
                 communityRecoveryFunction[timePoint] \
                     += simulationRecoveryFunction[timePoint]
-
-        # PAOLO: instead of calculating the community level recovery
-        # function on all points, we should aggregate points by the same
-        # zones defined for the socioeconomic dataset, and then we should
-        # produce a community recovery function for each zone.
-        # This has to be done on the damage by asset layer
-        # (For the aggregation we can use SAGA:
-        #  "Add Polygon Attributes to Points", i.e.
-        #  processing.runalg('saga:addpolygonattributestopoints', input,
-        #                    polygons, field, output))
 
         # Calculate community level recovery function
         # TODO: use enumerate instead
@@ -296,8 +280,7 @@ class RecoveryModeling(object):
     def generate_simulation_recovery_curve(
             self, timeList, LossBasedDamageStateProbabilities,
             RecoveryBasedDamageStateProbabilities, inspectionTimes,
-            recoveryTimes, repairTimes, leadTimeDispersion,
-            repairTimeDispersion, assessmentTimes, mobilizationTimes,
+            recoveryTimes, repairTimes, assessmentTimes, mobilizationTimes,
             zone_id, asset_refs):
         # Looping over all buildings in community
         # Initialize building level recovery function
@@ -316,7 +299,6 @@ class RecoveryModeling(object):
             # make available to the building all the imported data
             napa_bldg = Building(
                 inspectionTimes, recoveryTimes, repairTimes,
-                leadTimeDispersion, repairTimeDispersion,
                 currentSimulationBuildingLevelDamageStateProbabilities,
                 timeList, assessmentTimes, mobilizationTimes)
             approach = self.approach
