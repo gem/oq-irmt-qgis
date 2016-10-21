@@ -328,7 +328,8 @@ class Irmt:
     def warn_missing_features(self):
         title = tr('Missing dependencies for extra features')
         text = tr('To enable extra features install and set the oq-engine and'
-                  ' oq-hazardlib path in the settings panel')
+                  ' oq-hazardlib path in the settings panel and make sure'
+                  ' their dependencies are satisfied (e.g. h5py is installed)')
 
         if QSettings().value('irmt/oq_deps_warn', True, type=bool):
             answer = QMessageBox.information(
