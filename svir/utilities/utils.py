@@ -25,6 +25,8 @@
 import collections
 import json
 import os
+import platform
+import subprocess
 from copy import deepcopy
 from time import time
 from pprint import pformat
@@ -797,3 +799,11 @@ def read_config_file(filename, cast_func=None):
         if cast_func:
             lines = [cast_func(line) for line in lines]
         return lines
+
+
+def is_hdfview_installed():
+    cmd = "where" if platform.system() == "Windows" else "which"
+    if subprocess.call([cmd, 'hdfview']):
+        return False
+    else:
+        return True

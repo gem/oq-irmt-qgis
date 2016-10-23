@@ -55,6 +55,7 @@ from svir.utilities.shared import DEBUG
 from svir.utilities.utils import (LayerEditingManager,
                                   WaitCursorManager,
                                   get_ui_class,
+                                  is_hdfview_installed,
                                   )
 from svir.calculations.calculate_utils import (add_numeric_attribute,
                                                add_textual_attribute,
@@ -107,6 +108,8 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
             self.populate_rlz_cbx()
             self.populate_damage_states()
         self.default_field_name = None
+        if not is_hdfview_installed():
+            self.open_hdfview_btn.hide()
 
     def define_gui_elements(self):
         self.rlz_lbl = QLabel('Realization (different realizations'

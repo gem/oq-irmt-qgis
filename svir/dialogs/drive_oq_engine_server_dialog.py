@@ -26,6 +26,8 @@ import os
 import json
 import tempfile
 import zipfile
+import subprocess
+
 from qgis.gui import QgsMessageBar
 from PyQt4.QtCore import QDir, Qt, QObject, SIGNAL, QTimer, pyqtSlot
 
@@ -46,6 +48,7 @@ from svir.utilities.utils import (WaitCursorManager,
                                   ask_for_download_destination_folder,
                                   get_ui_class,
                                   SvNetworkError,
+                                  is_hdfview_installed,
                                   )
 from svir.dialogs.load_hdf5_as_layer_dialog import LoadHdf5AsLayerDialog
 from svir.dialogs.load_geojson_as_layer_dialog import LoadGeoJsonAsLayerDialog
@@ -473,9 +476,17 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 tr("Info"),
                 'Calculation %s was saved as %s' % (output_id, filepath),
                 level=QgsMessageBar.INFO)
-            # FIXME: let it be system independent
-            # if outtype == 'hdf5':
-            #     os.system("hdfview %s" % filepath)
+            if outtype == 'hdf5':
+                if is_hdfview_installed():
+                    try:
+                        subprocess.call(['hdfview', filepath])
+                    except OSError:
+                        msg = ('Unable to run hdfview to visualize the file %s'
+                               % filepath)
+                        self.iface.messageBar().pushMessage(
+                            tr("Warning"),
+                            tr(msg),
+                            level=QgsMessageBar.WARNING)
         else:
             raise NotImplementedError(action)
 
