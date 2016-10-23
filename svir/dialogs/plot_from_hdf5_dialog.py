@@ -39,7 +39,7 @@ from PyQt4.QtGui import (QDialogButtonBox,
 
 from openquake.baselib import hdf5
 
-from svir.utilities.utils import get_ui_class
+from svir.utilities.utils import get_ui_class, is_hdfview_installed
 
 FORM_CLASS = get_ui_class('ui_load_hdf5_as_layer.ui')
 
@@ -74,6 +74,8 @@ class PlotFromHdf5Dialog(QDialog, FORM_CLASS):
             self.populate_loss_type_cbx()
             self.set_ok_button()
         self.default_field_name = None
+        if not is_hdfview_installed():
+            self.open_hdfview_btn.hide()
 
     def define_gui_elements(self):
         self.rlz_lbl = QLabel('Realization (different realizations'
