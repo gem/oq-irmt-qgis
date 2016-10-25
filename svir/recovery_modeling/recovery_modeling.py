@@ -181,10 +181,12 @@ class RecoveryModeling(object):
         New_communityRecoveryFunction = [
             0 for x in range(len(timeList)+DAYS_BEFORE_EVENT)]
 
-        # PH,PT: we want to ensure we perform at least MIN_SAMPLES samples
-        # in order to reduce variation in values due to a small sample space.
-        if numberOfDamageSimulations * len(asset_refs) < MIN_SAMPLES:
-            numberOfDamageSimulations = MIN_SAMPLES / len(asset_refs)
+        # FIXME: temporarily disabled for testing purposes
+        # # PH,PT: we want to ensure we perform at least MIN_SAMPLES samples
+        # # in order to reduce variation in values due to a small sample
+        # # space.
+        # if numberOfDamageSimulations * len(asset_refs) < MIN_SAMPLES:
+        #     numberOfDamageSimulations = MIN_SAMPLES / len(asset_refs)
 
         # Looping over all damage simulations
         for sim in range(numberOfDamageSimulations):
