@@ -2,14 +2,14 @@ import random
 from scipy.stats import norm
 import math
 from svir.utilities.utils import read_config_file
+from svir.utilities.shared import DEBUG
 
 
 class Building(object):
 
-    def __init__(self,  # buildingNumber,
-                 inspectionTimes, recoveryTimes,
-                 repairTimes, currentDamageStateProbabilities,
-                 timeList, assessmentTimes, mobilizationTimes):
+    def __init__(self, inspectionTimes, recoveryTimes, repairTimes,
+                 currentDamageStateProbabilities, timeList, assessmentTimes,
+                 mobilizationTimes):
         self.inspectionTimes = inspectionTimes
         self.recoveryTimes = recoveryTimes
         self.repairTimes = repairTimes
@@ -26,14 +26,16 @@ class Building(object):
     def generateBldgLevelRecoveryFunction(self, approach):
         if approach == 'Disaggregate':
             return \
-                self.disaggregateBuildingLevelRecoveryFunction()
+                self._disaggregateBuildingLevelRecoveryFunction()
         elif approach == 'Aggregate':
-            return self.aggregateBuildingLevelRecoveryFunction()
+            return self._aggregateBuildingLevelRecoveryFunction()
         else:
             raise NotImplementedError(approach)
 
-    def aggregateBuildingLevelRecoveryFunction(self):
+    def _aggregateBuildingLevelRecoveryFunction(self):
         # Simulate lead time dispersions
+        if DEBUG:
+            random.seed(42)
         randomNumber = random.random()
         # Simulate lead times
         simulateRecoveryTimes = []
@@ -70,11 +72,13 @@ class Building(object):
             buildingLevelRecoveryFunction[i] = expectedFunctionality
         return buildingLevelRecoveryFunction
 
-    def disaggregateBuildingLevelRecoveryFunction(self):
+    def _disaggregateBuildingLevelRecoveryFunction(self):
         # PAOLO: moved leadTimeDispersion and repairTimeDispersion to the
         # building init
 
         # Simulate lead time dispersions
+        if DEBUG:
+            random.seed(42)
         randomNumber = random.random()
 
         # Simulate lead times
