@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#/***************************************************************************
+# /***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
@@ -205,8 +205,8 @@ def get_node_attr_id_and_name(node, layer):
 def calculate_node(
         node, node_attr_name, node_attr_id, layer, discarded_feats):
     operator = node.get('operator', DEFAULT_OPERATOR)
-    children = node['children']  # the existance of children should
-                                 # already be checked
+    # the existance of children should already be checked
+    children = node['children']
     with LayerEditingManager(layer,
                              'Calculating %s' % node_attr_name,
                              DEBUG):
