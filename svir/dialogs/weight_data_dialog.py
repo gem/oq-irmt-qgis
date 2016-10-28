@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#/***************************************************************************
+# /***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
@@ -248,7 +248,7 @@ class WeightDataDialog(QDialog):
 
     @pyqtProperty(str)
     def json_str(self):
-        #This method gets exposed to JS thanks to @pyqtProperty(str)
+        # This method gets exposed to JS thanks to @pyqtProperty(str)
         return json.dumps(self.project_definition,
                           sort_keys=False,
                           indent=2,
