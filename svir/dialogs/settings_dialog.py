@@ -64,7 +64,7 @@ class SettingsDialog(QDialog, FORM_CLASS):
         engine_username = mySettings.value('irmt/engine_username', '')
         engine_password = mySettings.value('irmt/engine_password', '')
         engine_hostname = mySettings.value(
-                'irmt/engine_hostname', 'localhost:8000')
+                'irmt/engine_hostname', 'http://localhost:8800')
 
         # hack for strange mac behaviour
         if not platform_username:
