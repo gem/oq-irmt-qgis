@@ -702,5 +702,6 @@ class LoadHdf5AsLayerDialog(QDialog, FORM_CLASS):
         super(LoadHdf5AsLayerDialog, self).accept()
 
     def reject(self):
-        self.hfile.close()
+        if self.hfile is not None:
+            self.hfile.close()
         super(LoadHdf5AsLayerDialog, self).reject()
