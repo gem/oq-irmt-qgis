@@ -240,12 +240,6 @@ class Irmt:
                            enable=True)
 
         if OQ_DEPENDENCIES_OK:
-            # Action to load as layer an hdf5 produced by the oq-engine
-            self.add_menu_item("load_hdf5_as_layer",
-                               ":/plugins/irmt/calculate.svg",  # FIXME
-                               u"Load HDF5 as layer",
-                               self.load_hdf5_as_layer,
-                               enable=True)
             # Action to load as layer hazard maps from hdf5 produced by the
             # oq-engine
             self.add_menu_item("load_hmaps_from_hdf5_as_layer",
@@ -344,10 +338,6 @@ class Irmt:
 
     def recovery_modeling(self):
         dlg = RecoveryModelingDialog(self.iface)
-        dlg.exec_()
-
-    def load_hdf5_as_layer(self):
-        dlg = LoadHdf5AsLayerDialog(self.iface)
         dlg.exec_()
 
     def load_hmaps_from_hdf5_as_layer(self):
