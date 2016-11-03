@@ -961,13 +961,13 @@
                     }
                 });
 
-            // Render the operator's name, without the optional '(ignore weights)' part
+            // Render the operator's name, without the optional '(ignore weights)' or '(no recalculation)' part
             nodeEnter.append("text")
                 .text(function(d) {
                     if (d.children){
                         var operator = d.operator? d.operator : DEFAULT_OPERATOR;
                         d.operator = operator;
-                        if (operator.indexOf('ignore weights') != -1) {
+                        if (operator.indexOf('ignore weights') != -1 || operator.indexOf('no recalculation') != -1 ) {
                             // Example:
                             // from "Simple sum (ignore weights)"
                             // we render just "Simple sum"
@@ -982,12 +982,12 @@
                 .attr("dy", function(d) { return "0.3em"; })
                 .on("click", function(d) { openWeightingDialog(d); });
 
-            // Render '(ignore weights)' in a new line, if present
+            // Render '(ignore weights)' or '(no recalculation)' in a new line, if present
             nodeEnter.append("text")
                 .text(function(d) {
                     if (d.children){
                         var ignoreWeightsStr = '';
-                        if (d.operator.indexOf('ignore weights') != -1) {
+                        if (d.operator.indexOf('ignore weights') != -1 || d.operator.indexOf('no recalculation') != -1 ) {
                             parts = d.operator.split('(');
                             ignoreWeightsStr = '(' + parts[1];
                         }
@@ -1023,7 +1023,7 @@
                         return "";
                     }
                     if (typeof d.parent.operator != 'undefined') {
-                        if (d.parent.operator.indexOf('ignore weights') != -1) {
+                        if (d.parent.operator.indexOf('ignore weights') != -1 || d.parent.operator.indexOf('no recalculation') != -1) {
                             return '';
                         }
                     }
@@ -1032,7 +1032,7 @@
                 .style("fill", function(d) {
                     if (typeof d.parent == 'undefined') { return; }
                     if (typeof d.parent.operator == 'undefined') { return; }
-                    if (d.parent.operator.indexOf('ignore weights') != -1) {
+                    if (d.parent.operator.indexOf('ignore weights') != -1 || d.parent.operator.indexOf('no recalculation') != -1) {
                         var color = '#660000';
                         return color;
                     }})
