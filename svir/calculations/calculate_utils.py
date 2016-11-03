@@ -196,7 +196,11 @@ def calculate_node(
     operator = node.get('operator', DEFAULT_OPERATOR)
     if operator == OPERATORS_DICT['CUSTOM']:
         # use the custom field values instead of recalculating them
-        # FIXME: check if we need to add anything to discarded_feats
+        for feat in layer.getFeatures():
+            if feat[node['field']] == QPyNullVariant(float):
+                discard_feat = True
+                discarded_feat = DiscardedFeature(feat.id(), 'Missing value')
+                discarded_feats.add(discarded_feat)
         return discarded_feats
     # the existance of children should already be checked
     children = node['children']
