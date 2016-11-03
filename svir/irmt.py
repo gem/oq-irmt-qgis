@@ -86,6 +86,7 @@ from svir.utilities.shared import (DEBUG,
                                    PROJECT_TEMPLATE,
                                    THEME_TEMPLATE,
                                    INDICATOR_TEMPLATE,
+                                   OPERATORS_DICT,
                                    HELP_PAGES_LOOKUP)
 
 
@@ -856,10 +857,14 @@ class Irmt:
         Check if is it possible to compute the integrated risk index,
         depending on the current project definition structure.
         """
-        # check that all the sub-indices are well-defined
-        if not self.is_ri_computable(proj_def):
+        iri_node = proj_def
+        # if the IRI node is a custom field, then we don't want to recompute it
+        if iri_node['operator'] == OPERATORS_DICT['CUSTOM']:
             return False
-        if not self.is_svi_computable(proj_def):
+        # check that all the sub-indices are well-defined
+        if not self.is_ri_computable(iri_node):
+            return False
+        if not self.is_svi_computable(iri_node):
             return False
         return True
 
@@ -868,11 +873,14 @@ class Irmt:
         Check if is it possible to render the integrated risk index,
         depending on the current project definition structure.
         """
-        if not self.is_iri_computable(proj_def):
-            return False
         iri_node = proj_def
         # check that that the iri_node has a corresponding field
         if 'field' not in iri_node:
+            return False
+        # if the IRI node is a custom field, then we assume it is renderable
+        if iri_node['operator'] == OPERATORS_DICT['CUSTOM']:
+            return True
+        if not self.is_iri_computable(proj_def):
             return False
         return True
 
