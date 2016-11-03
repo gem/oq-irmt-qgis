@@ -271,7 +271,6 @@ def calculate_node(
                     node_value = QPyNullVariant(float)
                     discarded_feat = DiscardedFeature(feat_id, 'Invalid value')
                     discarded_feats.add(discarded_feat)
-
             layer.changeAttributeValue(
                 feat_id, node_attr_id, node_value)
     return discarded_feats
