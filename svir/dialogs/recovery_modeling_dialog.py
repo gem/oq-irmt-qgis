@@ -39,6 +39,7 @@ from svir.utilities.utils import (get_ui_class,
                                   tr,
                                   TraceTimeManager,
                                   )
+from svir.utilities.shared import DEBUG
 from svir.recovery_modeling.recovery_modeling import RecoveryModeling
 
 FORM_CLASS = get_ui_class('ui_recovery_modeling.ui')
@@ -170,10 +171,13 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
                                       start=1):
             msg = ('Generating community level recovery curve for zone "%s"'
                    % zone_id)
+            seed = None
+            if DEBUG:
+                seed = 42
             with TraceTimeManager(msg):
                 recovery.generate_community_level_recovery_curve(
                     zone_id, zonal_dmg_by_asset_probs,
-                    zonal_asset_refs, writer, integrate_svi)
+                    zonal_asset_refs, writer, integrate_svi, seed)
 
             progress_perc = idx / float(tot_zones) * 100
             progress.setValue(progress_perc)

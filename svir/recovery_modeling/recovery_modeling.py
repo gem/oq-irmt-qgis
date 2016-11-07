@@ -146,7 +146,8 @@ class RecoveryModeling(object):
 
     def generate_community_level_recovery_curve(
             self, zone_id, zonal_dmg_by_asset_probs,
-            zonal_asset_refs, writer=None, integrate_svi=True):
+            zonal_asset_refs, writer=None, integrate_svi=False, seed=None,
+            n_simulations=None):
 
         # TODO: use svi_by_zone[zone_id] to adjust recovery times (how?)
 
@@ -167,6 +168,8 @@ class RecoveryModeling(object):
         (inspectionTimes, assessmentTimes,
             mobilizationTimes, repairTimes, recoveryTimes,
             numberOfDamageSimulations) = self.read_all_configuration_files()
+        if n_simulations is not None:
+            numberOfDamageSimulations = n_simulations
 
         # FIXME - when aggregating by zone we are constantly increasing
         # the times with this approach
@@ -195,7 +198,7 @@ class RecoveryModeling(object):
                     timeList, LossBasedDamageStateProbabilities,
                     RecoveryBasedDamageStateProbabilities, inspectionTimes,
                     recoveryTimes, repairTimes, assessmentTimes,
-                    mobilizationTimes, zone_id, asset_refs)
+                    mobilizationTimes, zone_id, asset_refs, seed)
             # Sum up all building level recovery function
             # TODO: use enumerate instead
             for timePoint in range(len(timeList)):
@@ -287,7 +290,7 @@ class RecoveryModeling(object):
             self, timeList, LossBasedDamageStateProbabilities,
             RecoveryBasedDamageStateProbabilities, inspectionTimes,
             recoveryTimes, repairTimes, assessmentTimes, mobilizationTimes,
-            zone_id, asset_refs):
+            zone_id, asset_refs, seed=None):
         # Looping over all buildings in community
         # Initialize building level recovery function
         simulationRecoveryFunction = [
@@ -310,7 +313,7 @@ class RecoveryModeling(object):
             approach = self.approach
             # approach can be aggregate or disaggregate
             building_level_recovery_function = \
-                napa_bldg.generateBldgLevelRecoveryFunction(approach)
+                napa_bldg.generateBldgLevelRecoveryFunction(approach, seed)
             if self.output_data_dir is not None:
                 output_by_building_dir = os.path.join(
                     self.output_data_dir, 'by_building')
