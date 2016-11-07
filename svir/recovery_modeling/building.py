@@ -23,19 +23,19 @@ class Building(object):
         self.repairTimeDispersion = read_config_file(
             'RepairTimeDispersion.txt', float)
 
-    def generateBldgLevelRecoveryFunction(self, approach):
+    def generateBldgLevelRecoveryFunction(self, approach, seed=None):
         if approach == 'Disaggregate':
             return \
-                self._disaggregateBuildingLevelRecoveryFunction()
+                self._disaggregateBuildingLevelRecoveryFunction(seed)
         elif approach == 'Aggregate':
-            return self._aggregateBuildingLevelRecoveryFunction()
+            return self._aggregateBuildingLevelRecoveryFunction(seed)
         else:
             raise NotImplementedError(approach)
 
-    def _aggregateBuildingLevelRecoveryFunction(self):
+    def _aggregateBuildingLevelRecoveryFunction(self, seed):
         # Simulate lead time dispersions
-        if DEBUG:
-            random.seed(42)
+        if seed is not None:
+            random.seed(seed)
         randomNumber = random.random()
         # Simulate lead times
         simulateRecoveryTimes = []
@@ -72,13 +72,13 @@ class Building(object):
             buildingLevelRecoveryFunction[i] = expectedFunctionality
         return buildingLevelRecoveryFunction
 
-    def _disaggregateBuildingLevelRecoveryFunction(self):
+    def _disaggregateBuildingLevelRecoveryFunction(self, seed):
         # PAOLO: moved leadTimeDispersion and repairTimeDispersion to the
         # building init
 
         # Simulate lead time dispersions
-        if DEBUG:
-            random.seed(42)
+        if seed is not None:
+            random.seed(seed)
         randomNumber = random.random()
 
         # Simulate lead times
