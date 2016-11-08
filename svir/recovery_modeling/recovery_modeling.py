@@ -64,7 +64,8 @@ class RecoveryModeling(object):
         recovery_modeling_dir = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
             '..', 'recovery_modeling')
-        self.input_data_dir = os.path.join(recovery_modeling_dir, 'input_data')
+        self.config_files_dir = os.path.join(
+            recovery_modeling_dir, 'config_files')
 
     def collect_zonal_data(self, integrate_svi=False, zone_field_name=None):
 
@@ -354,7 +355,7 @@ class RecoveryModeling(object):
         # occurs given loss-based damage state i
 
         transferProbabilitiesData = os.path.join(
-            self.input_data_dir, 'transferProbabilities.csv')
+            self.config_files_dir, 'transferProbabilities.csv')
 
         with open(transferProbabilitiesData, 'r') as f:
             reader = csv.reader(f)
