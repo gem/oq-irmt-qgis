@@ -99,7 +99,7 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         # and self.zone_field_name_cbx.currentIndex != -1)
 
     def populate_approach_cbx(self):
-        self.approach_cbx.addItems(['Aggregate', 'Disaggregate'])
+        self.approach_cbx.addItems(['Disaggregate', 'Aggregate'])
 
     @pyqtSlot(str)
     def on_output_data_dir_le_textChanged(self, text):
