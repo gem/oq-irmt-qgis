@@ -35,7 +35,7 @@ QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 
 
 def calculate_and_check_recovery_curve(
-        self, dmg_by_asset_features, approach, expected_curve_path,
+        testcase, dmg_by_asset_features, approach, expected_curve_path,
         regenerate_expected_values, seed=None, n_simulations=None):
     recovery = RecoveryModeling(dmg_by_asset_features, approach, IFACE)
     # NOTE: there is only one zone (i.e., 'ALL')
@@ -50,9 +50,9 @@ def calculate_and_check_recovery_curve(
             f.write(json.dumps(recovery_curve))
     with open(expected_curve_path, 'r') as f:
         expected_recovery_curve = json.loads(f.read())
-    self.assertEqual(len(recovery_curve), len(expected_recovery_curve))
+    testcase.assertEqual(len(recovery_curve), len(expected_recovery_curve))
     for actual, expected in zip(recovery_curve, expected_recovery_curve):
-        self.assertEqual(actual, expected)
+        testcase.assertEqual(actual, expected)
 
 
 class DeterministicTestCase(unittest.TestCase):
