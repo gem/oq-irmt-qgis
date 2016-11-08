@@ -55,7 +55,10 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         # Set up the user interface from Designer.
         self.setupUi(self)
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
-        self.populate_approach_cbx()
+        self.approach_cbx.addItems(['Disaggregate', 'Aggregate'])
+        n_simulations = int(
+            QSettings().value('irmt/n_simulations_per_building', 1))
+        self.n_simulations_sbx.setValue(n_simulations)
         self.populate_layers_in_combos()
         self.restoreState()
         self.set_ok_button()
@@ -97,9 +100,6 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         # and self.svi_layer_cbx.currentIndex != -1
         # and self.svi_field_name_cbx.currentIndex != -1
         # and self.zone_field_name_cbx.currentIndex != -1)
-
-    def populate_approach_cbx(self):
-        self.approach_cbx.addItems(['Disaggregate', 'Aggregate'])
 
     @pyqtSlot(str)
     def on_output_data_dir_le_textChanged(self, text):
@@ -166,6 +166,7 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         header = ['zone_id', 'days_to_recover_95_perc', 'event_time',
                   'after_6_months', 'after_12_months', 'after_18_months']
         writer.writerow(header)
+        n_simulations = self.n_simulations_sbx.value()
         # for each zone, calculate a zone-level recovery function
         for idx, zone_id in enumerate(zonal_dmg_by_asset_probs.keys(),
                                       start=1):
@@ -177,7 +178,8 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
             with TraceTimeManager(msg):
                 recovery.generate_community_level_recovery_curve(
                     zone_id, zonal_dmg_by_asset_probs,
-                    zonal_asset_refs, writer, integrate_svi, seed)
+                    zonal_asset_refs, writer, integrate_svi, seed,
+                    n_simulations=n_simulations)
 
             progress_perc = idx / float(tot_zones) * 100
             progress.setValue(progress_perc)

@@ -42,6 +42,23 @@
      <item row="0" column="1">
       <widget class="QComboBox" name="approach_cbx"/>
      </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Simulations per building</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QSpinBox" name="n_simulations_sbx">
+       <property name="minimum">
+        <number>1</number>
+       </property>
+       <property name="maximum">
+        <number>500</number>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
    <item>

@@ -36,7 +36,7 @@ QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 
 def calculate_and_check_recovery_curve(
         testcase, dmg_by_asset_features, approach, expected_curve_path,
-        regenerate_expected_values, seed=None, n_simulations=None):
+        regenerate_expected_values, seed=None, n_simulations=1):
     recovery = RecoveryModeling(dmg_by_asset_features, approach, IFACE)
     # NOTE: there is only one zone (i.e., 'ALL')
     zonal_dmg_by_asset_probs, zonal_asset_refs = \
