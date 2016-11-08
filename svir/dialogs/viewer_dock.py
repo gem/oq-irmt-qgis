@@ -147,7 +147,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.approach_lbl.setSizePolicy(
             QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.approach_cbx = QComboBox()
-        self.approach_cbx.addItems(['Aggregate', 'Disaggregate'])
+        self.approach_cbx.addItems(['Disaggregate', 'Aggregate'])
         self.approach_cbx.currentIndexChanged['QString'].connect(
             self.on_approach_changed)
         self.horizontalLayout.addWidget(self.approach_lbl)
