@@ -35,7 +35,8 @@ QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 
 
 def calculate_recovery_curve(
-        dmg_by_asset_features, approach, seed=None, n_simulations=None):
+        dmg_by_asset_features, approach, expected_curve_path,
+        regenerate_expected_values, seed=None, n_simulations=None):
     recovery = RecoveryModeling(dmg_by_asset_features, approach, IFACE)
     # NOTE: there is only one zone (i.e., 'ALL')
     zonal_dmg_by_asset_probs, zonal_asset_refs = \
@@ -44,6 +45,9 @@ def calculate_recovery_curve(
     recovery_curve = recovery.generate_community_level_recovery_curve(
         zone_id, zonal_dmg_by_asset_probs, zonal_asset_refs, seed=seed,
         n_simulations=n_simulations)
+    if regenerate_expected_values:
+        with open(expected_curve_path, 'w') as f:
+            f.write(json.dumps(recovery_curve))
     return recovery_curve
 
 
@@ -62,13 +66,11 @@ class DeterministicTestCase(unittest.TestCase):
         approach = 'Aggregate'
         # using only 1 asset
         dmg_by_asset_features = [self.dmg_by_asset_layer.getFeatures().next()]
-        recovery_curve = calculate_recovery_curve(
-            dmg_by_asset_features, approach, seed=42, n_simulations=1)
         expected_curve_path = os.path.join(
             self.data_dir_name, 'building_aggregate_1sim.txt')
-        if self.regenerate_expected_values:
-            with open(expected_curve_path, 'w') as f:
-                f.write(json.dumps(recovery_curve))
+        recovery_curve = calculate_recovery_curve(
+            dmg_by_asset_features, approach, expected_curve_path,
+            self.regenerate_expected_values, seed=42, n_simulations=1)
         with open(expected_curve_path, 'r') as f:
             expected_recovery_curve = json.loads(f.read())
         self.assertEqual(len(recovery_curve), len(expected_recovery_curve))
@@ -79,13 +81,11 @@ class DeterministicTestCase(unittest.TestCase):
         approach = 'Aggregate'
         # using all the 10 assets
         dmg_by_asset_features = list(self.dmg_by_asset_layer.getFeatures())
-        recovery_curve = calculate_recovery_curve(
-            dmg_by_asset_features, approach, seed=42, n_simulations=1)
         expected_curve_path = os.path.join(
             self.data_dir_name, 'community_aggregate_1sim.txt')
-        if self.regenerate_expected_values:
-            with open(expected_curve_path, 'w') as f:
-                f.write(json.dumps(recovery_curve))
+        recovery_curve = calculate_recovery_curve(
+            dmg_by_asset_features, approach, expected_curve_path,
+            self.regenerate_expected_values, seed=42, n_simulations=1)
         with open(expected_curve_path, 'r') as f:
             expected_recovery_curve = json.loads(f.read())
         self.assertEqual(len(recovery_curve), len(expected_recovery_curve))
@@ -96,13 +96,11 @@ class DeterministicTestCase(unittest.TestCase):
         approach = 'Disaggregate'
         # using only 1 asset
         dmg_by_asset_features = [self.dmg_by_asset_layer.getFeatures().next()]
-        recovery_curve = calculate_recovery_curve(
-            dmg_by_asset_features, approach, seed=42, n_simulations=1)
         expected_curve_path = os.path.join(
             self.data_dir_name, 'building_disaggregate_1sim.txt')
-        if self.regenerate_expected_values:
-            with open(expected_curve_path, 'w') as f:
-                f.write(json.dumps(recovery_curve))
+        recovery_curve = calculate_recovery_curve(
+            dmg_by_asset_features, approach, expected_curve_path,
+            self.regenerate_expected_values, seed=42, n_simulations=1)
         with open(expected_curve_path, 'r') as f:
             expected_recovery_curve = json.loads(f.read())
         self.assertEqual(len(recovery_curve), len(expected_recovery_curve))
@@ -113,13 +111,11 @@ class DeterministicTestCase(unittest.TestCase):
         approach = 'Disaggregate'
         # using all the 10 assets
         dmg_by_asset_features = list(self.dmg_by_asset_layer.getFeatures())
-        recovery_curve = calculate_recovery_curve(
-            dmg_by_asset_features, approach, seed=42, n_simulations=1)
         expected_curve_path = os.path.join(
             self.data_dir_name, 'community_disaggregate_1sim.txt')
-        if self.regenerate_expected_values:
-            with open(expected_curve_path, 'w') as f:
-                f.write(json.dumps(recovery_curve))
+        recovery_curve = calculate_recovery_curve(
+            dmg_by_asset_features, approach, expected_curve_path,
+            self.regenerate_expected_values, seed=42, n_simulations=1)
         with open(expected_curve_path, 'r') as f:
             expected_recovery_curve = json.loads(f.read())
         self.assertEqual(len(recovery_curve), len(expected_recovery_curve))
@@ -143,13 +139,56 @@ class StochasticTestCase(unittest.TestCase):
         approach = 'Aggregate'
         # using only 1 asset
         dmg_by_asset_features = [self.dmg_by_asset_layer.getFeatures().next()]
-        recovery_curve = calculate_recovery_curve(
-            dmg_by_asset_features, approach, n_simulations=200)
         expected_curve_path = os.path.join(
             self.data_dir_name, 'building_aggregate_200sim.txt')
-        if self.regenerate_expected_values:
-            with open(expected_curve_path, 'w') as f:
-                f.write(json.dumps(recovery_curve))
+        recovery_curve = calculate_recovery_curve(
+            dmg_by_asset_features, approach, expected_curve_path,
+            self.regenerate_expected_values, n_simulations=200)
+        with open(expected_curve_path, 'r') as f:
+            expected_recovery_curve = json.loads(f.read())
+        self.assertEqual(len(recovery_curve), len(expected_recovery_curve))
+        for actual, expected in zip(recovery_curve, expected_recovery_curve):
+            self.assertAlmostEqual(actual, expected)
+
+    def test_community_aggregate(self):
+        approach = 'Aggregate'
+        # using only 1 asset
+        dmg_by_asset_features = list(self.dmg_by_asset_layer.getFeatures())
+        expected_curve_path = os.path.join(
+            self.data_dir_name, 'community_aggregate_200sim.txt')
+        recovery_curve = calculate_recovery_curve(
+            dmg_by_asset_features, approach, expected_curve_path,
+            self.regenerate_expected_values, n_simulations=200)
+        with open(expected_curve_path, 'r') as f:
+            expected_recovery_curve = json.loads(f.read())
+        self.assertEqual(len(recovery_curve), len(expected_recovery_curve))
+        for actual, expected in zip(recovery_curve, expected_recovery_curve):
+            self.assertAlmostEqual(actual, expected)
+
+    def test_building_disaggregate(self):
+        approach = 'Disaggregate'
+        # using only 1 asset
+        dmg_by_asset_features = [self.dmg_by_asset_layer.getFeatures().next()]
+        expected_curve_path = os.path.join(
+            self.data_dir_name, 'building_disaggregate_200sim.txt')
+        recovery_curve = calculate_recovery_curve(
+            dmg_by_asset_features, approach, expected_curve_path,
+            self.regenerate_expected_values, n_simulations=200)
+        with open(expected_curve_path, 'r') as f:
+            expected_recovery_curve = json.loads(f.read())
+        self.assertEqual(len(recovery_curve), len(expected_recovery_curve))
+        for actual, expected in zip(recovery_curve, expected_recovery_curve):
+            self.assertAlmostEqual(actual, expected)
+
+    def test_community_disaggregate(self):
+        approach = 'Disaggregate'
+        # using only 1 asset
+        dmg_by_asset_features = list(self.dmg_by_asset_layer.getFeatures())
+        expected_curve_path = os.path.join(
+            self.data_dir_name, 'community_disaggregate_200sim.txt')
+        recovery_curve = calculate_recovery_curve(
+            dmg_by_asset_features, approach, expected_curve_path,
+            self.regenerate_expected_values, n_simulations=200)
         with open(expected_curve_path, 'r') as f:
             expected_recovery_curve = json.loads(f.read())
         self.assertEqual(len(recovery_curve), len(expected_recovery_curve))
