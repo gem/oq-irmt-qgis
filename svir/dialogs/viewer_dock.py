@@ -119,8 +119,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.loss_type_cbx = QComboBox()
         self.loss_type_cbx.currentIndexChanged['QString'].connect(
             self.on_loss_type_changed)
-        self.horizontalLayout.addWidget(self.loss_type_lbl)
-        self.horizontalLayout.addWidget(self.loss_type_cbx)
+        self.typeDepHLayout1.addWidget(self.loss_type_lbl)
+        self.typeDepHLayout1.addWidget(self.loss_type_cbx)
 
     def create_imt_selector(self):
         self.imt_lbl = QLabel('Intensity Measure Type')
@@ -129,8 +129,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.imt_cbx = QComboBox()
         self.imt_cbx.currentIndexChanged['QString'].connect(
             self.on_imt_changed)
-        self.horizontalLayout.addWidget(self.imt_lbl)
-        self.horizontalLayout.addWidget(self.imt_cbx)
+        self.typeDepHLayout1.addWidget(self.imt_lbl)
+        self.typeDepHLayout1.addWidget(self.imt_cbx)
 
     def create_poe_selector(self):
         self.poe_lbl = QLabel('Probability of Exceedance')
@@ -139,19 +139,19 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.poe_cbx = QComboBox()
         self.poe_cbx.currentIndexChanged['QString'].connect(
             self.on_poe_changed)
-        self.horizontalLayout.addWidget(self.poe_lbl)
-        self.horizontalLayout.addWidget(self.poe_cbx)
+        self.typeDepHLayout1.addWidget(self.poe_lbl)
+        self.typeDepHLayout1.addWidget(self.poe_cbx)
 
     def create_approach_selector(self):
-        self.approach_lbl = QLabel('Approach')
+        self.approach_lbl = QLabel('Recovery time approach')
         self.approach_lbl.setSizePolicy(
             QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.approach_cbx = QComboBox()
         self.approach_cbx.addItems(['Disaggregate', 'Aggregate'])
         self.approach_cbx.currentIndexChanged['QString'].connect(
             self.on_approach_changed)
-        self.horizontalLayout.addWidget(self.approach_lbl)
-        self.horizontalLayout.addWidget(self.approach_cbx)
+        self.typeDepHLayout1.addWidget(self.approach_lbl)
+        self.typeDepHLayout1.addWidget(self.approach_cbx)
 
     def create_n_simulations_spinbox(self):
         self.n_simulations_lbl = QLabel('Simulations per building')
@@ -164,8 +164,13 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.n_simulations_sbx.setValue(n_simulations)
         self.n_simulations_sbx.valueChanged['int'].connect(
             self.on_n_simulations_changed)
-        self.horizontalLayout.addWidget(self.n_simulations_lbl)
-        self.horizontalLayout.addWidget(self.n_simulations_sbx)
+        self.typeDepHLayout2.addWidget(self.n_simulations_lbl)
+        self.typeDepHLayout2.addWidget(self.n_simulations_sbx)
+        self.warning_n_simulations_lbl = QLabel(
+            'Warning: increasing the number of simulations per building,'
+            'the application might become irresponsive or run out of memory')
+        self.warning_n_simulations_lbl.setWordWrap(True)
+        self.typeDepVLayout.addWidget(self.warning_n_simulations_lbl)
 
     def remove_widgets_from_layout(self, widgets, layout):
         for widget in widgets:
@@ -191,31 +196,46 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 self.remove_widgets_from_layout(
                     [self.loss_type_lbl, self.loss_type_cbx,
                      self.poe_lbl, self.poe_cbx,
-                     self.approach_lbl, self.approach_cbx,
-                     self.n_simulations_lbl, self.n_simulations_sbx],
-                    self.horizontalLayout)
+                     self.approach_lbl, self.approach_cbx],
+                    self.typeDepHLayout1)
+                self.remove_widgets_from_layout(
+                    [self.n_simulations_lbl, self.n_simulations_sbx],
+                    self.typeDepHLayout2)
+                self.remove_widgets_from_layout(
+                    [self.warning_n_simulations_lbl],
+                    self.typeDepVLayout)
                 self.create_imt_selector()
             elif new_output_type == 'loss_curves':
                 self.remove_widgets_from_layout(
                     [self.imt_lbl, self.imt_cbx,
                      self.poe_lbl, self.poe_cbx,
-                     self.approach_lbl, self.approach_cbx,
-                     self.n_simulations_lbl, self.n_simulations_sbx],
-                    self.horizontalLayout)
+                     self.approach_lbl, self.approach_cbx],
+                    self.typeDepHLayout1)
+                self.remove_widgets_from_layout(
+                    [self.n_simulations_lbl, self.n_simulations_sbx],
+                    self.typeDepHLayout2)
+                self.remove_widgets_from_layout(
+                    [self.warning_n_simulations_lbl],
+                    self.typeDepVLayout)
                 self.create_loss_type_selector()
             elif new_output_type == 'uhs':
                 self.remove_widgets_from_layout(
                     [self.imt_lbl, self.imt_cbx,
                      self.loss_type_lbl, self.loss_type_cbx,
-                     self.approach_lbl, self.approach_cbx,
-                     self.n_simulations_lbl, self.n_simulations_sbx],
-                    self.horizontalLayout)
+                     self.approach_lbl, self.approach_cbx],
+                    self.typeDepHLayout1)
+                self.remove_widgets_from_layout(
+                    [self.n_simulations_lbl, self.n_simulations_sbx],
+                    self.typeDepHLayout2)
+                self.remove_widgets_from_layout(
+                    [self.warning_n_simulations_lbl],
+                    self.typeDepVLayout)
                 self.create_poe_selector()
             elif new_output_type == 'recovery_curves':
                 self.remove_widgets_from_layout(
                     [self.loss_type_lbl, self.loss_type_cbx,
                      self.imt_lbl, self.imt_cbx, self.poe_lbl, self.poe_cbx],
-                    self.horizontalLayout)
+                    self.typeDepHLayout1)
                 self.create_approach_selector()
                 self.create_n_simulations_spinbox()
             elif not new_output_type:  # None or ''
@@ -223,9 +243,14 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                     [self.loss_type_lbl, self.loss_type_cbx,
                      self.imt_lbl, self.imt_cbx,
                      self.poe_lbl, self.poe_cbx,
-                     self.approach_lbl, self.approach_cbx,
-                     self.n_simulations_lbl, self.n_simulations_sbx],
-                    self.horizontalLayout)
+                     self.approach_lbl, self.approach_cbx],
+                    self.typeDepHLayout1)
+                self.remove_widgets_from_layout(
+                    [self.n_simulations_lbl, self.n_simulations_sbx],
+                    self.typeDepHLayout2)
+                self.remove_widgets_from_layout(
+                    [self.warning_n_simulations_lbl],
+                    self.typeDepVLayout)
         self.adjustSize()
         self.output_type = new_output_type
 
