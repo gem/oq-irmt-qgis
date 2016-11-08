@@ -57,7 +57,18 @@
      </layout>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout"/>
+     <layout class="QVBoxLayout" name="typeDepVLayout">
+      <item>
+       <layout class="QHBoxLayout" name="typeDepHLayout1"/>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="typeDepHLayout2">
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+       </layout>
+      </item>
+     </layout>
     </item>
     <item>
      <layout class="QVBoxLayout" name="plot_layout"/>
