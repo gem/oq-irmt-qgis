@@ -34,8 +34,8 @@ from matplotlib.backends.backend_qt4agg import (
 )
 
 
-from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QColor, QLabel, QComboBox, QSizePolicy
+from PyQt4.QtCore import pyqtSlot, QSettings
+from PyQt4.QtGui import QColor, QLabel, QComboBox, QSizePolicy, QSpinBox
 from qgis.gui import QgsVertexMarker
 from qgis.core import QGis, QgsMapLayer, QgsFeatureRequest
 
@@ -154,6 +154,20 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.horizontalLayout.addWidget(self.approach_lbl)
         self.horizontalLayout.addWidget(self.approach_cbx)
 
+    def create_n_simulations_spinbox(self):
+        self.n_simulations_lbl = QLabel('Simulations per building')
+        self.approach_lbl.setSizePolicy(
+            QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.n_simulations_sbx = QSpinBox()
+        self.n_simulations_sbx.setRange(1, 500)
+        n_simulations = int(
+            QSettings().value('irmt/n_simulations_per_building', 1))
+        self.n_simulations_sbx.setValue(n_simulations)
+        self.n_simulations_sbx.valueChanged['int'].connect(
+            self.on_n_simulations_changed)
+        self.horizontalLayout.addWidget(self.n_simulations_lbl)
+        self.horizontalLayout.addWidget(self.n_simulations_sbx)
+
     def remove_widgets_from_layout(self, widgets, layout):
         for widget in widgets:
             if widget is not None:
@@ -170,27 +184,32 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 self.create_poe_selector()
             elif new_output_type == 'recovery_curves':
                 self.create_approach_selector()
+                self.create_n_simulations_spinbox()
         else:
             if self.output_type == new_output_type:
                 return
             if new_output_type == 'hcurves':
                 self.remove_widgets_from_layout(
                     [self.loss_type_lbl, self.loss_type_cbx,
-                     self.poe_lbl, self.poe_cbx, self.approach_cbx],
+                     self.poe_lbl, self.poe_cbx,
+                     self.approach_lbl, self.approach_cbx,
+                     self.n_simulations_lbl, self.n_simulations_sbx],
                     self.horizontalLayout)
                 self.create_imt_selector()
             elif new_output_type == 'loss_curves':
                 self.remove_widgets_from_layout(
                     [self.imt_lbl, self.imt_cbx,
                      self.poe_lbl, self.poe_cbx,
-                     self.approach_lbl, self.approach_cbx],
+                     self.approach_lbl, self.approach_cbx,
+                     self.n_simulations_lbl, self.n_simulations_sbx],
                     self.horizontalLayout)
                 self.create_loss_type_selector()
             elif new_output_type == 'uhs':
                 self.remove_widgets_from_layout(
                     [self.imt_lbl, self.imt_cbx,
                      self.loss_type_lbl, self.loss_type_cbx,
-                     self.approach_lbl, self.approach_cbx],
+                     self.approach_lbl, self.approach_cbx,
+                     self.n_simulations_lbl, self.n_simulations_sbx],
                     self.horizontalLayout)
                 self.create_poe_selector()
             elif new_output_type == 'recovery_curves':
@@ -199,12 +218,14 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                      self.imt_lbl, self.imt_cbx, self.poe_lbl, self.poe_cbx],
                     self.horizontalLayout)
                 self.create_approach_selector()
+                self.create_n_simulations_spinbox()
             elif not new_output_type:  # None or ''
                 self.remove_widgets_from_layout(
                     [self.loss_type_lbl, self.loss_type_cbx,
                      self.imt_lbl, self.imt_cbx,
                      self.poe_lbl, self.poe_cbx,
-                     self.approach_lbl, self.approach_cbx],
+                     self.approach_lbl, self.approach_cbx,
+                     self.n_simulations_lbl, self.n_simulations_sbx],
                     self.horizontalLayout)
         self.adjustSize()
         self.output_type = new_output_type
@@ -399,9 +420,11 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         integrate_svi = False
         zonal_dmg_by_asset_probs, zonal_asset_refs = \
             recovery.collect_zonal_data(integrate_svi)
+        n_simulations = self.n_simulations_sbx.value()
         recovery_function = \
             recovery.generate_community_level_recovery_curve(
-                'ALL', zonal_dmg_by_asset_probs, zonal_asset_refs)
+                'ALL', zonal_dmg_by_asset_probs, zonal_asset_refs,
+                n_simulations=n_simulations)
         self.current_abscissa = range(len(recovery_function))
         color = QColor('black')
         color_hex = color.name()
@@ -516,6 +539,11 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
     def on_approach_changed(self):
         self.current_approach = self.approach_cbx.currentText()
         self.set_selection(self.current_selection.keys())
+
+    def on_n_simulations_changed(self):
+        self.set_selection(self.current_selection.keys())
+        QSettings().setValue('irmt/n_simulations_per_building',
+                             self.n_simulations_sbx.value())
 
     @pyqtSlot()
     def on_export_data_button_clicked(self):

@@ -139,15 +139,13 @@ class RecoveryModeling(object):
         mobilizationTimes = read_config_file('MobilizationTimes.txt')
         repairTimes = read_config_file('RepairTimes.txt')
         recoveryTimes = read_config_file('RecoveryTimes.txt')
-        numberOfDamageSimulations = read_config_file(
-            'NumberOfDamageSimulations.txt', int)[0]
         return (inspectionTimes, assessmentTimes, mobilizationTimes,
-                repairTimes, recoveryTimes, numberOfDamageSimulations)
+                repairTimes, recoveryTimes)
 
     def generate_community_level_recovery_curve(
             self, zone_id, zonal_dmg_by_asset_probs,
             zonal_asset_refs, writer=None, integrate_svi=False, seed=None,
-            n_simulations=None):
+            n_simulations=1):
 
         # TODO: use svi_by_zone[zone_id] to adjust recovery times (how?)
 
@@ -165,11 +163,8 @@ class RecoveryModeling(object):
         # FIXME If we don't read files again for each zone, time increases
         # across zones. This is not optimal, but configuration files are
         # very small, so reading them is almost instantaneous.
-        (inspectionTimes, assessmentTimes,
-            mobilizationTimes, repairTimes, recoveryTimes,
-            numberOfDamageSimulations) = self.read_all_configuration_files()
-        if n_simulations is not None:
-            numberOfDamageSimulations = n_simulations
+        (inspectionTimes, assessmentTimes, mobilizationTimes, repairTimes,
+            recoveryTimes) = self.read_all_configuration_files()
 
         # FIXME - when aggregating by zone we are constantly increasing
         # the times with this approach
@@ -188,11 +183,11 @@ class RecoveryModeling(object):
         # # PH,PT: we want to ensure we perform at least MIN_SAMPLES samples
         # # in order to reduce variation in values due to a small sample
         # # space.
-        # if numberOfDamageSimulations * len(asset_refs) < MIN_SAMPLES:
-        #     numberOfDamageSimulations = MIN_SAMPLES / len(asset_refs)
+        # if n_simulations * len(asset_refs) < MIN_SAMPLES:
+        #     n_simulations = MIN_SAMPLES / len(asset_refs)
 
         # Looping over all damage simulations
-        for sim in range(numberOfDamageSimulations):
+        for sim in range(n_simulations):
             simulationRecoveryFunction = \
                 self.generate_simulation_recovery_curve(
                     timeList, LossBasedDamageStateProbabilities,
@@ -209,7 +204,7 @@ class RecoveryModeling(object):
         # TODO: use enumerate instead
         for timePoint in range(len(timeList)):
             communityRecoveryFunction[timePoint] /= \
-                numberOfDamageSimulations
+                n_simulations
 
         # PAOLO: should we plot this?
         # Plot community level recovery curve
