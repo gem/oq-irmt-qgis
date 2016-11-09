@@ -169,7 +169,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.typeDepHLayout2.addWidget(self.n_simulations_sbx)
         self.warning_n_simulations_lbl = QLabel(
             'Warning: increasing the number of simulations per building,'
-            'the application might become irresponsive or run out of memory')
+            ' the application might become irresponsive or run out of memory')
         self.warning_n_simulations_lbl.setWordWrap(True)
         self.typeDepVLayout.addWidget(self.warning_n_simulations_lbl)
 
