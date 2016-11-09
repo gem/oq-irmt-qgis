@@ -110,7 +110,6 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.plot_layout.addWidget(self.plot_canvas)
         self.toolbar_layout.insertWidget(0, self.plot_toolbar)
 
-        self.plot_canvas.mpl_connect('pick_event', self.on_plot_pick)
         self.plot_canvas.mpl_connect('motion_notify_event', self.on_plot_hover)
 
     def create_loss_type_selector(self):
