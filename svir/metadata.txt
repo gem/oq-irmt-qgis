@@ -28,6 +28,7 @@ changelog=
       be recalculated by the tool, but it has to be calculated by the user
       in a customized way. For such custom fields, a description of the
       calculation used to obtain it can be provided.
+    * Add Creative Commons 4 licenses
 
 # tags are comma separated with spaces allowed
 tags=GEM, IRMT, SVIR, OpenQuake, Social Vulnerability, Integrated Risk
