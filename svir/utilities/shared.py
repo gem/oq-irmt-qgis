@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#/***************************************************************************
+# /***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
@@ -104,6 +104,7 @@ OPERATORS_DICT['AVG'] = 'Average (ignore weights)'
 OPERATORS_DICT['MUL_S'] = 'Simple multiplication (ignore weights)'
 OPERATORS_DICT['MUL_W'] = 'Weighted multiplication'
 OPERATORS_DICT['GEOM_MEAN'] = 'Geometric mean (ignore weights)'
+OPERATORS_DICT['CUSTOM'] = 'Use a custom field (no recalculation)'
 
 DEFAULT_OPERATOR = OPERATORS_DICT['SUM_W']
 IGNORING_WEIGHT_OPERATORS = (OPERATORS_DICT['SUM_S'],

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#/***************************************************************************
+# /***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
@@ -180,6 +180,7 @@ class ProjectsManagerDialog(QDialog):
             project_definition = json.loads(project_definition_str)
             self.suppl_info['project_definitions'][self.suppl_info[
                 'selected_project_definition_idx']] = project_definition
+            self.selected_proj_def = project_definition
             self.ok_button.setEnabled(True)
         except ValueError as exc:
             # get the exception message

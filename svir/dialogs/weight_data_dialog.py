@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#/***************************************************************************
+# /***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
@@ -57,9 +57,9 @@ class WeightDataDialog(QDialog):
     Modal dialog allowing to select weights in a d3.js visualization
     """
 
-    # QVariantMap is to map a JSON to dict see:
-    #http://pyqt.sourceforge.net/Docs/PyQt4/incompatibilities.html#pyqt4-v4-7-4
-    # this is for javascript to emit when it changes the json
+#   QVariantMap is to map a JSON to dict see:
+#   http://pyqt.sourceforge.net/Docs/PyQt4/incompatibilities.html#pyqt4-v4-7-4
+#   this is for javascript to emit when it changes the json
     json_updated = pyqtSignal(['QVariantMap'], name='json_updated')
     # Python classes should connect to json_cleaned
     json_cleaned = pyqtSignal(['QVariantMap'], name='json_cleaned')
@@ -248,7 +248,7 @@ class WeightDataDialog(QDialog):
 
     @pyqtProperty(str)
     def json_str(self):
-        #This method gets exposed to JS thanks to @pyqtProperty(str)
+        # This method gets exposed to JS thanks to @pyqtProperty(str)
         return json.dumps(self.project_definition,
                           sort_keys=False,
                           indent=2,

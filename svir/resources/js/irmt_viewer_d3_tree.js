@@ -169,14 +169,53 @@
 
         }
 
-        function operatorSelect(pdOperator){
+        function operatorSelect(pdOperator, fieldName, fieldDescription){
             $('#projectDefWeightDialog')
                 .append('<br/><label style="clear: left; float: left; width: 10em;" for="operator">Operator: </label>')
-                .append('<select id="operator">'+ operatorOptions() + '</select>');
+                .append('<select id="operator">'+ operatorOptions() + '</select><br/>');
             //TODO use selectmenu when the bug there is fixed9?
             //$(selector).selectmenu()
             //$(selector).prop('selectedIndex', 4)
             $('#operator').val(pdOperator);
+            var fieldOpts = fieldOptions(pdData);
+            if (typeof fieldName !== 'undefined') {
+                fieldOpts += '<option value="' + fieldName + '">' + fieldName + '</option>';
+            } else {
+                fieldOpts += '<option disabled selected value></option>';
+            }
+            $('#projectDefWeightDialog')
+                .append('<br/><label style="clear: left; float: left; width: 10em;" id="fieldNameLabel" for="fieldNameLabel">Field name: </label>')
+                .append('<select id="fieldName">'+ fieldOpts + '</select>')
+                .append('<br/><label style="clear: left; float: left; width: 10em;" id="fieldDescriptionLabel" for="fieldDescriptionLabel">Field description: </label>')
+                .append('<input type="text" id="fieldDescription">');
+            if (typeof fieldName !== 'undefined') {
+                $('#fieldName').val(fieldName);
+            } else {
+                $('#fieldName').val('');
+            }
+            if (typeof fieldDescription !== 'undefined') {
+                $('#fieldDescription').val(fieldDescription);
+            } else {
+                $('#fieldDescription').val('');
+            }
+            enableOrDisableCustomFieldSelector();
+            $('#operator').change(function() {
+                enableOrDisableCustomFieldSelector();
+            });
+        }
+
+        function enableOrDisableCustomFieldSelector() {
+            if ($('#operator').val() === 'Use a custom field (no recalculation)') {
+                $('#fieldNameLabel').css("color", "black");
+                $('#fieldDescriptionLabel').css("color", "black");
+                $('#fieldName').prop('disabled', false);
+                $('#fieldDescription').prop('disabled', false);
+            } else {
+                $('#fieldNameLabel').css("color", "grey");
+                $('#fieldDescriptionLabel').css("color", "grey");
+                $('#fieldName').prop('disabled', 'disabled');
+                $('#fieldDescription').prop('disabled', 'disabled');
+            }
         }
 
         function operatorOptions(){
@@ -438,7 +477,16 @@
 
                 if ($('#operator').length !== 0) {
                     var operator = $('#operator').val();
-                    updateOperator(pdData, pdId, operator);
+                    updateNodeAttribute(pdData, pdId, 'operator', operator);
+                    if ($('#operator').val() === 'Use a custom field (no recalculation)') {
+                        var fieldName = $('#fieldName').val();
+                        var fieldDescription = $('#fieldDescription').val();
+                        updateNodeAttribute(pdData, pdId, 'field', fieldName);
+                        updateNodeAttribute(pdData, pdId, 'fieldDescription', fieldDescription);
+                    } else {
+                        updateNodeAttribute(pdData, pdId, 'field');
+                        updateNodeAttribute(pdData, pdId, 'fieldDescription');
+                    }
                 }
 
                 nodeEnter.remove("text");
@@ -479,13 +527,17 @@
             });
         }
 
-        function updateOperator(pdData, id, pdOperator) {
+        function updateNodeAttribute(pdData, id, attributeName, value) {
             if (pdData.id == id){
-                pdData.operator = pdOperator;
+                if (typeof value == 'undefined') {
+                    delete pdData[attributeName];
+                } else {
+                    pdData[attributeName] = value;
+                }
             }
 
             (pdData.children || []).forEach(function(currentItem) {
-                updateOperator(currentItem, id, pdOperator);
+                updateNodeAttribute(currentItem, id, attributeName, value);
             });
         }
 
@@ -508,8 +560,23 @@
             $('#projectDefWeightDialog').empty();
             updated_nodes = node.children[0];
             findTreeBranchInfo(pdData, [pdName], [pdLevel], pdParentField, updated_nodes);
-            operatorSelect(pdOperator);
+            var fieldNameAndDescription = getFieldNameAndDescription(node);
+            operatorSelect(pdOperator,
+                           fieldNameAndDescription[0],
+                           fieldNameAndDescription[1]);
             updateButton(pdId);
+        }
+
+        function getFieldNameAndDescription(node) {
+            var fieldName;
+            var fieldDescription;
+            if (typeof node.field !== 'undefined') {
+                fieldName = node.field;
+            }
+            if (typeof node.fieldDescription !== 'undefined') {
+                fieldDescription = node.fieldDescription;
+            }
+            return [fieldName, fieldDescription];
         }
 
         function getRadius(d) {
@@ -952,7 +1019,10 @@
                         findTreeBranchInfo(pdData, [pdName], [pdLevel], pdField, d);
                         var pdParentOperator = d.parent.operator? d.parent.operator : DEFAULT_OPERATOR;
                         d.parent.operator = pdParentOperator;
-                        operatorSelect(pdParentOperator);
+                        var fieldNameAndDescription = getFieldNameAndDescription(d.parent);
+                        operatorSelect(pdParentOperator,
+                                       fieldNameAndDescription[0],
+                                       fieldNameAndDescription[1]);
                         pdId = d.parent.id;
                         updateButton(pdId);
                     }
@@ -961,13 +1031,13 @@
                     }
                 });
 
-            // Render the operator's name, without the optional '(ignore weights)' part
+            // Render the operator's name, without the optional '(ignore weights)' or '(no recalculation)' part
             nodeEnter.append("text")
                 .text(function(d) {
                     if (d.children){
                         var operator = d.operator? d.operator : DEFAULT_OPERATOR;
                         d.operator = operator;
-                        if (operator.indexOf('ignore weights') != -1) {
+                        if (operator.indexOf('ignore weights') != -1 || operator.indexOf('no recalculation') != -1 ) {
                             // Example:
                             // from "Simple sum (ignore weights)"
                             // we render just "Simple sum"
@@ -982,12 +1052,12 @@
                 .attr("dy", function(d) { return "0.3em"; })
                 .on("click", function(d) { openWeightingDialog(d); });
 
-            // Render '(ignore weights)' in a new line, if present
+            // Render '(ignore weights)' or '(no recalculation)' in a new line, if present
             nodeEnter.append("text")
                 .text(function(d) {
                     if (d.children){
                         var ignoreWeightsStr = '';
-                        if (d.operator.indexOf('ignore weights') != -1) {
+                        if (d.operator.indexOf('ignore weights') != -1 || d.operator.indexOf('no recalculation') != -1 ) {
                             parts = d.operator.split('(');
                             ignoreWeightsStr = '(' + parts[1];
                         }
@@ -1023,7 +1093,7 @@
                         return "";
                     }
                     if (typeof d.parent.operator != 'undefined') {
-                        if (d.parent.operator.indexOf('ignore weights') != -1) {
+                        if (d.parent.operator.indexOf('ignore weights') != -1 || d.parent.operator.indexOf('no recalculation') != -1) {
                             return '';
                         }
                     }
@@ -1032,7 +1102,7 @@
                 .style("fill", function(d) {
                     if (typeof d.parent == 'undefined') { return; }
                     if (typeof d.parent.operator == 'undefined') { return; }
-                    if (d.parent.operator.indexOf('ignore weights') != -1) {
+                    if (d.parent.operator.indexOf('ignore weights') != -1 || d.parent.operator.indexOf('no recalculation') != -1) {
                         var color = '#660000';
                         return color;
                     }})
@@ -1049,7 +1119,10 @@
                         findTreeBranchInfo(pdData, [pdName], [pdLevel], pdField, d);
                         var pdParentOperator = d.parent.operator? d.parent.operator : DEFAULT_OPERATOR;
                         d.parent.operator = pdParentOperator;
-                        operatorSelect(pdParentOperator);
+                        var fieldNameAndDescription = getFieldNameAndDescription(d.parent);
+                        operatorSelect(pdParentOperator,
+                                       fieldNameAndDescription[0],
+                                       fieldNameAndDescription[1]);
                         pdId = d.parent.id;
                         updateButton(pdId);
                     }

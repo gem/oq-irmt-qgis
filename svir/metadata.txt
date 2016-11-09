@@ -24,6 +24,10 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     1.7.16
+    * Enable specifying that a node of the project definition does not have to
+      be recalculated by the tool, but it has to be calculated by the user
+      in a customized way. For such custom fields, a description of the
+      calculation used to obtain it can be provided.
     * Add Creative Commons 4 licenses
 
 # tags are comma separated with spaces allowed

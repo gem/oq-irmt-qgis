@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#/***************************************************************************
+# /***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
@@ -194,8 +194,16 @@ def get_node_attr_id_and_name(node, layer):
 def calculate_node(
         node, node_attr_name, node_attr_id, layer, discarded_feats):
     operator = node.get('operator', DEFAULT_OPERATOR)
-    children = node['children']  # the existance of children should
-                                 # already be checked
+    if operator == OPERATORS_DICT['CUSTOM']:
+        # use the custom field values instead of recalculating them
+        for feat in layer.getFeatures():
+            if feat[node['field']] == QPyNullVariant(float):
+                discard_feat = True
+                discarded_feat = DiscardedFeature(feat.id(), 'Missing value')
+                discarded_feats.add(discarded_feat)
+        return discarded_feats
+    # the existance of children should already be checked
+    children = node['children']
     with LayerEditingManager(layer,
                              'Calculating %s' % node_attr_name,
                              DEBUG):
@@ -267,7 +275,6 @@ def calculate_node(
                     node_value = QPyNullVariant(float)
                     discarded_feat = DiscardedFeature(feat_id, 'Invalid value')
                     discarded_feats.add(discarded_feat)
-
             layer.changeAttributeValue(
                 feat_id, node_attr_id, node_value)
     return discarded_feats
