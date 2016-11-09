@@ -54,7 +54,7 @@ from PyQt4.QtGui import (QAction,
                          QColor,
                          QFileDialog,
                          QDesktopServices,
-                         QApplication, QMessageBox)
+                         QApplication, QMessageBox, QMenu)
 
 from svir.dialogs.viewer_dock import ViewerDock
 from svir.ui.tool_button_with_help_link import QToolButtonWithHelpLink
@@ -138,8 +138,10 @@ class Irmt:
             if qVersion() > '4.3.3':
                 QCoreApplication.installTranslator(self.translator)
 
-        # our own toolbar
-        self.toolbar = None
+        # our own menu
+        self.menu = QMenu(self.iface.mainWindow())
+        self.menu.setTitle("IRMT")
+
         # keep a list of the menu items, in order to easily unload them later
         self.registered_actions = dict()
 
@@ -160,9 +162,17 @@ class Irmt:
             self.layers_removed)
 
     def initGui(self):
-        # create our own toolbar
-        self.toolbar = self.iface.addToolBar('IRMT')
-        self.toolbar.setObjectName('IRMTToolBar')
+
+        actions = self.iface.mainWindow().menuBar().actions()
+        # check if the IRMT menu already exists
+        for action in actions:
+            if action.text() == 'IRMT':
+                self.menu = action.menu()
+                break
+
+        menuBar = self.iface.mainWindow().menuBar()
+        menuBar.insertMenu(self.iface.firstRightStandardMenu().menuAction(),
+                           self.menu)
 
         # Action to activate the modal dialog to import socioeconomic
         # data from the platform
@@ -437,7 +447,7 @@ class Irmt:
                       set_checked=False
                       ):
         """
-        Add an item to the IRMT plugin menu and a corresponding toolbar icon
+        Add an item to the IRMT menu
 
         :param icon_path: path of the icon associated to the action
         :param label: name of the action, visible to the user
@@ -451,13 +461,7 @@ class Irmt:
         action.setChecked(set_checked)
         action.triggered.connect(corresponding_method)
 
-        help_page = HELP_PAGES_LOOKUP[action_name]
-        help_url = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                'help', 'build', 'html', help_page)
-        button = QToolButtonWithHelpLink(action, help_url)
-        self.toolbar.addWidget(button)
-
-        self.iface.addPluginToMenu(u"&IRMT", action)
+        self.menu.addAction(action)
         self.registered_actions[action_name] = action
 
         if add_to_layer_actions:
@@ -518,9 +522,10 @@ class Irmt:
             action = self.registered_actions[action_name]
             # Remove the actions in the layer legend
             self.iface.legendInterface().removeLegendLayerAction(action)
-            self.iface.removePluginMenu(u"&IRMT", action)
-            self.iface.removeToolBarIcon(action)
         clear_progress_message_bar(self.iface.messageBar())
+
+        # remove menu
+        self.menu.deleteLater()
 
         # remove the dock
         self.viewer_dock.remove_connects()
