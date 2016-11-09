@@ -163,16 +163,14 @@ class Irmt:
 
     def initGui(self):
 
-        actions = self.iface.mainWindow().menuBar().actions()
-        # check if the IRMT menu already exists
-        for action in actions:
-            if action.text() == 'IRMT':
-                self.menu = action.menu()
-                break
+        menu_bar = self.iface.mainWindow().menuBar()
+        get_menu = self.get_menu(menu_bar, 'IRMT')
 
-        menuBar = self.iface.mainWindow().menuBar()
-        menuBar.insertMenu(self.iface.firstRightStandardMenu().menuAction(),
-                           self.menu)
+        if get_menu is not None:
+            self.menu = get_menu
+
+        menu_bar.insertMenu(self.iface.firstRightStandardMenu().menuAction(),
+                            self.menu)
 
         # Action to activate the modal dialog to import socioeconomic
         # data from the platform
@@ -234,19 +232,22 @@ class Irmt:
                            ":/plugins/irmt/calculate.svg",  # FIXME
                            u"Load GeoJson as layer",
                            self.load_geojson_as_layer,
-                           enable=True)
+                           enable=True,
+                           submenu='Test1')
         # Action to drive the oq-engine server
         self.add_menu_item("drive_engine_server",
                            ":/plugins/irmt/manual.svg",  # FIXME
                            u"Drive oq-engine &server",
                            self.drive_oq_engine_server,
-                           enable=True)
+                           enable=True,
+                           submenu='Test1')
         # Action to run the recovery analysis
         self.add_menu_item("recovery_modeling",
                            ":/plugins/irmt/plot.svg",  # FIXME
                            u"Run recovery modeling",
                            self.recovery_modeling,
-                           enable=True)
+                           enable=True,
+                           submenu='Test2')
 
         if OQ_DEPENDENCIES_OK:
             # Action to load as layer hazard maps from hdf5 produced by the
@@ -294,20 +295,20 @@ class Irmt:
             # Action to load as layer ground motion fields from hdf5 produced
             # by the oq-engine with a scenario damage hazard calculation
             self.add_menu_item(
-                "load_scenario_damage_gmfs_from_hdf5_as_layer",
-                ":/plugins/irmt/calculate.svg",  # FIXME
-                u"Load scenario damage ground motion "
-                "fields from HDF5 as layer",
-                self.load_scenario_damage_gmfs_from_hdf5_as_layer,
-                enable=True)
+                    "load_scenario_damage_gmfs_from_hdf5_as_layer",
+                    ":/plugins/irmt/calculate.svg",  # FIXME
+                    u"Load scenario damage ground motion "
+                    "fields from HDF5 as layer",
+                    self.load_scenario_damage_gmfs_from_hdf5_as_layer,
+                    enable=True)
             # Action to load as layer damage by asset from hdf5 produced by
             # the oq-engine with a scenario damage risk calculation
             self.add_menu_item(
-                "load_scenario_damage_by_asset_from_hdf5_as_layer",
-                ":/plugins/irmt/calculate.svg",  # FIXME
-                u"Load scenario damage by asset from HDF5 as layer",
-                self.load_scenario_damage_by_asset_from_hdf5_as_layer,
-                enable=True)
+                    "load_scenario_damage_by_asset_from_hdf5_as_layer",
+                    ":/plugins/irmt/calculate.svg",  # FIXME
+                    u"Load scenario damage by asset from HDF5 as layer",
+                    self.load_scenario_damage_by_asset_from_hdf5_as_layer,
+                    enable=True)
         else:
             self.warn_missing_features()
 
@@ -328,6 +329,15 @@ class Irmt:
 
         self._create_viewer_dock()
         self.update_actions_status()
+
+    @staticmethod
+    def get_menu(parent, title):
+        actions = parent.actions()
+        # check if the given menu already exists
+        for action in actions:
+            if action.text() == title:
+                return action.menu()
+        return None
 
     def warn_missing_features(self):
         title = tr('Missing dependencies for extra features')
@@ -444,7 +454,8 @@ class Irmt:
                       add_to_layer_actions=False,
                       layers_type=QgsMapLayer.VectorLayer,
                       set_checkable=False,
-                      set_checked=False
+                      set_checked=False,
+                      submenu=None
                       ):
         """
         Add an item to the IRMT menu
@@ -461,7 +472,6 @@ class Irmt:
         action.setChecked(set_checked)
         action.triggered.connect(corresponding_method)
 
-        self.menu.addAction(action)
         self.registered_actions[action_name] = action
 
         if add_to_layer_actions:
@@ -471,6 +481,17 @@ class Irmt:
                 action_name,
                 layers_type,
                 True)
+
+        if submenu is None:
+            menu = self.menu
+        else:
+            get_menu = self.get_menu(self.menu, submenu)
+            if get_menu is not None:
+                menu = get_menu
+            else:
+                menu = self.menu.addMenu(submenu)
+        menu.addAction(action)
+
         return action
 
     def update_actions_status(self):
