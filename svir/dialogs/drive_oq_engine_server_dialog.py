@@ -415,6 +415,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                         button, action, output, outtype)
                     self.output_list_tbl.setCellWidget(row, col + 1, button)
             else:
+                # the OQ engine can still be driven through its http API
                 if output['type'] in ['dmg_by_asset']:
                     action = 'Load as layer'
                     button = QPushButton()
@@ -431,11 +432,12 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.output_list_tbl.resizeRowsToContents()
 
     def connect_button_to_action(self, button, action, output, outtype):
-        button.setText("%s %s" % (action, outtype))
         if action == 'Load as layer':
             style = 'background-color: blue; color: white;'
+            button.setText("Load %s as layer" % outtype)
         else:
             style = 'background-color: #3cb3c5; color: white;'
+            button.setText("%s %s" % (action, outtype))
         button.setStyleSheet(style)
         QObject.connect(
             button, SIGNAL("clicked()"),
