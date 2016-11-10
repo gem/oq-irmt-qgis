@@ -180,7 +180,8 @@ class Irmt:
                            " from the OpenQuake Platform",
                            self.import_sv_variables,
                            enable=True,
-                           add_to_layer_actions=False)
+                           add_to_layer_actions=False,
+                           submenu='OQ Platform')
         # Action to activate the modal dialog to import socioeconomic
         # data from the platform
         self.add_menu_item("import_layer",
@@ -188,22 +189,38 @@ class Irmt:
                            u"&Import project from the OpenQuake Platform",
                            self.download_layer,
                            enable=True,
-                           add_to_layer_actions=False)
-        # Action to activate the modal dialog to select a layer and one of its
-        # attributes, in order to transform that attribute
-        self.add_menu_item("transform_attributes",
-                           ":/plugins/irmt/transform.svg",
-                           u"&Transform attributes",
-                           self.transform_attributes,
+                           add_to_layer_actions=False,
+                           submenu='OQ Platform')
+        # Action to upload
+        self.add_menu_item("upload",
+                           ":/plugins/irmt/upload.svg",
+                           u"&Upload project to the OpenQuake Platform",
+                           self.upload,
                            enable=False,
-                           add_to_layer_actions=True)
+                           add_to_layer_actions=True,
+                           submenu='OQ Platform')
+        # Action to drive the oq-engine server
+        self.add_menu_item("drive_engine_server",
+                           ":/plugins/irmt/manual.svg",  # FIXME
+                           u"Drive oq-engine &server",
+                           self.drive_oq_engine_server,
+                           enable=True,
+                           submenu='OQ Engine')
+        # Action to load as layer a geojson produced by the oq-engine
+        self.add_menu_item("load_geojson_as_layer",
+                           ":/plugins/irmt/calculate.svg",  # FIXME
+                           u"Load GeoJson as layer",
+                           self.load_geojson_as_layer,
+                           enable=True,
+                           submenu='OQ Engine')
         # Action to manage the projects
         self.add_menu_item("project_definitions_manager",
                            ":/plugins/irmt/copy.svg",
                            u"&Manage project definitions",
                            self.project_definitions_manager,
                            enable=False,
-                           add_to_layer_actions=True)
+                           add_to_layer_actions=True,
+                           submenu='Social vulnerability')
         # Action to activate the modal dialog to choose weighting of the
         # data from the platform
         self.add_menu_item("weight_data",
@@ -211,7 +228,15 @@ class Irmt:
                            u"&Weight data and calculate indices",
                            self.weight_data,
                            enable=False,
-                           add_to_layer_actions=True)
+                           add_to_layer_actions=True,
+                           submenu='Social vulnerability')
+        # Action to run the recovery analysis
+        self.add_menu_item("recovery_modeling",
+                           ":/plugins/irmt/plot.svg",  # FIXME
+                           u"Run recovery modeling",
+                           self.recovery_modeling,
+                           enable=True,
+                           submenu='Recovery modeling')
         # Action to activate the modal dialog to guide the user through loss
         # aggregation by zone
         self.add_menu_item("aggregate_losses",
@@ -219,35 +244,8 @@ class Irmt:
                            u"&Aggregate loss by zone",
                            self.aggregate_losses,
                            enable=True,
-                           add_to_layer_actions=False)
-        # Action to upload
-        self.add_menu_item("upload",
-                           ":/plugins/irmt/upload.svg",
-                           u"&Upload project to the OpenQuake Platform",
-                           self.upload,
-                           enable=False,
-                           add_to_layer_actions=True)
-        # Action to load as layer a geojson produced by the oq-engine
-        self.add_menu_item("load_geojson_as_layer",
-                           ":/plugins/irmt/calculate.svg",  # FIXME
-                           u"Load GeoJson as layer",
-                           self.load_geojson_as_layer,
-                           enable=True,
-                           submenu='Test1')
-        # Action to drive the oq-engine server
-        self.add_menu_item("drive_engine_server",
-                           ":/plugins/irmt/manual.svg",  # FIXME
-                           u"Drive oq-engine &server",
-                           self.drive_oq_engine_server,
-                           enable=True,
-                           submenu='Test1')
-        # Action to run the recovery analysis
-        self.add_menu_item("recovery_modeling",
-                           ":/plugins/irmt/plot.svg",  # FIXME
-                           u"Run recovery modeling",
-                           self.recovery_modeling,
-                           enable=True,
-                           submenu='Test2')
+                           add_to_layer_actions=False,
+                           submenu='Utilities')
 
         if OQ_DEPENDENCIES_OK:
             # Action to load as layer hazard maps from hdf5 produced by the
@@ -256,42 +254,48 @@ class Irmt:
                                ":/plugins/irmt/calculate.svg",  # FIXME
                                u"Load hazard maps from HDF5 as layer",
                                self.load_hmaps_from_hdf5_as_layer,
-                               enable=True)
+                               enable=True,
+                               submenu='OQ Engine')
             # Action to load as layer hazard curves from hdf5 produced by the
             # oq-engine
             self.add_menu_item("load_hcurves_from_hdf5_as_layer",
                                ":/plugins/irmt/calculate.svg",  # FIXME
                                u"Load hazard curves from HDF5 as layer",
                                self.load_hcurves_from_hdf5_as_layer,
-                               enable=True)
+                               enable=True,
+                               submenu='OQ Engine')
             # Action to load as layer loss maps from hdf5 produced by the
             # oq-engine
             self.add_menu_item("load_loss_maps_from_hdf5_as_layer",
                                ":/plugins/irmt/calculate.svg",  # FIXME
                                u"Load loss maps from HDF5 as layer",
                                self.load_loss_maps_from_hdf5_as_layer,
-                               enable=True)
+                               enable=True,
+                               submenu='OQ Engine')
             # Action to load as layer loss curves from hdf5 produced by the
             # oq-engine
             self.add_menu_item("load_loss_curves_from_hdf5_as_layer",
                                ":/plugins/irmt/calculate.svg",  # FIXME
                                u"Load loss curves from HDF5 as layer",
                                self.load_loss_curves_from_hdf5_as_layer,
-                               enable=True)
+                               enable=True,
+                               submenu='OQ Engine')
             # Action to plot total damage reading it from a HDF5 produced by a
             # scenario damage calculation
             self.add_menu_item("plot_dmg_total",
                                ":/plugins/irmt/calculate.svg",  # FIXME
                                u"Plot total damage",
                                self.plot_dmg_total_from_hdf5,
-                               enable=True)
+                               enable=True,
+                               submenu='OQ Engine')
             # Action to plot damage by taxonomy reading it from a HDF5 produced
             # by a scenario damage calculation
             self.add_menu_item("plot_dmg_by_taxon",
                                ":/plugins/irmt/calculate.svg",  # FIXME
                                u"Plot damage by taxonomy",
                                self.plot_dmg_by_taxon_from_hdf5,
-                               enable=True)
+                               enable=True,
+                               submenu='OQ Engine')
             # Action to load as layer ground motion fields from hdf5 produced
             # by the oq-engine with a scenario damage hazard calculation
             self.add_menu_item(
@@ -300,7 +304,8 @@ class Irmt:
                     u"Load scenario damage ground motion "
                     "fields from HDF5 as layer",
                     self.load_scenario_damage_gmfs_from_hdf5_as_layer,
-                    enable=True)
+                    enable=True,
+                    submenu='OQ Engine')
             # Action to load as layer damage by asset from hdf5 produced by
             # the oq-engine with a scenario damage risk calculation
             self.add_menu_item(
@@ -308,9 +313,23 @@ class Irmt:
                     ":/plugins/irmt/calculate.svg",  # FIXME
                     u"Load scenario damage by asset from HDF5 as layer",
                     self.load_scenario_damage_by_asset_from_hdf5_as_layer,
-                    enable=True)
+                    enable=True,
+                    submenu='OQ Engine')
         else:
             self.warn_missing_features()
+
+        # Action to activate the modal dialog to select a layer and one
+        # of its
+        # attributes, in order to transform that attribute
+        self.add_menu_item("transform_attributes",
+                           ":/plugins/irmt/transform.svg",
+                           u"&Transform attributes",
+                           self.transform_attributes,
+                           enable=False,
+                           add_to_layer_actions=True,
+                           submenu='Utilities')
+
+        self.menu.addSeparator()
 
         # Action to activate the modal dialog to set up show_settings for the
         # connection with the platform
