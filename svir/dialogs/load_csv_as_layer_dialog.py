@@ -160,29 +160,6 @@ class LoadCsvAsLayerDialog(QDialog, FORM_CLASS):
             return None
         return shp_layer
 
-    # def load_layer(self, csv_path):
-    #     base_name = os.path.basename(csv_path)
-    #     layer_name, ext = os.path.splitext(base_name)
-    #     # FIXME: load csv
-    #     self.layer = QgsVectorLayer(csv_path, layer_name, 'ogr')
-    #     if self.layer.isValid():
-    #         QgsMapLayerRegistry.instance().addMapLayer(self.layer)
-    #         self.field_name = self.layer.dataProvider().fields()[0].name()
-    #         self.style_layer()
-    #         msg = 'Layer [%s] successfully loaded' % layer_name
-    #         self.iface.messageBar().pushMessage(
-    #             self.tr("Info"),
-    #             self.tr(msg),
-    #             level=QgsMessageBar.INFO,
-    #             duration=8)
-    #         self.accept()
-    #     else:
-    #         msg = 'Invalid csv'
-    #         self.iface.messageBar().pushMessage(
-    #             self.tr("Error"),
-    #             self.tr(msg),
-    #             level=QgsMessageBar.CRITICAL)
-
     def populate_dmg_state_cbx(self, damage_states):
         self.dmg_state_cbx.clear()
         self.dmg_state_cbx.setEnabled(True)
