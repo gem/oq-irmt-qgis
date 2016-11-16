@@ -171,6 +171,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             {'label': 'Outputs', 'bg_color': '#3cb3c5', 'txt_color': 'white'},
             {'label': 'Run Risk', 'bg_color': 'white', 'txt_color': 'black'}
         ]
+        self.calc_list_tbl.clearContents()
         self.calc_list_tbl.setRowCount(len(calc_list))
         self.calc_list_tbl.setColumnCount(len(selected_keys) + len(actions))
         for row, calc in enumerate(calc_list):
@@ -190,10 +191,14 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 self.calc_list_tbl.setItem(row, col, item)
             for col, action in enumerate(actions, len(selected_keys)):
                 # do not display 'Run Risk' button, if this is already a risk
-                # calculation
-                if (calc['job_type'] == 'risk'
-                        and action['label'] == 'Run Risk'):
-                    continue
+                # calculation or if the calculation is still incomplete
+                if action['label'] == 'Run Risk':
+                    if (calc['job_type'] == 'risk'
+                            or calc['status'] != 'complete'):
+                        continue
+                elif action['label'] == 'Outputs':
+                    if calc['status'] != 'complete':
+                        continue
                 button = QPushButton()
                 button.setText(action['label'])
                 style = 'background-color: %s; color: %s' % (
