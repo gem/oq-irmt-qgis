@@ -196,6 +196,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     if (calc['job_type'] == 'risk'
                             or calc['status'] != 'complete'):
                         continue
+                # do not display the button for outputs until calc is complete
                 elif action['label'] == 'Outputs':
                     if calc['status'] != 'complete':
                         continue
@@ -234,6 +235,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 self.output_list_tbl.setColumnCount(0)
         elif action == 'Outputs':
             output_list = self.get_output_list(calc_id)
+            self.list_of_outputs_lbl.setText(
+                'List of outputs for calculation %s' % calc_id)
             self.show_output_list(output_list)
         elif action == 'Run Risk':
             self.run_calc(calc_id)
