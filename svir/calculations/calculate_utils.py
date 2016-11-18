@@ -23,7 +23,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 from copy import deepcopy
-from qgis.core import QgsField
+from qgis.core import QgsField, QgsExpression
 from qgis.gui import QgsMessageBar
 
 from PyQt4.QtCore import QVariant, QPyNullVariant
@@ -206,13 +206,33 @@ def calculate_node(
         node, node_attr_name, node_attr_id, layer, discarded_feats):
     operator = node.get('operator', DEFAULT_OPERATOR)
     if operator == OPERATORS_DICT['CUSTOM']:
-        # use the custom field values instead of recalculating them
-        for feat in layer.getFeatures():
-            if feat[node['field']] == QPyNullVariant(float):
-                discard_feat = True
-                discarded_feat = DiscardedFeature(feat.id(), 'Missing value')
-                discarded_feats.add(discarded_feat)
-        return discarded_feats
+        description = node.get('fieldDescription', '')
+        expression = QgsExpression(description)
+        if description == '' or not expression.isValid():
+            # use the custom field values instead of recalculating them
+            for feat in layer.getFeatures():
+                if feat[node['field']] == QPyNullVariant(float):
+                    discard_feat = True
+                    discarded_feat = DiscardedFeature(
+                        feat.id(), 'Missing value')
+                    discarded_feats.add(discarded_feat)
+            return discarded_feats
+        else:
+            # attempt to retrieve a formula from the description and to
+            # calculate the field values based on that formula
+            expression.prepare(layer.fields())
+            with LayerEditingManager(layer,
+                                    'Calculating %s' % node_attr_name,
+                                    DEBUG):
+                for feat in layer.getFeatures():
+                    value = expression.evaluate(feat)
+                    if value == QPyNullVariant(float):
+                        discard_feat = True
+                        discarded_feat = DiscardedFeature(
+                            feat.id(), 'Missing value')
+                        discarded_feats.add(discarded_feat)
+                    layer.changeAttributeValue(feat.id(), node_attr_id, value)
+            return discarded_feats
     # the existance of children should already be checked
     children = node['children']
     with LayerEditingManager(layer,

@@ -40,6 +40,7 @@ from qgis.core import (QgsVectorLayer,
                        QgsRuleBasedRendererV2,
                        QgsFillSymbolV2,
                        QgsProject,
+                       QgsExpression,
                        )
 from qgis.gui import QgsMessageBar
 
@@ -1107,8 +1108,12 @@ class Irmt:
         """
         iri_node = proj_def
         # if the IRI node is a custom field, then we don't want to recompute it
+        # unless the description contains a valid formula
         if iri_node['operator'] == OPERATORS_DICT['CUSTOM']:
-            return False
+            description = proj_def.get('fieldDescription', '')
+            expression = QgsExpression(description)
+            if description == '' or not expression.isValid():
+                return False
         # check that all the sub-indices are well-defined
         if not self.is_ri_computable(iri_node):
             return False
