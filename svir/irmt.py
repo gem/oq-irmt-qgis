@@ -222,7 +222,7 @@ class Irmt:
                            self.project_definitions_manager,
                            enable=False,
                            add_to_layer_actions=True,
-                           submenu='Social vulnerability')
+                           submenu='Integrated risk')
         # Action to activate the modal dialog to choose weighting of the
         # data from the platform
         self.add_menu_item("weight_data",
@@ -231,7 +231,7 @@ class Irmt:
                            self.weight_data,
                            enable=False,
                            add_to_layer_actions=True,
-                           submenu='Social vulnerability')
+                           submenu='Integrated risk')
         # Action to run the recovery analysis
         self.add_menu_item("recovery_modeling",
                            ":/plugins/irmt/plot.svg",  # FIXME
