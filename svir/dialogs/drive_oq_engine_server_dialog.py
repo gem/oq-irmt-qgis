@@ -132,6 +132,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 resp = self.session.get(calc_list_url, timeout=10)
             except (ConnectionError, InvalidSchema, MissingSchema,
                     ReadTimeout, SvNetworkError) as exc:
+                self.iface.messageBar().pushMessage(
+                    tr("Error"),
+                    str(exc.message),
+                    level=QgsMessageBar.CRITICAL)
+                self.reject()
                 return
             # handle case of redirection to the login page
             if resp.url != calc_list_url and 'login' in resp.url:
