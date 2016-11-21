@@ -205,7 +205,10 @@ def get_node_attr_id_and_name(node, layer):
 def calculate_node(
         node, node_attr_name, node_attr_id, layer, discarded_feats):
     operator = node.get('operator', DEFAULT_OPERATOR)
-    if operator == OPERATORS_DICT['CUSTOM']:
+    # for backwards compatibility, we treat the old
+    # 'Use a custom field (no recalculation) as the new one with no parentheses
+    if operator in (OPERATORS_DICT['CUSTOM'],
+                    'Use a custom field (no recalculation)'):
         description = node.get('fieldDescription', '')
         expression = QgsExpression(description)
         if description == '' or not expression.isValid():
@@ -222,8 +225,8 @@ def calculate_node(
             # calculate the field values based on that formula
             expression.prepare(layer.fields())
             with LayerEditingManager(layer,
-                                    'Calculating %s' % node_attr_name,
-                                    DEBUG):
+                                     'Calculating %s' % node_attr_name,
+                                     DEBUG):
                 for feat in layer.getFeatures():
                     value = expression.evaluate(feat)
                     if value == QPyNullVariant(float):
