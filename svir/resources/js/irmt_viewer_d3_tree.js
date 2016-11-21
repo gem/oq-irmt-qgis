@@ -169,7 +169,10 @@
 
         }
 
-        function operatorSelect(pdOperator, fieldName, fieldDescription){
+        function operatorSelect(pdOperator, fieldInfo){
+            var fieldName = fieldInfo.fieldName;
+            var fieldDescription = fieldInfo.fieldDescription;
+            var customFormula = fieldInfo.customFormula;
             $('#projectDefWeightDialog')
                 .append('<br/><label style="clear: left; float: left; width: 10em;" for="operator">Operator: </label>')
                 .append('<select id="operator">'+ operatorOptions() + '</select><br/>');
@@ -187,7 +190,9 @@
                 .append('<br/><label style="clear: left; float: left; width: 10em;" id="fieldNameLabel" for="fieldNameLabel">Field name: </label>')
                 .append('<select id="fieldName">'+ fieldOpts + '</select>')
                 .append('<br/><label style="clear: left; float: left; width: 10em;" id="fieldDescriptionLabel" for="fieldDescriptionLabel">Field description: </label>')
-                .append('<input type="text" id="fieldDescription">');
+                .append('<input type="text" id="fieldDescription">')
+                .append('<br/><label style="clear: left; float: left; width: 10em;" id="customFormulaLabel" for="customFormulaLabel">Custom formula (optional): </label>')
+                .append('<input type="text" id="customFormula">');
             if (typeof fieldName !== 'undefined') {
                 $('#fieldName').val(fieldName);
             } else {
@@ -197,6 +202,11 @@
                 $('#fieldDescription').val(fieldDescription);
             } else {
                 $('#fieldDescription').val('');
+            }
+            if (typeof customFormula !== 'undefined') {
+                $('#customFormula').val(customFormula);
+            } else {
+                $('#customFormula').val('');
             }
             enableOrDisableCustomFieldSelector();
             $('#operator').change(function() {
@@ -208,13 +218,17 @@
             if ($('#operator').val().indexOf('custom') != -1) {
                 $('#fieldNameLabel').css("color", "black");
                 $('#fieldDescriptionLabel').css("color", "black");
+                $('#customFormulaLabel').css("color", "black");
                 $('#fieldName').prop('disabled', false);
                 $('#fieldDescription').prop('disabled', false);
+                $('#customFormula').prop('disabled', false);
             } else {
                 $('#fieldNameLabel').css("color", "grey");
                 $('#fieldDescriptionLabel').css("color", "grey");
+                $('#customFormulaLabel').css("color", "grey");
                 $('#fieldName').prop('disabled', 'disabled');
                 $('#fieldDescription').prop('disabled', 'disabled');
+                $('#customFormula').prop('disabled', 'disabled');
             }
         }
 
@@ -481,11 +495,14 @@
                     if ($('#operator').val().indexOf('custom') != -1) {
                         var fieldName = $('#fieldName').val();
                         var fieldDescription = $('#fieldDescription').val();
+                        var customFormula = $('#customFormula').val();
                         updateNodeAttribute(pdData, pdId, 'field', fieldName);
                         updateNodeAttribute(pdData, pdId, 'fieldDescription', fieldDescription);
+                        updateNodeAttribute(pdData, pdId, 'customFormula', customFormula);
                     } else {
                         updateNodeAttribute(pdData, pdId, 'field');
                         updateNodeAttribute(pdData, pdId, 'fieldDescription');
+                        updateNodeAttribute(pdData, pdId, 'customFormula');
                     }
                 }
 
@@ -560,23 +577,24 @@
             $('#projectDefWeightDialog').empty();
             updated_nodes = node.children[0];
             findTreeBranchInfo(pdData, [pdName], [pdLevel], pdParentField, updated_nodes);
-            var fieldNameAndDescription = getFieldNameAndDescription(node);
+            var fieldInfo = getFieldInfo(node);
             operatorSelect(pdOperator,
-                           fieldNameAndDescription[0],
-                           fieldNameAndDescription[1]);
+                           fieldInfo);
             updateButton(pdId);
         }
 
-        function getFieldNameAndDescription(node) {
-            var fieldName;
-            var fieldDescription;
+        function getFieldInfo(node) {
+            var fieldInfo = {}
             if (typeof node.field !== 'undefined') {
-                fieldName = node.field;
+                fieldInfo.fieldName = node.field;
             }
             if (typeof node.fieldDescription !== 'undefined') {
-                fieldDescription = node.fieldDescription;
+                fieldInfo.fieldDescription = node.fieldDescription;
             }
-            return [fieldName, fieldDescription];
+            if (typeof node.customFormula !== 'undefined') {
+                fieldInfo.customFormula = node.customFormula;
+            }
+            return fieldInfo;
         }
 
         function getRadius(d) {
@@ -1019,10 +1037,9 @@
                         findTreeBranchInfo(pdData, [pdName], [pdLevel], pdField, d);
                         var pdParentOperator = d.parent.operator? d.parent.operator : DEFAULT_OPERATOR;
                         d.parent.operator = pdParentOperator;
-                        var fieldNameAndDescription = getFieldNameAndDescription(d.parent);
+                        var fieldInfo = getFieldInfo(d.parent);
                         operatorSelect(pdParentOperator,
-                                       fieldNameAndDescription[0],
-                                       fieldNameAndDescription[1]);
+                                       fieldInfo);
                         pdId = d.parent.id;
                         updateButton(pdId);
                     }
@@ -1119,10 +1136,9 @@
                         findTreeBranchInfo(pdData, [pdName], [pdLevel], pdField, d);
                         var pdParentOperator = d.parent.operator? d.parent.operator : DEFAULT_OPERATOR;
                         d.parent.operator = pdParentOperator;
-                        var fieldNameAndDescription = getFieldNameAndDescription(d.parent);
+                        var fieldInfo = getFieldInfo(d.parent);
                         operatorSelect(pdParentOperator,
-                                       fieldNameAndDescription[0],
-                                       fieldNameAndDescription[1]);
+                                       fieldInfo);
                         pdId = d.parent.id;
                         updateButton(pdId);
                     }

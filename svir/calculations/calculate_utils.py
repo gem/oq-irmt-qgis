@@ -52,6 +52,10 @@ class InvalidChild(Exception):
     pass
 
 
+class InvalidFormula(Exception):
+    pass
+
+
 def add_numeric_attribute(proposed_attr_name, layer):
     field = QgsField(proposed_attr_name, QVariant.Double)
     field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
@@ -146,7 +150,7 @@ def calculate_composite_variable(iface, layer, node):
                                               node_attr_id,
                                               layer,
                                               discarded_feats)
-    except (InvalidOperator, InvalidChild) as e:
+    except (InvalidOperator, InvalidChild, InvalidFormula) as e:
         iface.messageBar().pushMessage(
             tr('Error'), str(e), level=QgsMessageBar.CRITICAL)
         if added_attrs_ids:
@@ -209,9 +213,11 @@ def calculate_node(
     # 'Use a custom field (no recalculation) as the new one with no parentheses
     if operator in (OPERATORS_DICT['CUSTOM'],
                     'Use a custom field (no recalculation)'):
-        description = node.get('fieldDescription', '')
-        expression = QgsExpression(description)
-        if description == '' or not expression.isValid():
+        customFormula = node.get('customFormula', '')
+        expression = QgsExpression(customFormula)
+        if not expression.isValid():
+            raise InvalidFormula('Invalid formula: %s' % customFormula)
+        if customFormula == '':
             # use the custom field values instead of recalculating them
             for feat in layer.getFeatures():
                 if feat[node['field']] == QPyNullVariant(float):

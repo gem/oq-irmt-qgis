@@ -1108,9 +1108,9 @@ class Irmt:
         # if the IRI node is a custom field, then we don't want to recompute it
         # unless the description contains a valid formula
         if iri_node['operator'] == OPERATORS_DICT['CUSTOM']:
-            description = proj_def.get('fieldDescription', '')
-            expression = QgsExpression(description)
-            if description == '' or not expression.isValid():
+            customFormula = proj_def.get('customFormula', '')
+            expression = QgsExpression(customFormula)
+            if customFormula == '' or not expression.isValid():
                 return False
         # check that all the sub-indices are well-defined
         if not self.is_ri_computable(iri_node):
