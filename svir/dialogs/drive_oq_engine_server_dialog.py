@@ -39,7 +39,11 @@ from PyQt4.QtGui import (QDialog,
                          QDockWidget,
                          )
 from svir.third_party.requests import Session
-from svir.third_party.requests.exceptions import ConnectionError
+from svir.third_party.requests.exceptions import (ConnectionError,
+                                                  InvalidSchema,
+                                                  MissingSchema,
+                                                  ReadTimeout,
+                                                  )
 from svir.utilities.settings import get_engine_credentials
 from svir.utilities.utils import (WaitCursorManager,
                                   engine_login,
@@ -99,10 +103,15 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     engine_login(self.hostname, username,
                                  password, self.session)
                     self.is_logged_in = True
-                except (ConnectionError, SvNetworkError) as exc:
+                except (ConnectionError, InvalidSchema, MissingSchema,
+                        ReadTimeout, SvNetworkError) as e:
+                    err_msg = str(e)
+                    if isinstance(e, InvalidSchema):
+                        err_msg += \
+                            ' (you could try prepending http:// or https://)'
                     self.iface.messageBar().pushMessage(
-                        tr("Error"),
-                        str(exc.message),
+                        tr("Login Error"),
+                        tr(err_msg),
                         level=QgsMessageBar.CRITICAL)
         if not self.is_logged_in:
             self.iface.messageBar().pushMessage(
@@ -121,7 +130,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         with WaitCursorManager():
             try:
                 resp = self.session.get(calc_list_url, timeout=10)
-            except (ConnectionError, SvNetworkError):
+            except (ConnectionError, InvalidSchema, MissingSchema,
+                    ReadTimeout, SvNetworkError) as exc:
                 return
             # handle case of redirection to the login page
             if resp.url != calc_list_url and 'login' in resp.url:
@@ -133,7 +143,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         with WaitCursorManager():
             try:
                 resp = self.session.get(calc_list_url, timeout=10)
-            except (ConnectionError, SvNetworkError) as exc:
+            except (ConnectionError, InvalidSchema, MissingSchema,
+                    ReadTimeout, SvNetworkError) as exc:
                 self.iface.messageBar().pushMessage(
                     tr("Error"),
                     str(exc.message),
@@ -254,7 +265,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 'Getting log for output %s...' % calc_id, self.iface):
             try:
                 resp = self.session.get(calc_log_url, timeout=10)
-            except (ConnectionError, SvNetworkError) as exc:
+            except (ConnectionError, InvalidSchema, MissingSchema,
+                    ReadTimeout, SvNetworkError) as exc:
                 self.iface.messageBar().pushMessage(
                     tr("Error"),
                     str(exc.message),
@@ -270,7 +282,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         with WaitCursorManager('Removing calculation...', self.iface):
             try:
                 resp = self.session.post(calc_remove_url, timeout=10)
-            except (ConnectionError, SvNetworkError) as exc:
+            except (ConnectionError, InvalidSchema, MissingSchema,
+                    ReadTimeout, SvNetworkError) as exc:
                 self.iface.messageBar().pushMessage(
                     tr("Error"),
                     str(exc.message),
@@ -330,7 +343,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             try:
                 resp = self.session.post(
                     run_calc_url, files=files, data=data, timeout=20)
-            except (ConnectionError, SvNetworkError) as exc:
+            except (ConnectionError, InvalidSchema, MissingSchema,
+                    ReadTimeout, SvNetworkError) as exc:
                 self.iface.messageBar().pushMessage(
                     tr("Error"),
                     str(exc.message),
@@ -350,7 +364,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         with WaitCursorManager('Getting list of outputs...', self.iface):
             try:
                 resp = self.session.get(output_list_url, timeout=10)
-            except (ConnectionError, SvNetworkError) as exc:
+            except (ConnectionError, InvalidSchema, MissingSchema,
+                    ReadTimeout, SvNetworkError) as exc:
                 self.iface.messageBar().pushMessage(
                     tr("Error"),
                     str(exc.message),
@@ -512,7 +527,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         with WaitCursorManager('Downloading output...', self.iface):
             try:
                 resp = self.session.get(output_download_url, timeout=10)
-            except (ConnectionError, SvNetworkError) as exc:
+            except (ConnectionError, InvalidSchema, MissingSchema,
+                    ReadTimeout, SvNetworkError) as exc:
                 self.iface.messageBar().pushMessage(
                     tr("Error"),
                     str(exc.message),
