@@ -58,7 +58,6 @@ from PyQt4.QtGui import (QAction,
                          QApplication, QMessageBox, QMenu)
 
 from svir.dialogs.viewer_dock import ViewerDock
-from svir.ui.tool_button_with_help_link import QToolButtonWithHelpLink
 from svir.utilities.import_sv_data import get_loggedin_downloader
 from svir.dialogs.download_layer_dialog import DownloadLayerDialog
 from svir.dialogs.projects_manager_dialog import ProjectsManagerDialog
@@ -94,8 +93,7 @@ from svir.utilities.shared import (DEBUG,
                                    PROJECT_TEMPLATE,
                                    THEME_TEMPLATE,
                                    INDICATOR_TEMPLATE,
-                                   OPERATORS_DICT,
-                                   HELP_PAGES_LOOKUP)
+                                   OPERATORS_DICT)
 
 # DO NOT REMOVE THIS
 # noinspection PyUnresolvedReferences
