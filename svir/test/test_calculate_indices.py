@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#/***************************************************************************
+# /***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
@@ -26,10 +26,7 @@ import unittest
 import os
 from copy import deepcopy
 from qgis.core import QgsVectorLayer, QgsVectorFileWriter
-
 from utilities import get_qgis_app
-
-QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 from svir.calculations.calculate_utils import (calculate_node,
                                                get_node_attr_id_and_name,
                                                calculate_composite_variable,
@@ -37,90 +34,94 @@ from svir.calculations.calculate_utils import (calculate_node,
 from svir.calculations.process_layer import ProcessLayer
 from svir.utilities.utils import set_operator, get_node
 from svir.utilities.shared import OPERATORS_DICT, DiscardedFeature
+QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
+
+
+PROJ_DEF_STD_OPERATORS = {
+    "name": "IRI",
+    "weight": 1.0,
+    "level": "1.0",
+    "operator": "Weighted sum",
+    "type": "Integrated Risk Index",
+    "children": [
+        {"name": "RI",
+         "type": "Risk Index",
+         "children": [],
+         "weight": 0.5,
+         "level": "2.0"
+         },
+        {"name": "SVI",
+         "type": "Social Vulnerability Index",
+         "children": [
+             {"name": "Education",
+              "weight": 0.5,
+              "level": "3.0",
+              "operator": "Weighted sum",
+              "type": "Social Vulnerability Theme",
+              "children": [
+                  {"name": ("Female population without secondary"
+                            " education or higher"),
+                   "isInverted": True,
+                   "weight": 0.2,
+                   "level": 4.0,
+                   "field": "EDUEOCSAF",
+                   "type": "Social Vulnerability Indicator",
+                   "children": []
+                   },
+                  {"name": ("Male population without secondary"
+                            " education or higher"),
+                   "isInverted": True,
+                   "weight": 0.3,
+                   "level": 4.0,
+                   "field": "EDUEOCSAM",
+                   "type": "Social Vulnerability Indicator",
+                   "children": []
+                   },
+                  {"name": "Scientific and technical journal articles",
+                   "weight": 0.5,
+                   "level": 4.0,
+                   "field": "EDUEOCSTJ",
+                   "type": "Social Vulnerability Indicator",
+                   "children": []
+                   }
+              ]
+              },
+             {"name": "Environment",
+              "weight": 0.5,
+              "level": "3.0",
+              "operator": "Weighted sum",
+              "type": "Social Vulnerability Theme",
+              "children": [
+                  {"name": "Droughts, floods, extreme temperatures",
+                   "weight": 0.5,
+                   "level": 4.1,
+                   "field": "ENVDIPDFT",
+                   "type": "Social Vulnerability Indicator",
+                   "children": []
+                   },
+                  {"name": "Natural disasters  - Number of deaths",
+                   "weight": 0.5,
+                   "level": 4.1,
+                   "field": "ENVDIPIND",
+                   "type": "Social Vulnerability Indicator",
+                   "children": []
+                   }
+              ]
+              }
+         ],
+         "weight": 0.5,
+         "level": "2.0"
+         }
+    ],
+    "description": ""
+}
 
 
 class CalculateCompositeVariableTestCase(unittest.TestCase):
 
     def setUp(self):
 
-        self.project_definition = {
-            "name": "IRI",
-            "weight": 1.0,
-            "level": "1.0",
-            "operator": "Weighted sum",
-            "type": "Integrated Risk Index",
-            "children": [
-                {"name": "RI",
-                 "type": "Risk Index",
-                 "children": [],
-                 "weight": 0.5,
-                 "level": "2.0"
-                 },
-                {"name": "SVI",
-                 "type": "Social Vulnerability Index",
-                 "children": [
-                     {"name": "Education",
-                      "weight": 0.5,
-                      "level": "3.0",
-                      "operator": "Weighted sum",
-                      "type": "Social Vulnerability Theme",
-                      "children": [
-                          {"name": ("Female population without secondary"
-                                    " education or higher"),
-                           "isInverted": True,
-                           "weight": 0.2,
-                           "level": 4.0,
-                           "field": "EDUEOCSAF",
-                           "type": "Social Vulnerability Indicator",
-                           "children": []
-                           },
-                          {"name": ("Male population without secondary"
-                                    " education or higher"),
-                           "isInverted": True,
-                           "weight": 0.3,
-                           "level": 4.0,
-                           "field": "EDUEOCSAM",
-                           "type": "Social Vulnerability Indicator",
-                           "children": []
-                           },
-                          {"name": "Scientific and technical journal articles",
-                           "weight": 0.5,
-                           "level": 4.0,
-                           "field": "EDUEOCSTJ",
-                           "type": "Social Vulnerability Indicator",
-                           "children": []
-                           }
-                      ]
-                      },
-                     {"name": "Environment",
-                      "weight": 0.5,
-                      "level": "3.0",
-                      "operator": "Weighted sum",
-                      "type": "Social Vulnerability Theme",
-                      "children": [
-                          {"name": "Droughts, floods, extreme temperatures",
-                           "weight": 0.5,
-                           "level": 4.1,
-                           "field": "ENVDIPDFT",
-                           "type": "Social Vulnerability Indicator",
-                           "children": []
-                           },
-                          {"name": "Natural disasters  - Number of deaths",
-                           "weight": 0.5,
-                           "level": 4.1,
-                           "field": "ENVDIPIND",
-                           "type": "Social Vulnerability Indicator",
-                           "children": []
-                           }
-                      ]
-                      }
-                 ],
-                 "weight": 0.5,
-                 "level": "2.0"
-                 }
-            ],
-            "description": ""
-        }
+        self.project_definition = PROJ_DEF_STD_OPERATORS
 
         # Load layer
         curr_dir_name = os.path.dirname(__file__)
@@ -131,6 +132,27 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         orig_layer = QgsVectorLayer(layer_path, 'Zonal Layer', 'ogr')
         # Avoid modifying the original files
         self.layer = ProcessLayer(orig_layer).duplicate_in_memory()
+
+    def test_custom_operator(self):
+        proj_def = deepcopy(self.project_definition)
+        operator = OPERATORS_DICT['CUSTOM']
+        # set economy's operator to custom and use a custom formula
+        proj_def['children'][1]['children'][0]['operator'] = operator
+        proj_def['children'][1]['children'][0]['fieldDescription'] = \
+            'EDUEOCSAF plus one'
+        proj_def['children'][1]['children'][0]['customFormula'] = \
+            '"EDUEOCSAF" + 1'
+        node_attr_id, node_attr_name, discarded_feats = \
+            calculate_education_node(proj_def, operator, self.layer)
+        expected_layer_path = os.path.join(
+            self.data_dir_name, 'custom_operator.shp')
+        expected_layer = QgsVectorLayer(
+            expected_layer_path, 'custom_operator', 'ogr')
+        res = ProcessLayer(self.layer).has_same_content_as(expected_layer)
+        self.assertEqual(res, True)
+        # # # to rebuild the outputs
+        # res_layer_name = 'custom_operator'
+        # write_output(self.layer, self.data_dir_name, res_layer_name)
 
     def test_simple_sum(self):
         proj_def = deepcopy(self.project_definition)
