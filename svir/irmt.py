@@ -28,6 +28,7 @@ import uuid
 import fileinput
 import re
 import sys
+import platform
 
 from copy import deepcopy
 from math import floor, ceil
@@ -247,7 +248,8 @@ class Irmt:
                            add_to_layer_actions=False,
                            submenu='Utilities')
 
-        if OQ_DEPENDENCIES_OK:
+        # currently available only in Ubuntu
+        if OQ_DEPENDENCIES_OK and platform.linux_distribution()[0] == 'Ubuntu':
             # Action to load as layer hazard maps from hdf5 produced by the
             # oq-engine
             self.add_menu_item("load_hmaps_from_hdf5_as_layer",
@@ -284,7 +286,7 @@ class Irmt:
             # scenario damage calculation
             self.add_menu_item("plot_dmg_total",
                                ":/plugins/irmt/calculate.svg",  # FIXME
-                               u"Plot total damage",
+                               u"Plot total damage from HDF5",
                                self.plot_dmg_total_from_hdf5,
                                enable=True,
                                submenu='OQ Engine')
@@ -292,7 +294,7 @@ class Irmt:
             # by a scenario damage calculation
             self.add_menu_item("plot_dmg_by_taxon",
                                ":/plugins/irmt/calculate.svg",  # FIXME
-                               u"Plot damage by taxonomy",
+                               u"Plot damage by taxonomy from HDF5",
                                self.plot_dmg_by_taxon_from_hdf5,
                                enable=True,
                                submenu='OQ Engine')
