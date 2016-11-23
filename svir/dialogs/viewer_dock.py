@@ -75,6 +75,9 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.poe_cbx = None
         self.approach_lbl = None
         self.approach_cbx = None
+        self.n_simulations_lbl = None
+        self.n_simulations_sbx = None
+        self.warning_n_simulations_lbl = None
 
         self.current_selection = {}
         self.current_imt = None
