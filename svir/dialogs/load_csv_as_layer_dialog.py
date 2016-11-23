@@ -40,7 +40,6 @@ from PyQt4.QtGui import (QDialogButtonBox,
                          QFileDialog,
                          QColor,
                          )
-from svir.calculations.process_layer import ProcessLayer
 from svir.utilities.utils import get_ui_class, tr
 
 FORM_CLASS = get_ui_class('ui_load_csv_as_layer.ui')
@@ -147,8 +146,6 @@ class LoadCsvAsLayerDialog(QDialog, FORM_CLASS):
             raise RuntimeError('Could not save shapefile')
         shp_layer = QgsVectorLayer(
             dest_filename, 'Damage by asset', 'ogr')
-        ProcessLayer(shp_layer).delete_attributes(
-            [longitude_field, latitude_field]),
         if shp_layer.isValid():
             QgsMapLayerRegistry.instance().addMapLayer(shp_layer)
         else:
@@ -217,7 +214,7 @@ class LoadCsvAsLayerDialog(QDialog, FORM_CLASS):
         field_idx = -1  # default
         for idx, name in enumerate(self.csv_header):
             if damage_state in name and loss_type in name and 'mean' in name:
-                field_idx = idx - 2  # lon and lat are removed from fields
+                field_idx = idx
         # FIXME: remove prints
         print self.csv_header
         print [field.name() for field in layer.dataProvider().fields()]

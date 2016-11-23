@@ -36,7 +36,7 @@ from svir.utilities.utils import (
                                   )
 
 NUM_LOSS_BASED_DMG_STATES = 5
-HEADING_FIELDS_TO_DISCARD = 2
+HEADING_FIELDS_TO_DISCARD = 4
 DAYS_BEFORE_EVENT = 0
 MARGIN_DAYS_AFTER = 400
 MIN_SAMPLES = 250
@@ -73,7 +73,7 @@ class RecoveryModeling(object):
         zonal_dmg_by_asset_probs = defaultdict(list)
         zonal_asset_refs = defaultdict(list)
         # select fields that contain probabilities
-        # i.e., ignore asset id and taxonomy (first
+        # i.e., ignore asset id, taxonomy, lon and lat (first
         # HEADING_FIELDS_TO_DISCARD items)
         # and get only columns containing means, discarding
         # those containing stddevs, therefore getting one item
