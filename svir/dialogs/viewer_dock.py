@@ -224,6 +224,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             elif new_output_type == 'uhs':
                 self.remove_widgets_from_layout(
                     [self.imt_lbl, self.imt_cbx,
+                     self.poe_lbl, self.poe_cbx,
                      self.loss_type_lbl, self.loss_type_cbx,
                      self.approach_lbl, self.approach_cbx],
                     self.typeDepHLayout1)
@@ -288,8 +289,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         if self.output_type == 'hcurves':
             self.plot.set_xscale('log')
             self.plot.set_yscale('log')
-            self.plot.set_xlabel('Intensity Measure Level')
-            self.plot.set_ylabel('Probability of Exceedance')
+            self.plot.set_xlabel('Intensity measure level')
+            self.plot.set_ylabel('Probability of exceedance')
             imt = self.imt_cbx.currentText()
             if count_selected == 0:
                 title = ''
@@ -301,7 +302,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             self.plot.set_xscale('log')
             self.plot.set_yscale('linear')
             self.plot.set_xlabel('Losses')
-            self.plot.set_ylabel('Probability of Exceedance')
+            self.plot.set_ylabel('Probability of exceedance')
             loss_type = self.loss_type_cbx.currentText()
             if count_selected == 0:
                 title = ''
@@ -317,9 +318,9 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             if count_selected == 0:
                 title = ''
             elif count_selected == 1:
-                title = 'Uniform Hazard Spectrum'
+                title = 'Uniform hazard spectrum'
             else:
-                title = 'Uniform Hazard Spectra'
+                title = 'Uniform hazard spectra'
         elif self.output_type == 'recovery_curves':
             self.plot.set_xscale('linear')
             self.plot.set_yscale('linear')
