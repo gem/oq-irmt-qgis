@@ -25,6 +25,7 @@
 
 import os
 import numpy as np
+import h5py
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 (works by side effect)
 import matplotlib.pyplot as plt
 from PyQt4.QtCore import pyqtSlot, QDir
@@ -241,8 +242,8 @@ class PlotFromHdf5Dialog(QDialog, FORM_CLASS):
 
     def accept(self):
         loss_type = self.loss_type_cbx.currentText()
-        dmg_states = self.hfile.get('composite_risk_model').attrs[
-            'damage_states'].tolist()
+        crm = h5py.File.__getitem__(self.hfile, 'composite_risk_model')
+        dmg_states = crm.attrs['damage_states'].tolist()
         if self.output_type == 'dmg_total':
             # self.plot_dmg_total(loss_type, dmg_states)
             self.plot_total_damage_dist(loss_type, dmg_states)
