@@ -56,7 +56,6 @@ from svir.utilities.shared import DEBUG
 from svir.utilities.utils import (LayerEditingManager,
                                   WaitCursorManager,
                                   get_ui_class,
-                                  is_hdfview_installed,
                                   )
 from svir.calculations.calculate_utils import (add_numeric_attribute,
                                                add_textual_attribute,
@@ -94,7 +93,6 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
         # Disable ok_button until all comboboxes are filled
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         self.ok_button.setDisabled(True)
-        self.open_hdfview_btn.setDisabled(True)
         self.define_gui_elements()
         self.adjust_gui_for_output_type()
         if self.npz_path:
@@ -109,8 +107,6 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
             self.populate_rlz_cbx()
             self.populate_damage_states()
         self.default_field_name = None
-        if not is_hdfview_installed():
-            self.open_hdfview_btn.hide()
 
     def define_gui_elements(self):
         self.rlz_lbl = QLabel('Realization (different realizations'
@@ -218,19 +214,6 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
             self.verticalLayout.addWidget(self.damage_state_lbl)
             self.verticalLayout.addWidget(self.damage_state_cbx)
             self.adjustSize()
-
-    @pyqtSlot(str)
-    def on_npz_path_le_textChanged(self):
-        self.open_hdfview_btn.setDisabled(
-            self.npz_path_le.text() == '')
-
-    @pyqtSlot()
-    def on_open_hdfview_btn_clicked(self):
-        file_path = self.npz_path_le.text()
-        if file_path:
-            to_run = "hdfview " + file_path
-            # FIXME make system independent
-            os.system(to_run)
 
     @pyqtSlot()
     def on_file_browser_tbn_clicked(self):

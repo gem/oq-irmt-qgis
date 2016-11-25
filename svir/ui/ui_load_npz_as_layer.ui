@@ -39,16 +39,6 @@
          </property>
         </widget>
        </item>
-       <item>
-        <widget class="QPushButton" name="open_hdfview_btn">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <property name="text">
-          <string>Open with HDFView</string>
-         </property>
-        </widget>
-       </item>
       </layout>
      </item>
     </layout>

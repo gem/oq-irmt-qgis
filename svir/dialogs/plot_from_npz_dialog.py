@@ -37,7 +37,7 @@ from PyQt4.QtGui import (QDialogButtonBox,
                          QCheckBox,
                          )
 
-from svir.utilities.utils import get_ui_class, is_hdfview_installed
+from svir.utilities.utils import get_ui_class
 
 FORM_CLASS = get_ui_class('ui_load_npz_as_layer.ui')
 
@@ -62,7 +62,6 @@ class PlotFromNpzDialog(QDialog, FORM_CLASS):
         # Disable ok_button until all comboboxes are filled
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         self.ok_button.setDisabled(True)
-        self.open_hdfview_btn.setDisabled(True)
         self.define_gui_elements()
         self.adjust_gui_for_output_type()
         if self.npz_path:
@@ -72,8 +71,6 @@ class PlotFromNpzDialog(QDialog, FORM_CLASS):
             self.populate_loss_type_cbx()
             self.set_ok_button()
         self.default_field_name = None
-        if not is_hdfview_installed():
-            self.open_hdfview_btn.hide()
 
     def define_gui_elements(self):
         self.rlz_lbl = QLabel('Realization (different realizations'
@@ -105,25 +102,9 @@ class PlotFromNpzDialog(QDialog, FORM_CLASS):
         self.verticalLayout.addWidget(self.exclude_no_dmg_ckb)
         self.adjustSize()
 
-    @pyqtSlot(str)
-    def on_npz_path_le_textChanged(self):
-        self.open_hdfview_btn.setDisabled(
-            self.npz_path_le.text() == '')
-
-    @pyqtSlot()
-    def on_open_hdfview_btn_clicked(self):
-        file_path = self.npz_path_le.text()
-        if file_path:
-            to_run = "hdfview " + file_path
-            # FIXME make system independent
-            os.system(to_run)
-
     @pyqtSlot()
     def on_file_browser_tbn_clicked(self):
         self.npz_path = self.open_file_dialog()
-
-    # def on_rlz_changed(self):
-    #     self.dataset = self.hdata.get(self.rlz_cbx.currentText())
 
     def on_loss_type_changed(self):
         self.loss_type = self.loss_type_cbx.currentText()
