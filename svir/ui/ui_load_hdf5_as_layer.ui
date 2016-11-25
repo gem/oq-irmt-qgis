@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>LoadHdf5AsLayerDialog</class>
- <widget class="QDialog" name="LoadHdf5AsLayerDialog">
+ <class>LoadNpzAsLayerDialog</class>
+ <widget class="QDialog" name="LoadNpzAsLayerDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Load hdf5 as layer</string>
+   <string>Load npz as layer</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
@@ -19,9 +19,9 @@
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
-        <widget class="QLabel" name="hdf5_lbl">
+        <widget class="QLabel" name="npz_lbl">
          <property name="text">
-          <string>Hdf5 file</string>
+          <string>Npz file</string>
          </property>
         </widget>
        </item>
@@ -33,7 +33,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="hdf5_path_le">
+        <widget class="QLineEdit" name="npz_path_le">
          <property name="enabled">
           <bool>false</bool>
          </property>
@@ -70,7 +70,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>LoadHdf5AsLayerDialog</receiver>
+   <receiver>LoadNpzAsLayerDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -86,7 +86,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>LoadHdf5AsLayerDialog</receiver>
+   <receiver>LoadNpzAsLayerDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

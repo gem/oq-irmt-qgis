@@ -28,7 +28,6 @@ import uuid
 import fileinput
 import re
 import sys
-import platform
 
 from copy import deepcopy
 from math import floor, ceil
@@ -111,10 +110,10 @@ if oq_engine_path and oq_engine_path not in sys.path:
     sys.path.append(oq_engine_path)
 
 try:
-    from openquake.baselib import hdf5  # noqa: F401
+    import openquake  # noqa: F401
 
-    from svir.dialogs.load_hdf5_as_layer_dialog import LoadHdf5AsLayerDialog
-    from svir.dialogs.plot_from_hdf5_dialog import PlotFromHdf5Dialog
+    from svir.dialogs.load_npz_as_layer_dialog import LoadNpzAsLayerDialog
+    from svir.dialogs.plot_from_npz_dialog import PlotFromNpzDialog
     OQ_DEPENDENCIES_OK = True
 except ImportError:
     OQ_DEPENDENCIES_OK = False
@@ -248,73 +247,72 @@ class Irmt:
                            add_to_layer_actions=False,
                            submenu='Utilities')
 
-        # currently available only in Ubuntu
-        if OQ_DEPENDENCIES_OK and platform.linux_distribution()[0] == 'Ubuntu':
-            # Action to load as layer hazard maps from hdf5 produced by the
+        if OQ_DEPENDENCIES_OK:
+            # Action to load as layer hazard maps from npz produced by the
             # oq-engine
-            self.add_menu_item("load_hmaps_from_hdf5_as_layer",
+            self.add_menu_item("load_hmaps_from_npz_as_layer",
                                ":/plugins/irmt/calculate.svg",  # FIXME
-                               u"Load hazard maps from HDF5 as layer",
-                               self.load_hmaps_from_hdf5_as_layer,
+                               u"Load hazard maps from NPZ as layer",
+                               self.load_hmaps_from_npz_as_layer,
                                enable=True,
                                submenu='OQ Engine')
-            # Action to load as layer hazard curves from hdf5 produced by the
+            # Action to load as layer hazard curves from npz produced by the
             # oq-engine
-            self.add_menu_item("load_hcurves_from_hdf5_as_layer",
+            self.add_menu_item("load_hcurves_from_npz_as_layer",
                                ":/plugins/irmt/calculate.svg",  # FIXME
-                               u"Load hazard curves from HDF5 as layer",
-                               self.load_hcurves_from_hdf5_as_layer,
+                               u"Load hazard curves from NPZ as layer",
+                               self.load_hcurves_from_npz_as_layer,
                                enable=True,
                                submenu='OQ Engine')
-            # Action to load as layer loss maps from hdf5 produced by the
+            # Action to load as layer loss maps from npz produced by the
             # oq-engine
-            self.add_menu_item("load_loss_maps_from_hdf5_as_layer",
+            self.add_menu_item("load_loss_maps_from_npz_as_layer",
                                ":/plugins/irmt/calculate.svg",  # FIXME
-                               u"Load loss maps from HDF5 as layer",
-                               self.load_loss_maps_from_hdf5_as_layer,
+                               u"Load loss maps from NPZ as layer",
+                               self.load_loss_maps_from_npz_as_layer,
                                enable=True,
                                submenu='OQ Engine')
-            # Action to load as layer loss curves from hdf5 produced by the
+            # Action to load as layer loss curves from npz produced by the
             # oq-engine
-            self.add_menu_item("load_loss_curves_from_hdf5_as_layer",
+            self.add_menu_item("load_loss_curves_from_npz_as_layer",
                                ":/plugins/irmt/calculate.svg",  # FIXME
-                               u"Load loss curves from HDF5 as layer",
-                               self.load_loss_curves_from_hdf5_as_layer,
+                               u"Load loss curves from NPZ as layer",
+                               self.load_loss_curves_from_npz_as_layer,
                                enable=True,
                                submenu='OQ Engine')
-            # Action to plot total damage reading it from a HDF5 produced by a
+            # Action to plot total damage reading it from a NPZ produced by a
             # scenario damage calculation
             self.add_menu_item("plot_dmg_total",
                                ":/plugins/irmt/calculate.svg",  # FIXME
-                               u"Plot total damage from HDF5",
-                               self.plot_dmg_total_from_hdf5,
+                               u"Plot total damage from NPZ",
+                               self.plot_dmg_total_from_npz,
                                enable=True,
                                submenu='OQ Engine')
-            # Action to plot damage by taxonomy reading it from a HDF5 produced
+            # Action to plot damage by taxonomy reading it from a NPZ produced
             # by a scenario damage calculation
             self.add_menu_item("plot_dmg_by_taxon",
                                ":/plugins/irmt/calculate.svg",  # FIXME
-                               u"Plot damage by taxonomy from HDF5",
-                               self.plot_dmg_by_taxon_from_hdf5,
+                               u"Plot damage by taxonomy from NPZ",
+                               self.plot_dmg_by_taxon_from_npz,
                                enable=True,
                                submenu='OQ Engine')
-            # Action to load as layer ground motion fields from hdf5 produced
+            # Action to load as layer ground motion fields from npz produced
             # by the oq-engine with a scenario damage hazard calculation
             self.add_menu_item(
-                    "load_scenario_damage_gmfs_from_hdf5_as_layer",
+                    "load_scenario_damage_gmfs_from_npz_as_layer",
                     ":/plugins/irmt/calculate.svg",  # FIXME
                     u"Load scenario damage ground motion "
-                    "fields from HDF5 as layer",
-                    self.load_scenario_damage_gmfs_from_hdf5_as_layer,
+                    "fields from NPZ as layer",
+                    self.load_scenario_damage_gmfs_from_npz_as_layer,
                     enable=True,
                     submenu='OQ Engine')
-            # Action to load as layer damage by asset from hdf5 produced by
+            # Action to load as layer damage by asset from npz produced by
             # the oq-engine with a scenario damage risk calculation
             self.add_menu_item(
-                    "load_scenario_damage_by_asset_from_hdf5_as_layer",
+                    "load_scenario_damage_by_asset_from_npz_as_layer",
                     ":/plugins/irmt/calculate.svg",  # FIXME
-                    u"Load scenario damage by asset from HDF5 as layer",
-                    self.load_scenario_damage_by_asset_from_hdf5_as_layer,
+                    u"Load scenario damage by asset from NPZ as layer",
+                    self.load_scenario_damage_by_asset_from_npz_as_layer,
                     enable=True,
                     submenu='OQ Engine')
         else:
@@ -364,7 +362,7 @@ class Irmt:
         title = tr('Missing dependencies for extra features')
         text = tr('To enable extra features install and set the oq-engine and'
                   ' oq-hazardlib path in the settings panel and make sure'
-                  ' their dependencies are satisfied (e.g. h5py is installed)')
+                  ' their dependencies are satisfied')
 
         if QSettings().value('irmt/oq_deps_warn', True, type=bool):
             answer = QMessageBox.information(
@@ -380,42 +378,42 @@ class Irmt:
         dlg = RecoveryModelingDialog(self.iface)
         dlg.exec_()
 
-    def load_hmaps_from_hdf5_as_layer(self):
-        dlg = LoadHdf5AsLayerDialog(self.iface, 'hmaps')
+    def load_hmaps_from_npz_as_layer(self):
+        dlg = LoadNpzAsLayerDialog(self.iface, 'hmaps')
         dlg.exec_()
         self.viewer_dock.change_output_type('')
 
-    def load_hcurves_from_hdf5_as_layer(self):
-        dlg = LoadHdf5AsLayerDialog(self.iface, 'hcurves')
+    def load_hcurves_from_npz_as_layer(self):
+        dlg = LoadNpzAsLayerDialog(self.iface, 'hcurves')
         dlg.exec_()
         self.viewer_dock.change_output_type('Hazard Curves')
 
-    def load_loss_maps_from_hdf5_as_layer(self):
-        dlg = LoadHdf5AsLayerDialog(self.iface, 'loss_maps')
+    def load_loss_maps_from_npz_as_layer(self):
+        dlg = LoadNpzAsLayerDialog(self.iface, 'loss_maps')
         dlg.exec_()
         self.viewer_dock.change_output_type('')
 
-    def load_loss_curves_from_hdf5_as_layer(self):
-        dlg = LoadHdf5AsLayerDialog(self.iface, 'loss_curves')
+    def load_loss_curves_from_npz_as_layer(self):
+        dlg = LoadNpzAsLayerDialog(self.iface, 'loss_curves')
         dlg.exec_()
         self.viewer_dock.change_output_type('Loss Curves')
 
-    def load_scenario_damage_gmfs_from_hdf5_as_layer(self):
-        dlg = LoadHdf5AsLayerDialog(self.iface, 'scenario_damage_gmfs')
+    def load_scenario_damage_gmfs_from_npz_as_layer(self):
+        dlg = LoadNpzAsLayerDialog(self.iface, 'scenario_damage_gmfs')
         dlg.exec_()
         self.viewer_dock.change_output_type('')
 
-    def load_scenario_damage_by_asset_from_hdf5_as_layer(self):
-        dlg = LoadHdf5AsLayerDialog(self.iface, 'scenario_damage_by_asset')
+    def load_scenario_damage_by_asset_from_npz_as_layer(self):
+        dlg = LoadNpzAsLayerDialog(self.iface, 'scenario_damage_by_asset')
         dlg.exec_()
         self.viewer_dock.change_output_type('')
 
-    def plot_dmg_total_from_hdf5(self):
-        dlg = PlotFromHdf5Dialog(self.iface, 'dmg_total')
+    def plot_dmg_total_from_npz(self):
+        dlg = PlotFromNpzDialog(self.iface, 'dmg_total')
         dlg.exec_()
 
-    def plot_dmg_by_taxon_from_hdf5(self):
-        dlg = PlotFromHdf5Dialog(self.iface, 'dmg_by_taxon')
+    def plot_dmg_by_taxon_from_npz(self):
+        dlg = PlotFromNpzDialog(self.iface, 'dmg_by_taxon')
         dlg.exec_()
 
     def load_geojson_as_layer(self):

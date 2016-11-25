@@ -61,8 +61,9 @@ class DiscardedFeature(object):
         return (self.feature_id == other.feature_id
                 and self.reason == other.reason)
 
-    def __ne__(self, other):  # python requrires to explicitly define not equal
-                              # so we implement the negation of __eq__
+    def __ne__(self, other):
+        # python requrires to explicitly define not equal so we implement the
+        # negation of __eq__
         return not self.__eq__(other)
 
     def __lt__(self, other):  # for sorting
@@ -180,13 +181,13 @@ HELP_PAGES_LOOKUP = {
     'aggregate_losses': '10_aggregate_loss_by_zone.html',
     'upload': '11_upload_project_to_platform.html',
     'show_settings': '04_connection_settings.html',
-    'load_hdf5_as_layer': 'FIXME',
-    'load_hcurves_from_hdf5_as_layer': 'FIXME',
-    'load_loss_curves_from_hdf5_as_layer': 'FIXME',
-    'load_hmaps_from_hdf5_as_layer': 'FIXME',
-    'load_loss_maps_from_hdf5_as_layer': 'FIXME',
-    'load_scenario_damage_gmfs_from_hdf5_as_layer': 'FIXME',
-    'load_scenario_damage_by_asset_from_hdf5_as_layer': 'FIXME',
+    'load_npz_as_layer': 'FIXME',
+    'load_hcurves_from_npz_as_layer': 'FIXME',
+    'load_loss_curves_from_npz_as_layer': 'FIXME',
+    'load_hmaps_from_npz_as_layer': 'FIXME',
+    'load_loss_maps_from_npz_as_layer': 'FIXME',
+    'load_scenario_damage_gmfs_from_npz_as_layer': 'FIXME',
+    'load_scenario_damage_by_asset_from_npz_as_layer': 'FIXME',
     'plot_dmg_total': 'FIXME',
     'plot_dmg_by_taxon': 'FIXME',
     'load_geojson_as_layer': 'FIXME',

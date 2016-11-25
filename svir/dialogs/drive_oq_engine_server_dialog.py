@@ -54,7 +54,7 @@ from svir.utilities.utils import (WaitCursorManager,
                                   SvNetworkError,
                                   is_hdfview_installed,
                                   )
-from svir.dialogs.load_hdf5_as_layer_dialog import LoadHdf5AsLayerDialog
+from svir.dialogs.load_npz_as_layer_dialog import LoadNpzAsLayerDialog
 from svir.dialogs.load_geojson_as_layer_dialog import LoadGeoJsonAsLayerDialog
 from svir.dialogs.load_csv_as_layer_dialog import LoadCsvAsLayerDialog
 
@@ -478,13 +478,13 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         output_type = output['type']
         if action == 'Load as layer':
             dest_folder = tempfile.gettempdir()
-            if outtype == 'hdf5':
+            if outtype == 'npz':
                 filepath = self.download_output(
                     output_id, outtype, dest_folder)
-                dlg = LoadHdf5AsLayerDialog(self.iface, output_type, filepath)
+                dlg = LoadNpzAsLayerDialog(self.iface, output_type, filepath)
                 dlg.exec_()
             elif outtype == 'geojson':
-                # FIXME: hazard maps do not produce an hdf5. Currently, it is
+                # FIXME: hazard maps do not produce an npz. Currently, it is
                 #        possible to read from geojson, but it doesn't work
                 #        pressing "load as layer" for the hmap
                 filepath = self.download_output(
@@ -506,7 +506,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 tr("Info"),
                 'Calculation %s was saved as %s' % (output_id, filepath),
                 level=QgsMessageBar.INFO)
-            if outtype == 'hdf5':
+            if outtype == 'npz':
                 if is_hdfview_installed():
                     try:
                         subprocess.call(['hdfview', filepath])
