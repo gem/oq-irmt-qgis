@@ -151,7 +151,7 @@ class PlotFromNpzDialog(QDialog, FORM_CLASS):
         pass
 
     def populate_loss_type_cbx(self):
-        self.loss_types = self.npz_file.get(self.output_type).dtype.names
+        self.loss_types = self.npz_file[self.output_type].dtype.names
         self.loss_type_cbx.clear()
         self.loss_type_cbx.setEnabled(True)
         self.loss_type_cbx.addItems(self.loss_types)
@@ -163,9 +163,9 @@ class PlotFromNpzDialog(QDialog, FORM_CLASS):
         '''
         Plots the damage distribution for the specified taxonomies
         '''
-        taxonomies = self.npz_file.get('assetcol/taxonomies').value.tolist()
+        taxonomies = self.npz_file['assetcol/taxonomies'].value.tolist()
         # discard stddev (do not show error bars)
-        dmg_by_taxon = self.npz_file.get('dmg_by_taxon')[loss_type]['mean']
+        dmg_by_taxon = self.npz_file['dmg_by_taxon'][loss_type]['mean']
         if self.exclude_no_dmg_ckb.isChecked():
             # exclude the first element, that is 'no damage'
             dmg_states = dmg_states[1:]
@@ -208,7 +208,7 @@ class PlotFromNpzDialog(QDialog, FORM_CLASS):
         '''
         Plots the total damage distribution
         '''
-        self.dataset = self.npz_file.get('dmg_total')
+        self.dataset = self.npz_file['dmg_total']
         means = self.dataset[loss_type]['mean'].tolist()[0]
         stddevs = self.dataset[loss_type]['stddev'].tolist()[0]
         if self.exclude_no_dmg_ckb.isChecked():

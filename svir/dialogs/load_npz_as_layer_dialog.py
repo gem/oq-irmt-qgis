@@ -276,7 +276,7 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
         elif self.output_type == 'loss_curves':
             self.loss_types = self.hdata.dtype.names
         elif self.output_type == 'gmf_data':
-            self.dataset = self.npz_file.get(self.rlz_cbx.currentText())
+            self.dataset = self.npz_file[self.rlz_cbx.currentText()]
             self.imts = {}
             for name in self.dataset.dtype.names[2:]:
                 imt, eid = name.split('-')
@@ -364,7 +364,7 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
     def get_taxonomies(self):
         if self.output_type in (
                 'loss_curves', 'loss_maps', 'scenario_damage_by_asset'):
-            self.taxonomies = self.npz_file.get('assetcol/taxonomies')[:].tolist()
+            self.taxonomies = self.npz_file['assetcol/taxonomies'][:].tolist()
 
     def populate_taxonomies(self):
         if self.output_type == 'scenario_damage_by_asset':
@@ -376,27 +376,27 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
     def populate_damage_states(self):
         if self.output_type == 'scenario_damage_by_asset':
             self.damage_states = ['no damage']
-            self.damage_states.extend(self.npz_file.get('oqparam').limit_states)
+            self.damage_states.extend(self.npz_file['oqparam'].limit_states)
             self.damage_state_cbx.clear()
             self.damage_state_cbx.setEnabled(True)
             self.damage_state_cbx.addItems(self.damage_states)
 
     def populate_rlz_cbx(self):
         if self.output_type in ('hcurves', 'hmaps', 'uhs'):
-            # self.hdata = self.npz_file.get(self.output_type)
+            # self.hdata = self.npz_file[self.output_type]
             self.rlzs = [key for key in self.npz_file.keys()
                          if key.startswith('rlz')]
         elif self.output_type in ('loss_curves', 'loss_maps'):
             if self.output_type == 'loss_curves':
-                self.hdata = self.npz_file.get('loss_curves-rlzs')
+                self.hdata = self.npz_file['loss_curves-rlzs']
             elif self.output_type == 'loss_maps':
-                self.hdata = self.npz_file.get('loss_maps-rlzs')
+                self.hdata = self.npz_file['loss_maps-rlzs']
             _, n_rlzs = self.hdata.shape
             self.rlzs = [str(i+1) for i in range(n_rlzs)]
         elif self.output_type == 'gmf_data':
             self.rlzs = [item[0] for item in self.npz_file.items()]
         elif self.output_type == 'scenario_damage_by_asset':
-            self.hdata = self.npz_file.get('dmg_by_asset')
+            self.hdata = self.npz_file['dmg_by_asset']
             _, n_rlzs = self.hdata.shape
             self.rlzs = [str(i+1) for i in range(n_rlzs)]
         self.rlz_cbx.clear()
@@ -533,8 +533,8 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
                 # the coordinates lon and lat of the asset.
                 # From the selected rows, we extract loss_type -> losses
                 #                                and loss_type -> poes
-                asset_array = self.npz_file.get('assetcol/array')
-                loss_curves = self.npz_file.get('loss_curves-rlzs')[:, rlz_idx]
+                asset_array = self.npz_file['assetcol/array']
+                loss_curves = self.npz_file['loss_curves-rlzs'][:, rlz_idx]
                 for asset_idx, row in enumerate(loss_curves):
                     asset = asset_array[asset_idx]
                     if asset['taxonomy_id'] != taxonomy_idx:
@@ -560,8 +560,8 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
                 # taxonomy is found in the assetcol/array, together with
                 # the coordinates lon and lat of the asset.
                 # From the selected rows, we extract loss_type -> poes
-                asset_array = self.npz_file.get('assetcol/array')
-                loss_maps = self.npz_file.get('loss_maps-rlzs')[:, rlz_idx]
+                asset_array = self.npz_file['assetcol/array']
+                loss_maps = self.npz_file['loss_maps-rlzs'][:, rlz_idx]
                 for asset_idx, row in enumerate(loss_maps):
                     asset = asset_array[asset_idx]
                     if asset['taxonomy_id'] != taxonomy_idx:
