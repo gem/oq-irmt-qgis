@@ -233,6 +233,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.calc_list_tbl.resizeRowsToContents()
         return True
 
+    def clear_output_list(self):
+        self.output_list_tbl.clearContents()
+        self.output_list_tbl.setRowCount(0)
+        self.output_list_tbl.setColumnCount(0)
+
     def on_calc_action_btn_clicked(self, calc_id, action):
         if action == 'Console':
             calc_log = self.get_calc_log(calc_id)
@@ -244,13 +249,12 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             self.remove_calc(calc_id)
             if (self.current_output_calc_id is not None
                     and self.current_output_calc_id == calc_id):
-                self.output_list_tbl.clearContents()
-                self.output_list_tbl.setRowCount(0)
-                self.output_list_tbl.setColumnCount(0)
+                self.clear_output_list()
         elif action == 'Outputs':
             output_list = self.get_output_list(calc_id)
             self.list_of_outputs_lbl.setText(
                 'List of outputs for calculation %s' % calc_id)
+            self.clear_output_list()
             self.show_output_list(output_list)
         elif action == 'Run Risk':
             self.run_calc(calc_id)
@@ -384,8 +388,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
     def show_output_list(self, output_list):
         if not output_list:
-            self.output_list_tbl.setRowCount(0)
-            self.output_list_tbl.setColumnCount(0)
+            self.clear_output_list()
             return
         exclude = ['url', 'outtypes']
         selected_keys = [key for key in sorted(output_list[0].keys())
