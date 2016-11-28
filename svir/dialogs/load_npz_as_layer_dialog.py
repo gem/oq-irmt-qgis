@@ -261,17 +261,10 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
             self.loss_types = self.npz_file.dtype.names
         elif self.output_type == 'gmf_data':
             self.dataset = self.npz_file[self.rlz_cbx.currentText()]
-            self.imts = {}
-            for name in self.dataset.dtype.names[2:]:
-                imt, eid = name.split('-')
-                eid = int(eid)
-                if imt not in self.imts:
-                    self.imts[imt] = [eid]
-                else:
-                    self.imts[imt].append(eid)
+            imts = self.dataset.dtype.names[2:]
             self.imt_cbx.clear()
             self.imt_cbx.setEnabled(True)
-            self.imt_cbx.addItems(self.imts.keys())
+            self.imt_cbx.addItems(imts)
         if self.output_type in ('hcurves', 'loss_curves'):
             self.set_ok_button()
 
@@ -289,9 +282,8 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
     def on_imt_changed(self):
         if self.output_type == 'gmf_data':
             imt = self.imt_cbx.currentText()
-            eids = self.imts[imt]
-            min_eid = min(eids)
-            max_eid = max(eids)
+            min_eid = 0
+            max_eid = len(self.dataset[imt] - 1)
             self.eid_sbx.cleanText()
             self.eid_sbx.setEnabled(True)
             self.eid_lbl.setText(
@@ -304,17 +296,6 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
             self.poe_cbx.clear()
             self.poe_cbx.setEnabled(True)
             self.poe_cbx.addItems(self.imts[imt])
-        elif self.output_type == 'FIXME':
-            eids = set(self.dataset['eid'])
-            min_eid = min(eids)
-            max_eid = max(eids)
-            self.eid_sbx.cleanText()
-            self.eid_sbx.setEnabled(True)
-            self.eid_lbl.setText(
-                'Event ID (used for default styling)'
-                ' (range %s-%s)' % (min_eid, max_eid))
-            self.eid_sbx.setRange(min_eid, max_eid)
-            self.set_ok_button()
 
     def on_poe_changed(self):
         self.set_ok_button()
@@ -439,8 +420,8 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
         elif self.output_type == 'gmf_data':
             imt = self.imt_cbx.currentText()
             eid = self.eid_sbx.value()
-            self.default_field_name = '%s-%03d' % (imt, eid)
-            layer_name = "scenario_damage_gmfs_rlz-%s" % rlz
+            self.default_field_name = '%s-%s' % (imt, eid)
+            layer_name = "scenario_damage_gmfs_rlz-%s_eid-%s" % (rlz, eid)
         elif self.output_type == 'scenario_damage_by_asset':
             layer_name = "scenario_damage_by_asset_rlz-%s_%s" % (rlz, taxonomy)
         elif self.output_type == 'uhs':
@@ -466,14 +447,17 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
                 continue
             if self.output_type in ('hmaps',
                                     'loss_maps',
-                                    'uhs',
-                                    'gmf_data'):
+                                    'uhs'):
                 # NOTE: add_numeric_attribute uses LayerEditingManager
                 added_field_name = add_numeric_attribute(
                     field_name, self.layer)
             elif self.output_type in ['hcurves', 'loss_curves']:
                 # FIXME: probably we need a different type with more capacity
                 added_field_name = add_textual_attribute(
+                    field_name, self.layer)
+            elif self.output_type == 'gmf_data':
+                field_name = "%s-%s" % (field_name, eid)
+                added_field_name = add_numeric_attribute(
                     field_name, self.layer)
             else:
                 raise NotImplementedError(self.output_type)
@@ -544,6 +528,7 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
                 # taxonomy is found in the assetcol/array, together with
                 # the coordinates lon and lat of the asset.
                 # From the selected rows, we extract loss_type -> poes
+                # FIXME: with npz, the following needs to be changed
                 asset_array = self.npz_file['assetcol/array']
                 loss_maps = self.npz_file['loss_maps-rlzs'][:, rlz_idx]
                 for asset_idx, row in enumerate(loss_maps):
@@ -563,14 +548,20 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
                         QgsPoint(lon, lat)))
                     feats.append(feat)
             elif self.output_type == 'gmf_data':
+                fields = self.layer.pendingFields()
+                layer_field_names = [field.name() for field in fields]
+                dataset_field_names = field_names
+                d2l_field_names = dict(
+                    zip(dataset_field_names[2:], layer_field_names))
                 for row in self.dataset:
                     # add a feature
-                    feat = QgsFeature(self.layer.pendingFields())
-                    for field_name_idx, field_name in enumerate(field_names):
+                    feat = QgsFeature(fields)
+                    for field_name in dataset_field_names:
                         if field_name in ['lon', 'lat']:
                             continue
-                        value = float(row[field_name_idx])
-                        feat.setAttribute(field_name, value)
+                        layer_field_name = d2l_field_names[field_name]
+                        value = float(row[field_name][eid])
+                        feat.setAttribute(layer_field_name, value)
                     feat.setGeometry(QgsGeometry.fromPoint(
                         QgsPoint(row[0], row[1])))
                     feats.append(feat)
@@ -607,8 +598,8 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
             self.layer,
             self.default_field_name,
             classes_count,
-            # QgsGraduatedSymbolRendererV2.Quantile,
-            QgsGraduatedSymbolRendererV2.EqualInterval,
+            QgsGraduatedSymbolRendererV2.Quantile,
+            # QgsGraduatedSymbolRendererV2.EqualInterval,
             symbol,
             ramp)
         graduated_renderer.updateRangeLowerValue(0, 0.0)
