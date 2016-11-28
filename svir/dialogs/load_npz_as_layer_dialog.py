@@ -23,7 +23,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-import os
 import json
 import numpy
 from qgis.core import (QgsVectorLayer,
@@ -246,18 +245,20 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
             self.imt_cbx.setEnabled(True)
             self.imt_cbx.addItems(self.imts.keys())
         elif self.output_type == 'uhs':
-            self.dataset = self.hdata.get(self.rlz_cbx.currentText())
+            self.dataset = self.npz_file[self.rlz_cbx.currentText()]
             self.poes = self.dataset.dtype.names[2:]
             self.poe_cbx.clear()
             self.poe_cbx.setEnabled(True)
             self.poe_cbx.addItems(self.poes)
         elif self.output_type in ('loss_maps', 'scenario_damage_by_asset'):
-            self.loss_types = self.hdata.dtype.fields
+            # FIXME: likely, self.npz_file.keys()
+            self.loss_types = self.npz_file.dtype.fields
             self.loss_type_cbx.clear()
             self.loss_type_cbx.setEnabled(True)
             self.loss_type_cbx.addItems(self.loss_types.keys())
         elif self.output_type == 'loss_curves':
-            self.loss_types = self.hdata.dtype.names
+            # FIXME: likely, self.npz_file.keys()
+            self.loss_types = self.npz_file.dtype.names
         elif self.output_type == 'gmf_data':
             self.dataset = self.npz_file[self.rlz_cbx.currentText()]
             self.imts = {}

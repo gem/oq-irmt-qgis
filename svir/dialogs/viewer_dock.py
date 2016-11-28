@@ -188,7 +188,9 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             elif new_output_type == 'loss_curves':
                 self.create_loss_type_selector()
             elif new_output_type == 'uhs':
-                self.create_poe_selector()
+                # Currently we are creating a layer for each poe
+                # self.create_poe_selector()
+                pass
             elif new_output_type == 'recovery_curves':
                 self.create_approach_selector()
                 self.create_n_simulations_spinbox()

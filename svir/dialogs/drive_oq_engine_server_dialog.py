@@ -26,7 +26,6 @@ import os
 import json
 import tempfile
 import zipfile
-import subprocess
 
 from qgis.gui import QgsMessageBar
 from PyQt4.QtCore import QDir, Qt, QObject, SIGNAL, QTimer, pyqtSlot
