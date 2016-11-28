@@ -24,8 +24,9 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     1.8.6
-    * Fix reading `composite_risk_model`, for plotting `dmg_total` and `dmg_by_taxon`
     * Use npz instead of hdf5
+    * Fix displaying the output list for oq-engine calculations (properly refreshing)
+    * Fix reading `composite_risk_model`, for plotting `dmg_total` and `dmg_by_taxon`
     1.8.5
     * Enable recovery modeling both for the csv output of oq-engine and for its shapefile translation
     1.8.4
