@@ -65,9 +65,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     it is possible to run calculations, delete them, list them, visualize
     their outputs and loading them as vector layers.
     """
-    def __init__(self, iface, OQ_DEPENDENCIES_OK):
+    def __init__(self, iface):
         self.iface = iface
-        self.OQ_DEPENDENCIES_OK = OQ_DEPENDENCIES_OK
         QDialog.__init__(self)
         # Set up the user interface from Designer.
         self.setupUi(self)
@@ -413,10 +412,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             num_actions = len(row['outtypes'])
             if num_actions > max_actions:
                 max_actions = num_actions
-        if self.OQ_DEPENDENCIES_OK:
-            if (has_hmaps or has_hcurves or has_gmf_data or has_uhs or
-                    has_dmg_by_asset):
-                max_actions += 1
+        if (has_hmaps or has_hcurves or has_gmf_data or has_uhs or
+                has_dmg_by_asset):
+            max_actions += 1
         else:
             if has_dmg_by_asset:
                 max_actions += 1
@@ -435,22 +433,13 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 button = QPushButton()
                 self.connect_button_to_action(button, action, output, outtype)
                 self.output_list_tbl.setCellWidget(row, col, button)
-            if self.OQ_DEPENDENCIES_OK:
-                if output['type'] in [
-                        'hmaps', 'hcurves', 'gmf_data', 'uhs', 'dmg_by_asset']:
-                    action = 'Load as layer'
-                    button = QPushButton()
-                    self.connect_button_to_action(
-                        button, action, output, outtype)
-                    self.output_list_tbl.setCellWidget(row, col + 1, button)
-            else:
-                # the OQ engine can still be driven through its http API
-                if output['type'] in ['dmg_by_asset']:
-                    action = 'Load as layer'
-                    button = QPushButton()
-                    self.connect_button_to_action(
-                        button, action, output, outtype)
-                    self.output_list_tbl.setCellWidget(row, col + 1, button)
+            if output['type'] in [
+                    'hmaps', 'hcurves', 'gmf_data', 'uhs', 'dmg_by_asset']:
+                action = 'Load as layer'
+                button = QPushButton()
+                self.connect_button_to_action(
+                    button, action, output, outtype)
+                self.output_list_tbl.setCellWidget(row, col + 1, button)
         col_names = [key.capitalize() for key in selected_keys]
         empty_col_names = ['' for outtype in range(max_actions)]
         headers = col_names + empty_col_names

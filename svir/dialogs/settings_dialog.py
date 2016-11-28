@@ -23,8 +23,8 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from PyQt4.QtCore import QDir, QSettings, pyqtSlot
-from PyQt4.QtGui import QFileDialog, QDialog
+from PyQt4.QtCore import QSettings
+from PyQt4.QtGui import QDialog
 from svir.utilities.utils import get_ui_class
 from svir.utilities.shared import PLATFORM_REGISTRATION_URL
 
@@ -89,12 +89,6 @@ class SettingsDialog(QDialog, FORM_CLASS):
 
         self.developermodeCheck.setChecked(
                 mySettings.value('irmt/developer_mode', False, type=bool))
-        self.warnOQDepsCheck.setChecked(
-                mySettings.value('irmt/oq_deps_warn', True, type=bool))
-        self.oq_hazardlib_path_edit.setText(
-                mySettings.value('irmt/oq_hazardlib_path', ''))
-        self.oq_engine_path_edit.setText(
-                mySettings.value('irmt/oq_engine_path', ''))
 
     def saveState(self):
         """
@@ -105,12 +99,6 @@ class SettingsDialog(QDialog, FORM_CLASS):
         platform_hostname = \
             self.platformHostnameEdit.text().strip().rstrip('/')
         engine_hostname = self.engineHostnameEdit.text().strip().rstrip('/')
-        mySettings.setValue('irmt/oq_hazardlib_path',
-                            self.oq_hazardlib_path_edit.text())
-        mySettings.setValue('irmt/oq_engine_path',
-                            self.oq_engine_path_edit.text())
-        mySettings.setValue('irmt/oq_deps_warn',
-                            self.warnOQDepsCheck.isChecked())
         mySettings.setValue('irmt/developer_mode',
                             self.developermodeCheck.isChecked())
         mySettings.setValue('irmt/platform_hostname', platform_hostname)
@@ -118,15 +106,11 @@ class SettingsDialog(QDialog, FORM_CLASS):
                             self.platformUsernameEdit.text())
         mySettings.setValue('irmt/platform_password',
                             self.platformPasswordEdit.text())
-        mySettings.setValue('irmt/developer_mode',
-                            self.developermodeCheck.isChecked())
         mySettings.setValue('irmt/engine_hostname', engine_hostname)
         mySettings.setValue('irmt/engine_username',
                             self.engineUsernameEdit.text())
         mySettings.setValue('irmt/engine_password',
                             self.enginePasswordEdit.text())
-        mySettings.setValue('irmt/developer_mode',
-                            self.developermodeCheck.isChecked())
 
     def accept(self):
         """
@@ -136,17 +120,3 @@ class SettingsDialog(QDialog, FORM_CLASS):
         if self.irmt_main is not None:
             self.irmt_main.reset_engine_login()
         super(SettingsDialog, self).accept()
-
-    @pyqtSlot()
-    def on_oq_hazardlib_path_btn_clicked(self):
-        path = QFileDialog.getExistingDirectory(
-            self, self.tr('Choose OQ hazardlib directory'), QDir.homePath())
-        if path:
-            self.oq_hazardlib_path_edit.setText(path)
-
-    @pyqtSlot()
-    def on_oq_engine_path_btn_clicked(self):
-        path = QFileDialog.getExistingDirectory(
-                self, self.tr('Choose OQ engine directory'), QDir.homePath())
-        if path:
-            self.oq_engine_path_edit.setText(path)

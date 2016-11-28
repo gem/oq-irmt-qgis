@@ -27,7 +27,6 @@ import tempfile
 import uuid
 import fileinput
 import re
-import sys
 
 from copy import deepcopy
 from math import floor, ceil
@@ -55,7 +54,8 @@ from PyQt4.QtGui import (QAction,
                          QColor,
                          QFileDialog,
                          QDesktopServices,
-                         QApplication, QMessageBox, QMenu)
+                         QApplication,
+                         QMenu)
 
 from svir.dialogs.viewer_dock import ViewerDock
 from svir.utilities.import_sv_data import get_loggedin_downloader
@@ -71,6 +71,8 @@ from svir.dialogs.load_geojson_as_layer_dialog import LoadGeoJsonAsLayerDialog
 from svir.dialogs.recovery_modeling_dialog import RecoveryModelingDialog
 from svir.dialogs.drive_oq_engine_server_dialog import (
     DriveOqEngineServerDialog)
+from svir.dialogs.load_npz_as_layer_dialog import LoadNpzAsLayerDialog
+from svir.dialogs.plot_from_npz_dialog import PlotFromNpzDialog
 
 from svir.thread_worker.abstract_worker import start_worker
 from svir.thread_worker.download_platform_data_worker import (
@@ -98,25 +100,6 @@ from svir.utilities.shared import (DEBUG,
 # DO NOT REMOVE THIS
 # noinspection PyUnresolvedReferences
 import svir.resources_rc  # pylint: disable=unused-import  # NOQA
-
-# check dependencies
-settings = QSettings()
-oq_hazardlib_path = settings.value('irmt/oq_hazardlib_path', '')
-oq_engine_path = settings.value('irmt/oq_engine_path', '')
-
-if oq_hazardlib_path and oq_hazardlib_path not in sys.path:
-    sys.path.append(oq_hazardlib_path)
-if oq_engine_path and oq_engine_path not in sys.path:
-    sys.path.append(oq_engine_path)
-
-try:
-    import openquake  # noqa: F401
-
-    from svir.dialogs.load_npz_as_layer_dialog import LoadNpzAsLayerDialog
-    from svir.dialogs.plot_from_npz_dialog import PlotFromNpzDialog
-    OQ_DEPENDENCIES_OK = True
-except ImportError:
-    OQ_DEPENDENCIES_OK = False
 
 
 class Irmt:
@@ -247,76 +230,73 @@ class Irmt:
                            add_to_layer_actions=False,
                            submenu='Utilities')
 
-        if OQ_DEPENDENCIES_OK:
-            # Action to load as layer hazard maps from npz produced by the
-            # oq-engine
-            self.add_menu_item("load_hmaps_from_npz_as_layer",
-                               ":/plugins/irmt/calculate.svg",  # FIXME
-                               u"Load hazard maps from NPZ as layer",
-                               self.load_hmaps_from_npz_as_layer,
-                               enable=True,
-                               submenu='OQ Engine')
-            # Action to load as layer hazard curves from npz produced by the
-            # oq-engine
-            self.add_menu_item("load_hcurves_from_npz_as_layer",
-                               ":/plugins/irmt/calculate.svg",  # FIXME
-                               u"Load hazard curves from NPZ as layer",
-                               self.load_hcurves_from_npz_as_layer,
-                               enable=True,
-                               submenu='OQ Engine')
-            # Action to load as layer loss maps from npz produced by the
-            # oq-engine
-            self.add_menu_item("load_loss_maps_from_npz_as_layer",
-                               ":/plugins/irmt/calculate.svg",  # FIXME
-                               u"Load loss maps from NPZ as layer",
-                               self.load_loss_maps_from_npz_as_layer,
-                               enable=True,
-                               submenu='OQ Engine')
-            # Action to load as layer loss curves from npz produced by the
-            # oq-engine
-            self.add_menu_item("load_loss_curves_from_npz_as_layer",
-                               ":/plugins/irmt/calculate.svg",  # FIXME
-                               u"Load loss curves from NPZ as layer",
-                               self.load_loss_curves_from_npz_as_layer,
-                               enable=True,
-                               submenu='OQ Engine')
-            # Action to plot total damage reading it from a NPZ produced by a
-            # scenario damage calculation
-            self.add_menu_item("plot_dmg_total",
-                               ":/plugins/irmt/calculate.svg",  # FIXME
-                               u"Plot total damage from NPZ",
-                               self.plot_dmg_total_from_npz,
-                               enable=True,
-                               submenu='OQ Engine')
-            # Action to plot damage by taxonomy reading it from a NPZ produced
-            # by a scenario damage calculation
-            self.add_menu_item("plot_dmg_by_taxon",
-                               ":/plugins/irmt/calculate.svg",  # FIXME
-                               u"Plot damage by taxonomy from NPZ",
-                               self.plot_dmg_by_taxon_from_npz,
-                               enable=True,
-                               submenu='OQ Engine')
-            # Action to load as layer ground motion fields from npz produced
-            # by the oq-engine with a scenario damage hazard calculation
-            self.add_menu_item(
-                    "load_scenario_damage_gmfs_from_npz_as_layer",
-                    ":/plugins/irmt/calculate.svg",  # FIXME
-                    u"Load scenario damage ground motion "
-                    "fields from NPZ as layer",
-                    self.load_scenario_damage_gmfs_from_npz_as_layer,
-                    enable=True,
-                    submenu='OQ Engine')
-            # Action to load as layer damage by asset from npz produced by
-            # the oq-engine with a scenario damage risk calculation
-            self.add_menu_item(
-                    "load_scenario_damage_by_asset_from_npz_as_layer",
-                    ":/plugins/irmt/calculate.svg",  # FIXME
-                    u"Load scenario damage by asset from NPZ as layer",
-                    self.load_scenario_damage_by_asset_from_npz_as_layer,
-                    enable=True,
-                    submenu='OQ Engine')
-        else:
-            self.warn_missing_features()
+        # Action to load as layer hazard maps from npz produced by the
+        # oq-engine
+        self.add_menu_item("load_hmaps_from_npz_as_layer",
+                           ":/plugins/irmt/calculate.svg",  # FIXME
+                           u"Load hazard maps from NPZ as layer",
+                           self.load_hmaps_from_npz_as_layer,
+                           enable=True,
+                           submenu='OQ Engine')
+        # Action to load as layer hazard curves from npz produced by the
+        # oq-engine
+        self.add_menu_item("load_hcurves_from_npz_as_layer",
+                           ":/plugins/irmt/calculate.svg",  # FIXME
+                           u"Load hazard curves from NPZ as layer",
+                           self.load_hcurves_from_npz_as_layer,
+                           enable=True,
+                           submenu='OQ Engine')
+        # Action to load as layer loss maps from npz produced by the
+        # oq-engine
+        self.add_menu_item("load_loss_maps_from_npz_as_layer",
+                           ":/plugins/irmt/calculate.svg",  # FIXME
+                           u"Load loss maps from NPZ as layer",
+                           self.load_loss_maps_from_npz_as_layer,
+                           enable=True,
+                           submenu='OQ Engine')
+        # Action to load as layer loss curves from npz produced by the
+        # oq-engine
+        self.add_menu_item("load_loss_curves_from_npz_as_layer",
+                           ":/plugins/irmt/calculate.svg",  # FIXME
+                           u"Load loss curves from NPZ as layer",
+                           self.load_loss_curves_from_npz_as_layer,
+                           enable=True,
+                           submenu='OQ Engine')
+        # Action to plot total damage reading it from a NPZ produced by a
+        # scenario damage calculation
+        self.add_menu_item("plot_dmg_total",
+                           ":/plugins/irmt/calculate.svg",  # FIXME
+                           u"Plot total damage from NPZ",
+                           self.plot_dmg_total_from_npz,
+                           enable=True,
+                           submenu='OQ Engine')
+        # Action to plot damage by taxonomy reading it from a NPZ produced
+        # by a scenario damage calculation
+        self.add_menu_item("plot_dmg_by_taxon",
+                           ":/plugins/irmt/calculate.svg",  # FIXME
+                           u"Plot damage by taxonomy from NPZ",
+                           self.plot_dmg_by_taxon_from_npz,
+                           enable=True,
+                           submenu='OQ Engine')
+        # Action to load as layer ground motion fields from npz produced
+        # by the oq-engine with a scenario damage hazard calculation
+        self.add_menu_item(
+                "load_scenario_damage_gmfs_from_npz_as_layer",
+                ":/plugins/irmt/calculate.svg",  # FIXME
+                u"Load scenario damage ground motion "
+                "fields from NPZ as layer",
+                self.load_scenario_damage_gmfs_from_npz_as_layer,
+                enable=True,
+                submenu='OQ Engine')
+        # Action to load as layer damage by asset from npz produced by
+        # the oq-engine with a scenario damage risk calculation
+        self.add_menu_item(
+                "load_scenario_damage_by_asset_from_npz_as_layer",
+                ":/plugins/irmt/calculate.svg",  # FIXME
+                u"Load scenario damage by asset from NPZ as layer",
+                self.load_scenario_damage_by_asset_from_npz_as_layer,
+                enable=True,
+                submenu='OQ Engine')
 
         # Action to activate the modal dialog to select a layer and one
         # of its
@@ -357,22 +337,6 @@ class Irmt:
             if action.text() == title:
                 return action.menu()
         return None
-
-    def warn_missing_features(self):
-        title = tr('Missing dependencies for extra features')
-        text = tr('To enable extra features install and set the oq-engine and'
-                  ' oq-hazardlib path in the settings panel and make sure'
-                  ' their dependencies are satisfied')
-
-        if QSettings().value('irmt/oq_deps_warn', True, type=bool):
-            answer = QMessageBox.information(
-                    None, title, text, tr("Close"), tr("Dont't warn me again"))
-            if answer == 1:
-                # Dont't warn me again clicked
-                QSettings().setValue('irmt/oq_deps_warn', False)
-
-        else:
-            self.iface.messageBar().pushInfo(title, text)
 
     def recovery_modeling(self):
         dlg = RecoveryModelingDialog(self.iface)
@@ -423,7 +387,7 @@ class Irmt:
     def drive_oq_engine_server(self):
         if self.drive_oq_engine_server_dlg is None:
             self.drive_oq_engine_server_dlg = DriveOqEngineServerDialog(
-                self.iface, OQ_DEPENDENCIES_OK)
+                self.iface)
         # else:
         #     # if the dialog was new, we don't need to login twice
         #     self.drive_oq_engine_server_dlg.login()
