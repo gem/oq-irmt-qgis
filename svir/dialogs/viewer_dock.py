@@ -184,83 +184,38 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 layout.removeWidget(widget)
 
     def set_output_type_and_its_gui(self, new_output_type):
-        if self.output_type is None:
-            if new_output_type == 'hcurves':
-                self.create_imt_selector()
-            elif new_output_type == 'loss_curves':
-                self.create_loss_type_selector()
-            elif new_output_type == 'uhs':
-                # Currently we are creating a layer for each poe
-                # self.create_poe_selector()
-                pass
-            elif new_output_type == 'recovery_curves':
-                self.create_approach_selector()
-                self.create_n_simulations_spinbox()
-        else:
-            if self.output_type == new_output_type:
-                return
-            if new_output_type == 'hcurves':
-                self.remove_widgets_from_layout(
-                    [self.loss_type_lbl, self.loss_type_cbx,
-                     self.poe_lbl, self.poe_cbx,
-                     self.approach_lbl, self.approach_cbx],
-                    self.typeDepHLayout1)
-                self.remove_widgets_from_layout(
-                    [self.n_simulations_lbl, self.n_simulations_sbx],
-                    self.typeDepHLayout2)
-                self.remove_widgets_from_layout(
-                    [self.warning_n_simulations_lbl],
-                    self.typeDepVLayout)
-                self.create_imt_selector()
-            elif new_output_type == 'loss_curves':
-                self.remove_widgets_from_layout(
-                    [self.imt_lbl, self.imt_cbx,
-                     self.poe_lbl, self.poe_cbx,
-                     self.approach_lbl, self.approach_cbx],
-                    self.typeDepHLayout1)
-                self.remove_widgets_from_layout(
-                    [self.n_simulations_lbl, self.n_simulations_sbx],
-                    self.typeDepHLayout2)
-                self.remove_widgets_from_layout(
-                    [self.warning_n_simulations_lbl],
-                    self.typeDepVLayout)
-                self.create_loss_type_selector()
-            elif new_output_type == 'uhs':
-                self.remove_widgets_from_layout(
-                    [self.imt_lbl, self.imt_cbx,
-                     self.poe_lbl, self.poe_cbx,
-                     self.loss_type_lbl, self.loss_type_cbx,
-                     self.approach_lbl, self.approach_cbx],
-                    self.typeDepHLayout1)
-                self.remove_widgets_from_layout(
-                    [self.n_simulations_lbl, self.n_simulations_sbx],
-                    self.typeDepHLayout2)
-                self.remove_widgets_from_layout(
-                    [self.warning_n_simulations_lbl],
-                    self.typeDepVLayout)
-                self.create_poe_selector()
-            elif new_output_type == 'recovery_curves':
-                self.remove_widgets_from_layout(
-                    [self.loss_type_lbl, self.loss_type_cbx,
-                     self.imt_lbl, self.imt_cbx, self.poe_lbl, self.poe_cbx],
-                    self.typeDepHLayout1)
-                self.create_approach_selector()
-                self.create_n_simulations_spinbox()
-            elif not new_output_type:  # None or ''
-                self.remove_widgets_from_layout(
-                    [self.loss_type_lbl, self.loss_type_cbx,
-                     self.imt_lbl, self.imt_cbx,
-                     self.poe_lbl, self.poe_cbx,
-                     self.approach_lbl, self.approach_cbx],
-                    self.typeDepHLayout1)
-                self.remove_widgets_from_layout(
-                    [self.n_simulations_lbl, self.n_simulations_sbx],
-                    self.typeDepHLayout2)
-                self.remove_widgets_from_layout(
-                    [self.warning_n_simulations_lbl],
-                    self.typeDepVLayout)
+        if (self.output_type is not None
+                and self.output_type == new_output_type):
+            return
+        self.clear_type_dependent_widgets()
+        if new_output_type == 'hcurves':
+            self.create_imt_selector()
+        elif new_output_type == 'loss_curves':
+            self.create_loss_type_selector()
+        elif new_output_type == 'uhs':
+            # Currently we are creating a layer for each poe
+            # self.create_poe_selector()
+            pass
+        elif new_output_type == 'recovery_curves':
+            self.create_approach_selector()
+            self.create_n_simulations_spinbox()
         self.adjustSize()
         self.output_type = new_output_type
+
+    def clear_type_dependent_widgets(self):
+        self.remove_widgets_from_layout(
+            [self.loss_type_lbl, self.loss_type_cbx,
+                self.imt_lbl, self.imt_cbx,
+                self.poe_lbl, self.poe_cbx,
+                self.approach_lbl, self.approach_cbx],
+            self.typeDepHLayout1)
+        self.remove_widgets_from_layout(
+            [self.n_simulations_lbl, self.n_simulations_sbx],
+            self.typeDepHLayout2)
+        self.remove_widgets_from_layout(
+            [self.warning_n_simulations_lbl],
+            self.typeDepVLayout)
+        self.adjustSize()
 
     def draw(self):
         self.plot.clear()
