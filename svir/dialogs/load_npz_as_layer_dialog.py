@@ -276,7 +276,7 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
         if self.output_type == 'gmf_data':
             imt = self.imt_cbx.currentText()
             min_eid = 0
-            max_eid = len(self.dataset[imt] - 1)
+            max_eid = (self.dataset[imt].shape[1] - 1)
             self.eid_sbx.cleanText()
             self.eid_sbx.setEnabled(True)
             self.eid_lbl.setText(
