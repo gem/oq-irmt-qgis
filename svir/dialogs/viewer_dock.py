@@ -114,8 +114,6 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.toolbar_layout.insertWidget(0, self.plot_toolbar)
 
         self.plot_canvas.mpl_connect('motion_notify_event', self.on_plot_hover)
-        # TODO: refresh the gui elements whenever output_type is changed
-        # instead of attempting to keep existing elements
 
     def create_loss_type_selector(self):
         self.loss_type_lbl = QLabel('Loss Type')
@@ -504,6 +502,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
                 self.vertex_marker.setCenter(feature.geometry().asPoint())
                 self.vertex_marker.show()
+                return True
             else:
                 self.vertex_marker.hide()
         return False
