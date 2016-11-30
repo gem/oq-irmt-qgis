@@ -394,8 +394,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                     'color': color_hex,
                     'line_style': line_style,
                 }
-            self.was_imt_switched = False
-            self.was_loss_type_switched = False
+        self.was_imt_switched = False
+        self.was_loss_type_switched = False
 
         self.draw()
 
