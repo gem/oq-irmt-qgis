@@ -167,8 +167,6 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
                 'Load uniform hazard spectra from NPZ, as layer')
             self.verticalLayout.addWidget(self.rlz_lbl)
             self.verticalLayout.addWidget(self.rlz_cbx)
-            self.verticalLayout.addWidget(self.poe_lbl)
-            self.verticalLayout.addWidget(self.poe_cbx)
             self.adjustSize()
         elif self.output_type == 'loss_maps':
             self.setWindowTitle('Load loss maps from NPZ, as layer')
@@ -240,9 +238,6 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
         elif self.output_type == 'uhs':
             self.dataset = self.npz_file[self.rlz_cbx.currentText()]
             self.poes = self.dataset.dtype.names[2:]
-            self.poe_cbx.clear()
-            self.poe_cbx.setEnabled(True)
-            self.poe_cbx.addItems(self.poes)
         elif self.output_type in ('loss_maps', 'scenario_damage_by_asset'):
             # FIXME: likely, self.npz_file.keys()
             self.loss_types = self.npz_file.dtype.fields
@@ -258,7 +253,7 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
             self.imt_cbx.clear()
             self.imt_cbx.setEnabled(True)
             self.imt_cbx.addItems(imts)
-        if self.output_type in ('hcurves', 'loss_curves'):
+        if self.output_type in ('hcurves', 'loss_curves', 'uhs'):
             self.set_ok_button()
 
     def on_loss_type_changed(self):
@@ -367,9 +362,9 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
             self.ok_button.setEnabled(self.poe_cbx.currentIndex() != -1)
         elif self.output_type in ('hcurves', 'gmf_data'):
             self.ok_button.setEnabled(self.imt_cbx.currentIndex() != -1)
-        elif self.output_type in ['loss_maps', 'uhs']:
+        elif self.output_type == 'loss_maps':
             self.ok_button.setEnabled(self.poe_cbx.currentIndex() != -1)
-        elif self.output_type == 'loss_curves':
+        elif self.output_type in ('loss_curves', 'uhs'):
             self.ok_button.setEnabled(self.rlz_cbx.currentIndex() != -1)
         elif self.output_type == 'scenario_damage_by_asset':
             self.ok_button.setEnabled(self.loss_type_cbx.currentIndex() != -1)
