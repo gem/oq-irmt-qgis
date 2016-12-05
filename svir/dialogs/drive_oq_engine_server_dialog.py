@@ -126,7 +126,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         calc_list_url = "%s/v1/calc/list?relevant=true" % self.hostname
         with WaitCursorManager():
             try:
-                resp = self.session.get(calc_list_url, timeout=10)
+                # FIXME: enable the user to set verify=True
+                resp = self.session.get(
+                    calc_list_url, timeout=10, verify=False)
             except (ConnectionError, InvalidSchema, MissingSchema,
                     ReadTimeout, SvNetworkError) as exc:
                 self.iface.messageBar().pushMessage(
@@ -144,7 +146,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         calc_list_url = "%s/v1/calc/list?relevant=true" % self.hostname
         with WaitCursorManager():
             try:
-                resp = self.session.get(calc_list_url, timeout=10)
+                # FIXME: enable the user to set verify=True
+                resp = self.session.get(
+                    calc_list_url, timeout=10, verify=False)
             except (ConnectionError, InvalidSchema, MissingSchema,
                     ReadTimeout, SvNetworkError) as exc:
                 self.iface.messageBar().pushMessage(
@@ -270,7 +274,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         with WaitCursorManager(
                 'Getting log for output %s...' % calc_id, self.iface):
             try:
-                resp = self.session.get(calc_log_url, timeout=10)
+                # FIXME: enable the user to set verify=True
+                resp = self.session.get(calc_log_url, timeout=10, verify=False)
             except (ConnectionError, InvalidSchema, MissingSchema,
                     ReadTimeout, SvNetworkError) as exc:
                 self.iface.messageBar().pushMessage(
@@ -369,7 +374,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         output_list_url = "%s/v1/calc/%s/results" % (self.hostname, calc_id)
         with WaitCursorManager('Getting list of outputs...', self.iface):
             try:
-                resp = self.session.get(output_list_url, timeout=10)
+                # FIXME: enable the user to set verify=True
+                resp = self.session.get(output_list_url, timeout=10,
+                                        verify=False)
             except (ConnectionError, InvalidSchema, MissingSchema,
                     ReadTimeout, SvNetworkError) as exc:
                 self.iface.messageBar().pushMessage(
@@ -510,7 +517,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                                                                 outtype))
         with WaitCursorManager('Downloading output...', self.iface):
             try:
-                resp = self.session.get(output_download_url, timeout=10)
+                # FIXME: enable the user to set verify=True
+                resp = self.session.get(output_download_url, timeout=10,
+                                        verify=False)
             except (ConnectionError, InvalidSchema, MissingSchema,
                     ReadTimeout, SvNetworkError) as exc:
                 self.iface.messageBar().pushMessage(
