@@ -604,7 +604,8 @@
             }
             if (typeof d.parent != 'undefined') {
                 if (typeof d.parent.operator != 'undefined') {
-                    if (d.parent.operator.indexOf('ignore weights') != -1) {
+                    if (d.parent.operator.indexOf('ignore weights') != -1
+                            || d.parent.operator.indexOf('custom') != -1) {
                         radius = Math.max(1.0 / d.parent.children.length * CIRCLE_SCALE, MIN_CIRCLE_SIZE);
                     }
                 }
