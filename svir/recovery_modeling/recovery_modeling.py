@@ -40,7 +40,7 @@ HEADING_FIELDS_TO_DISCARD = 4
 DAYS_BEFORE_EVENT = 0
 MARGIN_DAYS_AFTER = 400
 MIN_SAMPLES = 250
-SVI_WEIGHT_COEFF = 1  # FIXME: Let the user set this parameter
+# SVI_WEIGHT_COEFF = 1  # FIXME: Let the user set this parameter
 
 
 class RecoveryModeling(object):
@@ -338,14 +338,16 @@ class RecoveryModeling(object):
         return simulationRecoveryFunction
 
     def loss_based_to_recovery_based_probs(self, dmg_by_asset_probs):
-        LossBasedDamageStateProbabilities = [
-            [0 for x in range(5)] for y in range(len(dmg_by_asset_probs))]
+        LossBasedDamageStateProbabilities = \
+            [[0 for x in range(NUM_LOSS_BASED_DMG_STATES)]
+             for y in range(len(dmg_by_asset_probs))]
 
         for i in range(len(dmg_by_asset_probs)):
-            for j in range(5):
+            for j in range(NUM_LOSS_BASED_DMG_STATES):
                 LossBasedDamageStateProbabilities[i][j] = \
                     dmg_by_asset_probs[i][j]  # ex dmg_by_asset_probs[i+1][j+4]
 
+        # NB: The following is referred to the Napa case specifically!
         # Load Transfer Probability Note: There is a 5*6 matrix where rows
         # describe loss-based damage states (No
         # damage/Slight/Moderate/Extensive/Complete) and columns present
@@ -373,7 +375,8 @@ class RecoveryModeling(object):
                     RecoveryBasedDamageStateProbabilities[i][j] += (
                         float(LossBasedDamageStateProbabilities[i][s])
                         * float(transferProbabilities[s][j]))
-                    if j == 4 or j == 5:
+                    if (j == NUM_LOSS_BASED_DMG_STATES - 1
+                            or j == NUM_LOSS_BASED_DMG_STATES):
                         fractionCollapsedAndIrreparableBuildings += \
                             RecoveryBasedDamageStateProbabilities[i][j]
 
