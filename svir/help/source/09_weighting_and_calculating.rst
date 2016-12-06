@@ -9,7 +9,7 @@ Weighting data and calculating indices
 .. figure:: images/dialogWeightAndCalculate.png
     :align: center
     :scale: 60%
-    
+
     |icon-weight-and-calculate| Tree chart structure for the development of composite indicators
 
 Central to the construction of composite indicators is the need to meaningfully
@@ -60,7 +60,7 @@ socio-economic parameters of earthquake risk such as population, economy,
 infrastructure, education, and governance).  Individual indicators are
 aggregated into sub-indices (e.g., population, economy, etc.), and the
 sub-indices are aggregated to form a final composite index (e.g., social
-vulnerability or integrated risk index). The tree structure of the 
+vulnerability or integrated risk index). The tree structure of the
 :guilabel:`Weight data and calculate indices` widget encourages the development of hierarchical
 models of integrated risk. The starting point is a *root node* that corresponds
 to the development of a hierarchical model that can be: 1) an *Integrated Risk
@@ -159,6 +159,31 @@ rendered (see :numref:`fig-weighting-and-calculating` for a demonstration of
 how the radius of nodes corresponds with the respective weights of variables).
 Otherwise, the radius of a node is proportional to its weight, and the weight
 is rendered next to the node.
+
+In case the user wants to combine indices using a customized formula that is
+not included in the set of the available operators, it is possible to select
+from the dropdown menu the item :guilabel:`Use a custom field`, and to specify
+which one of the layer's fields has to be used to store the data. If nothing
+else is specified, the tool will not modify the contents of the selected field
+anymore, assuming that the user will take full responsibility in performing the
+customized calculation and storing the results in that field. In order to keep
+track of the workflow, it is possible to add a :guilabel:`Field description` of
+how the node is calculated. Optionally, the user can also specify the
+:guilabel:`Custom formula` used to calculate the field. The formula must be in
+the same format used by the QGIS Field Calculator, i.e., a valid `QgsExpression`.
+If the tool accepts the formula as valid, the node will be recalculated usin that
+formula, whenever the project definition is modified. Otherwise (if either the
+formula is not specified or it is invalid), the node will not be recalculated,
+therefore its values will remain unchanged.
+
+.. note::
+
+    When using a custom operator, we suggest first to create the corresponding
+    field using the QGIS Field Calculator, and to set the project definition
+    afterwards. The expression that is used within the field calculator can
+    be copied and pasted into the :guilabel:`Custom formula` text field. This
+    ensures the plugin will recalculate the node afterwards using the same
+    valid expression.
 
 
 Setting weights

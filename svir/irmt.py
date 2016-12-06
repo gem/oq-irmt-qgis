@@ -322,7 +322,7 @@ class Irmt:
         # Action to open the plugin's manual
         self.add_menu_item("help",
                            ":/plugins/irmt/manual.svg",
-                           u"Plugin's &Manual",
+                           u"IRMT &manual",
                            self.show_manual,
                            enable=True)
 
