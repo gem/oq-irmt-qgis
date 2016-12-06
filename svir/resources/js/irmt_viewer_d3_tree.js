@@ -191,7 +191,7 @@
                 .append('<select id="fieldName">'+ fieldOpts + '</select>')
                 .append('<br/><label style="clear: left; float: left; width: 10em;" id="fieldDescriptionLabel" for="fieldDescriptionLabel">Field description: </label>')
                 .append('<input type="text" id="fieldDescription">')
-                .append('<br/><label style="clear: left; float: left; width: 10em;" id="customFormulaLabel" for="customFormulaLabel">Custom formula (optional): </label>')
+                .append('<br/><label style="clear: left; float: left; width: 10em;" id="customFormulaLabel" for="customFormulaLabel">Custom formula: </label>')
                 .append('<input type="text" id="customFormula">');
             if (typeof fieldName !== 'undefined') {
                 $('#fieldName').val(fieldName);
