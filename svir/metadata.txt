@@ -27,6 +27,7 @@ changelog=
     * Enable using a different number of loss-based damage states
     * When using a custom operator, children nodes will be displayed with equal diameter
     * Minor additions to the manual, describing the new nested menu
+    * Do not time out when downloading an output from the OQ-Engine
     1.8.9
     * Allow API endpoints to be used with a self-signed SSL certificate
     1.8.8

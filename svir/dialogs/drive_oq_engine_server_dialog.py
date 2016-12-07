@@ -518,8 +518,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         with WaitCursorManager('Downloading output...', self.iface):
             try:
                 # FIXME: enable the user to set verify=True
-                resp = self.session.get(output_download_url, timeout=10,
-                                        verify=False)
+                resp = self.session.get(output_download_url, verify=False)
             except (ConnectionError, InvalidSchema, MissingSchema,
                     ReadTimeout, SvNetworkError) as exc:
                 self.iface.messageBar().pushMessage(
