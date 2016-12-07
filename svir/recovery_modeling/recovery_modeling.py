@@ -35,7 +35,6 @@ from svir.utilities.utils import (
                                   clear_progress_message_bar,
                                   )
 
-NUM_LOSS_BASED_DMG_STATES = 5
 HEADING_FIELDS_TO_DISCARD = 4
 DAYS_BEFORE_EVENT = 0
 MARGIN_DAYS_AFTER = 400
@@ -67,6 +66,24 @@ class RecoveryModeling(object):
         self.config_files_dir = os.path.join(
             recovery_modeling_dir, 'config_files')
 
+        # NB: The following is referred to the Napa case specifically!
+        # Load Transfer Probability Note: There is a 5*6 matrix where rows
+        # describe loss-based damage states (No
+        # damage/Slight/Moderate/Extensive/Complete) and columns present
+        # recovery-based damage states(No damage/Trigger inspection/Loss
+        # Function /Not Occupiable/Irreparable/Collapse). The element(i,j)
+        # in the matrix is the probability of recovery-based damage state j
+        # occurs given loss-based damage state i
+        transferProbabilitiesData = os.path.join(
+            self.config_files_dir, 'transferProbabilities.csv')
+
+        with open(transferProbabilitiesData, 'r') as f:
+            reader = csv.reader(f)
+            self.transferProbabilities = list(reader)
+
+        self.n_loss_based_dmg_states = len(self.transferProbabilities)
+        self.n_recovery_based_dmg_states = len(self.transferProbabilities[0])
+
     def collect_zonal_data(self, integrate_svi=False, zone_field_name=None):
 
         # build dictionary zone_id -> dmg_by_asset_probs
@@ -82,7 +99,7 @@ class RecoveryModeling(object):
         # without affecting this calculation
         probs_slice = slice(
             HEADING_FIELDS_TO_DISCARD,
-            HEADING_FIELDS_TO_DISCARD + 2*NUM_LOSS_BASED_DMG_STATES, 2)
+            HEADING_FIELDS_TO_DISCARD + 2*self.n_loss_based_dmg_states, 2)
         if integrate_svi and self.svi_layer is not None:
             # FIXME self.svi_field_name is temporarily ignored
             # svi_by_zone = dict()
@@ -339,29 +356,13 @@ class RecoveryModeling(object):
 
     def loss_based_to_recovery_based_probs(self, dmg_by_asset_probs):
         LossBasedDamageStateProbabilities = \
-            [[0 for x in range(NUM_LOSS_BASED_DMG_STATES)]
+            [[0 for x in range(self.n_loss_based_dmg_states)]
              for y in range(len(dmg_by_asset_probs))]
 
         for i in range(len(dmg_by_asset_probs)):
-            for j in range(NUM_LOSS_BASED_DMG_STATES):
+            for j in range(self.n_loss_based_dmg_states):
                 LossBasedDamageStateProbabilities[i][j] = \
                     dmg_by_asset_probs[i][j]  # ex dmg_by_asset_probs[i+1][j+4]
-
-        # NB: The following is referred to the Napa case specifically!
-        # Load Transfer Probability Note: There is a 5*6 matrix where rows
-        # describe loss-based damage states (No
-        # damage/Slight/Moderate/Extensive/Complete) and columns present
-        # recovery-based damage states(No damage/Trigger inspection/Loss
-        # Function /Not Occupiable/Irreparable/Collapse). The element(i,j)
-        # in the matrix is the probability of recovery-based damage state j
-        # occurs given loss-based damage state i
-
-        transferProbabilitiesData = os.path.join(
-            self.config_files_dir, 'transferProbabilities.csv')
-
-        with open(transferProbabilitiesData, 'r') as f:
-            reader = csv.reader(f)
-            transferProbabilities = list(reader)
 
         # Mapping from Loss-based to recovery-based building damage states
         RecoveryBasedDamageStateProbabilities = [
@@ -370,13 +371,13 @@ class RecoveryModeling(object):
         fractionCollapsedAndIrreparableBuildings = 0
         # TODO: use enumerate instead
         for i in range(len(LossBasedDamageStateProbabilities)):
-            for j in range(len(transferProbabilities[0])):
-                for s in range(len(transferProbabilities)):
+            for j in range(self.n_recovery_based_dmg_states):
+                for s in range(self.n_loss_based_dmg_states):
                     RecoveryBasedDamageStateProbabilities[i][j] += (
                         float(LossBasedDamageStateProbabilities[i][s])
-                        * float(transferProbabilities[s][j]))
-                    if (j == NUM_LOSS_BASED_DMG_STATES - 1
-                            or j == NUM_LOSS_BASED_DMG_STATES):
+                        * float(self.transferProbabilities[s][j]))
+                    if (j == self.n_loss_based_dmg_states - 1
+                            or j == self.n_loss_based_dmg_states):
                         fractionCollapsedAndIrreparableBuildings += \
                             RecoveryBasedDamageStateProbabilities[i][j]
 
