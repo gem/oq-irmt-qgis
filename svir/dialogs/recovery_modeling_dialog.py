@@ -162,15 +162,18 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
                   'after_6_months', 'after_12_months', 'after_18_months']
         writer.writerow(header)
         n_simulations = self.n_simulations_sbx.value()
+        n_zones = len(zonal_dmg_by_asset_probs)
         # for each zone, calculate a zone-level recovery function
-        for zone_id in zonal_dmg_by_asset_probs.keys():
+        for zone_index, zone_id in enumerate(
+                zonal_dmg_by_asset_probs.keys(), start=1):
             seed = None
             if DEBUG:
                 seed = 42
             recovery.generate_community_level_recovery_curve(
                 zone_id, zonal_dmg_by_asset_probs,
                 zonal_asset_refs, writer, integrate_svi, seed,
-                n_simulations=n_simulations)
+                n_simulations=n_simulations, n_zones=n_zones,
+                zone_index=zone_index)
         summary.close()
 
     def accept(self):

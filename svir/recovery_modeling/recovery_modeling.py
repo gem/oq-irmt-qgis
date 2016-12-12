@@ -164,7 +164,7 @@ class RecoveryModeling(object):
     def generate_community_level_recovery_curve(
             self, zone_id, zonal_dmg_by_asset_probs,
             zonal_asset_refs, writer=None, integrate_svi=False, seed=None,
-            n_simulations=1):
+            n_simulations=1, n_zones=1, zone_index=1):
 
         # TODO: use svi_by_zone[zone_id] to adjust recovery times (how?)
 
@@ -212,7 +212,8 @@ class RecoveryModeling(object):
                     timeList, LossBasedDamageStateProbabilities,
                     RecoveryBasedDamageStateProbabilities, inspectionTimes,
                     recoveryTimes, repairTimes, assessmentTimes,
-                    mobilizationTimes, zone_id, asset_refs, sim, seed)
+                    mobilizationTimes, zone_id, asset_refs, zone_index,
+                    n_zones, sim, n_simulations, seed)
             # Sum up all building level recovery function
             # TODO: use enumerate instead
             for timePoint in range(len(timeList)):
@@ -304,13 +305,15 @@ class RecoveryModeling(object):
             self, timeList, LossBasedDamageStateProbabilities,
             RecoveryBasedDamageStateProbabilities, inspectionTimes,
             recoveryTimes, repairTimes, assessmentTimes, mobilizationTimes,
-            zone_id, asset_refs, simulation, seed=None):
+            zone_id, asset_refs, zone_index, n_zones, simulation,
+            n_simulations, seed=None):
         # Looping over all buildings in community
         # Initialize building level recovery function
         simulationRecoveryFunction = [
             0 for x in range(len(timeList))]
-        msg = ('Calculating recovery curve for: zone %s, simulation %s'
-               % (zone_id, simulation + 1))
+        msg = ('Calculating recovery curve for '
+               'zone %s (%s/%s), simulation %s/%s'
+               % (zone_id, zone_index, n_zones, simulation + 1, n_simulations))
         msg_bar_item, progress = create_progress_message_bar(
             self.iface.messageBar(), msg)
         tot_bldgs = len(LossBasedDamageStateProbabilities)
