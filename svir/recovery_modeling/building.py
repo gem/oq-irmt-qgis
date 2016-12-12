@@ -2,7 +2,6 @@ import random
 from scipy.stats import norm
 import math
 from svir.utilities.utils import read_config_file
-from svir.utilities.shared import DEBUG
 
 
 class Building(object):

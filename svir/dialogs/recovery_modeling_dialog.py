@@ -34,10 +34,7 @@ from svir.calculations.aggregate_loss_by_zone import add_zone_id_to_points
 from svir.utilities.utils import (get_ui_class,
                                   reload_attrib_cbx,
                                   WaitCursorManager,
-                                  create_progress_message_bar,
-                                  clear_progress_message_bar,
                                   tr,
-                                  TraceTimeManager,
                                   )
 from svir.utilities.shared import DEBUG
 from svir.recovery_modeling.recovery_modeling import RecoveryModeling
@@ -157,10 +154,6 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
             recovery.collect_zonal_data(integrate_svi, zone_field_name)
 
         # Incorporate Napa Data to community recovery model
-        tot_zones = len(zonal_dmg_by_asset_probs)
-        msg = 'Calculating zone-level recovery curves...'
-        msg_bar_item, progress = create_progress_message_bar(
-            self.iface.messageBar(), msg)
         summary_filename = os.path.join(
             self.output_data_dir, 'summary.csv')
         summary = open(summary_filename, 'w')
@@ -170,23 +163,14 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         writer.writerow(header)
         n_simulations = self.n_simulations_sbx.value()
         # for each zone, calculate a zone-level recovery function
-        for idx, zone_id in enumerate(zonal_dmg_by_asset_probs.keys(),
-                                      start=1):
-            msg = ('Generating community level recovery curve for zone "%s"'
-                   % zone_id)
+        for zone_id in zonal_dmg_by_asset_probs.keys():
             seed = None
             if DEBUG:
                 seed = 42
-            with TraceTimeManager(msg):
-                recovery.generate_community_level_recovery_curve(
-                    zone_id, zonal_dmg_by_asset_probs,
-                    zonal_asset_refs, writer, integrate_svi, seed,
-                    n_simulations=n_simulations)
-
-            progress_perc = idx / float(tot_zones) * 100
-            progress.setValue(progress_perc)
-
-        clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
+            recovery.generate_community_level_recovery_curve(
+                zone_id, zonal_dmg_by_asset_probs,
+                zonal_asset_refs, writer, integrate_svi, seed,
+                n_simulations=n_simulations)
         summary.close()
 
     def accept(self):

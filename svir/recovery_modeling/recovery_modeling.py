@@ -212,7 +212,7 @@ class RecoveryModeling(object):
                     timeList, LossBasedDamageStateProbabilities,
                     RecoveryBasedDamageStateProbabilities, inspectionTimes,
                     recoveryTimes, repairTimes, assessmentTimes,
-                    mobilizationTimes, zone_id, asset_refs, seed)
+                    mobilizationTimes, zone_id, asset_refs, sim, seed)
             # Sum up all building level recovery function
             # TODO: use enumerate instead
             for timePoint in range(len(timeList)):
@@ -304,14 +304,19 @@ class RecoveryModeling(object):
             self, timeList, LossBasedDamageStateProbabilities,
             RecoveryBasedDamageStateProbabilities, inspectionTimes,
             recoveryTimes, repairTimes, assessmentTimes, mobilizationTimes,
-            zone_id, asset_refs, seed=None):
+            zone_id, asset_refs, simulation, seed=None):
         # Looping over all buildings in community
         # Initialize building level recovery function
         simulationRecoveryFunction = [
             0 for x in range(len(timeList))]
+        msg = ('Calculating recovery curve for: zone %s, simulation %s'
+               % (zone_id, simulation + 1))
+        msg_bar_item, progress = create_progress_message_bar(
+            self.iface.messageBar(), msg)
+        tot_bldgs = len(LossBasedDamageStateProbabilities)
         # TODO: use enumerate instead
         # TODO: perhaps iterate enumerating by asset_ref
-        for bldg_idx in range(len(LossBasedDamageStateProbabilities)):
+        for bldg_idx in range(tot_bldgs):
             # Generate recovery function for current
             # building/simulation using the given damage state
             # probability distribution
@@ -353,6 +358,9 @@ class RecoveryModeling(object):
             for timePoint in range(len(timeList)):
                 simulationRecoveryFunction[timePoint] += \
                     building_level_recovery_function[timePoint]
+            progress_perc = bldg_idx / float(tot_bldgs) * 100
+            progress.setValue(progress_perc)
+        clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
         return simulationRecoveryFunction
 
     def loss_based_to_recovery_based_probs(self, dmg_by_asset_probs):

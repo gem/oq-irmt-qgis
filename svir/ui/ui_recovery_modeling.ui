@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>370</width>
-    <height>432</height>
+    <height>460</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -26,6 +26,9 @@
    <bool>true</bool>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="sizeConstraint">
+    <enum>QLayout::SetMinimumSize</enum>
+   </property>
    <item>
     <widget class="QLabel" name="label_4">
      <property name="text">
