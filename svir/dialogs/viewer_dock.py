@@ -35,7 +35,13 @@ from matplotlib.backends.backend_qt4agg import (
 
 
 from PyQt4.QtCore import pyqtSlot, QSettings
-from PyQt4.QtGui import QColor, QLabel, QComboBox, QSizePolicy, QSpinBox
+from PyQt4.QtGui import (QColor,
+                         QLabel,
+                         QComboBox,
+                         QSizePolicy,
+                         QSpinBox,
+                         QPushButton,
+                         )
 from qgis.gui import QgsVertexMarker
 from qgis.core import QGis, QgsMapLayer, QgsFeatureRequest
 
@@ -78,6 +84,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.n_simulations_lbl = None
         self.n_simulations_sbx = None
         self.warning_n_simulations_lbl = None
+        self.recalculate_curve_btn = None
 
         self.current_selection = {}
         self.current_imt = None
@@ -175,6 +182,12 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.warning_n_simulations_lbl.setWordWrap(True)
         self.typeDepVLayout.addWidget(self.warning_n_simulations_lbl)
 
+    def create_recalculate_curve_btn(self):
+        self.recalculate_curve_btn = QPushButton('Calculate recovery curve')
+        self.typeDepVLayout.addWidget(self.recalculate_curve_btn)
+        self.recalculate_curve_btn.clicked.connect(
+            self.on_recalculate_curve_btn_clicked)
+
     def remove_widgets_from_layout(self, widgets, layout):
         for widget in widgets:
             if widget is not None:
@@ -197,6 +210,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         elif new_output_type == 'recovery_curves':
             self.create_approach_selector()
             self.create_n_simulations_spinbox()
+            self.create_recalculate_curve_btn()
         self.adjustSize()
         self.output_type = new_output_type
 
@@ -211,7 +225,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             [self.n_simulations_lbl, self.n_simulations_sbx],
             self.typeDepHLayout2)
         self.remove_widgets_from_layout(
-            [self.warning_n_simulations_lbl],
+            [self.warning_n_simulations_lbl, self.recalculate_curve_btn],
             self.typeDepVLayout)
         self.adjustSize()
 
@@ -526,8 +540,10 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.current_approach = self.approach_cbx.currentText()
         self.set_selection(self.current_selection.keys())
 
+    def on_recalculate_curve_btn_clicked(self):
+        self.layer_changed()
+
     def on_n_simulations_changed(self):
-        self.set_selection(self.current_selection.keys())
         QSettings().setValue('irmt/n_simulations_per_building',
                              self.n_simulations_sbx.value())
 

@@ -24,6 +24,8 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     1.8.11
+    * Changing the number of simulations per building does not cause the tool to immediately
+    recalculate the recovery curve. Instead, an additional button can be used to launch the calculation.
     * An additional checkbox enables/disables to save recovery curves for individual buildings
     1.8.10
     * Enable using a different number of loss-based damage states
