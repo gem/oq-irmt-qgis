@@ -59,6 +59,7 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         n_simulations = int(
             QSettings().value('irmt/n_simulations_per_building', 1))
         self.n_simulations_sbx.setValue(n_simulations)
+        self.save_bldg_curves_check.setChecked(False)
         self.populate_layers_in_combos()
         self.restoreState()
         self.set_ok_button()
@@ -78,11 +79,12 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         Reinstate the options based on the user's stored session info.
         """
         mySettings = QSettings()
-        output_data_dir = mySettings.value('irmt/recovery_output_data_dir', '')
+        self.output_data_dir = mySettings.value(
+            'irmt/recovery_output_data_dir', '')
         # hack for strange mac behaviour
-        if not output_data_dir:
-            output_data_dir = ''
-        self.output_data_dir_le.setText(output_data_dir)
+        if not self.output_data_dir:
+            self.output_data_dir = ''
+        self.output_data_dir_le.setText(self.output_data_dir)
 
     def saveState(self):
         """
@@ -149,7 +151,7 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         dmg_by_asset_features = list(self.dmg_by_asset_layer.getFeatures())
         recovery = RecoveryModeling(
             dmg_by_asset_features, approach, self.iface, self.svi_layer,
-            self.output_data_dir)
+            self.output_data_dir, self.save_bldg_curves_check.isChecked())
 
         zonal_dmg_by_asset_probs, zonal_asset_refs = \
             recovery.collect_zonal_data(integrate_svi, zone_field_name)

@@ -54,12 +54,13 @@ class RecoveryModeling(object):
     """
 
     def __init__(self, dmg_by_asset_features, approach, iface,
-                 svi_layer=None, output_data_dir=None):
+                 svi_layer=None, output_data_dir=None, save_bldg_curves=False):
         self.iface = iface
         self.svi_layer = svi_layer
         self.dmg_by_asset_features = dmg_by_asset_features
         self.approach = approach
         self.output_data_dir = output_data_dir
+        self.save_bldg_curves = save_bldg_curves
         recovery_modeling_dir = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
             '..', 'recovery_modeling')
@@ -327,7 +328,7 @@ class RecoveryModeling(object):
             # approach can be aggregate or disaggregate
             building_level_recovery_function = \
                 napa_bldg.generateBldgLevelRecoveryFunction(approach, seed)
-            if self.output_data_dir is not None:
+            if self.output_data_dir is not None and self.save_bldg_curves:
                 output_by_building_dir = os.path.join(
                     self.output_data_dir, 'by_building')
                 if not os.path.exists(output_by_building_dir):
