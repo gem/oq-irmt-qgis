@@ -45,9 +45,11 @@ from PyQt4.QtGui import (QColor,
 from qgis.gui import QgsVertexMarker
 from qgis.core import QGis, QgsMapLayer, QgsFeatureRequest
 
-from svir.utilities.shared import TEXTUAL_FIELD_TYPES
+from svir.utilities.shared import NUMERIC_FIELD_TYPES, TEXTUAL_FIELD_TYPES
 from svir.utilities.utils import get_ui_class, reload_attrib_cbx
-from svir.recovery_modeling.recovery_modeling import RecoveryModeling
+from svir.recovery_modeling.recovery_modeling import (
+    RecoveryModeling, fill_fields_multiselect)
+from svir.ui.list_multiselect_widget import ListMultiSelectWidget
 
 FORM_CLASS = get_ui_class('ui_viewer_dock.ui')
 
@@ -85,6 +87,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.n_simulations_sbx = None
         self.warning_n_simulations_lbl = None
         self.recalculate_curve_btn = None
+        self.fields_multiselect = None
 
         self.current_selection = {}
         self.current_imt = None
@@ -188,6 +191,13 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.recalculate_curve_btn.clicked.connect(
             self.on_recalculate_curve_btn_clicked)
 
+    def create_fields_multiselect(self):
+        self.fields_multiselect = ListMultiSelectWidget(
+            title='Select fields containing damage state probabilities')
+        self.typeDepVLayout.addWidget(self.fields_multiselect)
+        fill_fields_multiselect(
+            self.fields_multiselect, self.iface.activeLayer())
+
     def remove_widgets_from_layout(self, widgets, layout):
         for widget in widgets:
             if widget is not None:
@@ -210,6 +220,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         elif new_output_type == 'recovery_curves':
             self.create_approach_selector()
             self.create_n_simulations_spinbox()
+            self.create_fields_multiselect()
             self.create_recalculate_curve_btn()
         self.adjustSize()
         self.output_type = new_output_type
@@ -225,7 +236,9 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             [self.n_simulations_lbl, self.n_simulations_sbx],
             self.typeDepHLayout2)
         self.remove_widgets_from_layout(
-            [self.warning_n_simulations_lbl, self.recalculate_curve_btn],
+            [self.warning_n_simulations_lbl,
+             self.fields_multiselect,
+             self.recalculate_curve_btn],
             self.typeDepVLayout)
         self.adjustSize()
 
@@ -417,8 +430,9 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         approach = self.approach_cbx.currentText()
         recovery = RecoveryModeling(features, approach, self.iface)
         integrate_svi = False
+        probs_field_names = list(self.fields_multiselect.get_selected_items())
         zonal_dmg_by_asset_probs, zonal_asset_refs = \
-            recovery.collect_zonal_data(integrate_svi)
+            recovery.collect_zonal_data(probs_field_names, integrate_svi)
         n_simulations = self.n_simulations_sbx.value()
         recovery_function = \
             recovery.generate_community_level_recovery_curve(

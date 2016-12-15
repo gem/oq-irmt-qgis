@@ -36,8 +36,10 @@ from svir.utilities.utils import (get_ui_class,
                                   WaitCursorManager,
                                   tr,
                                   )
-from svir.utilities.shared import DEBUG
-from svir.recovery_modeling.recovery_modeling import RecoveryModeling
+from svir.utilities.shared import DEBUG, NUMERIC_FIELD_TYPES
+from svir.recovery_modeling.recovery_modeling import (
+    RecoveryModeling, fill_fields_multiselect)
+from svir.ui.list_multiselect_widget import ListMultiSelectWidget
 
 FORM_CLASS = get_ui_class('ui_recovery_modeling.ui')
 
@@ -51,6 +53,9 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         self.iface = iface
         # Set up the user interface from Designer.
         self.setupUi(self)
+        self.fields_multiselect = ListMultiSelectWidget(
+            title='Select fields containing damage state probabilities')
+        self.vLayout.insertWidget(2, self.fields_multiselect)
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         self.approach_cbx.addItems(['Disaggregate', 'Aggregate'])
         n_simulations = int(
@@ -70,6 +75,9 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
                 self.dmg_by_asset_layer_cbx.addItem(layer.name(), layer)
             if layer.geometryType() == QGis.Polygon:
                 self.svi_layer_cbx.addItem(layer.name(), layer)
+        if self.iface.activeLayer() is not None:
+            self.dmg_by_asset_layer_cbx.setCurrentIndex(
+                self.dmg_by_asset_layer_cbx.findData(self.iface.activeLayer()))
 
     def restoreState(self):
         """
@@ -94,8 +102,8 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
     def set_ok_button(self):
         self.ok_button.setEnabled(
             os.path.isdir(self.output_data_dir_le.text())
-            and self.approach_cbx.currentIndex != -1)
-        # and self.dmg_by_asset_layer_cbx.currentIndex != -1
+            and self.approach_cbx.currentIndex != -1
+            and self.dmg_by_asset_layer_cbx.currentIndex != -1)
         # and self.svi_layer_cbx.currentIndex != -1
         # and self.svi_field_name_cbx.currentIndex != -1
         # and self.zone_field_name_cbx.currentIndex != -1)
@@ -114,6 +122,10 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
     def on_dmg_by_asset_layer_cbx_currentIndexChanged(self, selected_index):
         self.dmg_by_asset_layer = self.dmg_by_asset_layer_cbx.itemData(
             selected_index)
+        self.fields_multiselect.selected_widget.clear()
+        self.fields_multiselect.unselected_widget.clear()
+        fill_fields_multiselect(
+            self.fields_multiselect, self.dmg_by_asset_layer)
 
     @pyqtSlot(int)
     def on_svi_layer_cbx_currentIndexChanged(self, selected_index):
@@ -150,8 +162,10 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
             dmg_by_asset_features, approach, self.iface, self.svi_layer,
             self.output_data_dir, self.save_bldg_curves_check.isChecked())
 
+        probs_field_names = list(self.fields_multiselect.get_selected_items())
         zonal_dmg_by_asset_probs, zonal_asset_refs = \
-            recovery.collect_zonal_data(integrate_svi, zone_field_name)
+            recovery.collect_zonal_data(
+                probs_field_names, integrate_svi, zone_field_name)
 
         # Incorporate Napa Data to community recovery model
         summary_filename = os.path.join(

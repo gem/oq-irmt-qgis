@@ -34,6 +34,7 @@ from svir.utilities.utils import (
                                   read_config_file,
                                   clear_progress_message_bar,
                                   )
+from svir.utilities.shared import NUMERIC_FIELD_TYPES
 
 HEADING_FIELDS_TO_DISCARD = 4
 DAYS_BEFORE_EVENT = 0
@@ -61,46 +62,25 @@ class RecoveryModeling(object):
         self.approach = approach
         self.output_data_dir = output_data_dir
         self.save_bldg_curves = save_bldg_curves
-        recovery_modeling_dir = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            '..', 'recovery_modeling')
-        self.config_files_dir = os.path.join(
-            recovery_modeling_dir, 'config_files')
 
-        # NB: The following is referred to the Napa case specifically!
-        # Load Transfer Probability Note: There is a 5*6 matrix where rows
-        # describe loss-based damage states (No
-        # damage/Slight/Moderate/Extensive/Complete) and columns present
-        # recovery-based damage states(No damage/Trigger inspection/Loss
-        # Function /Not Occupiable/Irreparable/Collapse). The element(i,j)
-        # in the matrix is the probability of recovery-based damage state j
-        # occurs given loss-based damage state i
-        transferProbabilitiesData = os.path.join(
-            self.config_files_dir, 'transferProbabilities.csv')
-
-        with open(transferProbabilitiesData, 'r') as f:
-            reader = csv.reader(f)
-            self.transferProbabilities = list(reader)
-
+        self.config_files_dir = get_config_files_dir()
+        self.transferProbabilities = get_transfer_probabilities(
+            self.config_files_dir)
         self.n_loss_based_dmg_states = len(self.transferProbabilities)
         self.n_recovery_based_dmg_states = len(self.transferProbabilities[0])
 
-    def collect_zonal_data(self, integrate_svi=False, zone_field_name=None):
-
+    def collect_zonal_data(self, probs_field_names, integrate_svi=False,
+                           zone_field_name=None):
         # build dictionary zone_id -> dmg_by_asset_probs
         zonal_dmg_by_asset_probs = defaultdict(list)
         zonal_asset_refs = defaultdict(list)
-        # select fields that contain probabilities
-        # i.e., ignore asset id, taxonomy, lon and lat (first
-        # HEADING_FIELDS_TO_DISCARD items)
-        # and get only columns containing means, discarding
-        # those containing stddevs, therefore getting one item
-        # out of two for the remaining columns
-        # Other fields can be safely added to the tail of the layer,
-        # without affecting this calculation
-        probs_slice = slice(
-            HEADING_FIELDS_TO_DISCARD,
-            HEADING_FIELDS_TO_DISCARD + 2*self.n_loss_based_dmg_states, 2)
+        try:
+            first_feat = self.dmg_by_asset_features[0]
+        except IndexError:
+            return zonal_dmg_by_asset_probs, zonal_asset_refs
+        probs_fields_idxs = sorted([
+            first_feat.fieldNameIndex(probs_field_names[i])
+            for i in range(len(probs_field_names))])
         if integrate_svi and self.svi_layer is not None:
             # FIXME self.svi_field_name is temporarily ignored
             # svi_by_zone = dict()
@@ -128,8 +108,8 @@ class RecoveryModeling(object):
                     asset_ref = str(int(asset_ref))
                 except:
                     asset_ref = str(asset_ref)
-                dmg_by_asset_probs = \
-                    dmg_by_asset_feat.attributes()[probs_slice]
+                dmg_by_asset_probs = [dmg_by_asset_feat.attributes()[idx]
+                                      for idx in probs_fields_idxs]
                 zonal_dmg_by_asset_probs[zone_id].append(dmg_by_asset_probs)
                 zonal_asset_refs[zone_id].append(asset_ref)
                 progress_perc = feat_idx / float(tot_features) * 100
@@ -142,8 +122,8 @@ class RecoveryModeling(object):
             tot_features = len(self.dmg_by_asset_features)
             for idx, dmg_by_asset_feat in enumerate(
                     self.dmg_by_asset_features, start=1):
-                dmg_by_asset_probs = \
-                    dmg_by_asset_feat.attributes()[probs_slice]
+                dmg_by_asset_probs = [dmg_by_asset_feat.attributes()[idx]
+                                      for idx in probs_fields_idxs]
                 asset_ref = dmg_by_asset_feat['asset_ref']
                 zonal_dmg_by_asset_probs['ALL'].append(dmg_by_asset_probs)
                 zonal_asset_refs['ALL'].append(asset_ref)
@@ -446,3 +426,59 @@ class RecoveryModeling(object):
             mobilizationTimes[i] = (
                 leadTimeFactor * float(mobilizationTimes[i]))
         return (timeList, inspectionTimes, assessmentTimes, mobilizationTimes)
+
+
+def get_config_files_dir():
+    recovery_modeling_dir = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        '..', 'recovery_modeling')
+    config_files_dir = os.path.join(
+        recovery_modeling_dir, 'config_files')
+    return config_files_dir
+
+
+def get_transfer_probabilities(config_files_dir):
+    # NB: The following is referred to the Napa case specifically!
+    # Load Transfer Probability Note: There is a 5*6 matrix where rows
+    # describe loss-based damage states (No
+    # damage/Slight/Moderate/Extensive/Complete) and columns present
+    # recovery-based damage states(No damage/Trigger inspection/Loss
+    # Function /Not Occupiable/Irreparable/Collapse). The element(i,j)
+    # in the matrix is the probability of recovery-based damage state j
+    # occurs given loss-based damage state i
+    transferProbabilitiesData = os.path.join(
+        config_files_dir, 'transferProbabilities.csv')
+    with open(transferProbabilitiesData, 'r') as f:
+        reader = csv.reader(f)
+        transfer_probabilities = list(reader)
+    return transfer_probabilities
+
+
+def fill_fields_multiselect(fields_multiselect, layer):
+    fields = layer.fields()
+    field_names = [field.name() for field in fields]
+    config_files_dir = get_config_files_dir()
+    transfer_probabilities = get_transfer_probabilities(
+        config_files_dir)
+    n_loss_based_dmg_states = len(transfer_probabilities)
+    # select fields that contain probabilities
+    # i.e., ignore asset id, taxonomy, lon and lat (first
+    # HEADING_FIELDS_TO_DISCARD items)
+    # and get only columns containing means, discarding
+    # those containing stddevs, therefore getting one item
+    # out of two for the remaining columns
+    # Other fields can be safely added to the tail of the layer,
+    # without affecting this calculation
+    probs_slice = slice(
+        HEADING_FIELDS_TO_DISCARD,
+        HEADING_FIELDS_TO_DISCARD + 2*n_loss_based_dmg_states, 2)
+    try:
+        default_field_names = field_names[probs_slice]
+    except:
+        default_field_names = []
+    other_fields = [field for field in fields
+                    if field.name() not in default_field_names
+                    and field.typeName() in NUMERIC_FIELD_TYPES]
+    other_field_names = [field.name() for field in other_fields]
+    fields_multiselect.set_selected_items(default_field_names)
+    fields_multiselect.set_unselected_items(other_field_names)

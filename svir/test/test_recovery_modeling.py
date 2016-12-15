@@ -38,9 +38,11 @@ def calculate_and_check_recovery_curve(
         testcase, dmg_by_asset_features, approach, expected_curve_path,
         regenerate_expected_values, seed=None, n_simulations=1):
     recovery = RecoveryModeling(dmg_by_asset_features, approach, IFACE)
+    probs_field_names = [u'structural', u'structur_2', u'structur_4',
+                         u'structur_6', u'structur_8']
     # NOTE: there is only one zone (i.e., 'ALL')
     zonal_dmg_by_asset_probs, zonal_asset_refs = \
-        recovery.collect_zonal_data()
+        recovery.collect_zonal_data(probs_field_names)
     zone_id = 'ALL'
     recovery_curve = recovery.generate_community_level_recovery_curve(
         zone_id, zonal_dmg_by_asset_probs, zonal_asset_refs, seed=seed,
