@@ -226,6 +226,13 @@ multiplied by -1 each time the variable is used in a calculation.
     the variable, and that the inversion will be performed on-the-fly for the
     purpose of the calculation.
 
+    Please also be aware of the fact that multiplying a variable by -1 is not
+    always what is actually needed to invert the meaning of an indicator. For
+    instance, let us suppose we want to meaningfully "invert" a percentage of
+    80%. The correct way to do so would be to calculate 100% - 80% = 20%.
+    Such kind of transformation can be easily performed using the QGIS Field
+    Calculator, in order to obtain a new field to be used in the project.
+
 
 Assigning a new name to a variable
 ==================================
