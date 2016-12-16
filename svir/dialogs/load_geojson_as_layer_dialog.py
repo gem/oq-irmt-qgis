@@ -147,6 +147,7 @@ class LoadGeoJsonAsLayerDialog(QDialog, FORM_CLASS):
             self.iface.messageBar().pushMessage(
                 self.tr("Error"),
                 self.tr(msg),
+                duration=0,
                 level=QgsMessageBar.CRITICAL)
 
     def populate_rlz_cbx(self):

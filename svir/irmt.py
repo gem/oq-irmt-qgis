@@ -407,6 +407,7 @@ class Irmt:
             self.iface.messageBar().pushMessage(
                 tr("Error"),
                 'Help file not found: %s' % base_url,
+                duration=0,
                 level=QgsMessageBar.CRITICAL)
         url = QUrl.fromLocalFile(base_url)
         QDesktopServices.openUrl(url)
@@ -644,6 +645,7 @@ class Irmt:
         except SvNetworkError as e:
             self.iface.messageBar().pushMessage(tr("Download Error"),
                                                 tr(str(e)),
+                                                duration=0,
                                                 level=QgsMessageBar.CRITICAL)
 
     def _data_download_successful(
@@ -1217,6 +1219,7 @@ class Irmt:
             self.iface.messageBar().pushMessage(
                 tr("Error"),
                 tr(msg),
+                duration=0,
                 level=QgsMessageBar.CRITICAL)
             return
 
@@ -1268,6 +1271,7 @@ class Irmt:
                     self.iface.messageBar().pushMessage(
                         tr("Error"),
                         tr(e.message),
+                        duration=0,
                         level=QgsMessageBar.CRITICAL)
                 else:  # only if the transformation was performed successfully
                     active_layer_id = self.iface.activeLayer().id()

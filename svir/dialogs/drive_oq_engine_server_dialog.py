@@ -109,12 +109,14 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     self.iface.messageBar().pushMessage(
                         tr("Login Error"),
                         tr(err_msg),
+                        duration=0,
                         level=QgsMessageBar.CRITICAL)
         if not self.is_logged_in:
             self.iface.messageBar().pushMessage(
                 tr("Error"),
                 tr("Please check OpenQuake Engine connection settings and"
                     " credentials"),
+                duration=0,
                 level=QgsMessageBar.CRITICAL)
             self.reject()
             return
@@ -134,6 +136,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 self.iface.messageBar().pushMessage(
                     tr("Error"),
                     str(exc.message),
+                    duration=0,
                     level=QgsMessageBar.CRITICAL)
                 self.reject()
                 return
@@ -154,6 +157,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 self.iface.messageBar().pushMessage(
                     tr("Error"),
                     str(exc.message),
+                    duration=0,
                     level=QgsMessageBar.CRITICAL)
                 self.reject()
                 return
@@ -163,6 +167,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     tr("Error"),
                     tr("Please check OpenQuake Engine connection settings and"
                        " credentials"),
+                    duration=0,
                     level=QgsMessageBar.CRITICAL)
                 self.reject()
                 return
@@ -281,6 +286,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 self.iface.messageBar().pushMessage(
                     tr("Error"),
                     str(exc.message),
+                    duration=0,
                     level=QgsMessageBar.CRITICAL)
                 self.reject()
                 return
@@ -298,6 +304,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 self.iface.messageBar().pushMessage(
                     tr("Error"),
                     str(exc.message),
+                    duration=0,
                     level=QgsMessageBar.CRITICAL)
                 self.reject()
                 return
@@ -312,6 +319,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             self.iface.messageBar().pushMessage(
                 tr("Error"),
                 'Unable to remove calculation %s' % calc_id,
+                duration=0,
                 level=QgsMessageBar.CRITICAL)
         return
 
@@ -337,6 +345,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 self.iface.messageBar().pushMessage(
                     tr("Error"),
                     tr("Please select all the files needed, or a zip archive"),
+                    duration=0,
                     level=QgsMessageBar.CRITICAL)
                 return
         else:
@@ -359,6 +368,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 self.iface.messageBar().pushMessage(
                     tr("Error"),
                     str(exc.message),
+                    duration=0,
                     level=QgsMessageBar.CRITICAL)
                 self.reject()
                 return
@@ -368,6 +378,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             self.iface.messageBar().pushMessage(
                 tr("Error"),
                 resp.text,
+                duration=0,
                 level=QgsMessageBar.CRITICAL)
 
     def get_output_list(self, calc_id):
@@ -382,6 +393,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 self.iface.messageBar().pushMessage(
                     tr("Error"),
                     str(exc.message),
+                    duration=0,
                     level=QgsMessageBar.CRITICAL)
                 self.reject()
                 return
@@ -524,6 +536,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 self.iface.messageBar().pushMessage(
                     tr("Error"),
                     str(exc.message),
+                    duration=0,
                     level=QgsMessageBar.CRITICAL)
                 self.reject()
                 return

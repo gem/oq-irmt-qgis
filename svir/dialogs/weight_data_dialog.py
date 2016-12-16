@@ -232,6 +232,7 @@ class WeightDataDialog(QDialog, FORM_CLASS):
             self.iface.messageBar().pushMessage(
                 tr("Error"),
                 'It was impossible to create the pdf',
+                duration=0,
                 level=QgsMessageBar.CRITICAL)
         else:
             self.iface.messageBar().pushMessage(

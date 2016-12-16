@@ -219,13 +219,15 @@ class UploadSettingsDialog(QDialog, FORM_CLASS):
                     error_msg = (
                         'Unable to login to the platform: ' + e.message)
                     self.iface.messageBar().pushMessage(
-                        'Error', error_msg, level=QgsMessageBar.CRITICAL)
+                        'Error', error_msg, duration=0,
+                        level=QgsMessageBar.CRITICAL)
                     return
                 if 'platform_layer_id' not in self.suppl_info:
                     error_msg = ('Unable to retrieve the id of'
                                  'the layer on the Platform')
                     self.iface.messageBar().pushMessage(
-                        'Error', error_msg, level=QgsMessageBar.CRITICAL)
+                        'Error', error_msg, duration=0,
+                        level=QgsMessageBar.CRITICAL)
                     return
                 response = update_platform_project(
                     hostname, session, self.project_definition,
@@ -251,6 +253,7 @@ class UploadSettingsDialog(QDialog, FORM_CLASS):
                     self.iface.messageBar().pushMessage(
                         tr("Error"),
                         tr(error_msg),
+                        duration=0,
                         level=QgsMessageBar.CRITICAL)
         else:
             if DEBUG:

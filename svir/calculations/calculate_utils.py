@@ -138,6 +138,7 @@ def calculate_composite_variable(iface, layer, node):
             get_node_attr_id_and_name(edited_node, layer)
     except InvalidNode as e:
         iface.messageBar().pushMessage(tr('Error'), str(e),
+                                       duration=0,
                                        level=QgsMessageBar.CRITICAL)
         if added_attrs_ids:
             ProcessLayer(layer).delete_attributes(added_attrs_ids)
@@ -152,7 +153,7 @@ def calculate_composite_variable(iface, layer, node):
                                               discarded_feats)
     except (InvalidOperator, InvalidChild, InvalidFormula) as e:
         iface.messageBar().pushMessage(
-            tr('Error'), str(e), level=QgsMessageBar.CRITICAL)
+            tr('Error'), str(e), duration=0, level=QgsMessageBar.CRITICAL)
         if added_attrs_ids:
             ProcessLayer(layer).delete_attributes(added_attrs_ids)
         return set(), set(), node, False
@@ -160,6 +161,7 @@ def calculate_composite_variable(iface, layer, node):
         msg = ('Could not calculate the composite variable due'
                ' to data problems: %s' % e)
         iface.messageBar().pushMessage(tr('Error'), tr(msg),
+                                       duration=0,
                                        level=QgsMessageBar.CRITICAL)
         if added_attrs_ids:
             ProcessLayer(layer).delete_attributes(

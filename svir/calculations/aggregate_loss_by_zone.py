@@ -197,6 +197,7 @@ def add_zone_id_to_points(iface, loss_attrs_dict, point_layer, zonal_layer,
             iface.messageBar().pushMessage(
                     tr("Error"),
                     tr(msg),
+                    duration=0,
                     level=QgsMessageBar.CRITICAL)
             use_fallback_calculation = True
 
@@ -549,6 +550,7 @@ def calculate_raster_stats(loss_layer, zonal_layer, iface):
                 tr("ZonalStats Error"),
                 tr('You aborted aggregation, so there are '
                    'no data for analysis. Exiting...'),
+                duration=0,
                 level=QgsMessageBar.CRITICAL)
     # FIXME: We probably need to return something more
     return (loss_layer, zonal_layer)

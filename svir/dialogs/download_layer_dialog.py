@@ -236,6 +236,7 @@ class DownloadLayerDialog(QDialog, FORM_CLASS):
             self.iface.messageBar().pushMessage(
                 tr("Download Error"),
                 tr('Unable to retrieve the project definitions for the layer'),
+                duration=0,
                 level=QgsMessageBar.CRITICAL)
             return
         supplemental_information = json.loads(
@@ -261,6 +262,7 @@ class DownloadLayerDialog(QDialog, FORM_CLASS):
             self.iface.messageBar().pushMessage(
                 tr("Import Error"),
                 tr('Layer invalid'),
+                duration=0,
                 level=QgsMessageBar.CRITICAL)
             return
         try:

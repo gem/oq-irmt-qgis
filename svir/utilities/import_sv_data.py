@@ -74,6 +74,7 @@ def get_loggedin_downloader(iface):
         iface.messageBar().pushMessage(
             tr("Login Error"),
             tr(err_msg),
+            duration=0,
             level=QgsMessageBar.CRITICAL)
         return None
 

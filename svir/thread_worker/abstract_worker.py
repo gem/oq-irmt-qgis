@@ -183,8 +183,8 @@ def worker_error(e, exception_string, message_bar):
     """
     message_bar.pushMessage(
         'Something went wrong! See the message log for more information.',
-        level=QgsMessageBar.CRITICAL,
-        duration=3)
+        duration=0,
+        level=QgsMessageBar.CRITICAL)
     QgsMessageLog.logMessage(
         'Worker thread raised an exception: %s' % exception_string,
         'IRMT worker',

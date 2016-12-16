@@ -153,6 +153,7 @@ class LoadCsvAsLayerDialog(QDialog, FORM_CLASS):
             self.iface.messageBar().pushMessage(
                 tr("Error"),
                 tr(msg),
+                duration=0,
                 level=QgsMessageBar.CRITICAL)
             return None
         return shp_layer

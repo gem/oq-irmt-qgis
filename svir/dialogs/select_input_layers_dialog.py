@@ -137,6 +137,7 @@ class SelectInputLayersDialog(QDialog, FORM_CLASS):
             self.iface.messageBar().pushMessage(
                 tr("Error"),
                 check_projection_msg,
+                duration=0,
                 level=QgsMessageBar.CRITICAL)
             return
 
@@ -338,6 +339,7 @@ class SelectInputLayersDialog(QDialog, FORM_CLASS):
             self.iface.messageBar().pushMessage(
                 tr("Error"),
                 tr(msg),
+                duration=0,
                 level=QgsMessageBar.CRITICAL)
             return None
         return shp_layer
@@ -351,6 +353,7 @@ class SelectInputLayersDialog(QDialog, FORM_CLASS):
                 self.iface.messageBar().pushMessage(
                     tr("Error"),
                     tr(msg),
+                    duration=0,
                     level=QgsMessageBar.CRITICAL)
                 return False
         else:
@@ -363,6 +366,7 @@ class SelectInputLayersDialog(QDialog, FORM_CLASS):
             self.iface.messageBar().pushMessage(
                 tr("Error"),
                 tr(msg),
+                duration=0,
                 level=QgsMessageBar.CRITICAL)
             return None
         # Zoom depending on the zonal layer's extent
@@ -376,6 +380,7 @@ class SelectInputLayersDialog(QDialog, FORM_CLASS):
             self.iface.messageBar().pushMessage(
                 tr("Error"),
                 tr(msg),
+                duration=0,
                 level=QgsMessageBar.CRITICAL)
             return False
         # Add zonal layer to registry
@@ -386,6 +391,7 @@ class SelectInputLayersDialog(QDialog, FORM_CLASS):
             self.iface.messageBar().pushMessage(
                 tr("Error"),
                 tr(msg),
+                duration=0,
                 level=QgsMessageBar.CRITICAL)
             return None
         return zonal_layer

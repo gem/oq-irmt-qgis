@@ -107,7 +107,7 @@ class UploadDialog(QDialog, FORM_CLASS):
             error_msg = (
                 'Unable to login to the platform: ' + e.message)
             self.message_bar.pushMessage(
-                'Error', error_msg, level=QgsMessageBar.CRITICAL)
+                'Error', error_msg, duration=0, level=QgsMessageBar.CRITICAL)
             return
 
         # adding by emitting signal in different thread
@@ -130,7 +130,8 @@ class UploadDialog(QDialog, FORM_CLASS):
             error_msg = (
                 'Unable to export the styled layer descriptor: ' + e.message)
             self.message_bar.pushMessage(
-                'Style error', error_msg, level=QgsMessageBar.CRITICAL)
+                'Style error', error_msg, duration=0,
+                level=QgsMessageBar.CRITICAL)
             return
 
         if DEBUG:
@@ -150,7 +151,8 @@ class UploadDialog(QDialog, FORM_CLASS):
             error_msg = (
                 'Error while styling the uploaded layer: ' + resp.reason)
             self.message_bar.pushMessage(
-                'Style error', error_msg, level=QgsMessageBar.CRITICAL)
+                'Style error', error_msg, duration=0,
+                level=QgsMessageBar.CRITICAL)
 
     def upload_done(self, result):
         layer_url, success = result
@@ -177,7 +179,8 @@ class UploadDialog(QDialog, FORM_CLASS):
             error_msg = layer_url
             clear_progress_message_bar(self.message_bar)
             self.message_bar.pushMessage(
-                'Upload error', error_msg, level=QgsMessageBar.CRITICAL)
+                'Upload error', error_msg, duration=0,
+                level=QgsMessageBar.CRITICAL)
 
     def load_finished(self):
         clear_progress_message_bar(self.message_bar, self.message_bar_item)
