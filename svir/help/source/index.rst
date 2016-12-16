@@ -30,6 +30,15 @@ Contents:
     12_using_r_scripts.rst
     13_recovery_modeling.rst
     14_driving_the_oqengine.rst
+    15_viewer_dock.rst
+
+
+Links:
+
+    `Code repository <https://github.com/gem/oq-irmt-qgis>`_
+
+    `Bug tracker <https://github.com/gem/oq-irmt-qgis/issues>`_
+
 
 .. note::
 

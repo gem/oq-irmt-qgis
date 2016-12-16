@@ -15,7 +15,7 @@
     <normaloff>:/plugins/inasafe/icon.png</normaloff>:/plugins/inasafe/icon.png</iconset>
   </property>
   <property name="windowTitle">
-   <string>OQ-Engine Outputs Viewer</string>
+   <string>IRMT Data Viewer</string>
   </property>
   <widget class="QWidget" name="container">
    <layout class="QVBoxLayout" name="verticalLayout">

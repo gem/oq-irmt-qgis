@@ -16,13 +16,6 @@ corresponding documentation.
     *Transform attributes* option will be available only as long as
     one of the loaded layers is activated.
 
-* |icon-connection-settings| :ref:`chap-connection-settings`
-
-* |icon-manual| IRMT manual: a web browser will be opened, showing the html
-  version of this manual
-
-* Toggle viewer dock: FIXME
-
 * OQ Platform
 
   * |icon-load-indicators| :ref:`chap-load-indicators`
@@ -31,7 +24,7 @@ corresponding documentation.
 
 * OQ Engine
 
-  * Drive the oq-engine server
+  * :ref:`chap-drive-oq-engine`
 
 * Integrated risk
 
@@ -40,12 +33,19 @@ corresponding documentation.
 
 * Recovery modeling
 
-  * Run recovery modeling
+  * :ref:`chap-recovery-modeling`
 
 * Utilities
 
   * |icon-aggregate-loss-by-zone| :ref:`chap-aggregating-loss-by-zone`
   * |icon-transform-attributes| :ref:`chap-transform-attribute`
+
+* |icon-connection-settings| :ref:`chap-irmt-settings`
+
+* |icon-manual| IRMT manual: a web browser will be opened, showing the html
+  version of this manual
+
+* :ref:`chap-viewer-dock` 
 
 
 .. |icon-connection-settings| image:: images/iconConnectionSettings.png
