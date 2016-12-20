@@ -32,7 +32,6 @@ from PyQt4 import Qt
 from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import (QDialog, QDialogButtonBox, QListWidgetItem,
                          QMessageBox)
-from qgis.gui import QgsMessageBar
 from qgis.core import QgsVectorLayer,  QgsMapLayerRegistry
 from svir.thread_worker.abstract_worker import start_worker
 from svir.thread_worker.download_platform_project_worker import (
@@ -43,9 +42,9 @@ from svir.utilities.utils import (WaitCursorManager,
                                   ask_for_destination_full_path_name,
                                   files_exist_in_destination,
                                   confirm_overwrite,
-                                  tr,
                                   write_layer_suppl_info_to_qgs,
                                   get_ui_class,
+                                  log_msg,
                                   )
 
 NS_NET_OPENGIS_WFS = '{http://www.opengis.net/wfs}'
@@ -233,11 +232,8 @@ class DownloadLayerDialog(QDialog, FORM_CLASS):
             sv_downloader.host, parent_dlg.layer_id)
         get_supplemental_information_resp = sv_downloader.sess.get(request_url)
         if not get_supplemental_information_resp.ok:
-            self.iface.messageBar().pushMessage(
-                tr("Download Error"),
-                tr('Unable to retrieve the project definitions for the layer'),
-                duration=0,
-                level=QgsMessageBar.CRITICAL)
+            msg = 'Unable to retrieve the project definitions for the layer'
+            log_msg(msg, level='C', message_bar=self.iface.messageBar())
             return
         supplemental_information = json.loads(
             get_supplemental_information_resp.content)
@@ -254,16 +250,11 @@ class DownloadLayerDialog(QDialog, FORM_CLASS):
             parent_dlg.extra_infos[parent_dlg.layer_id]['Title'], 'ogr')
         if layer.isValid():
             QgsMapLayerRegistry.instance().addMapLayer(layer)
-            self.iface.messageBar().pushMessage(
-                tr('Import successful'),
-                tr('Shapefile imported to %s' % new_shp_file_path),
-                duration=8)
+            msg = 'Shapefile imported to %s' % new_shp_file_path
+            log_msg(msg, level='I', message_bar=self.iface.messageBar())
         else:
-            self.iface.messageBar().pushMessage(
-                tr("Import Error"),
-                tr('Layer invalid'),
-                duration=0,
-                level=QgsMessageBar.CRITICAL)
+            msg = 'Layer invalid'
+            log_msg(msg, level='C', message_bar=self.iface.messageBar())
             return
         try:
             # dlg.layer_id has the format "oqplatform:layername"
@@ -281,10 +272,7 @@ class DownloadLayerDialog(QDialog, FORM_CLASS):
         except Exception as e:
             error_msg = ('Unable to download and apply the'
                          ' style layer descriptor: %s' % e)
-            self.iface.messageBar().pushMessage(
-                'Error downloading style',
-                error_msg, level=QgsMessageBar.WARNING,
-                duration=8)
+            log_msg(error_msg, level='C', message_bar=self.iface.messageBar())
         self.iface.setActiveLayer(layer)
         project_definitions = supplemental_information['project_definitions']
         # ensure backwards compatibility with projects with a single

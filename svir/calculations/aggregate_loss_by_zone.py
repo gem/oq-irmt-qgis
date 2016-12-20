@@ -29,7 +29,6 @@ from qgis.core import (QgsVectorLayer,
                        QgsSpatialIndex,
                        QgsFeatureRequest,
                        )
-from qgis.gui import QgsMessageBar
 from qgis.analysis import QgsZonalStatistics
 
 from PyQt4.QtCore import QVariant, QPyNullVariant
@@ -194,22 +193,15 @@ def add_zone_id_to_points(iface, loss_attrs_dict, point_layer, zonal_layer,
             msg = ("An error occurred while attempting to"
                    " compute zonal statistics with SAGA. Therefore"
                    " an alternative algorithm is used.")
-            iface.messageBar().pushMessage(
-                    tr("Error"),
-                    tr(msg),
-                    duration=0,
-                    level=QgsMessageBar.CRITICAL)
+            log_msg(msg, level='C', message_bar=iface.messageBar())
             use_fallback_calculation = True
 
     else:
-        saga_install_err += tr(
-                " In order to cope with complex geometries, "
-                "a working installation of SAGA is "
-                "recommended.")
-        iface.messageBar().pushMessage(
-                tr("Warning"),
-                tr(saga_install_err),
-                level=QgsMessageBar.WARNING)
+        saga_install_err += (
+            " In order to cope with complex geometries, "
+            "a working installation of SAGA is "
+            "recommended.")
+        log_msg(saga_install_err, level='W', message_bar=iface.messageBar())
         use_fallback_calculation = True
     if use_fallback_calculation:
         loss_layer_plus_zones, points_zone_id_attr_name = \
@@ -521,11 +513,7 @@ def notify_loss_aggregation_by_zone_complete(
         added_attrs.extend(loss_attrs_dict[loss_attr_name].values())
     msg = "New attributes [%s] have been added to the zonal layer" % (
         ', '.join(added_attrs))
-    iface.messageBar().pushMessage(
-            tr("Info"),
-            tr(msg),
-            level=QgsMessageBar.INFO,
-            duration=8)
+    log_msg(msg, level='I', message_bar=iface.messageBar())
 
 
 def calculate_raster_stats(loss_layer, zonal_layer, iface):
@@ -546,12 +534,9 @@ def calculate_raster_stats(loss_layer, zonal_layer, iface):
     # TODO: This is not giving any warning in case no loss points are
     #       contained by any of the zones
     if progress_dialog.wasCanceled():
-        iface.messageBar().pushMessage(
-                tr("ZonalStats Error"),
-                tr('You aborted aggregation, so there are '
-                   'no data for analysis. Exiting...'),
-                duration=0,
-                level=QgsMessageBar.CRITICAL)
+        msg = ("You aborted aggregation, so there are"
+               " no data for analysis. Exiting...")
+        log_msg(msg, level='C', message_bar=iface.messageBar())
     # FIXME: We probably need to return something more
     return (loss_layer, zonal_layer)
 
@@ -578,7 +563,5 @@ def purge_zones_without_loss_points(
     clear_progress_message_bar(iface.messageBar(), msg_bar_item)
 
     msg = "Zones containing no loss points were deleted"
-    iface.messageBar().pushMessage(tr("Warning"),
-                                   tr(msg),
-                                   level=QgsMessageBar.WARNING)
+    log_msg(msg, level='W', message_bar=iface.messageBar())
     return zonal_layer

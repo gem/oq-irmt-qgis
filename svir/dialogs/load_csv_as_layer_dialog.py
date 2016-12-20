@@ -32,7 +32,6 @@ from qgis.core import (QgsVectorLayer,
                        QgsRendererRangeV2,
                        QgsVectorFileWriter,
                        )
-from qgis.gui import QgsMessageBar
 from PyQt4.QtCore import pyqtSlot, QDir, QUrl
 
 from PyQt4.QtGui import (QDialogButtonBox,
@@ -40,7 +39,7 @@ from PyQt4.QtGui import (QDialogButtonBox,
                          QFileDialog,
                          QColor,
                          )
-from svir.utilities.utils import get_ui_class, tr
+from svir.utilities.utils import get_ui_class, log_msg
 
 FORM_CLASS = get_ui_class('ui_load_csv_as_layer.ui')
 
@@ -150,11 +149,7 @@ class LoadCsvAsLayerDialog(QDialog, FORM_CLASS):
             QgsMapLayerRegistry.instance().addMapLayer(shp_layer)
         else:
             msg = 'Invalid loss map'
-            self.iface.messageBar().pushMessage(
-                tr("Error"),
-                tr(msg),
-                duration=0,
-                level=QgsMessageBar.CRITICAL)
+            log_msg(msg, level='C', message_bar=self.iface.messageBar())
             return None
         return shp_layer
 

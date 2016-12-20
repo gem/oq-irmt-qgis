@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#/***************************************************************************
+# /***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
@@ -26,7 +26,6 @@ import os
 import tempfile
 import StringIO
 import csv
-from qgis.gui import QgsMessageBar
 
 from svir.third_party.requests import Session
 from svir.third_party.requests.exceptions import (ConnectionError,
@@ -38,7 +37,7 @@ from svir.utilities.settings import get_platform_credentials
 from svir.utilities.utils import (SvNetworkError,
                                   platform_login,
                                   WaitCursorManager,
-                                  tr,
+                                  log_msg,
                                   create_progress_message_bar,
                                   clear_progress_message_bar,
                                   )
@@ -71,11 +70,7 @@ def get_loggedin_downloader(iface):
         err_msg = str(e)
         if isinstance(e, InvalidSchema):
             err_msg += ' (you could try prepending http:// or https://)'
-        iface.messageBar().pushMessage(
-            tr("Login Error"),
-            tr(err_msg),
-            duration=0,
-            level=QgsMessageBar.CRITICAL)
+        log_msg(err_msg, level='C', message_bar=iface.messageBar())
         return None
 
 

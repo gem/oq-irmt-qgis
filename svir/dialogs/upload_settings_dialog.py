@@ -218,21 +218,21 @@ class UploadSettingsDialog(QDialog, FORM_CLASS):
                 except SvNetworkError as e:
                     error_msg = (
                         'Unable to login to the platform: ' + e.message)
-                    self.iface.messageBar().pushMessage(
-                        'Error', error_msg, duration=0,
-                        level=QgsMessageBar.CRITICAL)
+                    log_msg(error_msg, level='C',
+                            message_bar=self.iface.messageBar())
                     return
                 if 'platform_layer_id' not in self.suppl_info:
                     error_msg = ('Unable to retrieve the id of'
                                  'the layer on the Platform')
-                    self.iface.messageBar().pushMessage(
-                        'Error', error_msg, duration=0,
-                        level=QgsMessageBar.CRITICAL)
+                    log_msg(error_msg, level='C',
+                            message_bar=self.iface.messageBar())
                     return
                 response = update_platform_project(
                     hostname, session, self.project_definition,
                     self.suppl_info['platform_layer_id'])
                 if response.ok:
+                    log_msg(error_msg, level='C',
+                            message_bar=self.iface.messageBar())
                     self.iface.messageBar().pushMessage(
                         tr("Info"),
                         tr(response.text),
@@ -250,11 +250,8 @@ class UploadSettingsDialog(QDialog, FORM_CLASS):
                                       ' project definitions" functionality'
                                       ' to save the current project definition'
                                       ' as a new one having a unique title.')
-                    self.iface.messageBar().pushMessage(
-                        tr("Error"),
-                        tr(error_msg),
-                        duration=0,
-                        level=QgsMessageBar.CRITICAL)
+                    log_msg(error_msg, level='C',
+                            message_bar=self.iface.messageBar())
         else:
             if DEBUG:
                 log_msg('xml_file: %s' % self.xml_file)

@@ -33,7 +33,6 @@ from qgis.core import (QgsVectorLayer,
                        QgsGraduatedSymbolRendererV2,
                        QgsRendererRangeV2,
                        )
-from qgis.gui import QgsMessageBar
 from PyQt4.QtCore import pyqtSlot, QDir
 
 from PyQt4.QtGui import (QDialogButtonBox,
@@ -41,7 +40,7 @@ from PyQt4.QtGui import (QDialogButtonBox,
                          QFileDialog,
                          QColor,
                          )
-from svir.utilities.utils import get_ui_class
+from svir.utilities.utils import get_ui_class, log_msg
 
 FORM_CLASS = get_ui_class('ui_load_geojson_as_layer.ui')
 
@@ -136,19 +135,11 @@ class LoadGeoJsonAsLayerDialog(QDialog, FORM_CLASS):
             self.field_name = self.layer.dataProvider().fields()[0].name()
             self.style_layer()
             msg = 'Layer [%s] successfully loaded' % layer_name
-            self.iface.messageBar().pushMessage(
-                self.tr("Info"),
-                self.tr(msg),
-                level=QgsMessageBar.INFO,
-                duration=8)
+            log_msg(msg, level='I', message_bar=self.iface.messageBar())
             self.accept()
         else:
             msg = 'Invalid geojson'
-            self.iface.messageBar().pushMessage(
-                self.tr("Error"),
-                self.tr(msg),
-                duration=0,
-                level=QgsMessageBar.CRITICAL)
+            log_msg(msg, level='C', message_bar=self.iface.messageBar())
 
     def populate_rlz_cbx(self):
         self.rlz_cbx.clear()

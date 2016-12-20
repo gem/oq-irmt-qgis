@@ -24,7 +24,6 @@
 
 from copy import deepcopy
 import json
-from qgis.gui import QgsMessageBar
 
 from PyQt4.QtCore import (Qt,
                           QUrl,
@@ -46,7 +45,6 @@ from svir.utilities.shared import (DEFAULT_OPERATOR,
 from svir.utilities.utils import (get_field_names,
                                   confirmation_on_close,
                                   ask_for_destination_full_path_name,
-                                  tr,
                                   log_msg,
                                   get_ui_class,
                                   )
@@ -229,18 +227,12 @@ class WeightDataDialog(QDialog, FORM_CLASS):
         try:
             self.web_view.print_(self.printer)
         except:
-            self.iface.messageBar().pushMessage(
-                tr("Error"),
-                'It was impossible to create the pdf',
-                duration=0,
-                level=QgsMessageBar.CRITICAL)
+            msg = 'It was impossible to create the pdf'
+            log_msg(msg, level='C', message_bar=self.iface.messageBar())
         else:
-            self.iface.messageBar().pushMessage(
-                tr("Info"),
-                'Project definition printed as pdf and saved to: %s'
-                % dest_full_path_name,
-                level=QgsMessageBar.INFO,
-                duration=8)
+            msg = ('Project definition printed as pdf and saved to: %s'
+                   % dest_full_path_name)
+            log_msg(msg, level='I', message_bar=self.iface.messageBar())
 
     @pyqtSlot(str)
     def on_style_by_field_cbx_currentIndexChanged(self):

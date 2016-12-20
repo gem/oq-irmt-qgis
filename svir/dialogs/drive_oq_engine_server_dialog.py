@@ -27,7 +27,6 @@ import json
 import tempfile
 import zipfile
 
-from qgis.gui import QgsMessageBar
 from PyQt4.QtCore import QDir, Qt, QObject, SIGNAL, QTimer, pyqtSlot
 
 from PyQt4.QtGui import (QDialog,
@@ -47,7 +46,6 @@ from svir.utilities.settings import get_engine_credentials
 from svir.utilities.utils import (WaitCursorManager,
                                   engine_login,
                                   log_msg,
-                                  tr,
                                   ask_for_download_destination_folder,
                                   get_ui_class,
                                   SvNetworkError,
@@ -106,18 +104,12 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     if isinstance(e, InvalidSchema):
                         err_msg += \
                             ' (you could try prepending http:// or https://)'
-                    self.iface.messageBar().pushMessage(
-                        tr("Login Error"),
-                        tr(err_msg),
-                        duration=0,
-                        level=QgsMessageBar.CRITICAL)
+                    log_msg(err_msg, level='C',
+                            message_bar=self.iface.messageBar())
         if not self.is_logged_in:
-            self.iface.messageBar().pushMessage(
-                tr("Error"),
-                tr("Please check OpenQuake Engine connection settings and"
-                    " credentials"),
-                duration=0,
-                level=QgsMessageBar.CRITICAL)
+            msg = ("Please check OpenQuake Engine connection settings and"
+                   " credentials")
+            log_msg(msg, level='C', message_bar=self.iface.messageBar())
             self.reject()
             return
 
@@ -133,11 +125,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     calc_list_url, timeout=10, verify=False)
             except (ConnectionError, InvalidSchema, MissingSchema,
                     ReadTimeout, SvNetworkError) as exc:
-                self.iface.messageBar().pushMessage(
-                    tr("Error"),
-                    str(exc.message),
-                    duration=0,
-                    level=QgsMessageBar.CRITICAL)
+                log_msg(str(exc.msg), level='C',
+                        message_bar=self.iface.messageBar())
                 self.reject()
                 return
             # handle case of redirection to the login page
@@ -154,21 +143,16 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     calc_list_url, timeout=10, verify=False)
             except (ConnectionError, InvalidSchema, MissingSchema,
                     ReadTimeout, SvNetworkError) as exc:
-                self.iface.messageBar().pushMessage(
-                    tr("Error"),
-                    str(exc.message),
-                    duration=0,
-                    level=QgsMessageBar.CRITICAL)
+                log_msg(str(exc.msg), level='C',
+                        message_bar=self.iface.messageBar())
                 self.reject()
                 return
             # handle case of redirection to the login page
             if resp.url != calc_list_url and 'login' in resp.url:
-                self.iface.messageBar().pushMessage(
-                    tr("Error"),
-                    tr("Please check OpenQuake Engine connection settings and"
-                       " credentials"),
-                    duration=0,
-                    level=QgsMessageBar.CRITICAL)
+                msg = ("Please check OpenQuake Engine connection settings and"
+                       " credentials")
+                log_msg(msg, level='C',
+                        message_bar=self.iface.messageBar())
                 self.reject()
                 return
             calc_list = json.loads(resp.text)
@@ -283,11 +267,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 resp = self.session.get(calc_log_url, timeout=10, verify=False)
             except (ConnectionError, InvalidSchema, MissingSchema,
                     ReadTimeout, SvNetworkError) as exc:
-                self.iface.messageBar().pushMessage(
-                    tr("Error"),
-                    str(exc.message),
-                    duration=0,
-                    level=QgsMessageBar.CRITICAL)
+                log_msg(str(exc.message), level='C',
+                        message_bar=self.iface.messageBar())
                 self.reject()
                 return
             calc_log = json.loads(resp.text)
@@ -301,26 +282,17 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 resp = self.session.post(calc_remove_url, timeout=10)
             except (ConnectionError, InvalidSchema, MissingSchema,
                     ReadTimeout, SvNetworkError) as exc:
-                self.iface.messageBar().pushMessage(
-                    tr("Error"),
-                    str(exc.message),
-                    duration=0,
-                    level=QgsMessageBar.CRITICAL)
+                log_msg(str(exc.message), level='C',
+                        message_bar=self.iface.messageBar())
                 self.reject()
                 return
         if resp.ok:
-            self.iface.messageBar().pushMessage(
-                tr("Info"),
-                'Calculation %s successfully removed' % calc_id,
-                level=QgsMessageBar.INFO,
-                duration=8)
+            msg = 'Calculation %s successfully removed' % calc_id
+            log_msg(msg, level='I', message_bar=self.iface.messageBar())
             self.refresh_calc_list()
         else:
-            self.iface.messageBar().pushMessage(
-                tr("Error"),
-                'Unable to remove calculation %s' % calc_id,
-                duration=0,
-                level=QgsMessageBar.CRITICAL)
+            msg = 'Unable to remove calculation %s' % calc_id
+            log_msg(msg, level='C', message_bar=self.iface.messageBar())
         return
 
     def run_calc(self, calc_id=None):
@@ -342,11 +314,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 # NOTE: an alternative solution could be to check if the single
                 # file is .ini, to look for all the files specified in the .ini
                 # and to build a zip archive with all them
-                self.iface.messageBar().pushMessage(
-                    tr("Error"),
-                    tr("Please select all the files needed, or a zip archive"),
-                    duration=0,
-                    level=QgsMessageBar.CRITICAL)
+                msg = "Please select all the files needed, or a zip archive"
+                log_msg(msg, level='C', message_bar=self.iface.messageBar())
                 return
         else:
             _, zipped_file_name = tempfile.mkstemp()
@@ -365,21 +334,14 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     run_calc_url, files=files, data=data, timeout=20)
             except (ConnectionError, InvalidSchema, MissingSchema,
                     ReadTimeout, SvNetworkError) as exc:
-                self.iface.messageBar().pushMessage(
-                    tr("Error"),
-                    str(exc.message),
-                    duration=0,
-                    level=QgsMessageBar.CRITICAL)
+                msg = str(exc.message)
+                log_msg(msg, level='C', message_bar=self.iface.messageBar())
                 self.reject()
                 return
         if resp.ok:
             self.refresh_calc_list()
         else:
-            self.iface.messageBar().pushMessage(
-                tr("Error"),
-                resp.text,
-                duration=0,
-                level=QgsMessageBar.CRITICAL)
+            log_msg(resp.text, level='C', message_bar=self.iface.messageBar())
 
     def get_output_list(self, calc_id):
         output_list_url = "%s/v1/calc/%s/results" % (self.hostname, calc_id)
@@ -390,11 +352,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                                         verify=False)
             except (ConnectionError, InvalidSchema, MissingSchema,
                     ReadTimeout, SvNetworkError) as exc:
-                self.iface.messageBar().pushMessage(
-                    tr("Error"),
-                    str(exc.message),
-                    duration=0,
-                    level=QgsMessageBar.CRITICAL)
+                log_msg(str(exc.message), level='C',
+                        message_bar=self.iface.messageBar())
                 self.reject()
                 return
         if resp.ok:
@@ -511,10 +470,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             filepath = self.download_output(output_id, outtype)
             if not filepath:
                 return
-            self.iface.messageBar().pushMessage(
-                tr("Info"),
-                'Calculation %s was saved as %s' % (output_id, filepath),
-                level=QgsMessageBar.INFO)
+            msg = 'Calculation %s was saved as %s' % (output_id, filepath)
+            log_msg(msg, level='I', message_bar=self.iface.messageBar())
         else:
             raise NotImplementedError(action)
 
@@ -533,11 +490,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 resp = self.session.get(output_download_url, verify=False)
             except (ConnectionError, InvalidSchema, MissingSchema,
                     ReadTimeout, SvNetworkError) as exc:
-                self.iface.messageBar().pushMessage(
-                    tr("Error"),
-                    str(exc.message),
-                    duration=0,
-                    level=QgsMessageBar.CRITICAL)
+                log_msg(str(exc.message), level='C',
+                        message_bar=self.iface.messageBar())
                 self.reject()
                 return
             filename = resp.headers['content-disposition'].split(

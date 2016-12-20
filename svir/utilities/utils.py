@@ -64,9 +64,12 @@ def get_irmt_version():
     return _IRMT_VERSION
 
 
-def log_msg(message, tag='GEM IRMT Plugin', level='I'):
+def log_msg(message, tag='GEM IRMT Plugin', level='I', message_bar=None):
     """
-    Add a message to the QGIS message log
+    Add a message to the QGIS message log. If a messageBar is provided,
+    the same message will be displayed also in the messageBar. In the latter
+    case, warnings and critical messages will have no timeout, whereas
+    info messages will have a duration of 5 seconds.
 
     :param message: the message
     :param tag: the log topic
@@ -74,13 +77,31 @@ def log_msg(message, tag='GEM IRMT Plugin', level='I'):
         ('I' -> QgsMessageLog.INFO,
          'W' -> QgsMessageLog.WARNING,
          'C' -> QgsMessageLog.CRITICAL)
+    :param message_bar: a `QgsMessageBar` instance
     """
-    levels = {'I': QgsMessageLog.INFO,
-              'W': QgsMessageLog.WARNING,
-              'C': QgsMessageLog.CRITICAL}
+    levels = {'I': {'log': QgsMessageLog.INFO,
+                    'bar': QgsMessageBar.INFO},
+              'W': {'log': QgsMessageLog.WARNING,
+                    'bar': QgsMessageBar.WARNING},
+              'C': {'log': QgsMessageLog.CRITICAL,
+                    'bar': QgsMessageBar.CRITICAL}}
     if level not in levels:
         raise ValueError('Level must be one of %s' % levels.keys())
-    QgsMessageLog.logMessage(message, tag, levels[level])
+    QgsMessageLog.logMessage(tr(message), tr(tag), levels[level]['log'])
+    if message_bar is not None:
+        if level == 'I':
+            title = 'Info'
+            duration = 8
+        elif level == 'W':
+            title = 'Warning'
+            duration = 0
+        elif level == 'C':
+            title = 'Error'
+            duration = 0
+        message_bar.pushMessage(tr(title),
+                                tr(message),
+                                levels[level]['bar'],
+                                duration)
 
 
 def tr(message):

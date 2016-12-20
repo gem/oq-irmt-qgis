@@ -33,7 +33,6 @@ from qgis.core import (QgsVectorLayer,
                        QgsVectorFileWriter,
                        QgsMapLayer,
                        )
-from qgis.gui import QgsMessageBar
 
 from PyQt4.QtCore import pyqtSlot, QDir, QUrl
 
@@ -50,6 +49,7 @@ from svir.dialogs.attribute_selection_dialog import AttributeSelectionDialog
 from svir.utilities.utils import (tr,
                                   count_heading_commented_lines,
                                   get_ui_class,
+                                  log_msg,
                                   )
 
 FORM_CLASS = get_ui_class('ui_select_input_layers.ui')
@@ -112,8 +112,8 @@ class SelectInputLayersDialog(QDialog, FORM_CLASS):
                 file_name = file_names[0]
                 if len(file_names) > 1:
                     msg = "Only %s is loaded" % file_name
-                    self.iface.messageBar().pushMessage(
-                        tr("Warning"), tr(msg), level=QgsMessageBar.WARNING)
+                    log_msg(msg, level='W',
+                            message_bar=self.iface.messageBar())
                 layer = self.load_loss_layer(file_name)
         else:
             raise RuntimeError
@@ -134,11 +134,8 @@ class SelectInputLayersDialog(QDialog, FORM_CLASS):
         have_same_projection, check_projection_msg = ProcessLayer(
             loss_layer).has_same_projection_as(zonal_layer)
         if not have_same_projection:
-            self.iface.messageBar().pushMessage(
-                tr("Error"),
-                check_projection_msg,
-                duration=0,
-                level=QgsMessageBar.CRITICAL)
+            log_msg(check_projection_msg, level='C',
+                    message_bar=self.iface.messageBar())
             return
 
         # check if loss layer is raster or vector (aggregating by zone
@@ -336,11 +333,7 @@ class SelectInputLayersDialog(QDialog, FORM_CLASS):
             QgsMapLayerRegistry.instance().addMapLayer(shp_layer)
         else:
             msg = 'Invalid loss map'
-            self.iface.messageBar().pushMessage(
-                tr("Error"),
-                tr(msg),
-                duration=0,
-                level=QgsMessageBar.CRITICAL)
+            log_msg(msg, level='C', message_bar=self.iface.messageBar())
             return None
         return shp_layer
 
@@ -350,11 +343,7 @@ class SelectInputLayersDialog(QDialog, FORM_CLASS):
             loss_layer = QgsVectorLayer(loss_layer_path, tr('Loss map'), 'ogr')
             if not loss_layer.geometryType() == QGis.Point:
                 msg = 'Loss map must contain points'
-                self.iface.messageBar().pushMessage(
-                    tr("Error"),
-                    tr(msg),
-                    duration=0,
-                    level=QgsMessageBar.CRITICAL)
+                log_msg(msg, level='C', message_bar=self.iface.messageBar())
                 return False
         else:
             loss_layer = QgsRasterLayer(loss_layer_path, tr('Loss map'))
@@ -363,11 +352,7 @@ class SelectInputLayersDialog(QDialog, FORM_CLASS):
             QgsMapLayerRegistry.instance().addMapLayer(loss_layer)
         else:
             msg = 'Invalid loss map'
-            self.iface.messageBar().pushMessage(
-                tr("Error"),
-                tr(msg),
-                duration=0,
-                level=QgsMessageBar.CRITICAL)
+            log_msg(msg, level='C', message_bar=self.iface.messageBar())
             return None
         # Zoom depending on the zonal layer's extent
         return loss_layer
@@ -377,21 +362,13 @@ class SelectInputLayersDialog(QDialog, FORM_CLASS):
         zonal_layer = QgsVectorLayer(zonal_layer_path, tr('Zonal data'), 'ogr')
         if not zonal_layer.geometryType() == QGis.Polygon:
             msg = 'Zonal layer must contain zone polygons'
-            self.iface.messageBar().pushMessage(
-                tr("Error"),
-                tr(msg),
-                duration=0,
-                level=QgsMessageBar.CRITICAL)
+            log_msg(msg, level='C', message_bar=self.iface.messageBar())
             return False
         # Add zonal layer to registry
         if zonal_layer.isValid():
             QgsMapLayerRegistry.instance().addMapLayer(zonal_layer)
         else:
             msg = 'Invalid zonal layer'
-            self.iface.messageBar().pushMessage(
-                tr("Error"),
-                tr(msg),
-                duration=0,
-                level=QgsMessageBar.CRITICAL)
+            log_msg(msg, level='C', message_bar=self.iface.messageBar())
             return None
         return zonal_layer

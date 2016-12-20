@@ -24,7 +24,6 @@
 
 from copy import deepcopy
 from qgis.core import QgsField, QgsExpression
-from qgis.gui import QgsMessageBar
 
 from PyQt4.QtCore import QVariant, QPyNullVariant
 
@@ -37,7 +36,7 @@ from svir.utilities.shared import (DOUBLE_FIELD_TYPE_NAME,
                                    IGNORING_WEIGHT_OPERATORS,
                                    DiscardedFeature)
 from svir.calculations.process_layer import ProcessLayer
-from svir.utilities.utils import LayerEditingManager, tr, log_msg
+from svir.utilities.utils import LayerEditingManager, log_msg
 
 
 class InvalidNode(Exception):
@@ -137,9 +136,7 @@ def calculate_composite_variable(iface, layer, node):
         node_attr_id, node_attr_name, field_was_added = \
             get_node_attr_id_and_name(edited_node, layer)
     except InvalidNode as e:
-        iface.messageBar().pushMessage(tr('Error'), str(e),
-                                       duration=0,
-                                       level=QgsMessageBar.CRITICAL)
+        log_msg(str(e), level='C', message_bar=iface.messageBar())
         if added_attrs_ids:
             ProcessLayer(layer).delete_attributes(added_attrs_ids)
         return set(), set(), node, False
@@ -152,17 +149,14 @@ def calculate_composite_variable(iface, layer, node):
                                               layer,
                                               discarded_feats)
     except (InvalidOperator, InvalidChild, InvalidFormula) as e:
-        iface.messageBar().pushMessage(
-            tr('Error'), str(e), duration=0, level=QgsMessageBar.CRITICAL)
+        log_msg(str(e), level='C', message_bar=iface.messageBar())
         if added_attrs_ids:
             ProcessLayer(layer).delete_attributes(added_attrs_ids)
         return set(), set(), node, False
     except TypeError as e:
         msg = ('Could not calculate the composite variable due'
                ' to data problems: %s' % e)
-        iface.messageBar().pushMessage(tr('Error'), tr(msg),
-                                       duration=0,
-                                       level=QgsMessageBar.CRITICAL)
+        log_msg(msg, level='C', message_bar=iface.messageBar())
         if added_attrs_ids:
             ProcessLayer(layer).delete_attributes(
                 added_attrs_ids)

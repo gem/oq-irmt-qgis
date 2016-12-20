@@ -29,14 +29,13 @@ from PyQt4.QtGui import (QDialog,
                          QFileDialog,
                          QDialogButtonBox)
 from qgis.core import QgsMapLayer, QgsMapLayerRegistry, QGis
-from qgis.gui import QgsMessageBar
 from svir.calculations.aggregate_loss_by_zone import add_zone_id_to_points
 from svir.utilities.utils import (get_ui_class,
                                   reload_attrib_cbx,
                                   WaitCursorManager,
-                                  tr,
+                                  log_msg,
                                   )
-from svir.utilities.shared import DEBUG, NUMERIC_FIELD_TYPES
+from svir.utilities.shared import DEBUG
 from svir.recovery_modeling.recovery_modeling import (
     RecoveryModeling, fill_fields_multiselect)
 from svir.ui.list_multiselect_widget import ListMultiSelectWidget
@@ -200,9 +199,7 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         with WaitCursorManager('Generating recovery curves...', self.iface):
             self.calculate_community_level_recovery_curve(
                 self.integrate_svi_check.isChecked())
-        self.iface.messageBar().pushMessage(
-            tr("Info"),
-            'Recovery curves have been saved to [%s]' % self.output_data_dir,
-            level=QgsMessageBar.INFO, duration=0)
+        msg = 'Recovery curves have been saved to [%s]' % self.output_data_dir
+        log_msg(msg, level='I', message_bar=self.iface.messageBar())
         self.saveState()
         super(RecoveryModelingDialog, self).accept()

@@ -404,11 +404,8 @@ class Irmt:
         base_url = os.path.abspath(os.path.join(
             __file__, os.pardir, 'help', 'build', 'html', 'index.html'))
         if not os.path.exists(base_url):
-            self.iface.messageBar().pushMessage(
-                tr("Error"),
-                'Help file not found: %s' % base_url,
-                duration=0,
-                level=QgsMessageBar.CRITICAL)
+            msg = 'Help file not found: %s' % base_url
+            log_msg(msg, level='C', message_bar=self.iface.messageBar())
         url = QUrl.fromLocalFile(base_url)
         QDesktopServices.openUrl(url)
 
@@ -643,10 +640,7 @@ class Irmt:
                     start_worker(worker, self.iface.messageBar(),
                                  'Downloading data from platform')
         except SvNetworkError as e:
-            self.iface.messageBar().pushMessage(tr("Download Error"),
-                                                tr(str(e)),
-                                                duration=0,
-                                                level=QgsMessageBar.CRITICAL)
+            log_msg(str(e), level='C', message_bar=self.iface.messageBar())
 
     def _data_download_successful(
             self, result, load_geometries, dest_filename, project_definition):
@@ -666,11 +660,7 @@ class Irmt:
         """
         fname, msg = result
         display_msg = tr("Socioeconomic data loaded in a new layer")
-        self.iface.messageBar().pushMessage(tr("Info"),
-                                            tr(display_msg),
-                                            level=QgsMessageBar.INFO,
-                                            duration=8)
-        log_msg(msg)
+        log_msg(display_msg, level='I', message_bar=self.iface.messageBar())
         # don't remove the file, otherwise there will be concurrency
         # problems
 
@@ -803,8 +793,7 @@ class Irmt:
                                  for attr_id in added_attrs_ids]
             msg = ('New attributes have been added to the layer: %s'
                    % ', '.join(added_attrs_names))
-            self.iface.messageBar().pushMessage(
-                tr('Info'), tr(msg), level=QgsMessageBar.INFO)
+            log_msg(msg, level='I', message_bar=self.iface.messageBar())
         if discarded_feats:
             discarded_feats_ids_missing = [
                 feat.feature_id for feat in discarded_feats
@@ -869,10 +858,7 @@ class Irmt:
                 log_msg('original sld saved in %s' % sld_file_name)
         else:
             err_msg = 'Unable to save the sld: %s' % resp_text
-            self.iface.messageBar().pushMessage(
-                tr("Warning"),
-                tr(err_msg),
-                level=QgsMessageBar.WARNING)
+            log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
 
         dlg = WeightDataDialog(self.iface, edited_project_definition)
         dlg.show()
@@ -1216,11 +1202,7 @@ class Irmt:
         reg = QgsMapLayerRegistry.instance()
         if not reg.count():
             msg = 'No layer available for transformation'
-            self.iface.messageBar().pushMessage(
-                tr("Error"),
-                tr(msg),
-                duration=0,
-                level=QgsMessageBar.CRITICAL)
+            log_msg(msg, level='C', message_bar=self.iface.messageBar())
             return
 
         dlg = TransformationDialog(self.iface)
@@ -1262,17 +1244,12 @@ class Irmt:
                         msg += (' The transformation could not'
                                 ' be performed for the following'
                                 ' input values: %s' % invalid_input_values)
-                    self.iface.messageBar().pushMessage(
-                        tr("Info"),
-                        tr(msg),
-                        level=(QgsMessageBar.INFO if not invalid_input_values
-                               else QgsMessageBar.WARNING))
+                    level = 'I' if not invalid_input_values else 'W'
+                    log_msg(msg, level=level,
+                            message_bar=self.iface.messageBar())
                 except (ValueError, NotImplementedError) as e:
-                    self.iface.messageBar().pushMessage(
-                        tr("Error"),
-                        tr(e.message),
-                        duration=0,
-                        level=QgsMessageBar.CRITICAL)
+                    log_msg(e.message, level='C',
+                            message_bar=self.iface.messageBar())
                 else:  # only if the transformation was performed successfully
                     active_layer_id = self.iface.activeLayer().id()
                     read_layer_suppl_info_from_qgs(
@@ -1303,11 +1280,7 @@ class Irmt:
                 layer.commitChanges()
                 layer.triggerRepaint()
                 msg = 'Calculation performed on layer %s' % layer.name()
-                self.iface.messageBar().pushMessage(
-                    tr("Info"),
-                    tr(msg),
-                    level=QgsMessageBar.INFO,
-                    duration=8)
+                log_msg(msg, level='I', message_bar=self.iface.messageBar())
         self.update_actions_status()
 
     def upload(self):
