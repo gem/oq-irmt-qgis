@@ -26,6 +26,8 @@ changelog=
     1.8.13
     * Many additions to the user manual
     * Messages displayed in the QGIS message bar are also added to the log
+    * Fix header of csv for data exported from the Data Viewer
+    * Improved visualization and export of uniform hazard spectra
     1.8.12
     * Fields containing damage states probabilities can be selected through a multiselect widget
     1.8.11
