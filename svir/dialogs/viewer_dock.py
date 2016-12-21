@@ -243,6 +243,9 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.adjustSize()
 
     def draw(self):
+        marker = "None"
+        if self.output_type != 'recovery_curves':
+            marker = '.'
         self.plot.clear()
         gids = self.current_selection.keys()
         count_selected = len(gids)
@@ -265,6 +268,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 curve['ordinates'],
                 color=curve['color'],
                 linestyle=curve['line_style'],
+                marker=marker,
                 label='%.4f, %.4f' % (lon, lat),
                 gid=str(site),  # matplotlib needs a string when exporting svg
                 picker=5  # 5 points tolerance
