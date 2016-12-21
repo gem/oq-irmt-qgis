@@ -328,6 +328,10 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             self.plot.set_ylim(ylim_bottom, ylim_top * 1.5)
             xlim_left, xlim_right = self.plot.get_xlim()
             self.plot.set_xlim(xlim_left, xlim_right * 1.1)
+        elif self.output_type == 'uhs':
+            ylim_bottom, ylim_top = self.plot.get_ylim()
+            ylim_bottom_margin = (ylim_top-ylim_bottom)/20.0
+            self.plot.set_ylim(ylim_bottom-ylim_bottom_margin, ylim_top)
 
         if self.output_type != 'recovery_curves' and count_selected <= 20:
             if self.output_type == 'uhs':
