@@ -39,7 +39,7 @@ indicator (or composite index or indices).
 As part of the workflow, the IRMT facilitates the integration of composite
 indicators of socio-economic characteristics with measures of physical risk
 (i.e. estimations of human or economic loss) from the OpenQuake Engine
-(OQ-engine) [SCP+14]_, or other sources, to form what is referred to
+(OQ-engine) ([PMW+14]_ and [SCP+14]_), or other sources, to form what is referred to
 as an integrated risk assessment. Although the tool may be utilized for any
 type of indicator development, it is encouraged that composite indicators of
 social vulnerability are developed within this integrated risk framework.
@@ -88,6 +88,13 @@ and aggregation to produce composite indicators; 4) risk integration using
 OpenQuake risk estimates; and 5) the presentation of the results. Brief
 descriptions of the tool’s components and the workflow to develop integrated
 risk models are outlined in the sections below.
+
+.. [PMW+14]
+    Pagani, M., Monelli, D., Weatherill, G., Danciu, L., Crowley, H., Silva,
+    V., Henshaw, P., Butler, L., Nastasi, M., Panzeri, L., Simionato, M. and
+    Vigano, V. OpenQuake Engine: An Open Hazard (and Risk) Software for the
+    Global Earthquake Model. Seismological Research Letters, vol. 85 no. 3,
+    692-702
 
 .. [SCP+14]
     Silva, V., Crowley, H., Pagani, M., Monelli, D., and Pinho, R., 2014.
