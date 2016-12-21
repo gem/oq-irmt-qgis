@@ -578,6 +578,12 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 os.path.expanduser(
                     '~/hazard_curves_%s.csv' % self.current_imt),
                 '*.csv')
+        elif self.output_type == 'uhs':
+            filename = QtGui.QFileDialog.getSaveFileName(
+                self,
+                self.tr('Export data'),
+                os.path.expanduser('~/uniform_hazard_spectra.csv'),
+                '*.csv')
         elif self.output_type == 'loss_curves':
             filename = QtGui.QFileDialog.getSaveFileName(
                 self,
