@@ -601,18 +601,10 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 '*.csv')
         if filename:
             with open(filename, 'w') as csv_file:
+                # write header
                 line = 'lon,lat,%s' % (
                     ','.join(map(str, list(self.current_abscissa))))
                 csv_file.write(line + os.linesep)
-
-                for site, curve in self.current_selection.iteritems():
-                    poes = ','.join(map(str, curve['ordinates']))
-                    feature = next(self.active_layer.getFeatures(
-                            QgsFeatureRequest().setFilterFid(site)))
-
-                    lon = feature.geometry().asPoint().x()
-                    lat = feature.geometry().asPoint().y()
-                    line = '%s,%s,%s' % (lon, lat, poes)
 
                 if self.output_type == 'recovery_curves':
                     # FIXME: taking the first element, because they are all the
@@ -620,10 +612,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                     curve = self.current_selection.values()[0]
                     csv_file.write(str(curve['ordinates']))
                 else:
-                    line = 'lon,lat,%s' % (
-                        ','.join(map(str, list(self.current_abscissa))))
-                    csv_file.write(line + os.linesep)
-
+                    # write selected data
                     for site, curve in self.current_selection.iteritems():
                         poes = ','.join(map(str, curve['ordinates']))
                         feature = next(self.active_layer.getFeatures(
