@@ -1,7 +1,8 @@
 import random
 from scipy.stats import norm
 import math
-from svir.utilities.utils import read_config_file
+from PyQt4.QtCore import QSettings
+from svir.utilities.shared import RECOVERY_DEFAULTS
 
 
 class Building(object):
@@ -17,10 +18,14 @@ class Building(object):
         self.assessmentTimes = assessmentTimes
         self.mobilizationTimes = mobilizationTimes
         # PAOLO: how many of these files whould be read from here?
-        self.leadTimeDispersion = read_config_file(
-            'LeadTimeDispersion.txt', float)
-        self.repairTimeDispersion = read_config_file(
-            'RepairTimeDispersion.txt', float)
+        mySettings = QSettings()
+        self.leadTimeDispersion = float(mySettings.value(
+            'irmt/lead_time_dispersion',
+            RECOVERY_DEFAULTS['lead_time_dispersion']))
+
+        self.repairTimeDispersion = float(mySettings.value(
+            'irmt/repair_time_dispersion',
+            RECOVERY_DEFAULTS['repair_time_dispersion']))
 
     def generateBldgLevelRecoveryFunction(self, approach, seed=None):
         if approach == 'Disaggregate':

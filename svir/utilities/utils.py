@@ -807,14 +807,3 @@ def get_ui_class(ui_file):
         )
     )
     return uic.loadUiType(ui_file_path)[0]
-
-
-def read_config_file(filename, cast_func=None):
-    filename = os.path.join(
-        os.path.dirname(__file__), '..', 'recovery_modeling',
-        'config_files', filename)
-    with open(filename, 'r') as f:
-        lines = [line.strip() for line in f.readlines()]
-        if cast_func:
-            lines = [cast_func(line) for line in lines]
-        return lines

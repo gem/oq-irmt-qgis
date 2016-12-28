@@ -45,8 +45,8 @@ from PyQt4.QtGui import (QColor,
 from qgis.gui import QgsVertexMarker
 from qgis.core import QGis, QgsMapLayer, QgsFeatureRequest
 
-from svir.utilities.shared import NUMERIC_FIELD_TYPES, TEXTUAL_FIELD_TYPES
-from svir.utilities.utils import get_ui_class, reload_attrib_cbx
+from svir.utilities.shared import TEXTUAL_FIELD_TYPES
+from svir.utilities.utils import get_ui_class, reload_attrib_cbx, log_msg
 from svir.recovery_modeling.recovery_modeling import (
     RecoveryModeling, fill_fields_multiselect)
 from svir.ui.list_multiselect_widget import ListMultiSelectWidget
@@ -622,6 +622,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                         lat = feature.geometry().asPoint().y()
                         line = '%s,%s,%s' % (lon, lat, poes)
                         csv_file.write(line + os.linesep)
+            msg = 'Data exported to %s' % filename
+            log_msg(msg, level='I', message_bar=self.iface.messageBar())
 
     @pyqtSlot()
     def on_bw_chk_clicked(self):

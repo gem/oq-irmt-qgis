@@ -24,17 +24,17 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
-import csv
+import json
 import bisect
 import matplotlib.pyplot as plt
 from collections import defaultdict
+from PyQt4.QtCore import QSettings
 from svir.recovery_modeling.building import Building
 from svir.utilities.utils import (
                                   create_progress_message_bar,
-                                  read_config_file,
                                   clear_progress_message_bar,
                                   )
-from svir.utilities.shared import NUMERIC_FIELD_TYPES
+from svir.utilities.shared import NUMERIC_FIELD_TYPES, RECOVERY_DEFAULTS
 
 HEADING_FIELDS_TO_DISCARD = 4
 DAYS_BEFORE_EVENT = 0
@@ -63,9 +63,7 @@ class RecoveryModeling(object):
         self.output_data_dir = output_data_dir
         self.save_bldg_curves = save_bldg_curves
 
-        self.config_files_dir = get_config_files_dir()
-        self.transferProbabilities = get_transfer_probabilities(
-            self.config_files_dir)
+        self.transferProbabilities = get_transfer_probabilities()
         self.n_loss_based_dmg_states = len(self.transferProbabilities)
         self.n_recovery_based_dmg_states = len(self.transferProbabilities[0])
 
@@ -132,14 +130,14 @@ class RecoveryModeling(object):
             clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
         return zonal_dmg_by_asset_probs, zonal_asset_refs
 
-    def read_all_configuration_files(self):
-        inspectionTimes = read_config_file('InspectionTimes.txt', int)
-        assessmentTimes = read_config_file('AssessmentTimes.txt', int)
-        mobilizationTimes = read_config_file('MobilizationTimes.txt', int)
-        repairTimes = read_config_file('RepairTimes.txt', int)
-        recoveryTimes = read_config_file('RecoveryTimes.txt', int)
-        return (inspectionTimes, assessmentTimes, mobilizationTimes,
-                repairTimes, recoveryTimes)
+    def get_times(self, times_type):
+        mySettings = QSettings()
+        times_str = mySettings.value('irmt/%s' % times_type, '')
+        if times_str:
+            times = json.loads(times_str)
+        else:
+            times = RECOVERY_DEFAULTS[times_type]
+        return times
 
     def generate_community_level_recovery_curve(
             self, zone_id, zonal_dmg_by_asset_probs,
@@ -162,8 +160,11 @@ class RecoveryModeling(object):
         # FIXME If we don't read files again for each zone, time increases
         # across zones. This is not optimal, but configuration files are
         # very small, so reading them is almost instantaneous.
-        (inspectionTimes, assessmentTimes, mobilizationTimes, repairTimes,
-            recoveryTimes) = self.read_all_configuration_files()
+        inspectionTimes = self.get_times('inspection_times')
+        assessmentTimes = self.get_times('assessment_times')
+        mobilizationTimes = self.get_times('mobilization_times')
+        repairTimes = self.get_times('repair_times')
+        recoveryTimes = self.get_times('recovery_times')
 
         # FIXME - when aggregating by zone we are constantly increasing
         # the times with this approach
@@ -428,38 +429,22 @@ class RecoveryModeling(object):
         return (timeList, inspectionTimes, assessmentTimes, mobilizationTimes)
 
 
-def get_config_files_dir():
-    recovery_modeling_dir = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        '..', 'recovery_modeling')
-    config_files_dir = os.path.join(
-        recovery_modeling_dir, 'config_files')
-    return config_files_dir
-
-
-def get_transfer_probabilities(config_files_dir):
-    # NB: The following is referred to the Napa case specifically!
-    # Load Transfer Probability Note: There is a 5*6 matrix where rows
-    # describe loss-based damage states (No
-    # damage/Slight/Moderate/Extensive/Complete) and columns present
-    # recovery-based damage states(No damage/Trigger inspection/Loss
-    # Function /Not Occupiable/Irreparable/Collapse). The element(i,j)
-    # in the matrix is the probability of recovery-based damage state j
-    # occurs given loss-based damage state i
-    transferProbabilitiesData = os.path.join(
-        config_files_dir, 'transferProbabilities.csv')
-    with open(transferProbabilitiesData, 'r') as f:
-        reader = csv.reader(f)
-        transfer_probabilities = list(reader)
+def get_transfer_probabilities():
+    mySettings = QSettings()
+    transfer_probabilities_str = mySettings.value(
+        'irmt/transfer_probabilities', None)
+    if transfer_probabilities_str is None:
+        transfer_probabilities = RECOVERY_DEFAULTS[
+            'transfer_probabilities']
+    else:
+        transfer_probabilities = json.loads(transfer_probabilities_str)
     return transfer_probabilities
 
 
 def fill_fields_multiselect(fields_multiselect, layer):
     fields = layer.fields()
     field_names = [field.name() for field in fields]
-    config_files_dir = get_config_files_dir()
-    transfer_probabilities = get_transfer_probabilities(
-        config_files_dir)
+    transfer_probabilities = get_transfer_probabilities()
     n_loss_based_dmg_states = len(transfer_probabilities)
     # select fields that contain probabilities
     # i.e., ignore asset id, taxonomy, lon and lat (first

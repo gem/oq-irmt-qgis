@@ -196,3 +196,57 @@ HELP_PAGES_LOOKUP = {
     'toggle_viewer_dock': 'FIXME',
     'help': 'index.html',
 }
+
+RECOVERY_DEFAULTS = {
+    'transfer_probabilities': [
+        [1, 0, 0, 0, 0, 0],
+        [0.6, 0.4, 0, 0, 0, 0],
+        [0.2, 0.4, 0.3, 0.1, 0, 0],
+        [0, 0, 0.2, 0.4, 0.3, 0.1],
+        [0, 0, 0, 0, 0.2, 0.8]],
+    'inspection_times': [0, 30, 30, 30, 30, 0],
+    'assessment_times': [0, 0, 0, 60, 60, 0],
+    'mobilization_times': [0, 0, 0, 120, 365, 365],
+    'recovery_times': [0, 50, 108, 156, 252, 612],
+    'repair_times': [0, 13, 27, 39, 63, 153],
+    'lead_time_dispersion': 0.75,
+    'repair_time_dispersion': 0.4,
+}
+RECOVERY_DEFAULTS['n_loss_based_dmg_states'] = len(
+    RECOVERY_DEFAULTS['transfer_probabilities'])
+RECOVERY_DEFAULTS['n_recovery_based_dmg_states'] = len(
+    RECOVERY_DEFAULTS['transfer_probabilities'][0])
+
+RECOVERY_SETTINGS = (
+    'irmt/n_loss_based_dmg_states',
+    'irmt/n_loss_based_dmg_states',
+    'irmt/n_recovery_based_dmg_states',
+    'irmt/transfer_probabilities',
+    'irmt/assessment_times',
+    'irmt/inspection_times',
+    'irmt/mobilization_times',
+    'irmt/recovery_times',
+    'irmt/repair_times',
+    'irmt/lead_time_dispersion',
+    'irmt/repair_time_dispersion')
+
+# Notes on recovery modeling:
+#
+# assessment_times:
+#    The entry in row n is the assessment time for the (n - 1)th damage state
+# inspection_times:
+#    The entry in row n is the inspection time for the (n - 1)th damage state
+# mobilization_times:
+#    The entry in row n is the mobilization time for the (n - 1)th damage state
+# recovery_times:
+#    The entry in row n is the recovery time for the (n - 1)th damage state
+# repair_times:
+#    The entry in row n is the repair time for the (n - 1)th damage state
+# NB: The following is referred to the Napa case specifically!
+# Note on transfer probabilities: There is a 5*6 matrix where rows
+# describe loss-based damage states (No
+# damage/Slight/Moderate/Extensive/Complete) and columns present
+# recovery-based damage states(No damage/Trigger inspection/Loss
+# Function /Not Occupiable/Irreparable/Collapse). The element(i,j)
+# in the matrix is the probability of recovery-based damage state j
+# occurs given loss-based damage state i

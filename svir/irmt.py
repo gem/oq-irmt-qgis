@@ -69,6 +69,7 @@ from svir.dialogs.upload_settings_dialog import UploadSettingsDialog
 from svir.dialogs.weight_data_dialog import WeightDataDialog
 from svir.dialogs.load_geojson_as_layer_dialog import LoadGeoJsonAsLayerDialog
 from svir.dialogs.recovery_modeling_dialog import RecoveryModelingDialog
+from svir.dialogs.recovery_settings_dialog import RecoverySettingsDialog
 from svir.dialogs.drive_oq_engine_server_dialog import (
     DriveOqEngineServerDialog)
 from svir.dialogs.load_npz_as_layer_dialog import LoadNpzAsLayerDialog
@@ -220,6 +221,13 @@ class Irmt:
                            self.recovery_modeling,
                            enable=True,
                            submenu='Recovery modeling')
+        # Action to set the recovery modeling parameters
+        self.add_menu_item("recovery_settings",
+                           ":/plugins/irmt/settings.svg",  # FIXME
+                           u"Recovery modeling settings",
+                           self.recovery_settings,
+                           enable=True,
+                           submenu='Recovery modeling')
         # Action to activate the modal dialog to guide the user through loss
         # aggregation by zone
         self.add_menu_item("aggregate_losses",
@@ -340,6 +348,10 @@ class Irmt:
 
     def recovery_modeling(self):
         dlg = RecoveryModelingDialog(self.iface)
+        dlg.exec_()
+
+    def recovery_settings(self):
+        dlg = RecoverySettingsDialog()
         dlg.exec_()
 
     def load_hmaps_from_npz_as_layer(self):

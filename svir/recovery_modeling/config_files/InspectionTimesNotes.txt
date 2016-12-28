@@ -1,2 +1,0 @@
-The entry in row n is the inspection time for the (n - 1)th 
-damage state
