@@ -133,11 +133,11 @@ class RecoveryModeling(object):
         return zonal_dmg_by_asset_probs, zonal_asset_refs
 
     def read_all_configuration_files(self):
-        inspectionTimes = read_config_file('InspectionTimes.txt')
-        assessmentTimes = read_config_file('AssessmentTimes.txt')
-        mobilizationTimes = read_config_file('MobilizationTimes.txt')
-        repairTimes = read_config_file('RepairTimes.txt')
-        recoveryTimes = read_config_file('RecoveryTimes.txt')
+        inspectionTimes = read_config_file('InspectionTimes.txt', int)
+        assessmentTimes = read_config_file('AssessmentTimes.txt', int)
+        mobilizationTimes = read_config_file('MobilizationTimes.txt', int)
+        repairTimes = read_config_file('RepairTimes.txt', int)
+        recoveryTimes = read_config_file('RecoveryTimes.txt', int)
         return (inspectionTimes, assessmentTimes, mobilizationTimes,
                 repairTimes, recoveryTimes)
 
