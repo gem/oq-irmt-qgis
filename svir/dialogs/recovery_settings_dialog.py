@@ -51,7 +51,6 @@ class RecoverySettingsDialog(QDialog, FORM_CLASS):
         """
         # TODO: add some sanity checks on array dimensions
 
-        mySettings = QSettings()
         if restore_defaults:
             for setting in ('irmt/n_loss_based_dmg_states',
                             'irmt/n_loss_based_dmg_states',
@@ -64,106 +63,113 @@ class RecoverySettingsDialog(QDialog, FORM_CLASS):
                             'irmt/repair_times',
                             'irmt/lead_time_dispersion',
                             'irmt/repair_time_dispersion'):
-                mySettings.remove(setting)
+                QSettings().remove(setting)
 
-        n_loss_based_dmg_states = int(mySettings.value(
-            'irmt/n_loss_based_dmg_states',
-            RECOVERY_DEFAULTS['n_loss_based_dmg_states']))
-        self.n_loss_based_dmg_states_sbx.setValue(n_loss_based_dmg_states)
-
-        n_recovery_based_dmg_states = int(mySettings.value(
-            'irmt/n_recovery_based_dmg_states',
-            RECOVERY_DEFAULTS['n_recovery_based_dmg_states']))
-        self.n_recovery_based_dmg_states_sbx.setValue(
-            n_recovery_based_dmg_states)
-
-        transfer_probabilities_str = mySettings.value(
-            'irmt/transfer_probabilities', None)
-        if transfer_probabilities_str is None:
-            transfer_probabilities = list(RECOVERY_DEFAULTS[
-                'transfer_probabilities'])
-        else:
-            transfer_probabilities = json.loads(transfer_probabilities_str)
-        self.transfer_probabilities_tbl.setRowCount(n_loss_based_dmg_states)
-        self.transfer_probabilities_tbl.setColumnCount(
-            n_recovery_based_dmg_states)
-        for row in range(n_loss_based_dmg_states):
-            for col in range(n_recovery_based_dmg_states):
-                item = QTableWidgetItem()
-                item.setData(Qt.DisplayRole, transfer_probabilities[row][col])
-                self.transfer_probabilities_tbl.setItem(row, col, item)
-        self.transfer_probabilities_tbl.resizeRowsToContents()
-        self.transfer_probabilities_tbl.resizeColumnsToContents()
-
-        self.restore_times('assessment_times', self.assessment_times_tbl)
-        self.restore_times('inspection_times', self.inspection_times_tbl)
-        self.restore_times('mobilization_times', self.mobilization_times_tbl)
-        self.restore_times('recovery_times', self.recovery_times_tbl)
-        self.restore_times('repair_times', self.repair_times_tbl)
-
-        lead_time_dispersion = float(mySettings.value(
-            'irmt/lead_time_dispersion',
-            RECOVERY_DEFAULTS['lead_time_dispersion']))
-        self.lead_time_dispersion_sbx.setValue(lead_time_dispersion)
-
-        repair_time_dispersion = float(mySettings.value(
-            'irmt/repair_time_dispersion',
-            RECOVERY_DEFAULTS['repair_time_dispersion']))
-        self.repair_time_dispersion_sbx.setValue(repair_time_dispersion)
+        self.restore_setting_number(
+            'n_loss_based_dmg_states', self.n_loss_based_dmg_states_sbx, int)
+        self.restore_setting_number('n_recovery_based_dmg_states',
+                                    self.n_recovery_based_dmg_states_sbx, int)
+        self.restore_setting_2d_table(
+            'transfer_probabilities', self.transfer_probabilities_tbl)
+        self.restore_setting_1d_table(
+            'assessment_times', self.assessment_times_tbl)
+        self.restore_setting_1d_table(
+            'inspection_times', self.inspection_times_tbl)
+        self.restore_setting_1d_table(
+            'mobilization_times', self.mobilization_times_tbl)
+        self.restore_setting_1d_table(
+            'recovery_times', self.recovery_times_tbl)
+        self.restore_setting_1d_table(
+            'repair_times', self.repair_times_tbl)
+        self.restore_setting_number(
+            'lead_time_dispersion', self.lead_time_dispersion_sbx, float)
+        self.restore_setting_number(
+            'repair_time_dispersion', self.repair_time_dispersion_sbx, float)
 
     def saveState(self):
         """
         Store the options into the user's stored session info.
         """
-        mySettings = QSettings()
         n_loss_based_dmg_states = self.n_loss_based_dmg_states_sbx.value()
-        mySettings.setValue('irmt/n_loss_based_dmg_states',
-                            n_loss_based_dmg_states)
+        self.save_setting_number(
+            'n_loss_based_dmg_states', n_loss_based_dmg_states)
         n_recovery_based_dmg_states = \
             self.n_recovery_based_dmg_states_sbx.value()
-        mySettings.setValue('irmt/n_recovery_based_dmg_states',
-                            n_recovery_based_dmg_states)
-        transfer_probabilities = [
-            [0 for col in range(n_recovery_based_dmg_states)]
-            for row in range(n_loss_based_dmg_states)]
-        for row in range(n_loss_based_dmg_states):
-            for col in range(n_recovery_based_dmg_states):
-                transfer_probabilities[row][col] = float(
-                    self.transfer_probabilities_tbl.item(row, col).text())
-        mySettings.setValue('irmt/transfer_probabilities',
-                            json.dumps(transfer_probabilities))
-        self.save_times('assessment_times', self.assessment_times_tbl)
-        self.save_times('inspection_times', self.inspection_times_tbl)
-        self.save_times('mobilization_times', self.mobilization_times_tbl)
-        self.save_times('recovery_times', self.recovery_times_tbl)
-        self.save_times('repair_times', self.repair_times_tbl)
+        self.save_setting_number(
+            'n_recovery_based_dmg_states', n_recovery_based_dmg_states)
+        self.save_setting_2d_table(
+            'transfer_probabilities', self.transfer_probabilities_tbl, float)
+        self.save_setting_1d_table(
+            'assessment_times', self.assessment_times_tbl, int)
+        self.save_setting_1d_table(
+            'inspection_times', self.inspection_times_tbl, int)
+        self.save_setting_1d_table(
+            'mobilization_times', self.mobilization_times_tbl, int)
+        self.save_setting_1d_table(
+            'recovery_times', self.recovery_times_tbl, int)
+        self.save_setting_1d_table(
+            'repair_times', self.repair_times_tbl, int)
         lead_time_dispersion = self.lead_time_dispersion_sbx.value()
-        mySettings.setValue('irmt/lead_time_dispersion', lead_time_dispersion)
+        self.save_setting_number(
+            'lead_time_dispersion', lead_time_dispersion)
         repair_time_dispersion = self.repair_time_dispersion_sbx.value()
-        mySettings.setValue('irmt/repair_time_dispersion',
-                            repair_time_dispersion)
+        self.save_setting_number(
+            'repair_time_dispersion', repair_time_dispersion)
 
-    def save_times(self, times_type, times_table):
-        mySettings = QSettings()
-        times = [int(times_table.item(0, col).text())
-                 for col in range(times_table.columnCount())]
-        mySettings.setValue('irmt/%s' % times_type, json.dumps(times))
+    def save_setting_number(self, name, number):
+        QSettings().setValue('irmt/%s' % name, number)
 
-    def restore_times(self, times_type, times_table):
-        mySettings = QSettings()
-        times_str = mySettings.value('irmt/%s' % times_type, '')
-        if times_str:
-            times = json.loads(times_str)
+    def save_setting_1d_table(self, name, table, val_type):
+        elements = [0 for col in range(table.columnCount())]
+        for col in range(table.columnCount()):
+            elements[col] = val_type(table.item(0, col).text())
+        QSettings().setValue('irmt/%s' % name, json.dumps(elements))
+
+    def save_setting_2d_table(self, name, table, val_type):
+        elements = [
+            [0 for col in range(table.columnCount())]
+            for row in range(table.rowCount())]
+        for row in range(table.rowCount()):
+            for col in range(table.columnCount()):
+                elements[row][col] = val_type(table.item(row, col).text())
+        QSettings().setValue('irmt/%s' % name, json.dumps(elements))
+
+    def restore_setting_number(self, name, widget, val_type):
+        value = val_type(QSettings().value(
+            'irmt/%s' % name,
+            RECOVERY_DEFAULTS[name]))
+        widget.setValue(value)
+
+    def restore_setting_1d_table(self, name, table):
+        array_str = QSettings().value('irmt/%s' % name, None)
+        if array_str:
+            elements = json.loads(array_str)
         else:
-            times = list(RECOVERY_DEFAULTS[times_type])
-        times_table.setRowCount(1)
-        times_table.setColumnCount(len(times))
-        for col in range(len(times)):
+            elements = list(RECOVERY_DEFAULTS[name])
+        table.setRowCount(1)
+        table.setColumnCount(len(elements))
+        for col in range(table.columnCount()):
             item = QTableWidgetItem()
-            item.setData(Qt.DisplayRole, times[col])
-            times_table.setItem(0, col, item)
-        times_table.resizeRowsToContents()
-        times_table.resizeColumnsToContents()
+            item.setData(Qt.DisplayRole, elements[col])
+            table.setItem(0, col, item)
+        table.resizeRowsToContents()
+        table.resizeColumnsToContents()
+
+    def restore_setting_2d_table(self, name, table):
+        table_str = QSettings().value('irmt/%s' % name, None)
+        if table_str:
+            elements = json.loads(table_str)
+        else:
+            elements = list(RECOVERY_DEFAULTS[name])
+        table.setRowCount(len(elements))
+        table.setColumnCount(len(elements[0]))
+        for row in range(table.rowCount()):
+            for col in range(table.columnCount()):
+                item = QTableWidgetItem()
+                item.setData(Qt.DisplayRole, elements[row][col])
+                table.setItem(row, col, item)
+        table.resizeRowsToContents()
+        table.resizeColumnsToContents()
 
     def set_ok_button(self):
         self.ok_button.setEnabled(True)
