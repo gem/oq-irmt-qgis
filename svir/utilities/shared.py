@@ -217,19 +217,6 @@ RECOVERY_DEFAULTS['n_loss_based_dmg_states'] = len(
 RECOVERY_DEFAULTS['n_recovery_based_dmg_states'] = len(
     RECOVERY_DEFAULTS['transfer_probabilities'][0])
 
-RECOVERY_SETTINGS = (
-    'irmt/n_loss_based_dmg_states',
-    'irmt/n_loss_based_dmg_states',
-    'irmt/n_recovery_based_dmg_states',
-    'irmt/transfer_probabilities',
-    'irmt/assessment_times',
-    'irmt/inspection_times',
-    'irmt/mobilization_times',
-    'irmt/recovery_times',
-    'irmt/repair_times',
-    'irmt/lead_time_dispersion',
-    'irmt/repair_time_dispersion')
-
 # Notes on recovery modeling:
 #
 # assessment_times:

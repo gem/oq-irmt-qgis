@@ -136,7 +136,7 @@ class RecoveryModeling(object):
         if times_str:
             times = json.loads(times_str)
         else:
-            times = RECOVERY_DEFAULTS[times_type]
+            times = list(RECOVERY_DEFAULTS[times_type])
         return times
 
     def generate_community_level_recovery_curve(
@@ -434,8 +434,8 @@ def get_transfer_probabilities():
     transfer_probabilities_str = mySettings.value(
         'irmt/transfer_probabilities', None)
     if transfer_probabilities_str is None:
-        transfer_probabilities = RECOVERY_DEFAULTS[
-            'transfer_probabilities']
+        transfer_probabilities = list(RECOVERY_DEFAULTS[
+            'transfer_probabilities'])
     else:
         transfer_probabilities = json.loads(transfer_probabilities_str)
     return transfer_probabilities

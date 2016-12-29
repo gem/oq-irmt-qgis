@@ -28,7 +28,7 @@ from PyQt4.QtGui import (QDialog,
                          QTableWidgetItem,
                          QDialogButtonBox)
 from svir.utilities.utils import get_ui_class
-from svir.utilities.shared import RECOVERY_DEFAULTS, RECOVERY_SETTINGS
+from svir.utilities.shared import RECOVERY_DEFAULTS
 
 FORM_CLASS = get_ui_class('ui_recovery_settings.ui')
 
@@ -53,7 +53,17 @@ class RecoverySettingsDialog(QDialog, FORM_CLASS):
 
         mySettings = QSettings()
         if restore_defaults:
-            for setting in RECOVERY_SETTINGS:
+            for setting in ('irmt/n_loss_based_dmg_states',
+                            'irmt/n_loss_based_dmg_states',
+                            'irmt/n_recovery_based_dmg_states',
+                            'irmt/transfer_probabilities',
+                            'irmt/assessment_times',
+                            'irmt/inspection_times',
+                            'irmt/mobilization_times',
+                            'irmt/recovery_times',
+                            'irmt/repair_times',
+                            'irmt/lead_time_dispersion',
+                            'irmt/repair_time_dispersion'):
                 mySettings.remove(setting)
 
         n_loss_based_dmg_states = int(mySettings.value(
@@ -70,8 +80,8 @@ class RecoverySettingsDialog(QDialog, FORM_CLASS):
         transfer_probabilities_str = mySettings.value(
             'irmt/transfer_probabilities', None)
         if transfer_probabilities_str is None:
-            transfer_probabilities = RECOVERY_DEFAULTS[
-                'transfer_probabilities']
+            transfer_probabilities = list(RECOVERY_DEFAULTS[
+                'transfer_probabilities'])
         else:
             transfer_probabilities = json.loads(transfer_probabilities_str)
         self.transfer_probabilities_tbl.setRowCount(n_loss_based_dmg_states)
@@ -145,7 +155,7 @@ class RecoverySettingsDialog(QDialog, FORM_CLASS):
         if times_str:
             times = json.loads(times_str)
         else:
-            times = RECOVERY_DEFAULTS[times_type]
+            times = list(RECOVERY_DEFAULTS[times_type])
         times_table.setRowCount(1)
         times_table.setColumnCount(len(times))
         for col in range(len(times)):
