@@ -3,11 +3,12 @@ from scipy.stats import norm
 import math
 from PyQt4.QtCore import QSettings
 from svir.utilities.shared import RECOVERY_DEFAULTS
+from svir.utilities.utils import get_layer_setting
 
 
 class Building(object):
 
-    def __init__(self, inspectionTimes, recoveryTimes, repairTimes,
+    def __init__(self, iface, inspectionTimes, recoveryTimes, repairTimes,
                  currentDamageStateProbabilities, timeList, assessmentTimes,
                  mobilizationTimes):
         self.inspectionTimes = inspectionTimes
@@ -17,15 +18,21 @@ class Building(object):
         self.timeList = timeList
         self.assessmentTimes = assessmentTimes
         self.mobilizationTimes = mobilizationTimes
+        self.iface = iface
+        self.layer = self.iface.activeLayer()
         # PAOLO: how many of these files whould be read from here?
-        mySettings = QSettings()
-        self.leadTimeDispersion = float(mySettings.value(
-            'irmt/lead_time_dispersion',
-            RECOVERY_DEFAULTS['lead_time_dispersion']))
-
-        self.repairTimeDispersion = float(mySettings.value(
-            'irmt/repair_time_dispersion',
-            RECOVERY_DEFAULTS['repair_time_dispersion']))
+        self.leadTimeDispersion = get_layer_setting(
+            self.layer, 'lead_time_dispersion')
+        if self.leadTimeDispersion is None:
+            self.leadTimeDispersion = float(QSettings().value(
+                'irmt/lead_time_dispersion',
+                RECOVERY_DEFAULTS['lead_time_dispersion']))
+        self.repairTimeDispersion = get_layer_setting(
+            self.layer, 'repair_time_dispersion')
+        if self.repairTimeDispersion is None:
+            self.repairTimeDispersion = float(QSettings().value(
+                'irmt/repair_time_dispersion',
+                RECOVERY_DEFAULTS['repair_time_dispersion']))
 
     def generateBldgLevelRecoveryFunction(self, approach, seed=None):
         if approach == 'Disaggregate':

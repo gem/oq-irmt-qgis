@@ -807,3 +807,20 @@ def get_ui_class(ui_file):
         )
     )
     return uic.loadUiType(ui_file_path)[0]
+
+
+def save_layer_setting(layer, setting, value):
+    if layer is not None:
+        QgsProject.instance().writeEntry(
+            'irmt', '%s/%s' % (layer.id(), setting),
+            json.dumps(value))
+
+
+def get_layer_setting(layer, setting):
+    if layer is not None:
+        value_str, found = QgsProject.instance().readEntry(
+            'irmt', '%s/%s' % (layer.id(), setting), '')
+        if found and value_str:
+            value = json.loads(value_str)
+            return value
+    return None

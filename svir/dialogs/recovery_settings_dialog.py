@@ -27,7 +27,10 @@ from PyQt4.QtCore import pyqtSlot, QSettings, Qt
 from PyQt4.QtGui import (QDialog,
                          QTableWidgetItem,
                          QDialogButtonBox)
-from svir.utilities.utils import get_ui_class
+from qgis.core import QgsProject
+from svir.utilities.utils import (get_ui_class,
+                                  get_layer_setting,
+                                  save_layer_setting)
 from svir.utilities.shared import RECOVERY_DEFAULTS
 
 FORM_CLASS = get_ui_class('ui_recovery_settings.ui')
@@ -37,7 +40,9 @@ class RecoverySettingsDialog(QDialog, FORM_CLASS):
     """
     Modal dialog to set parameters for recovery modeling analysis.
     """
-    def __init__(self):
+    def __init__(self, iface):
+        self.iface = iface
+        self.layer = self.iface.activeLayer()
         QDialog.__init__(self)
         # Set up the user interface from Designer.
         self.setupUi(self)
@@ -52,18 +57,22 @@ class RecoverySettingsDialog(QDialog, FORM_CLASS):
         # TODO: add some sanity checks on array dimensions
 
         if restore_defaults:
-            for setting in ('irmt/n_loss_based_dmg_states',
-                            'irmt/n_loss_based_dmg_states',
-                            'irmt/n_recovery_based_dmg_states',
-                            'irmt/transfer_probabilities',
-                            'irmt/assessment_times',
-                            'irmt/inspection_times',
-                            'irmt/mobilization_times',
-                            'irmt/recovery_times',
-                            'irmt/repair_times',
-                            'irmt/lead_time_dispersion',
-                            'irmt/repair_time_dispersion'):
-                QSettings().remove(setting)
+            for scope, setting in (
+                    ('irmt', 'n_loss_based_dmg_states'),
+                    ('irmt', 'n_loss_based_dmg_states'),
+                    ('irmt', 'n_recovery_based_dmg_states'),
+                    ('irmt', 'transfer_probabilities'),
+                    ('irmt', 'assessment_times'),
+                    ('irmt', 'inspection_times'),
+                    ('irmt', 'mobilization_times'),
+                    ('irmt', 'recovery_times'),
+                    ('irmt', 'repair_times'),
+                    ('irmt', 'lead_time_dispersion'),
+                    ('irmt', 'repair_time_dispersion')):
+                QSettings().remove('%s/%s' % (scope, setting))
+                if self.layer:
+                    QgsProject.instance().removeEntry(
+                        scope, '%s/%s' % (self.layer.id(), setting))
 
         self.restore_setting_number(
             'n_loss_based_dmg_states', self.n_loss_based_dmg_states_sbx, int)
@@ -92,11 +101,11 @@ class RecoverySettingsDialog(QDialog, FORM_CLASS):
         """
         n_loss_based_dmg_states = self.n_loss_based_dmg_states_sbx.value()
         self.save_setting_number(
-            'n_loss_based_dmg_states', n_loss_based_dmg_states)
+            'n_loss_based_dmg_states', n_loss_based_dmg_states, int)
         n_recovery_based_dmg_states = \
             self.n_recovery_based_dmg_states_sbx.value()
         self.save_setting_number(
-            'n_recovery_based_dmg_states', n_recovery_based_dmg_states)
+            'n_recovery_based_dmg_states', n_recovery_based_dmg_states, int)
         self.save_setting_2d_table(
             'transfer_probabilities', self.transfer_probabilities_tbl, float)
         self.save_setting_1d_table(
@@ -111,19 +120,21 @@ class RecoverySettingsDialog(QDialog, FORM_CLASS):
             'repair_times', self.repair_times_tbl, int)
         lead_time_dispersion = self.lead_time_dispersion_sbx.value()
         self.save_setting_number(
-            'lead_time_dispersion', lead_time_dispersion)
+            'lead_time_dispersion', lead_time_dispersion, float)
         repair_time_dispersion = self.repair_time_dispersion_sbx.value()
         self.save_setting_number(
-            'repair_time_dispersion', repair_time_dispersion)
+            'repair_time_dispersion', repair_time_dispersion, float)
 
-    def save_setting_number(self, name, number):
-        QSettings().setValue('irmt/%s' % name, number)
+    def save_setting_number(self, name, value, val_type):
+        QSettings().setValue('irmt/%s' % name, value)
+        save_layer_setting(self.layer, name, value)
 
     def save_setting_1d_table(self, name, table, val_type):
         elements = [0 for col in range(table.columnCount())]
         for col in range(table.columnCount()):
             elements[col] = val_type(table.item(0, col).text())
         QSettings().setValue('irmt/%s' % name, json.dumps(elements))
+        save_layer_setting(self.layer, name, elements)
 
     def save_setting_2d_table(self, name, table, val_type):
         elements = [
@@ -133,19 +144,24 @@ class RecoverySettingsDialog(QDialog, FORM_CLASS):
             for col in range(table.columnCount()):
                 elements[row][col] = val_type(table.item(row, col).text())
         QSettings().setValue('irmt/%s' % name, json.dumps(elements))
+        save_layer_setting(self.layer, name, elements)
 
     def restore_setting_number(self, name, widget, val_type):
-        value = val_type(QSettings().value(
-            'irmt/%s' % name,
-            RECOVERY_DEFAULTS[name]))
+        value = get_layer_setting(self.layer, name)
+        if value is None:
+            value = val_type(QSettings().value(
+                'irmt/%s' % name,
+                RECOVERY_DEFAULTS[name]))
         widget.setValue(value)
 
     def restore_setting_1d_table(self, name, table):
-        array_str = QSettings().value('irmt/%s' % name, None)
-        if array_str:
-            elements = json.loads(array_str)
-        else:
-            elements = list(RECOVERY_DEFAULTS[name])
+        elements = get_layer_setting(self.layer, name)
+        if elements is None:
+            array_str = QSettings().value('irmt/%s' % name, None)
+            if array_str:
+                elements = json.loads(array_str)
+            else:
+                elements = list(RECOVERY_DEFAULTS[name])
         table.setRowCount(1)
         table.setColumnCount(len(elements))
         for col in range(table.columnCount()):
@@ -156,11 +172,13 @@ class RecoverySettingsDialog(QDialog, FORM_CLASS):
         table.resizeColumnsToContents()
 
     def restore_setting_2d_table(self, name, table):
-        table_str = QSettings().value('irmt/%s' % name, None)
-        if table_str:
-            elements = json.loads(table_str)
-        else:
-            elements = list(RECOVERY_DEFAULTS[name])
+        elements = get_layer_setting(self.layer, name)
+        if elements is None:
+            table_str = QSettings().value('irmt/%s' % name, None)
+            if table_str:
+                elements = json.loads(table_str)
+            else:
+                elements = list(RECOVERY_DEFAULTS[name])
         table.setRowCount(len(elements))
         table.setColumnCount(len(elements[0]))
         for row in range(table.rowCount()):

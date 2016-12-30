@@ -351,7 +351,7 @@ class Irmt:
         dlg.exec_()
 
     def recovery_settings(self):
-        dlg = RecoverySettingsDialog()
+        dlg = RecoverySettingsDialog(self.iface)
         dlg.exec_()
 
     def load_hmaps_from_npz_as_layer(self):

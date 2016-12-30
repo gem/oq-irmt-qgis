@@ -33,6 +33,7 @@ from svir.recovery_modeling.building import Building
 from svir.utilities.utils import (
                                   create_progress_message_bar,
                                   clear_progress_message_bar,
+                                  get_layer_setting,
                                   )
 from svir.utilities.shared import NUMERIC_FIELD_TYPES, RECOVERY_DEFAULTS
 
@@ -63,7 +64,8 @@ class RecoveryModeling(object):
         self.output_data_dir = output_data_dir
         self.save_bldg_curves = save_bldg_curves
 
-        self.transferProbabilities = get_transfer_probabilities()
+        self.transferProbabilities = get_transfer_probabilities(
+            self.iface.activeLayer())
         self.n_loss_based_dmg_states = len(self.transferProbabilities)
         self.n_recovery_based_dmg_states = len(self.transferProbabilities[0])
 
@@ -131,12 +133,13 @@ class RecoveryModeling(object):
         return zonal_dmg_by_asset_probs, zonal_asset_refs
 
     def get_times(self, times_type):
-        mySettings = QSettings()
-        times_str = mySettings.value('irmt/%s' % times_type, '')
-        if times_str:
-            times = json.loads(times_str)
-        else:
-            times = list(RECOVERY_DEFAULTS[times_type])
+        times = get_layer_setting(self.iface.activeLayer(), times_type)
+        if times is None:
+            times_str = QSettings().value('irmt/%s' % times_type, '')
+            if times_str:
+                times = json.loads(times_str)
+            else:
+                times = list(RECOVERY_DEFAULTS[times_type])
         return times
 
     def generate_community_level_recovery_curve(
@@ -310,6 +313,7 @@ class RecoveryModeling(object):
             # PAOLO: building number is not used. Instead, we need to
             # make available to the building all the imported data
             napa_bldg = Building(
+                self.iface,
                 inspectionTimes, recoveryTimes, repairTimes,
                 currentSimulationBuildingLevelDamageStateProbabilities,
                 timeList, assessmentTimes, mobilizationTimes)
@@ -429,22 +433,24 @@ class RecoveryModeling(object):
         return (timeList, inspectionTimes, assessmentTimes, mobilizationTimes)
 
 
-def get_transfer_probabilities():
-    mySettings = QSettings()
-    transfer_probabilities_str = mySettings.value(
-        'irmt/transfer_probabilities', None)
-    if transfer_probabilities_str is None:
-        transfer_probabilities = list(RECOVERY_DEFAULTS[
-            'transfer_probabilities'])
-    else:
-        transfer_probabilities = json.loads(transfer_probabilities_str)
+def get_transfer_probabilities(layer):
+    transfer_probabilities = get_layer_setting(
+        layer, 'transfer_probabilities')
+    if transfer_probabilities is None:
+        transfer_probabilities_str = QSettings().value(
+            'irmt/transfer_probabilities', None)
+        if transfer_probabilities_str is None:
+            transfer_probabilities = list(RECOVERY_DEFAULTS[
+                'transfer_probabilities'])
+        else:
+            transfer_probabilities = json.loads(transfer_probabilities_str)
     return transfer_probabilities
 
 
 def fill_fields_multiselect(fields_multiselect, layer):
     fields = layer.fields()
     field_names = [field.name() for field in fields]
-    transfer_probabilities = get_transfer_probabilities()
+    transfer_probabilities = get_transfer_probabilities(layer)
     n_loss_based_dmg_states = len(transfer_probabilities)
     # select fields that contain probabilities
     # i.e., ignore asset id, taxonomy, lon and lat (first
