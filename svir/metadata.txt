@@ -25,6 +25,7 @@ email=staff.it@globalquakemodel.org
 changelog=
     1.8.14
     * New settings dialog to edit recovery modeling parameters (removed config folder)
+    * Settings for recovery modeling can be saved separately for each layer
     * Fixed a casting issue that caused a bug in the calculation of the overal time interval
     1.8.13
     * Many additions to the user manual
