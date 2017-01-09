@@ -64,7 +64,8 @@ def get_irmt_version():
     return _IRMT_VERSION
 
 
-def log_msg(message, tag='GEM IRMT Plugin', level='I', message_bar=None):
+def log_msg(message, tag='GEM IRMT Plugin', level='I', message_bar=None,
+            duration=None):
     """
     Add a message to the QGIS message log. If a messageBar is provided,
     the same message will be displayed also in the messageBar. In the latter
@@ -78,6 +79,9 @@ def log_msg(message, tag='GEM IRMT Plugin', level='I', message_bar=None):
          'W' -> QgsMessageLog.WARNING,
          'C' -> QgsMessageLog.CRITICAL)
     :param message_bar: a `QgsMessageBar` instance
+    :param duration: how long (in seconds) the message will be displayed (use 0
+                     to keep the message visible indefinitely, or None to use
+                     the default duration of the chosen level
     """
     levels = {'I': {'log': QgsMessageLog.INFO,
                     'bar': QgsMessageBar.INFO},
@@ -91,13 +95,13 @@ def log_msg(message, tag='GEM IRMT Plugin', level='I', message_bar=None):
     if message_bar is not None:
         if level == 'I':
             title = 'Info'
-            duration = 8
+            duration = duration if duration is not None else 8
         elif level == 'W':
             title = 'Warning'
-            duration = 0
+            duration = duration if duration is not None else 0
         elif level == 'C':
             title = 'Error'
-            duration = 0
+            duration = duration if duration is not None else 0
         message_bar.pushMessage(tr(title),
                                 tr(message),
                                 levels[level]['bar'],

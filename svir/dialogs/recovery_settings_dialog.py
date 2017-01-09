@@ -32,6 +32,7 @@ from svir.utilities.utils import (get_ui_class,
                                   get_layer_setting,
                                   save_layer_setting)
 from svir.utilities.shared import RECOVERY_DEFAULTS
+from svir.utilities.utils import log_msg
 
 FORM_CLASS = get_ui_class('ui_recovery_settings.ui')
 
@@ -107,7 +108,8 @@ class RecoverySettingsDialog(QDialog, FORM_CLASS):
         self.save_setting_number(
             'n_recovery_based_dmg_states', n_recovery_based_dmg_states, int)
         self.save_setting_2d_table(
-            'transfer_probabilities', self.transfer_probabilities_tbl, float)
+            'transfer_probabilities', self.transfer_probabilities_tbl, float,
+            check_row_sum_to_1=True)
         self.save_setting_1d_table(
             'assessment_times', self.assessment_times_tbl, int)
         self.save_setting_1d_table(
@@ -136,13 +138,19 @@ class RecoverySettingsDialog(QDialog, FORM_CLASS):
         QSettings().setValue('irmt/%s' % name, json.dumps(elements))
         save_layer_setting(self.layer, name, elements)
 
-    def save_setting_2d_table(self, name, table, val_type):
+    def save_setting_2d_table(self, name, table, val_type,
+                              check_row_sum_to_1=False):
         elements = [
             [0 for col in range(table.columnCount())]
             for row in range(table.rowCount())]
         for row in range(table.rowCount()):
             for col in range(table.columnCount()):
                 elements[row][col] = val_type(table.item(row, col).text())
+            if check_row_sum_to_1:
+                if abs(1 - sum(elements[row])) > 1e-15:
+                    raise ValueError(
+                        'In table %s, the elements of row %s do not sum to 1'
+                        % (name, row + 1))
         QSettings().setValue('irmt/%s' % name, json.dumps(elements))
         save_layer_setting(self.layer, name, elements)
 
@@ -193,8 +201,14 @@ class RecoverySettingsDialog(QDialog, FORM_CLASS):
         self.ok_button.setEnabled(True)
 
     def accept(self):
-        self.saveState()
-        super(RecoverySettingsDialog, self).accept()
+        try:
+            self.saveState()
+        except ValueError as exc:
+            log_msg(exc.message, level='C',
+                    message_bar=self.iface.messageBar(),
+                    duration=5)
+        else:
+            super(RecoverySettingsDialog, self).accept()
 
     @pyqtSlot()
     def on_restore_defaults_btn_clicked(self):

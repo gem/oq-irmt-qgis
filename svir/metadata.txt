@@ -27,6 +27,7 @@ changelog=
     * New settings dialog to edit recovery modeling parameters (removed config folder)
     * Settings for recovery modeling can be saved separately for each layer
     * Fixed a casting issue that caused a bug in the calculation of the overal time interval
+    * Additional check on the rows of transfer probabilities: each one must sum to 1
     1.8.13
     * Many additions to the user manual
     * Messages displayed in the QGIS message bar are also added to the log
