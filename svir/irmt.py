@@ -5,7 +5,7 @@
 # OpenQuake Integrated Risk Modelling Toolkit
 #                              -------------------
 #        begin                : 2013-10-24
-#        copyright            : (C) 2013-2015 by GEM Foundation
+#        copyright            : (C) 2013-2017 by GEM Foundation
 #        email                : devops@openquake.org
 # ***************************************************************************/
 #
@@ -190,13 +190,13 @@ class Irmt:
                            self.drive_oq_engine_server,
                            enable=True,
                            submenu='OQ Engine')
-        # Action to load as layer a geojson produced by the oq-engine
-        self.add_menu_item("load_geojson_as_layer",
-                           ":/plugins/irmt/calculate.svg",  # FIXME
-                           u"Load GeoJson as layer",
-                           self.load_geojson_as_layer,
-                           enable=True,
-                           submenu='OQ Engine')
+        # # Action to load as layer a geojson produced by the oq-engine
+        # self.add_menu_item("load_geojson_as_layer",
+        #                    ":/plugins/irmt/calculate.svg",  # FIXME
+        #                    u"Load GeoJson as layer",
+        #                    self.load_geojson_as_layer,
+        #                    enable=True,
+        #                    submenu='OQ Engine')
         # Action to manage the projects
         self.add_menu_item("project_definitions_manager",
                            ":/plugins/irmt/copy.svg",
@@ -254,57 +254,57 @@ class Irmt:
                            self.load_hcurves_from_npz_as_layer,
                            enable=True,
                            submenu='OQ Engine')
-        # Action to load as layer loss maps from npz produced by the
-        # oq-engine
-        self.add_menu_item("load_loss_maps_from_npz_as_layer",
-                           ":/plugins/irmt/calculate.svg",  # FIXME
-                           u"Load loss maps from NPZ as layer",
-                           self.load_loss_maps_from_npz_as_layer,
-                           enable=True,
-                           submenu='OQ Engine')
-        # Action to load as layer loss curves from npz produced by the
-        # oq-engine
-        self.add_menu_item("load_loss_curves_from_npz_as_layer",
-                           ":/plugins/irmt/calculate.svg",  # FIXME
-                           u"Load loss curves from NPZ as layer",
-                           self.load_loss_curves_from_npz_as_layer,
-                           enable=True,
-                           submenu='OQ Engine')
-        # Action to plot total damage reading it from a NPZ produced by a
-        # scenario damage calculation
-        self.add_menu_item("plot_dmg_total",
-                           ":/plugins/irmt/calculate.svg",  # FIXME
-                           u"Plot total damage from NPZ",
-                           self.plot_dmg_total_from_npz,
-                           enable=True,
-                           submenu='OQ Engine')
-        # Action to plot damage by taxonomy reading it from a NPZ produced
-        # by a scenario damage calculation
-        self.add_menu_item("plot_dmg_by_taxon",
-                           ":/plugins/irmt/calculate.svg",  # FIXME
-                           u"Plot damage by taxonomy from NPZ",
-                           self.plot_dmg_by_taxon_from_npz,
-                           enable=True,
-                           submenu='OQ Engine')
+        # # Action to load as layer loss maps from npz produced by the
+        # # oq-engine
+        # self.add_menu_item("load_loss_maps_from_npz_as_layer",
+        #                    ":/plugins/irmt/calculate.svg",  # FIXME
+        #                    u"Load loss maps from NPZ as layer",
+        #                    self.load_loss_maps_from_npz_as_layer,
+        #                    enable=True,
+        #                    submenu='OQ Engine')
+        # # Action to load as layer loss curves from npz produced by the
+        # # oq-engine
+        # self.add_menu_item("load_loss_curves_from_npz_as_layer",
+        #                    ":/plugins/irmt/calculate.svg",  # FIXME
+        #                    u"Load loss curves from NPZ as layer",
+        #                    self.load_loss_curves_from_npz_as_layer,
+        #                    enable=True,
+        #                    submenu='OQ Engine')
+        # # Action to plot total damage reading it from a NPZ produced by a
+        # # scenario damage calculation
+        # self.add_menu_item("plot_dmg_total",
+        #                    ":/plugins/irmt/calculate.svg",  # FIXME
+        #                    u"Plot total damage from NPZ",
+        #                    self.plot_dmg_total_from_npz,
+        #                    enable=True,
+        #                    submenu='OQ Engine')
+        # # Action to plot damage by taxonomy reading it from a NPZ produced
+        # # by a scenario damage calculation
+        # self.add_menu_item("plot_dmg_by_taxon",
+        #                    ":/plugins/irmt/calculate.svg",  # FIXME
+        #                    u"Plot damage by taxonomy from NPZ",
+        #                    self.plot_dmg_by_taxon_from_npz,
+        #                    enable=True,
+        #                    submenu='OQ Engine')
         # Action to load as layer ground motion fields from npz produced
         # by the oq-engine with a scenario damage hazard calculation
-        self.add_menu_item(
-                "load_scenario_damage_gmfs_from_npz_as_layer",
-                ":/plugins/irmt/calculate.svg",  # FIXME
-                u"Load scenario damage ground motion "
-                "fields from NPZ as layer",
-                self.load_scenario_damage_gmfs_from_npz_as_layer,
-                enable=True,
-                submenu='OQ Engine')
-        # Action to load as layer damage by asset from npz produced by
-        # the oq-engine with a scenario damage risk calculation
-        self.add_menu_item(
-                "load_scenario_damage_by_asset_from_npz_as_layer",
-                ":/plugins/irmt/calculate.svg",  # FIXME
-                u"Load scenario damage by asset from NPZ as layer",
-                self.load_scenario_damage_by_asset_from_npz_as_layer,
-                enable=True,
-                submenu='OQ Engine')
+        # self.add_menu_item(
+        #         "load_scenario_damage_gmfs_from_npz_as_layer",
+        #         ":/plugins/irmt/calculate.svg",  # FIXME
+        #         u"Load scenario damage ground motion "
+        #         "fields from NPZ as layer",
+        #         self.load_scenario_damage_gmfs_from_npz_as_layer,
+        #         enable=True,
+        #         submenu='OQ Engine')
+        # # Action to load as layer damage by asset from npz produced by
+        # # the oq-engine with a scenario damage risk calculation
+        # self.add_menu_item(
+        #         "load_scenario_damage_by_asset_from_npz_as_layer",
+        #         ":/plugins/irmt/calculate.svg",  # FIXME
+        #         u"Load scenario damage by asset from NPZ as layer",
+        #         self.load_scenario_damage_by_asset_from_npz_as_layer,
+        #         enable=True,
+        #         submenu='OQ Engine')
 
         # Action to activate the modal dialog to select a layer and one
         # of its
