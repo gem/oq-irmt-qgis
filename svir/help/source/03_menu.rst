@@ -24,7 +24,7 @@ corresponding documentation.
 
 * OQ Engine
 
-  * :ref:`chap-drive-oq-engine`
+  * |icon-manual| :ref:`chap-drive-oq-engine`
 
 * Integrated risk
 
@@ -33,7 +33,8 @@ corresponding documentation.
 
 * Recovery modeling
 
-  * :ref:`chap-recovery-modeling`
+  * |icon-plot| :ref:`chap-recovery-modeling`
+  * |icon-connection-settings| :ref:`sec-recovery-modeling-settings`
 
 * Utilities
 
@@ -45,7 +46,7 @@ corresponding documentation.
 * |icon-manual| IRMT manual: a web browser will be opened, showing the html
   version of this manual
 
-* :ref:`chap-viewer-dock` 
+* |icon-plot| :ref:`chap-viewer-dock`
 
 
 .. |icon-connection-settings| image:: images/iconConnectionSettings.png
@@ -57,3 +58,4 @@ corresponding documentation.
 .. |icon-aggregate-loss-by-zone| image:: images/iconAggregateLossByZone.png
 .. |icon-upload| image:: images/iconUpload.png
 .. |icon-manual| image:: images/iconManual.png
+.. |icon-plot| image:: images/iconPlot.png
