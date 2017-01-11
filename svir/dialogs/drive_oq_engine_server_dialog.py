@@ -413,7 +413,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 self.output_list_tbl.setCellWidget(row, col, button)
             if output['type'] in [
                     'hmaps', 'hcurves', 'gmf_data', 'uhs', 'dmg_by_asset']:
-                action = 'Load as layer'
+                action = 'Load as shapefile'
                 button = QPushButton()
                 self.connect_button_to_action(
                     button, action, output, outtype)
@@ -428,9 +428,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.output_list_tbl.resizeRowsToContents()
 
     def connect_button_to_action(self, button, action, output, outtype):
-        if action == 'Load as layer':
+        if action == 'Load as shapefile':
             style = 'background-color: blue; color: white;'
-            button.setText("Load %s as layer" % outtype)
+            button.setText("Load %s as shapefile" % outtype)
         else:
             style = 'background-color: #3cb3c5; color: white;'
             button.setText("%s %s" % (action, outtype))
@@ -444,7 +444,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     def on_output_action_btn_clicked(self, output, action, outtype):
         output_id = output['id']
         output_type = output['type']
-        if action == 'Load as layer':
+        if action == 'Load as shapefile':
             dest_folder = tempfile.gettempdir()
             if outtype == 'npz':
                 filepath = self.download_output(
@@ -454,7 +454,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             elif outtype == 'geojson':
                 # FIXME: hazard maps do not produce an npz. Currently, it is
                 #        possible to read from geojson, but it doesn't work
-                #        pressing "load as layer" for the hmap
+                #        pressing "load as shapefile" for the hmap
                 filepath = self.download_output(
                     output_id, outtype, dest_folder)
                 dlg = LoadGeoJsonAsLayerDialog(self.iface, filepath)
