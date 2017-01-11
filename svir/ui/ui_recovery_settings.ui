@@ -18,28 +18,45 @@
     <layout class="QFormLayout" name="formLayout">
      <item row="0" column="0">
       <widget class="QLabel" name="label">
+       <property name="toolTip">
+        <string>Number of loss-based damage states</string>
+       </property>
        <property name="text">
-        <string>Loss-based damage states</string>
+        <string>Number of loss-based damage states</string>
        </property>
       </widget>
      </item>
      <item row="1" column="0">
       <widget class="QLabel" name="label_2">
+       <property name="toolTip">
+        <string>Number of recovery-based limit states</string>
+       </property>
        <property name="text">
-        <string>Recovery-based damage states</string>
+        <string>Number of recovery-based limit states</string>
        </property>
       </widget>
      </item>
      <item row="0" column="1">
-      <widget class="QSpinBox" name="n_loss_based_dmg_states_sbx"/>
+      <widget class="QSpinBox" name="n_loss_based_dmg_states_sbx">
+       <property name="toolTip">
+        <string>Number of loss-based damage states</string>
+       </property>
+      </widget>
      </item>
      <item row="1" column="1">
-      <widget class="QSpinBox" name="n_recovery_based_dmg_states_sbx"/>
+      <widget class="QSpinBox" name="n_recovery_based_dmg_states_sbx">
+       <property name="toolTip">
+        <string>Number of recovery-based limit states</string>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>
    <item>
     <widget class="QLabel" name="label_3">
+     <property name="toolTip">
+      <string>Conditional probability of being in a particular recovery-based limit state (column), given the occurrence of a loss based damage state (row) (each row must sum to 1)</string>
+     </property>
      <property name="text">
       <string>Transfer probabilities</string>
      </property>
@@ -65,10 +82,16 @@
        <height>0</height>
       </size>
      </property>
+     <property name="toolTip">
+      <string>Conditional probability of being in a particular recovery-based limit state (column), given the occurrence of a loss based damage state (row) (each row must sum to 1)</string>
+     </property>
     </widget>
    </item>
    <item>
     <widget class="QLabel" name="label_9">
+     <property name="toolTip">
+      <string>Time to conduct engineering assessment (days), being in a particular recovery-based limit state</string>
+     </property>
      <property name="text">
       <string>Assessment times</string>
      </property>
@@ -94,10 +117,16 @@
        <height>16777215</height>
       </size>
      </property>
+     <property name="toolTip">
+      <string>Time to conduct engineering assessment (days), being in a particular recovery-based limit state</string>
+     </property>
     </widget>
    </item>
    <item>
     <widget class="QLabel" name="label_8">
+     <property name="toolTip">
+      <string>Time to complete inspections (days), being in a particular recovery-based limit state</string>
+     </property>
      <property name="text">
       <string>Inspection times</string>
      </property>
@@ -123,10 +152,16 @@
        <height>16777215</height>
       </size>
      </property>
+     <property name="toolTip">
+      <string>Time to complete inspections (days), being in a particular recovery-based limit state</string>
+     </property>
     </widget>
    </item>
    <item>
     <widget class="QLabel" name="label_6">
+     <property name="toolTip">
+      <string>Time to mobilize for construction (days), being in a particular recovery-based limit state</string>
+     </property>
      <property name="text">
       <string>Mobilization times</string>
      </property>
@@ -152,10 +187,16 @@
        <height>16777215</height>
       </size>
      </property>
+     <property name="toolTip">
+      <string>Time to mobilize for construction (days), being in a particular recovery-based limit state</string>
+     </property>
     </widget>
    </item>
    <item>
     <widget class="QLabel" name="label_10">
+     <property name="toolTip">
+      <string>Period between the occurrence of the earthquake and the restoration of full functionality (days), being in a particular recovery-based limit state</string>
+     </property>
      <property name="text">
       <string>Recovery times</string>
      </property>
@@ -181,10 +222,16 @@
        <height>16777215</height>
       </size>
      </property>
+     <property name="toolTip">
+      <string>Period between the occurrence of the earthquake and the restoration of full functionality (days), being in a particular recovery-based limit state</string>
+     </property>
     </widget>
    </item>
    <item>
     <widget class="QLabel" name="label_4">
+     <property name="toolTip">
+      <string>Time to replace buildings (days), being in a particular recovery-based limit state</string>
+     </property>
      <property name="text">
       <string>Repair times</string>
      </property>
@@ -210,6 +257,9 @@
        <height>16777215</height>
       </size>
      </property>
+     <property name="toolTip">
+      <string>Time to replace buildings (days), being in a particular recovery-based limit state</string>
+     </property>
     </widget>
    </item>
    <item>
@@ -219,23 +269,37 @@
      </property>
      <item row="1" column="0">
       <widget class="QLabel" name="label_5">
+       <property name="toolTip">
+        <string>Level of uncertainty associated with the repair times</string>
+       </property>
        <property name="text">
         <string>Repair time dispersion</string>
        </property>
       </widget>
      </item>
      <item row="1" column="1">
-      <widget class="QDoubleSpinBox" name="repair_time_dispersion_sbx"/>
+      <widget class="QDoubleSpinBox" name="repair_time_dispersion_sbx">
+       <property name="toolTip">
+        <string>Level of uncertainty associated with the repair times</string>
+       </property>
+      </widget>
      </item>
      <item row="0" column="0">
       <widget class="QLabel" name="label_7">
+       <property name="toolTip">
+        <string>Level of uncertainty associated with the lead time</string>
+       </property>
        <property name="text">
         <string>Lead time dispersion</string>
        </property>
       </widget>
      </item>
      <item row="0" column="1">
-      <widget class="QDoubleSpinBox" name="lead_time_dispersion_sbx"/>
+      <widget class="QDoubleSpinBox" name="lead_time_dispersion_sbx">
+       <property name="toolTip">
+        <string>Level of uncertainty associated with the lead time</string>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>

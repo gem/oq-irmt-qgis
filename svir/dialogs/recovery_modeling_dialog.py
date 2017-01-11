@@ -52,14 +52,25 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         self.iface = iface
         # Set up the user interface from Designer.
         self.setupUi(self)
-        self.fields_multiselect = ListMultiSelectWidget(
-            title='Select fields containing damage state probabilities')
+        title = (
+            'Select fields containing loss-based damage state probabilities')
+        self.fields_multiselect = ListMultiSelectWidget(title=title)
         self.vLayout.insertWidget(2, self.fields_multiselect)
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
+        approach_explanation = (
+            'Aggregate: building-level recovery model as a single process\n'
+            'Disaggregate: Building-level recovery modelled using four'
+            ' processes: inspection, assessment, mobilization and repair.')
         self.approach_cbx.addItems(['Disaggregate', 'Aggregate'])
+        self.approach_cbx.setToolTip(approach_explanation)
+        self.approach_lbl.setToolTip(approach_explanation)
+        simulations_explanation = (
+            'Number of damage realizations used in Monte Carlo Simulation')
         n_simulations = int(
             QSettings().value('irmt/n_simulations_per_building', 1))
         self.n_simulations_sbx.setValue(n_simulations)
+        self.n_simulations_lbl.setToolTip(simulations_explanation)
+        self.n_simulations_sbx.setToolTip(simulations_explanation)
         self.save_bldg_curves_check.setChecked(False)
         self.populate_layers_in_combos()
         self.restoreState()

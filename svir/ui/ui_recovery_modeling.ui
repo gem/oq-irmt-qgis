@@ -66,7 +66,7 @@
         <widget class="QComboBox" name="approach_cbx"/>
        </item>
        <item row="1" column="0">
-        <widget class="QLabel" name="label_2">
+        <widget class="QLabel" name="n_simulations_lbl">
          <property name="text">
           <string>Simulations per building</string>
          </property>

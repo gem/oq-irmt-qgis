@@ -159,7 +159,13 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.approach_lbl = QLabel('Recovery time approach')
         self.approach_lbl.setSizePolicy(
             QSizePolicy.Minimum, QSizePolicy.Minimum)
+        approach_explanation = (
+            'Aggregate: building-level recovery model as a single process\n'
+            'Disaggregate: Building-level recovery modelled using four'
+            ' processes: inspection, assessment, mobilization and repair.')
+        self.approach_lbl.setToolTip(approach_explanation)
         self.approach_cbx = QComboBox()
+        self.approach_cbx.setToolTip(approach_explanation)
         self.approach_cbx.addItems(['Disaggregate', 'Aggregate'])
         self.approach_cbx.currentIndexChanged['QString'].connect(
             self.on_approach_changed)
@@ -167,10 +173,14 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.typeDepHLayout1.addWidget(self.approach_cbx)
 
     def create_n_simulations_spinbox(self):
+        simulations_explanation = (
+            'Number of damage realizations used in Monte Carlo Simulation')
         self.n_simulations_lbl = QLabel('Simulations per building')
+        self.n_simulations_lbl.setToolTip(simulations_explanation)
         self.approach_lbl.setSizePolicy(
             QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.n_simulations_sbx = QSpinBox()
+        self.n_simulations_sbx.setToolTip(simulations_explanation)
         self.n_simulations_sbx.setRange(1, 500)
         n_simulations = int(
             QSettings().value('irmt/n_simulations_per_building', 1))
@@ -192,8 +202,11 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             self.on_recalculate_curve_btn_clicked)
 
     def create_fields_multiselect(self):
-        self.fields_multiselect = ListMultiSelectWidget(
-            title='Select fields containing damage state probabilities')
+        title = (
+            'Select fields containing loss-based damage state probabilities')
+        self.fields_multiselect = ListMultiSelectWidget(title=title)
+        self.fields_multiselect.setSizePolicy(
+            QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.typeDepVLayout.addWidget(self.fields_multiselect)
         fill_fields_multiselect(
             self.fields_multiselect, self.iface.activeLayer())
