@@ -125,7 +125,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     calc_list_url, timeout=10, verify=False)
             except (ConnectionError, InvalidSchema, MissingSchema,
                     ReadTimeout, SvNetworkError) as exc:
-                log_msg(str(exc.msg), level='C',
+                log_msg(str(exc), level='C',
                         message_bar=self.iface.messageBar())
                 self.reject()
                 return
@@ -143,7 +143,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     calc_list_url, timeout=10, verify=False)
             except (ConnectionError, InvalidSchema, MissingSchema,
                     ReadTimeout, SvNetworkError) as exc:
-                log_msg(str(exc.msg), level='C',
+                log_msg(str(exc), level='C',
                         message_bar=self.iface.messageBar())
                 self.reject()
                 return
