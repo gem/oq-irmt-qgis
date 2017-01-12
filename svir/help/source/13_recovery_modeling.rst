@@ -70,8 +70,8 @@ capabilities of the tool are highlighted.
 
 .. _sec-inputFilesForOqEngine:
 
-STEP 1: Preparation of the input files for the OpenQuake Engine analysis
-========================================================================
+Preparation of the input files for the OpenQuake Engine analysis
+================================================================
 
 The recovery modelling algorithm
 requires users to provide a CSV file containing the probability of exceedance
@@ -104,8 +104,8 @@ a remote server or cluster.
 
 .. _sec-recovery-modeling-settings:
 
-STEP 2: Setting up the configuration variables to run the recovery modelling algorithm
-======================================================================================
+Setting up the configuration variables to run the recovery modelling algorithm
+==============================================================================
 
 The configuration variables that are necessary to perform the recovery modeling
 analysis can be edited using the dialog shown in :numref:`fig-dialogRecoveryModelingSettings`.
@@ -144,10 +144,6 @@ the user:
 +-----------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 | Lead times dispersion                   | Level of uncertainty associated with the lead times                                                                                   |
 +-----------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
-| Number of damage simulations            | Number of damage realizations used in Monte Carlo Simulation                                                                          |
-+-----------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
-
-.. warning:: Increasing the number of simulations, the model becomes more accurate, but the calculation becomes slower and more expensive in terms of memory consumption 
 
 The list of the outputs from the Scenario Damage calculation can be visualized
 in :numref:`fig-dialogDriveOqEngine`. The tool offers the possibility to load the 'Damage by asset'
@@ -164,7 +160,7 @@ length of 10 characters each. At this point, the user may choose between two
 workflows on how to proceed to the generation of single buildings and/or
 community level recovery curves.
 
-Interactive Workflow
+Interactive workflow
 ====================
 
 The user can select individual buildings (or a group of buildings) and the
@@ -182,7 +178,12 @@ addition, the user can manually select the fields of the layer that contain the
 probabilities of being in each damage state (:numref:`fig-dataViewerRecovery`). If the file with
 the damage state probabilities is in the same format as produced by OpenQuake,
 the software pre-selects the appropriate fields for the recovery modelling
-algorithm.
+algorithm. The number of simulations per building is the number of damage
+realizations used in Monte Carlo Simulation.
+
+.. warning:: Increasing the number of simulations, the model becomes more
+   accurate, but the calculation becomes slower and more expensive in terms of
+   memory consumption
 
 It should be emphasized that the integration of the recovery modelling
 algorithm in the QGIS software enables the users to adapt the workflow to their
@@ -198,7 +199,7 @@ by clicking them on the map, or select points by using a formula. If points
 have been labeled with the identifier of the zone, the selection can be done
 with respect to the zone identification (or ID).
 
-Batch Workflow
+Batch workflow
 ==============
 
 Initially, the user must select the layer containing the information regarding
