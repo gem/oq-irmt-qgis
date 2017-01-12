@@ -61,6 +61,8 @@ In the following steps, a brief description of the basic workflow to develop an
 end-to-end recovery prediction is presented, where the main features and
 capabilities of the tool are highlighted.
 
+.. _sec-inputFilesForOqEngine:
+
 STEP 1: Preparation of the input files for the OpenQuake Engine analysis
 ========================================================================
 
@@ -85,14 +87,6 @@ and examples of each component, readers are referred to [SIL2014]_.
 The window
 that requests users to upload the input files and run the scenario damage
 calculation is shown in :numref:`fig-dialogDriveOqEngine`.
-
-.. _fig-dialogDriveOqEngine:
-
-.. figure:: images/dialogDriveOqEngine.png
-    :align: center
-    :scale: 60%
-
-    Dialog to run the OpenQuake Engine server
 
 It should be noted that in order to use the OpenQuake Engine from QGIS, the
 user needs to set up the connection with a working OpenQuake Engine Server
@@ -209,12 +203,13 @@ Batch Workflow
 ==============
 
 Initially, the user must select the layer containing the information regarding
-the damage state probabilities per asset (see STEP 1), after which the specific
-fields that contain these probabilities shall be opted. Next, the user must
-select a specific recovery time approach (Aggregate/Disaggregate) and set the
-number of simulations per building (number of damage realizations used in Monte
-Carlo Simulation). Here, it is possible to select the layer of the study area
-with zonal geometries and generate aggregated recovery curves by zones.
+the damage state probabilities per asset (see
+:ref:`sec-inputFilesForOqEngine`), after which the specific fields that
+contain these probabilities shall be opted. Next, the user must select a
+specific recovery time approach (Aggregate/Disaggregate) and set the number of
+simulations per building (number of damage realizations used in Monte Carlo
+Simulation). Here, it is possible to select the layer of the study area with
+zonal geometries and generate aggregated recovery curves by zones.
 
 .. _fig-batchRecoveryModeling:
 
@@ -225,7 +220,7 @@ with zonal geometries and generate aggregated recovery curves by zones.
     Dialog to perform recovery modeling on the whole data set (also enabling zonal aggregation)
 
 By unchecking the :guilabel:`Aggregate assets by zone` box
-(:ref:`fig-batchRecoveryModeling`) the algorithm generates a single community
+(:numref:`fig-batchRecoveryModeling`) the algorithm generates a single community
 recovery curve by aggregating the recovery curves of all the buildings within
 the region. The graphs, like the one shown in :numref:`fig-recoveryPlot`, are
 saved in the output directory designated by the user. In addition,

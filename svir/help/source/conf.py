@@ -47,7 +47,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Integrated Risk Modelling Toolkit'
-copyright = u'2015, GEM Foundation'
+copyright = u'2017, GEM Foundation'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
