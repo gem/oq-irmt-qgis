@@ -35,10 +35,19 @@ measure types.
 While the layer is active, it is possible to select the :guilabel:`Output Type`
 :guilabel:`Hazard Curves`, to activate the visualization. When one or
 more points are selected in the map, the hazard curves for the chosen
-:guilabel:`Intensity Measure Type` are plotted together. The legend also
-specifies the longitude and latitude of the points corresponding to each
-of the curves in the plot. By hovering on the legend items or on the curves,
-the corresponding points in the map are highlighted.
+:guilabel:`Intensity Measure Type` are plotted together
+(:numref:`fig-dataViewerHazardCurves`). The legend also specifies the longitude
+and latitude of the points corresponding to each of the curves in the plot. By
+hovering on the legend items or on the curves, the corresponding points in the
+map are highlighted.
+
+.. _fig-dataViewerHazardCurves:
+
+.. figure:: images/dataViewerHazardCurves.png
+    :align: center
+    :scale: 60%
+
+    IRMT Data Viewer used for displaying hazard curves
 
 
 Visualizing uniform hazard spectra
@@ -51,6 +60,14 @@ be loaded as layer is `uhs`.
 
 Visualizing recovery curves
 ===========================
+
+.. _fig-dataViewerRecovery:
+
+.. figure:: images/dataViewerRecovery.png
+    :align: center
+    :scale: 60%
+
+    IRMT Data Viewer used for recovery modeling analysis
 
 Please refer to :ref:`chap-recovery-modeling` for a general overview of
 the recovery modeling workflow, its scientific background and the description

@@ -74,7 +74,7 @@ of analysis supported by the risk component of the OpenQuake Engine.
 The input
 files necessary for running a scenario damage calculation and the resulting
 output files are depicted in :numref:`fig-oqEngineInputFiles` For technical details, definitions
-and examples of each component, readers are referred to [SIL2014]_.
+and examples of each component, readers are referred to [SCP+14]_.
 
 .. _fig-oqEngineInputFiles:
 
@@ -177,14 +177,6 @@ the damage state probabilities is in the same format as produced by OpenQuake,
 the software pre-selects the appropriate fields for the recovery modelling
 algorithm.
 
-.. _fig-dataViewerRecovery:
-
-.. figure:: images/dataViewerRecovery.png
-    :align: center
-    :scale: 60%
-
-    IRMT Data Viewer used for recovery modeling analysis
-
 It should be emphasized that the integration of the recovery modelling
 algorithm in the QGIS software enables the users to adapt the workflow to their
 needs, leveraging all the features provided by the QGIS framework. The QGIS
@@ -240,5 +232,3 @@ interest to the user.
 
     The community-level recovery function for one of the zones under analysis, showing
     how the normalized recovery level evolves with time after the earthquake
-
-.. [SIL2014] Silva, V., Crowley, H., Pagani, M., Monelli, D., & Pinho, R. (2014). Development of the OpenQuake engine, the Global Earthquake Model's open-source software for seismic risk assessment. Natural Hazards, 72(3), 1409-1427.
