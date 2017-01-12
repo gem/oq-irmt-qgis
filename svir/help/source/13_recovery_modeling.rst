@@ -4,26 +4,33 @@
 Post-Earthquake Recovery Modelling Methodology
 **********************************************
 
-This scientific framework and computational tool was developed to quantify the
-effectiveness of specific resilience-building actions (preparedness,
-mitigation, and response) that would enhance the process of recovery following
-an earthquake. Building performance is assessed using metrics that are
-explicitly linked to community seismic resilience such as functionality,
-occupiability and repairability. A probabilistic approach to mapping the
-fragility function parameters for the loss-based damage states used in
-OpenQuake and HAZUS (e.g. slight, moderate, extensive, complete) to the
-recovery-based damage states (e.g. functional loss, uninhabitable, irreparable)
-that are needed to assess seismic resilience is applied. A discrete state-based
-stochastic simulation model is used to quantify recovery trajectories for
-damaged buildings. Deterministic recovery paths conditioned on the
-post-earthquake damage state are described by discrete recovery states and the
-time spent in each state. The uncertainty in the recovery trajectory is
-captured by generating multiple realizations of the recovery path (Monte Carlo
-Simulation) accounting for the uncertainty in the time spent in each state. The
-function that describes community-level (or neighborhood-level) recovery is
-obtained by aggregating the recovery curves for the individual buildings after
-accounting for the variation in shaking and damage at each site and various
-exogenous and endogenous factors that affect the pace of recovery.
+This work was supported by the State of California, Alfred E. Alquist Seismic
+Safety Commission and is part of a collaborative effort between the Global
+Earthquake Model (GEM) and the University of California at Los Angeles (UCLA),
+Department of Civil and Environmental Engineering. GEM implemented the
+scientific methodology developed by UCLA [BDL+15]_ and integrated it into
+the QGIS framework as part of the IRMT plugin.
+
+This computational tool was developed to quantify the effectiveness of specific
+resilience-building actions (preparedness, mitigation, and response) that would
+enhance the process of recovery following an earthquake. Building performance
+is assessed using metrics that are explicitly linked to community seismic
+resilience such as functionality, occupiability and repairability. A
+probabilistic approach to mapping the fragility function parameters for the
+loss-based damage states used in OpenQuake and HAZUS (e.g. slight, moderate,
+extensive, complete) to the recovery-based damage states (e.g. functional loss,
+uninhabitable, irreparable) that are needed to assess seismic resilience is
+applied. A discrete state-based stochastic simulation model is used to quantify
+recovery trajectories for damaged buildings. Deterministic recovery paths
+conditioned on the post-earthquake damage state are described by discrete
+recovery states and the time spent in each state. The uncertainty in the
+recovery trajectory is captured by generating multiple realizations of the
+recovery path (Monte Carlo Simulation) accounting for the uncertainty in the
+time spent in each state. The function that describes community-level (or
+neighborhood-level) recovery is obtained by aggregating the recovery curves for
+the individual buildings after accounting for the variation in shaking and
+damage at each site and various exogenous and endogenous factors that affect
+the pace of recovery.
 
 This tool provides an effective way to engage key stakeholders from
 government, industry and other groups, who are concerned with enhancing
@@ -232,3 +239,10 @@ interest to the user.
 
     The community-level recovery function for one of the zones under analysis, showing
     how the normalized recovery level evolves with time after the earthquake
+
+
+.. [BDL+15]
+   Burton, H., Deierlein, G., Lallemant, D., & Lin, T. (2015). Framework for
+   Incorporating Probabilistic Building Performance in the Assessment of
+   Community Seismic Resilience. J.Struct.Eng.
+   doi:10.1061/(ASCE)ST.1943-541X.0001321
