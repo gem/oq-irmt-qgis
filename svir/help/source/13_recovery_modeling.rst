@@ -81,7 +81,7 @@ of analysis supported by the risk component of the OpenQuake Engine.
 The input
 files necessary for running a scenario damage calculation and the resulting
 output files are depicted in :numref:`fig-oqEngineInputFiles` For technical details, definitions
-and examples of each component, readers are referred to [SCP+14]_.
+and examples of each component, readers are referred to [PMW+14]_ and [SCP+14]_.
 
 .. _fig-oqEngineInputFiles:
 
@@ -240,10 +240,3 @@ interest to the user.
 
     The community-level recovery function for one of the zones under analysis, showing
     how the normalized recovery level evolves with time after the earthquake
-
-
-.. [BDL+15]
-   Burton, H., Deierlein, G., Lallemant, D., & Lin, T. (2015). Framework for
-   Incorporating Probabilistic Building Performance in the Assessment of
-   Community Seismic Resilience. J.Struct.Eng.
-   doi:10.1061/(ASCE)ST.1943-541X.0001321

@@ -79,15 +79,36 @@ and validation. To accompany this manual we suggest the use of two popular
 resources ([NSST05]_ and [NSST08]_) aimed at providing a guide for the
 construction and use of composite indicators.
 
-
 This literature outlines the process of robust composite indicator construction
 that contains a number of steps. The IRMT leverages the QGIS platform to guide
 the user through the major steps for index construction. These steps include 1)
 the selection of variables; 2) data normalization/standardization; 3) weighting
 and aggregation to produce composite indicators; 4) risk integration using
-OpenQuake risk estimates; and 5) the presentation of the results. Brief
-descriptions of the tool’s components and the workflow to develop integrated
-risk models are outlined in the sections below.
+OpenQuake risk estimates; and 5) the presentation of the results.
+
+The IRMT plugin has been extended significantly with respect to its original
+purposes, in order to make it operate seamlessly with the other main components
+of the OpenQuake suite, i.e., the `OpenQuake Engine <https://github.com/gem/oq-engine>`_
+and the `OpenQuake Platform <https://platform.openquake.org/>`_. This enables
+a whole end-to-end workflow, where calculations of physical hazard and risk can
+be run directly from within the QGIS environment (see
+:ref:`chap-drive-oq-engine`) and the outputs of such calculations can be loaded
+as QGIS vector layers. Those of them that can be visualized as maps (e.g.
+hazard maps) are also automatically styled with respect to fields selected by
+the user. Others can be plotted as curves (e.g. hazard curves) inside a
+:guilabel:`Data Viewer` window (see :ref:`chap-viewer-dock`) that was conceived
+for this purpose.  Users that are willing to share their projects through the
+OpenQuake Platform, can use the plugin's interface to upload their work to the
+Platform, or to download from the Platform projects that were shared by other
+scientists.
+
+Another important addition to the IRMT plugin is a module for post-earthquake
+recovery modeling (see :ref:`chap-recovery-modeling`), that was supported by
+the State of California, Alfred E. Alquist Seismic Safety Commission, as part
+of a collaborative effort between the Global Earthquake Model (GEM) and the
+University of California at Los Angeles (UCLA), Department of Civil and
+Environmental Engineering. GEM implemented the scientific methodology developed
+by UCLA [BDL+15]_.
 
 .. [PMW+14]
     Pagani, M., Monelli, D., Weatherill, G., Danciu, L., Crowley, H., Silva,
@@ -111,3 +132,9 @@ risk models are outlined in the sections below.
     Nardo, M., Saisana, M., Saltelli, A. and Tarantola, S. 2008. Handbook on
     constructing composite indicators: Methodology and user guide. Paris,
     France: OECD Publishing.
+
+.. [BDL+15]
+   Burton, H., Deierlein, G., Lallemant, D., & Lin, T. (2015). Framework for
+   Incorporating Probabilistic Building Performance in the Assessment of
+   Community Seismic Resilience. J.Struct.Eng.
+   doi:10.1061/(ASCE)ST.1943-541X.0001321
