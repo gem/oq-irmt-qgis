@@ -5,7 +5,7 @@ The plugin's menu
 When the IRMT plugin is installed, it adds its own menu to those available
 on the QGIS graphical user interface. The plugin's menu contains the
 options listed below. For each option, this manual provides a separate chapter
-with the description of its functionality and of the typical workflow in which
+with the description of its functionality and of the typical workflows in which
 it is used. Please follow the links next to the option icons, to reach the
 corresponding documentation.
 

@@ -10,19 +10,34 @@ button :guilabel:`Toggle IRMT Data Viewer`.
 
 In its initial state, the window displays a :guilabel:`Output Type` selector,
 that enables to trigger the visualization of different types of data, and
-an empty plotting area.
+an initially empty plotting area.
 
-At the time of this writing, the viewer can plot some of the outputs produced
-by the OpenQuake Engine, such as hazard curves and uniform hazard spectra,
-and recovery curves.
+The viewer can plot some of the outputs produced by the OpenQuake Engine,
+such as hazard curves and uniform hazard spectra, and recovery curves (see
+also :ref:`chap-definitions`).
 
 When a layer containing compatible data is activated in the QGIS and the
 corresponding output type is selected, the viewer is ready to visualize
-the outputs corresponding to the features that will be selected on the map.
+the outputs corresponding to the features that will be selected in the map.
+
+Plots are obtained using the *Matplotlib* library. Below the plotting area,
+Matplotlib provides a toolbox with standard functionalities that enable
+modifying markers, labels, axes, zooming level and other parameters, saving the
+plot to file and exporting the selected curves into a csv format.
 
 
 Visualizing hazard curves
 =========================
+
+A hazard curve defines the relation between a scalar IML and the probability of
+at least one exceedance of that IML within a time span T. The OpenQuake-engine
+computes discrete hazard curves described by a two-dimensional array containing
+a first column of n values of an IMT and a second column including values of
+the probability of exceedance of the resultant IML in the time span T (which is
+indicated in the OpenQuake-engine configuration file). A hazard curve is the
+primary result of a PSHA analysis for a particular site. From hazard curves it
+is possible to compute other result-typologies such as hazard maps and uniform
+hazard spectra.
 
 As described in :ref:`chap-drive-oq-engine`, the plugin enables to run
 hazard calculations and to download the corresponding outputs. For outputs
@@ -30,12 +45,10 @@ of type `hcurves`, it is possible to load the data into a QGIS layer by
 pressing the button :guilabel:`Load npz as layer`. The layer will contain,
 for each point, the set of intensity measure levels and the corresponding
 values of probability of exceedance, for each of the available intensity
-measure types.
-
-While the layer is active, it is possible to select the :guilabel:`Output Type`
-:guilabel:`Hazard Curves`, to activate the visualization. When one or
-more points are selected in the map, the hazard curves for the chosen
-:guilabel:`Intensity Measure Type` are plotted together
+measure types. While the layer is active, it is possible to select the
+:guilabel:`Output Type` :guilabel:`Hazard Curves`, to activate the
+visualization. When one or more points are selected in the map, the hazard
+curves for the chosen :guilabel:`Intensity Measure Type` are plotted together
 (:numref:`fig-dataViewerHazardCurves`). The legend also specifies the longitude
 and latitude of the points corresponding to each of the curves in the plot. By
 hovering on the legend items or on the curves, the corresponding points in the
@@ -53,9 +66,15 @@ map are highlighted.
 Visualizing uniform hazard spectra
 ==================================
 
+A Uniform Hazard Spectrum (UHS) is a typology of result that is site-specific –
+as in the case of hazard curves. A UHS defines a relationship between the
+period (or frequency) of a period-dependent (or frequency-dependent) IMT such
+as spectral acceleration and the resulting IMT value with a fixed probability
+of exceedance in a time span T.
+
 The workflow to visualize uniform hazard spectra is almost the same as the one
 described above for visualizing hazard curves. In this case, the output type to
-be loaded as layer is `uhs`. 
+be loaded as layer is `uhs`.
 
 
 Visualizing recovery curves

@@ -38,7 +38,7 @@ Watch the console log
 
 It is possible to watch the log of a calculation, by pressing the
 :guilabel:`Console` button in the corresponding row. The log will be displayed
-in a tab of the QGIS :guilabel:`Log Message Panel`.  
+in a tab of the QGIS :guilabel:`Log Message Panel`.
 
 .. FIXME add figure
 
@@ -53,7 +53,22 @@ downloaded in one of the available formats, by clicking the corresponding
 button. In some cases, they can also be loaded as QGIS layers, and a default
 styling is applied, based on parameters chosen by the user.
 
-.. FIXME add figure
+A hazard map defines the geographic distribution of the values of a scalar IMT
+(see also :ref:`chap-definitions`) characterized by a fixed probability of
+being exceeded at least once in a time span T. For computing a hazard map with
+the OpenQuake-engine the user defines an IMT, a region over which the map will
+be computed and, the corresponding probability of exceedance. An alternative
+representation of a hazard map fixes the value of IMT and computes over an area
+the corresponding probability of at least on exceedance in T; this typology of
+result is currently not supported by the OpenQuake-engine.
+
+.. _fig-hazard-map:
+
+.. figure:: images/hazardMapExample.png
+    :align: center
+    :scale: 60%
+
+    Example of a hazard map produced by the OpenQuake Engine
 
 
 Run a risk calculation on top of hazard

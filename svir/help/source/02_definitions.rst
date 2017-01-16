@@ -1,8 +1,8 @@
 .. _chap-definitions:
 
-***********
-Definitions
-***********
+************************
+Definitions and acronyms
+************************
 
 In this manual, the terminology *layer*, *project*, and *project definition*
 are used ubiquitously, and it is important to explain what the terminology
@@ -46,7 +46,24 @@ definition:
   the percentage of population with a college education provides an
   example of a characteristic that may detract from social vulnerability,
   thereby warranting a negative directionality within an index.
-  
+
+In seismic hazard and risk analysis, a Ground-Motion Measure Type (GMMT) is a
+physical quantity expressing a particular characteristic of the ground shaking
+recorded or computed at one site. The most important and frequently used GMMTs
+are scalar and they indicate the shaking intensity (i.e. the amplitude of the
+ground shaking). These GMMT are also indicated with the acronym IMT. Other
+ground-motion measures define, for example, the duration of the shaking. A very
+common IMT is the peak ground acceleration, specified with the PGA acronym. The
+principal IMT used in the OpenQuake-engine are:
+  * Peak Ground Acceleration – indicated as PGA – measured in fractions of g
+  * Peak Ground Velocity – indicated as PGV – measured in cm/s
+  * Peak Ground Displacement – indicated as PGV – measured in cm
+  * Spectral Acceleration for a given period T – indicated as Sa(T) - measured
+    in fractions of g
+
+An Intensity Measure Level (IML) is a value of a specific IMT.
+
+
 .. [ESRI98]
     ESRI Shapefile Technical Description,
     Environmental Systems Research Institute, Redlands, C.A.

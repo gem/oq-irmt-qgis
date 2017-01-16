@@ -99,16 +99,16 @@ the user. Others can be plotted as curves (e.g. hazard curves) inside a
 :guilabel:`Data Viewer` window (see :ref:`chap-viewer-dock`) that was conceived
 for this purpose.  Users that are willing to share their projects through the
 OpenQuake Platform, can use the plugin's interface to upload their work to the
-Platform, or to download from the Platform projects that were shared by other
-scientists.
+Platform. They can also download and edit projects that were shared through the
+Platform by other users.
 
 Another important addition to the IRMT plugin is a module for post-earthquake
 recovery modeling (see :ref:`chap-recovery-modeling`), that was supported by
 the State of California, Alfred E. Alquist Seismic Safety Commission, as part
 of a collaborative effort between the Global Earthquake Model (GEM) and the
 University of California at Los Angeles (UCLA), Department of Civil and
-Environmental Engineering. GEM implemented the scientific methodology developed
-by UCLA [BDL+15]_.
+Environmental Engineering. GEM implemented in the QGIS environment the
+scientific methodology developed by UCLA [BDL+15]_.
 
 .. [PMW+14]
     Pagani, M., Monelli, D., Weatherill, G., Danciu, L., Crowley, H., Silva,
