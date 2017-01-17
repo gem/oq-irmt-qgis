@@ -83,37 +83,30 @@ class SelectInputLayersDialog(QDialog, FORM_CLASS):
         if dialog_type == 'loss_layer':
             text = self.tr('Select loss map to import')
             # FIXME: What should be the format of the raster maps?
-            filters = self.tr('Geojson vector loss curves (*.geojson);;'
+            filters = self.tr('Loss curves from the OpenQuake-engine (*.csv);;'
                               'Shapefile vector loss curves (*.shp);;'
-                              'Loss curves from the OpenQuake-engine (*.csv);;'
+                              'Geojson vector loss curves (*.geojson);;'
                               'Raster loss curves (*.*)')
-            file_names, file_type = QFileDialog.getOpenFileNamesAndFilter(
-                self, text, QDir.homePath(), filters)
         elif dialog_type == 'zonal_layer':
             text = self.tr('Select zonal layer to import')
             filters = self.tr('Vector shapefiles (*.shp);;SQLite (*.sqlite);;'
                               'All files (*.*)')
-            file_name, file_type = QFileDialog.getOpenFileNameAndFilter(
-                self, text, QDir.homePath(), filters)
         else:
             raise RuntimeError('Invalid dialog_type: {}'.format(dialog_type))
+        file_name, file_type = QFileDialog.getOpenFileNameAndFilter(
+            self, text, QDir.homePath(), filters)
         if dialog_type == 'zonal_layer':
             if not file_name:
                 return None
             layer = self.load_zonal_layer(file_name)
         elif dialog_type == 'loss_layer':
-            if not file_names:
+            if not file_name:
                 return None
             if file_type == 'Raster loss curves (*.*)':
                 self.loss_layer_is_vector = False
             if file_type == 'Loss curves from the OpenQuake-engine (*.csv)':
-                layer = self.import_loss_layer_from_csv(file_names)
+                layer = self.import_loss_layer_from_csv(file_name)
             else:
-                file_name = file_names[0]
-                if len(file_names) > 1:
-                    msg = "Only %s is loaded" % file_name
-                    log_msg(msg, level='W',
-                            message_bar=self.iface.messageBar())
                 layer = self.load_loss_layer(file_name)
         else:
             raise RuntimeError
@@ -242,61 +235,13 @@ class SelectInputLayersDialog(QDialog, FORM_CLASS):
             self.ok_button.setEnabled(False)
 
     def import_loss_layer_from_csv(self,
-                                   csv_file_paths,
+                                   csv_file_path,
                                    dest_shp=None,
-                                   from_oqengine=True):
+                                   delete_lon_lat=False):
         # FIXME: hardcoded field names
         longitude_field = 'LON'
         latitude_field = 'LAT'
-        if from_oqengine:
-            lines_to_skip_count = 0
-            loss_types = []
-            # get the loss type names from the csv files
-            row_counts = []
-            for csv_file_path in csv_file_paths:
-                with open(csv_file_path, "rb") as source:
-                    reader = csv.reader(source)
-                    # get the loss type from the second row
-                    reader.next()  # ignore the first row
-                    second_row = reader.next()
-                    loss_types.append(second_row[6])
-                    row_count = 2 + sum(1 for row in reader)
-                    row_counts.append(row_count)
-            if any(row_counts[0] != row_count for row_count in row_counts):
-                raise Exception('Input csv fields have different lengths')
-            header = ['LON', 'LAT']
-            header.extend([loss_type.upper() for loss_type in loss_types])
-            fd, reduced_csv_path = tempfile.mkstemp(suffix='csv')
-            os.close(fd)
-            source_files = []
-            source_readers = []
-            for csv_file_path in csv_file_paths:
-                source_file = open(csv_file_path, "rb")
-                source_files.append(source_file)
-                source_reader = csv.reader(source_file)
-                source_readers.append(source_reader)
-                source_reader.next()  # ignore first row
-            with open(reduced_csv_path, "wb") as reduced:
-                writer = csv.writer(reduced)
-                writer.writerow(header)
-                # iterate while there are rows in the first csv file
-                for first_source_row in source_readers[0]:
-                    # add lon, lat and average_loss from the first source
-                    lon = first_source_row[0]
-                    lat = first_source_row[1]
-                    first_loss = first_source_row[4]
-                    row = [lon, lat, first_loss]
-                    # append the average_loss from the other sources
-                    for source_reader in source_readers[1:]:
-                        loss = source_reader.next()[4]
-                        row.append(loss)
-                    writer.writerow(row)
-            for source_file in source_files:
-                source_file.close()
-            csv_file_path = reduced_csv_path
-        else:
-            csv_file_path = csv_file_paths[0]
-            lines_to_skip_count = count_heading_commented_lines(csv_file_path)
+        lines_to_skip_count = count_heading_commented_lines(csv_file_path)
         url = QUrl.fromLocalFile(csv_file_path)
         url.addQueryItem('type', 'csv')
         url.addQueryItem('xField', longitude_field)
@@ -327,8 +272,9 @@ class SelectInputLayersDialog(QDialog, FORM_CLASS):
             raise RuntimeError('Could not save shapefile')
         shp_layer = QgsVectorLayer(
             dest_filename, 'Loss data', 'ogr')
-        ProcessLayer(shp_layer).delete_attributes(
-            [longitude_field, latitude_field]),
+        if delete_lon_lat:
+            ProcessLayer(shp_layer).delete_attributes(
+                [longitude_field, latitude_field]),
         if shp_layer.isValid():
             QgsMapLayerRegistry.instance().addMapLayer(shp_layer)
         else:
