@@ -78,9 +78,9 @@ changelog=
     * While performing recovery modeling, enable changing the number of simulations per building
     * Add bugfixes and features introduced in stable versions of the plugin up to v1.7.16
 # tags are comma separated with spaces allowed
-tags=GEM, IRMT, SVIR, OpenQuake, Social Vulnerability, Integrated Risk, Recovery, Resilience, Risk, Hazard
+tags=GEM, IRMT, SVIR, OpenQuake, Social Vulnerability, Integrated Risk, Recovery, Resilience, Risk, Hazard, Earthquake
 
-homepage=https://github.com/gem/oq-irmt-qgis
+homepage=https://plugins.qgis.org/plugins/svir/
 tracker=https://github.com/gem/oq-irmt-qgis/issues
 repository=https://github.com/gem/oq-irmt-qgis
 icon=resources/icon.svg
