@@ -17,3 +17,22 @@ to produce building level and/or community level recovery functions, that
 predict recovery times following an earthquake.
 
 This plugin has been created by the [GEM Foundation](http://www.globalquakemodel.org/gem/).
+
+
+## Installation
+
+This plugin runs with [QGIS 2.14LTR](http://qgis.org/it/site/forusers/alldownloads.html)
+and above.
+
+On Microsoft Windows and Mac OS X, QGIS includes all the software dependencies needed by the plugin.
+
+On Linux, please make sure that [Scipy](https://www.scipy.org/install.html) is installed.
+
+The plugin can be installed using the QGIS Plugins Manager, that is accessible through the
+QGIS menu as **Plugins -> Manage and install plugins**. Please note that the **Settings** of
+the Plugins Manager contain a checkbox to **Show also experimental plugins**. If that option
+is checked, the latest version of the plugin that is marked as **experimental**
+will be available for installation. Otherwise, the latest **stable** version
+will be installable. Experimental versions contain new functionalities that may
+have not been properly tested yet, and that could cause the plugin or QGIS to behave
+unexpectedly.

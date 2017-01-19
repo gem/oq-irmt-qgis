@@ -16,6 +16,7 @@ Contents:
     :maxdepth: 2
     :numbered:
 
+    00_installation.rst
     01_introduction.rst
     02_definitions.rst
     03_menu
