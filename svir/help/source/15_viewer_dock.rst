@@ -73,8 +73,17 @@ as spectral acceleration and the resulting IMT value with a fixed probability
 of exceedance in a time span T.
 
 The workflow to visualize uniform hazard spectra is almost the same as the one
-described above for visualizing hazard curves. In this case, the output type to
-be loaded as layer is `uhs`.
+described above for visualizing hazard curves. In this case, the
+:guilabel:`Output Type` to be loaded as layer is :guilabel:`Uniform Hazard
+Spectra` (:numref:`fig-dataViewerUHS`).
+
+.. _fig-dataViewerUHS:
+
+.. figure:: images/dataViewerUHS.png
+    :align: center
+    :scale: 60%
+
+    IRMT Data Viewer used for displaying Uniform Hazard Spectra
 
 
 Visualizing recovery curves
