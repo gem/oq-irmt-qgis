@@ -18,3 +18,13 @@ be available for installation. Otherwise, the latest *stable* version will be
 installable. Experimental versions contain new functionalities that may have
 not been properly tested yet, and that could cause the plugin or QGIS to break
 or to behave unexpectedly.
+
+
+How to run tests on Ubuntu 16.04 LTS
+====================================
+
+In order to run tests on Ubuntu 16.04 LTS and above, QGIS has to be installed
+as described above and the following additional packages are required:
+``python-nose``, ``python-coverage``, ``python-mock``
+
+Then, move to the ``svir`` directory and run the script ``./maketest.sh``
