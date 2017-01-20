@@ -26,6 +26,7 @@
 
 import unittest
 import os.path
+import tempfile
 from collections import namedtuple
 from qgis.core import QgsVectorLayer
 from svir.test.utilities import get_qgis_app
@@ -67,13 +68,14 @@ class ImportLossFromCsvTestCase(unittest.TestCase):
         data_dir_name = os.path.join(curr_dir_name, 'data/loss/from_oqengine')
         csv_file_path = os.path.join(
             data_dir_name, 'output-161-avg_losses-rlz-000_61.csv')
+        out_dir = tempfile.gettempdir()
         dest_shp_file_path = os.path.join(
-            data_dir_name, 'output', 'loss_layer.shp')
+            out_dir, 'loss_layer.shp')
         dlg = SelectInputLayersDialog(IFACE)
         shp_layer = dlg.import_loss_layer_from_csv(csv_file_path,
                                                    dest_shp_file_path)
         expected_layer_path = os.path.join(
-            data_dir_name, 'output', 'expected_layer.shp')
+            data_dir_name, 'expected_layer.shp')
         expected_layer = QgsVectorLayer(
             expected_layer_path, 'expected_layer', 'ogr')
         res = ProcessLayer(shp_layer).has_same_content_as(expected_layer)
