@@ -24,6 +24,7 @@
 
 import unittest
 import os
+import sys
 from copy import deepcopy
 from qgis.core import QgsVectorLayer, QgsVectorFileWriter
 from utilities import get_qgis_app
@@ -142,14 +143,25 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
             'EDUEOCSAF plus one'
         proj_def['children'][1]['children'][0]['customFormula'] = \
             '"EDUEOCSAF" + 1'
+        # sys.stderr.write("\n\n\nInitial layer:\n")
+        # ProcessLayer(self.layer).pprint(usage='testing')
         node_attr_id, node_attr_name, discarded_feats = \
             calculate_education_node(proj_def, operator, self.layer)
+        # sys.stderr.write("\n\n\nCalculated EDUCATION as EDUEOCSAF+1:\n")
+        # ProcessLayer(self.layer).pprint(usage='testing')
         expected_layer_path = os.path.join(
             self.data_dir_name, 'custom_operator.shp')
         expected_layer = QgsVectorLayer(
             expected_layer_path, 'custom_operator', 'ogr')
         res = ProcessLayer(self.layer).has_same_content_as(expected_layer)
-        self.assertEqual(res, True)
+        try:
+            self.assertEqual(res, True)
+        except AssertionError:
+            sys.stderr.write("The resulting layer is different than expected")
+            sys.stderr.write("\n\n\nCalculated EDUCATION as EDUEOCSAF+1:\n")
+            ProcessLayer(self.layer).pprint(usage='testing')
+            sys.stderr.write("\n\n\nExpected layer (custom_operator.shp):\n")
+            ProcessLayer(expected_layer).pprint(usage='testing')
         # # # to rebuild the outputs
         # res_layer_name = 'custom_operator'
         # write_output(self.layer, self.data_dir_name, res_layer_name)
@@ -338,7 +350,6 @@ def write_output(res_layer, data_dir_name, res_layer_name):
         res_layer, res_layer_path, 'CP1250', None, 'ESRI Shapefile')
     if write_success != QgsVectorFileWriter.NoError:
         raise RuntimeError('Could not save shapefile')
-    QgsVectorLayer(res_layer_path, res_layer_name, 'ogr')
 
 
 proj_def_svi_calc_first_round = {
