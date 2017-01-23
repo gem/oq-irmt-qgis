@@ -162,6 +162,7 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
             ProcessLayer(self.layer).pprint(usage='testing')
             sys.stderr.write("\n\n\nExpected layer (custom_operator.shp):\n")
             ProcessLayer(expected_layer).pprint(usage='testing')
+            raise
         # # # to rebuild the outputs
         # res_layer_name = 'custom_operator'
         # write_output(self.layer, self.data_dir_name, res_layer_name)
