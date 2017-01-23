@@ -24,7 +24,6 @@
 
 import unittest
 import os
-import sys
 from copy import deepcopy
 from qgis.core import QgsVectorLayer, QgsVectorFileWriter
 from PyQt4.QtCore import QPyNullVariant
@@ -144,8 +143,6 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
             'EDUEOCSAF plus one'
         proj_def['children'][1]['children'][0]['customFormula'] = \
             '"EDUEOCSAF" + 1'
-        # sys.stderr.write("\n\n\nInitial layer:\n")
-        # ProcessLayer(self.layer).pprint(usage='testing')
         node_attr_id, node_attr_name, discarded_feats = \
             calculate_education_node(proj_def, operator, self.layer)
         # check that the EDUCATION field was created, and that it contains
