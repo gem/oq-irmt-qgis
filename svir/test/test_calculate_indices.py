@@ -27,6 +27,7 @@ import os
 import sys
 from copy import deepcopy
 from qgis.core import QgsVectorLayer, QgsVectorFileWriter
+from PyQt4.QtCore import QPyNullVariant
 from utilities import get_qgis_app
 from svir.calculations.calculate_utils import (calculate_node,
                                                get_node_attr_id_and_name,
@@ -147,25 +148,14 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         # ProcessLayer(self.layer).pprint(usage='testing')
         node_attr_id, node_attr_name, discarded_feats = \
             calculate_education_node(proj_def, operator, self.layer)
-        # sys.stderr.write("\n\n\nCalculated EDUCATION as EDUEOCSAF+1:\n")
-        # ProcessLayer(self.layer).pprint(usage='testing')
-        expected_layer_path = os.path.join(
-            self.data_dir_name, 'custom_operator.shp')
-        expected_layer = QgsVectorLayer(
-            expected_layer_path, 'custom_operator', 'ogr')
-        res = ProcessLayer(self.layer).has_same_content_as(expected_layer)
-        try:
-            self.assertEqual(res, True)
-        except AssertionError:
-            sys.stderr.write("The resulting layer is different than expected")
-            sys.stderr.write("\n\n\nCalculated EDUCATION as EDUEOCSAF+1:\n")
-            ProcessLayer(self.layer).pprint(usage='testing')
-            sys.stderr.write("\n\n\nExpected layer (custom_operator.shp):\n")
-            ProcessLayer(expected_layer).pprint(usage='testing')
-            raise
-        # # # to rebuild the outputs
-        # res_layer_name = 'custom_operator'
-        # write_output(self.layer, self.data_dir_name, res_layer_name)
+        # check that the EDUCATION field was created, and that it contains
+        # EDUEOCSAF + 1 where not null, or null otherwise
+        for feature in self.layer.getFeatures():
+            if type(feature['EDUEOCSAF']) != type(QPyNullVariant(float)):
+                self.assertAlmostEqual(
+                    feature['EDUEOCSAF'] + 1, feature['EDUCATION'])
+            else:
+                self.assertIsNone(feature['EDUCATION'])
 
     def test_simple_sum(self):
         proj_def = deepcopy(self.project_definition)
