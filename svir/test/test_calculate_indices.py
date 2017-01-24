@@ -145,6 +145,11 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
             '"EDUEOCSAF" + 1'
         node_attr_id, node_attr_name, discarded_feats = \
             calculate_education_node(proj_def, operator, self.layer)
+        # NOTE: there was an unexpected rounding issue in the creation of the
+        #       reference shapefile, that made the test pass while running
+        #       in some machines and not in others. I am using the following
+        #       alternative approach instead, that does not require saving a
+        #       shapefile.
         # check that the EDUCATION field was created, and that it contains
         # EDUEOCSAF + 1 where not null, or null otherwise
         for feature in self.layer.getFeatures():
