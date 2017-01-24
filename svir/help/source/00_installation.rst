@@ -25,6 +25,17 @@ How to run tests on Ubuntu 16.04 LTS
 
 In order to run tests on Ubuntu 16.04 LTS and above, QGIS has to be installed
 as described above and the following additional packages are required:
-``python-nose``, ``python-coverage``, ``python-mock``
+``python-scipy``, ``python-nose``, ``python-coverage``, ``python-mock``
 
-Then, move to the ``svir`` directory and run the script ``./maketest.sh``
+If the environment is not already set, run the script ``run-env-linux.sh``,
+providing the required argument (in most cases, specifying the directory `/usr`)
+
+.. code-block:: bash
+
+    $ source scripts/run-env-linux.sh /usr
+
+Then, move to the ``svir`` directory and run
+
+.. code-block:: bash
+
+    $ make test
