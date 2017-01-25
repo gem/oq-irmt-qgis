@@ -4,7 +4,7 @@
 set -x
 
 SOURCE="${BASH_SOURCE[0]}"
-THISDIR="$( cd -P "$( dirname "$SOURCE" )/.." && pwd )"
+REPODIR="$( cd -P "$( dirname "$SOURCE" )/.." && pwd )"
 
 if [ -z $UBUNTU_VERSION ]; then
     UBUNTU_VERSION="xenial"
@@ -23,7 +23,7 @@ sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key 073D307A618E5811
 sudo apt update
 sudo apt install -y qgis python-mock python-nose python-coverage python-scipy
 
-source $THISDIR/run-env-linux.sh /usr
+source $REPODIR/scripts/run-env-linux.sh /usr
 
-cd $THISDIR/../svir
+cd $REPODIR/svir
 make test
