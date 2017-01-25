@@ -1,7 +1,9 @@
 #!/bin/bash
 
 #display each command before executing it
-set -x
+#if [ -n $GEM_SET_DEBUG ]; then
+    set -x
+#fi
 
 SOURCE="${BASH_SOURCE[0]}"
 REPODIR="$( cd -P "$( dirname "$SOURCE" )/.." && pwd )"
