@@ -152,6 +152,8 @@ class StochasticTestCase(unittest.TestCase):
             self.regenerate_expected_values, n_simulations=200)
 
     def test_community_disaggregate(self):
+        # FIXME this should break the test on purpose
+        self.assertTrue(False)
         approach = 'Disaggregate'
         # using only 1 asset
         dmg_by_asset_features = list(self.dmg_by_asset_layer.getFeatures())
