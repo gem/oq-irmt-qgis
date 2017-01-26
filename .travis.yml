@@ -1,0 +1,23 @@
+dist: trusty
+sudo: true
+
+language: python
+
+python:
+ - "2.7"
+
+before_install:
+    - echo "deb http://qgis.org/debian trusty main" | sudo tee -a /etc/apt/sources.list
+    - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key 073D307A618E5811
+    - sudo apt-update -q
+
+install:
+    - sudo apt-get install -y qgis python-mock python-nose python-scipy
+
+before_script:
+    - "/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -ac -screen 0 1280x1024x16"
+    - "export DISPLAY=:99.0"
+
+script:
+    - . scripts/run-env-linux.sh /usr
+    - cd ./svir && make test
