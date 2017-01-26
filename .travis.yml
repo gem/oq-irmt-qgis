@@ -9,7 +9,7 @@ python:
 before_install:
     - echo "deb http://qgis.org/debian trusty main" | sudo tee -a /etc/apt/sources.list
     - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key 073D307A618E5811
-    - sudo apt-update -q
+    - sudo apt-get update -q
 
 install:
     - sudo apt-get install -y qgis python-mock python-nose python-scipy
