@@ -377,27 +377,68 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         for feature in self.active_layer.getFeatures(
                 QgsFeatureRequest().setFilterFids(selected)):
             if self.output_type == 'hcurves':
-                data_dic = json.loads(feature[self.current_imt])
-                self.current_abscissa = data_dic['imls']
+                err_msg = ("The selected layer does not contain hazard"
+                           "curves in the expected format.")
+                try:
+                    data_str = feature[self.current_imt]
+                except KeyError:
+                    log_msg(err_msg, level='C',
+                            message_bar=self.iface.messageBar())
+                    self.output_type_cbx.setCurrentIndex(-1)
+                    return
+                data_dic = json.loads(data_str)
+                try:
+                    self.current_abscissa = data_dic['imls']
+                except KeyError:
+                    log_msg(err_msg, level='C',
+                            message_bar=self.iface.messageBar())
+                    self.output_type_cbx.setCurrentIndex(-1)
+                    return
                 # for a single intensity measure type, the imls are always
                 # the same, so we can break the loop after the first feature
                 break
             elif self.output_type == 'loss_curves':
-                data_dic = json.loads(feature[self.current_loss_type])
-                self.current_abscissa = data_dic['losses']
+                err_msg = ("The selected layer does not contain loss"
+                           "curves in the expected format.")
+                try:
+                    data_str = feature[self.current_loss_type]
+                except KeyError:
+                    log_msg(err_msg, level='C',
+                            message_bar=self.iface.messageBar())
+                    self.output_type_cbx.setCurrentIndex(-1)
+                    return
+                data_dic = json.loads(data_str)
+                try:
+                    self.current_abscissa = data_dic['losses']
+                except KeyError:
+                    log_msg(err_msg, level='C',
+                            message_bar=self.iface.messageBar())
+                    self.output_type_cbx.setCurrentIndex(-1)
+                    return
                 # for a single loss type, the losses are always
                 # the same, so we can break the loop after the first feature
                 break
             elif self.output_type == 'uhs':
+                err_msg = ("The selected layer does not contain uniform"
+                           "hazard spectra in the expected format.")
                 field_names = [field.name() for field in feature.fields()]
                 # reading from something like
                 # [u'PGA', u'SA(0.025)', u'SA(0.05)', ...]
                 periods = [0.0]  # Use 0.0 for PGA
                 # get the number between parenthesis
-                periods.extend([float(name[name.find("(") + 1: name.find(")")])
-                               for name in field_names[1:]])
+                try:
+                    periods.extend(
+                        [float(name[name.find("(") + 1: name.find(")")])
+                         for name in field_names[1:]])
+                except ValueError:
+                    log_msg(err_msg, level='C',
+                            message_bar=self.iface.messageBar())
+                    self.output_type_cbx.setCurrentIndex(-1)
+                    return
                 self.current_abscissa = periods
                 break
+            else:
+                raise NotImplementedError(self.output_type)
 
         for i, feature in enumerate(self.active_layer.getFeatures(
                 QgsFeatureRequest().setFilterFids(selected))):
