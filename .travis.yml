@@ -7,7 +7,7 @@ python:
  - "2.7"
 
 before_install:
-    - echo "deb http://qgis.org/debian trusty main" | sudo tee -a /etc/apt/sources.list
+    - echo "deb http://qgis.org/debian-ltr trusty main" | sudo tee -a /etc/apt/sources.list
     - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key 073D307A618E5811
     - sudo apt-get update -q
 
