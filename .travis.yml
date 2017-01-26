@@ -12,7 +12,7 @@ before_install:
     - sudo apt-get update -q
 
 install:
-    - sudo apt-get install -y qgis python-mock python-nose python-scipy
+    - sudo apt-get install -y xvfb qgis python-mock python-nose python-scipy
 
 before_script:
     - "/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -ac -screen 0 1280x1024x16"
