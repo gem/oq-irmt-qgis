@@ -27,7 +27,8 @@ changelog=
     * Losses from oq-engine are read from the single-file csv format
     * Improved manual with additional examples, instructions about installation and testing
     * Custom operators use an api that works both for QGIS 2.14ltr and 2.18
-    * Tests can run on CI
+    * Continuous Integration on Jenkins and Travis
+    * The plugin provides a clear error message in case a wrong output type is selected in the Data Viewer
     1.8.16
     * Additional reference to the CSSC project and to relevant scientific literature about recovery modeling
     * Improvements to the user manual, about OpenQuake outputs visualization
