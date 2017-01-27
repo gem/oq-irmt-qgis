@@ -24,8 +24,6 @@
 
 # create the dialog for zoom to point
 import os.path
-import csv
-import tempfile
 from qgis.core import (QgsVectorLayer,
                        QGis,
                        QgsRasterLayer,
@@ -34,7 +32,7 @@ from qgis.core import (QgsVectorLayer,
                        QgsMapLayer,
                        )
 
-from PyQt4.QtCore import pyqtSlot, QDir, QUrl
+from PyQt4.QtCore import pyqtSlot, QDir, QUrl, QSettings, QFileInfo
 
 from PyQt4.QtGui import (QFileDialog,
                          QDialog,
@@ -93,15 +91,21 @@ class SelectInputLayersDialog(QDialog, FORM_CLASS):
                               'All files (*.*)')
         else:
             raise RuntimeError('Invalid dialog_type: {}'.format(dialog_type))
+        default_dir = QSettings().value('irmt/select_layer_dir',
+                                        QDir.homePath())
         file_name, file_type = QFileDialog.getOpenFileNameAndFilter(
-            self, text, QDir.homePath(), filters)
+            self, text, default_dir, filters)
         if dialog_type == 'zonal_layer':
             if not file_name:
                 return None
+            selected_dir = QFileInfo(file_name).dir().path()
+            QSettings().setValue('irmt/select_layer_dir', selected_dir)
             layer = self.load_zonal_layer(file_name)
         elif dialog_type == 'loss_layer':
             if not file_name:
                 return None
+            selected_dir = QFileInfo(file_name).dir().path()
+            QSettings().setValue('irmt/select_layer_dir', selected_dir)
             if file_type == 'Raster loss curves (*.*)':
                 self.loss_layer_is_vector = False
             if file_type == 'Loss curves from the OpenQuake-engine (*.csv)':
