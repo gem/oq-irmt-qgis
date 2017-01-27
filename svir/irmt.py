@@ -400,13 +400,13 @@ class Irmt:
         if self.drive_oq_engine_server_dlg is None:
             self.drive_oq_engine_server_dlg = DriveOqEngineServerDialog(
                 self.iface)
-        # else:
-        #     # if the dialog was new, we don't need to login twice
-        #     self.drive_oq_engine_server_dlg.login()
         self.drive_oq_engine_server_dlg.show()
         self.drive_oq_engine_server_dlg.raise_()
-        # self.drive_oq_engine_server_dlg.refresh_calc_list()
-        self.drive_oq_engine_server_dlg.start_polling()
+        if self.drive_oq_engine_server_dlg.is_logged_in:
+            self.drive_oq_engine_server_dlg.start_polling()
+        else:
+            self.drive_oq_engine_server_dlg.reject()
+            self.drive_oq_engine_server_dlg = None
 
     def reset_engine_login(self):
         if self.drive_oq_engine_server_dlg is not None:
