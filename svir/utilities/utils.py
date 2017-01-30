@@ -482,49 +482,6 @@ def update_platform_project(host,
     return resp
 
 
-def upload_shp(host, session, file_stem, username):
-    # FIXME: It looks like this function is never called
-    """
-    Upload a shapefile to the OpenQuake Platform
-
-    :param host: url of the OpenQuake Platform server
-    :param session: authenticated session to be used
-    :param file_stem: the name of the shapefile (without the extension)
-    :param username: the name of the user attempting to perform the action
-
-    :returns: a tuple containing the server's response and a boolean indicating
-              if the uploading was successful
-    """
-    files = {'layer_title': file_stem,
-             'base_file': ('%s.shp' % file_stem,
-                           open('%s.shp' % file_stem, 'rb')),
-             'dbf_file': ('%s.dbf' % file_stem,
-                          open('%s.dbf' % file_stem, 'rb')),
-             'shx_file': ('%s.shx' % file_stem,
-                          open('%s.shx' % file_stem, 'rb')),
-             'prj_file': ('%s.prj' % file_stem,
-                          open('%s.prj' % file_stem, 'rb')),
-             'xml_file': ('%s.xml' % file_stem,
-                          open('%s.xml' % file_stem, 'r')),
-             }
-    permissions = ('{"authenticated":"_none",'
-                   '"anonymous":"_none",'
-                   '"users":[["%s","layer_readwrite"],["%s","layer_admin"]]'
-                   '}') % (username, username)
-    payload = {'charset': ['UTF-8'],
-               'permissions': [permissions]}
-
-    r = session.post(host + '/layers/upload', data=payload, files=files)
-    response = json.loads(r.text)
-    try:
-        return host + response['url'], True
-    except KeyError:
-        if 'errors' in response:
-            return response['errors'], False
-        else:
-            return "The server did not provide error messages", False
-
-
 def ask_for_destination_full_path_name(
         parent, text='Save File', filter='Shapefiles (*.shp)'):
     """
