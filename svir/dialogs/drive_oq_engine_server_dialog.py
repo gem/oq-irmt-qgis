@@ -124,7 +124,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     def is_lockdown(self):
         # try retrieving the list of calculations and see if the server
         # redirects you to the login page
-        # TODO: call something that is quicker than this
+        # NOTE: we might call something quicker than this, if available 
         calc_list_url = "%s/v1/calc/list?relevant=true" % self.hostname
         with WaitCursorManager():
             try:
