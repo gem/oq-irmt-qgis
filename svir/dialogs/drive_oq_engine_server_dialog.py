@@ -256,6 +256,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 'List of outputs for calculation %s' % calc_id)
             self.clear_output_list()
             self.show_output_list(output_list)
+            self.download_datastore_btn.setEnabled(True)
+            self.download_datastore_btn.setText(
+                'Download HDF5 datastore for calculation %s'
+                % self.current_output_calc_id)
         elif action == 'Run Risk':
             self.run_calc(calc_id)
         else:
@@ -355,6 +359,31 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         else:
             log_msg(resp.text, level='C', message_bar=self.iface.messageBar())
 
+    @pyqtSlot()
+    def on_download_datastore_btn_clicked(self):
+        dest_folder = ask_for_download_destination_folder(self)
+        if not dest_folder:
+            return
+        datastore_url = "%s/v1/calc/%s/datastore" % (
+            self.hostname, self.current_output_calc_id)
+        with WaitCursorManager('Getting HDF5 datastore...', self.iface):
+            try:
+                # FIXME: enable the user to set verify=True
+                resp = self.session.get(datastore_url, timeout=10,
+                                        verify=False)
+            except (ConnectionError, InvalidSchema, MissingSchema,
+                    ReadTimeout, SvNetworkError) as exc:
+                log_msg(str(exc.message), level='C',
+                        message_bar=self.iface.messageBar())
+                self.reject()
+                return
+            filename = resp.headers['content-disposition'].split(
+                'filename=')[1]
+            filepath = os.path.join(dest_folder, os.path.basename(filename))
+            open(filepath, "wb").write(resp.content)
+            log_msg('The datastore has been saved as %s' % filepath,
+                    level='I', message_bar=self.iface.messageBar())
+
     def get_output_list(self, calc_id):
         output_list_url = "%s/v1/calc/%s/results" % (self.hostname, calc_id)
         with WaitCursorManager('Getting list of outputs...', self.iface):
@@ -378,6 +407,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     def show_output_list(self, output_list):
         if not output_list:
             self.clear_output_list()
+            self.download_datastore_btn.setEnabled(False)
+            self.download_datastore_btn.setText('Download HDF5 datastore')
             return
         exclude = ['url', 'outtypes']
         selected_keys = [key for key in sorted(output_list[0].keys())
