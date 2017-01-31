@@ -229,4 +229,7 @@ class PlotFromNpzDialog(QDialog, FORM_CLASS):
         self.npz_file.close()
         super(PlotFromNpzDialog, self).accept()
 
-    # FIXME: also cancel should close the npz file
+    def reject(self):
+        if self.npz_file is not None:
+            self.npz_file.close()
+        super(PlotFromNpzDialog, self).reject()

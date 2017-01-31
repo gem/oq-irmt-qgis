@@ -643,7 +643,7 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
                         if self.output_type == 'loss_curves':
                             self.style_curves()
                         elif self.output_type == 'loss_maps':
-                            self.style_maps()  # FIXME rename called function
+                            self.style_maps()
             elif self.output_type == 'uhs':
                 for poe in self.poes:
                     with WaitCursorManager(
