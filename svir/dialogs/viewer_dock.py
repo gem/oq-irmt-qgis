@@ -266,9 +266,9 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             return
         i = 0
         for site, curve in self.current_selection.iteritems():
-            # FIXME: we associated the same cumulative curve to all the
+            # NOTE: we associated the same cumulative curve to all the
             # selected points (ugly), and here we need to get only one
-            if self.output_type == 'recovery_curves' and i > 1:
+            if self.output_type == 'recovery_curves' and i > 0:
                 break
             feature = next(self.active_layer.getFeatures(
                 QgsFeatureRequest().setFilterFid(site)))
@@ -504,11 +504,11 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         color = QColor('black')
         color_hex = color.name()
         line_style = "-"  # solid
-        # FIXME: only for the sake of consistency with other approaches, we are
-        # associating all features with the same curve, instead of picking one
-        # single feature and a single curve. This is inefficient.
-        for feature in features:
-            self.current_selection[feature.id()] = {
+        # NOTE: differently with respect to the other approaches, we are
+        # associating only a single feature with the cumulative recovery curve.
+        # It might be a little ugly, but otherwise it would be inefficient.
+        if len(features) > 0:
+            self.current_selection[features[0].id()] = {
                 'abscissa': self.current_abscissa,
                 'ordinates': recovery_function,
                 'color': color_hex,
@@ -661,7 +661,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 csv_file.write(line + os.linesep)
 
                 if self.output_type == 'recovery_curves':
-                    # FIXME: taking the first element, because they are all the
+                    # NOTE: taking the first element, because they are all the
                     # same
                     curve = self.current_selection.values()[0]
                     csv_file.write(str(curve['ordinates']))
