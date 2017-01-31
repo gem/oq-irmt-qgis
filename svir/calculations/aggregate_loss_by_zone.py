@@ -253,7 +253,7 @@ def _add_zone_id_to_points_internal(iface, loss_layer, zonal_layer,
     zone_id_attr_idx = loss_layer_plus_zones.fieldNameIndex(
             zone_id_in_losses_attr_name)
     # to show the overall progress, cycling through points
-    tot_points = len(list(loss_layer_plus_zones.getFeatures()))
+    tot_points = loss_layer_plus_zones.featureCount()
     msg = tr(
             "Step 2 of 3: creating spatial index for loss points...")
     msg_bar_item, progress = create_progress_message_bar(
@@ -272,7 +272,7 @@ def _add_zone_id_to_points_internal(iface, loss_layer, zonal_layer,
                              tr("Label each point with the zone id"),
                              DEBUG):
         # to show the overall progress, cycling through zones
-        tot_zones = len(list(zonal_layer.getFeatures()))
+        tot_zones = zonal_layer.featureCount()
         msg = tr("Step 3 of 3: labeling points by zone id...")
         msg_bar_item, progress = create_progress_message_bar(
                 iface.messageBar(), msg)
@@ -396,7 +396,7 @@ def calculate_vector_stats_aggregating_by_zone_id(
     Once we know the zone id of each point in the loss map, we
     can count how many points are in each zone, sum and average their values
     """
-    tot_points = len(list(loss_layer.getFeatures()))
+    tot_points = loss_layer.featureCount()
     msg = tr("Step 2 of 3: aggregating losses by zone id...")
     msg_bar_item, progress = create_progress_message_bar(
             iface.messageBar(), msg)
@@ -430,8 +430,7 @@ def calculate_vector_stats_aggregating_by_zone_id(
             "Step 3 of 3: writing point counts, loss sums and averages into "
             "the zonal layer...")
     with TraceTimeManager(msg, DEBUG):
-        # FIXME: use zonal_layer.featureCount() here and in every other cases
-        tot_zones = len(list(zonal_layer.getFeatures()))
+        tot_zones = zonal_layer.featureCount()
         msg_bar_item, progress = create_progress_message_bar(
                 iface.messageBar(), msg)
         with LayerEditingManager(zonal_layer,
@@ -546,7 +545,7 @@ def purge_zones_without_loss_points(
     """
     Delete from the zonal layer the zones that contain no loss points
     """
-    tot_zones = len(list(zonal_layer.getFeatures()))
+    tot_zones = zonal_layer.featureCount()
     msg = tr("Purging zones containing no loss points...")
     msg_bar_item, progress = create_progress_message_bar(
             iface.messageBar(), msg)
