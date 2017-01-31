@@ -261,7 +261,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             marker = '.'
         self.plot.clear()
         gids = self.current_selection.keys()
-        count_selected = len(gids)
+        count_selected = len(self.iface.activeLayer().selectedFeatures())
         if count_selected == 0:
             return
         i = 0
