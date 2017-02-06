@@ -149,6 +149,11 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
             calculate_education_node(proj_def, operator, self.layer)
         # sys.stderr.write("\n\n\nCalculated EDUCATION as EDUEOCSAF+1:\n")
         # ProcessLayer(self.layer).pprint(usage='testing')
+
+        # # to rebuild the outputs
+        # res_layer_name = 'custom_operator'
+        # write_output(self.layer, self.data_dir_name, res_layer_name)
+
         expected_layer_path = os.path.join(
             self.data_dir_name, 'custom_operator.shp')
         expected_layer = QgsVectorLayer(
@@ -163,9 +168,6 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
             sys.stderr.write("\n\n\nExpected layer (custom_operator.shp):\n")
             ProcessLayer(expected_layer).pprint(usage='testing')
             raise
-        # # # to rebuild the outputs
-        # res_layer_name = 'custom_operator'
-        # write_output(self.layer, self.data_dir_name, res_layer_name)
 
     def test_simple_sum(self):
         proj_def = deepcopy(self.project_definition)
