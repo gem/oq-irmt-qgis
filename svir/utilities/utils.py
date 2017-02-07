@@ -333,8 +333,7 @@ def reload_attrib_cbx(
     # reset combo box
     combo.clear()
     # populate combo box with field names taken by layers
-    dp = layer.dataProvider()
-    fields = list(dp.fields())
+    fields = list(layer.fields())
 
     if prepend_empty_item:
         combo.addItem(None)

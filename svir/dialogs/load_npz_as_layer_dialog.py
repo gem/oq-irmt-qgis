@@ -456,7 +456,6 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
                 field_name_idx = field_names.index(field_name)
                 field_names.remove(field_name)
                 field_names.insert(field_name_idx, added_field_name)
-        pr = self.layer.dataProvider()
         with LayerEditingManager(self.layer, 'Reading npz', DEBUG):
             feats = []
             if self.output_type == 'hcurves':
@@ -565,7 +564,7 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
                     feat.setGeometry(QgsGeometry.fromPoint(
                         QgsPoint(row['lon'], row['lat'])))
                     feats.append(feat)
-            (res, outFeats) = pr.addFeatures(feats)
+            (res, outFeats) = self.layer.addFeatures(feats)
         # add self.layer to the legend
         QgsMapLayerRegistry.instance().addMapLayer(self.layer, False)
         rlz_group.addLayer(self.layer)

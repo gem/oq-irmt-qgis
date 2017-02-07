@@ -211,6 +211,6 @@ class LoadCsvAsLayerDialog(QDialog, FORM_CLASS):
         for idx, name in enumerate(self.csv_header):
             if damage_state in name and loss_type in name and 'mean' in name:
                 field_idx = idx
-        field_name = layer.dataProvider().fields()[field_idx].name()
+        field_name = layer.fields()[field_idx].name()
         self.style_layer(layer, field_name)
         super(LoadCsvAsLayerDialog, self).accept()

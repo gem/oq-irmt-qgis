@@ -238,7 +238,7 @@ def _add_zone_id_to_points_internal(iface, loss_layer, zonal_layer,
                 add_to_registry=add_to_registry)
     # add to it the new attribute that will contain the zone id
     # and to do that we need to know the type of the zone id field
-    zonal_layer_fields = zonal_layer.dataProvider().fields()
+    zonal_layer_fields = zonal_layer.fields()
     zone_id_field_variant, zone_id_field_type_name = [
         (field.type(), field.typeName()) for field in zonal_layer_fields
         if field.name() == zone_id_in_zones_attr_name][0]

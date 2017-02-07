@@ -62,7 +62,7 @@ class AttributeSelectionDialog(QDialog, FORM_CLASS):
         # Load in the comboboxes only the names of the attributes compatible
         # with the following analyses: only numeric for losses and only
         # string for zone ids
-        for field in loss_layer.dataProvider().fields():
+        for field in loss_layer.fields():
             # for the zone id accept both numeric or textual fields
             self.zone_id_attr_name_loss_cbox.addItem(field.name())
             # Accept only numeric fields to contain loss data
@@ -72,7 +72,7 @@ class AttributeSelectionDialog(QDialog, FORM_CLASS):
 
         self.zone_id_attr_name_loss_cbox.setCurrentIndex(0)
 
-        for field in zonal_layer.dataProvider().fields():
+        for field in zonal_layer.fields():
             # for the zone id accept both numeric or textual fields
             self.zone_id_attr_name_zone_cbox.addItem(field.name())
             # by default, set the selection to the first textual field
