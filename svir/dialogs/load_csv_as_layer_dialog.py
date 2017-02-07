@@ -39,7 +39,7 @@ from PyQt4.QtGui import (QDialogButtonBox,
                          QFileDialog,
                          QColor,
                          )
-from svir.utilities.utils import get_ui_class, log_msg
+from svir.utilities.utils import get_ui_class, log_msg, save_layer_as_shapefile
 
 FORM_CLASS = get_ui_class('ui_load_csv_as_layer.ui')
 
@@ -138,9 +138,7 @@ class LoadCsvAsLayerDialog(QDialog, FORM_CLASS):
                 dest_filename += ".shp"
         else:
             return
-        result = QgsVectorFileWriter.writeAsVectorFormat(
-            csv_layer, dest_filename, 'CP1250',
-            None, 'ESRI Shapefile')
+        result = save_layer_as_shapefile(csv_layer, dest_filename)
         if result != QgsVectorFileWriter.NoError:
             raise RuntimeError('Could not save shapefile')
         shp_layer = QgsVectorLayer(
