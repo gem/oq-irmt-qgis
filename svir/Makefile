@@ -66,7 +66,6 @@ test: compile transcompile
 	@export PYTHONPATH=`pwd`:$(PYTHONPATH); \
 		export QGIS_DEBUG=0; \
 		export QGIS_LOG_FILE=/dev/null; \
-		export LC_NUMERIC='C'; \
 		nosetests -s -v --with-xunit --with-id test\
 		3>&1 1>&2 2>&3 3>&-
 	@echo "----------------------"

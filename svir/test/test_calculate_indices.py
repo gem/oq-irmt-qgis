@@ -33,7 +33,10 @@ from svir.calculations.calculate_utils import (calculate_node,
                                                calculate_composite_variable,
                                                )
 from svir.calculations.process_layer import ProcessLayer
-from svir.utilities.utils import set_operator, get_node
+from svir.utilities.utils import (set_operator,
+                                  get_node,
+                                  save_layer_as_shapefile,
+                                  )
 from svir.utilities.shared import OPERATORS_DICT, DiscardedFeature
 QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 
@@ -345,8 +348,7 @@ def calculate_education_node(proj_def, operator, layer):
 
 def write_output(res_layer, data_dir_name, res_layer_name):
     res_layer_path = os.path.join(data_dir_name, res_layer_name + '.shp')
-    write_success = QgsVectorFileWriter.writeAsVectorFormat(
-        res_layer, res_layer_path, 'utf-8', res_layer.crs(), 'ESRI Shapefile')
+    write_success = save_layer_as_shapefile(res_layer, res_layer_path)
     if write_success != QgsVectorFileWriter.NoError:
         raise RuntimeError('Could not save shapefile')
 

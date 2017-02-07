@@ -50,6 +50,7 @@ from svir.utilities.utils import (tr,
                                   count_heading_commented_lines,
                                   get_ui_class,
                                   log_msg,
+                                  save_layer_as_shapefile,
                                   )
 
 FORM_CLASS = get_ui_class('ui_select_input_layers.ui')
@@ -265,9 +266,7 @@ class SelectInputLayersDialog(QDialog, FORM_CLASS):
                 dest_filename += ".shp"
         else:
             return
-        result = QgsVectorFileWriter.writeAsVectorFormat(
-            csv_layer, dest_filename, 'CP1250',
-            None, 'ESRI Shapefile')
+        result = save_layer_as_shapefile(csv_layer, dest_filename)
         if result != QgsVectorFileWriter.NoError:
             raise RuntimeError('Could not save shapefile')
         shp_layer = QgsVectorLayer(
