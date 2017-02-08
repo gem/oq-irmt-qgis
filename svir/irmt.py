@@ -686,7 +686,7 @@ class Irmt:
             line = re.sub('\),\s\(', '),(', line.rstrip())
             # thanks to inplace=True, 'print line' writes the line into the
             # input file, overwriting the original line
-            print line
+            print(line)
 
         # count top lines in the csv starting with '#'
         lines_to_skip_count = count_heading_commented_lines(fname)
