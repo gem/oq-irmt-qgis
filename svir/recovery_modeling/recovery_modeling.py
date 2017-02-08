@@ -160,16 +160,15 @@ class RecoveryModeling(object):
         # FIXME self.svi_field_name is temporarily ignored
         # svi_value = svi_by_zone[zone_id] if integrate_svi else None
 
-        # FIXME If we don't read files again for each zone, time increases
-        # across zones. This is not optimal, but configuration files are
-        # very small, so reading them is almost instantaneous.
+        # NOTE: If we don't read times again for each zone, time increases
+        # across zones. This is not optimal, but almost instantaneous.
         inspectionTimes = self.get_times('inspection_times')
         assessmentTimes = self.get_times('assessment_times')
         mobilizationTimes = self.get_times('mobilization_times')
         repairTimes = self.get_times('repair_times')
         recoveryTimes = self.get_times('recovery_times')
 
-        # FIXME - when aggregating by zone we are constantly increasing
+        # NOTE: when aggregating by zone we are constantly increasing
         # the times with this approach
         (timeList, inspectionTimes,
             assessmentTimes, mobilizationTimes) = self.calculate_times(

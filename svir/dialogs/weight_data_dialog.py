@@ -135,7 +135,7 @@ class WeightDataDialog(QDialog, FORM_CLASS):
     def update_active_layer_numeric_fields(self):
         self.active_layer_numeric_fields = [
             field.name()
-            for field in self.iface.activeLayer().dataProvider().fields()
+            for field in self.iface.activeLayer().fields()
             if field.typeName() in NUMERIC_FIELD_TYPES]
 
     def populate_style_by_field_cbx(self):

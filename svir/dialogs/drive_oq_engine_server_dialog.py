@@ -83,21 +83,27 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.current_output_calc_id = None
         self.is_logged_in = False
         self.timer = None
-        self.login()
-        if self.is_logged_in:
-            self.refresh_calc_list()
         # Keep retrieving the list of calculations (especially important to
         # update the status of the calculation)
         # NOTE: start_polling() is called from outside, in order to reset
         #       the timer whenever the button to open the dialog is pressed
         self.finished.connect(self.stop_polling)
+        try:
+            self.login()
+        except (ConnectionError, InvalidSchema, MissingSchema, ReadTimeout,
+                SvNetworkError):
+            self.is_logged_in = False
+        else:
+            self.refresh_calc_list()
 
     def login(self):
         self.session = Session()
         self.hostname, username, password = get_engine_credentials(self.iface)
         # try without authentication (if authentication is disabled server
         # side)
-        if not self.is_lockdown():
+        # NOTE: is_lockdown() can raise exceptions, to be catched from outside
+        is_lockdown = self.is_lockdown()
+        if not is_lockdown:
             self.is_logged_in = True
             return
         if username and password:
@@ -105,7 +111,6 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 try:
                     engine_login(self.hostname, username,
                                  password, self.session)
-                    self.is_logged_in = True
                 except (ConnectionError, InvalidSchema, MissingSchema,
                         ReadTimeout, SvNetworkError) as e:
                     err_msg = str(e)
@@ -114,17 +119,20 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                             ' (you could try prepending http:// or https://)'
                     log_msg(err_msg, level='C',
                             message_bar=self.iface.messageBar())
+                    self.is_logged_in = False
+                    raise
+                else:
+                    self.is_logged_in = True
         if not self.is_logged_in:
             msg = ("Please check OpenQuake Engine connection settings and"
                    " credentials")
             log_msg(msg, level='C', message_bar=self.iface.messageBar())
-            self.reject()
-            return
+            raise ConnectionError(msg)
 
     def is_lockdown(self):
         # try retrieving the list of calculations and see if the server
         # redirects you to the login page
-        # TODO: call something that is quicker than this
+        # NOTE: we might call something quicker than this, if available 
         calc_list_url = "%s/v1/calc/list?relevant=true" % self.hostname
         with WaitCursorManager():
             try:
@@ -135,11 +143,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     ReadTimeout, SvNetworkError) as exc:
                 log_msg(str(exc), level='C',
                         message_bar=self.iface.messageBar())
-                self.reject()
-                return
+                raise
             # handle case of redirection to the login page
             if resp.url != calc_list_url and 'login' in resp.url:
                 return True
+        return False
 
     def refresh_calc_list(self):
         # returns True if the list is correctly retrieved
@@ -153,6 +161,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     ReadTimeout, SvNetworkError) as exc:
                 log_msg(str(exc), level='C',
                         message_bar=self.iface.messageBar())
+                self.is_logged_in = False
                 self.reject()
                 return
             # handle case of redirection to the login page
@@ -161,6 +170,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                        " credentials")
                 log_msg(msg, level='C',
                         message_bar=self.iface.messageBar())
+                self.is_logged_in = False
                 self.reject()
                 return
             calc_list = json.loads(resp.text)
@@ -256,6 +266,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 'List of outputs for calculation %s' % calc_id)
             self.clear_output_list()
             self.show_output_list(output_list)
+            self.download_datastore_btn.setEnabled(True)
+            self.download_datastore_btn.setText(
+                'Download HDF5 datastore for calculation %s'
+                % self.current_output_calc_id)
         elif action == 'Run Risk':
             self.run_calc(calc_id)
         else:
@@ -355,6 +369,31 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         else:
             log_msg(resp.text, level='C', message_bar=self.iface.messageBar())
 
+    @pyqtSlot()
+    def on_download_datastore_btn_clicked(self):
+        dest_folder = ask_for_download_destination_folder(self)
+        if not dest_folder:
+            return
+        datastore_url = "%s/v1/calc/%s/datastore" % (
+            self.hostname, self.current_output_calc_id)
+        with WaitCursorManager('Getting HDF5 datastore...', self.iface):
+            try:
+                # FIXME: enable the user to set verify=True
+                resp = self.session.get(datastore_url, timeout=10,
+                                        verify=False)
+            except (ConnectionError, InvalidSchema, MissingSchema,
+                    ReadTimeout, SvNetworkError) as exc:
+                log_msg(str(exc.message), level='C',
+                        message_bar=self.iface.messageBar())
+                self.reject()
+                return
+            filename = resp.headers['content-disposition'].split(
+                'filename=')[1]
+            filepath = os.path.join(dest_folder, os.path.basename(filename))
+            open(filepath, "wb").write(resp.content)
+            log_msg('The datastore has been saved as %s' % filepath,
+                    level='I', message_bar=self.iface.messageBar())
+
     def get_output_list(self, calc_id):
         output_list_url = "%s/v1/calc/%s/results" % (self.hostname, calc_id)
         with WaitCursorManager('Getting list of outputs...', self.iface):
@@ -378,6 +417,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     def show_output_list(self, output_list):
         if not output_list:
             self.clear_output_list()
+            self.download_datastore_btn.setEnabled(False)
+            self.download_datastore_btn.setText('Download HDF5 datastore')
             return
         exclude = ['url', 'outtypes']
         selected_keys = [key for key in sorted(output_list[0].keys())
@@ -464,9 +505,6 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 dlg = LoadNpzAsLayerDialog(self.iface, output_type, filepath)
                 dlg.exec_()
             elif outtype == 'geojson':
-                # FIXME: hazard maps do not produce an npz. Currently, it is
-                #        possible to read from geojson, but it doesn't work
-                #        pressing "load as shapefile" for the hmap
                 filepath = self.download_output(
                     output_id, outtype, dest_folder)
                 dlg = LoadGeoJsonAsLayerDialog(self.iface, filepath)
@@ -535,5 +573,4 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
     def reject(self):
         self.stop_polling()
-        self.is_logged_in = False
         super(DriveOqEngineServerDialog, self).reject()

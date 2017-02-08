@@ -143,5 +143,5 @@ class UploadWorker(AbstractWorker):
             self.set_message.emit(
                 self.upload_size_msg + ' ' + tr('(processing on Platform)'))
         if DEBUG:
-            print "PROGRESS: {0} ({1}) - {2:d}/{3:d} - {4:.2f}%".format(
+            print("PROGRESS: {0} ({1}) - {2:d}/{3:d} - {4:.2f}%").format(
                 param.name, param.filename, current, total, progress)

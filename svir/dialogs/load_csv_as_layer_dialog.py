@@ -213,10 +213,6 @@ class LoadCsvAsLayerDialog(QDialog, FORM_CLASS):
         for idx, name in enumerate(self.csv_header):
             if damage_state in name and loss_type in name and 'mean' in name:
                 field_idx = idx
-        # FIXME: remove prints
-        print self.csv_header
-        print [field.name() for field in layer.dataProvider().fields()]
-        print 'field_idx = %s' % field_idx
-        field_name = layer.dataProvider().fields()[field_idx].name()
+        field_name = layer.fields()[field_idx].name()
         self.style_layer(layer, field_name)
         super(LoadCsvAsLayerDialog, self).accept()
