@@ -27,7 +27,15 @@ import json
 import tempfile
 import zipfile
 
-from PyQt4.QtCore import QDir, Qt, QObject, SIGNAL, QTimer, pyqtSlot
+from PyQt4.QtCore import (QDir,
+                          Qt,
+                          QObject,
+                          SIGNAL,
+                          QTimer,
+                          pyqtSlot,
+                          QFileInfo,
+                          QSettings,
+                          )
 
 from PyQt4.QtGui import (QDialog,
                          QTableWidgetItem,
@@ -312,10 +320,14 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         """
         text = self.tr('Select the files needed to run the calculation,'
                        ' or the zip archive containing those files.')
-        file_names = QFileDialog.getOpenFileNames(self, text, QDir.homePath())
+        default_dir = QSettings().value('irmt/run_oqengine_calc_dir',
+                                        QDir.homePath())
+        file_names = QFileDialog.getOpenFileNames(self, text, default_dir)
         if not file_names:
             return
-        elif len(file_names) == 1:
+        selected_dir = QFileInfo(file_names[0]).dir().path()
+        QSettings().setValue('irmt/run_oqengine_calc_dir', selected_dir)
+        if len(file_names) == 1:
             file_full_path = file_names[0]
             _, file_ext = os.path.splitext(file_full_path)
             if file_ext == '.zip':

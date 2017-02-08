@@ -91,6 +91,7 @@ from svir.utilities.utils import (tr,
                                   read_layer_suppl_info_from_qgs,
                                   write_layer_suppl_info_to_qgs,
                                   log_msg,
+                                  save_layer_as_shapefile,
                                   )
 from svir.utilities.shared import (DEBUG,
                                    PROJECT_TEMPLATE,
@@ -710,9 +711,7 @@ class Irmt:
                 raise RuntimeError('Layer invalid')
             layer = vlayer_csv
         else:
-            result = QgsVectorFileWriter.writeAsVectorFormat(
-                vlayer_csv, dest_filename, 'CP1250',
-                None, 'ESRI Shapefile')
+            result = save_layer_as_shapefile(vlayer_csv, dest_filename)
             if result != QgsVectorFileWriter.NoError:
                 raise RuntimeError('Could not save shapefile')
             layer = QgsVectorLayer(

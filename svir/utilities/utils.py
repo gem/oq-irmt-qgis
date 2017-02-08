@@ -25,12 +25,14 @@
 import collections
 import json
 import os
+import locale
 from copy import deepcopy
 from time import time
 from pprint import pformat
 from qgis.core import (QgsMapLayerRegistry,
                        QgsProject,
                        QgsMessageLog,
+                       QgsVectorFileWriter
                        )
 from qgis.gui import QgsMessageBar
 
@@ -828,3 +830,14 @@ def get_layer_setting(layer, setting):
             value = json.loads(value_str)
             return value
     return None
+
+
+def save_layer_as_shapefile(orig_layer, dest_path, crs=None):
+    if crs is None:
+        crs = orig_layer.crs()
+    old_lc_numeric = locale.getlocale(locale.LC_NUMERIC)
+    locale.setlocale(locale.LC_NUMERIC, 'C')
+    write_success = QgsVectorFileWriter.writeAsVectorFormat(
+        orig_layer, dest_path, 'utf-8', crs, 'ESRI Shapefile')
+    locale.setlocale(locale.LC_NUMERIC, old_lc_numeric)
+    return write_success
