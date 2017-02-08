@@ -146,9 +146,12 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
 
     @pyqtSlot()
     def on_output_data_dir_btn_clicked(self):
+        default_dir = QSettings().value('irmt/output_data_dir',
+                                        QDir.homePath())
         path = QFileDialog.getExistingDirectory(
-            self, self.tr('Choose output directory'), QDir.homePath())
+            self, self.tr('Choose output directory'), default_dir)
         if path:
+            QSettings().setValue('irmt/output_data_dir', path)
             self.output_data_dir_le.setText(path)
 
     def calculate_community_level_recovery_curve(self, integrate_svi=True):

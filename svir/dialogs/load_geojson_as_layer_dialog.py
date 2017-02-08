@@ -33,7 +33,7 @@ from qgis.core import (QgsVectorLayer,
                        QgsGraduatedSymbolRendererV2,
                        QgsRendererRangeV2,
                        )
-from PyQt4.QtCore import pyqtSlot, QDir
+from PyQt4.QtCore import pyqtSlot, QDir, QSettings, QFileInfo
 
 from PyQt4.QtGui import (QDialogButtonBox,
                          QDialog,
@@ -106,10 +106,14 @@ class LoadGeoJsonAsLayerDialog(QDialog, FORM_CLASS):
         # filters = self.tr('GeoJson maps (*.geojson);;'
         #                   'Zip archives (*.zip)')
         filters = self.tr('GeoJson maps (*.geojson)')
+        default_dir = QSettings().value('irmt/load_as_layer_dir',
+                                        QDir.homePath())
         geojson_path, self.file_type = QFileDialog.getOpenFileNameAndFilter(
-            self, text, QDir.homePath(), filters)
+            self, text, default_dir, filters)
         if not geojson_path:
             return
+        selected_dir = QFileInfo(geojson_path).dir().path()
+        QSettings().setValue('irmt/load_as_layer_dir', selected_dir)
         self.geojson_path = geojson_path
         self.geojson_path_le.setText(self.geojson_path)
         if self.file_type == self.tr('Zip archives (*.zip)'):

@@ -23,11 +23,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-import os
 import numpy
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 (works by side effect)
 import matplotlib.pyplot as plt
-from PyQt4.QtCore import pyqtSlot, QDir
+from PyQt4.QtCore import pyqtSlot, QDir, QSettings, QFileInfo
 
 from PyQt4.QtGui import (QDialogButtonBox,
                          QDialog,
@@ -116,9 +115,13 @@ class PlotFromNpzDialog(QDialog, FORM_CLASS):
         """
         text = self.tr('Select oq-engine output to import')
         filters = self.tr('NPZ files (*.npz)')
+        default_dir = QSettings().value('irmt/load_as_layer_dir',
+                                        QDir.homePath())
         npz_path = QFileDialog.getOpenFileName(
-            self, text, QDir.homePath(), filters)
+            self, text, default_dir, filters)
         if npz_path:
+            selected_dir = QFileInfo(npz_path).dir().path()
+            QSettings().setValue('irmt/load_as_layer_dir', selected_dir)
             self.npz_path = npz_path
             self.npz_path_le.setText(self.npz_path)
             self.npz_file = self.get_npz_file_handler()
