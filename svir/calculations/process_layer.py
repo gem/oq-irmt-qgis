@@ -80,10 +80,10 @@ class ProcessLayer():
             raise ValueError('Usage "%s" is not implemented')
         logger_func(spacer + 'Layer: %s' % self.layer.name())
         logger_func(spacer + str(
-            [field.name() for field in self.layer.dataProvider().fields()]))
+            [field.name() for field in self.layer.fields()]))
         ppdata = pformat(
             [feature.attributes()
-             for feature in self.layer.dataProvider().getFeatures()])
+             for feature in self.layer.getFeatures()])
         logger_func(spacer + ppdata)
 
     def has_same_projection_as(self, other_layer):
@@ -121,20 +121,18 @@ class ProcessLayer():
         :param other_layer: layer to compare with
         :type other_layer: QgsVectorLayer
         """
-        this_dp = self.layer.dataProvider()
-        other_dp = other_layer.dataProvider()
         len_this = self.layer.featureCount()
         len_other = other_layer.featureCount()
         # Check if the layers have the same number of rows (features)
         if len_this != len_other:
             return False
         # Check if the layers have the same field names (columns)
-        this_fields = [field.name() for field in this_dp.fields()]
-        other_fields = [field.name() for field in other_dp.fields()]
+        this_fields = [field.name() for field in self.layer.fields()]
+        other_fields = [field.name() for field in other_layer.fields()]
         if this_fields != other_fields:
             return False
-        this_features = this_dp.getFeatures()
-        other_features = other_dp.getFeatures()
+        this_features = self.layer.getFeatures()
+        other_features = other_layer.getFeatures()
         # we already checked that the layers have the same number of features
         # and now we want to make sure that for each feature the contents are
         # the same
@@ -184,7 +182,7 @@ class ProcessLayer():
                 i = 1
                 while True:
                     current_attribute_names = \
-                        [attribute.name() for attribute in layer_pr.fields()]
+                        [attribute.name() for attribute in self.layer.fields()]
                     if proposed_attribute_name in current_attribute_names:
                         # If the attribute is already assigned, change the
                         # proposed_attribute_name
@@ -336,8 +334,7 @@ class ProcessLayer():
         exception if not found
         """
         attribute_id = None
-        pr = self.layer.dataProvider()
-        for field_id, field in enumerate(pr.fields()):
+        for field_id, field in enumerate(self.layer.fields()):
             if field.name() == attribute_name:
                 attribute_id = field_id
                 return attribute_id

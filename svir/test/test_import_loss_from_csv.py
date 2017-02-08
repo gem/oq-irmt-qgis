@@ -56,10 +56,10 @@ class ImportLossFromCsvTestCase(unittest.TestCase):
                          Feature('B', 14, 7),
                          Feature('C', 10, 3),
                          Feature('D', 16, 4)]
-        dp = shp_layer.dataProvider()
-        actual_field_names = tuple(field.name() for field in dp.fields())
+        actual_field_names = tuple(
+            field.name() for field in shp_layer.fields())
         self.assertEqual(actual_field_names, expected_field_names)
-        for i, feat in enumerate(dp.getFeatures()):
+        for i, feat in enumerate(shp_layer.getFeatures()):
             actual_row = Feature(*feat.attributes())
             self.assertEqual(actual_row, expected_rows[i])
 

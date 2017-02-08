@@ -110,7 +110,6 @@ class AddAttributesTestCase(unittest.TestCase):
     def setUp(self):
         uri = 'Point?crs=epsg:4326'
         self.layer = QgsVectorLayer(uri, 'TestLayer', 'memory')
-        self.dp = self.layer.dataProvider()
 
     def test_find_attribute_id(self):
         field_names = ['first', 'second']
@@ -120,7 +119,7 @@ class AddAttributesTestCase(unittest.TestCase):
         field_two.setTypeName(INT_FIELD_TYPE_NAME)
         attributes = [field_one, field_two]
         ProcessLayer(self.layer).add_attributes(attributes)
-        added_field_names = [field.name() for field in self.dp.fields()]
+        added_field_names = [field.name() for field in self.layer.fields()]
         # Double-check that add_attributes is working properly
         upper_field_names = [field_name.upper() for field_name in field_names]
         self.assertEqual(added_field_names, upper_field_names)
