@@ -32,7 +32,7 @@ from qgis.core import (QgsVectorLayer,
                        QgsRendererRangeV2,
                        QgsVectorFileWriter,
                        )
-from PyQt4.QtCore import pyqtSlot, QDir, QUrl
+from PyQt4.QtCore import pyqtSlot, QDir, QUrl, QSettings, QFileInfo
 
 from PyQt4.QtGui import (QDialogButtonBox,
                          QDialog,
@@ -84,10 +84,14 @@ class LoadCsvAsLayerDialog(QDialog, FORM_CLASS):
         """
         text = self.tr('Select CSV file or archive to import')
         filters = self.tr('CSV (*.csv)')
+        default_dir = QSettings().value('irmt/load_as_layer_dir',
+                                        QDir.homePath())
         csv_path, self.file_type = QFileDialog.getOpenFileNameAndFilter(
-            self, text, QDir.homePath(), filters)
+            self, text, default_dir, filters)
         if not csv_path:
             return
+        selected_dir = QFileInfo(csv_path).dir().path()
+        QSettings().setValue('irmt/load_as_layer_dir', selected_dir)
         self.csv_path = csv_path
         self.csv_path_le.setText(self.csv_path)
         # read the header of the csv, so we can select from its fields
