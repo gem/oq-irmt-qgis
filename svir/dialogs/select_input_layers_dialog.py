@@ -24,8 +24,6 @@
 
 # create the dialog for zoom to point
 import os.path
-import csv
-import tempfile
 from qgis.core import (QgsVectorLayer,
                        QGis,
                        QgsRasterLayer,
@@ -34,7 +32,7 @@ from qgis.core import (QgsVectorLayer,
                        QgsMapLayer,
                        )
 
-from PyQt4.QtCore import pyqtSlot, QDir, QUrl
+from PyQt4.QtCore import pyqtSlot, QDir, QUrl, QSettings, QFileInfo
 
 from PyQt4.QtGui import (QFileDialog,
                          QDialog,
@@ -50,6 +48,7 @@ from svir.utilities.utils import (tr,
                                   count_heading_commented_lines,
                                   get_ui_class,
                                   log_msg,
+                                  save_layer_as_shapefile,
                                   )
 
 FORM_CLASS = get_ui_class('ui_select_input_layers.ui')
@@ -93,15 +92,21 @@ class SelectInputLayersDialog(QDialog, FORM_CLASS):
                               'All files (*.*)')
         else:
             raise RuntimeError('Invalid dialog_type: {}'.format(dialog_type))
+        default_dir = QSettings().value('irmt/select_layer_dir',
+                                        QDir.homePath())
         file_name, file_type = QFileDialog.getOpenFileNameAndFilter(
-            self, text, QDir.homePath(), filters)
+            self, text, default_dir, filters)
         if dialog_type == 'zonal_layer':
             if not file_name:
                 return None
+            selected_dir = QFileInfo(file_name).dir().path()
+            QSettings().setValue('irmt/select_layer_dir', selected_dir)
             layer = self.load_zonal_layer(file_name)
         elif dialog_type == 'loss_layer':
             if not file_name:
                 return None
+            selected_dir = QFileInfo(file_name).dir().path()
+            QSettings().setValue('irmt/select_layer_dir', selected_dir)
             if file_type == 'Raster loss curves (*.*)':
                 self.loss_layer_is_vector = False
             if file_type == 'Loss curves from the OpenQuake-engine (*.csv)':
@@ -265,9 +270,7 @@ class SelectInputLayersDialog(QDialog, FORM_CLASS):
                 dest_filename += ".shp"
         else:
             return
-        result = QgsVectorFileWriter.writeAsVectorFormat(
-            csv_layer, dest_filename, 'CP1250',
-            None, 'ESRI Shapefile')
+        result = save_layer_as_shapefile(csv_layer, dest_filename)
         if result != QgsVectorFileWriter.NoError:
             raise RuntimeError('Could not save shapefile')
         shp_layer = QgsVectorLayer(

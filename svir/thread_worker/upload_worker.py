@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#/***************************************************************************
+# /***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
@@ -32,6 +32,7 @@ from svir.utilities.shared import DEBUG
 from svir.utilities.utils import (multipart_encode_for_requests,
                                   UserAbortedNotification,
                                   tr,
+                                  save_layer_as_shapefile,
                                   )
 
 
@@ -70,13 +71,12 @@ class UploadWorker(AbstractWorker):
             # we need to build a shapefile from it
             self.set_message.emit(tr(
                 'Writing the shapefile to be uploaded...'))
-            QgsVectorFileWriter.writeAsVectorFormat(
-                self.current_layer,
-                data_file,
-                'utf-8',
-                QgsCoordinateReferenceSystem(
-                    4326, QgsCoordinateReferenceSystem.EpsgCrsId),
-                'ESRI Shapefile')
+            result = save_layer_as_shapefile(
+                self.current_layer, data_file,
+                crs=QgsCoordinateReferenceSystem(
+                    4326, QgsCoordinateReferenceSystem.EpsgCrsId))
+            if result != QgsVectorFileWriter.NoError:
+                raise RuntimeError('Could not save shapefile')
         file_size_mb = os.path.getsize(data_file)
         file_size_mb += os.path.getsize(self.file_stem + '.shx')
         file_size_mb += os.path.getsize(self.file_stem + '.dbf')
