@@ -181,6 +181,6 @@ class TransformationDialog(QDialog, FORM_CLASS):
     def fill_fields_multiselect(self):
         field_names = [
             field.name()
-            for field in self.iface.activeLayer().dataProvider().fields()
+            for field in self.iface.activeLayer().fields()
             if field.typeName() in NUMERIC_FIELD_TYPES]
         self.fields_multiselect.set_unselected_items(field_names)

@@ -35,6 +35,6 @@ class QToolButtonWithHelpLink(QToolButton):
 
     def open_doc(self):
         if DEBUG:
-            print 'Opening : %s' % self.help_url
+            print('Opening : %s' % self.help_url)
         QDesktopServices.openUrl(QUrl.fromLocalFile(self.help_url))
         QWhatsThis.leaveWhatsThisMode()

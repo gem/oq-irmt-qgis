@@ -136,7 +136,7 @@ class LoadGeoJsonAsLayerDialog(QDialog, FORM_CLASS):
         self.layer = QgsVectorLayer(geojson_path, layer_name, 'ogr')
         if self.layer.isValid():
             QgsMapLayerRegistry.instance().addMapLayer(self.layer)
-            self.field_name = self.layer.dataProvider().fields()[0].name()
+            self.field_name = self.layer.fields()[0].name()
             self.style_layer()
             msg = 'Layer [%s] successfully loaded' % layer_name
             log_msg(msg, level='I', message_bar=self.iface.messageBar())

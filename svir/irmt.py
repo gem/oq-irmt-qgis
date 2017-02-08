@@ -686,7 +686,7 @@ class Irmt:
             line = re.sub('\),\s\(', '),(', line.rstrip())
             # thanks to inplace=True, 'print line' writes the line into the
             # input file, overwriting the original line
-            print line
+            print(line)
 
         # count top lines in the csv starting with '#'
         lines_to_skip_count = count_heading_commented_lines(fname)
@@ -798,8 +798,8 @@ class Irmt:
         to the layer and specify if missing or invalid values were found.
         """
         if added_attrs_ids:
-            dp = self.iface.activeLayer().dataProvider()
-            all_field_names = [field.name() for field in dp.fields()]
+            all_field_names = [
+                field.name() for field in self.iface.activeLayer().fields()]
             added_attrs_names = [all_field_names[attr_id]
                                  for attr_id in added_attrs_ids]
             msg = ('New attributes have been added to the layer: %s'

@@ -37,10 +37,17 @@ Watch the console log
 =====================
 
 It is possible to watch the log of a calculation, by pressing the
-:guilabel:`Console` button in the corresponding row. The log will be displayed
-in a tab of the QGIS :guilabel:`Log Message Panel`.
+:guilabel:`Console` button in the corresponding row. The log will be
+displayed in a tab of the QGIS :guilabel:`Log Message Panel`, as shown
+in :ref:`fig-calculation-log`.
 
-.. FIXME add figure
+.. _fig-calculation-log:
+
+.. figure:: images/calculationLog.png
+    :align: center
+    :scale: 60%
+
+    Example of console output for a OQ-Engine calculation 
 
 
 Download outputs
@@ -76,17 +83,14 @@ Run a risk calculation on top of hazard
 
 To run a risk-only calculation on top of a previous hazard run you have to
 click the :guilabel:`Run Risk` button on the corresponding hazard calculation
-and select the zip file containing the risk `job.ini` and the related inputs.
-
-.. FIXME add figure
+and select the files including the risk `job.ini` and the related inputs (or
+a zip archive containing them).
 
 
 Remove a calculation
 ====================
 
 To hide a calculation from the list press the :guilabel:`Remove` button.
-
-.. FIXME add figure
 
 The calculation is removed from the calculations list, but it is not actually
 removed from the database nor from the datastore.
@@ -98,8 +102,6 @@ Calculation status
 The :guilabel:`Status` column of the :guilabel:`List of calculations` indicates
 the current status of a calculation, which can be one of the following:
 `created`, `executing`, `complete`, `failed`.
-
-.. FIXME add figure
 
 The reason behind a `failed` calculation can be inspected by watching the
 console log, by means of the :guilabel:`Console` button.

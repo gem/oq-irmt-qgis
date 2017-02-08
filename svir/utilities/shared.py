@@ -171,32 +171,6 @@ INDICATOR_TEMPLATE = {
     'children': []
 }
 
-
-HELP_PAGES_LOOKUP = {
-    'import_sv_variables': '05_load_indicators_from_platform.html',
-    'import_layer': '06_download_project_from_platform.html',
-    'transform_attributes': '07_transform_attribute.html',
-    'project_definitions_manager': '08_project_definitions_manager.html',
-    'weight_data': '09_weighting_and_calculating.html',
-    'aggregate_losses': '10_aggregate_loss_by_zone.html',
-    'upload': '11_upload_project_to_platform.html',
-    'show_settings': '04_connection_settings.html',
-    'load_npz_as_layer': 'FIXME',
-    'load_hcurves_from_npz_as_layer': 'FIXME',
-    'load_loss_curves_from_npz_as_layer': 'FIXME',
-    'load_hmaps_from_npz_as_layer': 'FIXME',
-    'load_loss_maps_from_npz_as_layer': 'FIXME',
-    'load_scenario_damage_gmfs_from_npz_as_layer': 'FIXME',
-    'load_scenario_damage_by_asset_from_npz_as_layer': 'FIXME',
-    'plot_dmg_total': 'FIXME',
-    'plot_dmg_by_taxon': 'FIXME',
-    'load_geojson_as_layer': 'FIXME',
-    'drive_engine_server': 'FIXME',
-    'recovery_modeling': 'FIXME',
-    'toggle_viewer_dock': 'FIXME',
-    'help': 'index.html',
-}
-
 RECOVERY_DEFAULTS = {
     'transfer_probabilities': [
         [1, 0, 0, 0, 0, 0],

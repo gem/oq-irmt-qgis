@@ -54,7 +54,7 @@ class IrmtTest(unittest.TestCase):
         self.assertFalse(icon.isNull())
 
     def test_toggle_active_actions(self):
-        #print IRMT.registered_actions()
+        #print(IRMT.registered_actions())
         #self.assertFalse()
         pass
 
