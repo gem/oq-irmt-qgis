@@ -812,7 +812,7 @@ def get_style():
     color_to = settings.value(
         'irmt/style_color_to', color_to_default)
     mode = settings.value(
-        'irmt/style_mode', style_mode_default)
+        'irmt/style_mode', style_mode_default, type=int)
     classes = settings.value(
         'irmt/style_classes', style_classes_default, type=int)
 

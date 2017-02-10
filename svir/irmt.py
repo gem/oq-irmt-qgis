@@ -65,8 +65,8 @@ from svir.dialogs.select_input_layers_dialog import SelectInputLayersDialog
 from svir.dialogs.select_sv_variables_dialog import SelectSvVariablesDialog
 from svir.dialogs.settings_dialog import SettingsDialog
 from svir.dialogs.transformation_dialog import TransformationDialog
-from svir.dialogs.upload_settings_dialog import UploadSettingsDialog
-from svir.dialogs.weight_data_dialog import WeightDataDialog
+#from svir.dialogs.upload_settings_dialog import UploadSettingsDialog
+#from svir.dialogs.weight_data_dialog import WeightDataDialog
 from svir.dialogs.load_geojson_as_layer_dialog import LoadGeoJsonAsLayerDialog
 from svir.dialogs.recovery_modeling_dialog import RecoveryModelingDialog
 from svir.dialogs.recovery_settings_dialog import RecoverySettingsDialog
