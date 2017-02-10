@@ -26,7 +26,7 @@ import json
 from copy import deepcopy
 from qgis.core import QgsProject
 
-from PyQt4.QtCore import pyqtSlot
+from PyQt4.QtCore import pyqtSlot, pyqtSignal
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox,
                          QInputDialog)
@@ -43,7 +43,11 @@ class ProjectsManagerDialog(QDialog, FORM_CLASS):
     definitions available for the active layer, or for creating a new project
     definition
     """
-    def __init__(self, iface):
+
+    force_restyle_switched_pm = pyqtSignal(
+        [int], name='force_restyle_switched_pm')
+
+    def __init__(self, iface, force_restyle=True):
         self.iface = iface
         QDialog.__init__(self)
         # Set up the user interface from Designer.
@@ -55,6 +59,11 @@ class ProjectsManagerDialog(QDialog, FORM_CLASS):
         self.selected_proj_def = None
         self.get_suppl_info()
         self.populate_proj_def_cbx()
+        self.force_restyle_ckb.setChecked(force_restyle)
+
+    @pyqtSlot(int)
+    def on_force_restyle_ckb_stateChanged(self, state):
+        self.force_restyle_switched_pm.emit(state)
 
     def get_suppl_info(self):
         active_layer_id = self.iface.activeLayer().id()

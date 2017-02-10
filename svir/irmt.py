@@ -776,7 +776,17 @@ class Irmt:
         """
         read_layer_suppl_info_from_qgs(
             self.iface.activeLayer().id(), self.supplemental_information)
-        select_proj_def_dlg = ProjectsManagerDialog(self.iface)
+        try:
+            force_restyle = self.supplemental_information[
+                self.iface.activeLayer().id()]['force_restyle']
+        except KeyError:
+            force_restyle = True
+        self._on_force_restyle_switched(force_restyle)
+        select_proj_def_dlg = ProjectsManagerDialog(
+            self.iface, force_restyle=force_restyle)
+        select_proj_def_dlg.force_restyle_switched_pm.connect(
+            lambda state: self._on_force_restyle_switched(state))
+
         if select_proj_def_dlg.exec_():
             selected_project_definition = select_proj_def_dlg.selected_proj_def
             added_attrs_ids, discarded_feats, project_definition = \
@@ -871,11 +881,20 @@ class Irmt:
             err_msg = 'Unable to save the sld: %s' % resp_text
             log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
 
-        dlg = WeightDataDialog(self.iface, edited_project_definition)
+        try:
+            force_restyle = self.supplemental_information[
+                self.iface.activeLayer().id()]['force_restyle']
+        except KeyError:
+            force_restyle = True
+        self._on_force_restyle_switched(force_restyle)
+        dlg = WeightDataDialog(
+            self.iface, edited_project_definition, force_restyle=force_restyle)
         dlg.show()
         self.redraw_ir_layer(edited_project_definition)
 
         dlg.json_cleaned.connect(lambda data: self._weights_changed(data, dlg))
+        dlg.force_restyle_switched_wd.connect(
+                lambda state: self._on_force_restyle_switched(state))
         if dlg.exec_():
             # If the user just opens the dialog and presses OK, it probably
             # means they want to just run the index calculation, so we
@@ -939,6 +958,17 @@ class Irmt:
         dlg.discarded_feats = discarded_feats
         dlg.update_project_definition(project_definition)
         self.redraw_ir_layer(project_definition)
+
+    def _on_force_restyle_switched(self, state):
+        force_restyle = True if state else False
+        layer_id = self.iface.activeLayer().id()
+        self.supplemental_information[
+            layer_id]['force_restyle'] = force_restyle
+        write_layer_suppl_info_to_qgs(
+            layer_id, deepcopy(self.supplemental_information[layer_id]))
+        if DEBUG:
+            from pprint import pprint
+            pprint(self.supplemental_information)
 
     def _recalculate_indexes(self, data):
         project_definition = deepcopy(data)
@@ -1103,6 +1133,12 @@ class Irmt:
         If the user has explicitly selected a field to use for styling, use
         it, otherwise attempt to show the IRI, or the SVI, or the RI
         """
+        try:
+            force_restyle = self.supplemental_information[
+                self.iface.activeLayer().id()]['force_restyle']
+        except KeyError:
+            force_restyle = True
+        self._on_force_restyle_switched(force_restyle)
         if 'style_by_field' in data:
             target_field = data['style_by_field']
             printing_str = target_field
@@ -1131,70 +1167,72 @@ class Irmt:
             ppdata = pprint.pformat(data, indent=4)
             log_msg('REDRAWING %s using: \n%s' % (printing_str, ppdata))
 
-        rule_renderer = QgsRuleBasedRendererV2(
-            QgsSymbolV2.defaultSymbol(self.iface.activeLayer().geometryType()))
-        root_rule = rule_renderer.rootRule()
+        if force_restyle:
+            rule_renderer = QgsRuleBasedRendererV2(
+                QgsSymbolV2.defaultSymbol(
+                    self.iface.activeLayer().geometryType()))
+            root_rule = rule_renderer.rootRule()
 
-        not_null_rule = root_rule.children()[0].clone()
-        not_null_rule.setSymbol(QgsFillSymbolV2.createSimple(
-            {'color': '255,0,0,255',
-             'color_border': '0,0,0,255'}))
-        not_null_rule.setFilterExpression('%s IS NOT NULL' % target_field)
-        not_null_rule.setLabel('%s:' % target_field)
-        root_rule.appendChild(not_null_rule)
+            not_null_rule = root_rule.children()[0].clone()
+            not_null_rule.setSymbol(QgsFillSymbolV2.createSimple(
+                {'color': '255,0,0,255',
+                 'color_border': '0,0,0,255'}))
+            not_null_rule.setFilterExpression('%s IS NOT NULL' % target_field)
+            not_null_rule.setLabel('%s:' % target_field)
+            root_rule.appendChild(not_null_rule)
 
-        null_rule = root_rule.children()[0].clone()
-        null_rule.setSymbol(QgsFillSymbolV2.createSimple(
-            {'style': 'no',
-             'color_border': '255,255,0,255',
-             'width_border': '0.5'}))
-        null_rule.setFilterExpression('%s IS NULL' % target_field)
-        null_rule.setLabel(tr('Invalid value'))
-        root_rule.appendChild(null_rule)
+            null_rule = root_rule.children()[0].clone()
+            null_rule.setSymbol(QgsFillSymbolV2.createSimple(
+                {'style': 'no',
+                 'color_border': '255,255,0,255',
+                 'width_border': '0.5'}))
+            null_rule.setFilterExpression('%s IS NULL' % target_field)
+            null_rule.setLabel(tr('Invalid value'))
+            root_rule.appendChild(null_rule)
 
-        color1 = QColor("#FFEBEB")
-        color2 = QColor("red")
-        classes_count = 10
-        ramp = QgsVectorGradientColorRampV2(color1, color2)
-        graduated_renderer = QgsGraduatedSymbolRendererV2.createRenderer(
-            self.iface.activeLayer(),
-            target_field,
-            classes_count,
-            QgsGraduatedSymbolRendererV2.Quantile,
-            QgsSymbolV2.defaultSymbol(self.iface.activeLayer().geometryType()),
-            ramp)
+            color1 = QColor("#FFEBEB")
+            color2 = QColor("red")
+            classes_count = 10
+            ramp = QgsVectorGradientColorRampV2(color1, color2)
+            graduated_renderer = QgsGraduatedSymbolRendererV2.createRenderer(
+                self.iface.activeLayer(),
+                target_field,
+                classes_count,
+                QgsGraduatedSymbolRendererV2.Quantile,
+                QgsSymbolV2.defaultSymbol(
+                    self.iface.activeLayer().geometryType()), ramp)
 
-        if graduated_renderer.ranges():
-            first_range_index = 0
-            last_range_index = len(graduated_renderer.ranges()) - 1
-            # NOTE: Workaround to avoid rounding problem (QGIS renderer's bug)
-            # which creates problems styling the zone containing the lowest
-            # and highest values in some cases
-            lower_value = \
-                graduated_renderer.ranges()[first_range_index].lowerValue()
-            decreased_lower_value = floor(lower_value * 10000.0) / 10000.0
-            graduated_renderer.updateRangeLowerValue(
-                first_range_index, decreased_lower_value)
-            upper_value = \
-                graduated_renderer.ranges()[last_range_index].upperValue()
-            increased_upper_value = ceil(upper_value * 10000.0) / 10000.0
-            graduated_renderer.updateRangeUpperValue(
-                last_range_index, increased_upper_value)
-        elif DEBUG:
-            log_msg('All features are NULL')
+            if graduated_renderer.ranges():
+                first_range_index = 0
+                last_range_index = len(graduated_renderer.ranges()) - 1
+                # NOTE: Workaround to avoid rounding problem (QGIS renderer's
+                # bug) which creates problems styling the zone containing the
+                # lowest and highest values in some cases
+                lower_value = \
+                    graduated_renderer.ranges()[first_range_index].lowerValue()
+                decreased_lower_value = floor(lower_value * 10000.0) / 10000.0
+                graduated_renderer.updateRangeLowerValue(
+                    first_range_index, decreased_lower_value)
+                upper_value = \
+                    graduated_renderer.ranges()[last_range_index].upperValue()
+                increased_upper_value = ceil(upper_value * 10000.0) / 10000.0
+                graduated_renderer.updateRangeUpperValue(
+                    last_range_index, increased_upper_value)
+            elif DEBUG:
+                log_msg('All features are NULL')
 
-        # create value ranges
-        rule_renderer.refineRuleRanges(not_null_rule, graduated_renderer)
-        for rule in not_null_rule.children():
-            label = rule.label().replace('"%s" >= ' % target_field, '')
-            label = label.replace(' AND "%s" <= ' % target_field, ' - ')
-            rule.setLabel(label)
-        # remove default rule
-        root_rule.removeChildAt(0)
+            # create value ranges
+            rule_renderer.refineRuleRanges(not_null_rule, graduated_renderer)
+            for rule in not_null_rule.children():
+                label = rule.label().replace('"%s" >= ' % target_field, '')
+                label = label.replace(' AND "%s" <= ' % target_field, ' - ')
+                rule.setLabel(label)
+            # remove default rule
+            root_rule.removeChildAt(0)
 
-        self.iface.activeLayer().setRendererV2(rule_renderer)
-        self.iface.legendInterface().refreshLayerSymbology(
-            self.iface.activeLayer())
+            self.iface.activeLayer().setRendererV2(rule_renderer)
+            self.iface.legendInterface().refreshLayerSymbology(
+                self.iface.activeLayer())
         self.iface.mapCanvas().refresh()
 
     def show_settings(self):

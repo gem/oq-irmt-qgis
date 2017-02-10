@@ -20,7 +20,7 @@
    <bool>true</bool>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="4" column="0">
+   <item row="5" column="0">
     <widget class="QCheckBox" name="on_the_fly_ckb">
      <property name="text">
       <string>Run calculations on-the-fly</string>
@@ -30,7 +30,7 @@
      </property>
     </widget>
    </item>
-   <item row="3" column="0">
+   <item row="4" column="0">
     <widget class="QComboBox" name="style_by_field_cbx"/>
    </item>
    <item row="0" column="0">
@@ -43,20 +43,7 @@
      </property>
     </widget>
    </item>
-   <item row="2" column="0">
-    <widget class="QLabel" name="label">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="text">
-      <string>Style the layer by</string>
-     </property>
-    </widget>
-   </item>
-   <item row="5" column="0">
+   <item row="7" column="0">
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <widget class="QPushButton" name="print_btn">
@@ -77,12 +64,35 @@
      </item>
     </layout>
    </item>
+   <item row="3" column="0">
+    <widget class="QLabel" name="label">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Style the layer by</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="0">
+    <widget class="QCheckBox" name="force_restyle_ckb">
+     <property name="text">
+      <string>Restyle layer after each recalculation</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
   </layout>
   <zorder>web_view</zorder>
   <zorder>label</zorder>
   <zorder>on_the_fly_ckb</zorder>
   <zorder>style_by_field_cbx</zorder>
-  <zorder>horizontalLayoutWidget</zorder>
+  <zorder>force_restyle_ckb</zorder>
  </widget>
  <customwidgets>
   <customwidget>
