@@ -24,7 +24,10 @@
 
 
 from PyQt4.QtCore import QSettings
-from PyQt4.QtGui import QDialog
+from PyQt4.QtGui import QDialog, QColor
+
+from qgis.core import QgsGraduatedSymbolRendererV2
+
 from svir.utilities.utils import get_ui_class
 from svir.utilities.shared import PLATFORM_REGISTRATION_URL
 
@@ -48,6 +51,16 @@ class SettingsDialog(QDialog, FORM_CLASS):
         link_text = ('<a href="%s">Register to the OpenQuake Platform</a>'
                      % PLATFORM_REGISTRATION_URL)
         self.registration_link_lbl.setText(link_text)
+
+        modes = {
+            QgsGraduatedSymbolRendererV2.EqualInterval: self.tr('Equal Interval'),
+            QgsGraduatedSymbolRendererV2.Quantile: self.tr('Quantile (Equal Count)'),
+            QgsGraduatedSymbolRendererV2.Jenks: self.tr('Natural Breaks (Jenks)'),
+            QgsGraduatedSymbolRendererV2.StdDev: self.tr('Standard Deviation'),
+            QgsGraduatedSymbolRendererV2.Pretty: self.tr('Pretty Breaks'),
+        }
+        for key in modes:
+            self.style_mode.addItem(modes[key], key)
         self.restoreState()
 
     def restoreState(self):
@@ -87,6 +100,24 @@ class SettingsDialog(QDialog, FORM_CLASS):
         self.enginePasswordEdit.setText(engine_password)
         self.engineHostnameEdit.setText(engine_hostname)
 
+        color_from_default = QColor('#FFEBEB')
+        self.style_color_from.setDefaultColor(color_from_default)
+        self.style_color_from.setColor(
+            mySettings.value('irmt/style_color_from', color_from_default))
+
+        color_to_default = QColor('red')
+        self.style_color_to.setDefaultColor(color_to_default)
+        self.style_color_to.setColor(
+            mySettings.value('irmt/style_color_to', color_to_default))
+
+        mode = mySettings.value(
+            'irmt/style_mode', QgsGraduatedSymbolRendererV2.Quantile)
+        mode_idx = self.style_mode.findData(mode)
+        self.style_mode.setCurrentIndex(mode_idx)
+
+        self.style_classes.setValue(
+            mySettings.value('irmt/style_classes', 10, type=int))
+
         self.developermodeCheck.setChecked(
                 mySettings.value('irmt/developer_mode', False, type=bool))
 
@@ -111,6 +142,14 @@ class SettingsDialog(QDialog, FORM_CLASS):
                             self.engineUsernameEdit.text())
         mySettings.setValue('irmt/engine_password',
                             self.enginePasswordEdit.text())
+
+        mySettings.setValue('irmt/style_color_from', self.style_color_from.color())
+        mySettings.setValue('irmt/style_color_to', self.style_color_to.color())
+
+        mySettings.setValue('irmt/style_mode', self.style_mode.itemData(
+            self.style_mode.currentIndex()))
+
+        mySettings.setValue('irmt/style_classes', self.style_classes.value())
 
     def accept(self):
         """
