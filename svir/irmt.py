@@ -92,7 +92,7 @@ from svir.utilities.utils import (tr,
                                   write_layer_suppl_info_to_qgs,
                                   log_msg,
                                   save_layer_as_shapefile,
-                                  )
+                                  get_style)
 from svir.utilities.shared import (DEBUG,
                                    PROJECT_TEMPLATE,
                                    THEME_TEMPLATE,
@@ -1152,15 +1152,14 @@ class Irmt:
         null_rule.setLabel(tr('Invalid value'))
         root_rule.appendChild(null_rule)
 
-        color1 = QColor("#FFEBEB")
-        color2 = QColor("red")
-        classes_count = 10
-        ramp = QgsVectorGradientColorRampV2(color1, color2)
+        style = get_style()
+        ramp = QgsVectorGradientColorRampV2(
+            style['color_from'], style['color_to'])
         graduated_renderer = QgsGraduatedSymbolRendererV2.createRenderer(
             self.iface.activeLayer(),
             target_field,
-            classes_count,
-            QgsGraduatedSymbolRendererV2.Quantile,
+            style['classes'],
+            style['mode'],
             QgsSymbolV2.defaultSymbol(self.iface.activeLayer().geometryType()),
             ramp)
 
