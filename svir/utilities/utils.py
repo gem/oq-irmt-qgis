@@ -32,18 +32,19 @@ from pprint import pformat
 from qgis.core import (QgsMapLayerRegistry,
                        QgsProject,
                        QgsMessageLog,
-                       QgsVectorFileWriter
+                       QgsVectorFileWriter,
+                       QgsGraduatedSymbolRendererV2
                        )
 from qgis.gui import QgsMessageBar
 
 from PyQt4 import uic
-from PyQt4.QtCore import Qt
+from PyQt4.QtCore import Qt, QSettings
 from PyQt4.QtGui import (QApplication,
                          QProgressBar,
                          QToolButton,
                          QFileDialog,
                          QMessageBox,
-                         )
+                         QColor)
 
 from svir.third_party.poster.encode import multipart_encode
 from svir.utilities.shared import DEBUG
@@ -797,3 +798,27 @@ def save_layer_as_shapefile(orig_layer, dest_path, crs=None):
         orig_layer, dest_path, 'utf-8', crs, 'ESRI Shapefile')
     locale.setlocale(locale.LC_NUMERIC, old_lc_numeric)
     return write_success
+
+
+def get_style():
+    color_from_default = QColor('#FFEBEB')
+    color_to_default = QColor('red')
+    style_mode_default = QgsGraduatedSymbolRendererV2.Quantile
+    style_classes_default = 10
+
+    settings = QSettings()
+    color_from = settings.value(
+        'irmt/style_color_from', color_from_default)
+    color_to = settings.value(
+        'irmt/style_color_to', color_to_default)
+    mode = settings.value(
+        'irmt/style_mode', style_mode_default)
+    classes = settings.value(
+        'irmt/style_classes', style_classes_default, type=int)
+
+    return {
+        'color_from': color_from,
+        'color_to': color_to,
+        'mode': mode,
+        'classes': classes
+    }

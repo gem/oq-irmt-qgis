@@ -24,11 +24,11 @@
 
 
 from PyQt4.QtCore import QSettings
-from PyQt4.QtGui import QDialog, QColor
+from PyQt4.QtGui import QDialog
 
 from qgis.core import QgsGraduatedSymbolRendererV2
 
-from svir.utilities.utils import get_ui_class
+from svir.utilities.utils import get_ui_class, get_style
 from svir.utilities.shared import PLATFORM_REGISTRATION_URL
 
 FORM_CLASS = get_ui_class('ui_settings.ui')
@@ -100,23 +100,18 @@ class SettingsDialog(QDialog, FORM_CLASS):
         self.enginePasswordEdit.setText(engine_password)
         self.engineHostnameEdit.setText(engine_hostname)
 
-        color_from_default = QColor('#FFEBEB')
-        self.style_color_from.setDefaultColor(color_from_default)
-        self.style_color_from.setColor(
-            mySettings.value('irmt/style_color_from', color_from_default))
+        style = get_style()
 
-        color_to_default = QColor('red')
-        self.style_color_to.setDefaultColor(color_to_default)
-        self.style_color_to.setColor(
-            mySettings.value('irmt/style_color_to', color_to_default))
+        self.style_color_from.setDefaultColor(style['color_from'])
+        self.style_color_from.setColor(style['color_from'])
 
-        mode = mySettings.value(
-            'irmt/style_mode', QgsGraduatedSymbolRendererV2.Quantile)
-        mode_idx = self.style_mode.findData(mode)
+        self.style_color_to.setDefaultColor(style['color_to'])
+        self.style_color_to.setColor(style['color_to'])
+
+        mode_idx = self.style_mode.findData(style['mode'])
         self.style_mode.setCurrentIndex(mode_idx)
 
-        self.style_classes.setValue(
-            mySettings.value('irmt/style_classes', 10, type=int))
+        self.style_classes.setValue(style['classes'])
 
         self.developermodeCheck.setChecked(
                 mySettings.value('irmt/developer_mode', False, type=bool))
