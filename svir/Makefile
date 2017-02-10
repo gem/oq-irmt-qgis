@@ -135,8 +135,8 @@ package: compile doc
 	rm -f $(PLUGINNAME)/$(PLUGINNAME).zip
 	git archive --prefix=$(PLUGINNAME)/ -o $(PLUGINNAME).zip $(VERSION)
 	# to save more space, we can use /ebook instead of /printer (but it would reduce the resolution of images)
-	gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/printer -dNOPAUSE -dQUIET -dBATCH -sOutputFile=help/build/html/_downloads/compressed-irmt.pdf help/build/html/_downloads/irmt.pdf;
-	mv -f help/build/html/_downloads/compressed-irmt.pdf help/build/html/_downloads/irmt.pdf
+	gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/printer -dNOPAUSE -dQUIET -dBATCH -sOutputFile=help/build/html/_downloads/resized-irmt.pdf help/build/html/_downloads/irmt.pdf;
+	mv -f help/build/html/_downloads/resized-irmt.pdf help/build/html/_downloads/irmt.pdf
 	mkdir -p $(PLUGINNAME)/help/build; rm -r $(PLUGINNAME)/help/build/html; cp -r help/build/html $(PLUGINNAME)/help/build/html;
 	mkdir -p $(PLUGINNAME)/apidoc/build; rm -r $(PLUGINNAME)/apidoc/build/html; cp -r apidoc/build/html $(PLUGINNAME)/apidoc/build/html
 	zip -r $(PLUGINNAME).zip $(PLUGINNAME)/help/build/html
