@@ -187,5 +187,5 @@ class ProjectsManagerDialog(QDialog, FORM_CLASS):
             exc_msg = exc.args[0]
             if isinstance(exc_msg, bytes):
                 exc_msg = exc_msg.decode('utf-8')   # make it a unicode object
-            log_msg(exc_msg, level='C', messageBar=self.iface.messageBar())
+            log_msg(exc_msg, level='C', message_bar=self.iface.messageBar())
             self.ok_button.setEnabled(False)
