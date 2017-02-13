@@ -31,6 +31,7 @@ changelog=
     * Minor improvements to the user manual
     * Some cleanup
     * Improved management of potential problems encountered while communicating with the OQ-Engine
+    * Minor changes to the recovery modeling settings dialog
     1.8.17
     * Losses from oq-engine are read from the single-file csv format
     * Improved manual with additional examples, instructions about installation and testing
