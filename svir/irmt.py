@@ -775,16 +775,12 @@ class Irmt:
         """
         read_layer_suppl_info_from_qgs(
             self.iface.activeLayer().id(), self.supplemental_information)
-        try:
-            force_restyle = self.supplemental_information[
-                self.iface.activeLayer().id()]['force_restyle']
-        except KeyError:
-            force_restyle = True
-        self._on_force_restyle_switched(force_restyle)
+        force_restyle = self.get_force_restyle()
         select_proj_def_dlg = ProjectsManagerDialog(
             self.iface, force_restyle=force_restyle)
         select_proj_def_dlg.force_restyle_switched_pm.connect(
-            lambda state: self._on_force_restyle_switched(state))
+            lambda checkbox_state: self._on_force_restyle_switched(
+                checkbox_state))
 
         if select_proj_def_dlg.exec_():
             selected_project_definition = select_proj_def_dlg.selected_proj_def
@@ -880,12 +876,7 @@ class Irmt:
             err_msg = 'Unable to save the sld: %s' % resp_text
             log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
 
-        try:
-            force_restyle = self.supplemental_information[
-                self.iface.activeLayer().id()]['force_restyle']
-        except KeyError:
-            force_restyle = True
-        self._on_force_restyle_switched(force_restyle)
+        force_restyle = self.get_force_restyle()
         dlg = WeightDataDialog(
             self.iface, edited_project_definition, force_restyle=force_restyle)
         dlg.show()
@@ -893,7 +884,8 @@ class Irmt:
 
         dlg.json_cleaned.connect(lambda data: self._weights_changed(data, dlg))
         dlg.force_restyle_switched_wd.connect(
-                lambda state: self._on_force_restyle_switched(state))
+            lambda checkbox_state: self._on_force_restyle_switched(
+                checkbox_state))
         if dlg.exec_():
             # If the user just opens the dialog and presses OK, it probably
             # means they want to just run the index calculation, so we
@@ -958,8 +950,10 @@ class Irmt:
         dlg.update_project_definition(project_definition)
         self.redraw_ir_layer(project_definition)
 
-    def _on_force_restyle_switched(self, state):
-        force_restyle = True if state else False
+    def _on_force_restyle_switched(self, checkbox_state):
+        # Checkbox state can be:
+        # 0 (Qt.Unchecked), 1 (Qt.PartiallyChecked) or 2 (Qt.Checked)
+        force_restyle = True if checkbox_state == Qt.Checked else False
         layer_id = self.iface.activeLayer().id()
         self.supplemental_information[
             layer_id]['force_restyle'] = force_restyle
@@ -1127,17 +1121,21 @@ class Irmt:
             return False
         return True
 
-    def redraw_ir_layer(self, data):
-        """
-        If the user has explicitly selected a field to use for styling, use
-        it, otherwise attempt to show the IRI, or the SVI, or the RI
-        """
+    def get_force_restyle(self):
         try:
             force_restyle = self.supplemental_information[
                 self.iface.activeLayer().id()]['force_restyle']
         except KeyError:
             force_restyle = True
-        self._on_force_restyle_switched(force_restyle)
+        checkbox_state = Qt.Checked if force_restyle is True else Qt.Unchecked
+        self._on_force_restyle_switched(checkbox_state)
+        return force_restyle
+
+    def redraw_ir_layer(self, data):
+        """
+        If the user has explicitly selected a field to use for styling, use
+        it, otherwise attempt to show the IRI, or the SVI, or the RI
+        """
         if 'style_by_field' in data:
             target_field = data['style_by_field']
             printing_str = target_field
@@ -1166,6 +1164,7 @@ class Irmt:
             ppdata = pprint.pformat(data, indent=4)
             log_msg('REDRAWING %s using: \n%s' % (printing_str, ppdata))
 
+        force_restyle = self.get_force_restyle()
         if force_restyle:
             rule_renderer = QgsRuleBasedRendererV2(
                 QgsSymbolV2.defaultSymbol(
