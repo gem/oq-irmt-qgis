@@ -258,7 +258,7 @@
       </size>
      </property>
      <property name="toolTip">
-      <string>Time to replace buildings (days), being in a particular recovery-based limit state</string>
+      <string>Time to replace elements in buildings or to reconstruct buildings (days), being in a particular recovery-based limit state</string>
      </property>
     </widget>
    </item>
