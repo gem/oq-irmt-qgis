@@ -1130,6 +1130,11 @@ class Irmt:
             ppdata = pprint.pformat(data, indent=4)
             log_msg('REDRAWING %s using: \n%s' % (printing_str, ppdata))
 
+        style = get_style()
+        if not style['force_restyling']:
+            self.iface.mapCanvas().refresh()
+            return
+
         rule_renderer = QgsRuleBasedRendererV2(
             QgsSymbolV2.defaultSymbol(self.iface.activeLayer().geometryType()))
         root_rule = rule_renderer.rootRule()
@@ -1151,7 +1156,6 @@ class Irmt:
         null_rule.setLabel(tr('Invalid value'))
         root_rule.appendChild(null_rule)
 
-        style = get_style()
         ramp = QgsVectorGradientColorRampV2(
             style['color_from'], style['color_to'])
         graduated_renderer = QgsGraduatedSymbolRendererV2.createRenderer(

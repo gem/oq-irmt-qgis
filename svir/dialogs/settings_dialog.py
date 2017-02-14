@@ -53,9 +53,12 @@ class SettingsDialog(QDialog, FORM_CLASS):
         self.registration_link_lbl.setText(link_text)
 
         modes = {
-            QgsGraduatedSymbolRendererV2.EqualInterval: self.tr('Equal Interval'),
-            QgsGraduatedSymbolRendererV2.Quantile: self.tr('Quantile (Equal Count)'),
-            QgsGraduatedSymbolRendererV2.Jenks: self.tr('Natural Breaks (Jenks)'),
+            QgsGraduatedSymbolRendererV2.EqualInterval: self.tr(
+                'Equal Interval'),
+            QgsGraduatedSymbolRendererV2.Quantile: self.tr(
+                'Quantile (Equal Count)'),
+            QgsGraduatedSymbolRendererV2.Jenks: self.tr(
+                'Natural Breaks (Jenks)'),
             QgsGraduatedSymbolRendererV2.StdDev: self.tr('Standard Deviation'),
             QgsGraduatedSymbolRendererV2.Pretty: self.tr('Pretty Breaks'),
         }
@@ -112,6 +115,7 @@ class SettingsDialog(QDialog, FORM_CLASS):
         self.style_mode.setCurrentIndex(mode_idx)
 
         self.style_classes.setValue(style['classes'])
+        self.force_restyling_ckb.setChecked(style['force_restyling'])
 
         self.developermodeCheck.setChecked(
                 mySettings.value('irmt/developer_mode', False, type=bool))
@@ -138,13 +142,16 @@ class SettingsDialog(QDialog, FORM_CLASS):
         mySettings.setValue('irmt/engine_password',
                             self.enginePasswordEdit.text())
 
-        mySettings.setValue('irmt/style_color_from', self.style_color_from.color())
+        mySettings.setValue('irmt/style_color_from',
+                            self.style_color_from.color())
         mySettings.setValue('irmt/style_color_to', self.style_color_to.color())
 
         mySettings.setValue('irmt/style_mode', self.style_mode.itemData(
             self.style_mode.currentIndex()))
 
         mySettings.setValue('irmt/style_classes', self.style_classes.value())
+        mySettings.setValue('irmt/force_restyling',
+                            self.force_restyling_ckb.isChecked())
 
     def accept(self):
         """

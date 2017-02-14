@@ -805,6 +805,7 @@ def get_style():
     color_to_default = QColor('red')
     style_mode_default = QgsGraduatedSymbolRendererV2.Quantile
     style_classes_default = 10
+    force_restyling_default = True
 
     settings = QSettings()
     color_from = settings.value(
@@ -815,10 +816,13 @@ def get_style():
         'irmt/style_mode', style_mode_default, type=int)
     classes = settings.value(
         'irmt/style_classes', style_classes_default, type=int)
+    force_restyling = settings.value(
+        'irmt/force_restyling', force_restyling_default, type=bool)
 
     return {
         'color_from': color_from,
         'color_to': color_to,
         'mode': mode,
-        'classes': classes
+        'classes': classes,
+        'force_restyling': force_restyling
     }
