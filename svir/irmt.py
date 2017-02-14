@@ -1145,7 +1145,7 @@ class Irmt:
 
         not_null_rule = root_rule.children()[0].clone()
         # strip parentheses from stringified color HSL
-        col_str = str(style['color_to'].getHsl())[1:-1]
+        col_str = str(style['color_from'].getHsl())[1:-1]
         not_null_rule.setSymbol(QgsFillSymbolV2.createSimple(
             {'color': col_str,
              'color_border': '0,0,0,255'}))
