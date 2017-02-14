@@ -1190,13 +1190,8 @@ class Irmt:
                 last_range_index, increased_upper_value)
         elif DEBUG:
             log_msg('All features are NULL')
-
         # create value ranges
         rule_renderer.refineRuleRanges(not_null_rule, graduated_renderer)
-        for rule in not_null_rule.children():
-            label = rule.label().replace('"%s" >= ' % target_field, '')
-            label = label.replace(' AND "%s" <= ' % target_field, ' - ')
-            rule.setLabel(label)
         # remove default rule
         root_rule.removeChildAt(0)
 
