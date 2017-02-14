@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>443</width>
-    <height>368</height>
+    <width>454</width>
+    <height>611</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -133,6 +133,62 @@
     </widget>
    </item>
    <item>
+    <widget class="QGroupBox" name="styling_gbx">
+     <property name="title">
+      <string>Default classification syle</string>
+     </property>
+     <layout class="QFormLayout" name="formLayout_3">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>Color from</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_9">
+        <property name="text">
+         <string>Color to</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QgsColorButtonV2" name="style_color_from"/>
+      </item>
+      <item row="1" column="1">
+       <widget class="QgsColorButtonV2" name="style_color_to"/>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_10">
+        <property name="text">
+         <string>Classes</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QSpinBox" name="style_classes">
+        <property name="minimum">
+         <number>1</number>
+        </property>
+        <property name="value">
+         <number>10</number>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>Mode</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QComboBox" name="style_mode"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <widget class="QCheckBox" name="developermodeCheck">
      <property name="text">
       <string>Developer mode (requires restart)</string>
@@ -151,6 +207,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QgsColorButtonV2</class>
+   <extends>QLineEdit</extends>
+   <header location="global">qgscolorbuttonv2.h</header>
+  </customwidget>
+ </customwidgets>
  <tabstops>
   <tabstop>buttonBox</tabstop>
  </tabstops>
