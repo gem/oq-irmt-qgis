@@ -39,7 +39,8 @@ from PyQt4.QtGui import (QDialogButtonBox,
                          QFileDialog,
                          QColor,
                          )
-from svir.utilities.utils import get_ui_class, log_msg, save_layer_as_shapefile
+from svir.utilities.utils import get_ui_class, log_msg, save_layer_as_shapefile, \
+    get_style
 
 FORM_CLASS = get_ui_class('ui_load_csv_as_layer.ui')
 
@@ -171,10 +172,9 @@ class LoadCsvAsLayerDialog(QDialog, FORM_CLASS):
             and self.loss_type_cbx.currentIndex != -1)
 
     def style_layer(self, layer, field_name):
-        color1 = QColor("#FFEBEB")
-        color2 = QColor("red")
-        classes_count = 10
-        ramp = QgsVectorGradientColorRampV2(color1, color2)
+        style = get_style()
+        ramp = QgsVectorGradientColorRampV2(
+            style['color_from'], style['color_to'])
         symbol = QgsSymbolV2.defaultSymbol(layer.geometryType())
         # see properties at:
         # https://qgis.org/api/qgsmarkersymbollayerv2_8cpp_source.html#l01073
@@ -183,14 +183,13 @@ class LoadCsvAsLayerDialog(QDialog, FORM_CLASS):
         graduated_renderer = QgsGraduatedSymbolRendererV2.createRenderer(
             layer,
             field_name,
-            classes_count,
-            # QgsGraduatedSymbolRendererV2.Quantile,
-            QgsGraduatedSymbolRendererV2.EqualInterval,
+            style['classes'],
+            style['mode'],
             symbol,
             ramp)
         graduated_renderer.updateRangeLowerValue(0, 0.0)
         symbol_zeros = QgsSymbolV2.defaultSymbol(layer.geometryType())
-        symbol_zeros = symbol.createSimple({'outline_width': '0.000001'})
+        symbol_zeros = symbol_zeros.createSimple({'outline_width': '0.000001'})
         symbol_zeros.setColor(QColor(222, 255, 222))
         zeros_min = 0.0
         zeros_max = 0.0
@@ -198,7 +197,7 @@ class LoadCsvAsLayerDialog(QDialog, FORM_CLASS):
             zeros_min, zeros_max, symbol_zeros,
             " %.4f - %.4f" % (zeros_min, zeros_max), True)
         graduated_renderer.addClassRange(range_zeros)
-        graduated_renderer.moveClass(classes_count, 0)
+        graduated_renderer.moveClass(style['classes'], 0)
         layer.setRendererV2(graduated_renderer)
         layer.setLayerTransparency(30)  # percent
         layer.triggerRepaint()

@@ -25,7 +25,10 @@
 
 from PyQt4.QtCore import QSettings
 from PyQt4.QtGui import QDialog
-from svir.utilities.utils import get_ui_class
+
+from qgis.core import QgsGraduatedSymbolRendererV2
+
+from svir.utilities.utils import get_ui_class, get_style
 from svir.utilities.shared import PLATFORM_REGISTRATION_URL
 
 FORM_CLASS = get_ui_class('ui_settings.ui')
@@ -48,6 +51,16 @@ class SettingsDialog(QDialog, FORM_CLASS):
         link_text = ('<a href="%s">Register to the OpenQuake Platform</a>'
                      % PLATFORM_REGISTRATION_URL)
         self.registration_link_lbl.setText(link_text)
+
+        modes = {
+            QgsGraduatedSymbolRendererV2.EqualInterval: self.tr('Equal Interval'),
+            QgsGraduatedSymbolRendererV2.Quantile: self.tr('Quantile (Equal Count)'),
+            QgsGraduatedSymbolRendererV2.Jenks: self.tr('Natural Breaks (Jenks)'),
+            QgsGraduatedSymbolRendererV2.StdDev: self.tr('Standard Deviation'),
+            QgsGraduatedSymbolRendererV2.Pretty: self.tr('Pretty Breaks'),
+        }
+        for key in modes:
+            self.style_mode.addItem(modes[key], key)
         self.restoreState()
 
     def restoreState(self):
@@ -87,6 +100,19 @@ class SettingsDialog(QDialog, FORM_CLASS):
         self.enginePasswordEdit.setText(engine_password)
         self.engineHostnameEdit.setText(engine_hostname)
 
+        style = get_style()
+
+        self.style_color_from.setDefaultColor(style['color_from'])
+        self.style_color_from.setColor(style['color_from'])
+
+        self.style_color_to.setDefaultColor(style['color_to'])
+        self.style_color_to.setColor(style['color_to'])
+
+        mode_idx = self.style_mode.findData(style['mode'])
+        self.style_mode.setCurrentIndex(mode_idx)
+
+        self.style_classes.setValue(style['classes'])
+
         self.developermodeCheck.setChecked(
                 mySettings.value('irmt/developer_mode', False, type=bool))
 
@@ -111,6 +137,14 @@ class SettingsDialog(QDialog, FORM_CLASS):
                             self.engineUsernameEdit.text())
         mySettings.setValue('irmt/engine_password',
                             self.enginePasswordEdit.text())
+
+        mySettings.setValue('irmt/style_color_from', self.style_color_from.color())
+        mySettings.setValue('irmt/style_color_to', self.style_color_to.color())
+
+        mySettings.setValue('irmt/style_mode', self.style_mode.itemData(
+            self.style_mode.currentIndex()))
+
+        mySettings.setValue('irmt/style_classes', self.style_classes.value())
 
     def accept(self):
         """
