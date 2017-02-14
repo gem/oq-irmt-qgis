@@ -55,7 +55,7 @@ from svir.utilities.shared import DEBUG
 from svir.utilities.utils import (LayerEditingManager,
                                   WaitCursorManager,
                                   get_ui_class,
-                                  )
+                                  get_style)
 from svir.calculations.calculate_utils import (add_numeric_attribute,
                                                add_textual_attribute,
                                                )
@@ -576,26 +576,25 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
         self.iface.zoomToActiveLayer()
 
     def style_maps(self):
-        color1 = QColor("#FFEBEB")
-        color2 = QColor("red")
-        classes_count = 10
-        ramp = QgsVectorGradientColorRampV2(color1, color2)
         symbol = QgsSymbolV2.defaultSymbol(self.layer.geometryType())
         # see properties at:
         # https://qgis.org/api/qgsmarkersymbollayerv2_8cpp_source.html#l01073
         symbol = symbol.createSimple({'outline_width': '0.000001'})
         symbol.setAlpha(1)  # opacity
+
+        style = get_style()
+        ramp = QgsVectorGradientColorRampV2(
+            style['color_from'], style['color_to'])
         graduated_renderer = QgsGraduatedSymbolRendererV2.createRenderer(
             self.layer,
             self.default_field_name,
-            classes_count,
-            QgsGraduatedSymbolRendererV2.Quantile,
-            # QgsGraduatedSymbolRendererV2.EqualInterval,
+            style['classes'],
+            style['mode'],
             symbol,
             ramp)
         graduated_renderer.updateRangeLowerValue(0, 0.0)
         symbol_zeros = QgsSymbolV2.defaultSymbol(self.layer.geometryType())
-        symbol_zeros = symbol.createSimple({'outline_width': '0.000001'})
+        symbol_zeros = symbol_zeros.createSimple({'outline_width': '0.000001'})
         symbol_zeros.setColor(QColor(222, 255, 222))
         zeros_min = 0.0
         zeros_max = 0.0
@@ -603,7 +602,7 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
             zeros_min, zeros_max, symbol_zeros,
             " %.4f - %.4f" % (zeros_min, zeros_max), True)
         graduated_renderer.addClassRange(range_zeros)
-        graduated_renderer.moveClass(classes_count, 0)
+        graduated_renderer.moveClass(style['classes'], 0)
         self.layer.setRendererV2(graduated_renderer)
         self.layer.setLayerTransparency(30)  # percent
         self.layer.triggerRepaint()
