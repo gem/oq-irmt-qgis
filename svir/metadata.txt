@@ -31,6 +31,8 @@ changelog=
     * Minor improvements to the user manual
     * Some cleanup
     * Improved management of potential problems encountered while communicating with the OQ-Engine
+    * The automatic styling applied to layers after recalculating composite indices can be customized
+      through the plugin's settings dialog
     1.8.17
     * Losses from oq-engine are read from the single-file csv format
     * Improved manual with additional examples, instructions about installation and testing
