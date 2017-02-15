@@ -31,6 +31,7 @@ changelog=
     * Minor improvements to the user manual
     * Some cleanup
     * Improved management of potential problems encountered while communicating with the OQ-Engine
+    * Minor changes to the recovery modeling settings dialog
     * The automatic styling applied to layers after recalculating composite indices can be customized
       through the plugin's settings dialog
     1.8.17

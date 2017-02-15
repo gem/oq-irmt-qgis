@@ -12,7 +12,7 @@ scientific methodology developed by UCLA [BDL+15]_ and integrated it into
 the QGIS framework as part of the IRMT plugin.
 
 This computational tool was developed to quantify the effectiveness of specific
-resilience-building actions (preparedness, mitigation, and response) that would
+resilience-building actions (preparedness and response) that would
 enhance the process of recovery following an earthquake. Building performance
 is assessed using metrics that are explicitly linked to community seismic
 resilience such as functionality, occupiability and repairability. A
@@ -138,7 +138,7 @@ the user:
 +-----------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 | Recovery times                          | Period between the occurrence of the earthquake and the restoration of full functionality                                             |
 +-----------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
-| Repair times                            | Time to replace building                                                                                                              |
+| Repair times                            | Time to replace elements in buildings or to reconstruct buildings                                                                     |
 +-----------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 | Repair times dispersion                 | Level of uncertainty associated with the repair times                                                                                 |
 +-----------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
