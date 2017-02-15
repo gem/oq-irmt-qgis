@@ -17,12 +17,39 @@
    <bool>true</bool>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="0">
-    <widget class="QLabel" name="label">
+   <item row="9" column="0">
+    <widget class="QLabel" name="label_2">
      <property name="text">
-      <string>Please select one of the available project definitions</string>
+      <string>Title</string>
      </property>
     </widget>
+   </item>
+   <item row="16" column="0">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+   <item row="11" column="0">
+    <widget class="QLabel" name="label_3">
+     <property name="text">
+      <string>Description</string>
+     </property>
+    </widget>
+   </item>
+   <item row="13" column="0">
+    <widget class="QLabel" name="label_4">
+     <property name="text">
+      <string>Raw textual representation</string>
+     </property>
+    </widget>
+   </item>
+   <item row="14" column="0">
+    <widget class="QPlainTextEdit" name="proj_def_raw"/>
    </item>
    <item row="2" column="0">
     <layout class="QHBoxLayout" name="horizontalLayout">
@@ -41,50 +68,33 @@
      </item>
     </layout>
    </item>
-   <item row="10" column="0">
-    <widget class="QLineEdit" name="proj_def_title"/>
-   </item>
-   <item row="9" column="0">
-    <widget class="QLabel" name="label_2">
+   <item row="0" column="0">
+    <widget class="QLabel" name="label">
      <property name="text">
-      <string>Title</string>
+      <string>Please select one of the available project definitions</string>
      </property>
     </widget>
-   </item>
-   <item row="11" column="0">
-    <widget class="QLabel" name="label_3">
-     <property name="text">
-      <string>Description</string>
-     </property>
-    </widget>
-   </item>
-   <item row="15" column="0">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-     </property>
-    </widget>
-   </item>
-   <item row="14" column="0">
-    <widget class="QPlainTextEdit" name="proj_def_raw"/>
    </item>
    <item row="12" column="0">
     <widget class="QPlainTextEdit" name="proj_def_descr"/>
-   </item>
-   <item row="13" column="0">
-    <widget class="QLabel" name="label_4">
-     <property name="text">
-      <string>Raw textual representation</string>
-     </property>
-    </widget>
    </item>
    <item row="3" column="0">
     <widget class="QPushButton" name="clone_btn">
      <property name="text">
       <string>Make a copy of the selected project definition</string>
+     </property>
+    </widget>
+   </item>
+   <item row="10" column="0">
+    <widget class="QLineEdit" name="proj_def_title"/>
+   </item>
+   <item row="15" column="0">
+    <widget class="QCheckBox" name="force_restyle_ckb">
+     <property name="text">
+      <string>Restyle layer after each recalculation</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
      </property>
     </widget>
    </item>

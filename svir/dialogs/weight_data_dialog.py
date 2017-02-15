@@ -63,14 +63,18 @@ class WeightDataDialog(QDialog, FORM_CLASS):
     json_updated = pyqtSignal(['QVariantMap'], name='json_updated')
     # Python classes should connect to json_cleaned
     json_cleaned = pyqtSignal(['QVariantMap'], name='json_cleaned')
+    force_restyle_switched_wd = pyqtSignal(
+            [int], name='force_restyle_switched_wd')
 
-    def __init__(self, iface, project_definition):
+    def __init__(self, iface, project_definition, force_restyle=True):
         self.iface = iface
         QDialog.__init__(self)
 
         # Set up the user interface from Designer.
         self.setupUi(self)
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
+
+        self.force_restyle_ckb.setChecked(force_restyle)
 
         self.added_attrs_ids = set()
         self.discarded_feats = set()
@@ -121,6 +125,10 @@ class WeightDataDialog(QDialog, FORM_CLASS):
         self.populate_style_by_field_cbx()
 
         self.web_view.setContextMenuPolicy(Qt.NoContextMenu)
+
+    @pyqtSlot(int)
+    def on_force_restyle_ckb_stateChanged(self, state):
+        self.force_restyle_switched_wd.emit(state)
 
     def closeEvent(self, event):
         confirmation_on_close(self, event)
