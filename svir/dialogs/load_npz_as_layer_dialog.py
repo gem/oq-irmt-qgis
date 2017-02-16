@@ -582,7 +582,7 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
         symbol = symbol.createSimple({'outline_width': '0.000001'})
         symbol.setAlpha(1)  # opacity
 
-        style = get_style()
+        style = get_style(self.layer)
         ramp = QgsVectorGradientColorRampV2(
             style['color_from'], style['color_to'])
         graduated_renderer = QgsGraduatedSymbolRendererV2.createRenderer(

@@ -39,8 +39,11 @@ from PyQt4.QtGui import (QDialogButtonBox,
                          QFileDialog,
                          QColor,
                          )
-from svir.utilities.utils import get_ui_class, log_msg, save_layer_as_shapefile, \
-    get_style
+from svir.utilities.utils import (get_ui_class,
+                                  log_msg,
+                                  save_layer_as_shapefile,
+                                  get_style,
+                                  )
 
 FORM_CLASS = get_ui_class('ui_load_csv_as_layer.ui')
 
@@ -172,7 +175,7 @@ class LoadCsvAsLayerDialog(QDialog, FORM_CLASS):
             and self.loss_type_cbx.currentIndex != -1)
 
     def style_layer(self, layer, field_name):
-        style = get_style()
+        style = get_style(layer)
         ramp = QgsVectorGradientColorRampV2(
             style['color_from'], style['color_to'])
         symbol = QgsSymbolV2.defaultSymbol(layer.geometryType())

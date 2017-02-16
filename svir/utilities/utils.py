@@ -800,7 +800,7 @@ def save_layer_as_shapefile(orig_layer, dest_path, crs=None):
     return write_success
 
 
-def get_style():
+def get_style(layer):
     color_from_default = QColor('#FFEBEB')
     color_to_default = QColor('red')
     style_mode_default = QgsGraduatedSymbolRendererV2.Quantile
@@ -816,9 +816,24 @@ def get_style():
         'irmt/style_mode', style_mode_default, type=int)
     classes = settings.value(
         'irmt/style_classes', style_classes_default, type=int)
-    force_restyling = settings.value(
-        'irmt/force_restyling', force_restyling_default, type=bool)
-
+    # look for the setting associated to the layer if available
+    force_restyling = None
+    if layer is not None:
+        # NOTE: I would use %s/%s instead of %s%s, but it does not work
+        value, found = QgsProject.instance().readEntry(
+            'irmt', '%s%s' % (layer.id(), 'force_restyling'))
+        if found:
+            force_restyling = True if value == 'True' else False
+    # otherwise look for the setting at project level
+    if force_restyling is None:
+        value, found = QgsProject.instance().readEntry(
+            'irmt', 'force_restyling')
+        if found:
+            force_restyling = True if value == 'True' else False
+    # if again the setting is not found, look for it at the general level
+    if force_restyling is None:
+        force_restyling = settings.value(
+            'irmt/force_restyling', force_restyling_default, type=bool)
     return {
         'color_from': color_from,
         'color_to': color_to,
