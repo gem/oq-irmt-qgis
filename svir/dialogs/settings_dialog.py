@@ -154,9 +154,10 @@ class SettingsDialog(QDialog, FORM_CLASS):
         # at project level, save the setting associated to the layer if
         # available
         if active_layer is not None:
-            # NOTE: I would use %s/%s instead of %s%s, but it does not work
+            # NOTE: We can't use %s/%s instead of %s_%s, because / is a special
+            #       character
             QgsProject.instance().writeEntry(
-                'irmt', '%s%s' % (active_layer.id(), 'force_restyling'),
+                'irmt', '%s_%s' % (active_layer.id(), 'force_restyling'),
                 str(self.force_restyling_ckb.isChecked()))
         else:  # no layer is selected
             QgsProject.instance().writeEntry(
