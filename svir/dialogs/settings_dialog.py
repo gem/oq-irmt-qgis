@@ -158,11 +158,11 @@ class SettingsDialog(QDialog, FORM_CLASS):
             #       character
             QgsProject.instance().writeEntry(
                 'irmt', '%s_%s' % (active_layer.id(), 'force_restyling'),
-                str(self.force_restyling_ckb.isChecked()))
+                self.force_restyling_ckb.isChecked())
         else:  # no layer is selected
             QgsProject.instance().writeEntry(
                 'irmt', 'force_restyling',
-                str(self.force_restyling_ckb.isChecked()))
+                self.force_restyling_ckb.isChecked())
         # keep the latest setting saved also into the general settings
         mySettings.setValue('irmt/force_restyling',
                             self.force_restyling_ckb.isChecked())
