@@ -26,7 +26,7 @@
 from PyQt4.QtCore import QSettings
 from PyQt4.QtGui import QDialog
 
-from qgis.core import QgsGraduatedSymbolRendererV2
+from qgis.core import QgsGraduatedSymbolRendererV2, QgsProject
 
 from svir.utilities.utils import get_ui_class, get_style
 from svir.utilities.shared import PLATFORM_REGISTRATION_URL
@@ -53,9 +53,12 @@ class SettingsDialog(QDialog, FORM_CLASS):
         self.registration_link_lbl.setText(link_text)
 
         modes = {
-            QgsGraduatedSymbolRendererV2.EqualInterval: self.tr('Equal Interval'),
-            QgsGraduatedSymbolRendererV2.Quantile: self.tr('Quantile (Equal Count)'),
-            QgsGraduatedSymbolRendererV2.Jenks: self.tr('Natural Breaks (Jenks)'),
+            QgsGraduatedSymbolRendererV2.EqualInterval: self.tr(
+                'Equal Interval'),
+            QgsGraduatedSymbolRendererV2.Quantile: self.tr(
+                'Quantile (Equal Count)'),
+            QgsGraduatedSymbolRendererV2.Jenks: self.tr(
+                'Natural Breaks (Jenks)'),
             QgsGraduatedSymbolRendererV2.StdDev: self.tr('Standard Deviation'),
             QgsGraduatedSymbolRendererV2.Pretty: self.tr('Pretty Breaks'),
         }
@@ -100,7 +103,7 @@ class SettingsDialog(QDialog, FORM_CLASS):
         self.enginePasswordEdit.setText(engine_password)
         self.engineHostnameEdit.setText(engine_hostname)
 
-        style = get_style()
+        style = get_style(self.iface.activeLayer())
 
         self.style_color_from.setDefaultColor(style['color_from'])
         self.style_color_from.setColor(style['color_from'])
@@ -112,6 +115,7 @@ class SettingsDialog(QDialog, FORM_CLASS):
         self.style_mode.setCurrentIndex(mode_idx)
 
         self.style_classes.setValue(style['classes'])
+        self.force_restyling_ckb.setChecked(style['force_restyling'])
 
         self.developermodeCheck.setChecked(
                 mySettings.value('irmt/developer_mode', False, type=bool))
@@ -138,13 +142,30 @@ class SettingsDialog(QDialog, FORM_CLASS):
         mySettings.setValue('irmt/engine_password',
                             self.enginePasswordEdit.text())
 
-        mySettings.setValue('irmt/style_color_from', self.style_color_from.color())
+        mySettings.setValue('irmt/style_color_from',
+                            self.style_color_from.color())
         mySettings.setValue('irmt/style_color_to', self.style_color_to.color())
 
         mySettings.setValue('irmt/style_mode', self.style_mode.itemData(
             self.style_mode.currentIndex()))
 
         mySettings.setValue('irmt/style_classes', self.style_classes.value())
+        active_layer = self.iface.activeLayer()
+        # at project level, save the setting associated to the layer if
+        # available
+        if active_layer is not None:
+            # NOTE: We can't use %s/%s instead of %s_%s, because / is a special
+            #       character
+            QgsProject.instance().writeEntry(
+                'irmt', '%s_%s' % (active_layer.id(), 'force_restyling'),
+                str(self.force_restyling_ckb.isChecked()))
+        else:  # no layer is selected
+            QgsProject.instance().writeEntry(
+                'irmt', 'force_restyling',
+                str(self.force_restyling_ckb.isChecked()))
+        # keep the latest setting saved also into the general settings
+        mySettings.setValue('irmt/force_restyling',
+                            self.force_restyling_ckb.isChecked())
 
     def accept(self):
         """

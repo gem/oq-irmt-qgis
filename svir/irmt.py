@@ -1130,13 +1130,24 @@ class Irmt:
             ppdata = pprint.pformat(data, indent=4)
             log_msg('REDRAWING %s using: \n%s' % (printing_str, ppdata))
 
+        style = get_style(self.iface.activeLayer())
+        if style['force_restyling']:
+            self._apply_style(style, target_field)
+
+        self.iface.legendInterface().refreshLayerSymbology(
+            self.iface.activeLayer())
+        self.iface.mapCanvas().refresh()
+
+    def _apply_style(self, style, target_field):
         rule_renderer = QgsRuleBasedRendererV2(
             QgsSymbolV2.defaultSymbol(self.iface.activeLayer().geometryType()))
         root_rule = rule_renderer.rootRule()
 
         not_null_rule = root_rule.children()[0].clone()
+        # strip parentheses from stringified color HSL
+        col_str = str(style['color_from'].getHsl())[1:-1]
         not_null_rule.setSymbol(QgsFillSymbolV2.createSimple(
-            {'color': '255,0,0,255',
+            {'color': col_str,
              'color_border': '0,0,0,255'}))
         not_null_rule.setFilterExpression('%s IS NOT NULL' % target_field)
         not_null_rule.setLabel('%s:' % target_field)
@@ -1151,7 +1162,6 @@ class Irmt:
         null_rule.setLabel(tr('Invalid value'))
         root_rule.appendChild(null_rule)
 
-        style = get_style()
         ramp = QgsVectorGradientColorRampV2(
             style['color_from'], style['color_to'])
         graduated_renderer = QgsGraduatedSymbolRendererV2.createRenderer(
@@ -1180,20 +1190,12 @@ class Irmt:
                 last_range_index, increased_upper_value)
         elif DEBUG:
             log_msg('All features are NULL')
-
         # create value ranges
         rule_renderer.refineRuleRanges(not_null_rule, graduated_renderer)
-        for rule in not_null_rule.children():
-            label = rule.label().replace('"%s" >= ' % target_field, '')
-            label = label.replace(' AND "%s" <= ' % target_field, ' - ')
-            rule.setLabel(label)
         # remove default rule
         root_rule.removeChildAt(0)
 
         self.iface.activeLayer().setRendererV2(rule_renderer)
-        self.iface.legendInterface().refreshLayerSymbology(
-            self.iface.activeLayer())
-        self.iface.mapCanvas().refresh()
 
     def show_settings(self):
         """
