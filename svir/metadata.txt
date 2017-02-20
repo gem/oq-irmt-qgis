@@ -33,7 +33,7 @@ changelog=
     * Improved management of potential problems encountered while communicating with the OQ-Engine
     * Minor changes to the recovery modeling settings dialog
     * The automatic styling applied to layers after recalculating composite indices can be customized
-      through the plugin's settings dialog
+      through the plugin's settings dialog (and it can be disabled)
     1.8.17
     * Losses from oq-engine are read from the single-file csv format
     * Improved manual with additional examples, instructions about installation and testing
