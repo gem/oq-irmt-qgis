@@ -821,16 +821,16 @@ def get_style(layer):
     if layer is not None:
         # NOTE: We can't use %s/%s instead of %s_%s, because / is a special
         #       character
-        value, found = QgsProject.instance().readEntry(
+        value, found = QgsProject.instance().readBoolEntry(
             'irmt', '%s_%s' % (layer.id(), 'force_restyling'))
         if found:
-            force_restyling = True if value == 'True' else False
+            force_restyling = value
     # otherwise look for the setting at project level
     if force_restyling is None:
-        value, found = QgsProject.instance().readEntry(
+        value, found = QgsProject.instance().readBoolEntry(
             'irmt', 'force_restyling')
         if found:
-            force_restyling = True if value == 'True' else False
+            force_restyling = value
     # if again the setting is not found, look for it at the general level
     if force_restyling is None:
         force_restyling = settings.value(
