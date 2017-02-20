@@ -55,6 +55,7 @@ from svir.utilities.shared import DEBUG
 from svir.utilities.utils import (LayerEditingManager,
                                   WaitCursorManager,
                                   get_ui_class,
+                                  log_msg,
                                   get_style)
 from svir.calculations.calculate_utils import (add_numeric_attribute,
                                                add_textual_attribute,
@@ -568,7 +569,10 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
                     feat.setGeometry(QgsGeometry.fromPoint(
                         QgsPoint(row['lon'], row['lat'])))
                     feats.append(feat)
-            (res, outFeats) = self.layer.addFeatures(feats)
+            added_ok = self.layer.addFeatures(feats, makeSelected=False)
+            if not added_ok:
+                msg = 'There was a problem adding features to the layer.'
+                log_msg(msg, level='C', message_bar=self.iface.messageBar())
         # add self.layer to the legend
         QgsMapLayerRegistry.instance().addMapLayer(self.layer, False)
         rlz_group.addLayer(self.layer)
