@@ -378,7 +378,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 QgsFeatureRequest().setFilterFids(selected)):
             if self.output_type == 'hcurves':
                 err_msg = ("The selected layer does not contain hazard"
-                           "curves in the expected format.")
+                           " curves in the expected format.")
                 try:
                     data_str = feature[self.current_imt]
                 except KeyError:
@@ -399,7 +399,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 break
             elif self.output_type == 'loss_curves':
                 err_msg = ("The selected layer does not contain loss"
-                           "curves in the expected format.")
+                           " curves in the expected format.")
                 try:
                     data_str = feature[self.current_loss_type]
                 except KeyError:
@@ -420,7 +420,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 break
             elif self.output_type == 'uhs':
                 err_msg = ("The selected layer does not contain uniform"
-                           "hazard spectra in the expected format.")
+                           " hazard spectra in the expected format.")
                 field_names = [field.name() for field in feature.fields()]
                 # reading from something like
                 # [u'PGA', u'SA(0.025)', u'SA(0.05)', ...]
