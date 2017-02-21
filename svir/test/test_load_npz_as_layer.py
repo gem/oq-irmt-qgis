@@ -25,6 +25,8 @@
 # import qgis libs so that we set the correct sip api version
 import os
 import unittest
+import tempfile
+import filecmp
 
 from PyQt4.QtGui import QAction
 from svir.dialogs.load_npz_as_layer_dialog import LoadNpzAsLayerDialog
@@ -61,6 +63,9 @@ class LoadNpzAsLayerTestCase(unittest.TestCase):
         idx = self.viewer_dock.imt_cbx.findText(imt)
         self.assertNotEqual(idx, -1, 'IMT %s not found' % imt)
         self.viewer_dock.imt_cbx.setCurrentIndex(idx)
+        # test exporting the current selection to csv
+        _, exported_file_path = tempfile.mkstemp(suffix=".csv")
+        self._test_export('hazard_curves_SA(0.2).csv')
 
     def test_load_uhs(self):
         filepath = os.path.join(self.data_dir_name, 'output-184-uhs_67.npz')
@@ -68,6 +73,20 @@ class LoadNpzAsLayerTestCase(unittest.TestCase):
         dlg.accept()
         self._set_output_type('Uniform Hazard Spectra')
         self._change_selection()
+        # test exporting the current selection to csv
+        self._test_export('uniform_hazard_spectra.csv')
+
+    def _test_export(self, expected_file_name):
+        _, exported_file_path = tempfile.mkstemp(suffix=".csv")
+        IFACE.activeLayer().select([1, 2])
+        # probably we have the wrong layer selected (uhs produce many layers)
+        self.viewer_dock.write_export_file(exported_file_path)
+        expected_file_path = os.path.join(
+            self.data_dir_name, expected_file_name)
+        self.assertTrue(
+            filecmp.cmp(exported_file_path, expected_file_path),
+            'The exported file (%s) is different with respect to the'
+            ' reference one (%s)' % (exported_file_path, expected_file_path))
 
     def _set_output_type(self, output_type):
         idx = self.viewer_dock.output_type_cbx.findText(output_type)
