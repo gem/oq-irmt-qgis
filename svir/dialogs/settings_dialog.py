@@ -24,7 +24,7 @@
 
 
 from PyQt4.QtCore import pyqtSlot, QSettings, Qt
-from PyQt4.QtGui import QDialog, QPalette, QColor, QColorDialog
+from PyQt4.QtGui import QDialog, QPalette, QColorDialog
 
 from qgis.core import QgsGraduatedSymbolRendererV2, QgsProject
 
@@ -121,11 +121,7 @@ class SettingsDialog(QDialog, FORM_CLASS):
                 mySettings.value('irmt/developer_mode', False, type=bool))
 
     def set_button_color(self, button, color):
-        palette = button.palette()
-        palette.setColor(QPalette.Button, QColor(color))
-        button.setAutoFillBackground(True)
-        button.setPalette(palette)
-        button.update()
+        button.setStyleSheet("background-color: %s" % color.name())
 
     def saveState(self):
         """
