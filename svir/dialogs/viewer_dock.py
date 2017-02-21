@@ -110,9 +110,9 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
         self.iface.mapCanvas().setSelectionColor(QColor('magenta'))
 
+        # TODO: re-add 'Loss Curves' when the corresponding npz is available
         self.output_type_cbx.addItems(
-            ['', 'Hazard Curves', 'Uniform Hazard Spectra', 'Loss Curves',
-             'Recovery Curves'])
+            ['', 'Hazard Curves', 'Uniform Hazard Spectra', 'Recovery Curves'])
 
         self.plot_figure = Figure()
         self.plot_canvas = FigureCanvas(self.plot_figure)
