@@ -23,8 +23,8 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from PyQt4.QtCore import QSettings
-from PyQt4.QtGui import QDialog
+from PyQt4.QtCore import pyqtSlot, QSettings, Qt
+from PyQt4.QtGui import QDialog, QPalette, QColor, QColorDialog
 
 from qgis.core import QgsGraduatedSymbolRendererV2, QgsProject
 
@@ -51,6 +51,9 @@ class SettingsDialog(QDialog, FORM_CLASS):
         link_text = ('<a href="%s">Register to the OpenQuake Platform</a>'
                      % PLATFORM_REGISTRATION_URL)
         self.registration_link_lbl.setText(link_text)
+
+        self.style_color_from.setFocusPolicy(Qt.NoFocus)
+        self.style_color_to.setFocusPolicy(Qt.NoFocus)
 
         modes = {
             QgsGraduatedSymbolRendererV2.EqualInterval: self.tr(
@@ -105,11 +108,8 @@ class SettingsDialog(QDialog, FORM_CLASS):
 
         style = get_style(self.iface.activeLayer())
 
-        self.style_color_from.setDefaultColor(style['color_from'])
-        self.style_color_from.setColor(style['color_from'])
-
-        self.style_color_to.setDefaultColor(style['color_to'])
-        self.style_color_to.setColor(style['color_to'])
+        self.set_button_color(self.style_color_from, style['color_from'])
+        self.set_button_color(self.style_color_to, style['color_to'])
 
         mode_idx = self.style_mode.findData(style['mode'])
         self.style_mode.setCurrentIndex(mode_idx)
@@ -119,6 +119,13 @@ class SettingsDialog(QDialog, FORM_CLASS):
 
         self.developermodeCheck.setChecked(
                 mySettings.value('irmt/developer_mode', False, type=bool))
+
+    def set_button_color(self, button, color):
+        palette = button.palette()
+        palette.setColor(QPalette.Button, QColor(color))
+        button.setAutoFillBackground(True)
+        button.setPalette(palette)
+        button.update()
 
     def saveState(self):
         """
@@ -142,9 +149,12 @@ class SettingsDialog(QDialog, FORM_CLASS):
         mySettings.setValue('irmt/engine_password',
                             self.enginePasswordEdit.text())
 
-        mySettings.setValue('irmt/style_color_from',
-                            self.style_color_from.color())
-        mySettings.setValue('irmt/style_color_to', self.style_color_to.color())
+        mySettings.setValue(
+            'irmt/style_color_from',
+            self.style_color_from.palette().color(QPalette.Button))
+        mySettings.setValue(
+            'irmt/style_color_to',
+            self.style_color_to.palette().color(QPalette.Button))
 
         mySettings.setValue('irmt/style_mode', self.style_mode.itemData(
             self.style_mode.currentIndex()))
@@ -166,6 +176,19 @@ class SettingsDialog(QDialog, FORM_CLASS):
         # keep the latest setting saved also into the general settings
         mySettings.setValue('irmt/force_restyling',
                             self.force_restyling_ckb.isChecked())
+
+    @pyqtSlot()
+    def on_style_color_from_clicked(self):
+        self.select_color(self.style_color_from)
+
+    @pyqtSlot()
+    def on_style_color_to_clicked(self):
+        self.select_color(self.style_color_to)
+
+    def select_color(self, button):
+        initial = button.palette().color(QPalette.Button)
+        color = QColorDialog.getColor(initial)
+        self.set_button_color(button, color)
 
     def accept(self):
         """
