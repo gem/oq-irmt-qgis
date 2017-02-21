@@ -58,4 +58,11 @@ def get_qgis_app():
         #noinspection PyPep8Naming
         IFACE = QgisInterface(CANVAS)
 
+        # add some fake methods, where the actual ones were missing
+        # NOTE: perhaps it should be done somewhere else
+        def do_nothing(layer):
+            pass
+        IFACE.setActiveLayer = do_nothing
+        IFACE.legendInterface().refreshLayerSymbology = do_nothing
+
     return QGIS_APP, CANVAS, IFACE, PARENT
