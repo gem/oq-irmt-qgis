@@ -184,7 +184,8 @@ class SettingsDialog(QDialog, FORM_CLASS):
     def select_color(self, button):
         initial = button.palette().color(QPalette.Button)
         color = QColorDialog.getColor(initial)
-        self.set_button_color(button, color)
+        if color.isValid():
+            self.set_button_color(button, color)
 
     def accept(self):
         """
