@@ -58,4 +58,12 @@ def get_qgis_app():
         #noinspection PyPep8Naming
         IFACE = QgisInterface(CANVAS)
 
+        # add some fake methods, where the actual ones were missing
+        # FIXME: in QgisInterface, legendInterface is returning the canvas
+        # instead of the legendInterface, which breaks things like setting the
+        # active layer or refreshing the layer symbology.
+        def do_nothing(layer):
+            pass
+        IFACE.legendInterface().refreshLayerSymbology = do_nothing
+
     return QGIS_APP, CANVAS, IFACE, PARENT

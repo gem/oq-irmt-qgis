@@ -110,9 +110,9 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
         self.iface.mapCanvas().setSelectionColor(QColor('magenta'))
 
+        # TODO: re-add 'Loss Curves' when the corresponding npz is available
         self.output_type_cbx.addItems(
-            ['', 'Hazard Curves', 'Uniform Hazard Spectra', 'Loss Curves',
-             'Recovery Curves'])
+            ['', 'Hazard Curves', 'Uniform Hazard Spectra', 'Recovery Curves'])
 
         self.plot_figure = Figure()
         self.plot_canvas = FigureCanvas(self.plot_figure)
@@ -378,7 +378,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 QgsFeatureRequest().setFilterFids(selected)):
             if self.output_type == 'hcurves':
                 err_msg = ("The selected layer does not contain hazard"
-                           "curves in the expected format.")
+                           " curves in the expected format.")
                 try:
                     data_str = feature[self.current_imt]
                 except KeyError:
@@ -399,7 +399,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 break
             elif self.output_type == 'loss_curves':
                 err_msg = ("The selected layer does not contain loss"
-                           "curves in the expected format.")
+                           " curves in the expected format.")
                 try:
                     data_str = feature[self.current_loss_type]
                 except KeyError:
@@ -420,7 +420,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 break
             elif self.output_type == 'uhs':
                 err_msg = ("The selected layer does not contain uniform"
-                           "hazard spectra in the expected format.")
+                           " hazard spectra in the expected format.")
                 field_names = [field.name() for field in feature.fields()]
                 # reading from something like
                 # [u'PGA', u'SA(0.025)', u'SA(0.05)', ...]
@@ -654,30 +654,33 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                     self.approach_cbx.currentText()),
                 '*.csv')
         if filename:
-            with open(filename, 'w') as csv_file:
-                # write header
-                line = 'lon,lat,%s' % (
-                    ','.join(map(str, list(self.current_abscissa))))
-                csv_file.write(line + os.linesep)
+            self.write_export_file(filename)
 
-                if self.output_type == 'recovery_curves':
-                    # NOTE: taking the first element, because they are all the
-                    # same
-                    curve = self.current_selection.values()[0]
-                    csv_file.write(str(curve['ordinates']))
-                else:
-                    # write selected data
-                    for site, curve in self.current_selection.iteritems():
-                        poes = ','.join(map(str, curve['ordinates']))
-                        feature = next(self.active_layer.getFeatures(
-                            QgsFeatureRequest().setFilterFid(site)))
+    def write_export_file(self, filename):
+        with open(filename, 'w') as csv_file:
+            # write header
+            line = 'lon,lat,%s' % (
+                ','.join(map(str, list(self.current_abscissa))))
+            csv_file.write(line + os.linesep)
 
-                        lon = feature.geometry().asPoint().x()
-                        lat = feature.geometry().asPoint().y()
-                        line = '%s,%s,%s' % (lon, lat, poes)
-                        csv_file.write(line + os.linesep)
-            msg = 'Data exported to %s' % filename
-            log_msg(msg, level='I', message_bar=self.iface.messageBar())
+            if self.output_type == 'recovery_curves':
+                # NOTE: taking the first element, because they are all the
+                # same
+                curve = self.current_selection.values()[0]
+                csv_file.write(str(curve['ordinates']))
+            else:
+                # write selected data
+                for site, curve in self.current_selection.iteritems():
+                    poes = ','.join(map(str, curve['ordinates']))
+                    feature = next(self.active_layer.getFeatures(
+                        QgsFeatureRequest().setFilterFid(site)))
+
+                    lon = feature.geometry().asPoint().x()
+                    lat = feature.geometry().asPoint().y()
+                    line = '%s,%s,%s' % (lon, lat, poes)
+                    csv_file.write(line + os.linesep)
+        msg = 'Data exported to %s' % filename
+        log_msg(msg, level='I', message_bar=self.iface.messageBar())
 
     @pyqtSlot()
     def on_bw_chk_clicked(self):

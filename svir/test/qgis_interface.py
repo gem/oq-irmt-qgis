@@ -204,10 +204,22 @@ class QgisInterface(QObject):
 
     def legendInterface(self):
         """Get the legend."""
+        # FIXME: this should return the legend interface instead of the canvas,
+        # otherwise it breaks things like setting the active layer or
+        # refreshing the layer symbology.
         return self.canvas
 
     def messageBar(self):
-        """Get the legend."""
+        """Get the message bar."""
         if self._messageBar is None:
             self._messageBar = Mock()  # avoid creating GUI by QgsMessageBar()
         return self._messageBar
+
+    def setActiveLayer(self, layer):
+        """
+        .. note: The QgsInterface api does not include this method; it is added
+                 here as a helper to facilitate testing. When we have multiple
+                 layers in the map registy, it might be tricky to identify
+                 which of them should be considered as the active one.
+        """
+        pass

@@ -130,10 +130,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             raise ConnectionError(msg)
 
     def is_lockdown(self):
-        # try retrieving the list of calculations and see if the server
+        # try retrieving the engine version and see if the server
         # redirects you to the login page
-        # NOTE: we might call something quicker than this, if available 
-        calc_list_url = "%s/v1/calc/list?relevant=true" % self.hostname
+        calc_list_url = "%s/engine_version" % self.hostname
         with WaitCursorManager():
             try:
                 # FIXME: enable the user to set verify=True
