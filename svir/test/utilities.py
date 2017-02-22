@@ -59,10 +59,11 @@ def get_qgis_app():
         IFACE = QgisInterface(CANVAS)
 
         # add some fake methods, where the actual ones were missing
-        # NOTE: perhaps it should be done somewhere else
+        # FIXME: in QgisInterface, legendInterface is returning the canvas
+        # instead of the legendInterface, which breaks things like setting the
+        # active layer or refreshing the layer symbology.
         def do_nothing(layer):
             pass
-        IFACE.setActiveLayer = do_nothing
         IFACE.legendInterface().refreshLayerSymbology = do_nothing
 
     return QGIS_APP, CANVAS, IFACE, PARENT
