@@ -217,7 +217,9 @@ class QgisInterface(QObject):
 
     def setActiveLayer(self, layer):
         """
-        .. note: The QgsInterface api does not include this method, it is added
-                 here as a helper to facilitate testing.
+        .. note: The QgsInterface api does not include this method; it is added
+                 here as a helper to facilitate testing. When we have multiple
+                 layers in the map registy, it might be tricky to identify
+                 which of them should be considered as the active one.
         """
         pass

@@ -47,6 +47,7 @@ class LoadNpzAsLayerTestCase(unittest.TestCase):
         self.viewer_dock = ViewerDock(IFACE, mock_action)
 
     def tearDown(self):
+        # the following line removes all the existing map layers
         IFACE.newProject()
 
     def test_load_hazard_map(self):
@@ -65,6 +66,8 @@ class LoadNpzAsLayerTestCase(unittest.TestCase):
         # test changing intensity measure type
         layers = CANVAS.layers()
         layer = layers[-1]
+        # select the first 2 features (the same used to produce the reference
+        # csv)
         layer.select([1, 2])
         imt = 'SA(0.2)'
         idx = self.viewer_dock.imt_cbx.findText(imt)
@@ -93,6 +96,8 @@ class LoadNpzAsLayerTestCase(unittest.TestCase):
         _, exported_file_path = tempfile.mkstemp(suffix=".csv")
         layers = CANVAS.layers()
         layer = layers[-1]
+        # select the first 2 features (the same used to produce the reference
+        # csv)
         layer.select([1, 2])
         # probably we have the wrong layer selected (uhs produce many layers)
         self.viewer_dock.write_export_file(exported_file_path)
