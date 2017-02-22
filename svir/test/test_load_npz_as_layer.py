@@ -39,7 +39,7 @@ QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 
 class LoadNpzAsLayerTestCase(unittest.TestCase):
     def setUp(self):
-        self.remove_all_layers()
+        IFACE.newProject()
         curr_dir_name = os.path.dirname(__file__)
         self.data_dir_name = os.path.join(
             curr_dir_name, 'data', 'hazard')
@@ -47,11 +47,7 @@ class LoadNpzAsLayerTestCase(unittest.TestCase):
         self.viewer_dock = ViewerDock(IFACE, mock_action)
 
     def tearDown(self):
-        self.remove_all_layers()
-
-    def remove_all_layers(self):
-        QgsMapLayerRegistry.instance().removeAllMapLayers()
-        CANVAS.refresh()
+        IFACE.newProject()
 
     def test_load_hazard_map(self):
         filepath = os.path.join(self.data_dir_name, 'output-182-hmaps_67.npz')
