@@ -56,6 +56,13 @@ class LoadNpzAsLayerTestCase(unittest.TestCase):
         dlg.accept()
         # hazard maps have nothing to do with the Data Viewer
 
+    def test_load_gmf(self):
+        filepath = os.path.join(self.data_dir_name,
+                                'output-195-gmf_data_70.npz')
+        dlg = LoadNpzAsLayerDialog(IFACE, 'gmf_data', filepath)
+        dlg.accept()
+        # ground motion fields have nothing to do with the Data Viewer
+
     def test_load_hazard_curves(self):
         filepath = os.path.join(self.data_dir_name,
                                 'output-181-hcurves_67.npz')
