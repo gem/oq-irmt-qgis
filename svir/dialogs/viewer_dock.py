@@ -32,6 +32,7 @@ from matplotlib.backends.backend_qt4agg import (
     FigureCanvasQTAgg as FigureCanvas,
     NavigationToolbar2QT as NavigationToolbar
 )
+from matplotlib.lines import Line2D
 
 
 from PyQt4.QtCore import pyqtSlot, QSettings
@@ -99,6 +100,11 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.color_names = [
             name for name in QColor.colorNames() if name != 'white']
         self.line_styles = ["-", "--", "-.", ":"]
+        self.markers = Line2D.filled_markers
+        # # uncomment the following to get all available markers, including
+        # # unfilled ones
+        # self.markers = [code for code, name in Line2D.markers.items()
+        #                 if name != 'nothing']
 
         # Marker for hovering
         self.vertex_marker = QgsVertexMarker(iface.mapCanvas())
@@ -256,9 +262,6 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.adjustSize()
 
     def draw(self):
-        marker = "None"
-        if self.output_type != 'recovery_curves':
-            marker = '.'
         self.plot.clear()
         gids = self.current_selection.keys()
         count_selected = len(self.iface.activeLayer().selectedFeatures())
@@ -281,7 +284,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 curve['ordinates'],
                 color=curve['color'],
                 linestyle=curve['line_style'],
-                marker=marker,
+                marker=curve['marker'],
                 label='%.4f, %.4f' % (lon, lat),
                 gid=str(site),  # matplotlib needs a string when exporting svg
                 picker=5  # 5 points tolerance
@@ -460,12 +463,13 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                     r = g = b = format(
                         (85 * line_styles_whole_cycles) % 256, '02x')
                     color_hex = "#%s%s%s" % (r, g, b)
+                    color = QColor(color_hex)
+                    color_hex = color.darker(120).name()
                     # here I am using i in order to cycle through all the
                     # line styles, regardless from the feature id
                     # (otherwise I might easily repeat styles, that are a
                     # small set of 4 items)
-                    line_style = self.line_styles[
-                        i % len(self.line_styles)]
+                    line_style = self.line_styles[i % len(self.line_styles)]
                 else:
                     # here I am using the feature id in order to keep a
                     # matching between a curve and the corresponding point
@@ -475,11 +479,13 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                     color = QColor(color_name)
                     color_hex = color.darker(120).name()
                     line_style = "-"  # solid
+                marker = self.markers[i % len(self.markers)]
                 self.current_selection[feature.id()] = {
                     'abscissa': self.current_abscissa,
                     'ordinates': ordinates,
                     'color': color_hex,
                     'line_style': line_style,
+                    'marker': marker,
                 }
         self.was_imt_switched = False
         self.was_loss_type_switched = False
@@ -503,7 +509,6 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.current_abscissa = range(len(recovery_function))
         color = QColor('black')
         color_hex = color.name()
-        line_style = "-"  # solid
         # NOTE: differently with respect to the other approaches, we are
         # associating only a single feature with the cumulative recovery curve.
         # It might be a little ugly, but otherwise it would be inefficient.
@@ -512,7 +517,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 'abscissa': self.current_abscissa,
                 'ordinates': recovery_function,
                 'color': color_hex,
-                'line_style': line_style,
+                'line_style': "-",  # solid
+                'marker': "None",
             }
         self.draw()
 
