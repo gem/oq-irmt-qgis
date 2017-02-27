@@ -288,14 +288,14 @@ class Irmt:
         #                    submenu='OQ Engine')
         # Action to load as layer ground motion fields from npz produced
         # by the oq-engine with a scenario damage hazard calculation
-        # self.add_menu_item(
-        #         "load_scenario_damage_gmfs_from_npz_as_layer",
-        #         ":/plugins/irmt/calculate.svg",  # FIXME
-        #         u"Load scenario damage ground motion "
-        #         "fields from NPZ as layer",
-        #         self.load_scenario_damage_gmfs_from_npz_as_layer,
-        #         enable=True,
-        #         submenu='OQ Engine')
+        self.add_menu_item(
+                "load_scenario_damage_gmfs_from_npz_as_layer",
+                ":/plugins/irmt/calculate.svg",  # FIXME
+                u"Load scenario damage ground motion "
+                "fields from NPZ as layer",
+                self.load_scenario_damage_gmfs_from_npz_as_layer,
+                enable=True,
+                submenu='OQ Engine')
         # # Action to load as layer damage by asset from npz produced by
         # # the oq-engine with a scenario damage risk calculation
         # self.add_menu_item(
@@ -375,7 +375,7 @@ class Irmt:
         self.viewer_dock.change_output_type('Loss Curves')
 
     def load_scenario_damage_gmfs_from_npz_as_layer(self):
-        dlg = LoadNpzAsLayerDialog(self.iface, 'scenario_damage_gmfs')
+        dlg = LoadNpzAsLayerDialog(self.iface, 'gmf_data')
         dlg.exec_()
         self.viewer_dock.change_output_type('')
 
