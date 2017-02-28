@@ -49,6 +49,7 @@ from svir.third_party.requests.exceptions import (ConnectionError,
                                                   InvalidSchema,
                                                   MissingSchema,
                                                   ReadTimeout,
+                                                  SSLError,
                                                   )
 from svir.utilities.settings import get_engine_credentials
 from svir.utilities.utils import (WaitCursorManager,
@@ -138,6 +139,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 # FIXME: enable the user to set verify=True
                 resp = self.session.get(
                     calc_list_url, timeout=10, verify=False)
+            except SSLError as exc:
+                err_msg = '; '.join(exc.message.message.strerror.message[0])
+                log_msg(err_msg, level='C',
+                        message_bar=self.iface.messageBar())
+                raise
             except (ConnectionError, InvalidSchema, MissingSchema,
                     ReadTimeout, SvNetworkError) as exc:
                 log_msg(str(exc), level='C',
