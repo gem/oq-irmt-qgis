@@ -69,10 +69,10 @@ class LoadNpzAsLayerTestCase(unittest.TestCase):
         dlg = LoadNpzAsLayerDialog(IFACE, 'hcurves', filepath)
         dlg.accept()
         self._set_output_type('Hazard Curves')
-        self._change_selection()
+        expected_layer_name = 'hazard_curves_rlz-rlz-000'
+        layer = self._get_layer_by_name(expected_layer_name)
+        self._change_selection(layer)
         # test changing intensity measure type
-        layers = CANVAS.layers()
-        layer = layers[-1]
         # select the first 2 features (the same used to produce the reference
         # csv)
         layer.select([1, 2])
@@ -82,31 +82,24 @@ class LoadNpzAsLayerTestCase(unittest.TestCase):
         self.viewer_dock.imt_cbx.setCurrentIndex(idx)
         # test exporting the current selection to csv
         _, exported_file_path = tempfile.mkstemp(suffix=".csv")
-        self._test_export('hazard_curves_SA(0.2).csv')
+        self._test_export(layer, 'hazard_curves_SA(0.2).csv')
 
     def test_load_uhs(self):
         filepath = os.path.join(self.data_dir_name, 'output-184-uhs_67.npz')
         dlg = LoadNpzAsLayerDialog(IFACE, 'uhs', filepath)
         dlg.accept()
-        # FIXME: setActiveLayer is not working. As a workaround, I am deleting
-        # all layers except the one I am testing.
-        for layer in CANVAS.layers():
-            if layer.name() != u'uhs_rlz-rlz-000_poe-0.02':
-                QgsMapLayerRegistry.instance().removeMapLayer(layer)
-        CANVAS.refresh()
+        expected_layer_name = 'uhs_rlz-rlz-000_poe-0.02'
+        layer = self._get_layer_by_name(expected_layer_name)
         self._set_output_type('Uniform Hazard Spectra')
-        self._change_selection()
+        self._change_selection(layer)
         # test exporting the current selection to csv
-        self._test_export('uniform_hazard_spectra.csv')
+        self._test_export(layer, 'uniform_hazard_spectra.csv')
 
-    def _test_export(self, expected_file_name):
+    def _test_export(self, layer, expected_file_name):
         _, exported_file_path = tempfile.mkstemp(suffix=".csv")
-        layers = CANVAS.layers()
-        layer = layers[-1]
         # select the first 2 features (the same used to produce the reference
         # csv)
         layer.select([1, 2])
-        # probably we have the wrong layer selected (uhs produce many layers)
         self.viewer_dock.write_export_file(exported_file_path)
         expected_file_path = os.path.join(
             self.data_dir_name, expected_file_name)
@@ -120,12 +113,20 @@ class LoadNpzAsLayerTestCase(unittest.TestCase):
         self.assertNotEqual(idx, -1, 'Output type %s not found' % output_type)
         self.viewer_dock.output_type_cbx.setCurrentIndex(idx)
 
-    def _change_selection(self):
-        layers = CANVAS.layers()
-        layer = layers[-1]
+    def _change_selection(self, layer):
         # the behavior should be slightly different (pluralizing labels, etc)
         # depending on the amount of features selected
         layer.select(1)
         layer.select(2)
         layer.selectAll()
         layer.removeSelection()
+
+    def _get_layer_by_name(self, layer_name):
+        layers = QgsMapLayerRegistry.instance().mapLayersByName(
+            layer_name)
+        self.assertEqual(
+            len(layers), 1, 'Layer %s found %s times.' % (layer_name,
+                                                          len(layers)))
+        layer = layers[0]
+        IFACE.setActiveLayer(layer)
+        return layer

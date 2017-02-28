@@ -94,7 +94,8 @@ class QgisInterface(QObject):
         .. note: The addLayer method was deprecated in QGIS 1.8 so you should
                  not need this method much.
         """
-        pass
+        self.addLayers([layer])
+        self.setActiveLayer(layer)
 
     @pyqtSlot()
     def removeAllLayers(self):
@@ -216,10 +217,7 @@ class QgisInterface(QObject):
         return self._messageBar
 
     def setActiveLayer(self, layer):
-        """
-        .. note: The QgsInterface api does not include this method; it is added
-                 here as a helper to facilitate testing. When we have multiple
-                 layers in the map registy, it might be tricky to identify
-                 which of them should be considered as the active one.
-        """
-        pass
+        """Emit signal setting the active layer."""
+        mc_layer = [l for l in self.canvas.layers() if l.id() == layer.id()][0]
+        # self.currentLayerChanged.emit(mc_layer)
+        self.currentLayerChanged.emit(QgsMapCanvasLayer(mc_layer))
