@@ -92,8 +92,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         try:
             self.login()
         except (ConnectionError, InvalidSchema, MissingSchema, ReadTimeout,
-                SvNetworkError):
-            self.is_logged_in = False
+                SvNetworkError, SSLError) as exc:
+            self._handle_generic_exception(exc)
         else:
             self.refresh_calc_list()
 
@@ -113,22 +113,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     engine_login(self.hostname, username,
                                  password, self.session)
                 except (ConnectionError, InvalidSchema, MissingSchema,
-                        ReadTimeout, SvNetworkError) as e:
-                    err_msg = str(e)
-                    if isinstance(e, InvalidSchema):
-                        err_msg += \
-                            ' (you could try prepending http:// or https://)'
-                    log_msg(err_msg, level='C',
-                            message_bar=self.iface.messageBar())
-                    self.is_logged_in = False
+                        ReadTimeout, SvNetworkError, SSLError):
                     raise
                 else:
                     self.is_logged_in = True
-        if not self.is_logged_in:
-            msg = ("Please check OpenQuake Engine connection settings and"
-                   " credentials")
-            log_msg(msg, level='C', message_bar=self.iface.messageBar())
-            raise ConnectionError(msg)
 
     def is_lockdown(self):
         # try retrieving the engine version and see if the server
@@ -139,15 +127,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 # FIXME: enable the user to set verify=True
                 resp = self.session.get(
                     calc_list_url, timeout=10, verify=False)
-            except SSLError as exc:
-                err_msg = '; '.join(exc.message.message.strerror.message[0])
-                log_msg(err_msg, level='C',
-                        message_bar=self.iface.messageBar())
-                raise
             except (ConnectionError, InvalidSchema, MissingSchema,
-                    ReadTimeout, SvNetworkError) as exc:
-                log_msg(str(exc), level='C',
-                        message_bar=self.iface.messageBar())
+                    ReadTimeout, SvNetworkError, SSLError):
                 raise
             # handle case of redirection to the login page
             if resp.url != calc_list_url and 'login' in resp.url:
@@ -163,11 +144,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 resp = self.session.get(
                     calc_list_url, timeout=10, verify=False)
             except (ConnectionError, InvalidSchema, MissingSchema,
-                    ReadTimeout, SvNetworkError) as exc:
-                log_msg(str(exc), level='C',
-                        message_bar=self.iface.messageBar())
-                self.is_logged_in = False
-                self.reject()
+                    ReadTimeout, SvNetworkError, SSLError) as exc:
+                self._handle_generic_exception(exc)
                 return
             # handle case of redirection to the login page
             if resp.url != calc_list_url and 'login' in resp.url:
@@ -293,10 +271,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 # FIXME: enable the user to set verify=True
                 resp = self.session.get(calc_log_url, timeout=10, verify=False)
             except (ConnectionError, InvalidSchema, MissingSchema,
-                    ReadTimeout, SvNetworkError) as exc:
-                log_msg(str(exc.message), level='C',
-                        message_bar=self.iface.messageBar())
-                self.reject()
+                    ReadTimeout, SvNetworkError, SSLError) as exc:
+                self._handle_generic_exception(exc)
                 return
             calc_log = json.loads(resp.text)
             self.calc_log_line[calc_id] = start + len(calc_log)
@@ -308,10 +284,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             try:
                 resp = self.session.post(calc_remove_url, timeout=10)
             except (ConnectionError, InvalidSchema, MissingSchema,
-                    ReadTimeout, SvNetworkError) as exc:
-                log_msg(str(exc.message), level='C',
-                        message_bar=self.iface.messageBar())
-                self.reject()
+                    ReadTimeout, SvNetworkError, SSLError) as exc:
+                self._handle_generic_exception(exc)
                 return
         if resp.ok:
             msg = 'Calculation %s successfully removed' % calc_id
@@ -364,10 +338,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 resp = self.session.post(
                     run_calc_url, files=files, data=data, timeout=20)
             except (ConnectionError, InvalidSchema, MissingSchema,
-                    ReadTimeout, SvNetworkError) as exc:
-                msg = str(exc.message)
-                log_msg(msg, level='C', message_bar=self.iface.messageBar())
-                self.reject()
+                    ReadTimeout, SvNetworkError, SSLError) as exc:
+                self._handle_generic_exception(exc)
                 return
         if resp.ok:
             self.refresh_calc_list()
@@ -387,10 +359,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 resp = self.session.get(datastore_url, timeout=10,
                                         verify=False)
             except (ConnectionError, InvalidSchema, MissingSchema,
-                    ReadTimeout, SvNetworkError) as exc:
-                log_msg(str(exc.message), level='C',
-                        message_bar=self.iface.messageBar())
-                self.reject()
+                    ReadTimeout, SvNetworkError, SSLError) as exc:
+                self._handle_generic_exception(exc)
                 return
             filename = resp.headers['content-disposition'].split(
                 'filename=')[1]
@@ -407,10 +377,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 resp = self.session.get(output_list_url, timeout=10,
                                         verify=False)
             except (ConnectionError, InvalidSchema, MissingSchema,
-                    ReadTimeout, SvNetworkError) as exc:
-                log_msg(str(exc.message), level='C',
-                        message_bar=self.iface.messageBar())
-                self.reject()
+                    ReadTimeout, SvNetworkError, SSLError) as exc:
+                self._handle_generic_exception(exc)
                 return
         if resp.ok:
             output_list = json.loads(resp.text)
@@ -544,10 +512,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 # FIXME: enable the user to set verify=True
                 resp = self.session.get(output_download_url, verify=False)
             except (ConnectionError, InvalidSchema, MissingSchema,
-                    ReadTimeout, SvNetworkError) as exc:
-                log_msg(str(exc.message), level='C',
-                        message_bar=self.iface.messageBar())
-                self.reject()
+                    ReadTimeout, SvNetworkError, SSLError) as exc:
+                self._handle_generic_exception(exc)
                 return
             filename = resp.headers['content-disposition'].split(
                 'filename=')[1]
@@ -575,6 +541,29 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     @pyqtSlot()
     def on_run_calc_btn_clicked(self):
         self.run_calc()
+
+    def _handle_generic_exception(self, exc):
+        if isinstance(exc, SSLError):
+            err_msg = '; '.join(exc.message.message.strerror.message[0])
+            err_msg += ' (you could try prepending http:// or https://)'
+            log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
+        else:
+            err_msg = str(exc)
+            if isinstance(exc, InvalidSchema):
+                err_msg += ' (you could try prepending http:// or https://)'
+            elif isinstance(exc, SvNetworkError):
+                err_msg += (
+                    ' (please make sure the username and password are'
+                    ' spelled correctly)')
+            else:
+                err_msg += (
+                    ' (please make sure the username and password are'
+                    ' spelled correctly and that you are using the right'
+                    ' port in the host setting)')
+            log_msg(err_msg, level='C',
+                    message_bar=self.iface.messageBar())
+        self.is_logged_in = False
+        self.reject()
 
     def reject(self):
         self.stop_polling()
