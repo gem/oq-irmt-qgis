@@ -89,6 +89,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         # NOTE: start_polling() is called from outside, in order to reset
         #       the timer whenever the button to open the dialog is pressed
         self.finished.connect(self.stop_polling)
+        self.attempt_login()
+
+    def attempt_login(self):
         try:
             self.login()
         except (ConnectionError, InvalidSchema, MissingSchema, ReadTimeout,
