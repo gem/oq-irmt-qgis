@@ -65,6 +65,9 @@ from svir.dialogs.load_csv_as_layer_dialog import LoadCsvAsLayerDialog
 
 FORM_CLASS = get_ui_class('ui_drive_engine_server.ui')
 
+HANDLED_EXCEPTIONS = (SSLError, ConnectionError, InvalidSchema, MissingSchema,
+                      ReadTimeout, SvNetworkError)
+
 
 class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     """
@@ -94,7 +97,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     def attempt_login(self):
         try:
             self.login()
-        except Exception as exc:
+        except HANDLED_EXCEPTIONS as exc:
             self._handle_exception(exc)
         else:
             self.refresh_calc_list()
@@ -111,27 +114,20 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             return
         if username and password:
             with WaitCursorManager('Logging in...', self.iface):
-                try:
-                    engine_login(self.hostname, username,
-                                 password, self.session)
-                except (ConnectionError, InvalidSchema, MissingSchema,
-                        ReadTimeout, SvNetworkError, SSLError):
-                    raise
-                else:
-                    self.is_logged_in = True
+                # it can raise exceptions, catched by self.attempt_login
+                engine_login(self.hostname, username, password, self.session)
+                # if no exception occurred
+                self.is_logged_in = True
 
     def is_lockdown(self):
         # try retrieving the engine version and see if the server
         # redirects you to the login page
         calc_list_url = "%s/engine_version" % self.hostname
         with WaitCursorManager():
-            try:
-                # FIXME: enable the user to set verify=True
-                resp = self.session.get(
-                    calc_list_url, timeout=10, verify=False)
-            except (ConnectionError, InvalidSchema, MissingSchema,
-                    ReadTimeout, SvNetworkError, SSLError):
-                raise
+            # it can raise exceptions, catched by self.attempt_login
+            # FIXME: enable the user to set verify=True
+            resp = self.session.get(
+                calc_list_url, timeout=10, verify=False)
             # handle case of redirection to the login page
             if resp.url != calc_list_url and 'login' in resp.url:
                 return True
@@ -145,7 +141,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 # FIXME: enable the user to set verify=True
                 resp = self.session.get(
                     calc_list_url, timeout=10, verify=False)
-            except Exception as exc:
+            except HANDLED_EXCEPTIONS as exc:
                 self._handle_exception(exc)
                 return
             # handle case of redirection to the login page
@@ -271,7 +267,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             try:
                 # FIXME: enable the user to set verify=True
                 resp = self.session.get(calc_log_url, timeout=10, verify=False)
-            except Exception as exc:
+            except HANDLED_EXCEPTIONS as exc:
                 self._handle_exception(exc)
                 return
             calc_log = json.loads(resp.text)
@@ -283,7 +279,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         with WaitCursorManager('Removing calculation...', self.iface):
             try:
                 resp = self.session.post(calc_remove_url, timeout=10)
-            except Exception as exc:
+            except HANDLED_EXCEPTIONS as exc:
                 self._handle_exception(exc)
                 return
         if resp.ok:
@@ -336,7 +332,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             try:
                 resp = self.session.post(
                     run_calc_url, files=files, data=data, timeout=20)
-            except Exception as exc:
+            except HANDLED_EXCEPTIONS as exc:
                 self._handle_exception(exc)
                 return
         if resp.ok:
@@ -356,7 +352,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 # FIXME: enable the user to set verify=True
                 resp = self.session.get(datastore_url, timeout=10,
                                         verify=False)
-            except Exception as exc:
+            except HANDLED_EXCEPTIONS as exc:
                 self._handle_exception(exc)
                 return
             filename = resp.headers['content-disposition'].split(
@@ -373,7 +369,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 # FIXME: enable the user to set verify=True
                 resp = self.session.get(output_list_url, timeout=10,
                                         verify=False)
-            except Exception as exc:
+            except HANDLED_EXCEPTIONS as exc:
                 self._handle_exception(exc)
                 return
         if resp.ok:
@@ -507,7 +503,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             try:
                 # FIXME: enable the user to set verify=True
                 resp = self.session.get(output_download_url, verify=False)
-            except Exception as exc:
+            except HANDLED_EXCEPTIONS as exc:
                 self._handle_exception(exc)
                 return
             filename = resp.headers['content-disposition'].split(
@@ -562,7 +558,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             log_msg(err_msg, level='C',
                     message_bar=self.iface.messageBar())
         else:
-            raise exc
+            # sanity check (it should never occur)
+            raise TypeError(
+                'Unable to handle exception of type %s' % type(exc))
         self.is_logged_in = False
         self.reject()
 
