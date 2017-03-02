@@ -122,17 +122,17 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     def is_lockdown(self):
         # try retrieving the engine version and see if the server
         # redirects you to the login page
-        calc_list_url = "%s/engine_version" % self.hostname
+        engine_version_url = "%s/engine_version" % self.hostname
         with WaitCursorManager():
             # it can raise exceptions, catched by self.attempt_login
             # FIXME: enable the user to set verify=True
             resp = self.session.get(
-                calc_list_url, timeout=10, verify=False)
+                engine_version_url, timeout=10, verify=False)
             # handle case of redirection to the login page
             if not resp.ok:
                 raise ConnectionError(
                     "%s %s: %s" % (resp.status_code, resp.url, resp.reason))
-            if resp.url != calc_list_url and 'login' in resp.url:
+            if resp.url != engine_version_url and 'login' in resp.url:
                 return True
         return False
 
