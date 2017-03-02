@@ -400,6 +400,8 @@ class Irmt:
         if self.drive_oq_engine_server_dlg is None:
             self.drive_oq_engine_server_dlg = DriveOqEngineServerDialog(
                 self.iface)
+        else:
+            self.drive_oq_engine_server_dlg.attempt_login()
         self.drive_oq_engine_server_dlg.show()
         self.drive_oq_engine_server_dlg.raise_()
         if self.drive_oq_engine_server_dlg.is_logged_in:
