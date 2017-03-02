@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>501</width>
-    <height>628</height>
+    <height>660</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -214,37 +214,55 @@
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="groupBox">
+    <widget class="QGroupBox" name="project_settings_gbx">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>0</height>
+      </size>
+     </property>
      <property name="title">
       <string>Project-related settings</string>
      </property>
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <item>
+       <widget class="QCheckBox" name="force_restyling_ckb">
+        <property name="text">
+         <string>Restyle layer after recalculating composite indices</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+     <zorder>force_restyling_ckb</zorder>
+     <zorder>force_restyling_ckb</zorder>
     </widget>
    </item>
    <item>
-    <widget class="QCheckBox" name="force_restyling_ckb">
-     <property name="text">
-      <string>Restyle layer after recalculating composite indices</string>
+    <widget class="QGroupBox" name="advanced_settings_gbx">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>0</height>
+      </size>
      </property>
-     <property name="checked">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QGroupBox" name="groupBox_2">
      <property name="title">
       <string>Advanced settings</string>
      </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QCheckBox" name="developermodeCheck">
-     <property name="toolTip">
-      <string>It is recommended to keep it unchecked</string>
-     </property>
-     <property name="text">
-      <string>Developer mode (requires restart)</string>
-     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_3">
+      <item>
+       <widget class="QCheckBox" name="developermodeCheck">
+        <property name="toolTip">
+         <string>It is recommended to keep it unchecked</string>
+        </property>
+        <property name="text">
+         <string>Developer mode (requires restart)</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </widget>
    </item>
    <item>
