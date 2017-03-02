@@ -150,7 +150,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             # handle case of redirection to the login page
             if resp.url != calc_list_url and 'login' in resp.url:
                 msg = ("Please check OpenQuake Engine connection settings and"
-                       " credentials")
+                       " credentials. The call to %s was redirected to %s."
+                       % (calc_list_url, resp.url))
                 log_msg(msg, level='C',
                         message_bar=self.iface.messageBar())
                 self.is_logged_in = False
