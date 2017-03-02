@@ -129,6 +129,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             resp = self.session.get(
                 calc_list_url, timeout=10, verify=False)
             # handle case of redirection to the login page
+            if not resp.ok:
+                raise ConnectionError(
+                    "%s %s: %s" % (resp.status_code, resp.url, resp.reason))
             if resp.url != calc_list_url and 'login' in resp.url:
                 return True
         return False
