@@ -85,9 +85,12 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
                 self.dmg_by_asset_layer_cbx.addItem(layer.name(), layer)
             if layer.geometryType() == QGis.Polygon:
                 self.svi_layer_cbx.addItem(layer.name(), layer)
-        if self.iface.activeLayer() is not None:
-            self.dmg_by_asset_layer_cbx.setCurrentIndex(
-                self.dmg_by_asset_layer_cbx.findData(self.iface.activeLayer()))
+        # if the active layer contains points, preselect it
+        active_layer = self.iface.activeLayer()
+        if active_layer is not None:
+            idx = self.dmg_by_asset_layer_cbx.findData(active_layer)
+            if idx != -1:
+                self.dmg_by_asset_layer_cbx.setCurrentIndex(idx)
 
     def restoreState(self):
         """
