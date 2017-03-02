@@ -107,14 +107,14 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.hostname, username, password = get_engine_credentials(self.iface)
         # try without authentication (if authentication is disabled server
         # side)
-        # NOTE: is_lockdown() can raise exceptions, to be catched from outside
+        # NOTE: is_lockdown() can raise exceptions, to be caught from outside
         is_lockdown = self.is_lockdown()
         if not is_lockdown:
             self.is_logged_in = True
             return
         if username and password:
             with WaitCursorManager('Logging in...', self.iface):
-                # it can raise exceptions, catched by self.attempt_login
+                # it can raise exceptions, caught by self.attempt_login
                 engine_login(self.hostname, username, password, self.session)
                 # if no exception occurred
                 self.is_logged_in = True
@@ -124,7 +124,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         # redirects you to the login page
         engine_version_url = "%s/engine_version" % self.hostname
         with WaitCursorManager():
-            # it can raise exceptions, catched by self.attempt_login
+            # it can raise exceptions, caught by self.attempt_login
             # FIXME: enable the user to set verify=True
             resp = self.session.get(
                 engine_version_url, timeout=10, verify=False)
