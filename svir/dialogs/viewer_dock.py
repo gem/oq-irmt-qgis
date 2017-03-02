@@ -55,6 +55,9 @@ from svir.ui.list_multiselect_widget import ListMultiSelectWidget
 FORM_CLASS = get_ui_class('ui_viewer_dock.ui')
 
 
+size_policy = QSizePolicy.MinimumExpanding
+
+
 class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
     def __init__(self, iface, action):
         """Constructor for the viewer dock.
@@ -133,8 +136,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
     def create_loss_type_selector(self):
         self.loss_type_lbl = QLabel('Loss Type')
-        self.loss_type_lbl.setSizePolicy(
-            QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.loss_type_lbl.setSizePolicy(size_policy, size_policy)
         self.loss_type_cbx = QComboBox()
         self.loss_type_cbx.currentIndexChanged['QString'].connect(
             self.on_loss_type_changed)
@@ -143,8 +145,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
     def create_imt_selector(self):
         self.imt_lbl = QLabel('Intensity Measure Type')
-        self.imt_lbl.setSizePolicy(
-            QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.imt_lbl.setSizePolicy(size_policy, size_policy)
         self.imt_cbx = QComboBox()
         self.imt_cbx.currentIndexChanged['QString'].connect(
             self.on_imt_changed)
@@ -153,8 +154,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
     def create_poe_selector(self):
         self.poe_lbl = QLabel('Probability of Exceedance')
-        self.poe_lbl.setSizePolicy(
-            QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.poe_lbl.setSizePolicy(size_policy, size_policy)
         self.poe_cbx = QComboBox()
         self.poe_cbx.currentIndexChanged['QString'].connect(
             self.on_poe_changed)
@@ -163,8 +163,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
     def create_approach_selector(self):
         self.approach_lbl = QLabel('Recovery time approach')
-        self.approach_lbl.setSizePolicy(
-            QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.approach_lbl.setSizePolicy(size_policy, size_policy)
         approach_explanation = (
             'Aggregate: building-level recovery model as a single process\n'
             'Disaggregate: Building-level recovery modelled using four'
@@ -183,8 +182,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             'Number of damage realizations used in Monte Carlo Simulation')
         self.n_simulations_lbl = QLabel('Simulations per building')
         self.n_simulations_lbl.setToolTip(simulations_explanation)
-        self.approach_lbl.setSizePolicy(
-            QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.approach_lbl.setSizePolicy(size_policy, size_policy)
         self.n_simulations_sbx = QSpinBox()
         self.n_simulations_sbx.setToolTip(simulations_explanation)
         self.n_simulations_sbx.setRange(1, 500)
@@ -211,17 +209,19 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         title = (
             'Select fields containing loss-based damage state probabilities')
         self.fields_multiselect = ListMultiSelectWidget(title=title)
-        self.fields_multiselect.setSizePolicy(
-            QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.fields_multiselect.setSizePolicy(size_policy, size_policy)
         self.typeDepVLayout.addWidget(self.fields_multiselect)
         fill_fields_multiselect(
             self.fields_multiselect, self.iface.activeLayer())
 
-    def remove_widgets_from_layout(self, widgets, layout):
-        for widget in widgets:
+    def clear_layout(self, layout):
+        if not layout.count():
+            return
+        # a widget is deleted when it does not have a parent
+        for i in reversed(range(layout.count() - 1)):
+            widget = layout.takeAt(i).widget()
             if widget is not None:
-                widget.hide()
-                layout.removeWidget(widget)
+                widget.setParent(None)
 
     def set_output_type_and_its_gui(self, new_output_type):
         if (self.output_type is not None
@@ -245,21 +245,9 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.output_type = new_output_type
 
     def clear_type_dependent_widgets(self):
-        self.remove_widgets_from_layout(
-            [self.loss_type_lbl, self.loss_type_cbx,
-                self.imt_lbl, self.imt_cbx,
-                self.poe_lbl, self.poe_cbx,
-                self.approach_lbl, self.approach_cbx],
-            self.typeDepHLayout1)
-        self.remove_widgets_from_layout(
-            [self.n_simulations_lbl, self.n_simulations_sbx],
-            self.typeDepHLayout2)
-        self.remove_widgets_from_layout(
-            [self.warning_n_simulations_lbl,
-             self.fields_multiselect,
-             self.recalculate_curve_btn],
-            self.typeDepVLayout)
-        self.adjustSize()
+        self.clear_layout(self.typeDepHLayout1)
+        self.clear_layout(self.typeDepHLayout2)
+        self.clear_layout(self.typeDepVLayout)
 
     def draw(self):
         self.plot.clear()
