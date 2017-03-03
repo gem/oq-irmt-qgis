@@ -242,7 +242,10 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             self.create_n_simulations_spinbox()
             self.create_fields_multiselect()
             self.create_recalculate_curve_btn()
-        self.adjustSize()
+        # NOTE: the window's size is automatically adjusted even without
+        # calling self.adjustSize(). If that method is called, it might cause
+        # the window to shrink unexpectedly until the focus is moved somewhere
+        # else.
         self.output_type = new_output_type
 
     def clear_type_dependent_widgets(self):
