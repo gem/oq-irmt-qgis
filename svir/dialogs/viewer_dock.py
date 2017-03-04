@@ -215,13 +215,23 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         fill_fields_multiselect(
             self.fields_multiselect, self.iface.activeLayer())
 
-    def clear_layout(self, layout):
-        if not layout.count():
-            return
-        # a widget is deleted when it does not have a parent
+    def clear_widgets_from_layout(self, layout):
+        """
+        Recursively remove all widgets from the layout, except from nested
+        layouts. If any of such widgets is a layout, then clear its widgets
+        instead of deleting it.
+        """
         for i in reversed(range(layout.count())):
-            widget = layout.takeAt(i).widget()
+            item = layout.itemAt(i)
+            # check if the item is a nested layout
+            nested_layout = item.layout()
+            if nested_layout is not None:
+                self.clear_widgets_from_layout(nested_layout)
+                continue
+            # check if the item is a widget
+            widget = item.widget()
             if widget is not None:
+                # a widget is deleted when it does not have a parent
                 widget.setParent(None)
 
     def set_output_type_and_its_gui(self, new_output_type):
@@ -249,9 +259,9 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.output_type = new_output_type
 
     def clear_type_dependent_widgets(self):
-        self.clear_layout(self.typeDepHLayout1)
-        self.clear_layout(self.typeDepHLayout2)
-        self.clear_layout(self.typeDepVLayout)
+        # typeDepVLayout contains typeDepHLayout1 and typeDepHLayout2, that
+        # will be cleared recursively
+        self.clear_widgets_from_layout(self.typeDepVLayout)
 
     def draw(self):
         self.plot.clear()
