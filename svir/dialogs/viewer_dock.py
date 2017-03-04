@@ -55,9 +55,6 @@ from svir.ui.list_multiselect_widget import ListMultiSelectWidget
 FORM_CLASS = get_ui_class('ui_viewer_dock.ui')
 
 
-size_policy = QSizePolicy.MinimumExpanding
-
-
 class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
     def __init__(self, iface, action):
         """Constructor for the viewer dock.
@@ -125,7 +122,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
         self.plot_figure = Figure()
         self.plot_canvas = FigureCanvas(self.plot_figure)
-        self.plot_canvas.setSizePolicy(size_policy, size_policy)
+        self.plot_canvas.setSizePolicy(
+            QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
         self.plot_toolbar = NavigationToolbar(self.plot_canvas, self)
         self.plot = self.plot_figure.add_subplot(111)
         self.legend = None
@@ -137,7 +135,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
     def create_loss_type_selector(self):
         self.loss_type_lbl = QLabel('Loss Type')
-        self.loss_type_lbl.setSizePolicy(size_policy, size_policy)
+        self.loss_type_lbl.setSizePolicy(
+            QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.loss_type_cbx = QComboBox()
         self.loss_type_cbx.currentIndexChanged['QString'].connect(
             self.on_loss_type_changed)
@@ -146,7 +145,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
     def create_imt_selector(self):
         self.imt_lbl = QLabel('Intensity Measure Type')
-        self.imt_lbl.setSizePolicy(size_policy, size_policy)
+        self.imt_lbl.setSizePolicy(
+            QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.imt_cbx = QComboBox()
         self.imt_cbx.currentIndexChanged['QString'].connect(
             self.on_imt_changed)
@@ -155,7 +155,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
     def create_poe_selector(self):
         self.poe_lbl = QLabel('Probability of Exceedance')
-        self.poe_lbl.setSizePolicy(size_policy, size_policy)
+        self.poe_lbl.setSizePolicy(
+            QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.poe_cbx = QComboBox()
         self.poe_cbx.currentIndexChanged['QString'].connect(
             self.on_poe_changed)
@@ -164,7 +165,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
     def create_approach_selector(self):
         self.approach_lbl = QLabel('Recovery time approach')
-        self.approach_lbl.setSizePolicy(size_policy, size_policy)
+        self.approach_lbl.setSizePolicy(
+            QSizePolicy.Minimum, QSizePolicy.Minimum)
         approach_explanation = (
             'Aggregate: building-level recovery model as a single process\n'
             'Disaggregate: Building-level recovery modelled using four'
@@ -183,7 +185,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             'Number of damage realizations used in Monte Carlo Simulation')
         self.n_simulations_lbl = QLabel('Simulations per building')
         self.n_simulations_lbl.setToolTip(simulations_explanation)
-        self.approach_lbl.setSizePolicy(size_policy, size_policy)
+        self.approach_lbl.setSizePolicy(
+            QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.n_simulations_sbx = QSpinBox()
         self.n_simulations_sbx.setToolTip(simulations_explanation)
         self.n_simulations_sbx.setRange(1, 500)
@@ -210,7 +213,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         title = (
             'Select fields containing loss-based damage state probabilities')
         self.fields_multiselect = ListMultiSelectWidget(title=title)
-        self.fields_multiselect.setSizePolicy(size_policy, size_policy)
+        self.fields_multiselect.setSizePolicy(
+            QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
         self.typeDepVLayout.addWidget(self.fields_multiselect)
         fill_fields_multiselect(
             self.fields_multiselect, self.iface.activeLayer())
