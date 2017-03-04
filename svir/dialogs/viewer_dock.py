@@ -219,7 +219,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         if not layout.count():
             return
         # a widget is deleted when it does not have a parent
-        for i in reversed(range(layout.count() - 1)):
+        for i in reversed(range(layout.count())):
             widget = layout.takeAt(i).widget()
             if widget is not None:
                 widget.setParent(None)
