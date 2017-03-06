@@ -242,7 +242,12 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         if (self.output_type is not None
                 and self.output_type == new_output_type):
             return
-        self.clear_type_dependent_widgets()
+
+        # clear type dependent widgets
+        # NOTE: typeDepVLayout contains typeDepHLayout1 and typeDepHLayout2,
+        #       that will be cleared recursively
+        self.clear_widgets_from_layout(self.typeDepVLayout)
+
         if new_output_type == 'hcurves':
             self.create_imt_selector()
         elif new_output_type == 'loss_curves':
@@ -261,11 +266,6 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         # the window to shrink unexpectedly until the focus is moved somewhere
         # else.
         self.output_type = new_output_type
-
-    def clear_type_dependent_widgets(self):
-        # typeDepVLayout contains typeDepHLayout1 and typeDepHLayout2, that
-        # will be cleared recursively
-        self.clear_widgets_from_layout(self.typeDepVLayout)
 
     def draw(self):
         self.plot.clear()
