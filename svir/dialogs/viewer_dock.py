@@ -227,10 +227,10 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         """
         for i in reversed(range(layout.count())):
             item = layout.itemAt(i)
-            # check if the item is a nested layout
-            nested_layout = item.layout()
-            if nested_layout is not None:
-                self.clear_widgets_from_layout(nested_layout)
+            # check if the item is a sub-layout (nested inside the layout)
+            sublayout = item.layout()
+            if sublayout is not None:
+                self.clear_widgets_from_layout(sublayout)
                 continue
             # check if the item is a widget
             widget = item.widget()
