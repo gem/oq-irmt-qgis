@@ -122,6 +122,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
         self.plot_figure = Figure()
         self.plot_canvas = FigureCanvas(self.plot_figure)
+        self.plot_canvas.setSizePolicy(
+            QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
         self.plot_toolbar = NavigationToolbar(self.plot_canvas, self)
         self.plot = self.plot_figure.add_subplot(111)
         self.legend = None
@@ -212,22 +214,40 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             'Select fields containing loss-based damage state probabilities')
         self.fields_multiselect = ListMultiSelectWidget(title=title)
         self.fields_multiselect.setSizePolicy(
-            QSizePolicy.Minimum, QSizePolicy.Minimum)
+            QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
         self.typeDepVLayout.addWidget(self.fields_multiselect)
         fill_fields_multiselect(
             self.fields_multiselect, self.iface.activeLayer())
 
-    def remove_widgets_from_layout(self, widgets, layout):
-        for widget in widgets:
+    def clear_widgets_from_layout(self, layout):
+        """
+        Recursively remove all widgets from the layout, except from nested
+        layouts. If any of such widgets is a layout, then clear its widgets
+        instead of deleting it.
+        """
+        for i in reversed(range(layout.count())):
+            item = layout.itemAt(i)
+            # check if the item is a sub-layout (nested inside the layout)
+            sublayout = item.layout()
+            if sublayout is not None:
+                self.clear_widgets_from_layout(sublayout)
+                continue
+            # check if the item is a widget
+            widget = item.widget()
             if widget is not None:
-                widget.hide()
-                layout.removeWidget(widget)
+                # a widget is deleted when it does not have a parent
+                widget.setParent(None)
 
     def set_output_type_and_its_gui(self, new_output_type):
         if (self.output_type is not None
                 and self.output_type == new_output_type):
             return
-        self.clear_type_dependent_widgets()
+
+        # clear type dependent widgets
+        # NOTE: typeDepVLayout contains typeDepHLayout1 and typeDepHLayout2,
+        #       that will be cleared recursively
+        self.clear_widgets_from_layout(self.typeDepVLayout)
+
         if new_output_type == 'hcurves':
             self.create_imt_selector()
         elif new_output_type == 'loss_curves':
@@ -241,25 +261,11 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             self.create_n_simulations_spinbox()
             self.create_fields_multiselect()
             self.create_recalculate_curve_btn()
-        self.adjustSize()
+        # NOTE: the window's size is automatically adjusted even without
+        # calling self.adjustSize(). If that method is called, it might cause
+        # the window to shrink unexpectedly until the focus is moved somewhere
+        # else.
         self.output_type = new_output_type
-
-    def clear_type_dependent_widgets(self):
-        self.remove_widgets_from_layout(
-            [self.loss_type_lbl, self.loss_type_cbx,
-                self.imt_lbl, self.imt_cbx,
-                self.poe_lbl, self.poe_cbx,
-                self.approach_lbl, self.approach_cbx],
-            self.typeDepHLayout1)
-        self.remove_widgets_from_layout(
-            [self.n_simulations_lbl, self.n_simulations_sbx],
-            self.typeDepHLayout2)
-        self.remove_widgets_from_layout(
-            [self.warning_n_simulations_lbl,
-             self.fields_multiselect,
-             self.recalculate_curve_btn],
-            self.typeDepVLayout)
-        self.adjustSize()
 
     def draw(self):
         self.plot.clear()

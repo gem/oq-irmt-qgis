@@ -29,6 +29,7 @@ changelog=
     * Fixed management of possible connection errors while driving the OQ-Engine
     * Fixed layer selection issue in the recovery modeling dialog
     * Fixed a layout issue in the plugin's settings dialog (checkboxes correctly inserted in corresponding group boxes)
+    * Fixed layout issues in the Data Viewer
     1.8.20
     * Custom QGIS widgets for color selection were substituted with standard Qt widgets,
       improving compatibility with Windows and Mac OS X
