@@ -166,13 +166,13 @@ def calculate_zonal_stats(loss_layer,
     return loss_layer, zonal_layer, loss_attrs_dict
 
 
-def add_zone_id_to_points(iface, loss_attrs_dict, point_layer, zonal_layer,
+def add_zone_id_to_points(iface, point_attrs_dict, point_layer, zonal_layer,
                           points_zone_id_attr_name, zones_id_attr_name):
     """
     this is the metod to use for getting points with an id of the containing
     zone
     :param iface:
-    :param loss_attrs_dict:
+    :param point_attrs_dict:
     :param point_layer:
     :param zonal_layer:
     :param points_zone_id_attr_name:
@@ -180,12 +180,13 @@ def add_zone_id_to_points(iface, loss_attrs_dict, point_layer, zonal_layer,
     :return:
     """
 
+    orig_fieldnames = [field.name() for field in point_layer.fields()]
     saga_install_err = get_saga_install_error()
     use_fallback_calculation = False
     if saga_install_err is None:
         try:
             (point_layer, res, zonal_layer,
-             points_zone_id_attr_name, loss_layer_plus_zones) = \
+             points_zone_id_attr_name, point_layer_plus_zones) = \
                 _add_zone_id_to_points_saga(point_layer,
                                             zonal_layer,
                                             zones_id_attr_name)
@@ -204,11 +205,16 @@ def add_zone_id_to_points(iface, loss_attrs_dict, point_layer, zonal_layer,
         log_msg(saga_install_err, level='W', message_bar=iface.messageBar())
         use_fallback_calculation = True
     if use_fallback_calculation:
-        loss_layer_plus_zones, points_zone_id_attr_name = \
+        point_layer_plus_zones, points_zone_id_attr_name = \
             _add_zone_id_to_points_internal(
                     iface, point_layer, zonal_layer,
                     zones_id_attr_name)
-    return (loss_attrs_dict, loss_layer_plus_zones, zonal_layer,
+    # fieldnames might have been laundered to max 10 characters
+    final_fieldnames = [
+        field.name() for field in point_layer_plus_zones.fields()]
+    for i, fieldname in enumerate(orig_fieldnames):
+        point_attrs_dict[orig_fieldnames[i]] = final_fieldnames[i]
+    return (point_attrs_dict, point_layer_plus_zones, zonal_layer,
             points_zone_id_attr_name)
 
 

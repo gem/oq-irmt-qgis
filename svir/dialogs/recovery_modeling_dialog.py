@@ -157,7 +157,8 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
             QSettings().setValue('irmt/output_data_dir', path)
             self.output_data_dir_le.setText(path)
 
-    def calculate_community_level_recovery_curve(self, integrate_svi=True):
+    def calculate_community_level_recovery_curve(
+            self, point_attrs_dict, integrate_svi=True):
         # Developed By: Henry Burton
         # Edited by: Hua Kang
         # Reimplemented for this plugin by: Paolo Tormene and Marco Bernasocchi
@@ -179,6 +180,8 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
             self.output_data_dir, self.save_bldg_curves_check.isChecked())
 
         probs_field_names = list(self.fields_multiselect.get_selected_items())
+        for i, fieldname in enumerate(probs_field_names):
+            probs_field_names[i] = point_attrs_dict[fieldname]
         zonal_dmg_by_asset_probs, zonal_asset_refs = \
             recovery.collect_zonal_data(
                 probs_field_names, integrate_svi, zone_field_name)
@@ -209,12 +212,13 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
     def accept(self):
         if self.integrate_svi_check.isChecked():
             self.zone_field_name = self.zone_field_name_cbx.currentText()
-            (_, self.dmg_by_asset_layer, self.svi_layer,
+            (point_attrs_dict, self.dmg_by_asset_layer, self.svi_layer,
              self.zone_field_name) = add_zone_id_to_points(
-                self.iface, None, self.dmg_by_asset_layer,
+                self.iface, {}, self.dmg_by_asset_layer,
                 self.svi_layer, None, self.zone_field_name)
         with WaitCursorManager('Generating recovery curves...', self.iface):
             self.calculate_community_level_recovery_curve(
+                point_attrs_dict,
                 self.integrate_svi_check.isChecked())
         msg = 'Recovery curves have been saved to [%s]' % self.output_data_dir
         log_msg(msg, level='I', message_bar=self.iface.messageBar())
