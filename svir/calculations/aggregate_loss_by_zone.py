@@ -184,9 +184,9 @@ def add_zone_id_to_points(iface, loss_attrs_dict, point_layer, zonal_layer,
     use_fallback_calculation = False
     if saga_install_err is None:
         try:
-            (loss_attrs_dict, point_layer, res, zonal_layer,
+            (point_layer, res, zonal_layer,
              points_zone_id_attr_name, loss_layer_plus_zones) = \
-                _add_zone_id_to_points_saga(loss_attrs_dict, point_layer,
+                _add_zone_id_to_points_saga(point_layer,
                                             zonal_layer,
                                             zones_id_attr_name)
         except RuntimeError:
@@ -317,7 +317,7 @@ def _add_zone_id_to_points_internal(iface, loss_layer, zonal_layer,
     return loss_layer_plus_zones, zone_id_in_losses_attr_name
 
 
-def _add_zone_id_to_points_saga(loss_attrs_dict, loss_layer, zonal_layer,
+def _add_zone_id_to_points_saga(loss_layer, zonal_layer,
                                 zone_id_in_zones_attr_name):
     # using SAGA to find out in which zone each point is
     # (it does not compute any other statistics)
@@ -369,7 +369,7 @@ def _add_zone_id_to_points_saga(loss_attrs_dict, loss_layer, zonal_layer,
     else:
         zone_id_in_losses_attr_name = \
             zone_id_in_zones_attr_name
-    return (loss_attrs_dict, loss_layer, res, zonal_layer,
+    return (loss_layer, res, zonal_layer,
             zone_id_in_losses_attr_name, loss_layer_plus_zones)
 
 
