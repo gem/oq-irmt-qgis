@@ -142,10 +142,10 @@ def calculate_zonal_stats(loss_layer,
                         zonal_layer.changeAttributeValue(
                                 feat.id(), unique_id_idx, feat.id())
 
-            (loss_attrs_dict, loss_layer_plus_zones, zonal_layer,
+            (_, loss_layer_plus_zones,
              zone_id_in_losses_attr_name) = add_zone_id_to_points(
-                    iface, loss_attrs_dict, loss_layer, zonal_layer,
-                    zone_id_in_losses_attr_name, zone_id_in_zones_attr_name)
+                    iface, loss_layer, zonal_layer,
+                    zone_id_in_zones_attr_name)
 
             old_field_to_new_field = {}
             for idx, field in enumerate(loss_layer.fields()):
@@ -166,26 +166,32 @@ def calculate_zonal_stats(loss_layer,
     return loss_layer, zonal_layer, loss_attrs_dict
 
 
-def add_zone_id_to_points(iface, loss_attrs_dict, point_layer, zonal_layer,
-                          points_zone_id_attr_name, zones_id_attr_name):
+def add_zone_id_to_points(iface, point_layer, zonal_layer,
+                          zones_id_attr_name):
     """
-    this is the metod to use for getting points with an id of the containing
-    zone
+    Given a layer with points and a layer with zones, add to the points layer a
+    new field containing the id of the zone inside which it is located.
     :param iface:
-    :param loss_attrs_dict:
-    :param point_layer:
-    :param zonal_layer:
-    :param points_zone_id_attr_name:
-    :param zones_id_attr_name:
-    :return:
+    :param point_layer: a QgsVectorLayer containing points
+    :param zonal_layer: a QgsVectorLayer containing polygons
+    :param zones_id_attr_name: name of the field of the zonal_layer that
+                               contains the zone id
+    :return: point_attrs_dict: a dictionary mapping the original field names
+                               of the point_layer with the possibly laundered
+                               ones,
+             point_layer_plus_zones: the points layer with the additional field
+                                     containing the zone id
+             points_zone_id_attr_name: the id of the new field added to the
+                                       points layer, containing the zone id
     """
 
+    orig_fieldnames = [field.name() for field in point_layer.fields()]
     saga_install_err = get_saga_install_error()
     use_fallback_calculation = False
     if saga_install_err is None:
         try:
-            (point_layer, res, zonal_layer,
-             points_zone_id_attr_name, loss_layer_plus_zones) = \
+            (point_layer, res,
+             points_zone_id_attr_name, point_layer_plus_zones) = \
                 _add_zone_id_to_points_saga(point_layer,
                                             zonal_layer,
                                             zones_id_attr_name)
@@ -204,11 +210,18 @@ def add_zone_id_to_points(iface, loss_attrs_dict, point_layer, zonal_layer,
         log_msg(saga_install_err, level='W', message_bar=iface.messageBar())
         use_fallback_calculation = True
     if use_fallback_calculation:
-        loss_layer_plus_zones, points_zone_id_attr_name = \
+        point_layer_plus_zones, points_zone_id_attr_name = \
             _add_zone_id_to_points_internal(
                     iface, point_layer, zonal_layer,
                     zones_id_attr_name)
-    return (loss_attrs_dict, loss_layer_plus_zones, zonal_layer,
+    # fieldnames might have been laundered to max 10 characters
+    final_fieldnames = [
+        field.name() for field in point_layer_plus_zones.fields()]
+    # NOTE: final_fieldnames contains an additional field with the id, so I
+    #       can't use zip on lists of different length
+    point_attrs_dict = {orig_fieldnames[i]: final_fieldnames[i]
+                        for i in range(len(orig_fieldnames))}
+    return (point_attrs_dict, point_layer_plus_zones,
             points_zone_id_attr_name)
 
 
@@ -369,7 +382,7 @@ def _add_zone_id_to_points_saga(loss_layer, zonal_layer,
     else:
         zone_id_in_losses_attr_name = \
             zone_id_in_zones_attr_name
-    return (loss_layer, res, zonal_layer,
+    return (loss_layer, res,
             zone_id_in_losses_attr_name, loss_layer_plus_zones)
 
 
