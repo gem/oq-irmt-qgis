@@ -810,8 +810,12 @@ def get_style(layer):
     settings = QSettings()
     color_from = settings.value(
         'irmt/style_color_from', color_from_default)
+    if not isinstance(color_from, QColor):
+        color_from = color_from_default
     color_to = settings.value(
         'irmt/style_color_to', color_to_default)
+    if not isinstance(color_to, QColor):
+        color_to = color_to_default
     mode = settings.value(
         'irmt/style_mode', style_mode_default, type=int)
     classes = settings.value(
