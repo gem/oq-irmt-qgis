@@ -212,7 +212,7 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
     def accept(self):
         if self.integrate_svi_check.isChecked():
             self.zone_field_name = self.zone_field_name_cbx.currentText()
-            (point_attrs_dict, self.dmg_by_asset_layer, self.svi_layer,
+            (point_attrs_dict, self.dmg_by_asset_layer,
              self.zone_field_name) = add_zone_id_to_points(
                 self.iface, self.dmg_by_asset_layer,
                 self.svi_layer, self.zone_field_name)

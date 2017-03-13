@@ -142,7 +142,7 @@ def calculate_zonal_stats(loss_layer,
                         zonal_layer.changeAttributeValue(
                                 feat.id(), unique_id_idx, feat.id())
 
-            (_, loss_layer_plus_zones, zonal_layer,
+            (_, loss_layer_plus_zones,
              zone_id_in_losses_attr_name) = add_zone_id_to_points(
                     iface, loss_layer, zonal_layer,
                     zone_id_in_zones_attr_name)
@@ -181,7 +181,6 @@ def add_zone_id_to_points(iface, point_layer, zonal_layer,
                                ones,
              point_layer_plus_zones: the points layer with the additional field
                                      containing the zone id
-             zonal_layer: the zonal layer
              points_zone_id_attr_name: the id of the new field added to the
                                        points layer, containing the zone id
     """
@@ -191,7 +190,7 @@ def add_zone_id_to_points(iface, point_layer, zonal_layer,
     use_fallback_calculation = False
     if saga_install_err is None:
         try:
-            (point_layer, res, zonal_layer,
+            (point_layer, res,
              points_zone_id_attr_name, point_layer_plus_zones) = \
                 _add_zone_id_to_points_saga(point_layer,
                                             zonal_layer,
@@ -222,7 +221,7 @@ def add_zone_id_to_points(iface, point_layer, zonal_layer,
     #       can't use zip on lists of different length
     point_attrs_dict = {orig_fieldnames[i]: final_fieldnames[i]
                         for i in range(len(orig_fieldnames))}
-    return (point_attrs_dict, point_layer_plus_zones, zonal_layer,
+    return (point_attrs_dict, point_layer_plus_zones,
             points_zone_id_attr_name)
 
 
@@ -383,7 +382,7 @@ def _add_zone_id_to_points_saga(loss_layer, zonal_layer,
     else:
         zone_id_in_losses_attr_name = \
             zone_id_in_zones_attr_name
-    return (loss_layer, res, zonal_layer,
+    return (loss_layer, res,
             zone_id_in_losses_attr_name, loss_layer_plus_zones)
 
 
