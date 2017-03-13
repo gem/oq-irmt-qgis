@@ -405,20 +405,20 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
         elif self.output_type == 'hcurves':
             imt = self.imt_cbx.currentText()
             self.default_field_name = imt
-            layer_name = "hazard_curves_rlz-%s" % rlz
+            layer_name = "hazard_curves_%s" % rlz
         elif self.output_type == 'loss_curves':
-            layer_name = "loss_curves_rlz-%s_%s" % (rlz, taxonomy)
+            layer_name = "loss_curves_%s_%s" % (rlz, taxonomy)
         elif self.output_type == 'loss_maps':
-            layer_name = "loss_maps_rlz-%s_%s" % (rlz, taxonomy)
+            layer_name = "loss_maps_%s_%s" % (rlz, taxonomy)
         elif self.output_type == 'gmf_data':
             imt = self.imt_cbx.currentText()
             eid = self.eid_sbx.value()
             self.default_field_name = '%s-%s' % (imt, eid)
-            layer_name = "scenario_damage_gmfs_rlz-%s_eid-%s" % (rlz, eid)
+            layer_name = "scenario_damage_gmfs_%s_eid-%s" % (rlz, eid)
         elif self.output_type == 'scenario_damage_by_asset':
-            layer_name = "scenario_damage_by_asset_rlz-%s_%s" % (rlz, taxonomy)
+            layer_name = "scenario_damage_by_asset_%s_%s" % (rlz, taxonomy)
         elif self.output_type == 'uhs':
-            layer_name = "uhs_rlz-%s_poe-%s" % (rlz, poe)
+            layer_name = "uhs_%s_poe-%s" % (rlz, poe)
 
         # get field names
         if self.output_type in ['hcurves', 'hmaps', 'gmf_data']:

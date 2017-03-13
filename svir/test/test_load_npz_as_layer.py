@@ -91,7 +91,7 @@ class LoadNpzAsLayerTestCase(unittest.TestCase):
         # FIXME: setActiveLayer is not working. As a workaround, I am deleting
         # all layers except the one I am testing.
         for layer in CANVAS.layers():
-            if layer.name() != u'uhs_rlz-rlz-000_poe-0.02':
+            if layer.name() != u'uhs_rlz-000_poe-0.02':
                 QgsMapLayerRegistry.instance().removeMapLayer(layer)
         CANVAS.refresh()
         self._set_output_type('Uniform Hazard Spectra')
