@@ -142,9 +142,9 @@ def calculate_zonal_stats(loss_layer,
                         zonal_layer.changeAttributeValue(
                                 feat.id(), unique_id_idx, feat.id())
 
-            (loss_attrs_dict, loss_layer_plus_zones, zonal_layer,
+            (_, loss_layer_plus_zones, zonal_layer,
              zone_id_in_losses_attr_name) = add_zone_id_to_points(
-                    iface, loss_attrs_dict, loss_layer, zonal_layer,
+                    iface, loss_layer, zonal_layer,
                     zone_id_in_losses_attr_name, zone_id_in_zones_attr_name)
 
             old_field_to_new_field = {}
@@ -166,13 +166,12 @@ def calculate_zonal_stats(loss_layer,
     return loss_layer, zonal_layer, loss_attrs_dict
 
 
-def add_zone_id_to_points(iface, point_attrs_dict, point_layer, zonal_layer,
+def add_zone_id_to_points(iface, point_layer, zonal_layer,
                           points_zone_id_attr_name, zones_id_attr_name):
     """
     this is the metod to use for getting points with an id of the containing
     zone
     :param iface:
-    :param point_attrs_dict:
     :param point_layer:
     :param zonal_layer:
     :param points_zone_id_attr_name:
@@ -212,8 +211,8 @@ def add_zone_id_to_points(iface, point_attrs_dict, point_layer, zonal_layer,
     # fieldnames might have been laundered to max 10 characters
     final_fieldnames = [
         field.name() for field in point_layer_plus_zones.fields()]
-    for i, fieldname in enumerate(orig_fieldnames):
-        point_attrs_dict[orig_fieldnames[i]] = final_fieldnames[i]
+    point_attrs_dict = {orig_fieldnames[i]: final_fieldnames[i]
+                        for i in range(len(orig_fieldnames))}
     return (point_attrs_dict, point_layer_plus_zones, zonal_layer,
             points_zone_id_attr_name)
 

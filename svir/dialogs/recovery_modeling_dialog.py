@@ -214,7 +214,7 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
             self.zone_field_name = self.zone_field_name_cbx.currentText()
             (point_attrs_dict, self.dmg_by_asset_layer, self.svi_layer,
              self.zone_field_name) = add_zone_id_to_points(
-                self.iface, {}, self.dmg_by_asset_layer,
+                self.iface, self.dmg_by_asset_layer,
                 self.svi_layer, None, self.zone_field_name)
         with WaitCursorManager('Generating recovery curves...', self.iface):
             self.calculate_community_level_recovery_curve(
