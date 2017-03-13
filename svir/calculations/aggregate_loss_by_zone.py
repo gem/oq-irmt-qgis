@@ -211,6 +211,8 @@ def add_zone_id_to_points(iface, point_layer, zonal_layer,
     # fieldnames might have been laundered to max 10 characters
     final_fieldnames = [
         field.name() for field in point_layer_plus_zones.fields()]
+    # NOTE: final_fieldnames contains an additional field with the id, so I
+    #       can't use zip on lists of different length
     point_attrs_dict = {orig_fieldnames[i]: final_fieldnames[i]
                         for i in range(len(orig_fieldnames))}
     return (point_attrs_dict, point_layer_plus_zones, zonal_layer,
