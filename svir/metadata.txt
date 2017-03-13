@@ -30,6 +30,8 @@ changelog=
     * Fixed layer selection issue in the recovery modeling dialog
     * Fixed a layout issue in the plugin's settings dialog (checkboxes correctly inserted in corresponding group boxes)
     * Fixed layout issues in the Data Viewer
+    * Removed a duplication in the name assigned to layers imported from npz
+    * Also csv-based layers with field names longer than 10 characters can now be used for recovery modeling
     1.8.20
     * Custom QGIS widgets for color selection were substituted with standard Qt widgets,
       improving compatibility with Windows and Mac OS X
