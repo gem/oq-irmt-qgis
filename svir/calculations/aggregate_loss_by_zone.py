@@ -145,7 +145,7 @@ def calculate_zonal_stats(loss_layer,
             (_, loss_layer_plus_zones, zonal_layer,
              zone_id_in_losses_attr_name) = add_zone_id_to_points(
                     iface, loss_layer, zonal_layer,
-                    zone_id_in_losses_attr_name, zone_id_in_zones_attr_name)
+                    zone_id_in_zones_attr_name)
 
             old_field_to_new_field = {}
             for idx, field in enumerate(loss_layer.fields()):
@@ -167,16 +167,23 @@ def calculate_zonal_stats(loss_layer,
 
 
 def add_zone_id_to_points(iface, point_layer, zonal_layer,
-                          points_zone_id_attr_name, zones_id_attr_name):
+                          zones_id_attr_name):
     """
-    this is the metod to use for getting points with an id of the containing
-    zone
+    Given a layer with points and a layer with zones, add to the points layer a
+    new field containing the id of the zone inside which it is located.
     :param iface:
-    :param point_layer:
-    :param zonal_layer:
-    :param points_zone_id_attr_name:
-    :param zones_id_attr_name:
-    :return:
+    :param point_layer: a QgsVectorLayer containing points
+    :param zonal_layer: a QgsVectorLayer containing polygons
+    :param zones_id_attr_name: name of the field of the zonal_layer that
+                               contains the zone id
+    :return: point_attrs_dict: a dictionary mapping the original field names
+                               of the point_layer with the possibly laundered
+                               ones,
+             point_layer_plus_zones: the points layer with the additional field
+                                     containing the zone id
+             zonal_layer: the zonal layer
+             points_zone_id_attr_name: the id of the new field added to the
+                                       points layer, containing the zone id
     """
 
     orig_fieldnames = [field.name() for field in point_layer.fields()]
