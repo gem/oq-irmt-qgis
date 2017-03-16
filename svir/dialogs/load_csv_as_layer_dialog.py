@@ -175,7 +175,7 @@ class LoadCsvAsLayerDialog(QDialog, FORM_CLASS):
             and self.loss_type_cbx.currentIndex != -1)
 
     def style_layer(self, layer, field_name):
-        style = get_style(layer)
+        style = get_style(layer, self.iface.messageBar())
         ramp = QgsVectorGradientColorRampV2(
             style['color_from'], style['color_to'])
         symbol = QgsSymbolV2.defaultSymbol(layer.geometryType())

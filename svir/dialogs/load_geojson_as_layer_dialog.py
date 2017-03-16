@@ -155,7 +155,7 @@ class LoadGeoJsonAsLayerDialog(QDialog, FORM_CLASS):
         self.ok_button.setEnabled(self.poe_cbx.currentIndex != -1)
 
     def style_layer(self):
-        style = get_style(self.layer)
+        style = get_style(self.layer, self.iface.messageBar())
         ramp = QgsVectorGradientColorRampV2(
             style['color_from'], style['color_to'])
         symbol = QgsSymbolV2.defaultSymbol(self.layer.geometryType())

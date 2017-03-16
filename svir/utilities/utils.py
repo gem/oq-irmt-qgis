@@ -800,7 +800,20 @@ def save_layer_as_shapefile(orig_layer, dest_path, crs=None):
     return write_success
 
 
-def get_style(layer):
+def _check_type(
+        variable, setting_name, expected_type, default_value, message_bar):
+    # show a warning if the type of the variable is not as expected. In that
+    # case, replace the current value of the variable with the specified
+    # default. Then return the variable.
+    if not isinstance(variable, expected_type):
+        msg = ('The type of the stored setting "%s" was not valid,'
+               ' so the default has been restored.' % setting_name)
+        log_msg(msg, level='C', message_bar=message_bar)
+        variable = default_value
+    return variable
+
+
+def get_style(layer, message_bar):
     color_from_default = QColor('#FFEBEB')
     color_to_default = QColor('red')
     style_mode_default = QgsGraduatedSymbolRendererV2.Quantile
@@ -810,12 +823,12 @@ def get_style(layer):
     settings = QSettings()
     color_from = settings.value(
         'irmt/style_color_from', color_from_default)
-    if not isinstance(color_from, QColor):
-        color_from = color_from_default
+    color_from = _check_type(
+        color_from, 'Color from', QColor, color_from_default, message_bar)
     color_to = settings.value(
         'irmt/style_color_to', color_to_default)
-    if not isinstance(color_to, QColor):
-        color_to = color_to_default
+    color_to = _check_type(
+        color_to, 'Color to', QColor, color_to_default, message_bar)
     mode = settings.value(
         'irmt/style_mode', style_mode_default, type=int)
     classes = settings.value(

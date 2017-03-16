@@ -1132,7 +1132,7 @@ class Irmt:
             ppdata = pprint.pformat(data, indent=4)
             log_msg('REDRAWING %s using: \n%s' % (printing_str, ppdata))
 
-        style = get_style(self.iface.activeLayer())
+        style = get_style(self.iface.activeLayer(), self.iface.messageBar())
         if style['force_restyling']:
             self._apply_style(style, target_field)
 
