@@ -802,9 +802,7 @@ def save_layer_as_shapefile(orig_layer, dest_path, crs=None):
 
 def _check_type(
         variable, setting_name, expected_type, default_value, message_bar):
-    # show a warning if the type of the variable is not as expected. In that
-    # case, replace the current value of the variable with the specified
-    # default. Then return the variable.
+    # return the variable as it is or restore the default if corrupted
     if not isinstance(variable, expected_type):
         msg = ('The type of the stored setting "%s" was not valid,'
                ' so the default has been restored.' % setting_name)
