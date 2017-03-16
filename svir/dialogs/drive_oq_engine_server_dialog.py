@@ -43,6 +43,7 @@ from PyQt4.QtGui import (QDialog,
                          QFileDialog,
                          QColor,
                          QDockWidget,
+                         QMessageBox,
                          )
 from svir.third_party.requests import Session
 from svir.third_party.requests.exceptions import (ConnectionError,
@@ -240,10 +241,16 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                                                         'MessageLog')
             logDock.show()
         elif action == 'Remove':
-            self.remove_calc(calc_id)
-            if (self.current_output_calc_id is not None
-                    and self.current_output_calc_id == calc_id):
-                self.clear_output_list()
+            confirmed = QMessageBox.question(
+                self,
+                'Remove calculation?',
+                'The calculation will be removed permanently. Are you sure?',
+                QMessageBox.Yes | QMessageBox.No)
+            if confirmed == QMessageBox.Yes:
+                self.remove_calc(calc_id)
+                if (self.current_output_calc_id is not None
+                        and self.current_output_calc_id == calc_id):
+                    self.clear_output_list()
         elif action == 'Outputs':
             output_list = self.get_output_list(calc_id)
             self.list_of_outputs_lbl.setText(
