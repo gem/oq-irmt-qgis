@@ -48,6 +48,7 @@ from PyQt4.QtGui import (QDialogButtonBox,
                          QComboBox,
                          QSpinBox,
                          QLabel,
+                         QCheckBox,
                          )
 
 
@@ -147,6 +148,9 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
         self.taxonomy_cbx.setEnabled(False)
         # self.taxonomy_cbx.currentIndexChanged['QString'].connect(
         #     self.on_taxonomy_changed)
+        self.load_selected_only_ckb = QCheckBox("Load only the selected items")
+        self.load_selected_only_ckb.setChecked(True)
+        self.verticalLayout.addWidget(self.load_selected_only_ckb)
 
     def adjust_gui_for_output_type(self):
         if self.output_type == 'hmaps':
@@ -168,6 +172,8 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
                 'Load uniform hazard spectra from NPZ, as layer')
             self.verticalLayout.addWidget(self.rlz_lbl)
             self.verticalLayout.addWidget(self.rlz_cbx)
+            self.verticalLayout.addWidget(self.poe_lbl)
+            self.verticalLayout.addWidget(self.poe_cbx)
             self.adjustSize()
         elif self.output_type == 'loss_maps':
             self.setWindowTitle('Load loss maps from NPZ, as layer')
@@ -239,6 +245,9 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
         elif self.output_type == 'uhs':
             self.dataset = self.npz_file[self.rlz_cbx.currentText()]
             self.poes = self.dataset.dtype.names[2:]
+            self.poe_cbx.clear()
+            self.poe_cbx.setEnabled(True)
+            self.poe_cbx.addItems(self.poes)
         elif self.output_type in ('loss_maps', 'scenario_damage_by_asset'):
             # FIXME: likely, self.npz_file.keys()
             self.loss_types = self.npz_file.dtype.fields
@@ -373,6 +382,8 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
             self.ok_button.setEnabled(self.rlz_cbx.currentIndex() != -1)
         elif self.output_type == 'scenario_damage_by_asset':
             self.ok_button.setEnabled(self.loss_type_cbx.currentIndex() != -1)
+        elif self.output_type == 'uhs':
+            self.ok_button.setEnabled(self.poe_cbx.currentIndex() != -1)
 
     def build_layer(self, rlz, taxonomy=None, poe=None):
         # get the root of layerTree, in order to add groups of layers
@@ -639,8 +650,14 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
 
     def accept(self):
         for rlz in self.rlzs:
+            if (self.load_selected_only_ckb.isChecked()
+                    and rlz != self.rlz_cbx.currentText()):
+                continue
             if self.output_type in ('loss_curves', 'loss_maps'):
                 for taxonomy in self.taxonomies:
+                    if (self.load_selected_only_ckb.isChecked()
+                            and taxonomy != self.taxonomy_cbx.currentText()):
+                        continue
                     with WaitCursorManager(
                             'Creating layer for realization "%s" '
                             ' and taxonomy "%s"...' % (rlz, taxonomy),
@@ -652,6 +669,9 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
                             self.style_maps()
             elif self.output_type == 'uhs':
                 for poe in self.poes:
+                    if (self.load_selected_only_ckb.isChecked()
+                            and poe != self.poe_cbx.currentText()):
+                        continue
                     with WaitCursorManager(
                             'Creating layer for realization "%s" '
                             ' and poe "%s"...' % (rlz, poe),
