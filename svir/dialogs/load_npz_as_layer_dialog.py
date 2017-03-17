@@ -49,6 +49,7 @@ from PyQt4.QtGui import (QDialogButtonBox,
                          QSpinBox,
                          QLabel,
                          QCheckBox,
+                         QHBoxLayout,
                          )
 
 
@@ -109,6 +110,11 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
         self.rlz_cbx.setEnabled(False)
         self.rlz_cbx.currentIndexChanged['QString'].connect(
             self.on_rlz_changed)
+        self.shape_msg = 'shape: %s'
+        self.rlz_shape_lbl = QLabel(self.shape_msg % '')
+        self.rlz_h_layout = QHBoxLayout()
+        self.rlz_h_layout.addWidget(self.rlz_cbx)
+        self.rlz_h_layout.addWidget(self.rlz_shape_lbl)
         self.imt_lbl = QLabel(
             'Intensity Measure Type (used for default styling)')
         self.imt_cbx = QComboBox()
@@ -150,7 +156,7 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
         if self.output_type == 'hmaps':
             self.setWindowTitle('Load hazard maps from NPZ, as layer')
             self.verticalLayout.addWidget(self.rlz_lbl)
-            self.verticalLayout.addWidget(self.rlz_cbx)
+            self.verticalLayout.addLayout(self.rlz_h_layout)
             self.verticalLayout.addWidget(self.imt_lbl)
             self.verticalLayout.addWidget(self.imt_cbx)
             self.verticalLayout.addWidget(self.poe_lbl)
@@ -159,20 +165,20 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
         elif self.output_type == 'hcurves':
             self.setWindowTitle('Load hazard curves from NPZ, as layer')
             self.verticalLayout.addWidget(self.rlz_lbl)
-            self.verticalLayout.addWidget(self.rlz_cbx)
+            self.verticalLayout.addLayout(self.rlz_h_layout)
             self.adjustSize()
         elif self.output_type == 'uhs':
             self.setWindowTitle(
                 'Load uniform hazard spectra from NPZ, as layer')
             self.verticalLayout.addWidget(self.rlz_lbl)
-            self.verticalLayout.addWidget(self.rlz_cbx)
+            self.verticalLayout.addLayout(self.rlz_h_layout)
             self.verticalLayout.addWidget(self.poe_lbl)
             self.verticalLayout.addWidget(self.poe_cbx)
             self.adjustSize()
         elif self.output_type == 'loss_maps':
             self.setWindowTitle('Load loss maps from NPZ, as layer')
             self.verticalLayout.addWidget(self.rlz_lbl)
-            self.verticalLayout.addWidget(self.rlz_cbx)
+            self.verticalLayout.addLayout(self.rlz_h_layout)
             self.verticalLayout.addWidget(self.loss_type_lbl)
             self.verticalLayout.addWidget(self.loss_type_cbx)
             self.verticalLayout.addWidget(self.poe_lbl)
@@ -181,13 +187,13 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
         elif self.output_type == 'loss_curves':
             self.setWindowTitle('Load loss curves from NPZ, as layer')
             self.verticalLayout.addWidget(self.rlz_lbl)
-            self.verticalLayout.addWidget(self.rlz_cbx)
+            self.verticalLayout.addLayout(self.rlz_h_layout)
             self.adjustSize()
         elif self.output_type == 'gmf_data':
             self.setWindowTitle(
                 'Load scenario damage GMFs from NPZ, as layer')
             self.verticalLayout.addWidget(self.rlz_lbl)
-            self.verticalLayout.addWidget(self.rlz_cbx)
+            self.verticalLayout.addLayout(self.rlz_h_layout)
             self.verticalLayout.addWidget(self.imt_lbl)
             self.verticalLayout.addWidget(self.imt_cbx)
             self.verticalLayout.addWidget(self.eid_lbl)
@@ -197,7 +203,7 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
             self.setWindowTitle(
                 'Load scenario damage by asset from NPZ, as layer')
             self.verticalLayout.addWidget(self.rlz_lbl)
-            self.verticalLayout.addWidget(self.rlz_cbx)
+            self.verticalLayout.addLayout(self.rlz_h_layout)
             self.verticalLayout.addWidget(self.loss_type_lbl)
             self.verticalLayout.addWidget(self.loss_type_cbx)
             self.verticalLayout.addWidget(self.taxonomy_lbl)
@@ -211,17 +217,10 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
         self.npz_path = self.open_file_dialog()
 
     def on_rlz_changed(self):
-        # rlz = self.rlz_cbx.currentText()
-        # if rlz == 'All':
-        #     self.imt_cbx.clear()
-        #     self.imt_cbx.setEnabled(False)
-        #     self.loss_type_cbx.clear()
-        #     self.loss_type_cbx.setEnabled(False)
-        #     self.poe_cbx.clear()
-        #     self.poe_cbx.setEnabled(False)
-        #     return
+        self.dataset = self.npz_file[self.rlz_cbx.currentText()]
+        # with str it prints something like '(524, )', otherwise just '524'
+        self.rlz_shape_lbl.setText(self.shape_msg % str(self.dataset.shape))
         if self.output_type in ['hcurves', 'hmaps']:
-            self.dataset = self.npz_file[self.rlz_cbx.currentText()]
             self.imts = {}
             for name in self.dataset.dtype.names[2:]:
                 if self.output_type == 'hmaps':
@@ -237,7 +236,6 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
             self.imt_cbx.setEnabled(True)
             self.imt_cbx.addItems(self.imts.keys())
         elif self.output_type == 'uhs':
-            self.dataset = self.npz_file[self.rlz_cbx.currentText()]
             self.poes = self.dataset.dtype.names[2:]
             self.poe_cbx.clear()
             self.poe_cbx.setEnabled(True)
@@ -252,7 +250,6 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
             # FIXME: likely, self.npz_file.keys()
             self.loss_types = self.npz_file.dtype.names
         elif self.output_type == 'gmf_data':
-            self.dataset = self.npz_file[self.rlz_cbx.currentText()]
             imts = self.dataset.dtype.names[2:]
             self.imt_cbx.clear()
             self.imt_cbx.setEnabled(True)
