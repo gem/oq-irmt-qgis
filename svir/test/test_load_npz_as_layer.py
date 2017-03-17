@@ -92,8 +92,6 @@ class LoadNpzAsLayerTestCase(unittest.TestCase):
         self.assertEqual(idx, 1, 'POE 0.02 was not found')
         dlg.poe_cbx.setCurrentIndex(idx)
         dlg.accept()
-        # layers = CANVAS.layers()
-        # layer = layers[-1]
         self._set_output_type('Uniform Hazard Spectra')
         self._change_selection()
         # test exporting the current selection to csv
