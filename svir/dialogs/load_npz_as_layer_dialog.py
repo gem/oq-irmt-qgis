@@ -127,7 +127,7 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
         self.loss_type_cbx.currentIndexChanged['QString'].connect(
             self.on_loss_type_changed)
         self.imt_lbl = QLabel(
-            'IMTI (used for default styling)')  # FIXME: complete name?
+            'Intensity Measure Type (used for default styling)')
         self.imt_cbx = QComboBox()
         self.imt_cbx.setEnabled(False)
         self.imt_cbx.currentIndexChanged['QString'].connect(
