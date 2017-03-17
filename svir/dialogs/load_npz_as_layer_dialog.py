@@ -127,12 +127,6 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
         self.loss_type_cbx.setEnabled(False)
         self.loss_type_cbx.currentIndexChanged['QString'].connect(
             self.on_loss_type_changed)
-        self.imt_lbl = QLabel(
-            'Intensity Measure Type (used for default styling)')
-        self.imt_cbx = QComboBox()
-        self.imt_cbx.setEnabled(False)
-        self.imt_cbx.currentIndexChanged['QString'].connect(
-            self.on_imt_changed)
         self.eid_lbl = QLabel(
             'Event ID (used for default styling)')
         self.eid_sbx = QSpinBox()
