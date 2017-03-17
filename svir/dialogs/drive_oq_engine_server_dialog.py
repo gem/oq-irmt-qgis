@@ -248,8 +248,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 QMessageBox.Yes | QMessageBox.No)
             if confirmed == QMessageBox.Yes:
                 self.remove_calc(calc_id)
-                if (self.current_output_calc_id is not None
-                        and self.current_output_calc_id == calc_id):
+                if self.current_output_calc_id == calc_id:
                     self.clear_output_list()
         elif action == 'Outputs':
             output_list = self.get_output_list(calc_id)
