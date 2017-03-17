@@ -84,7 +84,22 @@ class LoadNpzAsLayerTestCase(unittest.TestCase):
         _, exported_file_path = tempfile.mkstemp(suffix=".csv")
         self._test_export('hazard_curves_SA(0.2).csv')
 
-    def test_load_uhs(self):
+    def test_load_uhs_only_selected_poe(self):
+        filepath = os.path.join(self.data_dir_name, 'output-184-uhs_67.npz')
+        dlg = LoadNpzAsLayerDialog(IFACE, 'uhs', filepath)
+        dlg.load_selected_only_ckb.setChecked(True)
+        idx = dlg.poe_cbx.findText('0.02')
+        self.assertEqual(idx, 1, 'POE 0.02 was not found')
+        dlg.poe_cbx.setCurrentIndex(idx)
+        dlg.accept()
+        # layers = CANVAS.layers()
+        # layer = layers[-1]
+        self._set_output_type('Uniform Hazard Spectra')
+        self._change_selection()
+        # test exporting the current selection to csv
+        self._test_export('uniform_hazard_spectra.csv')
+
+    def test_load_uhs_all(self):
         filepath = os.path.join(self.data_dir_name, 'output-184-uhs_67.npz')
         dlg = LoadNpzAsLayerDialog(IFACE, 'uhs', filepath)
         dlg.load_selected_only_ckb.setChecked(False)
