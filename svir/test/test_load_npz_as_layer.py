@@ -87,6 +87,7 @@ class LoadNpzAsLayerTestCase(unittest.TestCase):
     def test_load_uhs(self):
         filepath = os.path.join(self.data_dir_name, 'output-184-uhs_67.npz')
         dlg = LoadNpzAsLayerDialog(IFACE, 'uhs', filepath)
+        dlg.load_selected_only_ckb.setChecked(False)
         dlg.accept()
         # FIXME: setActiveLayer is not working. As a workaround, I am deleting
         # all layers except the one I am testing.
