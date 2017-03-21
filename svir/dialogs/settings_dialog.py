@@ -106,7 +106,7 @@ class SettingsDialog(QDialog, FORM_CLASS):
         self.enginePasswordEdit.setText(engine_password)
         self.engineHostnameEdit.setText(engine_hostname)
 
-        style = get_style(self.iface.activeLayer())
+        style = get_style(self.iface.activeLayer(), self.iface.messageBar())
 
         self.set_button_color(self.style_color_from, style['color_from'])
         self.set_button_color(self.style_color_to, style['color_to'])
