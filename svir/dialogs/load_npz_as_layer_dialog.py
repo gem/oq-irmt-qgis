@@ -100,6 +100,7 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
             self.get_taxonomies()
             self.populate_taxonomies()
             self.populate_rlz_cbx()
+            self.show_num_sites()
             self.populate_damage_states()
         self.default_field_name = None
 
@@ -110,7 +111,7 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
         self.rlz_cbx.setEnabled(False)
         self.rlz_cbx.currentIndexChanged['QString'].connect(
             self.on_rlz_changed)
-        self.shape_msg = 'shape: %s'
+        self.shape_msg = 'Number of sites: %s'
         self.rlz_shape_lbl = QLabel(self.shape_msg % '')
         self.rlz_h_layout = QHBoxLayout()
         self.rlz_h_layout.addWidget(self.rlz_cbx)
@@ -218,8 +219,6 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
 
     def on_rlz_changed(self):
         self.dataset = self.npz_file[self.rlz_cbx.currentText()]
-        # with str it prints something like '(524, )', otherwise just '524'
-        self.rlz_shape_lbl.setText(self.shape_msg % str(self.dataset.shape))
         if self.output_type in ['hcurves', 'hmaps']:
             self.imts = {}
             for name in self.dataset.dtype.names[2:]:
@@ -314,6 +313,7 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
             self.get_taxonomies()
             self.populate_taxonomies()
             self.populate_rlz_cbx()
+            self.show_num_sites()
             self.populate_damage_states()
 
     def get_npz_file_handler(self):
@@ -361,6 +361,11 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
         self.rlz_cbx.setEnabled(True)
         # self.rlz_cbx.addItem('All')
         self.rlz_cbx.addItems(self.rlzs)
+
+    def show_num_sites(self):
+        # NOTE: we are assuming all realizations have the same number of sites
+        rlz_data = self.npz_file[self.rlz_cbx.currentText()]
+        self.rlz_shape_lbl.setText(self.shape_msg % rlz_data.shape)
 
     def set_ok_button(self):
         if self.output_type == 'hmaps':
