@@ -111,11 +111,11 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
         self.rlz_cbx.setEnabled(False)
         self.rlz_cbx.currentIndexChanged['QString'].connect(
             self.on_rlz_changed)
-        self.shape_msg = 'Number of sites: %s'
-        self.rlz_shape_lbl = QLabel(self.shape_msg % '')
+        self.num_sites_msg = 'Number of sites: %s'
+        self.rlz_num_sites_lbl = QLabel(self.num_sites_msg % '')
         self.rlz_h_layout = QHBoxLayout()
         self.rlz_h_layout.addWidget(self.rlz_cbx)
-        self.rlz_h_layout.addWidget(self.rlz_shape_lbl)
+        self.rlz_h_layout.addWidget(self.rlz_num_sites_lbl)
         self.imt_lbl = QLabel(
             'Intensity Measure Type (used for default styling)')
         self.imt_cbx = QComboBox()
@@ -363,11 +363,12 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
         self.rlz_cbx.addItems(self.rlzs)
 
     def show_num_sites(self):
-        # NOTE: we are assuming all realizations have the same number of sites.
+        # NOTE: we are assuming all realizations have the same number of sites,
+        #       which currently is always true.
         #       If different realizations have a different number of sites, we
         #       need to move this block of code inside on_rlz_changed()
         rlz_data = self.npz_file[self.rlz_cbx.currentText()]
-        self.rlz_shape_lbl.setText(self.shape_msg % rlz_data.shape)
+        self.rlz_num_sites_lbl.setText(self.num_sites_msg % rlz_data.shape)
 
     def set_ok_button(self):
         if self.output_type == 'hmaps':
