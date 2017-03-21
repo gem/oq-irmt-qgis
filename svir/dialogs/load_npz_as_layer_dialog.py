@@ -363,7 +363,9 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
         self.rlz_cbx.addItems(self.rlzs)
 
     def show_num_sites(self):
-        # NOTE: we are assuming all realizations have the same number of sites
+        # NOTE: we are assuming all realizations have the same number of sites.
+        #       If different realizations have a different number of sites, we
+        #       need to move this block of code inside on_rlz_changed()
         rlz_data = self.npz_file[self.rlz_cbx.currentText()]
         self.rlz_shape_lbl.setText(self.shape_msg % rlz_data.shape)
 
