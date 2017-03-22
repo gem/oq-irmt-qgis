@@ -13,3 +13,4 @@ svir/apidoc/build/*
 .DS_Store
 sample_data
 *.zip
+gdalwmscache/*
