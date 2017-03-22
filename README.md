@@ -36,3 +36,9 @@ will be available for installation. Otherwise, the latest **stable** version
 will be installable. Experimental versions contain new functionalities that may
 have not been properly tested yet, and that could cause the plugin or QGIS to
 break or to behave unexpectedly.
+
+
+## User manual
+
+The user manual for each of the released versions of this plugin is available
+[here](http://docs.openquake.org/oq-irmt-qgis/).
