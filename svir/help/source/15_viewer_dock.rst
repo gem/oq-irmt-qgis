@@ -54,6 +54,23 @@ and latitude of the points corresponding to each of the curves in the plot. By
 hovering on the legend items or on the curves, the corresponding points in the
 map are highlighted.
 
+
+.. warning:: The highlighting effect produced by hovering with the mouse on
+   legend items or curves, stops working correctly when a layer is loaded using
+   the OpenLayers Plugin. Please note that, starting from QGIS 2.18, base maps
+   can be added as layers without installing any external plugin (such as
+   OpenLayers), but using the new core functionality *XYZ driver* instead. In
+   order to do so, you have to open the :guilabel:`Browser Panel`, right-click
+   on the :guilabel:`Tile Server (XYZ)` and select :guilabel:`New
+   connection...`.  Then, for instance, to add a connection to OpenStreetMap,
+   you can insert into the text box the following string:
+   `http://tile.openstreetmap.org/{z}/{x}/{y}.png`. Then press :guilabel:`Ok`
+   and insert a name for the tile layer (e.g., *OpenStreetMap*). Afterwards, it
+   is sufficient to double-click on the new item you have just created, to add
+   OpenStreetMap to the :guilabel:`Layers Panel` and to visualize it in the map
+   canvas.
+
+
 .. _fig-dataViewerHazardCurves:
 
 .. figure:: images/dataViewerHazardCurves.png
