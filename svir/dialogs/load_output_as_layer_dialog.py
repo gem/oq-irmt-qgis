@@ -56,7 +56,11 @@ from PyQt4.QtGui import (QDialogButtonBox,
                          )
 
 
-from svir.utilities.shared import DEBUG
+from svir.utilities.shared import (DEBUG,
+                                   OQ_CSV_LOADABLE_TYPES,
+                                   OQ_NPZ_LOADABLE_TYPES,
+                                   OQ_ALL_LOADABLE_TYPES,
+                                   )
 from svir.utilities.utils import (LayerEditingManager,
                                   WaitCursorManager,
                                   get_ui_class,
@@ -71,10 +75,6 @@ from svir.calculations.calculate_utils import (add_numeric_attribute,
 
 FORM_CLASS = get_ui_class('ui_load_output_as_layer.ui')
 
-CSV_OUTPUT_TYPES = set(['ruptures', 'dmg_by_asset'])
-NPZ_OUTPUT_TYPES = set(['hmaps', 'hcurves', 'gmf_data', 'uhs'])
-OUTPUT_TYPES = CSV_OUTPUT_TYPES | NPZ_OUTPUT_TYPES
-
 
 class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     """
@@ -84,7 +84,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     def __init__(self, iface, output_type=None, path=None):
 
         # sanity check
-        if output_type is not None and output_type not in OUTPUT_TYPES:
+        if (output_type is not None
+                and output_type not in OQ_ALL_LOADABLE_TYPES):
             raise NotImplementedError(output_type)
         self.iface = iface
         self.path = path
@@ -108,19 +109,19 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 self.output_type_cbx.setCurrentIndex(index)
                 self.on_output_type_changed()
                 if self.path:
-                    if self.output_type in NPZ_OUTPUT_TYPES:
+                    if self.output_type in OQ_NPZ_LOADABLE_TYPES:
                         self.npz_file = numpy.load(self.path, 'r')
                         self.populate_out_dep_widgets()
             self.file_browser_tbn.setEnabled(True)
         else:
             self.file_browser_tbn.setEnabled(False)
-        if self.path and output_type in CSV_OUTPUT_TYPES:
+        if self.path and output_type in OQ_CSV_LOADABLE_TYPES:
             self.read_loss_types_and_dmg_states_from_csv_header()
 
     def populate_output_type_cbx(self):
         self.output_type_cbx.clear()
         self.output_type_cbx.addItem('')
-        self.output_type_cbx.addItems(list(OUTPUT_TYPES))
+        self.output_type_cbx.addItems(list(OQ_ALL_LOADABLE_TYPES))
         self.output_type_cbx.setEnabled(True)
 
     def create_rlz_selector(self):
@@ -203,7 +204,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.output_type = self.output_type_cbx.currentText()
         self.file_browser_tbn.setEnabled(bool(self.output_type))
         clear_widgets_from_layout(self.output_dep_vlayout)
-        if self.output_type in NPZ_OUTPUT_TYPES:
+        if self.output_type in OQ_NPZ_LOADABLE_TYPES:
             self.create_load_selected_only_ckb()
         if self.output_type == 'hmaps':
             self.setWindowTitle('Load hazard maps from NPZ, as layer')
@@ -334,9 +335,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         Open a file dialog to select the data file to be loaded
         """
         text = self.tr('Select the OQ-Engine output file to import')
-        if self.output_type in NPZ_OUTPUT_TYPES:
+        if self.output_type in OQ_NPZ_LOADABLE_TYPES:
             filters = self.tr('NPZ files (*.npz)')
-        elif self.output_type in CSV_OUTPUT_TYPES:
+        elif self.output_type in OQ_CSV_LOADABLE_TYPES:
             filters = self.tr('CSV files (*.csv)')
         else:
             raise NotImplementedError(self.output_type)
@@ -350,10 +351,10 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         QSettings().setValue('irmt/load_as_layer_dir', selected_dir)
         self.path = path
         self.path_le.setText(self.path)
-        if self.output_type in NPZ_OUTPUT_TYPES:
+        if self.output_type in OQ_NPZ_LOADABLE_TYPES:
             self.npz_file = numpy.load(self.path, 'r')
             self.populate_out_dep_widgets()
-        elif self.output_type in CSV_OUTPUT_TYPES:
+        elif self.output_type in OQ_CSV_LOADABLE_TYPES:
             # read the header of the csv, so we can select from its fields
             self.read_loss_types_and_dmg_states_from_csv_header()
 
@@ -815,9 +816,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.style_maps()
 
     def accept(self):
-        if self.output_type in NPZ_OUTPUT_TYPES:
+        if self.output_type in OQ_NPZ_LOADABLE_TYPES:
             self.load_from_npz()
-        elif self.output_type in CSV_OUTPUT_TYPES:
+        elif self.output_type in OQ_CSV_LOADABLE_TYPES:
             self.load_from_csv()
         super(LoadOutputAsLayerDialog, self).accept()
 
