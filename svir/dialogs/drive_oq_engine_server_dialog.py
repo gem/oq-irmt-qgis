@@ -457,7 +457,6 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         output_type = output['type']
         if action == 'Load as shapefile':
             dest_folder = tempfile.gettempdir()
-            # NOTE: geojson has been replaced by npz
             if outtype in ('npz', 'csv'):
                 filepath = self.download_output(
                     output_id, outtype, dest_folder)

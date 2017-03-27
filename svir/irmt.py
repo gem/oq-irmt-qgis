@@ -188,14 +188,6 @@ class Irmt:
                            self.drive_oq_engine_server,
                            enable=True,
                            submenu='OQ Engine')
-        # We might remove the following, since npz replaced geojson
-        # # Action to load as layer a geojson produced by the oq-engine
-        # self.add_menu_item("load_geojson_as_layer",
-        #                    ":/plugins/irmt/calculate.svg",  # FIXME
-        #                    u"Load GeoJson as layer",
-        #                    self.load_geojson_as_layer,
-        #                    enable=True,
-        #                    submenu='OQ Engine')
         # Action to manage the projects
         self.add_menu_item("project_definitions_manager",
                            ":/plugins/irmt/copy.svg",
@@ -305,11 +297,6 @@ class Irmt:
 
     # def plot_dmg_by_taxon_from_npz(self):
     #     dlg = PlotFromNpzDialog(self.iface, 'dmg_by_taxon')
-    #     dlg.exec_()
-
-    # We might remove the following, since npz replaced geojson
-    # def load_geojson_as_layer(self):
-    #     dlg = LoadGeoJsonAsLayerDialog(self.iface)
     #     dlg.exec_()
 
     def drive_oq_engine_server(self):
