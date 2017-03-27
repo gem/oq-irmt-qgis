@@ -115,8 +115,12 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             self.file_browser_tbn.setEnabled(True)
         else:
             self.file_browser_tbn.setEnabled(False)
-        if self.path and output_type in OQ_CSV_LOADABLE_TYPES:
-            self.read_loss_types_and_dmg_states_from_csv_header()
+        if self.path:
+            if output_type == 'dmg_by_asset':
+                self.read_loss_types_and_dmg_states_from_csv_header()
+            elif self.output_type != 'ruptures':
+                # we load everything
+                pass
 
     def populate_output_type_cbx(self):
         self.output_type_cbx.clear()
@@ -202,7 +206,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
 
     def crate_save_as_shp_ckb(self):
         self.save_as_shp_ckb = QCheckBox("Save loaded layer as shapefile")
-        self.save_as_shp_ckb.setChecked(True)
+        self.save_as_shp_ckb.setChecked(False)
         self.output_dep_vlayout.addWidget(self.save_as_shp_ckb)
 
     def on_output_type_changed(self):
@@ -249,10 +253,16 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         elif self.output_type == 'dmg_by_asset':
             self.setWindowTitle(
                 'Load scenario damage by asset from CSV, as layer')
+            # FIXME: probably to be removed the following 2 lines
             # self.create_rlz_selector()
             # self.create_taxonomy_selector()
             self.create_dmg_state_selector()
             self.create_loss_type_selector()
+            self.adjustSize()
+        elif self.output_type == 'ruptures':
+            self.setWindowTitle(
+                'Load ruptures from CSV, as layer')
+            # we do not create any selector, because everything is loaded
             self.adjustSize()
         self.set_ok_button()
 
@@ -283,7 +293,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             self.poe_cbx.clear()
             self.poe_cbx.setEnabled(True)
             self.poe_cbx.addItems(self.poes)
-        elif self.output_type in ('loss_maps', 'dmg_by_asset'):
+        elif self.output_type in ('loss_maps'):
             # FIXME: likely, self.npz_file.keys()
             self.loss_types = self.npz_file.dtype.fields
             self.loss_type_cbx.clear()
@@ -360,9 +370,12 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         if self.output_type in OQ_NPZ_LOADABLE_TYPES:
             self.npz_file = numpy.load(self.path, 'r')
             self.populate_out_dep_widgets()
-        elif self.output_type in OQ_CSV_LOADABLE_TYPES:
+        elif self.output_type == 'dmg_by_asset':
             # read the header of the csv, so we can select from its fields
             self.read_loss_types_and_dmg_states_from_csv_header()
+        elif self.output_type == 'ruptures':
+            # we load everything
+            pass
 
     def populate_out_dep_widgets(self):
         # FIXME: running only for npz
@@ -386,11 +399,13 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             self.populate_dmg_state_cbx(list(dmg_states))
 
     def get_taxonomies(self):
+        # FIXME: probably to be removed for dmg_by_asset
         if self.output_type in (
                 'loss_curves', 'loss_maps', 'dmg_by_asset'):
             self.taxonomies = self.npz_file['assetcol/taxonomies'][:].tolist()
 
     def populate_taxonomies(self):
+        # FIXME: probably to be removed
         if self.output_type == 'dmg_by_asset':
             self.taxonomies.insert(0, 'Sum')
             self.taxonomy_cbx.clear()
@@ -398,6 +413,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             self.taxonomy_cbx.setEnabled(True)
 
     def populate_dmg_states(self):
+        # FIXME: probably to be removed
         if self.output_type == 'dmg_by_asset':
             self.dmg_states = ['no damage']
             self.dmg_states.extend(self.npz_file['oqparam'].limit_states)
@@ -420,9 +436,11 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         elif self.output_type == 'gmf_data':
             self.rlzs = [item[0] for item in self.npz_file.items()]
         elif self.output_type == 'dmg_by_asset':
-            self.hdata = self.npz_file['dmg_by_asset']
-            _, n_rlzs = self.hdata.shape
-            self.rlzs = [str(i+1) for i in range(n_rlzs)]
+            # FIXME: probably to be removed
+            # self.hdata = self.npz_file['dmg_by_asset']
+            # _, n_rlzs = self.hdata.shape
+            # self.rlzs = [str(i+1) for i in range(n_rlzs)]
+            pass
         self.rlz_cbx.clear()
         self.rlz_cbx.setEnabled(True)
         # self.rlz_cbx.addItem('All')
@@ -464,21 +482,30 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 and self.loss_type_cbx.currentIndex() != -1)
         elif self.output_type == 'uhs':
             self.ok_button.setEnabled(self.poe_cbx.currentIndex() != -1)
+        elif self.output_type == 'ruptures':
+            self.ok_button.setEnabled(True)
 
     def import_layer_from_csv(self,
                               csv_path,
+                              longitude_field='lon',
+                              latitude_field='lat',
+                              delimiter=',',
+                              quote='"',
+                              wkt_field=None,
                               dest_shp=None):
-        longitude_field = 'lon'
-        latitude_field = 'lat'
         # lines_to_skip_count = 0
         url = QUrl.fromLocalFile(csv_path)
         url.addQueryItem('type', 'csv')
-        url.addQueryItem('xField', longitude_field)
-        url.addQueryItem('yField', latitude_field)
+        if wkt_field is not None:
+            url.addQueryItem('wktField', wkt_field)
+        else:
+            url.addQueryItem('xField', longitude_field)
+            url.addQueryItem('yField', latitude_field)
         url.addQueryItem('spatialIndex', 'no')
         url.addQueryItem('subsetIndex', 'no')
         url.addQueryItem('watchFile', 'no')
-        url.addQueryItem('delimiter', ',')
+        url.addQueryItem('delimiter', delimiter)
+        url.addQueryItem('quote', quote)
         url.addQueryItem('crs', 'epsg:4326')
         # url.addQueryItem('skipLines', str(lines_to_skip_count))
         url.addQueryItem('trimFields', 'yes')
@@ -550,6 +577,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             self.default_field_name = '%s-%s' % (imt, eid)
             layer_name = "scenario_damage_gmfs_%s_eid-%s" % (rlz, eid)
         elif self.output_type == 'dmg_by_asset':
+            # FIXME: probably to be removed
             layer_name = "dmg_by_asset_%s_%s" % (rlz, taxonomy)
         elif self.output_type == 'uhs':
             layer_name = "uhs_%s_poe-%s" % (rlz, poe)
@@ -813,15 +841,20 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             self.npz_file.close()
 
     def load_from_csv(self):
-        self.layer = self.import_layer_from_csv(self.path_le.text())
-        dmg_state = self.dmg_state_cbx.currentText()
-        loss_type = self.loss_type_cbx.currentText()
-        field_idx = -1  # default
-        for idx, name in enumerate(self.csv_header):
-            if dmg_state in name and loss_type in name and 'mean' in name:
-                field_idx = idx
-        self.default_field_name = self.layer.fields()[field_idx].name()
-        self.style_maps()
+        if self.output_type == 'dmg_by_asset':
+            self.layer = self.import_layer_from_csv(self.path_le.text())
+            dmg_state = self.dmg_state_cbx.currentText()
+            loss_type = self.loss_type_cbx.currentText()
+            field_idx = -1  # default
+            for idx, name in enumerate(self.csv_header):
+                if dmg_state in name and loss_type in name and 'mean' in name:
+                    field_idx = idx
+            self.default_field_name = self.layer.fields()[field_idx].name()
+            self.style_maps()
+
+        elif self.output_type == 'ruptures':
+            self.layer = self.import_layer_from_csv(
+                self.path_le.text(), wkt_field='boundary', delimiter='\t')
 
     def accept(self):
         if self.output_type in OQ_NPZ_LOADABLE_TYPES:
