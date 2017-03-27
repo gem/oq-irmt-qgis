@@ -47,7 +47,9 @@ FORM_CLASS = get_ui_class('ui_load_geojson_as_layer.ui')
 
 class LoadGeoJsonAsLayerDialog(QDialog, FORM_CLASS):
     """
-    FIXME This is not working for zipfiles yet
+    FIXME: We are using NPZ instead of Geojson, so this file might be deleted
+
+    FIXME: This is not working for zipfiles yet
     """
     def __init__(self, iface, geojson_path=None):
         self.iface = iface

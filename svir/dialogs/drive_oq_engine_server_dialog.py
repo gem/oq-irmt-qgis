@@ -60,9 +60,7 @@ from svir.utilities.utils import (WaitCursorManager,
                                   get_ui_class,
                                   SvNetworkError,
                                   )
-from svir.dialogs.load_npz_as_layer_dialog import LoadNpzAsLayerDialog
-from svir.dialogs.load_geojson_as_layer_dialog import LoadGeoJsonAsLayerDialog
-from svir.dialogs.load_csv_as_layer_dialog import LoadCsvAsLayerDialog
+from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 
 FORM_CLASS = get_ui_class('ui_drive_engine_server.ui')
 
@@ -474,20 +472,12 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         output_type = output['type']
         if action == 'Load as shapefile':
             dest_folder = tempfile.gettempdir()
-            if outtype == 'npz':
+            # NOTE: geojson has been replaced by npz
+            if outtype in ('npz', 'csv'):
                 filepath = self.download_output(
                     output_id, outtype, dest_folder)
-                dlg = LoadNpzAsLayerDialog(self.iface, output_type, filepath)
-                dlg.exec_()
-            elif outtype == 'geojson':
-                filepath = self.download_output(
-                    output_id, outtype, dest_folder)
-                dlg = LoadGeoJsonAsLayerDialog(self.iface, filepath)
-                dlg.exec_()
-            elif outtype == 'csv':
-                filepath = self.download_output(
-                    output_id, outtype, dest_folder)
-                dlg = LoadCsvAsLayerDialog(self.iface, filepath)
+                dlg = LoadOutputAsLayerDialog(
+                    self.iface, output_type, filepath)
                 dlg.exec_()
             else:
                 raise NotImplementedError("%s %s" % (action, outtype))
