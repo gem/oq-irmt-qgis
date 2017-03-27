@@ -178,7 +178,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
 
     def create_dmg_state_selector(self):
         self.dmg_state_lbl = QLabel(
-            'dmg state')
+            'Damage state')
         self.dmg_state_cbx = QComboBox()
         self.dmg_state_cbx.setEnabled(False)
         self.dmg_state_cbx.currentIndexChanged['QString'].connect(
@@ -200,12 +200,19 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.load_selected_only_ckb.setChecked(True)
         self.output_dep_vlayout.addWidget(self.load_selected_only_ckb)
 
+    def crate_save_as_shp_ckb(self):
+        self.save_as_shp_ckb = QCheckBox("Save loaded layer as shapefile")
+        self.save_as_shp_ckb.setChecked(True)
+        self.output_dep_vlayout.addWidget(self.save_as_shp_ckb)
+
     def on_output_type_changed(self):
         self.output_type = self.output_type_cbx.currentText()
         self.file_browser_tbn.setEnabled(bool(self.output_type))
         clear_widgets_from_layout(self.output_dep_vlayout)
         if self.output_type in OQ_NPZ_LOADABLE_TYPES:
             self.create_load_selected_only_ckb()
+        elif self.output_type in OQ_CSV_LOADABLE_TYPES:
+            self.crate_save_as_shp_ckb()
         if self.output_type == 'hmaps':
             self.setWindowTitle('Load hazard maps from NPZ, as layer')
             self.create_rlz_selector()
@@ -247,6 +254,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             self.create_dmg_state_selector()
             self.create_loss_type_selector()
             self.adjustSize()
+        self.set_ok_button()
 
     @pyqtSlot()
     def on_file_browser_tbn_clicked(self):
@@ -289,8 +297,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             self.imt_cbx.clear()
             self.imt_cbx.setEnabled(True)
             self.imt_cbx.addItems(imts)
-        if self.output_type in ('hcurves', 'loss_curves', 'uhs'):
-            self.set_ok_button()
+        self.set_ok_button()
 
     def on_loss_type_changed(self):
         self.loss_type = self.loss_type_cbx.currentText()
@@ -300,8 +307,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             self.poe_cbx.clear()
             self.poe_cbx.setEnabled(True)
             self.poe_cbx.addItems(poe_thresholds)
-        elif self.output_type == 'dmg_by_asset':
-            self.set_ok_button()
+        self.set_ok_button()
 
     def on_imt_changed(self):
         if self.output_type == 'gmf_data':
@@ -314,12 +320,12 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 'Event ID (used for default styling) (range %d-%d)' % (
                     min_eid, max_eid))
             self.eid_sbx.setRange(min_eid, max_eid)
-            self.set_ok_button()
         elif self.output_type == 'hmaps':
             imt = self.imt_cbx.currentText()
             self.poe_cbx.clear()
             self.poe_cbx.setEnabled(True)
             self.poe_cbx.addItems(self.imts[imt])
+        self.set_ok_button()
 
     def on_poe_changed(self):
         self.set_ok_button()
@@ -328,7 +334,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     #     self.set_ok_button()
 
     def on_dmg_state_changed(self):
-        pass
+        self.set_ok_button()
 
     def open_file_dialog(self):
         """
@@ -359,6 +365,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             self.read_loss_types_and_dmg_states_from_csv_header()
 
     def populate_out_dep_widgets(self):
+        # FIXME: running only for npz
         self.get_taxonomies()
         self.populate_taxonomies()
         self.populate_rlz_cbx()
@@ -476,29 +483,30 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         # url.addQueryItem('skipLines', str(lines_to_skip_count))
         url.addQueryItem('trimFields', 'yes')
         layer_uri = str(url.toEncoded())
-        csv_layer = QgsVectorLayer(layer_uri, 'dmg_by_asset', "delimitedtext")
-        dest_filename = dest_shp or QFileDialog.getSaveFileName(
-            self,
-            'Save loss shapefile as...',
-            os.path.expanduser("~"),
-            'Shapefiles (*.shp)')
-        if dest_filename:
-            if dest_filename[-4:] != ".shp":
-                dest_filename += ".shp"
+        layer = QgsVectorLayer(layer_uri, self.output_type, "delimitedtext")
+        if self.save_as_shp_ckb.isChecked():
+            dest_filename = dest_shp or QFileDialog.getSaveFileName(
+                self,
+                'Save loss shapefile as...',
+                os.path.expanduser("~"),
+                'Shapefiles (*.shp)')
+            if dest_filename:
+                if dest_filename[-4:] != ".shp":
+                    dest_filename += ".shp"
+            else:
+                return
+            result = save_layer_as_shapefile(layer, dest_filename)
+            if result != QgsVectorFileWriter.NoError:
+                raise RuntimeError('Could not save shapefile')
+            layer = QgsVectorLayer(
+                dest_filename, self.output_type, 'ogr')
+        if layer.isValid():
+            QgsMapLayerRegistry.instance().addMapLayer(layer)
         else:
-            return
-        result = save_layer_as_shapefile(csv_layer, dest_filename)
-        if result != QgsVectorFileWriter.NoError:
-            raise RuntimeError('Could not save shapefile')
-        shp_layer = QgsVectorLayer(
-            dest_filename, 'Damage by asset', 'ogr')
-        if shp_layer.isValid():
-            QgsMapLayerRegistry.instance().addMapLayer(shp_layer)
-        else:
-            msg = 'Invalid loss map'
+            msg = 'Unable to load layer'
             log_msg(msg, level='C', message_bar=self.iface.messageBar())
             return None
-        return shp_layer
+        return layer
 
     def build_layer(self, rlz, taxonomy=None, poe=None):
         # get the root of layerTree, in order to add groups of layers
