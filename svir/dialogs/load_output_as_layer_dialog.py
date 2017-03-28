@@ -27,6 +27,7 @@ import json
 import numpy
 import csv
 import os
+import tempfile
 from qgis.core import (QgsVectorLayer,
                        QgsFeature,
                        QgsPoint,
@@ -81,7 +82,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     Modal dialog to load an oq-engine output as layer
     """
 
-    def __init__(self, iface, output_type=None, path=None):
+    def __init__(self, iface, output_type=None, path=None, mode=None):
 
         # sanity check
         if (output_type is not None
@@ -91,6 +92,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.path = path
         self.npz_file = None
         self.output_type = output_type
+        self.mode = mode  # if 'testing' it will avoid some user interaction
         QDialog.__init__(self)
         # Set up the user interface from Designer.
         self.setupUi(self)
@@ -841,8 +843,13 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             self.npz_file.close()
 
     def load_from_csv(self):
+        if self.mode == 'testing':
+            dest_shp = tempfile.mkstemp(suffix='.shp')[1]
+        else:
+            dest_shp = None
         if self.output_type == 'dmg_by_asset':
-            self.layer = self.import_layer_from_csv(self.path_le.text())
+            self.layer = self.import_layer_from_csv(
+                self.path_le.text(), dest_shp=dest_shp)
             dmg_state = self.dmg_state_cbx.currentText()
             loss_type = self.loss_type_cbx.currentText()
             field_idx = -1  # default
@@ -854,7 +861,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
 
         elif self.output_type == 'ruptures':
             self.layer = self.import_layer_from_csv(
-                self.path_le.text(), wkt_field='boundary', delimiter='\t')
+                self.path_le.text(), wkt_field='boundary', delimiter='\t',
+                dest_shp=dest_shp)
 
     def accept(self):
         if self.output_type in OQ_NPZ_LOADABLE_TYPES:

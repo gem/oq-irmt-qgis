@@ -29,9 +29,10 @@ import tempfile
 import filecmp
 
 from PyQt4.QtGui import QAction
-from qgis.core import QgsMapLayerRegistry
+from qgis.core import QgsMapLayerRegistry, QgsVectorLayer
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 from svir.dialogs.viewer_dock import ViewerDock
+from svir.calculations.process_layer import ProcessLayer
 from utilities import get_qgis_app
 
 QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
@@ -112,6 +113,23 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
         self._change_selection()
         # test exporting the current selection to csv
         self._test_export('uniform_hazard_spectra.csv')
+
+    def test_dmg_by_asset(self):
+        # TODO
+        pass
+
+    def test_load_ruptures(self):
+        filepath = os.path.join(
+            self.data_dir_name, 'output-316-ruptures_104.csv')
+        dlg = LoadOutputAsLayerDialog(
+            IFACE, 'ruptures', filepath, mode='testing')
+        dlg.save_as_shp_ckb.setChecked(True)
+        dlg.accept()
+        current_layer = CANVAS.layers()[0]
+        reference_path = os.path.join(self.data_dir_name, 'ruptures.shp')
+        reference_layer = QgsVectorLayer(
+            reference_path, 'reference_ruptures', 'ogr')
+        ProcessLayer(current_layer).has_same_content_as(reference_layer)
 
     def _test_export(self, expected_file_name):
         _, exported_file_path = tempfile.mkstemp(suffix=".csv")
