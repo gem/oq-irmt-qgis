@@ -30,14 +30,14 @@ import filecmp
 
 from PyQt4.QtGui import QAction
 from qgis.core import QgsMapLayerRegistry
-from svir.dialogs.load_npz_as_layer_dialog import LoadNpzAsLayerDialog
+from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 from svir.dialogs.viewer_dock import ViewerDock
 from utilities import get_qgis_app
 
 QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 
 
-class LoadNpzAsLayerTestCase(unittest.TestCase):
+class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
     def setUp(self):
         IFACE.newProject()
         curr_dir_name = os.path.dirname(__file__)
@@ -52,21 +52,21 @@ class LoadNpzAsLayerTestCase(unittest.TestCase):
 
     def test_load_hazard_map(self):
         filepath = os.path.join(self.data_dir_name, 'output-182-hmaps_67.npz')
-        dlg = LoadNpzAsLayerDialog(IFACE, 'hmaps', filepath)
+        dlg = LoadOutputAsLayerDialog(IFACE, 'hmaps', filepath)
         dlg.accept()
         # hazard maps have nothing to do with the Data Viewer
 
     def test_load_gmf(self):
         filepath = os.path.join(self.data_dir_name,
                                 'output-195-gmf_data_70.npz')
-        dlg = LoadNpzAsLayerDialog(IFACE, 'gmf_data', filepath)
+        dlg = LoadOutputAsLayerDialog(IFACE, 'gmf_data', filepath)
         dlg.accept()
         # ground motion fields have nothing to do with the Data Viewer
 
     def test_load_hazard_curves(self):
         filepath = os.path.join(self.data_dir_name,
                                 'output-181-hcurves_67.npz')
-        dlg = LoadNpzAsLayerDialog(IFACE, 'hcurves', filepath)
+        dlg = LoadOutputAsLayerDialog(IFACE, 'hcurves', filepath)
         dlg.accept()
         self._set_output_type('Hazard Curves')
         self._change_selection()
@@ -86,7 +86,7 @@ class LoadNpzAsLayerTestCase(unittest.TestCase):
 
     def test_load_uhs_only_selected_poe(self):
         filepath = os.path.join(self.data_dir_name, 'output-184-uhs_67.npz')
-        dlg = LoadNpzAsLayerDialog(IFACE, 'uhs', filepath)
+        dlg = LoadOutputAsLayerDialog(IFACE, 'uhs', filepath)
         dlg.load_selected_only_ckb.setChecked(True)
         idx = dlg.poe_cbx.findText('0.02')
         self.assertEqual(idx, 1, 'POE 0.02 was not found')
@@ -99,7 +99,7 @@ class LoadNpzAsLayerTestCase(unittest.TestCase):
 
     def test_load_uhs_all(self):
         filepath = os.path.join(self.data_dir_name, 'output-184-uhs_67.npz')
-        dlg = LoadNpzAsLayerDialog(IFACE, 'uhs', filepath)
+        dlg = LoadOutputAsLayerDialog(IFACE, 'uhs', filepath)
         dlg.load_selected_only_ckb.setChecked(False)
         dlg.accept()
         # FIXME: setActiveLayer is not working. As a workaround, I am deleting
