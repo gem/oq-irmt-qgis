@@ -104,10 +104,10 @@ visualized in the IRMT Data Viewer (see :ref:`chap-viewer-dock`).
 Run a postprocessing (or risk) calculation on top of a previously computed hazard
 =================================================================================
 
-To run a postprocessing or risk calculation on top of a previous hazard one you have to
-click the :guilabel:`Continue` button on the corresponding hazard calculation
-and select the files including the risk `job.ini` and the related inputs (or
-a zip archive containing them).
+To run a postprocessing or risk calculation on top of a previous hazard one you
+have to click the :guilabel:`Continue` button on the corresponding hazard
+calculation and select the files including the postprocessing or risk `job.ini`
+and the related inputs (or a zip archive containing them).
 
 
 Remove a calculation
