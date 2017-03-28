@@ -178,7 +178,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             {'label': 'Console', 'bg_color': '#3cb3c5', 'txt_color': 'white'},
             {'label': 'Remove', 'bg_color': '#d9534f', 'txt_color': 'white'},
             {'label': 'Outputs', 'bg_color': '#3cb3c5', 'txt_color': 'white'},
-            {'label': 'Run Risk', 'bg_color': 'white', 'txt_color': 'black'}
+            {'label': 'Continue', 'bg_color': 'white', 'txt_color': 'black'}
         ]
         self.calc_list_tbl.clearContents()
         self.calc_list_tbl.setRowCount(len(calc_list))
@@ -199,9 +199,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 item.setTextColor(row_txt_color)
                 self.calc_list_tbl.setItem(row, col, item)
             for col, action in enumerate(actions, len(selected_keys)):
-                # do not display 'Run Risk' button, if this is already a risk
+                # do not display 'Continue' button, if this is already a risk
                 # calculation or if the calculation is still incomplete
-                if action['label'] == 'Run Risk':
+                if action['label'] == 'Continue':
                     if (calc['job_type'] == 'risk'
                             or calc['status'] != 'complete'):
                         continue
@@ -260,7 +260,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             self.download_datastore_btn.setText(
                 'Download HDF5 datastore for calculation %s'
                 % self.current_output_calc_id)
-        elif action == 'Run Risk':
+        elif action == 'Continue':
             self.run_calc(calc_id)
         else:
             raise NotImplementedError(action)
