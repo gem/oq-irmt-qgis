@@ -43,7 +43,7 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
         IFACE.newProject()
         curr_dir_name = os.path.dirname(__file__)
         self.data_dir_name = os.path.join(
-            curr_dir_name, 'data', 'hazard')
+            curr_dir_name, 'data')
         mock_action = QAction(IFACE.mainWindow())
         self.viewer_dock = ViewerDock(IFACE, mock_action)
 
@@ -52,20 +52,21 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
         IFACE.newProject()
 
     def test_load_hazard_map(self):
-        filepath = os.path.join(self.data_dir_name, 'output-182-hmaps_67.npz')
+        filepath = os.path.join(
+            self.data_dir_name, 'hazard', 'output-182-hmaps_67.npz')
         dlg = LoadOutputAsLayerDialog(IFACE, 'hmaps', filepath)
         dlg.accept()
         # hazard maps have nothing to do with the Data Viewer
 
     def test_load_gmf(self):
-        filepath = os.path.join(self.data_dir_name,
+        filepath = os.path.join(self.data_dir_name, 'hazard',
                                 'output-195-gmf_data_70.npz')
         dlg = LoadOutputAsLayerDialog(IFACE, 'gmf_data', filepath)
         dlg.accept()
         # ground motion fields have nothing to do with the Data Viewer
 
     def test_load_hazard_curves(self):
-        filepath = os.path.join(self.data_dir_name,
+        filepath = os.path.join(self.data_dir_name, 'hazard',
                                 'output-181-hcurves_67.npz')
         dlg = LoadOutputAsLayerDialog(IFACE, 'hcurves', filepath)
         dlg.accept()
@@ -86,7 +87,8 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
         self._test_export('hazard_curves_SA(0.2).csv')
 
     def test_load_uhs_only_selected_poe(self):
-        filepath = os.path.join(self.data_dir_name, 'output-184-uhs_67.npz')
+        filepath = os.path.join(self.data_dir_name, 'hazard',
+                                'output-184-uhs_67.npz')
         dlg = LoadOutputAsLayerDialog(IFACE, 'uhs', filepath)
         dlg.load_selected_only_ckb.setChecked(True)
         idx = dlg.poe_cbx.findText('0.02')
@@ -99,7 +101,8 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
         self._test_export('uniform_hazard_spectra.csv')
 
     def test_load_uhs_all(self):
-        filepath = os.path.join(self.data_dir_name, 'output-184-uhs_67.npz')
+        filepath = os.path.join(self.data_dir_name, 'hazard',
+                                'output-184-uhs_67.npz')
         dlg = LoadOutputAsLayerDialog(IFACE, 'uhs', filepath)
         dlg.load_selected_only_ckb.setChecked(False)
         dlg.accept()
@@ -115,18 +118,36 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
         self._test_export('uniform_hazard_spectra.csv')
 
     def test_dmg_by_asset(self):
-        # TODO
-        pass
+        filepath = os.path.join(
+            self.data_dir_name, 'risk',
+            'output-308-dmg_by_asset-ChiouYoungs2008()_103.csv')
+        dlg = LoadOutputAsLayerDialog(
+            IFACE, 'dmg_by_asset', filepath, mode='testing')
+        dlg.save_as_shp_ckb.setChecked(True)
+        idx = dlg.dmg_state_cbx.findText('complete')
+        self.assertEqual(idx, 2, '"complete" damage state was not found')
+        dlg.dmg_state_cbx.setCurrentIndex(idx)
+        idx = dlg.loss_type_cbx.findText('structural')
+        self.assertEqual(idx, 0, '"structural" loss_type was not found')
+        dlg.loss_type_cbx.setCurrentIndex(idx)
+        dlg.accept()
+        current_layer = CANVAS.layers()[0]
+        reference_path = os.path.join(
+            self.data_dir_name, 'dmg_by_asset_complete_structural.shp')
+        reference_layer = QgsVectorLayer(
+            reference_path, 'dmg_by_asset_complete_structural', 'ogr')
+        ProcessLayer(current_layer).has_same_content_as(reference_layer)
 
     def test_load_ruptures(self):
         filepath = os.path.join(
-            self.data_dir_name, 'output-316-ruptures_104.csv')
+            self.data_dir_name, 'hazard', 'output-316-ruptures_104.csv')
         dlg = LoadOutputAsLayerDialog(
             IFACE, 'ruptures', filepath, mode='testing')
         dlg.save_as_shp_ckb.setChecked(True)
         dlg.accept()
         current_layer = CANVAS.layers()[0]
-        reference_path = os.path.join(self.data_dir_name, 'ruptures.shp')
+        reference_path = os.path.join(
+            self.data_dir_name, 'hazard', 'ruptures.shp')
         reference_layer = QgsVectorLayer(
             reference_path, 'reference_ruptures', 'ogr')
         ProcessLayer(current_layer).has_same_content_as(reference_layer)
@@ -141,7 +162,7 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
         # probably we have the wrong layer selected (uhs produce many layers)
         self.viewer_dock.write_export_file(exported_file_path)
         expected_file_path = os.path.join(
-            self.data_dir_name, expected_file_name)
+            self.data_dir_name, 'hazard', expected_file_name)
         self.assertTrue(
             filecmp.cmp(exported_file_path, expected_file_path),
             'The exported file (%s) is different with respect to the'
