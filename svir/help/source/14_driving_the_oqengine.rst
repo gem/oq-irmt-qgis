@@ -101,11 +101,11 @@ visualized in the IRMT Data Viewer (see :ref:`chap-viewer-dock`).
     Example of a hazard map produced by the OpenQuake Engine
 
 
-Run a risk calculation on top of hazard
-=======================================
+Run a postprocessing (or risk) calculation on top of a previously computed hazard
+=================================================================================
 
-To run a risk-only calculation on top of a previous hazard run you have to
-click the :guilabel:`Run Risk` button on the corresponding hazard calculation
+To run a postprocessing or risk calculation on top of a previous hazard one you have to
+click the :guilabel:`Continue` button on the corresponding hazard calculation
 and select the files including the risk `job.ini` and the related inputs (or
 a zip archive containing them).
 
