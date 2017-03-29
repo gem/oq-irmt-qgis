@@ -62,6 +62,7 @@ from svir.utilities.utils import (WaitCursorManager,
                                   SvNetworkError,
                                   )
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
+from svir.dialogs.show_full_report_dialog import ShowFullReportDialog
 
 FORM_CLASS = get_ui_class('ui_drive_engine_server.ui')
 
@@ -424,8 +425,12 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 button = QPushButton()
                 self.connect_button_to_action(button, action, output, outtype)
                 self.output_list_tbl.setCellWidget(row, col, button)
-            if output['type'] in OQ_ALL_LOADABLE_TYPES:
-                action = 'Load as shapefile'
+            if (output['type'] in OQ_ALL_LOADABLE_TYPES
+                    or output['type'] == 'fullreport'):
+                if output['type'] == 'fullreport':
+                    action = 'Show'
+                else:
+                    action = 'Load as layer'
                 button = QPushButton()
                 self.connect_button_to_action(
                     button, action, output, outtype)
@@ -440,9 +445,12 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.output_list_tbl.resizeRowsToContents()
 
     def connect_button_to_action(self, button, action, output, outtype):
-        if action == 'Load as shapefile':
+        if action in ('Load as layer', 'Show'):
             style = 'background-color: blue; color: white;'
-            button.setText("Load %s as shapefile" % outtype)
+            if action == 'Load as layer':
+                button.setText("Load %s as layer" % outtype)
+            else:
+                button.setText("Show")
         else:
             style = 'background-color: #3cb3c5; color: white;'
             button.setText("%s %s" % (action, outtype))
@@ -456,7 +464,21 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     def on_output_action_btn_clicked(self, output, action, outtype):
         output_id = output['id']
         output_type = output['type']
-        if action == 'Load as shapefile':
+        if action == 'Show':
+            dest_folder = tempfile.gettempdir()
+            if outtype == 'rst':
+                filepath = self.download_output(
+                    output_id, outtype, dest_folder)
+                # NOTE: it might be created here directly instead, but this way
+                # we can use the qt-designer
+                dlg = ShowFullReportDialog(filepath)
+                dlg.setWindowTitle(
+                    'Full report of calculation %s' %
+                    self.current_output_calc_id)
+                dlg.exec_()
+            else:
+                raise NotImplementedError("%s %s" % (action, outtype))
+        elif action == 'Load as layer':
             dest_folder = tempfile.gettempdir()
             if outtype in ('npz', 'csv'):
                 filepath = self.download_output(
