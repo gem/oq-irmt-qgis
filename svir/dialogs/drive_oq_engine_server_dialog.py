@@ -398,14 +398,15 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         selected_keys = [key for key in sorted(output_list[0].keys())
                          if key not in exclude]
         max_actions = 0
+        at_least_one_is_loadable = False
         for row in output_list:
             if row['type'] in OQ_ALL_LOADABLE_TYPES:
                 # it can be directly loaded as layer
-                is_loadable = True
+                at_least_one_is_loadable = True
             num_actions = len(row['outtypes'])
             if num_actions > max_actions:
                 max_actions = num_actions
-        if is_loadable:
+        if at_least_one_is_loadable:
             max_actions += 1
 
         self.output_list_tbl.setRowCount(len(output_list))
