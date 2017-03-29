@@ -29,20 +29,21 @@ import tempfile
 import filecmp
 
 from PyQt4.QtGui import QAction
-from qgis.core import QgsMapLayerRegistry
-from svir.dialogs.load_npz_as_layer_dialog import LoadNpzAsLayerDialog
+from qgis.core import QgsMapLayerRegistry, QgsVectorLayer
+from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 from svir.dialogs.viewer_dock import ViewerDock
+from svir.calculations.process_layer import ProcessLayer
 from utilities import get_qgis_app
 
 QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 
 
-class LoadNpzAsLayerTestCase(unittest.TestCase):
+class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
     def setUp(self):
         IFACE.newProject()
         curr_dir_name = os.path.dirname(__file__)
         self.data_dir_name = os.path.join(
-            curr_dir_name, 'data', 'hazard')
+            curr_dir_name, 'data')
         mock_action = QAction(IFACE.mainWindow())
         self.viewer_dock = ViewerDock(IFACE, mock_action)
 
@@ -51,22 +52,23 @@ class LoadNpzAsLayerTestCase(unittest.TestCase):
         IFACE.newProject()
 
     def test_load_hazard_map(self):
-        filepath = os.path.join(self.data_dir_name, 'output-182-hmaps_67.npz')
-        dlg = LoadNpzAsLayerDialog(IFACE, 'hmaps', filepath)
+        filepath = os.path.join(
+            self.data_dir_name, 'hazard', 'output-182-hmaps_67.npz')
+        dlg = LoadOutputAsLayerDialog(IFACE, 'hmaps', filepath)
         dlg.accept()
         # hazard maps have nothing to do with the Data Viewer
 
     def test_load_gmf(self):
-        filepath = os.path.join(self.data_dir_name,
+        filepath = os.path.join(self.data_dir_name, 'hazard',
                                 'output-195-gmf_data_70.npz')
-        dlg = LoadNpzAsLayerDialog(IFACE, 'gmf_data', filepath)
+        dlg = LoadOutputAsLayerDialog(IFACE, 'gmf_data', filepath)
         dlg.accept()
         # ground motion fields have nothing to do with the Data Viewer
 
     def test_load_hazard_curves(self):
-        filepath = os.path.join(self.data_dir_name,
+        filepath = os.path.join(self.data_dir_name, 'hazard',
                                 'output-181-hcurves_67.npz')
-        dlg = LoadNpzAsLayerDialog(IFACE, 'hcurves', filepath)
+        dlg = LoadOutputAsLayerDialog(IFACE, 'hcurves', filepath)
         dlg.accept()
         self._set_output_type('Hazard Curves')
         self._change_selection()
@@ -85,8 +87,9 @@ class LoadNpzAsLayerTestCase(unittest.TestCase):
         self._test_export('hazard_curves_SA(0.2).csv')
 
     def test_load_uhs_only_selected_poe(self):
-        filepath = os.path.join(self.data_dir_name, 'output-184-uhs_67.npz')
-        dlg = LoadNpzAsLayerDialog(IFACE, 'uhs', filepath)
+        filepath = os.path.join(self.data_dir_name, 'hazard',
+                                'output-184-uhs_67.npz')
+        dlg = LoadOutputAsLayerDialog(IFACE, 'uhs', filepath)
         dlg.load_selected_only_ckb.setChecked(True)
         idx = dlg.poe_cbx.findText('0.02')
         self.assertEqual(idx, 1, 'POE 0.02 was not found')
@@ -98,8 +101,9 @@ class LoadNpzAsLayerTestCase(unittest.TestCase):
         self._test_export('uniform_hazard_spectra.csv')
 
     def test_load_uhs_all(self):
-        filepath = os.path.join(self.data_dir_name, 'output-184-uhs_67.npz')
-        dlg = LoadNpzAsLayerDialog(IFACE, 'uhs', filepath)
+        filepath = os.path.join(self.data_dir_name, 'hazard',
+                                'output-184-uhs_67.npz')
+        dlg = LoadOutputAsLayerDialog(IFACE, 'uhs', filepath)
         dlg.load_selected_only_ckb.setChecked(False)
         dlg.accept()
         # FIXME: setActiveLayer is not working. As a workaround, I am deleting
@@ -113,6 +117,41 @@ class LoadNpzAsLayerTestCase(unittest.TestCase):
         # test exporting the current selection to csv
         self._test_export('uniform_hazard_spectra.csv')
 
+    def test_dmg_by_asset(self):
+        filepath = os.path.join(
+            self.data_dir_name, 'risk',
+            'output-308-dmg_by_asset-ChiouYoungs2008()_103.csv')
+        dlg = LoadOutputAsLayerDialog(
+            IFACE, 'dmg_by_asset', filepath, mode='testing')
+        dlg.save_as_shp_ckb.setChecked(True)
+        idx = dlg.dmg_state_cbx.findText('complete')
+        self.assertEqual(idx, 2, '"complete" damage state was not found')
+        dlg.dmg_state_cbx.setCurrentIndex(idx)
+        idx = dlg.loss_type_cbx.findText('structural')
+        self.assertEqual(idx, 0, '"structural" loss_type was not found')
+        dlg.loss_type_cbx.setCurrentIndex(idx)
+        dlg.accept()
+        current_layer = CANVAS.layers()[0]
+        reference_path = os.path.join(
+            self.data_dir_name, 'dmg_by_asset_complete_structural.shp')
+        reference_layer = QgsVectorLayer(
+            reference_path, 'dmg_by_asset_complete_structural', 'ogr')
+        ProcessLayer(current_layer).has_same_content_as(reference_layer)
+
+    def test_load_ruptures(self):
+        filepath = os.path.join(
+            self.data_dir_name, 'hazard', 'output-316-ruptures_104.csv')
+        dlg = LoadOutputAsLayerDialog(
+            IFACE, 'ruptures', filepath, mode='testing')
+        dlg.save_as_shp_ckb.setChecked(True)
+        dlg.accept()
+        current_layer = CANVAS.layers()[0]
+        reference_path = os.path.join(
+            self.data_dir_name, 'hazard', 'ruptures.shp')
+        reference_layer = QgsVectorLayer(
+            reference_path, 'reference_ruptures', 'ogr')
+        ProcessLayer(current_layer).has_same_content_as(reference_layer)
+
     def _test_export(self, expected_file_name):
         _, exported_file_path = tempfile.mkstemp(suffix=".csv")
         layers = CANVAS.layers()
@@ -123,7 +162,7 @@ class LoadNpzAsLayerTestCase(unittest.TestCase):
         # probably we have the wrong layer selected (uhs produce many layers)
         self.viewer_dock.write_export_file(exported_file_path)
         expected_file_path = os.path.join(
-            self.data_dir_name, expected_file_name)
+            self.data_dir_name, 'hazard', expected_file_name)
         self.assertTrue(
             filecmp.cmp(exported_file_path, expected_file_path),
             'The exported file (%s) is different with respect to the'

@@ -47,7 +47,11 @@ from qgis.gui import QgsVertexMarker
 from qgis.core import QGis, QgsMapLayer, QgsFeatureRequest
 
 from svir.utilities.shared import TEXTUAL_FIELD_TYPES
-from svir.utilities.utils import get_ui_class, reload_attrib_cbx, log_msg
+from svir.utilities.utils import (get_ui_class,
+                                  reload_attrib_cbx,
+                                  log_msg,
+                                  clear_widgets_from_layout,
+                                  )
 from svir.recovery_modeling.recovery_modeling import (
     RecoveryModeling, fill_fields_multiselect)
 from svir.ui.list_multiselect_widget import ListMultiSelectWidget
@@ -219,25 +223,6 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         fill_fields_multiselect(
             self.fields_multiselect, self.iface.activeLayer())
 
-    def clear_widgets_from_layout(self, layout):
-        """
-        Recursively remove all widgets from the layout, except from nested
-        layouts. If any of such widgets is a layout, then clear its widgets
-        instead of deleting it.
-        """
-        for i in reversed(range(layout.count())):
-            item = layout.itemAt(i)
-            # check if the item is a sub-layout (nested inside the layout)
-            sublayout = item.layout()
-            if sublayout is not None:
-                self.clear_widgets_from_layout(sublayout)
-                continue
-            # check if the item is a widget
-            widget = item.widget()
-            if widget is not None:
-                # a widget is deleted when it does not have a parent
-                widget.setParent(None)
-
     def set_output_type_and_its_gui(self, new_output_type):
         if (self.output_type is not None
                 and self.output_type == new_output_type):
@@ -246,7 +231,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         # clear type dependent widgets
         # NOTE: typeDepVLayout contains typeDepHLayout1 and typeDepHLayout2,
         #       that will be cleared recursively
-        self.clear_widgets_from_layout(self.typeDepVLayout)
+        clear_widgets_from_layout(self.typeDepVLayout)
 
         if new_output_type == 'hcurves':
             self.create_imt_selector()

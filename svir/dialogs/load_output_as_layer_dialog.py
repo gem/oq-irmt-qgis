@@ -25,6 +25,9 @@
 
 import json
 import numpy
+import csv
+import os
+import tempfile
 from qgis.core import (QgsVectorLayer,
                        QgsFeature,
                        QgsPoint,
@@ -38,8 +41,9 @@ from qgis.core import (QgsVectorLayer,
                        QgsGraduatedSymbolRendererV2,
                        QgsRendererRangeV2,
                        QgsProject,
+                       QgsVectorFileWriter,
                        )
-from PyQt4.QtCore import pyqtSlot, QDir, QSettings, QFileInfo
+from PyQt4.QtCore import pyqtSlot, QDir, QSettings, QFileInfo, QUrl
 
 from PyQt4.QtGui import (QDialogButtonBox,
                          QDialog,
@@ -53,58 +57,80 @@ from PyQt4.QtGui import (QDialogButtonBox,
                          )
 
 
-from svir.utilities.shared import DEBUG
+from svir.utilities.shared import (DEBUG,
+                                   OQ_CSV_LOADABLE_TYPES,
+                                   OQ_NPZ_LOADABLE_TYPES,
+                                   OQ_ALL_LOADABLE_TYPES,
+                                   )
 from svir.utilities.utils import (LayerEditingManager,
                                   WaitCursorManager,
                                   get_ui_class,
                                   log_msg,
-                                  get_style)
+                                  get_style,
+                                  clear_widgets_from_layout,
+                                  save_layer_as_shapefile,
+                                  )
 from svir.calculations.calculate_utils import (add_numeric_attribute,
                                                add_textual_attribute,
                                                )
 
-FORM_CLASS = get_ui_class('ui_load_npz_as_layer.ui')
+FORM_CLASS = get_ui_class('ui_load_output_as_layer.ui')
 
 
-class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
+class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     """
-    Modal dialog to load hazard maps or hazard curves from npz files exported
-    by the oq-engine
+    Modal dialog to load an oq-engine output as layer
     """
-    def __init__(self, iface, output_type, npz_path=None):
+
+    def __init__(self, iface, output_type=None, path=None, mode=None):
 
         # sanity check
-        if output_type not in (
-                'hcurves', 'hmaps', 'uhs', 'loss_maps', 'loss_curves',
-                'gmf_data', 'scenario_damage_by_asset'):
+        if (output_type is not None
+                and output_type not in OQ_ALL_LOADABLE_TYPES):
             raise NotImplementedError(output_type)
         self.iface = iface
-        self.npz_path = npz_path
+        self.path = path
         self.npz_file = None
         self.output_type = output_type
+        self.mode = mode  # if 'testing' it will avoid some user interaction
         QDialog.__init__(self)
         # Set up the user interface from Designer.
         self.setupUi(self)
         # Disable ok_button until all comboboxes are filled
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         self.ok_button.setDisabled(True)
-        self.define_gui_elements()
-        self.adjust_gui_for_output_type()
-        if self.npz_path:
-            self.npz_path_le.setText(self.npz_path)
-            self.rlz_cbx.setEnabled(True)
-            self.imt_cbx.setEnabled(True)
-            self.poe_cbx.setEnabled(True)
-            self.loss_type_cbx.setEnabled(True)
-            self.npz_file = self.get_npz_file_handler()
-            self.get_taxonomies()
-            self.populate_taxonomies()
-            self.populate_rlz_cbx()
-            self.show_num_sites()
-            self.populate_damage_states()
-        self.default_field_name = None
+        self.populate_output_type_cbx()
+        self.output_type_cbx.currentIndexChanged['QString'].connect(
+            self.on_output_type_changed)
+        if self.path:
+            self.path_le.setText(self.path)
+        self.default_field_name = None  # field used for styling by default
+        if output_type is not None:
+            index = self.output_type_cbx.findText(output_type)
+            if index != -1:
+                self.output_type_cbx.setCurrentIndex(index)
+                self.on_output_type_changed()
+                if self.path:
+                    if self.output_type in OQ_NPZ_LOADABLE_TYPES:
+                        self.npz_file = numpy.load(self.path, 'r')
+                        self.populate_out_dep_widgets()
+            self.file_browser_tbn.setEnabled(True)
+        else:
+            self.file_browser_tbn.setEnabled(False)
+        if self.path:
+            if output_type == 'dmg_by_asset':
+                self.read_loss_types_and_dmg_states_from_csv_header()
+            elif self.output_type != 'ruptures':
+                # we load everything
+                pass
 
-    def define_gui_elements(self):
+    def populate_output_type_cbx(self):
+        self.output_type_cbx.clear()
+        self.output_type_cbx.addItem('')
+        self.output_type_cbx.addItems(list(OQ_ALL_LOADABLE_TYPES))
+        self.output_type_cbx.setEnabled(True)
+
+    def create_rlz_selector(self):
         self.rlz_lbl = QLabel('Realization (different realizations'
                               ' will be loaded into separate layer groups)')
         self.rlz_cbx = QComboBox()
@@ -116,106 +142,135 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
         self.rlz_h_layout = QHBoxLayout()
         self.rlz_h_layout.addWidget(self.rlz_cbx)
         self.rlz_h_layout.addWidget(self.rlz_num_sites_lbl)
+        self.output_dep_vlayout.addLayout(self.rlz_h_layout)
+
+    def create_imt_selector(self):
         self.imt_lbl = QLabel(
             'Intensity Measure Type (used for default styling)')
         self.imt_cbx = QComboBox()
         self.imt_cbx.setEnabled(False)
         self.imt_cbx.currentIndexChanged['QString'].connect(
             self.on_imt_changed)
+        self.output_dep_vlayout.addWidget(self.imt_lbl)
+        self.output_dep_vlayout.addWidget(self.imt_cbx)
+
+    def create_poe_selector(self):
         self.poe_lbl = QLabel(
             'Probability of Exceedance (used for default styling)')
         self.poe_cbx = QComboBox()
         self.poe_cbx.setEnabled(False)
         self.poe_cbx.currentIndexChanged['QString'].connect(
             self.on_poe_changed)
+        self.output_dep_vlayout.addWidget(self.poe_lbl)
+        self.output_dep_vlayout.addWidget(self.poe_cbx)
+
+    def create_loss_type_selector(self):
         self.loss_type_lbl = QLabel(
             'Loss Type (used for default styling)')
         self.loss_type_cbx = QComboBox()
         self.loss_type_cbx.setEnabled(False)
         self.loss_type_cbx.currentIndexChanged['QString'].connect(
             self.on_loss_type_changed)
+        self.output_dep_vlayout.addWidget(self.loss_type_lbl)
+        self.output_dep_vlayout.addWidget(self.loss_type_cbx)
+
+    def create_eid_selector(self):
         self.eid_lbl = QLabel(
             'Event ID (used for default styling)')
         self.eid_sbx = QSpinBox()
         self.eid_sbx.setEnabled(False)
-        self.damage_state_lbl = QLabel(
+        self.output_dep_vlayout.addWidget(self.eid_lbl)
+        self.output_dep_vlayout.addWidget(self.eid_sbx)
+
+    def create_dmg_state_selector(self):
+        self.dmg_state_lbl = QLabel(
             'Damage state')
-        self.damage_state_cbx = QComboBox()
-        self.damage_state_cbx.setEnabled(False)
-        self.damage_state_cbx.currentIndexChanged['QString'].connect(
-            self.on_damage_state_changed)
+        self.dmg_state_cbx = QComboBox()
+        self.dmg_state_cbx.setEnabled(False)
+        self.dmg_state_cbx.currentIndexChanged['QString'].connect(
+            self.on_dmg_state_changed)
+        self.output_dep_vlayout.addWidget(self.dmg_state_lbl)
+        self.output_dep_vlayout.addWidget(self.dmg_state_cbx)
+
+    def create_taxonomy_selector(self):
         self.taxonomy_lbl = QLabel('Taxonomy')
         self.taxonomy_cbx = QComboBox()
         self.taxonomy_cbx.setEnabled(False)
         # self.taxonomy_cbx.currentIndexChanged['QString'].connect(
         #     self.on_taxonomy_changed)
+        self.output_dep_vlayout.addWidget(self.taxonomy_lbl)
+        self.output_dep_vlayout.addWidget(self.taxonomy_cbx)
+
+    def create_load_selected_only_ckb(self):
         self.load_selected_only_ckb = QCheckBox("Load only the selected items")
         self.load_selected_only_ckb.setChecked(True)
-        self.verticalLayout.addWidget(self.load_selected_only_ckb)
+        self.output_dep_vlayout.addWidget(self.load_selected_only_ckb)
 
-    def adjust_gui_for_output_type(self):
+    def crate_save_as_shp_ckb(self):
+        self.save_as_shp_ckb = QCheckBox("Save loaded layer as shapefile")
+        self.save_as_shp_ckb.setChecked(False)
+        self.output_dep_vlayout.addWidget(self.save_as_shp_ckb)
+
+    def on_output_type_changed(self):
+        self.output_type = self.output_type_cbx.currentText()
+        self.file_browser_tbn.setEnabled(bool(self.output_type))
+        clear_widgets_from_layout(self.output_dep_vlayout)
+        if self.output_type in OQ_NPZ_LOADABLE_TYPES:
+            self.create_load_selected_only_ckb()
+        elif self.output_type in OQ_CSV_LOADABLE_TYPES:
+            self.crate_save_as_shp_ckb()
         if self.output_type == 'hmaps':
             self.setWindowTitle('Load hazard maps from NPZ, as layer')
-            self.verticalLayout.addWidget(self.rlz_lbl)
-            self.verticalLayout.addLayout(self.rlz_h_layout)
-            self.verticalLayout.addWidget(self.imt_lbl)
-            self.verticalLayout.addWidget(self.imt_cbx)
-            self.verticalLayout.addWidget(self.poe_lbl)
-            self.verticalLayout.addWidget(self.poe_cbx)
+            self.create_rlz_selector()
+            self.create_imt_selector()
+            self.create_poe_selector()
             self.adjustSize()
         elif self.output_type == 'hcurves':
             self.setWindowTitle('Load hazard curves from NPZ, as layer')
-            self.verticalLayout.addWidget(self.rlz_lbl)
-            self.verticalLayout.addLayout(self.rlz_h_layout)
+            self.create_rlz_selector()
             self.adjustSize()
         elif self.output_type == 'uhs':
             self.setWindowTitle(
                 'Load uniform hazard spectra from NPZ, as layer')
-            self.verticalLayout.addWidget(self.rlz_lbl)
-            self.verticalLayout.addLayout(self.rlz_h_layout)
-            self.verticalLayout.addWidget(self.poe_lbl)
-            self.verticalLayout.addWidget(self.poe_cbx)
+            self.create_rlz_selector()
+            self.create_poe_selector()
             self.adjustSize()
         elif self.output_type == 'loss_maps':
             self.setWindowTitle('Load loss maps from NPZ, as layer')
-            self.verticalLayout.addWidget(self.rlz_lbl)
-            self.verticalLayout.addLayout(self.rlz_h_layout)
-            self.verticalLayout.addWidget(self.loss_type_lbl)
-            self.verticalLayout.addWidget(self.loss_type_cbx)
-            self.verticalLayout.addWidget(self.poe_lbl)
-            self.verticalLayout.addWidget(self.poe_cbx)
+            self.create_rlz_selector()
+            self.create_loss_type_selector()
+            self.create_poe_selector()
             self.adjustSize()
         elif self.output_type == 'loss_curves':
             self.setWindowTitle('Load loss curves from NPZ, as layer')
-            self.verticalLayout.addWidget(self.rlz_lbl)
-            self.verticalLayout.addLayout(self.rlz_h_layout)
+            self.create_rlz_selector()
             self.adjustSize()
         elif self.output_type == 'gmf_data':
             self.setWindowTitle(
                 'Load scenario damage GMFs from NPZ, as layer')
-            self.verticalLayout.addWidget(self.rlz_lbl)
-            self.verticalLayout.addLayout(self.rlz_h_layout)
-            self.verticalLayout.addWidget(self.imt_lbl)
-            self.verticalLayout.addWidget(self.imt_cbx)
-            self.verticalLayout.addWidget(self.eid_lbl)
-            self.verticalLayout.addWidget(self.eid_sbx)
+            self.create_rlz_selector()
+            self.create_imt_selector()
+            self.create_eid_selector()
             self.adjustSize()
-        elif self.output_type == 'scenario_damage_by_asset':
+        elif self.output_type == 'dmg_by_asset':
             self.setWindowTitle(
-                'Load scenario damage by asset from NPZ, as layer')
-            self.verticalLayout.addWidget(self.rlz_lbl)
-            self.verticalLayout.addLayout(self.rlz_h_layout)
-            self.verticalLayout.addWidget(self.loss_type_lbl)
-            self.verticalLayout.addWidget(self.loss_type_cbx)
-            self.verticalLayout.addWidget(self.taxonomy_lbl)
-            self.verticalLayout.addWidget(self.taxonomy_cbx)
-            self.verticalLayout.addWidget(self.damage_state_lbl)
-            self.verticalLayout.addWidget(self.damage_state_cbx)
+                'Load scenario damage by asset from CSV, as layer')
+            # FIXME: probably to be removed the following 2 lines
+            # self.create_rlz_selector()
+            # self.create_taxonomy_selector()
+            self.create_dmg_state_selector()
+            self.create_loss_type_selector()
             self.adjustSize()
+        elif self.output_type == 'ruptures':
+            self.setWindowTitle(
+                'Load ruptures from CSV, as layer')
+            # we do not create any selector, because everything is loaded
+            self.adjustSize()
+        self.set_ok_button()
 
     @pyqtSlot()
     def on_file_browser_tbn_clicked(self):
-        self.npz_path = self.open_file_dialog()
+        self.open_file_dialog()
 
     def on_rlz_changed(self):
         self.dataset = self.npz_file[self.rlz_cbx.currentText()]
@@ -231,15 +286,16 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
                 elif self.output_type == 'hcurves':
                     imt = name
                     self.imts[imt] = []
-            self.imt_cbx.clear()
-            self.imt_cbx.setEnabled(True)
-            self.imt_cbx.addItems(self.imts.keys())
+            if self.output_type == 'hmaps':
+                self.imt_cbx.clear()
+                self.imt_cbx.setEnabled(True)
+                self.imt_cbx.addItems(self.imts.keys())
         elif self.output_type == 'uhs':
             self.poes = self.dataset.dtype.names[2:]
             self.poe_cbx.clear()
             self.poe_cbx.setEnabled(True)
             self.poe_cbx.addItems(self.poes)
-        elif self.output_type in ('loss_maps', 'scenario_damage_by_asset'):
+        elif self.output_type in ('loss_maps'):
             # FIXME: likely, self.npz_file.keys()
             self.loss_types = self.npz_file.dtype.fields
             self.loss_type_cbx.clear()
@@ -253,8 +309,7 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
             self.imt_cbx.clear()
             self.imt_cbx.setEnabled(True)
             self.imt_cbx.addItems(imts)
-        if self.output_type in ('hcurves', 'loss_curves', 'uhs'):
-            self.set_ok_button()
+        self.set_ok_button()
 
     def on_loss_type_changed(self):
         self.loss_type = self.loss_type_cbx.currentText()
@@ -264,8 +319,7 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
             self.poe_cbx.clear()
             self.poe_cbx.setEnabled(True)
             self.poe_cbx.addItems(poe_thresholds)
-        elif self.output_type == 'scenario_damage_by_asset':
-            self.set_ok_button()
+        self.set_ok_button()
 
     def on_imt_changed(self):
         if self.output_type == 'gmf_data':
@@ -278,12 +332,12 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
                 'Event ID (used for default styling) (range %d-%d)' % (
                     min_eid, max_eid))
             self.eid_sbx.setRange(min_eid, max_eid)
-            self.set_ok_button()
         elif self.output_type == 'hmaps':
             imt = self.imt_cbx.currentText()
             self.poe_cbx.clear()
             self.poe_cbx.setEnabled(True)
             self.poe_cbx.addItems(self.imts[imt])
+        self.set_ok_button()
 
     def on_poe_changed(self):
         self.set_ok_button()
@@ -291,53 +345,83 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
     # def on_eid_changed(self):
     #     self.set_ok_button()
 
-    def on_damage_state_changed(self):
-        pass
+    def on_dmg_state_changed(self):
+        self.set_ok_button()
 
     def open_file_dialog(self):
         """
         Open a file dialog to select the data file to be loaded
         """
-        text = self.tr('Select oq-engine output to import')
-        filters = self.tr('NPZ files (*.npz)')
+        text = self.tr('Select the OQ-Engine output file to import')
+        if self.output_type in OQ_NPZ_LOADABLE_TYPES:
+            filters = self.tr('NPZ files (*.npz)')
+        elif self.output_type in OQ_CSV_LOADABLE_TYPES:
+            filters = self.tr('CSV files (*.csv)')
+        else:
+            raise NotImplementedError(self.output_type)
         default_dir = QSettings().value('irmt/load_as_layer_dir',
                                         QDir.homePath())
-        npz_path = QFileDialog.getOpenFileName(
+        path = QFileDialog.getOpenFileName(
             self, text, default_dir, filters)
-        if npz_path:
-            selected_dir = QFileInfo(npz_path).dir().path()
-            QSettings().setValue('irmt/load_as_layer_dir', selected_dir)
-            self.npz_path = npz_path
-            self.npz_path_le.setText(self.npz_path)
-            self.npz_file = self.get_npz_file_handler()
-            self.get_taxonomies()
-            self.populate_taxonomies()
-            self.populate_rlz_cbx()
-            self.show_num_sites()
-            self.populate_damage_states()
+        if not path:
+            return
+        selected_dir = QFileInfo(path).dir().path()
+        QSettings().setValue('irmt/load_as_layer_dir', selected_dir)
+        self.path = path
+        self.path_le.setText(self.path)
+        if self.output_type in OQ_NPZ_LOADABLE_TYPES:
+            self.npz_file = numpy.load(self.path, 'r')
+            self.populate_out_dep_widgets()
+        elif self.output_type == 'dmg_by_asset':
+            # read the header of the csv, so we can select from its fields
+            self.read_loss_types_and_dmg_states_from_csv_header()
+        elif self.output_type == 'ruptures':
+            # we load everything
+            pass
 
-    def get_npz_file_handler(self):
-        return numpy.load(self.npz_path, 'r')
+    def populate_out_dep_widgets(self):
+        # FIXME: running only for npz
+        self.get_taxonomies()
+        self.populate_taxonomies()
+        self.populate_rlz_cbx()
+        self.show_num_sites()
+        self.populate_dmg_states()
+
+    def read_loss_types_and_dmg_states_from_csv_header(self):
+        with open(self.path, "rb") as source:
+            reader = csv.reader(source)
+            self.csv_header = reader.next()
+            # ignore asset_ref, taxonomy, lon, lat
+            names = self.csv_header[4:]
+            # extract from column names such as: structural~no_damage_mean
+            loss_types = set([name.split('~')[0] for name in names])
+            dmg_states = set(['_'.join(name.split('~')[1].split('_')[:-1])
+                              for name in names])
+            self.populate_loss_type_cbx(list(loss_types))
+            self.populate_dmg_state_cbx(list(dmg_states))
 
     def get_taxonomies(self):
+        # FIXME: probably to be removed for dmg_by_asset
         if self.output_type in (
-                'loss_curves', 'loss_maps', 'scenario_damage_by_asset'):
+                'loss_curves', 'loss_maps', 'dmg_by_asset'):
             self.taxonomies = self.npz_file['assetcol/taxonomies'][:].tolist()
 
     def populate_taxonomies(self):
-        if self.output_type == 'scenario_damage_by_asset':
+        # FIXME: probably to be removed
+        if self.output_type == 'dmg_by_asset':
             self.taxonomies.insert(0, 'Sum')
             self.taxonomy_cbx.clear()
             self.taxonomy_cbx.addItems(self.taxonomies)
             self.taxonomy_cbx.setEnabled(True)
 
-    def populate_damage_states(self):
-        if self.output_type == 'scenario_damage_by_asset':
-            self.damage_states = ['no damage']
-            self.damage_states.extend(self.npz_file['oqparam'].limit_states)
-            self.damage_state_cbx.clear()
-            self.damage_state_cbx.setEnabled(True)
-            self.damage_state_cbx.addItems(self.damage_states)
+    def populate_dmg_states(self):
+        # FIXME: probably to be removed
+        if self.output_type == 'dmg_by_asset':
+            self.dmg_states = ['no damage']
+            self.dmg_states.extend(self.npz_file['oqparam'].limit_states)
+            self.dmg_state_cbx.clear()
+            self.dmg_state_cbx.setEnabled(True)
+            self.dmg_state_cbx.addItems(self.dmg_states)
 
     def populate_rlz_cbx(self):
         if self.output_type in ('hcurves', 'hmaps', 'uhs'):
@@ -353,14 +437,26 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
             self.rlzs = [str(i+1) for i in range(n_rlzs)]
         elif self.output_type == 'gmf_data':
             self.rlzs = [item[0] for item in self.npz_file.items()]
-        elif self.output_type == 'scenario_damage_by_asset':
-            self.hdata = self.npz_file['dmg_by_asset']
-            _, n_rlzs = self.hdata.shape
-            self.rlzs = [str(i+1) for i in range(n_rlzs)]
+        elif self.output_type == 'dmg_by_asset':
+            # FIXME: probably to be removed
+            # self.hdata = self.npz_file['dmg_by_asset']
+            # _, n_rlzs = self.hdata.shape
+            # self.rlzs = [str(i+1) for i in range(n_rlzs)]
+            pass
         self.rlz_cbx.clear()
         self.rlz_cbx.setEnabled(True)
         # self.rlz_cbx.addItem('All')
         self.rlz_cbx.addItems(self.rlzs)
+
+    def populate_dmg_state_cbx(self, dmg_states):
+        self.dmg_state_cbx.clear()
+        self.dmg_state_cbx.setEnabled(True)
+        self.dmg_state_cbx.addItems(dmg_states)
+
+    def populate_loss_type_cbx(self, loss_types):
+        self.loss_type_cbx.clear()
+        self.loss_type_cbx.setEnabled(True)
+        self.loss_type_cbx.addItems(loss_types)
 
     def show_num_sites(self):
         # NOTE: we are assuming all realizations have the same number of sites,
@@ -373,16 +469,73 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
     def set_ok_button(self):
         if self.output_type == 'hmaps':
             self.ok_button.setEnabled(self.poe_cbx.currentIndex() != -1)
-        elif self.output_type in ('hcurves', 'gmf_data'):
+        if self.output_type == 'hcurves':
+            self.ok_button.setEnabled(self.rlz_cbx.currentIndex() != -1)
+        # elif self.output_type in ('hcurves', 'gmf_data'):
+        elif self.output_type in ('gmf_data'):
             self.ok_button.setEnabled(self.imt_cbx.currentIndex() != -1)
         elif self.output_type == 'loss_maps':
             self.ok_button.setEnabled(self.poe_cbx.currentIndex() != -1)
         elif self.output_type in ('loss_curves', 'uhs'):
             self.ok_button.setEnabled(self.rlz_cbx.currentIndex() != -1)
-        elif self.output_type == 'scenario_damage_by_asset':
-            self.ok_button.setEnabled(self.loss_type_cbx.currentIndex() != -1)
+        elif self.output_type == 'dmg_by_asset':
+            self.ok_button.setEnabled(
+                self.dmg_state_cbx.currentIndex() != -1
+                and self.loss_type_cbx.currentIndex() != -1)
         elif self.output_type == 'uhs':
             self.ok_button.setEnabled(self.poe_cbx.currentIndex() != -1)
+        elif self.output_type == 'ruptures':
+            self.ok_button.setEnabled(True)
+
+    def import_layer_from_csv(self,
+                              csv_path,
+                              longitude_field='lon',
+                              latitude_field='lat',
+                              delimiter=',',
+                              quote='"',
+                              wkt_field=None,
+                              dest_shp=None):
+        # lines_to_skip_count = 0
+        url = QUrl.fromLocalFile(csv_path)
+        url.addQueryItem('type', 'csv')
+        if wkt_field is not None:
+            url.addQueryItem('wktField', wkt_field)
+        else:
+            url.addQueryItem('xField', longitude_field)
+            url.addQueryItem('yField', latitude_field)
+        url.addQueryItem('spatialIndex', 'no')
+        url.addQueryItem('subsetIndex', 'no')
+        url.addQueryItem('watchFile', 'no')
+        url.addQueryItem('delimiter', delimiter)
+        url.addQueryItem('quote', quote)
+        url.addQueryItem('crs', 'epsg:4326')
+        # url.addQueryItem('skipLines', str(lines_to_skip_count))
+        url.addQueryItem('trimFields', 'yes')
+        layer_uri = str(url.toEncoded())
+        layer = QgsVectorLayer(layer_uri, self.output_type, "delimitedtext")
+        if self.save_as_shp_ckb.isChecked():
+            dest_filename = dest_shp or QFileDialog.getSaveFileName(
+                self,
+                'Save loss shapefile as...',
+                os.path.expanduser("~"),
+                'Shapefiles (*.shp)')
+            if dest_filename:
+                if dest_filename[-4:] != ".shp":
+                    dest_filename += ".shp"
+            else:
+                return
+            result = save_layer_as_shapefile(layer, dest_filename)
+            if result != QgsVectorFileWriter.NoError:
+                raise RuntimeError('Could not save shapefile')
+            layer = QgsVectorLayer(
+                dest_filename, self.output_type, 'ogr')
+        if layer.isValid():
+            QgsMapLayerRegistry.instance().addMapLayer(layer)
+        else:
+            msg = 'Unable to load layer'
+            log_msg(msg, level='C', message_bar=self.iface.messageBar())
+            return None
+        return layer
 
     def build_layer(self, rlz, taxonomy=None, poe=None):
         # get the root of layerTree, in order to add groups of layers
@@ -395,7 +548,7 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
         # rlz = self.rlz_cbx.currentText()
         if self.output_type in ('loss_maps',
                                 'loss_curves',
-                                'scenario_damage_by_asset'):
+                                'dmg_by_asset'):
             # NOTE: realizations in the npz file start counting from 1, but
             #       we need to refer to column indices that start from 0
             rlz_idx = int(rlz) - 1
@@ -413,7 +566,7 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
             self.default_field_name = '%s-%s' % (imt, poe)
             layer_name = "hazard_map_%s" % rlz
         elif self.output_type == 'hcurves':
-            imt = self.imt_cbx.currentText()
+            imt = self.imts.keys()[0]
             self.default_field_name = imt
             layer_name = "hazard_curves_%s" % rlz
         elif self.output_type == 'loss_curves':
@@ -425,8 +578,9 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
             eid = self.eid_sbx.value()
             self.default_field_name = '%s-%s' % (imt, eid)
             layer_name = "scenario_damage_gmfs_%s_eid-%s" % (rlz, eid)
-        elif self.output_type == 'scenario_damage_by_asset':
-            layer_name = "scenario_damage_by_asset_%s_%s" % (rlz, taxonomy)
+        elif self.output_type == 'dmg_by_asset':
+            # FIXME: probably to be removed
+            layer_name = "dmg_by_asset_%s_%s" % (rlz, taxonomy)
         elif self.output_type == 'uhs':
             layer_name = "uhs_%s_poe-%s" % (rlz, poe)
 
@@ -620,8 +774,7 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
         self.layer.setRendererV2(graduated_renderer)
         self.layer.setLayerTransparency(30)  # percent
         self.layer.triggerRepaint()
-        self.iface.legendInterface().refreshLayerSymbology(
-            self.layer)
+        self.iface.legendInterface().refreshLayerSymbology(self.layer)
         self.iface.mapCanvas().refresh()
 
     def style_curves(self):
@@ -647,7 +800,7 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
             self.layer)
         self.iface.mapCanvas().refresh()
 
-    def accept(self):
+    def load_from_npz(self):
         for rlz in self.rlzs:
             if (self.load_selected_only_ckb.isChecked()
                     and rlz != self.rlz_cbx.currentText()):
@@ -686,10 +839,39 @@ class LoadNpzAsLayerDialog(QDialog, FORM_CLASS):
                         self.style_maps()
                     elif self.output_type == 'hcurves':
                         self.style_curves()
-        self.npz_file.close()
-        super(LoadNpzAsLayerDialog, self).accept()
+        if self.npz_file is not None:
+            self.npz_file.close()
+
+    def load_from_csv(self):
+        if self.mode == 'testing':
+            dest_shp = tempfile.mkstemp(suffix='.shp')[1]
+        else:
+            dest_shp = None
+        if self.output_type == 'dmg_by_asset':
+            self.layer = self.import_layer_from_csv(
+                self.path_le.text(), dest_shp=dest_shp)
+            dmg_state = self.dmg_state_cbx.currentText()
+            loss_type = self.loss_type_cbx.currentText()
+            field_idx = -1  # default
+            for idx, name in enumerate(self.csv_header):
+                if dmg_state in name and loss_type in name and 'mean' in name:
+                    field_idx = idx
+            self.default_field_name = self.layer.fields()[field_idx].name()
+            self.style_maps()
+
+        elif self.output_type == 'ruptures':
+            self.layer = self.import_layer_from_csv(
+                self.path_le.text(), wkt_field='boundary', delimiter='\t',
+                dest_shp=dest_shp)
+
+    def accept(self):
+        if self.output_type in OQ_NPZ_LOADABLE_TYPES:
+            self.load_from_npz()
+        elif self.output_type in OQ_CSV_LOADABLE_TYPES:
+            self.load_from_csv()
+        super(LoadOutputAsLayerDialog, self).accept()
 
     def reject(self):
         if self.npz_file is not None:
             self.npz_file.close()
-        super(LoadNpzAsLayerDialog, self).reject()
+        super(LoadOutputAsLayerDialog, self).reject()
