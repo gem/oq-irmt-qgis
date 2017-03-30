@@ -199,16 +199,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 item.setTextColor(row_txt_color)
                 self.calc_list_tbl.setItem(row, col, item)
             for col, action in enumerate(actions, len(selected_keys)):
-                # do not display 'Continue' button, if this is already a risk
-                # calculation or if the calculation is still incomplete
-                if action['label'] == 'Continue':
-                    if (calc['job_type'] == 'risk'
-                            or calc['status'] != 'complete'):
-                        continue
-                # do not display the button for outputs until calc is complete
-                elif action['label'] == 'Outputs':
-                    if calc['status'] != 'complete':
-                        continue
+                if (calc['status'] != 'complete' and
+                        action['label'] in ('Continue', 'Outputs')):
+                    continue
                 button = QPushButton()
                 button.setText(action['label'])
                 style = 'background-color: %s; color: %s' % (
