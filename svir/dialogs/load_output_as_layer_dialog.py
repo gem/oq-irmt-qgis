@@ -196,6 +196,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.taxonomy_lbl = QLabel('Taxonomy')
         self.taxonomy_cbx = QComboBox()
         self.taxonomy_cbx.setEnabled(False)
+        # FIXME: it might be needed when npz risk outputs are available
         # self.taxonomy_cbx.currentIndexChanged['QString'].connect(
         #     self.on_taxonomy_changed)
         self.output_dep_vlayout.addWidget(self.taxonomy_lbl)
@@ -380,12 +381,12 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             pass
 
     def populate_out_dep_widgets(self):
-        # FIXME: running only for npz
-        self.get_taxonomies()
-        self.populate_taxonomies()
+        # FIXME: change as soon as npz risk outputs are available
+        # self.get_taxonomies()
+        # self.populate_taxonomies()
         self.populate_rlz_cbx()
         self.show_num_sites()
-        self.populate_dmg_states()
+        # self.populate_dmg_states()
 
     def read_loss_types_and_dmg_states_from_csv_header(self):
         with open(self.path, "rb") as source:
@@ -401,13 +402,13 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             self.populate_dmg_state_cbx(list(dmg_states))
 
     def get_taxonomies(self):
-        # FIXME: probably to be removed for dmg_by_asset
+        # FIXME: change as soon as npz risk outputs are available
         if self.output_type in (
-                'loss_curves', 'loss_maps', 'dmg_by_asset'):
+                'loss_curves', 'loss_maps'):
             self.taxonomies = self.npz_file['assetcol/taxonomies'][:].tolist()
 
     def populate_taxonomies(self):
-        # FIXME: probably to be removed
+        # FIXME: change as soon as npz risk outputs are available
         if self.output_type == 'dmg_by_asset':
             self.taxonomies.insert(0, 'Sum')
             self.taxonomy_cbx.clear()
@@ -415,7 +416,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             self.taxonomy_cbx.setEnabled(True)
 
     def populate_dmg_states(self):
-        # FIXME: probably to be removed
+        # FIXME: change as soon as npz risk outputs are available
         if self.output_type == 'dmg_by_asset':
             self.dmg_states = ['no damage']
             self.dmg_states.extend(self.npz_file['oqparam'].limit_states)
@@ -425,7 +426,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
 
     def populate_rlz_cbx(self):
         if self.output_type in ('hcurves', 'hmaps', 'uhs'):
-            # self.hdata = self.npz_file[self.output_type]
             self.rlzs = [key for key in self.npz_file.keys()
                          if key.startswith('rlz')]
         elif self.output_type in ('loss_curves', 'loss_maps'):
@@ -437,12 +437,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             self.rlzs = [str(i+1) for i in range(n_rlzs)]
         elif self.output_type == 'gmf_data':
             self.rlzs = [item[0] for item in self.npz_file.items()]
-        elif self.output_type == 'dmg_by_asset':
-            # FIXME: probably to be removed
-            # self.hdata = self.npz_file['dmg_by_asset']
-            # _, n_rlzs = self.hdata.shape
-            # self.rlzs = [str(i+1) for i in range(n_rlzs)]
-            pass
         self.rlz_cbx.clear()
         self.rlz_cbx.setEnabled(True)
         # self.rlz_cbx.addItem('All')
@@ -858,7 +852,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                     field_idx = idx
             self.default_field_name = self.layer.fields()[field_idx].name()
             self.style_maps()
-
         elif self.output_type == 'ruptures':
             self.layer = self.import_layer_from_csv(
                 self.path_le.text(), wkt_field='boundary', delimiter='\t',
