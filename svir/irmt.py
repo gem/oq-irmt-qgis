@@ -97,6 +97,7 @@ from svir.utilities.shared import (DEBUG,
                                    THEME_TEMPLATE,
                                    INDICATOR_TEMPLATE,
                                    OPERATORS_DICT)
+from svir.ui.tool_button_with_help_link import QToolButtonWithHelpLink
 
 # DO NOT REMOVE THIS
 # noinspection PyUnresolvedReferences
@@ -122,6 +123,9 @@ class Irmt:
             if qVersion() > '4.3.3':
                 QCoreApplication.installTranslator(self.translator)
 
+        # our own toolbar
+        self.toolbar = None
+
         # our own menu
         self.menu = QMenu(self.iface.mainWindow())
         self.menu.setTitle("IRMT")
@@ -146,6 +150,9 @@ class Irmt:
             self.layers_removed)
 
     def initGui(self):
+        # create our own toolbar
+        self.toolbar = self.iface.addToolBar('IRMT')
+        self.toolbar.setObjectName('IRMTToolBar')
 
         menu_bar = self.iface.mainWindow().menuBar()
         get_menu = self.get_menu(menu_bar, 'IRMT')
@@ -185,11 +192,12 @@ class Irmt:
                            submenu='OQ Platform')
         # Action to drive the oq-engine server
         self.add_menu_item("drive_engine_server",
-                           ":/plugins/irmt/manual.svg",  # FIXME
+                           ":/plugins/irmt/drive_oqengine.svg",
                            u"Drive oq-engine &server",
                            self.drive_oq_engine_server,
                            enable=True,
-                           submenu='OQ Engine')
+                           submenu='OQ Engine',
+                           add_to_toolbar=True)
         # # Action to load as layer a geojson produced by the oq-engine
         # self.add_menu_item("load_geojson_as_layer",
         #                    ":/plugins/irmt/calculate.svg",  # FIXME
@@ -216,7 +224,7 @@ class Irmt:
                            submenu='Integrated risk')
         # Action to run the recovery analysis
         self.add_menu_item("recovery_modeling",
-                           ":/plugins/irmt/plot.svg",  # FIXME
+                           ":/plugins/irmt/recovery.svg",
                            u"Run recovery modeling",
                            self.recovery_modeling,
                            enable=True,
@@ -325,14 +333,16 @@ class Irmt:
                            ":/plugins/irmt/settings.svg",
                            u"&IRMT settings",
                            self.show_settings,
-                           enable=True)
+                           enable=True,
+                           add_to_toolbar=True)
 
         # Action to open the plugin's manual
         self.add_menu_item("help",
                            ":/plugins/irmt/manual.svg",
                            u"IRMT &manual",
                            self.show_manual,
-                           enable=True)
+                           enable=True,
+                           add_to_toolbar=True)
 
         self._create_viewer_dock()
         self.update_actions_status()
@@ -450,10 +460,11 @@ class Irmt:
                       layers_type=QgsMapLayer.VectorLayer,
                       set_checkable=False,
                       set_checked=False,
-                      submenu=None
+                      submenu=None,
+                      add_to_toolbar=False,
                       ):
         """
-        Add an item to the IRMT menu
+        Add an item to the IRMT menu and a corresponding toolbar icon
 
         :param icon_path: path of the icon associated to the action
         :param label: name of the action, visible to the user
@@ -485,6 +496,12 @@ class Irmt:
                 menu = get_menu
             else:
                 menu = self.menu.addMenu(submenu)
+
+        if add_to_toolbar:
+            help_url = 'http://docs.openquake.org/oq-irmt-qgis/'
+            button = QToolButtonWithHelpLink(action, help_url)
+            self.toolbar.addWidget(button)
+
         menu.addAction(action)
 
         return action
@@ -538,6 +555,7 @@ class Irmt:
             action = self.registered_actions[action_name]
             # Remove the actions in the layer legend
             self.iface.legendInterface().removeLegendLayerAction(action)
+            self.iface.removeToolBarIcon(action)
         clear_progress_message_bar(self.iface.messageBar())
 
         # remove menu
