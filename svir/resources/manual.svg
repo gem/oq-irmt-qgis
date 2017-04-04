@@ -2,9 +2,10 @@
 <!-- Generator: Adobe Illustrator 15.0.2, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 width="37.547px" height="37.578px" viewBox="0 0 37.547 37.578" enable-background="new 0 0 37.547 37.578" xml:space="preserve">
-<rect x="2.89" y="2.118" fill="#FFFFFF" stroke="#1B75A5" stroke-width="1.5249" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" width="31.767" height="32.022"/>
-<line fill="none" stroke="#1B75A5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" x1="13.547" y1="33.844" x2="13.547" y2="2.844"/>
-<polyline fill="none" stroke="#1B75A5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" points="
-	13.547,12.844 34.547,12.844 13.547,12.844 13.547,23.844 34.547,23.844 "/>
+	 width="612px" height="792px" viewBox="0 0 612 792" enable-background="new 0 0 612 792" xml:space="preserve">
+<polyline fill="#34669A" points="175.1,170.099 175.1,208.595 475.085,208.595 475.085,170.099 "/>
+<polyline points="175.1,132.604 175.1,171.099 475.085,171.099 475.085,132.604 "/>
+<polyline fill="#34669A" points="153.597,132.604 153.597,609.58 453.582,609.58 453.582,132.604 "/>
+<polyline points="153.597,132.604 153.597,609.58 175.1,609.58 175.1,132.604 "/>
+<polyline points="453.267,261.585 323.207,132.947 323.507,262.709 "/>
 </svg>
