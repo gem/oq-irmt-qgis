@@ -200,7 +200,7 @@ class Irmt:
                            add_to_toolbar=True)
         # # Action to load as layer a geojson produced by the oq-engine
         # self.add_menu_item("load_geojson_as_layer",
-        #                    ":/plugins/irmt/calculate.svg",  # FIXME
+        #                    ":/plugins/irmt/copy.svg",
         #                    u"Load GeoJson as layer",
         #                    self.load_geojson_as_layer,
         #                    enable=True,
@@ -249,7 +249,7 @@ class Irmt:
         # Action to load as layer hazard maps from npz produced by the
         # oq-engine
         self.add_menu_item("load_hmaps_from_npz_as_layer",
-                           ":/plugins/irmt/calculate.svg",  # FIXME
+                           ":/plugins/irmt/copy.svg",
                            u"Load hazard maps from NPZ as layer",
                            self.load_hmaps_from_npz_as_layer,
                            enable=True,
@@ -257,7 +257,7 @@ class Irmt:
         # Action to load as layer hazard curves from npz produced by the
         # oq-engine
         self.add_menu_item("load_hcurves_from_npz_as_layer",
-                           ":/plugins/irmt/calculate.svg",  # FIXME
+                           ":/plugins/irmt/copy.svg",
                            u"Load hazard curves from NPZ as layer",
                            self.load_hcurves_from_npz_as_layer,
                            enable=True,
@@ -265,7 +265,7 @@ class Irmt:
         # # Action to load as layer loss maps from npz produced by the
         # # oq-engine
         # self.add_menu_item("load_loss_maps_from_npz_as_layer",
-        #                    ":/plugins/irmt/calculate.svg",  # FIXME
+        #                    ":/plugins/irmt/copy.svg",
         #                    u"Load loss maps from NPZ as layer",
         #                    self.load_loss_maps_from_npz_as_layer,
         #                    enable=True,
@@ -273,7 +273,7 @@ class Irmt:
         # # Action to load as layer loss curves from npz produced by the
         # # oq-engine
         # self.add_menu_item("load_loss_curves_from_npz_as_layer",
-        #                    ":/plugins/irmt/calculate.svg",  # FIXME
+        #                    ":/plugins/irmt/copy.svg",
         #                    u"Load loss curves from NPZ as layer",
         #                    self.load_loss_curves_from_npz_as_layer,
         #                    enable=True,
@@ -281,7 +281,7 @@ class Irmt:
         # # Action to plot total damage reading it from a NPZ produced by a
         # # scenario damage calculation
         # self.add_menu_item("plot_dmg_total",
-        #                    ":/plugins/irmt/calculate.svg",  # FIXME
+        #                    ":/plugins/irmt/copy.svg",
         #                    u"Plot total damage from NPZ",
         #                    self.plot_dmg_total_from_npz,
         #                    enable=True,
@@ -289,7 +289,7 @@ class Irmt:
         # # Action to plot damage by taxonomy reading it from a NPZ produced
         # # by a scenario damage calculation
         # self.add_menu_item("plot_dmg_by_taxon",
-        #                    ":/plugins/irmt/calculate.svg",  # FIXME
+        #                    ":/plugins/irmt/copy.svg",
         #                    u"Plot damage by taxonomy from NPZ",
         #                    self.plot_dmg_by_taxon_from_npz,
         #                    enable=True,
@@ -298,7 +298,7 @@ class Irmt:
         # by the oq-engine with a scenario damage hazard calculation
         self.add_menu_item(
                 "load_scenario_damage_gmfs_from_npz_as_layer",
-                ":/plugins/irmt/calculate.svg",  # FIXME
+                ":/plugins/irmt/copy.svg",
                 u"Load scenario damage ground motion "
                 "fields from NPZ as layer",
                 self.load_scenario_damage_gmfs_from_npz_as_layer,
@@ -308,7 +308,7 @@ class Irmt:
         # # the oq-engine with a scenario damage risk calculation
         # self.add_menu_item(
         #         "load_scenario_damage_by_asset_from_npz_as_layer",
-        #         ":/plugins/irmt/calculate.svg",  # FIXME
+        #         ":/plugins/irmt/copy.svg",
         #         u"Load scenario damage by asset from NPZ as layer",
         #         self.load_scenario_damage_by_asset_from_npz_as_layer,
         #         enable=True,
