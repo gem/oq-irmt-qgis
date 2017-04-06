@@ -53,6 +53,7 @@ from svir.third_party.requests.exceptions import (ConnectionError,
                                                   SSLError,
                                                   )
 from svir.utilities.settings import get_engine_credentials
+from svir.utilities.shared import OQ_ALL_LOADABLE_TYPES
 from svir.utilities.utils import (WaitCursorManager,
                                   engine_login,
                                   log_msg,
@@ -60,9 +61,7 @@ from svir.utilities.utils import (WaitCursorManager,
                                   get_ui_class,
                                   SvNetworkError,
                                   )
-from svir.dialogs.load_npz_as_layer_dialog import LoadNpzAsLayerDialog
-from svir.dialogs.load_geojson_as_layer_dialog import LoadGeoJsonAsLayerDialog
-from svir.dialogs.load_csv_as_layer_dialog import LoadCsvAsLayerDialog
+from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 
 FORM_CLASS = get_ui_class('ui_drive_engine_server.ui')
 
@@ -399,31 +398,17 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         selected_keys = [key for key in sorted(output_list[0].keys())
                          if key not in exclude]
         max_actions = 0
-        has_hmaps = False
-        has_hcurves = False
-        has_gmf_data = False
-        has_uhs = False
-        has_dmg_by_asset = False
+        at_least_one_is_loadable = False
         for row in output_list:
-            if row['type'] == 'hmaps':
-                has_hmaps = True
-            if row['type'] == 'hcurves':
-                has_hcurves = True
-            if row['type'] == 'gmf_data':
-                has_gmf_data = True
-            if row['type'] == 'uhs':
-                has_uhs = True
-            if row['type'] == 'dmg_by_asset':
-                has_dmg_by_asset = True
+            if row['type'] in OQ_ALL_LOADABLE_TYPES:
+                # it can be directly loaded as layer
+                at_least_one_is_loadable = True
             num_actions = len(row['outtypes'])
             if num_actions > max_actions:
                 max_actions = num_actions
-        if (has_hmaps or has_hcurves or has_gmf_data or has_uhs or
-                has_dmg_by_asset):
+        if at_least_one_is_loadable:
             max_actions += 1
-        else:
-            if has_dmg_by_asset:
-                max_actions += 1
+
         self.output_list_tbl.setRowCount(len(output_list))
         self.output_list_tbl.setColumnCount(
             len(selected_keys) + max_actions)
@@ -439,8 +424,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 button = QPushButton()
                 self.connect_button_to_action(button, action, output, outtype)
                 self.output_list_tbl.setCellWidget(row, col, button)
-            if output['type'] in [
-                    'hmaps', 'hcurves', 'gmf_data', 'uhs', 'dmg_by_asset']:
+            if output['type'] in OQ_ALL_LOADABLE_TYPES:
                 action = 'Load as shapefile'
                 button = QPushButton()
                 self.connect_button_to_action(
@@ -474,20 +458,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         output_type = output['type']
         if action == 'Load as shapefile':
             dest_folder = tempfile.gettempdir()
-            if outtype == 'npz':
+            if outtype in ('npz', 'csv'):
                 filepath = self.download_output(
                     output_id, outtype, dest_folder)
-                dlg = LoadNpzAsLayerDialog(self.iface, output_type, filepath)
-                dlg.exec_()
-            elif outtype == 'geojson':
-                filepath = self.download_output(
-                    output_id, outtype, dest_folder)
-                dlg = LoadGeoJsonAsLayerDialog(self.iface, filepath)
-                dlg.exec_()
-            elif outtype == 'csv':
-                filepath = self.download_output(
-                    output_id, outtype, dest_folder)
-                dlg = LoadCsvAsLayerDialog(self.iface, filepath)
+                dlg = LoadOutputAsLayerDialog(
+                    self.iface, output_type, filepath)
                 dlg.exec_()
             else:
                 raise NotImplementedError("%s %s" % (action, outtype))
