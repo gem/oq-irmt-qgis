@@ -117,17 +117,13 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             self.file_browser_tbn.setEnabled(True)
         else:
             self.file_browser_tbn.setEnabled(False)
-        if self.path:
-            if output_type == 'dmg_by_asset':
-                self.read_loss_types_and_dmg_states_from_csv_header()
-            elif self.output_type != 'ruptures':
-                # we load everything
-                pass
+        if self.path and output_type == 'dmg_by_asset':
+            self.read_loss_types_and_dmg_states_from_csv_header()
 
     def populate_output_type_cbx(self):
         self.output_type_cbx.clear()
         self.output_type_cbx.addItem('')
-        self.output_type_cbx.addItems(list(OQ_ALL_LOADABLE_TYPES))
+        self.output_type_cbx.addItems(sorted(OQ_ALL_LOADABLE_TYPES))
         self.output_type_cbx.setEnabled(True)
 
     def create_rlz_selector(self):
@@ -466,7 +462,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         if self.output_type == 'hcurves':
             self.ok_button.setEnabled(self.rlz_cbx.currentIndex() != -1)
         # elif self.output_type in ('hcurves', 'gmf_data'):
-        elif self.output_type in ('gmf_data'):
+        elif self.output_type == 'gmf_data':
             self.ok_button.setEnabled(self.imt_cbx.currentIndex() != -1)
         elif self.output_type == 'loss_maps':
             self.ok_button.setEnabled(self.poe_cbx.currentIndex() != -1)
