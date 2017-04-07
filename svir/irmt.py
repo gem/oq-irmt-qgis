@@ -222,7 +222,7 @@ class Irmt:
                            submenu='Recovery modeling')
         # Action to set the recovery modeling parameters
         self.add_menu_item("recovery_settings",
-                           ":/plugins/irmt/settings.svg",  # FIXME
+                           ":/plugins/irmt/recovery_settings.svg",
                            u"Recovery modeling settings",
                            self.recovery_settings,
                            enable=True,
@@ -239,7 +239,7 @@ class Irmt:
 
         # Action to load an oq-engine output as layer
         self.add_menu_item("load_oqengine_output_as_layer",
-                           ":/plugins/irmt/calculate.svg",  # FIXME
+                           ":/plugins/irmt/load_from_oqoutput.svg",
                            u"Load an OpenQuake Engine output file as layer",
                            self.load_oqengine_output_as_layer,
                            enable=True,
