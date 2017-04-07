@@ -199,16 +199,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 item.setTextColor(row_txt_color)
                 self.calc_list_tbl.setItem(row, col, item)
             for col, action in enumerate(actions, len(selected_keys)):
-                # do not display 'Continue' button, if this is already a risk
-                # calculation or if the calculation is still incomplete
-                if action['label'] == 'Continue':
-                    if (calc['job_type'] == 'risk'
-                            or calc['status'] != 'complete'):
-                        continue
-                # do not display the button for outputs until calc is complete
-                elif action['label'] == 'Outputs':
-                    if calc['status'] != 'complete':
-                        continue
+                # display the Continue and Output buttons only if the
+                # computation is completed
+                if (calc['status'] != 'complete' and
+                        action['label'] in ('Continue', 'Outputs')):
+                    continue
                 button = QPushButton()
                 button.setText(action['label'])
                 style = 'background-color: %s; color: %s' % (
@@ -304,7 +299,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     def run_calc(self, calc_id=None):
         """
         Run a calculation. If `calc_id` is given, it means we want to run
-        a risk calculation re-using the output of the given hazard calculation
+        a calculation re-using the output of the given calculation
         """
         text = self.tr('Select the files needed to run the calculation,'
                        ' or the zip archive containing those files.')
@@ -335,6 +330,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         run_calc_url = "%s/v1/calc/run" % self.hostname
         with WaitCursorManager('Starting calculation...', self.iface):
             if calc_id is not None:
+                # FIXME: currently the web api is expecting a hazard_job_id
+                # although it could be any kind of job_id. This will have to be
+                # changed as soon as the web api is updated.
                 data = {'hazard_job_id': calc_id}
             else:
                 data = {}
