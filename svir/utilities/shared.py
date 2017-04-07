@@ -211,3 +211,8 @@ RECOVERY_DEFAULTS['n_recovery_based_dmg_states'] = len(
 # Function /Not Occupiable/Irreparable/Collapse). The element(i,j)
 # in the matrix is the probability of recovery-based damage state j
 # occurs given loss-based damage state i
+
+
+OQ_CSV_LOADABLE_TYPES = set(['ruptures', 'dmg_by_asset'])
+OQ_NPZ_LOADABLE_TYPES = set(['hmaps', 'hcurves', 'gmf_data', 'uhs'])
+OQ_ALL_LOADABLE_TYPES = OQ_CSV_LOADABLE_TYPES | OQ_NPZ_LOADABLE_TYPES

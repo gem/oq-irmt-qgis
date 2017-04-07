@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>LoadNpzAsLayerDialog</class>
- <widget class="QDialog" name="LoadNpzAsLayerDialog">
+ <class>LoadOutputAsLayerDialog</class>
+ <widget class="QDialog" name="LoadOutputAsLayerDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -11,17 +11,34 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Load npz as layer</string>
+   <string>Load OpenQuake Engine output as layer</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
-    <layout class="QVBoxLayout" name="verticalLayout">
+    <layout class="QVBoxLayout" name="vlayout">
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout">
-       <item>
-        <widget class="QLabel" name="npz_lbl">
+      <layout class="QFormLayout" name="output_type_flayout">
+       <property name="fieldGrowthPolicy">
+        <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+       </property>
+       <item row="0" column="0">
+        <widget class="QLabel" name="output_type_lbl">
          <property name="text">
-          <string>Npz file</string>
+          <string>Output type</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QComboBox" name="output_type_cbx"/>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="file_hlayout">
+       <item>
+        <widget class="QLabel" name="file_lbl">
+         <property name="text">
+          <string>File to load</string>
          </property>
         </widget>
        </item>
@@ -33,13 +50,16 @@
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="npz_path_le">
+        <widget class="QLineEdit" name="path_le">
          <property name="enabled">
           <bool>false</bool>
          </property>
         </widget>
        </item>
       </layout>
+     </item>
+     <item>
+      <layout class="QVBoxLayout" name="output_dep_vlayout"/>
      </item>
     </layout>
    </item>
@@ -60,7 +80,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>LoadNpzAsLayerDialog</receiver>
+   <receiver>LoadOutputAsLayerDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -76,7 +96,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>LoadNpzAsLayerDialog</receiver>
+   <receiver>LoadOutputAsLayerDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

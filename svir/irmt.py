@@ -66,13 +66,11 @@ from svir.dialogs.settings_dialog import SettingsDialog
 from svir.dialogs.transformation_dialog import TransformationDialog
 from svir.dialogs.upload_settings_dialog import UploadSettingsDialog
 from svir.dialogs.weight_data_dialog import WeightDataDialog
-from svir.dialogs.load_geojson_as_layer_dialog import LoadGeoJsonAsLayerDialog
 from svir.dialogs.recovery_modeling_dialog import RecoveryModelingDialog
 from svir.dialogs.recovery_settings_dialog import RecoverySettingsDialog
 from svir.dialogs.drive_oq_engine_server_dialog import (
     DriveOqEngineServerDialog)
-from svir.dialogs.load_npz_as_layer_dialog import LoadNpzAsLayerDialog
-from svir.dialogs.plot_from_npz_dialog import PlotFromNpzDialog
+from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 
 from svir.thread_worker.abstract_worker import start_worker
 from svir.thread_worker.download_platform_data_worker import (
@@ -198,13 +196,6 @@ class Irmt:
                            enable=True,
                            submenu='OQ Engine',
                            add_to_toolbar=True)
-        # # Action to load as layer a geojson produced by the oq-engine
-        # self.add_menu_item("load_geojson_as_layer",
-        #                    ":/plugins/irmt/copy.svg",
-        #                    u"Load GeoJson as layer",
-        #                    self.load_geojson_as_layer,
-        #                    enable=True,
-        #                    submenu='OQ Engine')
         # Action to manage the projects
         self.add_menu_item("project_definitions_manager",
                            ":/plugins/irmt/copy.svg",
@@ -246,38 +237,13 @@ class Irmt:
                            add_to_layer_actions=False,
                            submenu='Utilities')
 
-        # Action to load as layer hazard maps from npz produced by the
-        # oq-engine
-        self.add_menu_item("load_hmaps_from_npz_as_layer",
-                           ":/plugins/irmt/copy.svg",
-                           u"Load hazard maps from NPZ as layer",
-                           self.load_hmaps_from_npz_as_layer,
+        # Action to load an oq-engine output as layer
+        self.add_menu_item("load_oqengine_output_as_layer",
+                           ":/plugins/irmt/calculate.svg",  # FIXME
+                           u"Load an OpenQuake Engine output file as layer",
+                           self.load_oqengine_output_as_layer,
                            enable=True,
                            submenu='OQ Engine')
-        # Action to load as layer hazard curves from npz produced by the
-        # oq-engine
-        self.add_menu_item("load_hcurves_from_npz_as_layer",
-                           ":/plugins/irmt/copy.svg",
-                           u"Load hazard curves from NPZ as layer",
-                           self.load_hcurves_from_npz_as_layer,
-                           enable=True,
-                           submenu='OQ Engine')
-        # # Action to load as layer loss maps from npz produced by the
-        # # oq-engine
-        # self.add_menu_item("load_loss_maps_from_npz_as_layer",
-        #                    ":/plugins/irmt/copy.svg",
-        #                    u"Load loss maps from NPZ as layer",
-        #                    self.load_loss_maps_from_npz_as_layer,
-        #                    enable=True,
-        #                    submenu='OQ Engine')
-        # # Action to load as layer loss curves from npz produced by the
-        # # oq-engine
-        # self.add_menu_item("load_loss_curves_from_npz_as_layer",
-        #                    ":/plugins/irmt/copy.svg",
-        #                    u"Load loss curves from NPZ as layer",
-        #                    self.load_loss_curves_from_npz_as_layer,
-        #                    enable=True,
-        #                    submenu='OQ Engine')
         # # Action to plot total damage reading it from a NPZ produced by a
         # # scenario damage calculation
         # self.add_menu_item("plot_dmg_total",
@@ -294,25 +260,6 @@ class Irmt:
         #                    self.plot_dmg_by_taxon_from_npz,
         #                    enable=True,
         #                    submenu='OQ Engine')
-        # Action to load as layer ground motion fields from npz produced
-        # by the oq-engine with a scenario damage hazard calculation
-        self.add_menu_item(
-                "load_scenario_damage_gmfs_from_npz_as_layer",
-                ":/plugins/irmt/copy.svg",
-                u"Load scenario damage ground motion "
-                "fields from NPZ as layer",
-                self.load_scenario_damage_gmfs_from_npz_as_layer,
-                enable=True,
-                submenu='OQ Engine')
-        # # Action to load as layer damage by asset from npz produced by
-        # # the oq-engine with a scenario damage risk calculation
-        # self.add_menu_item(
-        #         "load_scenario_damage_by_asset_from_npz_as_layer",
-        #         ":/plugins/irmt/copy.svg",
-        #         u"Load scenario damage by asset from NPZ as layer",
-        #         self.load_scenario_damage_by_asset_from_npz_as_layer,
-        #         enable=True,
-        #         submenu='OQ Engine')
 
         # Action to activate the modal dialog to select a layer and one
         # of its
@@ -364,47 +311,19 @@ class Irmt:
         dlg = RecoverySettingsDialog(self.iface)
         dlg.exec_()
 
-    def load_hmaps_from_npz_as_layer(self):
-        dlg = LoadNpzAsLayerDialog(self.iface, 'hmaps')
+    def load_oqengine_output_as_layer(self):
+        dlg = LoadOutputAsLayerDialog(self.iface)
         dlg.exec_()
-        self.viewer_dock.change_output_type('')
+        self.viewer_dock.change_output_type(dlg.output_type)
 
-    def load_hcurves_from_npz_as_layer(self):
-        dlg = LoadNpzAsLayerDialog(self.iface, 'hcurves')
-        dlg.exec_()
-        self.viewer_dock.change_output_type('Hazard Curves')
+    # These 2 will have to be addressed when managing risk outputs
+    # def plot_dmg_total_from_npz(self):
+    #     dlg = PlotFromNpzDialog(self.iface, 'dmg_total')
+    #     dlg.exec_()
 
-    def load_loss_maps_from_npz_as_layer(self):
-        dlg = LoadNpzAsLayerDialog(self.iface, 'loss_maps')
-        dlg.exec_()
-        self.viewer_dock.change_output_type('')
-
-    def load_loss_curves_from_npz_as_layer(self):
-        dlg = LoadNpzAsLayerDialog(self.iface, 'loss_curves')
-        dlg.exec_()
-        self.viewer_dock.change_output_type('Loss Curves')
-
-    def load_scenario_damage_gmfs_from_npz_as_layer(self):
-        dlg = LoadNpzAsLayerDialog(self.iface, 'gmf_data')
-        dlg.exec_()
-        self.viewer_dock.change_output_type('')
-
-    def load_scenario_damage_by_asset_from_npz_as_layer(self):
-        dlg = LoadNpzAsLayerDialog(self.iface, 'scenario_damage_by_asset')
-        dlg.exec_()
-        self.viewer_dock.change_output_type('')
-
-    def plot_dmg_total_from_npz(self):
-        dlg = PlotFromNpzDialog(self.iface, 'dmg_total')
-        dlg.exec_()
-
-    def plot_dmg_by_taxon_from_npz(self):
-        dlg = PlotFromNpzDialog(self.iface, 'dmg_by_taxon')
-        dlg.exec_()
-
-    def load_geojson_as_layer(self):
-        dlg = LoadGeoJsonAsLayerDialog(self.iface)
-        dlg.exec_()
+    # def plot_dmg_by_taxon_from_npz(self):
+    #     dlg = PlotFromNpzDialog(self.iface, 'dmg_by_taxon')
+    #     dlg.exec_()
 
     def drive_oq_engine_server(self):
         if self.drive_oq_engine_server_dlg is None:
