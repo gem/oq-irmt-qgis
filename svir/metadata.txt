@@ -29,6 +29,11 @@ changelog=
     * Added a confirmation dialog to avoid removing oq-engine calculations by mistake
     * Added an error message in case a stored color setting is corrupted
     * The GUI displays the number of sites before loading a layer from NPZ
+    * One single dialog is used to load any of the oq-engine outputs that are currently loadable as layers
+    * Ruptures can be loaded automatically as layers
+    * All the implemented loaders for oq-engine outputs are tested
+    * Loaders from geojson have been replaced by loaders from npz
+    * The full report of a oq-engine calculation can be visualized directly within the plugin
     1.8.21
     * Added tests for: importing hazard outputs from npz; selecting them with the Data Viewer; exporting selected data as csv.
     * Automatically add markers to uniform hazard spectra and hazard curves

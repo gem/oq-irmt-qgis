@@ -857,3 +857,23 @@ def get_style(layer, message_bar):
         'classes': classes,
         'force_restyling': force_restyling
     }
+
+
+def clear_widgets_from_layout(layout):
+    """
+    Recursively remove all widgets from the layout, except from nested
+    layouts. If any of such widgets is a layout, then clear its widgets
+    instead of deleting it.
+    """
+    for i in reversed(range(layout.count())):
+        item = layout.itemAt(i)
+        # check if the item is a sub-layout (nested inside the layout)
+        sublayout = item.layout()
+        if sublayout is not None:
+            clear_widgets_from_layout(sublayout)
+            continue
+        # check if the item is a widget
+        widget = item.widget()
+        if widget is not None:
+            # a widget is deleted when it does not have a parent
+            widget.setParent(None)
