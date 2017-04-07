@@ -199,6 +199,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 item.setTextColor(row_txt_color)
                 self.calc_list_tbl.setItem(row, col, item)
             for col, action in enumerate(actions, len(selected_keys)):
+                # display the Continue and Output buttons only if the
+                # computation is completed
                 if (calc['status'] != 'complete' and
                         action['label'] in ('Continue', 'Outputs')):
                     continue
