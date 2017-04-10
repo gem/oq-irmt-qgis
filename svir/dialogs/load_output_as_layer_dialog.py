@@ -24,9 +24,6 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import json
-import numpy
-import csv
-import os
 import tempfile
 from qgis.core import (QgsVectorLayer,
                        QgsFeature,
@@ -41,9 +38,8 @@ from qgis.core import (QgsVectorLayer,
                        QgsGraduatedSymbolRendererV2,
                        QgsRendererRangeV2,
                        QgsProject,
-                       QgsVectorFileWriter,
                        )
-from PyQt4.QtCore import pyqtSlot, QDir, QSettings, QFileInfo, QUrl
+from PyQt4.QtCore import pyqtSlot, QDir, QSettings, QFileInfo
 
 from PyQt4.QtGui import (QDialogButtonBox,
                          QDialog,
@@ -68,7 +64,6 @@ from svir.utilities.utils import (LayerEditingManager,
                                   log_msg,
                                   get_style,
                                   clear_widgets_from_layout,
-                                  save_layer_as_shapefile,
                                   )
 from svir.calculations.calculate_utils import (add_numeric_attribute,
                                                add_textual_attribute,
@@ -90,7 +85,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             raise NotImplementedError(output_type)
         self.iface = iface
         self.path = path
-        self.npz_file = None
+        # self.npz_file = None
         self.output_type = output_type
         self.mode = mode  # if 'testing' it will avoid some user interaction
         QDialog.__init__(self)
@@ -98,27 +93,28 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.setupUi(self)
         # Disable ok_button until all comboboxes are filled
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
-        self.ok_button.setDisabled(True)
-        self.populate_output_type_cbx()
-        self.output_type_cbx.currentIndexChanged['QString'].connect(
-            self.on_output_type_changed)
+        # self.ok_button.setDisabled(True)
+        # self.populate_output_type_cbx()
+        # self.output_type_cbx.currentIndexChanged['QString'].connect(
+        #     # self.on_output_type_changed)
         if self.path:
             self.path_le.setText(self.path)
-        self.default_field_name = None  # field used for styling by default
-        if output_type is not None:
-            index = self.output_type_cbx.findText(output_type)
-            if index != -1:
-                self.output_type_cbx.setCurrentIndex(index)
-                self.on_output_type_changed()
-                if self.path:
-                    if self.output_type in OQ_NPZ_LOADABLE_TYPES:
-                        self.npz_file = numpy.load(self.path, 'r')
-                        self.populate_out_dep_widgets()
-            self.file_browser_tbn.setEnabled(True)
-        else:
-            self.file_browser_tbn.setEnabled(False)
-        if self.path and output_type == 'dmg_by_asset':
-            self.read_loss_types_and_dmg_states_from_csv_header()
+        # self.default_field_name = None  # field used for styling by default
+        # if output_type is not None:
+        #     index = self.output_type_cbx.findText(output_type)
+        #     if index != -1:
+        #         self.output_type_cbx.setCurrentIndex(index)
+        #         self.on_output_type_changed()
+        #         if self.path:
+        #             if self.output_type in OQ_NPZ_LOADABLE_TYPES:
+        #                 self.npz_file = numpy.load(self.path, 'r')
+        #                 self.populate_out_dep_widgets()
+        #     self.file_browser_tbn.setEnabled(True)
+        # else:
+        #     self.file_browser_tbn.setEnabled(False)
+        # if self.path and output_type == 'dmg_by_asset':
+        #     self.read_loss_types_and_dmg_states_from_csv_header()
+        clear_widgets_from_layout(self.output_dep_vlayout)
 
     def populate_output_type_cbx(self):
         self.output_type_cbx.clear()
@@ -203,7 +199,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.load_selected_only_ckb.setChecked(True)
         self.output_dep_vlayout.addWidget(self.load_selected_only_ckb)
 
-    def crate_save_as_shp_ckb(self):
+    def create_save_as_shp_ckb(self):
         self.save_as_shp_ckb = QCheckBox("Save loaded layer as shapefile")
         self.save_as_shp_ckb.setChecked(False)
         self.output_dep_vlayout.addWidget(self.save_as_shp_ckb)
@@ -215,7 +211,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         if self.output_type in OQ_NPZ_LOADABLE_TYPES:
             self.create_load_selected_only_ckb()
         elif self.output_type in OQ_CSV_LOADABLE_TYPES:
-            self.crate_save_as_shp_ckb()
+            self.create_save_as_shp_ckb()
         if self.output_type == 'hmaps':
             self.setWindowTitle('Load hazard maps from NPZ, as layer')
             self.create_rlz_selector()
@@ -248,20 +244,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             self.create_rlz_selector()
             self.create_imt_selector()
             self.create_eid_selector()
-            self.adjustSize()
-        elif self.output_type == 'dmg_by_asset':
-            self.setWindowTitle(
-                'Load scenario damage by asset from CSV, as layer')
-            # FIXME: probably to be removed the following 2 lines
-            # self.create_rlz_selector()
-            # self.create_taxonomy_selector()
-            self.create_dmg_state_selector()
-            self.create_loss_type_selector()
-            self.adjustSize()
-        elif self.output_type == 'ruptures':
-            self.setWindowTitle(
-                'Load ruptures from CSV, as layer')
-            # we do not create any selector, because everything is loaded
             self.adjustSize()
         self.set_ok_button()
 
@@ -366,15 +348,11 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         QSettings().setValue('irmt/load_as_layer_dir', selected_dir)
         self.path = path
         self.path_le.setText(self.path)
-        if self.output_type in OQ_NPZ_LOADABLE_TYPES:
-            self.npz_file = numpy.load(self.path, 'r')
-            self.populate_out_dep_widgets()
-        elif self.output_type == 'dmg_by_asset':
-            # read the header of the csv, so we can select from its fields
-            self.read_loss_types_and_dmg_states_from_csv_header()
-        elif self.output_type == 'ruptures':
-            # we load everything
-            pass
+        return path
+        # # FIXME
+        # if self.output_type in OQ_NPZ_LOADABLE_TYPES:
+        #     self.npz_file = numpy.load(self.path, 'r')
+        #     self.populate_out_dep_widgets()
 
     def populate_out_dep_widgets(self):
         # FIXME: change as soon as npz risk outputs are available
@@ -384,41 +362,11 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.show_num_sites()
         # self.populate_dmg_states()
 
-    def read_loss_types_and_dmg_states_from_csv_header(self):
-        with open(self.path, "rb") as source:
-            reader = csv.reader(source)
-            self.csv_header = reader.next()
-            # ignore asset_ref, taxonomy, lon, lat
-            names = self.csv_header[4:]
-            # extract from column names such as: structural~no_damage_mean
-            loss_types = set([name.split('~')[0] for name in names])
-            dmg_states = set(['_'.join(name.split('~')[1].split('_')[:-1])
-                              for name in names])
-            self.populate_loss_type_cbx(list(loss_types))
-            self.populate_dmg_state_cbx(list(dmg_states))
-
     def get_taxonomies(self):
         # FIXME: change as soon as npz risk outputs are available
         if self.output_type in (
                 'loss_curves', 'loss_maps'):
             self.taxonomies = self.npz_file['assetcol/taxonomies'][:].tolist()
-
-    def populate_taxonomies(self):
-        # FIXME: change as soon as npz risk outputs are available
-        if self.output_type == 'dmg_by_asset':
-            self.taxonomies.insert(0, 'Sum')
-            self.taxonomy_cbx.clear()
-            self.taxonomy_cbx.addItems(self.taxonomies)
-            self.taxonomy_cbx.setEnabled(True)
-
-    def populate_dmg_states(self):
-        # FIXME: change as soon as npz risk outputs are available
-        if self.output_type == 'dmg_by_asset':
-            self.dmg_states = ['no damage']
-            self.dmg_states.extend(self.npz_file['oqparam'].limit_states)
-            self.dmg_state_cbx.clear()
-            self.dmg_state_cbx.setEnabled(True)
-            self.dmg_state_cbx.addItems(self.dmg_states)
 
     def populate_rlz_cbx(self):
         if self.output_type in ('hcurves', 'hmaps', 'uhs'):
@@ -468,64 +416,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             self.ok_button.setEnabled(self.poe_cbx.currentIndex() != -1)
         elif self.output_type in ('loss_curves', 'uhs'):
             self.ok_button.setEnabled(self.rlz_cbx.currentIndex() != -1)
-        elif self.output_type == 'dmg_by_asset':
-            self.ok_button.setEnabled(
-                self.dmg_state_cbx.currentIndex() != -1
-                and self.loss_type_cbx.currentIndex() != -1)
         elif self.output_type == 'uhs':
             self.ok_button.setEnabled(self.poe_cbx.currentIndex() != -1)
-        elif self.output_type == 'ruptures':
-            self.ok_button.setEnabled(True)
-
-    def import_layer_from_csv(self,
-                              csv_path,
-                              longitude_field='lon',
-                              latitude_field='lat',
-                              delimiter=',',
-                              quote='"',
-                              wkt_field=None,
-                              dest_shp=None):
-        # lines_to_skip_count = 0
-        url = QUrl.fromLocalFile(csv_path)
-        url.addQueryItem('type', 'csv')
-        if wkt_field is not None:
-            url.addQueryItem('wktField', wkt_field)
-        else:
-            url.addQueryItem('xField', longitude_field)
-            url.addQueryItem('yField', latitude_field)
-        url.addQueryItem('spatialIndex', 'no')
-        url.addQueryItem('subsetIndex', 'no')
-        url.addQueryItem('watchFile', 'no')
-        url.addQueryItem('delimiter', delimiter)
-        url.addQueryItem('quote', quote)
-        url.addQueryItem('crs', 'epsg:4326')
-        # url.addQueryItem('skipLines', str(lines_to_skip_count))
-        url.addQueryItem('trimFields', 'yes')
-        layer_uri = str(url.toEncoded())
-        layer = QgsVectorLayer(layer_uri, self.output_type, "delimitedtext")
-        if self.save_as_shp_ckb.isChecked():
-            dest_filename = dest_shp or QFileDialog.getSaveFileName(
-                self,
-                'Save loss shapefile as...',
-                os.path.expanduser("~"),
-                'Shapefiles (*.shp)')
-            if dest_filename:
-                if dest_filename[-4:] != ".shp":
-                    dest_filename += ".shp"
-            else:
-                return
-            result = save_layer_as_shapefile(layer, dest_filename)
-            if result != QgsVectorFileWriter.NoError:
-                raise RuntimeError('Could not save shapefile')
-            layer = QgsVectorLayer(
-                dest_filename, self.output_type, 'ogr')
-        if layer.isValid():
-            QgsMapLayerRegistry.instance().addMapLayer(layer)
-        else:
-            msg = 'Unable to load layer'
-            log_msg(msg, level='C', message_bar=self.iface.messageBar())
-            return None
-        return layer
 
     def build_layer(self, rlz, taxonomy=None, poe=None):
         # get the root of layerTree, in order to add groups of layers
@@ -537,8 +429,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             rlz_group = root.addGroup('Realization %s' % rlz)
         # rlz = self.rlz_cbx.currentText()
         if self.output_type in ('loss_maps',
-                                'loss_curves',
-                                'dmg_by_asset'):
+                                'loss_curves'):
+                                # 'dmg_by_asset'):
             # NOTE: realizations in the npz file start counting from 1, but
             #       we need to refer to column indices that start from 0
             rlz_idx = int(rlz) - 1
@@ -568,9 +460,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             eid = self.eid_sbx.value()
             self.default_field_name = '%s-%s' % (imt, eid)
             layer_name = "scenario_damage_gmfs_%s_eid-%s" % (rlz, eid)
-        elif self.output_type == 'dmg_by_asset':
-            # FIXME: probably to be removed
-            layer_name = "dmg_by_asset_%s_%s" % (rlz, taxonomy)
+        # elif self.output_type == 'dmg_by_asset':
+        #     # FIXME: probably to be removed
+        #     layer_name = "dmg_by_asset_%s_%s" % (rlz, taxonomy)
         elif self.output_type == 'uhs':
             layer_name = "uhs_%s_poe-%s" % (rlz, poe)
 
@@ -832,32 +724,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         if self.npz_file is not None:
             self.npz_file.close()
 
-    def load_from_csv(self):
-        if self.mode == 'testing':
-            dest_shp = tempfile.mkstemp(suffix='.shp')[1]
-        else:
-            dest_shp = None
-        if self.output_type == 'dmg_by_asset':
-            self.layer = self.import_layer_from_csv(
-                self.path_le.text(), dest_shp=dest_shp)
-            dmg_state = self.dmg_state_cbx.currentText()
-            loss_type = self.loss_type_cbx.currentText()
-            field_idx = -1  # default
-            for idx, name in enumerate(self.csv_header):
-                if dmg_state in name and loss_type in name and 'mean' in name:
-                    field_idx = idx
-            self.default_field_name = self.layer.fields()[field_idx].name()
-            self.style_maps()
-        elif self.output_type == 'ruptures':
-            self.layer = self.import_layer_from_csv(
-                self.path_le.text(), wkt_field='boundary', delimiter='\t',
-                dest_shp=dest_shp)
-
     def accept(self):
         if self.output_type in OQ_NPZ_LOADABLE_TYPES:
             self.load_from_npz()
-        elif self.output_type in OQ_CSV_LOADABLE_TYPES:
-            self.load_from_csv()
         super(LoadOutputAsLayerDialog, self).accept()
 
     def reject(self):
