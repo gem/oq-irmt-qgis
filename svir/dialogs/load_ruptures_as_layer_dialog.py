@@ -33,8 +33,8 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
     """
 
     def __init__(self, iface, output_type='ruptures', path=None, mode=None):
+        assert(output_type == 'ruptures')
         LoadOutputAsLayerDialog.__init__(self, iface, output_type, path, mode)
-        self.ok_button.setDisabled(True)
         self.file_browser_tbn.setEnabled(False)
         self.create_save_as_shp_ckb()
         self.setWindowTitle('Load ruptures from CSV, as layer')

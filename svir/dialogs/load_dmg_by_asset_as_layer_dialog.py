@@ -31,12 +31,13 @@ from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 
 class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
     """
-    Modal dialog to load ruptures from an oq-engine output, as layer
+    Modal dialog to load dmg_by_asset from an oq-engine output, as layer
     """
 
-    def __init__(self, iface, output_type='ruptures', path=None, mode=None):
+    def __init__(
+            self, iface, output_type='dmg_by_asset', path=None, mode=None):
+        assert(output_type == 'dmg_by_asset')
         LoadOutputAsLayerDialog.__init__(self, iface, output_type, path, mode)
-        self.ok_button.setDisabled(True)
         self.file_browser_tbn.setEnabled(False)
         self.create_dmg_state_selector()
         self.create_loss_type_selector()
@@ -58,7 +59,6 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             bool(self.path)
             and self.dmg_state_cbx.currentIndex() != -1
             and self.loss_type_cbx.currentIndex() != -1)
-        self.ok_button.setEnabled(bool(self.path))
 
     def load_from_csv(self):
         if self.mode == 'testing':

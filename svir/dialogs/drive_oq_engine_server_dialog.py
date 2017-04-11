@@ -66,6 +66,14 @@ from svir.dialogs.load_ruptures_as_layer_dialog import (
     LoadRupturesAsLayerDialog)
 from svir.dialogs.load_dmg_by_asset_as_layer_dialog import (
     LoadDmgByAssetAsLayerDialog)
+from svir.dialogs.load_gmf_data_as_layer_dialog import (
+    LoadGmfDataAsLayerDialog)
+from svir.dialogs.load_hmaps_as_layer_dialog import (
+    LoadHazardMapsAsLayerDialog)
+from svir.dialogs.load_hcurves_as_layer_dialog import (
+    LoadHazardCurvesAsLayerDialog)
+from svir.dialogs.load_uhs_as_layer_dialog import (
+    LoadUhsAsLayerDialog)
 from svir.dialogs.show_full_report_dialog import ShowFullReportDialog
 
 FORM_CLASS = get_ui_class('ui_drive_engine_server.ui')
@@ -490,6 +498,18 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                         self.iface, output_type, filepath)
                 elif output_type == 'dmg_by_asset':
                     dlg = LoadDmgByAssetAsLayerDialog(
+                        self.iface, output_type, filepath)
+                elif output_type == 'gmf_data':
+                    dlg = LoadGmfDataAsLayerDialog(
+                        self.iface, output_type, filepath)
+                elif output_type == 'hmaps':
+                    dlg = LoadHazardMapsAsLayerDialog(
+                        self.iface, output_type, filepath)
+                elif output_type == 'hcurves':
+                    dlg = LoadHazardCurvesAsLayerDialog(
+                        self.iface, output_type, filepath)
+                elif output_type == 'uhs':
+                    dlg = LoadUhsAsLayerDialog(
                         self.iface, output_type, filepath)
                 else:
                     dlg = LoadOutputAsLayerDialog(

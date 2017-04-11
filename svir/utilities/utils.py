@@ -927,8 +927,8 @@ def import_layer_from_csv(parent,
         layer = QgsVectorLayer(dest_filename, layer_name, 'ogr')
     if layer.isValid():
         QgsMapLayerRegistry.instance().addMapLayer(layer)
-        canvas = qgis.utils.iface.mapCanvas()
-        canvas.setExtent(layer.extent())
+        qgis.utils.iface.setActiveLayer(layer)
+        qgis.utils.iface.zoomToActiveLayer()
     else:
         msg = 'Unable to load layer'
         log_msg(msg, level='C', message_bar=message_bar)

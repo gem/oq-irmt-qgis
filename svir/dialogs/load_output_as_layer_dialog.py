@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 # /***************************************************************************
 # Irmt
@@ -23,12 +22,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-import json
-import tempfile
+import numpy
 from qgis.core import (QgsVectorLayer,
-                       QgsFeature,
-                       QgsPoint,
-                       QgsGeometry,
                        QgsMapLayerRegistry,
                        QgsSymbolV2,
                        QgsSymbolLayerV2Registry,
@@ -80,8 +75,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     def __init__(self, iface, output_type=None, path=None, mode=None):
 
         # sanity check
-        if (output_type is not None
-                and output_type not in OQ_ALL_LOADABLE_TYPES):
+        if output_type not in OQ_ALL_LOADABLE_TYPES:
             raise NotImplementedError(output_type)
         self.iface = iface
         self.path = path
@@ -91,12 +85,10 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         QDialog.__init__(self)
         # Set up the user interface from Designer.
         self.setupUi(self)
-        # Disable ok_button until all comboboxes are filled
+        # Disable ok_button until all user options are set
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
-        # self.ok_button.setDisabled(True)
-        # self.populate_output_type_cbx()
-        # self.output_type_cbx.currentIndexChanged['QString'].connect(
-        #     # self.on_output_type_changed)
+        self.ok_button.setDisabled(True)
+        self.file_browser_tbn.setEnabled(True)
         if self.path:
             self.path_le.setText(self.path)
         # self.default_field_name = None  # field used for styling by default
@@ -112,15 +104,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         #     self.file_browser_tbn.setEnabled(True)
         # else:
         #     self.file_browser_tbn.setEnabled(False)
-        # if self.path and output_type == 'dmg_by_asset':
-        #     self.read_loss_types_and_dmg_states_from_csv_header()
         clear_widgets_from_layout(self.output_dep_vlayout)
-
-    def populate_output_type_cbx(self):
-        self.output_type_cbx.clear()
-        self.output_type_cbx.addItem('')
-        self.output_type_cbx.addItems(sorted(OQ_ALL_LOADABLE_TYPES))
-        self.output_type_cbx.setEnabled(True)
 
     def create_rlz_selector(self):
         self.rlz_lbl = QLabel('Realization (different realizations'
@@ -205,76 +189,33 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.output_dep_vlayout.addWidget(self.save_as_shp_ckb)
 
     def on_output_type_changed(self):
-        self.output_type = self.output_type_cbx.currentText()
-        self.file_browser_tbn.setEnabled(bool(self.output_type))
-        clear_widgets_from_layout(self.output_dep_vlayout)
         if self.output_type in OQ_NPZ_LOADABLE_TYPES:
             self.create_load_selected_only_ckb()
         elif self.output_type in OQ_CSV_LOADABLE_TYPES:
             self.create_save_as_shp_ckb()
-        if self.output_type == 'hmaps':
-            self.setWindowTitle('Load hazard maps from NPZ, as layer')
-            self.create_rlz_selector()
-            self.create_imt_selector()
-            self.create_poe_selector()
-            self.adjustSize()
-        elif self.output_type == 'hcurves':
-            self.setWindowTitle('Load hazard curves from NPZ, as layer')
-            self.create_rlz_selector()
-            self.adjustSize()
-        elif self.output_type == 'uhs':
-            self.setWindowTitle(
-                'Load uniform hazard spectra from NPZ, as layer')
-            self.create_rlz_selector()
-            self.create_poe_selector()
-            self.adjustSize()
-        elif self.output_type == 'loss_maps':
-            self.setWindowTitle('Load loss maps from NPZ, as layer')
-            self.create_rlz_selector()
-            self.create_loss_type_selector()
-            self.create_poe_selector()
-            self.adjustSize()
-        elif self.output_type == 'loss_curves':
-            self.setWindowTitle('Load loss curves from NPZ, as layer')
-            self.create_rlz_selector()
-            self.adjustSize()
-        elif self.output_type == 'gmf_data':
-            self.setWindowTitle(
-                'Load scenario damage GMFs from NPZ, as layer')
-            self.create_rlz_selector()
-            self.create_imt_selector()
-            self.create_eid_selector()
-            self.adjustSize()
+        # elif self.output_type == 'loss_maps':
+        #     self.setWindowTitle('Load loss maps from NPZ, as layer')
+        #     self.create_rlz_selector()
+        #     self.create_loss_type_selector()
+        #     self.create_poe_selector()
+        #     self.adjustSize()
+        # elif self.output_type == 'loss_curves':
+        #     self.setWindowTitle('Load loss curves from NPZ, as layer')
+        #     self.create_rlz_selector()
+        #     self.adjustSize()
         self.set_ok_button()
 
     @pyqtSlot()
     def on_file_browser_tbn_clicked(self):
-        self.open_file_dialog()
+        path = self.open_file_dialog()
+        if path:
+            if self.ouput_type in OQ_NPZ_LOADABLE_TYPES:
+                self.npz_file = numpy.load(self.path, 'r')
+            self.populate_out_dep_widgets()
 
     def on_rlz_changed(self):
         self.dataset = self.npz_file[self.rlz_cbx.currentText()]
-        if self.output_type in ['hcurves', 'hmaps']:
-            self.imts = {}
-            for name in self.dataset.dtype.names[2:]:
-                if self.output_type == 'hmaps':
-                    imt, poe = name.split('-')
-                    if imt not in self.imts:
-                        self.imts[imt] = [poe]
-                    else:
-                        self.imts[imt].append(poe)
-                elif self.output_type == 'hcurves':
-                    imt = name
-                    self.imts[imt] = []
-            if self.output_type == 'hmaps':
-                self.imt_cbx.clear()
-                self.imt_cbx.setEnabled(True)
-                self.imt_cbx.addItems(self.imts.keys())
-        elif self.output_type == 'uhs':
-            self.poes = self.dataset.dtype.names[2:]
-            self.poe_cbx.clear()
-            self.poe_cbx.setEnabled(True)
-            self.poe_cbx.addItems(self.poes)
-        elif self.output_type in ('loss_maps'):
+        if self.output_type in ('loss_maps'):
             # FIXME: likely, self.npz_file.keys()
             self.loss_types = self.npz_file.dtype.fields
             self.loss_type_cbx.clear()
@@ -283,11 +224,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         elif self.output_type == 'loss_curves':
             # FIXME: likely, self.npz_file.keys()
             self.loss_types = self.npz_file.dtype.names
-        elif self.output_type == 'gmf_data':
-            imts = self.dataset.dtype.names[2:]
-            self.imt_cbx.clear()
-            self.imt_cbx.setEnabled(True)
-            self.imt_cbx.addItems(imts)
         self.set_ok_button()
 
     def on_loss_type_changed(self):
@@ -301,21 +237,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.set_ok_button()
 
     def on_imt_changed(self):
-        if self.output_type == 'gmf_data':
-            imt = self.imt_cbx.currentText()
-            min_eid = 0
-            max_eid = (self.dataset[imt].shape[1] - 1)
-            self.eid_sbx.cleanText()
-            self.eid_sbx.setEnabled(True)
-            self.eid_lbl.setText(
-                'Event ID (used for default styling) (range %d-%d)' % (
-                    min_eid, max_eid))
-            self.eid_sbx.setRange(min_eid, max_eid)
-        elif self.output_type == 'hmaps':
-            imt = self.imt_cbx.currentText()
-            self.poe_cbx.clear()
-            self.poe_cbx.setEnabled(True)
-            self.poe_cbx.addItems(self.imts[imt])
         self.set_ok_button()
 
     def on_poe_changed(self):
@@ -369,18 +290,13 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             self.taxonomies = self.npz_file['assetcol/taxonomies'][:].tolist()
 
     def populate_rlz_cbx(self):
-        if self.output_type in ('hcurves', 'hmaps', 'uhs'):
-            self.rlzs = [key for key in self.npz_file.keys()
-                         if key.startswith('rlz')]
-        elif self.output_type in ('loss_curves', 'loss_maps'):
+        if self.output_type in ('loss_curves', 'loss_maps'):
             if self.output_type == 'loss_curves':
                 self.hdata = self.npz_file['loss_curves-rlzs']
             elif self.output_type == 'loss_maps':
                 self.hdata = self.npz_file['loss_maps-rlzs']
             _, n_rlzs = self.hdata.shape
             self.rlzs = [str(i+1) for i in range(n_rlzs)]
-        elif self.output_type == 'gmf_data':
-            self.rlzs = [item[0] for item in self.npz_file.items()]
         self.rlz_cbx.clear()
         self.rlz_cbx.setEnabled(True)
         # self.rlz_cbx.addItem('All')
@@ -405,21 +321,12 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.rlz_num_sites_lbl.setText(self.num_sites_msg % rlz_data.shape)
 
     def set_ok_button(self):
-        if self.output_type == 'hmaps':
+        if self.output_type == 'loss_maps':
             self.ok_button.setEnabled(self.poe_cbx.currentIndex() != -1)
-        if self.output_type == 'hcurves':
+        elif self.output_type == 'loss_curves':
             self.ok_button.setEnabled(self.rlz_cbx.currentIndex() != -1)
-        # elif self.output_type in ('hcurves', 'gmf_data'):
-        elif self.output_type == 'gmf_data':
-            self.ok_button.setEnabled(self.imt_cbx.currentIndex() != -1)
-        elif self.output_type == 'loss_maps':
-            self.ok_button.setEnabled(self.poe_cbx.currentIndex() != -1)
-        elif self.output_type in ('loss_curves', 'uhs'):
-            self.ok_button.setEnabled(self.rlz_cbx.currentIndex() != -1)
-        elif self.output_type == 'uhs':
-            self.ok_button.setEnabled(self.poe_cbx.currentIndex() != -1)
 
-    def build_layer(self, rlz, taxonomy=None, poe=None):
+    def get_layer_group(self, rlz):
         # get the root of layerTree, in order to add groups of layers
         # (one group for each realization)
         root = QgsProject.instance().layerTreeRoot()
@@ -427,56 +334,121 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         rlz_group = root.findGroup(group_name)
         if not rlz_group:
             rlz_group = root.addGroup('Realization %s' % rlz)
-        # rlz = self.rlz_cbx.currentText()
-        if self.output_type in ('loss_maps',
-                                'loss_curves'):
-                                # 'dmg_by_asset'):
-            # NOTE: realizations in the npz file start counting from 1, but
-            #       we need to refer to column indices that start from 0
-            rlz_idx = int(rlz) - 1
-        if self.output_type == 'loss_maps':
-            loss_type = self.loss_type_cbx.currentText()
-            poe = "poe-%s" % self.poe_cbx.currentText()
-            self.default_field_name = loss_type
-        # if self.output_type == 'uhs':
-            # poe = self.poe_cbx.currentText()
+        return rlz_group
 
+    def build_layer_name(self):
+        raise NotImplementedError
+        # rlz = self.rlz_cbx.currentText()
         # build layer name
-        if self.output_type == 'hmaps':
-            imt = self.imt_cbx.currentText()
-            poe = self.poe_cbx.currentText()
-            self.default_field_name = '%s-%s' % (imt, poe)
-            layer_name = "hazard_map_%s" % rlz
-        elif self.output_type == 'hcurves':
-            imt = self.imts.keys()[0]
-            self.default_field_name = imt
-            layer_name = "hazard_curves_%s" % rlz
-        elif self.output_type == 'loss_curves':
-            layer_name = "loss_curves_%s_%s" % (rlz, taxonomy)
-        elif self.output_type == 'loss_maps':
-            layer_name = "loss_maps_%s_%s" % (rlz, taxonomy)
-        elif self.output_type == 'gmf_data':
-            imt = self.imt_cbx.currentText()
-            eid = self.eid_sbx.value()
-            self.default_field_name = '%s-%s' % (imt, eid)
-            layer_name = "scenario_damage_gmfs_%s_eid-%s" % (rlz, eid)
+        # elif self.output_type == 'loss_curves':
+        #     layer_name = "loss_curves_%s_%s" % (rlz, taxonomy)
+        # elif self.output_type == 'loss_maps':
+        #     layer_name = "loss_maps_%s_%s" % (rlz, taxonomy)
         # elif self.output_type == 'dmg_by_asset':
         #     # FIXME: probably to be removed
         #     layer_name = "dmg_by_asset_%s_%s" % (rlz, taxonomy)
-        elif self.output_type == 'uhs':
-            layer_name = "uhs_%s_poe-%s" % (rlz, poe)
+        # return layer_name
 
+    def get_field_names(self):
         # get field names
-        if self.output_type in ['hcurves', 'hmaps', 'gmf_data']:
-            field_names = list(self.dataset.dtype.names)
-        elif self.output_type == 'loss_maps':
+        if self.output_type == 'loss_maps':
             field_names = self.loss_types.keys()
         elif self.output_type == 'loss_curves':
             field_names = list(self.loss_types)
         if self.output_type in ('loss_curves', 'loss_maps'):
-            taxonomy_idx = self.taxonomies.index(taxonomy)
-        if self.output_type == 'uhs':
-            field_names = self.dataset[poe].dtype.names
+            self.taxonomy_idx = self.taxonomies.index(self.taxonomy)
+        return field_names
+
+    def add_field_to_layer(self, field_name):
+        if self.output_type == 'loss_maps':
+            # NOTE: add_numeric_attribute uses LayerEditingManager
+            added_field_name = add_numeric_attribute(
+                field_name, self.layer)
+        elif self.output_type == 'loss_curves':
+            # FIXME: probably we need a different type with more capacity
+            added_field_name = add_textual_attribute(
+                field_name, self.layer)
+        else:
+            raise NotImplementedError(self.output_type)
+        return added_field_name
+
+    def read_npz_into_layer(self, field_names):
+        with LayerEditingManager(self.layer, 'Reading npz', DEBUG):
+            feats = []
+            # elif self.output_type == 'loss_curves':
+            #     # We need to select rows from loss_curves-rlzs where the
+            #     # row index (the asset idx) has the given taxonomy. The
+            #     # taxonomy is found in the assetcol/array, together with
+            #     # the coordinates lon and lat of the asset.
+            #     # From the selected rows, we extract loss_type -> losses
+            #     #                                and loss_type -> poes
+            #     asset_array = self.npz_file['assetcol/array']
+            #     loss_curves = self.npz_file['loss_curves-rlzs'][:, rlz_idx]
+            #     for asset_idx, row in enumerate(loss_curves):
+            #         asset = asset_array[asset_idx]
+            #         if asset['taxonomy_id'] != taxonomy_idx:
+            #             continue
+            #         else:
+            #             lon = asset['lon']
+            #             lat = asset['lat']
+            #         # add a feature
+            #         feat = QgsFeature(self.layer.pendingFields())
+            #         # NOTE: field names are loss types
+            #         #       (normalized to 10 chars)
+            #         for field_name_idx, field_name in enumerate(field_names):
+            #             losses = row[field_name_idx]['losses'].tolist()
+            #             poes = row[field_name_idx]['poes'].tolist()
+            #             dic = dict(losses=losses, poes=poes)
+            #             value = json.dumps(dic)
+            #             feat.setAttribute(field_name, value)
+            #         feat.setGeometry(QgsGeometry.fromPoint(
+            #             QgsPoint(lon, lat)))
+            #         feats.append(feat)
+            # elif self.output_type == 'loss_maps':
+            #     # We need to select rows from loss_maps-rlzs where the
+            #     # row index (the asset idx) has the given taxonomy. The
+            #     # taxonomy is found in the assetcol/array, together with
+            #     # the coordinates lon and lat of the asset.
+            #     # From the selected rows, we extract loss_type -> poes
+            #     # FIXME: with npz, the following needs to be changed
+            #     asset_array = self.npz_file['assetcol/array']
+            #     loss_maps = self.npz_file['loss_maps-rlzs'][:, rlz_idx]
+            #     for asset_idx, row in enumerate(loss_maps):
+            #         asset = asset_array[asset_idx]
+            #         if asset['taxonomy_id'] != taxonomy_idx:
+            #             continue
+            #         else:
+            #             lon = asset['lon']
+            #             lat = asset['lat']
+            #         # add a feature
+            #         feat = QgsFeature(self.layer.pendingFields())
+            #         # NOTE: field names are loss types
+            #         #       (normalized to 10 chars)
+            #         for field_name_idx, field_name in enumerate(field_names):
+            #             loss = row[field_name_idx][poe]
+            #             feat.setAttribute(field_name, float(loss))
+            #         feat.setGeometry(QgsGeometry.fromPoint(
+            #             QgsPoint(lon, lat)))
+            #         feats.append(feat)
+            added_ok = self.layer.addFeatures(feats, makeSelected=False)
+            if not added_ok:
+                msg = 'There was a problem adding features to the layer.'
+                log_msg(msg, level='C', message_bar=self.iface.messageBar())
+
+    def build_layer(self, rlz, taxonomy=None, poe=None):
+        rlz_group = self.get_layer_group(rlz)
+        layer_name = self.build_layer_name()
+        # if self.output_type in ('loss_maps',
+        #                         'loss_curves'):
+        #                         # 'dmg_by_asset'):
+        #     # NOTE: realizations in the npz file start counting from 1, but
+        #     #       we need to refer to column indices that start from 0
+        #     rlz_idx = int(rlz) - 1
+        # if self.output_type == 'loss_maps':
+        #     loss_type = self.loss_type_cbx.currentText()
+        #     poe = "poe-%s" % self.poe_cbx.currentText()
+        #     self.default_field_name = loss_type
+        field_names = self.get_field_names()
 
         # create layer
         self.layer = QgsVectorLayer(
@@ -484,22 +456,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         for field_name in field_names:
             if field_name in ['lon', 'lat']:
                 continue
-            if self.output_type in ('hmaps',
-                                    'loss_maps',
-                                    'uhs'):
-                # NOTE: add_numeric_attribute uses LayerEditingManager
-                added_field_name = add_numeric_attribute(
-                    field_name, self.layer)
-            elif self.output_type in ['hcurves', 'loss_curves']:
-                # FIXME: probably we need a different type with more capacity
-                added_field_name = add_textual_attribute(
-                    field_name, self.layer)
-            elif self.output_type == 'gmf_data':
-                field_name = "%s-%s" % (field_name, eid)
-                added_field_name = add_numeric_attribute(
-                    field_name, self.layer)
-            else:
-                raise NotImplementedError(self.output_type)
+            added_field_name = self.add_field_to_layer(field_name)
             if field_name != added_field_name:
                 if field_name == self.default_field_name:
                     self.default_field_name = added_field_name
@@ -507,118 +464,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 field_name_idx = field_names.index(field_name)
                 field_names.remove(field_name)
                 field_names.insert(field_name_idx, added_field_name)
-        with LayerEditingManager(self.layer, 'Reading npz', DEBUG):
-            feats = []
-            if self.output_type == 'hcurves':
-                imtls = self.npz_file['imtls']
-            if self.output_type in ['hcurves', 'hmaps']:
-                for row in self.dataset:
-                    # add a feature
-                    feat = QgsFeature(self.layer.pendingFields())
-                    for field_name_idx, field_name in enumerate(field_names):
-                        if field_name in ['lon', 'lat']:
-                            continue
-                        if self.output_type == 'hmaps':
-                            # NOTE: without casting to float, it produces a
-                            #       null because it does not recognize the
-                            #       numpy type
-                            value = float(row[field_name_idx])
-                        elif self.output_type == 'hcurves':
-                            poes = row[field_name_idx].tolist()
-                            imls = imtls[field_name].tolist()
-                            dic = dict(poes=poes, imls=imls)
-                            value = json.dumps(dic)
-                        feat.setAttribute(field_name, value)
-                    feat.setGeometry(QgsGeometry.fromPoint(
-                        QgsPoint(row[0], row[1])))
-                    feats.append(feat)
-            elif self.output_type == 'loss_curves':
-                # We need to select rows from loss_curves-rlzs where the
-                # row index (the asset idx) has the given taxonomy. The
-                # taxonomy is found in the assetcol/array, together with
-                # the coordinates lon and lat of the asset.
-                # From the selected rows, we extract loss_type -> losses
-                #                                and loss_type -> poes
-                asset_array = self.npz_file['assetcol/array']
-                loss_curves = self.npz_file['loss_curves-rlzs'][:, rlz_idx]
-                for asset_idx, row in enumerate(loss_curves):
-                    asset = asset_array[asset_idx]
-                    if asset['taxonomy_id'] != taxonomy_idx:
-                        continue
-                    else:
-                        lon = asset['lon']
-                        lat = asset['lat']
-                    # add a feature
-                    feat = QgsFeature(self.layer.pendingFields())
-                    # NOTE: field names are loss types (normalized to 10 chars)
-                    for field_name_idx, field_name in enumerate(field_names):
-                        losses = row[field_name_idx]['losses'].tolist()
-                        poes = row[field_name_idx]['poes'].tolist()
-                        dic = dict(losses=losses, poes=poes)
-                        value = json.dumps(dic)
-                        feat.setAttribute(field_name, value)
-                    feat.setGeometry(QgsGeometry.fromPoint(
-                        QgsPoint(lon, lat)))
-                    feats.append(feat)
-            elif self.output_type == 'loss_maps':
-                # We need to select rows from loss_maps-rlzs where the
-                # row index (the asset idx) has the given taxonomy. The
-                # taxonomy is found in the assetcol/array, together with
-                # the coordinates lon and lat of the asset.
-                # From the selected rows, we extract loss_type -> poes
-                # FIXME: with npz, the following needs to be changed
-                asset_array = self.npz_file['assetcol/array']
-                loss_maps = self.npz_file['loss_maps-rlzs'][:, rlz_idx]
-                for asset_idx, row in enumerate(loss_maps):
-                    asset = asset_array[asset_idx]
-                    if asset['taxonomy_id'] != taxonomy_idx:
-                        continue
-                    else:
-                        lon = asset['lon']
-                        lat = asset['lat']
-                    # add a feature
-                    feat = QgsFeature(self.layer.pendingFields())
-                    # NOTE: field names are loss types (normalized to 10 chars)
-                    for field_name_idx, field_name in enumerate(field_names):
-                        loss = row[field_name_idx][poe]
-                        feat.setAttribute(field_name, float(loss))
-                    feat.setGeometry(QgsGeometry.fromPoint(
-                        QgsPoint(lon, lat)))
-                    feats.append(feat)
-            elif self.output_type == 'gmf_data':
-                fields = self.layer.pendingFields()
-                layer_field_names = [field.name() for field in fields]
-                dataset_field_names = field_names
-                d2l_field_names = dict(
-                    zip(dataset_field_names[2:], layer_field_names))
-                for row in self.dataset:
-                    # add a feature
-                    feat = QgsFeature(fields)
-                    for field_name in dataset_field_names:
-                        if field_name in ['lon', 'lat']:
-                            continue
-                        layer_field_name = d2l_field_names[field_name]
-                        value = float(row[field_name][eid])
-                        feat.setAttribute(layer_field_name, value)
-                    feat.setGeometry(QgsGeometry.fromPoint(
-                        QgsPoint(row[0], row[1])))
-                    feats.append(feat)
-            elif self.output_type == 'uhs':
-                for row in self.dataset:
-                    # add a feature
-                    feat = QgsFeature(self.layer.pendingFields())
-                    for field_name_idx, field_name in enumerate(field_names):
-                        if field_name in ['lon', 'lat']:
-                            continue
-                        value = float(row[poe][field_name_idx])
-                        feat.setAttribute(field_name, value)
-                    feat.setGeometry(QgsGeometry.fromPoint(
-                        QgsPoint(row['lon'], row['lat'])))
-                    feats.append(feat)
-            added_ok = self.layer.addFeatures(feats, makeSelected=False)
-            if not added_ok:
-                msg = 'There was a problem adding features to the layer.'
-                log_msg(msg, level='C', message_bar=self.iface.messageBar())
+
+        self.read_npz_into_layer(field_names)
         # add self.layer to the legend
         QgsMapLayerRegistry.instance().addMapLayer(self.layer, False)
         rlz_group.addLayer(self.layer)
@@ -701,26 +548,11 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                             self.style_curves()
                         elif self.output_type == 'loss_maps':
                             self.style_maps()
-            elif self.output_type == 'uhs':
-                for poe in self.poes:
-                    if (self.load_selected_only_ckb.isChecked()
-                            and poe != self.poe_cbx.currentText()):
-                        continue
-                    with WaitCursorManager(
-                            'Creating layer for realization "%s" '
-                            ' and poe "%s"...' % (rlz, poe),
-                            self.iface):
-                        self.build_layer(rlz, poe=poe)
-                        self.style_curves()
             else:
                 with WaitCursorManager('Creating layer for '
                                        ' realization "%s"...' % rlz,
                                        self.iface):
                     self.build_layer(rlz)
-                    if self.output_type in ('hmaps', 'gmf_data'):
-                        self.style_maps()
-                    elif self.output_type == 'hcurves':
-                        self.style_curves()
         if self.npz_file is not None:
             self.npz_file.close()
 
