@@ -35,7 +35,6 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
     def __init__(self, iface, output_type='ruptures', path=None, mode=None):
         assert(output_type == 'ruptures')
         LoadOutputAsLayerDialog.__init__(self, iface, output_type, path, mode)
-        self.file_browser_tbn.setEnabled(False)
         self.create_save_as_shp_ckb()
         self.setWindowTitle('Load ruptures from CSV, as layer')
         self.adjustSize()
@@ -54,6 +53,6 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
             wkt_field='boundary', delimiter='\t',
             save_as_shp=self.save_as_shp_ckb.isChecked(), dest_shp=dest_shp)
 
-    def accept(self):
-        self.load_from_csv()
-        super(LoadRupturesAsLayerDialog, self).accept()
+    def populate_out_dep_widgets(self):
+        # no widgets to populate
+        pass

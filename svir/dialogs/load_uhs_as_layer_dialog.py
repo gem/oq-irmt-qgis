@@ -42,7 +42,6 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
     def __init__(self, iface, output_type='uhs', path=None, mode=None):
         assert(output_type == 'uhs')
         LoadOutputAsLayerDialog.__init__(self, iface, output_type, path, mode)
-        self.file_browser_tbn.setEnabled(False)
         self.setWindowTitle(
             'Load uniform hazard spectra from NPZ, as layer')
         self.create_load_selected_only_ckb()
@@ -73,20 +72,6 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
         self.rlz_cbx.setEnabled(True)
         # self.rlz_cbx.addItem('All')
         self.rlz_cbx.addItems(self.rlzs)
-
-    def populate_out_dep_widgets(self):
-        # FIXME: change as soon as npz risk outputs are available
-        # self.get_taxonomies()
-        # self.populate_taxonomies()
-        self.populate_rlz_cbx()
-        self.show_num_sites()
-        # self.populate_dmg_states()
-
-    def get_taxonomies(self):
-        # FIXME: change as soon as npz risk outputs are available
-        if self.output_type in (
-                'loss_curves', 'loss_maps'):
-            self.taxonomies = self.npz_file['assetcol/taxonomies'][:].tolist()
 
     def build_layer_name(self):
         rlz = self.rlz_cbx.currentText()

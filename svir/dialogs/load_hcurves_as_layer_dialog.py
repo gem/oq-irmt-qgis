@@ -42,7 +42,6 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
     def __init__(self, iface, output_type='hcurves', path=None, mode=None):
         assert(output_type == 'hcurves')
         LoadOutputAsLayerDialog.__init__(self, iface, output_type, path, mode)
-        self.file_browser_tbn.setEnabled(False)
         self.setWindowTitle(
             'Load hazard curves from NPZ, as layer')
         self.create_load_selected_only_ckb()

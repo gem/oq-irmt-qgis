@@ -41,7 +41,6 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
     def __init__(self, iface, output_type='hmaps', path=None, mode=None):
         assert(output_type == 'hmaps')
         LoadOutputAsLayerDialog.__init__(self, iface, output_type, path, mode)
-        self.file_browser_tbn.setEnabled(False)
         self.setWindowTitle(
             'Load hazard maps from NPZ, as layer')
         self.create_load_selected_only_ckb()

@@ -70,7 +70,18 @@ from svir.dialogs.recovery_modeling_dialog import RecoveryModelingDialog
 from svir.dialogs.recovery_settings_dialog import RecoverySettingsDialog
 from svir.dialogs.drive_oq_engine_server_dialog import (
     DriveOqEngineServerDialog)
-from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
+from svir.dialogs.load_ruptures_as_layer_dialog import (
+    LoadRupturesAsLayerDialog)
+from svir.dialogs.load_dmg_by_asset_as_layer_dialog import (
+    LoadDmgByAssetAsLayerDialog)
+from svir.dialogs.load_hmaps_as_layer_dialog import (
+    LoadHazardMapsAsLayerDialog)
+from svir.dialogs.load_hcurves_as_layer_dialog import (
+    LoadHazardCurvesAsLayerDialog)
+from svir.dialogs.load_gmf_data_as_layer_dialog import (
+    LoadGmfDataAsLayerDialog)
+from svir.dialogs.load_uhs_as_layer_dialog import (
+    LoadUhsAsLayerDialog)
 
 from svir.thread_worker.abstract_worker import start_worker
 from svir.thread_worker.download_platform_data_worker import (
@@ -229,11 +240,45 @@ class Irmt:
                            add_to_layer_actions=False,
                            submenu='Utilities')
 
-        # Action to load an oq-engine output as layer
-        self.add_menu_item("load_oqengine_output_as_layer",
+        self.add_menu_item("load_ruptures_as_layer",
                            ":/plugins/irmt/calculate.svg",  # FIXME
-                           u"Load an OpenQuake Engine output file as layer",
-                           self.load_oqengine_output_as_layer,
+                           u"Load ruptures as layer",
+                           self.load_ruptures_as_layer,
+                           enable=True,
+                           submenu='OQ Engine')
+
+        self.add_menu_item("load_dmg_by_asset_as_layer",
+                           ":/plugins/irmt/calculate.svg",  # FIXME
+                           u"Load damage by asset as layer",
+                           self.load_dmg_by_asset_as_layer,
+                           enable=True,
+                           submenu='OQ Engine')
+
+        self.add_menu_item("load_hmaps_as_layer",
+                           ":/plugins/irmt/calculate.svg",  # FIXME
+                           u"Load hazard maps as layer",
+                           self.load_hmaps_as_layer,
+                           enable=True,
+                           submenu='OQ Engine')
+
+        self.add_menu_item("load_hcurves_as_layer",
+                           ":/plugins/irmt/calculate.svg",  # FIXME
+                           u"Load hazard curves as layer",
+                           self.load_hcurves_as_layer,
+                           enable=True,
+                           submenu='OQ Engine')
+
+        self.add_menu_item("load_gmf_data_as_layer",
+                           ":/plugins/irmt/calculate.svg",  # FIXME
+                           u"Load ground motion fields as layer",
+                           self.load_gmf_data_as_layer,
+                           enable=True,
+                           submenu='OQ Engine')
+
+        self.add_menu_item("load_uhs_as_layer",
+                           ":/plugins/irmt/calculate.svg",  # FIXME
+                           u"Load uniform hazard spectra as layer",
+                           self.load_uhs_as_layer,
                            enable=True,
                            submenu='OQ Engine')
 
@@ -285,8 +330,33 @@ class Irmt:
         dlg = RecoverySettingsDialog(self.iface)
         dlg.exec_()
 
-    def load_oqengine_output_as_layer(self):
-        dlg = LoadOutputAsLayerDialog(self.iface)
+    def load_ruptures_as_layer(self):
+        dlg = LoadRupturesAsLayerDialog(self.iface, 'ruptures')
+        dlg.exec_()
+        self.viewer_dock.change_output_type(dlg.output_type)
+
+    def load_dmg_by_asset_as_layer(self):
+        dlg = LoadDmgByAssetAsLayerDialog(self.iface, 'dmg_by_asset')
+        dlg.exec_()
+        self.viewer_dock.change_output_type(dlg.output_type)
+
+    def load_hmaps_as_layer(self):
+        dlg = LoadHazardMapsAsLayerDialog(self.iface, 'hmaps')
+        dlg.exec_()
+        self.viewer_dock.change_output_type(dlg.output_type)
+
+    def load_hcurves_as_layer(self):
+        dlg = LoadHazardCurvesAsLayerDialog(self.iface, 'hcurves')
+        dlg.exec_()
+        self.viewer_dock.change_output_type(dlg.output_type)
+
+    def load_gmf_data_as_layer(self):
+        dlg = LoadGmfDataAsLayerDialog(self.iface, 'gmf_data')
+        dlg.exec_()
+        self.viewer_dock.change_output_type(dlg.output_type)
+
+    def load_uhs_as_layer(self):
+        dlg = LoadUhsAsLayerDialog(self.iface, 'uhs')
         dlg.exec_()
         self.viewer_dock.change_output_type(dlg.output_type)
 

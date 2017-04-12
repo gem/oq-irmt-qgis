@@ -38,7 +38,6 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             self, iface, output_type='dmg_by_asset', path=None, mode=None):
         assert(output_type == 'dmg_by_asset')
         LoadOutputAsLayerDialog.__init__(self, iface, output_type, path, mode)
-        self.file_browser_tbn.setEnabled(False)
         self.create_dmg_state_selector()
         self.create_loss_type_selector()
         self.create_save_as_shp_ckb()
@@ -107,7 +106,3 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
     #         self.dmg_state_cbx.clear()
     #         self.dmg_state_cbx.setEnabled(True)
     #         self.dmg_state_cbx.addItems(self.dmg_states)
-
-    def accept(self):
-        self.load_from_csv()
-        super(LoadDmgByAssetAsLayerDialog, self).accept()

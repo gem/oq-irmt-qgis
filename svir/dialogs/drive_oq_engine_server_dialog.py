@@ -61,7 +61,6 @@ from svir.utilities.utils import (WaitCursorManager,
                                   get_ui_class,
                                   SvNetworkError,
                                   )
-from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 from svir.dialogs.load_ruptures_as_layer_dialog import (
     LoadRupturesAsLayerDialog)
 from svir.dialogs.load_dmg_by_asset_as_layer_dialog import (
@@ -493,27 +492,17 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             if outtype in ('npz', 'csv'):
                 filepath = self.download_output(
                     output_id, outtype, dest_folder)
-                if output_type == 'ruptures':
-                    dlg = LoadRupturesAsLayerDialog(
-                        self.iface, output_type, filepath)
-                elif output_type == 'dmg_by_asset':
-                    dlg = LoadDmgByAssetAsLayerDialog(
-                        self.iface, output_type, filepath)
-                elif output_type == 'gmf_data':
-                    dlg = LoadGmfDataAsLayerDialog(
-                        self.iface, output_type, filepath)
-                elif output_type == 'hmaps':
-                    dlg = LoadHazardMapsAsLayerDialog(
-                        self.iface, output_type, filepath)
-                elif output_type == 'hcurves':
-                    dlg = LoadHazardCurvesAsLayerDialog(
-                        self.iface, output_type, filepath)
-                elif output_type == 'uhs':
-                    dlg = LoadUhsAsLayerDialog(
-                        self.iface, output_type, filepath)
-                else:
-                    dlg = LoadOutputAsLayerDialog(
-                        self.iface, output_type, filepath)
+                output_type_loaders = {
+                    'ruptures': LoadRupturesAsLayerDialog,
+                    'dmg_by_asset': LoadDmgByAssetAsLayerDialog,
+                    'gmf_data': LoadGmfDataAsLayerDialog,
+                    'hmaps': LoadHazardMapsAsLayerDialog,
+                    'hcurves': LoadHazardCurvesAsLayerDialog,
+                    'uhs': LoadUhsAsLayerDialog}
+                if output_type not in output_type_loaders:
+                    raise NotImplementedError(output_type)
+                dlg = output_type_loaders[output_type](
+                    self.iface, output_type, filepath)
                 dlg.exec_()
             else:
                 raise NotImplementedError("%s %s" % (action, outtype))
