@@ -91,7 +91,7 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             self.populate_dmg_state_cbx(list(dmg_states))
 
     # def populate_taxonomies(self):
-    #     # FIXME: change as soon as npz risk outputs are available
+    #     # TODO: change as soon as npz risk outputs are available
     #     if self.output_type == 'dmg_by_asset':
     #         self.taxonomies.insert(0, 'Sum')
     #         self.taxonomy_cbx.clear()
@@ -99,7 +99,7 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
     #         self.taxonomy_cbx.setEnabled(True)
 
     # def populate_dmg_states(self):
-    #     # FIXME: change as soon as npz risk outputs are available
+    #     # TODO: change as soon as npz risk outputs are available
     #     if self.output_type == 'dmg_by_asset':
     #         self.dmg_states = ['no damage']
     #         self.dmg_states.extend(self.npz_file['oqparam'].limit_states)
