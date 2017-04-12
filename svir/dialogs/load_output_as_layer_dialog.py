@@ -362,7 +362,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             raise NotImplementedError(self.output_type)
         return added_field_name
 
-    def read_npz_into_layer(self, field_names):
+    def read_npz_into_layer(self, field_names, **kwargs):
         with LayerEditingManager(self.layer, 'Reading npz', DEBUG):
             feats = []
             # TODO: change as soon as npz files for these become available
@@ -457,7 +457,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 field_names.remove(field_name)
                 field_names.insert(field_name_idx, added_field_name)
 
-        self.read_npz_into_layer(field_names)
+        self.read_npz_into_layer(field_names, taxonomy=taxonomy, poe=poe)
         # add self.layer to the legend
         QgsMapLayerRegistry.instance().addMapLayer(self.layer, False)
         rlz_group.addLayer(self.layer)

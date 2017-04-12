@@ -89,7 +89,8 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
             field_name, self.layer)
         return added_field_name
 
-    def read_npz_into_layer(self, field_names):
+    def read_npz_into_layer(self, field_names, **kwargs):
+        poe = kwargs['poe']
         with LayerEditingManager(self.layer, 'Reading npz', DEBUG):
             feats = []
             for row in self.dataset:
@@ -98,7 +99,6 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
                 for field_name_idx, field_name in enumerate(field_names):
                     if field_name in ['lon', 'lat']:
                         continue
-                    poe = self.poe_cbx.currentText()
                     value = float(row[poe][field_name_idx])
                     feat.setAttribute(field_name, value)
                 feat.setGeometry(QgsGeometry.fromPoint(
@@ -120,7 +120,6 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
                     continue
                 with WaitCursorManager(
                         'Creating layer for realization "%s" '
-                        ' and poe "%s"...' % (rlz, poe),
-                        self.iface):
+                        ' and poe "%s"...' % (rlz, poe), self.iface):
                     self.build_layer(rlz, poe=poe)
                     self.style_curves()

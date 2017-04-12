@@ -114,7 +114,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         added_field_name = add_numeric_attribute(field_name, self.layer)
         return added_field_name
 
-    def read_npz_into_layer(self, field_names):
+    def read_npz_into_layer(self, field_names, **kwargs):
         with LayerEditingManager(self.layer, 'Reading npz', DEBUG):
             feats = []
             fields = self.layer.pendingFields()
