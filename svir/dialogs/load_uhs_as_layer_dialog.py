@@ -73,14 +73,13 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
         # self.rlz_cbx.addItem('All')
         self.rlz_cbx.addItems(self.rlzs)
 
-    def build_layer_name(self):
-        rlz = self.rlz_cbx.currentText()
-        poe = self.poe_cbx.currentText()
+    def build_layer_name(self, rlz, **kwargs):
+        poe = kwargs['poe']
         layer_name = "uhs_%s_poe-%s" % (rlz, poe)
         return layer_name
 
-    def get_field_names(self):
-        poe = self.poe_cbx.currentText()
+    def get_field_names(self, **kwargs):
+        poe = kwargs['poe']
         field_names = self.dataset[poe].dtype.names
         return field_names
 

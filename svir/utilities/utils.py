@@ -892,7 +892,8 @@ def import_layer_from_csv(parent,
                           lines_to_skip_count=0,
                           wkt_field=None,
                           save_as_shp=False,
-                          dest_shp=None):
+                          dest_shp=None,
+                          zoom_to_layer=True):
     url = QUrl.fromLocalFile(csv_path)
     url.addQueryItem('type', 'csv')
     if wkt_field is not None:
@@ -927,8 +928,10 @@ def import_layer_from_csv(parent,
         layer = QgsVectorLayer(dest_filename, layer_name, 'ogr')
     if layer.isValid():
         QgsMapLayerRegistry.instance().addMapLayer(layer)
-        qgis.utils.iface.setActiveLayer(layer)
-        qgis.utils.iface.zoomToActiveLayer()
+        if zoom_to_layer:
+            qgis.utils.iface.setActiveLayer(layer)
+            qgis.utils.iface.zoomToActiveLayer()
+
     else:
         msg = 'Unable to load layer'
         log_msg(msg, level='C', message_bar=message_bar)

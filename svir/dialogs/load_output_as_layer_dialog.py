@@ -327,11 +327,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             rlz_group = root.addGroup('Realization %s' % rlz)
         return rlz_group
 
-    def build_layer_name(self):
+    def build_layer_name(self, rlz, **kwargs):
         raise NotImplementedError()
         # TODO: change as soon as npz files for these become available
-        # rlz = self.rlz_cbx.currentText()
-        # build layer name
         # elif self.output_type == 'loss_curves':
         #     layer_name = "loss_curves_%s_%s" % (rlz, taxonomy)
         # elif self.output_type == 'loss_maps':
@@ -341,15 +339,15 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         #     layer_name = "dmg_by_asset_%s_%s" % (rlz, taxonomy)
         # return layer_name
 
-    def get_field_names(self):
-        # get field names
-        if self.output_type == 'loss_maps':
-            field_names = self.loss_types.keys()
-        elif self.output_type == 'loss_curves':
-            field_names = list(self.loss_types)
-        if self.output_type in ('loss_curves', 'loss_maps'):
-            self.taxonomy_idx = self.taxonomies.index(self.taxonomy)
-        return field_names
+    def get_field_names(self, **kwargs):
+        raise NotImplementedError
+        # if self.output_type == 'loss_maps':
+        #     field_names = self.loss_types.keys()
+        # elif self.output_type == 'loss_curves':
+        #     field_names = list(self.loss_types)
+        # if self.output_type in ('loss_curves', 'loss_maps'):
+        #     self.taxonomy_idx = self.taxonomies.index(self.taxonomy)
+        # return field_names
 
     def add_field_to_layer(self, field_name):
         if self.output_type == 'loss_maps':
@@ -430,7 +428,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
 
     def build_layer(self, rlz, taxonomy=None, poe=None):
         rlz_group = self.get_layer_group(rlz)
-        layer_name = self.build_layer_name()
+        layer_name = self.build_layer_name(rlz, taxonomy=taxonomy, poe=poe)
         # TODO: change as soon as npz files for these become available
         # if self.output_type in ('loss_maps',
         #                         'loss_curves'):
@@ -442,7 +440,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         #     loss_type = self.loss_type_cbx.currentText()
         #     poe = "poe-%s" % self.poe_cbx.currentText()
         #     self.default_field_name = loss_type
-        field_names = self.get_field_names()
+        field_names = self.get_field_names(rlz=rlz, taxonomy=taxonomy, poe=poe)
 
         # create layer
         self.layer = QgsVectorLayer(
@@ -528,6 +526,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             if (self.load_selected_only_ckb.isChecked()
                     and rlz != self.rlz_cbx.currentText()):
                 continue
+            # TODO: change as soon as the npz outputs are available
             if self.output_type in ('loss_curves', 'loss_maps'):
                 for taxonomy in self.taxonomies:
                     if (self.load_selected_only_ckb.isChecked()

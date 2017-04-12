@@ -97,9 +97,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         if self.npz_file is not None:
             self.npz_file.close()
 
-    def build_layer_name(self):
-        rlz = self.rlz_cbx.currentText()
-        # build layer name
+    def build_layer_name(self, rlz, **kwargs):
         self.imt = self.imt_cbx.currentText()
         self.eid = self.eid_sbx.value()
         self.default_field_name = '%s-%s' % (self.imt, self.eid)
@@ -107,7 +105,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         layer_name = "scenario_damage_gmfs_%s_eid-%s" % (rlz, self.eid)
         return layer_name
 
-    def get_field_names(self):
+    def get_field_names(self, **kwargs):
         field_names = list(self.dataset.dtype.names)
         return field_names
 

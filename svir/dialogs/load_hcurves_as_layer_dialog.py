@@ -72,7 +72,7 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
         # self.rlz_cbx.addItem('All')
         self.rlz_cbx.addItems(self.rlzs)
 
-    def build_layer_name(self):
+    def build_layer_name(self, rlz, **kwargs):
         rlz = self.rlz_cbx.currentText()
         # build layer name
         self.imt = self.imts.keys()[0]
@@ -80,7 +80,7 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
         layer_name = "hazard_curves_%s" % rlz
         return layer_name
 
-    def get_field_names(self):
+    def get_field_names(self, **kwargs):
         field_names = list(self.dataset.dtype.names)
         return field_names
 

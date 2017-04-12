@@ -72,10 +72,10 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         self.set_ok_button()
 
     def on_imt_changed(self):
-        imt = self.imt_cbx.currentText()
+        self.imt = self.imt_cbx.currentText()
         self.poe_cbx.clear()
         self.poe_cbx.setEnabled(True)
-        self.poe_cbx.addItems(self.imts[imt])
+        self.poe_cbx.addItems(self.imts[self.imt])
         self.set_ok_button()
 
     def populate_rlz_cbx(self):
@@ -85,17 +85,14 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         self.rlz_cbx.setEnabled(True)
         self.rlz_cbx.addItems(self.rlzs)
 
-    def build_layer_name(self):
-        rlz = self.rlz_cbx.currentText()
-        # build layer name
-        self.imt = self.imt_cbx.currentText()
-        self.poe = self.poe_cbx.currentText()
-        self.default_field_name = '%s-%s' % (self.imt, self.poe)
+    def build_layer_name(self, rlz, **kwargs):
+        imt = self.imt_cbx.currentText()
+        poe = self.poe_cbx.currentText()
+        self.default_field_name = '%s-%s' % (imt, poe)
         layer_name = "hazard_map_%s" % rlz
         return layer_name
 
-    def get_field_names(self):
-        # get field names
+    def get_field_names(self, **kwargs):
         field_names = list(self.dataset.dtype.names)
         return field_names
 
