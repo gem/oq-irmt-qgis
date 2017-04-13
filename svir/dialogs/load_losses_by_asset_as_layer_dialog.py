@@ -163,6 +163,9 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                         and taxonomy != self.taxonomy_cbx.currentText()):
                     continue
                 for loss_type in self.loss_types:
+                    if (self.load_selected_only_ckb.isChecked()
+                            and loss_type != self.loss_type_cbx.currentText()):
+                        continue
                     with WaitCursorManager(
                             'Creating layer for realization "%s", '
                             ' taxonomy "%s" and loss type "%s"...' % (
