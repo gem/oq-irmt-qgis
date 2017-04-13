@@ -177,8 +177,11 @@ class ProcessLayer():
             proposed_attribute_list = []
             for input_attribute in attribute_list:
                 input_attribute_name = input_attribute.name()
-                proposed_attribute_name = \
-                    input_attribute_name[:10].upper().replace(' ', '_')
+                if self.layer.providerType() == 'ogr':
+                    proposed_attribute_name = \
+                        input_attribute_name[:10].upper().replace(' ', '_')
+                else:
+                    proposed_attribute_name = input_attribute_name
                 i = 1
                 while True:
                     current_attribute_names = \
@@ -186,13 +189,17 @@ class ProcessLayer():
                     if proposed_attribute_name in current_attribute_names:
                         # If the attribute is already assigned, change the
                         # proposed_attribute_name
-                        i_num_digits = len(str(i))
-                        # 10 = shapefile limit
-                        # 1 = underscore
-                        max_name_len = 10 - i_num_digits - 1
-                        proposed_attribute_name = '%s_%d' % (
-                            input_attribute_name[
-                                :max_name_len].upper().replace(' ', '_'), i)
+                        if self.layer.providerType() == 'ogr':
+                            i_num_digits = len(str(i))
+                            # 10 = shapefile limit
+                            # 1 = underscore
+                            max_name_len = 10 - i_num_digits - 1
+                            proposed_attribute_name = '%s_%d' % (
+                                input_attribute_name[:max_name_len].upper(
+                                    ).replace(' ', '_'), i)
+                        else:
+                            proposed_attribute_name = '%s_%d' % (
+                                input_attribute_name, i)
                         i += 1
                     else:
                         # If the attribute name is not already assigned,
