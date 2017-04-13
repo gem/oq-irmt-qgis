@@ -214,5 +214,6 @@ RECOVERY_DEFAULTS['n_recovery_based_dmg_states'] = len(
 
 
 OQ_CSV_LOADABLE_TYPES = set(['ruptures', 'dmg_by_asset'])
-OQ_NPZ_LOADABLE_TYPES = set(['hmaps', 'hcurves', 'gmf_data', 'uhs'])
+OQ_NPZ_LOADABLE_TYPES = set([
+    'hmaps', 'hcurves', 'gmf_data', 'uhs', 'losses_by_asset'])
 OQ_ALL_LOADABLE_TYPES = OQ_CSV_LOADABLE_TYPES | OQ_NPZ_LOADABLE_TYPES

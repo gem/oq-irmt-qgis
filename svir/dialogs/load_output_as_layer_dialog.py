@@ -264,7 +264,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     def populate_out_dep_widgets(self):
         # TODO: change as soon as npz risk outputs are available
         # self.get_taxonomies()
-        # self.populate_taxonomies()
+        # self.populate_taxonomy_cbx()
         self.populate_rlz_cbx()
         self.show_num_sites()
         # self.populate_dmg_states()
@@ -426,9 +426,10 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 msg = 'There was a problem adding features to the layer.'
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
 
-    def build_layer(self, rlz, taxonomy=None, poe=None):
+    def build_layer(self, rlz, taxonomy=None, poe=None, loss_type=None):
         rlz_group = self.get_layer_group(rlz)
-        layer_name = self.build_layer_name(rlz, taxonomy=taxonomy, poe=poe)
+        layer_name = self.build_layer_name(
+            rlz, taxonomy=taxonomy, poe=poe, loss_type=loss_type)
         # TODO: change as soon as npz files for these become available
         # if self.output_type in ('loss_maps',
         #                         'loss_curves'):
@@ -440,7 +441,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         #     loss_type = self.loss_type_cbx.currentText()
         #     poe = "poe-%s" % self.poe_cbx.currentText()
         #     self.default_field_name = loss_type
-        field_names = self.get_field_names(rlz=rlz, taxonomy=taxonomy, poe=poe)
+        field_names = self.get_field_names(
+            rlz=rlz, taxonomy=taxonomy, poe=poe, loss_type=loss_type)
 
         # create layer
         self.layer = QgsVectorLayer(
@@ -457,7 +459,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 field_names.remove(field_name)
                 field_names.insert(field_name_idx, added_field_name)
 
-        self.read_npz_into_layer(field_names, taxonomy=taxonomy, poe=poe)
+        self.read_npz_into_layer(
+            field_names, rlz=rlz, taxonomy=taxonomy, poe=poe,
+            loss_type=loss_type)
         # add self.layer to the legend
         QgsMapLayerRegistry.instance().addMapLayer(self.layer, False)
         rlz_group.addLayer(self.layer)
