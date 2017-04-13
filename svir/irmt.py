@@ -333,17 +333,14 @@ class Irmt:
     def load_ruptures_as_layer(self):
         dlg = LoadRupturesAsLayerDialog(self.iface, 'ruptures')
         dlg.exec_()
-        self.viewer_dock.change_output_type(dlg.output_type)
 
     def load_dmg_by_asset_as_layer(self):
         dlg = LoadDmgByAssetAsLayerDialog(self.iface, 'dmg_by_asset')
         dlg.exec_()
-        self.viewer_dock.change_output_type(dlg.output_type)
 
     def load_hmaps_as_layer(self):
         dlg = LoadHazardMapsAsLayerDialog(self.iface, 'hmaps')
         dlg.exec_()
-        self.viewer_dock.change_output_type(dlg.output_type)
 
     def load_hcurves_as_layer(self):
         dlg = LoadHazardCurvesAsLayerDialog(self.iface, 'hcurves')
@@ -353,7 +350,6 @@ class Irmt:
     def load_gmf_data_as_layer(self):
         dlg = LoadGmfDataAsLayerDialog(self.iface, 'gmf_data')
         dlg.exec_()
-        self.viewer_dock.change_output_type(dlg.output_type)
 
     def load_uhs_as_layer(self):
         dlg = LoadUhsAsLayerDialog(self.iface, 'uhs')
