@@ -48,21 +48,14 @@ from PyQt4.QtGui import (QDialogButtonBox,
                          )
 
 
-from svir.utilities.shared import (DEBUG,
-                                   OQ_CSV_LOADABLE_TYPES,
+from svir.utilities.shared import (OQ_CSV_LOADABLE_TYPES,
                                    OQ_NPZ_LOADABLE_TYPES,
                                    OQ_ALL_LOADABLE_TYPES,
                                    )
-from svir.utilities.utils import (LayerEditingManager,
-                                  WaitCursorManager,
-                                  get_ui_class,
-                                  log_msg,
+from svir.utilities.utils import (get_ui_class,
                                   get_style,
                                   clear_widgets_from_layout,
                                   )
-from svir.calculations.calculate_utils import (add_numeric_attribute,
-                                               add_textual_attribute,
-                                               )
 
 FORM_CLASS = get_ui_class('ui_load_output_as_layer.ui')
 
@@ -94,8 +87,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         clear_widgets_from_layout(self.output_dep_vlayout)
 
     def create_rlz_selector(self):
-        self.rlz_lbl = QLabel('Realization (different realizations'
-                              ' will be loaded into separate layer groups)')
+        self.rlz_lbl = QLabel('Realization')
         self.rlz_cbx = QComboBox()
         self.rlz_cbx.setEnabled(False)
         self.rlz_cbx.currentIndexChanged['QString'].connect(
@@ -109,7 +101,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
 
     def create_imt_selector(self):
         self.imt_lbl = QLabel(
-            'Intensity Measure Type (used for default styling)')
+            'Intensity Measure Type')
         self.imt_cbx = QComboBox()
         self.imt_cbx.setEnabled(False)
         self.imt_cbx.currentIndexChanged['QString'].connect(
@@ -119,7 +111,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
 
     def create_poe_selector(self):
         self.poe_lbl = QLabel(
-            'Probability of Exceedance (used for default styling)')
+            'Probability of Exceedance')
         self.poe_cbx = QComboBox()
         self.poe_cbx.setEnabled(False)
         self.poe_cbx.currentIndexChanged['QString'].connect(
@@ -129,7 +121,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
 
     def create_loss_type_selector(self):
         self.loss_type_lbl = QLabel(
-            'Loss Type (used for default styling)')
+            'Loss Type')
         self.loss_type_cbx = QComboBox()
         self.loss_type_cbx.setEnabled(False)
         self.loss_type_cbx.currentIndexChanged['QString'].connect(
@@ -139,7 +131,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
 
     def create_eid_selector(self):
         self.eid_lbl = QLabel(
-            'Event ID (used for default styling)')
+            'Event ID')
         self.eid_sbx = QSpinBox()
         self.eid_sbx.setEnabled(False)
         self.output_dep_vlayout.addWidget(self.eid_lbl)
@@ -171,7 +163,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.output_dep_vlayout.addWidget(self.load_selected_only_ckb)
 
     def create_save_as_shp_ckb(self):
-        self.save_as_shp_ckb = QCheckBox("Save loaded layer as shapefile")
+        self.save_as_shp_ckb = QCheckBox("Save the loaded layer as shapefile")
         self.save_as_shp_ckb.setChecked(False)
         self.output_dep_vlayout.addWidget(self.save_as_shp_ckb)
 
@@ -340,7 +332,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         # return layer_name
 
     def get_field_names(self, **kwargs):
-        raise NotImplementedError
+        raise NotImplementedError()
+        # TODO: change as soon as npz files for these become available
         # if self.output_type == 'loss_maps':
         #     field_names = self.loss_types.keys()
         # elif self.output_type == 'loss_curves':
@@ -350,81 +343,114 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         # return field_names
 
     def add_field_to_layer(self, field_name):
-        if self.output_type == 'loss_maps':
-            # NOTE: add_numeric_attribute uses LayerEditingManager
-            added_field_name = add_numeric_attribute(
-                field_name, self.layer)
-        elif self.output_type == 'loss_curves':
-            # NOTE: probably we need a different type with more capacity
-            added_field_name = add_textual_attribute(
-                field_name, self.layer)
-        else:
-            raise NotImplementedError(self.output_type)
-        return added_field_name
+        raise NotImplementedError()
+        # TODO: change as soon as npz files for these become available
+        # if self.output_type == 'loss_maps':
+        #     # NOTE: add_numeric_attribute uses LayerEditingManager
+        #     added_field_name = add_numeric_attribute(
+        #         field_name, self.layer)
+        # elif self.output_type == 'loss_curves':
+        #     # NOTE: probably we need a different type with more capacity
+        #     added_field_name = add_textual_attribute(
+        #         field_name, self.layer)
+        # else:
+        #     raise NotImplementedError(self.output_type)
+        # return added_field_name
 
     def read_npz_into_layer(self, field_names, **kwargs):
-        with LayerEditingManager(self.layer, 'Reading npz', DEBUG):
-            feats = []
-            # TODO: change as soon as npz files for these become available
-            # elif self.output_type == 'loss_curves':
-            #     # We need to select rows from loss_curves-rlzs where the
-            #     # row index (the asset idx) has the given taxonomy. The
-            #     # taxonomy is found in the assetcol/array, together with
-            #     # the coordinates lon and lat of the asset.
-            #     # From the selected rows, we extract loss_type -> losses
-            #     #                                and loss_type -> poes
-            #     asset_array = self.npz_file['assetcol/array']
-            #     loss_curves = self.npz_file['loss_curves-rlzs'][:, rlz_idx]
-            #     for asset_idx, row in enumerate(loss_curves):
-            #         asset = asset_array[asset_idx]
-            #         if asset['taxonomy_id'] != taxonomy_idx:
-            #             continue
-            #         else:
-            #             lon = asset['lon']
-            #             lat = asset['lat']
-            #         # add a feature
-            #         feat = QgsFeature(self.layer.pendingFields())
-            #         # NOTE: field names are loss types
-            #         #       (normalized to 10 chars)
-            #         for field_name_idx, field_name in enumerate(field_names):
-            #             losses = row[field_name_idx]['losses'].tolist()
-            #             poes = row[field_name_idx]['poes'].tolist()
-            #             dic = dict(losses=losses, poes=poes)
-            #             value = json.dumps(dic)
-            #             feat.setAttribute(field_name, value)
-            #         feat.setGeometry(QgsGeometry.fromPoint(
-            #             QgsPoint(lon, lat)))
-            #         feats.append(feat)
-            # elif self.output_type == 'loss_maps':
-            #     # We need to select rows from loss_maps-rlzs where the
-            #     # row index (the asset idx) has the given taxonomy. The
-            #     # taxonomy is found in the assetcol/array, together with
-            #     # the coordinates lon and lat of the asset.
-            #     # From the selected rows, we extract loss_type -> poes
-            #     # TODO: with npz, the following needs to be changed
-            #     asset_array = self.npz_file['assetcol/array']
-            #     loss_maps = self.npz_file['loss_maps-rlzs'][:, rlz_idx]
-            #     for asset_idx, row in enumerate(loss_maps):
-            #         asset = asset_array[asset_idx]
-            #         if asset['taxonomy_id'] != taxonomy_idx:
-            #             continue
-            #         else:
-            #             lon = asset['lon']
-            #             lat = asset['lat']
-            #         # add a feature
-            #         feat = QgsFeature(self.layer.pendingFields())
-            #         # NOTE: field names are loss types
-            #         #       (normalized to 10 chars)
-            #         for field_name_idx, field_name in enumerate(field_names):
-            #             loss = row[field_name_idx][poe]
-            #             feat.setAttribute(field_name, float(loss))
-            #         feat.setGeometry(QgsGeometry.fromPoint(
-            #             QgsPoint(lon, lat)))
-            #         feats.append(feat)
-            added_ok = self.layer.addFeatures(feats, makeSelected=False)
-            if not added_ok:
-                msg = 'There was a problem adding features to the layer.'
-                log_msg(msg, level='C', message_bar=self.iface.messageBar())
+        raise NotImplementedError()
+        # TODO: change as soon as npz files for these become available
+        # with LayerEditingManager(self.layer, 'Reading npz', DEBUG):
+        #     feats = []
+        #     TODO: change as soon as npz files for these become available
+        #     elif self.output_type == 'loss_curves':
+        #         # We need to select rows from loss_curves-rlzs where the
+        #         # row index (the asset idx) has the given taxonomy. The
+        #         # taxonomy is found in the assetcol/array, together with
+        #         # the coordinates lon and lat of the asset.
+        #         # From the selected rows, we extract loss_type -> losses
+        #         #                                and loss_type -> poes
+        #         asset_array = self.npz_file['assetcol/array']
+        #         loss_curves = self.npz_file['loss_curves-rlzs'][:, rlz_idx]
+        #         for asset_idx, row in enumerate(loss_curves):
+        #             asset = asset_array[asset_idx]
+        #             if asset['taxonomy_id'] != taxonomy_idx:
+        #                 continue
+        #             else:
+        #                 lon = asset['lon']
+        #                 lat = asset['lat']
+        #             # add a feature
+        #             feat = QgsFeature(self.layer.pendingFields())
+        #             # NOTE: field names are loss types
+        #             #       (normalized to 10 chars)
+        #             for field_name_idx, field_name in enumerate(field_names):
+        #                 losses = row[field_name_idx]['losses'].tolist()
+        #                 poes = row[field_name_idx]['poes'].tolist()
+        #                 dic = dict(losses=losses, poes=poes)
+        #                 value = json.dumps(dic)
+        #                 feat.setAttribute(field_name, value)
+        #             feat.setGeometry(QgsGeometry.fromPoint(
+        #                 QgsPoint(lon, lat)))
+        #             feats.append(feat)
+        #     elif self.output_type == 'loss_maps':
+        #         # We need to select rows from loss_maps-rlzs where the
+        #         # row index (the asset idx) has the given taxonomy. The
+        #         # taxonomy is found in the assetcol/array, together with
+        #         # the coordinates lon and lat of the asset.
+        #         # From the selected rows, we extract loss_type -> poes
+        #         # TODO: with npz, the following needs to be changed
+        #         asset_array = self.npz_file['assetcol/array']
+        #         loss_maps = self.npz_file['loss_maps-rlzs'][:, rlz_idx]
+        #         for asset_idx, row in enumerate(loss_maps):
+        #             asset = asset_array[asset_idx]
+        #             if asset['taxonomy_id'] != taxonomy_idx:
+        #                 continue
+        #             else:
+        #                 lon = asset['lon']
+        #                 lat = asset['lat']
+        #             # add a feature
+        #             feat = QgsFeature(self.layer.pendingFields())
+        #             # NOTE: field names are loss types
+        #             #       (normalized to 10 chars)
+        #             for field_name_idx, field_name in enumerate(field_names):
+        #                 loss = row[field_name_idx][poe]
+        #                 feat.setAttribute(field_name, float(loss))
+        #             feat.setGeometry(QgsGeometry.fromPoint(
+        #                 QgsPoint(lon, lat)))
+        #             feats.append(feat)
+        #     added_ok = self.layer.addFeatures(feats, makeSelected=False)
+        #     if not added_ok:
+        #         msg = 'There was a problem adding features to the layer.'
+        #         log_msg(msg, level='C', message_bar=self.iface.messageBar())
+
+    def load_from_npz(self):
+        raise NotImplementedError()
+        # for rlz in self.rlzs:
+        #     if (self.load_selected_only_ckb.isChecked()
+        #             and rlz != self.rlz_cbx.currentText()):
+        #         continue
+        #     # TODO: change as soon as the npz outputs are available
+        #     if self.output_type in ('loss_curves', 'loss_maps'):
+        #         for taxonomy in self.taxonomies:
+        #             if (self.load_selected_only_ckb.isChecked()
+        #                     and taxonomy != self.taxonomy_cbx.currentText()):
+        #                 continue
+        #             with WaitCursorManager(
+        #                     'Creating layer for realization "%s" '
+        #                     ' and taxonomy "%s"...' % (rlz, taxonomy),
+        #                     self.iface):
+        #                 self.build_layer(rlz, taxonomy=taxonomy)
+        #                 if self.output_type == 'loss_curves':
+        #                     self.style_curves()
+        #                 elif self.output_type == 'loss_maps':
+        #                     self.style_maps()
+        #     else:
+        #         with WaitCursorManager('Creating layer for '
+        #                                ' realization "%s"...' % rlz,
+        #                                self.iface):
+        #             self.build_layer(rlz)
+        # if self.npz_file is not None:
+        #     self.npz_file.close()
 
     def build_layer(self, rlz, taxonomy=None, poe=None, loss_type=None):
         rlz_group = self.get_layer_group(rlz)
@@ -524,34 +550,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.iface.legendInterface().refreshLayerSymbology(
             self.layer)
         self.iface.mapCanvas().refresh()
-
-    def load_from_npz(self):
-        for rlz in self.rlzs:
-            if (self.load_selected_only_ckb.isChecked()
-                    and rlz != self.rlz_cbx.currentText()):
-                continue
-            # TODO: change as soon as the npz outputs are available
-            if self.output_type in ('loss_curves', 'loss_maps'):
-                for taxonomy in self.taxonomies:
-                    if (self.load_selected_only_ckb.isChecked()
-                            and taxonomy != self.taxonomy_cbx.currentText()):
-                        continue
-                    with WaitCursorManager(
-                            'Creating layer for realization "%s" '
-                            ' and taxonomy "%s"...' % (rlz, taxonomy),
-                            self.iface):
-                        self.build_layer(rlz, taxonomy=taxonomy)
-                        if self.output_type == 'loss_curves':
-                            self.style_curves()
-                        elif self.output_type == 'loss_maps':
-                            self.style_maps()
-            else:
-                with WaitCursorManager('Creating layer for '
-                                       ' realization "%s"...' % rlz,
-                                       self.iface):
-                    self.build_layer(rlz)
-        if self.npz_file is not None:
-            self.npz_file.close()
 
     def accept(self):
         if self.output_type in OQ_NPZ_LOADABLE_TYPES:
