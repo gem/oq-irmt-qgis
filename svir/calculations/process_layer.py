@@ -170,11 +170,12 @@ class ProcessLayer():
             description = 'Simulate add attributes'
         else:
             description = 'Add attributes'
+        aliases = dict()
+        proposed_attribute_dict = {}
+        proposed_attribute_list = []
         with LayerEditingManager(self.layer, description, DEBUG):
             # add attributes
             layer_pr = self.layer.dataProvider()
-            proposed_attribute_dict = {}
-            proposed_attribute_list = []
             for input_attribute in attribute_list:
                 input_attribute_name = input_attribute.name()
                 if self.layer.providerType() == 'ogr':
@@ -209,12 +210,21 @@ class ProcessLayer():
                         input_attribute.setName(proposed_attribute_name)
                         proposed_attribute_list.append(input_attribute)
                         break
+                if proposed_attribute_name != input_attribute_name:
+                    aliases[proposed_attribute_name] = input_attribute_name
             if not simulate:
                 added_ok = layer_pr.addAttributes(proposed_attribute_list)
                 if not added_ok:
                     raise AttributeError(
                         'Unable to add attributes %s' %
                         proposed_attribute_list)
+        with LayerEditingManager(self.layer, 'add aliases', DEBUG):
+            if not simulate:
+                for proposed_attribute_name in aliases:
+                    attribute_id = self.layer.fieldNameIndex(
+                        proposed_attribute_name)
+                    self.layer.addAttributeAlias(
+                        attribute_id, aliases[proposed_attribute_name])
         return proposed_attribute_dict
 
     def delete_attributes(self, attribute_list):
