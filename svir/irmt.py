@@ -553,14 +553,16 @@ class Irmt:
                             result,
                             load_geometries,
                             dest_filename,
-                            project_definition))
+                            project_definition,
+                            dlg.indicators_info_dict))
                     start_worker(worker, self.iface.messageBar(),
                                  'Downloading data from platform')
         except SvNetworkError as e:
             log_msg(str(e), level='C', message_bar=self.iface.messageBar())
 
     def _data_download_successful(
-            self, result, load_geometries, dest_filename, project_definition):
+            self, result, load_geometries, dest_filename, project_definition,
+            indicators_info_dict):
         """
         Called once the DonloadPlatformDataWorker has successfully downloaded
         socioeconomic data as a csv file.
@@ -574,6 +576,8 @@ class Irmt:
             containing the downloaded data
         :param project_definition: the project definition that was
             automatically built based on the DB structure
+        :param indicators_info_dict:
+            dict ind_code -> dict with additional info about it
         """
         fname, msg = result
         display_msg = tr("Socioeconomic data loaded in a new layer")
@@ -630,6 +634,18 @@ class Irmt:
             'project_definitions': [project_definition]}
         write_layer_suppl_info_to_qgs(layer.id(), suppl_info)
         self.update_actions_status()
+
+        # assign ind_name as alias for each ind_code
+        for field_idx, field in enumerate(layer.fields()):
+            if field.name() in indicators_info_dict:
+                layer.addAttributeAlias(
+                    field_idx, indicators_info_dict[field.name()]['name'])
+            elif field.name() == 'ISO':
+                layer.addAttributeAlias(
+                    field_idx, 'Country ISO code')
+            elif field.name() == 'COUNTRY_NA':
+                layer.addAttributeAlias(
+                    field_idx, 'Country name')
 
     def download_layer(self):
         """
