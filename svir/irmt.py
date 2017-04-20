@@ -1158,7 +1158,9 @@ class Irmt:
                 elif dlg.fields_multiselect.selected_widget.count() == 1:
                     target_attr_name = dlg.new_field_name_txt.text()
                 else:
-                    target_attr_name = ('_' + input_attr_name)[:10]
+                    # the limit of 10 chars for shapefiles is handled by
+                    # ProcessLayer.add_attributes
+                    target_attr_name = '_' + input_attr_name
                 try:
                     msg = "Applying '%s' transformation to field '%s'" % (
                         algorithm_name, input_attr_name)
