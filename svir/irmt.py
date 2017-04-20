@@ -1140,11 +1140,19 @@ class Irmt:
         dlg = TransformationDialog(self.iface)
         if dlg.exec_():
             layer = self.iface.activeLayer()
-            input_attr_names = dlg.fields_multiselect.get_selected_items()
+            input_attr_names = [
+                field_name_plus_alias.split('(')[0].strip()
+                for field_name_plus_alias in
+                dlg.fields_multiselect.get_selected_items()]
+            input_attr_aliases = [
+                field_name_plus_alias.split('(')[1].split(')')[0].strip()
+                for field_name_plus_alias in
+                dlg.fields_multiselect.get_selected_items()]
             algorithm_name = dlg.algorithm_cbx.currentText()
             variant = dlg.variant_cbx.currentText()
             inverse = dlg.inverse_ckb.isChecked()
-            for input_attr_name in input_attr_names:
+            for input_attr_idx, input_attr_name in enumerate(input_attr_names):
+                target_attr_alias = input_attr_aliases[input_attr_idx]
                 if dlg.overwrite_ckb.isChecked():
                     target_attr_name = input_attr_name
                 elif dlg.fields_multiselect.selected_widget.count() == 1:
@@ -1160,7 +1168,8 @@ class Irmt:
                                                        algorithm_name,
                                                        variant,
                                                        inverse,
-                                                       target_attr_name)
+                                                       target_attr_name,
+                                                       target_attr_alias)
                     msg = ('Transformation %s has been applied to attribute %s'
                            ' of layer %s.') % (algorithm_name,
                                                input_attr_name,
@@ -1171,7 +1180,8 @@ class Irmt:
                     else:
                         msg += (' The results of the transformation'
                                 ' have been saved into the new'
-                                ' attribute %s.') % (res_attr_name)
+                                ' attribute %s (%s).') % (res_attr_name,
+                                                          target_attr_alias)
                     if invalid_input_values:
                         msg += (' The transformation could not'
                                 ' be performed for the following'

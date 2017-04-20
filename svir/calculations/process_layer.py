@@ -257,7 +257,8 @@ class ProcessLayer():
 
     def transform_attribute(
             self, input_attr_name, algorithm_name, variant="",
-            inverse=False, new_attr_name=None, simulate=False):
+            inverse=False, new_attr_name=None, new_attr_alias=None,
+            simulate=False):
         """
         Use one of the available transformation algorithms to transform an
         attribute of the layer, and add a new attribute with the
@@ -272,6 +273,8 @@ class ProcessLayer():
                               results of the transformation (if it is equal to
                               the input_attr_name, the attribute will be
                               overwritten)
+        :param new_attr_alias: alias of the target attribute that will store
+                               ther results of the transformation
         :param simulate: if True, the method will just simulate the creation
                          of the target attribute and return the name that would
                          be assigned to it
@@ -332,6 +335,9 @@ class ProcessLayer():
             actual_new_attr_name = attr_names_dict[new_attr_name]
             # get the id of the new attribute
             new_attr_id = self.find_attribute_id(actual_new_attr_name)
+        if new_attr_alias:
+            with LayerEditingManager(self.layer, 'add alias', DEBUG):
+                self.layer.addAttributeAlias(new_attr_id, new_attr_alias)
 
         with LayerEditingManager(
                 self.layer, 'Write transformed values', DEBUG):
