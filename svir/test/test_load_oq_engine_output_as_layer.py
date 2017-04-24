@@ -30,7 +30,18 @@ import filecmp
 
 from PyQt4.QtGui import QAction
 from qgis.core import QgsMapLayerRegistry, QgsVectorLayer
-from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
+from svir.dialogs.load_dmg_by_asset_as_layer_dialog import (
+    LoadDmgByAssetAsLayerDialog)
+from svir.dialogs.load_ruptures_as_layer_dialog import (
+    LoadRupturesAsLayerDialog)
+from svir.dialogs.load_hmaps_as_layer_dialog import (
+    LoadHazardMapsAsLayerDialog)
+from svir.dialogs.load_hcurves_as_layer_dialog import (
+    LoadHazardCurvesAsLayerDialog)
+from svir.dialogs.load_gmf_data_as_layer_dialog import (
+    LoadGmfDataAsLayerDialog)
+from svir.dialogs.load_uhs_as_layer_dialog import (
+    LoadUhsAsLayerDialog)
 from svir.dialogs.viewer_dock import ViewerDock
 from svir.calculations.process_layer import ProcessLayer
 from utilities import get_qgis_app
@@ -54,21 +65,21 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
     def test_load_hazard_map(self):
         filepath = os.path.join(
             self.data_dir_name, 'hazard', 'output-182-hmaps_67.npz')
-        dlg = LoadOutputAsLayerDialog(IFACE, 'hmaps', filepath)
+        dlg = LoadHazardMapsAsLayerDialog(IFACE, 'hmaps', filepath)
         dlg.accept()
         # hazard maps have nothing to do with the Data Viewer
 
     def test_load_gmf(self):
         filepath = os.path.join(self.data_dir_name, 'hazard',
                                 'output-195-gmf_data_70.npz')
-        dlg = LoadOutputAsLayerDialog(IFACE, 'gmf_data', filepath)
+        dlg = LoadGmfDataAsLayerDialog(IFACE, 'gmf_data', filepath)
         dlg.accept()
         # ground motion fields have nothing to do with the Data Viewer
 
     def test_load_hazard_curves(self):
         filepath = os.path.join(self.data_dir_name, 'hazard',
                                 'output-181-hcurves_67.npz')
-        dlg = LoadOutputAsLayerDialog(IFACE, 'hcurves', filepath)
+        dlg = LoadHazardCurvesAsLayerDialog(IFACE, 'hcurves', filepath)
         dlg.accept()
         self._set_output_type('Hazard Curves')
         self._change_selection()
@@ -89,7 +100,7 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
     def test_load_uhs_only_selected_poe(self):
         filepath = os.path.join(self.data_dir_name, 'hazard',
                                 'output-184-uhs_67.npz')
-        dlg = LoadOutputAsLayerDialog(IFACE, 'uhs', filepath)
+        dlg = LoadUhsAsLayerDialog(IFACE, 'uhs', filepath)
         dlg.load_selected_only_ckb.setChecked(True)
         idx = dlg.poe_cbx.findText('0.02')
         self.assertEqual(idx, 1, 'POE 0.02 was not found')
@@ -103,7 +114,7 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
     def test_load_uhs_all(self):
         filepath = os.path.join(self.data_dir_name, 'hazard',
                                 'output-184-uhs_67.npz')
-        dlg = LoadOutputAsLayerDialog(IFACE, 'uhs', filepath)
+        dlg = LoadUhsAsLayerDialog(IFACE, 'uhs', filepath)
         dlg.load_selected_only_ckb.setChecked(False)
         dlg.accept()
         # FIXME: setActiveLayer is not working. As a workaround, I am deleting
@@ -121,11 +132,11 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
         filepath = os.path.join(
             self.data_dir_name, 'risk',
             'output-308-dmg_by_asset-ChiouYoungs2008()_103.csv')
-        dlg = LoadOutputAsLayerDialog(
+        dlg = LoadDmgByAssetAsLayerDialog(
             IFACE, 'dmg_by_asset', filepath, mode='testing')
         dlg.save_as_shp_ckb.setChecked(True)
         idx = dlg.dmg_state_cbx.findText('complete')
-        self.assertEqual(idx, 2, '"complete" damage state was not found')
+        self.assertEqual(idx, 4, '"complete" damage state was not found')
         dlg.dmg_state_cbx.setCurrentIndex(idx)
         idx = dlg.loss_type_cbx.findText('structural')
         self.assertEqual(idx, 0, '"structural" loss_type was not found')
@@ -141,7 +152,7 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
     def test_load_ruptures(self):
         filepath = os.path.join(
             self.data_dir_name, 'hazard', 'output-316-ruptures_104.csv')
-        dlg = LoadOutputAsLayerDialog(
+        dlg = LoadRupturesAsLayerDialog(
             IFACE, 'ruptures', filepath, mode='testing')
         dlg.save_as_shp_ckb.setChecked(True)
         dlg.accept()

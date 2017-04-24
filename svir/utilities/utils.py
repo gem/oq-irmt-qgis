@@ -26,19 +26,21 @@ import collections
 import json
 import os
 import locale
+import qgis
 from copy import deepcopy
 from time import time
 from pprint import pformat
 from qgis.core import (QgsMapLayerRegistry,
                        QgsProject,
                        QgsMessageLog,
+                       QgsVectorLayer,
                        QgsVectorFileWriter,
                        QgsGraduatedSymbolRendererV2
                        )
 from qgis.gui import QgsMessageBar
 
 from PyQt4 import uic
-from PyQt4.QtCore import Qt, QSettings
+from PyQt4.QtCore import Qt, QSettings, QUrl
 from PyQt4.QtGui import (QApplication,
                          QProgressBar,
                          QToolButton,
@@ -877,3 +879,61 @@ def clear_widgets_from_layout(layout):
         if widget is not None:
             # a widget is deleted when it does not have a parent
             widget.setParent(None)
+
+
+def import_layer_from_csv(parent,
+                          csv_path,
+                          layer_name,
+                          message_bar,
+                          longitude_field='lon',
+                          latitude_field='lat',
+                          delimiter=',',
+                          quote='"',
+                          lines_to_skip_count=0,
+                          wkt_field=None,
+                          save_as_shp=False,
+                          dest_shp=None,
+                          zoom_to_layer=True):
+    url = QUrl.fromLocalFile(csv_path)
+    url.addQueryItem('type', 'csv')
+    if wkt_field is not None:
+        url.addQueryItem('wktField', wkt_field)
+    else:
+        url.addQueryItem('xField', longitude_field)
+        url.addQueryItem('yField', latitude_field)
+    url.addQueryItem('spatialIndex', 'no')
+    url.addQueryItem('subsetIndex', 'no')
+    url.addQueryItem('watchFile', 'no')
+    url.addQueryItem('delimiter', delimiter)
+    url.addQueryItem('quote', quote)
+    url.addQueryItem('crs', 'epsg:4326')
+    url.addQueryItem('skipLines', str(lines_to_skip_count))
+    url.addQueryItem('trimFields', 'yes')
+    layer_uri = str(url.toEncoded())
+    layer = QgsVectorLayer(layer_uri, layer_name, "delimitedtext")
+    if save_as_shp:
+        dest_filename = dest_shp or QFileDialog.getSaveFileName(
+            parent,
+            'Save loss shapefile as...',
+            os.path.expanduser("~"),
+            'Shapefiles (*.shp)')
+        if dest_filename:
+            if dest_filename[-4:] != ".shp":
+                dest_filename += ".shp"
+        else:
+            return
+        result = save_layer_as_shapefile(layer, dest_filename)
+        if result != QgsVectorFileWriter.NoError:
+            raise RuntimeError('Could not save shapefile')
+        layer = QgsVectorLayer(dest_filename, layer_name, 'ogr')
+    if layer.isValid():
+        QgsMapLayerRegistry.instance().addMapLayer(layer)
+        if zoom_to_layer:
+            qgis.utils.iface.setActiveLayer(layer)
+            qgis.utils.iface.zoomToActiveLayer()
+
+    else:
+        msg = 'Unable to load layer'
+        log_msg(msg, level='C', message_bar=message_bar)
+        return None
+    return layer
