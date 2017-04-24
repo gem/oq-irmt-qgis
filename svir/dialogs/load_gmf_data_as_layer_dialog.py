@@ -106,6 +106,10 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         return layer_name
 
     def get_field_names(self, **kwargs):
+        # NOTE: we need a list instead of a tuple, because we want to be able
+        #       to modify the list afterwards, to keep track of the actual
+        #       field names created in the layer, that might be laundered to be
+        #       compliant with shapefiles constraints
         field_names = list(self.dataset.dtype.names)
         return field_names
 
