@@ -39,7 +39,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
     """
 
     def __init__(self, iface, output_type='gmf_data', path=None, mode=None):
-        assert(output_type == 'gmf_data')
+        assert output_type == 'gmf_data'
         LoadOutputAsLayerDialog.__init__(self, iface, output_type, path, mode)
         self.setWindowTitle(
             'Load ground motion fields from NPZ, as layer')
@@ -106,6 +106,10 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         return layer_name
 
     def get_field_names(self, **kwargs):
+        # NOTE: we need a list instead of a tuple, because we want to be able
+        #       to modify the list afterwards, to keep track of the actual
+        #       field names created in the layer, that might be laundered to be
+        #       compliant with shapefiles constraints
         field_names = list(self.dataset.dtype.names)
         return field_names
 

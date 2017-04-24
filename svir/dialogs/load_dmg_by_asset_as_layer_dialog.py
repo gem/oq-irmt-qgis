@@ -25,7 +25,7 @@
 import csv
 import tempfile
 from PyQt4.QtCore import pyqtSlot
-from svir.utilities.utils import import_layer_from_csv
+from svir.utilities.utils import import_layer_from_csv, log_msg
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 
 
@@ -36,7 +36,7 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
 
     def __init__(
             self, iface, output_type='dmg_by_asset', path=None, mode=None):
-        assert(output_type == 'dmg_by_asset')
+        assert output_type == 'dmg_by_asset'
         LoadOutputAsLayerDialog.__init__(self, iface, output_type, path, mode)
         self.create_dmg_state_selector()
         self.create_loss_type_selector()
@@ -72,10 +72,17 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             zoom_to_layer=zoom_to_layer)
         dmg_state = self.dmg_state_cbx.currentText()
         loss_type = self.loss_type_cbx.currentText()
-        field_idx = -1  # default
+        field_idx = None
         for idx, name in enumerate(self.csv_header):
             if dmg_state in name and loss_type in name and 'mean' in name:
                 field_idx = idx
+                break
+        if field_idx is None:
+            msg = ('Unable to style the layer, because the header of the csv'
+                   ' file does not contain any field corresponding to the'
+                   ' chosen damage state and loss type.')
+            log_msg(msg, level='C', message_bar=self.iface.messageBar())
+            return
         self.default_field_name = self.layer.fields()[field_idx].name()
         self.style_maps()
 
@@ -83,14 +90,25 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         with open(self.path, "rb") as source:
             reader = csv.reader(source)
             self.csv_header = reader.next()
-            # ignore asset_ref, taxonomy, lon, lat
+            # the header looks like:
+            # asset_ref,taxonomy,lon,lat,structural~no_damage_mean,
+            #    structural~no_damage_stdv,structural~slight_mean,
+            #    structural~slight_stdv,...
+            # we will ignore: asset_ref, taxonomy, lon, lat
             names = self.csv_header[4:]
-            # extract from column names such as: structural~no_damage_mean
-            loss_types = set([name.split('~')[0] for name in names])
-            dmg_states = set(['_'.join(name.split('~')[1].split('_')[:-1])
-                              for name in names])
-            self.populate_loss_type_cbx(list(loss_types))
-            self.populate_dmg_state_cbx(list(dmg_states))
+            loss_types = []
+            dmg_states = []
+            for name in names:
+                # each name looks like: structural~no_damage_mean
+                loss_type, dmg_state_plus_stat = name.split('~')
+                # dmg_state_plus_stat looks like: no_damage_mean
+                dmg_state, _ = dmg_state_plus_stat.rsplit('_', 1)
+                if loss_type not in loss_types:
+                    loss_types.append(loss_type)
+                if dmg_state not in dmg_states:
+                    dmg_states.append(dmg_state)
+            self.populate_loss_type_cbx(loss_types)
+            self.populate_dmg_state_cbx(dmg_states)
 
     # def populate_taxonomies(self):
     #     # TODO: change as soon as npz risk outputs are available

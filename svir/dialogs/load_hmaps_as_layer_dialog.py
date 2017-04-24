@@ -39,7 +39,7 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
     """
 
     def __init__(self, iface, output_type='hmaps', path=None, mode=None):
-        assert(output_type == 'hmaps')
+        assert output_type == 'hmaps'
         LoadOutputAsLayerDialog.__init__(self, iface, output_type, path, mode)
         self.setWindowTitle(
             'Load hazard maps from NPZ, as layer')
