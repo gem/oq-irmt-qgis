@@ -22,6 +22,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
+import numpy
 import collections
 import json
 import os
@@ -50,6 +51,8 @@ from PyQt4.QtGui import (QApplication,
 
 from svir.third_party.poster.encode import multipart_encode
 from svir.utilities.shared import DEBUG
+
+F32 = numpy.float32
 
 _IRMT_VERSION = None
 
@@ -937,3 +940,20 @@ def import_layer_from_csv(parent,
         log_msg(msg, level='C', message_bar=message_bar)
         return None
     return layer
+
+
+def groupby(npz, rlz, loss_type, taxonomy='All'):
+    # example:
+    # npz = numpy.load(npzfname)
+    # print(groupby(npz, 'rlz-000', 'structural_ins', '"tax1"'))
+    loss_by_site = collections.defaultdict(float)  # lon, lat -> loss
+    for rec in npz[rlz]:
+        if taxonomy == 'All' or taxonomy == rec['taxonomy']:
+            loss_by_site[rec['lon'], rec['lat']] += rec[loss_type]
+    import pdb
+    pdb.set_trace()
+    data = numpy.zeros(len(loss_by_site),
+                       [('lon', F32), ('lat', F32), (loss_type, F32)])
+    for i, (lon, lat) in enumerate(sorted(loss_by_site)):
+        data[i] = (lon, lat, loss_by_site[lon, lat])
+    return data

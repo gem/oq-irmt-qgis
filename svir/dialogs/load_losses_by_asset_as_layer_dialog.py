@@ -23,17 +23,15 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import numpy
-import collections
 from qgis.core import QgsFeature, QgsGeometry, QgsPoint
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 from svir.calculations.calculate_utils import add_numeric_attribute
 from svir.utilities.utils import (WaitCursorManager,
                                   LayerEditingManager,
                                   log_msg,
+                                  groupby,
                                   )
 from svir.utilities.shared import DEBUG
-
-F32 = numpy.float32
 
 
 class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
@@ -43,7 +41,7 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
 
     def __init__(
             self, iface, output_type='losses_by_asset', path=None, mode=None):
-        assert(output_type == 'losses_by_asset')
+        assert output_type == 'losses_by_asset'
         LoadOutputAsLayerDialog.__init__(self, iface, output_type, path, mode)
         self.setWindowTitle(
             'Load losses by asset from NPZ, aggregated by location, as layer')
@@ -101,13 +99,6 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         added_field_name = add_numeric_attribute(
             field_name, self.layer)
         return added_field_name
-        # NOTE: if we want to load everything
-        # if 'string' in self.dataset[field_name].dtype.name:
-        #     added_field_name = add_textual_attribute(
-        #         field_name, self.layer)
-        # else:
-        #     added_field_name = add_numeric_attribute(
-        #         field_name, self.layer)
 
     def read_npz_into_layer(self, field_names, **kwargs):
         rlz = kwargs['rlz']
@@ -115,7 +106,7 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         taxonomy = kwargs['taxonomy']
         with LayerEditingManager(self.layer, 'Reading npz', DEBUG):
             feats = []
-            grouped_by_site = self.groupby(
+            grouped_by_site = groupby(
                 self.npz_file, rlz, loss_type, taxonomy)
             for row in grouped_by_site:
                 # add a feature
@@ -128,26 +119,6 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                 feat.setGeometry(QgsGeometry.fromPoint(
                     QgsPoint(row['lon'], row['lat'])))
                 feats.append(feat)
-            # NOTE: to download the whole data not grouped by location
-            # loss_type = self.loss_type_cbx.currentText()
-            # tdata = self.groupby(self.npz_file, rlz, loss_type, taxonomy)
-            # for row in self.dataset:
-            #     if (taxonomy != 'All' and row['taxonomy'] != taxonomy):
-            #         continue
-            #     # add a feature
-            #     feat = QgsFeature(self.layer.pendingFields())
-            #     for field_name_idx, field_name in enumerate(
-            #             orig_field_names):
-            #         if field_name in ['lon', 'lat']:
-            #             continue
-            #         if 'string' in self.dataset[field_name].dtype.name:
-            #             value = str(row[field_name_idx])
-            #         else:
-            #             value = float(row[field_name_idx])
-            #         feat.setAttribute(field_names[field_name_idx], value)
-            #     feat.setGeometry(QgsGeometry.fromPoint(
-            #         QgsPoint(row['lon'], row['lat'])))
-            #     feats.append(feat)
             added_ok = self.layer.addFeatures(feats, makeSelected=False)
             if not added_ok:
                 msg = 'There was a problem adding features to the layer.'
@@ -179,17 +150,3 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                         #     self.style_maps()
         if self.npz_file is not None:
             self.npz_file.close()
-
-    def groupby(self, npz, rlz, loss_type, taxonomy='All'):
-        # example:
-        # npz = numpy.load(npzfname)
-        # print(self.groupby(npz, 'rlz-000', 'structural_ins', '"tax1"'))
-        loss_by_site = collections.defaultdict(float)  # lon, lat -> loss
-        for rec in npz[rlz]:
-            if taxonomy == 'All' or taxonomy == rec['taxonomy']:
-                loss_by_site[rec['lon'], rec['lat']] += rec[loss_type]
-        data = numpy.zeros(len(loss_by_site),
-                           [('lon', F32), ('lat', F32), (str(loss_type), F32)])
-        for i, (lon, lat) in enumerate(sorted(loss_by_site)):
-            data[i] = (lon, lat, loss_by_site[lon, lat])
-        return data
