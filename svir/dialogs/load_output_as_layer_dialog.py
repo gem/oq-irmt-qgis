@@ -72,7 +72,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             raise NotImplementedError(output_type)
         self.iface = iface
         self.path = path
-        # self.npz_file = None
         self.output_type = output_type
         self.mode = mode  # if 'testing' it will avoid some user interaction
         QDialog.__init__(self)
