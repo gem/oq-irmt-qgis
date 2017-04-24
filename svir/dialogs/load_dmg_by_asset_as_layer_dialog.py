@@ -25,7 +25,7 @@
 import csv
 import tempfile
 from PyQt4.QtCore import pyqtSlot
-from svir.utilities.utils import import_layer_from_csv
+from svir.utilities.utils import import_layer_from_csv, log_msg
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 
 
@@ -72,10 +72,17 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             zoom_to_layer=zoom_to_layer)
         dmg_state = self.dmg_state_cbx.currentText()
         loss_type = self.loss_type_cbx.currentText()
-        field_idx = -1  # default
+        field_idx = None
         for idx, name in enumerate(self.csv_header):
             if dmg_state in name and loss_type in name and 'mean' in name:
                 field_idx = idx
+                break
+        if field_idx is None:
+            msg = ('Unable to style the layer, because the header of the csv'
+                   ' file does not contain any field corresponding to the'
+                   ' chosen damage state and loss type.')
+            log_msg(msg, level='C', message_bar=self.iface.messageBar())
+            return
         self.default_field_name = self.layer.fields()[field_idx].name()
         self.style_maps()
 
