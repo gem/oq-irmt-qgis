@@ -40,7 +40,7 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
     """
 
     def __init__(self, iface, output_type='uhs', path=None, mode=None):
-        assert(output_type == 'uhs')
+        assert output_type == 'uhs'
         LoadOutputAsLayerDialog.__init__(self, iface, output_type, path, mode)
         self.setWindowTitle(
             'Load uniform hazard spectra from NPZ, as layer')

@@ -40,7 +40,7 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
     """
 
     def __init__(self, iface, output_type='hcurves', path=None, mode=None):
-        assert(output_type == 'hcurves')
+        assert output_type == 'hcurves'
         LoadOutputAsLayerDialog.__init__(self, iface, output_type, path, mode)
         self.setWindowTitle(
             'Load hazard curves from NPZ, as layer')

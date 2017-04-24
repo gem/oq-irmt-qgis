@@ -36,7 +36,7 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
 
     def __init__(
             self, iface, output_type='dmg_by_asset', path=None, mode=None):
-        assert(output_type == 'dmg_by_asset')
+        assert output_type == 'dmg_by_asset'
         LoadOutputAsLayerDialog.__init__(self, iface, output_type, path, mode)
         self.create_dmg_state_selector()
         self.create_loss_type_selector()

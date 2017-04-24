@@ -100,8 +100,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.output_dep_vlayout.addLayout(self.rlz_h_layout)
 
     def create_imt_selector(self):
-        self.imt_lbl = QLabel(
-            'Intensity Measure Type')
+        self.imt_lbl = QLabel('Intensity Measure Type')
         self.imt_cbx = QComboBox()
         self.imt_cbx.setEnabled(False)
         self.imt_cbx.currentIndexChanged['QString'].connect(
@@ -110,8 +109,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.output_dep_vlayout.addWidget(self.imt_cbx)
 
     def create_poe_selector(self):
-        self.poe_lbl = QLabel(
-            'Probability of Exceedance')
+        self.poe_lbl = QLabel('Probability of Exceedance')
         self.poe_cbx = QComboBox()
         self.poe_cbx.setEnabled(False)
         self.poe_cbx.currentIndexChanged['QString'].connect(
@@ -120,8 +118,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.output_dep_vlayout.addWidget(self.poe_cbx)
 
     def create_loss_type_selector(self):
-        self.loss_type_lbl = QLabel(
-            'Loss Type')
+        self.loss_type_lbl = QLabel('Loss Type')
         self.loss_type_cbx = QComboBox()
         self.loss_type_cbx.setEnabled(False)
         self.loss_type_cbx.currentIndexChanged['QString'].connect(
@@ -130,16 +127,14 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.output_dep_vlayout.addWidget(self.loss_type_cbx)
 
     def create_eid_selector(self):
-        self.eid_lbl = QLabel(
-            'Event ID')
+        self.eid_lbl = QLabel('Event ID')
         self.eid_sbx = QSpinBox()
         self.eid_sbx.setEnabled(False)
         self.output_dep_vlayout.addWidget(self.eid_lbl)
         self.output_dep_vlayout.addWidget(self.eid_sbx)
 
     def create_dmg_state_selector(self):
-        self.dmg_state_lbl = QLabel(
-            'Damage state')
+        self.dmg_state_lbl = QLabel('Damage state')
         self.dmg_state_cbx = QComboBox()
         self.dmg_state_cbx.setEnabled(False)
         self.dmg_state_cbx.currentIndexChanged['QString'].connect(

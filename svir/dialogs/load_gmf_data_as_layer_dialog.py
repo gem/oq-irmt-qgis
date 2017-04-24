@@ -39,7 +39,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
     """
 
     def __init__(self, iface, output_type='gmf_data', path=None, mode=None):
-        assert(output_type == 'gmf_data')
+        assert output_type == 'gmf_data'
         LoadOutputAsLayerDialog.__init__(self, iface, output_type, path, mode)
         self.setWindowTitle(
             'Load ground motion fields from NPZ, as layer')
