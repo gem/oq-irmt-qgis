@@ -950,8 +950,6 @@ def groupby(npz, rlz, loss_type, taxonomy='All'):
     for rec in npz[rlz]:
         if taxonomy == 'All' or taxonomy == rec['taxonomy']:
             loss_by_site[rec['lon'], rec['lat']] += rec[loss_type]
-    import pdb
-    pdb.set_trace()
     data = numpy.zeros(len(loss_by_site),
                        [('lon', F32), ('lat', F32), (loss_type, F32)])
     for i, (lon, lat) in enumerate(sorted(loss_by_site)):
