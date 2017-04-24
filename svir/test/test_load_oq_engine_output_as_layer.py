@@ -136,7 +136,7 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
             IFACE, 'dmg_by_asset', filepath, mode='testing')
         dlg.save_as_shp_ckb.setChecked(True)
         idx = dlg.dmg_state_cbx.findText('complete')
-        self.assertEqual(idx, 2, '"complete" damage state was not found')
+        self.assertEqual(idx, 4, '"complete" damage state was not found')
         dlg.dmg_state_cbx.setCurrentIndex(idx)
         idx = dlg.loss_type_cbx.findText('structural')
         self.assertEqual(idx, 0, '"structural" loss_type was not found')
