@@ -90,12 +90,21 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         with open(self.path, "rb") as source:
             reader = csv.reader(source)
             self.csv_header = reader.next()
-            # ignore asset_ref, taxonomy, lon, lat
+            # the header looks like:
+            # asset_ref,taxonomy,lon,lat,structural~no_damage_mean,
+            #    structural~no_damage_stdv,structural~slight_mean,
+            #    structural~slight_stdv,...
+            # we will ignore: asset_ref, taxonomy, lon, lat
             names = self.csv_header[4:]
-            # extract from column names such as: structural~no_damage_mean
-            loss_types = set([name.split('~')[0] for name in names])
-            dmg_states = set(['_'.join(name.split('~')[1].split('_')[:-1])
-                              for name in names])
+            loss_types = set()
+            dmg_states = set()
+            for name in names:
+                # each name looks like: structural~no_damage_mean
+                loss_type, dmg_state_plus_stat = name.split('~')
+                # dmg_state_plus_stat looks like: no_damage_mean
+                dmg_state, _ = dmg_state_plus_stat.rsplit('_', 1)
+                loss_types.add(loss_type)
+                dmg_states.add(dmg_state)
             self.populate_loss_type_cbx(list(loss_types))
             self.populate_dmg_state_cbx(list(dmg_states))
 
