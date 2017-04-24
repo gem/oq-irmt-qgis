@@ -82,6 +82,8 @@ from svir.dialogs.load_gmf_data_as_layer_dialog import (
     LoadGmfDataAsLayerDialog)
 from svir.dialogs.load_uhs_as_layer_dialog import (
     LoadUhsAsLayerDialog)
+from svir.dialogs.load_losses_by_asset_as_layer_dialog import (
+    LoadLossesByAssetAsLayerDialog)
 
 from svir.thread_worker.abstract_worker import start_worker
 from svir.thread_worker.download_platform_data_worker import (
@@ -282,6 +284,13 @@ class Irmt:
                            enable=True,
                            submenu='OQ Engine')
 
+        self.add_menu_item("load_losses_by_asset_as_layer",
+                           ":/plugins/irmt/calculate.svg",  # FIXME
+                           u"Load losses by asset as layer",
+                           self.load_losses_by_asset_as_layer,
+                           enable=True,
+                           submenu='OQ Engine')
+
         # Action to activate the modal dialog to select a layer and one
         # of its
         # attributes, in order to transform that attribute
@@ -355,6 +364,10 @@ class Irmt:
         dlg = LoadUhsAsLayerDialog(self.iface, 'uhs')
         dlg.exec_()
         self.viewer_dock.change_output_type(dlg.output_type)
+
+    def load_losses_by_asset_as_layer(self):
+        dlg = LoadLossesByAssetAsLayerDialog(self.iface, 'losses_by_asset')
+        dlg.exec_()
 
     # These 2 will have to be addressed when managing risk outputs
     # def plot_dmg_total_from_npz(self):

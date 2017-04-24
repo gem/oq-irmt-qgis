@@ -73,6 +73,8 @@ from svir.dialogs.load_hcurves_as_layer_dialog import (
     LoadHazardCurvesAsLayerDialog)
 from svir.dialogs.load_uhs_as_layer_dialog import (
     LoadUhsAsLayerDialog)
+from svir.dialogs.load_losses_by_asset_as_layer_dialog import (
+    LoadLossesByAssetAsLayerDialog)
 from svir.dialogs.show_full_report_dialog import ShowFullReportDialog
 
 FORM_CLASS = get_ui_class('ui_drive_engine_server.ui')
@@ -498,7 +500,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     'gmf_data': LoadGmfDataAsLayerDialog,
                     'hmaps': LoadHazardMapsAsLayerDialog,
                     'hcurves': LoadHazardCurvesAsLayerDialog,
-                    'uhs': LoadUhsAsLayerDialog}
+                    'uhs': LoadUhsAsLayerDialog,
+                    'losses_by_asset': LoadLossesByAssetAsLayerDialog}
                 if output_type not in output_type_loaders:
                     raise NotImplementedError(output_type)
                 dlg = output_type_loaders[output_type](
