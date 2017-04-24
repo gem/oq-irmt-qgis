@@ -96,17 +96,19 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             #    structural~slight_stdv,...
             # we will ignore: asset_ref, taxonomy, lon, lat
             names = self.csv_header[4:]
-            loss_types = set()
-            dmg_states = set()
+            loss_types = []
+            dmg_states = []
             for name in names:
                 # each name looks like: structural~no_damage_mean
                 loss_type, dmg_state_plus_stat = name.split('~')
                 # dmg_state_plus_stat looks like: no_damage_mean
                 dmg_state, _ = dmg_state_plus_stat.rsplit('_', 1)
-                loss_types.add(loss_type)
-                dmg_states.add(dmg_state)
-            self.populate_loss_type_cbx(list(loss_types))
-            self.populate_dmg_state_cbx(list(dmg_states))
+                if loss_type not in loss_types:
+                    loss_types.append(loss_type)
+                if dmg_state not in dmg_states:
+                    dmg_states.append(dmg_state)
+            self.populate_loss_type_cbx(loss_types)
+            self.populate_dmg_state_cbx(dmg_states)
 
     # def populate_taxonomies(self):
     #     # TODO: change as soon as npz risk outputs are available
