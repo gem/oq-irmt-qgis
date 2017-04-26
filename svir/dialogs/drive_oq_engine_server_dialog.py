@@ -61,7 +61,20 @@ from svir.utilities.utils import (WaitCursorManager,
                                   get_ui_class,
                                   SvNetworkError,
                                   )
-from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
+from svir.dialogs.load_ruptures_as_layer_dialog import (
+    LoadRupturesAsLayerDialog)
+from svir.dialogs.load_dmg_by_asset_as_layer_dialog import (
+    LoadDmgByAssetAsLayerDialog)
+from svir.dialogs.load_gmf_data_as_layer_dialog import (
+    LoadGmfDataAsLayerDialog)
+from svir.dialogs.load_hmaps_as_layer_dialog import (
+    LoadHazardMapsAsLayerDialog)
+from svir.dialogs.load_hcurves_as_layer_dialog import (
+    LoadHazardCurvesAsLayerDialog)
+from svir.dialogs.load_uhs_as_layer_dialog import (
+    LoadUhsAsLayerDialog)
+from svir.dialogs.load_losses_by_asset_as_layer_dialog import (
+    LoadLossesByAssetAsLayerDialog)
 from svir.dialogs.show_full_report_dialog import ShowFullReportDialog
 
 FORM_CLASS = get_ui_class('ui_drive_engine_server.ui')
@@ -481,7 +494,17 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             if outtype in ('npz', 'csv'):
                 filepath = self.download_output(
                     output_id, outtype, dest_folder)
-                dlg = LoadOutputAsLayerDialog(
+                output_type_loaders = {
+                    'ruptures': LoadRupturesAsLayerDialog,
+                    'dmg_by_asset': LoadDmgByAssetAsLayerDialog,
+                    'gmf_data': LoadGmfDataAsLayerDialog,
+                    'hmaps': LoadHazardMapsAsLayerDialog,
+                    'hcurves': LoadHazardCurvesAsLayerDialog,
+                    'uhs': LoadUhsAsLayerDialog,
+                    'losses_by_asset': LoadLossesByAssetAsLayerDialog}
+                if output_type not in output_type_loaders:
+                    raise NotImplementedError(output_type)
+                dlg = output_type_loaders[output_type](
                     self.iface, output_type, filepath)
                 dlg.exec_()
             else:
