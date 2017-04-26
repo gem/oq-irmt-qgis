@@ -13,7 +13,7 @@ name=OpenQuake Integrated Risk Modelling Toolkit
 qgisMinimumVersion=2.14
 description=Tools to drive the OpenQuake Engine, to develop composite indicators and integrate them with physical risk estimations, and to predict building recovery times following an earthquake
 about=This plugin allows users to drive OpenQuake Engine calculations (https://github.com/gem/oq-engine) of physical hazard and risk, and to load the corresponding outputs as QGIS layers. For those outputs, data visualization tools are provided. The toolkit also enables users to develop composite indicators to measure and quantify social characteristics, and combine them with estimates of human or infrastructure loss. The plugin can interact with the OpenQuake Platform (https://platform.openquake.org), to browse and download socio-economic data or existing projects, edit projects locally in QGIS and upload and share them with the scientific community. A post-earthquake recovery modeling framework is incorporated into the toolkit, to produce building level and/or community level recovery functions.
-version=1.8.22
+version=1.8.23
 author=GEM Foundation
 email=staff.it@globalquakemodel.org
 
@@ -23,17 +23,20 @@ email=staff.it@globalquakemodel.org
 
 # Uncomment the following line and add your changelog entries:
 changelog=
-    1.8.22
-    * Added a sanity check on default colors stored in the settings, to make sure they are valid QColor objects
+    1.8.23
     * Added a checkbox to load from npz as layer only the selected items
     * Added a confirmation dialog to avoid removing oq-engine calculations by mistake
     * Added an error message in case a stored color setting is corrupted
     * The GUI displays the number of sites before loading a layer from NPZ
-    * One single dialog is used to load any of the oq-engine outputs that are currently loadable as layers
-    * Ruptures can be loaded automatically as layers
+    * Loaders for oq-engine outputs are build through a hierarchical structure
+    * Implemented loaders as layers for: ruptures, losses_by_asset
     * All the implemented loaders for oq-engine outputs are tested
     * Loaders from geojson have been replaced by loaders from npz
     * The full report of a oq-engine calculation can be visualized directly within the plugin
+    * Improvements to the user manual
+    * It is possible to continue risk calculations (e.g. postprocessing on top of a risk calculation)
+    1.8.22
+    * Added a sanity check on default colors stored in the settings, to make sure they are valid QColor objects
     1.8.21
     * Added tests for: importing hazard outputs from npz; selecting them with the Data Viewer; exporting selected data as csv.
     * Automatically add markers to uniform hazard spectra and hazard curves
