@@ -225,6 +225,7 @@ class Irmt:
                            self.weight_data,
                            enable=False,
                            add_to_layer_actions=True,
+                           add_to_toolbar=True,
                            submenu='Integrated risk')
         # Action to run the recovery analysis
         self.add_menu_item("recovery_modeling",
@@ -248,6 +249,7 @@ class Irmt:
                            self.aggregate_losses,
                            enable=True,
                            add_to_layer_actions=False,
+                           add_to_toolbar=True,
                            submenu='Utilities')
 
         self.add_menu_item("load_ruptures_as_layer",
