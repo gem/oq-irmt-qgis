@@ -42,6 +42,7 @@ from qgis.core import (QgsVectorLayer,
                        QgsExpression,
                        )
 from qgis.gui import QgsMessageBar
+from qgis.core import QgsVectorJoinInfo
 
 from PyQt4.QtCore import (QSettings,
                           QTranslator,
@@ -552,6 +553,23 @@ class Irmt:
         dlg.exec_()
         self.update_actions_status()
 
+    def join_geometries(self):
+        if self.imported_layers < 2:
+            return
+        layers = self.iface.legendInterface().layers()
+        no_geoms = [
+            l for l in layers if l.providerType() == 'delimitedtext'][0]
+        geoms = [l for l in layers if l.providerType() == 'ogr'][0]
+        geoms.dataProvider().deleteAttributes(range(1, len(geoms.fields())))
+        join_fieldname = 'ISO'
+        join_object = QgsVectorJoinInfo()
+        join_object.joinLayerId = no_geoms.id()
+        join_object.joinFieldName = join_fieldname
+        join_object.targetFieldName = join_fieldname
+        join_object.prefix = ""
+        geoms.addJoin(join_object)
+        log_msg("Joined!", message_bar=self.iface.messageBar())
+
     def import_sv_variables(self):
         """
         Open a modal dialog to select socioeconomic variables to
@@ -622,15 +640,29 @@ class Irmt:
 
                     assign_default_weights(svi_themes)
 
+                    self.imported_layers = 0
                     worker = DownloadPlatformDataWorker(
                         sv_downloader,
                         indices_string,
-                        load_geometries,
+                        True,  # load_geometries,
                         iso_codes_string)
                     worker.successfully_finished.connect(
                         lambda result: self._data_download_successful(
                             result,
-                            load_geometries,
+                            True,  # load_geometries,
+                            dest_filename,
+                            project_definition))
+                    start_worker(worker, self.iface.messageBar(),
+                                 'Downloading data from platform')
+                    worker = DownloadPlatformDataWorker(
+                        sv_downloader,
+                        indices_string,
+                        False,  # load_geometries,
+                        iso_codes_string)
+                    worker.successfully_finished.connect(
+                        lambda result: self._data_download_successful(
+                            result,
+                            False,  # load_geometries,
                             dest_filename,
                             project_definition))
                     start_worker(worker, self.iface.messageBar(),
@@ -709,6 +741,8 @@ class Irmt:
             'project_definitions': [project_definition]}
         write_layer_suppl_info_to_qgs(layer.id(), suppl_info)
         self.update_actions_status()
+        self.imported_layers += 1
+        self.join_geometries()
 
     def download_layer(self):
         """

@@ -51,12 +51,6 @@
            <property name="title">
             <string>Filters</string>
            </property>
-           <zorder>label</zorder>
-           <zorder></zorder>
-           <zorder>label</zorder>
-           <zorder>label</zorder>
-           <zorder></zorder>
-           <zorder>label</zorder>
           </widget>
          </item>
          <item>
@@ -148,6 +142,19 @@
              <width>16777215</width>
              <height>100</height>
             </size>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="load_geometries_chk">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>Load geometries</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
            </property>
           </widget>
          </item>
