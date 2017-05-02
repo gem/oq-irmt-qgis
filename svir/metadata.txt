@@ -35,6 +35,7 @@ changelog=
     * The full report of a oq-engine calculation can be visualized directly within the plugin
     * Improvements to the user manual
     * It is possible to continue risk calculations (e.g. postprocessing on top of a risk calculation)
+    * Fixed an unreferenced variable in case of successful updating of a project on the OQ Platform
     1.8.22
     * Added a sanity check on default colors stored in the settings, to make sure they are valid QColor objects
     1.8.21
