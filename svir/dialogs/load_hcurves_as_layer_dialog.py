@@ -64,16 +64,7 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
             self.imts[imt] = []
         self.set_ok_button()
 
-    def populate_rlz_cbx(self):
-        self.rlzs = [key for key in self.npz_file.keys()
-                     if key.startswith('rlz')]
-        self.rlz_cbx.clear()
-        self.rlz_cbx.setEnabled(True)
-        # self.rlz_cbx.addItem('All')
-        self.rlz_cbx.addItems(self.rlzs)
-
     def build_layer_name(self, rlz, **kwargs):
-        rlz = self.rlz_cbx.currentText()
         # build layer name
         self.imt = self.imts.keys()[0]
         self.default_field_name = self.imt

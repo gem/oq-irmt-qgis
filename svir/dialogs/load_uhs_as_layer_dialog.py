@@ -65,14 +65,6 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
         self.poe_cbx.addItems(self.poes)
         self.set_ok_button()
 
-    def populate_rlz_cbx(self):
-        self.rlzs = [key for key in self.npz_file.keys()
-                     if key.startswith('rlz')]
-        self.rlz_cbx.clear()
-        self.rlz_cbx.setEnabled(True)
-        # self.rlz_cbx.addItem('All')
-        self.rlz_cbx.addItems(self.rlzs)
-
     def build_layer_name(self, rlz, **kwargs):
         poe = kwargs['poe']
         layer_name = "uhs_%s_poe-%s" % (rlz, poe)

@@ -86,7 +86,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         clear_widgets_from_layout(self.output_dep_vlayout)
 
     def create_rlz_selector(self):
-        self.rlz_lbl = QLabel('Realization')
         self.rlz_cbx = QComboBox()
         self.rlz_cbx.setEnabled(False)
         self.rlz_cbx.currentIndexChanged['QString'].connect(
@@ -272,9 +271,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         #         self.hdata = self.npz_file['loss_maps-rlzs']
         #     _, n_rlzs = self.hdata.shape
         #     self.rlzs = [str(i+1) for i in range(n_rlzs)]
+        self.rlzs = [key for key in self.npz_file.keys() if key != 'imtls']
         self.rlz_cbx.clear()
         self.rlz_cbx.setEnabled(True)
-        # self.rlz_cbx.addItem('All')
         self.rlz_cbx.addItems(self.rlzs)
 
     def populate_dmg_state_cbx(self, dmg_states):
@@ -307,10 +306,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         # get the root of layerTree, in order to add groups of layers
         # (one group for each realization)
         root = QgsProject.instance().layerTreeRoot()
-        group_name = 'Realization %s' % rlz
-        rlz_group = root.findGroup(group_name)
+        rlz_group = root.findGroup(rlz)
         if not rlz_group:
-            rlz_group = root.addGroup('Realization %s' % rlz)
+            rlz_group = root.addGroup(rlz)
         return rlz_group
 
     def build_layer_name(self, rlz, **kwargs):
