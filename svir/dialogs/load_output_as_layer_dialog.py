@@ -271,7 +271,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         #         self.hdata = self.npz_file['loss_maps-rlzs']
         #     _, n_rlzs = self.hdata.shape
         #     self.rlzs = [str(i+1) for i in range(n_rlzs)]
-        self.rlzs = [key for key in self.npz_file.keys() if key != 'imtls']
+        self.rlzs = [key for key in sorted(self.npz_file) if key != 'imtls']
         self.rlz_cbx.clear()
         self.rlz_cbx.setEnabled(True)
         self.rlz_cbx.addItems(self.rlzs)
@@ -302,14 +302,14 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         # elif self.output_type == 'loss_curves':
         #     self.ok_button.setEnabled(self.rlz_cbx.currentIndex() != -1)
 
-    def get_layer_group(self, rlz):
+    def get_layer_group(self, npz_key):
         # get the root of layerTree, in order to add groups of layers
-        # (one group for each realization)
+        # (one group for each realization or statistic)
         root = QgsProject.instance().layerTreeRoot()
-        rlz_group = root.findGroup(rlz)
-        if not rlz_group:
-            rlz_group = root.addGroup(rlz)
-        return rlz_group
+        npz_key_group = root.findGroup(npz_key)
+        if not npz_key_group:
+            npz_key_group = root.addGroup(npz_key)
+        return npz_key_group
 
     def build_layer_name(self, rlz, **kwargs):
         raise NotImplementedError()
