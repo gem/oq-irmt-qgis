@@ -82,6 +82,8 @@ FORM_CLASS = get_ui_class('ui_drive_engine_server.ui')
 HANDLED_EXCEPTIONS = (SSLError, ConnectionError, InvalidSchema, MissingSchema,
                       ReadTimeout, SvNetworkError)
 
+BUTTON_WIDTH = 75
+
 
 class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     """
@@ -174,6 +176,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             calc_list = json.loads(resp.text)
         selected_keys = ['description', 'id', 'job_type', 'owner', 'status']
         col_names = ['Description', 'ID', 'Job Type', 'Owner', 'Status']
+        col_widths = [380, 50, 80, 80, 80]
         if not calc_list:
             if self.calc_list_tbl.rowCount() > 0:
                 self.calc_list_tbl.clearContents()
@@ -184,8 +187,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 self.calc_list_tbl.setHorizontalHeaderLabels(col_names)
                 self.calc_list_tbl.horizontalHeader().setStyleSheet(
                     "font-weight: bold;")
-                self.calc_list_tbl.resizeColumnsToContents()
-                self.calc_list_tbl.resizeRowsToContents()
+                self.set_calc_list_widths(col_widths)
             return
         actions = [
             {'label': 'Console', 'bg_color': '#3cb3c5', 'txt_color': 'white'},
@@ -227,14 +229,19 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     lambda calc_id=calc['id'], action=action['label']: (
                         self.on_calc_action_btn_clicked(calc_id, action)))
                 self.calc_list_tbl.setCellWidget(row, col, button)
+                self.calc_list_tbl.setColumnWidth(col, BUTTON_WIDTH)
         empty_col_names = [''] * len(actions)
         headers = col_names + empty_col_names
         self.calc_list_tbl.setHorizontalHeaderLabels(headers)
         self.calc_list_tbl.horizontalHeader().setStyleSheet(
             "font-weight: bold;")
-        self.calc_list_tbl.resizeColumnsToContents()
-        self.calc_list_tbl.resizeRowsToContents()
+        self.set_calc_list_widths(col_widths)
         return True
+
+    def set_calc_list_widths(self, widths):
+        for i, width in enumerate(widths):
+            self.calc_list_tbl.setColumnWidth(i, width)
+        self.calc_list_tbl.resizeRowsToContents()
 
     def clear_output_list(self):
         self.output_list_tbl.clearContents()
@@ -436,6 +443,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 button = QPushButton()
                 self.connect_button_to_action(button, action, output, outtype)
                 self.output_list_tbl.setCellWidget(row, col, button)
+                self.calc_list_tbl.setColumnWidth(col, BUTTON_WIDTH)
             if (output['type'] in OQ_ALL_LOADABLE_TYPES
                     or output['type'] == 'fullreport'):
                 if output['type'] == 'fullreport':
@@ -446,6 +454,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 self.connect_button_to_action(
                     button, action, output, outtype)
                 self.output_list_tbl.setCellWidget(row, col + 1, button)
+                self.calc_list_tbl.setColumnWidth(col, BUTTON_WIDTH)
         col_names = [key.capitalize() for key in selected_keys]
         empty_col_names = ['' for outtype in range(max_actions)]
         headers = col_names + empty_col_names
