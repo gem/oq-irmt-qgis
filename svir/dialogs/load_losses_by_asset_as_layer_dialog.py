@@ -67,13 +67,6 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         self.populate_loss_type_cbx(self.loss_types)
         self.set_ok_button()
 
-    def populate_rlz_cbx(self):
-        self.rlzs = [key for key in self.npz_file.keys()
-                     if key.startswith('rlz')]
-        self.rlz_cbx.clear()
-        self.rlz_cbx.setEnabled(True)
-        self.rlz_cbx.addItems(self.rlzs)
-
     def populate_taxonomy_cbx(self, taxonomies):
         taxonomies.insert(0, 'All')
         self.taxonomy_cbx.clear()

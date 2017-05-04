@@ -75,15 +75,9 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         self.imt = self.imt_cbx.currentText()
         self.poe_cbx.clear()
         self.poe_cbx.setEnabled(True)
-        self.poe_cbx.addItems(self.imts[self.imt])
+        if self.imt:
+            self.poe_cbx.addItems(self.imts[self.imt])
         self.set_ok_button()
-
-    def populate_rlz_cbx(self):
-        self.rlzs = [key for key in self.npz_file.keys()
-                     if key.startswith('rlz')]
-        self.rlz_cbx.clear()
-        self.rlz_cbx.setEnabled(True)
-        self.rlz_cbx.addItems(self.rlzs)
 
     def build_layer_name(self, rlz, **kwargs):
         imt = self.imt_cbx.currentText()
