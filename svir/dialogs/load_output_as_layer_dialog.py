@@ -551,7 +551,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         super(LoadOutputAsLayerDialog, self).accept()
 
     def reject(self):
-        if (self.output_type in OQ_NPZ_LOADABLE_TYPES
-                and self.npz_file is not None):
+        if (hasattr(self, 'npz_file') and self.npz_file is not None
+                and self.output_type in OQ_NPZ_LOADABLE_TYPES):
             self.npz_file.close()
         super(LoadOutputAsLayerDialog, self).reject()
