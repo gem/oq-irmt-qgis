@@ -10,7 +10,8 @@ Driving the OpenQuake Engine
     :align: center
     :scale: 60%
 
-    Dialog to run the OpenQuake Engine server
+    |icon-drive-oq-engine| Dialog to run the OpenQuake Engine server
+
 
 The plugin enables to drive the `OpenQuake Engine
 <https://github.com/gem/oq-engine>`_, submitting new jobs, watching calculation
@@ -127,3 +128,6 @@ the current status of a calculation, which can be one of the following:
 
 The reason behind a `failed` calculation can be inspected by watching the
 console log, by means of the :guilabel:`Console` button.
+
+
+.. |icon-drive-oq-engine| image:: images/iconDriveOqEngine.png

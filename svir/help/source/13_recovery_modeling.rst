@@ -116,7 +116,7 @@ analysis can be edited using the dialog shown in :numref:`fig-dialogRecoveryMode
     :align: center
     :scale: 60%
 
-    Recovery modeling settings dialog
+    |icon-recovery-settings| Recovery modeling settings dialog
 
 The following variables should be adjusted to the available data and needs of
 the user:
@@ -217,7 +217,7 @@ zonal geometries and generate aggregated recovery curves by zones.
     :align: center
     :scale: 60%
 
-    Dialog to perform recovery modeling on the whole data set (also enabling zonal aggregation)
+    |icon-recovery| Dialog to perform recovery modeling on the whole data set (also enabling zonal aggregation)
 
 By unchecking the :guilabel:`Aggregate assets by zone` box
 (:numref:`fig-batchRecoveryModeling`) the algorithm generates a single community
@@ -240,3 +240,7 @@ interest to the user.
 
     The community-level recovery function for one of the zones under analysis, showing
     how the normalized recovery level evolves with time after the earthquake
+
+
+.. |icon-recovery| image:: images/iconRecovery.png
+.. |icon-recovery-settings| image:: images/iconRecoverySettings.png

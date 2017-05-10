@@ -1,24 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Generator: Adobe Illustrator 15.0.2, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 width="37.547px" height="37.578px" viewBox="0 0 37.547 37.578" enable-background="new 0 0 37.547 37.578" xml:space="preserve">
-<g>
+<svg version="1.1" id="Layer_1_copy" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px"
+	 y="0px" width="40px" height="40px" viewBox="0 0 40 40" enable-background="new 0 0 40 40" xml:space="preserve">
+<ellipse fill="#FFFFFF" stroke="#FFFFFF" stroke-width="0.25" stroke-miterlimit="10" cx="20" cy="20.094" rx="15.833" ry="15.75"/>
+<polyline fill="#34669A" stroke="#FFFFFF" stroke-miterlimit="10" points="31.352,34.262 34.592,31.143 39.5,36.381 36.258,39.5 "/>
+<path fill="#34669A" stroke="#FFFFFF" stroke-miterlimit="10" d="M17.826,0.625c12.309-1.318,22.549,7.936,21.615,20.989
+	c-0.668,9.358-8.108,16.979-17.426,17.8C9.593,40.51-0.421,30.945,0.567,18.089c0.6-7.811,5.6-13.538,11.562-16.121
+	C13.781,1.253,15.849,0.836,17.826,0.625z M20.229,37.139c8.789-0.125,16.644-7.619,16.644-16.907
+	c0-9.366-7.283-17.477-17.994-16.68C9.731,4.233,3.135,10.677,3.135,20.232C3.135,30.576,11.52,37.261,20.229,37.139z"/>
+<path stroke="#FFFFFF" stroke-miterlimit="10" d="M18.104,3.108c10.792-1.157,19.769,6.957,18.951,18.402
+	c-0.586,8.204-7.107,14.885-15.277,15.604c-10.889,0.96-19.669-7.427-18.803-18.696C3.5,11.571,7.883,6.549,13.11,4.285
+	C14.558,3.658,16.371,3.293,18.104,3.108z M20.208,34.536c7.573-0.106,14.345-6.565,14.345-14.569
+	c0-8.071-6.277-15.061-15.507-14.375c-7.884,0.586-13.569,6.14-13.569,14.375C5.477,28.881,12.702,34.643,20.208,34.536z"/>
+<polyline fill="#34669A" points="19.721,5.099 20.187,5.098 20.238,35.098 19.773,35.098 "/>
+<polyline fill="#34669A" points="34.969,19.859 34.969,20.325 4.969,20.339 4.969,19.874 "/>
+<g id="Plus_-_Grey">
 	
-		<rect x="2.665" y="24.203" opacity="0.6" fill="#FFFFFF" stroke="#1B75A5" stroke-width="1.5249" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" width="10.674" height="10.674"/>
+		<linearGradient id="SVGID_1_" gradientUnits="userSpaceOnUse" x1="0.4956" y1="2.3057" x2="10.1924" y2="2.3057" gradientTransform="matrix(1 0 0 -1 8.5 16)">
+		<stop  offset="0" style="stop-color:#FFFFFF"/>
+		<stop  offset="1" style="stop-color:#B7C6CE"/>
+	</linearGradient>
+	<polygon opacity="0.8" fill="url(#SVGID_1_)" enable-background="new    " points="18.692,12.481 15.055,12.481 15.055,8.846 
+		12.631,8.846 12.631,12.481 8.996,12.481 8.996,14.905 12.631,14.905 12.631,18.542 15.055,18.542 15.055,14.905 18.692,14.905 	
+		"/>
+	<polygon points="18.39,12.178 14.752,12.178 14.752,8.542 12.329,8.542 12.329,12.178 8.692,12.178 8.692,14.602 12.329,14.602 
+		12.329,18.239 14.752,18.239 14.752,14.602 18.39,14.602 	"/>
+</g>
+<g id="Minus_-_Grey">
 	
-		<rect x="13.339" y="24.203" fill="#FFFFFF" stroke="#1B75A5" stroke-width="1.5249" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" width="10.675" height="10.674"/>
+		<linearGradient id="SVGID_2_" gradientUnits="userSpaceOnUse" x1="13.3477" y1="2.3188" x2="23.0439" y2="2.3188" gradientTransform="matrix(1 0 0 -1 8.5 16)">
+		<stop  offset="0" style="stop-color:#FFFFFF"/>
+		<stop  offset="1" style="stop-color:#B7C6CE"/>
+	</linearGradient>
+	<rect x="21.848" y="12.57" opacity="0.8" fill="url(#SVGID_2_)" enable-background="new    " width="9.696" height="2.222"/>
+	<rect x="21.544" y="12.292" width="9.694" height="2.222"/>
+</g>
+<g id="Delete_-_Grey">
 	
-		<rect x="24.014" y="2.854" opacity="0.6" fill="#FFFFFF" stroke="#1B75A5" stroke-width="1.5249" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" width="10.674" height="10.674"/>
+		<linearGradient id="SVGID_3_" gradientUnits="userSpaceOnUse" x1="0.9468" y1="-10.2139" x2="9.6562" y2="-10.2139" gradientTransform="matrix(1 0 0 -1 8.5 16)">
+		<stop  offset="0" style="stop-color:#FFFFFF"/>
+		<stop  offset="1" style="stop-color:#B7C6CE"/>
+	</linearGradient>
+	<polygon opacity="0.8" fill="url(#SVGID_3_)" enable-background="new    " points="18.156,28.829 15.542,26.214 18.155,23.604 
+		16.414,21.864 13.799,24.474 11.187,21.859 9.447,23.604 12.061,26.214 9.447,28.829 11.187,30.568 13.799,27.957 16.414,30.568 	
+		"/>
+	<polygon points="17.867,28.538 15.251,25.923 17.866,23.311 16.123,21.571 13.51,24.184 10.896,21.568 9.156,23.311 11.768,25.923 
+		9.156,28.538 10.896,30.278 13.51,27.664 16.123,30.278 	"/>
+</g>
+<g id="Check_-_Grey">
 	
-		<rect x="13.339" y="13.529" opacity="0.6" fill="#FFFFFF" stroke="#1B75A5" stroke-width="1.5249" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" width="10.675" height="10.674"/>
-	
-		<rect x="24.014" y="13.529" fill="#FFFFFF" stroke="#1B75A5" stroke-width="1.5249" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" width="10.674" height="10.674"/>
-	
-		<rect x="24.014" y="24.203" fill="#1B75A5" stroke="#1B75A5" stroke-width="1.5249" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" width="10.674" height="10.674"/>
-	
-		<line fill="#1B75A5" stroke="#1B75A5" stroke-width="1.5249" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" x1="34.688" y1="34.877" x2="2.994" y2="3.184"/>
-	
-		<line opacity="0.6" fill="#1B75A5" stroke="#1B75A5" stroke-width="1.5249" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" x1="13.339" y1="24.203" x2="24.014" y2="13.529"/>
+		<linearGradient id="SVGID_4_" gradientUnits="userSpaceOnUse" x1="14.3477" y1="-10.3877" x2="24.0439" y2="-10.3877" gradientTransform="matrix(1 0 0 -1 8.5 16)">
+		<stop  offset="0" style="stop-color:#FFFFFF"/>
+		<stop  offset="1" style="stop-color:#B7C6CE"/>
+	</linearGradient>
+	<polygon opacity="0.8" fill="url(#SVGID_4_)" enable-background="new    " points="32.544,24.023 30.75,22.055 26.457,26.779 
+		24.642,24.777 22.848,26.752 26.454,30.721 26.457,30.717 26.461,30.721 	"/>
+	<polygon points="32.238,23.689 30.446,21.721 26.155,26.445 24.336,24.445 22.544,26.418 26.151,30.389 26.155,30.383 
+		26.16,30.389 	"/>
 </g>
 </svg>

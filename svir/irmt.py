@@ -108,6 +108,7 @@ from svir.utilities.shared import (DEBUG,
                                    THEME_TEMPLATE,
                                    INDICATOR_TEMPLATE,
                                    OPERATORS_DICT)
+from svir.ui.tool_button_with_help_link import QToolButtonWithHelpLink
 
 # DO NOT REMOVE THIS
 # noinspection PyUnresolvedReferences
@@ -133,6 +134,9 @@ class Irmt:
             if qVersion() > '4.3.3':
                 QCoreApplication.installTranslator(self.translator)
 
+        # our own toolbar
+        self.toolbar = None
+
         # our own menu
         self.menu = QMenu(self.iface.mainWindow())
         self.menu.setTitle("IRMT")
@@ -157,6 +161,9 @@ class Irmt:
             self.layers_removed)
 
     def initGui(self):
+        # create our own toolbar
+        self.toolbar = self.iface.addToolBar('IRMT')
+        self.toolbar.setObjectName('IRMTToolBar')
 
         menu_bar = self.iface.mainWindow().menuBar()
         get_menu = self.get_menu(menu_bar, 'IRMT')
@@ -196,11 +203,12 @@ class Irmt:
                            submenu='OQ Platform')
         # Action to drive the oq-engine server
         self.add_menu_item("drive_engine_server",
-                           ":/plugins/irmt/manual.svg",  # FIXME
+                           ":/plugins/irmt/drive_oqengine.svg",
                            u"Drive oq-engine &server",
                            self.drive_oq_engine_server,
                            enable=True,
-                           submenu='OQ Engine')
+                           submenu='OQ Engine',
+                           add_to_toolbar=True)
         # Action to manage the projects
         self.add_menu_item("project_definitions_manager",
                            ":/plugins/irmt/copy.svg",
@@ -217,17 +225,18 @@ class Irmt:
                            self.weight_data,
                            enable=False,
                            add_to_layer_actions=True,
+                           add_to_toolbar=True,
                            submenu='Integrated risk')
         # Action to run the recovery analysis
         self.add_menu_item("recovery_modeling",
-                           ":/plugins/irmt/plot.svg",  # FIXME
+                           ":/plugins/irmt/recovery.svg",
                            u"Run recovery modeling",
                            self.recovery_modeling,
                            enable=True,
                            submenu='Recovery modeling')
         # Action to set the recovery modeling parameters
         self.add_menu_item("recovery_settings",
-                           ":/plugins/irmt/settings.svg",  # FIXME
+                           ":/plugins/irmt/recovery_settings.svg",
                            u"Recovery modeling settings",
                            self.recovery_settings,
                            enable=True,
@@ -240,56 +249,73 @@ class Irmt:
                            self.aggregate_losses,
                            enable=True,
                            add_to_layer_actions=False,
+                           add_to_toolbar=True,
                            submenu='Utilities')
 
         self.add_menu_item("load_ruptures_as_layer",
-                           ":/plugins/irmt/calculate.svg",  # FIXME
+                           ":/plugins/irmt/load_from_oqoutput.svg",
                            u"Load ruptures as layer",
                            self.load_ruptures_as_layer,
                            enable=True,
                            submenu='OQ Engine')
 
         self.add_menu_item("load_dmg_by_asset_as_layer",
-                           ":/plugins/irmt/calculate.svg",  # FIXME
+                           ":/plugins/irmt/load_from_oqoutput.svg",
                            u"Load damage by asset as layer",
                            self.load_dmg_by_asset_as_layer,
                            enable=True,
                            submenu='OQ Engine')
 
         self.add_menu_item("load_hmaps_as_layer",
-                           ":/plugins/irmt/calculate.svg",  # FIXME
+                           ":/plugins/irmt/load_from_oqoutput.svg",
                            u"Load hazard maps as layer",
                            self.load_hmaps_as_layer,
                            enable=True,
                            submenu='OQ Engine')
 
         self.add_menu_item("load_hcurves_as_layer",
-                           ":/plugins/irmt/calculate.svg",  # FIXME
+                           ":/plugins/irmt/load_from_oqoutput.svg",
                            u"Load hazard curves as layer",
                            self.load_hcurves_as_layer,
                            enable=True,
                            submenu='OQ Engine')
 
         self.add_menu_item("load_gmf_data_as_layer",
-                           ":/plugins/irmt/calculate.svg",  # FIXME
+                           ":/plugins/irmt/load_from_oqoutput.svg",
                            u"Load ground motion fields as layer",
                            self.load_gmf_data_as_layer,
                            enable=True,
                            submenu='OQ Engine')
 
         self.add_menu_item("load_uhs_as_layer",
-                           ":/plugins/irmt/calculate.svg",  # FIXME
+                           ":/plugins/irmt/load_from_oqoutput.svg",
                            u"Load uniform hazard spectra as layer",
                            self.load_uhs_as_layer,
                            enable=True,
                            submenu='OQ Engine')
 
         self.add_menu_item("load_losses_by_asset_as_layer",
-                           ":/plugins/irmt/calculate.svg",  # FIXME
+                           ":/plugins/irmt/load_from_oqoutput.svg",
                            u"Load losses by asset as layer",
                            self.load_losses_by_asset_as_layer,
                            enable=True,
                            submenu='OQ Engine')
+        # # Action to plot total damage reading it from a NPZ produced by a
+        # # scenario damage calculation
+        # self.add_menu_item("plot_dmg_total",
+        #                    ":/plugins/irmt/copy.svg",
+        #                    u"Plot total damage from NPZ",
+        #                    self.plot_dmg_total_from_npz,
+        #                    enable=True,
+        #                    submenu='OQ Engine')
+        # # Action to plot damage by taxonomy reading it from a NPZ produced
+        # # by a scenario damage calculation
+        # self.add_menu_item("plot_dmg_by_taxon",
+        #                    ":/plugins/irmt/copy.svg",
+        #                    u"Plot damage by taxonomy from NPZ",
+        #                    self.plot_dmg_by_taxon_from_npz,
+        #                    enable=True,
+        #                    submenu='OQ Engine')
 
         # Action to activate the modal dialog to select a layer and one
         # of its
@@ -310,14 +336,16 @@ class Irmt:
                            ":/plugins/irmt/settings.svg",
                            u"&IRMT settings",
                            self.show_settings,
-                           enable=True)
+                           enable=True,
+                           add_to_toolbar=True)
 
         # Action to open the plugin's manual
         self.add_menu_item("help",
                            ":/plugins/irmt/manual.svg",
                            u"IRMT &manual",
                            self.show_manual,
-                           enable=True)
+                           enable=True,
+                           add_to_toolbar=True)
 
         self._create_viewer_dock()
         self.update_actions_status()
@@ -432,10 +460,11 @@ class Irmt:
                       layers_type=QgsMapLayer.VectorLayer,
                       set_checkable=False,
                       set_checked=False,
-                      submenu=None
+                      submenu=None,
+                      add_to_toolbar=False,
                       ):
         """
-        Add an item to the IRMT menu
+        Add an item to the IRMT menu and a corresponding toolbar icon
 
         :param icon_path: path of the icon associated to the action
         :param label: name of the action, visible to the user
@@ -467,6 +496,15 @@ class Irmt:
                 menu = get_menu
             else:
                 menu = self.menu.addMenu(submenu)
+
+        if add_to_toolbar:
+            help_url = 'http://docs.openquake.org/oq-irmt-qgis/'
+            # NOTE: the "what's this" functionality has been removed from QGIS
+            #       so the help_url will never be used. Anyway, buttons defined
+            #       this way keep working to run the corresponding actions.
+            button = QToolButtonWithHelpLink(action, help_url)
+            self.toolbar.addWidget(button)
+
         menu.addAction(action)
 
         return action
@@ -520,6 +558,7 @@ class Irmt:
             action = self.registered_actions[action_name]
             # Remove the actions in the layer legend
             self.iface.legendInterface().removeLegendLayerAction(action)
+            self.iface.removeToolBarIcon(action)
         clear_progress_message_bar(self.iface.messageBar())
 
         # remove menu
