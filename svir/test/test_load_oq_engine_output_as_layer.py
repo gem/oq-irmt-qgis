@@ -29,7 +29,7 @@ import tempfile
 import filecmp
 
 from PyQt4.QtGui import QAction
-from qgis.core import QgsMapLayerRegistry, QgsVectorLayer
+from qgis.core import QgsVectorLayer
 from svir.dialogs.load_dmg_by_asset_as_layer_dialog import (
     LoadDmgByAssetAsLayerDialog)
 from svir.dialogs.load_ruptures_as_layer_dialog import (
