@@ -26,7 +26,6 @@ from PyQt4.QtCore import pyqtSlot, QUrl
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox,
                          QDesktopServices)
-from qgis.gui import QgsMessageBar
 from svir.dialogs.upload_dialog import UploadDialog
 from svir.metadata.metadata_utilities import write_iso_metadata_file
 from svir.third_party.requests.sessions import Session
@@ -231,12 +230,8 @@ class UploadSettingsDialog(QDialog, FORM_CLASS):
                     hostname, session, self.project_definition,
                     self.suppl_info['platform_layer_id'])
                 if response.ok:
-                    log_msg(error_msg, level='C',
+                    log_msg(tr(response.text), level='I',
                             message_bar=self.iface.messageBar())
-                    self.iface.messageBar().pushMessage(
-                        tr("Info"),
-                        tr(response.text),
-                        level=QgsMessageBar.INFO)
                 else:
                     error_msg = response.text
                     # example of response text:
