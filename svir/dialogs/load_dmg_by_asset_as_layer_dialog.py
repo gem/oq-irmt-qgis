@@ -64,12 +64,9 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             dest_shp = tempfile.mkstemp(suffix='.shp')[1]
         else:
             dest_shp = None  # the destination file will be selected via GUI
-        zoom_to_layer = False if self.mode == 'testing' else True
         self.layer = import_layer_from_csv(
-            self, self.path_le.text(), self.output_type,
-            self.iface.messageBar(),
-            save_as_shp=self.save_as_shp_ckb.isChecked(), dest_shp=dest_shp,
-            zoom_to_layer=zoom_to_layer)
+            self, self.path_le.text(), self.output_type, self.iface,
+            save_as_shp=self.save_as_shp_ckb.isChecked(), dest_shp=dest_shp)
         dmg_state = self.dmg_state_cbx.currentText()
         loss_type = self.loss_type_cbx.currentText()
         field_idx = None

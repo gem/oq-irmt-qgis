@@ -27,7 +27,6 @@ import collections
 import json
 import os
 import locale
-import qgis
 from copy import deepcopy
 from time import time
 from pprint import pformat
@@ -887,7 +886,7 @@ def clear_widgets_from_layout(layout):
 def import_layer_from_csv(parent,
                           csv_path,
                           layer_name,
-                          message_bar,
+                          iface,
                           longitude_field='lon',
                           latitude_field='lat',
                           delimiter=',',
@@ -931,13 +930,13 @@ def import_layer_from_csv(parent,
         layer = QgsVectorLayer(dest_filename, layer_name, 'ogr')
     if layer.isValid():
         QgsMapLayerRegistry.instance().addMapLayer(layer)
+        iface.setActiveLayer(layer)
         if zoom_to_layer:
-            qgis.utils.iface.setActiveLayer(layer)
-            qgis.utils.iface.zoomToActiveLayer()
+            iface.zoomToActiveLayer()
 
     else:
         msg = 'Unable to load layer'
-        log_msg(msg, level='C', message_bar=message_bar)
+        log_msg(msg, level='C', message_bar=iface.messageBar())
         return None
     return layer
 
