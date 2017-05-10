@@ -24,6 +24,7 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     1.8.24
+    * ProcessLayer.addAttributes launders proposed attribute names only if the processed layer is a shapefile
     * Renewed set of icons and re-added plugin's toolbar with a subset of the available actions
     1.8.23
     * Added a checkbox to load from npz as layer only the selected items

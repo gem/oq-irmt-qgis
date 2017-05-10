@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#/***************************************************************************
+# /***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
@@ -25,17 +25,16 @@
 # import qgis libs so that we set the correct sip api version
 import os.path
 import unittest
+import tempfile
 from qgis.core import QgsVectorLayer
-
-from svir.test.utilities import get_qgis_app
-
-QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
-
 from svir.calculations.process_layer import ProcessLayer
 from svir.calculations.aggregate_loss_by_zone import (
     calculate_zonal_stats,
     purge_zones_without_loss_points,
     )
+from svir.utilities.utils import save_layer_as_shapefile
+from svir.test.utilities import get_qgis_app
+QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 
 
 class AggregateLossByZoneTestCase(unittest.TestCase):
@@ -72,6 +71,15 @@ class AggregateLossByZoneTestCase(unittest.TestCase):
                                     zone_id_in_zones_attr_name,
                                     IFACE)
         (output_loss_layer, output_zonal_layer, output_loss_attrs_dict) = res
+        _, output_loss_layer_shp_path = tempfile.mkstemp(suffix='.shp')
+        _, output_zonal_layer_shp_path = tempfile.mkstemp(suffix='.shp')
+        save_layer_as_shapefile(output_loss_layer, output_loss_layer_shp_path)
+        save_layer_as_shapefile(output_zonal_layer,
+                                output_zonal_layer_shp_path)
+        output_loss_layer = QgsVectorLayer(
+            output_loss_layer_shp_path, 'Loss points having zone ids', 'ogr')
+        output_zonal_layer = QgsVectorLayer(
+            output_zonal_layer_shp_path, 'Zonal layer', 'ogr')
 
         expected_zonal_layer_path = os.path.join(
             self.data_dir_name, 'svi_zones_plus_loss_stats_zone_names.shp')
@@ -106,6 +114,15 @@ class AggregateLossByZoneTestCase(unittest.TestCase):
                                     zone_id_in_zones_attr_name,
                                     IFACE)
         (output_loss_layer, output_zonal_layer, output_loss_attrs_dict) = res
+        _, output_loss_layer_shp_path = tempfile.mkstemp(suffix='.shp')
+        _, output_zonal_layer_shp_path = tempfile.mkstemp(suffix='.shp')
+        save_layer_as_shapefile(output_loss_layer, output_loss_layer_shp_path)
+        save_layer_as_shapefile(output_zonal_layer,
+                                output_zonal_layer_shp_path)
+        output_loss_layer = QgsVectorLayer(
+            output_loss_layer_shp_path, 'Loss points plus zone ids', 'ogr')
+        output_zonal_layer = QgsVectorLayer(
+            output_zonal_layer_shp_path, 'Zonal layer', 'ogr')
         expected_loss_layer_path = os.path.join(
             self.data_dir_name, 'loss_points_added_zone_ids.shp')
         expected_loss_layer = QgsVectorLayer(expected_loss_layer_path,
@@ -121,10 +138,10 @@ class AggregateLossByZoneTestCase(unittest.TestCase):
     def test_purge_empty_zones(self):
         loss_attrs_dict = {
             'count': u'LOSS_PTS',
-            'FATALITIES': {'sum': u'SUM_FATALI',
-                           'avg': u'AVG_FATALI'},
-            'STRUCTURAL': {'sum': u'SUM_STRUCT',
-                           'avg': u'AVG_STRUCT'}}
+            'FATALITIES': {'sum': u'SUM_FATALITIES',
+                           'avg': u'AVG_FATALITIES'},
+            'STRUCTURAL': {'sum': u'SUM_STRUCTURAL',
+                           'avg': u'AVG_STRUCTURAL'}}
         orig_zonal_layer_path = os.path.join(
             self.data_dir_name, 'svi_zones_plus_loss_stats_zone_ids.shp')
         orig_zonal_layer = QgsVectorLayer(

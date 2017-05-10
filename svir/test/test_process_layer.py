@@ -120,11 +120,8 @@ class AddAttributesTestCase(unittest.TestCase):
         attributes = [field_one, field_two]
         ProcessLayer(self.layer).add_attributes(attributes)
         added_field_names = [field.name() for field in self.layer.fields()]
-        # Double-check that add_attributes is working properly
-        upper_field_names = [field_name.upper() for field_name in field_names]
-        self.assertEqual(added_field_names, upper_field_names)
         # Check that both attributes are correctly found
-        for attr_name in upper_field_names:
+        for attr_name in added_field_names:
             # it raises AttributeError if not found
             ProcessLayer(self.layer).find_attribute_id(attr_name)
         # Check that an inexistent field doesn't get found and that the
@@ -139,8 +136,8 @@ class AddAttributesTestCase(unittest.TestCase):
         field_two.setTypeName(INT_FIELD_TYPE_NAME)
         attributes = [field_one, field_two]
         added_attributes = ProcessLayer(self.layer).add_attributes(attributes)
-        expected_dict = {'first': 'FIRST',
-                         'second': 'SECOND'}
+        expected_dict = {'first': 'first',
+                         'second': 'second'}
         self.assertDictEqual(added_attributes, expected_dict)
         # Let's add 2 other fields with the same names of the previous ones
         # ==> Since the names are already taken, we expect to add fields with
@@ -151,8 +148,8 @@ class AddAttributesTestCase(unittest.TestCase):
         field_four.setTypeName(INT_FIELD_TYPE_NAME)
         attributes = [field_three, field_four]
         added_attributes = ProcessLayer(self.layer).add_attributes(attributes)
-        expected_dict = {'first': 'FIRST_1',
-                         'second': 'SECOND_1'}
+        expected_dict = {'first': 'first_1',
+                         'second': 'second_1'}
         self.assertEqual(added_attributes, expected_dict)
         # Let's add 2 other fields with the same names of the previous ones
         # ==> Since the names are already taken, as well as the corresponding
@@ -163,6 +160,6 @@ class AddAttributesTestCase(unittest.TestCase):
         field_six.setTypeName(INT_FIELD_TYPE_NAME)
         attributes = [field_five, field_six]
         added_attributes = ProcessLayer(self.layer).add_attributes(attributes)
-        expected_dict = {'first': 'FIRST_2',
-                         'second': 'SECOND_2'}
+        expected_dict = {'first': 'first_2',
+                         'second': 'second_2'}
         self.assertEqual(added_attributes, expected_dict)
