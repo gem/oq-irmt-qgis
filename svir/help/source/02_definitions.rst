@@ -55,6 +55,7 @@ ground shaking). These GMMT are also indicated with the acronym IMT. Other
 ground-motion measures define, for example, the duration of the shaking. A very
 common IMT is the peak ground acceleration, specified with the PGA acronym. The
 principal IMT used in the OpenQuake-engine are:
+
   * Peak Ground Acceleration – indicated as PGA – measured in fractions of g
   * Peak Ground Velocity – indicated as PGV – measured in cm/s
   * Peak Ground Displacement – indicated as PGV – measured in cm
