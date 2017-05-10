@@ -39,7 +39,7 @@ __copyright__ = (
 )
 
 
-LOGGER = logging.getLogger('InaSAFE')
+LOGGER = logging.getLogger('IRMT')
 
 
 # noinspection PyMethodMayBeStatic,PyPep8Naming
@@ -133,7 +133,7 @@ class QgisInterface(QObject):
     def __getattr__(self, *args, **kwargs):
         # It's for processing module
         def dummy(*a, **kwa):
-            _ = a, kwa
+            # _ = a, kwa
             return QgisInterface(self.canvas)
         return dummy
 
@@ -258,10 +258,7 @@ class QgisInterface(QObject):
 
     def activeLayer(self):
         """Get pointer to the active layer (layer selected in the legend)."""
-        if self.active_layer is not None:
-            return self.active_layer
-        else:
-            return None
+        return self.active_layer
 
     def addToolBarIcon(self, action):
         """Add an icon to the plugins toolbar.
@@ -328,5 +325,6 @@ class QgisInterface(QObject):
         :returns: A QGIS message bar instance
         :rtype: QgsMessageBar
         """
+        # The commented line would display the message bar while running tests:
         # return self.message_bar
         return Mock()
