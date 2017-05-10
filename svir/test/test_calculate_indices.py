@@ -25,6 +25,7 @@
 import unittest
 import os
 import sys
+import tempfile
 from copy import deepcopy
 from qgis.core import QgsVectorLayer, QgsVectorFileWriter
 from utilities import get_qgis_app
@@ -123,6 +124,9 @@ PROJ_DEF_STD_OPERATORS = {
 
 class CalculateCompositeVariableTestCase(unittest.TestCase):
 
+    # NOTE: uncomment to enable displaying long diffs
+    # maxDiff = None
+
     def setUp(self):
 
         self.project_definition = PROJ_DEF_STD_OPERATORS
@@ -173,90 +177,102 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         operator = OPERATORS_DICT['SUM_S']
         node_attr_id, node_attr_name, discarded_feats = \
             calculate_education_node(proj_def, operator, self.layer)
+
+        # # to rebuild the outputs
+        # res_layer_name = 'simple_sum'
+        # write_output(self.layer, self.data_dir_name, res_layer_name)
+
         expected_layer_path = os.path.join(
             self.data_dir_name, 'simple_sum.shp')
         expected_layer = QgsVectorLayer(
             expected_layer_path, 'simple_sum', 'ogr')
         res = ProcessLayer(self.layer).has_same_content_as(expected_layer)
         self.assertEqual(res, True)
-        # # to rebuild the outputs
-        # res_layer_name = 'simple_sum'
-        # write_output(self.layer, self.data_dir_name, res_layer_name)
 
     def test_weighted_sum(self):
         proj_def = deepcopy(self.project_definition)
         operator = OPERATORS_DICT['SUM_W']
         node_attr_id, node_attr_name, discarded_feats = \
             calculate_education_node(proj_def, operator, self.layer)
+
+        # to rebuild the outputs
+        # res_layer_name = 'weighted_sum'
+        # write_output(self.layer, self.data_dir_name, res_layer_name)
+
         expected_layer_path = os.path.join(
             self.data_dir_name, 'weighted_sum.shp')
         expected_layer = QgsVectorLayer(
             expected_layer_path, 'weighted_sum', 'ogr')
         res = ProcessLayer(self.layer).has_same_content_as(expected_layer)
         self.assertEqual(res, True)
-        # to rebuild the outputs
-        # res_layer_name = 'weighted_sum'
-        # write_output(self.layer, self.data_dir_name, res_layer_name)
 
     def test_simple_multiplication(self):
         proj_def = deepcopy(self.project_definition)
         operator = OPERATORS_DICT['MUL_S']
         node_attr_id, node_attr_name, discarded_feats = \
             calculate_education_node(proj_def, operator, self.layer)
+
+        # # to rebuild the outputs
+        # res_layer_name = 'simple_multiplication'
+        # write_output(self.layer, self.data_dir_name, res_layer_name)
+
         expected_layer_path = os.path.join(
             self.data_dir_name, 'simple_multiplication.shp')
         expected_layer = QgsVectorLayer(
             expected_layer_path, 'simple_multiplication', 'ogr')
         res = ProcessLayer(self.layer).has_same_content_as(expected_layer)
         self.assertEqual(res, True)
-        # # to rebuild the outputs
-        # res_layer_name = 'simple_multiplication'
-        # write_output(self.layer, self.data_dir_name, res_layer_name)
 
     def test_weighted_multiplication(self):
         proj_def = deepcopy(self.project_definition)
         operator = OPERATORS_DICT['MUL_W']
         node_attr_id, node_attr_name, discarded_feats = \
             calculate_education_node(proj_def, operator, self.layer)
+
+        # # to rebuild the outputs
+        # res_layer_name = 'weighted_multiplication'
+        # write_output(self.layer, self.data_dir_name, res_layer_name)
+
         expected_layer_path = os.path.join(
             self.data_dir_name, 'weighted_multiplication.shp')
         expected_layer = QgsVectorLayer(
             expected_layer_path, 'weighted_multiplication', 'ogr')
         res = ProcessLayer(self.layer).has_same_content_as(expected_layer)
         self.assertEqual(res, True)
-        # # to rebuild the outputs
-        # res_layer_name = 'weighted_multiplication'
-        # write_output(self.layer, self.data_dir_name, res_layer_name)
 
     def test_average(self):
         proj_def = deepcopy(self.project_definition)
         operator = OPERATORS_DICT['AVG']
         node_attr_id, node_attr_name, discarded_feats = \
             calculate_education_node(proj_def, operator, self.layer)
+
+        # # to rebuild the outputs
+        # res_layer_name = 'average'
+        # write_output(self.layer, self.data_dir_name, res_layer_name)
+
         expected_layer_path = os.path.join(
             self.data_dir_name, 'average.shp')
         expected_layer = QgsVectorLayer(
             expected_layer_path, 'average', 'ogr')
         res = ProcessLayer(self.layer).has_same_content_as(expected_layer)
         self.assertEqual(res, True)
-        # # to rebuild the outputs
-        # res_layer_name = 'average'
-        # write_output(self.layer, self.data_dir_name, res_layer_name)
 
     def test_geometric_mean_positive_argument(self):
         proj_def = deepcopy(self.project_definition)
         operator = OPERATORS_DICT['GEOM_MEAN']
         node_attr_id, node_attr_name, discarded_feats = \
             calculate_education_node(proj_def, operator, self.layer)
+
+        # # to rebuild the outputs
+        # res_layer_name = 'geometric_mean_positive_argument'
+        # write_output(self.layer, self.data_dir_name, res_layer_name)
+
         expected_layer_path = os.path.join(
             self.data_dir_name, 'geometric_mean_positive_argument.shp')
         expected_layer = QgsVectorLayer(
             expected_layer_path, 'geometric_mean_positive_argument', 'ogr')
         res = ProcessLayer(self.layer).has_same_content_as(expected_layer)
         self.assertEqual(res, True)
-        # # to rebuild the outputs
-        # res_layer_name = 'geometric_mean_positive_argument'
-        # write_output(self.layer, self.data_dir_name, res_layer_name)
 
     def test_geometric_mean_negative_argument(self):
         proj_def = deepcopy(self.project_definition)
@@ -271,15 +287,17 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         operator = OPERATORS_DICT['GEOM_MEAN']
         node_attr_id, node_attr_name, discarded_feats = \
             calculate_education_node(proj_def, operator, self.layer)
+
+        # # to rebuild the outputs
+        # res_layer_name = 'geometric_mean_negative_argument'
+        # write_output(self.layer, self.data_dir_name, res_layer_name)
+
         expected_layer_path = os.path.join(
             self.data_dir_name, 'geometric_mean_negative_argument.shp')
         expected_layer = QgsVectorLayer(
             expected_layer_path, 'geometric_mean_negative_argument', 'ogr')
         res = ProcessLayer(self.layer).has_same_content_as(expected_layer)
         self.assertEqual(res, True)
-        # # to rebuild the outputs
-        # res_layer_name = 'geometric_mean_negative_argument'
-        # write_output(self.layer, self.data_dir_name, res_layer_name)
 
     def test_calculate_svi(self):
         proj_def = deepcopy(self.project_definition)
@@ -294,15 +312,25 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
                          expected_discarded_feats)
         self.assertEqual(any_change, True)
         self.assertEqual(proj_def, proj_def_svi_calc_first_round)
+
+        # # to rebuild the outputs
+        # res_layer_name = 'svi_calculation_first_round'
+        # write_output(self.layer, self.data_dir_name, res_layer_name)
+
+        _, out_layer_shp_path = tempfile.mkstemp(suffix='.shp')
+        save_layer_as_shapefile(self.layer, out_layer_shp_path)
+        out_layer = QgsVectorLayer(
+            out_layer_shp_path, 'svi_calculation_first_round', 'ogr')
+
         expected_layer_path = os.path.join(
             self.data_dir_name, 'svi_calculation_first_round.shp')
         expected_layer = QgsVectorLayer(
             expected_layer_path, 'svi_calculation_first_round', 'ogr')
-        res = ProcessLayer(self.layer).has_same_content_as(expected_layer)
+        res = ProcessLayer(out_layer).has_same_content_as(expected_layer)
+        if not res:
+            ProcessLayer(self.layer).pprint(usage='testing')
+            ProcessLayer(expected_layer).pprint(usage='testing')
         self.assertEqual(res, True)
-        # # to rebuild the outputs
-        # res_layer_name = 'svi_calculation_first_round'
-        # write_output(self.layer, self.data_dir_name, res_layer_name)
 
         # If the attributes have already been added to the layer, they should
         # be re-used instead of adding new ones
@@ -319,11 +347,16 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
                          expected_discarded_feats)
         self.assertEqual(any_change, True)
         self.assertEqual(proj_def, proj_def_svi_calc_first_round)
-        expected_layer_path = os.path.join(
-            self.data_dir_name, 'svi_calculation_first_round.shp')
-        expected_layer = QgsVectorLayer(
-            expected_layer_path, 'svi_calculation_first_round', 'ogr')
-        res = ProcessLayer(self.layer).has_same_content_as(expected_layer)
+
+        _, out_layer_shp_path = tempfile.mkstemp(suffix='.shp')
+        save_layer_as_shapefile(self.layer, out_layer_shp_path)
+        out_layer = QgsVectorLayer(
+            out_layer_shp_path, 'svi_calculation_second_round', 'ogr')
+
+        res = ProcessLayer(out_layer).has_same_content_as(expected_layer)
+        if not res:
+            ProcessLayer(self.layer).pprint(usage='testing')
+            ProcessLayer(expected_layer).pprint(usage='testing')
         self.assertEqual(res, True)
 
 
@@ -384,7 +417,7 @@ proj_def_svi_calc_first_round = {
                  'name': 'Scientific and technical journal articles',
                  'type': 'Social Vulnerability Indicator',
                  'weight': 0.5}],
-             'field': u'EDUCATION',
+             'field': u'Education',
              'level': '3.0',
              'name': 'Education',
              'operator': 'Weighted sum',
@@ -403,7 +436,7 @@ proj_def_svi_calc_first_round = {
                  'name': 'Natural disasters  - Number of deaths',
                  'type': 'Social Vulnerability Indicator',
                  'weight': 0.5}],
-             'field': u'ENVIRONMEN',
+             'field': u'Environment',
              'level': '3.0',
              'name': 'Environment',
              'operator': 'Weighted sum',

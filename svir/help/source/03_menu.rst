@@ -24,7 +24,7 @@ corresponding documentation.
 
 * OQ Engine
 
-  * |icon-manual| :ref:`chap-drive-oq-engine`
+  * |icon-drive-oq-engine| :ref:`chap-drive-oq-engine`
 
 * Integrated risk
 
@@ -33,8 +33,8 @@ corresponding documentation.
 
 * Recovery modeling
 
-  * |icon-plot| :ref:`chap-recovery-modeling`
-  * |icon-connection-settings| :ref:`sec-recovery-modeling-settings`
+  * |icon-recovery| :ref:`chap-recovery-modeling`
+  * |icon-recovery-settings| :ref:`sec-recovery-modeling-settings`
 
 * Utilities
 
@@ -59,3 +59,6 @@ corresponding documentation.
 .. |icon-upload| image:: images/iconUpload.png
 .. |icon-manual| image:: images/iconManual.png
 .. |icon-plot| image:: images/iconPlot.png
+.. |icon-recovery| image:: images/iconRecovery.png
+.. |icon-recovery-settings| image:: images/iconRecoverySettings.png
+.. |icon-drive-oq-engine| image:: images/iconDriveOqEngine.png
