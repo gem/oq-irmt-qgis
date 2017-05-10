@@ -499,6 +499,9 @@ class Irmt:
 
         if add_to_toolbar:
             help_url = 'http://docs.openquake.org/oq-irmt-qgis/'
+            # NOTE: the "what's this" functionality has been removed from QGIS
+            #       so the help_url will never be used. Anyway, buttons defined
+            #       this way keep working to run the corresponding actions.
             button = QToolButtonWithHelpLink(action, help_url)
             self.toolbar.addWidget(button)
 
