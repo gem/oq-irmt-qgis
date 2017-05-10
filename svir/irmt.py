@@ -671,14 +671,16 @@ class Irmt:
                             result,
                             load_geometries,
                             dest_filename,
-                            project_definition))
+                            project_definition,
+                            dlg.indicators_info_dict))
                     start_worker(worker, self.iface.messageBar(),
                                  'Downloading data from platform')
         except SvNetworkError as e:
             log_msg(str(e), level='C', message_bar=self.iface.messageBar())
 
     def _data_download_successful(
-            self, result, load_geometries, dest_filename, project_definition):
+            self, result, load_geometries, dest_filename, project_definition,
+            indicators_info_dict):
         """
         Called once the DonloadPlatformDataWorker has successfully downloaded
         socioeconomic data as a csv file.
@@ -692,6 +694,8 @@ class Irmt:
             containing the downloaded data
         :param project_definition: the project definition that was
             automatically built based on the DB structure
+        :param indicators_info_dict:
+            dict ind_code -> dict with additional info about it
         """
         fname, msg = result
         display_msg = tr("Socioeconomic data loaded in a new layer")
@@ -748,6 +752,18 @@ class Irmt:
             'project_definitions': [project_definition]}
         write_layer_suppl_info_to_qgs(layer.id(), suppl_info)
         self.update_actions_status()
+
+        # assign ind_name as alias for each ind_code
+        for field_idx, field in enumerate(layer.fields()):
+            if field.name() in indicators_info_dict:
+                layer.addAttributeAlias(
+                    field_idx, indicators_info_dict[field.name()]['name'])
+            elif field.name() == 'ISO':
+                layer.addAttributeAlias(
+                    field_idx, 'Country ISO code')
+            elif field.name() == 'COUNTRY_NA':
+                layer.addAttributeAlias(
+                    field_idx, 'Country name')
 
     def download_layer(self):
         """
@@ -1242,17 +1258,27 @@ class Irmt:
         dlg = TransformationDialog(self.iface)
         if dlg.exec_():
             layer = self.iface.activeLayer()
-            input_attr_names = dlg.fields_multiselect.get_selected_items()
+            input_attr_names = [
+                field_name_plus_alias.split('(')[0].strip()
+                for field_name_plus_alias in
+                dlg.fields_multiselect.get_selected_items()]
+            input_attr_aliases = [
+                field_name_plus_alias.split('(')[1].split(')')[0].strip()
+                for field_name_plus_alias in
+                dlg.fields_multiselect.get_selected_items()]
             algorithm_name = dlg.algorithm_cbx.currentText()
             variant = dlg.variant_cbx.currentText()
             inverse = dlg.inverse_ckb.isChecked()
-            for input_attr_name in input_attr_names:
+            for input_attr_idx, input_attr_name in enumerate(input_attr_names):
+                target_attr_alias = input_attr_aliases[input_attr_idx]
                 if dlg.overwrite_ckb.isChecked():
                     target_attr_name = input_attr_name
                 elif dlg.fields_multiselect.selected_widget.count() == 1:
                     target_attr_name = dlg.new_field_name_txt.text()
                 else:
-                    target_attr_name = ('_' + input_attr_name)[:10]
+                    # the limit of 10 chars for shapefiles is handled by
+                    # ProcessLayer.add_attributes
+                    target_attr_name = '_' + input_attr_name
                 try:
                     msg = "Applying '%s' transformation to field '%s'" % (
                         algorithm_name, input_attr_name)
@@ -1262,7 +1288,8 @@ class Irmt:
                                                        algorithm_name,
                                                        variant,
                                                        inverse,
-                                                       target_attr_name)
+                                                       target_attr_name,
+                                                       target_attr_alias)
                     msg = ('Transformation %s has been applied to attribute %s'
                            ' of layer %s.') % (algorithm_name,
                                                input_attr_name,
@@ -1273,7 +1300,8 @@ class Irmt:
                     else:
                         msg += (' The results of the transformation'
                                 ' have been saved into the new'
-                                ' attribute %s.') % (res_attr_name)
+                                ' attribute %s (%s).') % (res_attr_name,
+                                                          target_attr_alias)
                     if invalid_input_values:
                         msg += (' The transformation could not'
                                 ' be performed for the following'

@@ -133,8 +133,8 @@ class TransformationDialog(QDialog, FORM_CLASS):
     @pyqtSlot(str)
     def on_new_field_name_txt_textEdited(self):
         # we assume exactly one item is in the selected list
-        input_field_name = \
-            self.fields_multiselect.selected_widget.item(0).text()
+        input_field_name = self._extract_field_name(
+            self.fields_multiselect.selected_widget.item(0).text())
         new_field_name = self.new_field_name_txt.text()
         # if the name of the new field is equal to the name of the input field,
         # automatically check the 'overwrite' checkbox (and consequently
@@ -156,6 +156,11 @@ class TransformationDialog(QDialog, FORM_CLASS):
         self.inverse_ckb.setDisabled(
             self.algorithm_cbx.currentText() in ['LOG10'])
 
+    def _extract_field_name(self, field_name_plus_alias):
+        # attribute_name is something like 'ABCDEFGHIL (Readable name)'
+        # and we want to use only the heading code
+        return field_name_plus_alias.split('(')[0].strip()
+
     def update_default_fieldname(self):
         if self.fields_multiselect.selected_widget.count() != 1:
             self.new_field_name_txt.setText('')
@@ -163,8 +168,8 @@ class TransformationDialog(QDialog, FORM_CLASS):
             return
         if (not self.attr_name_user_def
                 or not self.new_field_name_txt.text()):
-            attribute_name = \
-                self.fields_multiselect.selected_widget.item(0).text()
+            attribute_name = self._extract_field_name(
+                self.fields_multiselect.selected_widget.item(0).text())
             algorithm_name = self.algorithm_cbx.currentText()
             variant = self.variant_cbx.currentText()
             inverse = self.inverse_ckb.isChecked()
@@ -179,8 +184,10 @@ class TransformationDialog(QDialog, FORM_CLASS):
             self.attr_name_user_def = False
 
     def fill_fields_multiselect(self):
-        field_names = [
-            field.name()
-            for field in self.iface.activeLayer().fields()
+        names_plus_aliases = [
+            '%s (%s)' % (field.name(),
+                         self.iface.activeLayer().attributeAlias(field_idx))
+            for field_idx, field in enumerate(
+                self.iface.activeLayer().fields())
             if field.typeName() in NUMERIC_FIELD_TYPES]
-        self.fields_multiselect.set_unselected_items(field_names)
+        self.fields_multiselect.set_unselected_items(names_plus_aliases)

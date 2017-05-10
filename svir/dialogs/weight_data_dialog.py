@@ -81,6 +81,7 @@ class WeightDataDialog(QDialog, FORM_CLASS):
         self.modified_project_definition = None
 
         self.active_layer_numeric_fields = []
+        self.active_layer_numeric_fields_aliases = []
         self.update_active_layer_numeric_fields()
         # keep track of the fact that the user has explicitly selected a field
         # to base the style on. Note that also the selection of the empty item
@@ -136,6 +137,11 @@ class WeightDataDialog(QDialog, FORM_CLASS):
         self.active_layer_numeric_fields = [
             field.name()
             for field in self.iface.activeLayer().fields()
+            if field.typeName() in NUMERIC_FIELD_TYPES]
+        self.active_layer_numeric_fields_aliases = [
+            self.iface.activeLayer().attributeAlias(field_idx)
+            for field_idx, field in enumerate(
+                self.iface.activeLayer().fields())
             if field.typeName() in NUMERIC_FIELD_TYPES]
 
     def populate_style_by_field_cbx(self):
@@ -265,7 +271,11 @@ class WeightDataDialog(QDialog, FORM_CLASS):
 
     @pyqtProperty(str)
     def ACTIVE_LAYER_NUMERIC_FIELDS(self):
-        return ';'.join(sorted(self.active_layer_numeric_fields))
+        return ';'.join(self.active_layer_numeric_fields)
+
+    @pyqtProperty(str)
+    def ACTIVE_LAYER_NUMERIC_FIELDS_ALIASES(self):
+        return ';'.join(self.active_layer_numeric_fields_aliases)
 
     @pyqtProperty(str)
     def NODE_TYPES(self):
@@ -275,6 +285,7 @@ class WeightDataDialog(QDialog, FORM_CLASS):
         msg = """
         var qt_page = {
             ACTIVE_LAYER_NUMERIC_FIELDS: "%s",
+            ACTIVE_LAYER_NUMERIC_FIELDS_ALIASES: "%s",
             DEFAULT_OPERATOR: "%s",
             NODE_TYPES: "%s",
             OPERATORS: "%s",
@@ -285,6 +296,7 @@ class WeightDataDialog(QDialog, FORM_CLASS):
             },
             DEV_MODE: %s
         };""" % (self.ACTIVE_LAYER_NUMERIC_FIELDS,
+                 self.ACTIVE_LAYER_NUMERIC_FIELDS_ALIASES,
                  self.DEFAULT_OPERATOR,
                  self.NODE_TYPES,
                  self.OPERATORS,
