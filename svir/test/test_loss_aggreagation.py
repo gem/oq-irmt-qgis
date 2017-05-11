@@ -44,27 +44,26 @@ class AggregateLossByZoneTestCase(unittest.TestCase):
         curr_dir_name = os.path.dirname(__file__)
         self.data_dir_name = os.path.join(curr_dir_name,
                                           'data/aggregation/dummy')
-        zonal_layer_path = os.path.join(
-            self.data_dir_name, 'svi_zones.shp')
-        orig_zonal_layer = QgsVectorLayer(zonal_layer_path, 'SVI zones', 'ogr')
-        # Avoid modifying the original files
-        self.copied_zonal_layer = \
-            ProcessLayer(orig_zonal_layer).duplicate_in_memory()
         self.loss_attr_names = ['FATALITIES', 'STRUCTURAL']
         self.loss_layer_is_vector = True
 
     def test_aggregate_using_zone_id(self):
         loss_layer_path = os.path.join(
             self.data_dir_name, 'loss_points_having_zone_ids.shp')
-        orig_loss_layer = QgsVectorLayer(loss_layer_path,
-                                         'Loss points having zone ids',
-                                         'ogr')
+        orig_loss_layer = QgsVectorLayer(
+            loss_layer_path, 'Loss points having zone ids', 'ogr')
+        zonal_layer_path = os.path.join(
+            self.data_dir_name, 'svi_zones.shp')
+        orig_zonal_layer = QgsVectorLayer(
+            zonal_layer_path, 'SVI zones', 'ogr')
         # avoid modifying the original layers
         copied_loss_layer = ProcessLayer(orig_loss_layer).duplicate_in_memory()
+        copied_zonal_layer = ProcessLayer(
+            orig_zonal_layer).duplicate_in_memory()
         zone_id_in_zones_attr_name = 'ZONE_NAME'
         zone_id_in_losses_attr_name = 'ZONE_NAME'
         res = calculate_zonal_stats(copied_loss_layer,
-                                    self.copied_zonal_layer,
+                                    copied_zonal_layer,
                                     self.loss_attr_names,
                                     self.loss_layer_is_vector,
                                     zone_id_in_losses_attr_name,
@@ -101,13 +100,19 @@ class AggregateLossByZoneTestCase(unittest.TestCase):
         loss_layer_path = os.path.join(
             self.data_dir_name, 'loss_points.shp')
         orig_loss_layer = QgsVectorLayer(loss_layer_path, 'Loss points', 'ogr')
+        zonal_layer_path = os.path.join(
+            self.data_dir_name, 'svi_zones.shp')
+        orig_zonal_layer = QgsVectorLayer(
+            zonal_layer_path, 'SVI zones', 'ogr')
         # avoid modifying the original layers
         copied_loss_layer = ProcessLayer(orig_loss_layer).duplicate_in_memory()
+        copied_zonal_layer = ProcessLayer(
+            orig_zonal_layer).duplicate_in_memory()
         zone_id_in_losses_attr_name = None
         zone_id_in_zones_attr_name = None
 
         res = calculate_zonal_stats(copied_loss_layer,
-                                    self.copied_zonal_layer,
+                                    copied_zonal_layer,
                                     self.loss_attr_names,
                                     self.loss_layer_is_vector,
                                     zone_id_in_losses_attr_name,

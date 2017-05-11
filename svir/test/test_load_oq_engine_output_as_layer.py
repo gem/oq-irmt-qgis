@@ -60,10 +60,6 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
         mock_action = QAction(IFACE.mainWindow())
         self.viewer_dock = ViewerDock(IFACE, mock_action)
 
-    def tearDown(self):
-        # the following line removes all the existing map layers
-        IFACE.newProject()
-
     def test_load_hazard_map(self):
         filepath = os.path.join(
             self.data_dir_name, 'hazard', 'output-182-hmaps_67.npz')
