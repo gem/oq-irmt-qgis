@@ -22,6 +22,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
+import tempfile
 from qgis.core import (QgsVectorLayer,
                        QgsMapLayerRegistry,
                        QgsField,
@@ -44,6 +45,7 @@ from svir.utilities.utils import (LayerEditingManager,
                                   clear_progress_message_bar,
                                   create_progress_message_bar,
                                   log_msg,
+                                  save_layer_as_shapefile,
                                   )
 from svir.utilities.shared import (INT_FIELD_TYPE_NAME,
                                    DOUBLE_FIELD_TYPE_NAME,
@@ -341,6 +343,16 @@ def _add_zone_id_to_points_saga(loss_layer, zonal_layer,
     # NOTE: The algorithm builds a new loss layer, in which
     #       each point will have an additional attribute,
     #       indicating the zone to which the point belongs.
+    if loss_layer.providerType() != 'ogr':
+        _, loss_layer_shp_path = tempfile.mkstemp(suffix='.shp')
+        save_layer_as_shapefile(loss_layer, loss_layer_shp_path)
+        loss_layer = QgsVectorLayer(
+            loss_layer_shp_path, loss_layer.name(), 'ogr')
+    if zonal_layer.providerType() != 'ogr':
+        _, zonal_layer_shp_path = tempfile.mkstemp(suffix='.shp')
+        save_layer_as_shapefile(zonal_layer, zonal_layer_shp_path)
+        zonal_layer = QgsVectorLayer(
+            zonal_layer_shp_path, zonal_layer.name(), 'ogr')
     res = processing.runalg('saga:clippointswithpolygons',
                             loss_layer,
                             zonal_layer,
