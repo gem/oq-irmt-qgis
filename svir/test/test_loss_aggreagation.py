@@ -84,16 +84,7 @@ class AggregateLossByZoneTestCase(unittest.TestCase):
             self.data_dir_name, 'svi_zones_plus_loss_stats_zone_names.shp')
         expected_zonal_layer = QgsVectorLayer(
             expected_zonal_layer_path, 'Expected zonal layer', 'ogr')
-
         self._check_output_layer(output_zonal_layer, expected_zonal_layer)
-        # just to make sure that we can manage correctly the attributes that
-        # were added, attempt to delete them
-        added_attrs = []
-        added_attrs.append(output_loss_attrs_dict['count'])
-        for loss_attr in self.loss_attr_names:
-            added_attrs.extend(output_loss_attrs_dict[loss_attr].values())
-        ProcessLayer(output_zonal_layer).delete_attributes(
-            added_attrs)
 
     def test_aggregate_using_geometries(self):
         # TODO: manage both with or without SAGA
