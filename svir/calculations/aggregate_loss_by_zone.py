@@ -195,7 +195,11 @@ def add_zone_id_to_points(iface, point_layer, zonal_layer,
                 _add_zone_id_to_points_saga(point_layer,
                                             zonal_layer,
                                             zones_id_attr_name)
-        except RuntimeError:
+        except (AttributeError, RuntimeError):
+            # NOTE: In the testing environment we are still unable to use
+            #       the saga:clippointswithpolygons algorithm, so it does not
+            #       run properly and it returns an AttributeError. We are
+            #       forced to use the fallback approach in that case.
             msg = ("An error occurred while attempting to"
                    " compute zonal statistics with SAGA. Therefore"
                    " an alternative algorithm is used.")
