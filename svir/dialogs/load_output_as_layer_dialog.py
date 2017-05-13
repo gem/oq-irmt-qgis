@@ -481,7 +481,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             field_names, rlz=rlz, taxonomy=taxonomy, poe=poe,
             loss_type=loss_type)
         # add self.layer to the legend
-        QgsMapLayerRegistry.instance().addMapLayer(self.layer, False)
+        QgsMapLayerRegistry.instance().addMapLayer(self.layer)
         rlz_group.addLayer(self.layer)
         self.iface.setActiveLayer(self.layer)
         self.iface.zoomToActiveLayer()

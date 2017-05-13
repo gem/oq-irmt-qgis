@@ -29,7 +29,7 @@ import tempfile
 import filecmp
 
 from PyQt4.QtGui import QAction
-from qgis.core import QgsMapLayerRegistry, QgsVectorLayer
+from qgis.core import QgsVectorLayer
 from svir.dialogs.load_dmg_by_asset_as_layer_dialog import (
     LoadDmgByAssetAsLayerDialog)
 from svir.dialogs.load_ruptures_as_layer_dialog import (
@@ -60,10 +60,6 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
         mock_action = QAction(IFACE.mainWindow())
         self.viewer_dock = ViewerDock(IFACE, mock_action)
 
-    def tearDown(self):
-        # the following line removes all the existing map layers
-        IFACE.newProject()
-
     def test_load_hazard_map(self):
         filepath = os.path.join(
             self.data_dir_name, 'hazard', 'output-182-hmaps_67.npz')
@@ -86,8 +82,7 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
         self._set_output_type('Hazard Curves')
         self._change_selection()
         # test changing intensity measure type
-        layers = CANVAS.layers()
-        layer = layers[-1]
+        layer = IFACE.activeLayer()
         # select the first 2 features (the same used to produce the reference
         # csv)
         layer.select([1, 2])
@@ -119,12 +114,7 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
         dlg = LoadUhsAsLayerDialog(IFACE, 'uhs', filepath)
         dlg.load_selected_only_ckb.setChecked(False)
         dlg.accept()
-        # FIXME: setActiveLayer is not working. As a workaround, I am deleting
-        # all layers except the one I am testing.
-        for layer in CANVAS.layers():
-            if layer.name() != u'uhs_rlz-000_poe-0.02':
-                QgsMapLayerRegistry.instance().removeMapLayer(layer)
-        CANVAS.refresh()
+        IFACE.setActiveLayer(dlg.layer)
         self._set_output_type('Uniform Hazard Spectra')
         self._change_selection()
         # test exporting the current selection to csv
@@ -144,7 +134,7 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
         self.assertEqual(idx, 0, '"structural" loss_type was not found')
         dlg.loss_type_cbx.setCurrentIndex(idx)
         dlg.accept()
-        current_layer = CANVAS.layers()[0]
+        current_layer = IFACE.activeLayer()
         reference_path = os.path.join(
             self.data_dir_name, 'dmg_by_asset_complete_structural.shp')
         reference_layer = QgsVectorLayer(
@@ -158,7 +148,7 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
             IFACE, 'ruptures', filepath, mode='testing')
         dlg.save_as_shp_ckb.setChecked(True)
         dlg.accept()
-        current_layer = CANVAS.layers()[0]
+        current_layer = IFACE.activeLayer()
         reference_path = os.path.join(
             self.data_dir_name, 'hazard', 'ruptures.shp')
         reference_layer = QgsVectorLayer(
@@ -198,8 +188,7 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
 
     def _test_export(self, expected_file_name):
         _, exported_file_path = tempfile.mkstemp(suffix=".csv")
-        layers = CANVAS.layers()
-        layer = layers[-1]
+        layer = IFACE.activeLayer()
         # select the first 2 features (the same used to produce the reference
         # csv)
         layer.select([1, 2])
@@ -218,8 +207,7 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
         self.viewer_dock.output_type_cbx.setCurrentIndex(idx)
 
     def _change_selection(self):
-        layers = CANVAS.layers()
-        layer = layers[-1]
+        layer = IFACE.activeLayer()
         # the behavior should be slightly different (pluralizing labels, etc)
         # depending on the amount of features selected
         layer.select(1)
