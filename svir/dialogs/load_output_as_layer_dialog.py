@@ -33,6 +33,7 @@ from qgis.core import (QgsVectorLayer,
                        QgsGraduatedSymbolRendererV2,
                        QgsRendererRangeV2,
                        QgsProject,
+                       QgsMapUnitScale,
                        )
 from PyQt4.QtCore import pyqtSlot, QDir, QSettings, QFileInfo
 
@@ -492,6 +493,15 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         # https://qgis.org/api/qgsmarkersymbollayerv2_8cpp_source.html#l01073
         symbol = symbol.createSimple({'outline_width': '0.000001'})
         symbol.setAlpha(1)  # opacity
+        symbol.setOutputUnit(symbol.MapUnit)
+        point_size = 0.05
+        symbol.setSize(point_size)
+        map_unit_scale = QgsMapUnitScale()
+        map_unit_scale.maxSizeMMEnabled = True
+        map_unit_scale.minSizeMMEnabled = True
+        map_unit_scale.minSizeMM = 0.5
+        map_unit_scale.maxSizeMM = 5
+        symbol.setMapUnitScale(map_unit_scale)
 
         style = get_style(self.layer, self.iface.messageBar())
         ramp = QgsVectorGradientColorRampV2(
@@ -507,6 +517,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         symbol_zeros = QgsSymbolV2.defaultSymbol(self.layer.geometryType())
         symbol_zeros = symbol_zeros.createSimple({'outline_width': '0.000001'})
         symbol_zeros.setColor(QColor(222, 255, 222))
+        symbol_zeros.setOutputUnit(symbol.MapUnit)
+        symbol_zeros.setSize(point_size)
+        symbol_zeros.setMapUnitScale(map_unit_scale)
         zeros_min = 0.0
         zeros_max = 0.0
         range_zeros = QgsRendererRangeV2(
