@@ -482,7 +482,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             field_names, rlz=rlz, taxonomy=taxonomy, poe=poe,
             loss_type=loss_type)
         # add self.layer to the legend
-        QgsMapLayerRegistry.instance().addMapLayer(self.layer)
+        # False is to avoid adding the layer to the tree root, but only to the
+        # group
+        QgsMapLayerRegistry.instance().addMapLayer(self.layer, False)
         rlz_group.addLayer(self.layer)
         self.iface.setActiveLayer(self.layer)
         self.iface.zoomToActiveLayer()
