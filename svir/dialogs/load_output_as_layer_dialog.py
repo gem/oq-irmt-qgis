@@ -35,7 +35,7 @@ from qgis.core import (QgsVectorLayer,
                        QgsProject,
                        QgsMapUnitScale,
                        )
-from PyQt4.QtCore import pyqtSlot, QDir, QSettings, QFileInfo
+from PyQt4.QtCore import pyqtSlot, QDir, QSettings, QFileInfo, Qt
 
 from PyQt4.QtGui import (QDialogButtonBox,
                          QDialog,
@@ -504,9 +504,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         symbol = QgsSymbolV2.defaultSymbol(self.layer.geometryType())
         # see properties at:
         # https://qgis.org/api/qgsmarkersymbollayerv2_8cpp_source.html#l01073
-        symbol = symbol.createSimple({'outline_width': '0.000001'})
         symbol.setAlpha(1)  # opacity
         self._set_symbol_size(symbol)
+        symbol.symbolLayer(0).setOutlineStyle(Qt.PenStyle(Qt.NoPen))
 
         style = get_style(self.layer, self.iface.messageBar())
         ramp = QgsVectorGradientColorRampV2(
@@ -520,9 +520,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             ramp)
         graduated_renderer.updateRangeLowerValue(0, 0.0)
         symbol_zeros = QgsSymbolV2.defaultSymbol(self.layer.geometryType())
-        symbol_zeros = symbol_zeros.createSimple({'outline_width': '0.000001'})
         symbol_zeros.setColor(QColor(222, 255, 222))
         self._set_symbol_size(symbol_zeros)
+        symbol_zeros.symbolLayer(0).setOutlineStyle(Qt.PenStyle(Qt.NoPen))
         zeros_min = 0.0
         zeros_max = 0.0
         range_zeros = QgsRendererRangeV2(
