@@ -29,15 +29,14 @@ from svir.utilities.utils import get_ui_class
 FORM_CLASS = get_ui_class('ui_show_full_report.ui')
 
 
-class ShowFullReportDialog(QDialog, FORM_CLASS):
+class ShowConsoleDialog(QDialog, FORM_CLASS):
     """
-    Modal dialog to show the full report of a OQ-Engine calculation
+    Modal dialog to display the console log of a OQ-Engine calculation
     """
 
-    def __init__(self, filepath):
+    def __init__(self, driver_dialog, calc_id):
         QDialog.__init__(self)
         # Set up the user interface from Designer.
         self.setupUi(self)
-        with open(filepath, 'rb') as rst_file:
-            text = rst_file.read()
-        self.text_browser.setText(text)
+        calc_log = driver_dialog.get_calc_log(calc_id)
+        self.text_browser.setText(calc_log)

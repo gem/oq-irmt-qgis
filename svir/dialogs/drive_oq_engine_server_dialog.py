@@ -42,7 +42,6 @@ from PyQt4.QtGui import (QDialog,
                          QPushButton,
                          QFileDialog,
                          QColor,
-                         QDockWidget,
                          QMessageBox,
                          )
 from svir.third_party.requests import Session
@@ -76,6 +75,7 @@ from svir.dialogs.load_uhs_as_layer_dialog import (
 from svir.dialogs.load_losses_by_asset_as_layer_dialog import (
     LoadLossesByAssetAsLayerDialog)
 from svir.dialogs.show_full_report_dialog import ShowFullReportDialog
+from svir.dialogs.show_console_dialog import ShowConsoleDialog
 
 FORM_CLASS = get_ui_class('ui_drive_engine_server.ui')
 
@@ -250,11 +250,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
     def on_calc_action_btn_clicked(self, calc_id, action):
         if action == 'Console':
-            calc_log = self.get_calc_log(calc_id)
-            log_msg(calc_log, tag='Calculation %s' % calc_id)
-            logDock = self.iface.mainWindow().findChild(QDockWidget,
-                                                        'MessageLog')
-            logDock.show()
+            dlg = ShowConsoleDialog(self, calc_id)
+            dlg.setWindowTitle(
+                'Console log of calculation %s' % calc_id)
+            dlg.exec_()
         elif action == 'Remove':
             confirmed = QMessageBox.question(
                 self,
