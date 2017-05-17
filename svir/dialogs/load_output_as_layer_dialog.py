@@ -502,7 +502,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         map_unit_scale.maxSizeMMEnabled = True
         map_unit_scale.minSizeMMEnabled = True
         map_unit_scale.minSizeMM = 0.5
-        map_unit_scale.maxSizeMM = 5
+        map_unit_scale.maxSizeMM = 10
         symbol.setMapUnitScale(map_unit_scale)
 
         style = get_style(self.layer, self.iface.messageBar())
