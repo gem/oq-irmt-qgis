@@ -309,7 +309,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         root = QgsProject.instance().layerTreeRoot()
         npz_key_group = root.findGroup(npz_key)
         if not npz_key_group:
-            npz_key_group = root.addGroup(npz_key)
+            npz_key_group = root.insertGroup(0, npz_key)
         return npz_key_group
 
     def build_layer_name(self, rlz, **kwargs):
@@ -485,7 +485,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         # False is to avoid adding the layer to the tree root, but only to the
         # group
         QgsMapLayerRegistry.instance().addMapLayer(self.layer, False)
-        rlz_group.addLayer(self.layer)
+        rlz_group.insertLayer(0, self.layer)
         self.iface.setActiveLayer(self.layer)
         self.iface.zoomToActiveLayer()
 
