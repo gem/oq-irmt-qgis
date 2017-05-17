@@ -68,14 +68,15 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
 
     def on_imt_changed(self):
         imt = self.imt_cbx.currentText()
-        min_eid = 0
-        max_eid = (self.dataset[imt].shape[1] - 1)
-        self.eid_sbx.cleanText()
-        self.eid_sbx.setEnabled(True)
-        self.eid_lbl.setText(
-            'Event ID (used for default styling) (range %d-%d)' % (
-                min_eid, max_eid))
-        self.eid_sbx.setRange(min_eid, max_eid)
+        if imt:
+            min_eid = 0
+            max_eid = (self.dataset[imt].shape[1] - 1)
+            self.eid_sbx.cleanText()
+            self.eid_sbx.setEnabled(True)
+            self.eid_lbl.setText(
+                'Event ID (used for default styling) (range %d-%d)' % (
+                    min_eid, max_eid))
+            self.eid_sbx.setRange(min_eid, max_eid)
         self.set_ok_button()
 
     def populate_rlz_cbx(self):
