@@ -489,12 +489,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.iface.setActiveLayer(self.layer)
         self.iface.zoomToActiveLayer()
 
-    def style_maps(self):
-        symbol = QgsSymbolV2.defaultSymbol(self.layer.geometryType())
-        # see properties at:
-        # https://qgis.org/api/qgsmarkersymbollayerv2_8cpp_source.html#l01073
-        symbol = symbol.createSimple({'outline_width': '0.000001'})
-        symbol.setAlpha(1)  # opacity
+    def _set_symbol_size(self, symbol):
         symbol.setOutputUnit(symbol.MapUnit)
         point_size = 0.05
         symbol.setSize(point_size)
@@ -504,6 +499,14 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         map_unit_scale.minSizeMM = 0.5
         map_unit_scale.maxSizeMM = 10
         symbol.setMapUnitScale(map_unit_scale)
+
+    def style_maps(self):
+        symbol = QgsSymbolV2.defaultSymbol(self.layer.geometryType())
+        # see properties at:
+        # https://qgis.org/api/qgsmarkersymbollayerv2_8cpp_source.html#l01073
+        symbol = symbol.createSimple({'outline_width': '0.000001'})
+        symbol.setAlpha(1)  # opacity
+        self._set_symbol_size(symbol)
 
         style = get_style(self.layer, self.iface.messageBar())
         ramp = QgsVectorGradientColorRampV2(
@@ -519,9 +522,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         symbol_zeros = QgsSymbolV2.defaultSymbol(self.layer.geometryType())
         symbol_zeros = symbol_zeros.createSimple({'outline_width': '0.000001'})
         symbol_zeros.setColor(QColor(222, 255, 222))
-        symbol_zeros.setOutputUnit(symbol.MapUnit)
-        symbol_zeros.setSize(point_size)
-        symbol_zeros.setMapUnitScale(map_unit_scale)
+        self._set_symbol_size(symbol_zeros)
         zeros_min = 0.0
         zeros_max = 0.0
         range_zeros = QgsRendererRangeV2(
@@ -543,6 +544,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         symbol = QgsSymbolV2.defaultSymbol(self.layer.geometryType())
         symbol.deleteSymbolLayer(0)
         symbol.appendSymbolLayer(cross)
+        self._set_symbol_size(symbol)
         renderer = QgsSingleSymbolRendererV2(symbol)
         effect = QgsOuterGlowEffect()
         effect.setSpread(0.5)
