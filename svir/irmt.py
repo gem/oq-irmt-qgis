@@ -325,6 +325,7 @@ class Irmt:
                            u"&Transform attributes",
                            self.transform_attributes,
                            enable=False,
+                           add_to_toolbar=True,
                            add_to_layer_actions=True,
                            submenu='Utilities')
 

@@ -33,8 +33,10 @@ from qgis.core import (QgsVectorLayer,
                        QgsGraduatedSymbolRendererV2,
                        QgsRendererRangeV2,
                        QgsProject,
+                       QgsMapUnitScale,
+                       QGis,
                        )
-from PyQt4.QtCore import pyqtSlot, QDir, QSettings, QFileInfo
+from PyQt4.QtCore import pyqtSlot, QDir, QSettings, QFileInfo, Qt
 
 from PyQt4.QtGui import (QDialogButtonBox,
                          QDialog,
@@ -481,17 +483,38 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             field_names, rlz=rlz, taxonomy=taxonomy, poe=poe,
             loss_type=loss_type)
         # add self.layer to the legend
-        QgsMapLayerRegistry.instance().addMapLayer(self.layer)
+        # False is to avoid adding the layer to the tree root, but only to the
+        # group
+        QgsMapLayerRegistry.instance().addMapLayer(self.layer, False)
         rlz_group.addLayer(self.layer)
         self.iface.setActiveLayer(self.layer)
         self.iface.zoomToActiveLayer()
+
+    def _set_symbol_size(self, symbol):
+        if self.iface.mapCanvas().mapUnits() == QGis.Degrees:
+            point_size = 0.05
+        elif self.iface.mapCanvas().mapUnits() == QGis.Meters:
+            point_size = 4000
+        else:
+            # it is not obvious how to choose the point size in the other
+            # cases, so we conservatively keep the default sizing
+            return
+        symbol.setOutputUnit(symbol.MapUnit)
+        symbol.setSize(point_size)
+        map_unit_scale = QgsMapUnitScale()
+        map_unit_scale.maxSizeMMEnabled = True
+        map_unit_scale.minSizeMMEnabled = True
+        map_unit_scale.minSizeMM = 0.5
+        map_unit_scale.maxSizeMM = 10
+        symbol.setMapUnitScale(map_unit_scale)
 
     def style_maps(self):
         symbol = QgsSymbolV2.defaultSymbol(self.layer.geometryType())
         # see properties at:
         # https://qgis.org/api/qgsmarkersymbollayerv2_8cpp_source.html#l01073
-        symbol = symbol.createSimple({'outline_width': '0.000001'})
         symbol.setAlpha(1)  # opacity
+        self._set_symbol_size(symbol)
+        symbol.symbolLayer(0).setOutlineStyle(Qt.PenStyle(Qt.NoPen))
 
         style = get_style(self.layer, self.iface.messageBar())
         ramp = QgsVectorGradientColorRampV2(
@@ -505,8 +528,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             ramp)
         graduated_renderer.updateRangeLowerValue(0, 0.0)
         symbol_zeros = QgsSymbolV2.defaultSymbol(self.layer.geometryType())
-        symbol_zeros = symbol_zeros.createSimple({'outline_width': '0.000001'})
         symbol_zeros.setColor(QColor(222, 255, 222))
+        self._set_symbol_size(symbol_zeros)
+        symbol_zeros.symbolLayer(0).setOutlineStyle(Qt.PenStyle(Qt.NoPen))
         zeros_min = 0.0
         zeros_max = 0.0
         range_zeros = QgsRendererRangeV2(
@@ -528,6 +552,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         symbol = QgsSymbolV2.defaultSymbol(self.layer.geometryType())
         symbol.deleteSymbolLayer(0)
         symbol.appendSymbolLayer(cross)
+        self._set_symbol_size(symbol)
         renderer = QgsSingleSymbolRendererV2(symbol)
         effect = QgsOuterGlowEffect()
         effect.setSpread(0.5)
