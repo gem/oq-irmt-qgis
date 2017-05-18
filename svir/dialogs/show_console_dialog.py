@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 # /***************************************************************************
 # Irmt
@@ -23,21 +22,42 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
+from PyQt4.QtCore import QTimer, QObject, SIGNAL
 from PyQt4.QtGui import QDialog
 from svir.utilities.utils import get_ui_class
 
 FORM_CLASS = get_ui_class('ui_show_full_report.ui')
 
 
-class ShowFullReportDialog(QDialog, FORM_CLASS):
+class ShowConsoleDialog(QDialog, FORM_CLASS):
     """
-    Modal dialog to show the full report of a OQ-Engine calculation
+    Modal dialog to display the console log of a OQ-Engine calculation
     """
 
-    def __init__(self, filepath):
+    def __init__(self, driver_dialog, calc_id):
         QDialog.__init__(self)
         # Set up the user interface from Designer.
         self.setupUi(self)
-        with open(filepath, 'rb') as rst_file:
-            text = rst_file.read()
-        self.text_browser.setText(text)
+        self.driver_dialog = driver_dialog
+        self.calc_id = calc_id
+        # when re-opening the dialog for a calculation, display the log from
+        # the beginning
+        self.driver_dialog.calc_log_line[calc_id] = 0
+        self.timer = QTimer()
+        QObject.connect(
+            self.timer, SIGNAL('timeout()'), self.refresh_calc_log)
+        self.timer.start(1000)  # refresh time in milliseconds
+        # show the log before the first iteration of the timer
+        self.refresh_calc_log()
+
+    def refresh_calc_log(self):
+        calc_status = self.driver_dialog.get_calc_status(self.calc_id)
+        if calc_status is None:
+            self.timer.stop()
+            self.reject()
+            return
+        if calc_status['status'] in ('complete', 'failed'):
+            self.timer.stop()
+        calc_log = self.driver_dialog.get_calc_log(self.calc_id)
+        if calc_log:
+            self.text_browser.append(calc_log)
