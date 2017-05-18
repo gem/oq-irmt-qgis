@@ -170,15 +170,19 @@ class ProcessLayer():
             description = 'Simulate add attributes'
         else:
             description = 'Add attributes'
+        aliases = dict()
+        proposed_attribute_dict = {}
+        proposed_attribute_list = []
         with LayerEditingManager(self.layer, description, DEBUG):
             # add attributes
             layer_pr = self.layer.dataProvider()
-            proposed_attribute_dict = {}
-            proposed_attribute_list = []
             for input_attribute in attribute_list:
                 input_attribute_name = input_attribute.name()
-                proposed_attribute_name = \
-                    input_attribute_name[:10].upper().replace(' ', '_')
+                if self.layer.providerType() == 'ogr':
+                    proposed_attribute_name = \
+                        input_attribute_name[:10].upper().replace(' ', '_')
+                else:
+                    proposed_attribute_name = input_attribute_name
                 i = 1
                 while True:
                     current_attribute_names = \
@@ -186,13 +190,17 @@ class ProcessLayer():
                     if proposed_attribute_name in current_attribute_names:
                         # If the attribute is already assigned, change the
                         # proposed_attribute_name
-                        i_num_digits = len(str(i))
-                        # 10 = shapefile limit
-                        # 1 = underscore
-                        max_name_len = 10 - i_num_digits - 1
-                        proposed_attribute_name = '%s_%d' % (
-                            input_attribute_name[
-                                :max_name_len].upper().replace(' ', '_'), i)
+                        if self.layer.providerType() == 'ogr':
+                            i_num_digits = len(str(i))
+                            # 10 = shapefile limit
+                            # 1 = underscore
+                            max_name_len = 10 - i_num_digits - 1
+                            proposed_attribute_name = '%s_%d' % (
+                                input_attribute_name[:max_name_len].upper(
+                                    ).replace(' ', '_'), i)
+                        else:
+                            proposed_attribute_name = '%s_%d' % (
+                                input_attribute_name, i)
                         i += 1
                     else:
                         # If the attribute name is not already assigned,
@@ -202,12 +210,21 @@ class ProcessLayer():
                         input_attribute.setName(proposed_attribute_name)
                         proposed_attribute_list.append(input_attribute)
                         break
+                if proposed_attribute_name != input_attribute_name:
+                    aliases[proposed_attribute_name] = input_attribute_name
             if not simulate:
                 added_ok = layer_pr.addAttributes(proposed_attribute_list)
                 if not added_ok:
                     raise AttributeError(
                         'Unable to add attributes %s' %
                         proposed_attribute_list)
+        with LayerEditingManager(self.layer, 'add aliases', DEBUG):
+            if not simulate:
+                for proposed_attribute_name in aliases:
+                    attribute_id = self.layer.fieldNameIndex(
+                        proposed_attribute_name)
+                    self.layer.addAttributeAlias(
+                        attribute_id, aliases[proposed_attribute_name])
         return proposed_attribute_dict
 
     def delete_attributes(self, attribute_list):
@@ -240,7 +257,8 @@ class ProcessLayer():
 
     def transform_attribute(
             self, input_attr_name, algorithm_name, variant="",
-            inverse=False, new_attr_name=None, simulate=False):
+            inverse=False, new_attr_name=None, new_attr_alias=None,
+            simulate=False):
         """
         Use one of the available transformation algorithms to transform an
         attribute of the layer, and add a new attribute with the
@@ -255,6 +273,8 @@ class ProcessLayer():
                               results of the transformation (if it is equal to
                               the input_attr_name, the attribute will be
                               overwritten)
+        :param new_attr_alias: alias of the target attribute that will store
+                               ther results of the transformation
         :param simulate: if True, the method will just simulate the creation
                          of the target attribute and return the name that would
                          be assigned to it
@@ -315,6 +335,9 @@ class ProcessLayer():
             actual_new_attr_name = attr_names_dict[new_attr_name]
             # get the id of the new attribute
             new_attr_id = self.find_attribute_id(actual_new_attr_name)
+        if new_attr_alias:
+            with LayerEditingManager(self.layer, 'add alias', DEBUG):
+                self.layer.addAttributeAlias(new_attr_id, new_attr_alias)
 
         with LayerEditingManager(
                 self.layer, 'Write transformed values', DEBUG):

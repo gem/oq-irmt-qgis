@@ -17,23 +17,6 @@
    <item>
     <layout class="QVBoxLayout" name="vlayout">
      <item>
-      <layout class="QFormLayout" name="output_type_flayout">
-       <property name="fieldGrowthPolicy">
-        <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
-       </property>
-       <item row="0" column="0">
-        <widget class="QLabel" name="output_type_lbl">
-         <property name="text">
-          <string>Output type</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QComboBox" name="output_type_cbx"/>
-       </item>
-      </layout>
-     </item>
-     <item>
       <layout class="QHBoxLayout" name="file_hlayout">
        <item>
         <widget class="QLabel" name="file_lbl">

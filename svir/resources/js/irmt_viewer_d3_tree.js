@@ -92,6 +92,11 @@
         var DEFAULT_OPERATOR = qt_page.DEFAULT_OPERATOR;
         var OPERATORS = qt_page.OPERATORS.split(';');
         var ACTIVE_LAYER_NUMERIC_FIELDS = qt_page.ACTIVE_LAYER_NUMERIC_FIELDS.split(';');
+        var ACTIVE_LAYER_NUMERIC_FIELDS_ALIASES = qt_page.ACTIVE_LAYER_NUMERIC_FIELDS_ALIASES.split(';');
+        var NUMERIC_FIELDS_TO_ALIASES = {};
+        for (var i = 0; i < ACTIVE_LAYER_NUMERIC_FIELDS.length; i++) {
+            NUMERIC_FIELDS_TO_ALIASES[ACTIVE_LAYER_NUMERIC_FIELDS[i]] = ACTIVE_LAYER_NUMERIC_FIELDS_ALIASES[i];
+        }
         var NODE_TYPES = qt_page.NODE_TYPES.split(';');
         var node_types_dict = {};
         for (var i = 0; i < NODE_TYPES.length; i++) {
@@ -208,6 +213,14 @@
             } else {
                 $('#customFormula').val('');
             }
+            $('#fieldName').change(function(){
+                if (typeof fieldDescription == 'undefined') {
+                    fieldAlias = NUMERIC_FIELDS_TO_ALIASES[$('#fieldName').val()];
+                    if (fieldAlias) {
+                        $('#fieldDescription').val(fieldAlias);
+                    }
+                }
+            });
             enableOrDisableCustomFieldSelector();
             $('#operator').change(function() {
                 enableOrDisableCustomFieldSelector();
@@ -283,12 +296,21 @@
                     .append('<br/><label for="field">Field name: </label>')
                     .append('<select id="field">' + fieldOptions(node) + '</select><br/>');
 
-                // By default, set the name to be equal to the fieldname selected
-                var defaultName = $('#field').val();
-                newNodeName.val(defaultName);
+                // by default, use the alias if present, or the field code
+                fieldAlias = NUMERIC_FIELDS_TO_ALIASES[$('#field').val()];
+                if (fieldAlias) {
+                    newNodeName.val(fieldAlias);
+                } else {
+                    newNodeName.val($('#field').val());
+                }
 
                 $('#field').on('change', function() {
-                    newNodeName.val(this.value);
+                    fieldAlias = NUMERIC_FIELDS_TO_ALIASES[$('#field').val()];
+                    if (fieldAlias) {
+                        newNodeName.val(fieldAlias);
+                    } else {
+                        newNodeName.val(this.value);
+                    }
                 });
             }
         }
@@ -356,9 +378,14 @@
             var takenFields = listTakenFields(rootNode);
             for (var i = 0; i < ACTIVE_LAYER_NUMERIC_FIELDS.length; i++) {
                 var field_name = ACTIVE_LAYER_NUMERIC_FIELDS[i];
+                var field_alias = ACTIVE_LAYER_NUMERIC_FIELDS_ALIASES[i];
                 // Add only numeric fields in the active layer that are not already in the PD
                 if (takenFields.indexOf(field_name) === -1){
-                    options += '<option value="' + field_name + '">' + field_name + '</option>';
+                    displayedOption = field_name;
+                    if (field_alias) {
+                        displayedOption += ' (' + field_alias + ')';
+                    }
+                    options += '<option value="' + field_name + '">' + displayedOption + '</option>';
                 }
             }
             return options;
@@ -937,8 +964,6 @@
                             'field': "",
                             'name': ""
                         };
-                        // console.log("newnode:")
-                        // console.log(new_node)
 
                         // Add node, appending it to the node that has been clicked
                         siblings.push(new_node);

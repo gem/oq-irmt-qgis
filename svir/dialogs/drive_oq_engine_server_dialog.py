@@ -61,13 +61,28 @@ from svir.utilities.utils import (WaitCursorManager,
                                   get_ui_class,
                                   SvNetworkError,
                                   )
-from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
+from svir.dialogs.load_ruptures_as_layer_dialog import (
+    LoadRupturesAsLayerDialog)
+from svir.dialogs.load_dmg_by_asset_as_layer_dialog import (
+    LoadDmgByAssetAsLayerDialog)
+from svir.dialogs.load_gmf_data_as_layer_dialog import (
+    LoadGmfDataAsLayerDialog)
+from svir.dialogs.load_hmaps_as_layer_dialog import (
+    LoadHazardMapsAsLayerDialog)
+from svir.dialogs.load_hcurves_as_layer_dialog import (
+    LoadHazardCurvesAsLayerDialog)
+from svir.dialogs.load_uhs_as_layer_dialog import (
+    LoadUhsAsLayerDialog)
+from svir.dialogs.load_losses_by_asset_as_layer_dialog import (
+    LoadLossesByAssetAsLayerDialog)
 from svir.dialogs.show_full_report_dialog import ShowFullReportDialog
 
 FORM_CLASS = get_ui_class('ui_drive_engine_server.ui')
 
 HANDLED_EXCEPTIONS = (SSLError, ConnectionError, InvalidSchema, MissingSchema,
                       ReadTimeout, SvNetworkError)
+
+BUTTON_WIDTH = 75
 
 
 class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
@@ -161,6 +176,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             calc_list = json.loads(resp.text)
         selected_keys = ['description', 'id', 'job_type', 'owner', 'status']
         col_names = ['Description', 'ID', 'Job Type', 'Owner', 'Status']
+        col_widths = [380, 50, 80, 80, 80]
         if not calc_list:
             if self.calc_list_tbl.rowCount() > 0:
                 self.calc_list_tbl.clearContents()
@@ -171,8 +187,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 self.calc_list_tbl.setHorizontalHeaderLabels(col_names)
                 self.calc_list_tbl.horizontalHeader().setStyleSheet(
                     "font-weight: bold;")
-                self.calc_list_tbl.resizeColumnsToContents()
-                self.calc_list_tbl.resizeRowsToContents()
+                self.set_calc_list_widths(col_widths)
             return
         actions = [
             {'label': 'Console', 'bg_color': '#3cb3c5', 'txt_color': 'white'},
@@ -199,16 +214,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 item.setTextColor(row_txt_color)
                 self.calc_list_tbl.setItem(row, col, item)
             for col, action in enumerate(actions, len(selected_keys)):
-                # do not display 'Continue' button, if this is already a risk
-                # calculation or if the calculation is still incomplete
-                if action['label'] == 'Continue':
-                    if (calc['job_type'] == 'risk'
-                            or calc['status'] != 'complete'):
-                        continue
-                # do not display the button for outputs until calc is complete
-                elif action['label'] == 'Outputs':
-                    if calc['status'] != 'complete':
-                        continue
+                # display the Continue and Output buttons only if the
+                # computation is completed
+                if (calc['status'] != 'complete' and
+                        action['label'] in ('Continue', 'Outputs')):
+                    continue
                 button = QPushButton()
                 button.setText(action['label'])
                 style = 'background-color: %s; color: %s' % (
@@ -219,14 +229,19 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     lambda calc_id=calc['id'], action=action['label']: (
                         self.on_calc_action_btn_clicked(calc_id, action)))
                 self.calc_list_tbl.setCellWidget(row, col, button)
+                self.calc_list_tbl.setColumnWidth(col, BUTTON_WIDTH)
         empty_col_names = [''] * len(actions)
         headers = col_names + empty_col_names
         self.calc_list_tbl.setHorizontalHeaderLabels(headers)
         self.calc_list_tbl.horizontalHeader().setStyleSheet(
             "font-weight: bold;")
-        self.calc_list_tbl.resizeColumnsToContents()
-        self.calc_list_tbl.resizeRowsToContents()
+        self.set_calc_list_widths(col_widths)
         return True
+
+    def set_calc_list_widths(self, widths):
+        for i, width in enumerate(widths):
+            self.calc_list_tbl.setColumnWidth(i, width)
+        self.calc_list_tbl.resizeRowsToContents()
 
     def clear_output_list(self):
         self.output_list_tbl.clearContents()
@@ -304,7 +319,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     def run_calc(self, calc_id=None):
         """
         Run a calculation. If `calc_id` is given, it means we want to run
-        a risk calculation re-using the output of the given hazard calculation
+        a calculation re-using the output of the given calculation
         """
         text = self.tr('Select the files needed to run the calculation,'
                        ' or the zip archive containing those files.')
@@ -335,6 +350,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         run_calc_url = "%s/v1/calc/run" % self.hostname
         with WaitCursorManager('Starting calculation...', self.iface):
             if calc_id is not None:
+                # FIXME: currently the web api is expecting a hazard_job_id
+                # although it could be any kind of job_id. This will have to be
+                # changed as soon as the web api is updated.
                 data = {'hazard_job_id': calc_id}
             else:
                 data = {}
@@ -399,16 +417,12 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         selected_keys = [key for key in sorted(output_list[0].keys())
                          if key not in exclude]
         max_actions = 0
-        needs_additional_button = False
         for row in output_list:
+            num_actions = len(row['outtypes'])
             if (row['type'] in OQ_ALL_LOADABLE_TYPES
                     or row['type'] == 'fullreport'):
-                needs_additional_button = True
-            num_actions = len(row['outtypes'])
-            if num_actions > max_actions:
-                max_actions = num_actions
-        if needs_additional_button:
-            max_actions += 1
+                num_actions += 1  # needs additional column for loader button
+            max_actions = max(max_actions, num_actions)
 
         self.output_list_tbl.setRowCount(len(output_list))
         self.output_list_tbl.setColumnCount(
@@ -425,6 +439,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 button = QPushButton()
                 self.connect_button_to_action(button, action, output, outtype)
                 self.output_list_tbl.setCellWidget(row, col, button)
+                self.calc_list_tbl.setColumnWidth(col, BUTTON_WIDTH)
             if (output['type'] in OQ_ALL_LOADABLE_TYPES
                     or output['type'] == 'fullreport'):
                 if output['type'] == 'fullreport':
@@ -435,6 +450,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 self.connect_button_to_action(
                     button, action, output, outtype)
                 self.output_list_tbl.setCellWidget(row, col + 1, button)
+                self.calc_list_tbl.setColumnWidth(col, BUTTON_WIDTH)
         col_names = [key.capitalize() for key in selected_keys]
         empty_col_names = ['' for outtype in range(max_actions)]
         headers = col_names + empty_col_names
@@ -483,7 +499,17 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             if outtype in ('npz', 'csv'):
                 filepath = self.download_output(
                     output_id, outtype, dest_folder)
-                dlg = LoadOutputAsLayerDialog(
+                output_type_loaders = {
+                    'ruptures': LoadRupturesAsLayerDialog,
+                    'dmg_by_asset': LoadDmgByAssetAsLayerDialog,
+                    'gmf_data': LoadGmfDataAsLayerDialog,
+                    'hmaps': LoadHazardMapsAsLayerDialog,
+                    'hcurves': LoadHazardCurvesAsLayerDialog,
+                    'uhs': LoadUhsAsLayerDialog,
+                    'losses_by_asset': LoadLossesByAssetAsLayerDialog}
+                if output_type not in output_type_loaders:
+                    raise NotImplementedError(output_type)
+                dlg = output_type_loaders[output_type](
                     self.iface, output_type, filepath)
                 dlg.exec_()
             else:

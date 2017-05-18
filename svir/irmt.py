@@ -70,7 +70,20 @@ from svir.dialogs.recovery_modeling_dialog import RecoveryModelingDialog
 from svir.dialogs.recovery_settings_dialog import RecoverySettingsDialog
 from svir.dialogs.drive_oq_engine_server_dialog import (
     DriveOqEngineServerDialog)
-from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
+from svir.dialogs.load_ruptures_as_layer_dialog import (
+    LoadRupturesAsLayerDialog)
+from svir.dialogs.load_dmg_by_asset_as_layer_dialog import (
+    LoadDmgByAssetAsLayerDialog)
+from svir.dialogs.load_hmaps_as_layer_dialog import (
+    LoadHazardMapsAsLayerDialog)
+from svir.dialogs.load_hcurves_as_layer_dialog import (
+    LoadHazardCurvesAsLayerDialog)
+from svir.dialogs.load_gmf_data_as_layer_dialog import (
+    LoadGmfDataAsLayerDialog)
+from svir.dialogs.load_uhs_as_layer_dialog import (
+    LoadUhsAsLayerDialog)
+from svir.dialogs.load_losses_by_asset_as_layer_dialog import (
+    LoadLossesByAssetAsLayerDialog)
 
 from svir.thread_worker.abstract_worker import start_worker
 from svir.thread_worker.download_platform_data_worker import (
@@ -95,6 +108,7 @@ from svir.utilities.shared import (DEBUG,
                                    THEME_TEMPLATE,
                                    INDICATOR_TEMPLATE,
                                    OPERATORS_DICT)
+from svir.ui.tool_button_with_help_link import QToolButtonWithHelpLink
 
 # DO NOT REMOVE THIS
 # noinspection PyUnresolvedReferences
@@ -120,6 +134,9 @@ class Irmt:
             if qVersion() > '4.3.3':
                 QCoreApplication.installTranslator(self.translator)
 
+        # our own toolbar
+        self.toolbar = None
+
         # our own menu
         self.menu = QMenu(self.iface.mainWindow())
         self.menu.setTitle("IRMT")
@@ -144,6 +161,9 @@ class Irmt:
             self.layers_removed)
 
     def initGui(self):
+        # create our own toolbar
+        self.toolbar = self.iface.addToolBar('IRMT')
+        self.toolbar.setObjectName('IRMTToolBar')
 
         menu_bar = self.iface.mainWindow().menuBar()
         get_menu = self.get_menu(menu_bar, 'IRMT')
@@ -183,11 +203,12 @@ class Irmt:
                            submenu='OQ Platform')
         # Action to drive the oq-engine server
         self.add_menu_item("drive_engine_server",
-                           ":/plugins/irmt/manual.svg",  # FIXME
+                           ":/plugins/irmt/drive_oqengine.svg",
                            u"Drive oq-engine &server",
                            self.drive_oq_engine_server,
                            enable=True,
-                           submenu='OQ Engine')
+                           submenu='OQ Engine',
+                           add_to_toolbar=True)
         # Action to manage the projects
         self.add_menu_item("project_definitions_manager",
                            ":/plugins/irmt/copy.svg",
@@ -204,17 +225,18 @@ class Irmt:
                            self.weight_data,
                            enable=False,
                            add_to_layer_actions=True,
+                           add_to_toolbar=True,
                            submenu='Integrated risk')
         # Action to run the recovery analysis
         self.add_menu_item("recovery_modeling",
-                           ":/plugins/irmt/plot.svg",  # FIXME
+                           ":/plugins/irmt/recovery.svg",
                            u"Run recovery modeling",
                            self.recovery_modeling,
                            enable=True,
                            submenu='Recovery modeling')
         # Action to set the recovery modeling parameters
         self.add_menu_item("recovery_settings",
-                           ":/plugins/irmt/settings.svg",  # FIXME
+                           ":/plugins/irmt/recovery_settings.svg",
                            u"Recovery modeling settings",
                            self.recovery_settings,
                            enable=True,
@@ -227,15 +249,73 @@ class Irmt:
                            self.aggregate_losses,
                            enable=True,
                            add_to_layer_actions=False,
+                           add_to_toolbar=True,
                            submenu='Utilities')
 
-        # Action to load an oq-engine output as layer
-        self.add_menu_item("load_oqengine_output_as_layer",
-                           ":/plugins/irmt/calculate.svg",  # FIXME
-                           u"Load an OpenQuake Engine output file as layer",
-                           self.load_oqengine_output_as_layer,
+        self.add_menu_item("load_ruptures_as_layer",
+                           ":/plugins/irmt/load_from_oqoutput.svg",
+                           u"Load ruptures as layer",
+                           self.load_ruptures_as_layer,
                            enable=True,
                            submenu='OQ Engine')
+
+        self.add_menu_item("load_dmg_by_asset_as_layer",
+                           ":/plugins/irmt/load_from_oqoutput.svg",
+                           u"Load damage by asset as layer",
+                           self.load_dmg_by_asset_as_layer,
+                           enable=True,
+                           submenu='OQ Engine')
+
+        self.add_menu_item("load_hmaps_as_layer",
+                           ":/plugins/irmt/load_from_oqoutput.svg",
+                           u"Load hazard maps as layer",
+                           self.load_hmaps_as_layer,
+                           enable=True,
+                           submenu='OQ Engine')
+
+        self.add_menu_item("load_hcurves_as_layer",
+                           ":/plugins/irmt/load_from_oqoutput.svg",
+                           u"Load hazard curves as layer",
+                           self.load_hcurves_as_layer,
+                           enable=True,
+                           submenu='OQ Engine')
+
+        self.add_menu_item("load_gmf_data_as_layer",
+                           ":/plugins/irmt/load_from_oqoutput.svg",
+                           u"Load ground motion fields as layer",
+                           self.load_gmf_data_as_layer,
+                           enable=True,
+                           submenu='OQ Engine')
+
+        self.add_menu_item("load_uhs_as_layer",
+                           ":/plugins/irmt/load_from_oqoutput.svg",
+                           u"Load uniform hazard spectra as layer",
+                           self.load_uhs_as_layer,
+                           enable=True,
+                           submenu='OQ Engine')
+
+        self.add_menu_item("load_losses_by_asset_as_layer",
+                           ":/plugins/irmt/load_from_oqoutput.svg",
+                           u"Load losses by asset as layer",
+                           self.load_losses_by_asset_as_layer,
+                           enable=True,
+                           submenu='OQ Engine')
+        # # Action to plot total damage reading it from a NPZ produced by a
+        # # scenario damage calculation
+        # self.add_menu_item("plot_dmg_total",
+        #                    ":/plugins/irmt/copy.svg",
+        #                    u"Plot total damage from NPZ",
+        #                    self.plot_dmg_total_from_npz,
+        #                    enable=True,
+        #                    submenu='OQ Engine')
+        # # Action to plot damage by taxonomy reading it from a NPZ produced
+        # # by a scenario damage calculation
+        # self.add_menu_item("plot_dmg_by_taxon",
+        #                    ":/plugins/irmt/copy.svg",
+        #                    u"Plot damage by taxonomy from NPZ",
+        #                    self.plot_dmg_by_taxon_from_npz,
+        #                    enable=True,
+        #                    submenu='OQ Engine')
 
         # Action to activate the modal dialog to select a layer and one
         # of its
@@ -256,14 +336,16 @@ class Irmt:
                            ":/plugins/irmt/settings.svg",
                            u"&IRMT settings",
                            self.show_settings,
-                           enable=True)
+                           enable=True,
+                           add_to_toolbar=True)
 
         # Action to open the plugin's manual
         self.add_menu_item("help",
                            ":/plugins/irmt/manual.svg",
                            u"IRMT &manual",
                            self.show_manual,
-                           enable=True)
+                           enable=True,
+                           add_to_toolbar=True)
 
         self._create_viewer_dock()
         self.update_actions_status()
@@ -285,10 +367,35 @@ class Irmt:
         dlg = RecoverySettingsDialog(self.iface)
         dlg.exec_()
 
-    def load_oqengine_output_as_layer(self):
-        dlg = LoadOutputAsLayerDialog(self.iface)
+    def load_ruptures_as_layer(self):
+        dlg = LoadRupturesAsLayerDialog(self.iface, 'ruptures')
+        dlg.exec_()
+
+    def load_dmg_by_asset_as_layer(self):
+        dlg = LoadDmgByAssetAsLayerDialog(self.iface, 'dmg_by_asset')
+        dlg.exec_()
+
+    def load_hmaps_as_layer(self):
+        dlg = LoadHazardMapsAsLayerDialog(self.iface, 'hmaps')
+        dlg.exec_()
+
+    def load_hcurves_as_layer(self):
+        dlg = LoadHazardCurvesAsLayerDialog(self.iface, 'hcurves')
         dlg.exec_()
         self.viewer_dock.change_output_type(dlg.output_type)
+
+    def load_gmf_data_as_layer(self):
+        dlg = LoadGmfDataAsLayerDialog(self.iface, 'gmf_data')
+        dlg.exec_()
+
+    def load_uhs_as_layer(self):
+        dlg = LoadUhsAsLayerDialog(self.iface, 'uhs')
+        dlg.exec_()
+        self.viewer_dock.change_output_type(dlg.output_type)
+
+    def load_losses_by_asset_as_layer(self):
+        dlg = LoadLossesByAssetAsLayerDialog(self.iface, 'losses_by_asset')
+        dlg.exec_()
 
     # These 2 will have to be addressed when managing risk outputs
     # def plot_dmg_total_from_npz(self):
@@ -353,10 +460,11 @@ class Irmt:
                       layers_type=QgsMapLayer.VectorLayer,
                       set_checkable=False,
                       set_checked=False,
-                      submenu=None
+                      submenu=None,
+                      add_to_toolbar=False,
                       ):
         """
-        Add an item to the IRMT menu
+        Add an item to the IRMT menu and a corresponding toolbar icon
 
         :param icon_path: path of the icon associated to the action
         :param label: name of the action, visible to the user
@@ -388,6 +496,15 @@ class Irmt:
                 menu = get_menu
             else:
                 menu = self.menu.addMenu(submenu)
+
+        if add_to_toolbar:
+            help_url = 'http://docs.openquake.org/oq-irmt-qgis/'
+            # NOTE: the "what's this" functionality has been removed from QGIS
+            #       so the help_url will never be used. Anyway, buttons defined
+            #       this way keep working to run the corresponding actions.
+            button = QToolButtonWithHelpLink(action, help_url)
+            self.toolbar.addWidget(button)
+
         menu.addAction(action)
 
         return action
@@ -441,6 +558,7 @@ class Irmt:
             action = self.registered_actions[action_name]
             # Remove the actions in the layer legend
             self.iface.legendInterface().removeLegendLayerAction(action)
+            self.iface.removeToolBarIcon(action)
         clear_progress_message_bar(self.iface.messageBar())
 
         # remove menu
@@ -553,14 +671,16 @@ class Irmt:
                             result,
                             load_geometries,
                             dest_filename,
-                            project_definition))
+                            project_definition,
+                            dlg.indicators_info_dict))
                     start_worker(worker, self.iface.messageBar(),
                                  'Downloading data from platform')
         except SvNetworkError as e:
             log_msg(str(e), level='C', message_bar=self.iface.messageBar())
 
     def _data_download_successful(
-            self, result, load_geometries, dest_filename, project_definition):
+            self, result, load_geometries, dest_filename, project_definition,
+            indicators_info_dict):
         """
         Called once the DonloadPlatformDataWorker has successfully downloaded
         socioeconomic data as a csv file.
@@ -574,6 +694,8 @@ class Irmt:
             containing the downloaded data
         :param project_definition: the project definition that was
             automatically built based on the DB structure
+        :param indicators_info_dict:
+            dict ind_code -> dict with additional info about it
         """
         fname, msg = result
         display_msg = tr("Socioeconomic data loaded in a new layer")
@@ -630,6 +752,18 @@ class Irmt:
             'project_definitions': [project_definition]}
         write_layer_suppl_info_to_qgs(layer.id(), suppl_info)
         self.update_actions_status()
+
+        # assign ind_name as alias for each ind_code
+        for field_idx, field in enumerate(layer.fields()):
+            if field.name() in indicators_info_dict:
+                layer.addAttributeAlias(
+                    field_idx, indicators_info_dict[field.name()]['name'])
+            elif field.name() == 'ISO':
+                layer.addAttributeAlias(
+                    field_idx, 'Country ISO code')
+            elif field.name() == 'COUNTRY_NA':
+                layer.addAttributeAlias(
+                    field_idx, 'Country name')
 
     def download_layer(self):
         """
@@ -1124,17 +1258,27 @@ class Irmt:
         dlg = TransformationDialog(self.iface)
         if dlg.exec_():
             layer = self.iface.activeLayer()
-            input_attr_names = dlg.fields_multiselect.get_selected_items()
+            input_attr_names = [
+                field_name_plus_alias.split('(')[0].strip()
+                for field_name_plus_alias in
+                dlg.fields_multiselect.get_selected_items()]
+            input_attr_aliases = [
+                field_name_plus_alias.split('(')[1].split(')')[0].strip()
+                for field_name_plus_alias in
+                dlg.fields_multiselect.get_selected_items()]
             algorithm_name = dlg.algorithm_cbx.currentText()
             variant = dlg.variant_cbx.currentText()
             inverse = dlg.inverse_ckb.isChecked()
-            for input_attr_name in input_attr_names:
+            for input_attr_idx, input_attr_name in enumerate(input_attr_names):
+                target_attr_alias = input_attr_aliases[input_attr_idx]
                 if dlg.overwrite_ckb.isChecked():
                     target_attr_name = input_attr_name
                 elif dlg.fields_multiselect.selected_widget.count() == 1:
                     target_attr_name = dlg.new_field_name_txt.text()
                 else:
-                    target_attr_name = ('_' + input_attr_name)[:10]
+                    # the limit of 10 chars for shapefiles is handled by
+                    # ProcessLayer.add_attributes
+                    target_attr_name = '_' + input_attr_name
                 try:
                     msg = "Applying '%s' transformation to field '%s'" % (
                         algorithm_name, input_attr_name)
@@ -1144,7 +1288,8 @@ class Irmt:
                                                        algorithm_name,
                                                        variant,
                                                        inverse,
-                                                       target_attr_name)
+                                                       target_attr_name,
+                                                       target_attr_alias)
                     msg = ('Transformation %s has been applied to attribute %s'
                            ' of layer %s.') % (algorithm_name,
                                                input_attr_name,
@@ -1155,7 +1300,8 @@ class Irmt:
                     else:
                         msg += (' The results of the transformation'
                                 ' have been saved into the new'
-                                ' attribute %s.') % (res_attr_name)
+                                ' attribute %s (%s).') % (res_attr_name,
+                                                          target_attr_alias)
                     if invalid_input_values:
                         msg += (' The transformation could not'
                                 ' be performed for the following'
