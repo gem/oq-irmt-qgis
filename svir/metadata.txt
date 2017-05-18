@@ -31,6 +31,7 @@ changelog=
     * When transforming a field, if the original field had an alias, the same alias will be added to the transformed field
     * Renewed set of icons and re-added plugin's toolbar with a subset of the available actions
     * Improved mock of QGIS interface for testing
+    * The latest added layer is put on top of the others in the same group, and new groups of layers are added on top
     * The automatic styling of layers imported from the OQ-Engine sets the size of points to depend on the map unit
     * Fixed the addition of layers to the corresponding groups, avoiding duplications
     * The log of a OQ-Engine calculation is displayed in a dedicated dialog instead of in the QGIS log window
