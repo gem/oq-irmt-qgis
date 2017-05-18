@@ -22,6 +22,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import tempfile
 from svir.utilities.utils import import_layer_from_csv
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
@@ -48,8 +49,10 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
             dest_shp = tempfile.mkstemp(suffix='.shp')[1]
         else:
             dest_shp = None  # the destination file will be selected via GUI
+        # extract the name of the csv file and remove the extension
+        layer_name = os.path.splitext(os.path.basename(self.path_le.text()))[0]
         self.layer = import_layer_from_csv(
-            self, self.path_le.text(), 'ruptures', self.iface,
+            self, self.path_le.text(), layer_name, self.iface,
             wkt_field='boundary', delimiter='\t',
             save_as_shp=self.save_as_shp_ckb.isChecked(), dest_shp=dest_shp)
 
