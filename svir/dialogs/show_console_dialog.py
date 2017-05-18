@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 # /***************************************************************************
 # Irmt
@@ -48,6 +47,9 @@ class ShowConsoleDialog(QDialog, FORM_CLASS):
         self.timer.start(1000)  # refresh time in milliseconds
 
     def refresh_calc_log(self):
+        calc_status = self.driver_dialog.get_calc_status(self.calc_id)
+        if calc_status['status'] == 'complete':
+            self.timer.stop()
         calc_log = self.driver_dialog.get_calc_log(self.calc_id)
         if calc_log:
             self.text_browser.append(calc_log)

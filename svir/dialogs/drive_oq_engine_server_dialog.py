@@ -298,6 +298,20 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             self.calc_log_line[calc_id] = start + len(calc_log)
             return '\n'.join([','.join(row) for row in calc_log])
 
+    def get_calc_status(self, calc_id):
+        calc_status_url = "%s/v1/calc/%s/status" % (self.hostname, calc_id)
+        with WaitCursorManager(
+                'Getting status for output %s...' % calc_id, self.iface):
+            try:
+                # FIXME: enable the user to set verify=True
+                resp = self.session.get(
+                    calc_status_url, timeout=10, verify=False)
+            except HANDLED_EXCEPTIONS as exc:
+                self._handle_exception(exc)
+                return
+            calc_status = json.loads(resp.text)
+            return calc_status
+
     def remove_calc(self, calc_id):
         calc_remove_url = "%s/v1/calc/%s/remove" % (self.hostname, calc_id)
         with WaitCursorManager('Removing calculation...', self.iface):
