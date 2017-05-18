@@ -47,6 +47,8 @@ class ShowConsoleDialog(QDialog, FORM_CLASS):
         QObject.connect(
             self.timer, SIGNAL('timeout()'), self.refresh_calc_log)
         self.timer.start(1000)  # refresh time in milliseconds
+        # show the log before the first iteration of the timer
+        self.refresh_calc_log()
 
     def refresh_calc_log(self):
         calc_status = self.driver_dialog.get_calc_status(self.calc_id)
