@@ -40,6 +40,9 @@ class ShowConsoleDialog(QDialog, FORM_CLASS):
         self.setupUi(self)
         self.driver_dialog = driver_dialog
         self.calc_id = calc_id
+        # when re-opening the dialog for a calculation, display the log from
+        # the beginning
+        self.driver_dialog.calc_log_line[calc_id] = 0
         self.timer = QTimer()
         QObject.connect(
             self.timer, SIGNAL('timeout()'), self.refresh_calc_log)
