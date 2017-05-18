@@ -42,7 +42,6 @@ from PyQt4.QtGui import (QDialog,
                          QPushButton,
                          QFileDialog,
                          QColor,
-                         QDockWidget,
                          QMessageBox,
                          )
 from svir.third_party.requests import Session
@@ -76,6 +75,7 @@ from svir.dialogs.load_uhs_as_layer_dialog import (
 from svir.dialogs.load_losses_by_asset_as_layer_dialog import (
     LoadLossesByAssetAsLayerDialog)
 from svir.dialogs.show_full_report_dialog import ShowFullReportDialog
+from svir.dialogs.show_console_dialog import ShowConsoleDialog
 
 FORM_CLASS = get_ui_class('ui_drive_engine_server.ui')
 
@@ -250,11 +250,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
     def on_calc_action_btn_clicked(self, calc_id, action):
         if action == 'Console':
-            calc_log = self.get_calc_log(calc_id)
-            log_msg(calc_log, tag='Calculation %s' % calc_id)
-            logDock = self.iface.mainWindow().findChild(QDockWidget,
-                                                        'MessageLog')
-            logDock.show()
+            dlg = ShowConsoleDialog(self, calc_id)
+            dlg.setWindowTitle(
+                'Console log of calculation %s' % calc_id)
+            dlg.exec_()
         elif action == 'Remove':
             confirmed = QMessageBox.question(
                 self,
@@ -298,6 +297,20 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             calc_log = json.loads(resp.text)
             self.calc_log_line[calc_id] = start + len(calc_log)
             return '\n'.join([','.join(row) for row in calc_log])
+
+    def get_calc_status(self, calc_id):
+        calc_status_url = "%s/v1/calc/%s/status" % (self.hostname, calc_id)
+        with WaitCursorManager(
+                'Getting status for output %s...' % calc_id, self.iface):
+            try:
+                # FIXME: enable the user to set verify=True
+                resp = self.session.get(
+                    calc_status_url, timeout=10, verify=False)
+            except HANDLED_EXCEPTIONS as exc:
+                self._handle_exception(exc)
+                return
+            calc_status = json.loads(resp.text)
+            return calc_status
 
     def remove_calc(self, calc_id):
         calc_remove_url = "%s/v1/calc/%s/remove" % (self.hostname, calc_id)
