@@ -40,7 +40,6 @@ class ShowConsoleDialog(QDialog, FORM_CLASS):
         self.setupUi(self)
         self.driver_dialog = driver_dialog
         self.calc_id = calc_id
-        self.text_browser.clear()
         self.timer = QTimer()
         QObject.connect(
             self.timer, SIGNAL('timeout()'), self.refresh_calc_log)
@@ -48,7 +47,7 @@ class ShowConsoleDialog(QDialog, FORM_CLASS):
 
     def refresh_calc_log(self):
         calc_status = self.driver_dialog.get_calc_status(self.calc_id)
-        if calc_status['status'] == 'complete':
+        if calc_status['status'] in ('complete', 'failed'):
             self.timer.stop()
         calc_log = self.driver_dialog.get_calc_log(self.calc_id)
         if calc_log:
