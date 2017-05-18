@@ -34,6 +34,7 @@ from qgis.core import (QgsVectorLayer,
                        QgsRendererRangeV2,
                        QgsProject,
                        QgsMapUnitScale,
+                       QGis,
                        )
 from PyQt4.QtCore import pyqtSlot, QDir, QSettings, QFileInfo, Qt
 
@@ -490,8 +491,15 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.iface.zoomToActiveLayer()
 
     def _set_symbol_size(self, symbol):
+        if self.iface.mapCanvas().mapUnits() == QGis.Degrees:
+            point_size = 0.05
+        elif self.iface.mapCanvas().mapUnits() == QGis.Meters:
+            point_size = 4000
+        else:
+            # it is not obvious how to choose the point size in the other
+            # cases, so we conservatively keep the default sizing
+            return
         symbol.setOutputUnit(symbol.MapUnit)
-        point_size = 0.05
         symbol.setSize(point_size)
         map_unit_scale = QgsMapUnitScale()
         map_unit_scale.maxSizeMMEnabled = True
