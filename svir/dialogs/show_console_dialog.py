@@ -23,6 +23,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
+from PyQt4.QtCore import QTimer, QObject, SIGNAL
 from PyQt4.QtGui import QDialog
 from svir.utilities.utils import get_ui_class
 
@@ -38,5 +39,15 @@ class ShowConsoleDialog(QDialog, FORM_CLASS):
         QDialog.__init__(self)
         # Set up the user interface from Designer.
         self.setupUi(self)
-        calc_log = driver_dialog.get_calc_log(calc_id)
-        self.text_browser.setText(calc_log)
+        self.driver_dialog = driver_dialog
+        self.calc_id = calc_id
+        self.text_browser.clear()
+        self.timer = QTimer()
+        QObject.connect(
+            self.timer, SIGNAL('timeout()'), self.refresh_calc_log)
+        self.timer.start(1000)  # refresh time in milliseconds
+
+    def refresh_calc_log(self):
+        calc_log = self.driver_dialog.get_calc_log(self.calc_id)
+        if calc_log:
+            self.text_browser.append(calc_log)
