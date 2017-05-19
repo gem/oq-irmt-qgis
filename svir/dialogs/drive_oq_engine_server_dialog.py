@@ -39,6 +39,7 @@ from PyQt4.QtCore import (QDir,
 
 from PyQt4.QtGui import (QDialog,
                          QTableWidgetItem,
+                         QAbstractItemView,
                          QPushButton,
                          QFileDialog,
                          QColor,
@@ -101,6 +102,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.session = None
         self.hostname = None
         self.current_output_calc_id = None
+        self.current_pointed_calc_id = None  # we will scroll to it
         self.is_logged_in = False
         self.timer = None
         # Keep retrieving the list of calculations (especially important to
@@ -236,6 +238,14 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.calc_list_tbl.horizontalHeader().setStyleSheet(
             "font-weight: bold;")
         self.set_calc_list_widths(col_widths)
+        if self.current_pointed_calc_id:
+            # find QTableItem corresponding to that calc_id
+            calc_id_col_idx = 1
+            for row in xrange(self.calc_list_tbl.rowCount()):
+                item_calc_id = self.calc_list_tbl.item(row, calc_id_col_idx)
+                if int(item_calc_id.text()) == self.current_pointed_calc_id:
+                    self.calc_list_tbl.scrollToItem(
+                        item_calc_id, QAbstractItemView.PositionAtCenter)
         return True
 
     def set_calc_list_widths(self, widths):
@@ -249,6 +259,12 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.output_list_tbl.setColumnCount(0)
 
     def on_calc_action_btn_clicked(self, calc_id, action):
+        # NOTE: while scrolling through the list of calculations, the tool
+        # keeps polling and refreshing the list, without losing the current
+        # scrolling.  But if you click on any button, at the next refresh, the
+        # view is scrolled to the top. Therefore we need to keep track of which
+        # line was selected, in order to scroll to that line.
+        self.current_pointed_calc_id = calc_id
         if action == 'Console':
             dlg = ShowConsoleDialog(self, calc_id)
             dlg.setWindowTitle(
