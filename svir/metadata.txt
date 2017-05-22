@@ -25,6 +25,7 @@ email=staff.it@globalquakemodel.org
 changelog=
     1.8.25
     * The list of OQ-Engine calculations is automatically scrolled to view the latest clicked row
+    * The IRMT viewer dock can be shown/hidden by an additional button in the plugin's toolbar
     1.8.24
     * ProcessLayer.addAttributes launders proposed attribute names only if the processed layer is a shapefile
     * When fields with long names are added to shapefiles, the original long names are saved as aliases
