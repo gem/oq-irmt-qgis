@@ -1385,6 +1385,7 @@ class Irmt:
                                     u"Toggle viewer dock",
                                     self.toggle_dock_visibility,
                                     enable=True,
+                                    add_to_toolbar=True,
                                     set_checkable=True,
                                     set_checked=True)
 

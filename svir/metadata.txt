@@ -25,6 +25,7 @@ email=staff.it@globalquakemodel.org
 changelog=
     1.8.25
     * The list of OQ-Engine calculations is automatically scrolled to view the latest clicked row
+    * The IRMT viewer dock can be shown/hidden by an additional button in the plugin's toolbar
     * A splitter has been added between the list of calculations and the list of outputs for a calculation, allowing to
       mutually resize the two lists
     1.8.24

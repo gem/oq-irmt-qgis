@@ -529,7 +529,6 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 and self.active_layer.type() == QgsMapLayer.VectorLayer
                 and self.active_layer.geometryType() == QGis.Point):
             self.active_layer.selectionChanged.connect(self.redraw)
-            self.setEnabled(True)
 
             if self.output_type == 'hcurves':
                 reload_attrib_cbx(self.imt_cbx,
@@ -543,8 +542,6 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                                   TEXTUAL_FIELD_TYPES)
             if self.active_layer.selectedFeatureCount() > 0:
                 self.set_selection(self.active_layer.selectedFeaturesIds())
-        else:
-            self.setDisabled(True)
 
     def remove_connects(self):
         try:
