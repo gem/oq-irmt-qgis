@@ -39,9 +39,11 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
     Modal dialog to load hazard curves from an oq-engine output, as layer
     """
 
-    def __init__(self, iface, output_type='hcurves', path=None, mode=None):
+    def __init__(self, iface, viewer_dock, output_type='hcurves',
+                 path=None, mode=None):
         assert output_type == 'hcurves'
-        LoadOutputAsLayerDialog.__init__(self, iface, output_type, path, mode)
+        LoadOutputAsLayerDialog.__init__(
+            self, iface, viewer_dock, output_type, path, mode)
         self.setWindowTitle(
             'Load hazard curves from NPZ, as layer')
         self.create_load_selected_only_ckb()
@@ -112,5 +114,6 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
                                    % rlz, self.iface):
                 self.build_layer(rlz)
                 self.style_curves()
+        self.viewer_dock.change_output_type('Hazard Curves')
         if self.npz_file is not None:
             self.npz_file.close()

@@ -34,10 +34,11 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
     Modal dialog to load dmg_by_asset from an oq-engine output, as layer
     """
 
-    def __init__(
-            self, iface, output_type='dmg_by_asset', path=None, mode=None):
+    def __init__(self, iface, viewer_dock, output_type='dmg_by_asset',
+                 path=None, mode=None):
         assert output_type == 'dmg_by_asset'
-        LoadOutputAsLayerDialog.__init__(self, iface, output_type, path, mode)
+        LoadOutputAsLayerDialog.__init__(
+            self, iface, viewer_dock, output_type, path, mode)
         self.create_dmg_state_selector()
         self.create_loss_type_selector()
         self.create_save_as_shp_ckb()
