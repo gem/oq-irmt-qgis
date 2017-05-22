@@ -127,7 +127,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.plot_figure = Figure()
         self.plot_canvas = FigureCanvas(self.plot_figure)
         self.plot_canvas.setSizePolicy(
-            QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+            QSizePolicy.Preferred, QSizePolicy.MinimumExpanding)
         self.plot_toolbar = NavigationToolbar(self.plot_canvas, self)
         self.plot = self.plot_figure.add_subplot(111)
         self.legend = None

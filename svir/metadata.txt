@@ -29,6 +29,7 @@ changelog=
     * A splitter has been added between the list of calculations and the list of outputs for a calculation, allowing to
       mutually resize the two lists
     * Removed annoying messages while retrieveing the console log of a OQ-Engine calculation
+    * The size policy of the Viewer Dock has been improved, to fit better in smaller screens
     1.8.24
     * ProcessLayer.addAttributes launders proposed attribute names only if the processed layer is a shapefile
     * When fields with long names are added to shapefiles, the original long names are saved as aliases
