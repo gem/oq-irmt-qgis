@@ -303,8 +303,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         stop = ''  # get until the end
         calc_log_url = "%s/v1/calc/%s/log/%s:%s" % (
             self.hostname, calc_id, start, stop)
-        with WaitCursorManager(
-                'Getting log for output %s...' % calc_id, self.iface):
+        with WaitCursorManager():
             try:
                 # FIXME: enable the user to set verify=True
                 resp = self.session.get(calc_log_url, timeout=10, verify=False)
@@ -317,8 +316,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
     def get_calc_status(self, calc_id):
         calc_status_url = "%s/v1/calc/%s/status" % (self.hostname, calc_id)
-        with WaitCursorManager(
-                'Getting status for output %s...' % calc_id, self.iface):
+        with WaitCursorManager():
             try:
                 # FIXME: enable the user to set verify=True
                 resp = self.session.get(

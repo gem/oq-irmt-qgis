@@ -30,6 +30,7 @@ changelog=
       mutually resize the two lists
     * When hazard curves or uniform hazard spectra are loaded from an OQ-Engine output, the corresponding output type
       is pre-selected in the Data Viewer
+    * Removed annoying messages while retrieveing the console log of a OQ-Engine calculation
     1.8.24
     * ProcessLayer.addAttributes launders proposed attribute names only if the processed layer is a shapefile
     * When fields with long names are added to shapefiles, the original long names are saved as aliases
