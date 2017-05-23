@@ -484,6 +484,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.read_npz_into_layer(
             field_names, rlz=rlz, taxonomy=taxonomy, poe=poe,
             loss_type=loss_type)
+        self.layer.setCustomProperty('output_type', self.output_type)
         # add self.layer to the legend
         # False is to avoid adding the layer to the tree root, but only to the
         # group
