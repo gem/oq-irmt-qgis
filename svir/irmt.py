@@ -410,7 +410,7 @@ class Irmt:
     def drive_oq_engine_server(self):
         if self.drive_oq_engine_server_dlg is None:
             self.drive_oq_engine_server_dlg = DriveOqEngineServerDialog(
-                self.iface)
+                self.iface, self.viewer_dock)
         else:
             self.drive_oq_engine_server_dlg.attempt_login()
         self.drive_oq_engine_server_dlg.show()

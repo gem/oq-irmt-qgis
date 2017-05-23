@@ -92,8 +92,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     it is possible to run calculations, delete them, list them, visualize
     their outputs and loading them as vector layers.
     """
-    def __init__(self, iface):
+    def __init__(self, iface, viewer_dock):
         self.iface = iface
+        self.viewer_dock = viewer_dock  # needed to change the output_type
         QDialog.__init__(self)
         # Set up the user interface from Designer.
         self.setupUi(self)
@@ -537,7 +538,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 if output_type not in output_type_loaders:
                     raise NotImplementedError(output_type)
                 dlg = output_type_loaders[output_type](
-                    self.iface, output_type, filepath)
+                    self.iface, self.viewer_dock, output_type, filepath)
                 dlg.exec_()
             else:
                 raise NotImplementedError("%s %s" % (action, outtype))

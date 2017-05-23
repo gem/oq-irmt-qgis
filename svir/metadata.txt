@@ -28,6 +28,8 @@ changelog=
     * The IRMT viewer dock can be shown/hidden by an additional button in the plugin's toolbar
     * A splitter has been added between the list of calculations and the list of outputs for a calculation, allowing to
       mutually resize the two lists
+    * When hazard curves or uniform hazard spectra are loaded from an OQ-Engine output, the corresponding output type
+      is pre-selected in the Data Viewer
     * Removed annoying messages while retrieveing the console log of a OQ-Engine calculation
     * The size policy of the Viewer Dock has been improved, to fit better in smaller screens
     1.8.24

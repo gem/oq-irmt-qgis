@@ -38,9 +38,11 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
     Modal dialog to load hazard maps from an oq-engine output, as layer
     """
 
-    def __init__(self, iface, output_type='hmaps', path=None, mode=None):
+    def __init__(self, iface, viewer_dock, output_type='hmaps',
+                 path=None, mode=None):
         assert output_type == 'hmaps'
-        LoadOutputAsLayerDialog.__init__(self, iface, output_type, path, mode)
+        LoadOutputAsLayerDialog.__init__(
+            self, iface, viewer_dock, output_type, path, mode)
         self.setWindowTitle(
             'Load hazard maps from NPZ, as layer')
         self.create_load_selected_only_ckb()

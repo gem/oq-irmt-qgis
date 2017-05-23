@@ -39,9 +39,11 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
     as layer
     """
 
-    def __init__(self, iface, output_type='uhs', path=None, mode=None):
+    def __init__(self, iface, viewer_dock, output_type='uhs',
+                 path=None, mode=None):
         assert output_type == 'uhs'
-        LoadOutputAsLayerDialog.__init__(self, iface, output_type, path, mode)
+        LoadOutputAsLayerDialog.__init__(
+            self, iface, viewer_dock, output_type, path, mode)
         self.setWindowTitle(
             'Load uniform hazard spectra from NPZ, as layer')
         self.create_load_selected_only_ckb()
@@ -115,3 +117,4 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
                         ' and poe "%s"...' % (rlz, poe), self.iface):
                     self.build_layer(rlz, poe=poe)
                     self.style_curves()
+        self.viewer_dock.change_output_type('Uniform Hazard Spectra')
