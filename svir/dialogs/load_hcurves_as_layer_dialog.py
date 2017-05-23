@@ -114,6 +114,5 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
                                    % rlz, self.iface):
                 self.build_layer(rlz)
                 self.style_curves()
-        self.viewer_dock.change_output_type('Hazard Curves')
         if self.npz_file is not None:
             self.npz_file.close()

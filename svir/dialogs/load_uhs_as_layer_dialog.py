@@ -117,4 +117,3 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
                         ' and poe "%s"...' % (rlz, poe), self.iface):
                     self.build_layer(rlz, poe=poe)
                     self.style_curves()
-        self.viewer_dock.change_output_type('Uniform Hazard Spectra')
