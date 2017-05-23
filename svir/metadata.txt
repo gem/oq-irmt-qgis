@@ -32,6 +32,8 @@ changelog=
       is pre-selected in the Data Viewer
     * Removed annoying messages while retrieveing the console log of a OQ-Engine calculation
     * The size policy of the Viewer Dock has been improved, to fit better in smaller screens
+    * When any cell of the table containing the list of oq-engine calculation is clicked, the list of outputs
+      corresponding to the same calculation is displayed, and the row is selected and kept on focus
     1.8.24
     * ProcessLayer.addAttributes launders proposed attribute names only if the processed layer is a shapefile
     * When fields with long names are added to shapefiles, the original long names are saved as aliases

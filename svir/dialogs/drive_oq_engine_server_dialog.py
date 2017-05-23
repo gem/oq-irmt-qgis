@@ -240,14 +240,25 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             "font-weight: bold;")
         self.set_calc_list_widths(col_widths)
         if self.current_pointed_calc_id:
-            # find QTableItem corresponding to that calc_id
-            calc_id_col_idx = 1
-            for row in xrange(self.calc_list_tbl.rowCount()):
-                item_calc_id = self.calc_list_tbl.item(row, calc_id_col_idx)
-                if int(item_calc_id.text()) == self.current_pointed_calc_id:
-                    self.calc_list_tbl.scrollToItem(
-                        item_calc_id, QAbstractItemView.PositionAtCenter)
+            self.highlight_and_scroll_to_calc_id(self.current_pointed_calc_id)
         return True
+
+    def get_row_by_calc_id(self, calc_id):
+        # find QTableItem corresponding to that calc_id
+        calc_id_col_idx = 1
+        for row in xrange(self.calc_list_tbl.rowCount()):
+            item_calc_id = self.calc_list_tbl.item(row, calc_id_col_idx)
+            if int(item_calc_id.text()) == calc_id:
+                return row
+        return None
+
+    def highlight_and_scroll_to_calc_id(self, calc_id):
+        row = self.get_row_by_calc_id(calc_id)
+        self.calc_list_tbl.selectRow(row)
+        calc_id_col_idx = 1
+        item_calc_id = self.calc_list_tbl.item(row, calc_id_col_idx)
+        self.calc_list_tbl.scrollToItem(
+            item_calc_id, QAbstractItemView.PositionAtCenter)
 
     def set_calc_list_widths(self, widths):
         for i, width in enumerate(widths):
@@ -258,6 +269,25 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.output_list_tbl.clearContents()
         self.output_list_tbl.setRowCount(0)
         self.output_list_tbl.setColumnCount(0)
+        self.list_of_outputs_lbl.setText('List of outputs')
+        self.download_datastore_btn.setEnabled(False)
+        self.download_datastore_btn.setText(
+            'Download HDF5 datastore for calculation')
+
+    def update_output_list(self, calc_id):
+        calc_status = self.get_calc_status(calc_id)
+        if calc_status['status'] == 'complete':
+            self.clear_output_list()
+            output_list = self.get_output_list(calc_id)
+            self.list_of_outputs_lbl.setText(
+                'List of outputs for calculation %s' % calc_id)
+            self.show_output_list(output_list)
+            self.download_datastore_btn.setEnabled(True)
+            self.download_datastore_btn.setText(
+                'Download HDF5 datastore for calculation %s'
+                % self.current_output_calc_id)
+        else:
+            self.clear_output_list()
 
     def on_calc_action_btn_clicked(self, calc_id, action):
         # NOTE: while scrolling through the list of calculations, the tool
@@ -266,7 +296,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         # view is scrolled to the top. Therefore we need to keep track of which
         # line was selected, in order to scroll to that line.
         self.current_pointed_calc_id = calc_id
+        self.highlight_and_scroll_to_calc_id(calc_id)
         if action == 'Console':
+            self.update_output_list(calc_id)
             dlg = ShowConsoleDialog(self, calc_id)
             dlg.setWindowTitle(
                 'Console log of calculation %s' % calc_id)
@@ -282,16 +314,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 if self.current_output_calc_id == calc_id:
                     self.clear_output_list()
         elif action == 'Outputs':
-            output_list = self.get_output_list(calc_id)
-            self.list_of_outputs_lbl.setText(
-                'List of outputs for calculation %s' % calc_id)
-            self.clear_output_list()
-            self.show_output_list(output_list)
-            self.download_datastore_btn.setEnabled(True)
-            self.download_datastore_btn.setText(
-                'Download HDF5 datastore for calculation %s'
-                % self.current_output_calc_id)
+            self.update_output_list(calc_id)
         elif action == 'Continue':
+            self.update_output_list(calc_id)
             self.run_calc(calc_id)
         else:
             raise NotImplementedError(action)
@@ -396,6 +421,16 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         else:
             log_msg(resp.text, level='C', message_bar=self.iface.messageBar())
 
+    @pyqtSlot(int, int)
+    def on_calc_list_tbl_cellClicked(self, row, column):
+        self.calc_list_tbl.selectRow(row)
+        # find QTableItem corresponding to that calc_id
+        calc_id_col_idx = 1
+        item_calc_id = self.calc_list_tbl.item(row, calc_id_col_idx)
+        calc_id = int(item_calc_id.text())
+        self.current_pointed_calc_id = calc_id
+        self.update_output_list(calc_id)
+
     @pyqtSlot()
     def on_download_datastore_btn_clicked(self):
         dest_folder = ask_for_download_destination_folder(self)
@@ -420,7 +455,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
     def get_output_list(self, calc_id):
         output_list_url = "%s/v1/calc/%s/results" % (self.hostname, calc_id)
-        with WaitCursorManager('Getting list of outputs...', self.iface):
+        with WaitCursorManager():
             try:
                 # FIXME: enable the user to set verify=True
                 resp = self.session.get(output_list_url, timeout=10,
@@ -582,7 +617,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.timer = QTimer()
         QObject.connect(
             self.timer, SIGNAL('timeout()'), self.refresh_calc_list)
-        self.timer.start(4000)  # refresh calc list time in milliseconds
+        self.timer.start(5000)  # refresh calc list time in milliseconds
 
     def stop_polling(self):
         # NOTE: perhaps we should disconnect the timeout signal here?
