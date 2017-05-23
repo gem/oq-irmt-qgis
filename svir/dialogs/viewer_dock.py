@@ -24,6 +24,7 @@
 
 import json
 import os
+from collections import OrderedDict
 
 from PyQt4 import QtGui
 
@@ -121,8 +122,12 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.iface.mapCanvas().setSelectionColor(QColor('magenta'))
 
         # TODO: re-add 'Loss Curves' when the corresponding npz is available
-        self.output_type_cbx.addItems(
-            ['', 'Hazard Curves', 'Uniform Hazard Spectra', 'Recovery Curves'])
+        self.output_types_names = OrderedDict([
+            ('', ''),
+            ('hcurves', 'Hazard Curves'),
+            ('uhs', 'Uniform Hazard Spectra'),
+            ('recovery_curves', 'Recovery Curves')])
+        self.output_type_cbx.addItems(self.output_types_names.values())
 
         self.plot_figure = Figure()
         self.plot_canvas = FigureCanvas(self.plot_figure)
@@ -682,17 +687,13 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
     @pyqtSlot(int)
     def on_output_type_cbx_currentIndexChanged(self):
-        otype = self.output_type_cbx.currentText()
-        if otype == 'Hazard Curves':
-            output_type = 'hcurves'
-        elif otype == 'Loss Curves':
-            output_type = 'loss_curves'
-        elif otype == 'Uniform Hazard Spectra':
-            output_type = 'uhs'
-        elif otype == 'Recovery Curves':
-            output_type = 'recovery_curves'
-        else:
-            output_type = None
+        otname = self.output_type_cbx.currentText()
+        for output_type, output_type_name in self.output_types_names.items():
+            if output_type_name == otname:
+                self.set_output_type_and_its_gui(output_type)
+                self.layer_changed()
+                return
+        output_type = None
         self.set_output_type_and_its_gui(output_type)
         self.layer_changed()
 
@@ -701,8 +702,11 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         event.accept()
 
     def change_output_type(self, output_type):
+        if output_type not in self.output_types_names:
+            output_type = ''
         # get the index of the item that has the given string
         # and set the combobox to that item
-        index = self.output_type_cbx.findText(output_type)
+        index = self.output_type_cbx.findText(
+            self.output_types_names[output_type])
         if index != -1:
             self.output_type_cbx.setCurrentIndex(index)

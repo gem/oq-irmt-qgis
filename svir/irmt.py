@@ -448,15 +448,10 @@ class Irmt:
 
     def current_layer_changed(self, layer=None):
         self.update_actions_status()
-        output_type = None
+        output_type = ''
         if layer:
-            output_type = layer.customProperty('output_type')
-        if output_type == 'hcurves':
-            self.viewer_dock.change_output_type('Hazard Curves')
-        elif output_type == 'uhs':
-            self.viewer_dock.change_output_type('Uniform Hazard Spectra')
-        else:
-            self.viewer_dock.change_output_type('')
+            output_type = layer.customProperty('output_type') or ''
+        self.viewer_dock.change_output_type(output_type)
         self.viewer_dock.layer_changed()
 
     def add_menu_item(self,
