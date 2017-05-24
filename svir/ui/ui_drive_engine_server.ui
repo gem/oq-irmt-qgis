@@ -43,7 +43,7 @@
      <property name="orientation">
       <enum>Qt::Vertical</enum>
      </property>
-     <widget class="QWidget" name="">
+     <widget class="QWidget" name="layoutWidget">
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
         <widget class="QLabel" name="list_of_calcs_lbl">
@@ -70,11 +70,14 @@
          <property name="columnCount">
           <number>0</number>
          </property>
+         <attribute name="verticalHeaderVisible">
+          <bool>false</bool>
+         </attribute>
         </widget>
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="">
+     <widget class="QWidget" name="layoutWidget">
       <layout class="QVBoxLayout" name="verticalLayout">
        <item>
         <widget class="QLabel" name="list_of_outputs_lbl">
@@ -100,6 +103,9 @@
          <property name="columnCount">
           <number>0</number>
          </property>
+         <attribute name="verticalHeaderVisible">
+          <bool>false</bool>
+         </attribute>
         </widget>
        </item>
       </layout>

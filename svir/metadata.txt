@@ -34,6 +34,8 @@ changelog=
     * The size policy of the Viewer Dock has been improved, to fit better in smaller screens
     * When any cell of the table containing the list of oq-engine calculation is clicked, the list of outputs
       corresponding to the same calculation is displayed, and the row is selected and kept on focus
+    * The row numbers, in both the list of calculations and the list of outputs for a calculation,
+      have been made  invisible
     1.8.24
     * ProcessLayer.addAttributes launders proposed attribute names only if the processed layer is a shapefile
     * When fields with long names are added to shapefiles, the original long names are saved as aliases
@@ -159,7 +161,7 @@ tracker=https://github.com/gem/oq-irmt-qgis/issues
 repository=https://github.com/gem/oq-irmt-qgis
 icon=resources/icon.svg
 # experimental flag
-experimental=True
+experimental=False
 
 # deprecated flag (applies to the whole plugin, not just a single version
 deprecated=False
