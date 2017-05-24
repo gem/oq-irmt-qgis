@@ -178,8 +178,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 return
             calc_list = json.loads(resp.text)
         selected_keys = ['description', 'id', 'job_type', 'owner', 'status']
-        col_names = ['Description', 'ID', 'Job Type', 'Owner', 'Status']
-        col_widths = [380, 50, 80, 80, 80]
+        col_names = ['Description', 'Job ID', 'Job Type', 'Owner', 'Status']
+        col_widths = [370, 60, 80, 80, 80]
         if not calc_list:
             if self.calc_list_tbl.rowCount() > 0:
                 self.calc_list_tbl.clearContents()
