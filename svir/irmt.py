@@ -340,6 +340,8 @@ class Irmt:
                            enable=True,
                            add_to_toolbar=True)
 
+        self._create_viewer_dock()
+
         # Action to open the plugin's manual
         self.add_menu_item("help",
                            ":/plugins/irmt/manual.svg",
@@ -348,7 +350,6 @@ class Irmt:
                            enable=True,
                            add_to_toolbar=True)
 
-        self._create_viewer_dock()
         self.update_actions_status()
 
     @staticmethod
