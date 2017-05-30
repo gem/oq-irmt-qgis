@@ -19,7 +19,7 @@ predict recovery times following an earthquake.
 This plugin has been created by the [GEM Foundation](http://www.globalquakemodel.org/gem/).
 
 
-## Installation
+## Installation and troubleshooting
 
 This plugin runs with [QGIS 2.14LTR](http://qgis.org/it/site/forusers/alldownloads.html)
 and above.
@@ -39,6 +39,14 @@ will be available for installation. Otherwise, the latest **stable** version
 will be installable. Experimental versions contain new functionalities that may
 have not been properly tested yet, and that could cause the plugin or QGIS to
 break or to behave unexpectedly.
+
+Some users reported issues about the `upgrading` process of the plugin to its latest version.
+We suggest to `reinstall` the plugin instead, in order to make sure the new installation is
+done in a clean folder.
+
+Please note that QGIS 2.18.8 contained some
+[critical bugs] (http://www.mail-archive.com/qgis-user@lists.osgeo.org/msg37309.html)
+that were fixed in version 2.18.9.
 
 
 ## User manual
