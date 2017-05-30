@@ -45,7 +45,7 @@ We suggest to `reinstall` the plugin instead, in order to make sure the new inst
 done in a clean folder.
 
 Please note that QGIS 2.18.8 contained some
-[critical bugs] (http://www.mail-archive.com/qgis-user@lists.osgeo.org/msg37309.html)
+[critical bugs](http://www.mail-archive.com/qgis-user@lists.osgeo.org/msg37309.html)
 that were fixed in version 2.18.9.
 
 
