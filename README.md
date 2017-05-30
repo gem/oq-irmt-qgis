@@ -30,6 +30,17 @@ still open in the 64 bit version.
 
 On Linux, please make sure that [Scipy](https://www.scipy.org/install.html) and
 [Matplotlib](https://matplotlib.org/users/installing.html) with Qt4 backend are installed.
+On Ubuntu (Debian and similar):
+
+```bash
+$ sudo apt install python-scipy python-matplotlib
+```
+
+On RHEL (Red Hat Enterprise Linux) / Fedora / Scientific Linux and similar:
+
+```bash
+$ sudo dnf install python-scipy python-matplotlib
+```
 
 The plugin can be installed using the QGIS Plugins Manager, that is accessible through the
 QGIS menu as **Plugins -> Manage and install plugins**. Please note that the **Settings** of
