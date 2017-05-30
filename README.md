@@ -40,7 +40,7 @@ will be installable. Experimental versions contain new functionalities that may
 have not been properly tested yet, and that could cause the plugin or QGIS to
 break or to behave unexpectedly.
 
-Some users reported issues about the `upgrading` process of the plugin to its latest version.
+Some users reported issues about `upgrading` the plugin to its latest version.
 We suggest to `reinstall` the plugin instead, in order to make sure the new installation is
 done in a clean folder.
 
