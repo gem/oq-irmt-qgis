@@ -94,15 +94,15 @@ Some of these require the statistical platform to take into account one single f
 statistics) or a couple of fields (e.g. scatterplot). In such cases, it is
 sufficient to add parametric references to those fields into the header of the script.
 Things become more complicated where the number of parameters required is not known in
-advance, as in the case of Principal Components Analysis. Unfortunately, at the time of writing, `the
+advance, as in the case of Principal Components Analysis. In older versions of QGIS, `the
 widgets that can be used through the script header
 syntax <http://docs.qgis.org/2.0/en/docs/user_manual/processing/modeler.html#definition-of-inputs>`_
-do not include a multiselection functionality, such as
-`this <https://github.com/gem/oq-irmt-qgis/blob/master/svir/ui/list_multiselect_widget.py>`_).
-Therefore, it is impossible for the user to graphically select an indefinite
-number of fields from the complete list. What we can do, however, is to let our
+did not include a multiselection functionality.
+Therefore, it was impossible for the user to graphically select an indefinite
+number of fields from the complete list. However, even without a multiselect widget,
+it was possible to let a
 script perform the analysis on the whole set of numeric fields available in the
-selected layer. In case we want to exclude some numeric fields from the
+selected layer. In order to exclude some numeric fields from the
 analysis, we can add to the script header the reference to a textual field to
 be added to the GUI, in which the user can insert a list of comma-separated
 names of fields to be ignored. The script becomes something like:
@@ -119,6 +119,30 @@ names of fields to be ignored. The script becomes something like:
     analyzedData <- numericData[, !(names(numericData) %in% excludedFields)]
     comps <- prcomp(analyzedData, scale=TRUE)
     >comps
+
+Since a multiple selector for layer fields has been made available,
+it is possible to run R algorithms such as in the following example,
+using the `multiple field` widget type:
+
+.. code-block:: r
+
+    ##Basic statistics=group
+    ##Layer=vector
+    ##ChosenFields=multiple field Layer
+    layerData <- data.frame(Layer)
+    numericFields <- sapply(layerData, is.numeric)
+    numericData <- layerData[, numericFields]
+    chosen <- trimws(strsplit(ChosenFields, ";")[[1]])
+    analyzedData <- numericData[, names(numericData) %in% chosen]
+    comps <- prcomp(analyzedData, scale=TRUE)
+    >comps
+
+This script creates automatically a graphical user interface that first lets the user
+select one of the available layers. Once the layer is selected, the corresponding fields
+are listed in a multi-select widget, where a set of them can be chosen. As soon as the
+`Run` button is pressed, the algorithm collects the chosen fields and it performs
+the Principal Components Analysis on them, excluding the non-numeric ones that might
+have been erroneously selected.
 
 What if we want to build a vector layer using the results of a calculation
 performed by R? Examples of this are available in the documentation linked

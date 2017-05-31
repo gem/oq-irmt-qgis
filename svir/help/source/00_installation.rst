@@ -1,13 +1,29 @@
-************
-Installation
-************
+********************************
+Installation and troubleshooting
+********************************
 
 This plugin runs with `QGIS 2.14LTR <http://qgis.org/it/site/forusers/alldownloads.html>`_
 and above.
 
 On Microsoft Windows and Mac OS X, QGIS includes all the software dependencies needed by the plugin.
+On Microsoft Windows, we suggest to use the 32 bit version of QGIS, because some library issues are
+still open in the 64 bit version.
 
-On Linux, please make sure that `Scipy <https://www.scipy.org/install.html>`_ is installed.
+On Linux, please make sure that `Scipy <https://www.scipy.org/install.html>`_
+and `Matplotlib <https://matplotlib.org/users/installing.html>`_ with Qt4 backend
+are installed.
+
+On Ubuntu (Debian and similar):
+
+.. code-block:: bash
+
+    $ sudo apt install python-scipy python-matplotlib
+
+On Fedora and similar:
+
+.. code-block:: bash
+
+    $ sudo dnf install python-scipy python-matplotlib
 
 The plugin can be installed using the QGIS Plugins Manager, that is accessible
 through the QGIS menu as :guilabel:`Plugins -> Manage and install plugins`.
@@ -18,6 +34,14 @@ be available for installation. Otherwise, the latest *stable* version will be
 installable. Experimental versions contain new functionalities that may have
 not been properly tested yet, and that could cause the plugin or QGIS to break
 or to behave unexpectedly.
+
+Some users reported issues about `upgrading` the plugin to its latest version.
+We suggest to `reinstall` the plugin instead, in order to make sure the new installation is
+done in a clean folder.
+
+Please note that QGIS 2.18.8 contained some
+`critical bugs <http://www.mail-archive.com/qgis-user@lists.osgeo.org/msg37309.html>`_
+that were fixed in version 2.18.9.
 
 
 How to run tests on Ubuntu 16.04 LTS
