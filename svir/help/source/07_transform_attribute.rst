@@ -13,7 +13,7 @@ Transforming attributes
     |icon-transform-attributes| Variable transformation and batch transformation functionality
 
 
-When variables are delineated in incommensurate ranges or scales, they can be
+When variables are defined in incommensurate ranges or scales, they can be
 standardized to avoid problems inherent when mixing measurement units, and
 normalization is employed to avoid having extreme values dominate an indicator,
 and to partially correct for data

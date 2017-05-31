@@ -40,8 +40,8 @@ service is hosted. By default, the host is set to `http://localhost:8800`,
 meaning that the plugin will attempt to connect to a OQ Engine Server running
 locally, on port `8800`.
 
-When the plugin loads a map from an OQ-Engine's output or when integrated risk
-indices are calculated, the map is automatically styled applying a rule-based
+When the plugin loads an OQ-Engine hazard/risk map as a layer or when integrated risk
+indices are calculated, the corresponding map is automatically styled applying a rule-based
 classification with the parameters specified in the
 :guilabel:`Rule-based classification settings`.
 By default, whenever composite indices are calculated, the rule-based classification

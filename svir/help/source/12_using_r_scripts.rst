@@ -137,7 +137,7 @@ using the `multiple field` widget type:
     comps <- prcomp(analyzedData, scale=TRUE)
     >comps
 
-This script creates automatically a graphical user interface that first lets the user
+This script creates automatically a graphical user interface that lets the user
 select one of the available layers. Once the layer is selected, the corresponding fields
 are listed in a multi-select widget, where a set of them can be chosen. As soon as the
 `Run` button is pressed, the algorithm collects the chosen fields and it performs

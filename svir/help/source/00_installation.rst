@@ -6,7 +6,7 @@ This plugin runs with `QGIS 2.14LTR <http://qgis.org/it/site/forusers/alldownloa
 and above.
 
 On Microsoft Windows and Mac OS X, QGIS includes all the software dependencies needed by the plugin.
-On Microsoft Windows, we suggest to use the 32 bit version of QGIS, because some library issues are
+On Microsoft Windows, we recommend to use the 32 bit version of QGIS, because some library issues are
 still open in the 64 bit version.
 
 On Linux, please make sure that `Scipy <https://www.scipy.org/install.html>`_
@@ -36,7 +36,7 @@ not been properly tested yet, and that could cause the plugin or QGIS to break
 or to behave unexpectedly.
 
 Some users reported issues about `upgrading` the plugin to its latest version.
-We suggest to `reinstall` the plugin instead, in order to make sure the new installation is
+We recommend to `reinstall` the plugin instead, in order to make sure the new installation is
 done in a clean folder.
 
 Please note that QGIS 2.18.8 contained some
