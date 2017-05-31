@@ -43,10 +43,10 @@ corresponding documentation.
 
 * |icon-connection-settings| :ref:`chap-irmt-settings`
 
+* |icon-plot| :ref:`chap-viewer-dock`
+
 * |icon-manual| IRMT manual: a web browser will be opened, showing the html
   version of this manual
-
-* |icon-plot| :ref:`chap-viewer-dock`
 
 
 .. |icon-connection-settings| image:: images/iconConnectionSettings.png

@@ -38,9 +38,8 @@ Watch the console log
 =====================
 
 It is possible to watch the log of a calculation, by pressing the
-:guilabel:`Console` button in the corresponding row. The log will be
-displayed in a tab of the QGIS :guilabel:`Log Message Panel`, as shown
-in :ref:`fig-calculation-log`.
+:guilabel:`Console` button in the corresponding row. The log will
+be displayed in a separate window as shown in :ref:`fig-calculation-log`.
 
 .. _fig-calculation-log:
 

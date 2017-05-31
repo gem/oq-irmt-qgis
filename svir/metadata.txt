@@ -25,6 +25,7 @@ email=staff.it@globalquakemodel.org
 changelog=
     1.8.26
     * Improved README with instructions on installation and troubleshooting
+    * Many updates to the user manual
     1.8.25
     * The list of OQ-Engine calculations is automatically scrolled to view the latest clicked row
     * The IRMT viewer dock can be shown/hidden by an additional button in the plugin's toolbar
