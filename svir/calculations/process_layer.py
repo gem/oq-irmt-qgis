@@ -166,6 +166,12 @@ class ProcessLayer():
                  passed as input argument, and as values the actual names of
                  the assigned attributes
         """
+        if 'Add Attributes' not in self.layer.capabilitiesString():
+            raise TypeError('Unable to add attributes to this kind of layer.'
+                            ' (%s). Please consider saving the layer with an'
+                            ' editable format before attempting to add'
+                            ' attributes to it.'
+                            % self.layer.providerType())
         if simulate:
             description = 'Simulate add attributes'
         else:
@@ -240,6 +246,12 @@ class ProcessLayer():
 
         :return: true in case of success and false in case of failure
         """
+        if 'Delete Attributes' not in self.layer.capabilitiesString():
+            raise TypeError('Unable to delete attributes to this kind of'
+                            ' layer (%s). Please consider saving the layer'
+                            ' with an editable format before attempting to'
+                            ' delete attributes from it.'
+                            % self.layer.providerType())
         attr_idx_list = []
         with LayerEditingManager(self.layer, 'Remove attributes', DEBUG):
             layer_pr = self.layer.dataProvider()
@@ -280,6 +292,11 @@ class ProcessLayer():
                          be assigned to it
         :returns: (actual_new_attr_name, invalid_input_values)
         """
+        if 'Change Attribute Values' not in self.layer.capabilitiesString():
+            raise TypeError('Unable to edit features of this kind of layer'
+                            ' (%s). Please consider saving the layer with an'
+                            ' editable format before attempting to transform'
+                            ' its attributes.' % self.layer.providerType())
         # get the id of the attribute named input_attr_name
         input_attr_id = self.find_attribute_id(input_attr_name)
         overwrite = (new_attr_name is not None
