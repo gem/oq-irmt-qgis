@@ -823,15 +823,23 @@ def get_style(layer, message_bar):
     force_restyling_default = True
 
     settings = QSettings()
-    color_from_rgba = settings.value(
-        'irmt/style_color_from', color_from_rgba_default, type=int)
-    color_from_rgba = _check_type(color_from_rgba, 'Color from', int,
-                                  color_from_rgba_default, message_bar)
+    try:
+        color_from_rgba = settings.value(
+            'irmt/style_color_from', color_from_rgba_default, type=int)
+    except TypeError:
+        msg = ('The type of the stored setting "style_color_from" was not'
+               ' valid, so the default has been restored.')
+        log_msg(msg, level='C', message_bar=message_bar)
+        color_from_rgba = color_from_rgba_default
     color_from = QColor().fromRgba(color_from_rgba)
-    color_to_rgba = settings.value(
-        'irmt/style_color_to', color_to_rgba_default, type=int)
-    color_to_rgba = _check_type(
-        color_to_rgba, 'Color to', int, color_to_rgba_default, message_bar)
+    try:
+        color_to_rgba = settings.value(
+            'irmt/style_color_to', color_to_rgba_default, type=int)
+    except TypeError:
+        msg = ('The type of the stored setting "style_color_to" was not'
+               ' valid, so the default has been restored.')
+        log_msg(msg, level='C', message_bar=message_bar)
+        color_to_rgba = color_to_rgba_default
     color_to = QColor().fromRgba(color_to_rgba)
     mode = settings.value(
         'irmt/style_mode', style_mode_default, type=int)
