@@ -29,6 +29,7 @@ changelog=
     * Many updates to the user manual
     * Re-clicking the row of the currently selected calculation, the row is unselected and
       the table ceases to scroll automatically to keep that row visible
+    * Color settings are saved as rgba instead of as QColor (fixing a storing issue in Mac OS)
     1.8.25
     * The list of OQ-Engine calculations is automatically scrolled to view the latest clicked row
     * The IRMT viewer dock can be shown/hidden by an additional button in the plugin's toolbar

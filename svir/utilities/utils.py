@@ -816,21 +816,31 @@ def _check_type(
 
 
 def get_style(layer, message_bar):
-    color_from_default = QColor('#FFEBEB')
-    color_to_default = QColor('red')
+    color_from_rgba_default = QColor('#FFEBEB').rgba()
+    color_to_rgba_default = QColor('red').rgba()
     style_mode_default = QgsGraduatedSymbolRendererV2.Quantile
     style_classes_default = 10
     force_restyling_default = True
 
     settings = QSettings()
-    color_from = settings.value(
-        'irmt/style_color_from', color_from_default)
-    color_from = _check_type(
-        color_from, 'Color from', QColor, color_from_default, message_bar)
-    color_to = settings.value(
-        'irmt/style_color_to', color_to_default)
-    color_to = _check_type(
-        color_to, 'Color to', QColor, color_to_default, message_bar)
+    try:
+        color_from_rgba = settings.value(
+            'irmt/style_color_from', color_from_rgba_default, type=int)
+    except TypeError:
+        msg = ('The type of the stored setting "style_color_from" was not'
+               ' valid, so the default has been restored.')
+        log_msg(msg, level='C', message_bar=message_bar)
+        color_from_rgba = color_from_rgba_default
+    color_from = QColor().fromRgba(color_from_rgba)
+    try:
+        color_to_rgba = settings.value(
+            'irmt/style_color_to', color_to_rgba_default, type=int)
+    except TypeError:
+        msg = ('The type of the stored setting "style_color_to" was not'
+               ' valid, so the default has been restored.')
+        log_msg(msg, level='C', message_bar=message_bar)
+        color_to_rgba = color_to_rgba_default
+    color_to = QColor().fromRgba(color_to_rgba)
     mode = settings.value(
         'irmt/style_mode', style_mode_default, type=int)
     classes = settings.value(
