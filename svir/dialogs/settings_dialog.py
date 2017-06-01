@@ -145,12 +145,14 @@ class SettingsDialog(QDialog, FORM_CLASS):
         mySettings.setValue('irmt/engine_password',
                             self.enginePasswordEdit.text())
 
+        color_from = self.style_color_from.palette().color(QPalette.Button)
         mySettings.setValue(
             'irmt/style_color_from',
-            self.style_color_from.palette().color(QPalette.Button))
+            color_from.rgba())
+        color_to = self.style_color_to.palette().color(QPalette.Button)
         mySettings.setValue(
             'irmt/style_color_to',
-            self.style_color_to.palette().color(QPalette.Button))
+            color_to.rgba())
 
         mySettings.setValue('irmt/style_mode', self.style_mode.itemData(
             self.style_mode.currentIndex()))
