@@ -25,13 +25,34 @@ cluster, to perform jobs that are highly demanding in terms of computational res
 
 
 Run a calculation
-===================
+=================
 
 When the :guilabel:`Run Calculation` button is pressed, a file explorer is opened,
 enabling to select the input files needed to run the job (or a zip archive
 containing them), including the `job.ini` file. By pressing :guilabel:`Open` to confirm,
 the job is submitted. The interface keeps querying the server asynchronously, and
 displaying the status of the calculation.
+
+
+The list of calculations
+========================
+
+For each calculation available on the connected OQ-Engine server (only those that
+the current user is authorized to visualize), the :guilabel:`List of calculations`
+(see :ref:`fig-dialogDriveOqEngine`)
+shows its :guilabel:`Description`, its unique :guilabel:`Job ID`, its :guilabel:`Job Type`
+(specifying if it is a hazard or risk calculation), its :guilabel:`Owner` and
+its :guilabel:`Status` (indicating if the calculation is still running, if it
+failed or if it was successfully completed). The list is refreshed at regular
+intervals of few seconds and it displays the most recent 100 calculations.
+
+It is possible to scroll the list up and down and to resize it with respect to the
+:guilabel:`List of outputs`. When any row of the list of calculations is selected,
+the row is highlighted and the list of outputs for the corresponding calculation
+is populated (it will be an empty list if the calculation has not been successfully
+completed). While a row is selected, it is automatically centered in the visible
+area of the list, at each refresh. By clicking again on the currently selected row,
+it will be unhighlighted, resetting the default scrolling behavior of the table.
 
 
 Watch the console log
