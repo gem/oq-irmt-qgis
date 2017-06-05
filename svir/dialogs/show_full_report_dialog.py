@@ -26,12 +26,12 @@
 from PyQt4.QtGui import QDialog
 from svir.utilities.utils import get_ui_class
 
-FORM_CLASS = get_ui_class('ui_show_full_report.ui')
+FORM_CLASS = get_ui_class('ui_text_browser.ui')
 
 
 class ShowFullReportDialog(QDialog, FORM_CLASS):
     """
-    Modal dialog to show the full report of a OQ-Engine calculation
+    Non-modal dialog to show the full report of a OQ-Engine calculation
     """
 
     def __init__(self, filepath):
