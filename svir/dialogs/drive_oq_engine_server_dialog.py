@@ -428,7 +428,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         calc_id_col_idx = 1
         item_calc_id = self.calc_list_tbl.item(row, calc_id_col_idx)
         calc_id = int(item_calc_id.text())
-        self.current_pointed_calc_id = calc_id
+        if self.current_pointed_calc_id == calc_id:
+            self.current_pointed_calc_id = None
+            self.calc_list_tbl.clearSelection()
+        else:
+            self.current_pointed_calc_id = calc_id
         self.update_output_list(calc_id)
 
     @pyqtSlot()
