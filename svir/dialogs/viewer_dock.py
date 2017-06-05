@@ -361,7 +361,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.plot_canvas.draw()
 
     def redraw(self, selected, deselected, _):
-        if self.output_type is None:
+        if not self.output_type:
             return
         for fid in deselected:
             try:

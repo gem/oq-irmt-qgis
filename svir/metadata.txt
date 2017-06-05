@@ -28,6 +28,8 @@ changelog=
     * A clear error message is shown when attempting to modify a non-editable kind of layer
     * Many updates to the user manual
     * Color settings are saved as rgba instead of as QColor (fixing a storing issue in Mac OS)
+    * Fixed an error that was triggered by the Data Viewer when selecting features in a layer for which
+      the output type is undefined
     1.8.25
     * The list of OQ-Engine calculations is automatically scrolled to view the latest clicked row
     * The IRMT viewer dock can be shown/hidden by an additional button in the plugin's toolbar
