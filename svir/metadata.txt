@@ -35,6 +35,7 @@ changelog=
     * The dialogs to visualize the console log or the full report of a OQ-Engine calculation
       have been made non-modal, so they do not block the interaction with the dialog that drives the OQ-Engine
     * When the download of a OQ-Engine output fails, the server-side traceback is shown
+    * An additional button permits to visualize the parameters of a OQ-Engine calculation
     1.8.25
     * The list of OQ-Engine calculations is automatically scrolled to view the latest clicked row
     * The IRMT viewer dock can be shown/hidden by an additional button in the plugin's toolbar
