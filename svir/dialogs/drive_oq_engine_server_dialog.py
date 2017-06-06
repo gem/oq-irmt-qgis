@@ -554,6 +554,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             if outtype == 'rst':
                 filepath = self.download_output(
                     output_id, outtype, dest_folder)
+                if not filepath:
+                    return
                 # NOTE: it might be created here directly instead, but this way
                 # we can use the qt-designer
                 self.full_report_dlg = ShowFullReportDialog(filepath)
@@ -568,6 +570,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             if outtype in ('npz', 'csv'):
                 filepath = self.download_output(
                     output_id, outtype, dest_folder)
+                if not filepath:
+                    return
                 output_type_loaders = {
                     'ruptures': LoadRupturesAsLayerDialog,
                     'dmg_by_asset': LoadDmgByAssetAsLayerDialog,
@@ -607,6 +611,13 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 resp = self.session.get(output_download_url, verify=False)
             except HANDLED_EXCEPTIONS as exc:
                 self._handle_exception(exc)
+                return
+            if not resp.ok:
+                err_msg = (
+                    'Unable to download the output.\n%s: %s.\n%s'
+                    % (resp.status_code, resp.reason, resp.text))
+                log_msg(err_msg, level='C',
+                        message_bar=self.iface.messageBar())
                 return
             filename = resp.headers['content-disposition'].split(
                 'filename=')[1]
