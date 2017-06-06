@@ -32,6 +32,8 @@ changelog=
     * Color settings are saved as rgba instead of as QColor (fixing a storing issue in Mac OS)
     * Fixed an error that was triggered by the Data Viewer when selecting features in a layer for which
       the output type is undefined
+    * The dialogs to visualize the console log or the full report of a OQ-Engine calculation
+      have been made non-modal, so they do not block the interaction with the dialog that drives the OQ-Engine
     1.8.25
     * The list of OQ-Engine calculations is automatically scrolled to view the latest clicked row
     * The IRMT viewer dock can be shown/hidden by an additional button in the plugin's toolbar

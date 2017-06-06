@@ -26,12 +26,12 @@ from PyQt4.QtCore import QTimer, QObject, SIGNAL
 from PyQt4.QtGui import QDialog
 from svir.utilities.utils import get_ui_class
 
-FORM_CLASS = get_ui_class('ui_show_full_report.ui')
+FORM_CLASS = get_ui_class('ui_text_browser.ui')
 
 
 class ShowConsoleDialog(QDialog, FORM_CLASS):
     """
-    Modal dialog to display the console log of a OQ-Engine calculation
+    Non-modal dialog to display the console log of a OQ-Engine calculation
     """
 
     def __init__(self, driver_dialog, calc_id):

@@ -98,6 +98,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         QDialog.__init__(self)
         # Set up the user interface from Designer.
         self.setupUi(self)
+        self.console_dlg = None
+        self.full_report_dlg = None
         # keep track of the log lines acquired for each calculation
         self.calc_log_line = {}
         self.session = None
@@ -299,10 +301,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.highlight_and_scroll_to_calc_id(calc_id)
         if action == 'Console':
             self.update_output_list(calc_id)
-            dlg = ShowConsoleDialog(self, calc_id)
-            dlg.setWindowTitle(
+            self.console_dlg = ShowConsoleDialog(self, calc_id)
+            self.console_dlg.setWindowTitle(
                 'Console log of calculation %s' % calc_id)
-            dlg.exec_()
+            self.console_dlg.show()
         elif action == 'Remove':
             confirmed = QMessageBox.question(
                 self,
@@ -554,11 +556,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     output_id, outtype, dest_folder)
                 # NOTE: it might be created here directly instead, but this way
                 # we can use the qt-designer
-                dlg = ShowFullReportDialog(filepath)
-                dlg.setWindowTitle(
+                self.full_report_dlg = ShowFullReportDialog(filepath)
+                self.full_report_dlg.setWindowTitle(
                     'Full report of calculation %s' %
                     self.current_output_calc_id)
-                dlg.exec_()
+                self.full_report_dlg.show()
             else:
                 raise NotImplementedError("%s %s" % (action, outtype))
         elif action == 'Load as layer':
