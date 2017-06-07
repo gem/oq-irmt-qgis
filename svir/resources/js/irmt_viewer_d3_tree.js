@@ -43,7 +43,7 @@
             position: {my: "left top", at: "left top", of: "#projectDefDialog"},
             autoOpen: false,
             modal: true,
-            minWidth: 500,
+            minWidth: 700,
             dialogClass: "no-close",
             closeOnEscape: false
         });
@@ -270,7 +270,7 @@
 
             dialog
                 .append('<label for="name">Name: </label>')
-                .append('<input id="newNodeName" type="text" name="newNodeName" value="">');
+                .append('<input id="newNodeName" type="text" name="newNodeName" size="50" value="">');
 
             newNodeName = $('#newNodeName');
             newNodeName.blur(function(){
