@@ -41,7 +41,8 @@ class CheckProjectionsTestCase(unittest.TestCase):
     def setUp(self):
         curr_dir_name = os.path.dirname(__file__)
         data_dir_name = os.path.join(
-            curr_dir_name, 'data/process_layer/check_projections')
+            curr_dir_name, os.pardir,
+            'data', 'process_layer', 'check_projections')
 
         loss_layer_epsg4326_file_path = os.path.join(
             data_dir_name, 'loss_layer_epsg4326.shp')
@@ -77,8 +78,8 @@ class CompareLayerContentTestCase(unittest.TestCase):
         # c is longer than a and b but they have the same partial content
         # d is different with respect to all the others
         curr_dir_name = os.path.dirname(__file__)
-        data_dir_name = os.path.join(curr_dir_name,
-                                     'data/process_layer/compare')
+        data_dir_name = os.path.join(
+            curr_dir_name, os.pardir, 'data', 'process_layer', 'compare')
         layer_a_file_path = os.path.join(data_dir_name, 'layer_a.shp')
         layer_b_file_path = os.path.join(data_dir_name, 'layer_b.shp')
         layer_c_file_path = os.path.join(data_dir_name, 'layer_c.shp')

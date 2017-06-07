@@ -56,7 +56,7 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
         IFACE.newProject()
         curr_dir_name = os.path.dirname(__file__)
         self.data_dir_name = os.path.join(
-            curr_dir_name, 'data')
+            curr_dir_name, os.pardir, 'data')
         mock_action = QAction(IFACE.mainWindow())
         self.viewer_dock = ViewerDock(IFACE, mock_action)
 
