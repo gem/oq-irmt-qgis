@@ -111,7 +111,11 @@ new sub-indicators, each with its own user-provided name.
 When a newly created node is
 clicked, a new dialog is initiated to give users the option to select the
 variables available in the layer (and not already used in the node) to populate
-the sub-indicator being under construction.
+the sub-indicator being under construction. The dropdown menu to select the
+field name displays, for each field, the corresponding alias (where available).
+When a field is selected, the proposed name to be displayed in the tree is
+set by default equal to the field alias (if available) or equal to the field
+name.
 
 .. note::
 
