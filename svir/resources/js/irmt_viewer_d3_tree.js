@@ -283,15 +283,6 @@
             });
 
             if (node_type != node_types_dict.SV_THEME) {
-                if (!fieldOptions(node)) {
-                    alertDialog(
-                        'Warning',
-                        ['It is impossible to add any new node to the tree, because all',
-                         'numeric fields of the layer have already been associated to',
-                         'existing nodes.'].join('\n')
-                    );
-                    return;
-                }
                 dialog
                     .append('<br/><label for="field">Field name: </label>')
                     .append('<select id="field">' + fieldOptions(node) + '</select><br/>');
@@ -920,6 +911,16 @@
                             default:
                                 //alert("You clicked a node with type " + clicked_node.type + ". You can't add new nodes there");
                                 return false;
+                        }
+
+                        if (!fieldOptions(clicked_node)) {
+                            alertDialog(
+                                'Warning',
+                                ['It is impossible to add any new node to the tree, because all',
+                                    'numeric fields of the layer have already been associated to',
+                                    'existing nodes.'].join('\n')
+                            );
+                            return;
                         }
 
                         if (typeof clicked_node.children == 'undefined') {
