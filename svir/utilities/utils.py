@@ -964,3 +964,7 @@ def groupby(npz, rlz, loss_type, taxonomy='All'):
     for i, (lon, lat) in enumerate(sorted(loss_by_site)):
         data[i] = (lon, lat, loss_by_site[lon, lat])
     return data
+
+
+def listdir_fullpath(path):
+    return [os.path.join(path, filename) for filename in os.listdir(path)]
