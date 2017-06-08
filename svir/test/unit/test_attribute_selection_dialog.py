@@ -45,8 +45,8 @@ class AttributeSelectionDialogTest(unittest.TestCase):
     def setUp(self):
         """Runs before each test."""
         curr_dir_name = os.path.dirname(__file__)
-        self.data_dir_name = os.path.join(curr_dir_name,
-                                          'data/aggregation/dummy')
+        self.data_dir_name = os.path.join(
+            curr_dir_name, os.pardir, 'data', 'aggregation', 'dummy')
         loss_layer_path = os.path.join(
             self.data_dir_name, 'loss_points_having_zone_ids.shp')
         loss_layer = QgsVectorLayer(loss_layer_path,

@@ -46,7 +46,7 @@ from svir.dialogs.load_losses_by_asset_as_layer_dialog import (
     LoadLossesByAssetAsLayerDialog)
 from svir.dialogs.viewer_dock import ViewerDock
 from svir.calculations.process_layer import ProcessLayer
-from utilities import get_qgis_app
+from svir.test.utilities import get_qgis_app
 
 QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 
@@ -56,7 +56,7 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
         IFACE.newProject()
         curr_dir_name = os.path.dirname(__file__)
         self.data_dir_name = os.path.join(
-            curr_dir_name, 'data')
+            curr_dir_name, os.pardir, 'data')
         mock_action = QAction(IFACE.mainWindow())
         self.viewer_dock = ViewerDock(IFACE, mock_action)
 

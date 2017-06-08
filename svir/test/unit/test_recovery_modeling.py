@@ -29,7 +29,7 @@ import json
 from qgis.core import QgsVectorLayer
 from recovery_modeling.recovery_modeling import RecoveryModeling
 
-from utilities import get_qgis_app
+from svir.test.utilities import get_qgis_app
 
 QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 
@@ -61,7 +61,7 @@ class DeterministicTestCase(unittest.TestCase):
     def setUp(self):
         curr_dir_name = os.path.dirname(__file__)
         self.data_dir_name = os.path.join(
-            curr_dir_name, 'data', 'recovery_modeling')
+            curr_dir_name, os.pardir, 'data', 'recovery_modeling')
         dmg_by_asset_layer_file_path = os.path.join(self.data_dir_name,
                                                     'dmg_by_asset.shp')
         self.dmg_by_asset_layer = QgsVectorLayer(dmg_by_asset_layer_file_path,
@@ -114,7 +114,7 @@ class StochasticTestCase(unittest.TestCase):
     def setUp(self):
         curr_dir_name = os.path.dirname(__file__)
         self.data_dir_name = os.path.join(
-            curr_dir_name, 'data', 'recovery_modeling')
+            curr_dir_name, os.pardir, 'data', 'recovery_modeling')
         dmg_by_asset_layer_file_path = os.path.join(self.data_dir_name,
                                                     'dmg_by_asset.shp')
         self.dmg_by_asset_layer = QgsVectorLayer(dmg_by_asset_layer_file_path,

@@ -40,11 +40,12 @@ class ImportLossFromCsvTestCase(unittest.TestCase):
 
     def test_import_loss_from_dummy_csv(self):
         curr_dir_name = os.path.dirname(__file__)
-        data_dir_name = os.path.join(curr_dir_name, 'data/loss/dummy')
+        data_dir_name = os.path.join(
+            curr_dir_name, os.pardir, 'data', 'loss', 'dummy')
         csv_file_path = os.path.join(
             data_dir_name, 'dummy_loss_data.csv')
         dest_shp_file_path = os.path.join(
-            data_dir_name, 'output/dummy_loss_layer.shp')
+            data_dir_name, 'output', 'dummy_loss_layer.shp')
 
         dlg = SelectInputLayersDialog(IFACE)
         shp_layer = dlg.import_loss_layer_from_csv(csv_file_path,
@@ -65,7 +66,8 @@ class ImportLossFromCsvTestCase(unittest.TestCase):
 
     def test_import_loss_from_csv_exported_by_oqengine(self):
         curr_dir_name = os.path.dirname(__file__)
-        data_dir_name = os.path.join(curr_dir_name, 'data/loss/from_oqengine')
+        data_dir_name = os.path.join(
+            curr_dir_name, os.pardir, 'data', 'loss', 'from_oqengine')
         csv_file_path = os.path.join(
             data_dir_name, 'output-161-avg_losses-rlz-000_61.csv')
         out_dir = tempfile.gettempdir()

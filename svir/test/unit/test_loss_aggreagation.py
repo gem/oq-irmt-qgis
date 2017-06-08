@@ -42,8 +42,8 @@ class AggregateLossByZoneTestCase(unittest.TestCase):
     def setUp(self):
         # Load dummy layers
         curr_dir_name = os.path.dirname(__file__)
-        self.data_dir_name = os.path.join(curr_dir_name,
-                                          'data/aggregation/dummy')
+        self.data_dir_name = os.path.join(
+            curr_dir_name, os.pardir, 'data', 'aggregation', 'dummy')
         self.loss_attr_names = ['FATALITIES', 'STRUCTURAL']
         self.loss_layer_is_vector = True
 

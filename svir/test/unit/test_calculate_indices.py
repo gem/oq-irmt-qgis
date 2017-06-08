@@ -28,7 +28,7 @@ import sys
 import tempfile
 from copy import deepcopy
 from qgis.core import QgsVectorLayer, QgsVectorFileWriter
-from utilities import get_qgis_app
+from svir.test.utilities import get_qgis_app
 from svir.calculations.calculate_utils import (calculate_node,
                                                get_node_attr_id_and_name,
                                                calculate_composite_variable,
@@ -133,8 +133,8 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
 
         # Load layer
         curr_dir_name = os.path.dirname(__file__)
-        self.data_dir_name = os.path.join(curr_dir_name,
-                                          'data/calculate_indices')
+        self.data_dir_name = os.path.join(
+            curr_dir_name, os.pardir, 'data', 'calculate_indices')
         layer_path = os.path.join(
             self.data_dir_name, 'socioeconomic_data.shp')
         orig_layer = QgsVectorLayer(layer_path, 'Zonal Layer', 'ogr')
