@@ -55,15 +55,13 @@ class QGISTest(unittest.TestCase):
         self.assertEqual(auth_id, expected_auth_id)
 
         # now test for a loaded layer
-        path = os.path.join(os.path.dirname(__file__),
-                            os.pardir,
-                            'data',
-                            'raster',
-                            'tenbytenraster.asc')
+        path = os.path.join(os.path.dirname(__file__), os.pardir,
+                            'data', 'raster', 'tenbytenraster.asc')
         title = 'TestRaster'
         layer = QgsRasterLayer(path, title)
         auth_id = layer.crs().authid()
         self.assertEqual(auth_id, expected_auth_id)
+
 
 if __name__ == '__main__':
     unittest.main()
