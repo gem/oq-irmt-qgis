@@ -40,7 +40,8 @@ class SafeTranslationsTest(unittest.TestCase):
 
     def test_qgis_translations(self):
         """Test that translations work."""
-        parent_path = os.path.join(__file__, os.path.pardir, os.path.pardir)
+        parent_path = os.path.join(
+            __file__, os.pardir, os.pardir, os.pardir)
         dir_path = os.path.abspath(parent_path)
         file_path = os.path.join(
             dir_path, 'i18n', 'it.qm')

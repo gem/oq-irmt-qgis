@@ -29,7 +29,7 @@ import json
 from qgis.core import QgsVectorLayer
 from recovery_modeling.recovery_modeling import RecoveryModeling
 
-from utilities import get_qgis_app
+from svir.test.utilities import get_qgis_app
 
 QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 
