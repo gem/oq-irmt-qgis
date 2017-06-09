@@ -58,7 +58,9 @@ class DriveOqEngineTestCase(unittest.TestCase):
         self.viewer_dock = ViewerDock(IFACE, mock_action)
         self.dlg = DriveOqEngineServerDialog(IFACE, self.viewer_dock)
         self.calc_id = 219
-        self.output_id = 935
+        self.hcurves_id = 934
+        self.hmaps_id = 935
+        self.uhs_id = 937
         # self.dlg.show()
         # self.dlg.raise_()
         # self.dlg.start_polling()
@@ -130,5 +132,17 @@ class DriveOqEngineTestCase(unittest.TestCase):
 
     def test_load_output(self):
         filepath = self.dlg.download_output(
-            self.output_id, 'npz', tempfile.gettempdir())
+            self.hmaps_id, 'npz', tempfile.gettempdir())
         print filepath
+
+    def test_load_hmaps(self):
+        output = dict(id=self.hmaps_id, type='hmaps')
+        self.dlg.on_output_action_btn_clicked(output, 'Load as layer', 'npz')
+
+    def test_load_hcurves(self):
+        output = dict(id=self.hcurves_id, type='hcurves')
+        self.dlg.on_output_action_btn_clicked(output, 'Load as layer', 'npz')
+
+    def test_load_uhs(self):
+        output = dict(id=self.uhs_id, type='uhs')
+        self.dlg.on_output_action_btn_clicked(output, 'Load as layer', 'npz')
