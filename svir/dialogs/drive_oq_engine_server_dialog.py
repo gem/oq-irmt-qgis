@@ -258,11 +258,15 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
     def highlight_and_scroll_to_calc_id(self, calc_id):
         row = self.get_row_by_calc_id(calc_id)
-        self.calc_list_tbl.selectRow(row)
-        calc_id_col_idx = 1
-        item_calc_id = self.calc_list_tbl.item(row, calc_id_col_idx)
-        self.calc_list_tbl.scrollToItem(
-            item_calc_id, QAbstractItemView.PositionAtCenter)
+        if row is not None:
+            self.calc_list_tbl.selectRow(row)
+            calc_id_col_idx = 1
+            item_calc_id = self.calc_list_tbl.item(row, calc_id_col_idx)
+            self.calc_list_tbl.scrollToItem(
+                item_calc_id, QAbstractItemView.PositionAtCenter)
+        else:
+            self.current_pointed_calc_id = None
+            self.calc_list_tbl.clearSelection()
 
     def set_calc_list_widths(self, widths):
         for i, width in enumerate(widths):

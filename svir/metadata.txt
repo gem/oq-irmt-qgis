@@ -38,6 +38,7 @@ changelog=
     * An additional button permits to visualize the parameters of a OQ-Engine calculation
     * Fixed a corruption in the project definition that happened when trying to add a new node to the
       tree when no other numeric fields are available
+    * Fixed case of highlighting a calculation that is no more in the list
     1.8.25
     * The list of OQ-Engine calculations is automatically scrolled to view the latest clicked row
     * The IRMT viewer dock can be shown/hidden by an additional button in the plugin's toolbar
