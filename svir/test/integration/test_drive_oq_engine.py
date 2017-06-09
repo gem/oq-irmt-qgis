@@ -24,15 +24,16 @@
 
 # import qgis libs so that we set the correct sip api version
 import os
-import sys
+# import sys
 import unittest
-import time
+# import time
+import tempfile
 
-from PyQt4.QtCore import (
-                          QObject,
-                          SIGNAL,
-                          QThread,
-                          )
+# from PyQt4.QtCore import (
+#                           QObject,
+#                           SIGNAL,
+#                           QThread,
+#                           )
 from PyQt4.QtGui import QAction
 from svir.dialogs.drive_oq_engine_server_dialog import (
     DriveOqEngineServerDialog)
@@ -56,17 +57,24 @@ class DriveOqEngineTestCase(unittest.TestCase):
         mock_action = QAction(IFACE.mainWindow())
         self.viewer_dock = ViewerDock(IFACE, mock_action)
         self.dlg = DriveOqEngineServerDialog(IFACE, self.viewer_dock)
-        self.dlg.show()
-        self.dlg.raise_()
-        self.dlg.start_polling()
+        self.calc_id = 219
+        self.output_id = 935
+        # self.dlg.show()
+        # self.dlg.raise_()
+        # self.dlg.start_polling()
         # self.irmt = Irmt(IFACE)
         # self.irmt.drive_oq_engine_server()
         # self.driver_dlg = self.irmt.drive_oq_engine_server_dlg
+
+    def tearDown(self):
+        # self.dlg.remove_calc(self.calc_id)
+        pass
 
     def test_run_calculation_separate_input_files(self):
         area_source_dir = os.path.join(
             self.demos_dir, 'hazard', 'AreaSourceClassicalPSHA')
         file_names = listdir_fullpath(area_source_dir)
+        # FIXME uncomment
         # self.dlg.run_calc(file_names=file_names)
 
         # import pdb
@@ -107,11 +115,20 @@ class DriveOqEngineTestCase(unittest.TestCase):
     #     sys.stderr.write('\n')
 
     def test_get_calc_log(self):
-        print(self.dlg.get_calc_log(219))
+        print(self.dlg.get_calc_log(self.calc_id))
 
     def test_get_calc_status(self):
-        print(self.dlg.get_calc_status(219))
+        print(self.dlg.get_calc_status(self.calc_id))
 
     def test_remove_calculation(self):
-        # self.dlg.remove_calc(219)
+        # self.dlg.remove_calc(self.calc_id)
         pass
+
+    def test_get_output_list(self):
+        output_list = self.dlg.get_output_list(self.calc_id)
+        print output_list
+
+    def test_load_output(self):
+        filepath = self.dlg.download_output(
+            self.output_id, 'npz', tempfile.gettempdir())
+        print filepath
