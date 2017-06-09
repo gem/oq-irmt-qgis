@@ -24,20 +24,13 @@
 
 # import qgis libs so that we set the correct sip api version
 import os
-# import sys
 import unittest
 import time
 import tempfile
 
-# from PyQt4.QtCore import (
-#                           QObject,
-#                           SIGNAL,
-#                           QThread,
-#                           )
 from PyQt4.QtGui import QAction
 from svir.dialogs.drive_oq_engine_server_dialog import (
     DriveOqEngineServerDialog)
-# from svir.irmt import Irmt
 from svir.dialogs.viewer_dock import ViewerDock
 from svir.utilities.utils import listdir_fullpath
 from svir.test.utilities import get_qgis_app
@@ -49,8 +42,6 @@ class DriveOqEngineTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        # super(DriveOqEngineTestCase, cls).setUpClass()
-        # IFACE.newProject()
         curr_dir_name = os.path.dirname(__file__)
         cls.data_dir_name = os.path.join(
             curr_dir_name, os.pardir, 'data')
@@ -68,15 +59,13 @@ class DriveOqEngineTestCase(unittest.TestCase):
             cls.demos_dir, 'hazard', 'AreaSourceClassicalPSHA')
         file_names = listdir_fullpath(area_source_dir)
         resp = cls.dlg.run_calc(file_names=file_names)
-        # FIXME
-        # cls.assertEqual(resp['status'], 'created')
+        assert resp['status'] == 'created', resp['status']
         cls.calc_id = resp['job_id']
 
         while True:
             time.sleep(4)
             status = cls.dlg.get_calc_status(cls.calc_id)
-            # FIXME
-            # cls.assertNotEqual(status['status'], 'failed')
+            assert status['status'] != 'failed', status['status']
             if status['status'] == 'complete':
                 break
 
@@ -91,7 +80,6 @@ class DriveOqEngineTestCase(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        # super(DriveOqEngineTestCase, cls).tearDownClass()
         # TODO: we should remove all the calculations that were created in the
         # setUp
         cls.dlg.remove_calc(cls.calc_id)
