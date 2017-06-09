@@ -422,6 +422,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 return
         if resp.ok:
             self.refresh_calc_list()
+            return resp.json()
         else:
             log_msg(resp.text, level='C', message_bar=self.iface.messageBar())
 

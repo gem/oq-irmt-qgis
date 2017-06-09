@@ -26,7 +26,7 @@
 import os
 # import sys
 import unittest
-# import time
+import time
 import tempfile
 
 # from PyQt4.QtCore import (
@@ -46,89 +46,58 @@ QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 
 
 class DriveOqEngineTestCase(unittest.TestCase):
-    def setUp(self):
-        IFACE.newProject()
+
+    @classmethod
+    def setUpClass(cls):
+        # super(DriveOqEngineTestCase, cls).setUpClass()
+        # IFACE.newProject()
         curr_dir_name = os.path.dirname(__file__)
-        self.data_dir_name = os.path.join(
+        cls.data_dir_name = os.path.join(
             curr_dir_name, os.pardir, 'data')
         # FIXME: it might be passed as argument when running integration tests
-        self.demos_dir = os.path.join(
+        cls.demos_dir = os.path.join(
             os.path.expanduser('~'), 'projects', 'oq-engine', 'demos')
         mock_action = QAction(IFACE.mainWindow())
-        self.viewer_dock = ViewerDock(IFACE, mock_action)
-        self.dlg = DriveOqEngineServerDialog(IFACE, self.viewer_dock)
-        self.calc_id = 219
-        self.hcurves_id = 934
-        self.hmaps_id = 935
-        self.uhs_id = 937
-        # self.dlg.show()
-        # self.dlg.raise_()
-        # self.dlg.start_polling()
-        # self.irmt = Irmt(IFACE)
-        # self.irmt.drive_oq_engine_server()
-        # self.driver_dlg = self.irmt.drive_oq_engine_server_dlg
+        cls.viewer_dock = ViewerDock(IFACE, mock_action)
+        cls.dlg = DriveOqEngineServerDialog(IFACE, cls.viewer_dock)
 
-    def tearDown(self):
-        # self.dlg.remove_calc(self.calc_id)
-        pass
-
-    def test_run_calculation_separate_input_files(self):
+        # TODO: we should run all the demos that cover the output types for
+        # which we have already implemented a corresponding loader. For now,
+        # we are just running the hazard AreaSource demo
         area_source_dir = os.path.join(
-            self.demos_dir, 'hazard', 'AreaSourceClassicalPSHA')
+            cls.demos_dir, 'hazard', 'AreaSourceClassicalPSHA')
         file_names = listdir_fullpath(area_source_dir)
-        # FIXME uncomment
-        # self.dlg.run_calc(file_names=file_names)
+        resp = cls.dlg.run_calc(file_names=file_names)
+        # FIXME
+        # cls.assertEqual(resp['status'], 'created')
+        cls.calc_id = resp['job_id']
 
-        # import pdb
-        # pdb.set_trace()
-        # print 'ciao'
-        # self.calc_status = None
-        # QObject.connect(
-        #     self.dlg.timer, SIGNAL('timeout()'), self._get_calc_status)
-        # self._get_calc_status()
-        # while self.calc_status != 'complete':
-        #     time.sleep(1)
-        #     sys.stderr.write(self.status)
-        #     sys.stderr.write('\n')
+        while True:
+            time.sleep(4)
+            status = cls.dlg.get_calc_status(cls.calc_id)
+            # FIXME
+            # cls.assertNotEqual(status['status'], 'failed')
+            if status['status'] == 'complete':
+                break
 
-        # thread = QThread()
-        # while True:
-        #     thread.sleep(2000)
-        #     self._get_calc_status()
-        # while True:
-        #     time.sleep(2)
-        #     try:
-        #         status = self.dlg.calc_list_tbl.item(0, 4).text()
-        #         sys.stderr.write(status)
-        #         sys.stderr.write('\n')
-        #     except:
-        #         pass
-        #     if status == 'complete':
-        #         break
-        # import pdb
-        # pdb.set_trace()
-        # remove_btn = self.dlg.calc_list_tbl.item(0, 6)
-        # remove_btn.click()
-        # print 'ciao'
+        output_list = cls.dlg.get_output_list(cls.calc_id)
+        for output in output_list:
+            if output['type'] == 'hcurves':
+                cls.hcurves_id = output['id']
+            elif output['type'] == 'hmaps':
+                cls.hmaps_id = output['id']
+            elif output['type'] == 'uhs':
+                cls.uhs_id = output['id']
 
-    # def _get_calc_status(self):
-    #     self.calc_status = self.dlg.calc_list_tbl.item(0, 4).text()
-    #     sys.stderr.write(self.calc_status)
-    #     sys.stderr.write('\n')
+    @classmethod
+    def tearDownClass(cls):
+        # super(DriveOqEngineTestCase, cls).tearDownClass()
+        # TODO: we should remove all the calculations that were created in the
+        # setUp
+        cls.dlg.remove_calc(cls.calc_id)
 
     def test_get_calc_log(self):
-        print(self.dlg.get_calc_log(self.calc_id))
-
-    def test_get_calc_status(self):
-        print(self.dlg.get_calc_status(self.calc_id))
-
-    def test_remove_calculation(self):
-        # self.dlg.remove_calc(self.calc_id)
-        pass
-
-    def test_get_output_list(self):
-        output_list = self.dlg.get_output_list(self.calc_id)
-        print output_list
+        self.dlg.get_calc_log(self.calc_id)
 
     def test_load_output(self):
         filepath = self.dlg.download_output(
