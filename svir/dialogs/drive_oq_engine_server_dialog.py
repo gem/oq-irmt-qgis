@@ -77,6 +77,7 @@ from svir.dialogs.load_losses_by_asset_as_layer_dialog import (
     LoadLossesByAssetAsLayerDialog)
 from svir.dialogs.show_full_report_dialog import ShowFullReportDialog
 from svir.dialogs.show_console_dialog import ShowConsoleDialog
+from svir.dialogs.show_params_dialog import ShowParamsDialog
 
 FORM_CLASS = get_ui_class('ui_drive_engine_server.ui')
 
@@ -98,6 +99,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         QDialog.__init__(self)
         # Set up the user interface from Designer.
         self.setupUi(self)
+        self.params_dlg = None
         self.console_dlg = None
         self.full_report_dlg = None
         # keep track of the log lines acquired for each calculation
@@ -298,6 +300,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         # view is scrolled to the top. Therefore we need to keep track of which
         # line was selected, in order to scroll to that line.
         self.current_pointed_calc_id = calc_id
+        self._set_show_calc_params_btn()
         self.highlight_and_scroll_to_calc_id(calc_id)
         if action == 'Console':
             self.update_output_list(calc_id)
@@ -435,7 +438,19 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             self.calc_list_tbl.clearSelection()
         else:
             self.current_pointed_calc_id = calc_id
+            self._set_show_calc_params_btn()
+        self._set_show_calc_params_btn()
         self.update_output_list(calc_id)
+
+    def _set_show_calc_params_btn(self):
+        self.show_calc_params_btn.setEnabled(
+            self.current_pointed_calc_id is not None)
+        if self.current_pointed_calc_id is not None:
+            self.show_calc_params_btn.setText(
+                'Show parameters for calculation %s'
+                % self.current_pointed_calc_id)
+        else:
+            self.show_calc_params_btn.setText('Show calculation parameters')
 
     @pyqtSlot()
     def on_download_datastore_btn_clicked(self):
@@ -458,6 +473,27 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             open(filepath, "wb").write(resp.content)
             log_msg('The datastore has been saved as %s' % filepath,
                     level='I', message_bar=self.iface.messageBar())
+
+    @pyqtSlot()
+    def on_show_calc_params_btn_clicked(self):
+        self.params_dlg = ShowParamsDialog()
+        self.params_dlg.setWindowTitle(
+            'Parameters of calculation %s' % self.current_pointed_calc_id)
+        get_calc_params_url = "%s/v1/calc/%s/oqparam" % (
+            self.hostname, self.current_pointed_calc_id)
+        with WaitCursorManager('Getting calculation parameters...',
+                               self.iface):
+            try:
+                # FIXME: enable the user to set verify=True
+                resp = self.session.get(get_calc_params_url, timeout=10,
+                                        verify=False)
+            except HANDLED_EXCEPTIONS as exc:
+                self._handle_exception(exc)
+                return
+            json_params = json.loads(resp.text)
+            indented_params = json.dumps(json_params, indent=4)
+            self.params_dlg.text_browser.setText(indented_params)
+        self.params_dlg.show()
 
     def get_output_list(self, calc_id):
         output_list_url = "%s/v1/calc/%s/results" % (self.hostname, calc_id)
