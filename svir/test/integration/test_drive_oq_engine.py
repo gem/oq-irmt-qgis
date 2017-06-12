@@ -156,30 +156,79 @@ class DriveOqEngineTestCase(unittest.TestCase):
 
     def test_load_hmaps(self):
         npz = numpy.load(self.hmaps_filepath, 'r')
-        rlz_dtype_names = npz['rlz-000'].dtype.names
-        expected_rlz_dtype_names = (
-            'lon', 'lat', 'PGA-0.1', 'PGA-0.02', 'PGV-0.1', 'PGV-0.02',
-            'SA(0.025)-0.1', 'SA(0.025)-0.02', 'SA(0.05)-0.1', 'SA(0.05)-0.02',
-            'SA(0.1)-0.1', 'SA(0.1)-0.02', 'SA(0.2)-0.1', 'SA(0.2)-0.02',
-            'SA(0.5)-0.1', 'SA(0.5)-0.02', 'SA(1.0)-0.1', 'SA(1.0)-0.02',
-            'SA(2.0)-0.1', 'SA(2.0)-0.02')
-        self.assertEqual(rlz_dtype_names, expected_rlz_dtype_names)
+        rlz_dtype = npz['rlz-000'].dtype
+        expected_rlz_dtype = numpy.dtype([
+            ('lon', '<f8'),
+            ('lat', '<f8'),
+            ('PGA-0.1', '<f8'),
+            ('PGA-0.02', '<f8'),
+            ('PGV-0.1', '<f8'),
+            ('PGV-0.02', '<f8'),
+            ('SA(0.025)-0.1', '<f8'),
+            ('SA(0.025)-0.02', '<f8'),
+            ('SA(0.05)-0.1', '<f8'),
+            ('SA(0.05)-0.02', '<f8'),
+            ('SA(0.1)-0.1', '<f8'),
+            ('SA(0.1)-0.02', '<f8'),
+            ('SA(0.2)-0.1', '<f8'),
+            ('SA(0.2)-0.02', '<f8'),
+            ('SA(0.5)-0.1', '<f8'),
+            ('SA(0.5)-0.02', '<f8'),
+            ('SA(1.0)-0.1', '<f8'),
+            ('SA(1.0)-0.02', '<f8'),
+            ('SA(2.0)-0.1', '<f8'),
+            ('SA(2.0)-0.02', '<f8')])
+        self.assertEqual(rlz_dtype, expected_rlz_dtype)
 
     def test_load_hcurves(self):
         npz = numpy.load(self.hcurves_filepath, 'r')
-        imtls_dtype_names = npz['imtls'].dtype.names
-        expected_imtls_dtype_names = (
-            'PGA', 'PGV', 'SA(0.025)', 'SA(0.05)', 'SA(0.1)', 'SA(0.2)',
-            'SA(0.5)', 'SA(1.0)', 'SA(2.0)')
-        self.assertEqual(imtls_dtype_names, expected_imtls_dtype_names)
-        rlz_dtype_names = npz['rlz-000'].dtype.names
-        expected_rlz_dtype_names = (
-            'lon', 'lat', 'PGA', 'PGV', 'SA(0.025)', 'SA(0.05)', 'SA(0.1)',
-            'SA(0.2)', 'SA(0.5)', 'SA(1.0)', 'SA(2.0)')
-        self.assertEqual(rlz_dtype_names, expected_rlz_dtype_names)
+        imtls_dtype = npz['imtls'].dtype
+        expected_imtls_dtype = numpy.dtype([
+            ('PGA', '<f8', (19,)),
+            ('PGV', '<f8', (45,)),
+            ('SA(0.025)', '<f8', (19,)),
+            ('SA(0.05)', '<f8', (19,)),
+            ('SA(0.1)', '<f8', (19,)),
+            ('SA(0.2)', '<f8', (19,)),
+            ('SA(0.5)', '<f8', (19,)),
+            ('SA(1.0)', '<f8', (20,)),
+            ('SA(2.0)', '<f8', (20,))])
+        self.assertEqual(imtls_dtype, expected_imtls_dtype)
+        rlz_dtype = npz['rlz-000'].dtype
+        expected_rlz_dtype = numpy.dtype([
+            ('lon', '<f8'),
+            ('lat', '<f8'),
+            ('PGA', '<f8', (19,)),
+            ('PGV', '<f8', (45,)),
+            ('SA(0.025)', '<f8', (19,)),
+            ('SA(0.05)', '<f8', (19,)),
+            ('SA(0.1)', '<f8', (19,)),
+            ('SA(0.2)', '<f8', (19,)),
+            ('SA(0.5)', '<f8', (19,)),
+            ('SA(1.0)', '<f8', (20,)),
+            ('SA(2.0)', '<f8', (20,))])
+        self.assertEqual(rlz_dtype, expected_rlz_dtype)
 
     def test_load_uhs(self):
         npz = numpy.load(self.uhs_filepath, 'r')
-        rlz_dtype_names = npz['rlz-000'].dtype.names
-        expected_rlz_dtype_names = ('lon', 'lat', '0.1', '0.02')
-        self.assertEqual(rlz_dtype_names, expected_rlz_dtype_names)
+        rlz_dtype = npz['rlz-000'].dtype
+        expected_rlz_dtype = numpy.dtype([
+            ('lon', '<f8'),
+            ('lat', '<f8'),
+            ('0.1', [('PGA', '<f8'),
+                     ('SA(0.025)', '<f8'),
+                     ('SA(0.05)', '<f8'),
+                     ('SA(0.1)', '<f8'),
+                     ('SA(0.2)', '<f8'),
+                     ('SA(0.5)', '<f8'),
+                     ('SA(1.0)', '<f8'),
+                     ('SA(2.0)', '<f8')]),
+            ('0.02', [('PGA', '<f8'),
+                      ('SA(0.025)', '<f8'),
+                      ('SA(0.05)', '<f8'),
+                      ('SA(0.1)', '<f8'),
+                      ('SA(0.2)', '<f8'),
+                      ('SA(0.5)', '<f8'),
+                      ('SA(1.0)', '<f8'),
+                      ('SA(2.0)', '<f8')])])
+        self.assertEqual(rlz_dtype, expected_rlz_dtype)
