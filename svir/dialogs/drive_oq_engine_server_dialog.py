@@ -23,7 +23,6 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
-import sys
 import json
 import tempfile
 import zipfile
@@ -627,11 +626,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     raise NotImplementedError(output_type)
                 dlg = output_type_loaders[output_type](
                     self.iface, self.viewer_dock, output_type, filepath)
-                # if we are running nosetests, accept defaults in combos
-                if 'nose' in sys.modules.keys():
-                    dlg.accept()
-                else:
-                    dlg.exec_()
+                dlg.exec_()
             else:
                 raise NotImplementedError("%s %s" % (action, outtype))
         elif action == 'Download':
