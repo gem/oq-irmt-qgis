@@ -27,79 +27,159 @@ import os
 import unittest
 import time
 import tempfile
+import zipfile
+import json
+import numpy
 
-from PyQt4.QtGui import QAction
-from svir.dialogs.drive_oq_engine_server_dialog import (
-    DriveOqEngineServerDialog)
-from svir.dialogs.viewer_dock import ViewerDock
+from svir.third_party.requests import Session
 from svir.utilities.utils import listdir_fullpath
-from svir.test.utilities import get_qgis_app
-
-QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 
 
 class DriveOqEngineTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        curr_dir_name = os.path.dirname(__file__)
-        cls.data_dir_name = os.path.join(
-            curr_dir_name, os.pardir, 'data')
+        cls.session = Session()
         # FIXME: it might be passed as argument when running integration tests
         cls.demos_dir = os.path.join(
             os.path.expanduser('~'), 'projects', 'oq-engine', 'demos')
-        mock_action = QAction(IFACE.mainWindow())
-        cls.viewer_dock = ViewerDock(IFACE, mock_action)
-        cls.dlg = DriveOqEngineServerDialog(IFACE, cls.viewer_dock)
-
+        cls.hostname = 'http://0.0.0.0:8800'
         # TODO: we should run all the demos that cover the output types for
         # which we have already implemented a corresponding loader. For now,
         # we are just running the hazard AreaSource demo
         area_source_dir = os.path.join(
             cls.demos_dir, 'hazard', 'AreaSourceClassicalPSHA')
         file_names = listdir_fullpath(area_source_dir)
-        resp = cls.dlg.run_calc(file_names=file_names)
+        resp = cls.run_calc(file_names=file_names)
         assert resp['status'] == 'created', resp['status']
         cls.calc_id = resp['job_id']
 
         while True:
             time.sleep(4)
-            status = cls.dlg.get_calc_status(cls.calc_id)
+            status = cls.get_calc_status(cls.calc_id)
             assert status['status'] != 'failed', status['status']
             if status['status'] == 'complete':
                 break
 
-        output_list = cls.dlg.get_output_list(cls.calc_id)
+        output_list = cls.get_output_list(cls.calc_id)
         for output in output_list:
             if output['type'] == 'hcurves':
-                cls.hcurves_id = output['id']
+                cls.hcurves_filepath = cls.download_output(output['id'], 'npz')
+                assert cls.hcurves_filepath is not None
             elif output['type'] == 'hmaps':
-                cls.hmaps_id = output['id']
+                cls.hmaps_filepath = cls.download_output(output['id'], 'npz')
+                assert cls.hmaps_filepath is not None
             elif output['type'] == 'uhs':
-                cls.uhs_id = output['id']
+                cls.uhs_filepath = cls.download_output(output['id'], 'npz')
+                assert cls.uhs_filepath is not None
 
     @classmethod
     def tearDownClass(cls):
         # TODO: we should remove all the calculations that were created in the
         # setUp
-        cls.dlg.remove_calc(cls.calc_id)
+        cls.remove_calc(cls.calc_id)
 
-    def test_get_calc_log(self):
-        self.dlg.get_calc_log(self.calc_id)
+    @classmethod
+    def run_calc(cls, calc_id=None, file_names=None):
+        """
+        Run a calculation. If `calc_id` is given, it means we want to run
+        a calculation re-using the output of the given calculation
+        """
+        if len(file_names) == 1:
+            file_full_path = file_names[0]
+            _, file_ext = os.path.splitext(file_full_path)
+            if file_ext == '.zip':
+                zipped_file_name = file_full_path
+            else:
+                raise TypeError(file_ext)
+        else:
+            _, zipped_file_name = tempfile.mkstemp()
+            with zipfile.ZipFile(zipped_file_name, 'w') as zipped_file:
+                for file_name in file_names:
+                    zipped_file.write(file_name)
+        run_calc_url = "%s/v1/calc/run" % cls.hostname
+        if calc_id is not None:
+            # FIXME: currently the web api is expecting a hazard_job_id
+            # although it could be any kind of job_id. This will have to be
+            # changed as soon as the web api is updated.
+            data = {'hazard_job_id': calc_id}
+        else:
+            data = {}
+        files = {'archive': open(zipped_file_name, 'rb')}
+        resp = cls.session.post(
+            run_calc_url, files=files, data=data, timeout=20)
+        if not resp.ok:
+            raise
+        return resp.json()
 
-    def test_load_output(self):
-        filepath = self.dlg.download_output(
-            self.hmaps_id, 'npz', tempfile.gettempdir())
-        print filepath
+    @classmethod
+    def remove_calc(cls, calc_id):
+        calc_remove_url = "%s/v1/calc/%s/remove" % (cls.hostname, calc_id)
+        resp = cls.session.post(calc_remove_url, timeout=10)
+        if not resp.ok:
+            raise
+
+    @classmethod
+    def get_calc_status(cls, calc_id):
+        calc_status_url = "%s/v1/calc/%s/status" % (cls.hostname, calc_id)
+        # FIXME: enable the user to set verify=True
+        resp = cls.session.get(calc_status_url, timeout=10, verify=False)
+        calc_status = json.loads(resp.text)
+        return calc_status
+
+    @classmethod
+    def get_output_list(cls, calc_id):
+        output_list_url = "%s/v1/calc/%s/results" % (cls.hostname, calc_id)
+        # FIXME: enable the user to set verify=True
+        resp = cls.session.get(output_list_url, timeout=10, verify=False)
+        if not resp.ok:
+            raise
+        output_list = json.loads(resp.text)
+        return output_list
+
+    @classmethod
+    def download_output(self, output_id, outtype):
+        dest_folder = tempfile.gettempdir()
+        output_download_url = (
+            "%s/v1/calc/result/%s?export_type=%s&dload=true" % (self.hostname,
+                                                                output_id,
+                                                                outtype))
+        # FIXME: enable the user to set verify=True
+        resp = self.session.get(output_download_url, verify=False)
+        if not resp.ok:
+            raise
+        filename = resp.headers['content-disposition'].split(
+            'filename=')[1]
+        filepath = os.path.join(dest_folder, filename)
+        open(filepath, "wb").write(resp.content)
+        return filepath
 
     def test_load_hmaps(self):
-        output = dict(id=self.hmaps_id, type='hmaps')
-        self.dlg.on_output_action_btn_clicked(output, 'Load as layer', 'npz')
+        npz = numpy.load(self.hmaps_filepath, 'r')
+        rlz_dtype_names = npz['rlz-000'].dtype.names
+        expected_rlz_dtype_names = (
+            'lon', 'lat', 'PGA-0.1', 'PGA-0.02', 'PGV-0.1', 'PGV-0.02',
+            'SA(0.025)-0.1', 'SA(0.025)-0.02', 'SA(0.05)-0.1', 'SA(0.05)-0.02',
+            'SA(0.1)-0.1', 'SA(0.1)-0.02', 'SA(0.2)-0.1', 'SA(0.2)-0.02',
+            'SA(0.5)-0.1', 'SA(0.5)-0.02', 'SA(1.0)-0.1', 'SA(1.0)-0.02',
+            'SA(2.0)-0.1', 'SA(2.0)-0.02')
+        self.assertEqual(rlz_dtype_names, expected_rlz_dtype_names)
 
     def test_load_hcurves(self):
-        output = dict(id=self.hcurves_id, type='hcurves')
-        self.dlg.on_output_action_btn_clicked(output, 'Load as layer', 'npz')
+        npz = numpy.load(self.hcurves_filepath, 'r')
+        imtls_dtype_names = npz['imtls'].dtype.names
+        expected_imtls_dtype_names = (
+            'PGA', 'PGV', 'SA(0.025)', 'SA(0.05)', 'SA(0.1)', 'SA(0.2)',
+            'SA(0.5)', 'SA(1.0)', 'SA(2.0)')
+        self.assertEqual(imtls_dtype_names, expected_imtls_dtype_names)
+        rlz_dtype_names = npz['rlz-000'].dtype.names
+        expected_rlz_dtype_names = (
+            'lon', 'lat', 'PGA', 'PGV', 'SA(0.025)', 'SA(0.05)', 'SA(0.1)',
+            'SA(0.2)', 'SA(0.5)', 'SA(1.0)', 'SA(2.0)')
+        self.assertEqual(rlz_dtype_names, expected_rlz_dtype_names)
 
     def test_load_uhs(self):
-        output = dict(id=self.uhs_id, type='uhs')
-        self.dlg.on_output_action_btn_clicked(output, 'Load as layer', 'npz')
+        npz = numpy.load(self.uhs_filepath, 'r')
+        rlz_dtype_names = npz['rlz-000'].dtype.names
+        expected_rlz_dtype_names = ('lon', 'lat', '0.1', '0.02')
+        self.assertEqual(rlz_dtype_names, expected_rlz_dtype_names)
