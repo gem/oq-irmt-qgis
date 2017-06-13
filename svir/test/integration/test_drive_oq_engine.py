@@ -40,10 +40,12 @@ class DriveOqEngineTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.session = Session()
-        # FIXME: it might be passed as argument when running integration tests
+        # TODO: it might be passed as argument when running integration tests
         cls.demos_dir = os.path.join(
-            os.path.expanduser('~'), 'projects', 'oq-engine', 'demos')
-        cls.hostname = 'http://0.0.0.0:8800'
+            os.path.dirname(__file__),
+            os.pardir, os.pardir, os.pardir, os.pardir,
+            'oq-engine', 'demos')
+        cls.hostname = 'http://localhost:8800'
         # TODO: we should run all the demos that cover the output types for
         # which we have already implemented a corresponding loader. For now,
         # we are just running the hazard AreaSource demo
