@@ -109,7 +109,7 @@ class DriveOqEngineTestCase(unittest.TestCase):
         resp = cls.session.post(
             run_calc_url, files=files, data=data, timeout=20)
         if not resp.ok:
-            raise
+            raise Exception(resp.text)
         return resp.json()
 
     @classmethod
@@ -117,7 +117,7 @@ class DriveOqEngineTestCase(unittest.TestCase):
         calc_remove_url = "%s/v1/calc/%s/remove" % (cls.hostname, calc_id)
         resp = cls.session.post(calc_remove_url, timeout=10)
         if not resp.ok:
-            raise
+            raise Exception(resp.text)
 
     @classmethod
     def get_calc_status(cls, calc_id):
@@ -133,7 +133,7 @@ class DriveOqEngineTestCase(unittest.TestCase):
         # FIXME: enable the user to set verify=True
         resp = cls.session.get(output_list_url, timeout=10, verify=False)
         if not resp.ok:
-            raise
+            raise Exception(resp.text)
         output_list = json.loads(resp.text)
         return output_list
 
@@ -147,7 +147,7 @@ class DriveOqEngineTestCase(unittest.TestCase):
         # FIXME: enable the user to set verify=True
         resp = self.session.get(output_download_url, verify=False)
         if not resp.ok:
-            raise
+            raise Exception(resp.text)
         filename = resp.headers['content-disposition'].split(
             'filename=')[1]
         filepath = os.path.join(dest_folder, filename)
