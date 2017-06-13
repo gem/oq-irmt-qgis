@@ -378,7 +378,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             log_msg(msg, level='C', message_bar=self.iface.messageBar())
         return
 
-    def run_calc(self, calc_id=None):
+    def run_calc(self, calc_id=None, file_names=None):
         """
         Run a calculation. If `calc_id` is given, it means we want to run
         a calculation re-using the output of the given calculation
@@ -387,7 +387,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                        ' or the zip archive containing those files.')
         default_dir = QSettings().value('irmt/run_oqengine_calc_dir',
                                         QDir.homePath())
-        file_names = QFileDialog.getOpenFileNames(self, text, default_dir)
+        if not file_names:
+            file_names = QFileDialog.getOpenFileNames(self, text, default_dir)
         if not file_names:
             return
         selected_dir = QFileInfo(file_names[0]).dir().path()
@@ -427,6 +428,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 return
         if resp.ok:
             self.refresh_calc_list()
+            return resp.json()
         else:
             log_msg(resp.text, level='C', message_bar=self.iface.messageBar())
 

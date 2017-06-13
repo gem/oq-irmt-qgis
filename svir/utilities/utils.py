@@ -26,6 +26,7 @@ import numpy
 import collections
 import json
 import os
+import sys
 import locale
 from copy import deepcopy
 from time import time
@@ -98,21 +99,26 @@ def log_msg(message, tag='GEM IRMT Plugin', level='I', message_bar=None,
                     'bar': QgsMessageBar.CRITICAL}}
     if level not in levels:
         raise ValueError('Level must be one of %s' % levels.keys())
-    QgsMessageLog.logMessage(tr(message), tr(tag), levels[level]['log'])
-    if message_bar is not None:
-        if level == 'I':
-            title = 'Info'
-            duration = duration if duration is not None else 8
-        elif level == 'W':
-            title = 'Warning'
-            duration = duration if duration is not None else 0
-        elif level == 'C':
-            title = 'Error'
-            duration = duration if duration is not None else 0
-        message_bar.pushMessage(tr(title),
-                                tr(message),
-                                levels[level]['bar'],
-                                duration)
+
+    # if we are running nosetests, exit on critical errors
+    if 'nose' in sys.modules.keys() and level == 'C':
+        sys.exit(message)
+    else:
+        QgsMessageLog.logMessage(tr(message), tr(tag), levels[level]['log'])
+        if message_bar is not None:
+            if level == 'I':
+                title = 'Info'
+                duration = duration if duration is not None else 8
+            elif level == 'W':
+                title = 'Warning'
+                duration = duration if duration is not None else 0
+            elif level == 'C':
+                title = 'Error'
+                duration = duration if duration is not None else 0
+            message_bar.pushMessage(tr(title),
+                                    tr(message),
+                                    levels[level]['bar'],
+                                    duration)
 
 
 def tr(message):
@@ -964,3 +970,7 @@ def groupby(npz, rlz, loss_type, taxonomy='All'):
     for i, (lon, lat) in enumerate(sorted(loss_by_site)):
         data[i] = (lon, lat, loss_by_site[lon, lat])
     return data
+
+
+def listdir_fullpath(path):
+    return [os.path.join(path, filename) for filename in os.listdir(path)]
