@@ -22,11 +22,16 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-import csv
-import tempfile
-from PyQt4.QtCore import pyqtSlot
-from svir.utilities.utils import import_layer_from_csv, log_msg
+import numpy
+import collections
+from qgis.core import QgsFeature, QgsGeometry, QgsPoint
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
+from svir.calculations.calculate_utils import add_numeric_attribute
+from svir.utilities.utils import (WaitCursorManager,
+                                  LayerEditingManager,
+                                  log_msg,
+                                  )
+from svir.utilities.shared import DEBUG
 
 
 class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
@@ -39,20 +44,18 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         assert output_type == 'dmg_by_asset'
         LoadOutputAsLayerDialog.__init__(
             self, iface, viewer_dock, output_type, path, mode)
-        self.create_dmg_state_selector()
+        self.setWindowTitle('Load scenario damage by asset from NPZ, as layer')
+        self.create_load_selected_only_ckb()
+        self.load_selected_only_ckb.setEnabled(False)
+        self.create_rlz_selector()
+        self.create_taxonomy_selector()
         self.create_loss_type_selector()
-        self.create_save_as_shp_ckb()
-        self.setWindowTitle('Load scenario damage by asset from CSV, as layer')
+        self.create_dmg_state_selector()
+        if self.path:
+            self.npz_file = numpy.load(self.path, 'r')
+            self.populate_out_dep_widgets()
         self.adjustSize()
         self.set_ok_button()
-        if self.path:
-            self.read_loss_types_and_dmg_states_from_csv_header()
-
-    @pyqtSlot()
-    def on_file_browser_tbn_clicked(self):
-        if self.open_file_dialog():
-            # read the header of the csv, so we can select from its fields
-            self.read_loss_types_and_dmg_states_from_csv_header()
 
     def set_ok_button(self):
         self.ok_button.setEnabled(
@@ -60,67 +63,126 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             and self.dmg_state_cbx.currentIndex() != -1
             and self.loss_type_cbx.currentIndex() != -1)
 
-    def load_from_csv(self):
-        if self.mode == 'testing':
-            dest_shp = tempfile.mkstemp(suffix='.shp')[1]
-        else:
-            dest_shp = None  # the destination file will be selected via GUI
-        self.layer = import_layer_from_csv(
-            self, self.path_le.text(), self.output_type, self.iface,
-            save_as_shp=self.save_as_shp_ckb.isChecked(), dest_shp=dest_shp)
-        dmg_state = self.dmg_state_cbx.currentText()
-        loss_type = self.loss_type_cbx.currentText()
-        field_idx = None
-        for idx, name in enumerate(self.csv_header):
-            if dmg_state in name and loss_type in name and 'mean' in name:
-                field_idx = idx
-                break
-        if field_idx is None:
-            msg = ('Unable to style the layer, because the header of the csv'
-                   ' file does not contain any field corresponding to the'
-                   ' chosen damage state and loss type.')
-            log_msg(msg, level='C', message_bar=self.iface.messageBar())
-            return
-        self.default_field_name = self.layer.fields()[field_idx].name()
-        self.style_maps()
+    def on_rlz_changed(self):
+        self.dataset = self.npz_file[self.rlz_cbx.currentText()]
+        self.taxonomies = numpy.unique(self.dataset['taxonomy']).tolist()
+        self.populate_taxonomy_cbx(self.taxonomies)
+        # discarding 'asset_ref', 'taxonomy', 'lon', 'lat'
+        self.loss_types = self.dataset.dtype.names[4:]
+        self.populate_loss_type_cbx(self.loss_types)
+        self.set_ok_button()
 
-    def read_loss_types_and_dmg_states_from_csv_header(self):
-        with open(self.path, "rb") as source:
-            reader = csv.reader(source)
-            self.csv_header = reader.next()
-            # the header looks like:
-            # asset_ref,taxonomy,lon,lat,structural~no_damage_mean,
-            #    structural~no_damage_stdv,structural~slight_mean,
-            #    structural~slight_stdv,...
-            # we will ignore: asset_ref, taxonomy, lon, lat
-            names = self.csv_header[4:]
-            loss_types = []
-            dmg_states = []
-            for name in names:
-                # each name looks like: structural~no_damage_mean
-                loss_type, dmg_state_plus_stat = name.split('~')
-                # dmg_state_plus_stat looks like: no_damage_mean
-                dmg_state, _ = dmg_state_plus_stat.rsplit('_', 1)
-                if loss_type not in loss_types:
-                    loss_types.append(loss_type)
-                if dmg_state not in dmg_states:
-                    dmg_states.append(dmg_state)
-            self.populate_loss_type_cbx(loss_types)
-            self.populate_dmg_state_cbx(dmg_states)
+    def populate_taxonomy_cbx(self, taxonomies):
+        self.taxonomies.insert(0, 'All')
+        self.taxonomy_cbx.clear()
+        self.taxonomy_cbx.addItems(taxonomies)
+        self.taxonomy_cbx.setEnabled(True)
 
-    # def populate_taxonomies(self):
-    #     # TODO: change as soon as npz risk outputs are available
-    #     if self.output_type == 'dmg_by_asset':
-    #         self.taxonomies.insert(0, 'Sum')
-    #         self.taxonomy_cbx.clear()
-    #         self.taxonomy_cbx.addItems(self.taxonomies)
-    #         self.taxonomy_cbx.setEnabled(True)
+    def on_loss_type_changed(self):
+        names = self.dataset[self.loss_type_cbx.currentText()].dtype.names
+        self.dmg_states = []
+        for dmg_state_plus_stat in names:
+            # each name looks like: no_damage_mean
+            dmg_state, _ = dmg_state_plus_stat.rsplit('_', 1)
+            if dmg_state not in self.dmg_states:
+                self.dmg_states.append(dmg_state)
+        self.populate_dmg_state_cbx()
 
-    # def populate_dmg_states(self):
-    #     # TODO: change as soon as npz risk outputs are available
-    #     if self.output_type == 'dmg_by_asset':
-    #         self.dmg_states = ['no damage']
-    #         self.dmg_states.extend(self.npz_file['oqparam'].limit_states)
-    #         self.dmg_state_cbx.clear()
-    #         self.dmg_state_cbx.setEnabled(True)
-    #         self.dmg_state_cbx.addItems(self.dmg_states)
+    def populate_dmg_state_cbx(self):
+        self.dmg_state_cbx.clear()
+        self.dmg_state_cbx.setEnabled(True)
+        self.dmg_state_cbx.addItems(self.dmg_states)
+
+    def build_layer_name(self, rlz, **kwargs):
+        taxonomy = kwargs['taxonomy']
+        loss_type = kwargs['loss_type']
+        dmg_state = kwargs['dmg_state']
+        layer_name = "dmg_by_asset_%s_%s_%s_%s" % (
+            rlz, taxonomy, loss_type, dmg_state)
+        return layer_name
+
+    def get_field_names(self, **kwargs):
+        # field_names = list(self.dataset.dtype.names)
+        loss_type = kwargs['loss_type']
+        dmg_state = kwargs['dmg_state']
+        ltds = "%s_%s_mean" % (loss_type, dmg_state)
+
+        field_names = ['lon', 'lat', ltds]
+        self.default_field_name = ltds
+        return field_names
+
+    def add_field_to_layer(self, field_name):
+        # NOTE: add_numeric_attribute uses LayerEditingManager
+        added_field_name = add_numeric_attribute(
+            field_name, self.layer)
+        return added_field_name
+
+    def read_npz_into_layer(self, field_names, **kwargs):
+        rlz = kwargs['rlz']
+        loss_type = kwargs['loss_type']
+        taxonomy = kwargs['taxonomy']
+        dmg_state = kwargs['dmg_state']
+        with LayerEditingManager(self.layer, 'Reading npz', DEBUG):
+            feats = []
+            grouped_by_site = self.group_by_site(
+                self.npz_file, rlz, loss_type, dmg_state, taxonomy)
+            for row in grouped_by_site:
+                # add a feature
+                feat = QgsFeature(self.layer.pendingFields())
+                for field_name_idx, field_name in enumerate(field_names):
+                    if field_name in ['lon', 'lat']:
+                        continue
+                    value = float(row[field_name_idx])
+                    feat.setAttribute(field_names[field_name_idx], value)
+                feat.setGeometry(QgsGeometry.fromPoint(
+                    QgsPoint(row['lon'], row['lat'])))
+                feats.append(feat)
+            added_ok = self.layer.addFeatures(feats, makeSelected=False)
+            if not added_ok:
+                msg = 'There was a problem adding features to the layer.'
+                log_msg(msg, level='C', message_bar=self.iface.messageBar())
+
+    def group_by_site(self, npz, rlz, loss_type, dmg_state, taxonomy='All'):
+        F32 = numpy.float32
+        dmg_by_site = collections.defaultdict(float)  # lon, lat -> dmg
+        for rec in npz[rlz]:
+            if taxonomy == 'All' or taxonomy == rec['taxonomy']:
+                value = rec[loss_type]['%s_mean' % dmg_state]
+                dmg_by_site[rec['lon'], rec['lat']] += value
+        data = numpy.zeros(
+            len(dmg_by_site),
+            [('lon', F32), ('lat', F32), (loss_type, F32)])
+        for i, (lon, lat) in enumerate(sorted(dmg_by_site)):
+            data[i] = (lon, lat, dmg_by_site[lon, lat])
+        return data
+
+    def load_from_npz(self):
+        for rlz in self.rlzs:
+            if (self.load_selected_only_ckb.isChecked()
+                    and rlz != self.rlz_cbx.currentText()):
+                continue
+            for taxonomy in self.taxonomies:
+                if (self.load_selected_only_ckb.isChecked()
+                        and taxonomy != self.taxonomy_cbx.currentText()):
+                    continue
+                for loss_type in self.loss_types:
+                    if (self.load_selected_only_ckb.isChecked()
+                            and loss_type != self.loss_type_cbx.currentText()):
+                        continue
+                    for dmg_state in self.dmg_states:
+                        if (self.load_selected_only_ckb.isChecked()
+                                and
+                                dmg_state != self.dmg_state_cbx.currentText()):
+                            continue
+                        with WaitCursorManager(
+                                'Creating layer for realization "%s",'
+                                ' taxonomy "%s", loss type "%s" and'
+                                ' damage state "%s"...' % (
+                                rlz, taxonomy, loss_type,
+                                dmg_state), self.iface):
+                            self.build_layer(
+                                rlz, taxonomy=taxonomy, loss_type=loss_type,
+                                dmg_state=dmg_state)
+                            self.style_maps()
+        if self.npz_file is not None:
+            self.npz_file.close()

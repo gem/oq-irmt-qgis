@@ -23,13 +23,13 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import numpy
+import collections
 from qgis.core import QgsFeature, QgsGeometry, QgsPoint
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 from svir.calculations.calculate_utils import add_numeric_attribute
 from svir.utilities.utils import (WaitCursorManager,
                                   LayerEditingManager,
                                   log_msg,
-                                  groupby,
                                   )
 from svir.utilities.shared import DEBUG
 
@@ -82,7 +82,6 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         return layer_name
 
     def get_field_names(self, **kwargs):
-        # field_names = list(self.dataset.dtype.names)
         loss_type = kwargs['loss_type']
         field_names = ['lon', 'lat', loss_type]
         self.default_field_name = loss_type
@@ -100,7 +99,7 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         taxonomy = kwargs['taxonomy']
         with LayerEditingManager(self.layer, 'Reading npz', DEBUG):
             feats = []
-            grouped_by_site = groupby(
+            grouped_by_site = self.group_by_site(
                 self.npz_file, rlz, loss_type, taxonomy)
             for row in grouped_by_site:
                 # add a feature
@@ -138,9 +137,20 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                         self.build_layer(
                             rlz, taxonomy=taxonomy, loss_type=loss_type)
                         self.style_maps()
-                        # if self.output_type == 'loss_curves':
-                        #     self.style_curves()
-                        # elif self.output_type == 'loss_maps':
-                        #     self.style_maps()
         if self.npz_file is not None:
             self.npz_file.close()
+
+    def group_by_site(self, npz, rlz, loss_type, taxonomy='All'):
+        # example:
+        # npz = numpy.load(npzfname)
+        # print(group_by_site(npz, 'rlz-000', 'structural_ins', '"tax1"'))
+        F32 = numpy.float32
+        loss_by_site = collections.defaultdict(float)  # lon, lat -> loss
+        for rec in npz[rlz]:
+            if taxonomy == 'All' or taxonomy == rec['taxonomy']:
+                loss_by_site[rec['lon'], rec['lat']] += rec[loss_type]
+        data = numpy.zeros(len(loss_by_site),
+                           [('lon', F32), ('lat', F32), (loss_type, F32)])
+        for i, (lon, lat) in enumerate(sorted(loss_by_site)):
+            data[i] = (lon, lat, loss_by_site[lon, lat])
+        return data

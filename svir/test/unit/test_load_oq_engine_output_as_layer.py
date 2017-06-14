@@ -125,27 +125,6 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
         # test exporting the current selection to csv
         self._test_export('uniform_hazard_spectra.csv')
 
-    def test_load_dmg_by_asset(self):
-        filepath = os.path.join(
-            self.data_dir_name, 'risk',
-            'output-308-dmg_by_asset-ChiouYoungs2008()_103.csv')
-        dlg = LoadDmgByAssetAsLayerDialog(
-            IFACE, self.viewer_dock, 'dmg_by_asset', filepath, mode='testing')
-        dlg.save_as_shp_ckb.setChecked(True)
-        idx = dlg.dmg_state_cbx.findText('complete')
-        self.assertEqual(idx, 4, '"complete" damage state was not found')
-        dlg.dmg_state_cbx.setCurrentIndex(idx)
-        idx = dlg.loss_type_cbx.findText('structural')
-        self.assertEqual(idx, 0, '"structural" loss_type was not found')
-        dlg.loss_type_cbx.setCurrentIndex(idx)
-        dlg.accept()
-        current_layer = IFACE.activeLayer()
-        reference_path = os.path.join(
-            self.data_dir_name, 'dmg_by_asset_complete_structural.shp')
-        reference_layer = QgsVectorLayer(
-            reference_path, 'dmg_by_asset_complete_structural', 'ogr')
-        ProcessLayer(current_layer).has_same_content_as(reference_layer)
-
     def test_load_ruptures(self):
         filepath = os.path.join(
             self.data_dir_name, 'hazard', 'output-607-ruptures_162.csv')
@@ -189,6 +168,45 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
         self.assertNotEqual(loss_type_idx, -1,
                             'Loss type structural was not found')
         dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
+        dlg.accept()
+
+    def test_load_dmg_by_asset_only_selected_taxonomy(self):
+        filepath = os.path.join(self.data_dir_name, 'risk',
+                                'output-1614-dmg_by_asset_356.npz')
+        dlg = LoadDmgByAssetAsLayerDialog(
+            IFACE, self.viewer_dock, 'dmg_by_asset', filepath)
+        dlg.load_selected_only_ckb.setChecked(True)
+        taxonomy_idx = dlg.taxonomy_cbx.findText('"Concrete"')
+        self.assertNotEqual(taxonomy_idx, -1,
+                            'Taxonomy "Concrete" was not found')
+        dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
+        loss_type_idx = dlg.loss_type_cbx.findText('structural')
+        self.assertNotEqual(loss_type_idx, -1,
+                            'Loss type structural was not found')
+        dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
+        dmg_state_idx = dlg.dmg_state_cbx.findText('moderate')
+        self.assertNotEqual(dmg_state_idx, -1,
+                            'Damage state moderate was not found')
+        dlg.dmg_state_cbx.setCurrentIndex(dmg_state_idx)
+        dlg.accept()
+
+    def test_load_dmg_by_asset_all_taxonomies(self):
+        filepath = os.path.join(self.data_dir_name, 'risk',
+                                'output-1614-dmg_by_asset_356.npz')
+        dlg = LoadDmgByAssetAsLayerDialog(
+            IFACE, self.viewer_dock, 'dmg_by_asset', filepath)
+        dlg.load_selected_only_ckb.setChecked(True)
+        taxonomy_idx = dlg.taxonomy_cbx.findText('All')
+        self.assertNotEqual(taxonomy_idx, -1, 'Taxonomy All was not found')
+        dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
+        loss_type_idx = dlg.loss_type_cbx.findText('structural')
+        self.assertNotEqual(loss_type_idx, -1,
+                            'Loss type structural was not found')
+        dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
+        dmg_state_idx = dlg.dmg_state_cbx.findText('moderate')
+        self.assertNotEqual(dmg_state_idx, -1,
+                            'Damage state moderate was not found')
+        dlg.dmg_state_cbx.setCurrentIndex(dmg_state_idx)
         dlg.accept()
 
     def _test_export(self, expected_file_name):
