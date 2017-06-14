@@ -39,6 +39,7 @@ changelog=
     * Fixed a corruption in the project definition that happened when trying to add a new node to the
       tree when no other numeric fields are available
     * Fixed case of highlighting a calculation that is no more in the list
+    * Replaced the csv importer for damage by asset with an importer from npz that also aggregates data by site
     1.8.25
     * The list of OQ-Engine calculations is automatically scrolled to view the latest clicked row
     * The IRMT viewer dock can be shown/hidden by an additional button in the plugin's toolbar
