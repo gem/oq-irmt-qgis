@@ -280,11 +280,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.rlz_cbx.setEnabled(True)
         self.rlz_cbx.addItems(self.rlzs)
 
-    def populate_dmg_state_cbx(self, dmg_states):
-        self.dmg_state_cbx.clear()
-        self.dmg_state_cbx.setEnabled(True)
-        self.dmg_state_cbx.addItems(dmg_states)
-
     def populate_loss_type_cbx(self, loss_types):
         self.loss_type_cbx.clear()
         self.loss_type_cbx.setEnabled(True)
@@ -448,10 +443,12 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         # if self.npz_file is not None:
         #     self.npz_file.close()
 
-    def build_layer(self, rlz, taxonomy=None, poe=None, loss_type=None):
+    def build_layer(self, rlz, taxonomy=None, poe=None, loss_type=None,
+                    dmg_state=None):
         rlz_group = self.get_layer_group(rlz)
         layer_name = self.build_layer_name(
-            rlz, taxonomy=taxonomy, poe=poe, loss_type=loss_type)
+            rlz, taxonomy=taxonomy, poe=poe, loss_type=loss_type,
+            dmg_state=dmg_state)
         # TODO: change as soon as npz files for these become available
         # if self.output_type in ('loss_maps',
         #                         'loss_curves'):
@@ -464,7 +461,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         #     poe = "poe-%s" % self.poe_cbx.currentText()
         #     self.default_field_name = loss_type
         field_names = self.get_field_names(
-            rlz=rlz, taxonomy=taxonomy, poe=poe, loss_type=loss_type)
+            rlz=rlz, taxonomy=taxonomy, poe=poe, loss_type=loss_type,
+            dmg_state=dmg_state)
 
         # create layer
         self.layer = QgsVectorLayer(
@@ -483,7 +481,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
 
         self.read_npz_into_layer(
             field_names, rlz=rlz, taxonomy=taxonomy, poe=poe,
-            loss_type=loss_type)
+            loss_type=loss_type, dmg_state=dmg_state)
         self.layer.setCustomProperty('output_type', self.output_type)
         # add self.layer to the legend
         # False is to avoid adding the layer to the tree root, but only to the
