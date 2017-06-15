@@ -191,9 +191,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 self.reject()
                 return
             calc_list = json.loads(resp.text)
-        selected_keys = ['description', 'id', 'job_type', 'owner', 'status']
-        col_names = ['Description', 'Job ID', 'Job Type', 'Owner', 'Status']
-        col_widths = [370, 60, 80, 80, 80]
+        selected_keys = [
+            'description', 'id', 'calculation_mode', 'owner', 'status']
+        col_names = [
+            'Description', 'Job ID', 'Calculation Mode', 'Owner', 'Status']
+        col_widths = [340, 60, 135, 70, 80]
         if not calc_list:
             if self.calc_list_tbl.rowCount() > 0:
                 self.calc_list_tbl.clearContents()
@@ -299,7 +301,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             output_list = self.get_output_list(calc_id)
             self.list_of_outputs_lbl.setText(
                 'List of outputs for calculation %s' % calc_id)
-            self.show_output_list(output_list)
+            self.show_output_list(output_list, calc_status['calculation_mode'])
             self.download_datastore_btn.setEnabled(True)
             self.download_datastore_btn.setText(
                 'Download HDF5 datastore for calculation %s'
@@ -528,7 +530,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         else:
             return []
 
-    def show_output_list(self, output_list):
+    def show_output_list(self, output_list, calculation_mode):
         if not output_list:
             self.clear_output_list()
             self.download_datastore_btn.setEnabled(False)
@@ -565,7 +567,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     or output['type'] == 'fullreport'):
                 if output['type'] == 'fullreport':
                     action = 'Show'
-                else:
+                elif 'event based' not in calculation_mode:
                     action = 'Load as layer'
                 button = QPushButton()
                 self.connect_button_to_action(
