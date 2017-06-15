@@ -53,7 +53,7 @@ from svir.third_party.requests.exceptions import (ConnectionError,
                                                   SSLError,
                                                   )
 from svir.utilities.settings import get_engine_credentials
-from svir.utilities.shared import OQ_ALL_LOADABLE_TYPES, OUTPUT_TYPE_LOADERS
+from svir.utilities.shared import OQ_ALL_LOADABLE_TYPES
 from svir.utilities.utils import (WaitCursorManager,
                                   engine_login,
                                   log_msg,
@@ -61,6 +61,20 @@ from svir.utilities.utils import (WaitCursorManager,
                                   get_ui_class,
                                   SvNetworkError,
                                   )
+from svir.dialogs.load_ruptures_as_layer_dialog import (
+    LoadRupturesAsLayerDialog)
+from svir.dialogs.load_dmg_by_asset_as_layer_dialog import (
+    LoadDmgByAssetAsLayerDialog)
+from svir.dialogs.load_gmf_data_as_layer_dialog import (
+    LoadGmfDataAsLayerDialog)
+from svir.dialogs.load_hmaps_as_layer_dialog import (
+    LoadHazardMapsAsLayerDialog)
+from svir.dialogs.load_hcurves_as_layer_dialog import (
+    LoadHazardCurvesAsLayerDialog)
+from svir.dialogs.load_uhs_as_layer_dialog import (
+    LoadUhsAsLayerDialog)
+from svir.dialogs.load_losses_by_asset_as_layer_dialog import (
+    LoadLossesByAssetAsLayerDialog)
 from svir.dialogs.show_full_report_dialog import ShowFullReportDialog
 from svir.dialogs.show_console_dialog import ShowConsoleDialog
 from svir.dialogs.show_params_dialog import ShowParamsDialog
@@ -71,6 +85,16 @@ HANDLED_EXCEPTIONS = (SSLError, ConnectionError, InvalidSchema, MissingSchema,
                       ReadTimeout, SvNetworkError)
 
 BUTTON_WIDTH = 75
+
+OUTPUT_TYPE_LOADERS = {
+    'ruptures': LoadRupturesAsLayerDialog,
+    'dmg_by_asset': LoadDmgByAssetAsLayerDialog,
+    'gmf_data': LoadGmfDataAsLayerDialog,
+    'hmaps': LoadHazardMapsAsLayerDialog,
+    'hcurves': LoadHazardCurvesAsLayerDialog,
+    'uhs': LoadUhsAsLayerDialog,
+    'losses_by_asset': LoadLossesByAssetAsLayerDialog}
+assert set(OUTPUT_TYPE_LOADERS.keys()) == OQ_ALL_LOADABLE_TYPES
 
 
 class DriveOqEngineServerDialog(QDialog, FORM_CLASS):

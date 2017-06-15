@@ -24,14 +24,20 @@
 
 # import qgis libs so that we set the correct sip api version
 import os
+import sys
+import traceback
 import unittest
 import tempfile
 import json
 from mock import Mock
 
 from svir.third_party.requests import Session
-from svir.utilities.shared import OQ_ALL_LOADABLE_TYPES, OUTPUT_TYPE_LOADERS
-from svir.utilities.utils import get_qgis_app
+from svir.utilities.shared import (OQ_ALL_LOADABLE_TYPES,
+                                   OQ_CSV_LOADABLE_TYPES,
+                                   OQ_NPZ_LOADABLE_TYPES,
+                                   )
+from svir.test.utilities import get_qgis_app
+from svir.dialogs.drive_oq_engine_server_dialog import OUTPUT_TYPE_LOADERS
 
 QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 
