@@ -30,7 +30,7 @@ from svir.calculations.transformation_algs import (RANK_VARIANTS,
                                                    QUADRATIC_VARIANTS,
                                                    LOG10_VARIANTS,
                                                    TRANSFORMATION_ALGS)
-from svir.utilities.utils import get_ui_class
+from svir.utilities.utils import get_ui_class, log_msg
 from svir.utilities.shared import NUMERIC_FIELD_TYPES
 from svir.calculations.process_layer import ProcessLayer
 from svir.ui.list_multiselect_widget import ListMultiSelectWidget
@@ -184,10 +184,23 @@ class TransformationDialog(QDialog, FORM_CLASS):
             self.attr_name_user_def = False
 
     def fill_fields_multiselect(self):
-        names_plus_aliases = [
-            '%s (%s)' % (field.name(),
-                         self.iface.activeLayer().attributeAlias(field_idx))
-            for field_idx, field in enumerate(
-                self.iface.activeLayer().fields())
-            if field.typeName() in NUMERIC_FIELD_TYPES]
+        names_plus_aliases = []
+        for field_idx, field in enumerate(self.iface.activeLayer().fields()):
+            if field.typeName() in NUMERIC_FIELD_TYPES:
+                if '(' in field.name():
+                    msg = (
+                        'Please remove parentheses from the name of field'
+                        ' %s before attempting to transform it, otherwise'
+                        ' the tool will not be able to distinguish between'
+                        ' the alias and the part of the name included'
+                        ' between parentheses. For instance, you may'
+                        ' replace "(" with "[" to avoid ambiguity.'
+                        % field.name())
+                    log_msg(
+                        msg, level='W', message_bar=self.iface.messageBar())
+                else:
+                    name_plus_alias = '%s (%s)' % (
+                        field.name(),
+                        self.iface.activeLayer().attributeAlias(field_idx))
+                    names_plus_aliases.append(name_plus_alias)
         self.fields_multiselect.set_unselected_items(names_plus_aliases)
