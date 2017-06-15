@@ -567,7 +567,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     or output['type'] == 'fullreport'):
                 if output['type'] == 'fullreport':
                     action = 'Show'
-                elif 'event based' not in calculation_mode:
+                # FIXME
+                elif not (output['type'] == 'gmf_data'
+                          and 'event_based' in calculation_mode):
                     action = 'Load as layer'
                 button = QPushButton()
                 self.connect_button_to_action(
