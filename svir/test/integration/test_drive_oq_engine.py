@@ -96,7 +96,10 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                     IFACE.newProject()
                     dlg = OUTPUT_TYPE_LOADERS[output_type](
                         IFACE, Mock(), output_type, filepath)
-                    dlg.accept()
+                    if dlg.ok_button.isEnabled():
+                        dlg.accept()
+                    else:
+                        raise RuntimeError('The ok button is disabled')
                 else:
                     print('\tLoader for output type %s is not implemented'
                           % output_type)
@@ -117,13 +120,13 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             print('\nCalculation %s: %s' % (calc['id'], calc['description']))
             self.load_calc_outputs(calc)
         if not self.failed_attempts:
-            print('All outputs were successfully loaded')
+            print('\n\nAll outputs were successfully loaded')
         else:
-            print('Failed attempts:')
+            print('\n\nFailed attempts:')
             for failed_attempt in self.failed_attempts:
-                print('Calculation %s: %s'
+                print('\tCalculation %s: %s'
                       % (failed_attempt['calc_id'],
                          failed_attempt['calc_description']))
-                print('Output type: %s' % failed_attempt['output_type'])
+                print('\t\tOutput type: %s' % failed_attempt['output_type'])
             raise RuntimeError(
                 'At least one output was not successfully loaded')
