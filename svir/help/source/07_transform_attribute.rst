@@ -128,6 +128,10 @@ be truncated to 10 characters.
     with the format `name (alias)`. If no alias is specified for the field, the
     parenthesis will be empty. The plugin automatically assigns to the
     transformed field the same alias of the original one (if available).
+    Please make sure that the names of the fields to be transformed do not
+    contain parentheses, otherwise the plugin would erroneously interpret them
+    as containers for the alias; therefore the selected name would be incomplete
+    (being taken excluding the parentheses) and it would not be found in the layer.
 
 If the checkbox :guilabel:`Let all project definitions utilize transformed
 values` is checked, all the project definitions associated with the active
