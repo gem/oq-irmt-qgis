@@ -48,6 +48,13 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         self.session = Session()
         self.hostname = 'http://localhost:8800'
 
+    def get_calc_list(self):
+        calc_list_url = "%s/v1/calc/list?relevant=true" % self.hostname
+        resp = self.session.get(
+            calc_list_url, timeout=10, verify=False)
+        calc_list = json.loads(resp.text)
+        return calc_list
+
     def get_output_list(self, calc_id):
         output_list_url = "%s/v1/calc/%s/results" % (self.hostname, calc_id)
         resp = self.session.get(output_list_url, timeout=10, verify=False)
@@ -72,22 +79,50 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         open(filepath, "wb").write(resp.content)
         return filepath
 
-    def load_calc_outputs(self, calc_id):
-        print('Calculation %s' % calc_id)
+    def load_calc_outputs(self, calc):
+        calc_id = calc['id']
         output_list = self.get_output_list(calc_id)
         for output in output_list:
-            output_type = output['type']
-            if output_type in OQ_ALL_LOADABLE_TYPES:
-                print('Loading output type %s' % output_type)
-                filepath = self.download_output(output['id'], 'npz')
-                assert filepath is not None
-                dlg = OUTPUT_TYPE_LOADERS[output_type](
-                    IFACE, Mock(), output_type, filepath)
-                dlg.accept()
-            else:
-                print(
-                    'Loader for output type %s not implemented' % output_type)
+            try:
+                output_type = output['type']
+                if output_type in OQ_ALL_LOADABLE_TYPES:
+                    if output_type in OQ_CSV_LOADABLE_TYPES:
+                        print('\tLoading output type %s' % output_type)
+                        filepath = self.download_output(output['id'], 'csv')
+                        assert filepath is not None
+                    elif output_type in OQ_NPZ_LOADABLE_TYPES:
+                        print('\tLoading output type %s' % output_type)
+                        filepath = self.download_output(output['id'], 'npz')
+                    IFACE.newProject()
+                    dlg = OUTPUT_TYPE_LOADERS[output_type](
+                        IFACE, Mock(), output_type, filepath)
+                    dlg.accept()
+                else:
+                    print('\tLoader for output type %s is not implemented'
+                          % output_type)
+            except Exception:
+                ex_type, ex, tb = sys.exc_info()
+                failed_attempt = {'calc_id': calc_id,
+                                  'calc_description': calc['description'],
+                                  'output_type': output_type,
+                                  'traceback': tb}
+                self.failed_attempts.append(failed_attempt)
+                traceback.print_tb(failed_attempt['traceback'])
+                print(ex)
 
     def test_load_outputs(self):
-        calc_id = 2
-        self.load_calc_outputs(calc_id)
+        self.failed_attempts = []
+        calc_list = self.get_calc_list()
+        for calc in calc_list:
+            print('\nCalculation %s: %s' % (calc['id'], calc['description']))
+            self.load_calc_outputs(calc)
+        if not self.failed_attempts:
+            print('All outputs were successfully loaded')
+        else:
+            print('Failed attempts:')
+            for failed_attempt in self.failed_attempts:
+                print('Calculation %s: %s'
+                      % (failed_attempt['calc_id'],
+                         failed_attempt['calc_description']))
+                print('Output type: %s' % failed_attempt['output_type'])
+            sys.exit('At least one output was not successfully loaded')
