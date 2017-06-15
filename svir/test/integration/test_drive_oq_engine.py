@@ -89,10 +89,10 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                     if output_type in OQ_CSV_LOADABLE_TYPES:
                         print('\tLoading output type %s' % output_type)
                         filepath = self.download_output(output['id'], 'csv')
-                        assert filepath is not None
                     elif output_type in OQ_NPZ_LOADABLE_TYPES:
                         print('\tLoading output type %s' % output_type)
                         filepath = self.download_output(output['id'], 'npz')
+                    assert filepath is not None
                     IFACE.newProject()
                     dlg = OUTPUT_TYPE_LOADERS[output_type](
                         IFACE, Mock(), output_type, filepath)
