@@ -27,6 +27,21 @@ from collections import OrderedDict
 from PyQt4.QtCore import QSettings
 from ConfigParser import ConfigParser
 
+from svir.dialogs.load_ruptures_as_layer_dialog import (
+    LoadRupturesAsLayerDialog)
+from svir.dialogs.load_dmg_by_asset_as_layer_dialog import (
+    LoadDmgByAssetAsLayerDialog)
+from svir.dialogs.load_gmf_data_as_layer_dialog import (
+    LoadGmfDataAsLayerDialog)
+from svir.dialogs.load_hmaps_as_layer_dialog import (
+    LoadHazardMapsAsLayerDialog)
+from svir.dialogs.load_hcurves_as_layer_dialog import (
+    LoadHazardCurvesAsLayerDialog)
+from svir.dialogs.load_uhs_as_layer_dialog import (
+    LoadUhsAsLayerDialog)
+from svir.dialogs.load_losses_by_asset_as_layer_dialog import (
+    LoadLossesByAssetAsLayerDialog)
+
 DEBUG = QSettings().value('/irmt/developer_mode', False, type=bool)
 
 cp = ConfigParser()
@@ -217,3 +232,12 @@ OQ_CSV_LOADABLE_TYPES = set(['ruptures', 'dmg_by_asset'])
 OQ_NPZ_LOADABLE_TYPES = set([
     'hmaps', 'hcurves', 'gmf_data', 'uhs', 'losses_by_asset'])
 OQ_ALL_LOADABLE_TYPES = OQ_CSV_LOADABLE_TYPES | OQ_NPZ_LOADABLE_TYPES
+OUTPUT_TYPE_LOADERS = {
+    'ruptures': LoadRupturesAsLayerDialog,
+    'dmg_by_asset': LoadDmgByAssetAsLayerDialog,
+    'gmf_data': LoadGmfDataAsLayerDialog,
+    'hmaps': LoadHazardMapsAsLayerDialog,
+    'hcurves': LoadHazardCurvesAsLayerDialog,
+    'uhs': LoadUhsAsLayerDialog,
+    'losses_by_asset': LoadLossesByAssetAsLayerDialog}
+assert set(OUTPUT_TYPE_LOADERS.keys()) == OQ_ALL_LOADABLE_TYPES
