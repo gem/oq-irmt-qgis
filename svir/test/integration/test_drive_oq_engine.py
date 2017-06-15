@@ -125,4 +125,5 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                       % (failed_attempt['calc_id'],
                          failed_attempt['calc_description']))
                 print('Output type: %s' % failed_attempt['output_type'])
-            sys.exit('At least one output was not successfully loaded')
+            raise RuntimeError(
+                'At least one output was not successfully loaded')

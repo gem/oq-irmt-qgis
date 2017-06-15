@@ -102,7 +102,7 @@ def log_msg(message, tag='GEM IRMT Plugin', level='I', message_bar=None,
 
     # if we are running nosetests, exit on critical errors
     if 'nose' in sys.modules.keys() and level == 'C':
-        sys.exit(message)
+        raise RuntimeError(message)
     else:
         QgsMessageLog.logMessage(tr(message), tr(tag), levels[level]['log'])
         if message_bar is not None:

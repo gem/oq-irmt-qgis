@@ -27,7 +27,6 @@ from collections import OrderedDict
 from PyQt4.QtCore import QSettings
 from ConfigParser import ConfigParser
 
-
 DEBUG = QSettings().value('/irmt/developer_mode', False, type=bool)
 
 cp = ConfigParser()
