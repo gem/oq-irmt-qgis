@@ -20,6 +20,7 @@ before_install:
 install:
     - sudo apt-get install -y xvfb qgis python-mock python-nose python-scipy
     - virtualenv oqe27
+    - oqe27/bin/pip install -U pip
     - oqe27/bin/pip install -r oq-engine/requirements-py27-linux64.txt
     - oqe27/bin/pip install -e oq-engine
 
