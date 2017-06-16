@@ -28,7 +28,7 @@ before_script:
     - "/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -ac -screen 0 1280x1024x16"
     - "export DISPLAY=:99.0"
     - oqe27/bin/oq restore dump.zip ~/oqdata
-    - oqe27/bin/oq webui start &> webui.log &
+    - oqe27/bin/oq webui start --skip-browser &> webui.log &
     - . ./scripts/run-env-linux.sh /usr
 
 script:
