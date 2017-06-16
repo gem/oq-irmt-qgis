@@ -94,6 +94,17 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                         filepath = self.download_output(output['id'], 'npz')
                     assert filepath is not None
                     IFACE.newProject()
+                    # TODO: when gmf_data for event_based becomes loadable,
+                    #       let's not skip this
+                    if (output_type == 'gmf_data'
+                            and calc['calculation_mode'] == 'event_based'):
+                        skipped_attempt = {
+                            'calc_id': calc_id,
+                            'calc_description': calc['description'],
+                            'output_type': output_type}
+                        self.skipped_attempts.append(skipped_attempt)
+                        print('\t\tSKIPPED')
+                        continue
                     dlg = OUTPUT_TYPE_LOADERS[output_type](
                         IFACE, Mock(), output_type, filepath)
                     if dlg.ok_button.isEnabled():
@@ -115,10 +126,18 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
 
     def test_load_outputs(self):
         self.failed_attempts = []
+        self.skipped_attempts = []
         calc_list = self.get_calc_list()
         for calc in calc_list:
             print('\nCalculation %s: %s' % (calc['id'], calc['description']))
             self.load_calc_outputs(calc)
+        if self.skipped_attempts:
+            print('\n\nSkipped:')
+            for skipped_attempt in self.skipped_attempts:
+                print('\tCalculation %s: %s'
+                      % (skipped_attempt['calc_id'],
+                         skipped_attempt['calc_description']))
+                print('\t\tOutput type: %s' % skipped_attempt['output_type'])
         if not self.failed_attempts:
             print('\n\nAll outputs were successfully loaded')
         else:
