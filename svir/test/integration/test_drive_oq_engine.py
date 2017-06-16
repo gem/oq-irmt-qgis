@@ -147,6 +147,10 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         self.failed_attempts = []
         self.skipped_attempts = []
         calc_list = self.get_calc_list()
+        expected_num_calcs = 16
+        self.assertEqual(len(calc_list), expected_num_calcs,
+                         'Found %s calculations; expected %s'
+                         % (len(calc_list), expected_num_calcs))
         for calc in calc_list:
             print('\nCalculation %s: %s' % (calc['id'], calc['description']))
             self.load_calc_outputs(calc)
