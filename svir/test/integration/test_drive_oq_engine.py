@@ -38,6 +38,7 @@ from svir.utilities.shared import (OQ_ALL_LOADABLE_TYPES,
                                    )
 from svir.test.utilities import get_qgis_app
 from svir.dialogs.drive_oq_engine_server_dialog import OUTPUT_TYPE_LOADERS
+from svir.dialogs.show_full_report_dialog import ShowFullReportDialog
 
 QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 
@@ -85,13 +86,17 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         for output in output_list:
             try:
                 output_type = output['type']
-                if output_type in OQ_ALL_LOADABLE_TYPES:
+                if (output_type in OQ_ALL_LOADABLE_TYPES
+                        or output_type == 'fullreport'):
                     if output_type in OQ_CSV_LOADABLE_TYPES:
                         print('\tLoading output type %s' % output_type)
                         filepath = self.download_output(output['id'], 'csv')
                     elif output_type in OQ_NPZ_LOADABLE_TYPES:
                         print('\tLoading output type %s' % output_type)
                         filepath = self.download_output(output['id'], 'npz')
+                    elif output_type == 'fullreport':
+                        print('\tLoading fullreport')
+                        filepath = self.download_output(output['id'], 'rst')
                     assert filepath is not None
                     IFACE.newProject()
                     # TODO: when gmf_data for event_based becomes loadable,
@@ -104,6 +109,10 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                             'output_type': output_type}
                         self.skipped_attempts.append(skipped_attempt)
                         print('\t\tSKIPPED')
+                        continue
+                    if output_type == 'fullreport':
+                        dlg = ShowFullReportDialog(filepath)
+                        dlg.accept()
                         continue
                     dlg = OUTPUT_TYPE_LOADERS[output_type](
                         IFACE, Mock(), output_type, filepath)
