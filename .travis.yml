@@ -9,7 +9,6 @@ language: python
 
 python:
     - "2.7"
-    - "3.5"
 
 before_install:
     - echo "deb http://qgis.org/$QGIS_VERSION trusty main" | sudo tee -a /etc/apt/sources.list
@@ -20,15 +19,15 @@ before_install:
 
 install:
     - sudo apt-get install -y xvfb qgis python-mock python-nose python-scipy
-    - python3.5 -m venv oqe35
-    - oqe35/bin/pip install -r oq-engine/requirements-py35-linux64.txt
-    - oqe35/bin/pip install -e oq-engine
+    - virtualenv oqe27
+    - oqe27/bin/pip install -r oq-engine/requirements-py27-linux64.txt
+    - oqe27/bin/pip install -e oq-engine
 
 before_script:
     - "/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -ac -screen 0 1280x1024x16"
     - "export DISPLAY=:99.0"
-    - oqe35/bin/oq restore dump.zip ~/oqdata
-    - oqe35/bin/oq webui start &> webui.log &
+    - oqe27/bin/oq restore dump.zip ~/oqdata
+    - oqe27/bin/oq webui start &> webui.log &
     - . ./scripts/run-env-linux.sh /usr
 
 script:
