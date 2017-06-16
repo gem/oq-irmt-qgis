@@ -20,9 +20,9 @@ before_install:
 install:
     - sudo apt-get install -y xvfb qgis python-mock python-nose python-scipy
     - virtualenv oqe27
-    - oqe27/bin/pip install -U pip
-    - oqe27/bin/pip install -r oq-engine/requirements-py27-linux64.txt
-    - oqe27/bin/pip install -e oq-engine
+    - oqe27/bin/pip -q install -U pip
+    - oqe27/bin/pip -q install -r oq-engine/requirements-py27-linux64.txt
+    - oqe27/bin/pip -q install -e oq-engine
 
 before_script:
     - "/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -ac -screen 0 1280x1024x16"
