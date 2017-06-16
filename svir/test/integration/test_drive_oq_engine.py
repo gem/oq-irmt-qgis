@@ -111,7 +111,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 print('\tLoading fullreport')
                 # TODO: do not skip this when encoding issue is solved
                 #       engine-side
-                if calc['id'] == 1:
+                if calc['description'] == u'Classical PSHA — Area Source':
                     skipped_attempt = {
                         'calc_id': calc_id,
                         'calc_description': calc['description'],
