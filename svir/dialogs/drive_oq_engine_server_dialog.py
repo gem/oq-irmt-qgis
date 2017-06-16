@@ -544,7 +544,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             num_actions = len(row['outtypes'])
             if (row['type'] in OQ_ALL_LOADABLE_TYPES
                     or row['type'] == 'fullreport'):
-                num_actions += 1  # needs additional column for loader button
+                # TODO: remove check when gmf_data will be loadable also for
+                #       event_based
+                if not (row['type'] == 'gmf_data'
+                        and 'event_based' in calculation_mode):
+                    num_actions += 1  # needs additional column for loader btn
             max_actions = max(max_actions, num_actions)
 
         self.output_list_tbl.setRowCount(len(output_list))
@@ -567,10 +571,13 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     or output['type'] == 'fullreport'):
                 if output['type'] == 'fullreport':
                     action = 'Show'
-                # FIXME
-                elif not (output['type'] == 'gmf_data'
-                          and 'event_based' in calculation_mode):
+                else:
                     action = 'Load as layer'
+                # TODO: remove check when gmf_data will be loadable also for
+                #       event_based
+                if (output['type'] == 'gmf_data'
+                        and calculation_mode == 'event_based'):
+                    continue
                 button = QPushButton()
                 self.connect_button_to_action(
                     button, action, output, outtype)
