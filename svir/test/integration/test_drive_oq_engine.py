@@ -157,6 +157,13 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         self.assertEqual(len(calc_list), expected_num_calcs,
                          'Found %s calculations; expected %s'
                          % (len(calc_list), expected_num_calcs))
+        try:
+            selected_calc_id = int(os.environ.get('SELECTED_CALC_ID'))
+        except:
+            selected_calc_id = None
+        if selected_calc_id is not None:
+            calc_list = [calc for calc in calc_list
+                         if calc['id'] == selected_calc_id]
         for calc in calc_list:
             print('\nCalculation %s: %s' % (calc['id'], calc['description']))
             self.load_calc_outputs(calc)

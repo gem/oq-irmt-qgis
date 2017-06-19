@@ -9,3 +9,6 @@ make test
 # (cd oq-engine; activate the oq virtualenv; oq reset; ./bin/run-demos.sh demos);
 # then:
 make integrationtest
+
+# to run integration tests for only one specific oq-engine calculation (e.g. 5):
+SELECTED_CALC_ID=5 make integrationtest

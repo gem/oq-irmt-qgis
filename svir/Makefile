@@ -89,6 +89,10 @@ integrationtest: compile transcompile
 	@echo "If you get 'no module...' errors, try sourcing"
 	@echo "the helper script we have provided first then run make integrationtest."
 	@echo "e.g. source ../scripts/run-env-linux.sh <path to qgis install>; make integrationtest"
+	@echo "Make sure the oq-engine server is running on localhost, that the database has"
+	@echo "been reset and all oq-engine demos have been completed successfully."
+	@echo "In order to run integration tests for one specific calculation id (e.g. 5), run:"
+	@echo "SELECTED_CALC_ID=5 make integrationtest"
 	@echo "----------------------"
 
 deploy: compile doc transcompile
