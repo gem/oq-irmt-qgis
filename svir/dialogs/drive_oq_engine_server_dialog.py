@@ -86,6 +86,16 @@ HANDLED_EXCEPTIONS = (SSLError, ConnectionError, InvalidSchema, MissingSchema,
 
 BUTTON_WIDTH = 75
 
+OUTPUT_TYPE_LOADERS = {
+    'ruptures': LoadRupturesAsLayerDialog,
+    'dmg_by_asset': LoadDmgByAssetAsLayerDialog,
+    'gmf_data': LoadGmfDataAsLayerDialog,
+    'hmaps': LoadHazardMapsAsLayerDialog,
+    'hcurves': LoadHazardCurvesAsLayerDialog,
+    'uhs': LoadUhsAsLayerDialog,
+    'losses_by_asset': LoadLossesByAssetAsLayerDialog}
+assert set(OUTPUT_TYPE_LOADERS) == OQ_ALL_LOADABLE_TYPES
+
 
 class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     """
@@ -181,9 +191,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 self.reject()
                 return
             calc_list = json.loads(resp.text)
-        selected_keys = ['description', 'id', 'job_type', 'owner', 'status']
-        col_names = ['Description', 'Job ID', 'Job Type', 'Owner', 'Status']
-        col_widths = [370, 60, 80, 80, 80]
+        selected_keys = [
+            'description', 'id', 'calculation_mode', 'owner', 'status']
+        col_names = [
+            'Description', 'Job ID', 'Calculation Mode', 'Owner', 'Status']
+        col_widths = [340, 60, 135, 70, 80]
         if not calc_list:
             if self.calc_list_tbl.rowCount() > 0:
                 self.calc_list_tbl.clearContents()
@@ -289,7 +301,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             output_list = self.get_output_list(calc_id)
             self.list_of_outputs_lbl.setText(
                 'List of outputs for calculation %s' % calc_id)
-            self.show_output_list(output_list)
+            self.show_output_list(output_list, calc_status['calculation_mode'])
             self.download_datastore_btn.setEnabled(True)
             self.download_datastore_btn.setText(
                 'Download HDF5 datastore for calculation %s'
@@ -378,7 +390,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             log_msg(msg, level='C', message_bar=self.iface.messageBar())
         return
 
-    def run_calc(self, calc_id=None):
+    def run_calc(self, calc_id=None, file_names=None):
         """
         Run a calculation. If `calc_id` is given, it means we want to run
         a calculation re-using the output of the given calculation
@@ -387,7 +399,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                        ' or the zip archive containing those files.')
         default_dir = QSettings().value('irmt/run_oqengine_calc_dir',
                                         QDir.homePath())
-        file_names = QFileDialog.getOpenFileNames(self, text, default_dir)
+        if not file_names:
+            file_names = QFileDialog.getOpenFileNames(self, text, default_dir)
         if not file_names:
             return
         selected_dir = QFileInfo(file_names[0]).dir().path()
@@ -427,6 +440,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 return
         if resp.ok:
             self.refresh_calc_list()
+            return resp.json()
         else:
             log_msg(resp.text, level='C', message_bar=self.iface.messageBar())
 
@@ -516,7 +530,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         else:
             return []
 
-    def show_output_list(self, output_list):
+    def show_output_list(self, output_list, calculation_mode):
         if not output_list:
             self.clear_output_list()
             self.download_datastore_btn.setEnabled(False)
@@ -530,7 +544,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             num_actions = len(row['outtypes'])
             if (row['type'] in OQ_ALL_LOADABLE_TYPES
                     or row['type'] == 'fullreport'):
-                num_actions += 1  # needs additional column for loader button
+                # TODO: remove check when gmf_data will be loadable also for
+                #       event_based
+                if not (row['type'] == 'gmf_data'
+                        and 'event_based' in calculation_mode):
+                    num_actions += 1  # needs additional column for loader btn
             max_actions = max(max_actions, num_actions)
 
         self.output_list_tbl.setRowCount(len(output_list))
@@ -555,6 +573,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     action = 'Show'
                 else:
                     action = 'Load as layer'
+                # TODO: remove check when gmf_data will be loadable also for
+                #       event_based
+                if (output['type'] == 'gmf_data'
+                        and calculation_mode == 'event_based'):
+                    continue
                 button = QPushButton()
                 self.connect_button_to_action(
                     button, action, output, outtype)
@@ -612,17 +635,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     output_id, outtype, dest_folder)
                 if not filepath:
                     return
-                output_type_loaders = {
-                    'ruptures': LoadRupturesAsLayerDialog,
-                    'dmg_by_asset': LoadDmgByAssetAsLayerDialog,
-                    'gmf_data': LoadGmfDataAsLayerDialog,
-                    'hmaps': LoadHazardMapsAsLayerDialog,
-                    'hcurves': LoadHazardCurvesAsLayerDialog,
-                    'uhs': LoadUhsAsLayerDialog,
-                    'losses_by_asset': LoadLossesByAssetAsLayerDialog}
-                if output_type not in output_type_loaders:
+                if output_type not in OUTPUT_TYPE_LOADERS:
                     raise NotImplementedError(output_type)
-                dlg = output_type_loaders[output_type](
+                dlg = OUTPUT_TYPE_LOADERS[output_type](
                     self.iface, self.viewer_dock, output_type, filepath)
                 dlg.exec_()
             else:
