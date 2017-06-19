@@ -101,7 +101,7 @@ def log_msg(message, tag='GEM IRMT Plugin', level='I', message_bar=None,
         raise ValueError('Level must be one of %s' % levels.keys())
 
     # if we are running nosetests, exit on critical errors
-    if 'nose' in sys.modules.keys() and level == 'C':
+    if 'nose' in sys.modules and level == 'C':
         raise RuntimeError(message)
     else:
         QgsMessageLog.logMessage(tr(message), tr(tag), levels[level]['log'])

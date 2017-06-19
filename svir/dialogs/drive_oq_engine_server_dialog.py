@@ -94,7 +94,7 @@ OUTPUT_TYPE_LOADERS = {
     'hcurves': LoadHazardCurvesAsLayerDialog,
     'uhs': LoadUhsAsLayerDialog,
     'losses_by_asset': LoadLossesByAssetAsLayerDialog}
-assert set(OUTPUT_TYPE_LOADERS.keys()) == OQ_ALL_LOADABLE_TYPES
+assert set(OUTPUT_TYPE_LOADERS) == OQ_ALL_LOADABLE_TYPES
 
 
 class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
