@@ -1,2 +1,11 @@
 source ../scripts/run-env-linux.sh /usr
+
+# to run unit tests:
 make test
+
+# to run integration tests:
+# you need a running engine server on localhost;
+# the db should contain only the demos of the oq-engine:
+# (cd oq-engine; activate the oq virtualenv; oq reset; ./bin/run-demos.sh demos);
+# then:
+make integrationtest
