@@ -163,6 +163,10 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             print('SELECTED_CALC_ID was not set or is not an integer value.'
                   ' Running tests for all the available calculations...')
             selected_calc_id = None
+        else:
+            print('SELECTED_CALC_ID is set.'
+                  ' Running tests only for calculation #%s...'
+                  % selected_calc_id)
         if selected_calc_id is not None:
             calc_list = [calc for calc in calc_list
                          if calc['id'] == selected_calc_id]
