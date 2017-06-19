@@ -34,6 +34,7 @@ before_script:
 script:
     - cd $TRAVIS_BUILD_DIR/svir && make test
     - cd $TRAVIS_BUILD_DIR/svir && make integrationtest
+    - cd $TRAVIS_BUILD_DIR/svir && make doc
 
 after_script:
     - cat $TRAVIS_BUILD_DIR/webui.log
