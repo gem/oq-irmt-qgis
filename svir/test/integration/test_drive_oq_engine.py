@@ -159,7 +159,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                          % (len(calc_list), expected_num_calcs))
         try:
             selected_calc_id = int(os.environ.get('SELECTED_CALC_ID'))
-        except:
+        except (ValueError, TypeError):
+            print('Invalid environment parameter SELECTED_CALC_ID.'
+                  ' Running tests for all the available calculations.')
             selected_calc_id = None
         if selected_calc_id is not None:
             calc_list = [calc for calc in calc_list
