@@ -13,7 +13,7 @@ name=OpenQuake Integrated Risk Modelling Toolkit
 qgisMinimumVersion=2.14
 description=Tools to drive the OpenQuake Engine, to develop composite indicators and integrate them with physical risk estimations, and to predict building recovery times following an earthquake
 about=This plugin allows users to drive OpenQuake Engine calculations (https://github.com/gem/oq-engine) of physical hazard and risk, and to load the corresponding outputs as QGIS layers. For those outputs, data visualization tools are provided. The toolkit also enables users to develop composite indicators to measure and quantify social characteristics, and combine them with estimates of human or infrastructure loss. The plugin can interact with the OpenQuake Platform (https://platform.openquake.org), to browse and download socio-economic data or existing projects, edit projects locally in QGIS and upload and share them with the scientific community. A post-earthquake recovery modeling framework is incorporated into the toolkit, to produce building level and/or community level recovery functions.
-version=1.8.26
+version=2.5.0
 author=GEM Foundation
 email=staff.it@globalquakemodel.org
 
@@ -23,7 +23,8 @@ email=staff.it@globalquakemodel.org
 
 # Uncomment the following line and add your changelog entries:
 changelog=
-    1.8.26
+    2.5.0
+    * The plugin is aligned with OQ-Engine version 2.5
     * Improved README with instructions on installation and troubleshooting
     * A clear error message is shown when attempting to modify a non-editable kind of layer
     * Many updates to the user manual
@@ -45,136 +46,7 @@ changelog=
     * Added integration tests loading outputs of oq-engine demos
     * The 'load as layer' button is disabled for gmf_data produced by event_based calculations
     * The list of oq-engine calculations displays the calculation mode instead of the job type
-    1.8.25
-    * The list of OQ-Engine calculations is automatically scrolled to view the latest clicked row
-    * The IRMT viewer dock can be shown/hidden by an additional button in the plugin's toolbar
-    * A splitter has been added between the list of calculations and the list of outputs for a calculation, allowing to
-      mutually resize the two lists
-    * When hazard curves or uniform hazard spectra are loaded from an OQ-Engine output, the corresponding output type
-      is pre-selected in the Data Viewer
-    * Removed annoying messages while retrieveing the console log of a OQ-Engine calculation
-    * The size policy of the Viewer Dock has been improved, to fit better in smaller screens
-    * When any cell of the table containing the list of oq-engine calculation is clicked, the list of outputs
-      corresponding to the same calculation is displayed, and the row is selected and kept on focus
-    * The row numbers, in both the list of calculations and the list of outputs for a calculation,
-      have been made  invisible
-    1.8.24
-    * ProcessLayer.addAttributes launders proposed attribute names only if the processed layer is a shapefile
-    * When fields with long names are added to shapefiles, the original long names are saved as aliases
-    * When a socioeconomic indicator is downloaded from the OQ-Platform, its code is saved as field name and
-      its full name is saved as field alias
-    * When transforming a field, if the original field had an alias, the same alias will be added to the transformed field
-    * Renewed set of icons and re-added plugin's toolbar with a subset of the available actions
-    * Improved mock of QGIS interface for testing
-    * The latest added layer is put on top of the others in the same group, and new groups of layers are added on top
-    * The automatic styling of layers imported from the OQ-Engine sets the size of points to depend on the map unit
-    * Fixed the addition of layers to the corresponding groups, avoiding duplications
-    * The log of a OQ-Engine calculation is displayed in a dedicated dialog instead of in the QGIS log window
-    * Fixed the cascade refreshing of dropdown menus while selecting gsims in gmf data
-    1.8.23
-    * Added a checkbox to load from npz as layer only the selected items
-    * Added a confirmation dialog to avoid removing oq-engine calculations by mistake
-    * Added an error message in case a stored color setting is corrupted
-    * The GUI displays the number of sites before loading a layer from NPZ
-    * Loaders for oq-engine outputs are build through a hierarchical structure
-    * Implemented loaders as layers for: ruptures, losses_by_asset
-    * All the implemented loaders for oq-engine outputs are tested
-    * Loaders from geojson have been replaced by loaders from npz
-    * The full report of a oq-engine calculation can be visualized directly within the plugin
-    * Improvements to the user manual
-    * It is possible to continue risk calculations (e.g. postprocessing on top of a risk calculation)
-    * Fixed an unreferenced variable in case of successful updating of a project on the OQ Platform
-    * Improved resizing of table items in the list of OQ Engine calculations, so the text of long
-      descriptions is wrapped instead of occupying too much horizontal space
-    * Stats of OQ Engine calculations with multiple realizations can be loaded as layers
-    * Fix behavior of 'cancel' in the dialogs that load OQ Engine outputs
-    1.8.22
-    * Added a sanity check on default colors stored in the settings, to make sure they are valid QColor objects
-    1.8.21
-    * Added tests for: importing hazard outputs from npz; selecting them with the Data Viewer; exporting selected data as csv.
-    * Automatically add markers to uniform hazard spectra and hazard curves
-    * Fixed management of possible connection errors while driving the OQ-Engine
-    * Fixed layer selection issue in the recovery modeling dialog
-    * Fixed a layout issue in the plugin's settings dialog (checkboxes correctly inserted in corresponding group boxes)
-    * Fixed layout issues in the Data Viewer
-    * Removed a duplication in the name assigned to layers imported from npz
-    * Also csv-based layers with field names longer than 10 characters can now be used for recovery modeling
-    1.8.20
-    * Custom QGIS widgets for color selection were substituted with standard Qt widgets,
-      improving compatibility with Windows and Mac OS X
-    1.8.19
-    * Fix adding features to layers when importing data from oq-engine outputs
-    1.8.18
-    * Redundancy reduced in the visualization of recovery curves
-    * Fixed a numeric issue in saving shapefiles while having a locale that uses comma as decimal separator
-    * The plugin keeps memory of the latest used directory
-    * A new button enables to download the HDF5 datastore of a chosen OQ-Engine calculation
-    * Minor improvements to the user manual
-    * Some cleanup
-    * Improved management of potential problems encountered while communicating with the OQ-Engine
-    * Minor changes to the recovery modeling settings dialog
-    * The automatic styling applied to layers after recalculating composite indices can be customized
-      through the plugin's settings dialog (and it can be disabled)
-    1.8.17
-    * Losses from oq-engine are read from the single-file csv format
-    * Improved manual with additional examples, instructions about installation and testing
-    * Custom operators use an api that works both for QGIS 2.14ltr and 2.18
-    * Continuous Integration on Jenkins and Travis
-    * The plugin provides a clear error message in case a wrong output type is selected in the Data Viewer
-    1.8.16
-    * Additional reference to the CSSC project and to relevant scientific literature about recovery modeling
-    * Improvements to the user manual, about OpenQuake outputs visualization
-    * Updated description and about
-    1.8.15
-    * Improvements to the user manual: additional sections and screenshots about recovery
-      modeling and driving the oq-engine server
-    * Fix exception handling when the oq-engine server is not available
-    * Enable scrolling in the Data Viewer
-    * Additional tooltips added to explain the meaning of recovery modeling configuration variables
-    * Check that each row of the transfer probabilities matrix sums to 1
-    1.8.14
-    * New settings dialog to edit recovery modeling parameters (removed config folder)
-    * Settings for recovery modeling can be saved separately for each layer
-    * Fixed a casting issue that caused a bug in the calculation of the overal time interval
-    * Additional check on the rows of transfer probabilities: each one must sum to 1
-    1.8.13
-    * Many additions to the user manual
-    * Messages displayed in the QGIS message bar are also added to the log
-    * Fix header of csv for data exported from the Data Viewer
-    * Improved visualization and export of uniform hazard spectra
-    1.8.12
-    * Fields containing damage states probabilities can be selected through a multiselect widget
-    1.8.11
-    * While calculating recovery curves, a feedback on the progress of the calculation is displayed
-    * Changing the number of simulations per building does not cause the tool to immediately
-      recalculate the recovery curve. Instead, an additional button can be used to launch the calculation
-    * An additional checkbox enables/disables to save recovery curves for individual buildings
-    1.8.10
-    * Enable using a different number of loss-based damage states
-    * When using a custom operator, children nodes will be displayed with equal diameter
-    * Minor additions to the manual, describing the new nested menu
-    * Do not time out when downloading an output from the OQ-Engine
-    1.8.9
-    * Allow API endpoints to be used with a self-signed SSL certificate
-    1.8.8
-    * Fix highlighting points on map when hovering on corresponding curves in plots
-    * Fix visualization of multiple curves when switching IMT
-    * Fix displaying the number of available event ids when loading ground motion fields from the OQ-Engine
-    1.8.7
-    * Remove all dependencies from the openquake libraries
-    1.8.6
-    * Use npz instead of hdf5
-    * Fix displaying the output list for oq-engine calculations (properly refreshing)
-    * Fix reading `composite_risk_model`, for plotting `dmg_total` and `dmg_by_taxon`
-    1.8.5
-    * Enable recovery modeling both for the csv output of oq-engine and for its shapefile translation
-    1.8.4
-    * Enable recalculating composite indices using custom operators
-      with the same format used by the field calculator
-    * Replace toolbox with a nested menu
-    * Enable hdf5-related actions only on Ubuntu
-    * While performing recovery modeling, enable changing the number of simulations per building
-    * Add bugfixes and features introduced in stable versions of the plugin up to v1.7.16
+
 # tags are comma separated with spaces allowed
 tags=GEM, IRMT, SVIR, OpenQuake, Social Vulnerability, Integrated Risk, Recovery, Resilience, Risk, Hazard, Earthquake
 
@@ -183,7 +55,7 @@ tracker=https://github.com/gem/oq-irmt-qgis/issues
 repository=https://github.com/gem/oq-irmt-qgis
 icon=resources/icon.svg
 # experimental flag
-experimental=True
+experimental=False
 
 # deprecated flag (applies to the whole plugin, not just a single version
 deprecated=False
