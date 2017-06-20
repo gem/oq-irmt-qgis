@@ -19,7 +19,7 @@ before_install:
 
 install:
     - sudo apt-get install -q -y xvfb qgis python-mock python-nose python-scipy
-    - sudo pip install sphinx
+    - sudo pip install sphinx sphinx_rtd_theme
     - export PYTHONPATH=$TRAVIS_BUILD_DIR:$PYTHONPATH
     # - virtualenv oqe27
     # - oqe27/bin/pip -q install -U pip
