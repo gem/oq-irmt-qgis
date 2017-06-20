@@ -15,7 +15,7 @@ before_install:
     - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key 073D307A618E5811
     - sudo apt-get update -q
     - git clone --depth=1 -q https://github.com/gem/oq-engine.git
-    - curl -sO http://artifacts.openquake.org/demos/dump.zip
+    - curl -sO http://artifacts.openquake.org/travis/oqdata.zip
 
 install:
     - sudo apt-get install -q -y xvfb qgis python-mock python-nose python-scipy
@@ -27,7 +27,7 @@ install:
 before_script:
     - "/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -ac -screen 0 1280x1024x16"
     - "export DISPLAY=:99.0"
-    - oqe27/bin/oq restore dump.zip ~/oqdata
+    - oqe27/bin/oq restore oqdata.zip ~/oqdata
     - oqe27/bin/oq webui start --skip-browser &> webui.log &
     - . ./scripts/run-env-linux.sh /usr
 
