@@ -85,7 +85,7 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
     def read_npz_into_layer(self, field_names, **kwargs):
         with LayerEditingManager(self.layer, 'Reading npz', DEBUG):
             feats = []
-            imtls = self.npz_file['imtls']
+            rlz = self.rlz_cbx.currentText()
             for row in self.dataset:
                 # add a feature
                 feat = QgsFeature(self.layer.pendingFields())
@@ -93,7 +93,7 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
                     if field_name in ['lon', 'lat']:
                         continue
                     poes = row[field_name_idx].tolist()
-                    imls = imtls[field_name].tolist()
+                    imls = self.npz_file[rlz][field_name].dtype.names
                     dic = dict(poes=poes, imls=imls)
                     value = json.dumps(dic)
                     feat.setAttribute(field_name, value)
