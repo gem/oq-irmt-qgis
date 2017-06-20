@@ -36,7 +36,7 @@ script:
     # - cd $TRAVIS_BUILD_DIR/svir && make test
     # - cd $TRAVIS_BUILD_DIR/svir && make integrationtest
     - cd $TRAVIS_BUILD_DIR/svir && make build_apidoc
-    - cd $TRAVIS_BUILD_DIR/svir && make build_manual_html
+    # - cd $TRAVIS_BUILD_DIR/svir && make build_manual_html
 
 after_script:
     # - cat $TRAVIS_BUILD_DIR/webui.log
