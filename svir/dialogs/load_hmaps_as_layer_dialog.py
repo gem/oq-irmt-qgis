@@ -62,8 +62,11 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
     def on_rlz_changed(self):
         self.dataset = self.npz_file[self.rlz_cbx.currentText()]
         self.imts = {}
-        for name in self.dataset.dtype.names[2:]:
-            imt, poe = name.split('-')
+        # assuming all rlzs or stats have the same structure, and choosing the
+        # first after lon and lat as reference
+        imts_poes = self.dataset[self.dataset.dtype.names[2]].dtype.names
+        for imt_poe in imts_poes:
+            imt, poe = imt_poe.split('-')
             if imt not in self.imts:
                 self.imts[imt] = [poe]
             else:
@@ -89,7 +92,8 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         return layer_name
 
     def get_field_names(self, **kwargs):
-        field_names = list(self.dataset.dtype.names)
+        field_names = [name for name in self.dataset.dtype.names
+                       if name != 'vs30']
         return field_names
 
     def add_field_to_layer(self, field_name):
@@ -110,7 +114,7 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
                     # NOTE: without casting to float, it produces a
                     #       null because it does not recognize the
                     #       numpy type
-                    value = float(row[field_name_idx])
+                    value = float(row[field_name][field_name_idx])
                     feat.setAttribute(field_name, value)
                 feat.setGeometry(QgsGeometry.fromPoint(
                     QgsPoint(row[0], row[1])))
