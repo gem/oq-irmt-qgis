@@ -20,6 +20,14 @@ svir.utilities.import_sv_data module
     :undoc-members:
     :show-inheritance:
 
+svir.utilities.settings module
+------------------------------
+
+.. automodule:: svir.utilities.settings
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 svir.utilities.shared module
 ----------------------------
 

@@ -73,12 +73,13 @@ def calculate_zonal_stats(loss_layer,
     The zonal_layer has to be a vector layer containing socioeconomic
     data aggregated by zone.
     At the end of the workflow, we will have, for each feature (zone):
+
     * a "LOSS_PTS" attribute, specifying how many loss points are
-        inside the zone
+      inside the zone
     * for each loss variable:
-        * a "SUM" attribute, summing the loss values for all the
-        points that are inside the zone
-        * a "AVG" attribute, averaging losses for each zone
+    * a "SUM" attribute, summing the loss values for all the
+      points that are inside the zone
+    * a "AVG" attribute, averaging losses for each zone
     """
     # add count, sum and avg fields for aggregating statistics
     # (one new attribute for the count of points, then a sum and an average
@@ -173,18 +174,19 @@ def add_zone_id_to_points(iface, point_layer, zonal_layer,
     """
     Given a layer with points and a layer with zones, add to the points layer a
     new field containing the id of the zone inside which it is located.
-    :param iface:
+
+    :param iface: QGIS interface
     :param point_layer: a QgsVectorLayer containing points
     :param zonal_layer: a QgsVectorLayer containing polygons
-    :param zones_id_attr_name: name of the field of the zonal_layer that
-                               contains the zone id
-    :return: point_attrs_dict: a dictionary mapping the original field names
-                               of the point_layer with the possibly laundered
-                               ones,
-             point_layer_plus_zones: the points layer with the additional field
-                                     containing the zone id
-             points_zone_id_attr_name: the id of the new field added to the
-                                       points layer, containing the zone id
+    :param zones_id_attr_name:
+        name of the field of the zonal_layer that contains the zone id
+    :returns:
+        * point_attrs_dict: a dictionary mapping the original field names
+          of the point_layer with the possibly laundered ones,
+        * point_layer_plus_zones: the points layer with the additional field
+          containing the zone id
+        * points_zone_id_attr_name: the id of the new field added to the
+          points layer, containing the zone id
     """
 
     orig_fieldnames = [field.name() for field in point_layer.fields()]

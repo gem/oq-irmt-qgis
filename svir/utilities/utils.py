@@ -82,10 +82,11 @@ def log_msg(message, tag='GEM IRMT Plugin', level='I', message_bar=None,
 
     :param message: the message
     :param tag: the log topic
-    :param level: the importance level
-        ('I' -> QgsMessageLog.INFO,
-         'W' -> QgsMessageLog.WARNING,
-         'C' -> QgsMessageLog.CRITICAL)
+    :param level:
+        the importance level
+        'I' -> QgsMessageLog.INFO,
+        'W' -> QgsMessageLog.WARNING,
+        'C' -> QgsMessageLog.CRITICAL
     :param message_bar: a `QgsMessageBar` instance
     :param duration: how long (in seconds) the message will be displayed (use 0
                      to keep the message visible indefinitely, or None to use
@@ -159,10 +160,11 @@ def replace_fields(sub_tree_root, before, after):
     project definition, and we obtain a new field that we want to track
     instead of the original one.
     It works by side-effect, modifying the passed project definition.
-    :param sub_tree_root: node of a project definition. From that node (used
-                          as root) towards the leaves of the tree, the function
-                          will recursively search for nodes with a 'field'
-                          property that contains the string before
+
+    :param sub_tree_root:
+        node of a project definition. From that node (used as root) towards the
+        leaves of the tree, the function will recursively search for nodes with
+        a 'field' property that contains the string before
     :param before: string to be replaced
     :param after: new value for the replaced string
     """
@@ -767,6 +769,7 @@ def insert_platform_layer_id(
 def get_ui_class(ui_file):
     """Get UI Python class from .ui file.
        Can be filename.ui or subdirectory/filename.ui
+
     :param ui_file: The file of the ui in svir.ui
     :type ui_file: str
     """
