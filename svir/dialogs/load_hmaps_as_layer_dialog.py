@@ -59,12 +59,17 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         self.ok_button.setEnabled(
             bool(self.path) and self.poe_cbx.currentIndex() != -1)
 
+    def populate_rlz_cbx(self):
+        # excluding lon, lat and the final vs30
+        self.rlzs = self.npz_file['all'].dtype.names[2:-1]
+        self.rlz_cbx.clear()
+        self.rlz_cbx.setEnabled(True)
+        self.rlz_cbx.addItems(self.rlzs)
+
     def on_rlz_changed(self):
-        self.dataset = self.npz_file[self.rlz_cbx.currentText()]
+        self.dataset = self.npz_file['all'][self.rlz_cbx.currentText()]
         self.imts = {}
-        # assuming all rlzs or stats have the same structure, and choosing the
-        # first after lon and lat as reference
-        imts_poes = self.dataset[self.dataset.dtype.names[2]].dtype.names
+        imts_poes = self.dataset.dtype.names
         for imt_poe in imts_poes:
             imt, poe = imt_poe.split('-')
             if imt not in self.imts:
@@ -75,6 +80,14 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         self.imt_cbx.setEnabled(True)
         self.imt_cbx.addItems(self.imts.keys())
         self.set_ok_button()
+
+    def show_num_sites(self):
+        # NOTE: we are assuming all realizations have the same number of sites,
+        #       which currently is always true.
+        #       If different realizations have a different number of sites, we
+        #       need to move this block of code inside on_rlz_changed()
+        rlz_data = self.npz_file['all'][self.rlz_cbx.currentText()]
+        self.rlz_num_sites_lbl.setText(self.num_sites_msg % rlz_data.shape)
 
     def on_imt_changed(self):
         self.imt = self.imt_cbx.currentText()
@@ -92,8 +105,7 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         return layer_name
 
     def get_field_names(self, **kwargs):
-        field_names = [name for name in self.dataset.dtype.names
-                       if name != 'vs30']
+        field_names = [self.default_field_name]
         return field_names
 
     def add_field_to_layer(self, field_name):
@@ -103,21 +115,21 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         return added_field_name
 
     def read_npz_into_layer(self, field_names, **kwargs):
+        rlz = self.rlz_cbx.currentText()
         with LayerEditingManager(self.layer, 'Reading npz', DEBUG):
             feats = []
-            for row in self.dataset:
+            for row_idx, row in enumerate(self.dataset):
                 # add a feature
                 feat = QgsFeature(self.layer.pendingFields())
-                for field_name_idx, field_name in enumerate(field_names):
-                    if field_name in ['lon', 'lat']:
-                        continue
+                for field_name in field_names:
                     # NOTE: without casting to float, it produces a
                     #       null because it does not recognize the
                     #       numpy type
-                    value = float(row[field_name][field_name_idx])
+                    value = float(row[field_name])
                     feat.setAttribute(field_name, value)
-                feat.setGeometry(QgsGeometry.fromPoint(
-                    QgsPoint(row[0], row[1])))
+                lon = self.npz_file['all']['lon'][row_idx]
+                lat = self.npz_file['all']['lat'][row_idx]
+                feat.setGeometry(QgsGeometry.fromPoint(QgsPoint(lon, lat)))
                 feats.append(feat)
             added_ok = self.layer.addFeatures(feats, makeSelected=False)
             if not added_ok:
