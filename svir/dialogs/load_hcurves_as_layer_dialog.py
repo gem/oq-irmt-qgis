@@ -66,7 +66,6 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
 
     def on_rlz_changed(self):
         self.dataset = self.npz_file['all'][self.rlz_cbx.currentText()]
-        self.imts = self.dataset.dtype.names
         self.set_ok_button()
 
     def show_num_sites(self):
