@@ -59,9 +59,24 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
         self.ok_button.setEnabled(
             bool(self.path) and self.poe_cbx.currentIndex() != -1)
 
+    def populate_rlz_cbx(self):
+        self.rlzs = [key for key in sorted(self.npz_file['all'].dtype.names)
+                     if key not in ('lon', 'lat')]
+        self.rlz_cbx.clear()
+        self.rlz_cbx.setEnabled(True)
+        self.rlz_cbx.addItems(self.rlzs)
+
+    def show_num_sites(self):
+        # NOTE: we are assuming all realizations have the same number of sites,
+        #       which currently is always true.
+        #       If different realizations have a different number of sites, we
+        #       need to move this block of code inside on_rlz_changed()
+        rlz_data = self.npz_file['all'][self.rlz_cbx.currentText()]
+        self.rlz_num_sites_lbl.setText(self.num_sites_msg % rlz_data.shape)
+
     def on_rlz_changed(self):
-        self.dataset = self.npz_file[self.rlz_cbx.currentText()]
-        self.poes = self.dataset.dtype.names[2:]
+        self.dataset = self.npz_file['all'][self.rlz_cbx.currentText()]
+        self.poes = self.dataset.dtype.names
         self.poe_cbx.clear()
         self.poe_cbx.setEnabled(True)
         self.poe_cbx.addItems(self.poes)
@@ -87,7 +102,7 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
         poe = kwargs['poe']
         with LayerEditingManager(self.layer, 'Reading npz', DEBUG):
             feats = []
-            for row in self.dataset:
+            for row_id, row in enumerate(self.dataset):
                 # add a feature
                 feat = QgsFeature(self.layer.pendingFields())
                 for field_name_idx, field_name in enumerate(field_names):
@@ -95,8 +110,9 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
                         continue
                     value = float(row[poe][field_name_idx])
                     feat.setAttribute(field_name, value)
-                feat.setGeometry(QgsGeometry.fromPoint(
-                    QgsPoint(row['lon'], row['lat'])))
+                lon = self.npz_file['all']['lon'][row_id]
+                lat = self.npz_file['all']['lat'][row_id]
+                feat.setGeometry(QgsGeometry.fromPoint(QgsPoint(lon, lat)))
                 feats.append(feat)
             added_ok = self.layer.addFeatures(feats, makeSelected=False)
             if not added_ok:
