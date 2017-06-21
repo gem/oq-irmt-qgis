@@ -58,18 +58,23 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
         self.ok_button.setEnabled(
             bool(self.path) and self.rlz_cbx.currentIndex() != -1)
 
+    def populate_rlz_cbx(self):
+        self.rlzs = self.npz_file['all'].dtype.names[2:]  # ignore lon, lat
+        self.rlz_cbx.clear()
+        self.rlz_cbx.setEnabled(True)
+        self.rlz_cbx.addItems(self.rlzs)
+
     def on_rlz_changed(self):
-        self.dataset = self.npz_file[self.rlz_cbx.currentText()]
-        self.imts = {}
-        for name in self.dataset.dtype.names[2:]:
-            imt = name
-            self.imts[imt] = []
+        self.dataset = self.npz_file['all'][self.rlz_cbx.currentText()]
+        self.imts = self.dataset.dtype.names
         self.set_ok_button()
+
+    def show_num_sites(self):
+        rlz_data = self.npz_file['all'][self.rlz_cbx.currentText()]
+        self.rlz_num_sites_lbl.setText(self.num_sites_msg % rlz_data.shape)
 
     def build_layer_name(self, rlz, **kwargs):
         # build layer name
-        self.imt = self.imts.keys()[0]
-        self.default_field_name = self.imt
         layer_name = "hazard_curves_%s" % rlz
         return layer_name
 
@@ -85,20 +90,18 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
     def read_npz_into_layer(self, field_names, **kwargs):
         with LayerEditingManager(self.layer, 'Reading npz', DEBUG):
             feats = []
-            rlz = self.rlz_cbx.currentText()
-            for row in self.dataset:
+            for row_idx, row in enumerate(self.dataset):
                 # add a feature
                 feat = QgsFeature(self.layer.pendingFields())
                 for field_name_idx, field_name in enumerate(field_names):
-                    if field_name in ['lon', 'lat']:
-                        continue
-                    poes = row[field_name_idx].tolist()
-                    imls = self.npz_file[rlz][field_name].dtype.names
+                    poes = row[field_name].tolist()
+                    imls = row[field_name].dtype.names
                     dic = dict(poes=poes, imls=imls)
                     value = json.dumps(dic)
                     feat.setAttribute(field_name, value)
-                feat.setGeometry(QgsGeometry.fromPoint(
-                    QgsPoint(row[0], row[1])))
+                lon = self.npz_file['all']['lon'][row_idx]
+                lat = self.npz_file['all']['lat'][row_idx]
+                feat.setGeometry(QgsGeometry.fromPoint(QgsPoint(lon, lat)))
                 feats.append(feat)
             added_ok = self.layer.addFeatures(feats, makeSelected=False)
             if not added_ok:
