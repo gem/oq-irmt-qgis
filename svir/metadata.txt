@@ -46,6 +46,8 @@ changelog=
     * Added integration tests loading outputs of oq-engine demos
     * The 'load as layer' button is disabled for gmf_data produced by event_based calculations
     * The list of oq-engine calculations displays the calculation mode instead of the job type
+    * Environment parameters SELECTED_OTYPE and SELECTED_CALC_ID can be used to test only a specific output
+      type or a specific calculation
 
 # tags are comma separated with spaces allowed
 tags=GEM, IRMT, SVIR, OpenQuake, Social Vulnerability, Integrated Risk, Recovery, Resilience, Risk, Hazard, Earthquake
