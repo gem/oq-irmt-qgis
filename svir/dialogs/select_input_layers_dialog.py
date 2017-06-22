@@ -75,9 +75,8 @@ class SelectInputLayersDialog(QDialog, FORM_CLASS):
     def open_file_dialog(self, dialog_type):
         """
         Open a file dialog to select the data file to be loaded
-        :param string dialog_type:
-            Valid types are 'loss_layer' or 'zonal_layer'
-        :returns:
+        :param string dialog_type: 'loss_layer' or 'zonal_layer'
+        :returns: a layer
         """
         if dialog_type == 'loss_layer':
             text = self.tr('Select loss map to import')

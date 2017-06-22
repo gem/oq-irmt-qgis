@@ -89,22 +89,22 @@ def calculate_composite_variable(iface, layer, node):
 
     :param iface: the iface, to be used to access the messageBar
     :param layer: the layer that contains the data to be used in the
-                  calculation and that will be modified adding new fields if
-                  needed
+         calculation and that will be modified adding new fields if
+         needed
     :param node: the root node of the project definition's sub-tree to be
-                 calculated
+         calculated
 
     :returns (added_attrs_ids, discarded_feats, node, any_change):
         added_attrs_ids: the set of ids of the attributes added to the layer
-                         during the calculation
+        during the calculation
         discarded_feats: the set of DiscardedFeature that can't contribute to
-                         the calculation, because of missing data or invalid
-                         data (e.g. when it's impossible to calculate the
-                         geometric mean because it causes the calculation of
-                         the fractionary power of a negative value)
+        the calculation, because of missing data or invalid
+        data (e.g. when it's impossible to calculate the
+        geometric mean because it causes the calculation of
+        the fractionary power of a negative value)
         node: the transformed (or unmodified) sub-tree
         any_change: True if the calculation caused any change in the
-                    subtree
+        subtree
     """
     # Avoid touching the original node, and manipulate a copy instead.
     # If anything fails, the original node will be returned

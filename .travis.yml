@@ -19,6 +19,8 @@ before_install:
 
 install:
     - sudo apt-get install -q -y xvfb qgis python-mock python-nose python-scipy
+    - sudo pip install sphinx==1.4.9 sphinx_rtd_theme
+    - export PYTHONPATH=$TRAVIS_BUILD_DIR:$PYTHONPATH
     - virtualenv oqe27
     - oqe27/bin/pip -q install -U pip
     - oqe27/bin/pip -q install -r oq-engine/requirements-py27-linux64.txt
@@ -34,6 +36,10 @@ before_script:
 script:
     - cd $TRAVIS_BUILD_DIR/svir && make test
     - cd $TRAVIS_BUILD_DIR/svir && make integrationtest
+
+after_success:
+    - cd $TRAVIS_BUILD_DIR/svir && make build_apidoc
+    - cd $TRAVIS_BUILD_DIR/svir && make build_manual_html
 
 after_script:
     - cat $TRAVIS_BUILD_DIR/webui.log

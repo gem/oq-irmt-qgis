@@ -27,7 +27,7 @@ import os
 import unittest
 import json
 from qgis.core import QgsVectorLayer
-from recovery_modeling.recovery_modeling import RecoveryModeling
+from svir.recovery_modeling.recovery_modeling import RecoveryModeling
 
 from svir.test.utilities import get_qgis_app
 
