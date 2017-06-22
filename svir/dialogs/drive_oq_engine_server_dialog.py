@@ -60,6 +60,7 @@ from svir.utilities.utils import (WaitCursorManager,
                                   ask_for_download_destination_folder,
                                   get_ui_class,
                                   SvNetworkError,
+                                  get_irmt_version,
                                   )
 from svir.dialogs.load_ruptures_as_layer_dialog import (
     LoadRupturesAsLayerDialog)
@@ -126,6 +127,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         #       the timer whenever the button to open the dialog is pressed
         self.finished.connect(self.stop_polling)
         self.attempt_login()
+        self.check_engine_compatibility()
 
     def attempt_login(self):
         try:
@@ -134,6 +136,22 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             self._handle_exception(exc)
         else:
             self.refresh_calc_list()
+
+    def check_engine_compatibility(self):
+        engine_version = self.get_engine_version()
+        assert engine_version is not None
+        engine_major, engine_minor, _ = engine_version.split('.')
+        engine_major, engine_minor = int(engine_major), int(engine_minor)
+        irmt_version = get_irmt_version()
+        irmt_major, irmt_minor, _ = irmt_version.split('.')
+        irmt_major, irmt_minor = int(irmt_major), int(irmt_minor)
+        if irmt_major != engine_major or irmt_minor != engine_minor:
+            msg = ('The plugin is optimized to work with the OpenQuake Engine '
+                   ' version %s.%s. You are currently connecting with an '
+                   ' OpenQuake Engine version %s.%s. This could cause some '
+                   ' malfunctioning.' % (irmt_major, irmt_minor,
+                                         engine_major, engine_minor))
+            log_msg(msg, level='W', message_bar=self.iface.messageBar())
 
     def login(self):
         self.session = Session()
@@ -168,6 +186,23 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             if resp.url != engine_version_url and 'login' in resp.url:
                 return True
         return False
+
+    def get_engine_version(self):
+        engine_version_url = "%s/engine_version" % self.hostname
+        with WaitCursorManager():
+            try:
+                # FIXME: enable the user to set verify=True
+                resp = self.session.get(
+                    engine_version_url, timeout=10, verify=False)
+                # handle case of redirection to the login page
+                if not resp.ok:
+                    raise ConnectionError(
+                        "%s %s: %s" % (resp.status_code,
+                                       resp.url, resp.reason))
+            except HANDLED_EXCEPTIONS as exc:
+                self._handle_exception(exc)
+                return
+            return resp.text
 
     def refresh_calc_list(self):
         # returns True if the list is correctly retrieved
