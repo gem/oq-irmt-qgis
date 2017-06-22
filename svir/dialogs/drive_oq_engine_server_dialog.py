@@ -220,7 +220,18 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         for row, calc in enumerate(calc_list):
             for col, key in enumerate(selected_keys):
                 item = QTableWidgetItem()
-                value = calc_list[row][key]
+                try:
+                    value = calc_list[row][key]
+                except KeyError:
+                    # from engine2.4 to engine2.5, job_type was changed into
+                    # calculation_mode. This check prevents the plugin to break
+                    # wnen using an old version of the engine.
+                    if key == 'calculation_mode':
+                        value = 'unknown'
+                    else:
+                        # if any other unexpected keys are used, it is safer to
+                        # raise a KeyError
+                        raise
                 item.setData(Qt.DisplayRole, value)
                 # set default colors
                 row_bg_color = Qt.white
@@ -301,7 +312,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             output_list = self.get_output_list(calc_id)
             self.list_of_outputs_lbl.setText(
                 'List of outputs for calculation %s' % calc_id)
-            self.show_output_list(output_list, calc_status['calculation_mode'])
+            # from engine2.4 to engine2.5, job_type was changed into
+            # calculation_mode. This check prevents the plugin to break wnen
+            # using an old version of the engine.
+            self.show_output_list(
+                output_list, calc_status.get('calculation_mode', 'unknown'))
             self.download_datastore_btn.setEnabled(True)
             self.download_datastore_btn.setText(
                 'Download HDF5 datastore for calculation %s'
@@ -576,7 +591,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 # TODO: remove check when gmf_data will be loadable also for
                 #       event_based
                 if (output['type'] == 'gmf_data'
-                        and calculation_mode == 'event_based'):
+                        and 'event_based' in calculation_mode):
                     continue
                 button = QPushButton()
                 self.connect_button_to_action(
