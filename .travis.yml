@@ -36,6 +36,8 @@ before_script:
 script:
     - cd $TRAVIS_BUILD_DIR/svir && make test
     - cd $TRAVIS_BUILD_DIR/svir && make integrationtest
+
+after_success:
     - cd $TRAVIS_BUILD_DIR/svir && make build_apidoc
     - cd $TRAVIS_BUILD_DIR/svir && make build_manual_html
 
