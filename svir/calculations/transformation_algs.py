@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#/***************************************************************************
+# /***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
@@ -231,10 +231,12 @@ def log10_(input_list,
     """
     Accept only input_list containing positive (or zero) values
     In case of zeros:
-        * the variant IGNORE ZEROS produces NULL as output when any input is
-          zero
-        * the variant INCREMENT BY ONE IF ZEROS ARE FOUND increments all input
-          data by 1
+
+    * the variant IGNORE ZEROS produces NULL as output when any input is
+      zero
+    * the variant INCREMENT BY ONE IF ZEROS ARE FOUND increments all input
+      data by 1
+
     Then use numpy.log10 function to perform the log10 transformation on the
     list of values
     """

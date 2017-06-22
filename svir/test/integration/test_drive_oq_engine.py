@@ -84,6 +84,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         calc_id = calc['id']
         output_list = self.get_output_list(calc_id)
         for output in output_list:
+            if (self.selected_otype is not None
+                    and output['type'] != self.selected_otype):
+                continue
             try:
                 self.load_output(calc, output)
             except Exception:
@@ -170,6 +173,15 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         if selected_calc_id is not None:
             calc_list = [calc for calc in calc_list
                          if calc['id'] == selected_calc_id]
+        self.selected_otype = os.environ.get('SELECTED_OTYPE')
+        if (self.selected_otype not in OQ_ALL_LOADABLE_TYPES
+                and self.selected_otype != 'fullreport'):
+            print('\n\tSELECTED_OTYPE was not set or is not valid.'
+                  ' Running tests for all the available output types.')
+            self.selected_otype = None
+        else:
+            print('\n\tSELECTED_OTYPE is set.'
+                  ' Running tests only for %s' % self.selected_otype)
         for calc in calc_list:
             print('\nCalculation %s: %s' % (calc['id'], calc['description']))
             self.load_calc_outputs(calc)

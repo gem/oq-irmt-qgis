@@ -93,6 +93,8 @@ integrationtest: compile transcompile
 	@echo "been reset and all oq-engine demos have been completed successfully."
 	@echo "In order to run integration tests for one specific calculation id (e.g. 5), run:"
 	@echo "SELECTED_CALC_ID=5 make integrationtest"
+	@echo "In order to run integration tests for one specific output type (e.g. hmaps), run:"
+	@echo "SELECTED_OTYPE=hmaps make integrationtest"
 	@echo "----------------------"
 
 deploy: compile doc transcompile
@@ -159,10 +161,10 @@ package: compile doc
 	gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/printer -dNOPAUSE -dQUIET -dBATCH -sOutputFile=help/build/html/_downloads/resized-irmt.pdf help/build/html/_downloads/irmt.pdf;
 	mv -f help/build/html/_downloads/resized-irmt.pdf help/build/html/_downloads/irmt.pdf
 	mkdir -p $(PLUGINNAME)/help/build; rm -r $(PLUGINNAME)/help/build/html; cp -r help/build/html $(PLUGINNAME)/help/build/html;
-	mkdir -p $(PLUGINNAME)/apidoc/build; rm -r $(PLUGINNAME)/apidoc/build/html; cp -r apidoc/build/html $(PLUGINNAME)/apidoc/build/html
+	mkdir -p $(PLUGINNAME)/apidoc/_build; rm -r $(PLUGINNAME)/apidoc/_build/html; cp -r apidoc/_build/html $(PLUGINNAME)/apidoc/_build/html
 	zip -r $(PLUGINNAME).zip $(PLUGINNAME)/help/build/html
-	zip -r $(PLUGINNAME).zip $(PLUGINNAME)/apidoc/build/html
-	zip --delete $(PLUGINNAME).zip $(PLUGINNAME)/test/\* $(PLUGINNAME)/help/source/\* $(PLUGINNAME)/apidoc/source/\*
+	zip -r $(PLUGINNAME).zip $(PLUGINNAME)/apidoc/_build/html
+	zip --delete $(PLUGINNAME).zip $(PLUGINNAME)/test/\* $(PLUGINNAME)/help/source/\*
 	rm -r $(PLUGINNAME)/
 	echo "Created package: $(PLUGINNAME).zip"
 
@@ -235,12 +237,21 @@ clean:
 # build documentation with sphinx
 doc: build_manual build_apidoc
 
-build_manual:
+build_manual: build_manual_latex build_manual_html
+
+build_manual_html:
 	@echo
-	@echo "-----------------------------"
-	@echo "Building manual using sphinx."
-	@echo "-----------------------------"
-	cd help; make latexpdf html
+	@echo "-------------------------------------------------"
+	@echo "Building html version of the manual using sphinx."
+	@echo "-------------------------------------------------"
+	cd help; make html
+
+build_manual_latex:
+	@echo
+	@echo "----------------------------------------------------------"
+	@echo "Building pdf version of the manual using sphinx and latex."
+	@echo "----------------------------------------------------------"
+	cd help; make latexpdf
 
 build_apidoc:
 	@echo

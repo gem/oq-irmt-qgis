@@ -66,9 +66,9 @@ class AbstractWorker(QtCore.QObject):
     def work(self):
         """ Reimplement this putting your calculation here
             available are:
-                self.progress.emit(0-100)
-                self.killed
-            :returns a python object - use None if killed is true
+            * self.progress.emit(0-100)
+            * self.killed
+            :returns: a python object - use None if killed is true
         """
 
         raise NotImplementedError

@@ -82,10 +82,11 @@ def log_msg(message, tag='GEM IRMT Plugin', level='I', message_bar=None,
 
     :param message: the message
     :param tag: the log topic
-    :param level: the importance level
-        ('I' -> QgsMessageLog.INFO,
-         'W' -> QgsMessageLog.WARNING,
-         'C' -> QgsMessageLog.CRITICAL)
+    :param level:
+        the importance level
+        'I' -> QgsMessageLog.INFO,
+        'W' -> QgsMessageLog.WARNING,
+        'C' -> QgsMessageLog.CRITICAL
     :param message_bar: a `QgsMessageBar` instance
     :param duration: how long (in seconds) the message will be displayed (use 0
                      to keep the message visible indefinitely, or None to use
@@ -159,10 +160,11 @@ def replace_fields(sub_tree_root, before, after):
     project definition, and we obtain a new field that we want to track
     instead of the original one.
     It works by side-effect, modifying the passed project definition.
-    :param sub_tree_root: node of a project definition. From that node (used
-                          as root) towards the leaves of the tree, the function
-                          will recursively search for nodes with a 'field'
-                          property that contains the string before
+
+    :param sub_tree_root:
+        node of a project definition. From that node (used as root) towards the
+        leaves of the tree, the function will recursively search for nodes with
+        a 'field' property that contains the string before
     :param before: string to be replaced
     :param after: new value for the replaced string
     """
@@ -336,8 +338,8 @@ def reload_attrib_cbx(
     :type layer: QgsVectorLayer
     :param prepend_empty_item: if to prepend an empty item to the combo
     :type layer: Bool
-    :param *valid_field_types: multiple tuples containing types
-    :type *valid_field_types: tuple, tuple, ...
+    :param \*valid_field_types: multiple tuples containing types
+    :type \*valid_field_types: tuple, tuple, ...
     """
     field_types = set()
     for field_type in valid_field_types:
@@ -505,9 +507,11 @@ def ask_for_destination_full_path_name(
     :param parent: the parent dialog
     :param text: the dialog's title text
     :param filter:
-        filter files by specific formats. Default: 'Shapefiles (*.shp)'
+        filter files by specific formats. Default: 'Shapefiles (\*.shp)'
         A more elaborate example:
-        "Images (*.png *.xpm *.jpg);;Text files (*.txt);;XML files (*.xml)"
+
+        "Images (\*.png \*.xpm \*.jpg);;
+        Text files (\*.txt);;XML files (\*.xml)"
 
     :returns: full path name of the destination file
     """
@@ -767,6 +771,7 @@ def insert_platform_layer_id(
 def get_ui_class(ui_file):
     """Get UI Python class from .ui file.
        Can be filename.ui or subdirectory/filename.ui
+
     :param ui_file: The file of the ui in svir.ui
     :type ui_file: str
     """
