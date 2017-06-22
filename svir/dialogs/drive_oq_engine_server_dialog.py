@@ -140,17 +140,17 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     def check_engine_compatibility(self):
         engine_version = self.get_engine_version()
         assert engine_version is not None
-        engine_major, engine_minor, _ = engine_version.split('.')
-        engine_major, engine_minor = int(engine_major), int(engine_minor)
+        engine_version = engine_version.split('-')[0]
+        engine_version = tuple(int(x) for x in engine_version.split('.'))
         irmt_version = get_irmt_version()
-        irmt_major, irmt_minor, _ = irmt_version.split('.')
-        irmt_major, irmt_minor = int(irmt_major), int(irmt_minor)
-        if irmt_major != engine_major or irmt_minor != engine_minor:
+        irmt_version = tuple(int(x) for x in irmt_version.split('.'))
+        irmt_major_minor = irmt_version[:2]
+        engine_major_minor = engine_version[:2]
+        if irmt_major_minor != engine_major_minor:
             msg = ('The plugin is optimized to work with the OpenQuake Engine '
-                   ' version %s.%s. You are currently connecting with an '
-                   ' OpenQuake Engine version %s.%s. This could cause some '
-                   ' malfunctioning.' % (irmt_major, irmt_minor,
-                                         engine_major, engine_minor))
+                   ' version %s. You are currently connecting with an '
+                   ' OpenQuake Engine version %s. This could cause some '
+                   ' malfunctioning.' % (irmt_major_minor, engine_major_minor))
             log_msg(msg, level='W', message_bar=self.iface.messageBar())
 
     def login(self):
