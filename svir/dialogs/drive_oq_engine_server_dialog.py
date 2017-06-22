@@ -223,7 +223,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 try:
                     value = calc_list[row][key]
                 except KeyError:
-                    # from engine2.4 to engine2.5, job_type was changed into
+                    # from engine2.5 to engine2.6, job_type was changed into
                     # calculation_mode. This check prevents the plugin to break
                     # wnen using an old version of the engine.
                     if key == 'calculation_mode':
@@ -312,7 +312,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             output_list = self.get_output_list(calc_id)
             self.list_of_outputs_lbl.setText(
                 'List of outputs for calculation %s' % calc_id)
-            # from engine2.4 to engine2.5, job_type was changed into
+            # from engine2.5 to engine2.6, job_type was changed into
             # calculation_mode. This check prevents the plugin to break wnen
             # using an old version of the engine.
             self.show_output_list(
