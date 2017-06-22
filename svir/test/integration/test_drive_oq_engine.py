@@ -104,23 +104,23 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         output_type = output['type']
         if (output_type in OQ_ALL_LOADABLE_TYPES
                 or output_type == 'fullreport'):
-            # TODO: when gmf_data for event_based becomes loadable,
-            #       let's not skip this
-            event_based_calc_desc = u'Event Based PSHA using Area Source'
-            if (output_type == 'gmf_data'
-                    and calc['description'] == event_based_calc_desc):
-                skipped_attempt = {
-                    'calc_id': calc_id,
-                    'calc_description': calc['description'],
-                    'output_type': output_type}
-                self.skipped_attempts.append(skipped_attempt)
-                print('\t\tSKIPPED')
-                return
             if output_type in OQ_CSV_LOADABLE_TYPES:
                 print('\tLoading output type %s...' % output_type)
                 filepath = self.download_output(output['id'], 'csv')
             elif output_type in OQ_NPZ_LOADABLE_TYPES:
                 print('\tLoading output type %s...' % output_type)
+                # TODO: when gmf_data for event_based becomes loadable,
+                #       let's not skip this
+                event_based_calc_desc = u'Event Based PSHA using Area Source'
+                if (output_type == 'gmf_data'
+                        and calc['description'] == event_based_calc_desc):
+                    skipped_attempt = {
+                        'calc_id': calc_id,
+                        'calc_description': calc['description'],
+                        'output_type': output_type}
+                    self.skipped_attempts.append(skipped_attempt)
+                    print('\t\tSKIPPED')
+                    return
                 filepath = self.download_output(output['id'], 'npz')
             elif output_type == 'fullreport':
                 print('\tLoading fullreport...')
