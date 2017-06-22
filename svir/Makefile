@@ -93,6 +93,8 @@ integrationtest: compile transcompile
 	@echo "been reset and all oq-engine demos have been completed successfully."
 	@echo "In order to run integration tests for one specific calculation id (e.g. 5), run:"
 	@echo "SELECTED_CALC_ID=5 make integrationtest"
+	@echo "In order to run integration tests for one specific output type (e.g. hmaps), run:"
+	@echo "SELECTED_OTYPE=hmaps make integrationtest"
 	@echo "----------------------"
 
 deploy: compile doc transcompile
