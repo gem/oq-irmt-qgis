@@ -338,8 +338,8 @@ def reload_attrib_cbx(
     :type layer: QgsVectorLayer
     :param prepend_empty_item: if to prepend an empty item to the combo
     :type layer: Bool
-    :param *valid_field_types: multiple tuples containing types
-    :type *valid_field_types: tuple, tuple, ...
+    :param \*valid_field_types: multiple tuples containing types
+    :type \*valid_field_types: tuple, tuple, ...
     """
     field_types = set()
     for field_type in valid_field_types:
@@ -507,9 +507,11 @@ def ask_for_destination_full_path_name(
     :param parent: the parent dialog
     :param text: the dialog's title text
     :param filter:
-        filter files by specific formats. Default: 'Shapefiles (*.shp)'
+        filter files by specific formats. Default: 'Shapefiles (\*.shp)'
         A more elaborate example:
-        "Images (*.png *.xpm *.jpg);;Text files (*.txt);;XML files (*.xml)"
+
+        "Images (\*.png \*.xpm \*.jpg);;
+        Text files (\*.txt);;XML files (\*.xml)"
 
     :returns: full path name of the destination file
     """
