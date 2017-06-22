@@ -125,17 +125,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 filepath = self.download_output(output['id'], 'rst')
             assert filepath is not None
             IFACE.newProject()
-            # TODO: when gmf_data for event_based becomes loadable,
-            #       let's not skip this
-            if (output_type == 'gmf_data'
-                    and calc['calculation_mode'] == 'event_based'):
-                skipped_attempt = {
-                    'calc_id': calc_id,
-                    'calc_description': calc['description'],
-                    'output_type': output_type}
-                self.skipped_attempts.append(skipped_attempt)
-                print('\t\tSKIPPED')
-                return
             if output_type == 'fullreport':
                 dlg = ShowFullReportDialog(filepath)
                 dlg.accept()
