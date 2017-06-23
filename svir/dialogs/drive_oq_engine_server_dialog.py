@@ -60,6 +60,7 @@ from svir.utilities.utils import (WaitCursorManager,
                                   ask_for_download_destination_folder,
                                   get_ui_class,
                                   SvNetworkError,
+                                  get_irmt_version,
                                   )
 from svir.dialogs.load_ruptures_as_layer_dialog import (
     LoadRupturesAsLayerDialog)
@@ -134,6 +135,26 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             self._handle_exception(exc)
         else:
             self.refresh_calc_list()
+            self.check_engine_compatibility()
+
+    def check_engine_compatibility(self):
+        engine_version = self.get_engine_version()
+        assert engine_version is not None
+        engine_version = engine_version.split('-')[0]
+        engine_version = tuple(int(x) for x in engine_version.split('.'))
+        irmt_version = get_irmt_version()
+        irmt_version = tuple(int(x) for x in irmt_version.split('.'))
+        irmt_major_minor = irmt_version[:2]
+        engine_major_minor = engine_version[:2]
+        if irmt_major_minor != engine_major_minor:
+            msg = ('The plugin is optimized to work with OpenQuake Engine '
+                   ' version %s.%s. You are currently connecting with '
+                   ' OpenQuake Engine version %s.%s. This could cause some '
+                   ' malfunctioning.' % (irmt_major_minor[0],
+                                         irmt_major_minor[1],
+                                         engine_major_minor[0],
+                                         engine_major_minor[1]))
+            log_msg(msg, level='W', message_bar=self.iface.messageBar())
 
     def login(self):
         self.session = Session()
@@ -168,6 +189,23 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             if resp.url != engine_version_url and 'login' in resp.url:
                 return True
         return False
+
+    def get_engine_version(self):
+        engine_version_url = "%s/engine_version" % self.hostname
+        with WaitCursorManager():
+            try:
+                # FIXME: enable the user to set verify=True
+                resp = self.session.get(
+                    engine_version_url, timeout=10, verify=False)
+                # handle case of redirection to the login page
+                if not resp.ok:
+                    raise ConnectionError(
+                        "%s %s: %s" % (resp.status_code,
+                                       resp.url, resp.reason))
+            except HANDLED_EXCEPTIONS as exc:
+                self._handle_exception(exc)
+                return
+            return resp.text
 
     def refresh_calc_list(self):
         # returns True if the list is correctly retrieved
@@ -220,7 +258,18 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         for row, calc in enumerate(calc_list):
             for col, key in enumerate(selected_keys):
                 item = QTableWidgetItem()
-                value = calc_list[row][key]
+                try:
+                    value = calc_list[row][key]
+                except KeyError:
+                    # from engine2.5 to engine2.6, job_type was changed into
+                    # calculation_mode. This check prevents the plugin to break
+                    # wnen using an old version of the engine.
+                    if key == 'calculation_mode':
+                        value = 'unknown'
+                    else:
+                        # if any other unexpected keys are used, it is safer to
+                        # raise a KeyError
+                        raise
                 item.setData(Qt.DisplayRole, value)
                 # set default colors
                 row_bg_color = Qt.white
@@ -301,7 +350,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             output_list = self.get_output_list(calc_id)
             self.list_of_outputs_lbl.setText(
                 'List of outputs for calculation %s' % calc_id)
-            self.show_output_list(output_list, calc_status['calculation_mode'])
+            # from engine2.5 to engine2.6, job_type was changed into
+            # calculation_mode. This check prevents the plugin to break wnen
+            # using an old version of the engine.
+            self.show_output_list(
+                output_list, calc_status.get('calculation_mode', 'unknown'))
             self.download_datastore_btn.setEnabled(True)
             self.download_datastore_btn.setText(
                 'Download HDF5 datastore for calculation %s'
