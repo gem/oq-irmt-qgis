@@ -626,7 +626,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 # TODO: remove check when gmf_data will be loadable also for
                 #       event_based
                 if (output['type'] == 'gmf_data'
-                        and 'event_based' in calculation_mode):
+                        and calculation_mode == 'event_based'):
                     continue
                 button = QPushButton()
                 self.connect_button_to_action(
