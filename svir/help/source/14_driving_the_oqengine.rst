@@ -39,12 +39,21 @@ The list of calculations
 
 For each calculation available on the connected OQ-Engine server (only those that
 the current user is authorized to visualize), the :guilabel:`List of calculations`
-(see :ref:`fig-dialogDriveOqEngine`)
-shows its :guilabel:`Description`, its unique :guilabel:`Job ID`, its :guilabel:`Job Type`
-(specifying if it is a hazard or risk calculation), its :guilabel:`Owner` and
-its :guilabel:`Status` (indicating if the calculation is still running, if it
+(see :ref:`fig-dialogDriveOqEngine`) shows its :guilabel:`Description`,
+its unique :guilabel:`Job ID`, its :guilabel:`Calculation Mode`, its :guilabel:`Owner`
+and its :guilabel:`Status` (indicating if the calculation is still running, if it
 failed or if it was successfully completed). The list is refreshed at regular
 intervals of few seconds and it displays the most recent 100 calculations.
+
+.. note::
+    Before OpenQuake Engine 2.6, the :guilabel:`Job Type` was displayed instead
+    of the :guilabel:`Calculation Mode`, specifying only if a calculation was
+    classified as *hazard* or *risk*. If the plugin attempts to connect to an
+    outdated OpenQuake Engine Server that is older than version 2.6, the column
+    :guilabel:`Calculation Mode` will display the value *unknown* for all
+    calculations. In case it happens, we recommend to update the OQ Engine Server
+    or to downgrade the plugin to an earlier version, in order to ensure maximum
+    compatibility between the two software versions.
 
 It is possible to scroll the list up and down and to resize it with respect to the
 :guilabel:`List of outputs`. When any row of the list of calculations is selected,
