@@ -127,7 +127,6 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         #       the timer whenever the button to open the dialog is pressed
         self.finished.connect(self.stop_polling)
         self.attempt_login()
-        self.check_engine_compatibility()
 
     def attempt_login(self):
         try:
@@ -136,6 +135,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             self._handle_exception(exc)
         else:
             self.refresh_calc_list()
+            self.check_engine_compatibility()
 
     def check_engine_compatibility(self):
         engine_version = self.get_engine_version()
@@ -147,10 +147,13 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         irmt_major_minor = irmt_version[:2]
         engine_major_minor = engine_version[:2]
         if irmt_major_minor != engine_major_minor:
-            msg = ('The plugin is optimized to work with the OpenQuake Engine '
-                   ' version %s. You are currently connecting with an '
-                   ' OpenQuake Engine version %s. This could cause some '
-                   ' malfunctioning.' % (irmt_major_minor, engine_major_minor))
+            msg = ('The plugin is optimized to work with OpenQuake Engine '
+                   ' version %s.%s. You are currently connecting with '
+                   ' OpenQuake Engine version %s.%s. This could cause some '
+                   ' malfunctioning.' % (irmt_major_minor[0],
+                                         irmt_major_minor[1],
+                                         engine_major_minor[0],
+                                         engine_major_minor[1]))
             log_msg(msg, level='W', message_bar=self.iface.messageBar())
 
     def login(self):
