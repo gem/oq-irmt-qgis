@@ -13,7 +13,7 @@ name=OpenQuake Integrated Risk Modelling Toolkit
 qgisMinimumVersion=2.14
 description=Tools to drive the OpenQuake Engine, to develop composite indicators and integrate them with physical risk estimations, and to predict building recovery times following an earthquake
 about=This plugin allows users to drive OpenQuake Engine calculations (https://github.com/gem/oq-engine) of physical hazard and risk, and to load the corresponding outputs as QGIS layers. For those outputs, data visualization tools are provided. The toolkit also enables users to develop composite indicators to measure and quantify social characteristics, and combine them with estimates of human or infrastructure loss. The plugin can interact with the OpenQuake Platform (https://platform.openquake.org), to browse and download socio-economic data or existing projects, edit projects locally in QGIS and upload and share them with the scientific community. A post-earthquake recovery modeling framework is incorporated into the toolkit, to produce building level and/or community level recovery functions.
-version=2.5.0
+version=2.6.0
 author=GEM Foundation
 email=staff.it@globalquakemodel.org
 
@@ -23,32 +23,10 @@ email=staff.it@globalquakemodel.org
 
 # Uncomment the following line and add your changelog entries:
 changelog=
-    2.5.0
-    * The plugin is aligned with OQ-Engine version 2.5
-    * Improved README with instructions on installation and troubleshooting
-    * A clear error message is shown when attempting to modify a non-editable kind of layer
-    * Many updates to the user manual
-    * Re-clicking the row of the currently selected calculation, the row is unselected and
-      the table ceases to scroll automatically to keep that row visible
-    * Color settings are saved as rgba instead of as QColor (fixing a storing issue in Mac OS)
-    * Fixed an error that was triggered by the Data Viewer when selecting features in a layer for which
-      the output type is undefined
-    * The dialogs to visualize the console log or the full report of a OQ-Engine calculation
-      have been made non-modal, so they do not block the interaction with the dialog that drives the OQ-Engine
-    * When the download of a OQ-Engine output fails, the server-side traceback is shown
-    * An additional button permits to visualize the parameters of a OQ-Engine calculation
-    * Fixed a corruption in the project definition that happened when trying to add a new node to the
-      tree when no other numeric fields are available
-    * Fixed case of highlighting a calculation that is no more in the list
-    * Replaced the csv importer for damage by asset with an importer from npz that also aggregates data by site
-    * When a field contanins "(" it will not be listed between those that can be transformed, and
-      a warning will suggest the user to replace the parenthesis with a square bracket before transforming the field
-    * Added integration tests loading outputs of oq-engine demos
-    * The 'load as layer' button is disabled for gmf_data produced by event_based calculations
-    * The list of oq-engine calculations displays the calculation mode instead of the job type
-    * Environment parameters SELECTED_OTYPE and SELECTED_CALC_ID can be used to test only a specific output
-      type or a specific calculation
-    * The compilation of the html version of the apidoc and of the user manual is tested on Travis
+    2.6.0
+    * The plugin is aligned with OQ-Engine version 2.6
+    * Added a warning message in case of connection with a potentially incompatible version of the OQ-Engine Server
+    * The list of calculations displays the Calculation Mode instead of the Job Type
 
 # tags are comma separated with spaces allowed
 tags=GEM, IRMT, SVIR, OpenQuake, Social Vulnerability, Integrated Risk, Recovery, Resilience, Risk, Hazard, Earthquake
@@ -58,7 +36,7 @@ tracker=https://github.com/gem/oq-irmt-qgis/issues
 repository=https://github.com/gem/oq-irmt-qgis
 icon=resources/icon.svg
 # experimental flag
-experimental=False
+experimental=True
 
 # deprecated flag (applies to the whole plugin, not just a single version
 deprecated=False
