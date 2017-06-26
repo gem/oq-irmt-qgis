@@ -23,7 +23,6 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import numpy
-import json
 from qgis.core import QgsFeature, QgsGeometry, QgsPoint
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 from svir.calculations.calculate_utils import add_textual_attribute
@@ -78,7 +77,11 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
         return layer_name
 
     def get_field_names(self, **kwargs):
-        field_names = list(self.dataset.dtype.names)
+        field_names = []
+        for imt in self.dataset.dtype.names:
+            for iml in self.dataset[imt].dtype.names:
+                field_name = "%s_%s" % (imt, iml)
+                field_names.append(field_name)
         return field_names
 
     def add_field_to_layer(self, field_name):
@@ -88,19 +91,17 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
 
     def read_npz_into_layer(self, field_names, **kwargs):
         with LayerEditingManager(self.layer, 'Reading npz', DEBUG):
+            lons = self.npz_file['all']['lon']
+            lats = self.npz_file['all']['lat']
             feats = []
             for row_idx, row in enumerate(self.dataset):
-                # add a feature
                 feat = QgsFeature(self.layer.pendingFields())
                 for field_name_idx, field_name in enumerate(field_names):
-                    poes = row[field_name].tolist()
-                    imls = row[field_name].dtype.names
-                    dic = dict(poes=poes, imls=imls)
-                    value = json.dumps(dic)
-                    feat.setAttribute(field_name, value)
-                lon = self.npz_file['all']['lon'][row_idx]
-                lat = self.npz_file['all']['lat'][row_idx]
-                feat.setGeometry(QgsGeometry.fromPoint(QgsPoint(lon, lat)))
+                    imt, iml = field_name.split('_')
+                    poe = row[imt][iml]
+                    feat.setAttribute(field_name, float(poe))
+                feat.setGeometry(QgsGeometry.fromPoint(
+                    QgsPoint(lons[row_idx], lats[row_idx])))
                 feats.append(feat)
             added_ok = self.layer.addFeatures(feats, makeSelected=False)
             if not added_ok:

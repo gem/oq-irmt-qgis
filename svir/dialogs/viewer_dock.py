@@ -376,26 +376,12 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         for feature in self.active_layer.getFeatures(
                 QgsFeatureRequest().setFilterFids(selected)):
             if self.output_type == 'hcurves':
-                err_msg = ("The selected layer does not contain hazard"
-                           " curves in the expected format.")
-                try:
-                    data_str = feature[self.current_imt]
-                except KeyError:
-                    log_msg(err_msg, level='C',
-                            message_bar=self.iface.messageBar())
-                    self.output_type_cbx.setCurrentIndex(-1)
-                    return
-                data_dic = json.loads(data_str)
-                try:
-                    self.current_abscissa = data_dic['imls']
-                except KeyError:
-                    log_msg(err_msg, level='C',
-                            message_bar=self.iface.messageBar())
-                    self.output_type_cbx.setCurrentIndex(-1)
-                    return
-                # for a single intensity measure type, the imls are always
-                # the same, so we can break the loop after the first feature
-                break
+                field_names = [field.name()
+                               for field in self.iface.activeLayer().fields()]
+                imt = self.imt_cbx.currentText()
+                imls = [field_name.split('_')[1] for field_name in field_names
+                        if field_name.split('_')[0] == imt]
+                self.current_abscissa = imls
             elif self.output_type == 'loss_curves':
                 err_msg = ("The selected layer does not contain loss"
                            " curves in the expected format.")
@@ -441,11 +427,14 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
         for i, feature in enumerate(self.active_layer.getFeatures(
                 QgsFeatureRequest().setFilterFids(selected))):
-            if self.output_type == 'hcurves':
-                data_dic = json.loads(feature[self.current_imt])
-            elif self.output_type == 'loss_curves':
+            if self.output_type == 'loss_curves':
                 data_dic = json.loads(feature[self.current_loss_type])
-            if self.output_type in ['hcurves', 'loss_curves']:
+            if self.output_type == 'hcurves':
+                imt = self.imt_cbx.currentText()
+                ordinates = [feature[field.name()]
+                             for field in self.iface.activeLayer().fields()
+                             if field.name().split('_')[0] == imt]
+            if self.output_type == 'loss_curves':
                 ordinates = data_dic['poes']
             elif self.output_type == 'uhs':
                 ordinates = [value for value in feature]
@@ -536,10 +525,11 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             self.active_layer.selectionChanged.connect(self.redraw)
 
             if self.output_type == 'hcurves':
-                reload_attrib_cbx(self.imt_cbx,
-                                  self.active_layer,
-                                  False,
-                                  TEXTUAL_FIELD_TYPES)
+                imts = sorted(set(
+                    [field.name().split('_')[0]
+                     for field in self.iface.activeLayer().fields()]))
+                self.imt_cbx.clear()
+                self.imt_cbx.addItems(imts)
             elif self.output_type == 'loss_curves':
                 reload_attrib_cbx(self.loss_type_cbx,
                                   self.active_layer,
