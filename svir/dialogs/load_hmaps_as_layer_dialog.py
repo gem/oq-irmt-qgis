@@ -115,7 +115,6 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         return added_field_name
 
     def read_npz_into_layer(self, field_names, **kwargs):
-        rlz = self.rlz_cbx.currentText()
         with LayerEditingManager(self.layer, 'Reading npz', DEBUG):
             feats = []
             for row_idx, row in enumerate(self.dataset):
