@@ -226,7 +226,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
         self.typeDepVLayout.addWidget(self.fields_multiselect)
         fill_fields_multiselect(
-            self.fields_multiselect, self.iface.activeLayer())
+            self.fields_multiselect, self.active_layer)
 
     def set_output_type_and_its_gui(self, new_output_type):
         if (self.output_type is not None
@@ -260,7 +260,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
     def draw(self):
         self.plot.clear()
         gids = self.current_selection.keys()
-        count_selected = len(self.iface.activeLayer().selectedFeatures())
+        count_selected = len(self.active_layer.selectedFeatures())
         if count_selected == 0:
             return
         i = 0
@@ -377,7 +377,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 QgsFeatureRequest().setFilterFids(selected)):
             if self.output_type == 'hcurves':
                 field_names = [field.name()
-                               for field in self.iface.activeLayer().fields()]
+                               for field in self.active_layer.fields()]
                 imt = self.imt_cbx.currentText()
                 imls = [field_name.split('_')[1] for field_name in field_names
                         if field_name.split('_')[0] == imt]
@@ -432,7 +432,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             if self.output_type == 'hcurves':
                 imt = self.imt_cbx.currentText()
                 ordinates = [feature[field.name()]
-                             for field in self.iface.activeLayer().fields()
+                             for field in self.active_layer.fields()
                              if field.name().split('_')[0] == imt]
             if self.output_type == 'loss_curves':
                 ordinates = data_dic['poes']
@@ -527,7 +527,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             if self.output_type == 'hcurves':
                 imts = sorted(set(
                     [field.name().split('_')[0]
-                     for field in self.iface.activeLayer().fields()]))
+                     for field in self.active_layer.fields()]))
                 self.imt_cbx.clear()
                 self.imt_cbx.addItems(imts)
             elif self.output_type == 'loss_curves':
