@@ -73,7 +73,8 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
 
     def build_layer_name(self, rlz, **kwargs):
         # build layer name
-        layer_name = "hazard_curves_%s" % rlz
+        investigation_time = self.get_investigation_time()
+        layer_name = "hazard_curves_%s_%sy" % (rlz, investigation_time)
         return layer_name
 
     def get_field_names(self, **kwargs):

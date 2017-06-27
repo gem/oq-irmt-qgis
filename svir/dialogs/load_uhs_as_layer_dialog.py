@@ -84,7 +84,8 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
 
     def build_layer_name(self, rlz, **kwargs):
         poe = kwargs['poe']
-        layer_name = "uhs_%s_poe-%s" % (rlz, poe)
+        investigation_time = self.get_investigation_time()
+        layer_name = "uhs_%s_poe-%s_%sy" % (rlz, poe, investigation_time)
         return layer_name
 
     def get_field_names(self, **kwargs):

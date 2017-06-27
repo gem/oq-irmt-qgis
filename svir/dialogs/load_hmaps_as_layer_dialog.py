@@ -101,7 +101,8 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         imt = self.imt_cbx.currentText()
         poe = self.poe_cbx.currentText()
         self.default_field_name = '%s-%s' % (imt, poe)
-        layer_name = "hazard_map_%s" % rlz
+        investigation_time = self.get_investigation_time()
+        layer_name = "hazard_map_%s_%sy" % (rlz, investigation_time)
         return layer_name
 
     def get_field_names(self, **kwargs):
