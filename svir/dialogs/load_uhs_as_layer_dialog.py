@@ -101,18 +101,17 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
     def read_npz_into_layer(self, field_names, **kwargs):
         poe = kwargs['poe']
         with LayerEditingManager(self.layer, 'Reading npz', DEBUG):
+            lons = self.npz_file['all']['lon']
+            lats = self.npz_file['all']['lat']
             feats = []
-            for row_id, row in enumerate(self.dataset):
+            for row_idx, row in enumerate(self.dataset):
                 # add a feature
                 feat = QgsFeature(self.layer.pendingFields())
                 for field_name_idx, field_name in enumerate(field_names):
-                    if field_name in ['lon', 'lat']:
-                        continue
                     value = float(row[poe][field_name_idx])
                     feat.setAttribute(field_name, value)
-                lon = self.npz_file['all']['lon'][row_id]
-                lat = self.npz_file['all']['lat'][row_id]
-                feat.setGeometry(QgsGeometry.fromPoint(QgsPoint(lon, lat)))
+                feat.setGeometry(QgsGeometry.fromPoint(
+                    QgsPoint(lons[row_idx], lats[row_idx])))
                 feats.append(feat)
             added_ok = self.layer.addFeatures(feats, makeSelected=False)
             if not added_ok:
