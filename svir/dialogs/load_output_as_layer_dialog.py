@@ -449,9 +449,10 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         except KeyError:
             investigation_time = None
         else:
-            try:
+            # check if it's integer
+            if numpy.equal(numpy.mod(investigation_time, 1), 0):
                 investigation_time = int(investigation_time)
-            except TypeError:
+            else:
                 investigation_time = float(investigation_time)
         return investigation_time
 
