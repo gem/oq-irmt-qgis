@@ -443,6 +443,13 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         # if self.npz_file is not None:
         #     self.npz_file.close()
 
+    def get_investigation_time(self):
+        try:
+            investigation_time = self.npz_file['investigation_time']
+        except KeyError:
+            investigation_time = None
+        return investigation_time
+
     def build_layer(self, rlz, taxonomy=None, poe=None, loss_type=None,
                     dmg_state=None):
         rlz_group = self.get_layer_group(rlz)
@@ -483,6 +490,10 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             field_names, rlz=rlz, taxonomy=taxonomy, poe=poe,
             loss_type=loss_type, dmg_state=dmg_state)
         self.layer.setCustomProperty('output_type', self.output_type)
+        investigation_time = self.get_investigation_time()
+        if investigation_time is not None:
+            self.layer.setCustomProperty('investigation_time',
+                                         investigation_time)
         # add self.layer to the legend
         # False is to avoid adding the layer to the tree root, but only to the
         # group

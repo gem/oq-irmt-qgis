@@ -286,6 +286,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 picker=5  # 5 points tolerance
             )
             i += 1
+        investigation_time = self.active_layer.customProperty(
+            'investigation_time', None)
         if self.output_type == 'hcurves':
             self.plot.set_xscale('log')
             self.plot.set_yscale('log')
@@ -333,6 +335,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 title = 'Building level recovery curve'
             else:
                 title = 'Community level recovery curve'
+        if investigation_time is not None:
+            title += ' (%s years)' % investigation_time
         self.plot.set_title(title)
         self.plot.grid()
         if self.output_type == 'hcurves':
