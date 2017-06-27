@@ -116,6 +116,8 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
 
     def read_npz_into_layer(self, field_names, **kwargs):
         with LayerEditingManager(self.layer, 'Reading npz', DEBUG):
+            lons = self.npz_file['all']['lon']
+            lats = self.npz_file['all']['lat']
             feats = []
             for row_idx, row in enumerate(self.dataset):
                 # add a feature
@@ -126,9 +128,8 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
                     #       numpy type
                     value = float(row[field_name])
                     feat.setAttribute(field_name, value)
-                lon = self.npz_file['all']['lon'][row_idx]
-                lat = self.npz_file['all']['lat'][row_idx]
-                feat.setGeometry(QgsGeometry.fromPoint(QgsPoint(lon, lat)))
+                feat.setGeometry(QgsGeometry.fromPoint(
+                    QgsPoint(lons[row_idx], lats[row_idx])))
                 feats.append(feat)
             added_ok = self.layer.addFeatures(feats, makeSelected=False)
             if not added_ok:
