@@ -647,27 +647,46 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
     def write_export_file(self, filename):
         with open(filename, 'w') as csv_file:
-            # write header
-            line = 'lon,lat,%s' % (
-                ','.join(map(str, list(self.current_abscissa))))
-            csv_file.write(line + os.linesep)
-
             if self.output_type == 'recovery_curves':
+                # write header
+                line = 'lon,lat,%s' % (
+                    ','.join(map(str, list(self.current_abscissa))))
+                csv_file.write(line + os.linesep)
                 # NOTE: taking the first element, because they are all the
                 # same
                 curve = self.current_selection.values()[0]
                 csv_file.write(str(curve['ordinates']))
-            else:
+            elif self.output_type == 'hcurves':
+                # write header
+                imt = self.imt_cbx.currentText()
+                headers = ["%s_%s" % (imt, x) for x in self.current_abscissa]
+                line = 'lon,lat,%s' % ','.join(headers)
+                csv_file.write(line + os.linesep)
                 # write selected data
                 for site, curve in self.current_selection.iteritems():
                     poes = ','.join(map(str, curve['ordinates']))
                     feature = next(self.active_layer.getFeatures(
                         QgsFeatureRequest().setFilterFid(site)))
-
                     lon = feature.geometry().asPoint().x()
                     lat = feature.geometry().asPoint().y()
                     line = '%s,%s,%s' % (lon, lat, poes)
                     csv_file.write(line + os.linesep)
+            elif self.output_type == 'uhs':
+                # write header
+                line = 'lon,lat,%s' % (
+                    ','.join(map(str, list(self.current_abscissa))))
+                csv_file.write(line + os.linesep)
+                # write selected data
+                for site, curve in self.current_selection.iteritems():
+                    poes = ','.join(map(str, curve['ordinates']))
+                    feature = next(self.active_layer.getFeatures(
+                        QgsFeatureRequest().setFilterFid(site)))
+                    lon = feature.geometry().asPoint().x()
+                    lat = feature.geometry().asPoint().y()
+                    line = '%s,%s,%s' % (lon, lat, poes)
+                    csv_file.write(line + os.linesep)
+            else:
+                raise NotImplementedError(self.output_type)
         msg = 'Data exported to %s' % filename
         log_msg(msg, level='I', message_bar=self.iface.messageBar())
 
