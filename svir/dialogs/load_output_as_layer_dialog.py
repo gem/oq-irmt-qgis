@@ -448,6 +448,11 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             investigation_time = self.npz_file['investigation_time']
         except KeyError:
             investigation_time = None
+        else:
+            try:
+                investigation_time = int(investigation_time)
+            except TypeError:
+                investigation_time = float(investigation_time)
         return investigation_time
 
     def build_layer(self, rlz, taxonomy=None, poe=None, loss_type=None,
