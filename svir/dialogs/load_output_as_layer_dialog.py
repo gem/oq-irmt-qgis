@@ -57,6 +57,7 @@ from svir.utilities.shared import (OQ_CSV_LOADABLE_TYPES,
 from svir.utilities.utils import (get_ui_class,
                                   get_style,
                                   clear_widgets_from_layout,
+                                  log_msg,
                                   )
 
 FORM_CLASS = get_ui_class('ui_load_output_as_layer.ui')
@@ -444,17 +445,20 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         #     self.npz_file.close()
 
     def get_investigation_time(self):
-        try:
-            investigation_time = self.npz_file['investigation_time']
-        except KeyError:
-            investigation_time = None
-        else:
-            # check if it's integer
-            if numpy.equal(numpy.mod(investigation_time, 1), 0):
-                investigation_time = int(investigation_time)
+        if self.output_type in ('hcurves', 'uhs', 'hmaps', 'gmf_data'):
+            try:
+                investigation_time = self.npz_file['investigation_time']
+            except KeyError:
+                msg = ('investigation_time not found. It is mandatory for %s.'
+                       ' Please check if the ouptut was produced by an'
+                       ' obsolete version of the OpenQuake Engine'
+                       ' Server.') % self.output_type
+                log_msg(msg, level='C', message_bar=self.iface.messageBar())
             else:
-                investigation_time = float(investigation_time)
-        return investigation_time
+                return investigation_time
+        else:
+            # some output do not need the investigation time
+            return None
 
     def build_layer(self, rlz, taxonomy=None, poe=None, loss_type=None,
                     dmg_state=None):
