@@ -654,7 +654,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             if self.output_type == 'recovery_curves':
                 # write header
                 line = 'lon,lat,%s' % (
-                    ','.join(map(str, list(self.current_abscissa))))
+                    ','.join(map(str, self.current_abscissa)))
                 csv_file.write(line + os.linesep)
                 # NOTE: taking the first element, because they are all the
                 # same
@@ -678,7 +678,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             elif self.output_type == 'uhs':
                 # write header
                 line = 'lon,lat,%s' % (
-                    ','.join(map(str, list(self.current_abscissa))))
+                    ','.join(map(str, self.current_abscissa)))
                 csv_file.write(line + os.linesep)
                 # write selected data
                 for site, curve in self.current_selection.iteritems():
