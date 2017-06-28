@@ -46,7 +46,7 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
         self.setWindowTitle(
             'Load hazard curves from NPZ, as layer')
         self.create_load_selected_only_ckb()
-        self.create_rlz_selector()
+        self.create_rlz_or_stat_selector()
         if self.path:
             self.npz_file = numpy.load(self.path, 'r')
             self.populate_out_dep_widgets()
@@ -55,26 +55,29 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
 
     def set_ok_button(self):
         self.ok_button.setEnabled(
-            bool(self.path) and self.rlz_cbx.currentIndex() != -1)
+            bool(self.path) and self.rlz_or_stat_cbx.currentIndex() != -1)
 
-    def populate_rlz_cbx(self):
-        self.rlzs = self.npz_file['all'].dtype.names[2:]  # ignore lon, lat
-        self.rlz_cbx.clear()
-        self.rlz_cbx.setEnabled(True)
-        self.rlz_cbx.addItems(self.rlzs)
+    def populate_rlz_or_stat_cbx(self):
+        # ignore lon, lat
+        self.rlzs_or_stats = self.npz_file['all'].dtype.names[2:]
+        self.rlz_or_stat_cbx.clear()
+        self.rlz_or_stat_cbx.setEnabled(True)
+        self.rlz_or_stat_cbx.addItems(self.rlzs_or_stats)
 
-    def on_rlz_changed(self):
-        self.dataset = self.npz_file['all'][self.rlz_cbx.currentText()]
+    def on_rlz_or_stat_changed(self):
+        self.dataset = self.npz_file['all'][self.rlz_or_stat_cbx.currentText()]
         self.set_ok_button()
 
     def show_num_sites(self):
-        rlz_data = self.npz_file['all'][self.rlz_cbx.currentText()]
-        self.rlz_num_sites_lbl.setText(self.num_sites_msg % rlz_data.shape)
+        rlz_or_stat_data = self.npz_file['all'][
+            self.rlz_or_stat_cbx.currentText()]
+        self.rlz_or_stat_num_sites_lbl.setText(
+            self.num_sites_msg % rlz_or_stat_data.shape)
 
-    def build_layer_name(self, rlz, **kwargs):
+    def build_layer_name(self, rlz_or_stat, **kwargs):
         # build layer name
         investigation_time = self.get_investigation_time()
-        layer_name = "hazard_curves_%s_%sy" % (rlz, investigation_time)
+        layer_name = "hazard_curves_%s_%sy" % (rlz_or_stat, investigation_time)
         return layer_name
 
     def get_field_names(self, **kwargs):
@@ -110,13 +113,13 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
 
     def load_from_npz(self):
-        for rlz in self.rlzs:
+        for rlz_or_stat in self.rlzs_or_stats:
             if (self.load_selected_only_ckb.isChecked()
-                    and rlz != self.rlz_cbx.currentText()):
+                    and rlz_or_stat != self.rlz_or_stat_cbx.currentText()):
                 continue
-            with WaitCursorManager('Creating layer for realization "%s"...'
-                                   % rlz, self.iface):
-                self.build_layer(rlz)
+            with WaitCursorManager('Creating layer for "%s"...'
+                                   % rlz_or_stat, self.iface):
+                self.build_layer(rlz_or_stat)
                 self.style_curves()
         if self.npz_file is not None:
             self.npz_file.close()
