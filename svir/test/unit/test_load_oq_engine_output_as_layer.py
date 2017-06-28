@@ -127,14 +127,16 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
 
     def test_load_ruptures(self):
         filepath = os.path.join(
-            self.data_dir_name, 'hazard', 'output-607-ruptures_162.csv')
+            self.data_dir_name, 'hazard', 'ruptures',
+            'output-607-ruptures_162.csv')
         dlg = LoadRupturesAsLayerDialog(
             IFACE, self.viewer_dock, 'ruptures', filepath, mode='testing')
         dlg.save_as_shp_ckb.setChecked(True)
         dlg.accept()
         current_layer = IFACE.activeLayer()
         reference_path = os.path.join(
-            self.data_dir_name, 'hazard', 'output-607-ruptures_162.shp')
+            self.data_dir_name, 'hazard', 'ruptures',
+            'output-607-ruptures_162.shp')
         reference_layer = QgsVectorLayer(
             reference_path, 'reference_ruptures', 'ogr')
         ProcessLayer(current_layer).has_same_content_as(reference_layer)

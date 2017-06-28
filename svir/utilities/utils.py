@@ -964,3 +964,22 @@ def import_layer_from_csv(parent,
 
 def listdir_fullpath(path):
     return [os.path.join(path, filename) for filename in os.listdir(path)]
+
+
+def get_param_from_comment_line(param_name, comment_line):
+    err_msg = 'Unable to extract param %s from line: %s' % (param_name,
+                                                            comment_line)
+    try:
+        # remove "# " from comment_line
+        comment_line = comment_line.split('# ')[1]
+    except IndexError:
+        raise LookupError(err_msg)
+    param_defs = comment_line.split(', ')
+    for param_def in param_defs:
+        try:
+            name, value = param_def.split('=')
+        except ValueError:
+            raise LookupError(err_msg)
+        if name == param_name:
+            return value.strip()
+    raise LookupError(err_msg)
