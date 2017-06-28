@@ -451,7 +451,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         #     self.npz_file.close()
 
     def get_investigation_time(self):
-        if self.output_type in ('hcurves', 'uhs', 'hmaps', 'gmf_data'):
+        if self.output_type in ('hcurves', 'uhs', 'hmaps'):
             try:
                 investigation_time = self.npz_file['investigation_time']
             except KeyError:
