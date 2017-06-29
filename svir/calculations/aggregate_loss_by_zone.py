@@ -46,6 +46,7 @@ from svir.utilities.utils import (LayerEditingManager,
                                   create_progress_message_bar,
                                   log_msg,
                                   save_layer_as_shapefile,
+                                  get_qgis_version,
                                   )
 from svir.utilities.shared import (INT_FIELD_TYPE_NAME,
                                    DOUBLE_FIELD_TYPE_NAME,
@@ -413,11 +414,14 @@ def get_saga_install_error():
             if saga_version is None:
                 err_msg = 'SAGA is not installed.'
             else:
-                (major, minor) = saga_version.split('.')[:2]
-                if (int(major), int(minor)) < (2, 3):
-                    err_msg = ('QGIS 2.18.10 and above do not support SAGA'
-                               ' versions below 2.3. You are using version'
-                               ' %s' % saga_version)
+                qgis_version = get_qgis_version()
+                if qgis_version >= (2, 18, 10):
+                    (saga_major, saga_minor) = map(int,
+                                                   saga_version.split('.')[:2])
+                    if (saga_major, saga_minor) < (2, 3):
+                        err_msg = ('QGIS 2.18.10 and above do not support SAGA'
+                                   ' versions below 2.3. You are using version'
+                                   ' %s' % saga_version)
         except AttributeError:
             err_msg = 'Unable to get the SAGA installed version.'
     else:
