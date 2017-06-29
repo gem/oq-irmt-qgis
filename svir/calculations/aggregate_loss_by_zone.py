@@ -29,6 +29,7 @@ from qgis.core import (QgsVectorLayer,
                        QgsGeometry,
                        QgsSpatialIndex,
                        QgsFeatureRequest,
+                       QGis,
                        )
 from qgis.analysis import QgsZonalStatistics
 
@@ -46,7 +47,6 @@ from svir.utilities.utils import (LayerEditingManager,
                                   create_progress_message_bar,
                                   log_msg,
                                   save_layer_as_shapefile,
-                                  get_qgis_version,
                                   )
 from svir.utilities.shared import (INT_FIELD_TYPE_NAME,
                                    DOUBLE_FIELD_TYPE_NAME,
@@ -417,17 +417,14 @@ def get_saga_install_error():
             if saga_version_str is None:
                 err_msg = 'SAGA is not installed.'
             else:
-                qgis_version = get_qgis_version()
-                if qgis_version >= (2, 18, 10):
+                qgis_version_int = QGis.QGIS_VERSION_INT
+                if qgis_version_int >= 21810:
                     (saga_major, saga_minor) = map(
                         int, saga_version_str.split('.')[:2])
                     if (saga_major, saga_minor) < (2, 3):
-                        qgis_version_str = '.'.join([str(v)
-                                                     for v in qgis_version])
                         err_msg = ('QGIS 2.18.10 and above do not support SAGA'
-                                   ' versions below 2.3. You are using QGIS'
-                                   ' version %s and SAGA version %s'
-                                   % (qgis_version_str, saga_version_str))
+                                   ' versions below 2.3, and you are using'
+                                   ' SAGA version %s' % saga_version_str)
     else:
         err_msg = 'SagaUtils was not imported.'
     return err_msg

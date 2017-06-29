@@ -37,7 +37,6 @@ from qgis.core import (QgsMapLayerRegistry,
                        QgsVectorLayer,
                        QgsVectorFileWriter,
                        QgsGraduatedSymbolRendererV2,
-                       QGis,
                        )
 from qgis.gui import QgsMessageBar
 
@@ -71,12 +70,6 @@ def get_irmt_version():
                 if line.startswith('version='):
                     _IRMT_VERSION = line.split('=')[1].strip()
     return _IRMT_VERSION
-
-
-def get_qgis_version():
-    qgis_version_str = QGis.QGIS_VERSION
-    qgis_version = tuple(map(int, qgis_version_str.split('.')))
-    return qgis_version
 
 
 def log_msg(message, tag='GEM IRMT Plugin', level='I', message_bar=None,
