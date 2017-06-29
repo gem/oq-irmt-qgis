@@ -25,7 +25,7 @@
 import os
 import tempfile
 from svir.utilities.utils import (import_layer_from_csv,
-                                  get_param_from_comment_line,
+                                  get_params_from_comment_line,
                                   log_msg,
                                   )
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
@@ -59,10 +59,15 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
         with open(csv_path, 'r') as f:
             comment_line = f.readline()
             try:
-                investigation_time = get_param_from_comment_line(
-                    'investigation_time', comment_line)
+                params_dict = get_params_from_comment_line(comment_line)
             except LookupError as exc:
                 log_msg(exc.message, level='C',
+                        message_bar=self.iface.messageBar())
+                return
+            try:
+                investigation_time = params_dict['investigation_time']
+            except KeyError:
+                log_msg('Investigation time not found', level='C',
                         message_bar=self.iface.messageBar())
                 return
         # extract the name of the csv file and remove the extension
