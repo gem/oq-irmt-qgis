@@ -47,7 +47,7 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         self.setWindowTitle(
             'Load losses by asset from NPZ, aggregated by location, as layer')
         self.create_load_selected_only_ckb()
-        self.create_rlz_selector()
+        self.create_rlz_or_stat_selector()
         self.create_taxonomy_selector()
         self.create_loss_type_selector()
         if self.path:
@@ -59,8 +59,8 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
     def set_ok_button(self):
         self.ok_button.setEnabled(bool(self.path))
 
-    def on_rlz_changed(self):
-        self.dataset = self.npz_file[self.rlz_cbx.currentText()]
+    def on_rlz_or_stat_changed(self):
+        self.dataset = self.npz_file[self.rlz_or_stat_cbx.currentText()]
         self.taxonomies = numpy.unique(self.dataset['taxonomy']).tolist()
         self.populate_taxonomy_cbx(self.taxonomies)
         # discarding 'asset_ref', 'taxonomy', 'lon', 'lat'
@@ -74,11 +74,11 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         self.taxonomy_cbx.addItems(taxonomies)
         self.taxonomy_cbx.setEnabled(True)
 
-    def build_layer_name(self, rlz, **kwargs):
+    def build_layer_name(self, rlz_or_stat, **kwargs):
         taxonomy = kwargs['taxonomy']
         loss_type = kwargs['loss_type']
         layer_name = "losses_by_asset_%s_%s_%s" % (
-            rlz, taxonomy, loss_type)
+            rlz_or_stat, taxonomy, loss_type)
         return layer_name
 
     def get_field_names(self, **kwargs):
@@ -94,13 +94,13 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         return added_field_name
 
     def read_npz_into_layer(self, field_names, **kwargs):
-        rlz = kwargs['rlz']
+        rlz_or_stat = kwargs['rlz_or_stat']
         loss_type = kwargs['loss_type']
         taxonomy = kwargs['taxonomy']
         with LayerEditingManager(self.layer, 'Reading npz', DEBUG):
             feats = []
             grouped_by_site = self.group_by_site(
-                self.npz_file, rlz, loss_type, taxonomy)
+                self.npz_file, rlz_or_stat, loss_type, taxonomy)
             for row in grouped_by_site:
                 # add a feature
                 feat = QgsFeature(self.layer.pendingFields())
@@ -118,9 +118,9 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
 
     def load_from_npz(self):
-        for rlz in self.rlzs:
+        for rlz_or_stat in self.rlzs_or_stats:
             if (self.load_selected_only_ckb.isChecked()
-                    and rlz != self.rlz_cbx.currentText()):
+                    and rlz_or_stat != self.rlz_or_stat_cbx.currentText()):
                 continue
             for taxonomy in self.taxonomies:
                 if (self.load_selected_only_ckb.isChecked()
@@ -131,22 +131,22 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                             and loss_type != self.loss_type_cbx.currentText()):
                         continue
                     with WaitCursorManager(
-                            'Creating layer for realization "%s", '
+                            'Creating layer for "%s", '
                             ' taxonomy "%s" and loss type "%s"...' % (
-                            rlz, taxonomy, loss_type), self.iface):
-                        self.build_layer(
-                            rlz, taxonomy=taxonomy, loss_type=loss_type)
+                            rlz_or_stat, taxonomy, loss_type), self.iface):
+                        self.build_layer(rlz_or_stat, taxonomy=taxonomy,
+                                         loss_type=loss_type)
                         self.style_maps()
         if self.npz_file is not None:
             self.npz_file.close()
 
-    def group_by_site(self, npz, rlz, loss_type, taxonomy='All'):
+    def group_by_site(self, npz, rlz_or_stat, loss_type, taxonomy='All'):
         # example:
         # npz = numpy.load(npzfname)
         # print(group_by_site(npz, 'rlz-000', 'structural_ins', '"tax1"'))
         F32 = numpy.float32
         loss_by_site = collections.defaultdict(float)  # lon, lat -> loss
-        for rec in npz[rlz]:
+        for rec in npz[rlz_or_stat]:
             if taxonomy == 'All' or taxonomy == rec['taxonomy']:
                 loss_by_site[rec['lon'], rec['lat']] += rec[loss_type]
         data = numpy.zeros(len(loss_by_site),

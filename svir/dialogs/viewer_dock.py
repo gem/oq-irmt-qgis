@@ -226,7 +226,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
         self.typeDepVLayout.addWidget(self.fields_multiselect)
         fill_fields_multiselect(
-            self.fields_multiselect, self.iface.activeLayer())
+            self.fields_multiselect, self.active_layer)
 
     def set_output_type_and_its_gui(self, new_output_type):
         if (self.output_type is not None
@@ -260,7 +260,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
     def draw(self):
         self.plot.clear()
         gids = self.current_selection.keys()
-        count_selected = len(self.iface.activeLayer().selectedFeatures())
+        count_selected = len(self.active_layer.selectedFeatures())
         if count_selected == 0:
             return
         i = 0
@@ -286,6 +286,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 picker=5  # 5 points tolerance
             )
             i += 1
+        investigation_time = self.active_layer.customProperty(
+            'investigation_time', None)
         if self.output_type == 'hcurves':
             self.plot.set_xscale('log')
             self.plot.set_yscale('log')
@@ -333,6 +335,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 title = 'Building level recovery curve'
             else:
                 title = 'Community level recovery curve'
+        if investigation_time is not None:
+            title += ' (%s years)' % investigation_time
         self.plot.set_title(title)
         self.plot.grid()
         if self.output_type == 'hcurves':
@@ -376,26 +380,12 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         for feature in self.active_layer.getFeatures(
                 QgsFeatureRequest().setFilterFids(selected)):
             if self.output_type == 'hcurves':
-                err_msg = ("The selected layer does not contain hazard"
-                           " curves in the expected format.")
-                try:
-                    data_str = feature[self.current_imt]
-                except KeyError:
-                    log_msg(err_msg, level='C',
-                            message_bar=self.iface.messageBar())
-                    self.output_type_cbx.setCurrentIndex(-1)
-                    return
-                data_dic = json.loads(data_str)
-                try:
-                    self.current_abscissa = data_dic['imls']
-                except KeyError:
-                    log_msg(err_msg, level='C',
-                            message_bar=self.iface.messageBar())
-                    self.output_type_cbx.setCurrentIndex(-1)
-                    return
-                # for a single intensity measure type, the imls are always
-                # the same, so we can break the loop after the first feature
-                break
+                field_names = [field.name()
+                               for field in self.active_layer.fields()]
+                imt = self.imt_cbx.currentText()
+                imls = [field_name.split('_')[1] for field_name in field_names
+                        if field_name.split('_')[0] == imt]
+                self.current_abscissa = imls
             elif self.output_type == 'loss_curves':
                 err_msg = ("The selected layer does not contain loss"
                            " curves in the expected format.")
@@ -441,11 +431,14 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
         for i, feature in enumerate(self.active_layer.getFeatures(
                 QgsFeatureRequest().setFilterFids(selected))):
-            if self.output_type == 'hcurves':
-                data_dic = json.loads(feature[self.current_imt])
-            elif self.output_type == 'loss_curves':
+            if self.output_type == 'loss_curves':
                 data_dic = json.loads(feature[self.current_loss_type])
-            if self.output_type in ['hcurves', 'loss_curves']:
+            if self.output_type == 'hcurves':
+                imt = self.imt_cbx.currentText()
+                ordinates = [feature[field.name()]
+                             for field in self.active_layer.fields()
+                             if field.name().split('_')[0] == imt]
+            if self.output_type == 'loss_curves':
                 ordinates = data_dic['poes']
             elif self.output_type == 'uhs':
                 ordinates = [value for value in feature]
@@ -536,10 +529,11 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             self.active_layer.selectionChanged.connect(self.redraw)
 
             if self.output_type == 'hcurves':
-                reload_attrib_cbx(self.imt_cbx,
-                                  self.active_layer,
-                                  False,
-                                  TEXTUAL_FIELD_TYPES)
+                imts = sorted(set(
+                    [field.name().split('_')[0]
+                     for field in self.active_layer.fields()]))
+                self.imt_cbx.clear()
+                self.imt_cbx.addItems(imts)
             elif self.output_type == 'loss_curves':
                 reload_attrib_cbx(self.loss_type_cbx,
                                   self.active_layer,
@@ -657,27 +651,46 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
     def write_export_file(self, filename):
         with open(filename, 'w') as csv_file:
-            # write header
-            line = 'lon,lat,%s' % (
-                ','.join(map(str, list(self.current_abscissa))))
-            csv_file.write(line + os.linesep)
-
             if self.output_type == 'recovery_curves':
+                # write header
+                line = 'lon,lat,%s' % (
+                    ','.join(map(str, self.current_abscissa)))
+                csv_file.write(line + os.linesep)
                 # NOTE: taking the first element, because they are all the
                 # same
                 curve = self.current_selection.values()[0]
                 csv_file.write(str(curve['ordinates']))
-            else:
+            elif self.output_type == 'hcurves':
+                # write header
+                imt = self.imt_cbx.currentText()
+                headers = ["%s_%s" % (imt, x) for x in self.current_abscissa]
+                line = 'lon,lat,%s' % ','.join(headers)
+                csv_file.write(line + os.linesep)
                 # write selected data
                 for site, curve in self.current_selection.iteritems():
                     poes = ','.join(map(str, curve['ordinates']))
                     feature = next(self.active_layer.getFeatures(
                         QgsFeatureRequest().setFilterFid(site)))
-
                     lon = feature.geometry().asPoint().x()
                     lat = feature.geometry().asPoint().y()
                     line = '%s,%s,%s' % (lon, lat, poes)
                     csv_file.write(line + os.linesep)
+            elif self.output_type == 'uhs':
+                # write header
+                line = 'lon,lat,%s' % (
+                    ','.join(map(str, self.current_abscissa)))
+                csv_file.write(line + os.linesep)
+                # write selected data
+                for site, curve in self.current_selection.iteritems():
+                    poes = ','.join(map(str, curve['ordinates']))
+                    feature = next(self.active_layer.getFeatures(
+                        QgsFeatureRequest().setFilterFid(site)))
+                    lon = feature.geometry().asPoint().x()
+                    lat = feature.geometry().asPoint().y()
+                    line = '%s,%s,%s' % (lon, lat, poes)
+                    csv_file.write(line + os.linesep)
+            else:
+                raise NotImplementedError(self.output_type)
         msg = 'Data exported to %s' % filename
         log_msg(msg, level='I', message_bar=self.iface.messageBar())
 

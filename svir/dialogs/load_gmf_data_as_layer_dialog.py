@@ -46,7 +46,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         self.setWindowTitle(
             'Load ground motion fields from NPZ, as layer')
         self.create_load_selected_only_ckb()
-        self.create_rlz_selector()
+        self.create_rlz_or_stat_selector()
         self.create_imt_selector()
         self.create_eid_selector()
         if self.path:
@@ -60,8 +60,8 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
             bool(self.path)
             and self.imt_cbx.currentIndex() != -1)
 
-    def on_rlz_changed(self):
-        self.dataset = self.npz_file[self.rlz_cbx.currentText()]
+    def on_rlz_or_stat_changed(self):
+        self.dataset = self.npz_file[self.rlz_or_stat_cbx.currentText()]
         imts = self.dataset.dtype.names[2:]
         self.imt_cbx.clear()
         self.imt_cbx.setEnabled(True)
@@ -81,31 +81,31 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
             self.eid_sbx.setRange(min_eid, max_eid)
         self.set_ok_button()
 
-    def populate_rlz_cbx(self):
-        self.rlzs = [item[0] for item in self.npz_file.items()]
-        self.rlz_cbx.clear()
-        self.rlz_cbx.setEnabled(True)
-        # self.rlz_cbx.addItem('All')
-        self.rlz_cbx.addItems(self.rlzs)
+    def populate_rlz_or_stat_cbx(self):
+        self.rlzs_or_stats = [item[0] for item in self.npz_file.items()]
+        self.rlz_or_stat_cbx.clear()
+        self.rlz_or_stat_cbx.setEnabled(True)
+        # self.rlz_or_stat_cbx.addItem('All')
+        self.rlz_or_stat_cbx.addItems(self.rlzs_or_stats)
 
     def load_from_npz(self):
-        for rlz in self.rlzs:
+        for rlz_or_stat in self.rlzs_or_stats:
             if (self.load_selected_only_ckb.isChecked()
-                    and rlz != self.rlz_cbx.currentText()):
+                    and rlz_or_stat != self.rlz_or_stat_cbx.currentText()):
                 continue
-            with WaitCursorManager('Creating layer for realization "%s"...'
-                                   % rlz, self.iface):
-                self.build_layer(rlz)
+            with WaitCursorManager('Creating layer for "%s"...'
+                                   % rlz_or_stat, self.iface):
+                self.build_layer(rlz_or_stat)
                 self.style_maps()
         if self.npz_file is not None:
             self.npz_file.close()
 
-    def build_layer_name(self, rlz, **kwargs):
+    def build_layer_name(self, rlz_or_stat, **kwargs):
         self.imt = self.imt_cbx.currentText()
         self.eid = self.eid_sbx.value()
         self.default_field_name = '%s-%s' % (self.imt, self.eid)
-        # layer_name = "gmf_data_%s_eid-%s" % (rlz, self.eid)
-        layer_name = "scenario_damage_gmfs_%s_eid-%s" % (rlz, self.eid)
+        # layer_name = "gmf_data_%s_eid-%s" % (rlz_or_stat, self.eid)
+        layer_name = "scenario_damage_gmfs_%s_eid-%s" % (rlz_or_stat, self.eid)
         return layer_name
 
     def get_field_names(self, **kwargs):

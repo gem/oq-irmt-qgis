@@ -57,33 +57,33 @@ compile: $(COMPILED_RESOURCE_FILES)
 %.qm : %.ts
 	lrelease $<
 
-test: compile transcompile
+unittest: compile transcompile
 	@echo
-	@echo "----------------------"
-	@echo "Regression Test Suite"
-	@echo "----------------------"
+	@echo "------------------"
+	@echo "Running unit tests"
+	@echo "------------------"
 
 	@export PYTHONPATH=`pwd`:$(PYTHONPATH); \
 		export QGIS_DEBUG=0; \
 		export QGIS_LOG_FILE=/dev/null; \
-		nosetests -s -v --with-xunit --with-id test/unit\
+		nosetests -s -v --with-doctest --with-id --exclude-dir=third_party --exclude-dir=test/integration\
 		3>&1 1>&2 2>&3 3>&-
 	@echo "----------------------"
 	@echo "If you get 'no module...' errors, try sourcing"
-	@echo "the helper script we have provided first then run make test."
-	@echo "e.g. source ../scripts/run-env-linux.sh <path to qgis install>; make test"
+	@echo "the helper script we have provided first then run make unittest."
+	@echo "e.g. source ../scripts/run-env-linux.sh <path to qgis install>; make unittest"
 	@echo "----------------------"
 
 integrationtest: compile transcompile
 	@echo
-	@echo "----------------------"
-	@echo "Integration Test Suite"
-	@echo "----------------------"
+	@echo "-------------------------"
+	@echo "Running integration tests"
+	@echo "-------------------------"
 
 	@export PYTHONPATH=`pwd`:$(PYTHONPATH); \
 		export QGIS_DEBUG=0; \
 		export QGIS_LOG_FILE=/dev/null; \
-		nosetests -s -v --with-xunit --with-id test/integration\
+		nosetests -s -v --with-id test/integration\
 		3>&1 1>&2 2>&3 3>&-
 	@echo "----------------------"
 	@echo "If you get 'no module...' errors, try sourcing"
@@ -95,6 +95,13 @@ integrationtest: compile transcompile
 	@echo "SELECTED_CALC_ID=5 make integrationtest"
 	@echo "In order to run integration tests for one specific output type (e.g. hmaps), run:"
 	@echo "SELECTED_OTYPE=hmaps make integrationtest"
+	@echo "----------------------"
+
+test: unittest integrationtest
+	@echo "----------------------"
+	@echo "If you get 'no module...' errors, try sourcing"
+	@echo "the helper script we have provided first then run make test."
+	@echo "e.g. source ../scripts/run-env-linux.sh <path to qgis install>; make test"
 	@echo "----------------------"
 
 deploy: compile doc transcompile
