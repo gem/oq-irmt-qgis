@@ -410,20 +410,24 @@ def get_saga_install_error():
     err_msg = None
     if saga_was_imported:
         try:
-            saga_version = SagaUtils.getSagaInstalledVersion()
-            if saga_version is None:
+            saga_version_str = SagaUtils.getSagaInstalledVersion()
+        except AttributeError:
+            err_msg = 'Unable to get the SAGA installed version.'
+        else:
+            if saga_version_str is None:
                 err_msg = 'SAGA is not installed.'
             else:
                 qgis_version = get_qgis_version()
                 if qgis_version >= (2, 18, 10):
-                    (saga_major, saga_minor) = map(int,
-                                                   saga_version.split('.')[:2])
+                    (saga_major, saga_minor) = map(
+                        int, saga_version_str.split('.')[:2])
                     if (saga_major, saga_minor) < (2, 3):
+                        qgis_version_str = '.'.join([str(v)
+                                                     for v in qgis_version])
                         err_msg = ('QGIS 2.18.10 and above do not support SAGA'
-                                   ' versions below 2.3. You are using version'
-                                   ' %s' % saga_version)
-        except AttributeError:
-            err_msg = 'Unable to get the SAGA installed version.'
+                                   ' versions below 2.3. You are using QGIS'
+                                   ' version %s and SAGA version %s'
+                                   % (qgis_version_str, saga_version_str))
     else:
         err_msg = 'SagaUtils was not imported.'
     return err_msg
