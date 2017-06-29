@@ -966,6 +966,10 @@ def listdir_fullpath(path):
     return [os.path.join(path, filename) for filename in os.listdir(path)]
 
 
+class InvalidHeaderError(Exception):
+    pass
+
+
 def get_params_from_comment_line(comment_line):
     """
     :param commented_line: a line starting with "# "
@@ -980,31 +984,31 @@ def get_params_from_comment_line(comment_line):
     >>> get_params_from_comment_line('h1, h2, h3')
     Traceback (most recent call last):
         ...
-    LookupError: Unable to extract parameters from line:
+    InvalidHeaderError: Unable to extract parameters from line:
     h1, h2, h3
     because the line does not start with "# "
 
     >>> get_params_from_comment_line("# p1=10,p2=20")
     Traceback (most recent call last):
         ...
-    LookupError: Unable to extract parameters from line:
+    InvalidHeaderError: Unable to extract parameters from line:
     # p1=10,p2=20
     """
     err_msg = 'Unable to extract parameters from line:\n%s' % comment_line
     if not comment_line.startswith('# '):
-        raise LookupError(
+        raise InvalidHeaderError(
             err_msg + '\nbecause the line does not start with "# "')
     try:
         comment, rest = comment_line.split('# ', 1)
     except IndexError:
-        raise LookupError(err_msg)
+        raise InvalidHeaderError(err_msg)
     params_dict = collections.OrderedDict()
     param_defs = rest.split(', ')
     for param_def in param_defs:
         try:
             name, value = param_def.split('=')
         except ValueError:
-            raise LookupError(err_msg)
+            raise InvalidHeaderError(err_msg)
         else:
             params_dict[name] = value
     return params_dict
