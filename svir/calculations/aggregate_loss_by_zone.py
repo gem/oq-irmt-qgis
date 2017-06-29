@@ -414,7 +414,7 @@ def get_saga_install_error():
                 err_msg = 'SAGA is not installed.'
             else:
                 (major, minor) = saga_version.split('.')[:2]
-                if (major, minor) < (2, 3):
+                if (int(major), int(minor)) < (2, 3):
                     err_msg = ('QGIS 2.18.10 and above do not support SAGA'
                                ' versions below 2.3. You are using version'
                                ' %s' % saga_version)
