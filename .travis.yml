@@ -22,7 +22,7 @@ before_install:
     - sudo apt-get update -q
 
 install:
-    - sudo apt-get install -q -y xvfb qgis python-mock python-nose python-scipy
+    - sudo apt-get install -q -y xvfb qgis python-mock python-nose python-nose-exclude python-scipy
     - sudo pip install sphinx==1.4.9 sphinx_rtd_theme
     - export PYTHONPATH=$TRAVIS_BUILD_DIR:$PYTHONPATH
     - virtualenv oqe27
@@ -39,7 +39,6 @@ before_script:
 
 script:
     - cd $TRAVIS_BUILD_DIR/svir && make test
-    - cd $TRAVIS_BUILD_DIR/svir && make integrationtest
 
 after_success:
     - cd $TRAVIS_BUILD_DIR/svir && make build_apidoc
