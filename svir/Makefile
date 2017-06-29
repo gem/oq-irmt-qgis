@@ -97,7 +97,7 @@ integrationtest: compile transcompile
 	@echo "SELECTED_OTYPE=hmaps make integrationtest"
 	@echo "----------------------"
 
-test: compile transcompile unittest integrationtest
+test: unittest integrationtest
 	@echo "----------------------"
 	@echo "If you get 'no module...' errors, try sourcing"
 	@echo "the helper script we have provided first then run make test."
