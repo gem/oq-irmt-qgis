@@ -46,7 +46,7 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         self.setWindowTitle(
             'Load hazard maps from NPZ, as layer')
         self.create_load_selected_only_ckb()
-        self.create_rlz_selector()
+        self.create_rlz_or_stat_selector()
         self.create_imt_selector()
         self.create_poe_selector()
         if self.path:
@@ -59,11 +59,19 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         self.ok_button.setEnabled(
             bool(self.path) and self.poe_cbx.currentIndex() != -1)
 
-    def on_rlz_changed(self):
-        self.dataset = self.npz_file[self.rlz_cbx.currentText()]
+    def populate_rlz_or_stat_cbx(self):
+        # excluding lon, lat and the final vs30
+        self.rlzs_or_stats = self.npz_file['all'].dtype.names[2:-1]
+        self.rlz_or_stat_cbx.clear()
+        self.rlz_or_stat_cbx.setEnabled(True)
+        self.rlz_or_stat_cbx.addItems(self.rlzs_or_stats)
+
+    def on_rlz_or_stat_changed(self):
+        self.dataset = self.npz_file['all'][self.rlz_or_stat_cbx.currentText()]
         self.imts = {}
-        for name in self.dataset.dtype.names[2:]:
-            imt, poe = name.split('-')
+        imts_poes = self.dataset.dtype.names
+        for imt_poe in imts_poes:
+            imt, poe = imt_poe.split('-')
             if imt not in self.imts:
                 self.imts[imt] = [poe]
             else:
@@ -73,6 +81,16 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         self.imt_cbx.addItems(self.imts.keys())
         self.set_ok_button()
 
+    def show_num_sites(self):
+        # NOTE: we are assuming all realizations have the same number of sites,
+        #       which currently is always true.
+        #       If different realizations have a different number of sites, we
+        #       need to move this block of code inside on_rlz_or_stat_changed()
+        rlz_or_stat_data = self.npz_file['all'][
+            self.rlz_or_stat_cbx.currentText()]
+        self.rlz_or_stat_num_sites_lbl.setText(
+            self.num_sites_msg % rlz_or_stat_data.shape)
+
     def on_imt_changed(self):
         self.imt = self.imt_cbx.currentText()
         self.poe_cbx.clear()
@@ -81,15 +99,16 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
             self.poe_cbx.addItems(self.imts[self.imt])
         self.set_ok_button()
 
-    def build_layer_name(self, rlz, **kwargs):
+    def build_layer_name(self, rlz_or_stat, **kwargs):
         imt = self.imt_cbx.currentText()
         poe = self.poe_cbx.currentText()
         self.default_field_name = '%s-%s' % (imt, poe)
-        layer_name = "hazard_map_%s" % rlz
+        investigation_time = self.get_investigation_time()
+        layer_name = "hazard_map_%s_%sy" % (rlz_or_stat, investigation_time)
         return layer_name
 
     def get_field_names(self, **kwargs):
-        field_names = list(self.dataset.dtype.names)
+        field_names = [self.default_field_name]
         return field_names
 
     def add_field_to_layer(self, field_name):
@@ -100,20 +119,20 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
 
     def read_npz_into_layer(self, field_names, **kwargs):
         with LayerEditingManager(self.layer, 'Reading npz', DEBUG):
+            lons = self.npz_file['all']['lon']
+            lats = self.npz_file['all']['lat']
             feats = []
-            for row in self.dataset:
+            for row_idx, row in enumerate(self.dataset):
                 # add a feature
                 feat = QgsFeature(self.layer.pendingFields())
-                for field_name_idx, field_name in enumerate(field_names):
-                    if field_name in ['lon', 'lat']:
-                        continue
+                for field_name in field_names:
                     # NOTE: without casting to float, it produces a
                     #       null because it does not recognize the
                     #       numpy type
-                    value = float(row[field_name_idx])
+                    value = float(row[field_name])
                     feat.setAttribute(field_name, value)
                 feat.setGeometry(QgsGeometry.fromPoint(
-                    QgsPoint(row[0], row[1])))
+                    QgsPoint(lons[row_idx], lats[row_idx])))
                 feats.append(feat)
             added_ok = self.layer.addFeatures(feats, makeSelected=False)
             if not added_ok:
@@ -121,14 +140,13 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
 
     def load_from_npz(self):
-        for rlz in self.rlzs:
+        for rlz_or_stat in self.rlzs_or_stats:
             if (self.load_selected_only_ckb.isChecked()
-                    and rlz != self.rlz_cbx.currentText()):
+                    and rlz_or_stat != self.rlz_or_stat_cbx.currentText()):
                 continue
-            with WaitCursorManager('Creating layer for '
-                                   ' realization "%s"...' % rlz,
+            with WaitCursorManager('Creating layer for "%s"...' % rlz_or_stat,
                                    self.iface):
-                self.build_layer(rlz)
+                self.build_layer(rlz_or_stat)
                 self.style_maps()
         if self.npz_file is not None:
             self.npz_file.close()

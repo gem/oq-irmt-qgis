@@ -24,7 +24,10 @@
 
 import os
 import tempfile
-from svir.utilities.utils import import_layer_from_csv
+from svir.utilities.utils import (import_layer_from_csv,
+                                  get_params_from_comment_line,
+                                  log_msg,
+                                  )
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 
 
@@ -51,12 +54,31 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
             dest_shp = tempfile.mkstemp(suffix='.shp')[1]
         else:
             dest_shp = None  # the destination file will be selected via GUI
+        csv_path = self.path_le.text()
+        # extract the investigation_time from the heading commented line
+        with open(csv_path, 'r') as f:
+            comment_line = f.readline()
+            try:
+                params_dict = get_params_from_comment_line(comment_line)
+            except LookupError as exc:
+                log_msg(exc.message, level='C',
+                        message_bar=self.iface.messageBar())
+                return
+            try:
+                investigation_time = params_dict['investigation_time']
+            except KeyError:
+                log_msg('Investigation time not found', level='C',
+                        message_bar=self.iface.messageBar())
+                return
         # extract the name of the csv file and remove the extension
-        layer_name = os.path.splitext(os.path.basename(self.path_le.text()))[0]
+        layer_name = os.path.splitext(os.path.basename(csv_path))[0]
+        layer_name += '_%sy' % investigation_time
         self.layer = import_layer_from_csv(
-            self, self.path_le.text(), layer_name, self.iface,
+            self, csv_path, layer_name, self.iface,
             wkt_field='boundary', delimiter='\t',
+            lines_to_skip_count=1,
             save_as_shp=self.save_as_shp_ckb.isChecked(), dest_shp=dest_shp)
+        self.layer.setCustomProperty('investigation_time', investigation_time)
 
     def populate_out_dep_widgets(self):
         # no widgets to populate

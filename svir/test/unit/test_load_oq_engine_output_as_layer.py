@@ -62,7 +62,7 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
 
     def test_load_hazard_map(self):
         filepath = os.path.join(
-            self.data_dir_name, 'hazard', 'output-182-hmaps_67.npz')
+            self.data_dir_name, 'hazard', 'output-3-hmaps_1.npz')
         dlg = LoadHazardMapsAsLayerDialog(
             IFACE, self.viewer_dock, 'hmaps', filepath)
         dlg.accept()
@@ -78,7 +78,7 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
 
     def test_load_hazard_curves(self):
         filepath = os.path.join(self.data_dir_name, 'hazard',
-                                'output-181-hcurves_67.npz')
+                                'output-2-hcurves_1.npz')
         dlg = LoadHazardCurvesAsLayerDialog(
             IFACE, self.viewer_dock, 'hcurves', filepath)
         dlg.accept()
@@ -99,7 +99,7 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
 
     def test_load_uhs_only_selected_poe(self):
         filepath = os.path.join(self.data_dir_name, 'hazard',
-                                'output-184-uhs_67.npz')
+                                'output-5-uhs_1.npz')
         dlg = LoadUhsAsLayerDialog(
             IFACE, self.viewer_dock, 'uhs', filepath)
         dlg.load_selected_only_ckb.setChecked(True)
@@ -115,7 +115,7 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
     @unittest.skip("Causing segfault")
     def test_load_uhs_all(self):
         filepath = os.path.join(self.data_dir_name, 'hazard',
-                                'output-184-uhs_67.npz')
+                                'output-5-uhs_1.npz')
         dlg = LoadUhsAsLayerDialog(
             IFACE, self.viewer_dock, 'uhs', filepath)
         dlg.load_selected_only_ckb.setChecked(False)
@@ -127,14 +127,16 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
 
     def test_load_ruptures(self):
         filepath = os.path.join(
-            self.data_dir_name, 'hazard', 'output-607-ruptures_162.csv')
+            self.data_dir_name, 'hazard', 'ruptures',
+            'output-607-ruptures_162.csv')
         dlg = LoadRupturesAsLayerDialog(
             IFACE, self.viewer_dock, 'ruptures', filepath, mode='testing')
         dlg.save_as_shp_ckb.setChecked(True)
         dlg.accept()
         current_layer = IFACE.activeLayer()
         reference_path = os.path.join(
-            self.data_dir_name, 'hazard', 'output-607-ruptures_162.shp')
+            self.data_dir_name, 'hazard', 'ruptures',
+            'output-607-ruptures_162.shp')
         reference_layer = QgsVectorLayer(
             reference_path, 'reference_ruptures', 'ogr')
         ProcessLayer(current_layer).has_same_content_as(reference_layer)
