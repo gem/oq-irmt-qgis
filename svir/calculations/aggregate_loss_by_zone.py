@@ -212,8 +212,8 @@ def add_zone_id_to_points(iface, point_layer, zonal_layer,
 
     else:
         saga_install_err += (
-            " In order to cope with complex geometries, "
-            "a working installation of SAGA is "
+            "\nIn order to cope with complex geometries, "
+            "a working and compatible installation of SAGA is "
             "recommended.")
         log_msg(saga_install_err, level='W', message_bar=iface.messageBar())
         use_fallback_calculation = True
@@ -412,6 +412,12 @@ def get_saga_install_error():
             saga_version = SagaUtils.getSagaInstalledVersion()
             if saga_version is None:
                 err_msg = 'SAGA is not installed.'
+            else:
+                major, minor = saga_version.split('.')[:2]
+                if int(major) < 2 or int(minor) < 3:
+                    err_msg = ('QGIS 2.18.10 and above do not support SAGA'
+                               ' versions below 2.3. You are using version'
+                               ' %s' % saga_version)
         except AttributeError:
             err_msg = 'Unable to get the SAGA installed version.'
     else:
