@@ -417,6 +417,7 @@ def get_saga_install_error():
             if saga_version_str is None:
                 err_msg = 'SAGA is not installed.'
             else:
+                import sys; sys.stderr.write(str(dir(QGis)))
                 qgis_version_int = QGis.QGIS_VERSION_INT
                 if qgis_version_int >= 21810:
                     (saga_major, saga_minor) = map(
