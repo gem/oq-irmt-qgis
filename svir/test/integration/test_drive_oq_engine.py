@@ -155,11 +155,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
     def test_load_outputs(self):
         self.failed_attempts = []
         self.skipped_attempts = []
+        self.untested_otypes = list(OQ_ALL_LOADABLE_TYPES)
         calc_list = self.get_calc_list()
-        expected_num_calcs = 15
-        self.assertEqual(len(calc_list), expected_num_calcs,
-                         'Found %s calculations; expected %s'
-                         % (len(calc_list), expected_num_calcs))
         try:
             selected_calc_id = int(os.environ.get('SELECTED_CALC_ID'))
         except (ValueError, TypeError):
