@@ -181,7 +181,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         else:
             print('\n\tSELECTED_OTYPE is set.'
                   ' Running tests only for %s' % self.selected_otype)
-            self.untested_otypes = set(self.selected_otype)
+            self.untested_otypes = set([self.selected_otype])
         for calc in calc_list:
             print('\nCalculation %s: %s' % (calc['id'], calc['description']))
             self.load_calc_outputs(calc)
