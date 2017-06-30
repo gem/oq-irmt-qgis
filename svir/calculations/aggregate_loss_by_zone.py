@@ -69,7 +69,8 @@ def calculate_zonal_stats(loss_layer,
                           zone_id_in_losses_attr_name,
                           zone_id_in_zones_attr_name,
                           iface,
-                          force_no_saga=False):
+                          force_saga=False,
+                          force_fallback=False):
     """
     :param loss_layer: vector or raster layer containing loss data points
     :param zonal_layer: vector layer containing zonal data
@@ -81,9 +82,15 @@ def calculate_zonal_stats(loss_layer,
     :param zone_id_in_zones_attr_name:
         name of the field containing the id of each zone (or None)
     :param iface: QGIS interface
-    :param force_no_saga:
+    :param force_saga:
+        if True, the plugin will try to use SAGA and it will raise an error in
+        case it does not work (useful to test that specific workflow)
+    :param force_fallback:
         if True, the fallback algorithm will be used instead
         of SAGA, even if a recent SAGA installation is available
+        (useful to test that specific workflow)
+
+    force_saga and force_fallback can't both be True at the same time.
 
     At the end of the workflow, we will have, for each feature (zone):
 
@@ -94,10 +101,12 @@ def calculate_zonal_stats(loss_layer,
       points that are inside the zone
     * a "AVG" attribute, averaging losses for each zone
     """
+    # sanity check
+    assert not (force_saga and force_fallback)
+
     # add count, sum and avg fields for aggregating statistics
     # (one new attribute for the count of points, then a sum and an average
     # for all the other loss attributes)
-
     # TODO remove debugging trace
     loss_attrs_dict = {}
     count_field = QgsField(
@@ -161,7 +170,7 @@ def calculate_zonal_stats(loss_layer,
             (_, loss_layer_plus_zones,
              zone_id_in_losses_attr_name) = add_zone_id_to_points(
                     iface, loss_layer, zonal_layer,
-                    zone_id_in_zones_attr_name, force_no_saga)
+                    zone_id_in_zones_attr_name, force_saga, force_fallback)
 
             old_field_to_new_field = {}
             for idx, field in enumerate(loss_layer.fields()):
@@ -182,8 +191,8 @@ def calculate_zonal_stats(loss_layer,
     return loss_layer, zonal_layer, loss_attrs_dict
 
 
-def add_zone_id_to_points(iface, point_layer, zonal_layer,
-                          zones_id_attr_name, force_no_saga=False):
+def add_zone_id_to_points(iface, point_layer, zonal_layer, zones_id_attr_name,
+                          force_saga=False, force_fallback=False):
     """
     Given a layer with points and a layer with zones, add to the points layer a
     new field containing the id of the zone inside which it is located.
@@ -201,13 +210,12 @@ def add_zone_id_to_points(iface, point_layer, zonal_layer,
         * points_zone_id_attr_name: the id of the new field added to the
           points layer, containing the zone id
     """
-
     orig_fieldnames = [field.name() for field in point_layer.fields()]
-    if force_no_saga:
+    use_fallback_calculation = False
+    if force_fallback:
         use_fallback_calculation = True
     else:
         saga_install_err = get_saga_install_error()
-        use_fallback_calculation = False
         if saga_install_err is None:
             try:
                 (point_layer, res,
@@ -225,7 +233,6 @@ def add_zone_id_to_points(iface, point_layer, zonal_layer,
                        " an alternative algorithm is used.")
                 log_msg(msg, level='C', message_bar=iface.messageBar())
                 use_fallback_calculation = True
-
         else:
             saga_install_err += (
                 "\nIn order to cope with complex geometries, "
@@ -233,7 +240,10 @@ def add_zone_id_to_points(iface, point_layer, zonal_layer,
                 "recommended.")
             log_msg(saga_install_err, level='W',
                     message_bar=iface.messageBar())
-            use_fallback_calculation = True
+            if force_saga:
+                raise RuntimeError(saga_install_err)
+            else:
+                use_fallback_calculation = True
     if use_fallback_calculation:
         point_layer_plus_zones, points_zone_id_attr_name = \
             _add_zone_id_to_points_internal(
