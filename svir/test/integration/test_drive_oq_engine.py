@@ -98,6 +98,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 self.failed_attempts.append(failed_attempt)
                 traceback.print_tb(failed_attempt['traceback'])
                 print(ex)
+            else:
+                self.untested_otypes.discard(output['type'])
 
     def load_output(self, calc, output):
         calc_id = calc['id']
@@ -155,7 +157,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
     def test_load_outputs(self):
         self.failed_attempts = []
         self.skipped_attempts = []
-        self.untested_otypes = list(OQ_ALL_LOADABLE_TYPES)
+        self.untested_otypes = OQ_ALL_LOADABLE_TYPES  # it's a set
         calc_list = self.get_calc_list()
         try:
             selected_calc_id = int(os.environ.get('SELECTED_CALC_ID'))
@@ -179,6 +181,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         else:
             print('\n\tSELECTED_OTYPE is set.'
                   ' Running tests only for %s' % self.selected_otype)
+            self.untested_otypes = set(self.selected_otype)
         for calc in calc_list:
             print('\nCalculation %s: %s' % (calc['id'], calc['description']))
             self.load_calc_outputs(calc)
@@ -200,3 +203,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 print('\t\tOutput type: %s' % failed_attempt['output_type'])
             raise RuntimeError(
                 'At least one output was not successfully loaded')
+        if self.untested_otypes:
+            raise RuntimeError('Untested output types: %s'
+                               % self.untested_otypes)
