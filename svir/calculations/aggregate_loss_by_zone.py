@@ -68,11 +68,23 @@ def calculate_zonal_stats(loss_layer,
                           loss_layer_is_vector,
                           zone_id_in_losses_attr_name,
                           zone_id_in_zones_attr_name,
-                          iface):
+                          iface,
+                          force_no_saga=False):
     """
-    The loss_layer containing loss data points, can raster or vector.
-    The zonal_layer has to be a vector layer containing socioeconomic
-    data aggregated by zone.
+    :param loss_layer: vector or raster layer containing loss data points
+    :param zonal_layer: vector layer containing zonal data
+    :param loss_attr_names: names of the loss layer fields to be aggregated
+    :param loss_layer_is_vector: True if the loss layer is a vector layer
+    :param zone_id_in_losses_attr_name:
+        name of the field containing the zone id where each loss point belongs
+        (or None)
+    :param zone_id_in_zones_attr_name:
+        name of the field containing the id of each zone (or None)
+    :param iface: QGIS interface
+    :param force_no_saga:
+        if True, the fallback algorithm will be used instead
+        of SAGA, even if a recent SAGA installation is available
+
     At the end of the workflow, we will have, for each feature (zone):
 
     * a "LOSS_PTS" attribute, specifying how many loss points are
@@ -149,7 +161,7 @@ def calculate_zonal_stats(loss_layer,
             (_, loss_layer_plus_zones,
              zone_id_in_losses_attr_name) = add_zone_id_to_points(
                     iface, loss_layer, zonal_layer,
-                    zone_id_in_zones_attr_name)
+                    zone_id_in_zones_attr_name, force_no_saga)
 
             old_field_to_new_field = {}
             for idx, field in enumerate(loss_layer.fields()):
@@ -171,7 +183,7 @@ def calculate_zonal_stats(loss_layer,
 
 
 def add_zone_id_to_points(iface, point_layer, zonal_layer,
-                          zones_id_attr_name):
+                          zones_id_attr_name, force_no_saga=False):
     """
     Given a layer with points and a layer with zones, add to the points layer a
     new field containing the id of the zone inside which it is located.
@@ -191,33 +203,37 @@ def add_zone_id_to_points(iface, point_layer, zonal_layer,
     """
 
     orig_fieldnames = [field.name() for field in point_layer.fields()]
-    saga_install_err = get_saga_install_error()
-    use_fallback_calculation = False
-    if saga_install_err is None:
-        try:
-            (point_layer, res,
-             points_zone_id_attr_name, point_layer_plus_zones) = \
-                _add_zone_id_to_points_saga(point_layer,
-                                            zonal_layer,
-                                            zones_id_attr_name)
-        except (AttributeError, RuntimeError):
-            # NOTE: In the testing environment we are still unable to use
-            #       the saga:clippointswithpolygons algorithm, so it does not
-            #       run properly and it returns an AttributeError. We are
-            #       forced to use the fallback approach in that case.
-            msg = ("An error occurred while attempting to"
-                   " compute zonal statistics with SAGA. Therefore"
-                   " an alternative algorithm is used.")
-            log_msg(msg, level='C', message_bar=iface.messageBar())
-            use_fallback_calculation = True
-
-    else:
-        saga_install_err += (
-            "\nIn order to cope with complex geometries, "
-            "a working and compatible installation of SAGA is "
-            "recommended.")
-        log_msg(saga_install_err, level='W', message_bar=iface.messageBar())
+    if force_no_saga:
         use_fallback_calculation = True
+    else:
+        saga_install_err = get_saga_install_error()
+        use_fallback_calculation = False
+        if saga_install_err is None:
+            try:
+                (point_layer, res,
+                 points_zone_id_attr_name, point_layer_plus_zones) = \
+                    _add_zone_id_to_points_saga(point_layer,
+                                                zonal_layer,
+                                                zones_id_attr_name)
+            except (AttributeError, RuntimeError):
+                # NOTE: In the testing environment we are still unable to use
+                #       the saga:clippointswithpolygons algorithm, so it does
+                #       not run properly and it returns an AttributeError. We
+                #       are forced to use the fallback approach in that case.
+                msg = ("An error occurred while attempting to"
+                       " compute zonal statistics with SAGA. Therefore"
+                       " an alternative algorithm is used.")
+                log_msg(msg, level='C', message_bar=iface.messageBar())
+                use_fallback_calculation = True
+
+        else:
+            saga_install_err += (
+                "\nIn order to cope with complex geometries, "
+                "a working and compatible installation of SAGA is "
+                "recommended.")
+            log_msg(saga_install_err, level='W',
+                    message_bar=iface.messageBar())
+            use_fallback_calculation = True
     if use_fallback_calculation:
         point_layer_plus_zones, points_zone_id_attr_name = \
             _add_zone_id_to_points_internal(
