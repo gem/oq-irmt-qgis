@@ -1,3 +1,5 @@
+.. _chap-installation:
+
 ********************************
 Installation and troubleshooting
 ********************************
@@ -24,6 +26,19 @@ On Fedora and similar:
 .. code-block:: bash
 
     $ sudo dnf install python-scipy python-matplotlib
+
+For geospatial analysis, the plugin leverages SAGA `Clip points with polygons` algorithm.
+In case SAGA is not installed or its version is too outdated, the plugin is able to perform
+the same analysis using a fallback (slower) algorithm. For best performance, we recommend to
+install SAGA or to update it at least to version 2.3. On Ubuntu, this can be done as follows:
+
+.. code-block:: bash
+
+    $ sudo add-apt-repository ppa:openquake/saga
+    $ sudo apt-get update
+    $ sudo apt-get install saga python-saga
+
+On Fedora, please follow these `instructions <https://copr.fedorainfracloud.org/coprs/dani/QGIS-latest-stable/>`_.
 
 The plugin can be installed using the QGIS Plugins Manager, that is accessible
 through the QGIS menu as :guilabel:`Plugins -> Manage and install plugins`.
