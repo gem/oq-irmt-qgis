@@ -1,7 +1,8 @@
+# to setup the testing environment:
 source ../scripts/run-env-linux.sh /usr
 
 # to run unit tests:
-make test
+make unittest
 
 # to run integration tests:
 # you need a running engine server on localhost;
@@ -12,3 +13,6 @@ make integrationtest
 
 # to run integration tests for only one specific oq-engine calculation (e.g. 5):
 SELECTED_CALC_ID=5 make integrationtest
+
+# to run all tests:
+make test

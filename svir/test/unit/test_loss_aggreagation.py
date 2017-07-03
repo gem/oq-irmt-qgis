@@ -86,7 +86,8 @@ class AggregateLossByZoneTestCase(unittest.TestCase):
             expected_zonal_layer_path, 'Expected zonal layer', 'ogr')
         self._check_output_layer(output_zonal_layer, expected_zonal_layer)
 
-    def test_aggregate_using_geometries(self):
+    def _aggregate_using_geometries(
+            self, force_saga=False, force_fallback=False):
         # TODO: manage both with or without SAGA
         loss_layer_path = os.path.join(
             self.data_dir_name, 'loss_points.shp')
@@ -108,7 +109,9 @@ class AggregateLossByZoneTestCase(unittest.TestCase):
                                     self.loss_layer_is_vector,
                                     zone_id_in_losses_attr_name,
                                     zone_id_in_zones_attr_name,
-                                    IFACE)
+                                    IFACE,
+                                    force_saga,
+                                    force_fallback)
         (output_loss_layer, output_zonal_layer, output_loss_attrs_dict) = res
         _, output_loss_layer_shp_path = tempfile.mkstemp(suffix='.shp')
         _, output_zonal_layer_shp_path = tempfile.mkstemp(suffix='.shp')
@@ -130,6 +133,15 @@ class AggregateLossByZoneTestCase(unittest.TestCase):
             expected_zonal_layer_path, 'Expected zonal layer', 'ogr')
         self._check_output_layer(output_loss_layer, expected_loss_layer)
         self._check_output_layer(output_zonal_layer, expected_zonal_layer)
+
+    def test_aggregate_using_geometries(self):
+        self._aggregate_using_geometries()
+
+    def test_aggregate_using_geometries_forcing_saga(self):
+        self._aggregate_using_geometries(force_saga=True)
+
+    def test_aggregate_using_geometries_forcing_fallback(self):
+        self._aggregate_using_geometries(force_fallback=True)
 
     def test_purge_empty_zones(self):
         loss_attrs_dict = {
