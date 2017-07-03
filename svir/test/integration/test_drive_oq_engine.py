@@ -152,12 +152,14 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             else:
                 raise RuntimeError('The ok button is disabled')
         else:
+            self.not_implemented_loaders.add(output_type)
             print('\tLoader for output type %s is not implemented'
                   % output_type)
 
     def test_load_outputs(self):
         self.failed_attempts = []
         self.skipped_attempts = []
+        self.not_implemented_loaders = set()
         self.untested_otypes = copy.copy(OQ_ALL_LOADABLE_TYPES)  # it's a set
         calc_list = self.get_calc_list()
         try:
@@ -204,6 +206,10 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 print('\t\tOutput type: %s' % failed_attempt['output_type'])
             raise RuntimeError(
                 'At least one output was not successfully loaded')
+        if self.not_implemented_loaders:
+            print('\n\nLoaders for the following output types found in the'
+                  ' available calculations have not been implemented yet:')
+            print(", ".join(self.not_implemented_loaders))
         if self.untested_otypes:
             raise RuntimeError('Untested output types: %s'
                                % self.untested_otypes)
