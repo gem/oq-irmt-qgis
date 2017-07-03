@@ -29,6 +29,7 @@ changelog=
     * The list of calculations displays the Calculation Mode instead of the Job Type
     * Loaders for OQ-Engine hazard outputs can read the new format introduced in OQ-Engine version 2.6
     * Layers for hazard curves are stored in a more convenient way, keeping a scalar value per cell instead of a json string
+    * Integration tests check that all implemented loaders for OQ-Engine outputs are tested at least once
 
 # tags are comma separated with spaces allowed
 tags=GEM, IRMT, SVIR, OpenQuake, Social Vulnerability, Integrated Risk, Recovery, Resilience, Risk, Hazard, Earthquake
