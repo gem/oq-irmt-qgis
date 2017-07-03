@@ -36,7 +36,7 @@ from qgis.core import (QgsMapLayerRegistry,
                        QgsMessageLog,
                        QgsVectorLayer,
                        QgsVectorFileWriter,
-                       QgsGraduatedSymbolRendererV2
+                       QgsGraduatedSymbolRendererV2,
                        )
 from qgis.gui import QgsMessageBar
 

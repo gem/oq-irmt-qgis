@@ -29,6 +29,7 @@ from qgis.core import (QgsVectorLayer,
                        QgsGeometry,
                        QgsSpatialIndex,
                        QgsFeatureRequest,
+                       QGis,
                        )
 from qgis.analysis import QgsZonalStatistics
 
@@ -67,11 +68,30 @@ def calculate_zonal_stats(loss_layer,
                           loss_layer_is_vector,
                           zone_id_in_losses_attr_name,
                           zone_id_in_zones_attr_name,
-                          iface):
+                          iface,
+                          force_saga=False,
+                          force_fallback=False):
     """
-    The loss_layer containing loss data points, can raster or vector.
-    The zonal_layer has to be a vector layer containing socioeconomic
-    data aggregated by zone.
+    :param loss_layer: vector or raster layer containing loss data points
+    :param zonal_layer: vector layer containing zonal data
+    :param loss_attr_names: names of the loss layer fields to be aggregated
+    :param loss_layer_is_vector: True if the loss layer is a vector layer
+    :param zone_id_in_losses_attr_name:
+        name of the field containing the zone id where each loss point belongs
+        (or None)
+    :param zone_id_in_zones_attr_name:
+        name of the field containing the id of each zone (or None)
+    :param iface: QGIS interface
+    :param force_saga:
+        if True, the plugin will try to use SAGA and it will raise an error in
+        case it does not work (useful to test that specific workflow)
+    :param force_fallback:
+        if True, the fallback algorithm will be used instead
+        of SAGA, even if a recent SAGA installation is available
+        (useful to test that specific workflow)
+
+    force_saga and force_fallback can't both be True at the same time.
+
     At the end of the workflow, we will have, for each feature (zone):
 
     * a "LOSS_PTS" attribute, specifying how many loss points are
@@ -81,10 +101,12 @@ def calculate_zonal_stats(loss_layer,
       points that are inside the zone
     * a "AVG" attribute, averaging losses for each zone
     """
+    # sanity check
+    assert not (force_saga and force_fallback)
+
     # add count, sum and avg fields for aggregating statistics
     # (one new attribute for the count of points, then a sum and an average
     # for all the other loss attributes)
-
     # TODO remove debugging trace
     loss_attrs_dict = {}
     count_field = QgsField(
@@ -148,7 +170,7 @@ def calculate_zonal_stats(loss_layer,
             (_, loss_layer_plus_zones,
              zone_id_in_losses_attr_name) = add_zone_id_to_points(
                     iface, loss_layer, zonal_layer,
-                    zone_id_in_zones_attr_name)
+                    zone_id_in_zones_attr_name, force_saga, force_fallback)
 
             old_field_to_new_field = {}
             for idx, field in enumerate(loss_layer.fields()):
@@ -169,8 +191,8 @@ def calculate_zonal_stats(loss_layer,
     return loss_layer, zonal_layer, loss_attrs_dict
 
 
-def add_zone_id_to_points(iface, point_layer, zonal_layer,
-                          zones_id_attr_name):
+def add_zone_id_to_points(iface, point_layer, zonal_layer, zones_id_attr_name,
+                          force_saga=False, force_fallback=False):
     """
     Given a layer with points and a layer with zones, add to the points layer a
     new field containing the id of the zone inside which it is located.
@@ -188,35 +210,40 @@ def add_zone_id_to_points(iface, point_layer, zonal_layer,
         * points_zone_id_attr_name: the id of the new field added to the
           points layer, containing the zone id
     """
-
     orig_fieldnames = [field.name() for field in point_layer.fields()]
-    saga_install_err = get_saga_install_error()
     use_fallback_calculation = False
-    if saga_install_err is None:
-        try:
-            (point_layer, res,
-             points_zone_id_attr_name, point_layer_plus_zones) = \
-                _add_zone_id_to_points_saga(point_layer,
-                                            zonal_layer,
-                                            zones_id_attr_name)
-        except (AttributeError, RuntimeError):
-            # NOTE: In the testing environment we are still unable to use
-            #       the saga:clippointswithpolygons algorithm, so it does not
-            #       run properly and it returns an AttributeError. We are
-            #       forced to use the fallback approach in that case.
-            msg = ("An error occurred while attempting to"
-                   " compute zonal statistics with SAGA. Therefore"
-                   " an alternative algorithm is used.")
-            log_msg(msg, level='C', message_bar=iface.messageBar())
-            use_fallback_calculation = True
-
-    else:
-        saga_install_err += (
-            " In order to cope with complex geometries, "
-            "a working installation of SAGA is "
-            "recommended.")
-        log_msg(saga_install_err, level='W', message_bar=iface.messageBar())
+    if force_fallback:
         use_fallback_calculation = True
+    else:
+        saga_install_err = get_saga_install_error()
+        if saga_install_err is None:
+            try:
+                (point_layer, res,
+                 points_zone_id_attr_name, point_layer_plus_zones) = \
+                    _add_zone_id_to_points_saga(point_layer,
+                                                zonal_layer,
+                                                zones_id_attr_name)
+            except (AttributeError, RuntimeError):
+                # NOTE: In the testing environment we are still unable to use
+                #       the saga:clippointswithpolygons algorithm, so it does
+                #       not run properly and it returns an AttributeError. We
+                #       are forced to use the fallback approach in that case.
+                msg = ("An error occurred while attempting to"
+                       " compute zonal statistics with SAGA. Therefore"
+                       " an alternative algorithm is used.")
+                log_msg(msg, level='C', message_bar=iface.messageBar())
+                use_fallback_calculation = True
+        else:
+            saga_install_err += (
+                "\nIn order to cope with complex geometries, "
+                "a working and compatible installation of SAGA is "
+                "recommended.")
+            log_msg(saga_install_err, level='W',
+                    message_bar=iface.messageBar())
+            if force_saga:
+                raise RuntimeError(saga_install_err)
+            else:
+                use_fallback_calculation = True
     if use_fallback_calculation:
         point_layer_plus_zones, points_zone_id_attr_name = \
             _add_zone_id_to_points_internal(
@@ -409,11 +436,21 @@ def get_saga_install_error():
     err_msg = None
     if saga_was_imported:
         try:
-            saga_version = SagaUtils.getSagaInstalledVersion()
-            if saga_version is None:
-                err_msg = 'SAGA is not installed.'
+            saga_version_str = SagaUtils.getSagaInstalledVersion()
         except AttributeError:
             err_msg = 'Unable to get the SAGA installed version.'
+        else:
+            if saga_version_str is None:
+                err_msg = 'SAGA is not installed.'
+            else:
+                qgis_version_int = QGis.QGIS_VERSION_INT
+                if qgis_version_int >= 21400:
+                    (saga_major, saga_minor) = map(
+                        int, saga_version_str.split('.')[:2])
+                    if (saga_major, saga_minor) < (2, 3):
+                        err_msg = ('QGIS 2.14 and above do not support SAGA'
+                                   ' versions below 2.3, and you are using'
+                                   ' SAGA version %s' % saga_version_str)
     else:
         err_msg = 'SagaUtils was not imported.'
     return err_msg

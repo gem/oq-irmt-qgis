@@ -33,11 +33,11 @@ the QGIS table of contents and its name will become available and pre-selected
 in the corresponding dropdown menu.
 
 Estimations of physical risk can be made available from the OQ-Engine as one or
-multiple CSV files. By selecting the file type :guilabel:`Loss curves from the
-OpenQuake-engine`, such files become available and can be (multi)selected. The
-resulting loss layer will contain a number of attributes equal to the number of
-CSV files imported, and each attribute will correspond to a different loss
-type.
+multiple CSV files. By selecting the file
+type :guilabel:`Loss curves from the OpenQuake-engine`, such files become available
+and can be (multi)selected. The resulting loss layer will contain a number of
+attributes equal to the number of CSV files imported, and each attribute will
+correspond to a different loss type.
 
 .. _fig-zonal-aggregation-of-loss-values:
 
@@ -59,6 +59,14 @@ and it will add those statistics to the zonal layer as new attributes. Within
 the layer's attribute table, a subsequent attribute will be added to display
 the count of loss points that are found inside the boundaries of each feature.
 The latter can be useful for troubleshooting.
+
+.. warning::
+
+    If SAGA is installed and sufficiently updated (at least version 2.3 is required),
+    the plugin leverages its fast `Clip points in polygons` geospatial algorithm.
+    Otherwise a fallback (slower but equivalent) algorithm is used. Please refer
+    to :ref:`chap-installation` for further information on how to install or
+    update SAGA.
 
 The *aggregation by zone* can be obtained in different ways. If the user is
 aware that both the loss layer and the zonal layer contain a common attribute
