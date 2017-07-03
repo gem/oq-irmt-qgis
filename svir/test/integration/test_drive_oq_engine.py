@@ -207,6 +207,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             raise RuntimeError(
                 'At least one output was not successfully loaded')
         if self.not_implemented_loaders:
+            # sanity check
+            for not_implemented_loader in self.not_implemented_loaders:
+                assert not_implemented_loader not in OQ_ALL_LOADABLE_TYPES
             print('\n\nLoaders for the following output types found in the'
                   ' available calculations have not been implemented yet:')
             print(", ".join(self.not_implemented_loaders))
