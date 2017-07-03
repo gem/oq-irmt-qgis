@@ -29,6 +29,7 @@ import traceback
 import unittest
 import tempfile
 import json
+import copy
 from mock import Mock
 
 from svir.third_party.requests import Session
@@ -157,7 +158,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
     def test_load_outputs(self):
         self.failed_attempts = []
         self.skipped_attempts = []
-        self.untested_otypes = OQ_ALL_LOADABLE_TYPES  # it's a set
+        self.untested_otypes = copy.copy(OQ_ALL_LOADABLE_TYPES)  # it's a set
         calc_list = self.get_calc_list()
         try:
             selected_calc_id = int(os.environ.get('SELECTED_CALC_ID'))
