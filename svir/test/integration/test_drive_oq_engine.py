@@ -29,6 +29,7 @@ import traceback
 import unittest
 import tempfile
 import json
+import copy
 from mock import Mock
 
 from svir.third_party.requests import Session
@@ -98,6 +99,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 self.failed_attempts.append(failed_attempt)
                 traceback.print_tb(failed_attempt['traceback'])
                 print(ex)
+            else:
+                self.untested_otypes.discard(output['type'])
 
     def load_output(self, calc, output):
         calc_id = calc['id']
@@ -149,17 +152,16 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             else:
                 raise RuntimeError('The ok button is disabled')
         else:
+            self.not_implemented_loaders.add(output_type)
             print('\tLoader for output type %s is not implemented'
                   % output_type)
 
     def test_load_outputs(self):
         self.failed_attempts = []
         self.skipped_attempts = []
+        self.not_implemented_loaders = set()
+        self.untested_otypes = copy.copy(OQ_ALL_LOADABLE_TYPES)  # it's a set
         calc_list = self.get_calc_list()
-        expected_num_calcs = 15
-        self.assertEqual(len(calc_list), expected_num_calcs,
-                         'Found %s calculations; expected %s'
-                         % (len(calc_list), expected_num_calcs))
         try:
             selected_calc_id = int(os.environ.get('SELECTED_CALC_ID'))
         except (ValueError, TypeError):
@@ -182,6 +184,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         else:
             print('\n\tSELECTED_OTYPE is set.'
                   ' Running tests only for %s' % self.selected_otype)
+            self.untested_otypes = set([self.selected_otype])
         for calc in calc_list:
             print('\nCalculation %s: %s' % (calc['id'], calc['description']))
             self.load_calc_outputs(calc)
@@ -203,3 +206,13 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 print('\t\tOutput type: %s' % failed_attempt['output_type'])
             raise RuntimeError(
                 'At least one output was not successfully loaded')
+        if self.not_implemented_loaders:
+            # sanity check
+            for not_implemented_loader in self.not_implemented_loaders:
+                assert not_implemented_loader not in OQ_ALL_LOADABLE_TYPES
+            print('\n\nLoaders for the following output types found in the'
+                  ' available calculations have not been implemented yet:')
+            print(", ".join(self.not_implemented_loaders))
+        if self.untested_otypes:
+            raise RuntimeError('Untested output types: %s'
+                               % self.untested_otypes)
