@@ -228,6 +228,14 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         fill_fields_multiselect(
             self.fields_multiselect, self.active_layer)
 
+    def create_stats_multiselect(self):
+        title = 'Select statistics to plot'
+        self.stats_multiselect = ListMultiSelectWidget(title=title)
+        self.stats_multiselect.setSizePolicy(
+            QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        self.typeDepVLayout.addWidget(self.stats_multiselect)
+        self.stats_multiselect.selection_changed.connect(self.draw)
+
     def set_output_type_and_its_gui(self, new_output_type):
         if (self.output_type is not None
                 and self.output_type == new_output_type):
@@ -240,6 +248,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
         if new_output_type == 'hcurves':
             self.create_imt_selector()
+            self.create_stats_multiselect()
         elif new_output_type == 'loss_curves':
             self.create_loss_type_selector()
         elif new_output_type == 'uhs':
@@ -269,22 +278,20 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             # selected points (ugly), and here we need to get only one
             if self.output_type == 'recovery_curves' and i > 0:
                 break
-            feature = next(self.active_layer.getFeatures(
-                QgsFeatureRequest().setFilterFid(site)))
-
-            lon = feature.geometry().asPoint().x()
-            lat = feature.geometry().asPoint().y()
-
-            self.plot.plot(
-                curve['abscissa'],
-                curve['ordinates'],
-                color=curve['color'],
-                linestyle=curve['line_style'],
-                marker=curve['marker'],
-                label='%.4f, %.4f' % (lon, lat),
-                gid=str(site),  # matplotlib needs a string when exporting svg
-                picker=5  # 5 points tolerance
-            )
+            for rlz_or_stat in curve['ordinates']:
+                if (rlz_or_stat not in
+                        self.stats_multiselect.get_selected_items()):
+                    continue
+                self.plot.plot(
+                    curve['abscissa'],
+                    curve['ordinates'][rlz_or_stat],
+                    color=curve['color'],
+                    linestyle=curve['line_style'],
+                    marker=curve['marker'],
+                    label='%s' % rlz_or_stat,
+                    gid=str(site),  # matplotlib needs a string to export svg
+                    picker=5  # 5 points tolerance
+                )
             i += 1
         investigation_time = self.active_layer.customProperty(
             'investigation_time', None)
@@ -297,9 +304,9 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             if count_selected == 0:
                 title = ''
             elif count_selected == 1:
-                title = 'Hazard Curve for %s' % imt
+                title = 'Hazard curve for %s' % imt
             else:
-                title = 'Hazard Curves for %s' % imt
+                title = 'Hazard curves for %s' % imt
         elif self.output_type == 'loss_curves':
             self.plot.set_xscale('log')
             self.plot.set_yscale('linear')
@@ -309,9 +316,9 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             if count_selected == 0:
                 title = ''
             elif count_selected == 1:
-                title = 'Loss Curve for %s' % loss_type
+                title = 'Loss curve for %s' % loss_type
             else:
-                title = 'Loss Curves for %s' % loss_type
+                title = 'Loss curves for %s' % loss_type
         elif self.output_type == 'uhs':
             self.plot.set_xscale('linear')
             self.plot.set_yscale('linear')
@@ -361,7 +368,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             for i, legend_line in enumerate(self.legend.get_lines()):
                 legend_line.set_picker(5)  # 5 points tolerance
                 # matplotlib needs a string when exporting to svg
-                legend_line.set_gid(str(gids[i]))
+                legend_line.set_gid(str(gids[0]))  # FIXME gids?
         self.plot_canvas.draw()
 
     def redraw(self, selected, deselected, _):
@@ -377,14 +384,17 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 self.redraw_recovery_curve(selected)
             return
         self.current_abscissa = []
+        self.selected_rlzs_or_stats = list(
+            self.stats_multiselect.get_selected_items())
         for feature in self.active_layer.getFeatures(
                 QgsFeatureRequest().setFilterFids(selected)):
             if self.output_type == 'hcurves':
-                field_names = [field.name()
-                               for field in self.active_layer.fields()]
                 imt = self.imt_cbx.currentText()
-                imls = [field_name.split('_')[1] for field_name in field_names
-                        if field_name.split('_')[0] == imt]
+                imls = [field_name.split('_')[2]
+                        for field_name in self.field_names
+                        if (field_name.split('_')[0]
+                            == self.selected_rlzs_or_stats[0])
+                        and field_name.split('_')[1] == imt]
                 self.current_abscissa = imls
             elif self.output_type == 'loss_curves':
                 err_msg = ("The selected layer does not contain loss"
@@ -410,7 +420,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             elif self.output_type == 'uhs':
                 err_msg = ("The selected layer does not contain uniform"
                            " hazard spectra in the expected format.")
-                field_names = [field.name() for field in feature.fields()]
+                self.field_names = [field.name() for field in feature.fields()]
                 # reading from something like
                 # [u'PGA', u'SA(0.025)', u'SA(0.05)', ...]
                 periods = [0.0]  # Use 0.0 for PGA
@@ -418,7 +428,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 try:
                     periods.extend(
                         [float(name[name.find("(") + 1: name.find(")")])
-                         for name in field_names[1:]])
+                         for name in self.field_names[1:]])
                 except ValueError:
                     log_msg(err_msg, level='C',
                             message_bar=self.iface.messageBar())
@@ -435,9 +445,16 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 data_dic = json.loads(feature[self.current_loss_type])
             if self.output_type == 'hcurves':
                 imt = self.imt_cbx.currentText()
-                ordinates = [feature[field.name()]
-                             for field in self.active_layer.fields()
-                             if field.name().split('_')[0] == imt]
+                # fields names are like 'max_PGA_0.005'
+                self.field_names = [field.name()
+                                    for field in self.active_layer.fields()]
+                ordinates = dict()
+                for rlz_or_stat in self.selected_rlzs_or_stats:
+                    ordinates[rlz_or_stat] = [
+                        feature[field_name]
+                        for field_name in self.field_names
+                        if field_name.split('_')[0] == rlz_or_stat
+                        and field_name.split('_')[1] == imt]
             if self.output_type == 'loss_curves':
                 ordinates = data_dic['poes']
             elif self.output_type == 'uhs':
@@ -518,6 +535,9 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             self.clear_imt_cbx()
         if hasattr(self, 'loss_type_cbx'):
             self.clear_loss_type_cbx()
+        if hasattr(self, 'stats_multiselect'):
+            self.stats_multiselect.set_selected_items([])
+            self.stats_multiselect.set_unselected_items([])
 
         self.remove_connects()
 
@@ -529,11 +549,20 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             self.active_layer.selectionChanged.connect(self.redraw)
 
             if self.output_type == 'hcurves':
+                # fields names are like 'max_PGA_0.005'
                 imts = sorted(set(
-                    [field.name().split('_')[0]
+                    [field.name().split('_')[1]
                      for field in self.active_layer.fields()]))
                 self.imt_cbx.clear()
                 self.imt_cbx.addItems(imts)
+                self.field_names = [
+                    field.name() for field in self.active_layer.fields()]
+                self.rlzs_or_stats = sorted(set(
+                    [field_name.split('_')[0]
+                     for field_name in self.field_names]))
+                # Select all stats by default
+                self.stats_multiselect.add_selected_items(self.rlzs_or_stats)
+                self.stats_multiselect.setEnabled(len(self.rlzs_or_stats) > 1)
             elif self.output_type == 'loss_curves':
                 reload_attrib_cbx(self.loss_type_cbx,
                                   self.active_layer,

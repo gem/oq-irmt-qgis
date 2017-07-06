@@ -291,11 +291,14 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             # some output do not need the investigation time
             return None
 
-    def build_layer(self, rlz_or_stat, taxonomy=None, poe=None, loss_type=None,
+    def build_layer(self, rlz_or_stat=None, taxonomy=None, poe=None, loss_type=None,
                     dmg_state=None):
-        rlz_or_stat_group = self.get_layer_group(rlz_or_stat)
+        if rlz_or_stat is not None:
+            rlz_or_stat_group = self.get_layer_group(rlz_or_stat)
+        else:
+            rlz_or_stat_group = self.get_layer_group('Stats')
         layer_name = self.build_layer_name(
-            rlz_or_stat, taxonomy=taxonomy, poe=poe, loss_type=loss_type,
+            rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe, loss_type=loss_type,
             dmg_state=dmg_state)
         field_names = self.get_field_names(
             rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
