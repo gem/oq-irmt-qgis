@@ -271,6 +271,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         gids = self.current_selection.keys()
         count_selected = len(self.active_layer.selectedFeatures())
         if count_selected == 0:
+            self.clear_plot()
             return
         i = 0
         for site, curve in self.current_selection.iteritems():
@@ -278,6 +279,12 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             # selected points (ugly), and here we need to get only one
             if self.output_type == 'recovery_curves' and i > 0:
                 break
+            feature = next(self.active_layer.getFeatures(
+                QgsFeatureRequest().setFilterFid(site)))
+
+            lon = feature.geometry().asPoint().x()
+            lat = feature.geometry().asPoint().y()
+
             for rlz_or_stat in curve['ordinates']:
                 if (rlz_or_stat not in
                         self.stats_multiselect.get_selected_items()):
@@ -285,10 +292,10 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 self.plot.plot(
                     curve['abscissa'],
                     curve['ordinates'][rlz_or_stat],
-                    color=curve['color'],
-                    linestyle=curve['line_style'],
-                    marker=curve['marker'],
-                    label='%s' % rlz_or_stat,
+                    color=curve['color'][rlz_or_stat],
+                    linestyle=curve['line_style'][rlz_or_stat],
+                    marker=curve['marker'][rlz_or_stat],
+                    label='(%.4f, %.4f) %s' % (lon, lat, rlz_or_stat),
                     gid=str(site),  # matplotlib needs a string to export svg
                     picker=5  # 5 points tolerance
                 )
@@ -445,16 +452,6 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 data_dic = json.loads(feature[self.current_loss_type])
             if self.output_type == 'hcurves':
                 imt = self.imt_cbx.currentText()
-                # fields names are like 'max_PGA_0.005'
-                self.field_names = [field.name()
-                                    for field in self.active_layer.fields()]
-                ordinates = dict()
-                for rlz_or_stat in self.selected_rlzs_or_stats:
-                    ordinates[rlz_or_stat] = [
-                        feature[field_name]
-                        for field_name in self.field_names
-                        if field_name.split('_')[0] == rlz_or_stat
-                        and field_name.split('_')[1] == imt]
             if self.output_type == 'loss_curves':
                 ordinates = data_dic['poes']
             elif self.output_type == 'uhs':
@@ -463,29 +460,47 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                     or self.was_loss_type_switched
                     or feature.id() not in self.current_selection
                     or self.output_type == 'uhs'):
-                if self.bw_chk.isChecked():
-                    line_styles_whole_cycles = i / len(self.line_styles)
-                    # NOTE: 85 is approximately 256 / 3
-                    r = g = b = format(
-                        (85 * line_styles_whole_cycles) % 256, '02x')
-                    color_hex = "#%s%s%s" % (r, g, b)
-                    color = QColor(color_hex)
-                    color_hex = color.darker(120).name()
-                    # here I am using i in order to cycle through all the
-                    # line styles, regardless from the feature id
-                    # (otherwise I might easily repeat styles, that are a
-                    # small set of 4 items)
-                    line_style = self.line_styles[i % len(self.line_styles)]
-                else:
-                    # here I am using the feature id in order to keep a
-                    # matching between a curve and the corresponding point
-                    # in the map
-                    color_name = self.color_names[
-                        feature.id() % len(self.color_names)]
-                    color = QColor(color_name)
-                    color_hex = color.darker(120).name()
-                    line_style = "-"  # solid
-                marker = self.markers[i % len(self.markers)]
+                # fields names are like 'max_PGA_0.005'
+                self.field_names = [field.name()
+                                    for field in self.active_layer.fields()]
+                ordinates = dict()
+                marker = dict()
+                line_style = dict()
+                color_hex = dict()
+                for rlz_or_stat_idx, rlz_or_stat in enumerate(
+                        self.selected_rlzs_or_stats):
+                    ordinates[rlz_or_stat] = [
+                        feature[field_name]
+                        for field_name in self.field_names
+                        if field_name.split('_')[0] == rlz_or_stat
+                        and field_name.split('_')[1] == imt]
+                    marker[rlz_or_stat] = self.markers[
+                        (i + rlz_or_stat_idx) % len(self.markers)]
+                    if self.bw_chk.isChecked():
+                        line_styles_whole_cycles = (
+                            (i + rlz_or_stat_idx) / len(self.line_styles))
+                        # NOTE: 85 is approximately 256 / 3
+                        r = g = b = format(
+                            (85 * line_styles_whole_cycles) % 256, '02x')
+                        color_hex = "#%s%s%s" % (r, g, b)
+                        color = QColor(color_hex)
+                        color_hex[rlz_or_stat] = color.darker(120).name()
+                        # here I am using i in order to cycle through all the
+                        # line styles, regardless from the feature id
+                        # (otherwise I might easily repeat styles, that are a
+                        # small set of 4 items)
+                        line_style[rlz_or_stat] = self.line_styles[
+                            (i + rlz_or_stat_idx) % len(self.line_styles)]
+                    else:
+                        # here I am using the feature id in order to keep a
+                        # matching between a curve and the corresponding point
+                        # in the map
+                        color_name = self.color_names[
+                            (feature.id() + rlz_or_stat_idx)
+                            % len(self.color_names)]
+                        color = QColor(color_name)
+                        color_hex[rlz_or_stat] = color.darker(120).name()
+                        line_style[rlz_or_stat] = "-"  # solid
                 self.current_selection[feature.id()] = {
                     'abscissa': self.current_abscissa,
                     'ordinates': ordinates,
@@ -495,7 +510,6 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 }
         self.was_imt_switched = False
         self.was_loss_type_switched = False
-
         self.draw()
 
     def redraw_recovery_curve(self, selected):
