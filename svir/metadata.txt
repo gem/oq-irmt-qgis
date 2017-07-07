@@ -31,6 +31,7 @@ changelog=
     * Layers for hazard curves are stored in a more convenient way, keeping a scalar value per cell instead of a json string
     * Integration tests check that all implemented loaders for OQ-Engine outputs are tested at least once
     * Both workflows aggregating loss points by zone are tested on Travis (1: using SAGA; 2: using the fallback algorithm)
+    * Fixed an offset issue with markers
 
 # tags are comma separated with spaces allowed
 tags=GEM, IRMT, SVIR, OpenQuake, Social Vulnerability, Integrated Risk, Recovery, Resilience, Risk, Hazard, Earthquake
