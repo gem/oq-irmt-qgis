@@ -252,9 +252,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         elif new_output_type == 'loss_curves':
             self.create_loss_type_selector()
         elif new_output_type == 'uhs':
-            # Currently we are creating a layer for each poe
-            # self.create_poe_selector()
-            pass
+            self.create_stats_multiselect()
         elif new_output_type == 'recovery_curves':
             self.create_approach_selector()
             self.create_n_simulations_spinbox()
@@ -482,8 +480,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                         # NOTE: 85 is approximately 256 / 3
                         r = g = b = format(
                             (85 * line_styles_whole_cycles) % 256, '02x')
-                        color_hex = "#%s%s%s" % (r, g, b)
-                        color = QColor(color_hex)
+                        color_hex_str = "#%s%s%s" % (r, g, b)
+                        color = QColor(color_hex_str)
                         color_hex[rlz_or_stat] = color.darker(120).name()
                         # here I am using i in order to cycle through all the
                         # line styles, regardless from the feature id
