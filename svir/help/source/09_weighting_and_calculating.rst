@@ -164,7 +164,7 @@ how the radius of nodes corresponds with the respective weights of variables).
 Otherwise, the radius of a node is proportional to its weight, and the weight
 is rendered next to the node.
 
-The following table shows list of basic operators available in the plugin.
+The following table lists the basic operators available in the plugin.
 Each formula assumes that we are combining a set :math:`x` of :math:`n` variables
 (tree nodes), and that each variable :math:`x_i` has been assigned a weight :math:`w_i`.
 Each weight is defined in the interval :math:`[0, 1]` and the sum of all weights is 1
@@ -173,12 +173,12 @@ Each weight is defined in the interval :math:`[0, 1]` and the sum of all weights
 ====================================== ===================================================================================================================
 Operator                               Formula
 ====================================== ===================================================================================================================
-Simple sum (ignore weights)            :math:`f(x) = \sum_{i=1}^n {x_i}`
-Weighted sum                           :math:`f(x) = \bar{x} = \frac{ \sum\limits_{i=1}^n w_i x_i}{\sum\limits_{i=1}^n w_i} = \sum\limits_{i=1}^n w_i x_i`
-Average (ignore weights)               :math:`f(x) = \frac {1}{n}\sum_{i=1}^n {x_i}`
-Simple multiplication (ignore weights) :math:`f(x) = \prod_{i=1}^n x_i`
-Weighted multiplication                :math:`f(x) = \prod\limits_{i=1}^n w_i x_i`
-Geometric mean (ignore weights)        :math:`f(x) = \left(\prod_{i=1}^n x_i\right)^\frac{1}{n} = \sqrt[n]{x_1 x_2 \cdots x_n}`
+Simple sum (ignore weights)            :math:`\sum\limits_{i=1}^n x_i`
+Weighted sum                           :math:`\sum\limits_{i=1}^n w_i x_i`
+Average (ignore weights)               :math:`\frac {1}{n}\sum\limits_{i=1}^n {x_i}`
+Simple multiplication (ignore weights) :math:`\prod\limits_{i=1}^n x_i`
+Weighted multiplication                :math:`\prod\limits_{i=1}^n w_i x_i`
+Geometric mean (ignore weights)        :math:`\sqrt[n]{\prod\limits_{i=1}^n x_i}`
 ====================================== ===================================================================================================================
 
 In case the user wants to combine indices using a customized formula that is
