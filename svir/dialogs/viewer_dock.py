@@ -266,13 +266,15 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
     def draw(self):
         self.plot.clear()
-        gids = self.current_selection.keys()
+        gids = dict()
+        for rlz_or_stat in self.selected_rlzs_or_stats:
+            gids[rlz_or_stat] = self.current_selection.keys()
         count_selected = len(self.active_layer.selectedFeatures())
         if count_selected == 0:
             self.clear_plot()
             return
-        i = 0
-        for site, curve in self.current_selection.iteritems():
+
+        for i, (site, curve) in enumerate(self.current_selection.iteritems()):
             # NOTE: we associated the same cumulative curve to all the
             # selected points (ugly), and here we need to get only one
             if self.output_type == 'recovery_curves' and i > 0:
@@ -293,13 +295,10 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                     color=curve['color'][rlz_or_stat],
                     linestyle=curve['line_style'][rlz_or_stat],
                     marker=curve['marker'][rlz_or_stat],
-                    label='(%.4f, %.4f) %s' % (lon, lat, rlz_or_stat),
+                    label='(%.3f, %.3f) %s' % (lon, lat, rlz_or_stat),
                     gid=str(site),  # matplotlib needs a string to export svg
                     picker=5  # 5 points tolerance
                 )
-            i += 1
-        investigation_time = self.active_layer.customProperty(
-            'investigation_time', None)
         if self.output_type == 'hcurves':
             self.plot.set_xscale('log')
             self.plot.set_yscale('log')
@@ -347,10 +346,6 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 title = 'Building level recovery curve'
             else:
                 title = 'Community level recovery curve'
-        if investigation_time is not None:
-            title += ' (%s years)' % investigation_time
-        self.plot.set_title(title)
-        self.plot.grid()
         if self.output_type == 'hcurves':
             ylim_bottom, ylim_top = self.plot.get_ylim()
             self.plot.set_ylim(ylim_bottom, ylim_top * 1.5)
@@ -361,6 +356,12 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             ylim_bottom_margin = (ylim_top-ylim_bottom)/20.0
             self.plot.set_ylim(ylim_bottom-ylim_bottom_margin, ylim_top)
 
+        investigation_time = self.active_layer.customProperty(
+            'investigation_time', None)
+        if investigation_time is not None:
+            title += ' (%s years)' % investigation_time
+        self.plot.set_title(title)
+        self.plot.grid()
         if self.output_type != 'recovery_curves' and count_selected <= 20:
             if self.output_type == 'uhs':
                 location = 'upper right'
@@ -369,11 +370,27 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             self.legend = self.plot.legend(
                 loc=location, fancybox=True, shadow=True,
                 fontsize='small')
-        if hasattr(self.legend, 'get_lines'):
-            for i, legend_line in enumerate(self.legend.get_lines()):
-                legend_line.set_picker(5)  # 5 points tolerance
-                # matplotlib needs a string when exporting to svg
-                legend_line.set_gid(str(gids[0]))  # FIXME gids?
+            for rlz_or_stat in curve['ordinates']:
+                if (rlz_or_stat not in
+                        self.stats_multiselect.get_selected_items()):
+                    continue
+                if hasattr(self.legend, 'get_lines'):
+                    # FIXME: there are 3 possible cases:
+                    #     1) one rlz for many points (ok)
+                    #        line -> site
+                    #     2) many stats for the same point (ok)
+                    #        line -> stat
+                    #     3) many stats for many points (missing example)
+                    #        line -> (site, stat)
+                    for i, legend_line in enumerate(self.legend.get_lines()):
+                        legend_line.set_picker(5)  # 5 points tolerance
+                        if len(curve['ordinates']) == 1:  # 1 rlz
+                            # matplotlib needs a string when exporting to svg
+                            legend_line.set_gid(str(gids[rlz_or_stat][i]))
+                        else:  # many stats
+                            # matplotlib needs a string when exporting to svg
+                            legend_line.set_gid(str(gids[rlz_or_stat][0]))
+
         self.plot_canvas.draw()
 
     def redraw(self, selected, deselected, _):
