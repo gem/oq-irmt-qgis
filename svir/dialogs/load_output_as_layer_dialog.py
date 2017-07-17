@@ -527,14 +527,14 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             # it is not obvious how to choose the point size in the other
             # cases, so we conservatively keep the default sizing
             return
-        symbol.setOutputUnit(symbol.MapUnit)
-        symbol.setSize(point_size)
+        symbol.symbolLayer(0).setSizeUnit(symbol.MapUnit)
+        symbol.symbolLayer(0).setSize(point_size)
         map_unit_scale = QgsMapUnitScale()
         map_unit_scale.maxSizeMMEnabled = True
         map_unit_scale.minSizeMMEnabled = True
         map_unit_scale.minSizeMM = 0.5
         map_unit_scale.maxSizeMM = 10
-        symbol.setMapUnitScale(map_unit_scale)
+        symbol.symbolLayer(0).setSizeMapUnitScale(map_unit_scale)
 
     def style_maps(self):
         symbol = QgsSymbolV2.defaultSymbol(self.layer.geometryType())
