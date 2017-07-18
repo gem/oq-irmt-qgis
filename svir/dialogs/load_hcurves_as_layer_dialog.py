@@ -55,11 +55,11 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
         self.ok_button.setEnabled(bool(self.path))
 
     def populate_dataset(self):
-        # ignore lon, lat
         self.rlzs_or_stats = self.npz_file['all'].dtype.names[2:]
         self.dataset = self.npz_file['all']
 
     def show_num_sites(self):
+        # FIXME
         pass
 
     def populate_out_dep_widgets(self):
