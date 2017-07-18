@@ -46,6 +46,7 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
             self, iface, viewer_dock, output_type, path, mode)
         self.setWindowTitle(
             'Load uniform hazard spectra from NPZ, as layer')
+        self.create_load_selected_only_ckb()
         self.create_poe_selector()
         if self.path:
             self.npz_file = numpy.load(self.path, 'r')
@@ -92,10 +93,11 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
 
     def get_field_names(self, **kwargs):
         poe = kwargs['poe']
+        field_names = []
         for rlz_or_stat in self.rlzs_or_stats:
-            field_names = [
+            field_names.extend([
                 "%s_%s" % (rlz_or_stat, imt)
-                for imt in self.dataset[rlz_or_stat][poe].dtype.names]
+                for imt in self.dataset[rlz_or_stat][poe].dtype.names])
         return field_names
 
     def add_field_to_layer(self, field_name):
@@ -127,6 +129,9 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
 
     def load_from_npz(self):
         for poe in self.poes:
+            if (self.load_selected_only_ckb.isChecked()
+                    and poe != self.poe_cbx.currentText()):
+                continue
             with WaitCursorManager(
                     'Creating layer for poe "%s"...' % poe, self.iface):
                 self.build_layer(poe=poe)

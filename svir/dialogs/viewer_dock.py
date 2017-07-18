@@ -307,8 +307,6 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             imt = self.imt_cbx.currentText()
             if count_selected == 0:
                 title = ''
-            elif count_selected == 1:
-                title = 'Hazard curve for %s' % imt
             else:
                 title = 'Hazard curves for %s' % imt
         elif self.output_type == 'loss_curves':
@@ -319,8 +317,6 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             loss_type = self.loss_type_cbx.currentText()
             if count_selected == 0:
                 title = ''
-            elif count_selected == 1:
-                title = 'Loss curve for %s' % loss_type
             else:
                 title = 'Loss curves for %s' % loss_type
         elif self.output_type == 'uhs':
@@ -330,8 +326,6 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             self.plot.set_ylabel('Spectral acceleration [g]')
             if count_selected == 0:
                 title = ''
-            elif count_selected == 1:
-                title = 'Uniform hazard spectrum'
             else:
                 title = 'Uniform hazard spectra'
         elif self.output_type == 'recovery_curves':
@@ -370,26 +364,14 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             self.legend = self.plot.legend(
                 loc=location, fancybox=True, shadow=True,
                 fontsize='small')
-            for rlz_or_stat in curve['ordinates']:
-                if (rlz_or_stat not in
-                        self.stats_multiselect.get_selected_items()):
-                    continue
+            selected_rlzs_or_stats = self.stats_multiselect.get_selected_items()
+            for rlz_or_stat in selected_rlzs_or_stats:
                 if hasattr(self.legend, 'get_lines'):
-                    # FIXME: there are 3 possible cases:
-                    #     1) one rlz for many points (ok)
-                    #        line -> site
-                    #     2) many stats for the same point (ok)
-                    #        line -> stat
-                    #     3) many stats for many points (missing example)
-                    #        line -> (site, stat)
                     for i, legend_line in enumerate(self.legend.get_lines()):
                         legend_line.set_picker(5)  # 5 points tolerance
-                        if len(curve['ordinates']) == 1:  # 1 rlz
-                            # matplotlib needs a string when exporting to svg
-                            legend_line.set_gid(str(gids[rlz_or_stat][i]))
-                        else:  # many stats
-                            # matplotlib needs a string when exporting to svg
-                            legend_line.set_gid(str(gids[rlz_or_stat][0]))
+                        legend_line.set_gid(
+                            str(gids[rlz_or_stat][
+                                i % len(self.current_selection)]))
 
         self.plot_canvas.draw()
 
@@ -444,38 +426,33 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                            " hazard spectra in the expected format.")
                 self.field_names = [field.name() for field in feature.fields()]
                 # reading from something like
-                # [u'PGA', u'SA(0.025)', u'SA(0.05)', ...]
-                periods = [0.0]  # Use 0.0 for PGA
+                # [u'rlz-000_PGA', u'rlz-000_SA(0.025)', ...]
+                unique_periods = [0.0]  # Use 0.0 for PGA
                 # get the number between parenthesis
                 try:
-                    periods.extend(
-                        [float(name[name.find("(") + 1: name.find(")")])
-                         for name in self.field_names[1:]])
+                    periods = [
+                        float(name[name.find("(") + 1: name.find(")")])
+                        for name in self.field_names
+                        if "(" in name]
+                    for period in periods:
+                        if period not in unique_periods:
+                            unique_periods.append(period)
                 except ValueError:
                     log_msg(err_msg, level='C',
                             message_bar=self.iface.messageBar())
                     self.output_type_cbx.setCurrentIndex(-1)
                     return
-                self.current_abscissa = periods
+                self.current_abscissa = unique_periods
                 break
             else:
                 raise NotImplementedError(self.output_type)
 
         for i, feature in enumerate(self.active_layer.getFeatures(
                 QgsFeatureRequest().setFilterFids(selected))):
-            if self.output_type == 'loss_curves':
-                data_dic = json.loads(feature[self.current_loss_type])
-            if self.output_type == 'hcurves':
-                imt = self.imt_cbx.currentText()
-            if self.output_type == 'loss_curves':
-                ordinates = data_dic['poes']
-            elif self.output_type == 'uhs':
-                ordinates = [value for value in feature]
             if (self.was_imt_switched
                     or self.was_loss_type_switched
                     or feature.id() not in self.current_selection
                     or self.output_type == 'uhs'):
-                # fields names are like 'max_PGA_0.005'
                 self.field_names = [field.name()
                                     for field in self.active_layer.fields()]
                 ordinates = dict()
@@ -484,16 +461,23 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 color_hex = dict()
                 for rlz_or_stat_idx, rlz_or_stat in enumerate(
                         self.selected_rlzs_or_stats):
-                    ordinates[rlz_or_stat] = [
-                        feature[field_name]
-                        for field_name in self.field_names
-                        if field_name.split('_')[0] == rlz_or_stat
-                        and field_name.split('_')[1] == imt]
+                    if self.output_type == 'hcurves':
+                        imt = self.imt_cbx.currentText()
+                        ordinates[rlz_or_stat] = [
+                            feature[field_name]
+                            for field_name in self.field_names
+                            if field_name.split('_')[0] == rlz_or_stat
+                            and field_name.split('_')[1] == imt]
+                    elif self.output_type == 'uhs':
+                        ordinates[rlz_or_stat] = [
+                            feature[field_name]
+                            for field_name in self.field_names
+                            if field_name.split('_')[0] == rlz_or_stat]
                     marker[rlz_or_stat] = self.markers[
-                        (i + rlz_or_stat_idx) % len(self.markers)]
+                        (i * rlz_or_stat_idx) % len(self.markers)]
                     if self.bw_chk.isChecked():
                         line_styles_whole_cycles = (
-                            (i + rlz_or_stat_idx) / len(self.line_styles))
+                            (i * rlz_or_stat_idx) / len(self.line_styles))
                         # NOTE: 85 is approximately 256 / 3
                         r = g = b = format(
                             (85 * line_styles_whole_cycles) % 256, '02x')
@@ -505,7 +489,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                         # (otherwise I might easily repeat styles, that are a
                         # small set of 4 items)
                         line_style[rlz_or_stat] = self.line_styles[
-                            (i + rlz_or_stat_idx) % len(self.line_styles)]
+                            (i * rlz_or_stat_idx) % len(self.line_styles)]
                     else:
                         # here I am using the feature id in order to keep a
                         # matching between a curve and the corresponding point
@@ -577,13 +561,14 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 and self.active_layer.geometryType() == QGis.Point):
             self.active_layer.selectionChanged.connect(self.redraw)
 
-            if self.output_type == 'hcurves':
-                # fields names are like 'max_PGA_0.005'
-                imts = sorted(set(
-                    [field.name().split('_')[1]
-                     for field in self.active_layer.fields()]))
-                self.imt_cbx.clear()
-                self.imt_cbx.addItems(imts)
+            if self.output_type in ['hcurves', 'uhs']:
+                if self.output_type == 'hcurves':
+                    # fields names are like 'max_PGA_0.005'
+                    imts = sorted(set(
+                        [field.name().split('_')[1]
+                        for field in self.active_layer.fields()]))
+                    self.imt_cbx.clear()
+                    self.imt_cbx.addItems(imts)
                 self.field_names = [
                     field.name() for field in self.active_layer.fields()]
                 self.rlzs_or_stats = sorted(set(

@@ -25,7 +25,7 @@
 import numpy
 from qgis.core import QgsFeature, QgsGeometry, QgsPoint
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
-from svir.calculations.calculate_utils import add_textual_attribute
+from svir.calculations.calculate_utils import add_numeric_attribute
 from svir.utilities.utils import (LayerEditingManager,
                                   log_msg,
                                   WaitCursorManager,
@@ -81,8 +81,7 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
         return field_names
 
     def add_field_to_layer(self, field_name):
-        # FIXME: probably we need a different type with more capacity
-        added_field_name = add_textual_attribute(field_name, self.layer)
+        added_field_name = add_numeric_attribute(field_name, self.layer)
         return added_field_name
 
     def read_npz_into_layer(self, field_names, **kwargs):
