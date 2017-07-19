@@ -710,34 +710,39 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 # same
                 curve = self.current_selection.values()[0]
                 csv_file.write(str(curve['ordinates']))
-            elif self.output_type == 'hcurves':
+            elif self.output_type in ['hcurves', 'uhs']:
+                selected_rlzs_or_stats = list(
+                    self.stats_multiselect.get_selected_items())
+                if self.output_type == 'hcurves':
+                    selected_imt = self.imt_cbx.currentText()
                 # write header
-                imt = self.imt_cbx.currentText()
-                headers = ["%s_%s" % (imt, x) for x in self.current_abscissa]
-                line = 'lon,lat,%s' % ','.join(headers)
-                csv_file.write(line + os.linesep)
+                field_names = []
+                for field in self.active_layer.fields():
+                    if self.output_type == 'hcurves':
+                        # field names are like 'mean_PGA_0.005'
+                        rlz_or_stat, imt, iml = field.name().split('_')
+                        if imt != selected_imt:
+                            continue
+                    else:  # 'uhs'
+                        # field names are like 'mean_PGA'
+                        rlz_or_stat, _ = field.name().split('_')
+                    if rlz_or_stat not in selected_rlzs_or_stats:
+                        continue
+                    field_names.append(field.name())
+                header = 'lon,lat,%s' % ','.join(field_names)
+                csv_file.write(header + os.linesep)
                 # write selected data
-                for site, curve in self.current_selection.iteritems():
-                    poes = ','.join(map(str, curve['ordinates']))
+                for site, _ in self.current_selection.iteritems():
                     feature = next(self.active_layer.getFeatures(
                         QgsFeatureRequest().setFilterFid(site)))
+                    values = [feature.attribute(field_name)
+                              for field_name in field_names]
                     lon = feature.geometry().asPoint().x()
                     lat = feature.geometry().asPoint().y()
-                    line = '%s,%s,%s' % (lon, lat, poes)
-                    csv_file.write(line + os.linesep)
-            elif self.output_type == 'uhs':
-                # write header
-                line = 'lon,lat,%s' % (
-                    ','.join(map(str, self.current_abscissa)))
-                csv_file.write(line + os.linesep)
-                # write selected data
-                for site, curve in self.current_selection.iteritems():
-                    poes = ','.join(map(str, curve['ordinates']))
-                    feature = next(self.active_layer.getFeatures(
-                        QgsFeatureRequest().setFilterFid(site)))
-                    lon = feature.geometry().asPoint().x()
-                    lat = feature.geometry().asPoint().y()
-                    line = '%s,%s,%s' % (lon, lat, poes)
+                    line = '%s,%s' % (lon, lat)
+                    if values:
+                        line += "," + ",".join([
+                            str(value) for value in values])
                     csv_file.write(line + os.linesep)
             else:
                 raise NotImplementedError(self.output_type)
