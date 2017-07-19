@@ -32,7 +32,6 @@ from qgis.core import (QgsVectorLayer,
                        QgsVectorGradientColorRampV2,
                        QgsGraduatedSymbolRendererV2,
                        QgsRendererRangeV2,
-                       QgsProject,
                        QgsMapUnitScale,
                        QGis,
                        )
@@ -251,15 +250,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     def set_ok_button(self):
         raise NotImplementedError()
 
-    def get_layer_group(self, npz_key):
-        # get the root of layerTree, in order to add groups of layers
-        # (one group for each realization or statistic)
-        root = QgsProject.instance().layerTreeRoot()
-        npz_key_group = root.findGroup(npz_key)
-        if not npz_key_group:
-            npz_key_group = root.insertGroup(0, npz_key)
-        return npz_key_group
-
     def build_layer_name(self, rlz_or_stat, **kwargs):
         raise NotImplementedError()
 
@@ -293,10 +283,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
 
     def build_layer(self, rlz_or_stat=None, taxonomy=None, poe=None,
                     loss_type=None, dmg_state=None):
-        if rlz_or_stat is not None:
-            rlz_or_stat_group = self.get_layer_group(rlz_or_stat)
-        else:
-            rlz_or_stat_group = self.get_layer_group('Stats')
         layer_name = self.build_layer_name(
             rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
             loss_type=loss_type, dmg_state=dmg_state)
@@ -327,11 +313,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         if investigation_time is not None:
             self.layer.setCustomProperty('investigation_time',
                                          investigation_time)
-        # add self.layer to the legend
-        # False is to avoid adding the layer to the tree root, but only to the
-        # group
-        QgsMapLayerRegistry.instance().addMapLayer(self.layer, False)
-        rlz_or_stat_group.insertLayer(0, self.layer)
+        QgsMapLayerRegistry.instance().addMapLayer(self.layer)
         self.iface.setActiveLayer(self.layer)
         self.iface.zoomToActiveLayer()
 

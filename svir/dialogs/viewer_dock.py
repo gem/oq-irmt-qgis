@@ -369,9 +369,9 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 if hasattr(self.legend, 'get_lines'):
                     for i, legend_line in enumerate(self.legend.get_lines()):
                         legend_line.set_picker(5)  # 5 points tolerance
-                        legend_line.set_gid(
-                            str(gids[rlz_or_stat][
-                                i % len(self.current_selection)]))
+                        gid = gids[
+                            rlz_or_stat][i % len(self.current_selection)]
+                        legend_line.set_gid(str(gid))
 
         self.plot_canvas.draw()
 
@@ -474,10 +474,10 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                             for field_name in self.field_names
                             if field_name.split('_')[0] == rlz_or_stat]
                     marker[rlz_or_stat] = self.markers[
-                        (i * rlz_or_stat_idx) % len(self.markers)]
+                        (i + rlz_or_stat_idx) % len(self.markers)]
                     if self.bw_chk.isChecked():
                         line_styles_whole_cycles = (
-                            (i * rlz_or_stat_idx) / len(self.line_styles))
+                            (i + rlz_or_stat_idx) / len(self.line_styles))
                         # NOTE: 85 is approximately 256 / 3
                         r = g = b = format(
                             (85 * line_styles_whole_cycles) % 256, '02x')
@@ -489,7 +489,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                         # (otherwise I might easily repeat styles, that are a
                         # small set of 4 items)
                         line_style[rlz_or_stat] = self.line_styles[
-                            (i * rlz_or_stat_idx) % len(self.line_styles)]
+                            (i + rlz_or_stat_idx) % len(self.line_styles)]
                     else:
                         # here I am using the feature id in order to keep a
                         # matching between a curve and the corresponding point
