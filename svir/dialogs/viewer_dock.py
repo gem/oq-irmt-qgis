@@ -364,14 +364,21 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             self.legend = self.plot.legend(
                 loc=location, fancybox=True, shadow=True,
                 fontsize='small')
-            selected_rlzs_or_stats = self.stats_multiselect.get_selected_items()
+            selected_rlzs_or_stats = list(
+                self.stats_multiselect.get_selected_items())
             for rlz_or_stat in selected_rlzs_or_stats:
                 if hasattr(self.legend, 'get_lines'):
+                    # We have blocks of legend lines, where each block refers
+                    # to all selected stats for one of the selected points.
+                    point_idx = 0
                     for i, legend_line in enumerate(self.legend.get_lines()):
                         legend_line.set_picker(5)  # 5 points tolerance
-                        gid = gids[
-                            rlz_or_stat][i % len(self.current_selection)]
+                        gid = gids[rlz_or_stat][point_idx]
                         legend_line.set_gid(str(gid))
+                        # check if from the next iteration we will have to
+                        # refer to the next selected point
+                        if (i + 1) % len(selected_rlzs_or_stats) == 0:
+                            point_idx += 1
 
         self.plot_canvas.draw()
 
