@@ -78,7 +78,7 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
 
     def test_load_hazard_curves(self):
         filepath = os.path.join(self.data_dir_name, 'hazard',
-                                'output-2-hcurves_1.npz')
+                                'output-121-hcurves_27.npz')
         dlg = LoadHazardCurvesAsLayerDialog(
             IFACE, self.viewer_dock, 'hcurves', filepath)
         dlg.accept()
@@ -89,41 +89,28 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
         # select the first 2 features (the same used to produce the reference
         # csv)
         layer.select([1, 2])
-        imt = 'SA(0.2)'
+        imt = 'SA(0.1)'
         idx = self.viewer_dock.imt_cbx.findText(imt)
         self.assertNotEqual(idx, -1, 'IMT %s not found' % imt)
         self.viewer_dock.imt_cbx.setCurrentIndex(idx)
         # test exporting the current selection to csv
         _, exported_file_path = tempfile.mkstemp(suffix=".csv")
-        self._test_export('hazard_curves_SA(0.2).csv')
+        self._test_export('hazard_curves_SA(0.1).csv')
 
     def test_load_uhs_only_selected_poe(self):
         filepath = os.path.join(self.data_dir_name, 'hazard',
-                                'output-5-uhs_1.npz')
+                                'output-125-uhs_27.npz')
         dlg = LoadUhsAsLayerDialog(
             IFACE, self.viewer_dock, 'uhs', filepath)
         dlg.load_selected_only_ckb.setChecked(True)
-        idx = dlg.poe_cbx.findText('0.02')
-        self.assertEqual(idx, 1, 'POE 0.02 was not found')
+        idx = dlg.poe_cbx.findText('0.1')
+        self.assertEqual(idx, 0, 'POE 0.1 was not found')
         dlg.poe_cbx.setCurrentIndex(idx)
         dlg.accept()
         self._set_output_type('Uniform Hazard Spectra')
         self._change_selection()
         # test exporting the current selection to csv
-        self._test_export('uniform_hazard_spectra.csv')
-
-    @unittest.skip("Causing segfault")
-    def test_load_uhs_all(self):
-        filepath = os.path.join(self.data_dir_name, 'hazard',
-                                'output-5-uhs_1.npz')
-        dlg = LoadUhsAsLayerDialog(
-            IFACE, self.viewer_dock, 'uhs', filepath)
-        dlg.load_selected_only_ckb.setChecked(False)
-        dlg.accept()
-        self._set_output_type('Uniform Hazard Spectra')
-        self._change_selection()
-        # test exporting the current selection to csv
-        self._test_export('uniform_hazard_spectra.csv')
+        self._test_export('uniform_hazard_spectra_poe01.csv')
 
     def test_load_ruptures(self):
         filepath = os.path.join(

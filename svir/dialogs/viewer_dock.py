@@ -573,7 +573,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                     # fields names are like 'max_PGA_0.005'
                     imts = sorted(set(
                         [field.name().split('_')[1]
-                        for field in self.active_layer.fields()]))
+                         for field in self.active_layer.fields()]))
                     self.imt_cbx.clear()
                     self.imt_cbx.addItems(imts)
                 self.field_names = [
@@ -715,6 +715,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                     self.stats_multiselect.get_selected_items())
                 if self.output_type == 'hcurves':
                     selected_imt = self.imt_cbx.currentText()
+
                 # write header
                 field_names = []
                 for field in self.active_layer.fields():
@@ -731,6 +732,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                     field_names.append(field.name())
                 header = 'lon,lat,%s' % ','.join(field_names)
                 csv_file.write(header + os.linesep)
+
                 # write selected data
                 for site, _ in self.current_selection.iteritems():
                     feature = next(self.active_layer.getFeatures(
