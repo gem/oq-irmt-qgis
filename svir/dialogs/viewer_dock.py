@@ -267,7 +267,9 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
     def draw(self):
         self.plot.clear()
         gids = dict()
-        for rlz_or_stat in self.selected_rlzs_or_stats:
+        selected_rlzs_or_stats = list(
+                self.stats_multiselect.get_selected_items())
+        for rlz_or_stat in selected_rlzs_or_stats:
             gids[rlz_or_stat] = self.current_selection.keys()
         count_selected = len(self.active_layer.selectedFeatures())
         if count_selected == 0:
@@ -364,8 +366,6 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             self.legend = self.plot.legend(
                 loc=location, fancybox=True, shadow=True,
                 fontsize='small')
-            selected_rlzs_or_stats = list(
-                self.stats_multiselect.get_selected_items())
             for rlz_or_stat in selected_rlzs_or_stats:
                 if hasattr(self.legend, 'get_lines'):
                     # We have blocks of legend lines, where each block refers
@@ -395,7 +395,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 self.redraw_recovery_curve(selected)
             return
         self.current_abscissa = []
-        self.selected_rlzs_or_stats = list(
+        selected_rlzs_or_stats = list(
             self.stats_multiselect.get_selected_items())
         for feature in self.active_layer.getFeatures(
                 QgsFeatureRequest().setFilterFids(selected)):
@@ -404,7 +404,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 imls = [field_name.split('_')[2]
                         for field_name in self.field_names
                         if (field_name.split('_')[0]
-                            == self.selected_rlzs_or_stats[0])
+                            == selected_rlzs_or_stats[0])
                         and field_name.split('_')[1] == imt]
                 self.current_abscissa = imls
             elif self.output_type == 'loss_curves':
@@ -467,7 +467,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 line_style = dict()
                 color_hex = dict()
                 for rlz_or_stat_idx, rlz_or_stat in enumerate(
-                        self.selected_rlzs_or_stats):
+                        selected_rlzs_or_stats):
                     if self.output_type == 'hcurves':
                         imt = self.imt_cbx.currentText()
                         ordinates[rlz_or_stat] = [
