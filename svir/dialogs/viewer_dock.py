@@ -92,8 +92,9 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.warning_n_simulations_lbl = None
         self.recalculate_curve_btn = None
         self.fields_multiselect = None
+        self.stats_multiselect = None
 
-        self.current_selection = {}  # feature_id -> curve
+        self.current_selection = {}  # rlz_or_stat -> feature_id -> curve
         self.current_imt = None
         self.current_loss_type = None
         self.was_imt_switched = False
@@ -266,40 +267,41 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.plot.clear()
         gids = dict()
         selected_rlzs_or_stats = list(
-                self.stats_multiselect.get_selected_items())
+            self.stats_multiselect.get_selected_items())
         selected_features_ids = [
             feature.id()
             for feature in self.iface.activeLayer().selectedFeatures()]
         for rlz_or_stat in selected_rlzs_or_stats:
             gids[rlz_or_stat] = selected_features_ids
-        count_selected = len(selected_features_ids)
-        if count_selected == 0:
+        count_selected_feats = len(selected_features_ids)
+        count_selected_stats = len(selected_rlzs_or_stats)
+        count_lines = count_selected_feats * count_selected_stats
+        if count_lines == 0:
             self.clear_plot()
             return
 
-        for i, (site, curve) in enumerate(self.current_selection.iteritems()):
-            # NOTE: we associated the same cumulative curve to all the
-            # selected points (ugly), and here we need to get only one
-            if self.output_type == 'recovery_curves' and i > 0:
-                break
-            feature = next(self.iface.activeLayer().getFeatures(
-                QgsFeatureRequest().setFilterFid(site)))
+        for rlz_or_stat in selected_rlzs_or_stats:
+            for i, (site, curve) in enumerate(self.current_selection[
+                    rlz_or_stat].iteritems()):
+                # NOTE: we associated the same cumulative curve to all the
+                # selected points (ugly), and here we need to get only one
+                if self.output_type == 'recovery_curves' and i > 0:
+                    break
+                feature = next(self.iface.activeLayer().getFeatures(
+                    QgsFeatureRequest().setFilterFid(site)))
 
-            lon = feature.geometry().asPoint().x()
-            lat = feature.geometry().asPoint().y()
+                lon = feature.geometry().asPoint().x()
+                lat = feature.geometry().asPoint().y()
 
-            for rlz_or_stat in curve['ordinates']:
-                if (rlz_or_stat not in
-                        self.stats_multiselect.get_selected_items()):
-                    continue
                 self.plot.plot(
                     curve['abscissa'],
-                    curve['ordinates'][rlz_or_stat],
-                    color=curve['color'][rlz_or_stat],
-                    linestyle=curve['line_style'][rlz_or_stat],
-                    marker=curve['marker'][rlz_or_stat],
+                    curve['ordinates'],
+                    color=curve['color'],
+                    linestyle=curve['line_style'],
+                    marker=curve['marker'],
                     label='(%.3f, %.3f) %s' % (lon, lat, rlz_or_stat),
-                    gid=str(site),  # matplotlib needs a string to export svg
+                    # matplotlib needs a string to export to svg
+                    gid=str(site),
                     picker=5  # 5 points tolerance
                 )
         if self.output_type == 'hcurves':
@@ -308,8 +310,10 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             self.plot.set_xlabel('Intensity measure level')
             self.plot.set_ylabel('Probability of exceedance')
             imt = self.imt_cbx.currentText()
-            if count_selected == 0:
+            if count_lines == 0:
                 title = ''
+            elif count_lines == 1:
+                title = 'Hazard curve for %s' % imt
             else:
                 title = 'Hazard curves for %s' % imt
         elif self.output_type == 'loss_curves':
@@ -318,8 +322,10 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             self.plot.set_xlabel('Losses')
             self.plot.set_ylabel('Probability of exceedance')
             loss_type = self.loss_type_cbx.currentText()
-            if count_selected == 0:
+            if count_lines == 0:
                 title = ''
+            elif count_lines == 1:
+                title = 'Loss curve for %s' % loss_type
             else:
                 title = 'Loss curves for %s' % loss_type
         elif self.output_type == 'uhs':
@@ -327,8 +333,10 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             self.plot.set_yscale('linear')
             self.plot.set_xlabel('Period [s]')
             self.plot.set_ylabel('Spectral acceleration [g]')
-            if count_selected == 0:
+            if count_lines == 0:
                 title = ''
+            elif count_lines == 1:
+                title = 'Uniform hazard spectrum'
             else:
                 title = 'Uniform hazard spectra'
         elif self.output_type == 'recovery_curves':
@@ -337,9 +345,9 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             self.plot.set_xlabel('Time [days]')
             self.plot.set_ylabel('Normalized recovery level')
             self.plot.set_ylim((0.0, 1.2))
-            if count_selected == 0:
+            if count_lines == 0:
                 title = ''
-            elif count_selected == 1:
+            elif count_lines == 1:
                 title = 'Building level recovery curve'
             else:
                 title = 'Community level recovery curve'
@@ -359,7 +367,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             title += ' (%s years)' % investigation_time
         self.plot.set_title(title)
         self.plot.grid()
-        if self.output_type != 'recovery_curves' and count_selected <= 20:
+        if self.output_type != 'recovery_curves' and 1 <= count_lines <= 20:
             if self.output_type == 'uhs':
                 location = 'upper right'
             else:
@@ -396,20 +404,24 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         """
         if not self.output_type:
             return
+        selected_rlzs_or_stats = list(
+            self.stats_multiselect.get_selected_items())
         for fid in deselected:
-            try:
-                # self.current_selection is a dictionary associating a curve to
-                # each feature id
-                del self.current_selection[fid]
-            except KeyError:
-                pass
+            # FIXME: check if using all_rlz_or_stats instead of only selected
+            for rlz_or_stat in selected_rlzs_or_stats:
+                try:
+                    # self.current_selection is a dictionary associating (for
+                    # each selected rlz or stat) a curve to each feature id
+                    del self.current_selection[rlz_or_stat][fid]
+                except KeyError:
+                    pass
         if self.output_type == 'recovery_curves':
             if len(selected) > 0:
                 self.redraw_recovery_curve(selected)
             return
+        if not selected_rlzs_or_stats:
+            return
         self.current_abscissa = []
-        selected_rlzs_or_stats = list(
-            self.stats_multiselect.get_selected_items())
         for feature in self.iface.activeLayer().getFeatures(
                 QgsFeatureRequest().setFilterFids(selected)):
             if self.output_type == 'hcurves':
@@ -471,7 +483,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 QgsFeatureRequest().setFilterFids(selected))):
             if (self.was_imt_switched
                     or self.was_loss_type_switched
-                    or feature.id() not in self.current_selection
+                    or (feature.id() not in
+                        self.current_selection[selected_rlzs_or_stats[0]])
                     or self.output_type == 'uhs'):
                 self.field_names = [
                     field.name()
@@ -521,13 +534,13 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                         color = QColor(color_name)
                         color_hex[rlz_or_stat] = color.darker(120).name()
                         line_style[rlz_or_stat] = "-"  # solid
-                self.current_selection[feature.id()] = {
-                    'abscissa': self.current_abscissa,
-                    'ordinates': ordinates,
-                    'color': color_hex,
-                    'line_style': line_style,
-                    'marker': marker,
-                }
+                    self.current_selection[rlz_or_stat][feature.id()] = {
+                        'abscissa': self.current_abscissa,
+                        'ordinates': ordinates[rlz_or_stat],
+                        'color': color_hex[rlz_or_stat],
+                        'line_style': line_style[rlz_or_stat],
+                        'marker': marker[rlz_or_stat],
+                    }
         self.was_imt_switched = False
         self.was_loss_type_switched = False
         self.draw()
@@ -553,6 +566,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         # associating only a single feature with the cumulative recovery curve.
         # It might be a little ugly, but otherwise it would be inefficient.
         if len(features) > 0:
+            # FIXME
             self.current_selection[features[0].id()] = {
                 'abscissa': self.current_abscissa,
                 'ordinates': recovery_function,
@@ -563,15 +577,16 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.draw()
 
     def layer_changed(self):
-        self.current_selection = {}
+        if self.stats_multiselect is not None:
+            for rlz_or_stat in self.stats_multiselect.get_selected_items():
+                self.current_selection[rlz_or_stat] = {}
+            self.stats_multiselect.set_selected_items([])
+            self.stats_multiselect.set_unselected_items([])
         self.clear_plot()
         if hasattr(self, 'self.imt_cbx'):
             self.clear_imt_cbx()
         if hasattr(self, 'loss_type_cbx'):
             self.clear_loss_type_cbx()
-        if hasattr(self, 'stats_multiselect'):
-            self.stats_multiselect.set_selected_items([])
-            self.stats_multiselect.set_unselected_items([])
 
         self.remove_connects()
 
@@ -603,8 +618,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                                   False,
                                   TEXTUAL_FIELD_TYPES)
             if self.iface.activeLayer().selectedFeatureCount() > 0:
-                self.set_selection(
-                    self.iface.activeLayer().selectedFeaturesIds())
+                self.set_selection()
 
     def remove_connects(self):
         try:
@@ -612,7 +626,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         except (TypeError, AttributeError):
             pass
 
-    def set_selection(self, selected):
+    def set_selection(self):
+        selected = self.iface.activeLayer().selectedFeaturesIds()
         self.redraw(selected, [], None)
 
     def clear_plot(self):
@@ -657,21 +672,21 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
     def on_imt_changed(self):
         self.current_imt = self.imt_cbx.currentText()
         self.was_imt_switched = True
-        self.set_selection(self.current_selection.keys())
+        self.set_selection()
 
     def on_loss_type_changed(self):
         self.current_loss_type = self.loss_type_cbx.currentText()
         self.was_loss_type_switched = True
-        self.set_selection(self.current_selection.keys())
+        self.set_selection()
 
     def on_poe_changed(self):
         self.current_poe = self.poe_cbx.currentText()
         self.was_poe_switched = True
-        self.set_selection(self.current_selection.keys())
+        self.set_selection()
 
     def on_approach_changed(self):
         self.current_approach = self.approach_cbx.currentText()
-        self.set_selection(self.current_selection.keys())
+        self.set_selection()
 
     def on_recalculate_curve_btn_clicked(self):
         self.layer_changed()
@@ -722,6 +737,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 csv_file.write(line + os.linesep)
                 # NOTE: taking the first element, because they are all the
                 # same
+                # FIXME: properly set current_selection for recovery curves
                 curve = self.current_selection.values()[0]
                 csv_file.write(str(curve['ordinates']))
             elif self.output_type in ['hcurves', 'uhs']:
@@ -748,9 +764,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 csv_file.write(header + os.linesep)
 
                 # write selected data
-                for site, _ in self.current_selection.iteritems():
-                    feature = next(self.iface.activeLayer().getFeatures(
-                        QgsFeatureRequest().setFilterFid(site)))
+                for feature in self.iface.activeLayer().getFeatures():
                     values = [feature.attribute(field_name)
                               for field_name in field_names]
                     lon = feature.geometry().asPoint().x()
