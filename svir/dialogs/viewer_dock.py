@@ -78,8 +78,6 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         # this is the action in the plugin (i.e. the button in the toolbar)
         self.action = action
 
-        self.active_layer = self.iface.activeLayer()
-
         self.output_type = None
         self.loss_type_lbl = None
         self.loss_type_cbx = None
@@ -95,7 +93,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.recalculate_curve_btn = None
         self.fields_multiselect = None
 
-        self.current_selection = {}
+        self.current_selection = {}  # feature_id -> curve
         self.current_imt = None
         self.current_loss_type = None
         self.was_imt_switched = False
@@ -226,7 +224,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
         self.typeDepVLayout.addWidget(self.fields_multiselect)
         fill_fields_multiselect(
-            self.fields_multiselect, self.active_layer)
+            self.fields_multiselect, self.iface.activeLayer())
 
     def create_stats_multiselect(self):
         title = 'Select statistics to plot'
@@ -269,9 +267,12 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         gids = dict()
         selected_rlzs_or_stats = list(
                 self.stats_multiselect.get_selected_items())
+        selected_features_ids = [
+            feature.id()
+            for feature in self.iface.activeLayer().selectedFeatures()]
         for rlz_or_stat in selected_rlzs_or_stats:
-            gids[rlz_or_stat] = self.current_selection.keys()
-        count_selected = len(self.active_layer.selectedFeatures())
+            gids[rlz_or_stat] = selected_features_ids
+        count_selected = len(selected_features_ids)
         if count_selected == 0:
             self.clear_plot()
             return
@@ -281,7 +282,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             # selected points (ugly), and here we need to get only one
             if self.output_type == 'recovery_curves' and i > 0:
                 break
-            feature = next(self.active_layer.getFeatures(
+            feature = next(self.iface.activeLayer().getFeatures(
                 QgsFeatureRequest().setFilterFid(site)))
 
             lon = feature.geometry().asPoint().x()
@@ -352,7 +353,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             ylim_bottom_margin = (ylim_top-ylim_bottom)/20.0
             self.plot.set_ylim(ylim_bottom-ylim_bottom_margin, ylim_top)
 
-        investigation_time = self.active_layer.customProperty(
+        investigation_time = self.iface.activeLayer().customProperty(
             'investigation_time', None)
         if investigation_time is not None:
             title += ' (%s years)' % investigation_time
@@ -383,10 +384,22 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.plot_canvas.draw()
 
     def redraw(self, selected, deselected, _):
+        """
+        Accepting parameters from QgsVectorLayer selectionChanged signal:
+        :param selected: newly selected feature ids
+            NOTE: if you add features to the selection, the list contains all
+            features, including those that were already selected before
+        :param deselected: ids of all features which have previously been
+            selected but are not any more
+        :param _: ignored (in case this is set to true, the old selection
+            was dismissed and the new selection corresponds to selected
+        """
         if not self.output_type:
             return
         for fid in deselected:
             try:
+                # self.current_selection is a dictionary associating a curve to
+                # each feature id
                 del self.current_selection[fid]
             except KeyError:
                 pass
@@ -397,7 +410,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.current_abscissa = []
         selected_rlzs_or_stats = list(
             self.stats_multiselect.get_selected_items())
-        for feature in self.active_layer.getFeatures(
+        for feature in self.iface.activeLayer().getFeatures(
                 QgsFeatureRequest().setFilterFids(selected)):
             if self.output_type == 'hcurves':
                 imt = self.imt_cbx.currentText()
@@ -454,14 +467,15 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             else:
                 raise NotImplementedError(self.output_type)
 
-        for i, feature in enumerate(self.active_layer.getFeatures(
+        for i, feature in enumerate(self.iface.activeLayer().getFeatures(
                 QgsFeatureRequest().setFilterFids(selected))):
             if (self.was_imt_switched
                     or self.was_loss_type_switched
                     or feature.id() not in self.current_selection
                     or self.output_type == 'uhs'):
-                self.field_names = [field.name()
-                                    for field in self.active_layer.fields()]
+                self.field_names = [
+                    field.name()
+                    for field in self.iface.activeLayer().fields()]
                 ordinates = dict()
                 marker = dict()
                 line_style = dict()
@@ -519,7 +533,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.draw()
 
     def redraw_recovery_curve(self, selected):
-        features = list(self.active_layer.getFeatures(
+        features = list(self.iface.activeLayer().getFeatures(
             QgsFeatureRequest().setFilterFids(selected)))
         approach = self.approach_cbx.currentText()
         recovery = RecoveryModeling(features, approach, self.iface)
@@ -561,23 +575,22 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
         self.remove_connects()
 
-        self.active_layer = self.iface.activeLayer()
-
-        if (self.active_layer is not None
-                and self.active_layer.type() == QgsMapLayer.VectorLayer
-                and self.active_layer.geometryType() == QGis.Point):
-            self.active_layer.selectionChanged.connect(self.redraw)
+        if (self.iface.activeLayer() is not None
+                and self.iface.activeLayer().type() == QgsMapLayer.VectorLayer
+                and self.iface.activeLayer().geometryType() == QGis.Point):
+            self.iface.activeLayer().selectionChanged.connect(self.redraw)
 
             if self.output_type in ['hcurves', 'uhs']:
                 if self.output_type == 'hcurves':
                     # fields names are like 'max_PGA_0.005'
                     imts = sorted(set(
                         [field.name().split('_')[1]
-                         for field in self.active_layer.fields()]))
+                         for field in self.iface.activeLayer().fields()]))
                     self.imt_cbx.clear()
                     self.imt_cbx.addItems(imts)
                 self.field_names = [
-                    field.name() for field in self.active_layer.fields()]
+                    field.name()
+                    for field in self.iface.activeLayer().fields()]
                 self.rlzs_or_stats = sorted(set(
                     [field_name.split('_')[0]
                      for field_name in self.field_names]))
@@ -586,15 +599,16 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 self.stats_multiselect.setEnabled(len(self.rlzs_or_stats) > 1)
             elif self.output_type == 'loss_curves':
                 reload_attrib_cbx(self.loss_type_cbx,
-                                  self.active_layer,
+                                  self.iface.activeLayer(),
                                   False,
                                   TEXTUAL_FIELD_TYPES)
-            if self.active_layer.selectedFeatureCount() > 0:
-                self.set_selection(self.active_layer.selectedFeaturesIds())
+            if self.iface.activeLayer().selectedFeatureCount() > 0:
+                self.set_selection(
+                    self.iface.activeLayer().selectedFeaturesIds())
 
     def remove_connects(self):
         try:
-            self.active_layer.selectionChanged.disconnect(self.redraw)
+            self.iface.activeLayer().selectionChanged.disconnect(self.redraw)
         except (TypeError, AttributeError):
             pass
 
@@ -630,7 +644,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 # matplotlib needs a string when exporting to svg, so here we
                 # must cast back to long
                 fid = long(line.get_gid())
-                feature = next(self.active_layer.getFeatures(
+                feature = next(self.iface.activeLayer().getFeatures(
                         QgsFeatureRequest().setFilterFid(fid)))
 
                 self.vertex_marker.setCenter(feature.geometry().asPoint())
@@ -718,7 +732,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
                 # write header
                 field_names = []
-                for field in self.active_layer.fields():
+                for field in self.iface.activeLayer().fields():
                     if self.output_type == 'hcurves':
                         # field names are like 'mean_PGA_0.005'
                         rlz_or_stat, imt, iml = field.name().split('_')
@@ -735,7 +749,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
                 # write selected data
                 for site, _ in self.current_selection.iteritems():
-                    feature = next(self.active_layer.getFeatures(
+                    feature = next(self.iface.activeLayer().getFeatures(
                         QgsFeatureRequest().setFilterFid(site)))
                     values = [feature.attribute(field_name)
                               for field_name in field_names]
