@@ -94,6 +94,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.fields_multiselect = None
         self.stats_multiselect = None
 
+        # self.current_selection[None] is for recovery curves
         self.current_selection = {}  # rlz_or_stat -> feature_id -> curve
         self.current_imt = None
         self.current_loss_type = None
@@ -281,8 +282,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             return
 
         for rlz_or_stat in selected_rlzs_or_stats:
-            for i, (site, curve) in enumerate(self.current_selection[
-                    rlz_or_stat].iteritems()):
+            for i, (site, curve) in enumerate(
+                    self.current_selection[rlz_or_stat].iteritems()):
                 # NOTE: we associated the same cumulative curve to all the
                 # selected points (ugly), and here we need to get only one
                 if self.output_type == 'recovery_curves' and i > 0:
@@ -407,8 +408,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         selected_rlzs_or_stats = list(
             self.stats_multiselect.get_selected_items())
         for fid in deselected:
-            # FIXME: check if using all_rlz_or_stats instead of only selected
-            for rlz_or_stat in selected_rlzs_or_stats:
+            for rlz_or_stat in self.rlzs_or_stats:
                 try:
                     # self.current_selection is a dictionary associating (for
                     # each selected rlz or stat) a curve to each feature id
@@ -419,7 +419,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             if len(selected) > 0:
                 self.redraw_recovery_curve(selected)
             return
-        if not selected_rlzs_or_stats:
+        if not selected_rlzs_or_stats or not self.current_selection:
             return
         self.current_abscissa = []
         for feature in self.iface.activeLayer().getFeatures(
@@ -566,8 +566,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         # associating only a single feature with the cumulative recovery curve.
         # It might be a little ugly, but otherwise it would be inefficient.
         if len(features) > 0:
-            # FIXME
-            self.current_selection[features[0].id()] = {
+            self.current_selection[None][features[0].id()] = {
                 'abscissa': self.current_abscissa,
                 'ordinates': recovery_function,
                 'color': color_hex,
@@ -738,7 +737,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 # NOTE: taking the first element, because they are all the
                 # same
                 # FIXME: properly set current_selection for recovery curves
-                curve = self.current_selection.values()[0]
+                curve = self.current_selection[None].values()[0]
                 csv_file.write(str(curve['ordinates']))
             elif self.output_type in ['hcurves', 'uhs']:
                 selected_rlzs_or_stats = list(
