@@ -28,6 +28,13 @@ import uuid
 import fileinput
 import re
 
+try:
+    import scipy  # NOQA
+except ImportError:
+    IS_SCIPY_INSTALLED = False
+else:
+    IS_SCIPY_INSTALLED = True
+
 from copy import deepcopy
 from math import floor, ceil
 from qgis.core import (QgsVectorLayer,
