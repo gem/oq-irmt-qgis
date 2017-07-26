@@ -52,10 +52,13 @@ from svir.utilities.utils import (get_ui_class,
                                   reload_attrib_cbx,
                                   log_msg,
                                   clear_widgets_from_layout,
+                                  warn_scipy_missing,
                                   )
 from svir.recovery_modeling.recovery_modeling import (
     RecoveryModeling, fill_fields_multiselect)
 from svir.ui.list_multiselect_widget import ListMultiSelectWidget
+
+from svir import IS_SCIPY_INSTALLED
 
 FORM_CLASS = get_ui_class('ui_viewer_dock.ui')
 
@@ -247,6 +250,10 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             # self.create_poe_selector()
             pass
         elif new_output_type == 'recovery_curves':
+            if not IS_SCIPY_INSTALLED:
+                warn_scipy_missing(self.iface.messageBar())
+                self.output_type = None
+                return
             self.create_approach_selector()
             self.create_n_simulations_spinbox()
             self.create_fields_multiselect()
