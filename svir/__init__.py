@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#/***************************************************************************
+# /***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
@@ -30,7 +30,16 @@ def classFactory(iface):
     from svir.irmt import Irmt
     return Irmt(iface)
 
+
 try:
     __import__('pkg_resources').declare_namespace(__name__)
 except ImportError:
     __path__ = __import__('pkgutil').extend_path(__path__, __name__)
+
+IS_SCIPY_INSTALLED = None
+try:
+    import scipy  # NOQA
+except ImportError:
+    IS_SCIPY_INSTALLED = False
+else:
+    IS_SCIPY_INSTALLED = True

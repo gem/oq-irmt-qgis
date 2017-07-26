@@ -28,13 +28,6 @@ import uuid
 import fileinput
 import re
 
-try:
-    import scipy  # NOQA
-except ImportError:
-    IS_SCIPY_INSTALLED = False
-else:
-    IS_SCIPY_INSTALLED = True
-
 from copy import deepcopy
 from math import floor, ceil
 from qgis.core import (QgsVectorLayer,
@@ -121,6 +114,8 @@ from svir.ui.tool_button_with_help_link import QToolButtonWithHelpLink
 # DO NOT REMOVE THIS
 # noinspection PyUnresolvedReferences
 import svir.resources_rc  # pylint: disable=unused-import  # NOQA
+
+from svir import IS_SCIPY_INSTALLED
 
 
 class Irmt:

@@ -58,7 +58,7 @@ from svir.recovery_modeling.recovery_modeling import (
     RecoveryModeling, fill_fields_multiselect)
 from svir.ui.list_multiselect_widget import ListMultiSelectWidget
 
-from svir.irmt import IS_SCIPY_INSTALLED
+from svir import IS_SCIPY_INSTALLED
 
 FORM_CLASS = get_ui_class('ui_viewer_dock.ui')
 
