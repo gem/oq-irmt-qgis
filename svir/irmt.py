@@ -109,7 +109,8 @@ from svir.utilities.utils import (tr,
                                   write_layer_suppl_info_to_qgs,
                                   log_msg,
                                   save_layer_as_shapefile,
-                                  get_style)
+                                  get_style,
+                                  warn_scipy_missing)
 from svir.utilities.shared import (DEBUG,
                                    PROJECT_TEMPLATE,
                                    THEME_TEMPLATE,
@@ -369,8 +370,11 @@ class Irmt:
         return None
 
     def recovery_modeling(self):
-        dlg = RecoveryModelingDialog(self.iface)
-        dlg.exec_()
+        if IS_SCIPY_INSTALLED:
+            dlg = RecoveryModelingDialog(self.iface)
+            dlg.exec_()
+        else:
+            warn_scipy_missing(self.iface.messageBar())
 
     def recovery_settings(self):
         dlg = RecoverySettingsDialog(self.iface)
