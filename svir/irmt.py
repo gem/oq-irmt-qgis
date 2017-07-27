@@ -68,6 +68,7 @@ from svir.dialogs.upload_settings_dialog import UploadSettingsDialog
 from svir.dialogs.weight_data_dialog import WeightDataDialog
 from svir.dialogs.recovery_modeling_dialog import RecoveryModelingDialog
 from svir.dialogs.recovery_settings_dialog import RecoverySettingsDialog
+from svir.dialogs.ipt_dialog import IptDialog
 from svir.dialogs.drive_oq_engine_server_dialog import (
     DriveOqEngineServerDialog)
 from svir.dialogs.load_ruptures_as_layer_dialog import (
@@ -204,6 +205,14 @@ class Irmt:
                            enable=False,
                            add_to_layer_actions=True,
                            submenu='OQ Platform')
+        # Action to drive ipt
+        self.add_menu_item("ipt",
+                           ":/plugins/irmt/ipt.svg",
+                           u"Input Preparation Toolkit",
+                           self.ipt,
+                           enable=True,
+                           submenu='OQ Engine',
+                           add_to_toolbar=True)
         # Action to drive the oq-engine server
         self.add_menu_item("drive_engine_server",
                            ":/plugins/irmt/drive_oqengine.svg",
@@ -413,6 +422,11 @@ class Irmt:
     # def plot_dmg_by_taxon_from_npz(self):
     #     dlg = PlotFromNpzDialog(self.iface, 'dmg_by_taxon')
     #     dlg.exec_()
+
+    def ipt(self):
+        self.ipt_dlg = IptDialog()
+        self.ipt_dlg.show()
+        # self.ipt_dlg.raise_()
 
     def drive_oq_engine_server(self):
         if self.drive_oq_engine_server_dlg is None:
