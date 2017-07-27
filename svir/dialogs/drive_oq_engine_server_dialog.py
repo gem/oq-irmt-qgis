@@ -52,6 +52,8 @@ from svir.third_party.requests.exceptions import (ConnectionError,
                                                   ReadTimeout,
                                                   SSLError,
                                                   )
+from svir.third_party.requests.packages.urllib3.exceptions import (
+    LocationParseError)
 from svir.utilities.settings import get_engine_credentials
 from svir.utilities.shared import OQ_ALL_LOADABLE_TYPES
 from svir.utilities.utils import (WaitCursorManager,
@@ -83,7 +85,7 @@ from svir.dialogs.show_params_dialog import ShowParamsDialog
 FORM_CLASS = get_ui_class('ui_drive_engine_server.ui')
 
 HANDLED_EXCEPTIONS = (SSLError, ConnectionError, InvalidSchema, MissingSchema,
-                      ReadTimeout, SvNetworkError)
+                      ReadTimeout, SvNetworkError, LocationParseError)
 
 BUTTON_WIDTH = 75
 
@@ -763,6 +765,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                               InvalidSchema,
                               MissingSchema,
                               ReadTimeout,
+                              LocationParseError,
                               SvNetworkError)):
             err_msg = str(exc)
             if isinstance(exc, InvalidSchema):
