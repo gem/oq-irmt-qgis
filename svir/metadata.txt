@@ -35,6 +35,7 @@ changelog=
     * The plugin works even if scipy is not installed and it requests to install it only on the attempt of using
       recovery modeling functionalities
     * Added a button to reset the default plugin settings
+    * While driving the OQ-Engine, notifications are displayed on top of the widget instead of using the main messageBar
     * The widget driving the OQ-Engine handles also the LocationParseError exception
 
 # tags are comma separated with spaces allowed
