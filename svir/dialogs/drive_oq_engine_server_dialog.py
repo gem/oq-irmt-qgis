@@ -45,6 +45,7 @@ from PyQt4.QtGui import (QDialog,
                          QColor,
                          QMessageBox,
                          )
+from qgis.gui import QgsMessageBar
 from svir.third_party.requests import Session
 from svir.third_party.requests.exceptions import (ConnectionError,
                                                   InvalidSchema,
@@ -126,6 +127,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         # NOTE: start_polling() is called from outside, in order to reset
         #       the timer whenever the button to open the dialog is pressed
         self.finished.connect(self.stop_polling)
+
+        self.message_bar = QgsMessageBar(self)
+        self.layout().insertWidget(0, self.message_bar)
+
         self.attempt_login()
 
     def attempt_login(self):
@@ -154,7 +159,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                                          irmt_major_minor[1],
                                          engine_major_minor[0],
                                          engine_major_minor[1]))
-            log_msg(msg, level='W', message_bar=self.iface.messageBar())
+            log_msg(msg, level='W', message_bar=self.message_bar)
 
     def login(self):
         self.session = Session()
@@ -224,7 +229,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                        " credentials. The call to %s was redirected to %s."
                        % (calc_list_url, resp.url))
                 log_msg(msg, level='C',
-                        message_bar=self.iface.messageBar())
+                        message_bar=self.message_bar)
                 self.is_logged_in = False
                 self.reject()
                 return
@@ -436,11 +441,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 return
         if resp.ok:
             msg = 'Calculation %s successfully removed' % calc_id
-            log_msg(msg, level='I', message_bar=self.iface.messageBar())
+            log_msg(msg, level='I', message_bar=self.message_bar)
             self.refresh_calc_list()
         else:
             msg = 'Unable to remove calculation %s' % calc_id
-            log_msg(msg, level='C', message_bar=self.iface.messageBar())
+            log_msg(msg, level='C', message_bar=self.message_bar)
         return
 
     def run_calc(self, calc_id=None, file_names=None):
@@ -468,7 +473,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 # file is .ini, to look for all the files specified in the .ini
                 # and to build a zip archive with all them
                 msg = "Please select all the files needed, or a zip archive"
-                log_msg(msg, level='C', message_bar=self.iface.messageBar())
+                log_msg(msg, level='C', message_bar=self.message_bar)
                 return
         else:
             _, zipped_file_name = tempfile.mkstemp()
@@ -495,7 +500,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             self.refresh_calc_list()
             return resp.json()
         else:
-            log_msg(resp.text, level='C', message_bar=self.iface.messageBar())
+            log_msg(resp.text, level='C', message_bar=self.message_bar)
 
     @pyqtSlot(int, int)
     def on_calc_list_tbl_cellClicked(self, row, column):
@@ -543,7 +548,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             filepath = os.path.join(dest_folder, os.path.basename(filename))
             open(filepath, "wb").write(resp.content)
             log_msg('The datastore has been saved as %s' % filepath,
-                    level='I', message_bar=self.iface.messageBar())
+                    level='I', message_bar=self.message_bar)
 
     @pyqtSlot()
     def on_show_calc_params_btn_clicked(self):
@@ -700,7 +705,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             if not filepath:
                 return
             msg = 'Calculation %s was saved as %s' % (output_id, filepath)
-            log_msg(msg, level='I', message_bar=self.iface.messageBar())
+            log_msg(msg, level='I', message_bar=self.message_bar)
         else:
             raise NotImplementedError(action)
 
@@ -725,7 +730,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     'Unable to download the output.\n%s: %s.\n%s'
                     % (resp.status_code, resp.reason, resp.text))
                 log_msg(err_msg, level='C',
-                        message_bar=self.iface.messageBar())
+                        message_bar=self.message_bar)
                 return
             filename = resp.headers['content-disposition'].split(
                 'filename=')[1]
@@ -758,7 +763,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         if isinstance(exc, SSLError):
             err_msg = '; '.join(exc.message.message.strerror.message[0])
             err_msg += ' (you could try prepending http:// or https://)'
-            log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
+            log_msg(err_msg, level='C', message_bar=self.message_bar)
         elif isinstance(exc, (ConnectionError,
                               InvalidSchema,
                               MissingSchema,
@@ -777,7 +782,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     ' spelled correctly and that you are using the right'
                     ' url and port in the host setting)')
             log_msg(err_msg, level='C',
-                    message_bar=self.iface.messageBar())
+                    message_bar=self.message_bar)
         else:
             # sanity check (it should never occur)
             raise TypeError(
