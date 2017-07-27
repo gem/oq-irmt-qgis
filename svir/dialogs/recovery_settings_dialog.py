@@ -48,10 +48,10 @@ class RecoverySettingsDialog(QDialog, FORM_CLASS):
         # Set up the user interface from Designer.
         self.setupUi(self)
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
-        self.restoreState(restore_defaults=False)
+        self.restore_state(restore_defaults=False)
         self.set_ok_button()
 
-    def restoreState(self, restore_defaults=False):
+    def restore_state(self, restore_defaults=False):
         """
         Reinstate the options based on the user's stored session info.
         """
@@ -96,7 +96,7 @@ class RecoverySettingsDialog(QDialog, FORM_CLASS):
         self.restore_setting_number(
             'repair_time_dispersion', self.repair_time_dispersion_sbx, float)
 
-    def saveState(self):
+    def save_state(self):
         """
         Store the options into the user's stored session info.
         """
@@ -202,7 +202,7 @@ class RecoverySettingsDialog(QDialog, FORM_CLASS):
 
     def accept(self):
         try:
-            self.saveState()
+            self.save_state()
         except ValueError as exc:
             log_msg(exc.message, level='C',
                     message_bar=self.iface.messageBar(),
@@ -212,7 +212,7 @@ class RecoverySettingsDialog(QDialog, FORM_CLASS):
 
     @pyqtSlot()
     def on_restore_defaults_btn_clicked(self):
-        self.restoreState(restore_defaults=True)
+        self.restore_state(restore_defaults=True)
 
     @pyqtSlot(int)
     def on_n_loss_based_dmg_states_sbx_valueChanged(

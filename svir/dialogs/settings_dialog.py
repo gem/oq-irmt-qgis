@@ -24,12 +24,12 @@
 
 
 from PyQt4.QtCore import pyqtSlot, QSettings, Qt
-from PyQt4.QtGui import QDialog, QPalette, QColorDialog
+from PyQt4.QtGui import QDialog, QPalette, QColorDialog, QMessageBox
 
 from qgis.core import QgsGraduatedSymbolRendererV2, QgsProject
 
 from svir.utilities.utils import get_ui_class, get_style
-from svir.utilities.shared import PLATFORM_REGISTRATION_URL
+from svir.utilities.shared import PLATFORM_REGISTRATION_URL, DEFAULT_SETTINGS
 
 FORM_CLASS = get_ui_class('ui_settings.ui')
 
@@ -67,23 +67,48 @@ class SettingsDialog(QDialog, FORM_CLASS):
         }
         for key in modes:
             self.style_mode.addItem(modes[key], key)
-        self.restoreState()
+        self.restore_state()
 
-    def restoreState(self):
+    def restore_state(self, restore_defaults=False):
         """
         Reinstate the options based on the user's stored session info.
+
+        :param restore_defaults: if True, settings will be reset to the default
+            values, instead of reading them from the user's stored info
         """
         mySettings = QSettings()
 
-        platform_username = mySettings.value('irmt/platform_username', '')
-        platform_password = mySettings.value('irmt/platform_password', '')
-        platform_hostname = mySettings.value(
-                'irmt/platform_hostname', 'https://platform.openquake.org')
+        platform_username = (DEFAULT_SETTINGS['platform_username']
+                             if restore_defaults
+                             else mySettings.value(
+                                 'irmt/platform_username',
+                                 DEFAULT_SETTINGS['platform_username']))
+        platform_password = (DEFAULT_SETTINGS['platform_password']
+                             if restore_defaults
+                             else mySettings.value(
+                                 'irmt/platform_password',
+                                 DEFAULT_SETTINGS['platform_password']))
+        platform_hostname = (DEFAULT_SETTINGS['platform_hostname']
+                             if restore_defaults
+                             else mySettings.value(
+                                'irmt/platform_hostname',
+                                DEFAULT_SETTINGS['platform_hostname']))
 
-        engine_username = mySettings.value('irmt/engine_username', '')
-        engine_password = mySettings.value('irmt/engine_password', '')
-        engine_hostname = mySettings.value(
-                'irmt/engine_hostname', 'http://localhost:8800')
+        engine_username = (DEFAULT_SETTINGS['engine_username']
+                           if restore_defaults
+                           else mySettings.value(
+                               'irmt/engine_username',
+                               DEFAULT_SETTINGS['engine_username']))
+        engine_password = (DEFAULT_SETTINGS['engine_password']
+                           if restore_defaults
+                           else mySettings.value(
+                               'irmt/engine_password',
+                               DEFAULT_SETTINGS['engine_password']))
+        engine_hostname = (DEFAULT_SETTINGS['engine_hostname']
+                           if restore_defaults
+                           else mySettings.value(
+                               'irmt/engine_hostname',
+                               DEFAULT_SETTINGS['engine_hostname']))
 
         # hack for strange mac behaviour
         if not platform_username:
@@ -106,7 +131,10 @@ class SettingsDialog(QDialog, FORM_CLASS):
         self.enginePasswordEdit.setText(engine_password)
         self.engineHostnameEdit.setText(engine_hostname)
 
-        style = get_style(self.iface.activeLayer(), self.iface.messageBar())
+        style = get_style(
+            self.iface.activeLayer(),
+            self.iface.messageBar(),
+            restore_defaults)
 
         self.set_button_color(self.style_color_from, style['color_from'])
         self.set_button_color(self.style_color_to, style['color_to'])
@@ -123,7 +151,7 @@ class SettingsDialog(QDialog, FORM_CLASS):
     def set_button_color(self, button, color):
         button.setStyleSheet("background-color: %s" % color.name())
 
-    def saveState(self):
+    def save_state(self):
         """
         Store the options into the user's stored session info.
         """
@@ -183,6 +211,15 @@ class SettingsDialog(QDialog, FORM_CLASS):
     def on_style_color_to_clicked(self):
         self.select_color(self.style_color_to)
 
+    @pyqtSlot()
+    def on_restore_default_settings_btn_clicked(self):
+        msg = ("All current settings will be deleted and replaced by defaults."
+               " Are you sure?")
+        reply = QMessageBox.question(
+            self, 'Warning', msg, QMessageBox.Yes, QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            self.restore_state(restore_defaults=True)
+
     def select_color(self, button):
         initial = button.palette().color(QPalette.Button)
         color = QColorDialog.getColor(initial)
@@ -193,7 +230,7 @@ class SettingsDialog(QDialog, FORM_CLASS):
         """
         Method invoked when OK button is clicked.
         """
-        self.saveState()
+        self.save_state()
         if self.irmt_main is not None:
             self.irmt_main.reset_engine_login()
         super(SettingsDialog, self).accept()

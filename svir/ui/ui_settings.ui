@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>501</width>
-    <height>660</height>
+    <height>664</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -236,8 +236,6 @@
        </widget>
       </item>
      </layout>
-     <zorder>force_restyling_ckb</zorder>
-     <zorder>force_restyling_ckb</zorder>
     </widget>
    </item>
    <item>
@@ -264,6 +262,33 @@
       </item>
      </layout>
     </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <widget class="QPushButton" name="restore_default_settings_btn">
+       <property name="text">
+        <string>Restore default settings</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
    </item>
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">
