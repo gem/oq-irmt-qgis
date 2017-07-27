@@ -34,6 +34,7 @@ changelog=
     * Fixed an offset issue with markers
     * The plugin works even if scipy is not installed and it requests to install it only on the attempt of using
       recovery modeling functionalities
+    * Added a button to reset the default plugin settings
 
 # tags are comma separated with spaces allowed
 tags=GEM, IRMT, SVIR, OpenQuake, Social Vulnerability, Integrated Risk, Recovery, Resilience, Risk, Hazard, Earthquake

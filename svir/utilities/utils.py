@@ -36,7 +36,6 @@ from qgis.core import (QgsMapLayerRegistry,
                        QgsMessageLog,
                        QgsVectorLayer,
                        QgsVectorFileWriter,
-                       QgsGraduatedSymbolRendererV2,
                        )
 from qgis.gui import QgsMessageBar
 
@@ -50,7 +49,7 @@ from PyQt4.QtGui import (QApplication,
                          QColor)
 
 from svir.third_party.poster.encode import multipart_encode
-from svir.utilities.shared import DEBUG
+from svir.utilities.shared import DEBUG, DEFAULT_SETTINGS
 
 F32 = numpy.float32
 
@@ -826,36 +825,46 @@ def _check_type(
     return variable
 
 
-def get_style(layer, message_bar):
-    color_from_rgba_default = QColor('#FFEBEB').rgba()
-    color_to_rgba_default = QColor('red').rgba()
-    style_mode_default = QgsGraduatedSymbolRendererV2.Quantile
-    style_classes_default = 10
-    force_restyling_default = True
-
+def get_style(layer, message_bar, restore_defaults=False):
     settings = QSettings()
-    try:
-        color_from_rgba = settings.value(
-            'irmt/style_color_from', color_from_rgba_default, type=int)
-    except TypeError:
-        msg = ('The type of the stored setting "style_color_from" was not'
-               ' valid, so the default has been restored.')
-        log_msg(msg, level='C', message_bar=message_bar)
-        color_from_rgba = color_from_rgba_default
+    if restore_defaults:
+        color_from_rgba = DEFAULT_SETTINGS['color_from_rgba']
+    else:
+        try:
+            color_from_rgba = settings.value(
+                'irmt/style_color_from',
+                DEFAULT_SETTINGS['color_from_rgba'],
+                type=int)
+        except TypeError:
+            msg = ('The type of the stored setting "style_color_from" was not'
+                   ' valid, so the default has been restored.')
+            log_msg(msg, level='C', message_bar=message_bar)
+            color_from_rgba = DEFAULT_SETTINGS['color_from_rgba']
     color_from = QColor().fromRgba(color_from_rgba)
-    try:
-        color_to_rgba = settings.value(
-            'irmt/style_color_to', color_to_rgba_default, type=int)
-    except TypeError:
-        msg = ('The type of the stored setting "style_color_to" was not'
-               ' valid, so the default has been restored.')
-        log_msg(msg, level='C', message_bar=message_bar)
-        color_to_rgba = color_to_rgba_default
+    if restore_defaults:
+        color_to_rgba = DEFAULT_SETTINGS['color_to_rgba']
+    else:
+        try:
+            color_to_rgba = settings.value(
+                'irmt/style_color_to',
+                DEFAULT_SETTINGS['color_to_rgba'],
+                type=int)
+        except TypeError:
+            msg = ('The type of the stored setting "style_color_to" was not'
+                   ' valid, so the default has been restored.')
+            log_msg(msg, level='C', message_bar=message_bar)
+            color_to_rgba = DEFAULT_SETTINGS['color_to_rgba']
     color_to = QColor().fromRgba(color_to_rgba)
-    mode = settings.value(
-        'irmt/style_mode', style_mode_default, type=int)
-    classes = settings.value(
-        'irmt/style_classes', style_classes_default, type=int)
+    mode = (DEFAULT_SETTINGS['style_mode']
+            if restore_defaults
+            else settings.value(
+                'irmt/style_mode', DEFAULT_SETTINGS['style_mode'], type=int))
+    classes = (DEFAULT_SETTINGS['style_classes']
+               if restore_defaults
+               else settings.value(
+                   'irmt/style_classes',
+                   DEFAULT_SETTINGS['style_classes'],
+                   type=int))
     # look for the setting associated to the layer if available
     force_restyling = None
     if layer is not None:
@@ -865,6 +874,8 @@ def get_style(layer, message_bar):
             'irmt', '%s_%s' % (layer.id(), 'force_restyling'))
         if found:
             force_restyling = value
+    if restore_defaults:
+        force_restyling = DEFAULT_SETTINGS['force_restyling']
     # otherwise look for the setting at project level
     if force_restyling is None:
         value, found = QgsProject.instance().readBoolEntry(
@@ -874,7 +885,9 @@ def get_style(layer, message_bar):
     # if again the setting is not found, look for it at the general level
     if force_restyling is None:
         force_restyling = settings.value(
-            'irmt/force_restyling', force_restyling_default, type=bool)
+            'irmt/force_restyling',
+            DEFAULT_SETTINGS['force_restyling'],
+            type=bool)
     return {
         'color_from': color_from,
         'color_to': color_to,
