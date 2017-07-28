@@ -48,8 +48,9 @@ class IptDialog(QDialog, FORM_CLASS):
         # downloadRequested(QNetworkRequest) is a signal that is triggered in
         # the web page when the user right-clicks on a link and chooses "save
         # link as". Instead of proceeding with the normal workflow (asking the
-        # user where to save the file) the control is passed to self.download,
-        # that retrieves the file and prints its contents
+        # user where to save the file) the control is passed to
+        # self.handle_downhandle_downloadRequested, that retrieves the file and
+        # prints its contents
         self.web_view.page().downloadRequested.connect(
             self.handle_downloadRequested)
 
