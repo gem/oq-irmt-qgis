@@ -102,7 +102,8 @@ from svir.utilities.utils import (tr,
                                   write_layer_suppl_info_to_qgs,
                                   log_msg,
                                   save_layer_as_shapefile,
-                                  get_style)
+                                  get_style,
+                                  warn_scipy_missing)
 from svir.utilities.shared import (DEBUG,
                                    PROJECT_TEMPLATE,
                                    THEME_TEMPLATE,
@@ -113,6 +114,8 @@ from svir.ui.tool_button_with_help_link import QToolButtonWithHelpLink
 # DO NOT REMOVE THIS
 # noinspection PyUnresolvedReferences
 import svir.resources_rc  # pylint: disable=unused-import  # NOQA
+
+from svir import IS_SCIPY_INSTALLED
 
 
 class Irmt:
@@ -362,8 +365,11 @@ class Irmt:
         return None
 
     def recovery_modeling(self):
-        dlg = RecoveryModelingDialog(self.iface)
-        dlg.exec_()
+        if IS_SCIPY_INSTALLED:
+            dlg = RecoveryModelingDialog(self.iface)
+            dlg.exec_()
+        else:
+            warn_scipy_missing(self.iface.messageBar())
 
     def recovery_settings(self):
         dlg = RecoverySettingsDialog(self.iface)

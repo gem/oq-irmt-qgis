@@ -1,9 +1,12 @@
 import random
-from scipy.stats import norm
 import math
 from PyQt4.QtCore import QSettings
 from svir.utilities.shared import RECOVERY_DEFAULTS
 from svir.utilities.utils import get_layer_setting
+
+from svir import IS_SCIPY_INSTALLED
+if IS_SCIPY_INSTALLED:
+    from scipy.stats import norm
 
 
 class Building(object):

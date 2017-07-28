@@ -73,7 +73,7 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         self.n_simulations_sbx.setToolTip(simulations_explanation)
         self.save_bldg_curves_check.setChecked(False)
         self.populate_layers_in_combos()
-        self.restoreState()
+        self.restore_state()
         self.set_ok_button()
 
     def populate_layers_in_combos(self):
@@ -92,7 +92,7 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
             if idx != -1:
                 self.dmg_by_asset_layer_cbx.setCurrentIndex(idx)
 
-    def restoreState(self):
+    def restore_state(self):
         """
         Reinstate the options based on the user's stored session info.
         """
@@ -104,7 +104,7 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
             self.output_data_dir = ''
         self.output_data_dir_le.setText(self.output_data_dir)
 
-    def saveState(self):
+    def save_state(self):
         """
         Store the options into the user's stored session info.
         """
@@ -222,5 +222,5 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
                 self.integrate_svi_check.isChecked())
         msg = 'Recovery curves have been saved to [%s]' % self.output_data_dir
         log_msg(msg, level='I', message_bar=self.iface.messageBar())
-        self.saveState()
+        self.save_state()
         super(RecoveryModelingDialog, self).accept()

@@ -25,7 +25,9 @@
 import os
 from collections import OrderedDict
 from PyQt4.QtCore import QSettings
+from PyQt4.QtGui import QColor
 from ConfigParser import ConfigParser
+from qgis.core import QgsGraduatedSymbolRendererV2
 
 DEBUG = QSettings().value('/irmt/developer_mode', False, type=bool)
 
@@ -217,3 +219,18 @@ OQ_CSV_LOADABLE_TYPES = set(['ruptures'])
 OQ_NPZ_LOADABLE_TYPES = set([
     'hmaps', 'hcurves', 'uhs', 'gmf_data', 'dmg_by_asset', 'losses_by_asset'])
 OQ_ALL_LOADABLE_TYPES = OQ_CSV_LOADABLE_TYPES | OQ_NPZ_LOADABLE_TYPES
+
+
+DEFAULT_SETTINGS = dict(
+    platform_username='',
+    platform_password='',
+    platform_hostname='https://platform.openquake.org',
+    engine_username='',
+    engine_password='',
+    engine_hostname='http://localhost:8800',
+    color_from_rgba=QColor('#FFEBEB').rgba(),
+    color_to_rgba=QColor('red').rgba(),
+    style_mode=QgsGraduatedSymbolRendererV2.Quantile,
+    style_classes=10,
+    force_restyling=True,
+)
