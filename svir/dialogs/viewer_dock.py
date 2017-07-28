@@ -237,7 +237,20 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.stats_multiselect.setSizePolicy(
             QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
         self.typeDepVLayout.addWidget(self.stats_multiselect)
-        self.stats_multiselect.selection_changed.connect(self.draw)
+        self.stats_multiselect.selection_changed.connect(
+            self.refresh_feature_selection)
+
+    def refresh_feature_selection(self):
+        if not list(self.stats_multiselect.get_selected_items()):
+            self.clear_plot()
+            return
+        # feature selection triggers the redrawing of plots
+        layer = self.iface.activeLayer()
+        selected_feats = layer.selectedFeaturesIds()
+        layer.blockSignals(True)
+        layer.removeSelection()
+        layer.blockSignals(False)
+        layer.selectByIds(selected_feats)
 
     def set_output_type_and_its_gui(self, new_output_type):
         if (self.output_type is not None
