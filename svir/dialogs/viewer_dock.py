@@ -773,9 +773,15 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 csv_file.write(line + os.linesep)
                 # NOTE: taking the first element, because they are all the
                 # same
-                # FIXME: properly set current_selection for recovery curves
-                curve = self.current_selection[None].values()[0]
-                csv_file.write(str(curve['ordinates']))
+                feature = self.iface.activeLayer().selectedFeatures()[0]
+                lon = feature.geometry().asPoint().x()
+                lat = feature.geometry().asPoint().y()
+                line = '%s,%s' % (lon, lat)
+                values = self.current_selection[None].values()[0]
+                if values:
+                    line += "," + ",".join([
+                        str(value) for value in values['ordinates']])
+                csv_file.write(line + os.linesep)
             elif self.output_type in ['hcurves', 'uhs']:
                 selected_rlzs_or_stats = list(
                     self.stats_multiselect.get_selected_items())
