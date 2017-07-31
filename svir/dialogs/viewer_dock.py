@@ -287,8 +287,11 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
     def draw(self):
         self.plot.clear()
         gids = dict()
-        selected_rlzs_or_stats = list(
-            self.stats_multiselect.get_selected_items())
+        if self.stats_multiselect is not None:
+            selected_rlzs_or_stats = list(
+                self.stats_multiselect.get_selected_items())
+        else:
+            selected_rlzs_or_stats = [None]
         selected_features_ids = [
             feature.id()
             for feature in self.iface.activeLayer().selectedFeatures()]
@@ -425,14 +428,24 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         """
         if not self.output_type:
             return
-        selected_rlzs_or_stats = list(
-            self.stats_multiselect.get_selected_items())
+        if self.stats_multiselect is not None:
+            selected_rlzs_or_stats = list(
+                self.stats_multiselect.get_selected_items())
+        else:
+            selected_rlzs_or_stats = None
         for fid in deselected:
-            for rlz_or_stat in self.rlzs_or_stats:
+            if hasattr(self, 'rlzs_or_stats'):
+                for rlz_or_stat in self.rlzs_or_stats:
+                    try:
+                        # self.current_selection is a dictionary associating
+                        # (for each selected rlz or stat) a curve to each
+                        # feature id
+                        del self.current_selection[rlz_or_stat][fid]
+                    except KeyError:
+                        pass
+            else:
                 try:
-                    # self.current_selection is a dictionary associating (for
-                    # each selected rlz or stat) a curve to each feature id
-                    del self.current_selection[rlz_or_stat][fid]
+                    del self.current_selection[None][fid]
                 except KeyError:
                     pass
         if self.output_type == 'recovery_curves':
@@ -586,6 +599,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         # associating only a single feature with the cumulative recovery curve.
         # It might be a little ugly, but otherwise it would be inefficient.
         if len(features) > 0:
+            self.current_selection[None] = {}
             self.current_selection[None][features[0].id()] = {
                 'abscissa': self.current_abscissa,
                 'ordinates': recovery_function,
@@ -596,11 +610,6 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.draw()
 
     def layer_changed(self):
-        if self.stats_multiselect is not None:
-            for rlz_or_stat in self.stats_multiselect.get_selected_items():
-                self.current_selection[rlz_or_stat] = {}
-            self.stats_multiselect.set_selected_items([])
-            self.stats_multiselect.set_unselected_items([])
         self.clear_plot()
         if hasattr(self, 'self.imt_cbx'):
             self.clear_imt_cbx()
@@ -615,6 +624,10 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             self.iface.activeLayer().selectionChanged.connect(self.redraw)
 
             if self.output_type in ['hcurves', 'uhs']:
+                for rlz_or_stat in self.stats_multiselect.get_selected_items():
+                    self.current_selection[rlz_or_stat] = {}
+                self.stats_multiselect.set_selected_items([])
+                self.stats_multiselect.set_unselected_items([])
                 if self.output_type == 'hcurves':
                     # fields names are like 'max_PGA_0.005'
                     imts = sorted(set(
@@ -636,6 +649,9 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                                   self.iface.activeLayer(),
                                   False,
                                   TEXTUAL_FIELD_TYPES)
+            elif self.output_type == 'recovery_curves':
+                fill_fields_multiselect(
+                    self.fields_multiselect, self.iface.activeLayer())
             if self.iface.activeLayer().selectedFeatureCount() > 0:
                 self.set_selection()
 
