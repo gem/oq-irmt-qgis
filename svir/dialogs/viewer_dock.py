@@ -428,6 +428,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         """
         if not self.output_type:
             return
+
         if self.stats_multiselect is not None:
             selected_rlzs_or_stats = list(
                 self.stats_multiselect.get_selected_items())

@@ -26,8 +26,10 @@
 import os
 import unittest
 import json
+from PyQt4.QtGui import QAction
 from qgis.core import QgsVectorLayer
 from svir.recovery_modeling.recovery_modeling import RecoveryModeling
+from svir.dialogs.viewer_dock import ViewerDock
 
 from svir.test.utilities import get_qgis_app
 
@@ -54,7 +56,10 @@ def calculate_and_check_recovery_curve(
         expected_recovery_curve = json.loads(f.read())
     testcase.assertEqual(len(recovery_curve), len(expected_recovery_curve))
     for actual, expected in zip(recovery_curve, expected_recovery_curve):
-        testcase.assertEqual(actual, expected)
+        if seed is not None:
+            testcase.assertEqual(actual, expected)
+        else:
+            testcase.assertAlmostEqual(actual, expected, places=2)
 
 
 class DeterministicTestCase(unittest.TestCase):
@@ -67,6 +72,20 @@ class DeterministicTestCase(unittest.TestCase):
         self.dmg_by_asset_layer = QgsVectorLayer(dmg_by_asset_layer_file_path,
                                                  'dmg_by_asset', 'ogr')
         self.regenerate_expected_values = False
+
+    def test_gui_building_aggregate(self):
+        mock_action = QAction(IFACE.mainWindow())
+        self.viewer_dock = ViewerDock(IFACE, mock_action)
+        IFACE.setActiveLayer(self.dmg_by_asset_layer)
+        output_type = 'Recovery Curves'
+        idx = self.viewer_dock.output_type_cbx.findText(output_type)
+        self.assertNotEqual(idx, -1, 'Output type %s not found' % output_type)
+        self.viewer_dock.output_type_cbx.setCurrentIndex(idx)
+        approach = 'Aggregate'
+        idx = self.viewer_dock.approach_cbx.findText(approach)
+        self.assertNotEqual(idx, -1, 'Approach %s not found' % approach)
+        self.viewer_dock.approach_cbx.setCurrentIndex(idx)
+        IFACE.activeLayer().select([1])
 
     def test_building_aggregate(self):
         approach = 'Aggregate'
