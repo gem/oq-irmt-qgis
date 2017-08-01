@@ -22,7 +22,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-from qgis.PyQt.QtWebKit import QWebPage
+# from qgis.PyQt.QtWebKit import QWebPage
 from qgis.PyQt.QtCore import QUrl
 from qgis.PyQt.QtGui import QDialog, QDialogButtonBox
 from third_party import requests
@@ -40,9 +40,9 @@ class IptDialog(QDialog, FORM_CLASS):
         self.setupUi(self)
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         qurl = QUrl(
-            # 'https://platform.openquake.org/ipt')
             # FIXME: loading a page that offers a link to download a small txt
-            'http://www.sample-videos.com/download-sample-text-file.php')
+            # 'http://www.sample-videos.com/download-sample-text-file.php')
+            'https://platform.openquake.org/ipt')
         self.web_view.setUrl(qurl)
 
         # downloadRequested(QNetworkRequest) is a signal that is triggered in
@@ -56,7 +56,8 @@ class IptDialog(QDialog, FORM_CLASS):
 
         # NOTE: without the following line, linkClicked is not emitted, but
         # we would need to delegate only one specific link!
-        self.web_view.page().setLinkDelegationPolicy(QWebPage.DelegateAllLinks)
+        # self.web_view.page().setLinkDelegationPolicy(
+        #     QWebPage.DelegateAllLinks)
         self.web_view.page().linkClicked.connect(self.handle_linkClicked)
 
         self.web_view.page().linkHovered.connect(self.handle_linkHovered)
@@ -78,6 +79,12 @@ class IptDialog(QDialog, FORM_CLASS):
         qurl = QUrl(
             'https://platform.openquake.org/ipt/?tab_id=1&example_id=99')
         self.web_view.setUrl(qurl)
+
+    def on_get_nrml_btn_clicked(self):
+        main_frame = self.web_view.page().mainFrame()
+        nrml_textarea = main_frame.findFirstElement("#textareaex")
+        nrml = nrml_textarea.evaluateJavaScript("this.value")
+        print(nrml)
 
     def on_back_btn_clicked(self):
         self.web_view.back()

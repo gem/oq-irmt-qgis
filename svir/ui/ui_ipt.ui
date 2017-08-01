@@ -38,6 +38,13 @@
     </widget>
    </item>
    <item>
+    <widget class="QPushButton" name="get_nrml_btn">
+     <property name="text">
+      <string>Get nrml</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QPushButton" name="back_btn">
      <property name="text">
       <string>Back</string>
