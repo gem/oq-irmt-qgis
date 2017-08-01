@@ -46,6 +46,7 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
             self, iface, viewer_dock, output_type, path, mode)
         self.setWindowTitle(
             'Load uniform hazard spectra from NPZ, as layer')
+        self.create_num_sites_indicator()
         self.create_load_selected_only_ckb()
         self.create_poe_selector()
         if self.path:
@@ -70,8 +71,8 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
         self.set_ok_button()
 
     def show_num_sites(self):
-        # FIXME
-        pass
+        self.num_sites_lbl.setText(
+            self.num_sites_msg % self.dataset.shape)
 
     def populate_out_dep_widgets(self):
         self.populate_dataset()

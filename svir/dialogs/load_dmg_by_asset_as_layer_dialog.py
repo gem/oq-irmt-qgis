@@ -47,6 +47,7 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         self.setWindowTitle('Load scenario damage by asset from NPZ, as layer')
         self.create_load_selected_only_ckb()
         self.load_selected_only_ckb.setEnabled(False)
+        self.create_num_sites_indicator()
         self.create_rlz_or_stat_selector()
         self.create_taxonomy_selector()
         self.create_loss_type_selector()

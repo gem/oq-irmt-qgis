@@ -46,6 +46,7 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         self.setWindowTitle(
             'Load hazard maps from NPZ, as layer')
         self.create_load_selected_only_ckb()
+        self.create_num_sites_indicator()
         self.create_rlz_or_stat_selector()
         self.create_imt_selector()
         self.create_poe_selector()
@@ -88,7 +89,7 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         #       need to move this block of code inside on_rlz_or_stat_changed()
         rlz_or_stat_data = self.npz_file['all'][
             self.rlz_or_stat_cbx.currentText()]
-        self.rlz_or_stat_num_sites_lbl.setText(
+        self.num_sites_lbl.setText(
             self.num_sites_msg % rlz_or_stat_data.shape)
 
     def on_imt_changed(self):

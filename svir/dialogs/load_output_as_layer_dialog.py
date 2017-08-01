@@ -45,7 +45,6 @@ from PyQt4.QtGui import (QDialogButtonBox,
                          QSpinBox,
                          QLabel,
                          QCheckBox,
-                         QHBoxLayout,
                          )
 
 
@@ -89,17 +88,17 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             self.path_le.setText(self.path)
         clear_widgets_from_layout(self.output_dep_vlayout)
 
+    def create_num_sites_indicator(self):
+        self.num_sites_msg = 'Number of sites: %s'
+        self.num_sites_lbl = QLabel(self.num_sites_msg % '')
+        self.output_dep_vlayout.addWidget(self.num_sites_lbl)
+
     def create_rlz_or_stat_selector(self):
         self.rlz_or_stat_cbx = QComboBox()
         self.rlz_or_stat_cbx.setEnabled(False)
         self.rlz_or_stat_cbx.currentIndexChanged['QString'].connect(
             self.on_rlz_or_stat_changed)
-        self.num_sites_msg = 'Number of sites: %s'
-        self.rlz_or_stat_num_sites_lbl = QLabel(self.num_sites_msg % '')
-        self.rlz_or_stat_h_layout = QHBoxLayout()
-        self.rlz_or_stat_h_layout.addWidget(self.rlz_or_stat_cbx)
-        self.rlz_or_stat_h_layout.addWidget(self.rlz_or_stat_num_sites_lbl)
-        self.output_dep_vlayout.addLayout(self.rlz_or_stat_h_layout)
+        self.output_dep_vlayout.addWidget(self.rlz_or_stat_cbx)
 
     def create_imt_selector(self):
         self.imt_lbl = QLabel('Intensity Measure Type')
@@ -244,7 +243,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         #       If different realizations have a different number of sites, we
         #       need to move this block of code inside on_rlz_or_stat_changed()
         rlz_or_stat_data = self.npz_file[self.rlz_or_stat_cbx.currentText()]
-        self.rlz_or_stat_num_sites_lbl.setText(
+        self.num_sites_lbl.setText(
             self.num_sites_msg % rlz_or_stat_data.shape)
 
     def set_ok_button(self):

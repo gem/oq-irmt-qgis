@@ -47,6 +47,7 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         self.setWindowTitle(
             'Load losses by asset from NPZ, aggregated by location, as layer')
         self.create_load_selected_only_ckb()
+        self.create_num_sites_indicator()
         self.create_rlz_or_stat_selector()
         self.create_taxonomy_selector()
         self.create_loss_type_selector()

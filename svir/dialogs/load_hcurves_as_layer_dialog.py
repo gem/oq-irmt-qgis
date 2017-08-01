@@ -45,6 +45,7 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
             self, iface, viewer_dock, output_type, path, mode)
         self.setWindowTitle(
             'Load hazard curves from NPZ, as layer')
+        self.create_num_sites_indicator()
         if self.path:
             self.npz_file = numpy.load(self.path, 'r')
             self.populate_out_dep_widgets()
@@ -59,8 +60,8 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
         self.dataset = self.npz_file['all']
 
     def show_num_sites(self):
-        # FIXME
-        pass
+        self.num_sites_lbl.setText(
+            self.num_sites_msg % self.dataset.shape)
 
     def populate_out_dep_widgets(self):
         self.populate_dataset()
