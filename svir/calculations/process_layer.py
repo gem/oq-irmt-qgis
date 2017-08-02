@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#/***************************************************************************
+# /***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
@@ -22,9 +22,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
+import sys
+
 import uuid
 from numpy.testing import assert_almost_equal
-from pprint import pprint
+from pprint import pformat
 from types import NoneType
 from PyQt4.QtCore import QPyNullVariant
 from qgis.core import (QgsMapLayer,
@@ -38,7 +40,7 @@ from svir.calculations.transformation_algs import TRANSFORMATION_ALGS, \
     transform
 from svir.utilities.shared import DEBUG, DOUBLE_FIELD_TYPE_NAME
 
-from svir.utilities.utils import LayerEditingManager, tr
+from svir.utilities.utils import LayerEditingManager, tr, log_msg
 
 
 class ProcessLayer():
@@ -59,14 +61,30 @@ class ProcessLayer():
     def __init__(self, layer):
         self.layer = layer
 
-    def pprint(self):
+    def pprint(self, usage='gui'):
         """
         Pretty print the contents of the layer
+
+        :param usage:
+            it can be either 'gui' or 'testing', indicating if the output has
+            to be written to the QGIS logging system (default) or to stderr as
+            it is useful for testing
         """
-        print 'Layer: %s' % self.layer.name()
-        print [field.name() for field in self.layer.dataProvider().fields()]
-        pprint([feature.attributes()
-                for feature in self.layer.dataProvider().getFeatures()])
+        if usage == 'gui':
+            logger_func = log_msg
+            spacer = ''
+        elif usage == 'testing':
+            logger_func = sys.stderr.write
+            spacer = '\n'
+        else:
+            raise ValueError('Usage "%s" is not implemented')
+        logger_func(spacer + 'Layer: %s' % self.layer.name())
+        logger_func(spacer + str(
+            [field.name() for field in self.layer.fields()]))
+        ppdata = pformat(
+            [feature.attributes()
+             for feature in self.layer.getFeatures()])
+        logger_func(spacer + ppdata)
 
     def has_same_projection_as(self, other_layer):
         """
@@ -103,20 +121,18 @@ class ProcessLayer():
         :param other_layer: layer to compare with
         :type other_layer: QgsVectorLayer
         """
-        this_dp = self.layer.dataProvider()
-        other_dp = other_layer.dataProvider()
         len_this = self.layer.featureCount()
         len_other = other_layer.featureCount()
         # Check if the layers have the same number of rows (features)
         if len_this != len_other:
             return False
         # Check if the layers have the same field names (columns)
-        this_fields = [field.name() for field in this_dp.fields()]
-        other_fields = [field.name() for field in other_dp.fields()]
+        this_fields = [field.name() for field in self.layer.fields()]
+        other_fields = [field.name() for field in other_layer.fields()]
         if this_fields != other_fields:
             return False
-        this_features = this_dp.getFeatures()
-        other_features = other_dp.getFeatures()
+        this_features = self.layer.getFeatures()
+        other_features = other_layer.getFeatures()
         # we already checked that the layers have the same number of features
         # and now we want to make sure that for each feature the contents are
         # the same
@@ -150,33 +166,47 @@ class ProcessLayer():
                  passed as input argument, and as values the actual names of
                  the assigned attributes
         """
+        if 'Add Attributes' not in self.layer.capabilitiesString():
+            raise TypeError('Unable to add attributes to this kind of layer.'
+                            ' (%s). Please consider saving the layer with an'
+                            ' editable format before attempting to add'
+                            ' attributes to it.'
+                            % self.layer.providerType())
         if simulate:
             description = 'Simulate add attributes'
         else:
             description = 'Add attributes'
+        aliases = dict()
+        proposed_attribute_dict = {}
+        proposed_attribute_list = []
         with LayerEditingManager(self.layer, description, DEBUG):
             # add attributes
             layer_pr = self.layer.dataProvider()
-            proposed_attribute_dict = {}
-            proposed_attribute_list = []
             for input_attribute in attribute_list:
                 input_attribute_name = input_attribute.name()
-                proposed_attribute_name = \
-                    input_attribute_name[:10].upper().replace(' ', '_')
+                if self.layer.providerType() == 'ogr':
+                    proposed_attribute_name = \
+                        input_attribute_name[:10].upper().replace(' ', '_')
+                else:
+                    proposed_attribute_name = input_attribute_name
                 i = 1
                 while True:
                     current_attribute_names = \
-                        [attribute.name() for attribute in layer_pr.fields()]
+                        [attribute.name() for attribute in self.layer.fields()]
                     if proposed_attribute_name in current_attribute_names:
                         # If the attribute is already assigned, change the
                         # proposed_attribute_name
-                        i_num_digits = len(str(i))
-                        # 10 = shapefile limit
-                        # 1 = underscore
-                        max_name_len = 10 - i_num_digits - 1
-                        proposed_attribute_name = '%s_%d' % (
-                            input_attribute_name[
-                                :max_name_len].upper().replace(' ', '_'), i)
+                        if self.layer.providerType() == 'ogr':
+                            i_num_digits = len(str(i))
+                            # 10 = shapefile limit
+                            # 1 = underscore
+                            max_name_len = 10 - i_num_digits - 1
+                            proposed_attribute_name = '%s_%d' % (
+                                input_attribute_name[:max_name_len].upper(
+                                    ).replace(' ', '_'), i)
+                        else:
+                            proposed_attribute_name = '%s_%d' % (
+                                input_attribute_name, i)
                         i += 1
                     else:
                         # If the attribute name is not already assigned,
@@ -186,12 +216,21 @@ class ProcessLayer():
                         input_attribute.setName(proposed_attribute_name)
                         proposed_attribute_list.append(input_attribute)
                         break
+                if proposed_attribute_name != input_attribute_name:
+                    aliases[proposed_attribute_name] = input_attribute_name
             if not simulate:
                 added_ok = layer_pr.addAttributes(proposed_attribute_list)
                 if not added_ok:
                     raise AttributeError(
                         'Unable to add attributes %s' %
                         proposed_attribute_list)
+        with LayerEditingManager(self.layer, 'add aliases', DEBUG):
+            if not simulate:
+                for proposed_attribute_name in aliases:
+                    attribute_id = self.layer.fieldNameIndex(
+                        proposed_attribute_name)
+                    self.layer.addAttributeAlias(
+                        attribute_id, aliases[proposed_attribute_name])
         return proposed_attribute_dict
 
     def delete_attributes(self, attribute_list):
@@ -207,6 +246,12 @@ class ProcessLayer():
 
         :return: true in case of success and false in case of failure
         """
+        if 'Delete Attributes' not in self.layer.capabilitiesString():
+            raise TypeError('Unable to delete attributes to this kind of'
+                            ' layer (%s). Please consider saving the layer'
+                            ' with an editable format before attempting to'
+                            ' delete attributes from it.'
+                            % self.layer.providerType())
         attr_idx_list = []
         with LayerEditingManager(self.layer, 'Remove attributes', DEBUG):
             layer_pr = self.layer.dataProvider()
@@ -218,13 +263,14 @@ class ProcessLayer():
                 attr_idx_list.append(attr_idx)
             # remove attributes
             if DEBUG:
-                print "REMOVING %s, (indices %s)" % (
-                    attribute_list, attr_idx_list)
+                log_msg("REMOVING %s, (indices %s)" % (
+                    attribute_list, attr_idx_list))
             return layer_pr.deleteAttributes(attr_idx_list)
 
     def transform_attribute(
             self, input_attr_name, algorithm_name, variant="",
-            inverse=False, new_attr_name=None, simulate=False):
+            inverse=False, new_attr_name=None, new_attr_alias=None,
+            simulate=False):
         """
         Use one of the available transformation algorithms to transform an
         attribute of the layer, and add a new attribute with the
@@ -239,11 +285,18 @@ class ProcessLayer():
                               results of the transformation (if it is equal to
                               the input_attr_name, the attribute will be
                               overwritten)
+        :param new_attr_alias: alias of the target attribute that will store
+                               ther results of the transformation
         :param simulate: if True, the method will just simulate the creation
                          of the target attribute and return the name that would
                          be assigned to it
         :returns: (actual_new_attr_name, invalid_input_values)
         """
+        if 'Change Attribute Values' not in self.layer.capabilitiesString():
+            raise TypeError('Unable to edit features of this kind of layer'
+                            ' (%s). Please consider saving the layer with an'
+                            ' editable format before attempting to transform'
+                            ' its attributes.' % self.layer.providerType())
         # get the id of the attribute named input_attr_name
         input_attr_id = self.find_attribute_id(input_attr_name)
         overwrite = (new_attr_name is not None
@@ -299,6 +352,9 @@ class ProcessLayer():
             actual_new_attr_name = attr_names_dict[new_attr_name]
             # get the id of the new attribute
             new_attr_id = self.find_attribute_id(actual_new_attr_name)
+        if new_attr_alias:
+            with LayerEditingManager(self.layer, 'add alias', DEBUG):
+                self.layer.addAttributeAlias(new_attr_id, new_attr_alias)
 
         with LayerEditingManager(
                 self.layer, 'Write transformed values', DEBUG):
@@ -318,8 +374,7 @@ class ProcessLayer():
         exception if not found
         """
         attribute_id = None
-        pr = self.layer.dataProvider()
-        for field_id, field in enumerate(pr.fields()):
+        for field_id, field in enumerate(self.layer.fields()):
             if field.name() == attribute_name:
                 attribute_id = field_id
                 return attribute_id
@@ -461,5 +516,6 @@ class ProcessLayer():
                     'Geometry type %s can not be accepted' % geom_type)
             layer_vertices += feature_vertices
             if DEBUG:
-                print "Feature %d, %d vertices" % (feat.id(), feature_vertices)
+                log_msg("Feature %d, %d vertices"
+                        % (feat.id(), feature_vertices))
         return layer_vertices

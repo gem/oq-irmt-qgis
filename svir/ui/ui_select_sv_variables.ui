@@ -16,8 +16,8 @@
   <property name="modal">
    <bool>true</bool>
   </property>
-  <layout class="QGridLayout" name="gridLayout">
-   <item row="1" column="0">
+  <layout class="QVBoxLayout" name="verticalLayout_2">
+   <item>
     <widget class="QScrollArea" name="scrollArea">
      <property name="mouseTracking">
       <bool>true</bool>
@@ -53,35 +53,9 @@
         </layout>
        </item>
        <item>
-        <widget class="ListMultiSelectWidget" name="country_multiselect">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="title">
-          <string>Select countries</string>
-         </property>
-        </widget>
-       </item>
-       <item>
         <widget class="QPushButton" name="fill_zones_btn">
          <property name="text">
           <string>Fill subnational zones</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="ListMultiSelectWidget" name="zone_multiselect">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="title">
-          <string>Select sub-national zones</string>
          </property>
         </widget>
        </item>
@@ -162,19 +136,6 @@
         </widget>
        </item>
        <item>
-        <widget class="ListMultiSelectWidget" name="indicator_multiselect">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="title">
-          <string>Select indicators</string>
-         </property>
-        </widget>
-       </item>
-       <item>
         <widget class="QGroupBox" name="indicator_info">
          <property name="title">
           <string>Indicator details</string>
@@ -185,20 +146,17 @@
         <widget class="QTextBrowser" name="indicator_details"/>
        </item>
       </layout>
-      <zorder>indicator_multiselect</zorder>
       <zorder></zorder>
       <zorder>filter_btn</zorder>
       <zorder>indicator_info</zorder>
       <zorder>filters_group</zorder>
       <zorder>indicator_details</zorder>
       <zorder>filters_help_lbl</zorder>
-      <zorder>zone_multiselect</zorder>
-      <zorder>country_multiselect</zorder>
       <zorder>fill_zones_btn</zorder>
      </widget>
     </widget>
    </item>
-   <item row="2" column="0">
+   <item>
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
@@ -210,14 +168,6 @@
    </item>
   </layout>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>ListMultiSelectWidget</class>
-   <extends>QGroupBox</extends>
-   <header>list_multiselect_widget</header>
-   <container>1</container>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections>
   <connection>

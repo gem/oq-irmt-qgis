@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#/***************************************************************************
+# /***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
@@ -39,16 +39,20 @@ from svir.thread_worker.upload_worker import UploadWorker
 from svir.third_party.requests.sessions import Session
 from svir.third_party.requests.utils import dict_from_cookiejar
 from svir.utilities.sldadapter import getGsCompatibleSld
-from svir.ui.ui_upload_metadata import Ui_UploadMetadataDialog
-from svir.utilities.utils import (get_credentials,
-                                  platform_login,
+from svir.utilities.settings import get_platform_credentials
+from svir.utilities.utils import (platform_login,
                                   create_progress_message_bar,
                                   clear_progress_message_bar,
-                                  SvNetworkError)
+                                  SvNetworkError,
+                                  log_msg,
+                                  get_ui_class,
+                                  )
 from svir.utilities.shared import DEBUG
 
+FORM_CLASS = get_ui_class('ui_upload_metadata.ui')
 
-class UploadDialog(QDialog):
+
+class UploadDialog(QDialog, FORM_CLASS):
     """
     Modal dialog allowing to upload the data to the OQ-Platform
     """
@@ -60,20 +64,19 @@ class UploadDialog(QDialog):
         QDialog.__init__(self)
 
         # Set up the user interface from Designer.
-        self.ui = Ui_UploadMetadataDialog()
-        self.ui.setupUi(self)
+        self.setupUi(self)
         self.message_bar = QgsMessageBar()
         self.message_bar.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
         self.layout().insertWidget(0, self.message_bar)
 
         self.message_bar_item = None
 
-        self.button_box = self.ui.buttonBox
+        self.button_box = self.buttonBox
 
-        self.hostname, self.username, self.password = get_credentials(
+        self.hostname, self.username, self.password = get_platform_credentials(
             self.iface)
 
-        self.web_view = self.ui.web_view
+        self.web_view = self.web_view
         self.page = self.web_view.page()
         self.frame = self.page.mainFrame()
 
@@ -104,7 +107,7 @@ class UploadDialog(QDialog):
             error_msg = (
                 'Unable to login to the platform: ' + e.message)
             self.message_bar.pushMessage(
-                'Error', error_msg, level=QgsMessageBar.CRITICAL)
+                'Error', error_msg, duration=0, level=QgsMessageBar.CRITICAL)
             return
 
         # adding by emitting signal in different thread
@@ -127,7 +130,8 @@ class UploadDialog(QDialog):
             error_msg = (
                 'Unable to export the styled layer descriptor: ' + e.message)
             self.message_bar.pushMessage(
-                'Style error', error_msg, level=QgsMessageBar.CRITICAL)
+                'Style error', error_msg, duration=0,
+                level=QgsMessageBar.CRITICAL)
             return
 
         if DEBUG:
@@ -142,12 +146,13 @@ class UploadDialog(QDialog):
             self.hostname + '/gs/rest/styles/%s' % style_name,
             data=sld, headers=headers)
         if DEBUG:
-            print 'Style upload response:', resp
+            log_msg('Style upload response: %s' % resp)
         if not resp.ok:
             error_msg = (
                 'Error while styling the uploaded layer: ' + resp.reason)
             self.message_bar.pushMessage(
-                'Style error', error_msg, level=QgsMessageBar.CRITICAL)
+                'Style error', error_msg, duration=0,
+                level=QgsMessageBar.CRITICAL)
 
     def upload_done(self, result):
         layer_url, success = result
@@ -174,7 +179,8 @@ class UploadDialog(QDialog):
             error_msg = layer_url
             clear_progress_message_bar(self.message_bar)
             self.message_bar.pushMessage(
-                'Upload error', error_msg, level=QgsMessageBar.CRITICAL)
+                'Upload error', error_msg, duration=0,
+                level=QgsMessageBar.CRITICAL)
 
     def load_finished(self):
         clear_progress_message_bar(self.message_bar, self.message_bar_item)

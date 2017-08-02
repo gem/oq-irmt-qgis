@@ -7,10 +7,15 @@
     <file alias="load.svg">resources/load.svg</file>
     <file alias="settings.svg">resources/settings.svg</file>
     <file alias="load_layer.svg">resources/load_layer.svg</file>
+    <file alias="load_from_oqoutput.svg">resources/load_from_oqoutput.svg</file>
     <file alias="transform.svg">resources/transform.svg</file>
     <file alias="upload.svg">resources/upload.svg</file>
     <file alias="weights.svg">resources/weights.svg</file>
     <file alias="manual.svg">resources/manual.svg</file>
+    <file alias="drive_oqengine.svg">resources/drive_oqengine.svg</file>
+    <file alias="recovery.svg">resources/recovery.svg</file>
+    <file alias="recovery_settings.svg">resources/recovery_settings.svg</file>
+    <file alias="plot.svg">resources/plot.svg</file>
     <file alias="weight_data.html">resources/weight_data.html</file>
     <file alias="js/d3.js">resources/js/d3.min.js</file>
     <file alias="js/irmt_viewer_d3_tree.js">resources/js/irmt_viewer_d3_tree.js</file>

@@ -12,12 +12,11 @@ Transforming attributes
 
     |icon-transform-attributes| Variable transformation and batch transformation functionality
 
-Once variables are selected, they should be standardized or normalized before
-they are aggregated into composite indicators. This is because variables are
-delineated in a number of statistical units that could easily consist of
-incommensurate ranges or scales. Variables are standardized to avoid problems
-inherent when mixing measurement units, and normalization is employed to avoid
-having extreme values dominate an indicator, and to partially correct for data
+
+When variables are defined in incommensurate ranges or scales, they can be
+standardized to avoid problems inherent when mixing measurement units, and
+normalization is employed to avoid having extreme values dominate an indicator,
+and to partially correct for data
 quality problems. The QGIS platform natively provides a :guilabel:`Field calculator` that
 can be used to update existing fields, or to create new ones, in order to
 perform a wide variety of mathematical operations for the
@@ -35,6 +34,13 @@ mathematical modelling packages (:numref:`tab-transformation-functions`).
   Logistig Sigmoid               :math:`S(x_i) = \frac{1}{1 + e^{-x_i}}`
   Simple Quadratic               :math:`Q(x_i) = \frac{x^2}{\max_{i \in \{1,\dots,n\}}(x_i)}`
   =============================  =================================================================================================================================
+
+.. warning::
+
+    Not all layer types can be edited. For instance, it is impossible to add or
+    modify fields of a csv-based layer. Prior to apply transformations to
+    non-editable layers, it is necessary to save them as shapefiles or as
+    another editable kind.
 
 These include:
 
@@ -112,7 +118,20 @@ proposed by the tool). Otherwise, the names of the new fields will be
 automatically assigned using the following convention: if the original
 attribute is named *ORIGINALNA*, the name of the transformed attribute becomes
 *\_ORIGINALN* (prepending "*\_*" and truncating to 10 characters which is the
-maximum length permitted for field names in shapefiles).
+maximum length permitted for field names in shapefiles). If the layer does not
+have the limitations of a shapefile, the name of the transformed field will *not*
+be truncated to 10 characters.
+
+.. note::
+
+    In the lists of fields, both the field name and the field alias are displayed,
+    with the format `name (alias)`. If no alias is specified for the field, the
+    parenthesis will be empty. The plugin automatically assigns to the
+    transformed field the same alias of the original one (if available).
+    Please make sure that the names of the fields to be transformed do not
+    contain parentheses, otherwise the plugin would erroneously interpret them
+    as containers for the alias; therefore the selected name would be incomplete
+    (being taken excluding the parentheses) and it would not be found in the layer.
 
 If the checkbox :guilabel:`Let all project definitions utilize transformed
 values` is checked, all the project definitions associated with the active
@@ -130,7 +149,7 @@ variables.  This saves the user from having to augment the model manually.  
 
 By clicking the :guilabel:`Advanced Calculator` button, the native QGIS field calculator
 is opened. Please refer to the `code documentation
-<../../../apidoc/build/html/svir.calculations.html#module-svir.calculations.transformation_algs>`_
+<../../../apidoc/_build/html/svir.calculations.html#module-svir.calculations.transformation_algs>`_
 for the detailed description of all the agorithms and variants provided by
 the IRMT.
 

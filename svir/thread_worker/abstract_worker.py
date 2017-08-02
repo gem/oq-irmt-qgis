@@ -66,9 +66,9 @@ class AbstractWorker(QtCore.QObject):
     def work(self):
         """ Reimplement this putting your calculation here
             available are:
-                self.progress.emit(0-100)
-                self.killed
-            :returns a python object - use None if killed is true
+            * self.progress.emit(0-100)
+            * self.killed
+            :returns: a python object - use None if killed is true
         """
 
         raise NotImplementedError
@@ -145,7 +145,7 @@ def toggle_worker_cancel(show_cancel, cancel_button):
     """
     Show or hide the cancel button
 
-    :param show_cancel: indicating if the :guilabel:`Cancel` button has to 
+    :param show_cancel: indicating if the :guilabel:`Cancel` button has to
                         be shown
     :type show_cancel: bool
     :param cancel_button: the button to be shown or hidden
@@ -183,8 +183,8 @@ def worker_error(e, exception_string, message_bar):
     """
     message_bar.pushMessage(
         'Something went wrong! See the message log for more information.',
-        level=QgsMessageBar.CRITICAL,
-        duration=3)
+        duration=0,
+        level=QgsMessageBar.CRITICAL)
     QgsMessageLog.logMessage(
         'Worker thread raised an exception: %s' % exception_string,
         'IRMT worker',

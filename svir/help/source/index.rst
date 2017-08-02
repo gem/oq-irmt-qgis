@@ -16,10 +16,11 @@ Contents:
     :maxdepth: 2
     :numbered:
 
+    00_installation.rst
     01_introduction.rst
     02_definitions.rst
-    03_toolbar.rst
-    04_connection_settings.rst
+    03_menu
+    04_irmt_settings.rst
     05_load_indicators_from_platform.rst
     06_download_project_from_platform.rst
     07_transform_attribute.rst
@@ -27,6 +28,18 @@ Contents:
     09_weighting_and_calculating.rst
     10_aggregate_loss_by_zone.rst
     11_upload_project_to_platform.rst
+    12_using_r_scripts.rst
+    13_recovery_modeling.rst
+    14_driving_the_oqengine.rst
+    15_viewer_dock.rst
+
+
+Links:
+
+    `Code repository <https://github.com/gem/oq-irmt-qgis>`_
+
+    `Bug tracker <https://github.com/gem/oq-irmt-qgis/issues>`_
+
 
 .. note::
 

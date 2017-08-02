@@ -1,0 +1,49 @@
+env:
+    - QGIS_VERSION=debian-ltr
+    - QGIS_VERSION=debian
+
+dist: trusty
+sudo: true
+
+language: python
+
+python:
+    - "2.7"
+
+before_install:
+    - if [ "$TRAVIS_PULL_REQUEST_BRANCH" != "" ]; then BRANCH=$TRAVIS_PULL_REQUEST_BRANCH; else BRANCH=$TRAVIS_BRANCH; fi
+    - if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${BRANCH})" == "" ]; then
+        BRANCH='master';
+      fi;
+    - curl -sfO http://artifacts.openquake.org/travis/oqdata-${BRANCH}.zip || ( echo "Dump for ${BRANCH} unavailable"; exit 1 )
+    - git clone -q -b ${BRANCH} --depth=1 https://github.com/gem/oq-engine.git && echo "Running against oq-engine/${BRANCH}"
+    - echo "deb http://qgis.org/$QGIS_VERSION trusty main" | sudo tee -a /etc/apt/sources.list
+    - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key 073D307A618E5811
+    - sudo add-apt-repository -y ppa:openquake/saga
+    - sudo apt-get update -q
+
+install:
+    - sudo apt-get install -q -y xvfb qgis python-mock python-nose python-nose-exclude python-scipy saga python-saga
+    - sudo pip install sphinx==1.4.9 sphinx_rtd_theme
+    - export PYTHONPATH=$TRAVIS_BUILD_DIR:$PYTHONPATH
+    - virtualenv oqe27
+    - oqe27/bin/pip -q install -U pip
+    - oqe27/bin/pip -q install -r oq-engine/requirements-py27-linux64.txt
+    - oqe27/bin/pip -q install -e oq-engine
+
+before_script:
+    - "/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -ac -screen 0 1280x1024x16"
+    - "export DISPLAY=:99.0"
+    - oqe27/bin/oq restore oqdata-${BRANCH}.zip ~/oqdata
+    - oqe27/bin/oq webui start --skip-browser &> webui.log &
+    - . ./scripts/run-env-linux.sh /usr
+
+script:
+    - cd $TRAVIS_BUILD_DIR/svir && make test
+
+after_success:
+    - cd $TRAVIS_BUILD_DIR/svir && make build_apidoc
+    - cd $TRAVIS_BUILD_DIR/svir && make build_manual_html
+
+after_script:
+    - cat $TRAVIS_BUILD_DIR/webui.log

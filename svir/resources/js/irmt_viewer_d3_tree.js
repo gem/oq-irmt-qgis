@@ -43,7 +43,7 @@
             position: {my: "left top", at: "left top", of: "#projectDefDialog"},
             autoOpen: false,
             modal: true,
-            minWidth: 500,
+            minWidth: 700,
             dialogClass: "no-close",
             closeOnEscape: false
         });
@@ -92,6 +92,11 @@
         var DEFAULT_OPERATOR = qt_page.DEFAULT_OPERATOR;
         var OPERATORS = qt_page.OPERATORS.split(';');
         var ACTIVE_LAYER_NUMERIC_FIELDS = qt_page.ACTIVE_LAYER_NUMERIC_FIELDS.split(';');
+        var ACTIVE_LAYER_NUMERIC_FIELDS_ALIASES = qt_page.ACTIVE_LAYER_NUMERIC_FIELDS_ALIASES.split(';');
+        var NUMERIC_FIELDS_TO_ALIASES = {};
+        for (var i = 0; i < ACTIVE_LAYER_NUMERIC_FIELDS.length; i++) {
+            NUMERIC_FIELDS_TO_ALIASES[ACTIVE_LAYER_NUMERIC_FIELDS[i]] = ACTIVE_LAYER_NUMERIC_FIELDS_ALIASES[i];
+        }
         var NODE_TYPES = qt_page.NODE_TYPES.split(';');
         var node_types_dict = {};
         for (var i = 0; i < NODE_TYPES.length; i++) {
@@ -103,8 +108,8 @@
         }
 
         var margin = {top: 20, right: 120, bottom: 20, left: 60};
-        var width = 960 - margin.right - margin.left;
-        var height = 800 - margin.top - margin.bottom;
+        var width = $(window).width() - margin.right - margin.left;
+        var height = $(window).height() - margin.top - margin.bottom;
 
         var duration = 750;
         var root;
@@ -113,7 +118,12 @@
             .attr("class", "tooltip")
             .style("opacity", 0);
 
-        var tree = d3.layout.tree().size([height, width]);
+        var tree = d3.layout.tree()
+            .size([height, width])
+            .separation(function separation(a,b) {
+                // at least the sum of radius of two sibling nodes, plus the text for weight
+                return getRadius(a) + getRadius(b) + 8;
+            });
 
         var nodeEnter;
 
@@ -164,14 +174,75 @@
 
         }
 
-        function operatorSelect(pdOperator){
+        function operatorSelect(pdOperator, fieldInfo){
+            var fieldName = fieldInfo.fieldName;
+            var fieldDescription = fieldInfo.fieldDescription;
+            var customFormula = fieldInfo.customFormula;
             $('#projectDefWeightDialog')
                 .append('<br/><label style="clear: left; float: left; width: 10em;" for="operator">Operator: </label>')
-                .append('<select id="operator">'+ operatorOptions() + '</select>');
+                .append('<select id="operator">'+ operatorOptions() + '</select><br/>');
             //TODO use selectmenu when the bug there is fixed9?
             //$(selector).selectmenu()
             //$(selector).prop('selectedIndex', 4)
             $('#operator').val(pdOperator);
+            var fieldOpts = fieldOptions(pdData);
+            if (typeof fieldName !== 'undefined') {
+                fieldOpts += '<option value="' + fieldName + '">' + fieldName + '</option>';
+            } else {
+                fieldOpts += '<option disabled selected value></option>';
+            }
+            $('#projectDefWeightDialog')
+                .append('<br/><label style="clear: left; float: left; width: 10em;" id="fieldNameLabel" for="fieldNameLabel">Field name: </label>')
+                .append('<select id="fieldName">'+ fieldOpts + '</select>')
+                .append('<br/><label style="clear: left; float: left; width: 10em;" id="fieldDescriptionLabel" for="fieldDescriptionLabel">Field description: </label>')
+                .append('<input type="text" id="fieldDescription">')
+                .append('<br/><label style="clear: left; float: left; width: 10em;" id="customFormulaLabel" for="customFormulaLabel">Custom formula: </label>')
+                .append('<input type="text" id="customFormula">');
+            if (typeof fieldName !== 'undefined') {
+                $('#fieldName').val(fieldName);
+            } else {
+                $('#fieldName').val('');
+            }
+            if (typeof fieldDescription !== 'undefined') {
+                $('#fieldDescription').val(fieldDescription);
+            } else {
+                $('#fieldDescription').val('');
+            }
+            if (typeof customFormula !== 'undefined') {
+                $('#customFormula').val(customFormula);
+            } else {
+                $('#customFormula').val('');
+            }
+            $('#fieldName').change(function(){
+                if (typeof fieldDescription == 'undefined') {
+                    fieldAlias = NUMERIC_FIELDS_TO_ALIASES[$('#fieldName').val()];
+                    if (fieldAlias) {
+                        $('#fieldDescription').val(fieldAlias);
+                    }
+                }
+            });
+            enableOrDisableCustomFieldSelector();
+            $('#operator').change(function() {
+                enableOrDisableCustomFieldSelector();
+            });
+        }
+
+        function enableOrDisableCustomFieldSelector() {
+            if ($('#operator').val().indexOf('custom') != -1) {
+                $('#fieldNameLabel').css("color", "black");
+                $('#fieldDescriptionLabel').css("color", "black");
+                $('#customFormulaLabel').css("color", "black");
+                $('#fieldName').prop('disabled', false);
+                $('#fieldDescription').prop('disabled', false);
+                $('#customFormula').prop('disabled', false);
+            } else {
+                $('#fieldNameLabel').css("color", "grey");
+                $('#fieldDescriptionLabel').css("color", "grey");
+                $('#customFormulaLabel').css("color", "grey");
+                $('#fieldName').prop('disabled', 'disabled');
+                $('#fieldDescription').prop('disabled', 'disabled');
+                $('#customFormula').prop('disabled', 'disabled');
+            }
         }
 
         function operatorOptions(){
@@ -199,7 +270,7 @@
 
             dialog
                 .append('<label for="name">Name: </label>')
-                .append('<input id="newNodeName" type="text" name="newNodeName" value="">');
+                .append('<input id="newNodeName" type="text" name="newNodeName" size="50" value="">');
 
             newNodeName = $('#newNodeName');
             newNodeName.blur(function(){
@@ -212,25 +283,25 @@
             });
 
             if (node_type != node_types_dict.SV_THEME) {
-                if (!fieldOptions(node)) {
-                    alertDialog(
-                        'Warning',
-                        ['It is impossible to add any new node to the tree, because all',
-                         'numeric fields of the layer have already been associated to',
-                         'existing nodes.'].join('\n')
-                    );
-                    return;
-                }
                 dialog
                     .append('<br/><label for="field">Field name: </label>')
                     .append('<select id="field">' + fieldOptions(node) + '</select><br/>');
 
-                // By default, set the name to be equal to the fieldname selected
-                var defaultName = $('#field').val();
-                newNodeName.val(defaultName);
+                // by default, use the alias if present, or the field code
+                fieldAlias = NUMERIC_FIELDS_TO_ALIASES[$('#field').val()];
+                if (fieldAlias) {
+                    newNodeName.val(fieldAlias);
+                } else {
+                    newNodeName.val($('#field').val());
+                }
 
                 $('#field').on('change', function() {
-                    newNodeName.val(this.value);
+                    fieldAlias = NUMERIC_FIELDS_TO_ALIASES[$('#field').val()];
+                    if (fieldAlias) {
+                        newNodeName.val(fieldAlias);
+                    } else {
+                        newNodeName.val(this.value);
+                    }
                 });
             }
         }
@@ -298,9 +369,14 @@
             var takenFields = listTakenFields(rootNode);
             for (var i = 0; i < ACTIVE_LAYER_NUMERIC_FIELDS.length; i++) {
                 var field_name = ACTIVE_LAYER_NUMERIC_FIELDS[i];
+                var field_alias = ACTIVE_LAYER_NUMERIC_FIELDS_ALIASES[i];
                 // Add only numeric fields in the active layer that are not already in the PD
                 if (takenFields.indexOf(field_name) === -1){
-                    options += '<option value="' + field_name + '">' + field_name + '</option>';
+                    displayedOption = field_name;
+                    if (field_alias) {
+                        displayedOption += ' (' + field_alias + ')';
+                    }
+                    options += '<option value="' + field_name + '">' + displayedOption + '</option>';
                 }
             }
             return options;
@@ -433,7 +509,19 @@
 
                 if ($('#operator').length !== 0) {
                     var operator = $('#operator').val();
-                    updateOperator(pdData, pdId, operator);
+                    updateNodeAttribute(pdData, pdId, 'operator', operator);
+                    if ($('#operator').val().indexOf('custom') != -1) {
+                        var fieldName = $('#fieldName').val();
+                        var fieldDescription = $('#fieldDescription').val();
+                        var customFormula = $('#customFormula').val();
+                        updateNodeAttribute(pdData, pdId, 'field', fieldName);
+                        updateNodeAttribute(pdData, pdId, 'fieldDescription', fieldDescription);
+                        updateNodeAttribute(pdData, pdId, 'customFormula', customFormula);
+                    } else {
+                        updateNodeAttribute(pdData, pdId, 'field');
+                        updateNodeAttribute(pdData, pdId, 'fieldDescription');
+                        updateNodeAttribute(pdData, pdId, 'customFormula');
+                    }
                 }
 
                 nodeEnter.remove("text");
@@ -474,13 +562,17 @@
             });
         }
 
-        function updateOperator(pdData, id, pdOperator) {
+        function updateNodeAttribute(pdData, id, attributeName, value) {
             if (pdData.id == id){
-                pdData.operator = pdOperator;
+                if (typeof value == 'undefined') {
+                    delete pdData[attributeName];
+                } else {
+                    pdData[attributeName] = value;
+                }
             }
 
             (pdData.children || []).forEach(function(currentItem) {
-                updateOperator(currentItem, id, pdOperator);
+                updateNodeAttribute(currentItem, id, attributeName, value);
             });
         }
 
@@ -503,8 +595,24 @@
             $('#projectDefWeightDialog').empty();
             updated_nodes = node.children[0];
             findTreeBranchInfo(pdData, [pdName], [pdLevel], pdParentField, updated_nodes);
-            operatorSelect(pdOperator);
+            var fieldInfo = getFieldInfo(node);
+            operatorSelect(pdOperator,
+                           fieldInfo);
             updateButton(pdId);
+        }
+
+        function getFieldInfo(node) {
+            var fieldInfo = {}
+            if (typeof node.field !== 'undefined') {
+                fieldInfo.fieldName = node.field;
+            }
+            if (typeof node.fieldDescription !== 'undefined') {
+                fieldInfo.fieldDescription = node.fieldDescription;
+            }
+            if (typeof node.customFormula !== 'undefined') {
+                fieldInfo.customFormula = node.customFormula;
+            }
+            return fieldInfo;
         }
 
         function getRadius(d) {
@@ -514,7 +622,8 @@
             }
             if (typeof d.parent != 'undefined') {
                 if (typeof d.parent.operator != 'undefined') {
-                    if (d.parent.operator.indexOf('ignore weights') != -1) {
+                    if (d.parent.operator.indexOf('ignore weights') != -1
+                            || d.parent.operator.indexOf('custom') != -1) {
                         radius = Math.max(1.0 / d.parent.children.length * CIRCLE_SCALE, MIN_CIRCLE_SIZE);
                     }
                 }
@@ -522,10 +631,14 @@
             return radius;
         }
 
-        var svg = d3.select("#projectDefDialog").append("svg")
-            .attr("width", width + margin.right + margin.left)
-            .attr("height", height + margin.top + margin.bottom)
+        var svg = d3.select("#projectDefDialog")
+            .append("svg")
+            .attr("width", "100%")
+            .attr("height", "100%")
             .attr("id", "project-definition-svg")
+            .call(d3.behavior.zoom().scaleExtent([0.1, 5]).on("zoom", function () {
+                svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")");
+            }))
             .append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -590,6 +703,9 @@
         }
 
         function findNodeField(subtree, name) {
+            // recursively search in the tree if there is any node with the
+            // given name. Return such node, if found, or false otherwise.
+
             if (typeof subtree.name !== 'undefined' && subtree.name === name) {
                 if (typeof subtree.field !== 'undefined') {
                     return subtree.field;
@@ -607,18 +723,49 @@
             return false;
         }
 
+        function nodeFieldAlreadyAssigned(subtree, field) {
+            // recursively search in the tree if there is any node associated
+            // to the given field, and return a boolean.
+
+            if (typeof subtree.field !== 'undefined' && subtree.field === field) {
+                return true;
+            }
+            if (typeof subtree.children !== 'undefined') {
+                for (var i = 0; i < subtree.children.length; i++) {
+                    var child = subtree.children[i];
+                    var found_field = nodeFieldAlreadyAssigned(child, field);
+                    if (found_field) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
         function updateD3Tree(source) {
             // check if meanwhile the project_definition was updated by any calculation
             var proj_def_from_python = JSON.parse(qt_page.json_str);
             var nodes = tree.nodes(root).reverse();
+            // reading nodes as they currently are in the d3 tree
             nodes.forEach(function(d) {
-                // if it has a name but not a field, check if project_definition contains
-                // a node with the same name, associated to a field
-                // and, in such case, associate the same field to the node
-                if (typeof d.name !== 'undefined'){
-                    var found_field = findNodeField(proj_def_from_python, d.name);
-                    if (found_field) {
-                        d.field = found_field;
+                // if this node has a name but is not stored into a layer's field yet,
+                // check if proj_def_from_python contains a node with the same name
+                // associated to a field. If it has, it means that the field was assigned
+                // by a on-the-fly calculation. In such case, align the d3 version of the
+                // tree associating the same field to the node.
+                // But... If the field is already taken by another node in the current d3
+                // version, it means that there are 2 nodes with the same name. In this
+                // corner case, we don't want to assign the same field to the current
+                // node, otherwise we would have a duplication.
+                if (typeof d.name !== 'undefined' && typeof d.field === 'undefined'){
+                    var found_field_from_python = findNodeField(proj_def_from_python, d.name);
+                    if (found_field_from_python) {
+                        // assign the field to the node only if the field is not already
+                        // assigned to a different node
+                        var found_field_from_js = nodeFieldAlreadyAssigned(root, found_field_from_python);
+                        if (!found_field_from_js) {
+                            d.field = found_field_from_python;
+                        }
                     }
                 }
             });
@@ -766,6 +913,16 @@
                                 return false;
                         }
 
+                        if (!fieldOptions(clicked_node)) {
+                            alertDialog(
+                                'Warning',
+                                ['It is impossible to add any new node to the tree, because all',
+                                    'numeric fields of the layer have already been associated to',
+                                    'existing nodes.'].join('\n')
+                            );
+                            return;
+                        }
+
                         if (typeof clicked_node.children == 'undefined') {
                             clicked_node.children = [];
                             clicked_node.operator = DEFAULT_OPERATOR;
@@ -808,8 +965,6 @@
                             'field': "",
                             'name': ""
                         };
-                        // console.log("newnode:")
-                        // console.log(new_node)
 
                         // Add node, appending it to the node that has been clicked
                         siblings.push(new_node);
@@ -877,13 +1032,8 @@
                     }
                 })
                 .attr("dy", function(d) {
-                    // NOTE are x and y swapped?
-                    // set te text above or below the node depending on the
-                    // parent position
-                    if (typeof d.parent != 'undefined' && d.x > d.parent.x){
-                        return "2em";
-                    }
-                    return "-1em";
+                    // Place the label always at the same height of the node
+                    return "0.3em";
                 })
                 .attr("text-anchor", function(d) {
                     if (d.type === node_types_dict.SV_INDICATOR || d.type === node_types_dict.RISK_INDICATOR) {
@@ -914,7 +1064,9 @@
                         findTreeBranchInfo(pdData, [pdName], [pdLevel], pdField, d);
                         var pdParentOperator = d.parent.operator? d.parent.operator : DEFAULT_OPERATOR;
                         d.parent.operator = pdParentOperator;
-                        operatorSelect(pdParentOperator);
+                        var fieldInfo = getFieldInfo(d.parent);
+                        operatorSelect(pdParentOperator,
+                                       fieldInfo);
                         pdId = d.parent.id;
                         updateButton(pdId);
                     }
@@ -923,13 +1075,13 @@
                     }
                 });
 
-            // Render the operator's name, without the optional '(ignore weights)' part
+            // Render the operator's name, without the optional part between parentheses, like '(ignore weights)'
             nodeEnter.append("text")
                 .text(function(d) {
                     if (d.children){
                         var operator = d.operator? d.operator : DEFAULT_OPERATOR;
                         d.operator = operator;
-                        if (operator.indexOf('ignore weights') != -1) {
+                        if (operator.indexOf('(') != -1) {
                             // Example:
                             // from "Simple sum (ignore weights)"
                             // we render just "Simple sum"
@@ -940,15 +1092,16 @@
                     }
                 })
                 .attr("id", function(d) {return "operator-label-" + d.level;})
-                .attr("x", function(d) { return getRadius(d) + 15; })
+                .attr("x", function(d) { return getRadius(d) + 5; })
+                .attr("dy", function(d) { return "0.3em"; })
                 .on("click", function(d) { openWeightingDialog(d); });
 
-            // Render '(ignore weights)' in a new line, if present
+            // Render the part between parentheses, like '(ignore weights)', if present, in a new line
             nodeEnter.append("text")
                 .text(function(d) {
                     if (d.children){
                         var ignoreWeightsStr = '';
-                        if (d.operator.indexOf('ignore weights') != -1) {
+                        if (d.operator.indexOf('(') != -1) {
                             parts = d.operator.split('(');
                             ignoreWeightsStr = '(' + parts[1];
                         }
@@ -972,19 +1125,19 @@
             // Render the weight next to the node, as a percentage
             nodeEnter.append("text")
                 .attr("id", (function(d) {return 'node-weight-' + d.name.replace(' ', '-'); }))
-                .attr("x", function(d) { return "-1em"; })
+                .style("font-size", function(d) {
+                    return "8px";
+                })
+                .attr("x", function(d) { return "-1.1em"; })
                 .attr("dy", function(d) {
-                    if (typeof d.parent != 'undefined' && d.x > d.parent.x){
-                        return -(getRadius(d) + 5);
-                    } else {
-                        return getRadius(d) + 12;
-                    }})
+                    return -(getRadius(d) + 3);
+                    })
                 .text(function(d) {
                     if (typeof d.parent == 'undefined') {
                         return "";
                     }
                     if (typeof d.parent.operator != 'undefined') {
-                        if (d.parent.operator.indexOf('ignore weights') != -1) {
+                        if (d.parent.operator.indexOf('(') != -1) {
                             return '';
                         }
                     }
@@ -993,7 +1146,7 @@
                 .style("fill", function(d) {
                     if (typeof d.parent == 'undefined') { return; }
                     if (typeof d.parent.operator == 'undefined') { return; }
-                    if (d.parent.operator.indexOf('ignore weights') != -1) {
+                    if (d.parent.operator.indexOf('(') != -1) {
                         var color = '#660000';
                         return color;
                     }})
@@ -1010,7 +1163,9 @@
                         findTreeBranchInfo(pdData, [pdName], [pdLevel], pdField, d);
                         var pdParentOperator = d.parent.operator? d.parent.operator : DEFAULT_OPERATOR;
                         d.parent.operator = pdParentOperator;
-                        operatorSelect(pdParentOperator);
+                        var fieldInfo = getFieldInfo(d.parent);
+                        operatorSelect(pdParentOperator,
+                                       fieldInfo);
                         pdId = d.parent.id;
                         updateButton(pdId);
                     }

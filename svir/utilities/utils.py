@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#/***************************************************************************
+# /***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
@@ -22,21 +22,36 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
+import numpy
 import collections
 import json
 import os
+import sys
+import locale
 from copy import deepcopy
 from time import time
-from qgis.core import QgsMapLayerRegistry, QgsProject
+from pprint import pformat
+from qgis.core import (QgsMapLayerRegistry,
+                       QgsProject,
+                       QgsMessageLog,
+                       QgsVectorLayer,
+                       QgsVectorFileWriter,
+                       )
 from qgis.gui import QgsMessageBar
 
-from PyQt4.QtCore import QSettings, Qt
-from PyQt4.QtGui import QApplication, QProgressBar, QToolButton, QFileDialog, \
-    QMessageBox
+from PyQt4 import uic
+from PyQt4.QtCore import Qt, QSettings, QUrl
+from PyQt4.QtGui import (QApplication,
+                         QProgressBar,
+                         QToolButton,
+                         QFileDialog,
+                         QMessageBox,
+                         QColor)
 
-from svir.dialogs.settings_dialog import SettingsDialog
 from svir.third_party.poster.encode import multipart_encode
-from svir.utilities.shared import DEBUG
+from svir.utilities.shared import DEBUG, DEFAULT_SETTINGS
+
+F32 = numpy.float32
 
 _IRMT_VERSION = None
 
@@ -54,6 +69,56 @@ def get_irmt_version():
                 if line.startswith('version='):
                     _IRMT_VERSION = line.split('=')[1].strip()
     return _IRMT_VERSION
+
+
+def log_msg(message, tag='GEM IRMT Plugin', level='I', message_bar=None,
+            duration=None):
+    """
+    Add a message to the QGIS message log. If a messageBar is provided,
+    the same message will be displayed also in the messageBar. In the latter
+    case, warnings and critical messages will have no timeout, whereas
+    info messages will have a duration of 5 seconds.
+
+    :param message: the message
+    :param tag: the log topic
+    :param level:
+        the importance level
+        'I' -> QgsMessageLog.INFO,
+        'W' -> QgsMessageLog.WARNING,
+        'C' -> QgsMessageLog.CRITICAL
+    :param message_bar: a `QgsMessageBar` instance
+    :param duration: how long (in seconds) the message will be displayed (use 0
+                     to keep the message visible indefinitely, or None to use
+                     the default duration of the chosen level
+    """
+    levels = {'I': {'log': QgsMessageLog.INFO,
+                    'bar': QgsMessageBar.INFO},
+              'W': {'log': QgsMessageLog.WARNING,
+                    'bar': QgsMessageBar.WARNING},
+              'C': {'log': QgsMessageLog.CRITICAL,
+                    'bar': QgsMessageBar.CRITICAL}}
+    if level not in levels:
+        raise ValueError('Level must be one of %s' % levels.keys())
+
+    # if we are running nosetests, exit on critical errors
+    if 'nose' in sys.modules and level == 'C':
+        raise RuntimeError(message)
+    else:
+        QgsMessageLog.logMessage(tr(message), tr(tag), levels[level]['log'])
+        if message_bar is not None:
+            if level == 'I':
+                title = 'Info'
+                duration = duration if duration is not None else 8
+            elif level == 'W':
+                title = 'Warning'
+                duration = duration if duration is not None else 0
+            elif level == 'C':
+                title = 'Error'
+                duration = duration if duration is not None else 0
+            message_bar.pushMessage(tr(title),
+                                    tr(message),
+                                    levels[level]['bar'],
+                                    duration)
 
 
 def tr(message):
@@ -94,10 +159,11 @@ def replace_fields(sub_tree_root, before, after):
     project definition, and we obtain a new field that we want to track
     instead of the original one.
     It works by side-effect, modifying the passed project definition.
-    :param sub_tree_root: node of a project definition. From that node (used
-                          as root) towards the leaves of the tree, the function
-                          will recursively search for nodes with a 'field'
-                          property that contains the string before
+
+    :param sub_tree_root:
+        node of a project definition. From that node (used as root) towards the
+        leaves of the tree, the function will recursively search for nodes with
+        a 'field' property that contains the string before
     :param before: string to be replaced
     :param after: new value for the replaced string
     """
@@ -121,8 +187,8 @@ def count_heading_commented_lines(fname):
             else:
                 break
     if DEBUG:
-        print "The file contains %s heading lines starting with #" % (
-            lines_to_skip_count)
+        log_msg("The file contains %s heading lines starting with #" % (
+            lines_to_skip_count))
     return lines_to_skip_count
 
 
@@ -184,25 +250,6 @@ def get_field_names(sub_tree, field_names=None):
             child_field_names = get_field_names(child, field_names)
             field_names = field_names.union(child_field_names)
     return field_names
-
-
-def get_credentials(iface):
-    """
-    Get from the QSettings the credentials to access the OpenQuake Platform
-
-    :returns: tuple (hostname, username, password)
-
-    """
-    qs = QSettings()
-    hostname = qs.value('irmt/platform_hostname', '')
-    username = qs.value('irmt/platform_username', '')
-    password = qs.value('irmt/platform_password', '')
-    if not (hostname and username and password):
-        SettingsDialog(iface).exec_()
-        hostname = qs.value('irmt/platform_hostname', '')
-        username = qs.value('irmt/platform_username', '')
-        password = qs.value('irmt/platform_password', '')
-    return hostname, username, password
 
 
 def clear_progress_message_bar(msg_bar, msg_bar_item=None):
@@ -274,7 +321,7 @@ def reload_layers_in_cbx(combo, layer_types=None, skip_layer_ids=None):
         layer_id_allowed = bool(skip_layer_ids is None
                                 or l.id() not in skip_layer_ids)
         if layer_type_allowed and layer_id_allowed:
-            combo.addItem(l.name())
+            combo.addItem(l.name(), l)
 
 
 def reload_attrib_cbx(
@@ -290,8 +337,8 @@ def reload_attrib_cbx(
     :type layer: QgsVectorLayer
     :param prepend_empty_item: if to prepend an empty item to the combo
     :type layer: Bool
-    :param *valid_field_types: multiple tuples containing types
-    :type *valid_field_types: tuple, tuple, ...
+    :param \*valid_field_types: multiple tuples containing types
+    :type \*valid_field_types: tuple, tuple, ...
     """
     field_types = set()
     for field_type in valid_field_types:
@@ -300,8 +347,7 @@ def reload_attrib_cbx(
     # reset combo box
     combo.clear()
     # populate combo box with field names taken by layers
-    dp = layer.dataProvider()
-    fields = list(dp.fields())
+    fields = list(layer.fields())
 
     if prepend_empty_item:
         combo.addItem(None)
@@ -309,7 +355,7 @@ def reload_attrib_cbx(
     for field in fields:
         # add if in field_types
         if not field_types or field.typeName() in field_types:
-            combo.addItem(field.name())
+            combo.addItem(field.name(), field)
 
 
 def toggle_select_features(layer, use_new, new_feature_ids, old_feature_ids):
@@ -396,6 +442,34 @@ def platform_login(host, username, password, session):
         raise SvNetworkError(error_message)
 
 
+def engine_login(host, username, password, session):
+    """
+    Logs in a session to a engine server
+
+    :param host: The host url
+    :type host: str
+    :param username: The username
+    :type username: str
+    :param password: The password
+    :type password: str
+    :param session: The session to be autenticated
+    :type session: Session
+    """
+
+    login_url = host + '/accounts/ajax_login/'
+    session_resp = session.post(login_url,
+                                data={
+                                    "username": username,
+                                    "password": password
+                                },
+                                timeout=10,
+                                )
+    if session_resp.status_code != 200:  # 200 means successful:OK
+        error_message = ('Unable to get session for login: %s' %
+                         session_resp.text)
+        raise SvNetworkError(error_message)
+
+
 def update_platform_project(host,
                             session,
                             project_definition,
@@ -421,52 +495,38 @@ def update_platform_project(host,
     return resp
 
 
-def upload_shp(host, session, file_stem, username):
-    # FIXME: It looks like this function is never called
+def ask_for_destination_full_path_name(
+        parent, text='Save File', filter='Shapefiles (*.shp)'):
     """
-    Upload a shapefile to the OpenQuake Platform
+    Open a dialog to ask for a destination full path name, initially pointing
+    to the home directory.
+    QFileDialog by defaults asks for confirmation if an existing file is
+    selected and it automatically resolves symlinks.
 
-    :param host: url of the OpenQuake Platform server
-    :param session: authenticated session to be used
-    :param file_stem: the name of the shapefile (without the extension)
-    :param username: the name of the user attempting to perform the action
+    :param parent: the parent dialog
+    :param text: the dialog's title text
+    :param filter:
+        filter files by specific formats. Default: 'Shapefiles (\*.shp)'
+        A more elaborate example:
 
-    :returns: a tuple containing the server's response and a boolean indicating
-              if the uploading was successful
+        "Images (\*.png \*.xpm \*.jpg);;
+        Text files (\*.txt);;XML files (\*.xml)"
+
+    :returns: full path name of the destination file
     """
-    files = {'layer_title': file_stem,
-             'base_file': ('%s.shp' % file_stem,
-                           open('%s.shp' % file_stem, 'rb')),
-             'dbf_file': ('%s.dbf' % file_stem,
-                          open('%s.dbf' % file_stem, 'rb')),
-             'shx_file': ('%s.shx' % file_stem,
-                          open('%s.shx' % file_stem, 'rb')),
-             'prj_file': ('%s.prj' % file_stem,
-                          open('%s.prj' % file_stem, 'rb')),
-             'xml_file': ('%s.xml' % file_stem,
-                          open('%s.xml' % file_stem, 'r')),
-             }
-    permissions = ('{"authenticated":"_none",'
-                   '"anonymous":"_none",'
-                   '"users":[["%s","layer_readwrite"],["%s","layer_admin"]]'
-                   '}') % (username, username)
-    payload = {'charset': ['UTF-8'],
-               'permissions': [permissions]}
-
-    r = session.post(host + '/layers/upload', data=payload, files=files)
-    response = json.loads(r.text)
-    try:
-        return host + response['url'], True
-    except KeyError:
-        if 'errors' in response:
-            return response['errors'], False
-        else:
-            return "The server did not provide error messages", False
+    return QFileDialog.getSaveFileName(
+        parent, text, directory=os.path.expanduser("~"), filter=filter)
 
 
-def ask_for_download_destination(parent, text='Download destination'):
+def ask_for_download_destination_folder(parent, text='Download destination'):
     """
-    Open a dialog to ask for a download destination folder
+    Open a dialog to ask for a download destination folder, initially pointing
+    to the home directory.
+
+    :param parent: the parent dialog
+    :param text: the dialog's title text
+
+    :returns: full path of the destination folder
     """
     return QFileDialog.getExistingDirectory(
         parent,
@@ -483,12 +543,12 @@ def files_exist_in_destination(destination, file_names):
 
     :returns: list of file names that already exist in the destination folder
     """
-    file_exists_in_destination = []
+    existing_files_in_destination = []
     for file_name in file_names:
         file_path = os.path.join(destination, file_name)
         if os.path.isfile(file_path):
-            file_exists_in_destination.append(file_path)
-    return file_exists_in_destination
+            existing_files_in_destination.append(file_path)
+    return existing_files_in_destination
 
 
 def confirm_overwrite(parent, files):
@@ -538,13 +598,13 @@ class TraceTimeManager(object):
 
     def __enter__(self):
         if self.debug:
-            print self.message
+            log_msg(self.message)
             self.t_start = time()
 
     def __exit__(self, type, value, traceback):
         if self.debug:
             self.t_stop = time()
-            print "Completed in %f" % (self.t_stop - self.t_start)
+            log_msg("Completed in %f" % (self.t_stop - self.t_start))
 
 
 class LayerEditingManager(object):
@@ -564,13 +624,13 @@ class LayerEditingManager(object):
     def __enter__(self):
         self.layer.startEditing()
         if self.debug:
-            print "BEGIN", self.message
+            log_msg("BEGIN %s" % self.message)
 
     def __exit__(self, type, value, traceback):
         self.layer.commitChanges()
         self.layer.updateExtents()
         if self.debug:
-            print "END", self.message
+            log_msg("END %s" % self.message)
 
 
 class WaitCursorManager(object):
@@ -660,9 +720,13 @@ def write_layer_suppl_info_to_qgs(layer_id, suppl_info):
     # avoids not finding the layer_id in supplemental_info
     read_layer_suppl_info_from_qgs(layer_id, suppl_info)
     if DEBUG:
-        print ("Project's property 'supplemental_information[%s]'"
-               " updated: %s") % (
-            layer_id, QgsProject.instance().readEntry('irmt', layer_id))
+        prop_suppl_info, found = QgsProject.instance().readEntry('irmt',
+                                                                 layer_id)
+        assert found, 'After writeEntry, readEntry did not find the same item!'
+        prop_suppl_info_obj = json.loads(prop_suppl_info)
+        prop_suppl_info_str = pformat(prop_suppl_info_obj, indent=4)
+        log_msg(("Project's property 'supplemental_information[%s]'"
+                 " updated: \n%s") % (layer_id, prop_suppl_info_str))
 
 
 def read_layer_suppl_info_from_qgs(layer_id, supplemental_information):
@@ -682,9 +746,9 @@ def read_layer_suppl_info_from_qgs(layer_id, supplemental_information):
     supplemental_information[layer_id] = json.loads(layer_suppl_info_str)
 
     if DEBUG:
-        print ("self.supplemental_information[%s] synchronized"
-               " with project, as: %s") % (
-            layer_id, supplemental_information[layer_id])
+        suppl_info_str = pformat(supplemental_information[layer_id], indent=4)
+        log_msg(("self.supplemental_information[%s] synchronized"
+                 " with project, as: \n%s") % (layer_id, suppl_info_str))
 
 
 def insert_platform_layer_id(
@@ -701,3 +765,269 @@ def insert_platform_layer_id(
     if 'platform_layer_id' not in suppl_info:
         suppl_info['platform_layer_id'] = platform_layer_id
     write_layer_suppl_info_to_qgs(active_layer_id, suppl_info)
+
+
+def get_ui_class(ui_file):
+    """Get UI Python class from .ui file.
+       Can be filename.ui or subdirectory/filename.ui
+
+    :param ui_file: The file of the ui in svir.ui
+    :type ui_file: str
+    """
+    os.path.sep.join(ui_file.split('/'))
+    ui_file_path = os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__),
+            os.pardir,
+            'ui',
+            ui_file
+        )
+    )
+    return uic.loadUiType(ui_file_path)[0]
+
+
+def save_layer_setting(layer, setting, value):
+    if layer is not None:
+        QgsProject.instance().writeEntry(
+            'irmt', '%s/%s' % (layer.id(), setting),
+            json.dumps(value))
+
+
+def get_layer_setting(layer, setting):
+    if layer is not None:
+        value_str, found = QgsProject.instance().readEntry(
+            'irmt', '%s/%s' % (layer.id(), setting), '')
+        if found and value_str:
+            value = json.loads(value_str)
+            return value
+    return None
+
+
+def save_layer_as_shapefile(orig_layer, dest_path, crs=None):
+    if crs is None:
+        crs = orig_layer.crs()
+    old_lc_numeric = locale.getlocale(locale.LC_NUMERIC)
+    locale.setlocale(locale.LC_NUMERIC, 'C')
+    write_success = QgsVectorFileWriter.writeAsVectorFormat(
+        orig_layer, dest_path, 'utf-8', crs, 'ESRI Shapefile')
+    locale.setlocale(locale.LC_NUMERIC, old_lc_numeric)
+    return write_success
+
+
+def _check_type(
+        variable, setting_name, expected_type, default_value, message_bar):
+    # return the variable as it is or restore the default if corrupted
+    if not isinstance(variable, expected_type):
+        msg = ('The type of the stored setting "%s" was not valid,'
+               ' so the default has been restored.' % setting_name)
+        log_msg(msg, level='C', message_bar=message_bar)
+        variable = default_value
+    return variable
+
+
+def get_style(layer, message_bar, restore_defaults=False):
+    settings = QSettings()
+    if restore_defaults:
+        color_from_rgba = DEFAULT_SETTINGS['color_from_rgba']
+    else:
+        try:
+            color_from_rgba = settings.value(
+                'irmt/style_color_from',
+                DEFAULT_SETTINGS['color_from_rgba'],
+                type=int)
+        except TypeError:
+            msg = ('The type of the stored setting "style_color_from" was not'
+                   ' valid, so the default has been restored.')
+            log_msg(msg, level='C', message_bar=message_bar)
+            color_from_rgba = DEFAULT_SETTINGS['color_from_rgba']
+    color_from = QColor().fromRgba(color_from_rgba)
+    if restore_defaults:
+        color_to_rgba = DEFAULT_SETTINGS['color_to_rgba']
+    else:
+        try:
+            color_to_rgba = settings.value(
+                'irmt/style_color_to',
+                DEFAULT_SETTINGS['color_to_rgba'],
+                type=int)
+        except TypeError:
+            msg = ('The type of the stored setting "style_color_to" was not'
+                   ' valid, so the default has been restored.')
+            log_msg(msg, level='C', message_bar=message_bar)
+            color_to_rgba = DEFAULT_SETTINGS['color_to_rgba']
+    color_to = QColor().fromRgba(color_to_rgba)
+    mode = (DEFAULT_SETTINGS['style_mode']
+            if restore_defaults
+            else settings.value(
+                'irmt/style_mode', DEFAULT_SETTINGS['style_mode'], type=int))
+    classes = (DEFAULT_SETTINGS['style_classes']
+               if restore_defaults
+               else settings.value(
+                   'irmt/style_classes',
+                   DEFAULT_SETTINGS['style_classes'],
+                   type=int))
+    # look for the setting associated to the layer if available
+    force_restyling = None
+    if layer is not None:
+        # NOTE: We can't use %s/%s instead of %s_%s, because / is a special
+        #       character
+        value, found = QgsProject.instance().readBoolEntry(
+            'irmt', '%s_%s' % (layer.id(), 'force_restyling'))
+        if found:
+            force_restyling = value
+    if restore_defaults:
+        force_restyling = DEFAULT_SETTINGS['force_restyling']
+    # otherwise look for the setting at project level
+    if force_restyling is None:
+        value, found = QgsProject.instance().readBoolEntry(
+            'irmt', 'force_restyling')
+        if found:
+            force_restyling = value
+    # if again the setting is not found, look for it at the general level
+    if force_restyling is None:
+        force_restyling = settings.value(
+            'irmt/force_restyling',
+            DEFAULT_SETTINGS['force_restyling'],
+            type=bool)
+    return {
+        'color_from': color_from,
+        'color_to': color_to,
+        'mode': mode,
+        'classes': classes,
+        'force_restyling': force_restyling
+    }
+
+
+def clear_widgets_from_layout(layout):
+    """
+    Recursively remove all widgets from the layout, except from nested
+    layouts. If any of such widgets is a layout, then clear its widgets
+    instead of deleting it.
+    """
+    for i in reversed(range(layout.count())):
+        item = layout.itemAt(i)
+        # check if the item is a sub-layout (nested inside the layout)
+        sublayout = item.layout()
+        if sublayout is not None:
+            clear_widgets_from_layout(sublayout)
+            continue
+        # check if the item is a widget
+        widget = item.widget()
+        if widget is not None:
+            # a widget is deleted when it does not have a parent
+            widget.setParent(None)
+
+
+def import_layer_from_csv(parent,
+                          csv_path,
+                          layer_name,
+                          iface,
+                          longitude_field='lon',
+                          latitude_field='lat',
+                          delimiter=',',
+                          quote='"',
+                          lines_to_skip_count=0,
+                          wkt_field=None,
+                          save_as_shp=False,
+                          dest_shp=None,
+                          zoom_to_layer=True):
+    url = QUrl.fromLocalFile(csv_path)
+    url.addQueryItem('type', 'csv')
+    if wkt_field is not None:
+        url.addQueryItem('wktField', wkt_field)
+    else:
+        url.addQueryItem('xField', longitude_field)
+        url.addQueryItem('yField', latitude_field)
+    url.addQueryItem('spatialIndex', 'no')
+    url.addQueryItem('subsetIndex', 'no')
+    url.addQueryItem('watchFile', 'no')
+    url.addQueryItem('delimiter', delimiter)
+    url.addQueryItem('quote', quote)
+    url.addQueryItem('crs', 'epsg:4326')
+    url.addQueryItem('skipLines', str(lines_to_skip_count))
+    url.addQueryItem('trimFields', 'yes')
+    layer_uri = str(url.toEncoded())
+    layer = QgsVectorLayer(layer_uri, layer_name, "delimitedtext")
+    if save_as_shp:
+        dest_filename = dest_shp or QFileDialog.getSaveFileName(
+            parent,
+            'Save loss shapefile as...',
+            os.path.expanduser("~"),
+            'Shapefiles (*.shp)')
+        if dest_filename:
+            if dest_filename[-4:] != ".shp":
+                dest_filename += ".shp"
+        else:
+            return
+        result = save_layer_as_shapefile(layer, dest_filename)
+        if result != QgsVectorFileWriter.NoError:
+            raise RuntimeError('Could not save shapefile')
+        layer = QgsVectorLayer(dest_filename, layer_name, 'ogr')
+    if layer.isValid():
+        QgsMapLayerRegistry.instance().addMapLayer(layer)
+        iface.setActiveLayer(layer)
+        if zoom_to_layer:
+            iface.zoomToActiveLayer()
+
+    else:
+        msg = 'Unable to load layer'
+        log_msg(msg, level='C', message_bar=iface.messageBar())
+        return None
+    return layer
+
+
+def listdir_fullpath(path):
+    return [os.path.join(path, filename) for filename in os.listdir(path)]
+
+
+class InvalidHeaderError(Exception):
+    pass
+
+
+def get_params_from_comment_line(comment_line):
+    """
+    :param commented_line: a line starting with "# "
+    :returns: an OrderedDict with parameter -> value
+
+    >>> get_params_from_comment_line('# investigation_time=1000.0')
+    OrderedDict([('investigation_time', '1000.0')])
+
+    >>> get_params_from_comment_line("# p1=10, p2=20")
+    OrderedDict([('p1', '10'), ('p2', '20')])
+
+    >>> get_params_from_comment_line('h1, h2, h3')
+    Traceback (most recent call last):
+        ...
+    InvalidHeaderError: Unable to extract parameters from line:
+    h1, h2, h3
+    because the line does not start with "# "
+
+    >>> get_params_from_comment_line("# p1=10,p2=20")
+    Traceback (most recent call last):
+        ...
+    InvalidHeaderError: Unable to extract parameters from line:
+    # p1=10,p2=20
+    """
+    err_msg = 'Unable to extract parameters from line:\n%s' % comment_line
+    if not comment_line.startswith('# '):
+        raise InvalidHeaderError(
+            err_msg + '\nbecause the line does not start with "# "')
+    try:
+        comment, rest = comment_line.split('# ', 1)
+    except IndexError:
+        raise InvalidHeaderError(err_msg)
+    params_dict = collections.OrderedDict()
+    param_defs = rest.split(', ')
+    for param_def in param_defs:
+        try:
+            name, value = param_def.split('=')
+        except ValueError:
+            raise InvalidHeaderError(err_msg)
+        else:
+            params_dict[name] = value
+    return params_dict
+
+
+def warn_scipy_missing(message_bar):
+    msg = ("This functionality requires scipy. Please install it"
+           " and restart QGIS to enable it.")
+    log_msg(msg, level='C', message_bar=message_bar)

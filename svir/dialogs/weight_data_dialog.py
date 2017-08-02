@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#/***************************************************************************
+# /***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
@@ -34,25 +34,32 @@ from PyQt4.QtCore import (Qt,
                           )
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox,
+                         QPrinter,
                          )
 
-from svir.ui.ui_weight_data import Ui_WeightDataDialog
 from svir.utilities.shared import (DEFAULT_OPERATOR,
                                    OPERATORS_DICT,
                                    NUMERIC_FIELD_TYPES,
                                    NODE_TYPES,
                                    DEBUG)
-from svir.utilities.utils import get_field_names, confirmation_on_close
+from svir.utilities.utils import (get_field_names,
+                                  confirmation_on_close,
+                                  ask_for_destination_full_path_name,
+                                  log_msg,
+                                  get_ui_class,
+                                  )
+
+FORM_CLASS = get_ui_class('ui_weight_data.ui')
 
 
-class WeightDataDialog(QDialog):
+class WeightDataDialog(QDialog, FORM_CLASS):
     """
     Modal dialog allowing to select weights in a d3.js visualization
     """
 
-    # QVariantMap is to map a JSON to dict see:
-    #http://pyqt.sourceforge.net/Docs/PyQt4/incompatibilities.html#pyqt4-v4-7-4
-    # this is for javascript to emit when it changes the json
+#   QVariantMap is to map a JSON to dict see:
+#   http://pyqt.sourceforge.net/Docs/PyQt4/incompatibilities.html#pyqt4-v4-7-4
+#   this is for javascript to emit when it changes the json
     json_updated = pyqtSignal(['QVariantMap'], name='json_updated')
     # Python classes should connect to json_cleaned
     json_cleaned = pyqtSignal(['QVariantMap'], name='json_cleaned')
@@ -62,9 +69,8 @@ class WeightDataDialog(QDialog):
         QDialog.__init__(self)
 
         # Set up the user interface from Designer.
-        self.ui = Ui_WeightDataDialog()
-        self.ui.setupUi(self)
-        self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
+        self.setupUi(self)
+        self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
 
         self.added_attrs_ids = set()
         self.discarded_feats = set()
@@ -75,6 +81,7 @@ class WeightDataDialog(QDialog):
         self.modified_project_definition = None
 
         self.active_layer_numeric_fields = []
+        self.active_layer_numeric_fields_aliases = []
         self.update_active_layer_numeric_fields()
         # keep track of the fact that the user has explicitly selected a field
         # to base the style on. Note that also the selection of the empty item
@@ -86,13 +93,27 @@ class WeightDataDialog(QDialog):
         try:
             proj_title = self.project_definition['title']
         except KeyError:
-            proj_title = 'untitled'
+            proj_title = 'Untitled'
         dialog_title = (
             'Set weights and operators for project: "%s"' % proj_title)
         self.setWindowTitle(dialog_title)
 
-        self.web_view = self.ui.web_view
+        self.web_view = self.web_view
+        self.web_view.page().mainFrame().setScrollBarPolicy(
+            Qt.Vertical, Qt.ScrollBarAlwaysOff)
+        self.web_view.page().mainFrame().setScrollBarPolicy(
+            Qt.Horizontal, Qt.ScrollBarAlwaysOff)
         self.web_view.load(QUrl('qrc:/plugins/irmt/weight_data.html'))
+
+        self.printer = QPrinter(QPrinter.HighResolution)
+        self.printer.setPageSize(QPrinter.A4)
+        self.printer.setOutputFormat(QPrinter.PdfFormat)
+        self.printer.setPrintRange(QPrinter.AllPages)
+        self.printer.setOrientation(QPrinter.Portrait)
+        self.printer.setDocName(proj_title)
+        self.printer.setCreator(
+            'GEM Integrated Risk Modelling Toolkit QGIS Plugin')
+
         self.frame = self.web_view.page().mainFrame()
 
         self.frame.javaScriptWindowObjectCleared.connect(self.setup_js)
@@ -115,7 +136,12 @@ class WeightDataDialog(QDialog):
     def update_active_layer_numeric_fields(self):
         self.active_layer_numeric_fields = [
             field.name()
-            for field in self.iface.activeLayer().dataProvider().fields()
+            for field in self.iface.activeLayer().fields()
+            if field.typeName() in NUMERIC_FIELD_TYPES]
+        self.active_layer_numeric_fields_aliases = [
+            self.iface.activeLayer().attributeAlias(field_idx)
+            for field_idx, field in enumerate(
+                self.iface.activeLayer().fields())
             if field.typeName() in NUMERIC_FIELD_TYPES]
 
     def populate_style_by_field_cbx(self):
@@ -126,21 +152,27 @@ class WeightDataDialog(QDialog):
             if field in fields_in_proj_def]
         # block signals to avoid performing the onchange actions while adding
         # items programmatically
-        self.ui.style_by_field_cbx.blockSignals(True)
-        self.ui.style_by_field_cbx.clear()
-        self.ui.style_by_field_cbx.addItem('')
-        self.ui.style_by_field_cbx.addItems(fields_for_styling)
+        self.style_by_field_cbx.blockSignals(True)
+        self.style_by_field_cbx.clear()
+        self.style_by_field_cbx.addItem('')
+        self.style_by_field_cbx.addItems(fields_for_styling)
         if 'style_by_field' in self.project_definition:
-            idx = self.ui.style_by_field_cbx.findText(
+            idx = self.style_by_field_cbx.findText(
                 self.project_definition['style_by_field'])
-            self.ui.style_by_field_cbx.setCurrentIndex(idx)
+            self.style_by_field_cbx.setCurrentIndex(idx)
         # reactivate the signals, so the user's changes will trigger something
-        self.ui.style_by_field_cbx.blockSignals(False)
+        self.style_by_field_cbx.blockSignals(False)
 
     def setup_js(self):
         # pass a reference (called qt_page) of self to the JS world
         # to expose a member of self to js you need to declare it as property
         # see for example self.json_str()
+
+        if DEBUG:
+            log_msg("######################### for weight_data_debug.html")
+            self.print_self_for_debug()
+            log_msg("######################### end for weight_data_debug.html")
+
         self.frame.addToJavaScriptWindowObject('qt_page', self)
 
     def show_tree(self):
@@ -151,11 +183,10 @@ class WeightDataDialog(QDialog):
         self.any_changes_made = True
         if DEBUG:
             import pprint
-            pp = pprint.PrettyPrinter(indent=4)
-            print 'in handle_json_updated, data='
-            pp.pprint(data)
+            ppdata = pprint.pformat(data, indent=4)
+            log_msg('in handle_json_updated, data=\n%s' % ppdata)
 
-        if self.ui.on_the_fly_ckb.isChecked():
+        if self.on_the_fly_ckb.isChecked():
             self.project_definition = self.clean_json([data])
             self._manage_style_by_field()
             self.json_cleaned.emit(self.project_definition)
@@ -169,9 +200,9 @@ class WeightDataDialog(QDialog):
 
     def _manage_style_by_field(self):
         if self.style_by_field_selected:
-            if self.ui.style_by_field_cbx.currentText():
+            if self.style_by_field_cbx.currentText():
                 self.project_definition['style_by_field'] = \
-                    self.ui.style_by_field_cbx.currentText()
+                    self.style_by_field_cbx.currentText()
             elif 'style_by_field' in self.project_definition:
                 # if the empty item is selected, clean the project definition
                 del self.project_definition['style_by_field']
@@ -192,6 +223,23 @@ class WeightDataDialog(QDialog):
         # return the main element
         return data[0]
 
+    @pyqtSlot()
+    def on_print_btn_clicked(self):
+        dest_full_path_name = ask_for_destination_full_path_name(
+            self, filter='Pdf files (*.pdf)')
+        if not dest_full_path_name:
+            return
+        self.printer.setOutputFileName(dest_full_path_name)
+        try:
+            self.web_view.print_(self.printer)
+        except:
+            msg = 'It was impossible to create the pdf'
+            log_msg(msg, level='C', message_bar=self.iface.messageBar())
+        else:
+            msg = ('Project definition printed as pdf and saved to: %s'
+                   % dest_full_path_name)
+            log_msg(msg, level='I', message_bar=self.iface.messageBar())
+
     @pyqtSlot(str)
     def on_style_by_field_cbx_currentIndexChanged(self):
         self.style_by_field_selected = True
@@ -200,7 +248,7 @@ class WeightDataDialog(QDialog):
 
     @pyqtProperty(str)
     def json_str(self):
-        #This method gets exposed to JS thanks to @pyqtProperty(str)
+        # This method gets exposed to JS thanks to @pyqtProperty(str)
         return json.dumps(self.project_definition,
                           sort_keys=False,
                           indent=2,
@@ -223,8 +271,35 @@ class WeightDataDialog(QDialog):
 
     @pyqtProperty(str)
     def ACTIVE_LAYER_NUMERIC_FIELDS(self):
-        return ';'.join(sorted(self.active_layer_numeric_fields))
+        return ';'.join(self.active_layer_numeric_fields)
+
+    @pyqtProperty(str)
+    def ACTIVE_LAYER_NUMERIC_FIELDS_ALIASES(self):
+        return ';'.join(self.active_layer_numeric_fields_aliases)
 
     @pyqtProperty(str)
     def NODE_TYPES(self):
         return ';'.join(["%s:%s" % (k, v) for k, v in NODE_TYPES.iteritems()])
+
+    def print_self_for_debug(self):
+        msg = """
+        var qt_page = {
+            ACTIVE_LAYER_NUMERIC_FIELDS: "%s",
+            ACTIVE_LAYER_NUMERIC_FIELDS_ALIASES: "%s",
+            DEFAULT_OPERATOR: "%s",
+            NODE_TYPES: "%s",
+            OPERATORS: "%s",
+            json_str: '%s',
+            json_updated: function (updated_json_str) {
+                console.log("json_updated signal emitted with this JSON:");
+                console.log(updated_json_str)
+            },
+            DEV_MODE: %s
+        };""" % (self.ACTIVE_LAYER_NUMERIC_FIELDS,
+                 self.ACTIVE_LAYER_NUMERIC_FIELDS_ALIASES,
+                 self.DEFAULT_OPERATOR,
+                 self.NODE_TYPES,
+                 self.OPERATORS,
+                 self.json_str.replace('\n', ''),
+                 str(self.DEV_MODE).lower())
+        log_msg(msg)
