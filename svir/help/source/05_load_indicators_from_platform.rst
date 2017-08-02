@@ -60,6 +60,23 @@ where to save the shapefile that will be obtained). The layer will contain
 features equal to the number of selected countries and will contain all
 attributes selected as indicators for the given countries. Additional
 attributes will include fields containing country ISO codes and country names.
+
+.. note::
+
+    When a socioeconomic indicator is downloaded from the OpenQuake Platform, the
+    layer field that is created to store the indicator's values will be named after the
+    indicator's code. This is because the code is shorter than 10 character, which is
+    the maximum length for a field name according with the shapefiles specifications.
+    The code is not so easily readable though, therefore the plugin assigns to the field
+    also an alias, containing the full name of the socioeconomic indicator. In this way,
+    when the layer's attribute table is opened, its header will display the full name
+    of the indicator. The code will still be visible as a tooltip, by pointing the mouse
+    over the column header. Please note that aliases are not stored in the shapefile, but
+    they are linked to it through the project's properties. Therefore, if only the shapefile
+    is saved and opened in a different project, those aliases will not be available anymore.
+    In order to keep track of aliases, it is therefore necessary to save the project,
+    including the shapefile in it.
+
 To reduce processing time, detailed country geometries were simplified using
 ESRI's `Bend Simplify algorithm
 <http://resources.arcgis.com/en/help/main/10.1/index.html#//007000000010000000>`_.

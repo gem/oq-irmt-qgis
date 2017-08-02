@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#/***************************************************************************
+# /***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
@@ -25,7 +25,9 @@
 import os
 from collections import OrderedDict
 from PyQt4.QtCore import QSettings
+from PyQt4.QtGui import QColor
 from ConfigParser import ConfigParser
+from qgis.core import QgsGraduatedSymbolRendererV2
 
 DEBUG = QSettings().value('/irmt/developer_mode', False, type=bool)
 
@@ -61,8 +63,9 @@ class DiscardedFeature(object):
         return (self.feature_id == other.feature_id
                 and self.reason == other.reason)
 
-    def __ne__(self, other):  # python requrires to explicitly define not equal
-                              # so we implement the negation of __eq__
+    def __ne__(self, other):
+        # python requrires to explicitly define not equal so we implement the
+        # negation of __eq__
         return not self.__eq__(other)
 
     def __lt__(self, other):  # for sorting
@@ -85,7 +88,9 @@ NUMERIC_FIELD_TYPES = (INT_FIELD_TYPE_NAME,
                        REAL_FIELD_TYPE_NAME,
                        REAL_FIELD_TYPE_NAME.lower(),
                        DOUBLE_FIELD_TYPE_NAME,
-                       DOUBLE_FIELD_TYPE_NAME.capitalize())
+                       DOUBLE_FIELD_TYPE_NAME.capitalize(),
+                       'qint8', 'qint16', 'qint32', 'qint64',
+                       'qlonglong', 'qreal')
 
 STRING_FIELD_TYPE_NAME = 'String'
 TEXT_FIELD_TYPE_NAME = 'text'
@@ -102,6 +107,7 @@ OPERATORS_DICT['AVG'] = 'Average (ignore weights)'
 OPERATORS_DICT['MUL_S'] = 'Simple multiplication (ignore weights)'
 OPERATORS_DICT['MUL_W'] = 'Weighted multiplication'
 OPERATORS_DICT['GEOM_MEAN'] = 'Geometric mean (ignore weights)'
+OPERATORS_DICT['CUSTOM'] = 'Use a custom field'
 
 DEFAULT_OPERATOR = OPERATORS_DICT['SUM_W']
 IGNORING_WEIGHT_OPERATORS = (OPERATORS_DICT['SUM_S'],
@@ -167,15 +173,64 @@ INDICATOR_TEMPLATE = {
     'children': []
 }
 
-
-HELP_PAGES_LOOKUP = {
-    'import_sv_variables': '05_load_indicators_from_platform.html',
-    'import_layer': '06_download_project_from_platform.html',
-    'transform_attributes': '07_transform_attribute.html',
-    'project_definitions_manager': '08_project_definitions_manager.html',
-    'weight_data': '09_weighting_and_calculating.html',
-    'aggregate_losses': '10_aggregate_loss_by_zone.html',
-    'upload': '11_upload_project_to_platform.html',
-    'show_settings': '04_connection_settings.html',
-    'help': 'index.html',
+RECOVERY_DEFAULTS = {
+    'transfer_probabilities': [
+        [1, 0, 0, 0, 0, 0],
+        [0.6, 0.4, 0, 0, 0, 0],
+        [0.2, 0.4, 0.3, 0.1, 0, 0],
+        [0, 0, 0.2, 0.4, 0.3, 0.1],
+        [0, 0, 0, 0, 0.2, 0.8]],
+    'inspection_times': [0, 30, 30, 30, 30, 0],
+    'assessment_times': [0, 0, 0, 60, 60, 0],
+    'mobilization_times': [0, 0, 0, 120, 365, 365],
+    'recovery_times': [0, 50, 108, 156, 252, 612],
+    'repair_times': [0, 13, 27, 39, 63, 153],
+    'lead_time_dispersion': 0.75,
+    'repair_time_dispersion': 0.4,
 }
+RECOVERY_DEFAULTS['n_loss_based_dmg_states'] = len(
+    RECOVERY_DEFAULTS['transfer_probabilities'])
+RECOVERY_DEFAULTS['n_recovery_based_dmg_states'] = len(
+    RECOVERY_DEFAULTS['transfer_probabilities'][0])
+
+# Notes on recovery modeling:
+#
+# assessment_times:
+#    The entry in row n is the assessment time for the (n - 1)th damage state
+# inspection_times:
+#    The entry in row n is the inspection time for the (n - 1)th damage state
+# mobilization_times:
+#    The entry in row n is the mobilization time for the (n - 1)th damage state
+# recovery_times:
+#    The entry in row n is the recovery time for the (n - 1)th damage state
+# repair_times:
+#    The entry in row n is the repair time for the (n - 1)th damage state
+# NB: The following is referred to the Napa case specifically!
+# Note on transfer probabilities: There is a 5*6 matrix where rows
+# describe loss-based damage states (No
+# damage/Slight/Moderate/Extensive/Complete) and columns present
+# recovery-based damage states(No damage/Trigger inspection/Loss
+# Function /Not Occupiable/Irreparable/Collapse). The element(i,j)
+# in the matrix is the probability of recovery-based damage state j
+# occurs given loss-based damage state i
+
+
+OQ_CSV_LOADABLE_TYPES = set(['ruptures'])
+OQ_NPZ_LOADABLE_TYPES = set([
+    'hmaps', 'hcurves', 'uhs', 'gmf_data', 'dmg_by_asset', 'losses_by_asset'])
+OQ_ALL_LOADABLE_TYPES = OQ_CSV_LOADABLE_TYPES | OQ_NPZ_LOADABLE_TYPES
+
+
+DEFAULT_SETTINGS = dict(
+    platform_username='',
+    platform_password='',
+    platform_hostname='https://platform.openquake.org',
+    engine_username='',
+    engine_password='',
+    engine_hostname='http://localhost:8800',
+    color_from_rgba=QColor('#FFEBEB').rgba(),
+    color_to_rgba=QColor('red').rgba(),
+    style_mode=QgsGraduatedSymbolRendererV2.Quantile,
+    style_classes=10,
+    force_restyling=True,
+)

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#/***************************************************************************
+# /***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
@@ -23,19 +23,20 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 from copy import deepcopy
-from qgis.core import QgsField
-from qgis.gui import QgsMessageBar
+from qgis.core import QgsField, QgsExpression
 
 from PyQt4.QtCore import QVariant, QPyNullVariant
 
-from svir.utilities.shared import (DOUBLE_FIELD_TYPE_NAME, DEBUG,
+from svir.utilities.shared import (DOUBLE_FIELD_TYPE_NAME,
+                                   STRING_FIELD_TYPE_NAME,
+                                   DEBUG,
                                    SUM_BASED_OPERATORS,
                                    MUL_BASED_OPERATORS, DEFAULT_OPERATOR,
                                    OPERATORS_DICT,
                                    IGNORING_WEIGHT_OPERATORS,
                                    DiscardedFeature)
 from svir.calculations.process_layer import ProcessLayer
-from svir.utilities.utils import LayerEditingManager, tr
+from svir.utilities.utils import LayerEditingManager, log_msg
 
 
 class InvalidNode(Exception):
@@ -50,9 +51,22 @@ class InvalidChild(Exception):
     pass
 
 
+class InvalidFormula(Exception):
+    pass
+
+
 def add_numeric_attribute(proposed_attr_name, layer):
     field = QgsField(proposed_attr_name, QVariant.Double)
     field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
+    assigned_attr_names = ProcessLayer(layer).add_attributes(
+        [field])
+    assigned_attr_name = assigned_attr_names[proposed_attr_name]
+    return assigned_attr_name
+
+
+def add_textual_attribute(proposed_attr_name, layer):
+    field = QgsField(proposed_attr_name, QVariant.String)
+    field.setTypeName(STRING_FIELD_TYPE_NAME)
     assigned_attr_names = ProcessLayer(layer).add_attributes(
         [field])
     assigned_attr_name = assigned_attr_names[proposed_attr_name]
@@ -75,22 +89,22 @@ def calculate_composite_variable(iface, layer, node):
 
     :param iface: the iface, to be used to access the messageBar
     :param layer: the layer that contains the data to be used in the
-                  calculation and that will be modified adding new fields if
-                  needed
+         calculation and that will be modified adding new fields if
+         needed
     :param node: the root node of the project definition's sub-tree to be
-                 calculated
+         calculated
 
     :returns (added_attrs_ids, discarded_feats, node, any_change):
         added_attrs_ids: the set of ids of the attributes added to the layer
-                         during the calculation
+        during the calculation
         discarded_feats: the set of DiscardedFeature that can't contribute to
-                         the calculation, because of missing data or invalid
-                         data (e.g. when it's impossible to calculate the
-                         geometric mean because it causes the calculation of
-                         the fractionary power of a negative value)
+        the calculation, because of missing data or invalid
+        data (e.g. when it's impossible to calculate the
+        geometric mean because it causes the calculation of
+        the fractionary power of a negative value)
         node: the transformed (or unmodified) sub-tree
         any_change: True if the calculation caused any change in the
-                    subtree
+        subtree
     """
     # Avoid touching the original node, and manipulate a copy instead.
     # If anything fails, the original node will be returned
@@ -122,8 +136,7 @@ def calculate_composite_variable(iface, layer, node):
         node_attr_id, node_attr_name, field_was_added = \
             get_node_attr_id_and_name(edited_node, layer)
     except InvalidNode as e:
-        iface.messageBar().pushMessage(tr('Error'), str(e),
-                                       level=QgsMessageBar.CRITICAL)
+        log_msg(str(e), level='C', message_bar=iface.messageBar())
         if added_attrs_ids:
             ProcessLayer(layer).delete_attributes(added_attrs_ids)
         return set(), set(), node, False
@@ -135,17 +148,15 @@ def calculate_composite_variable(iface, layer, node):
                                               node_attr_id,
                                               layer,
                                               discarded_feats)
-    except (InvalidOperator, InvalidChild) as e:
-        iface.messageBar().pushMessage(
-            tr('Error'), str(e), level=QgsMessageBar.CRITICAL)
+    except (InvalidOperator, InvalidChild, InvalidFormula) as e:
+        log_msg(str(e), level='C', message_bar=iface.messageBar())
         if added_attrs_ids:
             ProcessLayer(layer).delete_attributes(added_attrs_ids)
         return set(), set(), node, False
     except TypeError as e:
         msg = ('Could not calculate the composite variable due'
                ' to data problems: %s' % e)
-        iface.messageBar().pushMessage(tr('Error'), tr(msg),
-                                       level=QgsMessageBar.CRITICAL)
+        log_msg(msg, level='C', message_bar=iface.messageBar())
         if added_attrs_ids:
             ProcessLayer(layer).delete_attributes(
                 added_attrs_ids)
@@ -176,7 +187,7 @@ def get_node_attr_id_and_name(node, layer):
                 proposed_node_attr_name, layer)
             field_was_added = True
         elif DEBUG:
-            print 'Reusing field %s' % node_attr_name
+            log_msg('Reusing field %s' % node_attr_name)
     elif 'name' in node:
         proposed_node_attr_name = node['name']
         node_attr_name = add_numeric_attribute(
@@ -194,8 +205,41 @@ def get_node_attr_id_and_name(node, layer):
 def calculate_node(
         node, node_attr_name, node_attr_id, layer, discarded_feats):
     operator = node.get('operator', DEFAULT_OPERATOR)
-    children = node['children']  # the existance of children should
-                                 # already be checked
+    # for backwards compatibility, we treat the old
+    # 'Use a custom field (no recalculation) as the new one with no parentheses
+    if operator in (OPERATORS_DICT['CUSTOM'],
+                    'Use a custom field (no recalculation)'):
+        customFormula = node.get('customFormula', '')
+        expression = QgsExpression(customFormula)
+        if not QgsExpression.isValid(customFormula, None, None):
+            raise InvalidFormula('Invalid formula: %s' % customFormula)
+        if customFormula == '':
+            # use the custom field values instead of recalculating them
+            for feat in layer.getFeatures():
+                if feat[node['field']] == QPyNullVariant(float):
+                    discard_feat = True
+                    discarded_feat = DiscardedFeature(
+                        feat.id(), 'Missing value')
+                    discarded_feats.add(discarded_feat)
+            return discarded_feats
+        else:
+            # attempt to retrieve a formula from the description and to
+            # calculate the field values based on that formula
+            expression.prepare(layer.fields())
+            with LayerEditingManager(layer,
+                                     'Calculating %s' % node_attr_name,
+                                     DEBUG):
+                for feat in layer.getFeatures():
+                    value = expression.evaluate(feat)
+                    if value == QPyNullVariant(float):
+                        discard_feat = True
+                        discarded_feat = DiscardedFeature(
+                            feat.id(), 'Missing value')
+                        discarded_feats.add(discarded_feat)
+                    layer.changeAttributeValue(feat.id(), node_attr_id, value)
+            return discarded_feats
+    # the existance of children should already be checked
+    children = node['children']
     with LayerEditingManager(layer,
                              'Calculating %s' % node_attr_name,
                              DEBUG):
@@ -267,7 +311,6 @@ def calculate_node(
                     node_value = QPyNullVariant(float)
                     discarded_feat = DiscardedFeature(feat_id, 'Invalid value')
                     discarded_feats.add(discarded_feat)
-
             layer.changeAttributeValue(
                 feat_id, node_attr_id, node_value)
     return discarded_feats

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#/***************************************************************************
+# /***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
@@ -22,27 +22,21 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
+import tempfile
 from qgis.core import (QgsVectorLayer,
                        QgsMapLayerRegistry,
                        QgsField,
                        QgsGeometry,
                        QgsSpatialIndex,
                        QgsFeatureRequest,
+                       QGis,
                        )
-from qgis.gui import QgsMessageBar
 from qgis.analysis import QgsZonalStatistics
 
 from PyQt4.QtCore import QVariant, QPyNullVariant
 from PyQt4.QtGui import QProgressDialog
 
 import processing
-
-try:
-    from processing.algs.saga import SagaUtils
-    saga_was_imported = True
-except:
-    print "Unable to import SagaUtils module from processing.algs.saga"
-    saga_was_imported = False
 
 from svir.calculations.process_layer import ProcessLayer
 
@@ -51,11 +45,21 @@ from svir.utilities.utils import (LayerEditingManager,
                                   TraceTimeManager,
                                   clear_progress_message_bar,
                                   create_progress_message_bar,
+                                  log_msg,
+                                  save_layer_as_shapefile,
                                   )
 from svir.utilities.shared import (INT_FIELD_TYPE_NAME,
                                    DOUBLE_FIELD_TYPE_NAME,
                                    DEBUG,
                                    )
+
+try:
+    from processing.algs.saga import SagaUtils
+
+    saga_was_imported = True
+except:
+    log_msg("Unable to import SagaUtils module from processing.algs.saga")
+    saga_was_imported = False
 
 
 def calculate_zonal_stats(loss_layer,
@@ -64,25 +68,49 @@ def calculate_zonal_stats(loss_layer,
                           loss_layer_is_vector,
                           zone_id_in_losses_attr_name,
                           zone_id_in_zones_attr_name,
-                          iface):
+                          iface,
+                          force_saga=False,
+                          force_fallback=False):
     """
-    The loss_layer containing loss data points, can raster or vector.
-    The zonal_layer has to be a vector layer containing socioeconomic
-    data aggregated by zone.
+    :param loss_layer: vector or raster layer containing loss data points
+    :param zonal_layer: vector layer containing zonal data
+    :param loss_attr_names: names of the loss layer fields to be aggregated
+    :param loss_layer_is_vector: True if the loss layer is a vector layer
+    :param zone_id_in_losses_attr_name:
+        name of the field containing the zone id where each loss point belongs
+        (or None)
+    :param zone_id_in_zones_attr_name:
+        name of the field containing the id of each zone (or None)
+    :param iface: QGIS interface
+    :param force_saga:
+        if True, the plugin will try to use SAGA and it will raise an error in
+        case it does not work (useful to test that specific workflow)
+    :param force_fallback:
+        if True, the fallback algorithm will be used instead
+        of SAGA, even if a recent SAGA installation is available
+        (useful to test that specific workflow)
+
+    force_saga and force_fallback can't both be True at the same time.
+
     At the end of the workflow, we will have, for each feature (zone):
+
     * a "LOSS_PTS" attribute, specifying how many loss points are
-        inside the zone
+      inside the zone
     * for each loss variable:
-        * a "SUM" attribute, summing the loss values for all the
-        points that are inside the zone
-        * a "AVG" attribute, averaging losses for each zone
+    * a "SUM" attribute, summing the loss values for all the
+      points that are inside the zone
+    * a "AVG" attribute, averaging losses for each zone
     """
+    # sanity check
+    assert not (force_saga and force_fallback)
+
     # add count, sum and avg fields for aggregating statistics
     # (one new attribute for the count of points, then a sum and an average
     # for all the other loss attributes)
+    # TODO remove debugging trace
     loss_attrs_dict = {}
     count_field = QgsField(
-        'LOSS_PTS', QVariant.Int)
+            'LOSS_PTS', QVariant.Int)
     count_field.setTypeName(INT_FIELD_TYPE_NAME)
     count_added = \
         ProcessLayer(zonal_layer).add_attributes([count_field])
@@ -111,9 +139,9 @@ def calculate_zonal_stats(loss_layer,
             # then we can aggregate by zone id, instead of doing a
             # geo-spatial analysis to see in which zone each point is
             res = calculate_vector_stats_aggregating_by_zone_id(
-                loss_layer, zonal_layer, zone_id_in_losses_attr_name,
-                zone_id_in_zones_attr_name, loss_attr_names,
-                loss_attrs_dict, iface)
+                    loss_layer, zonal_layer, zone_id_in_losses_attr_name,
+                    zone_id_in_zones_attr_name, loss_attr_names,
+                    loss_attrs_dict, iface)
             (loss_layer, zonal_layer, loss_attrs_dict) = res
         else:
             if not zone_id_in_zones_attr_name:
@@ -134,108 +162,312 @@ def calculate_zonal_stats(loss_layer,
                                          'Copy feature id into the new field',
                                          DEBUG):
                     unique_id_idx = zonal_layer.fieldNameIndex(
-                        zone_id_in_zones_attr_name)
+                            zone_id_in_zones_attr_name)
                     for feat in zonal_layer.getFeatures():
                         zonal_layer.changeAttributeValue(
-                            feat.id(), unique_id_idx, feat.id())
-            # if SAGA is not installed, the check will return a error msg
-            err_msg = None
-            if saga_was_imported:
-                try:
-                    saga_version = SagaUtils.getSagaInstalledVersion()
-                    if saga_version is None:
-                        err_msg = 'SAGA is not installed.'
-                except AttributeError:
-                    err_msg = 'Unable to get the SAGA installed version.'
-            else:
-                err_msg = 'SagaUtils was not imported.'
-            if err_msg is not None:
-                err_msg += tr(" In order to cope with complex geometries, "
-                              "a working installation of SAGA is "
-                              "recommended.")
-                iface.messageBar().pushMessage(
-                    tr("Warning"),
-                    tr(err_msg),
-                    level=QgsMessageBar.WARNING)
-                res = calculate_vector_stats_using_geometries(
-                    loss_layer, zonal_layer, zone_id_in_zones_attr_name,
-                    zone_id_in_losses_attr_name, loss_attr_names,
-                    loss_attrs_dict, iface)
-                (loss_layer, zonal_layer, loss_attrs_dict) = res
-            else:
-                # using SAGA to find out in which zone each point is
-                # (it does not compute any other statistics)
-                # NOTE: The algorithm builds a new loss layer, in which
-                #       each point will have an additional attribute,
-                #       indicating the zone to which the point belongs.
-                res = processing.runalg('saga:clippointswithpolygons',
-                                        loss_layer,
-                                        zonal_layer,
-                                        zone_id_in_zones_attr_name,
-                                        0,
-                                        None)
-                if res is None:
-                    msg = ("An error occurred while attempting to"
-                           " compute zonal statistics with SAGA. Therefore"
-                           " an alternative algorithm is used.")
-                    iface.messageBar().pushMessage(
-                        tr("Error"),
-                        tr(msg),
-                        level=QgsMessageBar.CRITICAL)
-                    res = calculate_vector_stats_using_geometries(
-                        loss_layer, zonal_layer,
-                        zone_id_in_zones_attr_name,
-                        zone_id_in_losses_attr_name, loss_attr_names,
-                        loss_attrs_dict, iface)
-                    (loss_layer, zonal_layer, loss_attrs_dict) = res
-                else:
-                    loss_layer_plus_zones = QgsVectorLayer(
-                        res['CLIPS'],
-                        'Points labeled by zone',
-                        'ogr')
-                    if DEBUG:
-                        QgsMapLayerRegistry.instance().addMapLayer(
-                            loss_layer_plus_zones)
-                    # If the zone id attribute name was already taken in
-                    # the loss layer, when SAGA added the new attribute, it
-                    # was given a different name by default. We need to get
-                    # the new attribute name (as the difference between the
-                    # loss_layer and the loss_layer_plus_zones)
-                    new_fields = set(
-                        field.name() for field in
-                        loss_layer_plus_zones.dataProvider().fields())
-                    orig_fields = set(
-                        field.name() for field in
-                        loss_layer.dataProvider().fields())
-                    zone_field_name = (new_fields - orig_fields).pop()
-                    if zone_field_name:
-                        zone_id_in_losses_attr_name = zone_field_name
-                    else:
-                        zone_id_in_losses_attr_name = \
-                            zone_id_in_zones_attr_name
-                    res = calculate_vector_stats_aggregating_by_zone_id(
-                        loss_layer_plus_zones, zonal_layer,
-                        zone_id_in_losses_attr_name,
-                        zone_id_in_zones_attr_name,
-                        loss_attr_names, loss_attrs_dict, iface)
-                    (loss_layer, zonal_layer, loss_attrs_dict) = res
+                                feat.id(), unique_id_idx, feat.id())
+
+            (_, loss_layer_plus_zones,
+             zone_id_in_losses_attr_name) = add_zone_id_to_points(
+                    iface, loss_layer, zonal_layer,
+                    zone_id_in_zones_attr_name, force_saga, force_fallback)
+
+            old_field_to_new_field = {}
+            for idx, field in enumerate(loss_layer.fields()):
+                old_field_to_new_field[field.name()] = \
+                    loss_layer_plus_zones.fields()[idx].name()
+
+            res = calculate_vector_stats_aggregating_by_zone_id(
+                    loss_layer_plus_zones, zonal_layer,
+                    zone_id_in_losses_attr_name,
+                    zone_id_in_zones_attr_name,
+                    loss_attr_names, loss_attrs_dict, iface,
+                    old_field_to_new_field)
+            (loss_layer, zonal_layer, loss_attrs_dict) = res
+
     else:
         (loss_layer, zonal_layer) = \
             calculate_raster_stats(loss_layer, zonal_layer)
-    return (loss_layer, zonal_layer, loss_attrs_dict)
+    return loss_layer, zonal_layer, loss_attrs_dict
+
+
+def add_zone_id_to_points(iface, point_layer, zonal_layer, zones_id_attr_name,
+                          force_saga=False, force_fallback=False):
+    """
+    Given a layer with points and a layer with zones, add to the points layer a
+    new field containing the id of the zone inside which it is located.
+
+    :param iface: QGIS interface
+    :param point_layer: a QgsVectorLayer containing points
+    :param zonal_layer: a QgsVectorLayer containing polygons
+    :param zones_id_attr_name:
+        name of the field of the zonal_layer that contains the zone id
+    :returns:
+        * point_attrs_dict: a dictionary mapping the original field names
+          of the point_layer with the possibly laundered ones,
+        * point_layer_plus_zones: the points layer with the additional field
+          containing the zone id
+        * points_zone_id_attr_name: the id of the new field added to the
+          points layer, containing the zone id
+    """
+    orig_fieldnames = [field.name() for field in point_layer.fields()]
+    use_fallback_calculation = False
+    if force_fallback:
+        use_fallback_calculation = True
+    else:
+        saga_install_err = get_saga_install_error()
+        if saga_install_err is None:
+            try:
+                (point_layer, res,
+                 points_zone_id_attr_name, point_layer_plus_zones) = \
+                    _add_zone_id_to_points_saga(point_layer,
+                                                zonal_layer,
+                                                zones_id_attr_name)
+            except (AttributeError, RuntimeError):
+                # NOTE: In the testing environment we are still unable to use
+                #       the saga:clippointswithpolygons algorithm, so it does
+                #       not run properly and it returns an AttributeError. We
+                #       are forced to use the fallback approach in that case.
+                msg = ("An error occurred while attempting to"
+                       " compute zonal statistics with SAGA. Therefore"
+                       " an alternative algorithm is used.")
+                log_msg(msg, level='C', message_bar=iface.messageBar())
+                use_fallback_calculation = True
+        else:
+            saga_install_err += (
+                "\nIn order to cope with complex geometries, "
+                "a working and compatible installation of SAGA is "
+                "recommended.")
+            log_msg(saga_install_err, level='W',
+                    message_bar=iface.messageBar())
+            if force_saga:
+                raise RuntimeError(saga_install_err)
+            else:
+                use_fallback_calculation = True
+    if use_fallback_calculation:
+        point_layer_plus_zones, points_zone_id_attr_name = \
+            _add_zone_id_to_points_internal(
+                    iface, point_layer, zonal_layer,
+                    zones_id_attr_name)
+    # fieldnames might have been laundered to max 10 characters
+    final_fieldnames = [
+        field.name() for field in point_layer_plus_zones.fields()]
+    # NOTE: final_fieldnames contains an additional field with the id, so I
+    #       can't use zip on lists of different length
+    point_attrs_dict = {orig_fieldnames[i]: final_fieldnames[i]
+                        for i in range(len(orig_fieldnames))}
+    return (point_attrs_dict, point_layer_plus_zones,
+            points_zone_id_attr_name)
+
+
+def _add_zone_id_to_points_internal(iface, loss_layer, zonal_layer,
+                                    zone_id_in_zones_attr_name):
+    """
+       On the hypothesis that we don't know what is the zone in which
+       each point was collected (and if we can't use SAGA),
+       we use an alternative implementation of what SAGA does, i.e.,
+       we add a field to the loss layer, containing the id of the zone
+       to which it belongs. In order to achieve that:
+       * we create a spatial index of the loss points
+       * for each zone (in the layer containing zonally-aggregated SVI
+           * we identify points that are inside the zone's bounding box
+           * we check if each of these points is actually inside the
+               zone's geometry; if it is:
+               * copy the zone id into the new field of the loss point
+       Notes:
+       * loss_layer contains the not aggregated loss points
+       * zonal_layer contains the zone geometries
+       """
+    # make a copy of the loss layer and use that from now on
+    add_to_registry = True if DEBUG else False
+    loss_layer_plus_zones = \
+        ProcessLayer(loss_layer).duplicate_in_memory(
+                new_name='Loss plus zone labels',
+                add_to_registry=add_to_registry)
+    # add to it the new attribute that will contain the zone id
+    # and to do that we need to know the type of the zone id field
+    zonal_layer_fields = zonal_layer.fields()
+    zone_id_field_variant, zone_id_field_type_name = [
+        (field.type(), field.typeName()) for field in zonal_layer_fields
+        if field.name() == zone_id_in_zones_attr_name][0]
+    zone_id_field = QgsField(
+            zone_id_in_zones_attr_name, zone_id_field_variant)
+    zone_id_field.setTypeName(zone_id_field_type_name)
+    assigned_attr_names_dict = \
+        ProcessLayer(loss_layer_plus_zones).add_attributes(
+                [zone_id_field])
+    zone_id_in_losses_attr_name = assigned_attr_names_dict.values()[0]
+    # get the index of the new attribute, to be used to update its values
+    zone_id_attr_idx = loss_layer_plus_zones.fieldNameIndex(
+            zone_id_in_losses_attr_name)
+    # to show the overall progress, cycling through points
+    tot_points = loss_layer_plus_zones.featureCount()
+    msg = tr(
+            "Step 2 of 3: creating spatial index for loss points...")
+    msg_bar_item, progress = create_progress_message_bar(
+            iface.messageBar(), msg)
+    # create spatial index
+    with TraceTimeManager(tr("Creating spatial index for loss points..."),
+                          DEBUG):
+        spatial_index = QgsSpatialIndex()
+        for current_point, loss_feature in enumerate(
+                loss_layer_plus_zones.getFeatures()):
+            progress_perc = current_point / float(tot_points) * 100
+            progress.setValue(progress_perc)
+            spatial_index.insertFeature(loss_feature)
+    clear_progress_message_bar(iface.messageBar(), msg_bar_item)
+    with LayerEditingManager(loss_layer_plus_zones,
+                             tr("Label each point with the zone id"),
+                             DEBUG):
+        # to show the overall progress, cycling through zones
+        tot_zones = zonal_layer.featureCount()
+        msg = tr("Step 3 of 3: labeling points by zone id...")
+        msg_bar_item, progress = create_progress_message_bar(
+                iface.messageBar(), msg)
+        for current_zone, zone_feature in enumerate(
+                zonal_layer.getFeatures()):
+            progress_perc = current_zone / float(tot_zones) * 100
+            progress.setValue(progress_perc)
+            msg = "{0}% - Zone: {1} on {2}".format(progress_perc,
+                                                   zone_feature.id(),
+                                                   tot_zones)
+            with TraceTimeManager(msg, DEBUG):
+                zone_geometry = zone_feature.geometry()
+                # Find ids of points within the bounding box of the zone
+                point_ids = spatial_index.intersects(
+                        zone_geometry.boundingBox())
+                # check if the points inside the bounding box of the zone
+                # are actually inside the zone's geometry
+                for point_id in point_ids:
+                    msg = "Checking if point {0} is actually inside " \
+                          "the zone".format(point_id)
+                    with TraceTimeManager(msg, DEBUG):
+                        # Get the point feature by the point's id
+                        request = QgsFeatureRequest().setFilterFid(
+                                point_id)
+                        point_feature = loss_layer_plus_zones.getFeatures(
+                                request).next()
+                        point_geometry = QgsGeometry(
+                                point_feature.geometry())
+                        # check if the point is actually inside the zone
+                        # and it is not only contained by its bounding box
+                        if zone_geometry.contains(point_geometry):
+                            zone_id = zone_feature[
+                                zone_id_in_zones_attr_name]
+                            loss_layer_plus_zones.changeAttributeValue(
+                                    point_id, zone_id_attr_idx, zone_id)
+        # for consistency with the SAGA algorithm, remove points that don't
+        # belong to any zone
+        for point_feature in loss_layer_plus_zones.getFeatures():
+            if not point_feature[zone_id_in_losses_attr_name]:
+                loss_layer_plus_zones.deleteFeature(point_feature.id())
+    clear_progress_message_bar(iface.messageBar(), msg_bar_item)
+    return loss_layer_plus_zones, zone_id_in_losses_attr_name
+
+
+def _add_zone_id_to_points_saga(loss_layer, zonal_layer,
+                                zone_id_in_zones_attr_name):
+    # using SAGA to find out in which zone each point is
+    # (it does not compute any other statistics)
+    # NOTE: The algorithm builds a new loss layer, in which
+    #       each point will have an additional attribute,
+    #       indicating the zone to which the point belongs.
+    if loss_layer.providerType() != 'ogr':
+        _, loss_layer_shp_path = tempfile.mkstemp(suffix='.shp')
+        save_layer_as_shapefile(loss_layer, loss_layer_shp_path)
+        loss_layer = QgsVectorLayer(
+            loss_layer_shp_path, loss_layer.name(), 'ogr')
+    if zonal_layer.providerType() != 'ogr':
+        _, zonal_layer_shp_path = tempfile.mkstemp(suffix='.shp')
+        save_layer_as_shapefile(zonal_layer, zonal_layer_shp_path)
+        zonal_layer = QgsVectorLayer(
+            zonal_layer_shp_path, zonal_layer.name(), 'ogr')
+    res = processing.runalg('saga:clippointswithpolygons',
+                            loss_layer,
+                            zonal_layer,
+                            zone_id_in_zones_attr_name,
+                            0,
+                            None)
+    if res is None:
+        raise RuntimeError
+
+    loss_layer_plus_zones = QgsVectorLayer(
+            res['CLIPS'],
+            'Points labeled by zone',
+            'ogr')
+    if DEBUG:
+        QgsMapLayerRegistry.instance().addMapLayer(
+                loss_layer_plus_zones)
+    # NOTE: In previous versions, we were identifying the
+    # zone_field_name as the difference between the sets of
+    # field names before and after running the
+    # clippointswithpolygons algorithm (supposing that the only
+    # difference was an additional field with the zone ids). It
+    # was good also for the corner case in which the field name
+    # for zone ids was already taken in the loss layer, and it
+    # was therefore modified by saga). BUT... it was not taking
+    # into account the case of long field names in the loss
+    # layer (for instance, using a csv-based layer instead of a
+    # shapefile). In such case, saga produces a shapefile with
+    # laundered names, and the "difference" approach does not
+    # work anymore. THEREFORE... we are forced to make a little
+    # hack, assuming that the field added by saga (the one
+    # containing zone ids) will be the last one.
+    if (len(loss_layer_plus_zones.fields())
+            - len(loss_layer.fields()) == 1):
+        # NOTE: we are assuming that the field containing zone
+        # ids will be added by saga as the last field in the
+        # layer
+        zone_field_name = \
+            loss_layer_plus_zones.fields()[-1].name()
+    else:
+        zone_field_name = None
+    if zone_field_name is not None:
+        zone_id_in_losses_attr_name = zone_field_name
+    else:
+        zone_id_in_losses_attr_name = \
+            zone_id_in_zones_attr_name
+    return (loss_layer, res,
+            zone_id_in_losses_attr_name, loss_layer_plus_zones)
+
+
+def get_saga_install_error():
+    # if SAGA is not installed, the check will return a error msg
+    err_msg = None
+    if saga_was_imported:
+        try:
+            saga_version_str = SagaUtils.getSagaInstalledVersion()
+        except AttributeError:
+            err_msg = 'Unable to get the SAGA installed version.'
+        else:
+            if saga_version_str is None:
+                err_msg = 'SAGA is not installed.'
+            else:
+                qgis_version_int = QGis.QGIS_VERSION_INT
+                if qgis_version_int >= 21400:
+                    (saga_major, saga_minor) = map(
+                        int, saga_version_str.split('.')[:2])
+                    if (saga_major, saga_minor) < (2, 3):
+                        err_msg = ('QGIS 2.14 and above do not support SAGA'
+                                   ' versions below 2.3, and you are using'
+                                   ' SAGA version %s' % saga_version_str)
+    else:
+        err_msg = 'SagaUtils was not imported.'
+    return err_msg
 
 
 def calculate_vector_stats_aggregating_by_zone_id(
         loss_layer, zonal_layer, zone_id_in_losses_attr_name,
-        zone_id_in_zones_attr_name, loss_attr_names, loss_attrs_dict, iface):
+        zone_id_in_zones_attr_name, loss_attr_names, loss_attrs_dict,
+        iface, old_field_to_new_field=None):
     """
     Once we know the zone id of each point in the loss map, we
     can count how many points are in each zone, sum and average their values
     """
-    tot_points = len(list(loss_layer.getFeatures()))
+    tot_points = loss_layer.featureCount()
     msg = tr("Step 2 of 3: aggregating losses by zone id...")
     msg_bar_item, progress = create_progress_message_bar(
-        iface.messageBar(), msg)
+            iface.messageBar(), msg)
     # if the user picked an attribute from the loss layer, to be
     # used as zone id, use that; otherwise, use the attribute
     # copied from the zonal layer
@@ -254,29 +486,33 @@ def calculate_vector_stats_aggregating_by_zone_id(
                 if loss_attr_name not in zone_stats[zone_id]:
                     zone_stats[zone_id][loss_attr_name] = {
                         'count': 0, 'sum': 0.0}
-                loss_value = point_feat[loss_attr_name]
+                if old_field_to_new_field:
+                    loss_value = point_feat[
+                        old_field_to_new_field[loss_attr_name]]
+                else:
+                    loss_value = point_feat[loss_attr_name]
                 zone_stats[zone_id][loss_attr_name]['count'] += 1
                 zone_stats[zone_id][loss_attr_name]['sum'] += loss_value
     clear_progress_message_bar(iface.messageBar(), msg_bar_item)
     msg = tr(
-        "Step 3 of 3: writing point counts, loss sums and averages into "
-        "the zonal layer...")
+            "Step 3 of 3: writing point counts, loss sums and averages into "
+            "the zonal layer...")
     with TraceTimeManager(msg, DEBUG):
-        tot_zones = len(list(zonal_layer.getFeatures()))
+        tot_zones = zonal_layer.featureCount()
         msg_bar_item, progress = create_progress_message_bar(
-            iface.messageBar(), msg)
+                iface.messageBar(), msg)
         with LayerEditingManager(zonal_layer,
                                  msg,
                                  DEBUG):
             count_idx = zonal_layer.fieldNameIndex(
-                loss_attrs_dict['count'])
+                    loss_attrs_dict['count'])
             sum_idx = {}
             avg_idx = {}
             for loss_attr_name in loss_attr_names:
                 sum_idx[loss_attr_name] = zonal_layer.fieldNameIndex(
-                    loss_attrs_dict[loss_attr_name]['sum'])
+                        loss_attrs_dict[loss_attr_name]['sum'])
                 avg_idx[loss_attr_name] = zonal_layer.fieldNameIndex(
-                    loss_attrs_dict[loss_attr_name]['avg'])
+                        loss_attrs_dict[loss_attr_name]['avg'])
             for current_zone, zone_feat in enumerate(
                     zonal_layer.getFeatures()):
                 progress_perc = current_zone / float(tot_zones) * 100
@@ -312,27 +548,27 @@ def calculate_vector_stats_aggregating_by_zone_id(
                 # without casting to int and to float, it wouldn't work
                 fid = zone_feat.id()
                 zonal_layer.changeAttributeValue(
-                    fid, count_idx, int(points_count))
+                        fid, count_idx, int(points_count))
                 for loss_attr_name in loss_attr_names:
                     if points_count:
                         zonal_layer.changeAttributeValue(
-                            fid, sum_idx[loss_attr_name],
-                            float(loss_sum[loss_attr_name]))
+                                fid, sum_idx[loss_attr_name],
+                                float(loss_sum[loss_attr_name]))
                         zonal_layer.changeAttributeValue(
-                            fid, avg_idx[loss_attr_name],
-                            float(loss_avg[loss_attr_name]))
+                                fid, avg_idx[loss_attr_name],
+                                float(loss_avg[loss_attr_name]))
                     else:
                         # if no points were found in that region, let both
                         # sum and average be NULL instead of 0
                         zonal_layer.changeAttributeValue(
-                            fid, sum_idx[loss_attr_name],
-                            QPyNullVariant(float))
+                                fid, sum_idx[loss_attr_name],
+                                QPyNullVariant(float))
                         zonal_layer.changeAttributeValue(
-                            fid, avg_idx[loss_attr_name],
-                            QPyNullVariant(float))
+                                fid, avg_idx[loss_attr_name],
+                                QPyNullVariant(float))
     clear_progress_message_bar(iface.messageBar(), msg_bar_item)
     notify_loss_aggregation_by_zone_complete(
-        loss_attrs_dict, loss_attr_names, iface)
+            loss_attrs_dict, loss_attr_names, iface)
     return (loss_layer, zonal_layer, loss_attrs_dict)
 
 
@@ -344,124 +580,7 @@ def notify_loss_aggregation_by_zone_complete(
         added_attrs.extend(loss_attrs_dict[loss_attr_name].values())
     msg = "New attributes [%s] have been added to the zonal layer" % (
         ', '.join(added_attrs))
-    iface.messageBar().pushMessage(
-        tr("Info"),
-        tr(msg),
-        level=QgsMessageBar.INFO,
-        duration=8)
-
-
-def calculate_vector_stats_using_geometries(
-        loss_layer, zonal_layer, zone_id_in_zones_attr_name,
-        zone_id_in_losses_attr_name, loss_attr_names, loss_attrs_dict, iface):
-    """
-    On the hypothesis that we don't know what is the zone in which
-    each point was collected (and if we can't use SAGA),
-    we use an alternative implementation of what SAGA does, i.e.,
-    we add a field to the loss layer, containing the id of the zone
-    to which it belongs. In order to achieve that:
-    * we create a spatial index of the loss points
-    * for each zone (in the layer containing zonally-aggregated SVI
-        * we identify points that are inside the zone's bounding box
-        * we check if each of these points is actually inside the
-            zone's geometry; if it is:
-            * copy the zone id into the new field of the loss point
-    * then we calculate_vector_stats_aggregating_by_zone_id
-    Notes:
-    * loss_layer contains the not aggregated loss points
-    * zonal_layer contains the zone geometries
-    """
-    # make a copy of the loss layer and use that from now on
-    add_to_registry = True if DEBUG else False
-    loss_layer_plus_zones = \
-        ProcessLayer(loss_layer).duplicate_in_memory(
-            new_name='Loss plus zone labels', add_to_registry=add_to_registry)
-    # add to it the new attribute that will contain the zone id
-    # and to do that we need to know the type of the zone id field
-    zonal_layer_fields = zonal_layer.dataProvider().fields()
-    zone_id_field_variant, zone_id_field_type_name = [
-        (field.type(), field.typeName()) for field in zonal_layer_fields
-        if field.name() == zone_id_in_zones_attr_name][0]
-    zone_id_field = QgsField(
-        zone_id_in_zones_attr_name, zone_id_field_variant)
-    zone_id_field.setTypeName(zone_id_field_type_name)
-    assigned_attr_names_dict = \
-        ProcessLayer(loss_layer_plus_zones).add_attributes(
-            [zone_id_field])
-    zone_id_in_losses_attr_name = assigned_attr_names_dict.values()[0]
-    # get the index of the new attribute, to be used to update its values
-    zone_id_attr_idx = loss_layer_plus_zones.fieldNameIndex(
-        zone_id_in_losses_attr_name)
-    # to show the overall progress, cycling through points
-    tot_points = len(list(loss_layer_plus_zones.getFeatures()))
-    msg = tr(
-        "Step 2 of 3: creating spatial index for loss points...")
-    msg_bar_item, progress = create_progress_message_bar(
-        iface.messageBar(), msg)
-
-    # create spatial index
-    with TraceTimeManager(tr("Creating spatial index for loss points..."),
-                          DEBUG):
-        spatial_index = QgsSpatialIndex()
-        for current_point, loss_feature in enumerate(
-                loss_layer_plus_zones.getFeatures()):
-            progress_perc = current_point / float(tot_points) * 100
-            progress.setValue(progress_perc)
-            spatial_index.insertFeature(loss_feature)
-
-    clear_progress_message_bar(iface.messageBar(), msg_bar_item)
-    with LayerEditingManager(loss_layer_plus_zones,
-                             tr("Label each point with the zone id"),
-                             DEBUG):
-        # to show the overall progress, cycling through zones
-        tot_zones = len(list(zonal_layer.getFeatures()))
-        msg = tr("Step 3 of 3: labeling points by zone id...")
-        msg_bar_item, progress = create_progress_message_bar(
-            iface.messageBar(), msg)
-        for current_zone, zone_feature in enumerate(
-                zonal_layer.getFeatures()):
-            progress_perc = current_zone / float(tot_zones) * 100
-            progress.setValue(progress_perc)
-            msg = "{0}% - Zone: {1} on {2}".format(progress_perc,
-                                                   zone_feature.id(),
-                                                   tot_zones)
-            with TraceTimeManager(msg, DEBUG):
-                zone_geometry = zone_feature.geometry()
-                # Find ids of points within the bounding box of the zone
-                point_ids = spatial_index.intersects(
-                    zone_geometry.boundingBox())
-                # check if the points inside the bounding box of the zone
-                # are actually inside the zone's geometry
-                for point_id in point_ids:
-                    msg = "Checking if point {0} is actually inside " \
-                          "the zone".format(point_id)
-                    with TraceTimeManager(msg, DEBUG):
-                        # Get the point feature by the point's id
-                        request = QgsFeatureRequest().setFilterFid(
-                            point_id)
-                        point_feature = loss_layer_plus_zones.getFeatures(
-                            request).next()
-                        point_geometry = QgsGeometry(
-                            point_feature.geometry())
-                        # check if the point is actually inside the zone
-                        # and it is not only contained by its bounding box
-                        if zone_geometry.contains(point_geometry):
-                            zone_id = zone_feature[
-                                zone_id_in_zones_attr_name]
-                            loss_layer_plus_zones.changeAttributeValue(
-                                point_id, zone_id_attr_idx, zone_id)
-        # for consistency with the SAGA algorithm, remove points that don't
-        # belong to any zone
-        for point_feature in loss_layer_plus_zones.getFeatures():
-            if not point_feature[zone_id_in_losses_attr_name]:
-                loss_layer_plus_zones.deleteFeature(point_feature.id())
-
-    clear_progress_message_bar(iface.messageBar(), msg_bar_item)
-    return calculate_vector_stats_aggregating_by_zone_id(
-        loss_layer_plus_zones,
-        zonal_layer, zone_id_in_losses_attr_name,
-        zone_id_in_zones_attr_name, loss_attr_names,
-        loss_attrs_dict, iface)
+    log_msg(msg, level='I', message_bar=iface.messageBar())
 
 
 def calculate_raster_stats(loss_layer, zonal_layer, iface):
@@ -471,22 +590,20 @@ def calculate_raster_stats(loss_layer, zonal_layer, iface):
     values for each zone
     """
     zonal_statistics = QgsZonalStatistics(
-        zonal_layer,
-        loss_layer.dataProvider().dataSourceUri())
+            zonal_layer,
+            loss_layer.dataProvider().dataSourceUri())
     progress_dialog = QProgressDialog(
-        tr('Calculating zonal statistics'),
-        tr('Abort...'),
-        0,
-        0)
+            tr('Calculating zonal statistics'),
+            tr('Abort...'),
+            0,
+            0)
     zonal_statistics.calculateStatistics(progress_dialog)
     # TODO: This is not giving any warning in case no loss points are
     #       contained by any of the zones
     if progress_dialog.wasCanceled():
-        iface.messageBar().pushMessage(
-            tr("ZonalStats Error"),
-            tr('You aborted aggregation, so there are '
-                'no data for analysis. Exiting...'),
-            level=QgsMessageBar.CRITICAL)
+        msg = ("You aborted aggregation, so there are"
+               " no data for analysis. Exiting...")
+        log_msg(msg, level='C', message_bar=iface.messageBar())
     # FIXME: We probably need to return something more
     return (loss_layer, zonal_layer)
 
@@ -496,10 +613,10 @@ def purge_zones_without_loss_points(
     """
     Delete from the zonal layer the zones that contain no loss points
     """
-    tot_zones = len(list(zonal_layer.getFeatures()))
+    tot_zones = zonal_layer.featureCount()
     msg = tr("Purging zones containing no loss points...")
     msg_bar_item, progress = create_progress_message_bar(
-        iface.messageBar(), msg)
+            iface.messageBar(), msg)
 
     with LayerEditingManager(zonal_layer, msg, DEBUG):
         for current_zone, zone_feature in enumerate(zonal_layer.getFeatures()):
@@ -513,7 +630,5 @@ def purge_zones_without_loss_points(
     clear_progress_message_bar(iface.messageBar(), msg_bar_item)
 
     msg = "Zones containing no loss points were deleted"
-    iface.messageBar().pushMessage(tr("Warning"),
-                                   tr(msg),
-                                   level=QgsMessageBar.WARNING)
+    log_msg(msg, level='W', message_bar=iface.messageBar())
     return zonal_layer

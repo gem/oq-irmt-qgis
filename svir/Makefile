@@ -21,10 +21,6 @@ LOCALES = it
 
 PLUGINNAME = svir
 
-# PY_FILES = irmt.py select_input_layers_dialog.py __init__.py attribute_selection_dialog.py transformation_dialog.py select_sv_variables_dialog.py settings_dialog.py projects_manager_dialog.py
-
-UI_FILES = ui/ui_select_input_layers.py ui/ui_attribute_selection.py ui/ui_transformation.py ui/ui_select_sv_variables.py ui/ui_settings.py ui/ui_weight_data.py ui/ui_calculate_iri.py ui/ui_upload_metadata.py ui/ui_upload_settings.py ui/ui_download_layer.py ui/ui_projects_manager_dialog.py
-
 EXTRAS = resources/start_plugin_icon.png metadata.txt
 
 COMPILED_RESOURCE_FILES = resources_rc.py
@@ -50,7 +46,7 @@ endif
 
 default: compile
 
-compile: $(UI_FILES) $(COMPILED_RESOURCE_FILES)
+compile: $(COMPILED_RESOURCE_FILES)
 
 %_rc.py : %.qrc $(RESOURCE_SRC)
 	pyrcc4 -o $*_rc.py  $<
@@ -61,18 +57,47 @@ compile: $(UI_FILES) $(COMPILED_RESOURCE_FILES)
 %.qm : %.ts
 	lrelease $<
 
-test: compile transcompile
+unittest: compile transcompile
 	@echo
-	@echo "----------------------"
-	@echo "Regression Test Suite"
-	@echo "----------------------"
+	@echo "------------------"
+	@echo "Running unit tests"
+	@echo "------------------"
 
-	@# Preceding dash means that make will continue in case of errors
-	@-export PYTHONPATH=`pwd`:$(PYTHONPATH); \
+	@export PYTHONPATH=`pwd`:$(PYTHONPATH); \
 		export QGIS_DEBUG=0; \
 		export QGIS_LOG_FILE=/dev/null; \
-		nosetests -s -v --with-id --with-coverage --cover-package=. test\
-		3>&1 1>&2 2>&3 3>&- || true
+		nosetests -s -v --with-doctest --with-id --exclude-dir=third_party --exclude-dir=test/integration\
+		3>&1 1>&2 2>&3 3>&-
+	@echo "----------------------"
+	@echo "If you get 'no module...' errors, try sourcing"
+	@echo "the helper script we have provided first then run make unittest."
+	@echo "e.g. source ../scripts/run-env-linux.sh <path to qgis install>; make unittest"
+	@echo "----------------------"
+
+integrationtest: compile transcompile
+	@echo
+	@echo "-------------------------"
+	@echo "Running integration tests"
+	@echo "-------------------------"
+
+	@export PYTHONPATH=`pwd`:$(PYTHONPATH); \
+		export QGIS_DEBUG=0; \
+		export QGIS_LOG_FILE=/dev/null; \
+		nosetests -s -v --with-id test/integration\
+		3>&1 1>&2 2>&3 3>&-
+	@echo "----------------------"
+	@echo "If you get 'no module...' errors, try sourcing"
+	@echo "the helper script we have provided first then run make integrationtest."
+	@echo "e.g. source ../scripts/run-env-linux.sh <path to qgis install>; make integrationtest"
+	@echo "Make sure the oq-engine server is running on localhost, that the database has"
+	@echo "been reset and all oq-engine demos have been completed successfully."
+	@echo "In order to run integration tests for one specific calculation id (e.g. 5), run:"
+	@echo "SELECTED_CALC_ID=5 make integrationtest"
+	@echo "In order to run integration tests for one specific output type (e.g. hmaps), run:"
+	@echo "SELECTED_OTYPE=hmaps make integrationtest"
+	@echo "----------------------"
+
+test: unittest integrationtest
 	@echo "----------------------"
 	@echo "If you get 'no module...' errors, try sourcing"
 	@echo "the helper script we have provided first then run make test."
@@ -139,13 +164,19 @@ package: compile doc
 	@echo "------------------------------------"
 	rm -f $(PLUGINNAME)/$(PLUGINNAME).zip
 	git archive --prefix=$(PLUGINNAME)/ -o $(PLUGINNAME).zip $(VERSION)
-	mkdir -p $(PLUGINNAME)/help/build; rm -r $(PLUGINNAME)/help/build/html; cp -r help/build/html $(PLUGINNAME)/help/build/html
-	mkdir -p $(PLUGINNAME)/apidoc/build; rm -r $(PLUGINNAME)/apidoc/build/html; cp -r apidoc/build/html $(PLUGINNAME)/apidoc/build/html
+	# to save more space, we can use /ebook instead of /printer (but it would reduce the resolution of images)
+	gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/printer -dNOPAUSE -dQUIET -dBATCH -sOutputFile=help/build/html/_downloads/resized-irmt.pdf help/build/html/_downloads/irmt.pdf;
+	mv -f help/build/html/_downloads/resized-irmt.pdf help/build/html/_downloads/irmt.pdf
+	mkdir -p $(PLUGINNAME)/help/build; rm -r $(PLUGINNAME)/help/build/html; cp -r help/build/html $(PLUGINNAME)/help/build/html;
+	mkdir -p $(PLUGINNAME)/apidoc/_build; rm -r $(PLUGINNAME)/apidoc/_build/html; cp -r apidoc/_build/html $(PLUGINNAME)/apidoc/_build/html
 	zip -r $(PLUGINNAME).zip $(PLUGINNAME)/help/build/html
-	zip -r $(PLUGINNAME).zip $(PLUGINNAME)/apidoc/build/html
-	zip --delete $(PLUGINNAME).zip $(PLUGINNAME)/test/\* $(PLUGINNAME)/help/source/\* $(PLUGINNAME)/apidoc/source/\*
+	zip -r $(PLUGINNAME).zip $(PLUGINNAME)/apidoc/_build/html
+	zip --delete $(PLUGINNAME).zip $(PLUGINNAME)/test/\* $(PLUGINNAME)/help/source/\*
 	rm -r $(PLUGINNAME)/
 	echo "Created package: $(PLUGINNAME).zip"
+
+package_no_compile:
+	git archive --prefix=$(PLUGINNAME)/ -o $(PLUGINNAME).zip $(VERSION)
 
 upload_doc: doc
 	@echo
@@ -213,12 +244,21 @@ clean:
 # build documentation with sphinx
 doc: build_manual build_apidoc
 
-build_manual:
+build_manual: build_manual_latex build_manual_html
+
+build_manual_html:
 	@echo
-	@echo "-----------------------------"
-	@echo "Building manual using sphinx."
-	@echo "-----------------------------"
-	cd help; make latexpdf html
+	@echo "-------------------------------------------------"
+	@echo "Building html version of the manual using sphinx."
+	@echo "-------------------------------------------------"
+	cd help; make html
+
+build_manual_latex:
+	@echo
+	@echo "----------------------------------------------------------"
+	@echo "Building pdf version of the manual using sphinx and latex."
+	@echo "----------------------------------------------------------"
+	cd help; make latexpdf
 
 build_apidoc:
 	@echo

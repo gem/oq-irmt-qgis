@@ -9,7 +9,7 @@ Weighting data and calculating indices
 .. figure:: images/dialogWeightAndCalculate.png
     :align: center
     :scale: 60%
-    
+
     |icon-weight-and-calculate| Tree chart structure for the development of composite indicators
 
 Central to the construction of composite indicators is the need to meaningfully
@@ -60,7 +60,7 @@ socio-economic parameters of earthquake risk such as population, economy,
 infrastructure, education, and governance).  Individual indicators are
 aggregated into sub-indices (e.g., population, economy, etc.), and the
 sub-indices are aggregated to form a final composite index (e.g., social
-vulnerability or integrated risk index). The tree structure of the 
+vulnerability or integrated risk index). The tree structure of the
 :guilabel:`Weight data and calculate indices` widget encourages the development of hierarchical
 models of integrated risk. The starting point is a *root node* that corresponds
 to the development of a hierarchical model that can be: 1) an *Integrated Risk
@@ -72,6 +72,13 @@ by the user (e.g., Economy, Education, and Environment as shown within
 dynamically by adding or removing nodes, *inverting* variables, setting a
 weight to each variable or node and choosing the operators to be used to
 combine variables together.
+
+.. note::
+
+    The dialog can be resized, and it is possible to pan and zoom within the
+    tree area using your mouse. By pressing :guilabel:`Save as PDF`, and
+    specifying the destination file, the project representation can be printed
+    as PDF.
 
 Whenever :guilabel:`Update` or :guilabel:`Update and close` are clicked, the project definition is
 updated and the composite indices are re-calculated. As a consequence, the map
@@ -104,7 +111,11 @@ new sub-indicators, each with its own user-provided name.
 When a newly created node is
 clicked, a new dialog is initiated to give users the option to select the
 variables available in the layer (and not already used in the node) to populate
-the sub-indicator being under construction.
+the sub-indicator being under construction. The dropdown menu to select the
+field name displays, for each field, the corresponding alias (where available).
+When a field is selected, the proposed name to be displayed in the tree is
+set by default equal to the field alias (if available) or equal to the field
+name.
 
 .. note::
 
@@ -153,6 +164,48 @@ how the radius of nodes corresponds with the respective weights of variables).
 Otherwise, the radius of a node is proportional to its weight, and the weight
 is rendered next to the node.
 
+The following table lists the basic operators available in the plugin.
+Each formula assumes that we are combining a set :math:`x` of :math:`n` variables
+(tree nodes), and that each variable :math:`x_i` has been assigned a weight :math:`w_i`.
+Each weight is defined in the interval :math:`[0, 1]` and the sum of all weights is 1
+(:math:`\sum\limits_{i=1}^n w_i = 1`).
+
+====================================== ===================================================================================================================
+Operator                               Formula
+====================================== ===================================================================================================================
+Simple sum (ignore weights)            :math:`\sum\limits_{i=1}^n x_i`
+Weighted sum                           :math:`\sum\limits_{i=1}^n w_i x_i`
+Average (ignore weights)               :math:`\frac {1}{n}\sum\limits_{i=1}^n {x_i}`
+Simple multiplication (ignore weights) :math:`\prod\limits_{i=1}^n x_i`
+Weighted multiplication                :math:`\prod\limits_{i=1}^n w_i x_i`
+Geometric mean (ignore weights)        :math:`\sqrt[n]{\prod\limits_{i=1}^n x_i}`
+====================================== ===================================================================================================================
+
+In case the user wants to combine indices using a customized formula that is
+not included in the set of the available operators, it is possible to select
+from the dropdown menu the item :guilabel:`Use a custom field`, and to specify
+which one of the layer's fields has to be used to store the data. If nothing
+else is specified, the tool will not modify the contents of the selected field
+anymore, assuming that the user will take full responsibility in performing the
+customized calculation and storing the results in that field. In order to keep
+track of the workflow, it is possible to add a :guilabel:`Field description` of
+how the node is calculated. Optionally, the user can also specify the
+:guilabel:`Custom formula` used to calculate the field. The formula must be in
+the same format used by the QGIS Field Calculator, i.e., a valid `QgsExpression`.
+If the tool accepts the formula as valid, the node will be recalculated usin that
+formula, whenever the project definition is modified. Otherwise (if either the
+formula is not specified or it is invalid), the node will not be recalculated,
+therefore its values will remain unchanged.
+
+.. note::
+
+    When using a custom operator, we suggest first to create the corresponding
+    field using the QGIS Field Calculator, and to set the project definition
+    afterwards. The expression that is used within the field calculator can
+    be copied and pasted into the :guilabel:`Custom formula` text field. This
+    ensures the plugin will recalculate the node afterwards using the same
+    valid expression.
+
 
 Setting weights
 ===============
@@ -193,6 +246,13 @@ multiplied by -1 each time the variable is used in a calculation.
     Please note that the layer's field will keep holding the original value of
     the variable, and that the inversion will be performed on-the-fly for the
     purpose of the calculation.
+
+    Please also be aware of the fact that multiplying a variable by -1 is not
+    always what is actually needed to invert the meaning of an indicator. For
+    instance, let us suppose we want to meaningfully "invert" a percentage of
+    80%. The correct way to do so would be to calculate 100% - 80% = 20%.
+    Such kind of transformation can be easily performed using the QGIS Field
+    Calculator, in order to obtain a new field to be used in the project.
 
 
 Assigning a new name to a variable

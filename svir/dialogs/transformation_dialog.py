@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#/***************************************************************************
+# /***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
@@ -26,16 +26,19 @@ from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox)
 
-from svir.ui.ui_transformation import Ui_TransformationDialog
 from svir.calculations.transformation_algs import (RANK_VARIANTS,
                                                    QUADRATIC_VARIANTS,
                                                    LOG10_VARIANTS,
                                                    TRANSFORMATION_ALGS)
+from svir.utilities.utils import get_ui_class, log_msg
 from svir.utilities.shared import NUMERIC_FIELD_TYPES
 from svir.calculations.process_layer import ProcessLayer
+from svir.ui.list_multiselect_widget import ListMultiSelectWidget
+
+FORM_CLASS = get_ui_class('ui_transformation.ui')
 
 
-class TransformationDialog(QDialog):
+class TransformationDialog(QDialog, FORM_CLASS):
     """
     Modal dialog giving to the user the possibility to transform
     one or multiple attributes in the active layer, using one of the available
@@ -47,52 +50,54 @@ class TransformationDialog(QDialog):
         self.attr_name_user_def = False
         self.use_advanced = False
         # Set up the user interface from Designer.
-        self.ui = Ui_TransformationDialog()
-        self.ui.setupUi(self)
-        self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
+        self.setupUi(self)
+        self.fields_multiselect = ListMultiSelectWidget(
+            title='Select fields to transform')
+        self.vertical_layout.insertWidget(1, self.fields_multiselect)
+        self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         self.fill_fields_multiselect()
 
         alg_list = TRANSFORMATION_ALGS.keys()
-        self.ui.algorithm_cbx.addItems(alg_list)
-        if self.ui.algorithm_cbx.currentText() in ['RANK', 'QUADRATIC']:
+        self.algorithm_cbx.addItems(alg_list)
+        if self.algorithm_cbx.currentText() in ['RANK', 'QUADRATIC']:
             self.reload_variant_cbx()
-        self.ui.inverse_ckb.setDisabled(
-            self.ui.algorithm_cbx.currentText() in ['LOG10'])
-        self.ui.warning_lbl.hide()
-        self.ui.warning_lbl.setText(
+        self.inverse_ckb.setDisabled(
+            self.algorithm_cbx.currentText() in ['LOG10'])
+        self.warning_lbl.hide()
+        self.warning_lbl.setText(
             "<font color='red'>"
             "WARNING: the original attribute will be overwritten by the"
             " results of the transformation (it can not be undone)"
             "</font>")
-        self.ui.fields_multiselect.selection_changed.connect(
+        self.fields_multiselect.selection_changed.connect(
             self.set_ok_button)
-        self.ui.fields_multiselect.selection_changed.connect(
+        self.fields_multiselect.selection_changed.connect(
             self.set_new_field_editable)
-        self.ui.fields_multiselect.selection_changed.connect(
+        self.fields_multiselect.selection_changed.connect(
             self.update_default_fieldname)
         self.set_ok_button()
         self.set_new_field_editable()
 
     def set_ok_button(self):
         self.ok_button.setEnabled(
-            self.ui.fields_multiselect.selected_widget.count() > 0)
+            self.fields_multiselect.selected_widget.count() > 0)
 
     def set_new_field_editable(self):
-        n_fields_selected = self.ui.fields_multiselect.selected_widget.count()
-        self.ui.new_field_name_lbl.setEnabled(n_fields_selected == 1)
-        self.ui.new_field_name_txt.setEnabled(n_fields_selected == 1)
+        n_fields_selected = self.fields_multiselect.selected_widget.count()
+        self.new_field_name_lbl.setEnabled(n_fields_selected == 1)
+        self.new_field_name_txt.setEnabled(n_fields_selected == 1)
 
     @pyqtSlot(int)
     def on_overwrite_ckb_stateChanged(self):
-        overwrite_checked = self.ui.overwrite_ckb.isChecked()
-        self.ui.new_field_name_lbl.setDisabled(overwrite_checked)
-        self.ui.new_field_name_txt.setDisabled(overwrite_checked)
-        self.ui.track_new_field_ckb.setDisabled(overwrite_checked)
+        overwrite_checked = self.overwrite_ckb.isChecked()
+        self.new_field_name_lbl.setDisabled(overwrite_checked)
+        self.new_field_name_txt.setDisabled(overwrite_checked)
+        self.track_new_field_ckb.setDisabled(overwrite_checked)
         if overwrite_checked:
             self.attr_name_user_def = False
-            self.ui.warning_lbl.show()
+            self.warning_lbl.show()
         else:
-            self.ui.warning_lbl.hide()
+            self.warning_lbl.hide()
         self.update_default_fieldname()
 
     @pyqtSlot()
@@ -120,7 +125,7 @@ class TransformationDialog(QDialog):
     @pyqtSlot()
     def on_new_field_name_txt_editingFinished(self):
         self.attr_name_user_def = True
-        new_field_name = self.ui.new_field_name_txt.text()
+        new_field_name = self.new_field_name_txt.text()
         # if the name of the new field is empty, automatically assign a name
         if not new_field_name:
             self.update_default_fieldname()
@@ -128,54 +133,74 @@ class TransformationDialog(QDialog):
     @pyqtSlot(str)
     def on_new_field_name_txt_textEdited(self):
         # we assume exactly one item is in the selected list
-        input_field_name = \
-            self.ui.fields_multiselect.selected_widget.item(0).text()
-        new_field_name = self.ui.new_field_name_txt.text()
+        input_field_name = self._extract_field_name(
+            self.fields_multiselect.selected_widget.item(0).text())
+        new_field_name = self.new_field_name_txt.text()
         # if the name of the new field is equal to the name of the input field,
         # automatically check the 'overwrite' checkbox (and consequently
         # display the warning)
         if new_field_name == input_field_name:
-            self.ui.overwrite_ckb.setChecked(True)
+            self.overwrite_ckb.setChecked(True)
 
     def reload_variant_cbx(self):
-        self.ui.variant_cbx.clear()
-        self.ui.variant_cbx.setEnabled(True)
-        if self.ui.algorithm_cbx.currentText() == 'RANK':
-            self.ui.variant_cbx.addItems(RANK_VARIANTS)
-        elif self.ui.algorithm_cbx.currentText() == 'QUADRATIC':
-            self.ui.variant_cbx.addItems(QUADRATIC_VARIANTS)
-        elif self.ui.algorithm_cbx.currentText() == 'LOG10':
-            self.ui.variant_cbx.addItems(LOG10_VARIANTS)
+        self.variant_cbx.clear()
+        self.variant_cbx.setEnabled(True)
+        if self.algorithm_cbx.currentText() == 'RANK':
+            self.variant_cbx.addItems(RANK_VARIANTS)
+        elif self.algorithm_cbx.currentText() == 'QUADRATIC':
+            self.variant_cbx.addItems(QUADRATIC_VARIANTS)
+        elif self.algorithm_cbx.currentText() == 'LOG10':
+            self.variant_cbx.addItems(LOG10_VARIANTS)
         else:
-            self.ui.variant_cbx.setDisabled(True)
-        self.ui.inverse_ckb.setDisabled(
-            self.ui.algorithm_cbx.currentText() in ['LOG10'])
+            self.variant_cbx.setDisabled(True)
+        self.inverse_ckb.setDisabled(
+            self.algorithm_cbx.currentText() in ['LOG10'])
+
+    def _extract_field_name(self, field_name_plus_alias):
+        # attribute_name is something like 'ABCDEFGHIL (Readable name)'
+        # and we want to use only the heading code
+        return field_name_plus_alias.split('(')[0].strip()
 
     def update_default_fieldname(self):
-        if self.ui.fields_multiselect.selected_widget.count() != 1:
-            self.ui.new_field_name_txt.setText('')
+        if self.fields_multiselect.selected_widget.count() != 1:
+            self.new_field_name_txt.setText('')
             self.attr_name_user_def = False
             return
         if (not self.attr_name_user_def
-                or not self.ui.new_field_name_txt.text()):
-            attribute_name = \
-                self.ui.fields_multiselect.selected_widget.item(0).text()
-            algorithm_name = self.ui.algorithm_cbx.currentText()
-            variant = self.ui.variant_cbx.currentText()
-            inverse = self.ui.inverse_ckb.isChecked()
-            if self.ui.overwrite_ckb.isChecked():
+                or not self.new_field_name_txt.text()):
+            attribute_name = self._extract_field_name(
+                self.fields_multiselect.selected_widget.item(0).text())
+            algorithm_name = self.algorithm_cbx.currentText()
+            variant = self.variant_cbx.currentText()
+            inverse = self.inverse_ckb.isChecked()
+            if self.overwrite_ckb.isChecked():
                 new_attr_name = attribute_name
             else:
                 new_attr_name = \
                     ProcessLayer(self.iface.activeLayer()).transform_attribute(
                         attribute_name, algorithm_name, variant,
                         inverse, simulate=True)
-            self.ui.new_field_name_txt.setText(new_attr_name)
+            self.new_field_name_txt.setText(new_attr_name)
             self.attr_name_user_def = False
 
     def fill_fields_multiselect(self):
-        field_names = [
-            field.name()
-            for field in self.iface.activeLayer().dataProvider().fields()
-            if field.typeName() in NUMERIC_FIELD_TYPES]
-        self.ui.fields_multiselect.set_unselected_items(field_names)
+        names_plus_aliases = []
+        for field_idx, field in enumerate(self.iface.activeLayer().fields()):
+            if field.typeName() in NUMERIC_FIELD_TYPES:
+                if '(' in field.name():
+                    msg = (
+                        'Please remove parentheses from the name of field'
+                        ' %s before attempting to transform it, otherwise'
+                        ' the tool will not be able to distinguish between'
+                        ' the alias and the part of the name included'
+                        ' between parentheses. For instance, you may'
+                        ' replace "(" with "[" to avoid ambiguity.'
+                        % field.name())
+                    log_msg(
+                        msg, level='W', message_bar=self.iface.messageBar())
+                else:
+                    name_plus_alias = '%s (%s)' % (
+                        field.name(),
+                        self.iface.activeLayer().attributeAlias(field_idx))
+                    names_plus_aliases.append(name_plus_alias)
+        self.fields_multiselect.set_unselected_items(names_plus_aliases)

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#/***************************************************************************
+# /***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
@@ -24,17 +24,15 @@
 
 # create the dialog for zoom to point
 import os.path
-import csv
-import tempfile
 from qgis.core import (QgsVectorLayer,
                        QGis,
                        QgsRasterLayer,
                        QgsMapLayerRegistry,
                        QgsVectorFileWriter,
+                       QgsMapLayer,
                        )
-from qgis.gui import QgsMessageBar
 
-from PyQt4.QtCore import pyqtSlot, QDir, QUrl
+from PyQt4.QtCore import pyqtSlot, QDir, QUrl, QSettings, QFileInfo
 
 from PyQt4.QtGui import (QFileDialog,
                          QDialog,
@@ -46,11 +44,17 @@ from svir.calculations.aggregate_loss_by_zone import (
 
 from svir.calculations.process_layer import ProcessLayer
 from svir.dialogs.attribute_selection_dialog import AttributeSelectionDialog
-from svir.ui.ui_select_input_layers import Ui_SelectInputLayersDialog
-from svir.utilities.utils import tr, count_heading_commented_lines
+from svir.utilities.utils import (tr,
+                                  count_heading_commented_lines,
+                                  get_ui_class,
+                                  log_msg,
+                                  save_layer_as_shapefile,
+                                  )
+
+FORM_CLASS = get_ui_class('ui_select_input_layers.ui')
 
 
-class SelectInputLayersDialog(QDialog):
+class SelectInputLayersDialog(QDialog, FORM_CLASS):
     """
     Modal dialog allowing to select a raster or vector layer
     containing loss data points and a vector layer containing polygons
@@ -61,10 +65,9 @@ class SelectInputLayersDialog(QDialog):
         self.iface = iface
         QDialog.__init__(self)
         # Set up the user interface from Designer.
-        self.ui = Ui_SelectInputLayersDialog()
-        self.ui.setupUi(self)
+        self.setupUi(self)
         # Disable ok_button until loss and zonal layers are selected
-        self.ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
+        self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         self.ok_button.setDisabled(True)
         self.loss_layer_is_vector = True
         self.populate_cbx()
@@ -72,56 +75,54 @@ class SelectInputLayersDialog(QDialog):
     def open_file_dialog(self, dialog_type):
         """
         Open a file dialog to select the data file to be loaded
-        :param string dialog_type:
-            Valid types are 'loss_layer' or 'zonal_layer'
-        :returns:
+        :param string dialog_type: 'loss_layer' or 'zonal_layer'
+        :returns: a layer
         """
         if dialog_type == 'loss_layer':
             text = self.tr('Select loss map to import')
             # FIXME: What should be the format of the raster maps?
-            filters = self.tr('Geojson vector loss curves (*.geojson);;'
+            filters = self.tr('Loss curves from the OpenQuake-engine (*.csv);;'
                               'Shapefile vector loss curves (*.shp);;'
-                              'Loss curves from the OpenQuake-engine (*.csv);;'
+                              'Geojson vector loss curves (*.geojson);;'
                               'Raster loss curves (*.*)')
-            file_names, file_type = QFileDialog.getOpenFileNamesAndFilter(
-                self, text, QDir.homePath(), filters)
         elif dialog_type == 'zonal_layer':
             text = self.tr('Select zonal layer to import')
             filters = self.tr('Vector shapefiles (*.shp);;SQLite (*.sqlite);;'
                               'All files (*.*)')
-            file_name, file_type = QFileDialog.getOpenFileNameAndFilter(
-                self, text, QDir.homePath(), filters)
         else:
             raise RuntimeError('Invalid dialog_type: {}'.format(dialog_type))
+        default_dir = QSettings().value('irmt/select_layer_dir',
+                                        QDir.homePath())
+        file_name, file_type = QFileDialog.getOpenFileNameAndFilter(
+            self, text, default_dir, filters)
         if dialog_type == 'zonal_layer':
             if not file_name:
                 return None
+            selected_dir = QFileInfo(file_name).dir().path()
+            QSettings().setValue('irmt/select_layer_dir', selected_dir)
             layer = self.load_zonal_layer(file_name)
         elif dialog_type == 'loss_layer':
-            if not file_names:
+            if not file_name:
                 return None
+            selected_dir = QFileInfo(file_name).dir().path()
+            QSettings().setValue('irmt/select_layer_dir', selected_dir)
             if file_type == 'Raster loss curves (*.*)':
                 self.loss_layer_is_vector = False
             if file_type == 'Loss curves from the OpenQuake-engine (*.csv)':
-                layer = self.import_loss_layer_from_csv(file_names)
+                layer = self.import_loss_layer_from_csv(file_name)
             else:
-                file_name = file_names[0]
-                if len(file_names) > 1:
-                    msg = "Only %s is loaded" % file_name
-                    self.iface.messageBar().pushMessage(
-                        tr("Warning"), tr(msg), level=QgsMessageBar.WARNING)
                 layer = self.load_loss_layer(file_name)
         else:
             raise RuntimeError
         return layer
 
     def accept(self):
-        loss_layer_id = self.ui.loss_layer_cbx.itemData(
-            self.ui.loss_layer_cbx.currentIndex())
+        loss_layer_id = self.loss_layer_cbx.itemData(
+            self.loss_layer_cbx.currentIndex())
         loss_layer = QgsMapLayerRegistry.instance().mapLayer(
             loss_layer_id)
-        zonal_layer_id = self.ui.zonal_layer_cbx.itemData(
-            self.ui.zonal_layer_cbx.currentIndex())
+        zonal_layer_id = self.zonal_layer_cbx.itemData(
+            self.zonal_layer_cbx.currentIndex())
         zonal_layer = QgsMapLayerRegistry.instance().mapLayer(
             zonal_layer_id)
 
@@ -130,10 +131,8 @@ class SelectInputLayersDialog(QDialog):
         have_same_projection, check_projection_msg = ProcessLayer(
             loss_layer).has_same_projection_as(zonal_layer)
         if not have_same_projection:
-            self.iface.messageBar().pushMessage(
-                tr("Error"),
-                check_projection_msg,
-                level=QgsMessageBar.CRITICAL)
+            log_msg(check_projection_msg, level='C',
+                    message_bar=self.iface.messageBar())
             return
 
         # check if loss layer is raster or vector (aggregating by zone
@@ -163,7 +162,7 @@ class SelectInputLayersDialog(QDialog):
                                     self.iface)
         (loss_layer, zonal_layer, loss_attrs_dict) = res
 
-        if self.ui.purge_chk.isChecked():
+        if self.purge_chk.isChecked():
             purge_zones_without_loss_points(
                 zonal_layer, loss_attrs_dict, self.iface)
         super(SelectInputLayersDialog, self).accept()
@@ -192,13 +191,13 @@ class SelectInputLayersDialog(QDialog):
                 "Are you sure to delete the empty zones from the zonal layer?",
                 QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if reply == QMessageBox.No:
-                self.ui.purge_chk.setCheckState(0)
+                self.purge_chk.setCheckState(0)
 
     @pyqtSlot()
     def on_loss_layer_tbn_clicked(self):
         layer = self.open_file_dialog('loss_layer')
-        if layer and ProcessLayer(layer).is_type_in(["point", "multipoint"]):
-            cbx = self.ui.loss_layer_cbx
+        if layer and layer.geometryType() == QGis.Point:
+            cbx = self.loss_layer_cbx
             cbx.addItem(layer.name())
             last_index = cbx.count() - 1
             cbx.setItemData(last_index, layer.id())
@@ -208,9 +207,8 @@ class SelectInputLayersDialog(QDialog):
     @pyqtSlot()
     def on_zonal_layer_tbn_clicked(self):
         layer = self.open_file_dialog('zonal_layer')
-        if layer and ProcessLayer(layer).is_type_in(
-                ["polygon", "multipolygon"]):
-            cbx = self.ui.zonal_layer_cbx
+        if layer and layer.geometryType() == QGis.Polygon:
+            cbx = self.zonal_layer_cbx
             cbx.addItem(layer.name())
             last_index = cbx.count() - 1
             cbx.setItemData(last_index, layer.id())
@@ -221,79 +219,33 @@ class SelectInputLayersDialog(QDialog):
         for key, layer in \
                 QgsMapLayerRegistry.instance().mapLayers().iteritems():
             # populate loss cbx only with layers containing points
-            if ProcessLayer(layer).is_type_in(["point", "multipoint"]):
-                self.ui.loss_layer_cbx.addItem(layer.name())
-                self.ui.loss_layer_cbx.setItemData(
-                    self.ui.loss_layer_cbx.count()-1, layer.id())
-            if ProcessLayer(layer).is_type_in(["polygon", "multipolygon"]):
-                self.ui.zonal_layer_cbx.addItem(layer.name())
-                self.ui.zonal_layer_cbx.setItemData(
-                    self.ui.zonal_layer_cbx.count()-1, layer.id())
+            if layer.type() != QgsMapLayer.VectorLayer:
+                continue
+            if layer.geometryType() == QGis.Point:
+                self.loss_layer_cbx.addItem(layer.name())
+                self.loss_layer_cbx.setItemData(
+                    self.loss_layer_cbx.count()-1, layer.id())
+            if layer.geometryType() == QGis.Polygon:
+                self.zonal_layer_cbx.addItem(layer.name())
+                self.zonal_layer_cbx.setItemData(
+                    self.zonal_layer_cbx.count()-1, layer.id())
         self.enable_ok_button_if_both_layers_are_specified()
 
     def enable_ok_button_if_both_layers_are_specified(self):
-        if self.ui.loss_layer_cbx.currentText() and \
-                self.ui.zonal_layer_cbx.currentText():
+        if self.loss_layer_cbx.currentText() and \
+                self.zonal_layer_cbx.currentText():
             self.ok_button.setEnabled(True)
         else:
             self.ok_button.setEnabled(False)
 
     def import_loss_layer_from_csv(self,
-                                   csv_file_paths,
+                                   csv_file_path,
                                    dest_shp=None,
-                                   from_oqengine=True):
+                                   delete_lon_lat=False):
         # FIXME: hardcoded field names
         longitude_field = 'LON'
         latitude_field = 'LAT'
-        if from_oqengine:
-            lines_to_skip_count = 0
-            loss_types = []
-            # get the loss type names from the csv files
-            row_counts = []
-            for csv_file_path in csv_file_paths:
-                with open(csv_file_path, "rb") as source:
-                    reader = csv.reader(source)
-                    # get the loss type from the second row
-                    reader.next()  # ignore the first row
-                    second_row = reader.next()
-                    loss_types.append(second_row[6])
-                    row_count = 2 + sum(1 for row in reader)
-                    row_counts.append(row_count)
-            if any(row_counts[0] != row_count for row_count in row_counts):
-                raise Exception('Input csv fields have different lengths')
-            header = ['LON', 'LAT']
-            header.extend([loss_type.upper() for loss_type in loss_types])
-            fd, reduced_csv_path = tempfile.mkstemp(suffix='csv')
-            os.close(fd)
-            source_files = []
-            source_readers = []
-            for csv_file_path in csv_file_paths:
-                source_file = open(csv_file_path, "rb")
-                source_files.append(source_file)
-                source_reader = csv.reader(source_file)
-                source_readers.append(source_reader)
-                source_reader.next()  # ignore first row
-            with open(reduced_csv_path, "wb") as reduced:
-                writer = csv.writer(reduced)
-                writer.writerow(header)
-                # iterate while there are rows in the first csv file
-                for first_source_row in source_readers[0]:
-                    # add lon, lat and average_loss from the first source
-                    lon = first_source_row[0]
-                    lat = first_source_row[1]
-                    first_loss = first_source_row[4]
-                    row = [lon, lat, first_loss]
-                    # append the average_loss from the other sources
-                    for source_reader in source_readers[1:]:
-                        loss = source_reader.next()[4]
-                        row.append(loss)
-                    writer.writerow(row)
-            for source_file in source_files:
-                source_file.close()
-            csv_file_path = reduced_csv_path
-        else:
-            csv_file_path = csv_file_paths[0]
-            lines_to_skip_count = count_heading_commented_lines(csv_file_path)
+        lines_to_skip_count = count_heading_commented_lines(csv_file_path)
         url = QUrl.fromLocalFile(csv_file_path)
         url.addQueryItem('type', 'csv')
         url.addQueryItem('xField', longitude_field)
@@ -317,23 +269,19 @@ class SelectInputLayersDialog(QDialog):
                 dest_filename += ".shp"
         else:
             return
-        result = QgsVectorFileWriter.writeAsVectorFormat(
-            csv_layer, dest_filename, 'CP1250',
-            None, 'ESRI Shapefile')
+        result = save_layer_as_shapefile(csv_layer, dest_filename)
         if result != QgsVectorFileWriter.NoError:
             raise RuntimeError('Could not save shapefile')
         shp_layer = QgsVectorLayer(
             dest_filename, 'Loss data', 'ogr')
-        ProcessLayer(shp_layer).delete_attributes(
-            [longitude_field, latitude_field]),
+        if delete_lon_lat:
+            ProcessLayer(shp_layer).delete_attributes(
+                [longitude_field, latitude_field]),
         if shp_layer.isValid():
             QgsMapLayerRegistry.instance().addMapLayer(shp_layer)
         else:
             msg = 'Invalid loss map'
-            self.iface.messageBar().pushMessage(
-                tr("Error"),
-                tr(msg),
-                level=QgsMessageBar.CRITICAL)
+            log_msg(msg, level='C', message_bar=self.iface.messageBar())
             return None
         return shp_layer
 
@@ -343,10 +291,7 @@ class SelectInputLayersDialog(QDialog):
             loss_layer = QgsVectorLayer(loss_layer_path, tr('Loss map'), 'ogr')
             if not loss_layer.geometryType() == QGis.Point:
                 msg = 'Loss map must contain points'
-                self.iface.messageBar().pushMessage(
-                    tr("Error"),
-                    tr(msg),
-                    level=QgsMessageBar.CRITICAL)
+                log_msg(msg, level='C', message_bar=self.iface.messageBar())
                 return False
         else:
             loss_layer = QgsRasterLayer(loss_layer_path, tr('Loss map'))
@@ -355,10 +300,7 @@ class SelectInputLayersDialog(QDialog):
             QgsMapLayerRegistry.instance().addMapLayer(loss_layer)
         else:
             msg = 'Invalid loss map'
-            self.iface.messageBar().pushMessage(
-                tr("Error"),
-                tr(msg),
-                level=QgsMessageBar.CRITICAL)
+            log_msg(msg, level='C', message_bar=self.iface.messageBar())
             return None
         # Zoom depending on the zonal layer's extent
         return loss_layer
@@ -368,19 +310,13 @@ class SelectInputLayersDialog(QDialog):
         zonal_layer = QgsVectorLayer(zonal_layer_path, tr('Zonal data'), 'ogr')
         if not zonal_layer.geometryType() == QGis.Polygon:
             msg = 'Zonal layer must contain zone polygons'
-            self.iface.messageBar().pushMessage(
-                tr("Error"),
-                tr(msg),
-                level=QgsMessageBar.CRITICAL)
+            log_msg(msg, level='C', message_bar=self.iface.messageBar())
             return False
         # Add zonal layer to registry
         if zonal_layer.isValid():
             QgsMapLayerRegistry.instance().addMapLayer(zonal_layer)
         else:
             msg = 'Invalid zonal layer'
-            self.iface.messageBar().pushMessage(
-                tr("Error"),
-                tr(msg),
-                level=QgsMessageBar.CRITICAL)
+            log_msg(msg, level='C', message_bar=self.iface.messageBar())
             return None
         return zonal_layer
