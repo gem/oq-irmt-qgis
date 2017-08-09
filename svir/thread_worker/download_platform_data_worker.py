@@ -103,7 +103,7 @@ class DownloadPlatformDataWorker(AbstractWorker):
             if self.is_subnational_study:
                 # in case of subnational study, we expect:
                 # zone_name, country_iso, parent_label, v1, v2, ... vn
-                types_string = ('"String","String","String","String"'
+                types_string = ('"String","String","String"'
                                 + ',"Real"' * sv_variables_count)
             else:  # national study
                 # in case of national study, we expect:
