@@ -35,7 +35,6 @@ from PyQt4.QtGui import (QFileDialog,
                          QToolButton,
                          )
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
-from svir.dialogs.attribute_selection_dialog import AttributeSelectionDialog
 from svir.calculations.process_layer import ProcessLayer
 from svir.calculations.calculate_utils import add_numeric_attribute
 from svir.calculations.aggregate_loss_by_zone import (
@@ -231,22 +230,6 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             cbx.setItemData(last_index, layer.id())
             cbx.setCurrentIndex(last_index)
 
-    @staticmethod
-    def attribute_selection(loss_layer, zonal_layer):
-        """
-        Open a modal dialog containing combo boxes, allowing the user
-        to select what are the attribute names for
-        * loss values (from loss layer)
-        * zone id (from loss layer)
-        * zone id (from zonal layer)
-        """
-        dlg = AttributeSelectionDialog(loss_layer, zonal_layer)
-        # if the user presses OK
-        if dlg.exec_():
-            return dlg.selected_attributes
-        else:
-            return False
-
     def accept(self):
         self.load_from_npz()
         loss_layer = self.layer
@@ -267,19 +250,9 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             # TODO: load only loss layer
             super(LoadOutputAsLayerDialog, self).accept()
             return
-        # Open dialog to ask the user to specify attributes
-        # * loss from loss_layer
-        # * zone_id from loss_layer
-        # * svi from zonal_layer
-        # * zone_id from zonal_layer
-        ret_val = self.attribute_selection(
-            loss_layer, zonal_layer)
-        if not ret_val:
-            super(LoadOutputAsLayerDialog, self).accept()
-            return
-        (loss_attr_names,
-         zone_id_in_losses_attr_name,
-         zone_id_in_zones_attr_name) = ret_val
+        loss_attr_names = [field.name() for field in loss_layer.fields()]
+        zone_id_in_losses_attr_name = None
+        zone_id_in_zones_attr_name = None
         # aggregate losses by zone (calculate count of points in the
         # zone, sum and average loss values for the same zone)
         loss_layer_is_vector = True

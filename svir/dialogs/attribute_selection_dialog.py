@@ -25,12 +25,10 @@
 from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox,
-                         QComboBox,
-                         QFormLayout,
                          )
 
 from svir.utilities.utils import tr, get_ui_class
-from svir.utilities.shared import NUMERIC_FIELD_TYPES, TEXTUAL_FIELD_TYPES
+from svir.utilities.shared import NUMERIC_FIELD_TYPES
 
 FORM_CLASS = get_ui_class('ui_attribute_selection.ui')
 
