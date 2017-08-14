@@ -24,25 +24,12 @@
 
 import numpy
 import collections
-from qgis.core import (QgsFeature, QgsGeometry, QgsPoint, QGis,
-                       QgsMapLayerRegistry, QgsVectorLayer,
-                       )
-from PyQt4.QtCore import QDir, QSettings, QFileInfo
-from PyQt4.QtGui import (QFileDialog,
-                         QHBoxLayout,
-                         QComboBox,
-                         QLabel,
-                         QToolButton,
-                         )
+from qgis.core import QgsFeature, QgsGeometry, QgsPoint
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
-from svir.calculations.process_layer import ProcessLayer
 from svir.calculations.calculate_utils import add_numeric_attribute
-from svir.calculations.aggregate_loss_by_zone import (
-    calculate_zonal_stats)
 from svir.utilities.utils import (WaitCursorManager,
                                   LayerEditingManager,
                                   log_msg,
-                                  tr,
                                   )
 from svir.utilities.shared import DEBUG
 
@@ -69,23 +56,6 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             self.populate_out_dep_widgets()
         self.adjustSize()
         self.set_ok_button()
-
-    def create_zonal_layer_selector(self):
-        self.zonal_layer_cbx = QComboBox()
-        self.zonal_layer_cbx.addItem('')
-        # self.zonal_layer_cbx.setEnabled(False)
-        # self.zonal_layer_cbx.currentIndexChanged['QString'].connect(
-        #     self.on_zonal_layer_cbx_changed)
-        self.zonal_layer_lbl = QLabel('Zonal layer')
-        self.zonal_layer_tbn = QToolButton()
-        self.zonal_layer_tbn.setText('...')
-        self.zonal_layer_h_layout = QHBoxLayout()
-        self.zonal_layer_h_layout.addWidget(self.zonal_layer_cbx)
-        self.zonal_layer_h_layout.addWidget(self.zonal_layer_tbn)
-        self.zonal_layer_tbn.clicked.connect(
-            self.on_zonal_layer_tbn_clicked)
-        self.output_dep_vlayout.addWidget(self.zonal_layer_lbl)
-        self.output_dep_vlayout.addLayout(self.zonal_layer_h_layout)
 
     def set_ok_button(self):
         self.ok_button.setEnabled(bool(self.path))
@@ -185,84 +155,3 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         for i, (lon, lat) in enumerate(sorted(loss_by_site)):
             data[i] = (lon, lat, loss_by_site[lon, lat])
         return data
-
-    def open_zonal_layer_dialog(self):
-        """
-        Open a file dialog to select the zonal layer to be loaded
-        :returns: the zonal layer
-        """
-        text = self.tr('Select zonal layer to import')
-        filters = self.tr('Vector shapefiles (*.shp);;SQLite (*.sqlite);;'
-                          'All files (*.*)')
-        default_dir = QSettings().value('irmt/select_layer_dir',
-                                        QDir.homePath())
-        file_name, file_type = QFileDialog.getOpenFileNameAndFilter(
-            self, text, default_dir, filters)
-        if not file_name:
-            return None
-        selected_dir = QFileInfo(file_name).dir().path()
-        QSettings().setValue('irmt/select_layer_dir', selected_dir)
-        layer = self.load_zonal_layer(file_name)
-        return layer
-
-    def load_zonal_layer(self, zonal_layer_path):
-        # Load zonal layer
-        zonal_layer = QgsVectorLayer(zonal_layer_path, tr('Zonal data'), 'ogr')
-        if not zonal_layer.geometryType() == QGis.Polygon:
-            msg = 'Zonal layer must contain zone polygons'
-            log_msg(msg, level='C', message_bar=self.iface.messageBar())
-            return False
-        # Add zonal layer to registry
-        if zonal_layer.isValid():
-            QgsMapLayerRegistry.instance().addMapLayer(zonal_layer)
-        else:
-            msg = 'Invalid zonal layer'
-            log_msg(msg, level='C', message_bar=self.iface.messageBar())
-            return None
-        return zonal_layer
-
-    def on_zonal_layer_tbn_clicked(self):
-        layer = self.open_zonal_layer_dialog()
-        if layer and layer.geometryType() == QGis.Polygon:
-            cbx = self.zonal_layer_cbx
-            cbx.addItem(layer.name())
-            last_index = cbx.count() - 1
-            cbx.setItemData(last_index, layer.id())
-            cbx.setCurrentIndex(last_index)
-
-    def accept(self):
-        self.load_from_npz()
-        loss_layer = self.layer
-        if not self.zonal_layer_cbx.currentText():
-            super(LoadOutputAsLayerDialog, self).accept()
-            return
-        zonal_layer_id = self.zonal_layer_cbx.itemData(
-            self.zonal_layer_cbx.currentIndex())
-        zonal_layer = QgsMapLayerRegistry.instance().mapLayer(
-            zonal_layer_id)
-        # if the two layers have different projections, display an error
-        # message and return
-        have_same_projection, check_projection_msg = ProcessLayer(
-            loss_layer).has_same_projection_as(zonal_layer)
-        if not have_same_projection:
-            log_msg(check_projection_msg, level='C',
-                    message_bar=self.iface.messageBar())
-            # TODO: load only loss layer
-            super(LoadOutputAsLayerDialog, self).accept()
-            return
-        loss_attr_names = [field.name() for field in loss_layer.fields()]
-        zone_id_in_losses_attr_name = None
-        zone_id_in_zones_attr_name = None
-        # aggregate losses by zone (calculate count of points in the
-        # zone, sum and average loss values for the same zone)
-        loss_layer_is_vector = True
-        res = calculate_zonal_stats(loss_layer,
-                                    zonal_layer,
-                                    loss_attr_names,
-                                    loss_layer_is_vector,
-                                    zone_id_in_losses_attr_name,
-                                    zone_id_in_zones_attr_name,
-                                    self.iface)
-        (loss_layer, zonal_layer, loss_attrs_dict) = res
-
-        super(LoadOutputAsLayerDialog, self).accept()

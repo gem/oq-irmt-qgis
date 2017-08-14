@@ -51,6 +51,7 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         self.create_taxonomy_selector()
         self.create_loss_type_selector()
         self.create_dmg_state_selector()
+        self.create_zonal_layer_selector()
         if self.path:
             self.npz_file = numpy.load(self.path, 'r')
             self.populate_out_dep_widgets()
