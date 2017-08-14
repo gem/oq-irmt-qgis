@@ -71,8 +71,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     """
 
     def __init__(self, iface, viewer_dock, output_type=None,
-                 path=None, mode=None):
-
+                 path=None, mode=None, zonal_layer_path=None):
         # sanity check
         if output_type not in OQ_ALL_LOADABLE_TYPES:
             raise NotImplementedError(output_type)
@@ -81,6 +80,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.path = path
         self.output_type = output_type
         self.mode = mode  # if 'testing' it will avoid some user interaction
+        self.zonal_layer_path = zonal_layer_path
         QDialog.__init__(self)
         # Set up the user interface from Designer.
         self.setupUi(self)
@@ -170,9 +170,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     def create_zonal_layer_selector(self):
         self.zonal_layer_cbx = QComboBox()
         self.zonal_layer_cbx.addItem('')
-        # self.zonal_layer_cbx.setEnabled(False)
-        # self.zonal_layer_cbx.currentIndexChanged['QString'].connect(
-        #     self.on_zonal_layer_cbx_changed)
         self.zonal_layer_lbl = QLabel('Zonal layer')
         self.zonal_layer_tbn = QToolButton()
         self.zonal_layer_tbn.setText('...')
@@ -631,8 +628,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             return None
         selected_dir = QFileInfo(file_name).dir().path()
         QSettings().setValue('irmt/select_layer_dir', selected_dir)
-        layer = self.load_zonal_layer(file_name)
-        return layer
+        zonal_layer_plus_stats = self.load_zonal_layer(file_name)
+        return zonal_layer_plus_stats
 
     def load_zonal_layer(self, zonal_layer_path):
         # Load zonal layer
@@ -641,23 +638,30 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             msg = 'Zonal layer must contain zone polygons'
             log_msg(msg, level='C', message_bar=self.iface.messageBar())
             return False
+        # Make a copy, where stats will be added
+        zonal_layer_plus_stats = ProcessLayer(
+            zonal_layer).duplicate_in_memory()
         # Add zonal layer to registry
-        if zonal_layer.isValid():
-            QgsMapLayerRegistry.instance().addMapLayer(zonal_layer)
+        if zonal_layer_plus_stats.isValid():
+            QgsMapLayerRegistry.instance().addMapLayer(zonal_layer_plus_stats)
         else:
             msg = 'Invalid zonal layer'
             log_msg(msg, level='C', message_bar=self.iface.messageBar())
             return None
-        return zonal_layer
+        return zonal_layer_plus_stats
 
     def on_zonal_layer_tbn_clicked(self):
-        layer = self.open_zonal_layer_dialog()
-        if layer and layer.geometryType() == QGis.Polygon:
-            cbx = self.zonal_layer_cbx
-            cbx.addItem(layer.name())
-            last_index = cbx.count() - 1
-            cbx.setItemData(last_index, layer.id())
-            cbx.setCurrentIndex(last_index)
+        zonal_layer_plus_stats = self.open_zonal_layer_dialog()
+        if (zonal_layer_plus_stats and
+                zonal_layer_plus_stats.geometryType() == QGis.Polygon):
+            self.populate_zonal_layer_cbx(zonal_layer_plus_stats)
+
+    def populate_zonal_layer_cbx(self, zonal_layer_plus_stats):
+        cbx = self.zonal_layer_cbx
+        cbx.addItem(zonal_layer_plus_stats.name())
+        last_index = cbx.count() - 1
+        cbx.setItemData(last_index, zonal_layer_plus_stats.id())
+        cbx.setCurrentIndex(last_index)
 
     def accept(self):
         if self.output_type in OQ_NPZ_LOADABLE_TYPES:
