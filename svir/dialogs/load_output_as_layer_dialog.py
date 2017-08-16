@@ -35,6 +35,7 @@ from qgis.core import (QgsVectorLayer,
                        QgsProject,
                        QgsMapUnitScale,
                        QGis,
+                       QgsMapLayer,
                        )
 from PyQt4.QtCore import pyqtSlot, QDir, QSettings, QFileInfo, Qt
 from PyQt4.QtGui import (QDialogButtonBox,
@@ -189,6 +190,17 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.output_dep_vlayout.addWidget(self.zonal_layer_gbx)
         self.zonal_layer_tbn.clicked.connect(
             self.on_zonal_layer_tbn_clicked)
+
+    def pre_populate_zonal_layer_cbx(self):
+        for key, layer in \
+                QgsMapLayerRegistry.instance().mapLayers().iteritems():
+            # populate loss cbx only with layers containing points
+            if layer.type() != QgsMapLayer.VectorLayer:
+                continue
+            if layer.geometryType() == QGis.Polygon:
+                self.zonal_layer_cbx.addItem(layer.name())
+                self.zonal_layer_cbx.setItemData(
+                    self.zonal_layer_cbx.count()-1, layer.id())
 
     def on_output_type_changed(self):
         if self.output_type in OQ_NPZ_LOADABLE_TYPES:

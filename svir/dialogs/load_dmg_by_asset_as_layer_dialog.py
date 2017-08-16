@@ -60,6 +60,8 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             zonal_layer_plus_stats = self.load_zonal_layer(
                 self.zonal_layer_path)
             self.populate_zonal_layer_cbx(zonal_layer_plus_stats)
+        else:
+            self.pre_populate_zonal_layer_cbx()
         self.adjustSize()
         self.set_ok_button()
 
