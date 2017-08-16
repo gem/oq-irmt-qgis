@@ -223,14 +223,18 @@ def add_zone_id_to_points(iface, point_layer, zonal_layer, zones_id_attr_name,
                     _add_zone_id_to_points_saga(point_layer,
                                                 zonal_layer,
                                                 zones_id_attr_name)
-            except (AttributeError, RuntimeError):
+                if not point_layer_plus_zones.fields():
+                    raise RuntimeError('SAGA does not handle correctly the'
+                                       ' case in which none of the zones'
+                                       ' contains any of the points.')
+            except (AttributeError, RuntimeError) as exc:
                 # NOTE: In the testing environment we are still unable to use
                 #       the saga:clippointswithpolygons algorithm, so it does
                 #       not run properly and it returns an AttributeError. We
                 #       are forced to use the fallback approach in that case.
                 msg = ("An error occurred while attempting to"
-                       " compute zonal statistics with SAGA. Therefore"
-                       " an alternative algorithm is used.")
+                       " compute zonal statistics with SAGA: %s Therefore"
+                       " an alternative algorithm is used." % exc.message)
                 log_msg(msg, level='C', message_bar=iface.messageBar())
                 use_fallback_calculation = True
         else:
@@ -254,7 +258,6 @@ def add_zone_id_to_points(iface, point_layer, zonal_layer, zones_id_attr_name,
         field.name() for field in point_layer_plus_zones.fields()]
     # NOTE: final_fieldnames contains an additional field with the id, so I
     #       can't use zip on lists of different length
-    # FIXME: it breaks if no point belongs to any of the zones
     point_attrs_dict = {orig_fieldnames[i]: final_fieldnames[i]
                         for i in range(len(orig_fieldnames))}
     return (point_attrs_dict, point_layer_plus_zones,
