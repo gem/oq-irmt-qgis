@@ -46,7 +46,9 @@ from PyQt4.QtGui import (QDialogButtonBox,
                          QLabel,
                          QCheckBox,
                          QHBoxLayout,
+                         QVBoxLayout,
                          QToolButton,
+                         QGroupBox,
                          )
 from svir.calculations.process_layer import ProcessLayer
 from svir.calculations.aggregate_loss_by_zone import (
@@ -168,6 +170,12 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.output_dep_vlayout.addWidget(self.save_as_shp_ckb)
 
     def create_zonal_layer_selector(self):
+        self.zonal_layer_gbx = QGroupBox()
+        self.zonal_layer_gbx.setTitle('Aggregate by zone (optional)')
+        self.zonal_layer_gbx.setCheckable(True)
+        self.zonal_layer_gbx.setChecked(True)
+        self.zonal_layer_gbx_v_layout = QVBoxLayout()
+        self.zonal_layer_gbx.setLayout(self.zonal_layer_gbx_v_layout)
         self.zonal_layer_cbx = QComboBox()
         self.zonal_layer_cbx.addItem('')
         self.zonal_layer_lbl = QLabel('Zonal layer')
@@ -176,10 +184,11 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.zonal_layer_h_layout = QHBoxLayout()
         self.zonal_layer_h_layout.addWidget(self.zonal_layer_cbx)
         self.zonal_layer_h_layout.addWidget(self.zonal_layer_tbn)
+        self.zonal_layer_gbx_v_layout.addWidget(self.zonal_layer_lbl)
+        self.zonal_layer_gbx_v_layout.addLayout(self.zonal_layer_h_layout)
+        self.output_dep_vlayout.addWidget(self.zonal_layer_gbx)
         self.zonal_layer_tbn.clicked.connect(
             self.on_zonal_layer_tbn_clicked)
-        self.output_dep_vlayout.addWidget(self.zonal_layer_lbl)
-        self.output_dep_vlayout.addLayout(self.zonal_layer_h_layout)
 
     def on_output_type_changed(self):
         if self.output_type in OQ_NPZ_LOADABLE_TYPES:
@@ -668,7 +677,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             self.load_from_npz()
             if self.output_type in ('losses_by_asset', 'dmg_by_asset'):
                 loss_layer = self.layer
-                if not self.zonal_layer_cbx.currentText():
+                if (not self.zonal_layer_cbx.currentText() or
+                        not self.zonal_layer_gbx.isChecked()):
                     super(LoadOutputAsLayerDialog, self).accept()
                     return
                 zonal_layer_id = self.zonal_layer_cbx.itemData(
