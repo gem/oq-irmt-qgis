@@ -145,7 +145,7 @@ class AggregateLossByZoneTestCase(unittest.TestCase):
 
     def test_purge_empty_zones(self):
         loss_attrs_dict = {
-            'count': u'LOSS_PTS',
+            'count': u'NUM_POINTS',
             'FATALITIES': {'sum': u'SUM_FATALITIES',
                            'avg': u'AVG_FATALITIES'},
             'STRUCTURAL': {'sum': u'SUM_STRUCTURAL',
