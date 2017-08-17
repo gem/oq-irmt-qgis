@@ -652,16 +652,19 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         zonal_layer_plus_stats = self.load_zonal_layer(file_name)
         return zonal_layer_plus_stats
 
-    def load_zonal_layer(self, zonal_layer_path):
+    def load_zonal_layer(self, zonal_layer_path, make_a_copy=False):
         # Load zonal layer
         zonal_layer = QgsVectorLayer(zonal_layer_path, tr('Zonal data'), 'ogr')
         if not zonal_layer.geometryType() == QGis.Polygon:
             msg = 'Zonal layer must contain zone polygons'
             log_msg(msg, level='C', message_bar=self.iface.messageBar())
             return False
-        # Make a copy, where stats will be added
-        zonal_layer_plus_stats = ProcessLayer(
-            zonal_layer).duplicate_in_memory()
+        if make_a_copy:
+            # Make a copy, where stats will be added
+            zonal_layer_plus_stats = ProcessLayer(
+                zonal_layer).duplicate_in_memory()
+        else:
+            zonal_layer_plus_stats = zonal_layer
         # Add zonal layer to registry
         if zonal_layer_plus_stats.isValid():
             QgsMapLayerRegistry.instance().addMapLayer(zonal_layer_plus_stats)

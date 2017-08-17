@@ -57,8 +57,10 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             self.npz_file = numpy.load(self.path, 'r')
             self.populate_out_dep_widgets()
         if self.zonal_layer_path:
+            # NOTE: it happens while running tests. We need to avoid
+            #       overwriting the original layer, so we make a copy of it.
             zonal_layer_plus_stats = self.load_zonal_layer(
-                self.zonal_layer_path)
+                self.zonal_layer_path, make_a_copy=True)
             self.populate_zonal_layer_cbx(zonal_layer_plus_stats)
         else:
             self.pre_populate_zonal_layer_cbx()
