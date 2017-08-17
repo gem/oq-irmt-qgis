@@ -187,9 +187,15 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.zonal_layer_h_layout.addWidget(self.zonal_layer_tbn)
         self.zonal_layer_gbx_v_layout.addWidget(self.zonal_layer_lbl)
         self.zonal_layer_gbx_v_layout.addLayout(self.zonal_layer_h_layout)
+        self.zone_id_field_lbl = QLabel('Field containing zone ids')
+        self.zone_id_field_cbx = QComboBox()
+        self.zonal_layer_gbx_v_layout.addWidget(self.zone_id_field_lbl)
+        self.zonal_layer_gbx_v_layout.addWidget(self.zone_id_field_cbx)
         self.output_dep_vlayout.addWidget(self.zonal_layer_gbx)
         self.zonal_layer_tbn.clicked.connect(
             self.on_zonal_layer_tbn_clicked)
+        self.zonal_layer_cbx.currentIndexChanged[int].connect(
+            self.on_zonal_layer_cbx_currentIndexChanged)
 
     def pre_populate_zonal_layer_cbx(self):
         for key, layer in \
@@ -201,6 +207,21 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 self.zonal_layer_cbx.addItem(layer.name())
                 self.zonal_layer_cbx.setItemData(
                     self.zonal_layer_cbx.count()-1, layer.id())
+
+    def on_zonal_layer_cbx_currentIndexChanged(self, new_index):
+        self.zone_id_field_cbx.clear()
+        zonal_layer = None
+        if not self.zonal_layer_cbx.currentText():
+            return
+        zonal_layer_id = self.zonal_layer_cbx.itemData(new_index)
+        zonal_layer = QgsMapLayerRegistry.instance().mapLayer(zonal_layer_id)
+        # if the zonal_layer doesn't have a field containing a unique zone id,
+        # the user can choose to add such unique id
+        self.zone_id_field_cbx.addItem("Add field with unique zone id")
+        for field in zonal_layer.fields():
+            # for the zone id accept both numeric or textual fields
+            self.zone_id_field_cbx.addItem(field.name())
+            # by default, set the selection to the first textual field
 
     def on_output_type_changed(self):
         if self.output_type in OQ_NPZ_LOADABLE_TYPES:
@@ -713,7 +734,12 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 loss_attr_names = [
                     field.name() for field in loss_layer.fields()]
                 zone_id_in_losses_attr_name = None
-                zone_id_in_zones_attr_name = None
+                # index 0 is for "Add field with unique zone id"
+                if self.zone_id_field_cbx.currentIndex() == 0:
+                    zone_id_in_zones_attr_name = None
+                else:
+                    zone_id_in_zones_attr_name = \
+                        self.zone_id_field_cbx.currentText()
                 # aggregate losses by zone (calculate count of points in the
                 # zone, sum and average loss values for the same zone)
                 loss_layer_is_vector = True

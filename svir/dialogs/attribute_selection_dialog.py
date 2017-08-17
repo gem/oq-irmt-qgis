@@ -58,8 +58,7 @@ class AttributeSelectionDialog(QDialog, FORM_CLASS):
             tr("Add field with unique zone id"))
 
         # Load in the comboboxes only the names of the attributes compatible
-        # with the following analyses: only numeric for losses and only
-        # string for zone ids
+        # with the following analyses
         for field in loss_layer.fields():
             # for the zone id accept both numeric or textual fields
             self.zone_id_attr_name_loss_cbox.addItem(field.name())
