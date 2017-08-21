@@ -35,9 +35,9 @@ from qgis.core import (QgsVectorLayer,
                        QgsProject,
                        QgsMapUnitScale,
                        QGis,
+                       QgsMapLayer,
                        )
 from PyQt4.QtCore import pyqtSlot, QDir, QSettings, QFileInfo, Qt
-
 from PyQt4.QtGui import (QDialogButtonBox,
                          QDialog,
                          QFileDialog,
@@ -47,9 +47,13 @@ from PyQt4.QtGui import (QDialogButtonBox,
                          QLabel,
                          QCheckBox,
                          QHBoxLayout,
+                         QVBoxLayout,
+                         QToolButton,
+                         QGroupBox,
                          )
-
-
+from svir.calculations.process_layer import ProcessLayer
+from svir.calculations.aggregate_loss_by_zone import (
+    calculate_zonal_stats)
 from svir.utilities.shared import (OQ_CSV_LOADABLE_TYPES,
                                    OQ_NPZ_LOADABLE_TYPES,
                                    OQ_ALL_LOADABLE_TYPES,
@@ -58,6 +62,7 @@ from svir.utilities.utils import (get_ui_class,
                                   get_style,
                                   clear_widgets_from_layout,
                                   log_msg,
+                                  tr,
                                   )
 
 FORM_CLASS = get_ui_class('ui_load_output_as_layer.ui')
@@ -69,8 +74,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     """
 
     def __init__(self, iface, viewer_dock, output_type=None,
-                 path=None, mode=None):
-
+                 path=None, mode=None, zonal_layer_path=None):
         # sanity check
         if output_type not in OQ_ALL_LOADABLE_TYPES:
             raise NotImplementedError(output_type)
@@ -79,6 +83,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.path = path
         self.output_type = output_type
         self.mode = mode  # if 'testing' it will avoid some user interaction
+        self.zonal_layer_path = zonal_layer_path
         QDialog.__init__(self)
         # Set up the user interface from Designer.
         self.setupUi(self)
@@ -164,6 +169,59 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.save_as_shp_ckb = QCheckBox("Save the loaded layer as shapefile")
         self.save_as_shp_ckb.setChecked(False)
         self.output_dep_vlayout.addWidget(self.save_as_shp_ckb)
+
+    def create_zonal_layer_selector(self):
+        self.zonal_layer_gbx = QGroupBox()
+        self.zonal_layer_gbx.setTitle('Aggregate by zone (optional)')
+        self.zonal_layer_gbx.setCheckable(True)
+        self.zonal_layer_gbx.setChecked(True)
+        self.zonal_layer_gbx_v_layout = QVBoxLayout()
+        self.zonal_layer_gbx.setLayout(self.zonal_layer_gbx_v_layout)
+        self.zonal_layer_cbx = QComboBox()
+        self.zonal_layer_cbx.addItem('')
+        self.zonal_layer_lbl = QLabel('Zonal layer')
+        self.zonal_layer_tbn = QToolButton()
+        self.zonal_layer_tbn.setText('...')
+        self.zonal_layer_h_layout = QHBoxLayout()
+        self.zonal_layer_h_layout.addWidget(self.zonal_layer_cbx)
+        self.zonal_layer_h_layout.addWidget(self.zonal_layer_tbn)
+        self.zonal_layer_gbx_v_layout.addWidget(self.zonal_layer_lbl)
+        self.zonal_layer_gbx_v_layout.addLayout(self.zonal_layer_h_layout)
+        self.zone_id_field_lbl = QLabel('Field containing zone ids')
+        self.zone_id_field_cbx = QComboBox()
+        self.zonal_layer_gbx_v_layout.addWidget(self.zone_id_field_lbl)
+        self.zonal_layer_gbx_v_layout.addWidget(self.zone_id_field_cbx)
+        self.output_dep_vlayout.addWidget(self.zonal_layer_gbx)
+        self.zonal_layer_tbn.clicked.connect(
+            self.on_zonal_layer_tbn_clicked)
+        self.zonal_layer_cbx.currentIndexChanged[int].connect(
+            self.on_zonal_layer_cbx_currentIndexChanged)
+
+    def pre_populate_zonal_layer_cbx(self):
+        for key, layer in \
+                QgsMapLayerRegistry.instance().mapLayers().iteritems():
+            # populate loss cbx only with layers containing points
+            if layer.type() != QgsMapLayer.VectorLayer:
+                continue
+            if layer.geometryType() == QGis.Polygon:
+                self.zonal_layer_cbx.addItem(layer.name())
+                self.zonal_layer_cbx.setItemData(
+                    self.zonal_layer_cbx.count()-1, layer.id())
+
+    def on_zonal_layer_cbx_currentIndexChanged(self, new_index):
+        self.zone_id_field_cbx.clear()
+        zonal_layer = None
+        if not self.zonal_layer_cbx.currentText():
+            return
+        zonal_layer_id = self.zonal_layer_cbx.itemData(new_index)
+        zonal_layer = QgsMapLayerRegistry.instance().mapLayer(zonal_layer_id)
+        # if the zonal_layer doesn't have a field containing a unique zone id,
+        # the user can choose to add such unique id
+        self.zone_id_field_cbx.addItem("Add field with unique zone id")
+        for field in zonal_layer.fields():
+            # for the zone id accept both numeric or textual fields
+            self.zone_id_field_cbx.addItem(field.name())
+            # by default, set the selection to the first textual field
 
     def on_output_type_changed(self):
         if self.output_type in OQ_NPZ_LOADABLE_TYPES:
@@ -596,9 +654,103 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             self.layer)
         self.iface.mapCanvas().refresh()
 
+    def open_zonal_layer_dialog(self):
+        """
+        Open a file dialog to select the zonal layer to be loaded
+        :returns: the zonal layer
+        """
+        text = self.tr('Select zonal layer to import')
+        filters = self.tr('Vector shapefiles (*.shp);;SQLite (*.sqlite);;'
+                          'All files (*.*)')
+        default_dir = QSettings().value('irmt/select_layer_dir',
+                                        QDir.homePath())
+        file_name, file_type = QFileDialog.getOpenFileNameAndFilter(
+            self, text, default_dir, filters)
+        if not file_name:
+            return None
+        selected_dir = QFileInfo(file_name).dir().path()
+        QSettings().setValue('irmt/select_layer_dir', selected_dir)
+        zonal_layer_plus_stats = self.load_zonal_layer(file_name)
+        return zonal_layer_plus_stats
+
+    def load_zonal_layer(self, zonal_layer_path, make_a_copy=False):
+        # Load zonal layer
+        zonal_layer = QgsVectorLayer(zonal_layer_path, tr('Zonal data'), 'ogr')
+        if not zonal_layer.geometryType() == QGis.Polygon:
+            msg = 'Zonal layer must contain zone polygons'
+            log_msg(msg, level='C', message_bar=self.iface.messageBar())
+            return False
+        if make_a_copy:
+            # Make a copy, where stats will be added
+            zonal_layer_plus_stats = ProcessLayer(
+                zonal_layer).duplicate_in_memory()
+        else:
+            zonal_layer_plus_stats = zonal_layer
+        # Add zonal layer to registry
+        if zonal_layer_plus_stats.isValid():
+            QgsMapLayerRegistry.instance().addMapLayer(zonal_layer_plus_stats)
+        else:
+            msg = 'Invalid zonal layer'
+            log_msg(msg, level='C', message_bar=self.iface.messageBar())
+            return None
+        return zonal_layer_plus_stats
+
+    def on_zonal_layer_tbn_clicked(self):
+        zonal_layer_plus_stats = self.open_zonal_layer_dialog()
+        if (zonal_layer_plus_stats and
+                zonal_layer_plus_stats.geometryType() == QGis.Polygon):
+            self.populate_zonal_layer_cbx(zonal_layer_plus_stats)
+
+    def populate_zonal_layer_cbx(self, zonal_layer_plus_stats):
+        cbx = self.zonal_layer_cbx
+        cbx.addItem(zonal_layer_plus_stats.name())
+        last_index = cbx.count() - 1
+        cbx.setItemData(last_index, zonal_layer_plus_stats.id())
+        cbx.setCurrentIndex(last_index)
+
     def accept(self):
         if self.output_type in OQ_NPZ_LOADABLE_TYPES:
             self.load_from_npz()
+            if self.output_type in ('losses_by_asset', 'dmg_by_asset'):
+                loss_layer = self.layer
+                if (not self.zonal_layer_cbx.currentText() or
+                        not self.zonal_layer_gbx.isChecked()):
+                    super(LoadOutputAsLayerDialog, self).accept()
+                    return
+                zonal_layer_id = self.zonal_layer_cbx.itemData(
+                    self.zonal_layer_cbx.currentIndex())
+                zonal_layer = QgsMapLayerRegistry.instance().mapLayer(
+                    zonal_layer_id)
+                # if the two layers have different projections, display an
+                # error message and return
+                have_same_projection, check_projection_msg = ProcessLayer(
+                    loss_layer).has_same_projection_as(zonal_layer)
+                if not have_same_projection:
+                    log_msg(check_projection_msg, level='C',
+                            message_bar=self.iface.messageBar())
+                    # TODO: load only loss layer
+                    super(LoadOutputAsLayerDialog, self).accept()
+                    return
+                loss_attr_names = [
+                    field.name() for field in loss_layer.fields()]
+                zone_id_in_losses_attr_name = None
+                # index 0 is for "Add field with unique zone id"
+                if self.zone_id_field_cbx.currentIndex() == 0:
+                    zone_id_in_zones_attr_name = None
+                else:
+                    zone_id_in_zones_attr_name = \
+                        self.zone_id_field_cbx.currentText()
+                # aggregate losses by zone (calculate count of points in the
+                # zone, sum and average loss values for the same zone)
+                loss_layer_is_vector = True
+                res = calculate_zonal_stats(loss_layer,
+                                            zonal_layer,
+                                            loss_attr_names,
+                                            loss_layer_is_vector,
+                                            zone_id_in_losses_attr_name,
+                                            zone_id_in_zones_attr_name,
+                                            self.iface)
+                (loss_layer, zonal_layer, loss_attrs_dict) = res
         elif self.output_type in OQ_CSV_LOADABLE_TYPES:
             self.load_from_csv()
         super(LoadOutputAsLayerDialog, self).accept()
