@@ -66,7 +66,7 @@ unittest: compile transcompile
 	@export PYTHONPATH=`pwd`:$(PYTHONPATH); \
 		export QGIS_DEBUG=0; \
 		export QGIS_LOG_FILE=/dev/null; \
-		nosetests -s -v --with-doctest --with-id --with-timer --exclude-dir=third_party --exclude-dir=test/integration\
+		nosetests -s -v --with-doctest --with-id --exclude-dir=third_party --exclude-dir=test/integration\
 		3>&1 1>&2 2>&3 3>&-
 	@echo "----------------------"
 	@echo "If you get 'no module...' errors, try sourcing"

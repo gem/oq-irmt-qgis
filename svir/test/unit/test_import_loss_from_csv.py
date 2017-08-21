@@ -82,7 +82,4 @@ class ImportLossFromCsvTestCase(unittest.TestCase):
             expected_layer_path, 'expected_layer', 'ogr')
         res = ProcessLayer(shp_layer).has_same_content_as(expected_layer)
         self.assertEqual(
-            res, True,
-            "\nExpected:\n%s\nGot:\n%s" % (
-                ProcessLayer(expected_layer).pprint(usage='testing'),
-                ProcessLayer(shp_layer).pprint(usage='testing')))
+            res, True, msg='Please check the content of the imported layer')
