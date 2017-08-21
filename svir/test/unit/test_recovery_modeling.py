@@ -26,6 +26,7 @@
 import os
 import unittest
 import json
+from nose.plugins.attrib import attr
 from PyQt4.QtGui import QAction
 from qgis.core import QgsVectorLayer
 from svir.recovery_modeling.recovery_modeling import RecoveryModeling
@@ -128,6 +129,7 @@ class DeterministicTestCase(unittest.TestCase):
             self.regenerate_expected_values, seed=42, n_simulations=1)
 
 
+@attr('slow')
 class StochasticTestCase(unittest.TestCase):
 
     def setUp(self):

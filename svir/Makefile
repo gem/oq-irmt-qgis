@@ -57,6 +57,23 @@ compile: $(COMPILED_RESOURCE_FILES)
 %.qm : %.ts
 	lrelease $<
 
+fastunittest: compile transcompile
+	@echo
+	@echo "-----------------------"
+	@echo "Running fast unit tests"
+	@echo "-----------------------"
+
+	@export PYTHONPATH=`pwd`:$(PYTHONPATH); \
+		export QGIS_DEBUG=0; \
+		export QGIS_LOG_FILE=/dev/null; \
+		nosetests -s -a'!slow' -v --with-doctest --with-id --exclude-dir=third_party --exclude-dir=test/integration\
+		3>&1 1>&2 2>&3 3>&-
+	@echo "----------------------"
+	@echo "If you get 'no module...' errors, try sourcing"
+	@echo "the helper script we have provided first then run make unittest."
+	@echo "e.g. source ../scripts/run-env-linux.sh <path to qgis install>; make unittest"
+	@echo "----------------------"
+
 unittest: compile transcompile
 	@echo
 	@echo "------------------"
