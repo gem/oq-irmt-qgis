@@ -38,6 +38,7 @@ changelog=
     * Added a button to reset the default plugin settings
     * While driving the OQ-Engine, notifications are displayed on top of the widget instead of using the main messageBar
     * The widget driving the OQ-Engine handles also the LocationParseError exception
+    * One single widget loads losses_by_asset or dmg_by_asset and aggregates points by polygons taken from a zonal layer
 
 # tags are comma separated with spaces allowed
 tags=GEM, IRMT, SVIR, OpenQuake, Social Vulnerability, Integrated Risk, Recovery, Resilience, Risk, Hazard, Earthquake

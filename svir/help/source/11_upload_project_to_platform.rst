@@ -26,7 +26,7 @@ the web is accomplished using the OQ-Platform (:numref:`fig-after-uploading`)
 and the Social Vulnerability and Integrated Risk Viewer (see
 the `web application <https://platform.openquake.org/irv_viewer/>`_
 and the corresponding `documentation
-<http://www.globalquakemodel.org/openquake/support/documentation/platform/irv/>`_).
+<http://storage.globalquakemodel.org/openquake/support/documentation/platform/irv/>`_).
 
 .. _fig-after-uploading:
 

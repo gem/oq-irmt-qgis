@@ -25,12 +25,10 @@
 from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import (QDialog,
                          QDialogButtonBox,
-                         QComboBox,
-                         QFormLayout,
                          )
 
 from svir.utilities.utils import tr, get_ui_class
-from svir.utilities.shared import NUMERIC_FIELD_TYPES, TEXTUAL_FIELD_TYPES
+from svir.utilities.shared import NUMERIC_FIELD_TYPES
 
 FORM_CLASS = get_ui_class('ui_attribute_selection.ui')
 
@@ -60,8 +58,7 @@ class AttributeSelectionDialog(QDialog, FORM_CLASS):
             tr("Add field with unique zone id"))
 
         # Load in the comboboxes only the names of the attributes compatible
-        # with the following analyses: only numeric for losses and only
-        # string for zone ids
+        # with the following analyses
         for field in loss_layer.fields():
             # for the zone id accept both numeric or textual fields
             self.zone_id_attr_name_loss_cbox.addItem(field.name())

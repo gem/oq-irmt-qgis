@@ -40,10 +40,11 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
     """
 
     def __init__(self, iface, viewer_dock, output_type='dmg_by_asset',
-                 path=None, mode=None):
+                 path=None, mode=None, zonal_layer_path=None):
         assert output_type == 'dmg_by_asset'
         LoadOutputAsLayerDialog.__init__(
-            self, iface, viewer_dock, output_type, path, mode)
+            self, iface, viewer_dock, output_type, path, mode,
+            zonal_layer_path)
         self.setWindowTitle('Load scenario damage by asset from NPZ, as layer')
         self.create_load_selected_only_ckb()
         self.load_selected_only_ckb.setEnabled(False)
@@ -52,9 +53,18 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         self.create_taxonomy_selector()
         self.create_loss_type_selector()
         self.create_dmg_state_selector()
+        self.create_zonal_layer_selector()
         if self.path:
             self.npz_file = numpy.load(self.path, 'r')
             self.populate_out_dep_widgets()
+        if self.zonal_layer_path:
+            # NOTE: it happens while running tests. We need to avoid
+            #       overwriting the original layer, so we make a copy of it.
+            zonal_layer_plus_stats = self.load_zonal_layer(
+                self.zonal_layer_path, make_a_copy=True)
+            self.populate_zonal_layer_cbx(zonal_layer_plus_stats)
+        else:
+            self.pre_populate_zonal_layer_cbx()
         self.adjustSize()
         self.set_ok_button()
 
