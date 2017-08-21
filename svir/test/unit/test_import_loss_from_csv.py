@@ -81,4 +81,8 @@ class ImportLossFromCsvTestCase(unittest.TestCase):
         expected_layer = QgsVectorLayer(
             expected_layer_path, 'expected_layer', 'ogr')
         res = ProcessLayer(shp_layer).has_same_content_as(expected_layer)
-        self.assertEqual(res, True)
+        self.assertEqual(
+            res, True,
+            "\nExpected:\n%s\nGot:\n%s" % (
+                ProcessLayer(expected_layer).pprint(usage='testing'),
+                ProcessLayer(shp_layer).pprint(usage='testing')))
