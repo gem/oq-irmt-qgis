@@ -29,6 +29,7 @@ changelog=
     * The list of calculations displays the Calculation Mode instead of the Job Type
     * Loaders for OQ-Engine hazard outputs can read the new format introduced in OQ-Engine version 2.6
     * Layers for hazard curves are stored in a more convenient way, keeping a scalar value per cell instead of a json string
+    * For hazard curves and uniform hazard spectra, it is possible to plot together multiple statistical outputs (e.g. mean and quantiles)
     * Integration tests check that all implemented loaders for OQ-Engine outputs are tested at least once
     * Both workflows aggregating loss points by zone are tested on Travis (1: using SAGA; 2: using the fallback algorithm)
     * Fixed an offset issue with markers
