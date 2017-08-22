@@ -1,5 +1,8 @@
 #!/bin/bash
 
+export LC_ALL=en_US.UTF-8
+export LANG=en_US.UTF-8
+
 #display each command before executing it
 if [ -n $GEM_SET_DEBUG ]; then
     set -x
