@@ -37,7 +37,7 @@ oqe27/bin/pip -q install -U pip
 oqe27/bin/pip -q install -r oq-engine/requirements-py27-linux64.txt
 oqe27/bin/pip -q install -e oq-engine
 
-oqe27/bin/oq restore oqdata-${BRANCH}.zip ~/oqdata
+oqe27/bin/oq restore oqdata-master.zip ~/oqdata
 oqe27/bin/oq webui start --skip-browser &> webui.log &
 
 source $REPODIR/scripts/run-env-linux.sh /usr
