@@ -48,3 +48,5 @@ source $REPODIR/scripts/run-env-linux.sh /usr
 
 cd $REPODIR/svir
 make test
+make build_apidoc
+make build_manual_html
