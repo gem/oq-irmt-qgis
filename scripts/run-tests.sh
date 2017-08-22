@@ -23,13 +23,14 @@ export DISPLAY=:1
 if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${IRMT_BRANCH})" == "" ]; then
   BRANCH='master';
 fi;
-curl -sfO http://artifacts.openquake.org/travis/oqdata-${BRANCH}.zip || ( echo "Dump for ${BRANCH} unavailable"; exit 1 )
-git clone -q -b ${BRANCH} --depth=1 https://github.com/gem/oq-engine.git && echo "Running against oq-engine/${BRANCH}"
 echo "deb http://qgis.org/$QGIS_VERSION $UBUNTU_VERSION main" | sudo tee /etc/apt/sources.list.d/qgis.list
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key CAEB3DC3BDF7FB45
 sudo add-apt-repository -y ppa:openquake/saga
 sudo apt-get update -q
-sudo apt install -y qgis python-mock python-nose python-nose-exclude python-scipy saga python-saga
+sudo apt install -y qgis python-mock python-nose python-nose-exclude python-scipy saga python-saga curl
+
+curl -sfO http://artifacts.openquake.org/travis/oqdata-${BRANCH}.zip || ( echo "Dump for ${BRANCH} unavailable"; exit 1 )
+git clone -q -b ${BRANCH} --depth=1 https://github.com/gem/oq-engine.git && echo "Running against oq-engine/${BRANCH}"
 
 virtualenv oqe27
 oqe27/bin/pip -q install -U pip
