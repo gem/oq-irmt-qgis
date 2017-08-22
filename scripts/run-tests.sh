@@ -32,6 +32,7 @@ sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key CAEB3DC3BDF7FB45
 sudo add-apt-repository -y ppa:openquake/saga
 sudo apt-get update -q
 sudo apt install -y qgis python-mock python-nose python-nose-exclude python-scipy saga python-saga curl
+sudo pip install sphinx==1.4.9 sphinx_rtd_theme
 
 curl -sfO http://artifacts.openquake.org/travis/oqdata-master.zip || ( echo "Dump for master unavailable"; exit 1 )
 git clone -q -b master --depth=1 https://github.com/gem/oq-engine.git && echo "Running against oq-engine/master"
