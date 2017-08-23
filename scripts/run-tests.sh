@@ -4,7 +4,7 @@ set -e
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
 export PYTHONIOENCODING=utf-8
-export PYTHONPATH=$REPODIR/svir:$PYTHONPATH
+export PYTHONPATH=$REPODIR:$PYTHONPATH
 
 #display each command before executing it
 if [ -n $GEM_SET_DEBUG ]; then
