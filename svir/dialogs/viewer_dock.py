@@ -417,9 +417,10 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
     def redraw(self, selected, deselected, _):
         """
-        Accepting parameters from QgsVectorLayer selectionChanged signal:
+        Accepting parameters from QgsVectorLayer selectionChanged signal
+
         :param selected: newly selected feature ids
-            NOTE: if you add features to the selection, the list contains all
+            NOTE - if you add features to the selection, the list contains all
             features, including those that were already selected before
         :param deselected: ids of all features which have previously been
             selected but are not any more
