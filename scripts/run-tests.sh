@@ -4,6 +4,7 @@ set -e
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
 export PYTHONIOENCODING=utf-8
+export PYTHONPATH=$REPODIR/svir:$PYTHONPATH
 
 #display each command before executing it
 if [ -n $GEM_SET_DEBUG ]; then
@@ -35,20 +36,20 @@ sudo apt-get update -q
 sudo apt install -y qgis python-mock python-nose python-nose-exclude python-scipy saga python-saga curl
 sudo pip install sphinx==1.4.9 sphinx_rtd_theme
 
-curl -sfO http://artifacts.openquake.org/travis/oqdata-master.zip || ( echo "Dump for master unavailable"; exit 1 )
-git clone -q -b master --depth=1 https://github.com/gem/oq-engine.git && echo "Running against oq-engine/master"
+# curl -sfO http://artifacts.openquake.org/travis/oqdata-master.zip || ( echo "Dump for master unavailable"; exit 1 )
+# git clone -q -b master --depth=1 https://github.com/gem/oq-engine.git && echo "Running against oq-engine/master"
 
-virtualenv oqe27
-oqe27/bin/pip -q install -U pip
-oqe27/bin/pip -q install -r oq-engine/requirements-py27-linux64.txt
-oqe27/bin/pip -q install -e oq-engine
+# virtualenv oqe27
+# oqe27/bin/pip -q install -U pip
+# oqe27/bin/pip -q install -r oq-engine/requirements-py27-linux64.txt
+# oqe27/bin/pip -q install -e oq-engine
 
-oqe27/bin/oq restore oqdata-master.zip ~/oqdata
-oqe27/bin/oq webui start --skip-browser &> webui.log &
+# oqe27/bin/oq restore oqdata-master.zip ~/oqdata
+# oqe27/bin/oq webui start --skip-browser &> webui.log &
 
 source $REPODIR/scripts/run-env-linux.sh /usr
 
 cd $REPODIR/svir
-make test
+# make test
 make build_apidoc
-make build_manual_html
+# make build_manual_html
