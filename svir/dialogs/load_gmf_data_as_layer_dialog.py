@@ -46,6 +46,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         self.setWindowTitle(
             'Load ground motion fields from NPZ, as layer')
         self.create_load_selected_only_ckb()
+        self.create_num_sites_indicator()
         self.create_rlz_or_stat_selector()
         self.create_imt_selector()
         self.create_eid_selector()

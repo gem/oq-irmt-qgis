@@ -21,9 +21,9 @@ fi
 export DISPLAY=:1
 
 echo "deb http://qgis.org/$QGIS_VERSION $UBUNTU_VERSION main" | sudo tee /etc/apt/sources.list.d/qgis.list
-sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key 073D307A618E5811
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key CAEB3DC3BDF7FB45
 sudo apt update
-sudo apt install -y qgis python-mock python-nose python-scipy
+sudo apt install -y qgis python-mock python-nose python-nose-exclude python-scipy
 
 source $REPODIR/scripts/run-env-linux.sh /usr
 

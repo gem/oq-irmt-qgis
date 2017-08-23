@@ -447,6 +447,8 @@ def get_transfer_probabilities(layer):
 
 
 def fill_fields_multiselect(fields_multiselect, layer):
+    if fields_multiselect is None or layer is None:
+        return
     fields = layer.fields()
     field_names = [field.name() for field in fields]
     transfer_probabilities = get_transfer_probabilities(layer)
