@@ -424,7 +424,7 @@ class Irmt:
     #     dlg.exec_()
 
     def ipt(self):
-        self.ipt_dlg = IptDialog()
+        self.ipt_dlg = IptDialog(self.iface.messageBar())
         self.ipt_dlg.show()
         # self.ipt_dlg.raise_()
 

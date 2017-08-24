@@ -23,7 +23,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 # from qgis.PyQt.QtWebKit import QWebPage
-from qgis.PyQt.QtCore import QUrl
+from qgis.PyQt.QtCore import QUrl, QObject, pyqtSlot
 from qgis.PyQt.QtGui import QDialog, QDialogButtonBox
 from svir.third_party import requests
 from svir.utilities.utils import get_ui_class
@@ -34,16 +34,23 @@ FORM_CLASS = get_ui_class('ui_ipt.ui')
 class IptDialog(QDialog, FORM_CLASS):
     """Docstring for IptDialog. """
 
-    def __init__(self):
-        QDialog.__init__(self)
+    def __init__(self, message_bar):
+        super(IptDialog, self).__init__()
         # Set up the user interface from Designer.
         self.setupUi(self)
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
+        self.message_bar = message_bar
         qurl = QUrl(
             # FIXME: loading a page that offers a link to download a small txt
             # 'http://www.sample-videos.com/download-sample-text-file.php')
-            'https://platform.openquake.org/ipt')
+            # 'https://platform.openquake.org/ipt')
+            'http://localhost:8000')
         self.web_view.setUrl(qurl)
+        self.myobject = MyObject(self.message_bar)
+        main_frame = self.web_view.page().mainFrame()
+        main_frame.addToJavaScriptWindowObject("myobject", self.myobject)
+        # myobject.mysignal.emit()
+        # self.message_bar.pushMessage("Hello")
 
         # downloadRequested(QNetworkRequest) is a signal that is triggered in
         # the web page when the user right-clicks on a link and chooses "save
@@ -88,3 +95,18 @@ class IptDialog(QDialog, FORM_CLASS):
 
     def on_back_btn_clicked(self):
         self.web_view.back()
+
+
+class MyObject(QObject):
+
+    def __init__(self, message_bar):
+        super(MyObject, self).__init__()
+        self.message_bar = message_bar
+
+    @pyqtSlot(int, int, result=int)
+    def add(self, a, b):
+        return a + b
+
+    @pyqtSlot()
+    def notify_click(self):
+        self.message_bar.pushMessage('Clicked!')
