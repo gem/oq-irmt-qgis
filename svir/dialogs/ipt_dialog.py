@@ -25,7 +25,7 @@
 # from qgis.PyQt.QtWebKit import QWebPage
 from qgis.PyQt.QtCore import QUrl
 from qgis.PyQt.QtGui import QDialog, QDialogButtonBox
-from third_party import requests
+from svir.third_party import requests
 from svir.utilities.utils import get_ui_class
 
 FORM_CLASS = get_ui_class('ui_ipt.ui')
