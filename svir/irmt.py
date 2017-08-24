@@ -207,7 +207,7 @@ class Irmt:
                            submenu='OQ Platform')
         # Action to drive ipt
         self.add_menu_item("ipt",
-                           ":/plugins/irmt/ipt.svg",
+                           ":/plugins/irmt/define.svg",
                            u"Input Preparation Toolkit",
                            self.ipt,
                            enable=True,
