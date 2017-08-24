@@ -9,20 +9,7 @@
         <button id='mybutton' type="button">Click Me!</button>
     </body>
     <script charset="utf-8">
-        function notifyWithAlert() {
-            alert($('#mybutton').text());
-        }
-
-        // var myButton = $('#mybutton');
-        // var myButton = document.getElementById("mybutton");
-        // myButton.onclick.connect(notifyWithAlert)
-        // myButton.clicked.connect(myQObject.notifyOnMessageBar)
         $(document).ready(function(){
-            /*
-            $('#mybutton').click(function(){
-                notifyWithAlert()
-            });
-            */
             $('#mybutton').click(function(){
                 myobject.notify_click();
                 alert("1 + 2 = " + myobject.add(1, 2));

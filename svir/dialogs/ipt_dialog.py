@@ -49,8 +49,6 @@ class IptDialog(QDialog, FORM_CLASS):
         self.myobject = MyObject(self.message_bar)
         main_frame = self.web_view.page().mainFrame()
         main_frame.addToJavaScriptWindowObject("myobject", self.myobject)
-        # myobject.mysignal.emit()
-        # self.message_bar.pushMessage("Hello")
 
         # downloadRequested(QNetworkRequest) is a signal that is triggered in
         # the web page when the user right-clicks on a link and chooses "save
