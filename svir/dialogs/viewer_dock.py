@@ -81,8 +81,6 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         # this is the action in the plugin (i.e. the button in the toolbar)
         self.action = action
 
-        self.active_layer = self.iface.activeLayer()
-
         self.output_type = None
         self.loss_type_lbl = None
         self.loss_type_cbx = None
@@ -97,8 +95,10 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.warning_n_simulations_lbl = None
         self.recalculate_curve_btn = None
         self.fields_multiselect = None
+        self.stats_multiselect = None
 
-        self.current_selection = {}
+        # self.current_selection[None] is for recovery curves
+        self.current_selection = {}  # rlz_or_stat -> feature_id -> curve
         self.current_imt = None
         self.current_loss_type = None
         self.was_imt_switched = False
@@ -229,7 +229,28 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
         self.typeDepVLayout.addWidget(self.fields_multiselect)
         fill_fields_multiselect(
-            self.fields_multiselect, self.active_layer)
+            self.fields_multiselect, self.iface.activeLayer())
+
+    def create_stats_multiselect(self):
+        title = 'Select statistics to plot'
+        self.stats_multiselect = ListMultiSelectWidget(title=title)
+        self.stats_multiselect.setSizePolicy(
+            QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        self.typeDepVLayout.addWidget(self.stats_multiselect)
+        self.stats_multiselect.selection_changed.connect(
+            self.refresh_feature_selection)
+
+    def refresh_feature_selection(self):
+        if not list(self.stats_multiselect.get_selected_items()):
+            self.clear_plot()
+            return
+        # feature selection triggers the redrawing of plots
+        layer = self.iface.activeLayer()
+        selected_feats = layer.selectedFeaturesIds()
+        layer.blockSignals(True)
+        layer.removeSelection()
+        layer.blockSignals(False)
+        layer.selectByIds(selected_feats)
 
     def set_output_type_and_its_gui(self, new_output_type):
         if (self.output_type is not None
@@ -243,12 +264,11 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
         if new_output_type == 'hcurves':
             self.create_imt_selector()
+            self.create_stats_multiselect()
         elif new_output_type == 'loss_curves':
             self.create_loss_type_selector()
         elif new_output_type == 'uhs':
-            # Currently we are creating a layer for each poe
-            # self.create_poe_selector()
-            pass
+            self.create_stats_multiselect()
         elif new_output_type == 'recovery_curves':
             if not IS_SCIPY_INSTALLED:
                 warn_scipy_missing(self.iface.messageBar())
@@ -266,67 +286,80 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
     def draw(self):
         self.plot.clear()
-        gids = self.current_selection.keys()
-        count_selected = len(self.active_layer.selectedFeatures())
-        if count_selected == 0:
+        gids = dict()
+        if self.stats_multiselect is not None:
+            selected_rlzs_or_stats = list(
+                self.stats_multiselect.get_selected_items())
+        else:
+            selected_rlzs_or_stats = [None]
+        selected_features_ids = [
+            feature.id()
+            for feature in self.iface.activeLayer().selectedFeatures()]
+        for rlz_or_stat in selected_rlzs_or_stats:
+            gids[rlz_or_stat] = selected_features_ids
+        count_selected_feats = len(selected_features_ids)
+        count_selected_stats = len(selected_rlzs_or_stats)
+        count_lines = count_selected_feats * count_selected_stats
+        if count_lines == 0:
+            self.clear_plot()
             return
-        i = 0
-        for site, curve in self.current_selection.iteritems():
-            # NOTE: we associated the same cumulative curve to all the
-            # selected points (ugly), and here we need to get only one
-            if self.output_type == 'recovery_curves' and i > 0:
-                break
-            feature = next(self.active_layer.getFeatures(
-                QgsFeatureRequest().setFilterFid(site)))
 
-            lon = feature.geometry().asPoint().x()
-            lat = feature.geometry().asPoint().y()
+        for rlz_or_stat in selected_rlzs_or_stats:
+            for i, (site, curve) in enumerate(
+                    self.current_selection[rlz_or_stat].iteritems()):
+                # NOTE: we associated the same cumulative curve to all the
+                # selected points (ugly), and here we need to get only one
+                if self.output_type == 'recovery_curves' and i > 0:
+                    break
+                feature = next(self.iface.activeLayer().getFeatures(
+                    QgsFeatureRequest().setFilterFid(site)))
 
-            self.plot.plot(
-                curve['abscissa'],
-                curve['ordinates'],
-                color=curve['color'],
-                linestyle=curve['line_style'],
-                marker=curve['marker'],
-                label='%.4f, %.4f' % (lon, lat),
-                gid=str(site),  # matplotlib needs a string when exporting svg
-                picker=5  # 5 points tolerance
-            )
-            i += 1
-        investigation_time = self.active_layer.customProperty(
-            'investigation_time', None)
+                lon = feature.geometry().asPoint().x()
+                lat = feature.geometry().asPoint().y()
+
+                self.plot.plot(
+                    curve['abscissa'],
+                    curve['ordinates'],
+                    color=curve['color'],
+                    linestyle=curve['line_style'],
+                    marker=curve['marker'],
+                    label='(%.3f, %.3f) %s' % (lon, lat, rlz_or_stat),
+                    # matplotlib needs a string to export to svg
+                    gid=str(site),
+                    picker=5  # 5 points tolerance
+                )
         if self.output_type == 'hcurves':
             self.plot.set_xscale('log')
             self.plot.set_yscale('log')
             self.plot.set_xlabel('Intensity measure level')
             self.plot.set_ylabel('Probability of exceedance')
             imt = self.imt_cbx.currentText()
-            if count_selected == 0:
+            if count_lines == 0:
                 title = ''
-            elif count_selected == 1:
-                title = 'Hazard Curve for %s' % imt
+            elif count_lines == 1:
+                title = 'Hazard curve for %s' % imt
             else:
-                title = 'Hazard Curves for %s' % imt
+                title = 'Hazard curves for %s' % imt
         elif self.output_type == 'loss_curves':
             self.plot.set_xscale('log')
             self.plot.set_yscale('linear')
             self.plot.set_xlabel('Losses')
             self.plot.set_ylabel('Probability of exceedance')
             loss_type = self.loss_type_cbx.currentText()
-            if count_selected == 0:
+            if count_lines == 0:
                 title = ''
-            elif count_selected == 1:
-                title = 'Loss Curve for %s' % loss_type
+            elif count_lines == 1:
+                title = 'Loss curve for %s' % loss_type
             else:
-                title = 'Loss Curves for %s' % loss_type
+                title = 'Loss curves for %s' % loss_type
         elif self.output_type == 'uhs':
             self.plot.set_xscale('linear')
             self.plot.set_yscale('linear')
             self.plot.set_xlabel('Period [s]')
             self.plot.set_ylabel('Spectral acceleration [g]')
-            if count_selected == 0:
+            if count_lines == 0:
                 title = ''
-            elif count_selected == 1:
+            elif count_lines == 1:
                 title = 'Uniform hazard spectrum'
             else:
                 title = 'Uniform hazard spectra'
@@ -336,16 +369,12 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             self.plot.set_xlabel('Time [days]')
             self.plot.set_ylabel('Normalized recovery level')
             self.plot.set_ylim((0.0, 1.2))
-            if count_selected == 0:
+            if count_lines == 0:
                 title = ''
-            elif count_selected == 1:
+            elif count_lines == 1:
                 title = 'Building level recovery curve'
             else:
                 title = 'Community level recovery curve'
-        if investigation_time is not None:
-            title += ' (%s years)' % investigation_time
-        self.plot.set_title(title)
-        self.plot.grid()
         if self.output_type == 'hcurves':
             ylim_bottom, ylim_top = self.plot.get_ylim()
             self.plot.set_ylim(ylim_bottom, ylim_top * 1.5)
@@ -356,7 +385,13 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             ylim_bottom_margin = (ylim_top-ylim_bottom)/20.0
             self.plot.set_ylim(ylim_bottom-ylim_bottom_margin, ylim_top)
 
-        if self.output_type != 'recovery_curves' and count_selected <= 20:
+        investigation_time = self.iface.activeLayer().customProperty(
+            'investigation_time', None)
+        if investigation_time is not None:
+            title += ' (%s years)' % investigation_time
+        self.plot.set_title(title)
+        self.plot.grid()
+        if self.output_type != 'recovery_curves' and 1 <= count_lines <= 20:
             if self.output_type == 'uhs':
                 location = 'upper right'
             else:
@@ -364,34 +399,72 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             self.legend = self.plot.legend(
                 loc=location, fancybox=True, shadow=True,
                 fontsize='small')
-        if hasattr(self.legend, 'get_lines'):
-            for i, legend_line in enumerate(self.legend.get_lines()):
-                legend_line.set_picker(5)  # 5 points tolerance
-                # matplotlib needs a string when exporting to svg
-                legend_line.set_gid(str(gids[i]))
+            for rlz_or_stat in selected_rlzs_or_stats:
+                if hasattr(self.legend, 'get_lines'):
+                    # We have blocks of legend lines, where each block refers
+                    # to all selected stats for one of the selected points.
+                    point_idx = 0
+                    for i, legend_line in enumerate(self.legend.get_lines()):
+                        legend_line.set_picker(5)  # 5 points tolerance
+                        gid = gids[rlz_or_stat][point_idx]
+                        legend_line.set_gid(str(gid))
+                        # check if from the next iteration we will have to
+                        # refer to the next selected point
+                        if (i + 1) % len(selected_rlzs_or_stats) == 0:
+                            point_idx += 1
+
         self.plot_canvas.draw()
 
     def redraw(self, selected, deselected, _):
+        """
+        Accepting parameters from QgsVectorLayer selectionChanged signal:
+        :param selected: newly selected feature ids
+            NOTE: if you add features to the selection, the list contains all
+            features, including those that were already selected before
+        :param deselected: ids of all features which have previously been
+            selected but are not any more
+        :param _: ignored (in case this is set to true, the old selection
+            was dismissed and the new selection corresponds to selected
+        """
         if not self.output_type:
             return
+
+        if self.stats_multiselect is not None:
+            selected_rlzs_or_stats = list(
+                self.stats_multiselect.get_selected_items())
+        else:
+            selected_rlzs_or_stats = None
         for fid in deselected:
-            try:
-                del self.current_selection[fid]
-            except KeyError:
-                pass
+            if hasattr(self, 'rlzs_or_stats'):
+                for rlz_or_stat in self.rlzs_or_stats:
+                    try:
+                        # self.current_selection is a dictionary associating
+                        # (for each selected rlz or stat) a curve to each
+                        # feature id
+                        del self.current_selection[rlz_or_stat][fid]
+                    except KeyError:
+                        pass
+            else:
+                try:
+                    del self.current_selection[None][fid]
+                except KeyError:
+                    pass
         if self.output_type == 'recovery_curves':
             if len(selected) > 0:
                 self.redraw_recovery_curve(selected)
             return
+        if not selected_rlzs_or_stats or not self.current_selection:
+            return
         self.current_abscissa = []
-        for feature in self.active_layer.getFeatures(
+        for feature in self.iface.activeLayer().getFeatures(
                 QgsFeatureRequest().setFilterFids(selected)):
             if self.output_type == 'hcurves':
-                field_names = [field.name()
-                               for field in self.active_layer.fields()]
                 imt = self.imt_cbx.currentText()
-                imls = [field_name.split('_')[1] for field_name in field_names
-                        if field_name.split('_')[0] == imt]
+                imls = [field_name.split('_')[2]
+                        for field_name in self.field_names
+                        if (field_name.split('_')[0]
+                            == selected_rlzs_or_stats[0])
+                        and field_name.split('_')[1] == imt]
                 self.current_abscissa = imls
             elif self.output_type == 'loss_curves':
                 err_msg = ("The selected layer does not contain loss"
@@ -417,79 +490,97 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             elif self.output_type == 'uhs':
                 err_msg = ("The selected layer does not contain uniform"
                            " hazard spectra in the expected format.")
-                field_names = [field.name() for field in feature.fields()]
+                self.field_names = [field.name() for field in feature.fields()]
                 # reading from something like
-                # [u'PGA', u'SA(0.025)', u'SA(0.05)', ...]
-                periods = [0.0]  # Use 0.0 for PGA
+                # [u'rlz-000_PGA', u'rlz-000_SA(0.025)', ...]
+                unique_periods = [0.0]  # Use 0.0 for PGA
                 # get the number between parenthesis
                 try:
-                    periods.extend(
-                        [float(name[name.find("(") + 1: name.find(")")])
-                         for name in field_names[1:]])
+                    periods = [
+                        float(name[name.find("(") + 1: name.find(")")])
+                        for name in self.field_names
+                        if "(" in name]
+                    for period in periods:
+                        if period not in unique_periods:
+                            unique_periods.append(period)
                 except ValueError:
                     log_msg(err_msg, level='C',
                             message_bar=self.iface.messageBar())
                     self.output_type_cbx.setCurrentIndex(-1)
                     return
-                self.current_abscissa = periods
+                self.current_abscissa = unique_periods
                 break
             else:
                 raise NotImplementedError(self.output_type)
 
-        for i, feature in enumerate(self.active_layer.getFeatures(
+        for i, feature in enumerate(self.iface.activeLayer().getFeatures(
                 QgsFeatureRequest().setFilterFids(selected))):
-            if self.output_type == 'loss_curves':
-                data_dic = json.loads(feature[self.current_loss_type])
-            if self.output_type == 'hcurves':
-                imt = self.imt_cbx.currentText()
-                ordinates = [feature[field.name()]
-                             for field in self.active_layer.fields()
-                             if field.name().split('_')[0] == imt]
-            if self.output_type == 'loss_curves':
-                ordinates = data_dic['poes']
-            elif self.output_type == 'uhs':
-                ordinates = [value for value in feature]
             if (self.was_imt_switched
                     or self.was_loss_type_switched
-                    or feature.id() not in self.current_selection
+                    or (feature.id() not in
+                        self.current_selection[selected_rlzs_or_stats[0]])
                     or self.output_type == 'uhs'):
-                if self.bw_chk.isChecked():
-                    line_styles_whole_cycles = i / len(self.line_styles)
-                    # NOTE: 85 is approximately 256 / 3
-                    r = g = b = format(
-                        (85 * line_styles_whole_cycles) % 256, '02x')
-                    color_hex = "#%s%s%s" % (r, g, b)
-                    color = QColor(color_hex)
-                    color_hex = color.darker(120).name()
-                    # here I am using i in order to cycle through all the
-                    # line styles, regardless from the feature id
-                    # (otherwise I might easily repeat styles, that are a
-                    # small set of 4 items)
-                    line_style = self.line_styles[i % len(self.line_styles)]
-                else:
-                    # here I am using the feature id in order to keep a
-                    # matching between a curve and the corresponding point
-                    # in the map
-                    color_name = self.color_names[
-                        feature.id() % len(self.color_names)]
-                    color = QColor(color_name)
-                    color_hex = color.darker(120).name()
-                    line_style = "-"  # solid
-                marker = self.markers[i % len(self.markers)]
-                self.current_selection[feature.id()] = {
-                    'abscissa': self.current_abscissa,
-                    'ordinates': ordinates,
-                    'color': color_hex,
-                    'line_style': line_style,
-                    'marker': marker,
-                }
+                self.field_names = [
+                    field.name()
+                    for field in self.iface.activeLayer().fields()]
+                ordinates = dict()
+                marker = dict()
+                line_style = dict()
+                color_hex = dict()
+                for rlz_or_stat_idx, rlz_or_stat in enumerate(
+                        selected_rlzs_or_stats):
+                    if self.output_type == 'hcurves':
+                        imt = self.imt_cbx.currentText()
+                        ordinates[rlz_or_stat] = [
+                            feature[field_name]
+                            for field_name in self.field_names
+                            if field_name.split('_')[0] == rlz_or_stat
+                            and field_name.split('_')[1] == imt]
+                    elif self.output_type == 'uhs':
+                        ordinates[rlz_or_stat] = [
+                            feature[field_name]
+                            for field_name in self.field_names
+                            if field_name.split('_')[0] == rlz_or_stat]
+                    marker[rlz_or_stat] = self.markers[
+                        (i + rlz_or_stat_idx) % len(self.markers)]
+                    if self.bw_chk.isChecked():
+                        line_styles_whole_cycles = (
+                            (i + rlz_or_stat_idx) / len(self.line_styles))
+                        # NOTE: 85 is approximately 256 / 3
+                        r = g = b = format(
+                            (85 * line_styles_whole_cycles) % 256, '02x')
+                        color_hex_str = "#%s%s%s" % (r, g, b)
+                        color = QColor(color_hex_str)
+                        color_hex[rlz_or_stat] = color.darker(120).name()
+                        # here I am using i in order to cycle through all the
+                        # line styles, regardless from the feature id
+                        # (otherwise I might easily repeat styles, that are a
+                        # small set of 4 items)
+                        line_style[rlz_or_stat] = self.line_styles[
+                            (i + rlz_or_stat_idx) % len(self.line_styles)]
+                    else:
+                        # here I am using the feature id in order to keep a
+                        # matching between a curve and the corresponding point
+                        # in the map
+                        color_name = self.color_names[
+                            (feature.id() + rlz_or_stat_idx)
+                            % len(self.color_names)]
+                        color = QColor(color_name)
+                        color_hex[rlz_or_stat] = color.darker(120).name()
+                        line_style[rlz_or_stat] = "-"  # solid
+                    self.current_selection[rlz_or_stat][feature.id()] = {
+                        'abscissa': self.current_abscissa,
+                        'ordinates': ordinates[rlz_or_stat],
+                        'color': color_hex[rlz_or_stat],
+                        'line_style': line_style[rlz_or_stat],
+                        'marker': marker[rlz_or_stat],
+                    }
         self.was_imt_switched = False
         self.was_loss_type_switched = False
-
         self.draw()
 
     def redraw_recovery_curve(self, selected):
-        features = list(self.active_layer.getFeatures(
+        features = list(self.iface.activeLayer().getFeatures(
             QgsFeatureRequest().setFilterFids(selected)))
         approach = self.approach_cbx.currentText()
         recovery = RecoveryModeling(features, approach, self.iface)
@@ -509,7 +600,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         # associating only a single feature with the cumulative recovery curve.
         # It might be a little ugly, but otherwise it would be inefficient.
         if len(features) > 0:
-            self.current_selection[features[0].id()] = {
+            self.current_selection[None] = {}
+            self.current_selection[None][features[0].id()] = {
                 'abscissa': self.current_abscissa,
                 'ordinates': recovery_function,
                 'color': color_hex,
@@ -519,7 +611,6 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.draw()
 
     def layer_changed(self):
-        self.current_selection = {}
         self.clear_plot()
         if hasattr(self, 'self.imt_cbx'):
             self.clear_imt_cbx()
@@ -528,34 +619,51 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
         self.remove_connects()
 
-        self.active_layer = self.iface.activeLayer()
+        if (self.iface.activeLayer() is not None
+                and self.iface.activeLayer().type() == QgsMapLayer.VectorLayer
+                and self.iface.activeLayer().geometryType() == QGis.Point):
+            self.iface.activeLayer().selectionChanged.connect(self.redraw)
 
-        if (self.active_layer is not None
-                and self.active_layer.type() == QgsMapLayer.VectorLayer
-                and self.active_layer.geometryType() == QGis.Point):
-            self.active_layer.selectionChanged.connect(self.redraw)
-
-            if self.output_type == 'hcurves':
-                imts = sorted(set(
-                    [field.name().split('_')[0]
-                     for field in self.active_layer.fields()]))
-                self.imt_cbx.clear()
-                self.imt_cbx.addItems(imts)
+            if self.output_type in ['hcurves', 'uhs']:
+                for rlz_or_stat in self.stats_multiselect.get_selected_items():
+                    self.current_selection[rlz_or_stat] = {}
+                self.stats_multiselect.set_selected_items([])
+                self.stats_multiselect.set_unselected_items([])
+                if self.output_type == 'hcurves':
+                    # fields names are like 'max_PGA_0.005'
+                    imts = sorted(set(
+                        [field.name().split('_')[1]
+                         for field in self.iface.activeLayer().fields()]))
+                    self.imt_cbx.clear()
+                    self.imt_cbx.addItems(imts)
+                self.field_names = [
+                    field.name()
+                    for field in self.iface.activeLayer().fields()]
+                self.rlzs_or_stats = sorted(set(
+                    [field_name.split('_')[0]
+                     for field_name in self.field_names]))
+                # Select all stats by default
+                self.stats_multiselect.add_selected_items(self.rlzs_or_stats)
+                self.stats_multiselect.setEnabled(len(self.rlzs_or_stats) > 1)
             elif self.output_type == 'loss_curves':
                 reload_attrib_cbx(self.loss_type_cbx,
-                                  self.active_layer,
+                                  self.iface.activeLayer(),
                                   False,
                                   TEXTUAL_FIELD_TYPES)
-            if self.active_layer.selectedFeatureCount() > 0:
-                self.set_selection(self.active_layer.selectedFeaturesIds())
+            elif self.output_type == 'recovery_curves':
+                fill_fields_multiselect(
+                    self.fields_multiselect, self.iface.activeLayer())
+            if self.iface.activeLayer().selectedFeatureCount() > 0:
+                self.set_selection()
 
     def remove_connects(self):
         try:
-            self.active_layer.selectionChanged.disconnect(self.redraw)
+            self.iface.activeLayer().selectionChanged.disconnect(self.redraw)
         except (TypeError, AttributeError):
             pass
 
-    def set_selection(self, selected):
+    def set_selection(self):
+        selected = self.iface.activeLayer().selectedFeaturesIds()
         self.redraw(selected, [], None)
 
     def clear_plot(self):
@@ -587,7 +695,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 # matplotlib needs a string when exporting to svg, so here we
                 # must cast back to long
                 fid = long(line.get_gid())
-                feature = next(self.active_layer.getFeatures(
+                feature = next(self.iface.activeLayer().getFeatures(
                         QgsFeatureRequest().setFilterFid(fid)))
 
                 self.vertex_marker.setCenter(feature.geometry().asPoint())
@@ -600,21 +708,21 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
     def on_imt_changed(self):
         self.current_imt = self.imt_cbx.currentText()
         self.was_imt_switched = True
-        self.set_selection(self.current_selection.keys())
+        self.set_selection()
 
     def on_loss_type_changed(self):
         self.current_loss_type = self.loss_type_cbx.currentText()
         self.was_loss_type_switched = True
-        self.set_selection(self.current_selection.keys())
+        self.set_selection()
 
     def on_poe_changed(self):
         self.current_poe = self.poe_cbx.currentText()
         self.was_poe_switched = True
-        self.set_selection(self.current_selection.keys())
+        self.set_selection()
 
     def on_approach_changed(self):
         self.current_approach = self.approach_cbx.currentText()
-        self.set_selection(self.current_selection.keys())
+        self.set_selection()
 
     def on_recalculate_curve_btn_clicked(self):
         self.layer_changed()
@@ -665,36 +773,48 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 csv_file.write(line + os.linesep)
                 # NOTE: taking the first element, because they are all the
                 # same
-                curve = self.current_selection.values()[0]
-                csv_file.write(str(curve['ordinates']))
-            elif self.output_type == 'hcurves':
-                # write header
-                imt = self.imt_cbx.currentText()
-                headers = ["%s_%s" % (imt, x) for x in self.current_abscissa]
-                line = 'lon,lat,%s' % ','.join(headers)
+                feature = self.iface.activeLayer().selectedFeatures()[0]
+                lon = feature.geometry().asPoint().x()
+                lat = feature.geometry().asPoint().y()
+                line = '%s,%s' % (lon, lat)
+                values = self.current_selection[None].values()[0]
+                if values:
+                    line += "," + ",".join([
+                        str(value) for value in values['ordinates']])
                 csv_file.write(line + os.linesep)
+            elif self.output_type in ['hcurves', 'uhs']:
+                selected_rlzs_or_stats = list(
+                    self.stats_multiselect.get_selected_items())
+                if self.output_type == 'hcurves':
+                    selected_imt = self.imt_cbx.currentText()
+
+                # write header
+                field_names = []
+                for field in self.iface.activeLayer().fields():
+                    if self.output_type == 'hcurves':
+                        # field names are like 'mean_PGA_0.005'
+                        rlz_or_stat, imt, iml = field.name().split('_')
+                        if imt != selected_imt:
+                            continue
+                    else:  # 'uhs'
+                        # field names are like 'mean_PGA'
+                        rlz_or_stat, _ = field.name().split('_')
+                    if rlz_or_stat not in selected_rlzs_or_stats:
+                        continue
+                    field_names.append(field.name())
+                header = 'lon,lat,%s' % ','.join(field_names)
+                csv_file.write(header + os.linesep)
+
                 # write selected data
-                for site, curve in self.current_selection.iteritems():
-                    poes = ','.join(map(str, curve['ordinates']))
-                    feature = next(self.active_layer.getFeatures(
-                        QgsFeatureRequest().setFilterFid(site)))
+                for feature in self.iface.activeLayer().getFeatures():
+                    values = [feature.attribute(field_name)
+                              for field_name in field_names]
                     lon = feature.geometry().asPoint().x()
                     lat = feature.geometry().asPoint().y()
-                    line = '%s,%s,%s' % (lon, lat, poes)
-                    csv_file.write(line + os.linesep)
-            elif self.output_type == 'uhs':
-                # write header
-                line = 'lon,lat,%s' % (
-                    ','.join(map(str, self.current_abscissa)))
-                csv_file.write(line + os.linesep)
-                # write selected data
-                for site, curve in self.current_selection.iteritems():
-                    poes = ','.join(map(str, curve['ordinates']))
-                    feature = next(self.active_layer.getFeatures(
-                        QgsFeatureRequest().setFilterFid(site)))
-                    lon = feature.geometry().asPoint().x()
-                    lat = feature.geometry().asPoint().y()
-                    line = '%s,%s,%s' % (lon, lat, poes)
+                    line = '%s,%s' % (lon, lat)
+                    if values:
+                        line += "," + ",".join([
+                            str(value) for value in values])
                     csv_file.write(line + os.linesep)
             else:
                 raise NotImplementedError(self.output_type)

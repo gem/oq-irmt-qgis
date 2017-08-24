@@ -27,6 +27,7 @@ import os
 import unittest
 import tempfile
 import filecmp
+from numpy.testing import assert_almost_equal
 
 from PyQt4.QtGui import QAction
 from qgis.core import QgsVectorLayer
@@ -78,7 +79,7 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
 
     def test_load_hazard_curves(self):
         filepath = os.path.join(self.data_dir_name, 'hazard',
-                                'output-2-hcurves_1.npz')
+                                'output-121-hcurves_27.npz')
         dlg = LoadHazardCurvesAsLayerDialog(
             IFACE, self.viewer_dock, 'hcurves', filepath)
         dlg.accept()
@@ -89,41 +90,28 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
         # select the first 2 features (the same used to produce the reference
         # csv)
         layer.select([1, 2])
-        imt = 'SA(0.2)'
+        imt = 'SA(0.1)'
         idx = self.viewer_dock.imt_cbx.findText(imt)
         self.assertNotEqual(idx, -1, 'IMT %s not found' % imt)
         self.viewer_dock.imt_cbx.setCurrentIndex(idx)
         # test exporting the current selection to csv
         _, exported_file_path = tempfile.mkstemp(suffix=".csv")
-        self._test_export('hazard_curves_SA(0.2).csv')
+        self._test_export('hazard_curves_SA(0.1).csv')
 
     def test_load_uhs_only_selected_poe(self):
         filepath = os.path.join(self.data_dir_name, 'hazard',
-                                'output-5-uhs_1.npz')
+                                'output-125-uhs_27.npz')
         dlg = LoadUhsAsLayerDialog(
             IFACE, self.viewer_dock, 'uhs', filepath)
         dlg.load_selected_only_ckb.setChecked(True)
-        idx = dlg.poe_cbx.findText('0.02')
-        self.assertEqual(idx, 1, 'POE 0.02 was not found')
+        idx = dlg.poe_cbx.findText('0.1')
+        self.assertEqual(idx, 0, 'POE 0.1 was not found')
         dlg.poe_cbx.setCurrentIndex(idx)
         dlg.accept()
         self._set_output_type('Uniform Hazard Spectra')
         self._change_selection()
         # test exporting the current selection to csv
-        self._test_export('uniform_hazard_spectra.csv')
-
-    @unittest.skip("Causing segfault")
-    def test_load_uhs_all(self):
-        filepath = os.path.join(self.data_dir_name, 'hazard',
-                                'output-5-uhs_1.npz')
-        dlg = LoadUhsAsLayerDialog(
-            IFACE, self.viewer_dock, 'uhs', filepath)
-        dlg.load_selected_only_ckb.setChecked(False)
-        dlg.accept()
-        self._set_output_type('Uniform Hazard Spectra')
-        self._change_selection()
-        # test exporting the current selection to csv
-        self._test_export('uniform_hazard_spectra.csv')
+        self._test_export('uniform_hazard_spectra_poe01.csv')
 
     def test_load_ruptures(self):
         filepath = os.path.join(
@@ -172,6 +160,41 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
         dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
         dlg.accept()
 
+    @unittest.skip("Causing segfault")
+    def test_load_losses_by_asset_aggregate_by_zone(self):
+        loss_layer_path = os.path.join(self.data_dir_name, 'risk',
+                                       'output-399-losses_by_asset_123.npz')
+        zonal_layer_path = os.path.join(self.data_dir_name, 'risk',
+                                        'zonal_layer.shp')
+        dlg = LoadLossesByAssetAsLayerDialog(
+            IFACE, self.viewer_dock, 'losses_by_asset', loss_layer_path,
+            zonal_layer_path=zonal_layer_path)
+        dlg.load_selected_only_ckb.setChecked(True)
+        taxonomy_idx = dlg.taxonomy_cbx.findText('All')
+        self.assertNotEqual(taxonomy_idx, -1, 'Taxonomy All was not found')
+        dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
+        loss_type_idx = dlg.loss_type_cbx.findText('structural')
+        self.assertNotEqual(loss_type_idx, -1,
+                            'Loss type structural was not found')
+        dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
+        self.assertTrue(dlg.zonal_layer_cbx.currentText(),
+                        'The zonal layer was not loaded')
+        dlg.accept()
+        zonal_layer_plus_stats = [layer for layer in IFACE.layers()
+                                  if layer.name() == 'Zonal data (copy)'][0]
+        zonal_layer_plus_stats_first_feat = \
+            zonal_layer_plus_stats.getFeatures().next()
+        expected_zonal_layer_path = os.path.join(
+            self.data_dir_name, 'risk',
+            'zonal_layer_plus_losses_by_asset_stats.shp')
+        expected_zonal_layer = QgsVectorLayer(
+            expected_zonal_layer_path, 'Zonal data', 'ogr')
+        expected_zonal_layer_first_feat = \
+            expected_zonal_layer.getFeatures().next()
+        assert_almost_equal(
+            zonal_layer_plus_stats_first_feat.attributes(),
+            expected_zonal_layer_first_feat.attributes())
+
     def test_load_dmg_by_asset_only_selected_taxonomy(self):
         filepath = os.path.join(self.data_dir_name, 'risk',
                                 'output-1614-dmg_by_asset_356.npz')
@@ -210,6 +233,43 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
                             'Damage state moderate was not found')
         dlg.dmg_state_cbx.setCurrentIndex(dmg_state_idx)
         dlg.accept()
+
+    @unittest.skip("Causing segfault")
+    def test_load_dmg_by_asset_aggregate_by_zone(self):
+        dmg_layer_path = os.path.join(self.data_dir_name, 'risk',
+                                      'output-1614-dmg_by_asset_356.npz')
+        zonal_layer_path = os.path.join(self.data_dir_name, 'risk',
+                                        'zonal_layer.shp')
+        dlg = LoadDmgByAssetAsLayerDialog(
+            IFACE, self.viewer_dock, 'dmg_by_asset', dmg_layer_path,
+            zonal_layer_path=zonal_layer_path)
+        dlg.load_selected_only_ckb.setChecked(True)
+        taxonomy_idx = dlg.taxonomy_cbx.findText('All')
+        self.assertNotEqual(taxonomy_idx, -1, 'Taxonomy All was not found')
+        dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
+        loss_type_idx = dlg.loss_type_cbx.findText('structural')
+        self.assertNotEqual(loss_type_idx, -1,
+                            'Loss type structural was not found')
+        dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
+        dmg_state_idx = dlg.dmg_state_cbx.findText('moderate')
+        self.assertNotEqual(dmg_state_idx, -1,
+                            'Damage state moderate was not found')
+        dlg.dmg_state_cbx.setCurrentIndex(dmg_state_idx)
+        dlg.accept()
+        zonal_layer_plus_stats = [layer for layer in IFACE.layers()
+                                  if layer.name() == 'Zonal data (copy)'][0]
+        zonal_layer_plus_stats_first_feat = \
+            zonal_layer_plus_stats.getFeatures().next()
+        expected_zonal_layer_path = os.path.join(
+            self.data_dir_name, 'risk',
+            'zonal_layer_plus_dmg_by_asset_stats.shp')
+        expected_zonal_layer = QgsVectorLayer(
+            expected_zonal_layer_path, 'Zonal data', 'ogr')
+        expected_zonal_layer_first_feat = \
+            expected_zonal_layer.getFeatures().next()
+        assert_almost_equal(
+            zonal_layer_plus_stats_first_feat.attributes(),
+            expected_zonal_layer_first_feat.attributes())
 
     def _test_export(self, expected_file_name):
         _, exported_file_path = tempfile.mkstemp(suffix=".csv")

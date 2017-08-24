@@ -94,12 +94,12 @@ def calculate_zonal_stats(loss_layer,
 
     At the end of the workflow, we will have, for each feature (zone):
 
-    * a "LOSS_PTS" attribute, specifying how many loss points are
+    * a "NUM_POINTS" attribute, specifying how many points are
       inside the zone
-    * for each loss variable:
-    * a "SUM" attribute, summing the loss values for all the
-      points that are inside the zone
-    * a "AVG" attribute, averaging losses for each zone
+    * for each variable:
+        * a "SUM" attribute, summing the values for all the
+          points that are inside the zone
+        * a "AVG" attribute, averaging for each zone
     """
     # sanity check
     assert not (force_saga and force_fallback)
@@ -110,7 +110,7 @@ def calculate_zonal_stats(loss_layer,
     # TODO remove debugging trace
     loss_attrs_dict = {}
     count_field = QgsField(
-            'LOSS_PTS', QVariant.Int)
+            'NUM_POINTS', QVariant.Int)
     count_field.setTypeName(INT_FIELD_TYPE_NAME)
     count_added = \
         ProcessLayer(zonal_layer).add_attributes([count_field])
@@ -223,14 +223,18 @@ def add_zone_id_to_points(iface, point_layer, zonal_layer, zones_id_attr_name,
                     _add_zone_id_to_points_saga(point_layer,
                                                 zonal_layer,
                                                 zones_id_attr_name)
-            except (AttributeError, RuntimeError):
+                if not point_layer_plus_zones.fields():
+                    raise RuntimeError('SAGA does not handle correctly the'
+                                       ' case in which none of the zones'
+                                       ' contains any of the points.')
+            except (AttributeError, RuntimeError) as exc:
                 # NOTE: In the testing environment we are still unable to use
                 #       the saga:clippointswithpolygons algorithm, so it does
                 #       not run properly and it returns an AttributeError. We
                 #       are forced to use the fallback approach in that case.
                 msg = ("An error occurred while attempting to"
-                       " compute zonal statistics with SAGA. Therefore"
-                       " an alternative algorithm is used.")
+                       " compute zonal statistics with SAGA: %s Therefore"
+                       " an alternative algorithm is used." % exc.message)
                 log_msg(msg, level='C', message_bar=iface.messageBar())
                 use_fallback_calculation = True
         else:
@@ -586,7 +590,7 @@ def notify_loss_aggregation_by_zone_complete(
 def calculate_raster_stats(loss_layer, zonal_layer, iface):
     """
     In case the layer containing loss data is raster, use
-    QgsZonalStatistics to calculate PTS_COUNT, sum and average loss
+    QgsZonalStatistics to calculate NUM_POINTS, SUM and AVG
     values for each zone
     """
     zonal_statistics = QgsZonalStatistics(

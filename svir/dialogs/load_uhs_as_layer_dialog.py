@@ -46,8 +46,8 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
             self, iface, viewer_dock, output_type, path, mode)
         self.setWindowTitle(
             'Load uniform hazard spectra from NPZ, as layer')
+        self.create_num_sites_indicator()
         self.create_load_selected_only_ckb()
-        self.create_rlz_or_stat_selector()
         self.create_poe_selector()
         if self.path:
             self.npz_file = numpy.load(self.path, 'r')
@@ -59,23 +59,24 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
         self.ok_button.setEnabled(
             bool(self.path) and self.poe_cbx.currentIndex() != -1)
 
-    def populate_rlz_or_stat_cbx(self):
+    def populate_dataset(self):
         self.rlzs_or_stats = [
             key for key in sorted(self.npz_file['all'].dtype.names)
             if key not in ('lon', 'lat')]
-        self.rlz_or_stat_cbx.clear()
-        self.rlz_or_stat_cbx.setEnabled(True)
-        self.rlz_or_stat_cbx.addItems(self.rlzs_or_stats)
+        self.dataset = self.npz_file['all']
+        self.poes = self.dataset[self.rlzs_or_stats[0]].dtype.names
+        self.poe_cbx.clear()
+        self.poe_cbx.setEnabled(True)
+        self.poe_cbx.addItems(self.poes)
+        self.set_ok_button()
 
     def show_num_sites(self):
-        # NOTE: we are assuming all realizations have the same number of sites,
-        #       which currently is always true.
-        #       If different realizations have a different number of sites, we
-        #       need to move this block of code inside on_rlz_or_stat_changed()
-        rlz_or_stat_data = self.npz_file['all'][
-            self.rlz_or_stat_cbx.currentText()]
-        self.rlz_or_stat_num_sites_lbl.setText(
-            self.num_sites_msg % rlz_or_stat_data.shape)
+        self.num_sites_lbl.setText(
+            self.num_sites_msg % self.dataset.shape)
+
+    def populate_out_dep_widgets(self):
+        self.populate_dataset()
+        self.show_num_sites()
 
     def on_rlz_or_stat_changed(self):
         self.dataset = self.npz_file['all'][self.rlz_or_stat_cbx.currentText()]
@@ -85,16 +86,19 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
         self.poe_cbx.addItems(self.poes)
         self.set_ok_button()
 
-    def build_layer_name(self, rlz_or_stat, **kwargs):
+    def build_layer_name(self, **kwargs):
         poe = kwargs['poe']
         investigation_time = self.get_investigation_time()
-        layer_name = "uhs_%s_poe-%s_%sy" % (rlz_or_stat, poe,
-                                            investigation_time)
+        layer_name = "uhs_poe-%s_%sy" % (poe, investigation_time)
         return layer_name
 
     def get_field_names(self, **kwargs):
         poe = kwargs['poe']
-        field_names = self.dataset[poe].dtype.names
+        field_names = []
+        for rlz_or_stat in self.rlzs_or_stats:
+            field_names.extend([
+                "%s_%s" % (rlz_or_stat, imt)
+                for imt in self.dataset[rlz_or_stat][poe].dtype.names])
         return field_names
 
     def add_field_to_layer(self, field_name):
@@ -113,8 +117,9 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
                 # add a feature
                 feat = QgsFeature(self.layer.pendingFields())
                 for field_name_idx, field_name in enumerate(field_names):
-                    value = float(row[poe][field_name_idx])
-                    feat.setAttribute(field_name, value)
+                    rlz_or_stat, imt = field_name.split('_')
+                    iml = row[rlz_or_stat][poe][imt]
+                    feat.setAttribute(field_name, float(iml))
                 feat.setGeometry(QgsGeometry.fromPoint(
                     QgsPoint(lons[row_idx], lats[row_idx])))
                 feats.append(feat)
@@ -124,16 +129,11 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
 
     def load_from_npz(self):
-        for rlz_or_stat in self.rlzs_or_stats:
+        for poe in self.poes:
             if (self.load_selected_only_ckb.isChecked()
-                    and rlz_or_stat != self.rlz_or_stat_cbx.currentText()):
+                    and poe != self.poe_cbx.currentText()):
                 continue
-            for poe in self.poes:
-                if (self.load_selected_only_ckb.isChecked()
-                        and poe != self.poe_cbx.currentText()):
-                    continue
-                with WaitCursorManager(
-                        'Creating layer for "%s" '
-                        ' and poe "%s"...' % (rlz_or_stat, poe), self.iface):
-                    self.build_layer(rlz_or_stat, poe=poe)
-                    self.style_curves()
+            with WaitCursorManager(
+                    'Creating layer for poe "%s"...' % poe, self.iface):
+                self.build_layer(poe=poe)
+                self.style_curves()
