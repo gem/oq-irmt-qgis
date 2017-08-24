@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width" />
+        <title>Index</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <body>
+        <button id='mybutton' type="button">Click Me!</button>
+    </body>
+    <script charset="utf-8">
+        function notifyWithAlert() {
+            alert($('#mybutton').text());
+        }
+
+        // var myButton = $('#mybutton');
+        // var myButton = document.getElementById("mybutton");
+        // myButton.onclick.connect(notifyWithAlert)
+        // myButton.clicked.connect(myQObject.notifyOnMessageBar)
+        $(document).ready(function(){
+            /*
+            $('#mybutton').click(function(){
+                notifyWithAlert()
+            });
+            */
+            $('#mybutton').click(function(){
+                myobject.notify_click();
+                alert("1 + 2 = " + myobject.add(1, 2));
+            });
+        });
+    </script>
+</html>
