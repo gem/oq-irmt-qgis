@@ -426,7 +426,7 @@ class Irmt:
     def ipt(self):
         self.ipt_dlg = IptDialog(self.iface.messageBar())
         self.ipt_dlg.show()
-        # self.ipt_dlg.raise_()
+        self.ipt_dlg.raise_()
 
     def drive_oq_engine_server(self):
         if self.drive_oq_engine_server_dlg is None:
