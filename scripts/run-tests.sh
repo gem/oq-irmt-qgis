@@ -26,6 +26,7 @@ fi
 
 export DISPLAY=:1
 
+OQENGINE_BRANCH = $IRMT_BRANCH
 if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${IRMT_BRANCH})" == "" ]; then
   OQENGINE_BRANCH='master';
 fi;
