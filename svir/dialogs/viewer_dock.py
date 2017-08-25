@@ -850,3 +850,10 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             self.output_types_names[output_type])
         if index != -1:
             self.output_type_cbx.setCurrentIndex(index)
+        layer = self.iface.activeLayer()
+        if layer:
+            layer_type = layer.customProperty('output_type')
+            if layer_type:
+                self.output_type_cbx.setDisabled(True)
+                return
+        self.output_type_cbx.setEnabled(True)
