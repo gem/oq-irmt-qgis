@@ -53,9 +53,7 @@ class IptDialog(QDialog, FORM_CLASS):
             # 'http://www.sample-videos.com/download-sample-text-file.php')
             # 'https://platform.openquake.org/ipt')
             'http://localhost:8000')
-        request = QNetworkRequest()
-        request.setUrl(qurl)
-        request.setRawHeader("Gem-OqIrmtQgis-Ipt", "0.1.0")
+        request = self.build_request(qurl)
         self.web_view.load(request)
         self.api = PythonAPI(self.message_bar)
         self.frame = self.web_view.page().mainFrame()
@@ -108,7 +106,8 @@ class IptDialog(QDialog, FORM_CLASS):
     def on_set_example_btn_clicked(self):
         qurl = QUrl(
             'https://platform.openquake.org/ipt/?tab_id=1&example_id=99')
-        self.web_view.setUrl(qurl)
+        request = self.build_request(qurl)
+        self.web_view.load(request)
 
     def on_get_nrml_btn_clicked(self):
         main_frame = self.web_view.page().mainFrame()
@@ -118,6 +117,12 @@ class IptDialog(QDialog, FORM_CLASS):
 
     def on_back_btn_clicked(self):
         self.web_view.back()
+
+    def build_request(self, qurl):
+        request = QNetworkRequest()
+        request.setUrl(qurl)
+        request.setRawHeader("Gem-OqIrmtQgis-Ipt", "0.1.0")
+        return request
 
 
 class PythonAPI(QObject):
