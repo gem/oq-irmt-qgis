@@ -24,6 +24,7 @@
 
 import json
 # from qgis.PyQt.QtWebKit import QWebSettings  # uncomment for debugging
+from qgis.PyQt.QtNetwork import QNetworkRequest
 from qgis.PyQt.QtCore import QUrl, QObject, pyqtSlot
 from qgis.PyQt.QtGui import QDialog, QDialogButtonBox
 from svir.third_party import requests
@@ -52,7 +53,10 @@ class IptDialog(QDialog, FORM_CLASS):
             # 'http://www.sample-videos.com/download-sample-text-file.php')
             # 'https://platform.openquake.org/ipt')
             'http://localhost:8000')
-        self.web_view.setUrl(qurl)
+        request = QNetworkRequest()
+        request.setUrl(qurl)
+        request.setRawHeader("Gem-OqIrmtQgis-Ipt", "0.1.0")
+        self.web_view.load(request)
         self.api = PythonAPI(self.message_bar)
         self.frame = self.web_view.page().mainFrame()
 
