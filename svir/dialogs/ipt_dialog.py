@@ -23,7 +23,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import json
-from qgis.PyQt.QtWebKit import QWebSettings
+# from qgis.PyQt.QtWebKit import QWebSettings  # uncomment for debugging
 from qgis.PyQt.QtCore import QUrl, QObject, pyqtSlot
 from qgis.PyQt.QtGui import QDialog, QDialogButtonBox
 from svir.third_party import requests
@@ -31,10 +31,11 @@ from svir.utilities.utils import get_ui_class
 
 FORM_CLASS = get_ui_class('ui_ipt.ui')
 
-# turn on developer tools in webkit so we can get at the javascript console for
-# debugging
-QWebSettings.globalSettings().setAttribute(
-    QWebSettings.DeveloperExtrasEnabled, True)
+# uncomment to turn on developer tools in webkit so we can get at the
+# javascript console for debugging (it causes segfaults in tests, so it has to
+# be kept disabled while it is not used for debugging).
+# QWebSettings.globalSettings().setAttribute(
+#     QWebSettings.DeveloperExtrasEnabled, True)
 
 
 class IptDialog(QDialog, FORM_CLASS):
