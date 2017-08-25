@@ -22,13 +22,19 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-# from qgis.PyQt.QtWebKit import QWebPage
+import json
+from qgis.PyQt.QtWebKit import QWebSettings
 from qgis.PyQt.QtCore import QUrl, QObject, pyqtSlot
 from qgis.PyQt.QtGui import QDialog, QDialogButtonBox
 from svir.third_party import requests
 from svir.utilities.utils import get_ui_class
 
 FORM_CLASS = get_ui_class('ui_ipt.ui')
+
+# turn on developer tools in webkit so we can get at the javascript console for
+# debugging
+QWebSettings.globalSettings().setAttribute(
+    QWebSettings.DeveloperExtrasEnabled, True)
 
 
 class IptDialog(QDialog, FORM_CLASS):
@@ -46,9 +52,16 @@ class IptDialog(QDialog, FORM_CLASS):
             # 'https://platform.openquake.org/ipt')
             'http://localhost:8000')
         self.web_view.setUrl(qurl)
-        self.myobject = MyObject(self.message_bar)
-        main_frame = self.web_view.page().mainFrame()
-        main_frame.addToJavaScriptWindowObject("myobject", self.myobject)
+        self.api = PythonAPI(self.message_bar)
+        self.frame = self.web_view.page().mainFrame()
+
+        # javaScriptWindowObjectCleared is emitted whenever the global window
+        # object of the JavaScript environment is cleared, e.g., before
+        # starting a new load. If you intend to add QObjects to a QWebFrame
+        # using addToJavaScriptWindowObject(), you should add them in a slot
+        # connected to this signal. This ensures that your objects remain
+        # accessible when loading new URLs.
+        self.frame.javaScriptWindowObjectCleared.connect(self.load_api)
 
         # downloadRequested(QNetworkRequest) is a signal that is triggered in
         # the web page when the user right-clicks on a link and chooses "save
@@ -66,6 +79,13 @@ class IptDialog(QDialog, FORM_CLASS):
         self.web_view.page().linkClicked.connect(self.handle_linkClicked)
 
         self.web_view.page().linkHovered.connect(self.handle_linkHovered)
+
+    def load_api(self):
+        # add pyapi to javascript window object
+        # slots can be accessed in either of the following ways -
+        #   1.  var obj = window.pyapi.json_decode(json);
+        #   2.  var obj = pyapi.json_decode(json)
+        self.frame.addToJavaScriptWindowObject('pyapi', self.api)
 
     def handle_downloadRequested(self, request):
         print('Downloaded file:')
@@ -95,10 +115,10 @@ class IptDialog(QDialog, FORM_CLASS):
         self.web_view.back()
 
 
-class MyObject(QObject):
+class PythonAPI(QObject):
 
     def __init__(self, message_bar):
-        super(MyObject, self).__init__()
+        super(PythonAPI, self).__init__()
         self.message_bar = message_bar
 
     @pyqtSlot(int, int, result=int)
@@ -108,3 +128,23 @@ class MyObject(QObject):
     @pyqtSlot()
     def notify_click(self):
         self.message_bar.pushMessage('Clicked!')
+
+    # take a list of strings and return a string
+    # because of setapi line above, we get a list of python strings as input
+    @pyqtSlot('QStringList', result=str)
+    def concat(self, strlist):
+        return ''.join(strlist)
+
+    # take a javascript object and return string
+    # javascript objects come into python as dictionaries
+    # functions are represented by an empty dictionary
+    @pyqtSlot('QVariantMap', result=str)
+    def json_encode(self, jsobj):
+        # import is here to keep it separate from 'required' import
+        return json.dumps(jsobj)
+
+    # take a string and return an object (which is represented in python
+    # by a dictionary
+    @pyqtSlot(str, result='QVariantMap')
+    def json_decode(self, jsstr):
+        return json.loads(jsstr)
