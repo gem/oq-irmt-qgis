@@ -52,7 +52,7 @@ class IptDialog(QDialog, FORM_CLASS):
             # FIXME: loading a page that offers a link to download a small txt
             # 'http://www.sample-videos.com/download-sample-text-file.php')
             # 'https://platform.openquake.org/ipt')
-            'http://localhost:8000')
+            'http://localhost:8800/ipt?tab_id=1&example_id=99')
         request = self.build_request(qurl)
         self.web_view.load(request)
         self.api = PythonAPI(self.message_bar)
@@ -96,6 +96,8 @@ class IptDialog(QDialog, FORM_CLASS):
         print(resp.content)
 
     def handle_linkClicked(self, url):
+        # request = self.build_request(url)
+        # self.web_view.load(request)
         print('Downloaded file:')
         resp = requests.get(url.toString())
         print(resp.content)
@@ -105,7 +107,7 @@ class IptDialog(QDialog, FORM_CLASS):
 
     def on_set_example_btn_clicked(self):
         qurl = QUrl(
-            'https://platform.openquake.org/ipt/?tab_id=1&example_id=99')
+            'http://localhost:8800/ipt?tab_id=1&example_id=99')
         request = self.build_request(qurl)
         self.web_view.load(request)
 
@@ -121,7 +123,7 @@ class IptDialog(QDialog, FORM_CLASS):
     def build_request(self, qurl):
         request = QNetworkRequest()
         request.setUrl(qurl)
-        request.setRawHeader("Gem-OqIrmtQgis-Ipt", "0.1.0")
+        request.setRawHeader("Gem--Oq-Irmt-Qgis--Ipt", "0.1.0")
         return request
 
 
