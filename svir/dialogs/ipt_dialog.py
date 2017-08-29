@@ -24,13 +24,15 @@
 
 import json
 # from qgis.PyQt.QtWebKit import QWebSettings  # uncomment for debugging
+from qgis.PyQt.QtWebKit import QWebView
 from qgis.PyQt.QtNetwork import QNetworkRequest
 from qgis.PyQt.QtCore import QUrl, QObject, pyqtSlot
-from qgis.PyQt.QtGui import QDialog, QDialogButtonBox
+from qgis.PyQt.QtGui import (QDialog,
+                             QDialogButtonBox,
+                             QVBoxLayout,
+                             QPushButton,
+                             )
 from svir.third_party import requests
-from svir.utilities.utils import get_ui_class
-
-FORM_CLASS = get_ui_class('ui_ipt.ui')
 
 # uncomment to turn on developer tools in webkit so we can get at the
 # javascript console for debugging (it causes segfaults in tests, so it has to
@@ -39,13 +41,25 @@ FORM_CLASS = get_ui_class('ui_ipt.ui')
 #     QWebSettings.DeveloperExtrasEnabled, True)
 
 
-class IptDialog(QDialog, FORM_CLASS):
-    """Docstring for IptDialog. """
+class IptDialog(QDialog):
+    """FIXME Docstring for IptDialog. """
 
     def __init__(self, message_bar):
         super(IptDialog, self).__init__()
-        # Set up the user interface from Designer.
-        self.setupUi(self)
+        self.web_view = QWebView()
+        self.set_example_btn = QPushButton("Set example")
+        self.get_nrml_btn = QPushButton("Get nrml")
+        self.back_btn = QPushButton("Back")
+        self.buttonBox = QDialogButtonBox()
+        self.vlayout = QVBoxLayout()
+        self.vlayout.addWidget(self.web_view)
+        self.vlayout.addWidget(self.set_example_btn)
+        self.vlayout.addWidget(self.get_nrml_btn)
+        self.vlayout.addWidget(self.back_btn)
+        self.vlayout.addWidget(self.buttonBox)
+        self.setLayout(self.vlayout)
+        self.setWindowTitle("Input Preparation Toolkit")
+
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         self.message_bar = message_bar
         qurl = QUrl(
