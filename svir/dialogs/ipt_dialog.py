@@ -50,14 +50,11 @@ class IptDialog(QDialog):
         self.set_example_btn.clicked.connect(self.on_set_example_btn_clicked)
         # self.get_nrml_btn = QPushButton("Get nrml")
         # self.get_nrml_btn.clicked.connect(self.on_get_nrml_btn_clicked)
-        # self.back_btn = QPushButton("Back")
-        # self.back_btn.clicked.connect(self.on_back_btn_clicked)
         self.buttonBox = QDialogButtonBox()
         self.vlayout = QVBoxLayout()
         self.vlayout.addWidget(self.web_view)
         self.vlayout.addWidget(self.set_example_btn)
         # self.vlayout.addWidget(self.get_nrml_btn)
-        # self.vlayout.addWidget(self.back_btn)
         self.vlayout.addWidget(self.buttonBox)
         self.setLayout(self.vlayout)
         self.setWindowTitle("Input Preparation Toolkit")
@@ -67,7 +64,7 @@ class IptDialog(QDialog):
             # FIXME: loading a page that offers a link to download a small txt
             # 'http://www.sample-videos.com/download-sample-text-file.php')
             # 'https://platform.openquake.org/ipt')
-            'http://localhost:8800/ipt?tab_id=1&example_id=99')
+            'http://localhost:8800/ipt')
         self.web_view.load(qurl)
 
         # downloadRequested(QNetworkRequest) is a signal that is triggered in
@@ -94,9 +91,6 @@ class IptDialog(QDialog):
     #     nrml_textarea = main_frame.findFirstElement("#textareaex")
     #     nrml = nrml_textarea.evaluateJavaScript("this.value")
     #     print(nrml)
-
-    # def on_back_btn_clicked(self):
-    #     self.web_view.back()
 
 
 class PythonAPI(QObject):

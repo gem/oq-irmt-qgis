@@ -143,15 +143,12 @@ class GemQWebView(QWebView):
             'The requested functionality is disabled.')
 
     # def on_OpenLinkInNewWindow(self):
-    #     "FIXME"
     #     pass
 
     # def on_Back(self):
-    #     "FIXME"
     #     pass
 
     # def on_Forward(self):
-    #     "FIXME"
     #     pass
 
     def on_urlChanged(self, url):
