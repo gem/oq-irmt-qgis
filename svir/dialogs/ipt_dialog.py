@@ -68,8 +68,7 @@ class IptDialog(QDialog):
             # 'http://www.sample-videos.com/download-sample-text-file.php')
             # 'https://platform.openquake.org/ipt')
             'http://localhost:8800/ipt?tab_id=1&example_id=99')
-        request = self.web_view.build_request(qurl)
-        self.web_view.load(request)
+        self.web_view.load(qurl)
 
         # downloadRequested(QNetworkRequest) is a signal that is triggered in
         # the web page when the user right-clicks on a link and chooses "save
@@ -88,8 +87,7 @@ class IptDialog(QDialog):
     def on_set_example_btn_clicked(self):
         qurl = QUrl(
             'http://localhost:8800/ipt?tab_id=1&example_id=99')
-        request = self.web_view.build_request(qurl)
-        self.web_view.load(request)
+        self.web_view.load(qurl)
 
     def on_get_nrml_btn_clicked(self):
         main_frame = self.web_view.page().mainFrame()

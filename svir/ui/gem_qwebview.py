@@ -72,13 +72,28 @@ class GemQWebView(QWebView):
         open_in_new_win_action.triggered.disconnect()
         open_in_new_win_action.triggered.connect(
             self.on_OpenLinkInNewWindow)
+        back_action = self.pageAction(QWebPage.Back)
+        back_action.triggered.disconnect()
+        back_action.triggered.connect(self.on_Back)
+        forward_action = self.pageAction(QWebPage.Forward)
+        back_action.triggered.connect(self.on_Forward)
+        forward_action.triggered.disconnect()
         self.urlChanged[QUrl].connect(self.on_urlChanged)
 
         self.page().linkHovered.connect(self.on_linkHovered)
 
     def load(self, *args, **kwargs):
-        print("FIXME Inside GemQWebView.load")
-        super(GemQWebView, self).load(*args, **kwargs)
+        if isinstance(args[0], QNetworkRequest):
+            request = args[0]
+            request = self.set_header(request)
+            super(GemQWebView, self).load(request)
+        elif isinstance(args[0], QUrl):
+            qurl = args[0]
+            request = self.build_request(qurl)
+            super(GemQWebView, self).load(request)
+        else:
+            print("Unexpected args")
+            super(GemQWebView, self).load(*args, **kwargs)
 
     # def load(self, url_request, operation=QNetworkAccessManager.GetOperation,
     #          body=QByteArray()):
@@ -103,6 +118,10 @@ class GemQWebView(QWebView):
     def build_request(self, qurl):
         request = QNetworkRequest()
         request.setUrl(qurl)
+        request = self.set_header(request)
+        return request
+
+    def set_header(self, request):
         request.setRawHeader(self.gem_header_name, self.gem_header_value)
         return request
 
@@ -131,6 +150,14 @@ class GemQWebView(QWebView):
         self.message_bar.pushMessage(
             'The requested functionality is disabled. Please use the IPT'
             ' application in a single window.')
+
+    def on_Back(self):
+        "FIXME"
+        pass
+
+    def on_Forward(self):
+        "FIXME"
+        pass
 
     def on_urlChanged(self, url):
         pass
