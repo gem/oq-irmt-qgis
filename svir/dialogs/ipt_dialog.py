@@ -100,12 +100,6 @@ class IptDialog(QDialog):
     def on_back_btn_clicked(self):
         self.web_view.back()
 
-    # def build_request(self, qurl):
-    #     request = QNetworkRequest()
-    #     request.setUrl(qurl)
-    #     request.setRawHeader(self.gem_header_name, self.gem_header_value)
-    #     return request
-
 
 class PythonAPI(QObject):
 

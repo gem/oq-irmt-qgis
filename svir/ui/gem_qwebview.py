@@ -29,10 +29,9 @@ from qgis.PyQt.QtWebKit import QWebView, QWebPage
 from qgis.PyQt.QtNetwork import QNetworkRequest
 from qgis.PyQt.QtCore import QUrl
 
-# uncomment to turn on developer tools in webkit so we can get at the
-# javascript console for debugging (it causes segfaults in tests, so it has to
-# be kept disabled while it is not used for debugging).
-
+# # uncomment to turn on developer tools in webkit so we can get at the
+# # javascript console for debugging (it causes segfaults in tests, so it has
+# # to be kept disabled while it is not used for debugging).
 # from qgis.PyQt.QtWebKit import QWebSettings
 # QWebSettings.globalSettings().setAttribute(
 #     QWebSettings.DeveloperExtrasEnabled, True)
