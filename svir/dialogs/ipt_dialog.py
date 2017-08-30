@@ -48,16 +48,16 @@ class IptDialog(QDialog):
                                     self.message_bar)
         self.set_example_btn = QPushButton("Set example")
         self.set_example_btn.clicked.connect(self.on_set_example_btn_clicked)
-        self.get_nrml_btn = QPushButton("Get nrml")
-        self.get_nrml_btn.clicked.connect(self.on_get_nrml_btn_clicked)
-        self.back_btn = QPushButton("Back")
-        self.back_btn.clicked.connect(self.on_back_btn_clicked)
+        # self.get_nrml_btn = QPushButton("Get nrml")
+        # self.get_nrml_btn.clicked.connect(self.on_get_nrml_btn_clicked)
+        # self.back_btn = QPushButton("Back")
+        # self.back_btn.clicked.connect(self.on_back_btn_clicked)
         self.buttonBox = QDialogButtonBox()
         self.vlayout = QVBoxLayout()
         self.vlayout.addWidget(self.web_view)
         self.vlayout.addWidget(self.set_example_btn)
-        self.vlayout.addWidget(self.get_nrml_btn)
-        self.vlayout.addWidget(self.back_btn)
+        # self.vlayout.addWidget(self.get_nrml_btn)
+        # self.vlayout.addWidget(self.back_btn)
         self.vlayout.addWidget(self.buttonBox)
         self.setLayout(self.vlayout)
         self.setWindowTitle("Input Preparation Toolkit")
@@ -89,14 +89,14 @@ class IptDialog(QDialog):
             'http://localhost:8800/ipt?tab_id=1&example_id=99')
         self.web_view.load(qurl)
 
-    def on_get_nrml_btn_clicked(self):
-        main_frame = self.web_view.page().mainFrame()
-        nrml_textarea = main_frame.findFirstElement("#textareaex")
-        nrml = nrml_textarea.evaluateJavaScript("this.value")
-        print(nrml)
+    # def on_get_nrml_btn_clicked(self):
+    #     main_frame = self.web_view.page().mainFrame()
+    #     nrml_textarea = main_frame.findFirstElement("#textareaex")
+    #     nrml = nrml_textarea.evaluateJavaScript("this.value")
+    #     print(nrml)
 
-    def on_back_btn_clicked(self):
-        self.web_view.back()
+    # def on_back_btn_clicked(self):
+    #     self.web_view.back()
 
 
 class PythonAPI(QObject):

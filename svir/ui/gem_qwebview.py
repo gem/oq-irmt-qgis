@@ -70,14 +70,16 @@ class GemQWebView(QWebView):
         open_in_new_win_action = self.pageAction(
             QWebPage.OpenLinkInNewWindow)
         open_in_new_win_action.triggered.disconnect()
-        open_in_new_win_action.triggered.connect(
-            self.on_OpenLinkInNewWindow)
+        # open_in_new_win_action.setEnabled(False)
+        open_in_new_win_action.triggered.connect(self.display_disabled)
         back_action = self.pageAction(QWebPage.Back)
         back_action.triggered.disconnect()
-        back_action.triggered.connect(self.on_Back)
+        # back_action.setEnabled(False)
+        back_action.triggered.connect(self.display_disabled)
         forward_action = self.pageAction(QWebPage.Forward)
-        back_action.triggered.connect(self.on_Forward)
         forward_action.triggered.disconnect()
+        # forward_action.setEnabled(False)
+        forward_action.triggered.connect(self.display_disabled)
         self.urlChanged[QUrl].connect(self.on_urlChanged)
 
         self.page().linkHovered.connect(self.on_linkHovered)
@@ -95,18 +97,6 @@ class GemQWebView(QWebView):
             print("Unexpected args")
             super(GemQWebView, self).load(*args, **kwargs)
 
-    # def load(self, url_request, operation=QNetworkAccessManager.GetOperation,
-    #          body=QByteArray()):
-    #     if isinstance(url_request, QUrl):
-    #         request = self.build_request(url_request)
-    #     elif isinstance(url_request, QNetworkRequest):
-    #         request = self.build_header(url_request)
-    #     else:
-    #         raise TypeError(
-    #             "load accepts a QUrl or a QNetworkRequest; got %s instead."
-    #             % type(url_request))
-    #     super(GemQWebView, self).load(request, operation, body)
-
     # def acceptNavigationRequest(self, frame, request, type):
     #     print('Navigation Request:', request.url())
     #     return False
@@ -114,6 +104,11 @@ class GemQWebView(QWebView):
     def contextMenuEvent(self, event):
         self.clickpos = event.pos()
         super(GemQWebView, self).contextMenuEvent(event)
+
+    # def event(self, *args, **kwargs):
+    #     print("ARGS: %s" % args)
+    #     print("KWARGS: %s" % kwargs)
+    #     super(GemQWebView, self).event(*args, **kwargs)
 
     def build_request(self, qurl):
         request = QNetworkRequest()
@@ -132,32 +127,32 @@ class GemQWebView(QWebView):
         #   2.  var obj = pyapi.json_decode(json)
         self.frame.addToJavaScriptWindowObject('pyapi', self.python_api)
 
-    def on_linkClicked(self, url):
-        request = self.build_request(url)
-        self.load(request)
+    def on_linkClicked(self, qurl):
+        self.load(qurl)
         # print('Downloaded file:')
         # resp = requests.get(url.toString())
         # print(resp.content)
 
     def on_OpenLink(self):
-        print('OpenLink')
         main_frame = self.page().mainFrame()
         qurl = main_frame.hitTestContent(self.clickpos).linkUrl()
-        request = self.build_request(qurl)
-        self.load(request)
+        self.load(qurl)
 
-    def on_OpenLinkInNewWindow(self):
+    def display_disabled(self):
         self.message_bar.pushMessage(
-            'The requested functionality is disabled. Please use the IPT'
-            ' application in a single window.')
+            'The requested functionality is disabled.')
 
-    def on_Back(self):
-        "FIXME"
-        pass
+    # def on_OpenLinkInNewWindow(self):
+    #     "FIXME"
+    #     pass
 
-    def on_Forward(self):
-        "FIXME"
-        pass
+    # def on_Back(self):
+    #     "FIXME"
+    #     pass
+
+    # def on_Forward(self):
+    #     "FIXME"
+    #     pass
 
     def on_urlChanged(self, url):
         pass
