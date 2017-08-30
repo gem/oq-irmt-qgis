@@ -49,8 +49,12 @@ class IptDialog(QDialog):
         super(IptDialog, self).__init__()
         self.gem_header_name = "Gem--Oq-Irmt-Qgis--Ipt"
         self.gem_header_value = "0.1.0"
+        self.message_bar = message_bar
+        self.python_api = PythonAPI(self.message_bar)
         self.web_view = GemQWebView(self.gem_header_name,
-                                    self.gem_header_value)
+                                    self.gem_header_value,
+                                    self.python_api,
+                                    self.message_bar)
         self.set_example_btn = QPushButton("Set example")
         self.set_example_btn.clicked.connect(self.on_set_example_btn_clicked)
         self.get_nrml_btn = QPushButton("Get nrml")
@@ -68,95 +72,32 @@ class IptDialog(QDialog):
         self.setWindowTitle("Input Preparation Toolkit")
 
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
-        self.message_bar = message_bar
         qurl = QUrl(
             # FIXME: loading a page that offers a link to download a small txt
             # 'http://www.sample-videos.com/download-sample-text-file.php')
             # 'https://platform.openquake.org/ipt')
             'http://localhost:8800/ipt?tab_id=1&example_id=99')
-        request = self.build_request(qurl)
+        request = self.web_view.build_request(qurl)
         self.web_view.load(request)
-        self.api = PythonAPI(self.message_bar)
-        self.frame = self.web_view.page().mainFrame()
-
-        # javaScriptWindowObjectCleared is emitted whenever the global window
-        # object of the JavaScript environment is cleared, e.g., before
-        # starting a new load. If you intend to add QObjects to a QWebFrame
-        # using addToJavaScriptWindowObject(), you should add them in a slot
-        # connected to this signal. This ensures that your objects remain
-        # accessible when loading new URLs.
-        self.frame.javaScriptWindowObjectCleared.connect(self.load_api)
 
         # downloadRequested(QNetworkRequest) is a signal that is triggered in
         # the web page when the user right-clicks on a link and chooses "save
         # link as". Instead of proceeding with the normal workflow (asking the
         # user where to save the file) the control is passed to
-        # self.handle_downhandle_downloadRequested, that retrieves the file and
+        # self.on_downloadRequested, that retrieves the file and
         # prints its contents
         self.web_view.page().downloadRequested.connect(
-            self.handle_downloadRequested)
+            self.on_downloadRequested)
 
-        # NOTE: without the following line, linkClicked is not emitted, but
-        # we would need to delegate only one specific link!
-        self.web_view.page().setLinkDelegationPolicy(
-            QWebPage.DelegateAllLinks)
-        self.web_view.page().linkClicked.connect(self.handle_linkClicked)
-        # self.web_view.page().OpenLink.connect(self.handle_OpenLink)
-        open_link_action = self.web_view.pageAction(QWebPage.OpenLink)
-        open_link_action.triggered.disconnect()
-        open_link_action.triggered.connect(self.handle_OpenLink)
-        open_in_new_win_action = self.web_view.pageAction(
-            QWebPage.OpenLinkInNewWindow)
-        open_in_new_win_action.triggered.disconnect()
-        open_in_new_win_action.triggered.connect(
-            self.handle_OpenLinkInNewWindow)
-        self.web_view.urlChanged[QUrl].connect(self.handle_urlChanged)
-
-        self.web_view.page().linkHovered.connect(self.handle_linkHovered)
-
-    def load_api(self):
-        # add pyapi to javascript window object
-        # slots can be accessed in either of the following ways -
-        #   1.  var obj = window.pyapi.json_decode(json);
-        #   2.  var obj = pyapi.json_decode(json)
-        self.frame.addToJavaScriptWindowObject('pyapi', self.api)
-
-    def handle_downloadRequested(self, request):
+    def on_downloadRequested(self, request):
         print('Downloaded file:')
         resp = requests.get(request.url().toString())
         print(resp.content)
 
-    def handle_linkClicked(self, url):
-        request = self.build_request(url)
-        self.web_view.load(request)
-        # print('Downloaded file:')
-        # resp = requests.get(url.toString())
-        # print(resp.content)
-
-    def handle_OpenLink(self):
-        print('OpenLink')
-        main_frame = self.web_view.page().mainFrame()
-        qurl = main_frame.hitTestContent(self.web_view.clickpos).linkUrl()
-        request = self.build_request(qurl)
-        self.web_view.load(request)
-
-    def handle_OpenLinkInNewWindow(self):
-        self.message_bar.pushMessage(
-            'The requested functionality is disabled. Please use the IPT'
-            ' application in a single window.')
-
-    def handle_urlChanged(self, url):
-        pass
-        # print(url)
-
-    def handle_linkHovered(self, link, title, text_content):
-        pass
-        # print(link)
-
     def on_set_example_btn_clicked(self):
         qurl = QUrl(
             'http://localhost:8800/ipt?tab_id=1&example_id=99')
-        request = self.build_request(qurl)
+        request = self.web_view.build_request(qurl)
         self.web_view.load(request)
 
     def on_get_nrml_btn_clicked(self):
@@ -168,11 +109,11 @@ class IptDialog(QDialog):
     def on_back_btn_clicked(self):
         self.web_view.back()
 
-    def build_request(self, qurl):
-        request = QNetworkRequest()
-        request.setUrl(qurl)
-        request.setRawHeader(self.gem_header_name, self.gem_header_value)
-        return request
+    # def build_request(self, qurl):
+    #     request = QNetworkRequest()
+    #     request.setUrl(qurl)
+    #     request.setRawHeader(self.gem_header_name, self.gem_header_value)
+    #     return request
 
 
 class PythonAPI(QObject):
@@ -212,11 +153,42 @@ class PythonAPI(QObject):
 
 class GemQWebView(QWebView):
 
-    def __init__(self, gem_header_name, gem_header_value):
+    def __init__(self, gem_header_name, gem_header_value, python_api,
+                 message_bar):
         self.gem_header_name = gem_header_name
         self.gem_header_value = gem_header_value
-        self.clickpos = None
+        self.python_api = python_api
+        self.message_bar = message_bar
+
         super(GemQWebView, self).__init__()
+
+        self.clickpos = None
+
+        self.frame = self.page().mainFrame()
+        # javaScriptWindowObjectCleared is emitted whenever the global window
+        # object of the JavaScript environment is cleared, e.g., before
+        # starting a new load. If you intend to add QObjects to a QWebFrame
+        # using addToJavaScriptWindowObject(), you should add them in a slot
+        # connected to this signal. This ensures that your objects remain
+        # accessible when loading new URLs.
+        self.frame.javaScriptWindowObjectCleared.connect(self.load_python_api)
+
+        # NOTE: without the following line, linkClicked is not emitted, but
+        # we would need to delegate only one specific link!
+        self.page().setLinkDelegationPolicy(QWebPage.DelegateAllLinks)
+
+        self.page().linkClicked.connect(self.on_linkClicked)
+        open_link_action = self.pageAction(QWebPage.OpenLink)
+        open_link_action.triggered.disconnect()
+        open_link_action.triggered.connect(self.on_OpenLink)
+        open_in_new_win_action = self.pageAction(
+            QWebPage.OpenLinkInNewWindow)
+        open_in_new_win_action.triggered.disconnect()
+        open_in_new_win_action.triggered.connect(
+            self.on_OpenLinkInNewWindow)
+        self.urlChanged[QUrl].connect(self.on_urlChanged)
+
+        self.page().linkHovered.connect(self.on_linkHovered)
 
     def load(self, *args, **kwargs):
         print("FIXME Inside GemQWebView.load")
@@ -242,9 +214,42 @@ class GemQWebView(QWebView):
         self.clickpos = event.pos()
         super(GemQWebView, self).contextMenuEvent(event)
 
-    # def build_request(self, qurl):
-    #     request = QNetworkRequest()
-    #     request.setUrl(qurl)
-    #     request = request.setRawHeader(self.gem_header_name,
-    #                                    self.gem_header_value)
-    #     return request
+    def build_request(self, qurl):
+        request = QNetworkRequest()
+        request.setUrl(qurl)
+        request.setRawHeader(self.gem_header_name, self.gem_header_value)
+        return request
+
+    def load_python_api(self):
+        # add pyapi to javascript window object
+        # slots can be accessed in either of the following ways -
+        #   1.  var obj = window.pyapi.json_decode(json);
+        #   2.  var obj = pyapi.json_decode(json)
+        self.frame.addToJavaScriptWindowObject('pyapi', self.python_api)
+
+    def on_linkClicked(self, url):
+        request = self.build_request(url)
+        self.load(request)
+        # print('Downloaded file:')
+        # resp = requests.get(url.toString())
+        # print(resp.content)
+
+    def on_OpenLink(self):
+        print('OpenLink')
+        main_frame = self.page().mainFrame()
+        qurl = main_frame.hitTestContent(self.clickpos).linkUrl()
+        request = self.build_request(qurl)
+        self.load(request)
+
+    def on_OpenLinkInNewWindow(self):
+        self.message_bar.pushMessage(
+            'The requested functionality is disabled. Please use the IPT'
+            ' application in a single window.')
+
+    def on_urlChanged(self, url):
+        pass
+        # print(url)
+
+    def on_linkHovered(self, link, title, text_content):
+        pass
+        # print(link)
