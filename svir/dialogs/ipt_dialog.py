@@ -23,6 +23,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import json
+from qgis.PyQt.QtWebKit import QWebPage
 # from qgis.PyQt.QtWebKit import QWebSettings  # uncomment for debugging
 from qgis.PyQt.QtWebKit import QWebView
 from qgis.PyQt.QtNetwork import QNetworkRequest
@@ -46,10 +47,16 @@ class IptDialog(QDialog):
 
     def __init__(self, message_bar):
         super(IptDialog, self).__init__()
-        self.web_view = QWebView()
+        self.gem_header_name = "Gem--Oq-Irmt-Qgis--Ipt"
+        self.gem_header_value = "0.1.0"
+        self.web_view = GemQWebView(self.gem_header_name,
+                                    self.gem_header_value)
         self.set_example_btn = QPushButton("Set example")
+        self.set_example_btn.clicked.connect(self.on_set_example_btn_clicked)
         self.get_nrml_btn = QPushButton("Get nrml")
+        self.get_nrml_btn.clicked.connect(self.on_get_nrml_btn_clicked)
         self.back_btn = QPushButton("Back")
+        self.back_btn.clicked.connect(self.on_back_btn_clicked)
         self.buttonBox = QDialogButtonBox()
         self.vlayout = QVBoxLayout()
         self.vlayout.addWidget(self.web_view)
@@ -91,9 +98,19 @@ class IptDialog(QDialog):
 
         # NOTE: without the following line, linkClicked is not emitted, but
         # we would need to delegate only one specific link!
-        # self.web_view.page().setLinkDelegationPolicy(
-        #     QWebPage.DelegateAllLinks)
+        self.web_view.page().setLinkDelegationPolicy(
+            QWebPage.DelegateAllLinks)
         self.web_view.page().linkClicked.connect(self.handle_linkClicked)
+        # self.web_view.page().OpenLink.connect(self.handle_OpenLink)
+        open_link_action = self.web_view.pageAction(QWebPage.OpenLink)
+        open_link_action.triggered.disconnect()
+        open_link_action.triggered.connect(self.handle_OpenLink)
+        open_in_new_win_action = self.web_view.pageAction(
+            QWebPage.OpenLinkInNewWindow)
+        open_in_new_win_action.triggered.disconnect()
+        open_in_new_win_action.triggered.connect(
+            self.handle_OpenLinkInNewWindow)
+        self.web_view.urlChanged[QUrl].connect(self.handle_urlChanged)
 
         self.web_view.page().linkHovered.connect(self.handle_linkHovered)
 
@@ -110,14 +127,31 @@ class IptDialog(QDialog):
         print(resp.content)
 
     def handle_linkClicked(self, url):
-        # request = self.build_request(url)
-        # self.web_view.load(request)
-        print('Downloaded file:')
-        resp = requests.get(url.toString())
-        print(resp.content)
+        request = self.build_request(url)
+        self.web_view.load(request)
+        # print('Downloaded file:')
+        # resp = requests.get(url.toString())
+        # print(resp.content)
+
+    def handle_OpenLink(self):
+        print('OpenLink')
+        main_frame = self.web_view.page().mainFrame()
+        qurl = main_frame.hitTestContent(self.web_view.clickpos).linkUrl()
+        request = self.build_request(qurl)
+        self.web_view.load(request)
+
+    def handle_OpenLinkInNewWindow(self):
+        self.message_bar.pushMessage(
+            'The requested functionality is disabled. Please use the IPT'
+            ' application in a single window.')
+
+    def handle_urlChanged(self, url):
+        pass
+        # print(url)
 
     def handle_linkHovered(self, link, title, text_content):
-        print(link)
+        pass
+        # print(link)
 
     def on_set_example_btn_clicked(self):
         qurl = QUrl(
@@ -137,7 +171,7 @@ class IptDialog(QDialog):
     def build_request(self, qurl):
         request = QNetworkRequest()
         request.setUrl(qurl)
-        request.setRawHeader("Gem--Oq-Irmt-Qgis--Ipt", "0.1.0")
+        request.setRawHeader(self.gem_header_name, self.gem_header_value)
         return request
 
 
@@ -174,3 +208,43 @@ class PythonAPI(QObject):
     @pyqtSlot(str, result='QVariantMap')
     def json_decode(self, jsstr):
         return json.loads(jsstr)
+
+
+class GemQWebView(QWebView):
+
+    def __init__(self, gem_header_name, gem_header_value):
+        self.gem_header_name = gem_header_name
+        self.gem_header_value = gem_header_value
+        self.clickpos = None
+        super(GemQWebView, self).__init__()
+
+    def load(self, *args, **kwargs):
+        print("FIXME Inside GemQWebView.load")
+        super(GemQWebView, self).load(*args, **kwargs)
+
+    # def load(self, url_request, operation=QNetworkAccessManager.GetOperation,
+    #          body=QByteArray()):
+    #     if isinstance(url_request, QUrl):
+    #         request = self.build_request(url_request)
+    #     elif isinstance(url_request, QNetworkRequest):
+    #         request = self.build_header(url_request)
+    #     else:
+    #         raise TypeError(
+    #             "load accepts a QUrl or a QNetworkRequest; got %s instead."
+    #             % type(url_request))
+    #     super(GemQWebView, self).load(request, operation, body)
+
+    # def acceptNavigationRequest(self, frame, request, type):
+    #     print('Navigation Request:', request.url())
+    #     return False
+
+    def contextMenuEvent(self, event):
+        self.clickpos = event.pos()
+        super(GemQWebView, self).contextMenuEvent(event)
+
+    # def build_request(self, qurl):
+    #     request = QNetworkRequest()
+    #     request.setUrl(qurl)
+    #     request = request.setRawHeader(self.gem_header_name,
+    #                                    self.gem_header_value)
+    #     return request
