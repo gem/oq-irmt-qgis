@@ -74,7 +74,8 @@ class StandaloneAppDialog(QDialog):
         self.vlayout = QVBoxLayout()
         self.vlayout.addWidget(self.message_bar)
         self.vlayout.addWidget(self.web_view)
-        self.vlayout.addWidget(self.set_example_btn)
+        if app_name == 'ipt':
+            self.vlayout.addWidget(self.set_example_btn)
         # self.vlayout.addWidget(self.get_nrml_btn)
         self.vlayout.addWidget(self.buttonBox)
         self.setLayout(self.vlayout)
