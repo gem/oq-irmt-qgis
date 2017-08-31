@@ -35,16 +35,31 @@ from svir.third_party import requests
 from svir.ui.gem_qwebview import GemQWebView
 
 
-class IptDialog(QDialog):
-    """FIXME Docstring for IptDialog. """
+class StandaloneAppDialog(QDialog):
+    """FIXME Docstring for StandaloneAppDialog. """
 
-    def __init__(self):
-        super(IptDialog, self).__init__()
-        self.resize(1200, self.width())
-        self.gem_header_name = "Gem--Oq-Irmt-Qgis--Ipt"
-        self.gem_header_value = "0.1.0"
+    def __init__(self, app_name, app_descr):
+        super(StandaloneAppDialog, self).__init__()
+
         self.message_bar = QgsMessageBar(self)
-        self.python_api = PythonAPI(self.message_bar)
+        self.app_name = app_name
+        self.app_descr = app_descr
+        if app_name == 'ipt':
+            self.python_api = IptPythonApi(self.message_bar)
+            self.gem_header_name = "Gem--Oq-Irmt-Qgis--Ipt"
+            self.gem_header_value = "0.1.0"
+        elif app_name == 'taxtweb':
+            self.python_api = TaxtwebPythonApi(self.message_bar)
+            self.gem_header_name = "Gem--Oq-Irmt-Qgis--Taxtweb"
+            self.gem_header_value = "0.1.0"
+        elif app_name == 'taxonomy':
+            self.python_api = TaxonomyPythonApi(self.message_bar)
+            self.gem_header_name = "Gem--Oq-Irmt-Qgis--Taxonomy"
+            self.gem_header_value = "0.1.0"
+        else:
+            raise NotImplementedError(app_name)
+
+        self.resize(1200, self.width())
         self.web_view = GemQWebView(self.gem_header_name,
                                     self.gem_header_value,
                                     self.python_api,
@@ -63,14 +78,14 @@ class IptDialog(QDialog):
         # self.vlayout.addWidget(self.get_nrml_btn)
         self.vlayout.addWidget(self.buttonBox)
         self.setLayout(self.vlayout)
-        self.setWindowTitle("Input Preparation Toolkit")
+        self.setWindowTitle(self.app_descr)
 
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         qurl = QUrl(
             # FIXME: loading a page that offers a link to download a small txt
             # 'http://www.sample-videos.com/download-sample-text-file.php')
             # 'https://platform.openquake.org/ipt')
-            'http://localhost:8800/ipt')
+            'http://localhost:8800/%s' % self.app_name)
         self.web_view.load(qurl)
 
         # downloadRequested(QNetworkRequest) is a signal that is triggered in
@@ -99,10 +114,10 @@ class IptDialog(QDialog):
     #     print(nrml)
 
 
-class PythonAPI(QObject):
+class IptPythonApi(QObject):
 
     def __init__(self, message_bar):
-        super(PythonAPI, self).__init__()
+        super(IptPythonApi, self).__init__()
         self.message_bar = message_bar
 
     @pyqtSlot(int, int, result=int)
@@ -132,3 +147,23 @@ class PythonAPI(QObject):
     @pyqtSlot(str, result='QVariantMap')
     def json_decode(self, jsstr):
         return json.loads(jsstr)
+
+
+class TaxtwebPythonApi(QObject):
+    def __init__(self, message_bar):
+        super(TaxtwebPythonApi, self).__init__()
+        self.message_bar = message_bar
+
+    @pyqtSlot()
+    def notify_click(self):
+        self.message_bar.pushMessage('Clicked!')
+
+
+class TaxonomyPythonApi(QObject):
+    def __init__(self, message_bar):
+        super(TaxonomyPythonApi, self).__init__()
+        self.message_bar = message_bar
+
+    @pyqtSlot()
+    def notify_click(self):
+        self.message_bar.pushMessage('Clicked!')
