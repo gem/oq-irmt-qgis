@@ -29,6 +29,7 @@ from qgis.PyQt.QtGui import (QDialog,
                              QVBoxLayout,
                              QPushButton,
                              )
+from qgis.gui import QgsMessageBar
 from svir.third_party import requests
 from svir.ui.gem_qwebview import GemQWebView
 
@@ -36,12 +37,12 @@ from svir.ui.gem_qwebview import GemQWebView
 class IptDialog(QDialog):
     """FIXME Docstring for IptDialog. """
 
-    def __init__(self, message_bar):
+    def __init__(self):
         super(IptDialog, self).__init__()
         self.resize(1200, self.width())
         self.gem_header_name = "Gem--Oq-Irmt-Qgis--Ipt"
         self.gem_header_value = "0.1.0"
-        self.message_bar = message_bar
+        self.message_bar = QgsMessageBar(self)
         self.python_api = PythonAPI(self.message_bar)
         self.web_view = GemQWebView(self.gem_header_name,
                                     self.gem_header_value,
@@ -53,6 +54,7 @@ class IptDialog(QDialog):
         # self.get_nrml_btn.clicked.connect(self.on_get_nrml_btn_clicked)
         self.buttonBox = QDialogButtonBox()
         self.vlayout = QVBoxLayout()
+        self.vlayout.addWidget(self.message_bar)
         self.vlayout.addWidget(self.web_view)
         self.vlayout.addWidget(self.set_example_btn)
         # self.vlayout.addWidget(self.get_nrml_btn)
