@@ -28,6 +28,7 @@ from qgis.PyQt.QtGui import (QDialog,
                              QDialogButtonBox,
                              QVBoxLayout,
                              QPushButton,
+                             QSizePolicy,
                              )
 from qgis.gui import QgsMessageBar
 from svir.third_party import requests
@@ -48,6 +49,8 @@ class IptDialog(QDialog):
                                     self.gem_header_value,
                                     self.python_api,
                                     self.message_bar)
+        self.web_view.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,
+                                                QSizePolicy.MinimumExpanding))
         self.set_example_btn = QPushButton("Set example")
         self.set_example_btn.clicked.connect(self.on_set_example_btn_clicked)
         # self.get_nrml_btn = QPushButton("Get nrml")
