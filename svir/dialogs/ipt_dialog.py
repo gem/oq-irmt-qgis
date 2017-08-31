@@ -38,6 +38,7 @@ class IptDialog(QDialog):
 
     def __init__(self, message_bar):
         super(IptDialog, self).__init__()
+        self.resize(1200, self.width())
         self.gem_header_name = "Gem--Oq-Irmt-Qgis--Ipt"
         self.gem_header_value = "0.1.0"
         self.message_bar = message_bar
