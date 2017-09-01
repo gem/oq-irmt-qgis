@@ -50,7 +50,6 @@ class GemQWebView(QWebView):
 
         self.webpage = QWebPage()
         self.network_access_manager = GemQNetworkAccessManager(self)
-        #     gem_header_name, gem_header_value)
         self.setPage(self.webpage)
         self.webpage.setNetworkAccessManager(self.network_access_manager)
         self.settings().setAttribute(QWebSettings.JavascriptEnabled, True)
@@ -84,18 +83,6 @@ class GemQWebView(QWebView):
 
 
 class GemQNetworkAccessManager(QNetworkAccessManager):
-
-    # def __init__(self, gem_header_name, gem_header_value):
-    #     super(GemQNetworkAccessManager, self).__init__()
-
-    # def set_header(self, request):
-    #     request.setRawHeader(self.gem_header_name, self.gem_header_value)
-    #     return request
-
-    # def createRequest(self, op, req, outgoingData):
-    #     req = self.set_header(req)
-    #     return super(GemQNetworkAccessManager, self).createRequest(
-    #         op, req, outgoingData)
 
     def createRequest(self, op, req, outgoingData):
         req = self.parent().add_header_to_request(req)
