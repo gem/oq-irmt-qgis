@@ -26,8 +26,9 @@
 
 
 from qgis.PyQt.QtWebKit import QWebView, QWebPage, QWebSettings
-from qgis.PyQt.QtNetwork import QNetworkRequest, QNetworkAccessManager
-from qgis.PyQt.QtCore import QUrl
+# from qgis.PyQt.QtNetwork import QNetworkRequest, QNetworkAccessManager
+from qgis.PyQt.QtNetwork import QNetworkAccessManager
+# from qgis.PyQt.QtCore import QUrl
 
 # # uncomment to turn on developer tools in webkit so we can get at the
 # # javascript console for debugging (it causes segfaults in tests, so it has
@@ -47,9 +48,9 @@ class GemQWebView(QWebView):
 
         super(GemQWebView, self).__init__()
 
-        self.clickpos = None
         self.webpage = QWebPage()
         self.network_access_manager = GemQNetworkAccessManager(self)
+        #     gem_header_name, gem_header_value)
         self.setPage(self.webpage)
         self.webpage.setNetworkAccessManager(self.network_access_manager)
         self.settings().setAttribute(QWebSettings.JavascriptEnabled, True)
@@ -65,73 +66,6 @@ class GemQWebView(QWebView):
         # accessible when loading new URLs.
         self.frame.javaScriptWindowObjectCleared.connect(self.load_python_api)
 
-        # NOTE: without the following line, linkClicked is not emitted, but
-        # we would need to delegate only one specific link!
-        self.page().setLinkDelegationPolicy(QWebPage.DelegateAllLinks)
-
-        self.page().linkClicked.connect(self.on_linkClicked)
-        open_link_action = self.pageAction(QWebPage.OpenLink)
-        open_link_action.triggered.disconnect()
-        open_link_action.triggered.connect(self.on_OpenLink)
-        open_in_new_win_action = self.pageAction(
-            QWebPage.OpenLinkInNewWindow)
-        open_in_new_win_action.triggered.disconnect()
-        # open_in_new_win_action.setEnabled(False)
-        open_in_new_win_action.triggered.connect(self.display_disabled)
-        back_action = self.pageAction(QWebPage.Back)
-        back_action.triggered.disconnect()
-        # back_action.setEnabled(False)
-        back_action.triggered.connect(self.display_disabled)
-        forward_action = self.pageAction(QWebPage.Forward)
-        forward_action.triggered.disconnect()
-        # forward_action.setEnabled(False)
-        forward_action.triggered.connect(self.display_disabled)
-        self.urlChanged[QUrl].connect(self.on_urlChanged)
-
-        self.page().linkHovered.connect(self.on_linkHovered)
-
-    def load(self, *args, **kwargs):
-        if isinstance(args[0], QNetworkRequest):
-            request = args[0]
-            request = self.set_header(request)
-            args = list(args)
-            args[0] = request
-            super(GemQWebView, self).load(*args, **kwargs)
-        elif isinstance(args[0], QUrl):
-            qurl = args[0]
-            request = self.build_request(qurl)
-            super(GemQWebView, self).load(request, **kwargs)
-        else:
-            print("Unexpected args")
-            super(GemQWebView, self).load(*args, **kwargs)
-
-    # def acceptNavigationRequest(self, frame, request, type):
-    #     print('Navigation Request:', request.url())
-    #     return False
-
-    def contextMenuEvent(self, event):
-        self.clickpos = event.pos()
-        super(GemQWebView, self).contextMenuEvent(event)
-
-    def mousePressEvent(self, event):
-        self.clickpos = event.pos()
-        super(GemQWebView, self).mousePressEvent(event)
-
-    # def event(self, *args, **kwargs):
-    #     print("ARGS: %s" % args)
-    #     print("KWARGS: %s" % kwargs)
-    #     super(GemQWebView, self).event(*args, **kwargs)
-
-    def build_request(self, qurl):
-        request = QNetworkRequest()
-        request.setUrl(qurl)
-        request = self.set_header(request)
-        return request
-
-    def set_header(self, request):
-        request.setRawHeader(self.gem_header_name, self.gem_header_value)
-        return request
-
     def load_python_api(self):
         # add pyapi to javascript window object
         # slots can be accessed in either of the following ways -
@@ -139,63 +73,31 @@ class GemQWebView(QWebView):
         #   2.  var obj = pyapi.json_decode(json)
         self.frame.addToJavaScriptWindowObject('pyapi', self.python_api)
 
-    def on_linkClicked(self, qurl):
-        self.load(qurl)
-        # print('Downloaded file:')
-        # resp = requests.get(url.toString())
-        # print(resp.content)
-
-    def on_OpenLink(self):
-        main_frame = self.page().mainFrame()
-        qurl = main_frame.hitTestContent(self.clickpos).linkUrl()
-        self.load(qurl)
-
     # on window.open(link), force window.open(link, "_self")
     # i.e., open all links in the same page
     def createWindow(self, window_type):
         return self
 
-    def display_disabled(self):
-        self.message_bar.pushMessage(
-            'The requested functionality is disabled.')
-
-    # def on_OpenLinkInNewWindow(self):
-    #     pass
-
-    # def on_Back(self):
-    #     pass
-
-    # def on_Forward(self):
-    #     pass
-
-    def on_urlChanged(self, url):
-        pass
-        # print(url)
-
-    def on_linkHovered(self, link, title, text_content):
-        pass
-        # print(link)
-
-
-# class GemQWebPage(QWebPage):
-    # pass
-
-    # def acceptNavigationRequest(self, frame, request, type):
-    #     print('Navigation Request:', request.url())
-    #     print('Parent:', self.parent())
-    #     print('Type: ', type)
-    #     # if type == QWebPage.NavigationTypeOther:
-    #     #     request = self.parent().set_header(request)
-    #     #     self.parent().load(request)
-    #     #     return False
-    #     request = self.parent().set_header(request)
-    #     return super(GemQWebPage, self).acceptNavigationRequest(
-    #         frame, request, type)
+    def add_header_to_request(self, request):
+        request.setRawHeader(self.gem_header_name, self.gem_header_value)
+        return request
 
 
 class GemQNetworkAccessManager(QNetworkAccessManager):
 
+    # def __init__(self, gem_header_name, gem_header_value):
+    #     super(GemQNetworkAccessManager, self).__init__()
+
+    # def set_header(self, request):
+    #     request.setRawHeader(self.gem_header_name, self.gem_header_value)
+    #     return request
+
+    # def createRequest(self, op, req, outgoingData):
+    #     req = self.set_header(req)
+    #     return super(GemQNetworkAccessManager, self).createRequest(
+    #         op, req, outgoingData)
+
     def createRequest(self, op, req, outgoingData):
-        req = self.parent().set_header(req)
+        req = self.parent().add_header_to_request(req)
         return super(GemQNetworkAccessManager, self).createRequest(
             op, req, outgoingData)
