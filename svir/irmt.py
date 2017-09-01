@@ -150,6 +150,9 @@ class Irmt:
 
         # avoid dialog to be deleted right after showing it
         self.drive_oq_engine_server_dlg = None
+        self.ipt_dlg = None
+        self.taxtweb_dlg = None
+        self.taxonomy_dlg = None
 
         # keep track of the supplemental information for each layer
         # layer_id -> {}
@@ -440,20 +443,23 @@ class Irmt:
     #     dlg.exec_()
 
     def ipt(self):
-        self.ipt_dlg = StandaloneAppDialog(
-            'ipt', 'OpenQuake Input Preparation Toolkit')
+        if self.ipt_dlg is None:
+            self.ipt_dlg = StandaloneAppDialog(
+                'ipt', 'OpenQuake Input Preparation Toolkit')
         self.ipt_dlg.show()
         self.ipt_dlg.raise_()
 
     def taxtweb(self):
-        self.taxtweb_dlg = StandaloneAppDialog(
-            'taxtweb', 'OpenQuake TaxtWEB')
+        if self.taxtweb_dlg is None:
+            self.taxtweb_dlg = StandaloneAppDialog(
+                'taxtweb', 'OpenQuake TaxtWEB')
         self.taxtweb_dlg.show()
         self.taxtweb_dlg.raise_()
 
     def taxonomy(self):
-        self.taxonomy_dlg = StandaloneAppDialog(
-            'taxonomy', 'OpenQuake Taxonomy')
+        if self.taxonomy_dlg is None:
+            self.taxonomy_dlg = StandaloneAppDialog(
+                'taxonomy', 'OpenQuake Taxonomy')
         self.taxonomy_dlg.show()
         self.taxonomy_dlg.raise_()
 
