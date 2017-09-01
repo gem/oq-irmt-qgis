@@ -25,7 +25,6 @@
 import json
 from qgis.PyQt.QtCore import QUrl, QObject, pyqtSlot
 from qgis.PyQt.QtGui import (QDialog,
-                             QDialogButtonBox,
                              QVBoxLayout,
                              QPushButton,
                              QSizePolicy,
@@ -70,18 +69,15 @@ class StandaloneAppDialog(QDialog):
         self.set_example_btn.clicked.connect(self.on_set_example_btn_clicked)
         # self.get_nrml_btn = QPushButton("Get nrml")
         # self.get_nrml_btn.clicked.connect(self.on_get_nrml_btn_clicked)
-        self.buttonBox = QDialogButtonBox()
         self.vlayout = QVBoxLayout()
         self.vlayout.addWidget(self.message_bar)
         self.vlayout.addWidget(self.web_view)
         if app_name == 'ipt':
             self.vlayout.addWidget(self.set_example_btn)
         # self.vlayout.addWidget(self.get_nrml_btn)
-        self.vlayout.addWidget(self.buttonBox)
         self.setLayout(self.vlayout)
         self.setWindowTitle(self.app_descr)
 
-        self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         qurl = QUrl(
             # FIXME: loading a page that offers a link to download a small txt
             # 'http://www.sample-videos.com/download-sample-text-file.php')
