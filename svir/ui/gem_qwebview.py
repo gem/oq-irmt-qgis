@@ -25,14 +25,13 @@
 """
 
 
-from qgis.PyQt.QtWebKit import QWebView, QWebPage
-from qgis.PyQt.QtNetwork import QNetworkRequest
+from qgis.PyQt.QtWebKit import QWebView, QWebPage, QWebSettings
+from qgis.PyQt.QtNetwork import QNetworkRequest, QNetworkAccessManager
 from qgis.PyQt.QtCore import QUrl
 
 # # uncomment to turn on developer tools in webkit so we can get at the
 # # javascript console for debugging (it causes segfaults in tests, so it has
 # # to be kept disabled while it is not used for debugging).
-# from qgis.PyQt.QtWebKit import QWebSettings
 # QWebSettings.globalSettings().setAttribute(
 #     QWebSettings.DeveloperExtrasEnabled, True)
 
@@ -49,6 +48,13 @@ class GemQWebView(QWebView):
         super(GemQWebView, self).__init__()
 
         self.clickpos = None
+        self.webpage = QWebPage()
+        self.network_access_manager = GemQNetworkAccessManager(self)
+        self.setPage(self.webpage)
+        self.webpage.setNetworkAccessManager(self.network_access_manager)
+        self.settings().setAttribute(QWebSettings.JavascriptEnabled, True)
+        self.settings().setAttribute(
+            QWebSettings.JavascriptCanOpenWindows, True)
 
         self.frame = self.page().mainFrame()
         # javaScriptWindowObjectCleared is emitted whenever the global window
@@ -88,11 +94,13 @@ class GemQWebView(QWebView):
         if isinstance(args[0], QNetworkRequest):
             request = args[0]
             request = self.set_header(request)
-            super(GemQWebView, self).load(request)
+            args = list(args)
+            args[0] = request
+            super(GemQWebView, self).load(*args, **kwargs)
         elif isinstance(args[0], QUrl):
             qurl = args[0]
             request = self.build_request(qurl)
-            super(GemQWebView, self).load(request)
+            super(GemQWebView, self).load(request, **kwargs)
         else:
             print("Unexpected args")
             super(GemQWebView, self).load(*args, **kwargs)
@@ -104,6 +112,10 @@ class GemQWebView(QWebView):
     def contextMenuEvent(self, event):
         self.clickpos = event.pos()
         super(GemQWebView, self).contextMenuEvent(event)
+
+    def mousePressEvent(self, event):
+        self.clickpos = event.pos()
+        super(GemQWebView, self).mousePressEvent(event)
 
     # def event(self, *args, **kwargs):
     #     print("ARGS: %s" % args)
@@ -138,6 +150,11 @@ class GemQWebView(QWebView):
         qurl = main_frame.hitTestContent(self.clickpos).linkUrl()
         self.load(qurl)
 
+    # on window.open(link), force window.open(link, "_self")
+    # i.e., open all links in the same page
+    def createWindow(self, window_type):
+        return self
+
     def display_disabled(self):
         self.message_bar.pushMessage(
             'The requested functionality is disabled.')
@@ -158,3 +175,27 @@ class GemQWebView(QWebView):
     def on_linkHovered(self, link, title, text_content):
         pass
         # print(link)
+
+
+# class GemQWebPage(QWebPage):
+    # pass
+
+    # def acceptNavigationRequest(self, frame, request, type):
+    #     print('Navigation Request:', request.url())
+    #     print('Parent:', self.parent())
+    #     print('Type: ', type)
+    #     # if type == QWebPage.NavigationTypeOther:
+    #     #     request = self.parent().set_header(request)
+    #     #     self.parent().load(request)
+    #     #     return False
+    #     request = self.parent().set_header(request)
+    #     return super(GemQWebPage, self).acceptNavigationRequest(
+    #         frame, request, type)
+
+
+class GemQNetworkAccessManager(QNetworkAccessManager):
+
+    def createRequest(self, op, req, outgoingData):
+        req = self.parent().set_header(req)
+        return super(GemQNetworkAccessManager, self).createRequest(
+            op, req, outgoingData)
