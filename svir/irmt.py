@@ -451,15 +451,19 @@ class Irmt:
 
     def taxtweb(self):
         if self.taxtweb_dlg is None:
+            self.instantiate_taxonomy_dlg()
             self.taxtweb_dlg = StandaloneAppDialog(
-                'taxtweb', 'OpenQuake TaxtWEB')
+                'taxtweb', 'OpenQuake TaxtWEB', self.taxonomy_dlg)
         self.taxtweb_dlg.show()
         self.taxtweb_dlg.raise_()
 
-    def taxonomy(self):
+    def instantiate_taxonomy_dlg(self):
         if self.taxonomy_dlg is None:
             self.taxonomy_dlg = StandaloneAppDialog(
                 'taxonomy', 'OpenQuake Taxonomy')
+
+    def taxonomy(self):
+        self.instantiate_taxonomy_dlg()
         self.taxonomy_dlg.show()
         self.taxonomy_dlg.raise_()
 

@@ -14,19 +14,21 @@
                 if (typeof pyapi == 'undefined') {
                     alert("Called by normal browser")
                 } else {
-                    pyapi.notify_click();
-                    alert("Called by QGIS")
-                    console.info("1 + 2 = " + pyapi.add(1, 2));
-                    var strlist = ['a', 'b', 'c'];
-                    console.info(pyapi.concat(strlist));
-                    var jsobj = {
-                        a: 1,
-                        b: 'test',
-                        c: 1.23
-                    };
-                    var json = pyapi.json_encode(jsobj);
-                    console.info(json);
-                    console.info(pyapi.json_decode(json));
+                    <!-- pyapi.notify_click(); -->
+                    <!-- alert("Called by QGIS") -->
+                    <!-- console.info("1 + 2 = " + pyapi.add(1, 2)); -->
+                    <!-- var strlist = ['a', 'b', 'c']; -->
+                    <!-- console.info(pyapi.concat(strlist)); -->
+                    <!-- var jsobj = { -->
+                    <!--     a: 1, -->
+                    <!--     b: 'test', -->
+                    <!--     c: 1.23 -->
+                    <!-- }; -->
+                    <!-- var json = pyapi.json_encode(jsobj); -->
+                    <!-- console.info(json); -->
+                    <!-- console.info(pyapi.json_decode(json)); -->
+                    var url = 'http://localhost:8800/taxonomy/height-of-ground-floor-level-above-grade-unknown--hf99';
+                    pyapi.point_to_taxonomy(url);
                 }
             });
         });

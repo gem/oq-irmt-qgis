@@ -37,23 +37,28 @@ from svir.ui.gem_qwebview import GemQWebView
 class StandaloneAppDialog(QDialog):
     """FIXME Docstring for StandaloneAppDialog. """
 
-    def __init__(self, app_name, app_descr):
+    def __init__(self, app_name, app_descr, taxonomy_dlg=None):
         super(StandaloneAppDialog, self).__init__()
 
         self.message_bar = QgsMessageBar(self)
         self.app_name = app_name
         self.app_descr = app_descr
+        self.taxonomy_dlg = taxonomy_dlg
         if app_name == 'ipt':
             self.python_api = IptPythonApi(self.message_bar)
-            self.gem_header_name = "Gem--Oq-Irmt-Qgis--Ipt"
+            self.gem_header_name = "Gem--Qgis-Oq-Irmt--Ipt"
             self.gem_header_value = "0.1.0"
         elif app_name == 'taxtweb':
-            self.python_api = TaxtwebPythonApi(self.message_bar)
-            self.gem_header_name = "Gem--Oq-Irmt-Qgis--Taxtweb"
+            # sanity check (we need a reference to the taxonomy dialog, to
+            # point to taxonomies selected in the TaxtWEB app)
+            assert(self.taxonomy_dlg is not None)
+            self.python_api = TaxtwebPythonApi(
+                self.message_bar, self.taxonomy_dlg)
+            self.gem_header_name = "Gem--Qgis-Oq-Irmt--Taxtweb"
             self.gem_header_value = "0.1.0"
         elif app_name == 'taxonomy':
             self.python_api = TaxonomyPythonApi(self.message_bar)
-            self.gem_header_name = "Gem--Oq-Irmt-Qgis--Taxonomy"
+            self.gem_header_name = "Gem--Qgis-Oq-Irmt--Taxonomy"
             self.gem_header_value = "0.1.0"
         else:
             raise NotImplementedError(app_name)
@@ -79,10 +84,13 @@ class StandaloneAppDialog(QDialog):
         self.setWindowTitle(self.app_descr)
 
         qurl = QUrl(
-            # FIXME: loading a page that offers a link to download a small txt
+            # EXAMPLES: loading a page with a link to download a small txt
             # 'http://www.sample-videos.com/download-sample-text-file.php')
             # 'https://platform.openquake.org/ipt')
             'http://localhost:8800/%s' % self.app_name)
+        # # Uncomment to use the dummy example instead
+        # if self.app_name == 'taxtweb':
+        #     qurl = QUrl('http://localhost:8000')
         self.web_view.load(qurl)
 
         # downloadRequested(QNetworkRequest) is a signal that is triggered in
@@ -147,13 +155,21 @@ class IptPythonApi(QObject):
 
 
 class TaxtwebPythonApi(QObject):
-    def __init__(self, message_bar):
+    def __init__(self, message_bar, taxonomy_dlg):
         super(TaxtwebPythonApi, self).__init__()
         self.message_bar = message_bar
+        self.taxonomy_dlg = taxonomy_dlg
 
     @pyqtSlot()
     def notify_click(self):
         self.message_bar.pushMessage('Clicked!')
+
+    @pyqtSlot(str)
+    def point_to_taxonomy(self, url):
+        qurl = QUrl(url)
+        self.taxonomy_dlg.web_view.load(qurl)
+        self.taxonomy_dlg.show()
+        self.taxonomy_dlg.raise_()
 
 
 class TaxonomyPythonApi(QObject):
