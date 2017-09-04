@@ -11,25 +11,25 @@
     <script charset="utf-8">
         $(document).ready(function(){
             $('#mybutton').click(function(){
-                if (typeof pyapi == 'undefined') {
+                if (typeof gem_api == 'undefined') {
                     alert("Called by normal browser")
                 } else {
-                    <!-- pyapi.notify_click(); -->
+                    gem_api.notify_click();
                     <!-- alert("Called by QGIS") -->
-                    <!-- console.info("1 + 2 = " + pyapi.add(1, 2)); -->
+                    <!-- console.info("1 + 2 = " + gem_api.add(1, 2)); -->
                     <!-- var strlist = ['a', 'b', 'c']; -->
-                    <!-- console.info(pyapi.concat(strlist)); -->
+                    <!-- console.info(gem_api.concat(strlist)); -->
                     <!-- var jsobj = { -->
                     <!--     a: 1, -->
                     <!--     b: 'test', -->
                     <!--     c: 1.23 -->
                     <!-- }; -->
-                    <!-- var json = pyapi.json_encode(jsobj); -->
+                    <!-- var json = gem_api.json_encode(jsobj); -->
                     <!-- console.info(json); -->
-                    <!-- console.info(pyapi.json_decode(json)); -->
-                    <!-- var url = 'http://localhost:8800/taxonomy/height-of-ground-floor-level-above-grade-unknown--hf99'; -->
-                    pyapi.point_to_taxonomy(url);
+                    <!-- console.info(gem_api.json_decode(json)); -->
                     var url = 'http://localhost:8800/taxonomy/height-of-ground-floor-level-above-grade-unknown--hf99';
+                    gem_api.point_to_taxonomy(url);
+                    <!-- var url = 'http://localhost:8800/taxonomy/height-of-ground-floor-level-above-grade-unknown--hf99'; -->
                     <!-- window.open(url); -->
                     <!-- <1!-- window.open("https://www.w3schools.com"); --1> -->
                 }

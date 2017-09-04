@@ -25,10 +25,8 @@
 """
 
 
-from qgis.PyQt.QtWebKit import QWebView, QWebPage, QWebSettings
-# from qgis.PyQt.QtNetwork import QNetworkRequest, QNetworkAccessManager
-from qgis.PyQt.QtNetwork import QNetworkAccessManager
-# from qgis.PyQt.QtCore import QUrl
+from qgis.PyQt.QtWebKit import QWebView, QWebSettings
+from qgis.PyQt.QtNetwork import QNetworkAccessManager, QNetworkCookieJar
 
 # # uncomment to turn on developer tools in webkit so we can get at the
 # # javascript console for debugging (it causes segfaults in tests, so it has
@@ -39,19 +37,15 @@ from qgis.PyQt.QtNetwork import QNetworkAccessManager
 
 class GemQWebView(QWebView):
 
-    def __init__(self, gem_header_name, gem_header_value, python_api,
-                 message_bar):
+    def __init__(self, gem_header_name, gem_header_value, gem_api):
         self.gem_header_name = gem_header_name
         self.gem_header_value = gem_header_value
-        self.python_api = python_api
-        self.message_bar = message_bar
+        self.gem_api = gem_api
 
         super(GemQWebView, self).__init__()
 
-        self.webpage = QWebPage()
-        self.network_access_manager = GemQNetworkAccessManager(self)
-        self.setPage(self.webpage)
-        self.webpage.setNetworkAccessManager(self.network_access_manager)
+        self.page().setNetworkAccessManager(GemQNetworkAccessManager(self))
+        self.page().networkAccessManager().setCookieJar(QNetworkCookieJar())
         self.settings().setAttribute(QWebSettings.JavascriptEnabled, True)
         self.settings().setAttribute(
             QWebSettings.JavascriptCanOpenWindows, True)
@@ -63,14 +57,14 @@ class GemQWebView(QWebView):
         # using addToJavaScriptWindowObject(), you should add them in a slot
         # connected to this signal. This ensures that your objects remain
         # accessible when loading new URLs.
-        self.frame.javaScriptWindowObjectCleared.connect(self.load_python_api)
+        self.frame.javaScriptWindowObjectCleared.connect(self.load_gem_api)
 
-    def load_python_api(self):
+    def load_gem_api(self):
         # add pyapi to javascript window object
         # slots can be accessed in either of the following ways -
         #   1.  var obj = window.pyapi.json_decode(json);
         #   2.  var obj = pyapi.json_decode(json)
-        self.frame.addToJavaScriptWindowObject('pyapi', self.python_api)
+        self.frame.addToJavaScriptWindowObject('gem_api', self.gem_api)
 
     # on window.open(link), force window.open(link, "_self")
     # i.e., open all links in the same page

@@ -30,7 +30,6 @@ from qgis.PyQt.QtGui import (QDialog,
                              QSizePolicy,
                              )
 from qgis.gui import QgsMessageBar
-from svir.third_party import requests
 from svir.ui.gem_qwebview import GemQWebView
 
 
@@ -45,19 +44,19 @@ class StandaloneAppDialog(QDialog):
         self.app_descr = app_descr
         self.taxonomy_dlg = taxonomy_dlg
         if app_name == 'ipt':
-            self.python_api = IptPythonApi(self.message_bar)
+            self.gem_api = IptPythonApi(self.message_bar)
             self.gem_header_name = "Gem--Qgis-Oq-Irmt--Ipt"
             self.gem_header_value = "0.1.0"
         elif app_name == 'taxtweb':
             # sanity check (we need a reference to the taxonomy dialog, to
             # point to taxonomies selected in the TaxtWEB app)
             assert(self.taxonomy_dlg is not None)
-            self.python_api = TaxtwebPythonApi(
+            self.gem_api = TaxtwebPythonApi(
                 self.message_bar, self.taxonomy_dlg)
             self.gem_header_name = "Gem--Qgis-Oq-Irmt--Taxtweb"
             self.gem_header_value = "0.1.0"
         elif app_name == 'taxonomy':
-            self.python_api = TaxonomyPythonApi(self.message_bar)
+            self.gem_api = TaxonomyPythonApi(self.message_bar)
             self.gem_header_name = "Gem--Qgis-Oq-Irmt--Taxonomy"
             self.gem_header_value = "0.1.0"
         else:
@@ -66,72 +65,39 @@ class StandaloneAppDialog(QDialog):
         self.resize(1200, self.width())
         self.web_view = GemQWebView(self.gem_header_name,
                                     self.gem_header_value,
-                                    self.python_api,
-                                    self.message_bar)
+                                    self.gem_api)
         self.web_view.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,
                                                 QSizePolicy.MinimumExpanding))
         self.set_example_btn = QPushButton("Set example")
         self.set_example_btn.clicked.connect(self.on_set_example_btn_clicked)
-        # self.get_nrml_btn = QPushButton("Get nrml")
-        # self.get_nrml_btn.clicked.connect(self.on_get_nrml_btn_clicked)
         self.vlayout = QVBoxLayout()
         self.vlayout.addWidget(self.message_bar)
         self.vlayout.addWidget(self.web_view)
         if app_name == 'ipt':
             self.vlayout.addWidget(self.set_example_btn)
-        # self.vlayout.addWidget(self.get_nrml_btn)
         self.setLayout(self.vlayout)
         self.setWindowTitle(self.app_descr)
 
-        qurl = QUrl(
-            # EXAMPLES: loading a page with a link to download a small txt
-            # 'http://www.sample-videos.com/download-sample-text-file.php')
-            # 'https://platform.openquake.org/ipt')
-            'http://localhost:8800/%s' % self.app_name)
+        qurl = QUrl('http://localhost:8800/%s' % self.app_name)
         # # Uncomment to use the dummy example instead
         # if self.app_name == 'taxtweb':
         #     qurl = QUrl('http://localhost:8000')
         self.web_view.load(qurl)
 
-        # downloadRequested(QNetworkRequest) is a signal that is triggered in
-        # the web page when the user right-clicks on a link and chooses "save
-        # link as". Instead of proceeding with the normal workflow (asking the
-        # user where to save the file) the control is passed to
-        # self.on_downloadRequested, that retrieves the file and
-        # prints its contents
-        self.web_view.page().downloadRequested.connect(
-            self.on_downloadRequested)
-
-    def on_downloadRequested(self, request):
-        print('Downloaded file:')
-        resp = requests.get(request.url().toString())
-        print(resp.content)
-
     def on_set_example_btn_clicked(self):
-        qurl = QUrl(
-            'http://localhost:8800/ipt?tab_id=1&example_id=99')
+        qurl = QUrl('http://localhost:8800/ipt?tab_id=1&example_id=99')
         self.web_view.load(qurl)
 
-    # def on_get_nrml_btn_clicked(self):
-    #     main_frame = self.web_view.page().mainFrame()
-    #     nrml_textarea = main_frame.findFirstElement("#textareaex")
-    #     nrml = nrml_textarea.evaluateJavaScript("this.value")
-    #     print(nrml)
 
-
-class IptPythonApi(QObject):
-
+class GemApi(QObject):
     def __init__(self, message_bar):
-        super(IptPythonApi, self).__init__()
+        super(GemApi, self).__init__()
         self.message_bar = message_bar
 
+    # return the sum of two integers
     @pyqtSlot(int, int, result=int)
     def add(self, a, b):
         return a + b
-
-    @pyqtSlot()
-    def notify_click(self):
-        self.message_bar.pushMessage('Clicked!')
 
     # take a list of strings and return a string
     # because of setapi line above, we get a list of python strings as input
@@ -153,16 +119,20 @@ class IptPythonApi(QObject):
     def json_decode(self, jsstr):
         return json.loads(jsstr)
 
-
-class TaxtwebPythonApi(QObject):
-    def __init__(self, message_bar, taxonomy_dlg):
-        super(TaxtwebPythonApi, self).__init__()
-        self.message_bar = message_bar
-        self.taxonomy_dlg = taxonomy_dlg
-
     @pyqtSlot()
     def notify_click(self):
         self.message_bar.pushMessage('Clicked!')
+
+
+class IptPythonApi(GemApi):
+    pass
+
+
+class TaxtwebPythonApi(GemApi):
+    def __init__(self, message_bar, taxonomy_dlg):
+        super(TaxtwebPythonApi, self).__init__(message_bar)
+        self.message_bar = message_bar
+        self.taxonomy_dlg = taxonomy_dlg
 
     @pyqtSlot(str)
     def point_to_taxonomy(self, url):
@@ -172,11 +142,5 @@ class TaxtwebPythonApi(QObject):
         self.taxonomy_dlg.raise_()
 
 
-class TaxonomyPythonApi(QObject):
-    def __init__(self, message_bar):
-        super(TaxonomyPythonApi, self).__init__()
-        self.message_bar = message_bar
-
-    @pyqtSlot()
-    def notify_click(self):
-        self.message_bar.pushMessage('Clicked!')
+class TaxonomyPythonApi(GemApi):
+    pass
