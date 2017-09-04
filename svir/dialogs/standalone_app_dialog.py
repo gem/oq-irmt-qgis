@@ -79,9 +79,11 @@ class StandaloneAppDialog(QDialog):
         self.setWindowTitle(self.app_descr)
 
         qurl = QUrl('http://localhost:8800/%s' % self.app_name)
+
         # # Uncomment to use the dummy example instead
         # if self.app_name == 'taxtweb':
         #     qurl = QUrl('http://localhost:8000')
+
         self.web_view.load(qurl)
 
     def on_set_example_btn_clicked(self):
@@ -89,10 +91,12 @@ class StandaloneAppDialog(QDialog):
         self.web_view.load(qurl)
 
 
-class GemApi(QObject):
-    def __init__(self, message_bar):
-        super(GemApi, self).__init__()
+class CommonApi(QObject):
+    def __init__(self, parent, message_bar):
+        super(CommonApi, self).__init__(parent)
         self.message_bar = message_bar
+        self.setObjectName("common")
+        self.dummy_property = 10
 
     # return the sum of two integers
     @pyqtSlot(int, int, result=int)
@@ -121,7 +125,29 @@ class GemApi(QObject):
 
     @pyqtSlot()
     def notify_click(self):
-        self.message_bar.pushMessage('Clicked!')
+        self.info("Clicked!")
+
+    @pyqtSlot(str)
+    def info(self, message):
+        self.message_bar.pushMessage(message, level=QgsMessageBar.INFO)
+
+    @pyqtSlot(str)
+    def warning(self, message):
+        self.message_bar.pushMessage(message, level=QgsMessageBar.WARNING)
+
+    @pyqtSlot(str)
+    def error(self, message):
+        self.message_bar.pushMessage(message, level=QgsMessageBar.CRITICAL)
+
+    @pyqtSlot(result=int)
+    def dummy_property_get(self):
+        return self.dummy_property
+
+
+class GemApi(QObject):
+    def __init__(self, message_bar):
+        super(GemApi, self).__init__()
+        self.common = CommonApi(self, message_bar)
 
 
 class IptPythonApi(GemApi):

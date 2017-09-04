@@ -14,19 +14,19 @@
                 if (typeof gem_api == 'undefined') {
                     alert("Called by normal browser")
                 } else {
-                    gem_api.notify_click();
+                    gem_api.common.notify_click();
                     <!-- alert("Called by QGIS") -->
-                    <!-- console.info("1 + 2 = " + gem_api.add(1, 2)); -->
+                    <!-- console.info("1 + 2 = " + gem_api.common.add(1, 2)); -->
                     <!-- var strlist = ['a', 'b', 'c']; -->
-                    <!-- console.info(gem_api.concat(strlist)); -->
+                    <!-- console.info(gem_api.common.concat(strlist)); -->
                     <!-- var jsobj = { -->
                     <!--     a: 1, -->
                     <!--     b: 'test', -->
                     <!--     c: 1.23 -->
                     <!-- }; -->
-                    <!-- var json = gem_api.json_encode(jsobj); -->
+                    <!-- var json = gem_api.common.json_encode(jsobj); -->
                     <!-- console.info(json); -->
-                    <!-- console.info(gem_api.json_decode(json)); -->
+                    <!-- console.info(gem_api.common.json_decode(json)); -->
                     var url = 'http://localhost:8800/taxonomy/height-of-ground-floor-level-above-grade-unknown--hf99';
                     gem_api.point_to_taxonomy(url);
                     <!-- var url = 'http://localhost:8800/taxonomy/height-of-ground-floor-level-above-grade-unknown--hf99'; -->
