@@ -26,7 +26,11 @@
 
 
 from qgis.PyQt.QtWebKit import QWebView, QWebSettings
-from qgis.PyQt.QtNetwork import QNetworkAccessManager, QNetworkCookieJar
+from qgis.PyQt.QtNetwork import (QNetworkAccessManager,
+                                 QNetworkCookieJar,
+                                 QNetworkCookie,
+                                 )
+from qgis.PyQt.QtCore import QMutex, QMutexLocker, QSettings, QByteArray
 
 # # uncomment to turn on developer tools in webkit so we can get at the
 # # javascript console for debugging (it causes segfaults in tests, so it has
@@ -45,7 +49,6 @@ class GemQWebView(QWebView):
         super(GemQWebView, self).__init__()
 
         self.page().setNetworkAccessManager(GemQNetworkAccessManager(self))
-        self.page().networkAccessManager().setCookieJar(QNetworkCookieJar())
         self.settings().setAttribute(QWebSettings.JavascriptEnabled, True)
         self.settings().setAttribute(
             QWebSettings.JavascriptCanOpenWindows, True)
@@ -78,7 +81,47 @@ class GemQWebView(QWebView):
 
 class GemQNetworkAccessManager(QNetworkAccessManager):
 
+    def __init__(self, parent=None):
+        super(GemQNetworkAccessManager, self).__init__(parent)
+        self.setCookieJar(PersistentCookieJar())
+
     def createRequest(self, op, req, outgoingData):
         req = self.parent().add_header_to_request(req)
         return super(GemQNetworkAccessManager, self).createRequest(
             op, req, outgoingData)
+
+
+# Inspired by:
+# https://stackoverflow.com/questions/13971787/how-do-i-save-cookies-with-qt
+class PersistentCookieJar(QNetworkCookieJar):
+    mutex = QMutex()
+
+    def __init__(self, parent=None):
+        super(PersistentCookieJar, self).__init__(parent)
+        self.load()
+
+    def cookiesForUrl(self, *args, **kwargs):
+        return super(PersistentCookieJar, self).cookiesForUrl(
+            *args, **kwargs)
+
+    def setCookiesFromUrl(self, *args, **kwargs):
+        ret_val = super(PersistentCookieJar, self).setCookiesFromUrl(
+            *args, **kwargs)
+        self.save()
+        return ret_val
+
+    def save(self):
+        with QMutexLocker(self.mutex):
+            cookies = self.allCookies()
+            data = QByteArray()
+            for cookie in cookies:
+                if not cookie.isSessionCookie():
+                    data.append(cookie.toRawForm())
+                    data.append("\n")
+            QSettings().setValue("Cookies", data)
+
+    def load(self):
+        with QMutexLocker(self.mutex):
+            data = QSettings().value("Cookies")
+            cookies = QNetworkCookie.parseCookies(data)
+            self.setAllCookies(cookies)
