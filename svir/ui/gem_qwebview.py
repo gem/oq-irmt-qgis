@@ -101,8 +101,7 @@ class PersistentCookieJar(QNetworkCookieJar):
         self.load()
 
     def cookiesForUrl(self, *args, **kwargs):
-        return super(PersistentCookieJar, self).cookiesForUrl(
-            *args, **kwargs)
+        return super(PersistentCookieJar, self).cookiesForUrl(*args, **kwargs)
 
     def setCookiesFromUrl(self, *args, **kwargs):
         ret_val = super(PersistentCookieJar, self).setCookiesFromUrl(
