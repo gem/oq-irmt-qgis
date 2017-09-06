@@ -31,6 +31,7 @@ from qgis.PyQt.QtNetwork import (QNetworkAccessManager,
                                  QNetworkCookie,
                                  )
 from qgis.PyQt.QtCore import QMutex, QMutexLocker, QSettings, QByteArray
+from qgis.PyQt.QtGui import QSizePolicy
 
 # # uncomment to turn on developer tools in webkit so we can get at the
 # # javascript console for debugging (it causes segfaults in tests, so it has
@@ -47,6 +48,11 @@ class GemQWebView(QWebView):
         self.gem_api = gem_api
 
         super(GemQWebView, self).__init__()
+
+        initial_width = 1050
+        self.resize(initial_width, self.width())
+        self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,
+                                       QSizePolicy.MinimumExpanding))
 
         self.page().setNetworkAccessManager(GemQNetworkAccessManager(self))
         self.settings().setAttribute(QWebSettings.JavascriptEnabled, True)

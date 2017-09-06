@@ -27,7 +27,6 @@ from qgis.PyQt.QtCore import QUrl, QObject, pyqtSlot
 from qgis.PyQt.QtGui import (QDialog,
                              QVBoxLayout,
                              QPushButton,
-                             QSizePolicy,
                              )
 from qgis.gui import QgsMessageBar
 from svir.ui.gem_qwebview import GemQWebView
@@ -62,12 +61,9 @@ class StandaloneAppDialog(QDialog):
         else:
             raise NotImplementedError(app_name)
 
-        self.resize(1200, self.width())
         self.web_view = GemQWebView(self.gem_header_name,
                                     self.gem_header_value,
                                     self.gem_api)
-        self.web_view.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,
-                                                QSizePolicy.MinimumExpanding))
         self.set_example_btn = QPushButton("Set example")
         self.set_example_btn.clicked.connect(self.on_set_example_btn_clicked)
         self.vlayout = QVBoxLayout()
