@@ -137,7 +137,3 @@ class GemApi(QObject):
     def __init__(self, message_bar):
         super(GemApi, self).__init__()
         self.common = CommonApi(self, message_bar)
-
-
-class TaxonomyPythonApi(GemApi):
-    pass
