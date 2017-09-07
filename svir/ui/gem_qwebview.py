@@ -49,11 +49,8 @@ class GemQWebView(QWebView):
 
         super(GemQWebView, self).__init__()
 
-        initial_width = 1050
-        self.resize(initial_width, self.width())
         self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,
                                        QSizePolicy.MinimumExpanding))
-
         self.page().setNetworkAccessManager(GemQNetworkAccessManager(self))
         self.settings().setAttribute(QWebSettings.JavascriptEnabled, True)
         self.settings().setAttribute(

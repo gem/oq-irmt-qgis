@@ -68,7 +68,9 @@ from svir.dialogs.upload_settings_dialog import UploadSettingsDialog
 from svir.dialogs.weight_data_dialog import WeightDataDialog
 from svir.dialogs.recovery_modeling_dialog import RecoveryModelingDialog
 from svir.dialogs.recovery_settings_dialog import RecoverySettingsDialog
-from svir.dialogs.standalone_app_dialog import StandaloneAppDialog
+from svir.dialogs.ipt_dialog import IptDialog
+from svir.dialogs.taxtweb_dialog import TaxtwebDialog
+from svir.dialogs.taxonomy_dialog import TaxonomyDialog
 from svir.dialogs.drive_oq_engine_server_dialog import (
     DriveOqEngineServerDialog)
 from svir.dialogs.load_ruptures_as_layer_dialog import (
@@ -211,7 +213,7 @@ class Irmt:
         # Action to drive ipt
         self.add_menu_item("ipt",
                            ":/plugins/irmt/define.svg",
-                           u"GEM Input Preparation Toolkit",
+                           u"OpenQuake Input Preparation Toolkit",
                            self.ipt,
                            enable=True,
                            submenu='OQ Engine',
@@ -219,7 +221,7 @@ class Irmt:
         # Action to drive taxtweb
         self.add_menu_item("taxtweb",
                            ":/plugins/irmt/define.svg",
-                           u"GEM TaxtWEB",
+                           u"OpenQuake TaxtWEB",
                            self.taxtweb,
                            enable=True,
                            submenu='OQ Engine',
@@ -227,7 +229,7 @@ class Irmt:
         # Action to drive taxonomy
         self.add_menu_item("taxonomy",
                            ":/plugins/irmt/define.svg",
-                           u"GEM Taxonomy",
+                           u"OpenQuake Taxonomy",
                            self.taxonomy,
                            enable=True,
                            submenu='OQ Engine',
@@ -444,23 +446,20 @@ class Irmt:
 
     def ipt(self):
         if self.ipt_dlg is None:
-            self.ipt_dlg = StandaloneAppDialog(
-                'ipt', 'OpenQuake Input Preparation Toolkit')
+            self.ipt_dlg = IptDialog()
         self.ipt_dlg.show()
         self.ipt_dlg.raise_()
 
     def taxtweb(self):
         if self.taxtweb_dlg is None:
             self.instantiate_taxonomy_dlg()
-            self.taxtweb_dlg = StandaloneAppDialog(
-                'taxtweb', 'OpenQuake TaxtWEB', self.taxonomy_dlg)
+            self.taxtweb_dlg = TaxtwebDialog(self.taxonomy_dlg)
         self.taxtweb_dlg.show()
         self.taxtweb_dlg.raise_()
 
     def instantiate_taxonomy_dlg(self):
         if self.taxonomy_dlg is None:
-            self.taxonomy_dlg = StandaloneAppDialog(
-                'taxonomy', 'OpenQuake Taxonomy')
+            self.taxonomy_dlg = TaxonomyDialog()
 
     def taxonomy(self):
         self.instantiate_taxonomy_dlg()

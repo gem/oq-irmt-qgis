@@ -26,72 +26,64 @@ import json
 from qgis.PyQt.QtCore import QUrl, QObject, pyqtSlot
 from qgis.PyQt.QtGui import (QDialog,
                              QVBoxLayout,
-                             QPushButton,
                              )
 from qgis.gui import QgsMessageBar
 from svir.ui.gem_qwebview import GemQWebView
 
 
 class StandaloneAppDialog(QDialog):
-    """FIXME Docstring for StandaloneAppDialog. """
+    """
+    Dialog to be inherited by OpenQuake standalone applications
 
-    def __init__(self, app_name, app_descr, taxonomy_dlg=None):
+    :param app_name: short name of the app as it appears in the url
+    :param app_descr: longer name to be used as the window title
+    :param gem_header_name: header that identifies that the application is
+        being driven from QGIS
+    :param gem_header_value: version of the interface between the plugin and
+        the embedded application
+    """
+
+    def __init__(self, app_name, app_descr, gem_header_name, gem_header_value):
         super(StandaloneAppDialog, self).__init__()
 
         self.message_bar = QgsMessageBar(self)
         self.app_name = app_name
         self.app_descr = app_descr
-        self.taxonomy_dlg = taxonomy_dlg
-        if app_name == 'ipt':
-            self.gem_api = IptPythonApi(self.message_bar)
-            self.gem_header_name = "Gem--Qgis-Oq-Irmt--Ipt"
-            self.gem_header_value = "0.1.0"
-        elif app_name == 'taxtweb':
-            # sanity check (we need a reference to the taxonomy dialog, to
-            # point to taxonomies selected in the TaxtWEB app)
-            assert(self.taxonomy_dlg is not None)
-            self.gem_api = TaxtwebPythonApi(
-                self.message_bar, self.taxonomy_dlg)
-            self.gem_header_name = "Gem--Qgis-Oq-Irmt--Taxtweb"
-            self.gem_header_value = "0.1.0"
-        elif app_name == 'taxonomy':
-            self.gem_api = TaxonomyPythonApi(self.message_bar)
-            self.gem_header_name = "Gem--Qgis-Oq-Irmt--Taxonomy"
-            self.gem_header_value = "0.1.0"
-        else:
-            raise NotImplementedError(app_name)
+        self.gem_header_name = gem_header_name
+        self.gem_header_value = gem_header_value
 
+    def build_gui(self):
+        self.setWindowTitle(self.app_descr)
+        self.vlayout = QVBoxLayout()
+        self.setLayout(self.vlayout)
+        self.vlayout.addWidget(self.message_bar)
         self.web_view = GemQWebView(self.gem_header_name,
                                     self.gem_header_value,
                                     self.gem_api)
-        self.set_example_btn = QPushButton("Set example")
-        self.set_example_btn.clicked.connect(self.on_set_example_btn_clicked)
-        self.vlayout = QVBoxLayout()
-        self.vlayout.addWidget(self.message_bar)
-        self.vlayout.addWidget(self.web_view)
-        if app_name == 'ipt':
-            self.vlayout.addWidget(self.set_example_btn)
-        self.setLayout(self.vlayout)
-        self.setWindowTitle(self.app_descr)
-
         qurl = QUrl('http://localhost:8800/%s' % self.app_name)
-
         # # Uncomment to use the dummy example instead
         # if self.app_name == 'taxtweb':
         #     qurl = QUrl('http://localhost:8000')
-
         self.web_view.load(qurl)
-
-    def on_set_example_btn_clicked(self):
-        qurl = QUrl('http://localhost:8800/ipt?tab_id=1&example_id=99')
-        self.web_view.load(qurl)
+        self.vlayout.addWidget(self.web_view)
+        initial_width = 1050
+        self.resize(initial_width, self.width())
 
 
 class CommonApi(QObject):
+    """
+    Set of shared methods that can be used by all the standalone applications.
+    To use one of these methods from javascript, you can do, e.g.:
+
+    gem_api.common.method_name(param)
+    """
+
     def __init__(self, parent, message_bar):
         super(CommonApi, self).__init__(parent)
         self.message_bar = message_bar
         self.setObjectName("common")
+        # NOTE: to access a property from javascript, a getter has to be
+        # implemeimplemented (see method dummy_property_get)
         self.dummy_property = 10
 
     # return the sum of two integers
@@ -137,6 +129,7 @@ class CommonApi(QObject):
 
     @pyqtSlot(result=int)
     def dummy_property_get(self):
+        "A getter must be defined to access instance properties"
         return self.dummy_property
 
 
@@ -144,24 +137,6 @@ class GemApi(QObject):
     def __init__(self, message_bar):
         super(GemApi, self).__init__()
         self.common = CommonApi(self, message_bar)
-
-
-class IptPythonApi(GemApi):
-    pass
-
-
-class TaxtwebPythonApi(GemApi):
-    def __init__(self, message_bar, taxonomy_dlg):
-        super(TaxtwebPythonApi, self).__init__(message_bar)
-        self.message_bar = message_bar
-        self.taxonomy_dlg = taxonomy_dlg
-
-    @pyqtSlot(str)
-    def point_to_taxonomy(self, url):
-        qurl = QUrl(url)
-        self.taxonomy_dlg.web_view.load(qurl)
-        self.taxonomy_dlg.show()
-        self.taxonomy_dlg.raise_()
 
 
 class TaxonomyPythonApi(GemApi):
