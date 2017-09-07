@@ -41,6 +41,19 @@ from qgis.PyQt.QtGui import QSizePolicy
 
 
 class GemQWebView(QWebView):
+    """
+    A modified version of QWebView, that adds to the embedded web pages a
+    header that contains information about the version of the interface between
+    the plugin and the standalone gem application that is embedded.
+    Whenever the global window object of the Javascript environment is cleared,
+    a Python API is made available to be called from the web page.
+
+    :param gem_header_name: a name like "Gem--Qgis-Oq-Irmt--Ipt", describing
+        the applications that are interacting (the plugin and the web app)
+    :param gem_header_value: the version of the API, like "0.1.0"
+    :param gem_api: the python API that can be used from Javascript to drive
+        the QGIS GUI
+    """
 
     def __init__(self, gem_header_name, gem_header_value, gem_api):
         self.gem_header_name = gem_header_name
@@ -83,6 +96,10 @@ class GemQWebView(QWebView):
 
 
 class GemQNetworkAccessManager(QNetworkAccessManager):
+    """
+    A modified version of QNetworkAccessManager, that adds a header to each
+    request and that uses a persistent cookie jar.
+    """
 
     def __init__(self, parent=None):
         super(GemQNetworkAccessManager, self).__init__(parent)
@@ -97,22 +114,24 @@ class GemQNetworkAccessManager(QNetworkAccessManager):
 # Inspired by:
 # https://stackoverflow.com/questions/13971787/how-do-i-save-cookies-with-qt
 class PersistentCookieJar(QNetworkCookieJar):
+    """
+    A modified version of QNetworkCookieJar, that saves and loads cookies
+    to/from a permanent storage (using QSettings as storage infrastructure)
+    """
+
     mutex = QMutex()
 
     def __init__(self, parent=None):
         super(PersistentCookieJar, self).__init__(parent)
-        self.load()
-
-    def cookiesForUrl(self, *args, **kwargs):
-        return super(PersistentCookieJar, self).cookiesForUrl(*args, **kwargs)
+        self.load_cookies()
 
     def setCookiesFromUrl(self, *args, **kwargs):
         ret_val = super(PersistentCookieJar, self).setCookiesFromUrl(
             *args, **kwargs)
-        self.save()
+        self.save_cookies()
         return ret_val
 
-    def save(self):
+    def save_cookies(self):
         with QMutexLocker(self.mutex):
             cookies = self.allCookies()
             data = QByteArray()
@@ -122,7 +141,7 @@ class PersistentCookieJar(QNetworkCookieJar):
                     data.append("\n")
             QSettings().setValue("Cookies", data)
 
-    def load(self):
+    def load_cookies(self):
         with QMutexLocker(self.mutex):
             data = QSettings().value("Cookies")
             cookies = QNetworkCookie.parseCookies(data)
