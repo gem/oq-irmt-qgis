@@ -61,9 +61,11 @@ class StandaloneAppDialog(QDialog):
                                     self.gem_header_value,
                                     self.gem_api)
         qurl = QUrl('http://localhost:8800/%s' % self.app_name)
+
         # # Uncomment to use the dummy example instead
         # if self.app_name == 'taxtweb':
         #     qurl = QUrl('http://localhost:8000')
+
         self.web_view.load(qurl)
         self.vlayout.addWidget(self.web_view)
         initial_width = 1050
