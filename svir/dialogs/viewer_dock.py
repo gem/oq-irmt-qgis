@@ -668,6 +668,11 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             self.iface.activeLayer().selectionChanged.disconnect(
                 self.set_selection)
         except (TypeError, AttributeError):
+            # AttributeError may occur if the signal selectionChanged has
+            # already been destroyed. In that case, we don't need to disconnect
+            # it. TypeError may occur when attempting to disconnect something
+            # that was not connected. Also in this case, we don't need to
+            # disconnect anything
             pass
 
     def set_selection(self):
