@@ -623,10 +623,14 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         if (self.iface.activeLayer() is not None
                 and self.iface.activeLayer().type() == QgsMapLayer.VectorLayer
                 and self.iface.activeLayer().geometryType() == QGis.Point):
-            self.iface.activeLayer().selectionChanged.connect(self.redraw)
+            self.iface.activeLayer().selectionChanged.connect(
+                self.set_selection)
 
             if self.output_type in ['hcurves', 'uhs']:
                 for rlz_or_stat in self.stats_multiselect.get_selected_items():
+                    self.current_selection[rlz_or_stat] = {}
+                for rlz_or_stat \
+                        in self.stats_multiselect.get_unselected_items():
                     self.current_selection[rlz_or_stat] = {}
                 self.stats_multiselect.set_selected_items([])
                 self.stats_multiselect.set_unselected_items([])
@@ -654,12 +658,15 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             elif self.output_type == 'recovery_curves':
                 fill_fields_multiselect(
                     self.fields_multiselect, self.iface.activeLayer())
+            else:  # no plots for this layer
+                self.current_selection = {}
             if self.iface.activeLayer().selectedFeatureCount() > 0:
                 self.set_selection()
 
     def remove_connects(self):
         try:
-            self.iface.activeLayer().selectionChanged.disconnect(self.redraw)
+            self.iface.activeLayer().selectionChanged.disconnect(
+                self.set_selection)
         except (TypeError, AttributeError):
             pass
 
