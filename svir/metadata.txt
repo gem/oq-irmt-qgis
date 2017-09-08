@@ -40,6 +40,8 @@ changelog=
     * The widget driving the OQ-Engine handles also the LocationParseError exception
     * One single widget loads losses_by_asset or dmg_by_asset and aggregates points by polygons taken from a zonal layer
     * When the active layer has an assigned output type, other output types can not be selected in the Data Viewer
+    * Fixed an error occurring while switching between a layer that does not use the Data Viewer and one that uses it,
+      that was caused by a missing re-initialization in a corner case
 
 # tags are comma separated with spaces allowed
 tags=GEM, IRMT, SVIR, OpenQuake, Social Vulnerability, Integrated Risk, Recovery, Resilience, Risk, Hazard, Earthquake
