@@ -37,7 +37,7 @@ class TaxonomyDialog(StandaloneAppDialog):
         gem_header_value = "0.1.0"
         super(TaxonomyDialog, self).__init__(
             app_name, app_descr, gem_header_name, gem_header_value)
-        self.gem_api = TaxonomyApi(self.message_bar)
+        self.gem_api = TaxonomyApi(self.host, self.message_bar)
         self.build_gui()
 
 

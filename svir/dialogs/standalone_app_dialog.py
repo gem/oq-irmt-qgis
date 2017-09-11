@@ -52,6 +52,9 @@ class StandaloneAppDialog(QDialog):
         self.gem_header_name = gem_header_name
         self.gem_header_value = gem_header_value
 
+        # FIXME: we should probably get it from the user settings
+        self.host = 'http://localhost:8800'
+
     def build_gui(self):
         self.setWindowTitle(self.app_descr)
         self.vlayout = QVBoxLayout()
@@ -60,7 +63,7 @@ class StandaloneAppDialog(QDialog):
         self.web_view = GemQWebView(self.gem_header_name,
                                     self.gem_header_value,
                                     self.gem_api)
-        qurl = QUrl('http://localhost:8800/%s' % self.app_name)
+        qurl = QUrl('%s/%s' % (self.host, self.app_name))
 
         # # Uncomment to use the dummy example instead
         # if self.app_name == 'taxtweb':
@@ -80,8 +83,9 @@ class CommonApi(QObject):
     gem_api.common.method_name(param)
     """
 
-    def __init__(self, parent, message_bar):
+    def __init__(self, parent, host, message_bar):
         super(CommonApi, self).__init__(parent)
+        self.host = host
         self.message_bar = message_bar
         self.setObjectName("common")
         # NOTE: to access a property from javascript, a getter has to be
@@ -136,6 +140,7 @@ class CommonApi(QObject):
 
 
 class GemApi(QObject):
-    def __init__(self, message_bar):
+    def __init__(self, host, message_bar):
         super(GemApi, self).__init__()
-        self.common = CommonApi(self, message_bar)
+        self.host = host
+        self.common = CommonApi(self, host, message_bar)

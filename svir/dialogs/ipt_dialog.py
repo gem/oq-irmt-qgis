@@ -40,7 +40,7 @@ class IptDialog(StandaloneAppDialog):
         gem_header_value = "0.1.0"
         super(IptDialog, self).__init__(
             app_name, app_descr, gem_header_name, gem_header_value)
-        self.gem_api = IptPythonApi(self.message_bar)
+        self.gem_api = IptPythonApi(self.host, self.message_bar)
         self.build_gui()
 
     def build_gui(self):
@@ -50,7 +50,8 @@ class IptDialog(StandaloneAppDialog):
         self.vlayout.addWidget(self.set_example_btn)
 
     def on_set_example_btn_clicked(self):
-        qurl = QUrl('http://localhost:8800/ipt?tab_id=1&example_id=99')
+        qurl = QUrl('%s/%s?tab_id=1&example_id=99' % (
+            self.host, self.app_name))
         self.web_view.load(qurl)
 
 

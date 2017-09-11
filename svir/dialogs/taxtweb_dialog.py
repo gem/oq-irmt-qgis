@@ -47,7 +47,8 @@ class TaxtwebDialog(StandaloneAppDialog):
         gem_header_value = "0.1.0"
         super(TaxtwebDialog, self).__init__(
             app_name, app_descr, gem_header_name, gem_header_value)
-        self.gem_api = TaxtwebApi(self.message_bar, self.taxonomy_dlg)
+        self.gem_api = TaxtwebApi(
+            self.host, self.message_bar, self.taxonomy_dlg)
         self.build_gui()
 
 
@@ -56,14 +57,13 @@ class TaxtwebApi(GemApi):
     API methods that are specific for the TaxtWEB application
     (other shared methods are defined in the CommonApi)
     """
-    def __init__(self, message_bar, taxonomy_dlg):
-        super(TaxtwebApi, self).__init__(message_bar)
-        self.message_bar = message_bar
+    def __init__(self, host, message_bar, taxonomy_dlg):
+        super(TaxtwebApi, self).__init__(host, message_bar)
         self.taxonomy_dlg = taxonomy_dlg
 
     @pyqtSlot(str)
     def point_to_taxonomy(self, url):
-        qurl = QUrl(url)
+        qurl = QUrl("%s%s" % (self.host, url))
         self.taxonomy_dlg.web_view.load(qurl)
         self.taxonomy_dlg.show()
         self.taxonomy_dlg.raise_()
