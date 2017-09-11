@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width" />
-        <title>Index</title>
+        <title>This is the title</title>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <body>
         <button id='mybutton' type="button">Click Me!</button>
@@ -11,6 +11,7 @@
     <script charset="utf-8">
         $(document).ready(function(){
             $('#mybutton').click(function(){
+                document.title = "Button was clicked";
                 if (typeof gem_api == 'undefined') {
                     alert("Called by normal browser")
                 } else {
@@ -27,7 +28,7 @@
                     <!-- var json = gem_api.common.json_encode(jsobj); -->
                     <!-- console.info(json); -->
                     <!-- console.info(gem_api.common.json_decode(json)); -->
-                    var url = 'http://localhost:8800/taxonomy/height-of-ground-floor-level-above-grade-unknown--hf99';
+                    var url = '/taxonomy/height-of-ground-floor-level-above-grade-unknown--hf99';
                     gem_api.point_to_taxonomy(url);
                     <!-- var url = 'http://localhost:8800/taxonomy/height-of-ground-floor-level-above-grade-unknown--hf99'; -->
                     <!-- window.open(url); -->

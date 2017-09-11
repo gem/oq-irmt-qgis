@@ -43,8 +43,9 @@ class StandaloneAppDialog(QDialog):
         the embedded application
     """
 
-    def __init__(self, app_name, app_descr, gem_header_name, gem_header_value):
-        super(StandaloneAppDialog, self).__init__()
+    def __init__(self, app_name, app_descr, gem_header_name, gem_header_value,
+                 parent=None):
+        super(StandaloneAppDialog, self).__init__(parent=parent)
 
         self.message_bar = QgsMessageBar(self)
         self.app_name = app_name
@@ -62,7 +63,8 @@ class StandaloneAppDialog(QDialog):
         self.vlayout.addWidget(self.message_bar)
         self.web_view = GemQWebView(self.gem_header_name,
                                     self.gem_header_value,
-                                    self.gem_api)
+                                    self.gem_api,
+                                    parent=self)
         qurl = QUrl('%s/%s' % (self.host, self.app_name))
 
         # # Uncomment to use the dummy example instead

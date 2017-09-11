@@ -30,7 +30,12 @@ from qgis.PyQt.QtNetwork import (QNetworkAccessManager,
                                  QNetworkCookieJar,
                                  QNetworkCookie,
                                  )
-from qgis.PyQt.QtCore import QMutex, QMutexLocker, QSettings, QByteArray
+from qgis.PyQt.QtCore import (QMutex,
+                              QMutexLocker,
+                              QSettings,
+                              QByteArray,
+                              pyqtSlot,
+                              )
 from qgis.PyQt.QtGui import QSizePolicy
 
 # # uncomment to turn on developer tools in webkit so we can get at the
@@ -55,12 +60,14 @@ class GemQWebView(QWebView):
         the QGIS GUI
     """
 
-    def __init__(self, gem_header_name, gem_header_value, gem_api):
+    def __init__(self, gem_header_name, gem_header_value, gem_api,
+                 parent=None):
+        self.parent = parent
         self.gem_header_name = gem_header_name
         self.gem_header_value = gem_header_value
         self.gem_api = gem_api
 
-        super(GemQWebView, self).__init__()
+        super(GemQWebView, self).__init__(parent=parent)
 
         self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,
                                        QSizePolicy.MinimumExpanding))
@@ -78,12 +85,21 @@ class GemQWebView(QWebView):
         # accessible when loading new URLs.
         self.frame.javaScriptWindowObjectCleared.connect(self.load_gem_api)
 
+        # catch the signal emitted when the title of the page is changed
+        self.titleChanged[str].connect(self.on_title_changed)
+
     def load_gem_api(self):
         # add pyapi to javascript window object
         # slots can be accessed in either of the following ways -
         #   1.  var obj = window.pyapi.json_decode(json);
         #   2.  var obj = pyapi.json_decode(json)
         self.frame.addToJavaScriptWindowObject('gem_api', self.gem_api)
+
+    @pyqtSlot(str)
+    def on_title_changed(self, title):
+        # get the changed title of the web page and set the window title of the
+        # parent widget to the same string
+        self.parent.setWindowTitle(title)
 
     # on window.open(link), force window.open(link, "_self")
     # i.e., open all links in the same page
