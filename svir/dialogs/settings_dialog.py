@@ -68,6 +68,8 @@ class SettingsDialog(QDialog, FORM_CLASS):
         for key in modes:
             self.style_mode.addItem(modes[key], key)
         self.restore_state()
+        self.initial_engine_hostname = QSettings().value(
+            'irmt/engine_hostname')
 
     def restore_state(self, restore_defaults=False):
         """
@@ -233,4 +235,15 @@ class SettingsDialog(QDialog, FORM_CLASS):
         self.save_state()
         if self.irmt_main is not None:
             self.irmt_main.reset_engine_login()
+        current_engine_hostname = QSettings().value('irmt/engine_hostname')
+        if current_engine_hostname != self.initial_engine_hostname:
+            if self.irmt_main.ipt_dlg is not None:
+                self.irmt_main.ipt_dlg.set_host()
+                self.irmt_main.ipt_dlg.load_homepage()
+            if self.irmt_main.taxtweb_dlg is not None:
+                self.irmt_main.taxtweb_dlg.set_host()
+                self.irmt_main.taxtweb_dlg.load_homepage()
+            if self.irmt_main.taxonomy_dlg is not None:
+                self.irmt_main.taxonomy_dlg.set_host()
+                self.irmt_main.taxonomy_dlg.load_homepage()
         super(SettingsDialog, self).accept()

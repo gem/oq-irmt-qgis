@@ -23,12 +23,13 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import json
-from qgis.PyQt.QtCore import QUrl, QObject, pyqtSlot
+from qgis.PyQt.QtCore import QUrl, QObject, pyqtSlot, QSettings
 from qgis.PyQt.QtGui import (QDialog,
                              QVBoxLayout,
                              )
 from qgis.gui import QgsMessageBar
 from svir.ui.gem_qwebview import GemQWebView
+from svir.utilities.shared import DEFAULT_SETTINGS
 
 
 class StandaloneAppDialog(QDialog):
@@ -52,9 +53,20 @@ class StandaloneAppDialog(QDialog):
         self.app_descr = app_descr
         self.gem_header_name = gem_header_name
         self.gem_header_value = gem_header_value
+        self.web_view = None
+        self.set_host()
 
-        # FIXME: we should probably get it from the user settings
-        self.host = 'http://localhost:8800'
+    def set_host(self):
+        self.host = QSettings().value(
+            'irmt/engine_hostname', DEFAULT_SETTINGS['engine_hostname'])
+
+    def load_homepage(self):
+        if self.web_view is not None:
+            qurl = QUrl('%s/%s' % (self.host, self.app_name))
+            # # Uncomment to use the dummy example instead
+            # if self.app_name == 'taxtweb':
+            #     qurl = QUrl('http://localhost:8000')
+            self.web_view.load(qurl)
 
     def build_gui(self):
         self.setWindowTitle(self.app_descr)
@@ -65,13 +77,7 @@ class StandaloneAppDialog(QDialog):
                                     self.gem_header_value,
                                     self.gem_api,
                                     parent=self)
-        qurl = QUrl('%s/%s' % (self.host, self.app_name))
-
-        # # Uncomment to use the dummy example instead
-        # if self.app_name == 'taxtweb':
-        #     qurl = QUrl('http://localhost:8000')
-
-        self.web_view.load(qurl)
+        self.load_homepage()
         self.vlayout.addWidget(self.web_view)
         initial_width = 1050
         self.resize(initial_width, self.width())
