@@ -155,10 +155,10 @@ class PersistentCookieJar(QNetworkCookieJar):
                 if not cookie.isSessionCookie():
                     data.append(cookie.toRawForm())
                     data.append("\n")
-            QSettings().setValue("Cookies", data)
+            QSettings().setValue("irmt/cookies", data)
 
     def load_cookies(self):
         with QMutexLocker(self.mutex):
-            data = QSettings().value("Cookies")
+            data = QSettings().value("irmt/cookies", "")
             cookies = QNetworkCookie.parseCookies(data)
             self.setAllCookies(cookies)
