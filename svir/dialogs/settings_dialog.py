@@ -236,7 +236,11 @@ class SettingsDialog(QDialog, FORM_CLASS):
         if self.irmt_main is not None:
             self.irmt_main.reset_engine_login()
         current_engine_hostname = QSettings().value('irmt/engine_hostname')
+        # in case the engine hostname was modified, the embedded web apps that
+        # were using the old hostname must be refreshed using the new one
         if current_engine_hostname != self.initial_engine_hostname:
+            # TODO: we might keep a register of web apps and run this kind of
+            # refresh on all the registered items
             if self.irmt_main.ipt_dlg is not None:
                 self.irmt_main.ipt_dlg.set_host()
                 self.irmt_main.ipt_dlg.load_homepage()
