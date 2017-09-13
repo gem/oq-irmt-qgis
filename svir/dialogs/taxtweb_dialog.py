@@ -36,7 +36,7 @@ class TaxtwebDialog(StandaloneAppDialog):
         pointing to the chosen page in the glossary
     """
 
-    def __init__(self, taxonomy_dlg):
+    def __init__(self, taxonomy_dlg, parent=None):
         self.taxonomy_dlg = taxonomy_dlg
         # sanity check (we need a reference to the taxonomy dialog, to
         # point to taxonomies selected in the TaxtWEB app)
@@ -46,9 +46,8 @@ class TaxtwebDialog(StandaloneAppDialog):
         gem_header_name = "Gem--Qgis-Oq-Irmt--Taxtweb"
         gem_header_value = "0.1.0"
         super(TaxtwebDialog, self).__init__(
-            app_name, app_descr, gem_header_name, gem_header_value)
-        self.gem_api = TaxtwebApi(
-            self.host, self.message_bar, self.taxonomy_dlg)
+            app_name, app_descr, gem_header_name, gem_header_value, parent)
+        self.gem_api = TaxtwebApi(self.message_bar, self.taxonomy_dlg, self)
         self.build_gui()
 
 
@@ -57,13 +56,13 @@ class TaxtwebApi(GemApi):
     API methods that are specific for the TaxtWEB application
     (other shared methods are defined in the CommonApi)
     """
-    def __init__(self, host, message_bar, taxonomy_dlg):
-        super(TaxtwebApi, self).__init__(host, message_bar)
+    def __init__(self, message_bar, taxonomy_dlg, parent=None):
+        super(TaxtwebApi, self).__init__(message_bar, parent)
         self.taxonomy_dlg = taxonomy_dlg
 
     @pyqtSlot(str)
     def point_to_taxonomy(self, url):
-        qurl = QUrl("%s%s" % (self.host, url))
+        qurl = QUrl("%s%s" % (self.parent().host, url))
         self.taxonomy_dlg.web_view.load(qurl)
         self.taxonomy_dlg.show()
         self.taxonomy_dlg.raise_()

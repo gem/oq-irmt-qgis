@@ -42,11 +42,12 @@ class StandaloneAppDialog(QDialog):
         being driven from QGIS
     :param gem_header_value: version of the interface between the plugin and
         the embedded application
+    :param parent: the parent object (optional)
     """
 
     def __init__(self, app_name, app_descr, gem_header_name, gem_header_value,
                  parent=None):
-        super(StandaloneAppDialog, self).__init__(parent=parent)
+        super(StandaloneAppDialog, self).__init__(parent)
 
         self.message_bar = QgsMessageBar(self)
         self.app_name = app_name
@@ -91,9 +92,8 @@ class CommonApi(QObject):
     gem_api.common.method_name(param)
     """
 
-    def __init__(self, parent, host, message_bar):
+    def __init__(self, message_bar, parent=None):
         super(CommonApi, self).__init__(parent)
-        self.host = host
         self.message_bar = message_bar
         self.setObjectName("common")
         # NOTE: to access a property from javascript, a getter has to be
@@ -148,7 +148,6 @@ class CommonApi(QObject):
 
 
 class GemApi(QObject):
-    def __init__(self, host, message_bar):
-        super(GemApi, self).__init__()
-        self.host = host
-        self.common = CommonApi(self, host, message_bar)
+    def __init__(self, message_bar, parent=None):
+        super(GemApi, self).__init__(parent)
+        self.common = CommonApi(message_bar, self)

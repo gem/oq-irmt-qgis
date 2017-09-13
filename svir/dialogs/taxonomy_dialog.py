@@ -30,14 +30,14 @@ class TaxonomyDialog(StandaloneAppDialog):
     Dialog that embeds the OpenQuake Taxonomy standalone application
     """
 
-    def __init__(self):
+    def __init__(self, parent=None):
         app_name = 'taxonomy'
         app_descr = 'OpenQuake Taxonomy'
         gem_header_name = "Gem--Qgis-Oq-Irmt--Taxonomy"
         gem_header_value = "0.1.0"
         super(TaxonomyDialog, self).__init__(
-            app_name, app_descr, gem_header_name, gem_header_value)
-        self.gem_api = TaxonomyApi(self.host, self.message_bar)
+            app_name, app_descr, gem_header_name, gem_header_value, parent)
+        self.gem_api = TaxonomyApi(self.message_bar, self)
         self.build_gui()
 
 

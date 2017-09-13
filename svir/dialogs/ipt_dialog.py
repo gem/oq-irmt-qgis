@@ -33,14 +33,14 @@ class IptDialog(StandaloneAppDialog):
     standalone application
     """
 
-    def __init__(self):
+    def __init__(self, parent=None):
         app_name = 'ipt'
         app_descr = 'OpenQuake Input Preparation Toolkit'
         gem_header_name = "Gem--Qgis-Oq-Irmt--Ipt"
         gem_header_value = "0.1.0"
         super(IptDialog, self).__init__(
-            app_name, app_descr, gem_header_name, gem_header_value)
-        self.gem_api = IptPythonApi(self.host, self.message_bar)
+            app_name, app_descr, gem_header_name, gem_header_value, parent)
+        self.gem_api = IptPythonApi(self.message_bar, self)
         self.build_gui()
 
     def build_gui(self):
