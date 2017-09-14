@@ -24,6 +24,7 @@
 
 import json
 import os
+import pickle
 from collections import OrderedDict
 
 from PyQt4 import QtGui
@@ -47,7 +48,8 @@ from PyQt4.QtGui import (QColor,
 from qgis.gui import QgsVertexMarker
 from qgis.core import QGis, QgsMapLayer, QgsFeatureRequest
 
-from svir.utilities.shared import TEXTUAL_FIELD_TYPES
+from svir.third_party import requests
+from svir.utilities.shared import TEXTUAL_FIELD_TYPES, OQ_QUERYABLE_TYPES
 from svir.utilities.utils import (get_ui_class,
                                   reload_attrib_cbx,
                                   log_msg,
@@ -129,6 +131,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             ('', ''),
             ('hcurves', 'Hazard Curves'),
             ('uhs', 'Uniform Hazard Spectra'),
+            ('agg_curves-rlzs', 'Aggregated loss curves (rlzs)'),
             ('recovery_curves', 'Recovery Curves')])
         self.output_type_cbx.addItems(self.output_types_names.values())
 
@@ -267,6 +270,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             self.create_stats_multiselect()
         elif new_output_type == 'loss_curves':
             self.create_loss_type_selector()
+        elif new_output_type == 'agg_curves-rlzs':
+            self.create_loss_type_selector()
         elif new_output_type == 'uhs':
             self.create_stats_multiselect()
         elif new_output_type == 'recovery_curves':
@@ -283,6 +288,45 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         # the window to shrink unexpectedly until the focus is moved somewhere
         # else.
         self.output_type = new_output_type
+
+    def load_agg_curves_rlzs(self, calc_id):
+        # FIXME: get hostname from settings
+        self.change_output_type('agg_curves-rlzs')
+        hostname = 'http://localhost:8800'
+        url = '%s/v1/calc/%s/extract/agg_curves-rlzs' % (hostname, calc_id)
+        self.agg_curves_rlzs = pickle.loads(requests.get(url).content)
+        loss_types = self.agg_curves_rlzs.dtype.names
+        self.loss_type_cbx.clear()
+        self.loss_type_cbx.addItems(loss_types)
+
+    def draw_agg_curve_rlzs(self):
+        num_rlzs = self.agg_curves_rlzs.array.shape[1]
+        loss_type = self.loss_type_cbx.currentText()
+        abscissa = self.agg_curves_rlzs.return_periods
+        ordinates = self.agg_curves_rlzs.array[loss_type]
+        self.plot.clear()
+        for rlz in range(num_rlzs):
+            self.plot.plot(
+                abscissa,
+                ordinates[:, rlz],
+                # color=curve['color'],
+                # linestyle=curve['line_style'],
+                # marker=curve['marker'],
+                label='Rlz %s' % rlz,
+            )
+        self.plot.set_xscale('log')
+        self.plot.set_yscale('linear')
+        self.plot.set_xlabel('Return period (Years)')
+        self.plot.set_ylabel('Loss')
+        title = '%s losses' % loss_type
+        self.plot.set_title(title)
+        self.plot.grid()
+        if 1 <= num_rlzs <= 20:
+            location = 'upper left'
+            self.legend = self.plot.legend(
+                loc=location, fancybox=True, shadow=True)
+        self.plot_canvas.draw()
+        self.export_data_button.setDisabled(True)
 
     def draw(self):
         self.plot.clear()
@@ -414,6 +458,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                             point_idx += 1
 
         self.plot_canvas.draw()
+        self.export_data_button.setEnabled(True)
 
     def redraw(self, selected, deselected, _):
         """
@@ -723,10 +768,14 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.was_imt_switched = True
         self.set_selection()
 
-    def on_loss_type_changed(self):
-        self.current_loss_type = self.loss_type_cbx.currentText()
-        self.was_loss_type_switched = True
-        self.set_selection()
+    @pyqtSlot(str)
+    def on_loss_type_changed(self, loss_type):
+        if self.output_type == 'agg_curves-rlzs':
+            self.draw_agg_curve_rlzs()
+        else:
+            self.current_loss_type = self.loss_type_cbx.currentText()
+            self.was_loss_type_switched = True
+            self.set_selection()
 
     def on_poe_changed(self):
         self.current_poe = self.poe_cbx.currentText()
@@ -839,12 +888,13 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.layer_changed()
 
     @pyqtSlot(int)
-    def on_output_type_cbx_currentIndexChanged(self):
+    def on_output_type_cbx_currentIndexChanged(self, index):
         otname = self.output_type_cbx.currentText()
         for output_type, output_type_name in self.output_types_names.items():
             if output_type_name == otname:
                 self.set_output_type_and_its_gui(output_type)
-                self.layer_changed()
+                if output_type not in OQ_QUERYABLE_TYPES:
+                    self.layer_changed()
                 return
         output_type = None
         self.set_output_type_and_its_gui(output_type)
