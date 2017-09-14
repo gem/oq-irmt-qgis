@@ -219,6 +219,7 @@ OQ_CSV_LOADABLE_TYPES = set(['ruptures'])
 OQ_NPZ_LOADABLE_TYPES = set([
     'hmaps', 'hcurves', 'uhs', 'gmf_data', 'dmg_by_asset', 'losses_by_asset'])
 OQ_ALL_LOADABLE_TYPES = OQ_CSV_LOADABLE_TYPES | OQ_NPZ_LOADABLE_TYPES
+OQ_RST_TYPES = set(['fullreport'])
 
 
 DEFAULT_SETTINGS = dict(

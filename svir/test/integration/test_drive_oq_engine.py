@@ -36,6 +36,7 @@ from svir.third_party.requests import Session
 from svir.utilities.shared import (OQ_ALL_LOADABLE_TYPES,
                                    OQ_CSV_LOADABLE_TYPES,
                                    OQ_NPZ_LOADABLE_TYPES,
+                                   OQ_RST_TYPES,
                                    )
 from svir.test.utilities import get_qgis_app
 from svir.dialogs.drive_oq_engine_server_dialog import OUTPUT_TYPE_LOADERS
@@ -105,16 +106,15 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
     def load_output(self, calc, output):
         calc_id = calc['id']
         output_type = output['type']
-        if (output_type in OQ_ALL_LOADABLE_TYPES
-                or output_type == 'fullreport'):
+        if output_type in OQ_ALL_LOADABLE_TYPES | OQ_RST_TYPES:
             if output_type in OQ_CSV_LOADABLE_TYPES:
                 print('\tLoading output type %s...' % output_type)
                 filepath = self.download_output(output['id'], 'csv')
             elif output_type in OQ_NPZ_LOADABLE_TYPES:
                 print('\tLoading output type %s...' % output_type)
                 filepath = self.download_output(output['id'], 'npz')
-            elif output_type == 'fullreport':
-                print('\tLoading fullreport...')
+            elif output_type in OQ_RST_TYPES:
+                print('\tLoading output type %s...' % output_type)
                 # TODO: do not skip this when encoding issue is solved
                 #       engine-side
                 if calc['description'] == u'Classical PSHA — Area Source':
@@ -176,8 +176,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             calc_list = [calc for calc in calc_list
                          if calc['id'] == selected_calc_id]
         self.selected_otype = os.environ.get('SELECTED_OTYPE')
-        if (self.selected_otype not in OQ_ALL_LOADABLE_TYPES
-                and self.selected_otype != 'fullreport'):
+        if (self.selected_otype not in OQ_ALL_LOADABLE_TYPES | OQ_RST_TYPES):
             print('\n\tSELECTED_OTYPE was not set or is not valid.'
                   ' Running tests for all the available output types.')
             self.selected_otype = None
