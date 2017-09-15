@@ -49,7 +49,11 @@ from qgis.gui import QgsVertexMarker
 from qgis.core import QGis, QgsMapLayer, QgsFeatureRequest
 
 from svir.third_party import requests
-from svir.utilities.shared import TEXTUAL_FIELD_TYPES, OQ_QUERYABLE_TYPES
+from svir.utilities.shared import (TEXTUAL_FIELD_TYPES,
+                                   OQ_ALL_LOADABLE_TYPES,
+                                   OQ_QUERYABLE_TYPES,
+                                   DEFAULT_SETTINGS,
+                                   )
 from svir.utilities.utils import (get_ui_class,
                                   reload_attrib_cbx,
                                   log_msg,
@@ -290,9 +294,10 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.output_type = new_output_type
 
     def load_agg_curves_rlzs(self, calc_id):
-        # FIXME: get hostname from settings
         self.change_output_type('agg_curves-rlzs')
-        hostname = 'http://localhost:8800'
+        # TODO: handle case of engine server requiring login
+        hostname = QSettings().value(
+            'irmt/engine_hostname', DEFAULT_SETTINGS['engine_hostname'])
         url = '%s/v1/calc/%s/extract/agg_curves-rlzs' % (hostname, calc_id)
         self.agg_curves_rlzs = pickle.loads(requests.get(url).content)
         loss_types = self.agg_curves_rlzs.dtype.names
@@ -316,17 +321,16 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             )
         self.plot.set_xscale('log')
         self.plot.set_yscale('linear')
-        self.plot.set_xlabel('Return period (Years)')
-        self.plot.set_ylabel('Loss')
-        title = '%s losses' % loss_type
+        self.plot.set_xlabel('Return period (years)')
+        self.plot.set_ylabel('Loss')  # TODO: add measurement unit
+        title = 'Loss type: %s' % loss_type
         self.plot.set_title(title)
-        self.plot.grid()
+        self.plot.grid(which='both')
         if 1 <= num_rlzs <= 20:
             location = 'upper left'
             self.legend = self.plot.legend(
-                loc=location, fancybox=True, shadow=True)
+                loc=location, fancybox=True, shadow=True, fontsize='small')
         self.plot_canvas.draw()
-        self.export_data_button.setDisabled(True)
 
     def draw(self):
         self.plot.clear()
@@ -434,7 +438,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         if investigation_time is not None:
             title += ' (%s years)' % investigation_time
         self.plot.set_title(title)
-        self.plot.grid()
+        self.plot.grid(which='both')
         if self.output_type != 'recovery_curves' and 1 <= count_lines <= 20:
             if self.output_type == 'uhs':
                 location = 'upper right'
@@ -458,7 +462,6 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                             point_idx += 1
 
         self.plot_canvas.draw()
-        self.export_data_button.setEnabled(True)
 
     def redraw(self, selected, deselected, _):
         """
@@ -748,6 +751,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 self.on_container_hover(event, self.legend)
 
     def on_container_hover(self, event, container):
+        if self.output_type not in OQ_ALL_LOADABLE_TYPES:
+            return False
         for line in container.get_lines():
             if line.contains(event)[0]:
                 # matplotlib needs a string when exporting to svg, so here we
