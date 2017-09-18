@@ -445,7 +445,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                         del self.current_selection[rlz_or_stat][fid]
                     except KeyError:
                         pass
-            else:
+            else:  # recovery curves
                 try:
                     del self.current_selection[None][fid]
                 except KeyError:
@@ -454,7 +454,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             if hasattr(self, 'rlzs_or_stats'):
                 for rlz_or_stat in self.rlzs_or_stats:
                     self.current_selection[rlz_or_stat] = {}
-            else:
+            else:  # recovery curves
                 self.current_selection[None] = {}
         if self.output_type == 'recovery_curves':
             if len(selected) > 0:
