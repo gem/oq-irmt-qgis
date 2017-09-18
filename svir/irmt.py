@@ -212,7 +212,7 @@ class Irmt:
                            submenu='OQ Platform')
         # Action to drive ipt
         self.add_menu_item("ipt",
-                           ":/plugins/irmt/define.svg",
+                           ":/plugins/irmt/ipt.svg",
                            u"OpenQuake Input Preparation Toolkit",
                            self.ipt,
                            enable=True,
@@ -220,7 +220,7 @@ class Irmt:
                            add_to_toolbar=True)
         # Action to drive taxtweb
         self.add_menu_item("taxtweb",
-                           ":/plugins/irmt/define.svg",
+                           ":/plugins/irmt/taxtweb.svg",
                            u"OpenQuake TaxtWEB",
                            self.taxtweb,
                            enable=True,
@@ -228,7 +228,7 @@ class Irmt:
                            add_to_toolbar=True)
         # Action to drive taxonomy
         self.add_menu_item("taxonomy",
-                           ":/plugins/irmt/define.svg",
+                           ":/plugins/irmt/taxonomy.svg",
                            u"OpenQuake Taxonomy",
                            self.taxonomy,
                            enable=True,
