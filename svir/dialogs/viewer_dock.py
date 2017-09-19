@@ -136,6 +136,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             ('hcurves', 'Hazard Curves'),
             ('uhs', 'Uniform Hazard Spectra'),
             ('agg_curves-rlzs', 'Aggregated loss curves (rlzs)'),
+            ('agg_curves-stats', 'Aggregated loss curves (stats)'),
             ('recovery_curves', 'Recovery Curves')])
         self.output_type_cbx.addItems(self.output_types_names.values())
 
@@ -274,7 +275,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             self.create_stats_multiselect()
         elif new_output_type == 'loss_curves':
             self.create_loss_type_selector()
-        elif new_output_type == 'agg_curves-rlzs':
+        elif new_output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
             self.create_loss_type_selector()
         elif new_output_type == 'uhs':
             self.create_stats_multiselect()
@@ -304,7 +305,72 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.loss_type_cbx.clear()
         self.loss_type_cbx.addItems(loss_types)
 
-    def draw_agg_curve_rlzs(self):
+    def load_agg_curves_stats(self, calc_id):
+        self.change_output_type('agg_curves-stats')
+        # TODO: handle case of engine server requiring login
+        hostname = QSettings().value(
+            'irmt/engine_hostname', DEFAULT_SETTINGS['engine_hostname'])
+        url = '%s/v1/calc/%s/extract/agg_curves-stats' % (hostname, calc_id)
+        self.agg_curves_stats = pickle.loads(requests.get(url).content)
+        loss_types = self.agg_curves_stats.dtype.names
+        self.loss_type_cbx.clear()
+        self.loss_type_cbx.addItems(loss_types)
+
+    def draw_agg_curves_stats(self):
+        stats = self.agg_curves_stats.stats
+        loss_type = self.loss_type_cbx.currentText()
+        abscissa = self.agg_curves_stats.return_periods
+        ordinates = self.agg_curves_stats.array[loss_type]
+        self.plot.clear()
+        marker = dict()
+        line_style = dict()
+        color_hex = dict()
+        for stat_idx, stat in enumerate(stats):
+            marker[stat_idx] = self.markers[stat_idx % len(self.markers)]
+            if self.bw_chk.isChecked():
+                line_styles_whole_cycles = stat_idx / len(self.line_styles)
+                # NOTE: 85 is approximately 256 / 3
+                r = g = b = format(
+                    (85 * line_styles_whole_cycles) % 256, '02x')
+                color_hex_str = "#%s%s%s" % (r, g, b)
+                color = QColor(color_hex_str)
+                color_hex[stat_idx] = color.darker(120).name()
+                # here I am using i in order to cycle through all the
+                # line styles, regardless from the feature id
+                # (otherwise I might easily repeat styles, that are a
+                # small set of 4 items)
+                line_style[stat_idx] = self.line_styles[
+                    stat_idx % len(self.line_styles)]
+            else:
+                # here I am using the feature id in order to keep a
+                # matching between a curve and the corresponding point
+                # in the map
+                color_name = self.color_names[stat_idx % len(self.color_names)]
+                color = QColor(color_name)
+                color_hex[stat_idx] = color.darker(120).name()
+                line_style[stat_idx] = "-"  # solid
+            self.plot.plot(
+                abscissa,
+                ordinates[:, stat_idx],
+                color=color_hex[stat_idx],
+                linestyle=line_style[stat_idx],
+                marker=marker[stat_idx],
+                label=stat,
+            )
+        self.plot.set_xscale('log')
+        self.plot.set_yscale('linear')
+        self.plot.set_xlabel('Return period (years)')
+        self.plot.set_ylabel('Loss')  # TODO: add measurement unit
+        title = 'Loss type: %s' % loss_type
+        self.plot.set_title(title)
+        self.plot.grid(which='both')
+        if 1 <= len(stats) <= 20:
+            location = 'upper left'
+            self.legend = self.plot.legend(
+                loc=location, fancybox=True, shadow=True, fontsize='small')
+        self.plot_canvas.draw()
+
+    def draw_agg_curves_rlzs(self):
         num_rlzs = self.agg_curves_rlzs.array.shape[1]
         loss_type = self.loss_type_cbx.currentText()
         abscissa = self.agg_curves_rlzs.return_periods
@@ -804,7 +870,9 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
     def on_loss_type_changed(self, loss_type):
         self.current_loss_type = self.loss_type_cbx.currentText()
         if self.output_type == 'agg_curves-rlzs':
-            self.draw_agg_curve_rlzs()
+            self.draw_agg_curves_rlzs()
+        elif self.output_type == 'agg_curves-stats':
+            self.draw_agg_curves_stats()
         else:
             self.was_loss_type_switched = True
             self.redraw_current_selection()
@@ -854,6 +922,13 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 self.tr('Export data'),
                 os.path.expanduser(
                     '~/agg_curves-rlzs_%s.csv' % self.current_loss_type),
+                '*.csv')
+        elif self.output_type == 'agg_curves-stats':
+            filename = QtGui.QFileDialog.getSaveFileName(
+                self,
+                self.tr('Export data'),
+                os.path.expanduser(
+                    '~/agg_curves-stats_%s.csv' % self.current_loss_type),
                 '*.csv')
         elif self.output_type == 'recovery_curves':
             filename = QtGui.QFileDialog.getSaveFileName(
@@ -929,6 +1004,18 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                     line = str(return_period) + "," + ",".join(
                         [str(value) for value in values[i]])
                     csv_file.write(line + os.linesep)
+            elif self.output_type == 'agg_curves-stats':
+                stats = self.agg_curves_stats.stats
+                # write header
+                line = 'return_period,' + ','.join(map(str, stats))
+                csv_file.write(line + os.linesep)
+                for i, return_period in enumerate(
+                        self.agg_curves_stats.return_periods):
+                    values = self.agg_curves_stats.array[
+                        self.current_loss_type]
+                    line = str(return_period) + "," + ",".join(
+                        [str(value) for value in values[i]])
+                    csv_file.write(line + os.linesep)
             else:
                 raise NotImplementedError(self.output_type)
         msg = 'Data exported to %s' % filename
@@ -939,7 +1026,9 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         if self.output_type in OQ_ALL_LOADABLE_TYPES | set('recovery_curves'):
             self.layer_changed()
         elif self.output_type == 'agg_curves-rlzs':
-            self.draw_agg_curve_rlzs()
+            self.draw_agg_curves_rlzs()
+        elif self.output_type == 'agg_curves-stats':
+            self.draw_agg_curves_stats()
 
     @pyqtSlot(int)
     def on_output_type_cbx_currentIndexChanged(self, index):

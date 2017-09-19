@@ -163,6 +163,13 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             os.close(tmpfile_handler)
             print('\t\tok')
             return
+        elif output_type == 'agg_curves-stats':
+            self.viewer_dock.load_agg_curves_stats(calc_id)
+            tmpfile_handler, tmpfile_name = tempfile.mkstemp()
+            self.viewer_dock.write_export_file(tmpfile_name)
+            os.close(tmpfile_handler)
+            print('\t\tok')
+            return
         else:
             self.not_implemented_loaders.add(output_type)
             print('\tLoader for output type %s is not implemented'

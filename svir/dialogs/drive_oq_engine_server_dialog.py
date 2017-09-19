@@ -682,6 +682,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             if output_type == 'agg_curves-rlzs':
                 self.viewer_dock.load_agg_curves_rlzs(
                     self.current_output_calc_id)
+            elif output_type == 'agg_curves-stats':
+                self.viewer_dock.load_agg_curves_stats(
+                    self.current_output_calc_id)
             elif outtype == 'rst':
                 filepath = self.download_output(
                     output_id, outtype, dest_folder)
