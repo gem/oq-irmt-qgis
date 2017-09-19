@@ -445,11 +445,17 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                         del self.current_selection[rlz_or_stat][fid]
                     except KeyError:
                         pass
-            else:
+            else:  # recovery curves
                 try:
                     del self.current_selection[None][fid]
                 except KeyError:
                     pass
+        for fid in selected:
+            if hasattr(self, 'rlzs_or_stats'):
+                for rlz_or_stat in self.rlzs_or_stats:
+                    self.current_selection[rlz_or_stat] = {}
+            else:  # recovery curves
+                self.current_selection[None] = {}
         if self.output_type == 'recovery_curves':
             if len(selected) > 0:
                 self.redraw_recovery_curve(selected)
@@ -624,13 +630,10 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 and self.iface.activeLayer().type() == QgsMapLayer.VectorLayer
                 and self.iface.activeLayer().geometryType() == QGis.Point):
             self.iface.activeLayer().selectionChanged.connect(
-                self.set_selection)
+                self.redraw_current_selection)
 
             if self.output_type in ['hcurves', 'uhs']:
                 for rlz_or_stat in self.stats_multiselect.get_selected_items():
-                    self.current_selection[rlz_or_stat] = {}
-                for rlz_or_stat \
-                        in self.stats_multiselect.get_unselected_items():
                     self.current_selection[rlz_or_stat] = {}
                 self.stats_multiselect.set_selected_items([])
                 self.stats_multiselect.set_unselected_items([])
@@ -660,13 +663,12 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                     self.fields_multiselect, self.iface.activeLayer())
             else:  # no plots for this layer
                 self.current_selection = {}
-            if self.iface.activeLayer().selectedFeatureCount() > 0:
-                self.set_selection()
+            self.redraw_current_selection()
 
     def remove_connects(self):
         try:
             self.iface.activeLayer().selectionChanged.disconnect(
-                self.set_selection)
+                self.redraw_current_selection)
         except (TypeError, AttributeError):
             # AttributeError may occur if the signal selectionChanged has
             # already been destroyed. In that case, we don't need to disconnect
@@ -675,7 +677,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             # disconnect anything
             pass
 
-    def set_selection(self):
+    def redraw_current_selection(self):
         selected = self.iface.activeLayer().selectedFeaturesIds()
         self.redraw(selected, [], None)
 
@@ -721,21 +723,21 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
     def on_imt_changed(self):
         self.current_imt = self.imt_cbx.currentText()
         self.was_imt_switched = True
-        self.set_selection()
+        self.redraw_current_selection()
 
     def on_loss_type_changed(self):
         self.current_loss_type = self.loss_type_cbx.currentText()
         self.was_loss_type_switched = True
-        self.set_selection()
+        self.redraw_current_selection()
 
     def on_poe_changed(self):
         self.current_poe = self.poe_cbx.currentText()
         self.was_poe_switched = True
-        self.set_selection()
+        self.redraw_current_selection()
 
     def on_approach_changed(self):
         self.current_approach = self.approach_cbx.currentText()
-        self.set_selection()
+        self.redraw_current_selection()
 
     def on_recalculate_curve_btn_clicked(self):
         self.layer_changed()

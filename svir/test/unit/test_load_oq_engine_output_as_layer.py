@@ -296,6 +296,7 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
         # the behavior should be slightly different (pluralizing labels, etc)
         # depending on the amount of features selected
         layer.select(1)
+        layer.removeSelection()
         layer.select(2)
         layer.selectAll()
         layer.removeSelection()
