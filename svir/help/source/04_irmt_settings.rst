@@ -54,5 +54,9 @@ to increase the verbosity of logging. The latter is useful for developers or
 advanced users because logging is critical for troubleshooting, but it is not
 recommended for standard users.
 
+The button :guilabel:`Restore default settings` can be used to discard the
+settings customized by the user and to replace them with the factory defaults.
+Please be aware that such operation, once confirmed, can not be undone.
+
 
 .. |icon-connection-settings| image:: images/iconConnectionSettings.png
