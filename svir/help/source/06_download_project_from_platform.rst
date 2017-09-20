@@ -20,7 +20,7 @@ projects is displayed. The list will contain the titles of projects for which
 the user has been granted editing privileges (their own projects or those
 shared with them by other users). When a project is selected from the list, its
 title, abstract, bounding box and keywords are displayed in the lower textbox
-that is utilized to delineate important attributes of the project's definition.
+that is utilized to delineate important attributes of the project definition.
 The label directly above the textbox displays an ID that uniquely identifies
 the layer used in the OpenQuake-platform.
 
