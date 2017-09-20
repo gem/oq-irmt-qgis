@@ -229,7 +229,7 @@ class Irmt:
         # Action to drive taxonomy
         self.add_menu_item("taxonomy",
                            ":/plugins/irmt/taxonomy.svg",
-                           u"OpenQuake Taxonomy",
+                           u"OpenQuake Glossary for GEM Taxonomy",
                            self.taxonomy,
                            enable=True,
                            submenu='OQ Engine',
@@ -237,7 +237,7 @@ class Irmt:
         # Action to drive the oq-engine server
         self.add_menu_item("drive_engine_server",
                            ":/plugins/irmt/drive_oqengine.svg",
-                           u"Drive oq-engine &server",
+                           u"Drive the OpenQuake Engine",
                            self.drive_oq_engine_server,
                            enable=True,
                            submenu='OQ Engine',
