@@ -40,7 +40,8 @@ from svir.utilities.shared import (OQ_ALL_LOADABLE_TYPES,
                                    OQ_RST_TYPES,
                                    )
 from svir.test.utilities import get_qgis_app
-from svir.dialogs.drive_oq_engine_server_dialog import OUTPUT_TYPE_LOADERS
+from svir.dialogs.drive_oq_engine_server_dialog import (
+    OUTPUT_TYPE_LOADERS, DriveOqEngineServerDialog)
 from svir.dialogs.show_full_report_dialog import ShowFullReportDialog
 from svir.dialogs.viewer_dock import ViewerDock
 
@@ -157,14 +158,20 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             else:
                 raise RuntimeError('The ok button is disabled')
         elif output_type == 'agg_curves-rlzs':
-            self.viewer_dock.load_agg_curves_rlzs(calc_id)
+            drive_engine_dlg = DriveOqEngineServerDialog(
+                IFACE, self.viewer_dock)
+            self.viewer_dock.load_agg_curves_rlzs(
+                calc_id, drive_engine_dlg.session, drive_engine_dlg.hostname)
             tmpfile_handler, tmpfile_name = tempfile.mkstemp()
             self.viewer_dock.write_export_file(tmpfile_name)
             os.close(tmpfile_handler)
             print('\t\tok')
             return
         elif output_type == 'agg_curves-stats':
-            self.viewer_dock.load_agg_curves_stats(calc_id)
+            drive_engine_dlg = DriveOqEngineServerDialog(
+                IFACE, self.viewer_dock)
+            self.viewer_dock.load_agg_curves_stats(
+                calc_id, drive_engine_dlg.session, drive_engine_dlg.hostname)
             tmpfile_handler, tmpfile_name = tempfile.mkstemp()
             self.viewer_dock.write_export_file(tmpfile_name)
             os.close(tmpfile_handler)
