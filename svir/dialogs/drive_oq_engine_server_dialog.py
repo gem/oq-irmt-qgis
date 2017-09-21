@@ -681,10 +681,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             dest_folder = tempfile.gettempdir()
             if output_type == 'agg_curves-rlzs':
                 self.viewer_dock.load_agg_curves_rlzs(
-                    self.current_output_calc_id)
+                    self.current_output_calc_id, self.session, self.hostname)
             elif output_type == 'agg_curves-stats':
                 self.viewer_dock.load_agg_curves_stats(
-                    self.current_output_calc_id)
+                    self.current_output_calc_id, self.session, self.hostname)
             elif outtype == 'rst':
                 filepath = self.download_output(
                     output_id, outtype, dest_folder)

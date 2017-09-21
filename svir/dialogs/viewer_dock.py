@@ -48,11 +48,9 @@ from PyQt4.QtGui import (QColor,
 from qgis.gui import QgsVertexMarker
 from qgis.core import QGis, QgsMapLayer, QgsFeatureRequest
 
-from svir.third_party import requests
 from svir.utilities.shared import (TEXTUAL_FIELD_TYPES,
                                    OQ_ALL_LOADABLE_TYPES,
                                    OQ_QUERYABLE_TYPES,
-                                   DEFAULT_SETTINGS,
                                    )
 from svir.utilities.utils import (get_ui_class,
                                   reload_attrib_cbx,
@@ -294,24 +292,18 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         # else.
         self.output_type = new_output_type
 
-    def load_agg_curves_rlzs(self, calc_id):
+    def load_agg_curves_rlzs(self, calc_id, session, hostname):
         self.change_output_type('agg_curves-rlzs')
-        # TODO: handle case of engine server requiring login
-        hostname = QSettings().value(
-            'irmt/engine_hostname', DEFAULT_SETTINGS['engine_hostname'])
         url = '%s/v1/calc/%s/extract/agg_curves-rlzs' % (hostname, calc_id)
-        self.agg_curves_rlzs = pickle.loads(requests.get(url).content)
+        self.agg_curves_rlzs = pickle.loads(session.get(url).content)
         loss_types = self.agg_curves_rlzs.dtype.names
         self.loss_type_cbx.clear()
         self.loss_type_cbx.addItems(loss_types)
 
-    def load_agg_curves_stats(self, calc_id):
+    def load_agg_curves_stats(self, calc_id, session, hostname):
         self.change_output_type('agg_curves-stats')
-        # TODO: handle case of engine server requiring login
-        hostname = QSettings().value(
-            'irmt/engine_hostname', DEFAULT_SETTINGS['engine_hostname'])
         url = '%s/v1/calc/%s/extract/agg_curves-stats' % (hostname, calc_id)
-        self.agg_curves_stats = pickle.loads(requests.get(url).content)
+        self.agg_curves_stats = pickle.loads(session.get(url).content)
         loss_types = self.agg_curves_stats.dtype.names
         self.loss_type_cbx.clear()
         self.loss_type_cbx.addItems(loss_types)
