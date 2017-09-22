@@ -158,6 +158,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             else:
                 raise RuntimeError('The ok button is disabled')
         elif output_type == 'agg_curves-rlzs':
+            print('\tLoading output type %s...' % output_type)
             drive_engine_dlg = DriveOqEngineServerDialog(
                 IFACE, self.viewer_dock)
             self.viewer_dock.load_agg_curves_rlzs(
@@ -168,6 +169,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             print('\t\tok')
             return
         elif output_type == 'agg_curves-stats':
+            print('\tLoading output type %s...' % output_type)
             drive_engine_dlg = DriveOqEngineServerDialog(
                 IFACE, self.viewer_dock)
             self.viewer_dock.load_agg_curves_stats(
