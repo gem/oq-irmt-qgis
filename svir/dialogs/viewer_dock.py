@@ -302,15 +302,14 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
     def draw_agg_curves(self, output_type):
         if output_type == 'agg_curves-rlzs':
-            self.draw_agg_curves_rlzs()
+            rlzs_or_stats = ["Rlz %s" % rlz
+                             for rlz in range(self.agg_curves.array.shape[1])]
         elif output_type == 'agg_curves-stats':
-            self.draw_agg_curves_stats()
+            rlzs_or_stats = self.agg_curves.stats
         else:
             raise NotImplementedError(
                 'Can not draw outputs of type %s' % output_type)
-
-    def draw_agg_curves_stats(self):
-        stats = self.agg_curves.stats
+            return
         loss_type = self.loss_type_cbx.currentText()
         abscissa = self.agg_curves.return_periods
         ordinates = self.agg_curves.array[loss_type]
@@ -318,37 +317,37 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         marker = dict()
         line_style = dict()
         color_hex = dict()
-        for stat_idx, stat in enumerate(stats):
-            marker[stat_idx] = self.markers[stat_idx % len(self.markers)]
+        for idx, rlz_or_stat in enumerate(rlzs_or_stats):
+            marker[idx] = self.markers[idx % len(self.markers)]
             if self.bw_chk.isChecked():
-                line_styles_whole_cycles = stat_idx / len(self.line_styles)
+                line_styles_whole_cycles = idx / len(self.line_styles)
                 # NOTE: 85 is approximately 256 / 3
                 r = g = b = format(
                     (85 * line_styles_whole_cycles) % 256, '02x')
                 color_hex_str = "#%s%s%s" % (r, g, b)
                 color = QColor(color_hex_str)
-                color_hex[stat_idx] = color.darker(120).name()
+                color_hex[idx] = color.darker(120).name()
                 # here I am using i in order to cycle through all the
                 # line styles, regardless from the feature id
                 # (otherwise I might easily repeat styles, that are a
                 # small set of 4 items)
-                line_style[stat_idx] = self.line_styles[
-                    stat_idx % len(self.line_styles)]
+                line_style[idx] = self.line_styles[
+                    idx % len(self.line_styles)]
             else:
                 # here I am using the feature id in order to keep a
                 # matching between a curve and the corresponding point
                 # in the map
-                color_name = self.color_names[stat_idx % len(self.color_names)]
+                color_name = self.color_names[idx % len(self.color_names)]
                 color = QColor(color_name)
-                color_hex[stat_idx] = color.darker(120).name()
-                line_style[stat_idx] = "-"  # solid
+                color_hex[idx] = color.darker(120).name()
+                line_style[idx] = "-"  # solid
             self.plot.plot(
                 abscissa,
-                ordinates[:, stat_idx],
-                color=color_hex[stat_idx],
-                linestyle=line_style[stat_idx],
-                marker=marker[stat_idx],
-                label=stat,
+                ordinates[:, idx],
+                color=color_hex[idx],
+                linestyle=line_style[idx],
+                marker=marker[idx],
+                label=rlz_or_stat,
             )
         self.plot.set_xscale('log')
         self.plot.set_yscale('linear')
@@ -357,60 +356,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         title = 'Loss type: %s' % loss_type
         self.plot.set_title(title)
         self.plot.grid(which='both')
-        if 1 <= len(stats) <= 20:
-            location = 'upper left'
-            self.legend = self.plot.legend(
-                loc=location, fancybox=True, shadow=True, fontsize='small')
-        self.plot_canvas.draw()
-
-    def draw_agg_curves_rlzs(self):
-        num_rlzs = self.agg_curves.array.shape[1]
-        loss_type = self.loss_type_cbx.currentText()
-        abscissa = self.agg_curves.return_periods
-        ordinates = self.agg_curves.array[loss_type]
-        self.plot.clear()
-        marker = dict()
-        line_style = dict()
-        color_hex = dict()
-        for rlz in range(num_rlzs):
-            marker[rlz] = self.markers[rlz % len(self.markers)]
-            if self.bw_chk.isChecked():
-                line_styles_whole_cycles = rlz / len(self.line_styles)
-                # NOTE: 85 is approximately 256 / 3
-                r = g = b = format(
-                    (85 * line_styles_whole_cycles) % 256, '02x')
-                color_hex_str = "#%s%s%s" % (r, g, b)
-                color = QColor(color_hex_str)
-                color_hex[rlz] = color.darker(120).name()
-                # here I am using i in order to cycle through all the
-                # line styles, regardless from the feature id
-                # (otherwise I might easily repeat styles, that are a
-                # small set of 4 items)
-                line_style[rlz] = self.line_styles[rlz % len(self.line_styles)]
-            else:
-                # here I am using the feature id in order to keep a
-                # matching between a curve and the corresponding point
-                # in the map
-                color_name = self.color_names[rlz % len(self.color_names)]
-                color = QColor(color_name)
-                color_hex[rlz] = color.darker(120).name()
-                line_style[rlz] = "-"  # solid
-            self.plot.plot(
-                abscissa,
-                ordinates[:, rlz],
-                color=color_hex[rlz],
-                linestyle=line_style[rlz],
-                marker=marker[rlz],
-                label='Rlz %s' % rlz,
-            )
-        self.plot.set_xscale('log')
-        self.plot.set_yscale('linear')
-        self.plot.set_xlabel('Return period (years)')
-        self.plot.set_ylabel('Loss')  # TODO: add measurement unit
-        title = 'Loss type: %s' % loss_type
-        self.plot.set_title(title)
-        self.plot.grid(which='both')
-        if 1 <= num_rlzs <= 20:
+        if 1 <= len(rlzs_or_stats) <= 20:
             location = 'upper left'
             self.legend = self.plot.legend(
                 loc=location, fancybox=True, shadow=True, fontsize='small')
