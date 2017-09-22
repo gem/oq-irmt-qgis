@@ -50,7 +50,7 @@ from qgis.core import QGis, QgsMapLayer, QgsFeatureRequest
 
 from svir.utilities.shared import (TEXTUAL_FIELD_TYPES,
                                    OQ_ALL_LOADABLE_TYPES,
-                                   OQ_QUERYABLE_TYPES,
+                                   OQ_NO_MAP_TYPES,
                                    )
 from svir.utilities.utils import (get_ui_class,
                                   reload_attrib_cbx,
@@ -292,27 +292,28 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         # else.
         self.output_type = new_output_type
 
-    def load_agg_curves_rlzs(self, calc_id, session, hostname):
-        self.change_output_type('agg_curves-rlzs')
-        url = '%s/v1/calc/%s/extract/agg_curves-rlzs' % (hostname, calc_id)
-        self.agg_curves_rlzs = pickle.loads(session.get(url).content)
-        loss_types = self.agg_curves_rlzs.dtype.names
+    def load_agg_curves(self, calc_id, session, hostname, output_type):
+        self.change_output_type(output_type)
+        url = '%s/v1/calc/%s/extract/%s' % (hostname, calc_id, output_type)
+        self.agg_curves = pickle.loads(session.get(url).content)
+        loss_types = self.agg_curves.dtype.names
         self.loss_type_cbx.clear()
         self.loss_type_cbx.addItems(loss_types)
 
-    def load_agg_curves_stats(self, calc_id, session, hostname):
-        self.change_output_type('agg_curves-stats')
-        url = '%s/v1/calc/%s/extract/agg_curves-stats' % (hostname, calc_id)
-        self.agg_curves_stats = pickle.loads(session.get(url).content)
-        loss_types = self.agg_curves_stats.dtype.names
-        self.loss_type_cbx.clear()
-        self.loss_type_cbx.addItems(loss_types)
+    def draw_agg_curves(self, output_type):
+        if output_type == 'agg_curves-rlzs':
+            self.draw_agg_curves_rlzs()
+        elif output_type == 'agg_curves-stats':
+            self.draw_agg_curves_stats()
+        else:
+            raise NotImplementedError(
+                'Can not draw outputs of type %s' % output_type)
 
     def draw_agg_curves_stats(self):
-        stats = self.agg_curves_stats.stats
+        stats = self.agg_curves.stats
         loss_type = self.loss_type_cbx.currentText()
-        abscissa = self.agg_curves_stats.return_periods
-        ordinates = self.agg_curves_stats.array[loss_type]
+        abscissa = self.agg_curves.return_periods
+        ordinates = self.agg_curves.array[loss_type]
         self.plot.clear()
         marker = dict()
         line_style = dict()
@@ -363,10 +364,10 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.plot_canvas.draw()
 
     def draw_agg_curves_rlzs(self):
-        num_rlzs = self.agg_curves_rlzs.array.shape[1]
+        num_rlzs = self.agg_curves.array.shape[1]
         loss_type = self.loss_type_cbx.currentText()
-        abscissa = self.agg_curves_rlzs.return_periods
-        ordinates = self.agg_curves_rlzs.array[loss_type]
+        abscissa = self.agg_curves.return_periods
+        ordinates = self.agg_curves.array[loss_type]
         self.plot.clear()
         marker = dict()
         line_style = dict()
@@ -836,7 +837,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 self.on_container_hover(event, self.legend)
 
     def on_container_hover(self, event, container):
-        if self.output_type not in OQ_ALL_LOADABLE_TYPES:
+        if self.output_type in OQ_NO_MAP_TYPES:
             return False
         for line in container.get_lines():
             if line.contains(event)[0]:
@@ -861,10 +862,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
     @pyqtSlot(str)
     def on_loss_type_changed(self, loss_type):
         self.current_loss_type = self.loss_type_cbx.currentText()
-        if self.output_type == 'agg_curves-rlzs':
-            self.draw_agg_curves_rlzs()
-        elif self.output_type == 'agg_curves-stats':
-            self.draw_agg_curves_stats()
+        if self.output_type in OQ_NO_MAP_TYPES:
+            self.draw_agg_curves(self.output_type)
         else:
             self.was_loss_type_switched = True
             self.redraw_current_selection()
@@ -908,19 +907,13 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 os.path.expanduser(
                     '~/loss_curves_%s.csv' % self.current_loss_type),
                 '*.csv')
-        elif self.output_type == 'agg_curves-rlzs':
+        elif self.output_type in OQ_NO_MAP_TYPES:
             filename = QtGui.QFileDialog.getSaveFileName(
                 self,
                 self.tr('Export data'),
                 os.path.expanduser(
-                    '~/agg_curves-rlzs_%s.csv' % self.current_loss_type),
-                '*.csv')
-        elif self.output_type == 'agg_curves-stats':
-            filename = QtGui.QFileDialog.getSaveFileName(
-                self,
-                self.tr('Export data'),
-                os.path.expanduser(
-                    '~/agg_curves-stats_%s.csv' % self.current_loss_type),
+                    '~/%s_%s.csv' % (self.output_type,
+                                     self.current_loss_type)),
                 '*.csv')
         elif self.output_type == 'recovery_curves':
             filename = QtGui.QFileDialog.getSaveFileName(
@@ -986,25 +979,24 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                             str(value) for value in values])
                     csv_file.write(line + os.linesep)
             elif self.output_type == 'agg_curves-rlzs':
-                num_rlzs = self.agg_curves_rlzs.array.shape[1]
+                num_rlzs = self.agg_curves.array.shape[1]
                 # write header
                 line = 'return_period,' + ','.join(map(str, range(num_rlzs)))
                 csv_file.write(line + os.linesep)
                 for i, return_period in enumerate(
-                        self.agg_curves_rlzs.return_periods):
-                    values = self.agg_curves_rlzs.array[self.current_loss_type]
+                        self.agg_curves.return_periods):
+                    values = self.agg_curves.array[self.current_loss_type]
                     line = str(return_period) + "," + ",".join(
                         [str(value) for value in values[i]])
                     csv_file.write(line + os.linesep)
             elif self.output_type == 'agg_curves-stats':
-                stats = self.agg_curves_stats.stats
+                stats = self.agg_curves.stats
                 # write header
                 line = 'return_period,' + ','.join(map(str, stats))
                 csv_file.write(line + os.linesep)
                 for i, return_period in enumerate(
-                        self.agg_curves_stats.return_periods):
-                    values = self.agg_curves_stats.array[
-                        self.current_loss_type]
+                        self.agg_curves.return_periods):
+                    values = self.agg_curves.array[self.current_loss_type]
                     line = str(return_period) + "," + ",".join(
                         [str(value) for value in values[i]])
                     csv_file.write(line + os.linesep)
@@ -1017,10 +1009,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
     def on_bw_chk_clicked(self):
         if self.output_type in OQ_ALL_LOADABLE_TYPES | set('recovery_curves'):
             self.layer_changed()
-        elif self.output_type == 'agg_curves-rlzs':
-            self.draw_agg_curves_rlzs()
-        elif self.output_type == 'agg_curves-stats':
-            self.draw_agg_curves_stats()
+        elif self.output_type in OQ_NO_MAP_TYPES:
+            self.draw_agg_curves(self.output_type)
 
     @pyqtSlot(int)
     def on_output_type_cbx_currentIndexChanged(self, index):
@@ -1028,7 +1018,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         for output_type, output_type_name in self.output_types_names.items():
             if output_type_name == otname:
                 self.set_output_type_and_its_gui(output_type)
-                if output_type not in OQ_QUERYABLE_TYPES:
+                if output_type not in OQ_NO_MAP_TYPES:
                     self.layer_changed()
                 return
         output_type = None

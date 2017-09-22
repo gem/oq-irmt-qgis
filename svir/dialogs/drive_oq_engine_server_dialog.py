@@ -58,7 +58,7 @@ from svir.third_party.requests.packages.urllib3.exceptions import (
 from svir.utilities.settings import get_engine_credentials
 from svir.utilities.shared import (OQ_ALL_LOADABLE_TYPES,
                                    OQ_RST_TYPES,
-                                   OQ_QUERYABLE_TYPES,
+                                   OQ_NO_MAP_TYPES,
                                    )
 from svir.utilities.utils import (WaitCursorManager,
                                   engine_login,
@@ -607,7 +607,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             num_actions = len(row['outtypes'])
             if row['type'] in (OQ_ALL_LOADABLE_TYPES |
                                OQ_RST_TYPES |
-                               OQ_QUERYABLE_TYPES):
+                               OQ_NO_MAP_TYPES):
                 # TODO: remove check when gmf_data will be loadable also for
                 #       event_based
                 if not (row['type'] == 'gmf_data'
@@ -633,8 +633,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 self.calc_list_tbl.setColumnWidth(col, BUTTON_WIDTH)
             if output['type'] in (OQ_ALL_LOADABLE_TYPES |
                                   OQ_RST_TYPES |
-                                  OQ_QUERYABLE_TYPES):
-                if output['type'] in OQ_RST_TYPES | OQ_QUERYABLE_TYPES:
+                                  OQ_NO_MAP_TYPES):
+                if output['type'] in OQ_RST_TYPES | OQ_NO_MAP_TYPES:
                     action = 'Show'
                 else:
                     action = 'Load as layer'
@@ -679,12 +679,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         output_type = output['type']
         if action == 'Show':
             dest_folder = tempfile.gettempdir()
-            if output_type == 'agg_curves-rlzs':
-                self.viewer_dock.load_agg_curves_rlzs(
-                    self.current_output_calc_id, self.session, self.hostname)
-            elif output_type == 'agg_curves-stats':
-                self.viewer_dock.load_agg_curves_stats(
-                    self.current_output_calc_id, self.session, self.hostname)
+            if output_type in OQ_NO_MAP_TYPES:
+                self.viewer_dock.load_agg_curves(
+                    self.current_output_calc_id, self.session, self.hostname,
+                    output_type)
             elif outtype == 'rst':
                 filepath = self.download_output(
                     output_id, outtype, dest_folder)
