@@ -298,7 +298,9 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         response = session.get(url).content
         self.agg_curves = pickle.loads(response)
         loss_types = self.agg_curves.dtype.names
+        self.loss_type_cbx.blockSignals(True)
         self.loss_type_cbx.clear()
+        self.loss_type_cbx.blockSignals(False)
         self.loss_type_cbx.addItems(loss_types)
 
     def draw_agg_curves(self, output_type):
