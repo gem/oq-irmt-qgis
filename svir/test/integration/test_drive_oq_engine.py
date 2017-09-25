@@ -160,8 +160,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 raise RuntimeError('The ok button is disabled')
         elif output_type in OQ_NO_MAP_TYPES:
             print('\tLoading output type %s...' % output_type)
-            # drive_engine_dlg = DriveOqEngineServerDialog(
-            #     IFACE, self.viewer_dock)
+            drive_engine_dlg = DriveOqEngineServerDialog(
+                IFACE, self.viewer_dock)
             # self.viewer_dock.load_agg_curves(
             #     calc_id, drive_engine_dlg.session, drive_engine_dlg.hostname,
             #     output_type)
