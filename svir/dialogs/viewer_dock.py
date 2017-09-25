@@ -296,15 +296,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.change_output_type(output_type)
         url = '%s/v1/calc/%s/extract/%s' % (hostname, calc_id, output_type)
         response = session.get(url).content
-        try:
-            self.agg_curves = pickle.loads(response)
-        except ValueError as exc:
-            msg = ("Unable to load the output: [%s]. Please check if the"
-                   " OpenQuake Engine Server is running on Python 3. In that"
-                   " case, since this plugin runs on Python 2, it would be"
-                   " impossible to unpickle the output." % exc.message)
-            log_msg(msg, level="C", message_bar=self.iface.messageBar())
-            return
+        self.agg_curves = pickle.loads(response)
         loss_types = self.agg_curves.dtype.names
         self.loss_type_cbx.clear()
         self.loss_type_cbx.addItems(loss_types)
