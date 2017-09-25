@@ -133,9 +133,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         #       the timer whenever the button to open the dialog is pressed
         self.finished.connect(self.stop_polling)
 
+        print("Adding messagebar")
         self.message_bar = QgsMessageBar(self)
         self.layout().insertWidget(0, self.message_bar)
 
+        print("Attempt login")
         self.attempt_login()
 
     def attempt_login(self):
