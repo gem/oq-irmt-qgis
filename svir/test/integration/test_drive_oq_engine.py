@@ -165,6 +165,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             self.viewer_dock.load_agg_curves(
                 calc_id, drive_engine_dlg.session, drive_engine_dlg.hostname,
                 output_type)
+            print(self.viewer_dock.agg_curves.array)
             tmpfile_handler, tmpfile_name = tempfile.mkstemp()
             self.viewer_dock.write_export_file(tmpfile_name)
             os.close(tmpfile_handler)
