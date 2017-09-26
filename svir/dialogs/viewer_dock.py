@@ -295,13 +295,9 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
     def load_agg_curves(self, calc_id, session, hostname, output_type):
         self.change_output_type(output_type)
         url = '%s/v1/calc/%s/extract/%s' % (hostname, calc_id, output_type)
-        print("Calling url: %s" % url)
         response = session.get(url).content
-        print("Response: %s" % response)
         self.agg_curves = pickle.loads(response)
-        print(self.agg_curves.array)
         loss_types = self.agg_curves.dtype.names
-        print("Loss types: %s" % loss_types)
         self.loss_type_cbx.blockSignals(True)
         self.loss_type_cbx.clear()
         self.loss_type_cbx.blockSignals(False)
