@@ -294,11 +294,15 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         # else.
         self.output_type = new_output_type
 
-    def load_agg_curves(self, calc_id, session, hostname, output_type):
-        self.change_output_type(output_type)
+    def extract_npz(self, session, hostname, calc_id, output_type):
         url = '%s/v1/calc/%s/extract/%s' % (hostname, calc_id, output_type)
         resp_content = session.get(url).content
-        self.agg_curves = numpy.load(io.BytesIO(resp_content))
+        return numpy.load(io.BytesIO(resp_content))
+
+    def load_agg_curves(self, calc_id, session, hostname, output_type):
+        self.change_output_type(output_type)
+        self.agg_curves = self.extract_npz(
+            session, hostname, calc_id, output_type)
         loss_types = self.agg_curves['array'].dtype.names
         self.loss_type_cbx.blockSignals(True)
         self.loss_type_cbx.clear()
