@@ -680,17 +680,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         if action == 'Show':
             dest_folder = tempfile.gettempdir()
             if output_type in OQ_NO_MAP_TYPES:
-                try:
-                    self.viewer_dock.load_agg_curves(
-                        self.current_output_calc_id, self.session,
-                        self.hostname, output_type)
-                except ValueError as exc:
-                    msg = ("Unable to load the output: [%s]. Please check if"
-                           " the OpenQuake Engine Server is running on Python"
-                           " 3. In that case, since this plugin runs on"
-                           " Python 2, it would be impossible to unpickle the"
-                           " output." % exc.message)
-                    log_msg(msg, level="C", message_bar=self.message_bar)
+                self.viewer_dock.load_agg_curves(
+                    self.current_output_calc_id, self.session,
+                    self.hostname, output_type)
             elif outtype == 'rst':
                 filepath = self.download_output(
                     output_id, outtype, dest_folder)

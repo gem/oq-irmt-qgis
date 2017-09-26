@@ -24,7 +24,8 @@
 
 import json
 import os
-import pickle
+import numpy
+import io
 from collections import OrderedDict
 
 from PyQt4 import QtGui
@@ -295,9 +296,9 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
     def load_agg_curves(self, calc_id, session, hostname, output_type):
         self.change_output_type(output_type)
         url = '%s/v1/calc/%s/extract/%s' % (hostname, calc_id, output_type)
-        response = session.get(url).content
-        self.agg_curves = pickle.loads(response)
-        loss_types = self.agg_curves.dtype.names
+        resp_content = session.get(url).content
+        self.agg_curves = numpy.load(io.BytesIO(resp_content))
+        loss_types = self.agg_curves['array'].dtype.names
         self.loss_type_cbx.blockSignals(True)
         self.loss_type_cbx.clear()
         self.loss_type_cbx.blockSignals(False)
@@ -305,17 +306,18 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
     def draw_agg_curves(self, output_type):
         if output_type == 'agg_curves-rlzs':
-            rlzs_or_stats = ["Rlz %s" % rlz
-                             for rlz in range(self.agg_curves.array.shape[1])]
+            rlzs_or_stats = [
+                "Rlz %s" % rlz
+                for rlz in range(self.agg_curves['array'].shape[1])]
         elif output_type == 'agg_curves-stats':
-            rlzs_or_stats = self.agg_curves.stats
+            rlzs_or_stats = self.agg_curves['stats']
         else:
             raise NotImplementedError(
                 'Can not draw outputs of type %s' % output_type)
             return
         loss_type = self.loss_type_cbx.currentText()
-        abscissa = self.agg_curves.return_periods
-        ordinates = self.agg_curves.array[loss_type]
+        abscissa = self.agg_curves['return_periods']
+        ordinates = self.agg_curves['array'][loss_type]
         self.plot.clear()
         marker = dict()
         line_style = dict()
@@ -928,24 +930,25 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                             str(value) for value in values])
                     csv_file.write(line + os.linesep)
             elif self.output_type == 'agg_curves-rlzs':
-                num_rlzs = self.agg_curves.array.shape[1]
+                num_rlzs = self.agg_curves['array'].shape[1]
+                rlzs_str = ['rlz-%s' % rlz for rlz in range(num_rlzs)]
                 # write header
-                line = 'return_period,' + ','.join(map(str, range(num_rlzs)))
+                line = 'return_period,' + ','.join(rlzs_str)
                 csv_file.write(line + os.linesep)
                 for i, return_period in enumerate(
-                        self.agg_curves.return_periods):
-                    values = self.agg_curves.array[self.current_loss_type]
+                        self.agg_curves['return_periods']):
+                    values = self.agg_curves['array'][self.current_loss_type]
                     line = str(return_period) + "," + ",".join(
                         [str(value) for value in values[i]])
                     csv_file.write(line + os.linesep)
             elif self.output_type == 'agg_curves-stats':
-                stats = self.agg_curves.stats
+                stats = self.agg_curves['stats']
                 # write header
                 line = 'return_period,' + ','.join(map(str, stats))
                 csv_file.write(line + os.linesep)
                 for i, return_period in enumerate(
-                        self.agg_curves.return_periods):
-                    values = self.agg_curves.array[self.current_loss_type]
+                        self.agg_curves['return_periods']):
+                    values = self.agg_curves['array'][self.current_loss_type]
                     line = str(return_period) + "," + ",".join(
                         [str(value) for value in values[i]])
                     csv_file.write(line + os.linesep)
