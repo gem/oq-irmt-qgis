@@ -930,6 +930,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                             str(value) for value in values])
                     csv_file.write(line + os.linesep)
             elif self.output_type == 'agg_curves-rlzs':
+                # the expected shape is (P, R), where P is the number of return
+                # periods and R is the number of realizations
                 num_rlzs = self.agg_curves['array'].shape[1]
                 rlzs_str = ['rlz-%s' % rlz for rlz in range(num_rlzs)]
                 # write header
@@ -942,6 +944,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                         [str(value) for value in values[i]])
                     csv_file.write(line + os.linesep)
             elif self.output_type == 'agg_curves-stats':
+                # the expected shape is (P, S), where P is the number of return
+                # periods and S is the number of statistics
                 stats = self.agg_curves['stats']
                 # write header
                 line = 'return_period,' + ','.join(map(str, stats))
