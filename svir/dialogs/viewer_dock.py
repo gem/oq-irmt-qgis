@@ -24,6 +24,7 @@
 
 import json
 import os
+import csv
 import numpy
 import io
 from collections import OrderedDict
@@ -879,29 +880,26 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
     def write_export_file(self, filename):
         with open(filename, 'w') as csv_file:
+            writer = csv.writer(csv_file)
             if self.output_type == 'recovery_curves':
-                # write header
-                line = 'lon,lat,%s' % (
-                    ','.join(map(str, self.current_abscissa)))
-                csv_file.write(line + os.linesep)
+                headers = ['lon', 'lat']
+                headers.extend(self.current_abscissa)
+                writer.writerow(headers)
                 # NOTE: taking the first element, because they are all the
                 # same
                 feature = self.iface.activeLayer().selectedFeatures()[0]
                 lon = feature.geometry().asPoint().x()
                 lat = feature.geometry().asPoint().y()
-                line = '%s,%s' % (lon, lat)
                 values = self.current_selection[None].values()[0]
+                row = [lon, lat]
                 if values:
-                    line += "," + ",".join([
-                        str(value) for value in values['ordinates']])
-                csv_file.write(line + os.linesep)
+                    row.extend(values['ordinates'])
+                writer.writerow(row)
             elif self.output_type in ['hcurves', 'uhs']:
                 selected_rlzs_or_stats = list(
                     self.stats_multiselect.get_selected_items())
                 if self.output_type == 'hcurves':
                     selected_imt = self.imt_cbx.currentText()
-
-                # write header
                 field_names = []
                 for field in self.iface.activeLayer().fields():
                     if self.output_type == 'hcurves':
@@ -915,47 +913,44 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                     if rlz_or_stat not in selected_rlzs_or_stats:
                         continue
                     field_names.append(field.name())
-                header = 'lon,lat,%s' % ','.join(field_names)
-                csv_file.write(header + os.linesep)
-
-                # write selected data
+                headers = ['lon', 'lat']
+                headers.extend(field_names)
+                writer.writerow(headers)
                 for feature in self.iface.activeLayer().getFeatures():
                     values = [feature.attribute(field_name)
                               for field_name in field_names]
                     lon = feature.geometry().asPoint().x()
                     lat = feature.geometry().asPoint().y()
-                    line = '%s,%s' % (lon, lat)
+                    row = [lon, lat]
                     if values:
-                        line += "," + ",".join([
-                            str(value) for value in values])
-                    csv_file.write(line + os.linesep)
+                        row.extend(values)
+                    writer.writerow(row)
             elif self.output_type == 'agg_curves-rlzs':
                 # the expected shape is (P, R), where P is the number of return
                 # periods and R is the number of realizations
                 num_rlzs = self.agg_curves['array'].shape[1]
-                rlzs_str = ['rlz-%s' % rlz for rlz in range(num_rlzs)]
-                # write header
-                line = 'return_period,' + ','.join(rlzs_str)
-                csv_file.write(line + os.linesep)
+                headers = ['return_period']
+                headers.extend(['rlz-%s' % rlz for rlz in range(num_rlzs)])
+                writer.writerow(headers)
                 for i, return_period in enumerate(
                         self.agg_curves['return_periods']):
                     values = self.agg_curves['array'][self.current_loss_type]
-                    line = str(return_period) + "," + ",".join(
-                        [str(value) for value in values[i]])
-                    csv_file.write(line + os.linesep)
+                    row = [return_period]
+                    row.extend([value for value in values[i]])
+                    writer.writerow(row)
             elif self.output_type == 'agg_curves-stats':
                 # the expected shape is (P, S), where P is the number of return
                 # periods and S is the number of statistics
                 stats = self.agg_curves['stats']
-                # write header
-                line = 'return_period,' + ','.join(map(str, stats))
-                csv_file.write(line + os.linesep)
+                headers = ['return_period']
+                headers.extend(stats)
+                writer.writerow(headers)
                 for i, return_period in enumerate(
                         self.agg_curves['return_periods']):
                     values = self.agg_curves['array'][self.current_loss_type]
-                    line = str(return_period) + "," + ",".join(
-                        [str(value) for value in values[i]])
-                    csv_file.write(line + os.linesep)
+                    row = [return_period]
+                    row.extend([value for value in values[i]])
+                    writer.writerow(row)
             else:
                 raise NotImplementedError(self.output_type)
         msg = 'Data exported to %s' % filename
