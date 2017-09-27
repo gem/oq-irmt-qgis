@@ -323,6 +323,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         loss_type = self.loss_type_cbx.currentText()
         abscissa = self.agg_curves['return_periods']
         ordinates = self.agg_curves['array'][loss_type]
+        unit_idx = self.agg_curves['array'].dtype.names.index(loss_type)
+        unit = self.agg_curves['units'][unit_idx]
         self.plot.clear()
         marker = dict()
         line_style = dict()
@@ -362,7 +364,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.plot.set_xscale('log')
         self.plot.set_yscale('linear')
         self.plot.set_xlabel('Return period (years)')
-        self.plot.set_ylabel('Loss')  # TODO: add measurement unit
+        self.plot.set_ylabel('Loss (%s)' % unit)
         title = 'Loss type: %s' % loss_type
         self.plot.set_title(title)
         self.plot.grid(which='both')
