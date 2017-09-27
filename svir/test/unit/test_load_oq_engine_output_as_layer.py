@@ -26,7 +26,7 @@
 import os
 import unittest
 import tempfile
-import filecmp
+import csv
 from numpy.testing import assert_almost_equal
 
 from PyQt4.QtGui import QAction
@@ -281,10 +281,22 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
         self.viewer_dock.write_export_file(exported_file_path)
         expected_file_path = os.path.join(
             self.data_dir_name, 'hazard', expected_file_name)
-        self.assertTrue(
-            filecmp.cmp(exported_file_path, expected_file_path),
-            'The exported file (%s) is different with respect to the'
-            ' reference one (%s)' % (exported_file_path, expected_file_path))
+        with open(exported_file_path, 'r') as got:
+            got_reader = csv.reader(got)
+            with open(expected_file_path, 'r') as expected:
+                expected_reader = csv.reader(expected)
+                for got_line in got_reader:
+                    expected_line = expected_reader.next()
+                    for col, got_element in enumerate(got_line):
+                        try:
+                            got_el_cast = float(got_element)
+                        except ValueError:
+                            got_el_cast = got_element
+                        try:
+                            exp_el_cast = float(expected_line[col])
+                        except ValueError:
+                            exp_el_cast = expected_line[col]
+                        self.assertAlmostEqual(got_el_cast, exp_el_cast)
 
     def _set_output_type(self, output_type):
         idx = self.viewer_dock.output_type_cbx.findText(output_type)
