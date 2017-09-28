@@ -279,6 +279,13 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
         layer.select([1, 2])
         # probably we have the wrong layer selected (uhs produce many layers)
         self.viewer_dock.write_export_file(exported_file_path)
+        # NOTE: we are only checking that the exported CSV has at least 3 rows
+        # and 3 columns per row. We are avoiding more precise checks, because
+        # CSV tests are very fragile. On different platforms the numbers could
+        # be slightly different. With different versions of
+        # shapely/libgeos/numpy/etc the numbers could be slightly different.
+        # The parameters of the demos could change in the future and the
+        # numbers (even the number of rows and columns) could change.
         with open(exported_file_path, 'r') as got:
             got_reader = csv.reader(got)
             n_rows = 0
