@@ -161,7 +161,8 @@ class SettingsDialog(QDialog, FORM_CLASS):
         # if the (stripped) hostname ends with '/', remove it
         platform_hostname = \
             self.platformHostnameEdit.text().strip().rstrip('/')
-        engine_hostname = self.engineHostnameEdit.text().strip().rstrip('/')
+        engine_hostname = self.engineHostnameEdit.text(
+            ).strip().rstrip('/').rstrip('/engine')
         mySettings.setValue('irmt/developer_mode',
                             self.developermodeCheck.isChecked())
         mySettings.setValue('irmt/platform_hostname', platform_hostname)

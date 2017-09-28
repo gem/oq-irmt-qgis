@@ -483,6 +483,7 @@ class Irmt:
     def reset_engine_login(self):
         if self.drive_oq_engine_server_dlg is not None:
             self.drive_oq_engine_server_dlg.is_logged_in = False
+            self.drive_oq_engine_server_dlg.clear_output_list()
 
     def show_manual(self):
         base_url = os.path.abspath(os.path.join(
