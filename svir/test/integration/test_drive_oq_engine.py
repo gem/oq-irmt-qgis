@@ -32,14 +32,18 @@ import json
 import copy
 from mock import Mock
 
+from PyQt4.QtGui import QAction
 from svir.third_party.requests import Session
 from svir.utilities.shared import (OQ_ALL_LOADABLE_TYPES,
                                    OQ_CSV_LOADABLE_TYPES,
                                    OQ_NPZ_LOADABLE_TYPES,
+                                   OQ_RST_TYPES,
+                                   OQ_NO_MAP_TYPES,
                                    )
 from svir.test.utilities import get_qgis_app
 from svir.dialogs.drive_oq_engine_server_dialog import OUTPUT_TYPE_LOADERS
 from svir.dialogs.show_full_report_dialog import ShowFullReportDialog
+from svir.dialogs.viewer_dock import ViewerDock
 
 QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 
@@ -49,6 +53,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
     def setUp(self):
         self.session = Session()
         self.hostname = 'http://localhost:8800'
+        mock_action = QAction(IFACE.mainWindow())
+        self.viewer_dock = ViewerDock(IFACE, mock_action)
 
     def get_calc_list(self):
         calc_list_url = "%s/v1/calc/list?relevant=true" % self.hostname
@@ -105,16 +111,15 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
     def load_output(self, calc, output):
         calc_id = calc['id']
         output_type = output['type']
-        if (output_type in OQ_ALL_LOADABLE_TYPES
-                or output_type == 'fullreport'):
+        if output_type in OQ_ALL_LOADABLE_TYPES | OQ_RST_TYPES:
             if output_type in OQ_CSV_LOADABLE_TYPES:
                 print('\tLoading output type %s...' % output_type)
                 filepath = self.download_output(output['id'], 'csv')
             elif output_type in OQ_NPZ_LOADABLE_TYPES:
                 print('\tLoading output type %s...' % output_type)
                 filepath = self.download_output(output['id'], 'npz')
-            elif output_type == 'fullreport':
-                print('\tLoading fullreport...')
+            elif output_type in OQ_RST_TYPES:
+                print('\tLoading output type %s...' % output_type)
                 # TODO: do not skip this when encoding issue is solved
                 #       engine-side
                 if calc['description'] == u'Classical PSHA — Area Source':
@@ -149,8 +154,18 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             if dlg.ok_button.isEnabled():
                 dlg.accept()
                 print('\t\tok')
+                return
             else:
                 raise RuntimeError('The ok button is disabled')
+        elif output_type in OQ_NO_MAP_TYPES:
+            print('\tLoading output type %s...' % output_type)
+            self.viewer_dock.load_agg_curves(
+                calc_id, self.session, self.hostname, output_type)
+            tmpfile_handler, tmpfile_name = tempfile.mkstemp()
+            self.viewer_dock.write_export_file(tmpfile_name)
+            os.close(tmpfile_handler)
+            print('\t\tok')
+            return
         else:
             self.not_implemented_loaders.add(output_type)
             print('\tLoader for output type %s is not implemented'
@@ -176,8 +191,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             calc_list = [calc for calc in calc_list
                          if calc['id'] == selected_calc_id]
         self.selected_otype = os.environ.get('SELECTED_OTYPE')
-        if (self.selected_otype not in OQ_ALL_LOADABLE_TYPES
-                and self.selected_otype != 'fullreport'):
+        if (self.selected_otype not in OQ_ALL_LOADABLE_TYPES | OQ_RST_TYPES):
             print('\n\tSELECTED_OTYPE was not set or is not valid.'
                   ' Running tests for all the available output types.')
             self.selected_otype = None

@@ -56,7 +56,10 @@ from svir.third_party.requests.exceptions import (ConnectionError,
 from svir.third_party.requests.packages.urllib3.exceptions import (
     LocationParseError)
 from svir.utilities.settings import get_engine_credentials
-from svir.utilities.shared import OQ_ALL_LOADABLE_TYPES
+from svir.utilities.shared import (OQ_ALL_LOADABLE_TYPES,
+                                   OQ_RST_TYPES,
+                                   OQ_NO_MAP_TYPES,
+                                   )
 from svir.utilities.utils import (WaitCursorManager,
                                   engine_login,
                                   log_msg,
@@ -602,8 +605,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         max_actions = 0
         for row in output_list:
             num_actions = len(row['outtypes'])
-            if (row['type'] in OQ_ALL_LOADABLE_TYPES
-                    or row['type'] == 'fullreport'):
+            if row['type'] in (OQ_ALL_LOADABLE_TYPES |
+                               OQ_RST_TYPES |
+                               OQ_NO_MAP_TYPES):
                 # TODO: remove check when gmf_data will be loadable also for
                 #       event_based
                 if not (row['type'] == 'gmf_data'
@@ -627,9 +631,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 self.connect_button_to_action(button, action, output, outtype)
                 self.output_list_tbl.setCellWidget(row, col, button)
                 self.calc_list_tbl.setColumnWidth(col, BUTTON_WIDTH)
-            if (output['type'] in OQ_ALL_LOADABLE_TYPES
-                    or output['type'] == 'fullreport'):
-                if output['type'] == 'fullreport':
+            if output['type'] in (OQ_ALL_LOADABLE_TYPES |
+                                  OQ_RST_TYPES |
+                                  OQ_NO_MAP_TYPES):
+                if output['type'] in OQ_RST_TYPES | OQ_NO_MAP_TYPES:
                     action = 'Show'
                 else:
                     action = 'Load as layer'
@@ -674,7 +679,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         output_type = output['type']
         if action == 'Show':
             dest_folder = tempfile.gettempdir()
-            if outtype == 'rst':
+            if output_type in OQ_NO_MAP_TYPES:
+                self.viewer_dock.load_agg_curves(
+                    self.current_output_calc_id, self.session,
+                    self.hostname, output_type)
+            elif outtype == 'rst':
                 filepath = self.download_output(
                     output_id, outtype, dest_folder)
                 if not filepath:

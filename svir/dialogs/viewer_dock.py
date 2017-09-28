@@ -24,6 +24,9 @@
 
 import json
 import os
+import csv
+import numpy
+import io
 from collections import OrderedDict
 
 from PyQt4 import QtGui
@@ -47,7 +50,10 @@ from PyQt4.QtGui import (QColor,
 from qgis.gui import QgsVertexMarker
 from qgis.core import QGis, QgsMapLayer, QgsFeatureRequest
 
-from svir.utilities.shared import TEXTUAL_FIELD_TYPES
+from svir.utilities.shared import (TEXTUAL_FIELD_TYPES,
+                                   OQ_ALL_LOADABLE_TYPES,
+                                   OQ_NO_MAP_TYPES,
+                                   )
 from svir.utilities.utils import (get_ui_class,
                                   reload_attrib_cbx,
                                   log_msg,
@@ -129,6 +135,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             ('', ''),
             ('hcurves', 'Hazard Curves'),
             ('uhs', 'Uniform Hazard Spectra'),
+            ('agg_curves-rlzs', 'Aggregated loss curves (rlzs)'),
+            ('agg_curves-stats', 'Aggregated loss curves (stats)'),
             ('recovery_curves', 'Recovery Curves')])
         self.output_type_cbx.addItems(self.output_types_names.values())
 
@@ -267,6 +275,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             self.create_stats_multiselect()
         elif new_output_type == 'loss_curves':
             self.create_loss_type_selector()
+        elif new_output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
+            self.create_loss_type_selector()
         elif new_output_type == 'uhs':
             self.create_stats_multiselect()
         elif new_output_type == 'recovery_curves':
@@ -283,6 +293,84 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         # the window to shrink unexpectedly until the focus is moved somewhere
         # else.
         self.output_type = new_output_type
+
+    def extract_npz(self, session, hostname, calc_id, output_type):
+        url = '%s/v1/calc/%s/extract/%s' % (hostname, calc_id, output_type)
+        resp_content = session.get(url).content
+        return numpy.load(io.BytesIO(resp_content))
+
+    def load_agg_curves(self, calc_id, session, hostname, output_type):
+        self.change_output_type(output_type)
+        self.agg_curves = self.extract_npz(
+            session, hostname, calc_id, output_type)
+        loss_types = self.agg_curves['array'].dtype.names
+        self.loss_type_cbx.blockSignals(True)
+        self.loss_type_cbx.clear()
+        self.loss_type_cbx.blockSignals(False)
+        self.loss_type_cbx.addItems(loss_types)
+
+    def draw_agg_curves(self, output_type):
+        if output_type == 'agg_curves-rlzs':
+            rlzs_or_stats = [
+                "Rlz %s" % rlz
+                for rlz in range(self.agg_curves['array'].shape[1])]
+        elif output_type == 'agg_curves-stats':
+            rlzs_or_stats = self.agg_curves['stats']
+        else:
+            raise NotImplementedError(
+                'Can not draw outputs of type %s' % output_type)
+            return
+        loss_type = self.loss_type_cbx.currentText()
+        abscissa = self.agg_curves['return_periods']
+        ordinates = self.agg_curves['array'][loss_type]
+        self.plot.clear()
+        marker = dict()
+        line_style = dict()
+        color_hex = dict()
+        for idx, rlz_or_stat in enumerate(rlzs_or_stats):
+            marker[idx] = self.markers[idx % len(self.markers)]
+            if self.bw_chk.isChecked():
+                line_styles_whole_cycles = idx / len(self.line_styles)
+                # NOTE: 85 is approximately 256 / 3
+                r = g = b = format(
+                    (85 * line_styles_whole_cycles) % 256, '02x')
+                color_hex_str = "#%s%s%s" % (r, g, b)
+                color = QColor(color_hex_str)
+                color_hex[idx] = color.darker(120).name()
+                # here I am using i in order to cycle through all the
+                # line styles, regardless from the feature id
+                # (otherwise I might easily repeat styles, that are a
+                # small set of 4 items)
+                line_style[idx] = self.line_styles[
+                    idx % len(self.line_styles)]
+            else:
+                # here I am using the feature id in order to keep a
+                # matching between a curve and the corresponding point
+                # in the map
+                color_name = self.color_names[idx % len(self.color_names)]
+                color = QColor(color_name)
+                color_hex[idx] = color.darker(120).name()
+                line_style[idx] = "-"  # solid
+            self.plot.plot(
+                abscissa,
+                ordinates[:, idx],
+                color=color_hex[idx],
+                linestyle=line_style[idx],
+                marker=marker[idx],
+                label=rlz_or_stat,
+            )
+        self.plot.set_xscale('log')
+        self.plot.set_yscale('linear')
+        self.plot.set_xlabel('Return period (years)')
+        self.plot.set_ylabel('Loss')  # TODO: add measurement unit
+        title = 'Loss type: %s' % loss_type
+        self.plot.set_title(title)
+        self.plot.grid(which='both')
+        if 1 <= len(rlzs_or_stats) <= 20:
+            location = 'upper left'
+            self.legend = self.plot.legend(
+                loc=location, fancybox=True, shadow=True, fontsize='small')
+        self.plot_canvas.draw()
 
     def draw(self):
         self.plot.clear()
@@ -390,7 +478,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         if investigation_time is not None:
             title += ' (%s years)' % investigation_time
         self.plot.set_title(title)
-        self.plot.grid()
+        self.plot.grid(which='both')
         if self.output_type != 'recovery_curves' and 1 <= count_lines <= 20:
             if self.output_type == 'uhs':
                 location = 'upper right'
@@ -705,6 +793,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 self.on_container_hover(event, self.legend)
 
     def on_container_hover(self, event, container):
+        if self.output_type in OQ_NO_MAP_TYPES:
+            return False
         for line in container.get_lines():
             if line.contains(event)[0]:
                 # matplotlib needs a string when exporting to svg, so here we
@@ -725,10 +815,14 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.was_imt_switched = True
         self.redraw_current_selection()
 
-    def on_loss_type_changed(self):
+    @pyqtSlot(str)
+    def on_loss_type_changed(self, loss_type):
         self.current_loss_type = self.loss_type_cbx.currentText()
-        self.was_loss_type_switched = True
-        self.redraw_current_selection()
+        if self.output_type in OQ_NO_MAP_TYPES:
+            self.draw_agg_curves(self.output_type)
+        else:
+            self.was_loss_type_switched = True
+            self.redraw_current_selection()
 
     def on_poe_changed(self):
         self.current_poe = self.poe_cbx.currentText()
@@ -748,6 +842,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
     @pyqtSlot()
     def on_export_data_button_clicked(self):
+        filename = None
         if self.output_type == 'hcurves':
             filename = QtGui.QFileDialog.getSaveFileName(
                 self,
@@ -768,6 +863,14 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                 os.path.expanduser(
                     '~/loss_curves_%s.csv' % self.current_loss_type),
                 '*.csv')
+        elif self.output_type in OQ_NO_MAP_TYPES:
+            filename = QtGui.QFileDialog.getSaveFileName(
+                self,
+                self.tr('Export data'),
+                os.path.expanduser(
+                    '~/%s_%s.csv' % (self.output_type,
+                                     self.current_loss_type)),
+                '*.csv')
         elif self.output_type == 'recovery_curves':
             filename = QtGui.QFileDialog.getSaveFileName(
                 self,
@@ -776,34 +879,31 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                     '~/recovery_curves_%s.csv' %
                     self.approach_cbx.currentText()),
                 '*.csv')
-        if filename:
+        if filename is not None:
             self.write_export_file(filename)
 
     def write_export_file(self, filename):
         with open(filename, 'w') as csv_file:
+            writer = csv.writer(csv_file)
             if self.output_type == 'recovery_curves':
-                # write header
-                line = 'lon,lat,%s' % (
-                    ','.join(map(str, self.current_abscissa)))
-                csv_file.write(line + os.linesep)
+                headers = ['lon', 'lat']
+                headers.extend(self.current_abscissa)
+                writer.writerow(headers)
                 # NOTE: taking the first element, because they are all the
                 # same
                 feature = self.iface.activeLayer().selectedFeatures()[0]
                 lon = feature.geometry().asPoint().x()
                 lat = feature.geometry().asPoint().y()
-                line = '%s,%s' % (lon, lat)
                 values = self.current_selection[None].values()[0]
+                row = [lon, lat]
                 if values:
-                    line += "," + ",".join([
-                        str(value) for value in values['ordinates']])
-                csv_file.write(line + os.linesep)
+                    row.extend(values['ordinates'])
+                writer.writerow(row)
             elif self.output_type in ['hcurves', 'uhs']:
                 selected_rlzs_or_stats = list(
                     self.stats_multiselect.get_selected_items())
                 if self.output_type == 'hcurves':
                     selected_imt = self.imt_cbx.currentText()
-
-                # write header
                 field_names = []
                 for field in self.iface.activeLayer().fields():
                     if self.output_type == 'hcurves':
@@ -817,20 +917,44 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                     if rlz_or_stat not in selected_rlzs_or_stats:
                         continue
                     field_names.append(field.name())
-                header = 'lon,lat,%s' % ','.join(field_names)
-                csv_file.write(header + os.linesep)
-
-                # write selected data
+                headers = ['lon', 'lat']
+                headers.extend(field_names)
+                writer.writerow(headers)
                 for feature in self.iface.activeLayer().getFeatures():
                     values = [feature.attribute(field_name)
                               for field_name in field_names]
                     lon = feature.geometry().asPoint().x()
                     lat = feature.geometry().asPoint().y()
-                    line = '%s,%s' % (lon, lat)
+                    row = [lon, lat]
                     if values:
-                        line += "," + ",".join([
-                            str(value) for value in values])
-                    csv_file.write(line + os.linesep)
+                        row.extend(values)
+                    writer.writerow(row)
+            elif self.output_type == 'agg_curves-rlzs':
+                # the expected shape is (P, R), where P is the number of return
+                # periods and R is the number of realizations
+                num_rlzs = self.agg_curves['array'].shape[1]
+                headers = ['return_period']
+                headers.extend(['rlz-%s' % rlz for rlz in range(num_rlzs)])
+                writer.writerow(headers)
+                for i, return_period in enumerate(
+                        self.agg_curves['return_periods']):
+                    values = self.agg_curves['array'][self.current_loss_type]
+                    row = [return_period]
+                    row.extend([value for value in values[i]])
+                    writer.writerow(row)
+            elif self.output_type == 'agg_curves-stats':
+                # the expected shape is (P, S), where P is the number of return
+                # periods and S is the number of statistics
+                stats = self.agg_curves['stats']
+                headers = ['return_period']
+                headers.extend(stats)
+                writer.writerow(headers)
+                for i, return_period in enumerate(
+                        self.agg_curves['return_periods']):
+                    values = self.agg_curves['array'][self.current_loss_type]
+                    row = [return_period]
+                    row.extend([value for value in values[i]])
+                    writer.writerow(row)
             else:
                 raise NotImplementedError(self.output_type)
         msg = 'Data exported to %s' % filename
@@ -838,15 +962,19 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
 
     @pyqtSlot()
     def on_bw_chk_clicked(self):
-        self.layer_changed()
+        if self.output_type in OQ_ALL_LOADABLE_TYPES | set('recovery_curves'):
+            self.layer_changed()
+        elif self.output_type in OQ_NO_MAP_TYPES:
+            self.draw_agg_curves(self.output_type)
 
     @pyqtSlot(int)
-    def on_output_type_cbx_currentIndexChanged(self):
+    def on_output_type_cbx_currentIndexChanged(self, index):
         otname = self.output_type_cbx.currentText()
         for output_type, output_type_name in self.output_types_names.items():
             if output_type_name == otname:
                 self.set_output_type_and_its_gui(output_type)
-                self.layer_changed()
+                if output_type not in OQ_NO_MAP_TYPES:
+                    self.layer_changed()
                 return
         output_type = None
         self.set_output_type_and_its_gui(output_type)
