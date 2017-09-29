@@ -680,7 +680,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         if action == 'Show':
             dest_folder = tempfile.gettempdir()
             if output_type in OQ_NO_MAP_TYPES:
-                self.viewer_dock.load_agg_curves(
+                self.viewer_dock.load_no_map_output(
                     self.current_output_calc_id, self.session,
                     self.hostname, output_type)
             elif outtype == 'rst':
