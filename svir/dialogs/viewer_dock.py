@@ -966,6 +966,12 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     '~/loss_curves_%s.csv' % self.current_loss_type),
                 '*.csv')
         elif self.output_type in OQ_NO_MAP_TYPES:
+            if self.output_type == 'dmg_total':
+                # TODO: we might get the original csv from the engine
+                log_msg('This functionality is not implemented. You might'
+                        ' consider downloading the csv directly from the'
+                        ' OQ-Engine.', message_bar=self.iface.messageBar())
+                return
             filename = QFileDialog.getSaveFileName(
                 self,
                 self.tr('Export data'),
@@ -1057,6 +1063,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     row = [return_period]
                     row.extend([value for value in values[i]])
                     writer.writerow(row)
+            elif self.output_type == 'dmg_total':
+                # TODO: we might get the original csv from the engine
+                log_msg('This functionality is not implemented. You might'
+                        ' consider downloading the csv directly from the'
+                        ' OQ-Engine.', message_bar=self.iface.messageBar())
             else:
                 raise NotImplementedError(self.output_type)
         msg = 'Data exported to %s' % filename
