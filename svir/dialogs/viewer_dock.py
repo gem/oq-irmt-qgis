@@ -345,14 +345,15 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         rlzs = ['rlz-%s' % rlz for rlz in range(num_rlzs)]
         self.rlz_cbx.blockSignals(True)
         self.rlz_cbx.clear()
-        self.rlz_cbx.blockSignals(False)
         self.rlz_cbx.addItems(rlzs)
+        self.rlz_cbx.blockSignals(False)
 
         loss_types = self.dmg_total['array'].dtype.names
         self.loss_type_cbx.blockSignals(True)
         self.loss_type_cbx.clear()
-        self.loss_type_cbx.blockSignals(False)
         self.loss_type_cbx.addItems(loss_types)
+        self.loss_type_cbx.blockSignals(False)
+        self.draw_dmg_total()
 
     def load_agg_curves(self, calc_id, session, hostname, output_type):
         self.change_output_type(output_type)
@@ -447,20 +448,21 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         indX = numpy.arange(len(dmg_states))  # the x locations for the groups
         # indZ = numpy.arange(len(taxonomies))  #   y locations for the groups
         error_config = {'ecolor': '0.3', 'linewidth': '2'}
-        # bar_width = 0.3
-        # padding_left = 0
+        bar_width = 0.3
+        padding_left = 0
 
         self.plot.clear()
-        # self.plot.bar(indX+padding_left, height=means, width=bar_width,
-        #               yerr=stddevs, error_kw=error_config, color='IndianRed',
-        #               linewidth=1.5, alpha=0.6)
-        self.plot.bar(indX, height=means, yerr=stddevs, error_kw=error_config,
-                      color='IndianRed')
+        self.plot.bar(indX+padding_left, height=means, width=bar_width,
+                      yerr=stddevs, error_kw=error_config, color='IndianRed',
+                      linewidth=1.5, alpha=0.6)
         self.plot.set_title('Damage distribution (all taxonomies)')
         self.plot.set_xlabel('Damage state')
         self.plot.set_ylabel('Number of assets in damage state')
         # self.plot.set_xticks(indX+padding_left+bar_width/2., dmg_states)
-        # self.plot.set_margins(.25, 0)
+        self.plot.set_xticks(indX+padding_left+bar_width/2.)
+        self.plot.set_xticklabels(dmg_states)
+        self.plot.margins(.15, 0)
+        self.plot.yaxis.grid()
         self.plot_canvas.draw()
 
     def draw(self):
@@ -934,7 +936,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                              self.n_simulations_sbx.value())
 
     def on_rlz_changed(self):
-        pass
+        self.draw_dmg_total()
 
     @pyqtSlot(int)
     def on_exclude_no_dmg_ckb_state_changed(self, state):
