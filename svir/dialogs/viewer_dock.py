@@ -29,8 +29,6 @@ import numpy
 import io
 from collections import OrderedDict
 
-from PyQt4 import QtGui
-
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import (
     FigureCanvasQTAgg as FigureCanvas,
@@ -39,14 +37,17 @@ from matplotlib.backends.backend_qt4agg import (
 from matplotlib.lines import Line2D
 
 
-from PyQt4.QtCore import pyqtSlot, QSettings
-from PyQt4.QtGui import (QColor,
-                         QLabel,
-                         QComboBox,
-                         QSizePolicy,
-                         QSpinBox,
-                         QPushButton,
-                         )
+from qgis.PyQt.QtCore import pyqtSlot, QSettings
+from qgis.PyQt.QtGui import (QColor,
+                             QLabel,
+                             QComboBox,
+                             QSizePolicy,
+                             QSpinBox,
+                             QPushButton,
+                             QCheckBox,
+                             QDockWidget,
+                             QFileDialog,
+                             )
 from qgis.gui import QgsVertexMarker
 from qgis.core import QGis, QgsMapLayer, QgsFeatureRequest
 
@@ -69,7 +70,7 @@ from svir import IS_SCIPY_INSTALLED
 FORM_CLASS = get_ui_class('ui_viewer_dock.ui')
 
 
-class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
+class ViewerDock(QDockWidget, FORM_CLASS):
     def __init__(self, iface, action):
         """Constructor for the viewer dock.
 
@@ -80,7 +81,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             use autoconnect to set up slots. See article below:
             http://doc.qt.nokia.com/4.7-snapshot/designer-using-a-ui-file.html
         """
-        QtGui.QDockWidget.__init__(self, None)
+        QDockWidget.__init__(self, None)
         self.setupUi(self)
         self.iface = iface
 
@@ -102,6 +103,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.recalculate_curve_btn = None
         self.fields_multiselect = None
         self.stats_multiselect = None
+        self.rlzs_multiselect = None
 
         # self.current_selection[None] is for recovery curves
         self.current_selection = {}  # rlz_or_stat -> feature_id -> curve
@@ -135,8 +137,9 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             ('', ''),
             ('hcurves', 'Hazard Curves'),
             ('uhs', 'Uniform Hazard Spectra'),
-            ('agg_curves-rlzs', 'Aggregated loss curves (rlzs)'),
-            ('agg_curves-stats', 'Aggregated loss curves (stats)'),
+            ('agg_curves-rlzs', 'Aggregated loss curves (realizations)'),
+            ('agg_curves-stats', 'Aggregated loss curves (statistics)'),
+            ('dmg_total', 'Total damage distribution'),
             ('recovery_curves', 'Recovery Curves')])
         self.output_type_cbx.addItems(self.output_types_names.values())
 
@@ -160,8 +163,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.loss_type_cbx = QComboBox()
         self.loss_type_cbx.currentIndexChanged['QString'].connect(
             self.on_loss_type_changed)
-        self.typeDepHLayout1.addWidget(self.loss_type_lbl)
-        self.typeDepHLayout1.addWidget(self.loss_type_cbx)
+        self.typeDepHLayout2.addWidget(self.loss_type_lbl)
+        self.typeDepHLayout2.addWidget(self.loss_type_cbx)
 
     def create_imt_selector(self):
         self.imt_lbl = QLabel('Intensity Measure Type')
@@ -182,6 +185,25 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             self.on_poe_changed)
         self.typeDepHLayout1.addWidget(self.poe_lbl)
         self.typeDepHLayout1.addWidget(self.poe_cbx)
+
+    def create_rlz_selector(self):
+        self.rlz_lbl = QLabel('Realization')
+        self.rlz_lbl.setSizePolicy(
+            QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.rlz_cbx = QComboBox()
+        self.rlz_cbx.currentIndexChanged['QString'].connect(
+            self.on_rlz_changed)
+        self.typeDepHLayout1.addWidget(self.rlz_lbl)
+        self.typeDepHLayout1.addWidget(self.rlz_cbx)
+
+    def create_exclude_no_dmg_ckb(self):
+        self.exclude_no_dmg_ckb = QCheckBox('Exclude "no damage"')
+        self.exclude_no_dmg_ckb.setSizePolicy(
+            QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.exclude_no_dmg_ckb.setChecked(True)
+        self.exclude_no_dmg_ckb.stateChanged[int].connect(
+            self.on_exclude_no_dmg_ckb_state_changed)
+        self.typeDepVLayout.addWidget(self.exclude_no_dmg_ckb)
 
     def create_approach_selector(self):
         self.approach_lbl = QLabel('Recovery time approach')
@@ -277,6 +299,10 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             self.create_loss_type_selector()
         elif new_output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
             self.create_loss_type_selector()
+        elif new_output_type == 'dmg_total':
+            self.create_loss_type_selector()
+            self.create_rlz_selector()
+            self.create_exclude_no_dmg_ckb()
         elif new_output_type == 'uhs':
             self.create_stats_multiselect()
         elif new_output_type == 'recovery_curves':
@@ -298,6 +324,36 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         url = '%s/v1/calc/%s/extract/%s' % (hostname, calc_id, output_type)
         resp_content = session.get(url).content
         return numpy.load(io.BytesIO(resp_content))
+
+    def load_no_map_output(self, calc_id, session, hostname, output_type):
+        if output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
+            self.load_agg_curves(calc_id, session, hostname, output_type)
+        elif output_type == 'dmg_total':
+            self.load_dmg_total(calc_id, session, hostname, output_type)
+        else:
+            raise NotImplementedError(output_type)
+
+    def load_dmg_total(self, calc_id, session, hostname, output_type):
+        self.change_output_type(output_type)
+        self.dmg_total = self.extract_npz(
+            session, hostname, calc_id, output_type)
+        composite_risk_model_attrs = self.extract_npz(
+            session, hostname, calc_id, 'composite_risk_model.attrs')
+        self.dmg_states = composite_risk_model_attrs['damage_states']
+
+        num_rlzs = self.dmg_total['array'].shape[0]
+        rlzs = ['rlz-%s' % rlz for rlz in range(num_rlzs)]
+        self.rlz_cbx.blockSignals(True)
+        self.rlz_cbx.clear()
+        self.rlz_cbx.addItems(rlzs)
+        self.rlz_cbx.blockSignals(False)
+
+        loss_types = self.dmg_total['array'].dtype.names
+        self.loss_type_cbx.blockSignals(True)
+        self.loss_type_cbx.clear()
+        self.loss_type_cbx.addItems(loss_types)
+        self.loss_type_cbx.blockSignals(False)
+        self.draw_dmg_total()
 
     def load_agg_curves(self, calc_id, session, hostname, output_type):
         self.change_output_type(output_type)
@@ -323,6 +379,8 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         loss_type = self.loss_type_cbx.currentText()
         abscissa = self.agg_curves['return_periods']
         ordinates = self.agg_curves['array'][loss_type]
+        unit_idx = self.agg_curves['array'].dtype.names.index(loss_type)
+        unit = self.agg_curves['units'][unit_idx]
         self.plot.clear()
         marker = dict()
         line_style = dict()
@@ -362,7 +420,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         self.plot.set_xscale('log')
         self.plot.set_yscale('linear')
         self.plot.set_xlabel('Return period (years)')
-        self.plot.set_ylabel('Loss')  # TODO: add measurement unit
+        self.plot.set_ylabel('Loss (%s)' % unit)
         title = 'Loss type: %s' % loss_type
         self.plot.set_title(title)
         self.plot.grid(which='both')
@@ -370,6 +428,41 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
             location = 'upper left'
             self.legend = self.plot.legend(
                 loc=location, fancybox=True, shadow=True, fontsize='small')
+        self.plot_canvas.draw()
+
+    def draw_dmg_total(self):
+        '''
+        Plots the total damage distribution
+        '''
+        rlz = int(self.rlz_cbx.currentText().split('-')[1])  # from rlz-xxx
+        loss_type = self.loss_type_cbx.currentText()
+        means = self.dmg_total['array'][rlz][loss_type]['mean']
+        stddevs = self.dmg_total['array'][rlz][loss_type]['stddev']
+        dmg_states = self.dmg_states
+        if self.exclude_no_dmg_ckb.isChecked():
+            # exclude the first element, that is 'no damage'
+            means = means[1:]
+            stddevs = stddevs[1:]
+            dmg_states = dmg_states[1:]
+
+        indX = numpy.arange(len(dmg_states))  # the x locations for the groups
+        error_config = {'ecolor': '0.3', 'linewidth': '2'}
+        bar_width = 0.3
+        if self.bw_chk.isChecked():
+            color = 'lightgray'
+        else:
+            color = 'IndianRed'
+        self.plot.clear()
+        self.plot.bar(indX, height=means, width=bar_width,
+                      yerr=stddevs, error_kw=error_config, color=color,
+                      linewidth=1.5, alpha=0.6)
+        self.plot.set_title('Damage distribution')
+        self.plot.set_xlabel('Damage state')
+        self.plot.set_ylabel('Number of assets in damage state')
+        self.plot.set_xticks(indX+bar_width/2.)
+        self.plot.set_xticklabels(dmg_states)
+        self.plot.margins(.15, 0)
+        self.plot.yaxis.grid()
         self.plot_canvas.draw()
 
     def draw(self):
@@ -818,8 +911,10 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
     @pyqtSlot(str)
     def on_loss_type_changed(self, loss_type):
         self.current_loss_type = self.loss_type_cbx.currentText()
-        if self.output_type in OQ_NO_MAP_TYPES:
+        if self.output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
             self.draw_agg_curves(self.output_type)
+        elif self.output_type == 'dmg_total':
+            self.draw_dmg_total()
         else:
             self.was_loss_type_switched = True
             self.redraw_current_selection()
@@ -840,31 +935,44 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
         QSettings().setValue('irmt/n_simulations_per_building',
                              self.n_simulations_sbx.value())
 
+    def on_rlz_changed(self):
+        self.draw_dmg_total()
+
+    @pyqtSlot(int)
+    def on_exclude_no_dmg_ckb_state_changed(self, state):
+        self.draw_dmg_total()
+
     @pyqtSlot()
     def on_export_data_button_clicked(self):
         filename = None
         if self.output_type == 'hcurves':
-            filename = QtGui.QFileDialog.getSaveFileName(
+            filename = QFileDialog.getSaveFileName(
                 self,
                 self.tr('Export data'),
                 os.path.expanduser(
                     '~/hazard_curves_%s.csv' % self.current_imt),
                 '*.csv')
         elif self.output_type == 'uhs':
-            filename = QtGui.QFileDialog.getSaveFileName(
+            filename = QFileDialog.getSaveFileName(
                 self,
                 self.tr('Export data'),
                 os.path.expanduser('~/uniform_hazard_spectra.csv'),
                 '*.csv')
         elif self.output_type == 'loss_curves':
-            filename = QtGui.QFileDialog.getSaveFileName(
+            filename = QFileDialog.getSaveFileName(
                 self,
                 self.tr('Export data'),
                 os.path.expanduser(
                     '~/loss_curves_%s.csv' % self.current_loss_type),
                 '*.csv')
         elif self.output_type in OQ_NO_MAP_TYPES:
-            filename = QtGui.QFileDialog.getSaveFileName(
+            if self.output_type == 'dmg_total':
+                # TODO: we might get the original csv from the engine
+                log_msg('This functionality is not implemented. You might'
+                        ' consider downloading the csv directly from the'
+                        ' OQ-Engine.', message_bar=self.iface.messageBar())
+                return
+            filename = QFileDialog.getSaveFileName(
                 self,
                 self.tr('Export data'),
                 os.path.expanduser(
@@ -872,7 +980,7 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                                      self.current_loss_type)),
                 '*.csv')
         elif self.output_type == 'recovery_curves':
-            filename = QtGui.QFileDialog.getSaveFileName(
+            filename = QFileDialog.getSaveFileName(
                 self,
                 self.tr('Export data'),
                 os.path.expanduser(
@@ -955,6 +1063,12 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
                     row = [return_period]
                     row.extend([value for value in values[i]])
                     writer.writerow(row)
+            elif self.output_type == 'dmg_total':
+                # TODO: we might get the original csv from the engine
+                log_msg('This functionality is not implemented. You might'
+                        ' consider downloading the csv directly from the'
+                        ' OQ-Engine.', message_bar=self.iface.messageBar())
+                return
             else:
                 raise NotImplementedError(self.output_type)
         msg = 'Data exported to %s' % filename
@@ -964,8 +1078,10 @@ class ViewerDock(QtGui.QDockWidget, FORM_CLASS):
     def on_bw_chk_clicked(self):
         if self.output_type in OQ_ALL_LOADABLE_TYPES | set('recovery_curves'):
             self.layer_changed()
-        elif self.output_type in OQ_NO_MAP_TYPES:
+        if self.output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
             self.draw_agg_curves(self.output_type)
+        elif self.output_type == 'dmg_total':
+            self.draw_dmg_total()
 
     @pyqtSlot(int)
     def on_output_type_cbx_currentIndexChanged(self, index):
