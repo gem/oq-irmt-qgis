@@ -448,20 +448,18 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         indX = numpy.arange(len(dmg_states))  # the x locations for the groups
         error_config = {'ecolor': '0.3', 'linewidth': '2'}
         bar_width = 0.3
-        padding_left = 0
         if self.bw_chk.isChecked():
             color = 'lightgray'
         else:
             color = 'IndianRed'
         self.plot.clear()
-        self.plot.bar(indX+padding_left, height=means, width=bar_width,
+        self.plot.bar(indX, height=means, width=bar_width,
                       yerr=stddevs, error_kw=error_config, color=color,
                       linewidth=1.5, alpha=0.6)
         self.plot.set_title('Damage distribution')
         self.plot.set_xlabel('Damage state')
         self.plot.set_ylabel('Number of assets in damage state')
-        # self.plot.set_xticks(indX+padding_left+bar_width/2., dmg_states)
-        self.plot.set_xticks(indX+padding_left+bar_width/2.)
+        self.plot.set_xticks(indX+bar_width/2.)
         self.plot.set_xticklabels(dmg_states)
         self.plot.margins(.15, 0)
         self.plot.yaxis.grid()
