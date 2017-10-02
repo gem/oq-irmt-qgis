@@ -159,7 +159,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 raise RuntimeError('The ok button is disabled')
         elif output_type in OQ_NO_MAP_TYPES:
             print('\tLoading output type %s...' % output_type)
-            self.viewer_dock.load_agg_curves(
+            self.viewer_dock.load_no_map_output(
                 calc_id, self.session, self.hostname, output_type)
             tmpfile_handler, tmpfile_name = tempfile.mkstemp()
             self.viewer_dock.write_export_file(tmpfile_name)

@@ -446,7 +446,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             dmg_states = dmg_states[1:]
 
         indX = numpy.arange(len(dmg_states))  # the x locations for the groups
-        # indZ = numpy.arange(len(taxonomies))  #   y locations for the groups
         error_config = {'ecolor': '0.3', 'linewidth': '2'}
         bar_width = 0.3
         padding_left = 0
@@ -1068,6 +1067,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 log_msg('This functionality is not implemented. You might'
                         ' consider downloading the csv directly from the'
                         ' OQ-Engine.', message_bar=self.iface.messageBar())
+                return
             else:
                 raise NotImplementedError(self.output_type)
         msg = 'Data exported to %s' % filename
