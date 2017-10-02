@@ -449,12 +449,15 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         error_config = {'ecolor': '0.3', 'linewidth': '2'}
         bar_width = 0.3
         padding_left = 0
-
+        if self.bw_chk.isChecked():
+            color = 'lightgray'
+        else:
+            color = 'IndianRed'
         self.plot.clear()
         self.plot.bar(indX+padding_left, height=means, width=bar_width,
-                      yerr=stddevs, error_kw=error_config, color='IndianRed',
+                      yerr=stddevs, error_kw=error_config, color=color,
                       linewidth=1.5, alpha=0.6)
-        self.plot.set_title('Damage distribution (all taxonomies)')
+        self.plot.set_title('Damage distribution')
         self.plot.set_xlabel('Damage state')
         self.plot.set_ylabel('Number of assets in damage state')
         # self.plot.set_xticks(indX+padding_left+bar_width/2., dmg_states)
@@ -1077,8 +1080,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     def on_bw_chk_clicked(self):
         if self.output_type in OQ_ALL_LOADABLE_TYPES | set('recovery_curves'):
             self.layer_changed()
-        elif self.output_type in OQ_NO_MAP_TYPES:
+        if self.output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
             self.draw_agg_curves(self.output_type)
+        elif self.output_type == 'dmg_total':
+            self.draw_dmg_total()
 
     @pyqtSlot(int)
     def on_output_type_cbx_currentIndexChanged(self, index):
