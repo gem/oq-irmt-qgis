@@ -725,7 +725,7 @@ def write_layer_suppl_info_to_qgs(layer_id, suppl_info):
         assert found, 'After writeEntry, readEntry did not find the same item!'
         prop_suppl_info_obj = json.loads(prop_suppl_info)
         prop_suppl_info_str = pformat(prop_suppl_info_obj, indent=4)
-        log_msg(("Project's property 'supplemental_information[%s]'"
+        log_msg(("Project property 'supplemental_information[%s]'"
                  " updated: \n%s") % (layer_id, prop_suppl_info_str))
 
 

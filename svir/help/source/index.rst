@@ -43,7 +43,7 @@ Links:
 
 .. note::
 
-    This documentation is distributed within the plugin's package and it is
+    This documentation is distributed within the plugin package and it is
     also available online at `<http://docs.openquake.org/oq-irmt-qgis/>`_
 
 

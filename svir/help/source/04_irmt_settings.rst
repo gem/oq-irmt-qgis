@@ -20,7 +20,7 @@ The OQ-Platform is a web-based portal to visualize, explore and share GEM's
 datasets, tools and models. In the :guilabel:`IRMT Settings` dialog displayed
 in :numref:`fig-connection-settings`, credentials must be inserted to
 authenticate the user and to allow the user to log into the OQ-Platform. In the
-:guilabel:`Host` field insert the URL of GEM's production installation of the
+:guilabel:`Host` field insert the URL of GEM production installation of the
 `OQ-Platform <https://platform.openquake.org>`_ or a different installation if
 you have URL access. If you still haven't registered to use the OQ-Platform,
 you can do so by clicking :guilabel:`Register to the OQ-Platform`.  This will
@@ -53,6 +53,10 @@ The checkbox labeled :guilabel:`Developer mode (requires restart)` can be used
 to increase the verbosity of logging. The latter is useful for developers or
 advanced users because logging is critical for troubleshooting, but it is not
 recommended for standard users.
+
+The button :guilabel:`Restore default settings` can be used to discard the
+settings customized by the user and to replace them with the factory defaults.
+Please be aware that such operation, once confirmed, can not be undone.
 
 
 .. |icon-connection-settings| image:: images/iconConnectionSettings.png
