@@ -40,6 +40,7 @@ from matplotlib.lines import Line2D
 from qgis.PyQt.QtCore import pyqtSlot, QSettings
 from qgis.PyQt.QtGui import (QColor,
                              QLabel,
+                             QPlainTextEdit,
                              QComboBox,
                              QSizePolicy,
                              QSpinBox,
@@ -311,6 +312,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.tags[tag_name]['selected'] = True
         for tag_name in self.tag_names_multiselect.get_unselected_items():
             self.tags[tag_name]['selected'] = False
+        self.update_list_selected_edt()
         self.draw_dmg_total()
 
     def update_selected_tag_values(self):
@@ -318,13 +320,24 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.tags[self.current_tag_name]['values'][tag_value] = True
         for tag_value in self.tag_values_multiselect.get_unselected_items():
             self.tags[self.current_tag_name]['values'][tag_value] = False
+        self.update_list_selected_edt()
         self.draw_dmg_total()
 
-    def create_list_selected_lbl(self):
-        self.list_selected_lbl = QLabel('Selected tags:')
-        self.list_selected_lbl.setSizePolicy(
+    def create_list_selected_edt(self):
+        self.list_selected_edt = QPlainTextEdit('Selected tags:')
+        self.list_selected_edt.setSizePolicy(
             QSizePolicy.Minimum, QSizePolicy.Minimum)
-        self.typeDepVLayout.addWidget(self.list_selected_lbl)
+        self.list_selected_edt.setReadOnly(True)
+        self.typeDepVLayout.addWidget(self.list_selected_edt)
+
+    def update_list_selected_edt(self):
+        selected_tags_str = ''
+        for tag_name in self.tags:
+            if self.tags[tag_name]['selected']:
+                for tag_value in self.tags[tag_name]['values']:
+                    if self.tags[tag_name]['values'][tag_value]:
+                        selected_tags_str += '&%s=%s' % (tag_name, tag_value)
+        self.list_selected_edt.setPlainText(selected_tags_str)
 
     def refresh_feature_selection(self):
         if not list(self.stats_multiselect.get_selected_items()):
@@ -360,7 +373,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.create_rlz_selector()
             self.create_tag_names_multiselect()
             self.create_tag_values_multiselect()
-            self.create_list_selected_lbl()
+            self.create_list_selected_edt()
             self.create_exclude_no_dmg_ckb()
         elif new_output_type == 'uhs':
             self.create_stats_multiselect()
@@ -413,6 +426,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             else:
                 # True means selected
                 self.tags[tag_name]['values'][tag_value] = True
+        self.update_list_selected_edt()
 
         num_rlzs = self.dmg_total['array'].shape[0]
         rlzs = ['rlz-%s' % rlz for rlz in range(num_rlzs)]
