@@ -262,13 +262,69 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.fields_multiselect, self.iface.activeLayer())
 
     def create_stats_multiselect(self):
-        title = 'Select statistics to plot'
+        title = 'Select statistics'
         self.stats_multiselect = ListMultiSelectWidget(title=title)
         self.stats_multiselect.setSizePolicy(
             QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
         self.typeDepVLayout.addWidget(self.stats_multiselect)
         self.stats_multiselect.selection_changed.connect(
             self.refresh_feature_selection)
+
+    def create_tag_names_multiselect(self):
+        title = 'Select tag names'
+        self.tag_names_multiselect = ListMultiSelectWidget(title=title)
+        self.tag_names_multiselect.setSizePolicy(
+            QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        self.typeDepVLayout.addWidget(self.tag_names_multiselect)
+        self.tag_names_multiselect.unselected_widget.itemClicked.connect(
+            self.populate_tag_values_multiselect)
+        self.tag_names_multiselect.selected_widget.itemClicked.connect(
+            self.populate_tag_values_multiselect)
+        self.tag_names_multiselect.selection_changed.connect(
+            self.update_selected_tag_names)
+
+    def create_tag_values_multiselect(self):
+        title = 'Select tag values'
+        self.tag_values_multiselect = ListMultiSelectWidget(title=title)
+        self.tag_values_multiselect.setSizePolicy(
+            QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        self.typeDepVLayout.addWidget(self.tag_values_multiselect)
+        self.tag_values_multiselect.selection_changed.connect(
+            self.update_selected_tag_values)
+
+    def populate_tag_values_multiselect(self, item):
+        tag_name = item.text()
+        self.current_tag_name = tag_name
+        self.tag_values_multiselect.setTitle(
+            'Select values for tag: %s' % tag_name)
+        selected_tag_values = [
+            tag_value for tag_value in self.tags[tag_name]['values']
+            if self.tags[tag_name]['values'][tag_value]]
+        unselected_tag_values = [
+            tag_value for tag_value in self.tags[tag_name]['values']
+            if not self.tags[tag_name]['values'][tag_value]]
+        self.tag_values_multiselect.set_selected_items(selected_tag_values)
+        self.tag_values_multiselect.set_unselected_items(unselected_tag_values)
+
+    def update_selected_tag_names(self):
+        for tag_name in self.tag_names_multiselect.get_selected_items():
+            self.tags[tag_name]['selected'] = True
+        for tag_name in self.tag_names_multiselect.get_unselected_items():
+            self.tags[tag_name]['selected'] = False
+        self.draw_dmg_total()
+
+    def update_selected_tag_values(self):
+        for tag_value in self.tag_values_multiselect.get_selected_items():
+            self.tags[self.current_tag_name]['values'][tag_value] = True
+        for tag_value in self.tag_values_multiselect.get_unselected_items():
+            self.tags[self.current_tag_name]['values'][tag_value] = False
+        self.draw_dmg_total()
+
+    def create_list_selected_lbl(self):
+        self.list_selected_lbl = QLabel('Selected tags:')
+        self.list_selected_lbl.setSizePolicy(
+            QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.typeDepVLayout.addWidget(self.list_selected_lbl)
 
     def refresh_feature_selection(self):
         if not list(self.stats_multiselect.get_selected_items()):
@@ -302,6 +358,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         elif new_output_type == 'dmg_total':
             self.create_loss_type_selector()
             self.create_rlz_selector()
+            self.create_tag_names_multiselect()
+            self.create_tag_values_multiselect()
+            self.create_list_selected_lbl()
             self.create_exclude_no_dmg_ckb()
         elif new_output_type == 'uhs':
             self.create_stats_multiselect()
@@ -340,6 +399,20 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         composite_risk_model_attrs = self.extract_npz(
             session, hostname, calc_id, 'composite_risk_model.attrs')
         self.dmg_states = composite_risk_model_attrs['damage_states']
+        tags_npz = self.extract_npz(
+            session, hostname, calc_id, 'assetcol/tags')
+        tags_array = tags_npz['array']
+        self.tags = {}
+        for tag in tags_array:
+            # tags are in the format 'city=Benicia' (tag_name=tag_value)
+            tag_name, tag_value = tag.split('=')
+            if tag_name not in self.tags:
+                self.tags[tag_name] = {
+                    'selected': True,
+                    'values': {tag_value: True}}  # True means selected
+            else:
+                # True means selected
+                self.tags[tag_name]['values'][tag_value] = True
 
         num_rlzs = self.dmg_total['array'].shape[0]
         rlzs = ['rlz-%s' % rlz for rlz in range(num_rlzs)]
@@ -353,6 +426,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.loss_type_cbx.clear()
         self.loss_type_cbx.addItems(loss_types)
         self.loss_type_cbx.blockSignals(False)
+
+        self.tag_names_multiselect.set_selected_items(self.tags.keys())
+
         self.draw_dmg_total()
 
     def load_agg_curves(self, calc_id, session, hostname, output_type):
