@@ -332,6 +332,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.list_selected_edt = QPlainTextEdit('Selected tags:')
         self.list_selected_edt.setSizePolicy(
             QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.list_selected_edt.setMaximumHeight(50)
         self.list_selected_edt.setReadOnly(True)
         self.typeDepVLayout.addWidget(self.list_selected_edt)
 
@@ -341,7 +342,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             if self.tags[tag_name]['selected']:
                 for tag_value in self.tags[tag_name]['values']:
                     if self.tags[tag_name]['values'][tag_value]:
-                        selected_tags_str += '&%s=%s' % (tag_name, tag_value)
+                        selected_tags_str += '%s="%s" ' % (tag_name, tag_value)
         self.list_selected_edt.setPlainText(selected_tags_str)
 
     def refresh_feature_selection(self):
@@ -426,11 +427,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             tag_name, tag_value = tag.split('=')
             if tag_name not in self.tags:
                 self.tags[tag_name] = {
-                    'selected': True,
-                    'values': {tag_value: True}}  # True means selected
+                    'selected': False,
+                    'values': {tag_value: False}}  # False means unselected
             else:
-                # True means selected
-                self.tags[tag_name]['values'][tag_value] = True
+                # False means unselected
+                self.tags[tag_name]['values'][tag_value] = False
         self.update_list_selected_edt()
 
         num_rlzs = self.dmg_total['array'].shape[0]
@@ -446,7 +447,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.loss_type_cbx.addItems(loss_types)
         self.loss_type_cbx.blockSignals(False)
 
-        self.tag_names_multiselect.set_selected_items(self.tags.keys())
+        self.tag_names_multiselect.set_unselected_items(self.tags.keys())
 
         self.draw_dmg_total()
 
