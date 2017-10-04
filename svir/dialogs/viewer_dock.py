@@ -66,6 +66,7 @@ from svir.utilities.utils import (get_ui_class,
 from svir.recovery_modeling.recovery_modeling import (
     RecoveryModeling, fill_fields_multiselect)
 from svir.ui.list_multiselect_widget import ListMultiSelectWidget
+from svir.ui.list_multiselect_mono_widget import ListMultiSelectMonoWidget
 
 from svir import IS_SCIPY_INSTALLED
 
@@ -281,6 +282,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             QAbstractItemView.SingleSelection)
         self.tag_names_multiselect.unselected_widget.setSelectionMode(
             QAbstractItemView.SingleSelection)
+        self.tag_names_multiselect.select_all_btn.hide()
+        self.tag_names_multiselect.deselect_all_btn.hide()
         self.typeDepVLayout.addWidget(self.tag_names_multiselect)
         self.tag_names_multiselect.unselected_widget.itemClicked.connect(
             self.populate_tag_values_multiselect)
@@ -291,9 +294,12 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
     def create_tag_values_multiselect(self):
         title = 'Select tag values'
-        self.tag_values_multiselect = ListMultiSelectWidget(title=title)
+        self.tag_values_multiselect = ListMultiSelectMonoWidget(
+            message_bar=self.iface.messageBar(), title=title)
         self.tag_values_multiselect.setSizePolicy(
             QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        self.tag_values_multiselect.select_all_btn.hide()
+        self.tag_values_multiselect.deselect_all_btn.hide()
         self.typeDepVLayout.addWidget(self.tag_values_multiselect)
         self.tag_values_multiselect.selection_changed.connect(
             self.update_selected_tag_values)
@@ -552,6 +558,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         # means = self.dmg_total['array'][rlz][loss_type]['mean']
         # stddevs = self.dmg_total['array'][rlz][loss_type]['stddev']
         means = self.dmg_total['array'][rlz]
+        if any(means < 0):
+            msg = ('The results displayed include negative damage estimates'
+                   ' for one or more damage states. Please check the fragility'
+                   ' model for crossing curves.')
+            log_msg(msg, level='W', message_bar=self.iface.messageBar())
         dmg_states = self.dmg_states
         if self.exclude_no_dmg_ckb.isChecked():
             # exclude the first element, that is 'no damage'
