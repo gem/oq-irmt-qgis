@@ -48,6 +48,7 @@ from qgis.PyQt.QtGui import (QColor,
                              QCheckBox,
                              QDockWidget,
                              QFileDialog,
+                             QAbstractItemView,
                              )
 from qgis.gui import QgsVertexMarker
 from qgis.core import QGis, QgsMapLayer, QgsFeatureRequest
@@ -276,6 +277,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.tag_names_multiselect = ListMultiSelectWidget(title=title)
         self.tag_names_multiselect.setSizePolicy(
             QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        self.tag_names_multiselect.selected_widget.setSelectionMode(
+            QAbstractItemView.SingleSelection)
+        self.tag_names_multiselect.unselected_widget.setSelectionMode(
+            QAbstractItemView.SingleSelection)
         self.typeDepVLayout.addWidget(self.tag_names_multiselect)
         self.tag_names_multiselect.unselected_widget.itemClicked.connect(
             self.populate_tag_values_multiselect)
