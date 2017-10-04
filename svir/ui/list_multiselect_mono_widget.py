@@ -44,7 +44,5 @@ class ListMultiSelectMonoWidget(ListMultiSelectWidget):
 
     def _select(self):
         if self.selected_widget.count():
-            msg = 'You can select only one value per tag'
-            log_msg(msg, level='W', message_bar=self.message_bar)
-            return
+            self.unselected_widget.addItem(self.selected_widget.takeItem(0))
         super(ListMultiSelectMonoWidget, self)._select()
