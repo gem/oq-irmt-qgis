@@ -312,13 +312,26 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.tag_values_multiselect.set_selected_items(selected_tag_values)
         self.tag_values_multiselect.set_unselected_items(unselected_tag_values)
 
+    def filter_dmg_total(self):
+        params = {}
+        for tag_name in self.tags:
+            if self.tags[tag_name]['selected']:
+                for value in self.tags[tag_name]['values']:
+                    if self.tags[tag_name]['values'][value]:
+                        params[tag_name] = value
+        output_type = 'aggdamages/%s' % self.loss_type_cbx.currentText()
+        self.dmg_total = self.extract_npz(
+            self.session, self.hostname, self.calc_id, output_type,
+            params=params)
+        self.draw_dmg_total()
+
     def update_selected_tag_names(self):
         for tag_name in self.tag_names_multiselect.get_selected_items():
             self.tags[tag_name]['selected'] = True
         for tag_name in self.tag_names_multiselect.get_unselected_items():
             self.tags[tag_name]['selected'] = False
         self.update_list_selected_edt()
-        self.draw_dmg_total()
+        self.filter_dmg_total()
 
     def update_selected_tag_values(self):
         for tag_value in self.tag_values_multiselect.get_selected_items():
@@ -326,7 +339,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         for tag_value in self.tag_values_multiselect.get_unselected_items():
             self.tags[self.current_tag_name]['values'][tag_value] = False
         self.update_list_selected_edt()
-        self.draw_dmg_total()
+        self.filter_dmg_total()
 
     def create_list_selected_edt(self):
         self.list_selected_edt = QPlainTextEdit('Selected tags:')
@@ -398,9 +411,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         # else.
         self.output_type = new_output_type
 
-    def extract_npz(self, session, hostname, calc_id, output_type):
+    def extract_npz(
+            self, session, hostname, calc_id, output_type, params=None):
         url = '%s/v1/calc/%s/extract/%s' % (hostname, calc_id, output_type)
-        resp_content = session.get(url).content
+        resp_content = session.get(url, params=params).content
         return numpy.load(io.BytesIO(resp_content))
 
     def load_no_map_output(self, calc_id, session, hostname, output_type):
@@ -412,9 +426,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             raise NotImplementedError(output_type)
 
     def load_dmg_total(self, calc_id, session, hostname, output_type):
+        self.calc_id = calc_id
+        self.session = session
+        self.hostname = hostname
         self.change_output_type(output_type)
-        self.dmg_total = self.extract_npz(
-            session, hostname, calc_id, output_type)
         composite_risk_model_attrs = self.extract_npz(
             session, hostname, calc_id, 'composite_risk_model.attrs')
         self.dmg_states = composite_risk_model_attrs['damage_states']
@@ -434,14 +449,15 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 self.tags[tag_name]['values'][tag_value] = False
         self.update_list_selected_edt()
 
-        num_rlzs = self.dmg_total['array'].shape[0]
-        rlzs = ['rlz-%s' % rlz for rlz in range(num_rlzs)]
+        rlzs_npz = self.extract_npz(
+            session, hostname, calc_id, 'realizations')
+        rlzs = rlzs_npz['array']['gsims']
         self.rlz_cbx.blockSignals(True)
         self.rlz_cbx.clear()
         self.rlz_cbx.addItems(rlzs)
         self.rlz_cbx.blockSignals(False)
 
-        loss_types = self.dmg_total['array'].dtype.names
+        loss_types = composite_risk_model_attrs['loss_types']
         self.loss_type_cbx.blockSignals(True)
         self.loss_type_cbx.clear()
         self.loss_type_cbx.addItems(loss_types)
@@ -449,7 +465,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
         self.tag_names_multiselect.set_unselected_items(self.tags.keys())
 
-        self.draw_dmg_total()
+        self.filter_dmg_total()
 
     def load_agg_curves(self, calc_id, session, hostname, output_type):
         self.change_output_type(output_type)
@@ -530,15 +546,17 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         '''
         Plots the total damage distribution
         '''
-        rlz = int(self.rlz_cbx.currentText().split('-')[1])  # from rlz-xxx
-        loss_type = self.loss_type_cbx.currentText()
-        means = self.dmg_total['array'][rlz][loss_type]['mean']
-        stddevs = self.dmg_total['array'][rlz][loss_type]['stddev']
+        rlz = self.rlz_cbx.currentIndex()
+        # TODO: re-add error bars when stddev will become available again
+        # loss_type = self.loss_type_cbx.currentText()
+        # means = self.dmg_total['array'][rlz][loss_type]['mean']
+        # stddevs = self.dmg_total['array'][rlz][loss_type]['stddev']
+        means = self.dmg_total['array'][rlz]
         dmg_states = self.dmg_states
         if self.exclude_no_dmg_ckb.isChecked():
             # exclude the first element, that is 'no damage'
             means = means[1:]
-            stddevs = stddevs[1:]
+            # stddevs = stddevs[1:]
             dmg_states = dmg_states[1:]
 
         indX = numpy.arange(len(dmg_states))  # the x locations for the groups
@@ -549,8 +567,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         else:
             color = 'IndianRed'
         self.plot.clear()
+        # self.plot.bar(indX, height=means, width=bar_width,
+        #               yerr=stddevs, error_kw=error_config, color=color,
+        #               linewidth=1.5, alpha=0.6)
         self.plot.bar(indX, height=means, width=bar_width,
-                      yerr=stddevs, error_kw=error_config, color=color,
+                      error_kw=error_config, color=color,
                       linewidth=1.5, alpha=0.6)
         self.plot.set_title('Damage distribution')
         self.plot.set_xlabel('Damage state')
@@ -1010,7 +1031,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         if self.output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
             self.draw_agg_curves(self.output_type)
         elif self.output_type == 'dmg_total':
-            self.draw_dmg_total()
+            self.filter_dmg_total()
         else:
             self.was_loss_type_switched = True
             self.redraw_current_selection()
@@ -1032,11 +1053,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                              self.n_simulations_sbx.value())
 
     def on_rlz_changed(self):
-        self.draw_dmg_total()
+        self.filter_dmg_total()
 
     @pyqtSlot(int)
     def on_exclude_no_dmg_ckb_state_changed(self, state):
-        self.draw_dmg_total()
+        self.filter_dmg_total()
 
     @pyqtSlot()
     def on_export_data_button_clicked(self):
@@ -1177,7 +1198,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         if self.output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
             self.draw_agg_curves(self.output_type)
         elif self.output_type == 'dmg_total':
-            self.draw_dmg_total()
+            self.filter_dmg_total()
 
     @pyqtSlot(int)
     def on_output_type_cbx_currentIndexChanged(self, index):
