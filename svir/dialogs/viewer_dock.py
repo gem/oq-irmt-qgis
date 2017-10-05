@@ -552,6 +552,12 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         '''
         Plots the total damage distribution
         '''
+        if len(self.dmg_total['array']) == 0:
+            msg = 'No assets satisfy the selected criteria'
+            log_msg(msg, level='W', message_bar=self.iface.messageBar())
+            self.plot.clear()
+            self.plot_canvas.draw()
+            return
         rlz = self.rlz_cbx.currentIndex()
         # TODO: re-add error bars when stddev will become available again
         # loss_type = self.loss_type_cbx.currentText()
