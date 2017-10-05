@@ -289,6 +289,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.populate_tag_values_multiselect)
         self.tag_names_multiselect.selected_widget.itemClicked.connect(
             self.populate_tag_values_multiselect)
+        self.tag_names_multiselect.unselected_widget.itemDoubleClicked.connect(
+            self.populate_tag_values_multiselect)
+        self.tag_names_multiselect.selected_widget.itemDoubleClicked.connect(
+            self.populate_tag_values_multiselect)
         self.tag_names_multiselect.selection_changed.connect(
             self.update_selected_tag_names)
 
