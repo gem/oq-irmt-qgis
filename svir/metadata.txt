@@ -25,6 +25,7 @@ email=staff.it@globalquakemodel.org
 changelog=
     2.7.0
     * Added the possibility to visualize oq-engine outputs of types agg_curves-rlzs, agg_curves-stats and dmg_total
+    * Damage can be aggregated by realization, loss type and multiple tags
     2.6.1
     * For hazard curves and uniform hazard spectra, it is possible to plot together multiple statistical outputs (e.g. mean and quantiles)
     * Fixed an offset issue with markers
