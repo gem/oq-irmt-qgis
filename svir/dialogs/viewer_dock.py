@@ -317,6 +317,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             if not self.tags[tag_name]['values'][tag_value]]
         self.tag_values_multiselect.set_selected_items(selected_tag_values)
         self.tag_values_multiselect.set_unselected_items(unselected_tag_values)
+        self.tag_values_multiselect.setEnabled(
+            tag_name in list(self.tag_names_multiselect.get_selected_items()))
 
     def filter_dmg_total(self):
         params = {}
@@ -336,6 +338,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.tags[tag_name]['selected'] = True
         for tag_name in self.tag_names_multiselect.get_unselected_items():
             self.tags[tag_name]['selected'] = False
+        self.tag_values_multiselect.setEnabled(
+            tag_name in list(self.tag_names_multiselect.get_selected_items()))
         self.update_list_selected_edt()
         self.filter_dmg_total()
 
