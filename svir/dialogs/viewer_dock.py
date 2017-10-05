@@ -389,6 +389,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         # NOTE: typeDepVLayout contains typeDepHLayout1 and typeDepHLayout2,
         #       that will be cleared recursively
         clear_widgets_from_layout(self.typeDepVLayout)
+        if hasattr(self, 'plot'):
+            self.plot.clear()
+            self.plot_canvas.draw()
 
         if new_output_type == 'hcurves':
             self.create_imt_selector()
