@@ -377,10 +377,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         layer.selectByIds(selected_feats)
 
     def set_output_type_and_its_gui(self, new_output_type):
-        if (self.output_type is not None
-                and self.output_type == new_output_type):
-            return
-
         # clear type dependent widgets
         # NOTE: typeDepVLayout contains typeDepHLayout1 and typeDepHLayout2,
         #       that will be cleared recursively
