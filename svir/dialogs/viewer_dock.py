@@ -1132,7 +1132,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     '~/recovery_curves_%s.csv' %
                     self.approach_cbx.currentText()),
                 '*.csv')
-        if filename is not None:
+        if filename:
             self.write_export_file(filename)
 
     def write_export_file(self, filename):
