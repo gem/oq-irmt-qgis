@@ -424,6 +424,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         return numpy.load(io.BytesIO(resp_content))
 
     def load_no_map_output(self, calc_id, session, hostname, output_type):
+        self.calc_id = calc_id
+        self.session = session
+        self.hostname = hostname
+        self.change_output_type(output_type)
         if output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
             self.load_agg_curves(calc_id, session, hostname, output_type)
         elif output_type == 'dmg_total':
@@ -432,10 +436,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             raise NotImplementedError(output_type)
 
     def load_dmg_total(self, calc_id, session, hostname, output_type):
-        self.calc_id = calc_id
-        self.session = session
-        self.hostname = hostname
-        self.change_output_type(output_type)
         composite_risk_model_attrs = self.extract_npz(
             session, hostname, calc_id, 'composite_risk_model.attrs')
         self.dmg_states = composite_risk_model_attrs['damage_states']
@@ -474,7 +474,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.filter_dmg_total()
 
     def load_agg_curves(self, calc_id, session, hostname, output_type):
-        self.change_output_type(output_type)
         self.agg_curves = self.extract_npz(
             session, hostname, calc_id, output_type)
         loss_types = self.agg_curves['array'].dtype.names
@@ -1104,8 +1103,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 self,
                 self.tr('Export data'),
                 os.path.expanduser(
-                    '~/%s_%s.csv' % (self.output_type,
-                                     self.current_loss_type)),
+                    '~/%s_%s_%s.csv' % (self.output_type,
+                                        self.current_loss_type,
+                                        self.calc_id)),
                 '*.csv')
         elif self.output_type == 'dmg_total':
             filename = QFileDialog.getSaveFileName(
