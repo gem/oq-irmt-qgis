@@ -477,6 +477,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.loss_type_cbx.blockSignals(False)
 
         self.tag_names_multiselect.set_unselected_items(self.tags.keys())
+        self.tag_names_multiselect.set_selected_items([])
+        self.tag_values_multiselect.set_unselected_items([])
+        self.tag_values_multiselect.set_selected_items([])
 
         self.filter_dmg_total()
 
