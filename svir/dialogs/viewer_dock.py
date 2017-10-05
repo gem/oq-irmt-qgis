@@ -1099,19 +1099,20 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 os.path.expanduser(
                     '~/loss_curves_%s.csv' % self.current_loss_type),
                 '*.csv')
-        elif self.output_type in OQ_NO_MAP_TYPES:
-            if self.output_type == 'dmg_total':
-                # TODO: we might get the original csv from the engine
-                log_msg('This functionality is not implemented. You might'
-                        ' consider downloading the csv directly from the'
-                        ' OQ-Engine.', message_bar=self.iface.messageBar())
-                return
+        elif self.output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
             filename = QFileDialog.getSaveFileName(
                 self,
                 self.tr('Export data'),
                 os.path.expanduser(
                     '~/%s_%s.csv' % (self.output_type,
                                      self.current_loss_type)),
+                '*.csv')
+        elif self.output_type == 'dmg_total':
+            filename = QFileDialog.getSaveFileName(
+                self,
+                self.tr('Export data'),
+                os.path.expanduser(
+                    '~/%s_%s.csv' % (self.output_type, self.calc_id)),
                 '*.csv')
         elif self.output_type == 'recovery_curves':
             filename = QFileDialog.getSaveFileName(
@@ -1198,11 +1199,16 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     row.extend([value for value in values[i]])
                     writer.writerow(row)
             elif self.output_type == 'dmg_total':
-                # TODO: we might get the original csv from the engine
-                log_msg('This functionality is not implemented. You might'
-                        ' consider downloading the csv directly from the'
-                        ' OQ-Engine.', message_bar=self.iface.messageBar())
-                return
+                csv_file.write(
+                    "# Realization: %s\n" % self.rlz_cbx.currentText())
+                csv_file.write(
+                    "# Loss type: %s\n" % self.loss_type_cbx.currentText())
+                csv_file.write(
+                    "# %s\n" % self.list_selected_edt.toPlainText())
+                headers = self.dmg_states
+                writer.writerow(headers)
+                values = self.dmg_total['array'][self.rlz_cbx.currentIndex()]
+                writer.writerow(values)
             else:
                 raise NotImplementedError(self.output_type)
         msg = 'Data exported to %s' % filename
