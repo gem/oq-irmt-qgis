@@ -614,7 +614,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 if not (row['type'] == 'gmf_data'
                         and 'event_based' in calculation_mode):
                     num_actions += 1  # needs additional column for loader btn
-            if "%s_show" % row['type'] in OQ_NO_MAP_TYPES:
+            if "%s_aggr" % row['type'] in OQ_NO_MAP_TYPES:
                 num_actions += 1
             max_actions = max(max_actions, num_actions)
 
@@ -650,12 +650,12 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     self.connect_button_to_action(
                         button, action, output, outtype)
                     self.output_list_tbl.setCellWidget(row, col + 1, button)
-                if "%s_show" % output['type'] in OQ_NO_MAP_TYPES:
+                if "%s_aggr" % output['type'] in OQ_NO_MAP_TYPES:
                     mod_output = copy.deepcopy(output)
-                    mod_output['type'] = "%s_show" % output['type']
+                    mod_output['type'] = "%s_aggr" % output['type']
                     button = QPushButton()
                     self.connect_button_to_action(
-                        button, 'Show', mod_output, outtype)
+                        button, 'Aggregate', mod_output, outtype)
                     self.output_list_tbl.setCellWidget(row, col + 2, button)
         col_names = [key.capitalize() for key in selected_keys]
         empty_col_names = ['' for outtype in range(max_actions)]
@@ -667,10 +667,12 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.output_list_tbl.resizeRowsToContents()
 
     def connect_button_to_action(self, button, action, output, outtype):
-        if action in ('Load as layer', 'Show'):
+        if action in ('Load as layer', 'Show', 'Aggregate'):
             style = 'background-color: blue; color: white;'
             if action == 'Load as layer':
                 button.setText("Load %s as layer" % outtype)
+            elif action == 'Aggregate':
+                button.setText("Aggregate")
             else:
                 button.setText("Show")
         else:
@@ -686,7 +688,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     def on_output_action_btn_clicked(self, output, action, outtype):
         output_id = output['id']
         output_type = output['type']
-        if action == 'Show':
+        if action in ['Show', 'Aggregate']:
             dest_folder = tempfile.gettempdir()
             if output_type in OQ_NO_MAP_TYPES:
                 self.viewer_dock.load_no_map_output(
