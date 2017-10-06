@@ -26,6 +26,7 @@ import os
 import json
 import tempfile
 import zipfile
+import copy
 
 from PyQt4.QtCore import (QDir,
                           Qt,
@@ -613,6 +614,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 if not (row['type'] == 'gmf_data'
                         and 'event_based' in calculation_mode):
                     num_actions += 1  # needs additional column for loader btn
+            if "%s_%s" % (row['type'], "show") in OQ_NO_MAP_TYPES:
+                num_actions += 1
             max_actions = max(max_actions, num_actions)
 
         self.output_list_tbl.setRowCount(len(output_list))
@@ -631,23 +634,29 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 self.connect_button_to_action(button, action, output, outtype)
                 self.output_list_tbl.setCellWidget(row, col, button)
                 self.calc_list_tbl.setColumnWidth(col, BUTTON_WIDTH)
-            if output['type'] in (OQ_ALL_LOADABLE_TYPES |
-                                  OQ_RST_TYPES |
-                                  OQ_NO_MAP_TYPES):
-                if output['type'] in OQ_RST_TYPES | OQ_NO_MAP_TYPES:
-                    action = 'Show'
-                else:
-                    action = 'Load as layer'
-                # TODO: remove check when gmf_data will be loadable also for
-                #       event_based
-                if (output['type'] == 'gmf_data'
-                        and calculation_mode == 'event_based'):
-                    continue
-                button = QPushButton()
-                self.connect_button_to_action(
-                    button, action, output, outtype)
-                self.output_list_tbl.setCellWidget(row, col + 1, button)
-                self.calc_list_tbl.setColumnWidth(col, BUTTON_WIDTH)
+                if output['type'] in (OQ_ALL_LOADABLE_TYPES |
+                                      OQ_RST_TYPES |
+                                      OQ_NO_MAP_TYPES):
+                    if output['type'] in OQ_RST_TYPES | OQ_NO_MAP_TYPES:
+                        action = 'Show'
+                    else:
+                        action = 'Load as layer'
+                    # TODO: remove check when gmf_data will be loadable also
+                    #       for event_based
+                    if (output['type'] == 'gmf_data'
+                            and calculation_mode == 'event_based'):
+                        continue
+                    button = QPushButton()
+                    self.connect_button_to_action(
+                        button, action, output, outtype)
+                    self.output_list_tbl.setCellWidget(row, col + 1, button)
+                if "%s_%s" % (output['type'], "show") in OQ_NO_MAP_TYPES:
+                    mod_output = copy.deepcopy(output)
+                    mod_output['type'] = "%s_%s" % (output['type'], "show")
+                    button = QPushButton()
+                    self.connect_button_to_action(
+                        button, 'Show', mod_output, outtype)
+                    self.output_list_tbl.setCellWidget(row, col + 2, button)
         col_names = [key.capitalize() for key in selected_keys]
         empty_col_names = ['' for outtype in range(max_actions)]
         headers = col_names + empty_col_names
