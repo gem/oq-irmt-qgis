@@ -313,12 +313,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.current_tag_name = tag_name
         self.tag_values_multiselect.setTitle(
             'Select values for tag: %s' % tag_name)
-        selected_tag_values = [
-            tag_value for tag_value in self.tags[tag_name]['values']
-            if self.tags[tag_name]['values'][tag_value]]
-        unselected_tag_values = [
-            tag_value for tag_value in self.tags[tag_name]['values']
-            if not self.tags[tag_name]['values'][tag_value]]
+        tag_values = self.tags[tag_name]['values']
+        selected_tag_values = [tag_value for tag_value in tag_values
+                               if tag_values[tag_value]]
+        unselected_tag_values = [tag_value for tag_value in tag_values
+                                 if not tag_values[tag_value]]
         self.tag_values_multiselect.set_selected_items(selected_tag_values)
         self.tag_values_multiselect.set_unselected_items(unselected_tag_values)
         self.tag_values_multiselect.setEnabled(
@@ -330,6 +329,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             if self.tags[tag_name]['selected']:
                 for value in self.tags[tag_name]['values']:
                     if self.tags[tag_name]['values'][value]:
+                        # NOTE: this would not work for multiple values per tag
                         params[tag_name] = value
         output_type = 'aggdamages/%s' % self.loss_type_cbx.currentText()
         self.dmg_total = self.extract_npz(
@@ -569,11 +569,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             return
         rlz = self.rlz_cbx.currentIndex()
         # TODO: re-add error bars when stddev will become available again
-        # loss_type = self.loss_type_cbx.currentText()
-        # means = self.dmg_total['array'][rlz][loss_type]['mean']
-        # stddevs = self.dmg_total['array'][rlz][loss_type]['stddev']
+        # means = self.dmg_total['array'][rlz]['mean']
+        # stddevs = self.dmg_total['array'][rlz]['stddev']
         means = self.dmg_total['array'][rlz]
-        if any(means < 0):
+        if (means < 0).any():
             msg = ('The results displayed include negative damage estimates'
                    ' for one or more damage states. Please check the fragility'
                    ' model for crossing curves.')
@@ -582,22 +581,24 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         if self.exclude_no_dmg_ckb.isChecked():
             # exclude the first element, that is 'no damage'
             means = means[1:]
+            # TODO: re-add error bars when stddev will become available again
             # stddevs = stddevs[1:]
             dmg_states = dmg_states[1:]
 
         indX = numpy.arange(len(dmg_states))  # the x locations for the groups
-        error_config = {'ecolor': '0.3', 'linewidth': '2'}
+        # TODO: re-add error bars when stddev will become available again
+        # error_config = {'ecolor': '0.3', 'linewidth': '2'}
         bar_width = 0.3
         if self.bw_chk.isChecked():
             color = 'lightgray'
         else:
             color = 'IndianRed'
         self.plot.clear()
+        # TODO: re-add error bars when stddev will become available again
         # self.plot.bar(indX, height=means, width=bar_width,
         #               yerr=stddevs, error_kw=error_config, color=color,
         #               linewidth=1.5, alpha=0.6)
-        self.plot.bar(indX, height=means, width=bar_width,
-                      error_kw=error_config, color=color,
+        self.plot.bar(indX, height=means, width=bar_width, color=color,
                       linewidth=1.5, alpha=0.6)
         self.plot.set_title('Damage distribution')
         self.plot.set_xlabel('Damage state')
