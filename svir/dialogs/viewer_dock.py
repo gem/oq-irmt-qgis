@@ -51,6 +51,7 @@ from qgis.PyQt.QtGui import (QColor,
                              QAbstractItemView,
                              QTableWidget,
                              QTableWidgetItem,
+                             QAbstractItemView,
                              )
 from qgis.gui import QgsVertexMarker
 from qgis.core import QGis, QgsMapLayer, QgsFeatureRequest
@@ -708,6 +709,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         table = QTableWidget(nrows, ncols)
         table.setHorizontalHeaderLabels(self.rlzs)
         # table.setVerticalHeaderLabels(FIXME)
+        table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         for row in range(nrows):
             for col in range(ncols):
                 table.setItem(
