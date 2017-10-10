@@ -37,7 +37,7 @@ from matplotlib.backends.backend_qt4agg import (
 from matplotlib.lines import Line2D
 
 
-from qgis.PyQt.QtCore import pyqtSlot, QSettings
+from qgis.PyQt.QtCore import pyqtSlot, QSettings, Qt
 from qgis.PyQt.QtGui import (QColor,
                              QLabel,
                              QPlainTextEdit,
@@ -323,6 +323,14 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                                  if not tag_values[tag_value]]
         self.tag_values_multiselect.set_selected_items(selected_tag_values)
         self.tag_values_multiselect.set_unselected_items(unselected_tag_values)
+        unselected_items = [
+            self.tag_values_multiselect.unselected_widget.item(i) for i in
+            range(self.tag_values_multiselect.unselected_widget.count())]
+        if self.tag_with_all_values:
+            for i in range(len(unselected_items)):
+                item = unselected_items[i]
+                if item.text() == "*":
+                    item.setFlags(Qt.ItemIsEnabled)
         self.tag_values_multiselect.setEnabled(
             tag_name in list(self.tag_names_multiselect.get_selected_items()))
 
@@ -378,6 +386,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         if self.output_type == 'dmg_by_asset_aggr':
             self.filter_dmg_by_asset_aggr()
         elif self.output_type == 'losses_by_asset_aggr':
+            if "*" in self.tag_values_multiselect.get_selected_items():
+                self.tag_with_all_values = self.current_tag_name
+            elif (self.tag_with_all_values == self.current_tag_name and
+                    "*" in self.tag_values_multiselect.get_unselected_items()):
+                self.tag_with_all_values = None
             self.filter_losses_by_asset_aggr()
 
     def create_list_selected_edt(self):
@@ -465,6 +478,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.calc_id = calc_id
         self.session = session
         self.hostname = hostname
+        self.current_tag_name = None
+        self.tag_with_all_values = None
         self.change_output_type(output_type)
         if output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
             self.load_agg_curves(calc_id, session, hostname, output_type)
