@@ -431,6 +431,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         clear_widgets_from_layout(self.table_layout)
         if hasattr(self, 'plot'):
             self.plot.clear()
+            self.plot_canvas.show()
             self.plot_canvas.draw()
 
         if new_output_type == 'hcurves':
@@ -698,6 +699,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.plot_canvas.draw()
 
     def draw_losses_by_asset_aggr(self):
+        self.plot_canvas.hide()
         clear_widgets_from_layout(self.table_layout)
         losses_array = self.losses_by_asset_aggr['array']
 
