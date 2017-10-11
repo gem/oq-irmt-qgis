@@ -709,6 +709,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
         nrows, ncols = losses_array.shape
         table = QTableWidget(nrows, ncols)
+        table.setSizePolicy(
+            QSizePolicy.Preferred, QSizePolicy.MinimumExpanding)
         table.setHorizontalHeaderLabels(self.rlzs)
         # table.setVerticalHeaderLabels(FIXME)
         table.setEditTriggers(QAbstractItemView.NoEditTriggers)
