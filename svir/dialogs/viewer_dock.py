@@ -712,7 +712,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             tags = self.losses_by_asset_aggr['tags']
         except KeyError:
             pass
-
         nrows, ncols = losses_array.shape
         table = QTableWidget(nrows, ncols)
         table.setSizePolicy(
