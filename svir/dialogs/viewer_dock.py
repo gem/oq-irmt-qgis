@@ -707,7 +707,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         clear_widgets_from_layout(self.table_layout)
         losses_array = self.losses_by_asset_aggr['array']
         losses_array = self._to_2d(losses_array)
-        selected = self.losses_by_asset_aggr['selected']
         tags = None
         try:
             tags = self.losses_by_asset_aggr['tags']
@@ -722,9 +721,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             table.setVerticalHeaderLabels(tags)
         table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         for row in range(nrows):
-            if tags is None:
-                table.setVerticalHeaderItem(row,
-                                            QTableWidgetItem(str(selected)))
             for col in range(ncols):
                 table.setItem(
                     row, col, QTableWidgetItem(str(losses_array[row, col])))
@@ -1352,25 +1348,24 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 csv_file.write(
                     "# Tags: %s\n" % (
                         self.list_selected_edt.toPlainText() or 'None'))
-                headers = ['tag']
+                try:
+                    tags = self.losses_by_asset_aggr['tags']
+                    headers = ['tag']
+                except KeyError:
+                    tags = None
+                    headers = []
                 headers.extend(self.rlzs)
                 writer.writerow(headers)
                 losses_array = self.losses_by_asset_aggr['array']
                 losses_array = self._to_2d(losses_array)
-                selected = self.losses_by_asset_aggr['selected']
-                tags = None
-                try:
-                    tags = self.losses_by_asset_aggr['tags']
-                except KeyError:
-                    values = list(selected) or ["None"]
-                    values.extend(losses_array[0])
-                    writer.writerow(values)
-                else:
+                if tags is not None:
                     for row_idx, row in enumerate(
                             self.losses_by_asset_aggr['array']):
                         values = [tags[row_idx]]
                         values.extend(losses_array[row_idx])
                         writer.writerow(values)
+                else:
+                    writer.writerow(losses_array[0])
             else:
                 raise NotImplementedError(self.output_type)
         msg = 'Data exported to %s' % filename
