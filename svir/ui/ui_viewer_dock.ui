@@ -95,6 +95,9 @@
          </layout>
         </item>
         <item>
+         <layout class="QVBoxLayout" name="table_layout"/>
+        </item>
+        <item>
          <layout class="QVBoxLayout" name="plot_layout"/>
         </item>
         <item>

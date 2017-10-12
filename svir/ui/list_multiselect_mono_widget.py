@@ -26,7 +26,6 @@
 
 from qgis.PyQt.QtGui import QAbstractItemView
 from svir.ui.list_multiselect_widget import ListMultiSelectWidget
-from svir.utilities.utils import log_msg
 
 
 class ListMultiSelectMonoWidget(ListMultiSelectWidget):
