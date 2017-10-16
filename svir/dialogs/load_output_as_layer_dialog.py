@@ -25,6 +25,7 @@
 import numpy
 from qgis.core import (QgsVectorLayer,
                        QgsMapLayerRegistry,
+                       QgsStyleV2,
                        QgsSymbolV2,
                        QgsSymbolLayerV2Registry,
                        QgsOuterGlowEffect,
@@ -402,8 +403,13 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         symbol.symbolLayer(0).setOutlineStyle(Qt.PenStyle(Qt.NoPen))
 
         style = get_style(self.layer, self.iface.messageBar())
-        ramp = QgsVectorGradientColorRampV2(
-            style['color_from'], style['color_to'])
+        default_qgs_style = QgsStyleV2().defaultStyle()
+        default_color_ramp_names = default_qgs_style.colorRampNames()
+        ramp_type_idx = default_color_ramp_names.index('Spectral')
+        ramp = default_qgs_style.colorRamp(
+            default_color_ramp_names[ramp_type_idx])
+        # ramp = QgsVectorGradientColorRampV2(
+        #     style['color_from'], style['color_to'])
         graduated_renderer = QgsGraduatedSymbolRendererV2.createRenderer(
             self.layer,
             self.default_field_name,
