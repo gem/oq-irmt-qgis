@@ -105,8 +105,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         self.imt = self.imt_cbx.currentText()
         self.eid = self.eid_sbx.value()
         self.default_field_name = '%s-%s' % (self.imt, self.eid)
-        # layer_name = "gmf_data_%s_eid-%s" % (rlz_or_stat, self.eid)
-        layer_name = "scenario_damage_gmfs_%s_eid-%s" % (rlz_or_stat, self.eid)
+        layer_name = "scenario_gmfs_%s_eid-%s" % (rlz_or_stat, self.eid)
         return layer_name
 
     def get_field_names(self, **kwargs):
