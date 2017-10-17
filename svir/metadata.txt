@@ -26,6 +26,7 @@ changelog=
     2.7.2
     When loading a gmf map, the default name is "scenario_gmfs_rlz-RLZ_eid-EID" both for scenario_risk and scenario_damage
     2.7.1
+    * Added a check on the status code returned by the oq-engine server 'extract' API, displaying an error message in case of failure
     * Losses can be aggregated by loss type and multiple tags, producing a table with aggregated values per realization
     2.7.0
     * Added the possibility to visualize oq-engine outputs of types agg_curves-rlzs, agg_curves-stats, dmg_by_asset and losses_by_asset
