@@ -472,6 +472,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self, session, hostname, calc_id, output_type, params=None):
         url = '%s/v1/calc/%s/extract/%s' % (hostname, calc_id, output_type)
         resp_content = session.get(url, params=params).content
+        if not resp_content:
+            raise ValueError('GET %s returned an empty content!' % url)
         return numpy.load(io.BytesIO(resp_content))
 
     def load_no_map_output(self, calc_id, session, hostname, output_type):
