@@ -1426,6 +1426,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         event.accept()
 
     def change_output_type(self, output_type):
+        self.setVisible(True)
+        self.raise_()
         if output_type not in self.output_types_names:
             output_type = ''
         # get the index of the item that has the given string
