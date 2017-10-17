@@ -670,7 +670,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         if action in ('Load as layer', 'Show', 'Aggregate'):
             style = 'background-color: blue; color: white;'
             if action == 'Load as layer':
-                button.setText("Load %s as layer" % outtype)
+                button.setText("Load layer")
             elif action == 'Aggregate':
                 button.setText("Aggregate")
             else:
