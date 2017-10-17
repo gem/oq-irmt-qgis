@@ -478,7 +478,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         resp = session.get(url, params=params)
         if not resp.ok:
             msg = "Unable to extract %s with parameters %s: %s" % (
-                output_type, params, resp.reason)
+                url, params, resp.reason)
             log_msg(msg, level='C', message_bar=self.iface.messageBar())
             return
         resp_content = resp.content
