@@ -482,6 +482,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             log_msg(msg, level='C', message_bar=self.iface.messageBar())
             return
         resp_content = resp.content
+        if not resp_content:
+            msg = 'GET %s returned an empty content!' % url
+            log_msg(msg, level='C', message_bar=self.iface.messageBar())
+            return
         return numpy.load(io.BytesIO(resp_content))
 
     def load_no_map_output(self, calc_id, session, hostname, output_type):
