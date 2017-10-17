@@ -347,6 +347,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.dmg_by_asset_aggr = self.extract_npz(
             self.session, self.hostname, self.calc_id, output_type,
             params=params)
+        if self.dmg_by_asset_aggr is None:
+            return
         self.draw_dmg_by_asset_aggr()
 
     def filter_losses_by_asset_aggr(self):
@@ -361,6 +363,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.losses_by_asset_aggr = self.extract_npz(
             self.session, self.hostname, self.calc_id, output_type,
             params=params)
+        if self.losses_by_asset_aggr is None:
+            return
         self.draw_losses_by_asset_aggr()
 
     def update_selected_tag_names(self):
@@ -471,7 +475,12 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     def extract_npz(
             self, session, hostname, calc_id, output_type, params=None):
         url = '%s/v1/calc/%s/extract/%s' % (hostname, calc_id, output_type)
-        resp_content = session.get(url, params=params).content
+        resp = session.get(url, params=params)
+        if not resp.ok:
+            msg = "Unable to extract %s: %s" % (output_type, resp.reason)
+            log_msg(msg, level='C', message_bar=self.iface.messageBar())
+            return
+        resp_content = resp.content
         return numpy.load(io.BytesIO(resp_content))
 
     def load_no_map_output(self, calc_id, session, hostname, output_type):
@@ -495,9 +504,13 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     def load_dmg_by_asset_aggr(self, calc_id, session, hostname, output_type):
         composite_risk_model_attrs = self.extract_npz(
             session, hostname, calc_id, 'composite_risk_model.attrs')
+        if composite_risk_model_attrs is None:
+            return
         self.dmg_states = composite_risk_model_attrs['damage_states']
         tags_npz = self.extract_npz(
             session, hostname, calc_id, 'assetcol/tags')
+        if tags_npz is None:
+            return
         tags_array = tags_npz['array']
         self.tags = {}
         for tag in tags_array:
@@ -514,6 +527,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
         rlzs_npz = self.extract_npz(
             session, hostname, calc_id, 'realizations')
+        if rlzs_npz is None:
+            return
         rlzs = rlzs_npz['array']['gsims']
         self.rlz_cbx.blockSignals(True)
         self.rlz_cbx.clear()
@@ -537,11 +552,17 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self, calc_id, session, hostname, output_type):
         composite_risk_model_attrs = self.extract_npz(
             session, hostname, calc_id, 'composite_risk_model.attrs')
+        if composite_risk_model_attrs is None:
+            return
         rlzs_npz = self.extract_npz(
             session, hostname, calc_id, 'realizations')
+        if rlzs_npz is None:
+            return
         self.rlzs = rlzs_npz['array']['gsims']
         tags_npz = self.extract_npz(
             session, hostname, calc_id, 'assetcol/tags')
+        if tags_npz is None:
+            return
         tags_array = tags_npz['array']
         self.tags = {}
         for tag in tags_array:
@@ -573,6 +594,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     def load_agg_curves(self, calc_id, session, hostname, output_type):
         self.agg_curves = self.extract_npz(
             session, hostname, calc_id, output_type)
+        if self.agg_curves is None:
+            return
         loss_types = self.agg_curves['array'].dtype.names
         self.loss_type_cbx.blockSignals(True)
         self.loss_type_cbx.clear()
