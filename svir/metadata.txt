@@ -24,6 +24,7 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     2.7.2
+    * When loading a OQ-Engine output, if the Data Viewer was hidden, it becomes visible
     * When loading a gmf map, the default name is "scenario_gmfs_rlz-RLZ_eid-EID" both for scenario_risk and scenario_damage
     * Added a check on the status code returned by the oq-engine server 'extract' API, displaying an error message in case of failure
     2.7.1
