@@ -391,6 +391,8 @@ class Irmt:
         dlg = LoadHazardCurvesAsLayerDialog(self.iface, 'hcurves')
         dlg.exec_()
         self.viewer_dock.change_output_type(dlg.output_type)
+        self.viewer_dock.setVisible(True)
+        self.viewer_dock.raise_()
 
     def load_gmf_data_as_layer(self):
         dlg = LoadGmfDataAsLayerDialog(self.iface, 'gmf_data')
@@ -400,6 +402,8 @@ class Irmt:
         dlg = LoadUhsAsLayerDialog(self.iface, 'uhs')
         dlg.exec_()
         self.viewer_dock.change_output_type(dlg.output_type)
+        self.viewer_dock.setVisible(True)
+        self.viewer_dock.raise_()
 
     def load_losses_by_asset_as_layer(self):
         dlg = LoadLossesByAssetAsLayerDialog(self.iface, 'losses_by_asset')

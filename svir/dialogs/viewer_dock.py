@@ -495,6 +495,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.current_tag_name = None
         self.tag_with_all_values = None
         self.change_output_type(output_type)
+        self.setVisible(True)
+        self.raise_()
         if output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
             self.load_agg_curves(calc_id, session, hostname, output_type)
         elif output_type == 'dmg_by_asset_aggr':
@@ -1426,8 +1428,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         event.accept()
 
     def change_output_type(self, output_type):
-        self.setVisible(True)
-        self.raise_()
         if output_type not in self.output_types_names:
             output_type = ''
         # get the index of the item that has the given string
