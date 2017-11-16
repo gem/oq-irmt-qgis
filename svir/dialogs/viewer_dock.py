@@ -267,14 +267,19 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         fill_fields_multiselect(
             self.fields_multiselect, self.iface.activeLayer())
 
+    def create_rlzs_multiselect(self):
+        title = 'Select realizations'
+        self.rlzs_multiselect = ListMultiSelectWidget(title=title)
+        self.rlzs_multiselect.setSizePolicy(
+            QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        self.typeDepVLayout.addWidget(self.rlzs_multiselect)
+
     def create_stats_multiselect(self):
         title = 'Select statistics'
         self.stats_multiselect = ListMultiSelectWidget(title=title)
         self.stats_multiselect.setSizePolicy(
             QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
         self.typeDepVLayout.addWidget(self.stats_multiselect)
-        self.stats_multiselect.selection_changed.connect(
-            self.refresh_feature_selection)
 
     def create_tag_names_multiselect(self):
         title = 'Select tag names'
@@ -439,6 +444,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         if new_output_type == 'hcurves':
             self.create_imt_selector()
             self.create_stats_multiselect()
+            self.stats_multiselect.selection_changed.connect(
+                self.refresh_feature_selection)
         elif new_output_type == 'loss_curves':
             self.create_loss_type_selector()
         elif new_output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
@@ -457,6 +464,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.create_list_selected_edt()
         elif new_output_type == 'uhs':
             self.create_stats_multiselect()
+            self.stats_multiselect.selection_changed.connect(
+                self.refresh_feature_selection)
         elif new_output_type == 'recovery_curves':
             if not IS_SCIPY_INSTALLED:
                 warn_scipy_missing(self.iface.messageBar())
@@ -608,14 +617,38 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.loss_type_cbx.clear()
         self.loss_type_cbx.blockSignals(False)
         self.loss_type_cbx.addItems(loss_types)
+        if output_type == 'agg_curves-stats':
+            self.create_stats_multiselect()
+            self.stats_multiselect.selection_changed.connect(
+                lambda: self.draw_agg_curves(output_type))
+            self.stats_multiselect.add_selected_items(self.agg_curves['stats'])
+            self.draw_agg_curves(output_type)
+        elif output_type == 'agg_curves-rlzs':
+            self.create_rlzs_multiselect()
+            self.rlzs_multiselect.selection_changed.connect(
+                lambda: self.draw_agg_curves(output_type))
+            rlzs = ["Rlz %3d" % rlz
+                    for rlz in range(self.agg_curves['array'].shape[1])]
+            self.rlzs_multiselect.add_selected_items(rlzs)
+            self.draw_agg_curves(output_type)
+        else:
+            raise NotImplementedError(
+                'Can not draw outputs of type %s' % output_type)
+            return
 
     def draw_agg_curves(self, output_type):
         if output_type == 'agg_curves-rlzs':
-            rlzs_or_stats = [
-                "Rlz %s" % rlz
-                for rlz in range(self.agg_curves['array'].shape[1])]
+            if self.rlzs_multiselect is None:
+                rlzs_or_stats = []
+            else:
+                rlzs_or_stats = list(
+                    self.rlzs_multiselect.get_selected_items())
         elif output_type == 'agg_curves-stats':
-            rlzs_or_stats = self.agg_curves['stats']
+            if self.stats_multiselect is None:
+                rlzs_or_stats = []
+            else:
+                rlzs_or_stats = list(
+                    self.stats_multiselect.get_selected_items())
         else:
             raise NotImplementedError(
                 'Can not draw outputs of type %s' % output_type)
