@@ -100,10 +100,12 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.output_dep_vlayout.addWidget(self.num_sites_lbl)
 
     def create_rlz_or_stat_selector(self):
+        self.rlz_or_stat_lbl = QLabel('Realization')
         self.rlz_or_stat_cbx = QComboBox()
         self.rlz_or_stat_cbx.setEnabled(False)
         self.rlz_or_stat_cbx.currentIndexChanged['QString'].connect(
             self.on_rlz_or_stat_changed)
+        self.output_dep_vlayout.addWidget(self.rlz_or_stat_lbl)
         self.output_dep_vlayout.addWidget(self.rlz_or_stat_cbx)
 
     def create_imt_selector(self):
