@@ -172,7 +172,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.zonal_layer_gbx = QGroupBox()
         self.zonal_layer_gbx.setTitle('Aggregate by zone (optional)')
         self.zonal_layer_gbx.setCheckable(True)
-        self.zonal_layer_gbx.setChecked(True)
+        self.zonal_layer_gbx.setChecked(False)
         self.zonal_layer_gbx_v_layout = QVBoxLayout()
         self.zonal_layer_gbx.setLayout(self.zonal_layer_gbx_v_layout)
         self.zonal_layer_cbx = QComboBox()
