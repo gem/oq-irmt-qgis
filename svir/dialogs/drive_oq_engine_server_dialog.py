@@ -170,8 +170,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
     def login(self):
         self.session = Session()
-        self.hostname, username, password = get_credentials(self.iface,
-                                                            'engine')
+        self.hostname, username, password = get_credentials('engine')
         # try without authentication (if authentication is disabled server
         # side)
         # NOTE: is_lockdown() can raise exceptions, to be caught from outside

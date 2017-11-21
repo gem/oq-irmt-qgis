@@ -208,9 +208,8 @@ class UploadSettingsDialog(QDialog, FORM_CLASS):
         if self.do_update:
             with WaitCursorManager(
                     'Updating project on the OpenQuake Platform',
-                    self.iface):
-                hostname, username, password = get_credentials(
-                    self.iface, 'platform')
+                    self.iface.messageBar()):
+                hostname, username, password = get_credentials('platform')
                 session = Session()
                 try:
                     platform_login(hostname, username, password, session)

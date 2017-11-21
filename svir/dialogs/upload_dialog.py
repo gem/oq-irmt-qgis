@@ -74,7 +74,7 @@ class UploadDialog(QDialog, FORM_CLASS):
         self.button_box = self.buttonBox
 
         self.hostname, self.username, self.password = get_credentials(
-            self.iface, 'platform')
+            'platform')
 
         self.web_view = self.web_view
         self.page = self.web_view.page()

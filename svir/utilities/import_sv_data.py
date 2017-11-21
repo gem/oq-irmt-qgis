@@ -49,15 +49,15 @@ PLATFORM_EXPORT_VARIABLES_DATA = "/svir/export_variables_data"
 PLATFORM_EXPORT_COUNTRIES_INFO = "/svir/export_countries_info"
 
 
-def get_loggedin_downloader(iface):
+def get_loggedin_downloader(message_bar):
     """
     Attempt to login to the OpenQuake Platform
 
-    :param iface: needed to get the credentials and to use the messageBar
+    :param message_bar: needed to display messages
 
     :returns: a :class:`svir.utilities.SvDownloader` instance
     """
-    hostname, username, password = get_credentials(iface, 'platform')
+    hostname, username, password = get_credentials('platform')
     sv_downloader = SvDownloader(hostname)
 
     try:
