@@ -1035,7 +1035,8 @@ def warn_scipy_missing(message_bar):
 
 def get_credentials(server):
     """
-    Get from the QSettings the credentials to access the OpenQuake Platform
+    Get from the QSettings the credentials to access the OpenQuake Engine
+    or the OpenQuake Platform.
     If those settings are not found, use defaults instead.
 
     :param server: it can be either 'platform' or 'engine'
