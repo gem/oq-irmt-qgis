@@ -237,9 +237,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                        " credentials. The call to %s was redirected to %s."
                        % (calc_list_url, resp.url))
                 log_msg(msg, level='C',
-                        message_bar=self.message_bar)
+                        message_bar=self.iface.messageBar())
                 self.is_logged_in = False
                 self.reject()
+                SettingsDialog(self.iface).exec_()
                 return
             calc_list = json.loads(resp.text)
         selected_keys = [
@@ -787,7 +788,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         if isinstance(exc, SSLError):
             err_msg = '; '.join(exc.message.message.strerror.message[0])
             err_msg += ' (you could try prepending http:// or https://)'
-            log_msg(err_msg, level='C', message_bar=self.message_bar)
+            log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
         elif isinstance(exc, (ConnectionError,
                               InvalidSchema,
                               MissingSchema,
@@ -806,14 +807,14 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     ' (please make sure the username and password are'
                     ' spelled correctly and that you are using the right'
                     ' url and port in the host setting)')
-            log_msg(err_msg, level='C',
-                    message_bar=self.message_bar)
+            log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
         else:
             # sanity check (it should never occur)
             raise TypeError(
                 'Unable to handle exception of type %s' % type(exc))
         self.is_logged_in = False
         self.reject()
+        SettingsDialog(self.iface).exec_()
 
     def reject(self):
         self.stop_polling()
