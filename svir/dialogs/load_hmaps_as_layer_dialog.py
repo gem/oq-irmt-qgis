@@ -146,7 +146,7 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
                     and rlz_or_stat != self.rlz_or_stat_cbx.currentText()):
                 continue
             with WaitCursorManager('Creating layer for "%s"...' % rlz_or_stat,
-                                   self.iface):
+                                   self.iface.messageBar()):
                 self.build_layer(rlz_or_stat)
                 self.style_maps()
         if self.npz_file is not None:
