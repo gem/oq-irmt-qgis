@@ -29,13 +29,18 @@ import numpy
 import io
 from collections import OrderedDict
 
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_qt4agg import (
-    FigureCanvasQTAgg as FigureCanvas,
-    NavigationToolbar2QT as NavigationToolbar
-)
-from matplotlib.lines import Line2D
-
+try:
+    from matplotlib.figure import Figure
+    from matplotlib.backends.backend_qt4agg import (
+        FigureCanvasQTAgg as FigureCanvas,
+        NavigationToolbar2QT as NavigationToolbar
+    )
+    from matplotlib.lines import Line2D
+except ImportError as exc:
+    raise ImportError(
+        'There was a problem importing matplotlib. It could happen when using'
+        ' a 64 bit version of QGIS. We recommend to use'
+        ' a 32 bit version instead: %s' % exc)
 
 from qgis.PyQt.QtCore import pyqtSlot, QSettings, Qt
 from qgis.PyQt.QtGui import (QColor,

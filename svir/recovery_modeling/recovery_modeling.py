@@ -26,7 +26,13 @@
 import os
 import json
 import bisect
-import matplotlib.pyplot as plt
+try:
+    import matplotlib.pyplot as plt
+except ImportError as exc:
+    raise ImportError(
+        'There was a problem importing matplotlib. It could happen when using'
+        ' a 64 bit version of QGIS. We recommend to use'
+        ' a 32 bit version instead: %s' % exc)
 from collections import defaultdict
 from PyQt4.QtCore import QSettings
 from svir.recovery_modeling.building import Building
