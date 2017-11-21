@@ -62,7 +62,7 @@ def get_loggedin_downloader(message_bar):
 
     try:
         msg = ("Connecting to the OpenQuake Platform...")
-        with WaitCursorManager(msg, iface):
+        with WaitCursorManager(msg, message_bar):
             sv_downloader.login(username, password)
         return sv_downloader
     except (SvNetworkError, ConnectionError,
@@ -70,7 +70,7 @@ def get_loggedin_downloader(message_bar):
         err_msg = str(e)
         if isinstance(e, InvalidSchema):
             err_msg += ' (you could try prepending http:// or https://)'
-        log_msg(err_msg, level='C', message_bar=iface.messageBar())
+        log_msg(err_msg, level='C', message_bar=message_bar)
         return None
 
 

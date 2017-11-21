@@ -105,7 +105,7 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
 
     def load_from_npz(self):
-        with WaitCursorManager('Creating layer...', self.iface):
+        with WaitCursorManager('Creating layer...', self.iface.messageBar()):
             self.build_layer()
             self.style_curves()
         if self.npz_file is not None:

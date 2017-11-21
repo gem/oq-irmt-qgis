@@ -108,7 +108,8 @@ class UploadSettingsDialog(QDialog, FORM_CLASS):
         self.update_radio.setChecked(self.exists_on_platform)
         self.set_labels()
 
-        with WaitCursorManager("Counting layer's vertices", iface):
+        with WaitCursorManager("Counting layer's vertices",
+                               iface.messageBar()):
             self.vertices_count = ProcessLayer(
                 iface.activeLayer()).count_vertices()
 

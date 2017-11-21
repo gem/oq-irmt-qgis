@@ -638,17 +638,17 @@ class WaitCursorManager(object):
     Wrapper to be used for a time-consuming block of code, that changes the
     mouse cursor and adds an info message to the messageBar
     """
-    def __init__(self, msg=None, iface=None):
+    def __init__(self, msg=None, message_bar=None):
         self.msg = msg
-        self.iface = iface
-        self.has_message = msg and iface
+        self.message_bar = message_bar
+        self.has_message = msg and message_bar
         self.message = None
 
     def __enter__(self):
         if self.has_message:
-            self.message = self.iface.messageBar().createMessage(
+            self.message = self.message_bar.createMessage(
                 tr('Info'), tr(self.msg))
-            self.message = self.iface.messageBar().pushWidget(
+            self.message = self.message_bar.pushWidget(
                 self.message, level=QgsMessageBar.INFO)
             QApplication.processEvents()
         QApplication.setOverrideCursor(Qt.WaitCursor)
@@ -656,7 +656,7 @@ class WaitCursorManager(object):
     def __exit__(self, type, value, traceback):
         QApplication.restoreOverrideCursor()
         if self.has_message:
-            self.iface.messageBar().popWidget(self.message)
+            self.message_bar.popWidget(self.message)
 
 
 class SvNetworkError(Exception):

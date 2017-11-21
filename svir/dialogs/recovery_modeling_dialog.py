@@ -216,7 +216,8 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
              self.zone_field_name) = add_zone_id_to_points(
                 self.iface, self.dmg_by_asset_layer,
                 self.svi_layer, self.zone_field_name)
-        with WaitCursorManager('Generating recovery curves...', self.iface):
+        with WaitCursorManager('Generating recovery curves...',
+                               self.iface.messageBar()):
             self.calculate_community_level_recovery_curve(
                 point_attrs_dict,
                 self.integrate_svi_check.isChecked())
