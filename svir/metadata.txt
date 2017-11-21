@@ -13,7 +13,7 @@ name=OpenQuake Integrated Risk Modelling Toolkit
 qgisMinimumVersion=2.14
 description=Tools to drive the OpenQuake Engine, to develop composite indicators and integrate them with physical risk estimations, and to predict building recovery times following an earthquake
 about=This plugin allows users to drive OpenQuake Engine calculations (https://github.com/gem/oq-engine) of physical hazard and risk, and to load the corresponding outputs as QGIS layers. For those outputs, data visualization tools are provided. The toolkit also enables users to develop composite indicators to measure and quantify social characteristics, and combine them with estimates of human or infrastructure loss. The plugin can interact with the OpenQuake Platform (https://platform.openquake.org), to browse and download socio-economic data or existing projects, edit projects locally in QGIS and upload and share them with the scientific community. A post-earthquake recovery modeling framework is incorporated into the toolkit, to produce building level and/or community level recovery functions.
-version=2.8.0
+version=2.8.1
 author=GEM Foundation
 email=staff.it@globalquakemodel.org
 
@@ -23,6 +23,11 @@ email=staff.it@globalquakemodel.org
 
 # Uncomment the following line and add your changelog entries:
 changelog=
+    2.8.1
+    * When interacting with the OQ-Engine or the OQ-Platform, the plugin will attempt first to use the default credentials.
+      It will open the settings dialog automatically, in case the login fails with the default settings.
+    * When a problem causes the widget that drives the OQ-Engine to be closed, error messages are displayed in the general
+      QGIS message bar, instead of using the inner message bar of the widget (otherwise, they would not be visible to the user)
     2.8.0
     * In aggregated loss curves, it is possible to display a chosen set of realizations or statistics (mean, quantiles, etc.)
     2.7.3
