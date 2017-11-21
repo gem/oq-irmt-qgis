@@ -613,7 +613,7 @@ class Irmt:
         download from the openquake platform
         """
         # login to platform, to be able to retrieve sv indices
-        sv_downloader = get_loggedin_downloader(self.iface)
+        sv_downloader = get_loggedin_downloader(self.iface.messageBar())
         if sv_downloader is None:
             self.show_settings()
             return
@@ -786,7 +786,7 @@ class Irmt:
         Open dialog to select one of the integrated risk projects available on
         the OQ-Platform and download it as a qgis project
         """
-        sv_downloader = get_loggedin_downloader(self.iface)
+        sv_downloader = get_loggedin_downloader(self.iface.messageBar())
         if sv_downloader is None:
             self.show_settings()
             return
