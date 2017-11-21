@@ -36,7 +36,6 @@ from svir.utilities.shared import (IRMT_PLUGIN_VERSION,
                                    SUPPLEMENTAL_INFORMATION_VERSION,
                                    DEBUG,
                                    )
-from svir.utilities.settings import get_platform_credentials
 from svir.utilities.utils import (reload_attrib_cbx,
                                   tr,
                                   WaitCursorManager,
@@ -47,6 +46,7 @@ from svir.utilities.utils import (reload_attrib_cbx,
                                   insert_platform_layer_id,
                                   log_msg,
                                   get_ui_class,
+                                  get_credentials,
                                   )
 
 LICENSES = (
@@ -209,8 +209,8 @@ class UploadSettingsDialog(QDialog, FORM_CLASS):
             with WaitCursorManager(
                     'Updating project on the OpenQuake Platform',
                     self.iface):
-                hostname, username, password = get_platform_credentials(
-                    self.iface)
+                hostname, username, password = get_credentials(
+                    self.iface, 'platform')
                 session = Session()
                 try:
                     platform_login(hostname, username, password, session)

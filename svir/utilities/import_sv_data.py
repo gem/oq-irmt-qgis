@@ -33,13 +33,13 @@ from svir.third_party.requests.exceptions import (ConnectionError,
                                                   MissingSchema,
                                                   ReadTimeout,
                                                   )
-from svir.utilities.settings import get_platform_credentials
 from svir.utilities.utils import (SvNetworkError,
                                   platform_login,
                                   WaitCursorManager,
                                   log_msg,
                                   create_progress_message_bar,
                                   clear_progress_message_bar,
+                                  get_credentials,
                                   )
 
 PLATFORM_EXPORT_SV_THEMES = "/svir/list_themes"
@@ -57,7 +57,7 @@ def get_loggedin_downloader(iface):
 
     :returns: a :class:`svir.utilities.SvDownloader` instance
     """
-    hostname, username, password = get_platform_credentials(iface)
+    hostname, username, password = get_credentials(iface, 'platform')
     sv_downloader = SvDownloader(hostname)
 
     try:

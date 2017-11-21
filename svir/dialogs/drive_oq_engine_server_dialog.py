@@ -56,7 +56,6 @@ from svir.third_party.requests.exceptions import (ConnectionError,
                                                   )
 from svir.third_party.requests.packages.urllib3.exceptions import (
     LocationParseError)
-from svir.utilities.settings import get_engine_credentials
 from svir.utilities.shared import (OQ_ALL_LOADABLE_TYPES,
                                    OQ_RST_TYPES,
                                    OQ_NO_MAP_TYPES,
@@ -68,6 +67,7 @@ from svir.utilities.utils import (WaitCursorManager,
                                   get_ui_class,
                                   SvNetworkError,
                                   get_irmt_version,
+                                  get_credentials,
                                   )
 from svir.dialogs.load_ruptures_as_layer_dialog import (
     LoadRupturesAsLayerDialog)
@@ -86,6 +86,7 @@ from svir.dialogs.load_losses_by_asset_as_layer_dialog import (
 from svir.dialogs.show_full_report_dialog import ShowFullReportDialog
 from svir.dialogs.show_console_dialog import ShowConsoleDialog
 from svir.dialogs.show_params_dialog import ShowParamsDialog
+from svir.dialogs.settings_dialog import SettingsDialog
 
 FORM_CLASS = get_ui_class('ui_drive_engine_server.ui')
 
@@ -169,7 +170,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
     def login(self):
         self.session = Session()
-        self.hostname, username, password = get_engine_credentials(self.iface)
+        self.hostname, username, password = get_credentials(self.iface,
+                                                            'engine')
         # try without authentication (if authentication is disabled server
         # side)
         # NOTE: is_lockdown() can raise exceptions, to be caught from outside

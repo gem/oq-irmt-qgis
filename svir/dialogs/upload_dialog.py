@@ -39,13 +39,13 @@ from svir.thread_worker.upload_worker import UploadWorker
 from svir.third_party.requests.sessions import Session
 from svir.third_party.requests.utils import dict_from_cookiejar
 from svir.utilities.sldadapter import getGsCompatibleSld
-from svir.utilities.settings import get_platform_credentials
 from svir.utilities.utils import (platform_login,
                                   create_progress_message_bar,
                                   clear_progress_message_bar,
                                   SvNetworkError,
                                   log_msg,
                                   get_ui_class,
+                                  get_credentials,
                                   )
 from svir.utilities.shared import DEBUG
 
@@ -73,8 +73,8 @@ class UploadDialog(QDialog, FORM_CLASS):
 
         self.button_box = self.buttonBox
 
-        self.hostname, self.username, self.password = get_platform_credentials(
-            self.iface)
+        self.hostname, self.username, self.password = get_credentials(
+            self.iface, 'platform')
 
         self.web_view = self.web_view
         self.page = self.web_view.page()

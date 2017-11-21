@@ -1031,3 +1031,23 @@ def warn_scipy_missing(message_bar):
     msg = ("This functionality requires scipy. Please install it"
            " and restart QGIS to enable it.")
     log_msg(msg, level='C', message_bar=message_bar)
+
+
+def get_credentials(iface, server):
+    """
+    Get from the QSettings the credentials to access the OpenQuake Platform
+    If those settings are not found, use defaults instead.
+
+    :param server: it can be either 'platform' or 'engine'
+
+    :returns: tuple (hostname, username, password)
+
+    """
+    qs = QSettings()
+    hostname = qs.value('irmt/%s_hostname' % server,
+                        DEFAULT_SETTINGS['%s_hostname' % server])
+    username = qs.value('irmt/%s_username' % server,
+                        DEFAULT_SETTINGS['%s_username' % server])
+    password = qs.value('irmt/%s_password' % server,
+                        DEFAULT_SETTINGS['%s_password' % server])
+    return hostname, username, password
