@@ -32,6 +32,7 @@ from PyQt4.QtCore import QPyNullVariant
 from qgis.core import (QgsMapLayer,
                        QGis,
                        QgsVectorLayer,
+                       QgsVectorDataProvider,
                        QgsMapLayerRegistry,
                        QgsField)
 
@@ -166,7 +167,8 @@ class ProcessLayer():
                  passed as input argument, and as values the actual names of
                  the assigned attributes
         """
-        if 'Add Attributes' not in self.layer.capabilitiesString():
+        caps = self.layer.dataProvider().capabilities()
+        if not (caps & QgsVectorDataProvider.AddAttributes):
             raise TypeError('Unable to add attributes to this kind of layer.'
                             ' (%s). Please consider saving the layer with an'
                             ' editable format before attempting to add'
@@ -246,7 +248,8 @@ class ProcessLayer():
 
         :return: true in case of success and false in case of failure
         """
-        if 'Delete Attributes' not in self.layer.capabilitiesString():
+        caps = self.layer.dataProvider().capabilities()
+        if not (caps & QgsVectorDataProvider.DeleteAttributes):
             raise TypeError('Unable to delete attributes to this kind of'
                             ' layer (%s). Please consider saving the layer'
                             ' with an editable format before attempting to'
@@ -292,7 +295,8 @@ class ProcessLayer():
                          be assigned to it
         :returns: (actual_new_attr_name, invalid_input_values)
         """
-        if 'Change Attribute Values' not in self.layer.capabilitiesString():
+        caps = self.layer.dataProvider().capabilities()
+        if not (caps & QgsVectorDataProvider.ChangeAttributeValues):
             raise TypeError('Unable to edit features of this kind of layer'
                             ' (%s). Please consider saving the layer with an'
                             ' editable format before attempting to transform'

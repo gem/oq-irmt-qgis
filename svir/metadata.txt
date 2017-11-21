@@ -28,6 +28,7 @@ changelog=
       It will open the settings dialog automatically, in case the login fails with the default settings.
     * When a problem causes the widget that drives the OQ-Engine to be closed, error messages are displayed in the general
       QGIS message bar, instead of using the inner message bar of the widget (otherwise, they would not be visible to the user)
+    * Fix a bug in the check of layer capabilities, that was working only with QGIS locale set to English
     2.8.0
     * In aggregated loss curves, it is possible to display a chosen set of realizations or statistics (mean, quantiles, etc.)
     2.7.3
