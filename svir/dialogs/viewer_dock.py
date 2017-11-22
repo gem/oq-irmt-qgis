@@ -38,9 +38,9 @@ try:
     from matplotlib.lines import Line2D
 except ImportError as exc:
     raise ImportError(
-        'There was a problem importing matplotlib. It could happen when using'
-        ' a 64 bit version of QGIS. We recommend to use'
-        ' a 32 bit version instead: %s' % exc)
+        'There was a problem importing matplotlib. If you are using'
+        ' a 64bit version of QGIS on Windows, please try using'
+        ' a 32bit version instead. %s' % exc)
 
 from qgis.PyQt.QtCore import pyqtSlot, QSettings, Qt
 from qgis.PyQt.QtGui import (QColor,
