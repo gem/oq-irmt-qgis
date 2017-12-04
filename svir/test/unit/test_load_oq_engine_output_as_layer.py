@@ -302,7 +302,7 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
             self.assertGreaterEqual(
                 n_rows, 3,
                 "The exported file %s has only %s rows" % (
-                    exported_file_path, n_cols))
+                    exported_file_path, n_rows))
 
     def _set_output_type(self, output_type):
         idx = self.viewer_dock.output_type_cbx.findText(output_type)
