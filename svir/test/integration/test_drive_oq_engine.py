@@ -107,6 +107,23 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 print(ex)
             else:
                 self.untested_otypes.discard(output['type'])
+            output_type_aggr = "%s_aggr" % output['type']
+            if output_type_aggr in OQ_NO_MAP_TYPES:
+                mod_output = copy.deepcopy(output)
+                mod_output['type'] = output_type_aggr
+                try:
+                    self.load_output(calc, mod_output)
+                except Exception:
+                    ex_type, ex, tb = sys.exc_info()
+                    failed_attempt = {'calc_id': calc_id,
+                                      'calc_description': calc['description'],
+                                      'output_type': mod_output['type'],
+                                      'traceback': tb}
+                    self.failed_attempts.append(failed_attempt)
+                    traceback.print_tb(failed_attempt['traceback'])
+                    print(ex)
+                else:
+                    self.untested_otypes.discard(output['type'])
 
     def load_output(self, calc, output):
         calc_id = calc['id']

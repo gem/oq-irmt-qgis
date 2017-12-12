@@ -221,7 +221,8 @@ OQ_NPZ_LOADABLE_TYPES = set([
 OQ_ALL_LOADABLE_TYPES = OQ_CSV_LOADABLE_TYPES | OQ_NPZ_LOADABLE_TYPES
 OQ_RST_TYPES = set(['fullreport'])
 OQ_NO_MAP_TYPES = set(
-    ['agg_curves-rlzs', 'agg_curves-stats', 'dmg_total'])
+    ['agg_curves-rlzs', 'agg_curves-stats', 'dmg_by_asset_aggr',
+     'losses_by_asset_aggr'])
 
 
 DEFAULT_SETTINGS = dict(

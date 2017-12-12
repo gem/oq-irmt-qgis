@@ -29,17 +29,23 @@ import numpy
 import io
 from collections import OrderedDict
 
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_qt4agg import (
-    FigureCanvasQTAgg as FigureCanvas,
-    NavigationToolbar2QT as NavigationToolbar
-)
-from matplotlib.lines import Line2D
+try:
+    from matplotlib.figure import Figure
+    from matplotlib.backends.backend_qt4agg import (
+        FigureCanvasQTAgg as FigureCanvas,
+        NavigationToolbar2QT as NavigationToolbar
+    )
+    from matplotlib.lines import Line2D
+except ImportError as exc:
+    raise ImportError(
+        'There was a problem importing matplotlib. If you are using'
+        ' a 64bit version of QGIS on Windows, please try using'
+        ' a 32bit version instead. %s' % exc)
 
-
-from qgis.PyQt.QtCore import pyqtSlot, QSettings
+from qgis.PyQt.QtCore import pyqtSlot, QSettings, Qt
 from qgis.PyQt.QtGui import (QColor,
                              QLabel,
+                             QPlainTextEdit,
                              QComboBox,
                              QSizePolicy,
                              QSpinBox,
@@ -47,6 +53,9 @@ from qgis.PyQt.QtGui import (QColor,
                              QCheckBox,
                              QDockWidget,
                              QFileDialog,
+                             QAbstractItemView,
+                             QTableWidget,
+                             QTableWidgetItem,
                              )
 from qgis.gui import QgsVertexMarker
 from qgis.core import QGis, QgsMapLayer, QgsFeatureRequest
@@ -64,6 +73,7 @@ from svir.utilities.utils import (get_ui_class,
 from svir.recovery_modeling.recovery_modeling import (
     RecoveryModeling, fill_fields_multiselect)
 from svir.ui.list_multiselect_widget import ListMultiSelectWidget
+from svir.ui.list_multiselect_mono_widget import ListMultiSelectMonoWidget
 
 from svir import IS_SCIPY_INSTALLED
 
@@ -139,7 +149,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             ('uhs', 'Uniform Hazard Spectra'),
             ('agg_curves-rlzs', 'Aggregated loss curves (realizations)'),
             ('agg_curves-stats', 'Aggregated loss curves (statistics)'),
-            ('dmg_total', 'Total damage distribution'),
+            ('dmg_by_asset_aggr', 'Damage distribution'),
+            ('losses_by_asset_aggr', 'Loss distribution'),
             ('recovery_curves', 'Recovery Curves')])
         self.output_type_cbx.addItems(self.output_types_names.values())
 
@@ -261,14 +272,156 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         fill_fields_multiselect(
             self.fields_multiselect, self.iface.activeLayer())
 
+    def create_rlzs_multiselect(self):
+        title = 'Select realizations'
+        self.rlzs_multiselect = ListMultiSelectWidget(title=title)
+        self.rlzs_multiselect.setSizePolicy(
+            QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        self.typeDepVLayout.addWidget(self.rlzs_multiselect)
+
     def create_stats_multiselect(self):
-        title = 'Select statistics to plot'
+        title = 'Select statistics'
         self.stats_multiselect = ListMultiSelectWidget(title=title)
         self.stats_multiselect.setSizePolicy(
             QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
         self.typeDepVLayout.addWidget(self.stats_multiselect)
-        self.stats_multiselect.selection_changed.connect(
-            self.refresh_feature_selection)
+
+    def create_tag_names_multiselect(self):
+        title = 'Select tag names'
+        self.tag_names_multiselect = ListMultiSelectWidget(title=title)
+        self.tag_names_multiselect.setSizePolicy(
+            QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        self.tag_names_multiselect.selected_widget.setSelectionMode(
+            QAbstractItemView.SingleSelection)
+        self.tag_names_multiselect.unselected_widget.setSelectionMode(
+            QAbstractItemView.SingleSelection)
+        self.tag_names_multiselect.select_all_btn.hide()
+        self.tag_names_multiselect.deselect_all_btn.hide()
+        self.typeDepVLayout.addWidget(self.tag_names_multiselect)
+        self.tag_names_multiselect.unselected_widget.itemClicked.connect(
+            self.populate_tag_values_multiselect)
+        self.tag_names_multiselect.selected_widget.itemClicked.connect(
+            self.populate_tag_values_multiselect)
+        self.tag_names_multiselect.unselected_widget.itemDoubleClicked.connect(
+            self.populate_tag_values_multiselect)
+        self.tag_names_multiselect.selected_widget.itemDoubleClicked.connect(
+            self.populate_tag_values_multiselect)
+        self.tag_names_multiselect.selection_changed.connect(
+            self.update_selected_tag_names)
+
+    def create_tag_values_multiselect(self):
+        title = 'Select tag values'
+        self.tag_values_multiselect = ListMultiSelectMonoWidget(
+            message_bar=self.iface.messageBar(), title=title)
+        self.tag_values_multiselect.setSizePolicy(
+            QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        self.tag_values_multiselect.select_all_btn.hide()
+        self.tag_values_multiselect.deselect_all_btn.hide()
+        self.typeDepVLayout.addWidget(self.tag_values_multiselect)
+        self.tag_values_multiselect.selection_changed.connect(
+            self.update_selected_tag_values)
+
+    def populate_tag_values_multiselect(self, item):
+        tag_name = item.text()
+        self.current_tag_name = tag_name
+        self.tag_values_multiselect.setTitle(
+            'Select values for tag: %s' % tag_name)
+        tag_values = self.tags[tag_name]['values']
+        selected_tag_values = [tag_value for tag_value in tag_values
+                               if tag_values[tag_value]]
+        unselected_tag_values = [tag_value for tag_value in tag_values
+                                 if not tag_values[tag_value]]
+        self.tag_values_multiselect.set_selected_items(selected_tag_values)
+        self.tag_values_multiselect.set_unselected_items(unselected_tag_values)
+        unselected_items = [
+            self.tag_values_multiselect.unselected_widget.item(i) for i in
+            range(self.tag_values_multiselect.unselected_widget.count())]
+        if self.tag_with_all_values:
+            for i in range(len(unselected_items)):
+                item = unselected_items[i]
+                if item.text() == "*":
+                    item.setFlags(Qt.ItemIsEnabled)
+                    item.setBackgroundColor(QColor('darkGray'))
+        self.tag_values_multiselect.setEnabled(
+            tag_name in list(self.tag_names_multiselect.get_selected_items()))
+
+    def filter_dmg_by_asset_aggr(self):
+        params = {}
+        for tag_name in self.tags:
+            if self.tags[tag_name]['selected']:
+                for value in self.tags[tag_name]['values']:
+                    if self.tags[tag_name]['values'][value]:
+                        # NOTE: this would not work for multiple values per tag
+                        params[tag_name] = value
+        output_type = 'aggdamages/%s' % self.loss_type_cbx.currentText()
+        self.dmg_by_asset_aggr = self.extract_npz(
+            self.session, self.hostname, self.calc_id, output_type,
+            params=params)
+        if self.dmg_by_asset_aggr is None:
+            return
+        self.draw_dmg_by_asset_aggr()
+
+    def filter_losses_by_asset_aggr(self):
+        params = {}
+        for tag_name in self.tags:
+            if self.tags[tag_name]['selected']:
+                for value in self.tags[tag_name]['values']:
+                    if self.tags[tag_name]['values'][value]:
+                        # NOTE: this would not work for multiple values per tag
+                        params[tag_name] = value
+        output_type = 'agglosses/%s' % self.loss_type_cbx.currentText()
+        self.losses_by_asset_aggr = self.extract_npz(
+            self.session, self.hostname, self.calc_id, output_type,
+            params=params)
+        if self.losses_by_asset_aggr is None:
+            return
+        self.draw_losses_by_asset_aggr()
+
+    def update_selected_tag_names(self):
+        for tag_name in self.tag_names_multiselect.get_selected_items():
+            self.tags[tag_name]['selected'] = True
+        for tag_name in self.tag_names_multiselect.get_unselected_items():
+            self.tags[tag_name]['selected'] = False
+        self.tag_values_multiselect.setEnabled(
+            tag_name in list(self.tag_names_multiselect.get_selected_items()))
+        self.update_list_selected_edt()
+        if self.output_type == 'dmg_by_asset_aggr':
+            self.filter_dmg_by_asset_aggr()
+        elif self.output_type == 'losses_by_asset_aggr':
+            self.filter_losses_by_asset_aggr()
+
+    def update_selected_tag_values(self):
+        for tag_value in self.tag_values_multiselect.get_selected_items():
+            self.tags[self.current_tag_name]['values'][tag_value] = True
+        for tag_value in self.tag_values_multiselect.get_unselected_items():
+            self.tags[self.current_tag_name]['values'][tag_value] = False
+        self.update_list_selected_edt()
+        if self.output_type == 'dmg_by_asset_aggr':
+            self.filter_dmg_by_asset_aggr()
+        elif self.output_type == 'losses_by_asset_aggr':
+            if "*" in self.tag_values_multiselect.get_selected_items():
+                self.tag_with_all_values = self.current_tag_name
+            elif (self.tag_with_all_values == self.current_tag_name and
+                    "*" in self.tag_values_multiselect.get_unselected_items()):
+                self.tag_with_all_values = None
+            self.filter_losses_by_asset_aggr()
+
+    def create_list_selected_edt(self):
+        self.list_selected_edt = QPlainTextEdit('Selected tags:')
+        self.list_selected_edt.setSizePolicy(
+            QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.list_selected_edt.setMaximumHeight(30)
+        self.list_selected_edt.setReadOnly(True)
+        self.typeDepVLayout.addWidget(self.list_selected_edt)
+
+    def update_list_selected_edt(self):
+        selected_tags_str = ''
+        for tag_name in self.tags:
+            if self.tags[tag_name]['selected']:
+                for tag_value in self.tags[tag_name]['values']:
+                    if self.tags[tag_name]['values'][tag_value]:
+                        selected_tags_str += '%s="%s" ' % (tag_name, tag_value)
+        self.list_selected_edt.setPlainText(selected_tags_str)
 
     def refresh_feature_selection(self):
         if not list(self.stats_multiselect.get_selected_items()):
@@ -283,28 +436,41 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         layer.selectByIds(selected_feats)
 
     def set_output_type_and_its_gui(self, new_output_type):
-        if (self.output_type is not None
-                and self.output_type == new_output_type):
-            return
-
         # clear type dependent widgets
         # NOTE: typeDepVLayout contains typeDepHLayout1 and typeDepHLayout2,
         #       that will be cleared recursively
         clear_widgets_from_layout(self.typeDepVLayout)
+        clear_widgets_from_layout(self.table_layout)
+        if hasattr(self, 'plot'):
+            self.plot.clear()
+            self.plot_canvas.show()
+            self.plot_canvas.draw()
 
         if new_output_type == 'hcurves':
             self.create_imt_selector()
             self.create_stats_multiselect()
+            self.stats_multiselect.selection_changed.connect(
+                self.refresh_feature_selection)
         elif new_output_type == 'loss_curves':
             self.create_loss_type_selector()
         elif new_output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
             self.create_loss_type_selector()
-        elif new_output_type == 'dmg_total':
+        elif new_output_type == 'dmg_by_asset_aggr':
             self.create_loss_type_selector()
             self.create_rlz_selector()
+            self.create_tag_names_multiselect()
+            self.create_tag_values_multiselect()
+            self.create_list_selected_edt()
             self.create_exclude_no_dmg_ckb()
+        elif new_output_type == 'losses_by_asset_aggr':
+            self.create_loss_type_selector()
+            self.create_tag_names_multiselect()
+            self.create_tag_values_multiselect()
+            self.create_list_selected_edt()
         elif new_output_type == 'uhs':
             self.create_stats_multiselect()
+            self.stats_multiselect.selection_changed.connect(
+                self.refresh_feature_selection)
         elif new_output_type == 'recovery_curves':
             if not IS_SCIPY_INSTALLED:
                 warn_scipy_missing(self.iface.messageBar())
@@ -320,58 +486,174 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         # else.
         self.output_type = new_output_type
 
-    def extract_npz(self, session, hostname, calc_id, output_type):
+    def extract_npz(
+            self, session, hostname, calc_id, output_type, params=None):
         url = '%s/v1/calc/%s/extract/%s' % (hostname, calc_id, output_type)
-        resp_content = session.get(url).content
+        resp = session.get(url, params=params)
+        if not resp.ok:
+            msg = "Unable to extract %s with parameters %s: %s" % (
+                url, params, resp.reason)
+            log_msg(msg, level='C', message_bar=self.iface.messageBar())
+            return
+        resp_content = resp.content
+        if not resp_content:
+            msg = 'GET %s returned an empty content!' % url
+            log_msg(msg, level='C', message_bar=self.iface.messageBar())
+            return
         return numpy.load(io.BytesIO(resp_content))
 
     def load_no_map_output(self, calc_id, session, hostname, output_type):
+        self.calc_id = calc_id
+        self.session = session
+        self.hostname = hostname
+        self.current_tag_name = None
+        self.tag_with_all_values = None
+        self.change_output_type(output_type)
+        self.setVisible(True)
+        self.raise_()
         if output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
             self.load_agg_curves(calc_id, session, hostname, output_type)
-        elif output_type == 'dmg_total':
-            self.load_dmg_total(calc_id, session, hostname, output_type)
+        elif output_type == 'dmg_by_asset_aggr':
+            self.load_dmg_by_asset_aggr(
+                calc_id, session, hostname, output_type)
+        elif output_type == 'losses_by_asset_aggr':
+            self.load_losses_by_asset_aggr(
+                calc_id, session, hostname, output_type)
         else:
             raise NotImplementedError(output_type)
 
-    def load_dmg_total(self, calc_id, session, hostname, output_type):
-        self.change_output_type(output_type)
-        self.dmg_total = self.extract_npz(
-            session, hostname, calc_id, output_type)
+    def load_dmg_by_asset_aggr(self, calc_id, session, hostname, output_type):
         composite_risk_model_attrs = self.extract_npz(
             session, hostname, calc_id, 'composite_risk_model.attrs')
+        if composite_risk_model_attrs is None:
+            return
         self.dmg_states = composite_risk_model_attrs['damage_states']
+        tags_npz = self.extract_npz(
+            session, hostname, calc_id, 'assetcol/tags')
+        if tags_npz is None:
+            return
+        tags_array = tags_npz['array']
+        self.tags = {}
+        for tag in tags_array:
+            # tags are in the format 'city=Benicia' (tag_name=tag_value)
+            tag_name, tag_value = tag.split('=')
+            if tag_name not in self.tags:
+                self.tags[tag_name] = {
+                    'selected': False,
+                    'values': {tag_value: False}}  # False means unselected
+            else:
+                # False means unselected
+                self.tags[tag_name]['values'][tag_value] = False
+        self.update_list_selected_edt()
 
-        num_rlzs = self.dmg_total['array'].shape[0]
-        rlzs = ['rlz-%s' % rlz for rlz in range(num_rlzs)]
+        rlzs_npz = self.extract_npz(
+            session, hostname, calc_id, 'realizations')
+        if rlzs_npz is None:
+            return
+        rlzs = rlzs_npz['array']['gsims']
         self.rlz_cbx.blockSignals(True)
         self.rlz_cbx.clear()
         self.rlz_cbx.addItems(rlzs)
         self.rlz_cbx.blockSignals(False)
 
-        loss_types = self.dmg_total['array'].dtype.names
+        loss_types = composite_risk_model_attrs['loss_types']
         self.loss_type_cbx.blockSignals(True)
         self.loss_type_cbx.clear()
         self.loss_type_cbx.addItems(loss_types)
         self.loss_type_cbx.blockSignals(False)
-        self.draw_dmg_total()
+
+        self.tag_names_multiselect.set_unselected_items(self.tags.keys())
+        self.tag_names_multiselect.set_selected_items([])
+        self.tag_values_multiselect.set_unselected_items([])
+        self.tag_values_multiselect.set_selected_items([])
+
+        self.filter_dmg_by_asset_aggr()
+
+    def load_losses_by_asset_aggr(
+            self, calc_id, session, hostname, output_type):
+        composite_risk_model_attrs = self.extract_npz(
+            session, hostname, calc_id, 'composite_risk_model.attrs')
+        if composite_risk_model_attrs is None:
+            return
+        rlzs_npz = self.extract_npz(
+            session, hostname, calc_id, 'realizations')
+        if rlzs_npz is None:
+            return
+        self.rlzs = rlzs_npz['array']['gsims']
+        tags_npz = self.extract_npz(
+            session, hostname, calc_id, 'assetcol/tags')
+        if tags_npz is None:
+            return
+        tags_array = tags_npz['array']
+        self.tags = {}
+        for tag in tags_array:
+            # tags are in the format 'city=Benicia' (tag_name=tag_value)
+            tag_name, tag_value = tag.split('=')
+            if tag_name not in self.tags:
+                self.tags[tag_name] = {
+                    'selected': False,
+                    'values': {tag_value: False}}  # False means unselected
+            else:
+                # False means unselected
+                self.tags[tag_name]['values'][tag_value] = False
+            self.tags[tag_name]['values']['*'] = False
+        self.update_list_selected_edt()
+
+        loss_types = composite_risk_model_attrs['loss_types']
+        self.loss_type_cbx.blockSignals(True)
+        self.loss_type_cbx.clear()
+        self.loss_type_cbx.addItems(loss_types)
+        self.loss_type_cbx.blockSignals(False)
+
+        self.tag_names_multiselect.set_unselected_items(self.tags.keys())
+        self.tag_names_multiselect.set_selected_items([])
+        self.tag_values_multiselect.set_unselected_items([])
+        self.tag_values_multiselect.set_selected_items([])
+
+        self.filter_losses_by_asset_aggr()
 
     def load_agg_curves(self, calc_id, session, hostname, output_type):
-        self.change_output_type(output_type)
         self.agg_curves = self.extract_npz(
             session, hostname, calc_id, output_type)
+        if self.agg_curves is None:
+            return
         loss_types = self.agg_curves['array'].dtype.names
         self.loss_type_cbx.blockSignals(True)
         self.loss_type_cbx.clear()
         self.loss_type_cbx.blockSignals(False)
         self.loss_type_cbx.addItems(loss_types)
+        if output_type == 'agg_curves-stats':
+            self.create_stats_multiselect()
+            self.stats_multiselect.selection_changed.connect(
+                lambda: self.draw_agg_curves(output_type))
+            self.stats_multiselect.add_selected_items(self.agg_curves['stats'])
+            self.draw_agg_curves(output_type)
+        elif output_type == 'agg_curves-rlzs':
+            self.create_rlzs_multiselect()
+            self.rlzs_multiselect.selection_changed.connect(
+                lambda: self.draw_agg_curves(output_type))
+            rlzs = ["Rlz %3d" % rlz
+                    for rlz in range(self.agg_curves['array'].shape[1])]
+            self.rlzs_multiselect.add_selected_items(rlzs)
+            self.draw_agg_curves(output_type)
+        else:
+            raise NotImplementedError(
+                'Can not draw outputs of type %s' % output_type)
+            return
 
     def draw_agg_curves(self, output_type):
         if output_type == 'agg_curves-rlzs':
-            rlzs_or_stats = [
-                "Rlz %s" % rlz
-                for rlz in range(self.agg_curves['array'].shape[1])]
+            if self.rlzs_multiselect is None:
+                rlzs_or_stats = []
+            else:
+                rlzs_or_stats = list(
+                    self.rlzs_multiselect.get_selected_items())
         elif output_type == 'agg_curves-stats':
-            rlzs_or_stats = self.agg_curves['stats']
+            if self.stats_multiselect is None:
+                rlzs_or_stats = []
+            else:
+                rlzs_or_stats = list(
+                    self.stats_multiselect.get_selected_items())
         else:
             raise NotImplementedError(
                 'Can not draw outputs of type %s' % output_type)
@@ -430,31 +712,48 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 loc=location, fancybox=True, shadow=True, fontsize='small')
         self.plot_canvas.draw()
 
-    def draw_dmg_total(self):
+    def draw_dmg_by_asset_aggr(self):
         '''
         Plots the total damage distribution
         '''
-        rlz = int(self.rlz_cbx.currentText().split('-')[1])  # from rlz-xxx
-        loss_type = self.loss_type_cbx.currentText()
-        means = self.dmg_total['array'][rlz][loss_type]['mean']
-        stddevs = self.dmg_total['array'][rlz][loss_type]['stddev']
+        if len(self.dmg_by_asset_aggr['array']) == 0:
+            msg = 'No assets satisfy the selected criteria'
+            log_msg(msg, level='W', message_bar=self.iface.messageBar())
+            self.plot.clear()
+            self.plot_canvas.draw()
+            return
+        rlz = self.rlz_cbx.currentIndex()
+        # TODO: re-add error bars when stddev will become available again
+        # means = self.dmg_by_asset_aggr['array'][rlz]['mean']
+        # stddevs = self.dmg_by_asset_aggr['array'][rlz]['stddev']
+        means = self.dmg_by_asset_aggr['array'][rlz]
+        if (means < 0).any():
+            msg = ('The results displayed include negative damage estimates'
+                   ' for one or more damage states. Please check the fragility'
+                   ' model for crossing curves.')
+            log_msg(msg, level='W', message_bar=self.iface.messageBar())
         dmg_states = self.dmg_states
         if self.exclude_no_dmg_ckb.isChecked():
             # exclude the first element, that is 'no damage'
             means = means[1:]
-            stddevs = stddevs[1:]
+            # TODO: re-add error bars when stddev will become available again
+            # stddevs = stddevs[1:]
             dmg_states = dmg_states[1:]
 
         indX = numpy.arange(len(dmg_states))  # the x locations for the groups
-        error_config = {'ecolor': '0.3', 'linewidth': '2'}
+        # TODO: re-add error bars when stddev will become available again
+        # error_config = {'ecolor': '0.3', 'linewidth': '2'}
         bar_width = 0.3
         if self.bw_chk.isChecked():
             color = 'lightgray'
         else:
             color = 'IndianRed'
         self.plot.clear()
-        self.plot.bar(indX, height=means, width=bar_width,
-                      yerr=stddevs, error_kw=error_config, color=color,
+        # TODO: re-add error bars when stddev will become available again
+        # self.plot.bar(indX, height=means, width=bar_width,
+        #               yerr=stddevs, error_kw=error_config, color=color,
+        #               linewidth=1.5, alpha=0.6)
+        self.plot.bar(indX, height=means, width=bar_width, color=color,
                       linewidth=1.5, alpha=0.6)
         self.plot.set_title('Damage distribution')
         self.plot.set_xlabel('Damage state')
@@ -464,6 +763,37 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.plot.margins(.15, 0)
         self.plot.yaxis.grid()
         self.plot_canvas.draw()
+
+    def _to_2d(self, array):
+        # convert 1d array into 2d, unless already 2d
+        if len(array.shape) == 1:
+            array = array[None, :]
+        return array
+
+    def draw_losses_by_asset_aggr(self):
+        self.plot_canvas.hide()
+        clear_widgets_from_layout(self.table_layout)
+        losses_array = self.losses_by_asset_aggr['array']
+        losses_array = self._to_2d(losses_array)
+        tags = None
+        try:
+            tags = self.losses_by_asset_aggr['tags']
+        except KeyError:
+            pass
+        nrows, ncols = losses_array.shape
+        table = QTableWidget(nrows, ncols)
+        table.setSizePolicy(
+            QSizePolicy.Preferred, QSizePolicy.MinimumExpanding)
+        table.setHorizontalHeaderLabels(self.rlzs)
+        if tags is not None:
+            table.setVerticalHeaderLabels(tags)
+        table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        for row in range(nrows):
+            for col in range(ncols):
+                table.setItem(
+                    row, col, QTableWidgetItem(str(losses_array[row, col])))
+        table.resizeColumnsToContents()
+        self.table_layout.addWidget(table)
 
     def draw(self):
         self.plot.clear()
@@ -913,8 +1243,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.current_loss_type = self.loss_type_cbx.currentText()
         if self.output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
             self.draw_agg_curves(self.output_type)
-        elif self.output_type == 'dmg_total':
-            self.draw_dmg_total()
+        elif self.output_type == 'dmg_by_asset_aggr':
+            self.filter_dmg_by_asset_aggr()
+        elif self.output_type == 'losses_by_asset_aggr':
+            self.filter_losses_by_asset_aggr()
         else:
             self.was_loss_type_switched = True
             self.redraw_current_selection()
@@ -936,11 +1268,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                              self.n_simulations_sbx.value())
 
     def on_rlz_changed(self):
-        self.draw_dmg_total()
+        self.filter_dmg_by_asset_aggr()
 
     @pyqtSlot(int)
     def on_exclude_no_dmg_ckb_state_changed(self, state):
-        self.draw_dmg_total()
+        self.filter_dmg_by_asset_aggr()
 
     @pyqtSlot()
     def on_export_data_button_clicked(self):
@@ -965,19 +1297,21 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 os.path.expanduser(
                     '~/loss_curves_%s.csv' % self.current_loss_type),
                 '*.csv')
-        elif self.output_type in OQ_NO_MAP_TYPES:
-            if self.output_type == 'dmg_total':
-                # TODO: we might get the original csv from the engine
-                log_msg('This functionality is not implemented. You might'
-                        ' consider downloading the csv directly from the'
-                        ' OQ-Engine.', message_bar=self.iface.messageBar())
-                return
+        elif self.output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
             filename = QFileDialog.getSaveFileName(
                 self,
                 self.tr('Export data'),
                 os.path.expanduser(
-                    '~/%s_%s.csv' % (self.output_type,
-                                     self.current_loss_type)),
+                    '~/%s_%s_%s.csv' % (self.output_type,
+                                        self.current_loss_type,
+                                        self.calc_id)),
+                '*.csv')
+        elif self.output_type in ['dmg_by_asset_aggr', 'losses_by_asset_aggr']:
+            filename = QFileDialog.getSaveFileName(
+                self,
+                self.tr('Export data'),
+                os.path.expanduser(
+                    '~/%s_%s.csv' % (self.output_type, self.calc_id)),
                 '*.csv')
         elif self.output_type == 'recovery_curves':
             filename = QFileDialog.getSaveFileName(
@@ -987,7 +1321,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     '~/recovery_curves_%s.csv' %
                     self.approach_cbx.currentText()),
                 '*.csv')
-        if filename is not None:
+        if filename:
             self.write_export_file(filename)
 
     def write_export_file(self, filename):
@@ -1063,12 +1397,43 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     row = [return_period]
                     row.extend([value for value in values[i]])
                     writer.writerow(row)
-            elif self.output_type == 'dmg_total':
-                # TODO: we might get the original csv from the engine
-                log_msg('This functionality is not implemented. You might'
-                        ' consider downloading the csv directly from the'
-                        ' OQ-Engine.', message_bar=self.iface.messageBar())
-                return
+            elif self.output_type == 'dmg_by_asset_aggr':
+                csv_file.write(
+                    "# Realization: %s\n" % self.rlz_cbx.currentText())
+                csv_file.write(
+                    "# Loss type: %s\n" % self.loss_type_cbx.currentText())
+                csv_file.write(
+                    "# Tags: %s\n" % (
+                        self.list_selected_edt.toPlainText() or 'None'))
+                headers = self.dmg_states
+                writer.writerow(headers)
+                values = self.dmg_by_asset_aggr[
+                    'array'][self.rlz_cbx.currentIndex()]
+                writer.writerow(values)
+            elif self.output_type == 'losses_by_asset_aggr':
+                csv_file.write(
+                    "# Loss type: %s\n" % self.loss_type_cbx.currentText())
+                csv_file.write(
+                    "# Tags: %s\n" % (
+                        self.list_selected_edt.toPlainText() or 'None'))
+                try:
+                    tags = self.losses_by_asset_aggr['tags']
+                    headers = ['tag']
+                except KeyError:
+                    tags = None
+                    headers = []
+                headers.extend(self.rlzs)
+                writer.writerow(headers)
+                losses_array = self.losses_by_asset_aggr['array']
+                losses_array = self._to_2d(losses_array)
+                if tags is not None:
+                    for row_idx, row in enumerate(
+                            self.losses_by_asset_aggr['array']):
+                        values = [tags[row_idx]]
+                        values.extend(losses_array[row_idx])
+                        writer.writerow(values)
+                else:
+                    writer.writerow(losses_array[0])
             else:
                 raise NotImplementedError(self.output_type)
         msg = 'Data exported to %s' % filename
@@ -1080,8 +1445,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.layer_changed()
         if self.output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
             self.draw_agg_curves(self.output_type)
-        elif self.output_type == 'dmg_total':
-            self.draw_dmg_total()
+        elif self.output_type == 'dmg_by_asset_aggr':
+            self.filter_dmg_by_asset_aggr()
 
     @pyqtSlot(int)
     def on_output_type_cbx_currentIndexChanged(self, index):

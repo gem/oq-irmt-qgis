@@ -33,13 +33,13 @@ from svir.third_party.requests.exceptions import (ConnectionError,
                                                   MissingSchema,
                                                   ReadTimeout,
                                                   )
-from svir.utilities.settings import get_platform_credentials
 from svir.utilities.utils import (SvNetworkError,
                                   platform_login,
                                   WaitCursorManager,
                                   log_msg,
                                   create_progress_message_bar,
                                   clear_progress_message_bar,
+                                  get_credentials,
                                   )
 
 PLATFORM_EXPORT_SV_THEMES = "/svir/list_themes"
@@ -49,20 +49,20 @@ PLATFORM_EXPORT_VARIABLES_DATA = "/svir/export_variables_data"
 PLATFORM_EXPORT_COUNTRIES_INFO = "/svir/export_countries_info"
 
 
-def get_loggedin_downloader(iface):
+def get_loggedin_downloader(message_bar):
     """
     Attempt to login to the OpenQuake Platform
 
-    :param iface: needed to get the credentials and to use the messageBar
+    :param message_bar: needed to display messages
 
     :returns: a :class:`svir.utilities.SvDownloader` instance
     """
-    hostname, username, password = get_platform_credentials(iface)
+    hostname, username, password = get_credentials('platform')
     sv_downloader = SvDownloader(hostname)
 
     try:
         msg = ("Connecting to the OpenQuake Platform...")
-        with WaitCursorManager(msg, iface):
+        with WaitCursorManager(msg, message_bar):
             sv_downloader.login(username, password)
         return sv_downloader
     except (SvNetworkError, ConnectionError,
@@ -70,7 +70,7 @@ def get_loggedin_downloader(iface):
         err_msg = str(e)
         if isinstance(e, InvalidSchema):
             err_msg += ' (you could try prepending http:// or https://)'
-        log_msg(err_msg, level='C', message_bar=iface.messageBar())
+        log_msg(err_msg, level='C', message_bar=message_bar)
         return None
 
 

@@ -15,7 +15,7 @@ Each layer references a specific dataset and specifies how that dataset is
 portrayed within the map. The standard layer format for the IRMT is the ESRI
 Shapefile [ESRI98]_ that can be imported within the QGIS software using the
 default *add data* functionality, or layers may be created on-the-fly within
-the IRMT using GEM's socio-economic databases.  A QGIS project can include
+the IRMT using GEM socio-economic databases.  A QGIS project can include
 multiple layers that can be utilized to provide the variables and maps
 necessary for an integrated risk assessment. For each layer, multiple *project
 definitions* can be saved. A *project definition* is a set of parameters that

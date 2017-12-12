@@ -191,7 +191,7 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                                 ' taxonomy "%s", loss type "%s" and'
                                 ' damage state "%s"...' % (
                                 rlz_or_stat, taxonomy, loss_type,
-                                dmg_state), self.iface):
+                                dmg_state), self.iface.messageBar()):
                             self.build_layer(
                                 rlz_or_stat, taxonomy=taxonomy,
                                 loss_type=loss_type, dmg_state=dmg_state)

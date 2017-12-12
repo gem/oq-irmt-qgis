@@ -421,6 +421,8 @@ class Irmt:
         dlg = LoadHazardCurvesAsLayerDialog(self.iface, 'hcurves')
         dlg.exec_()
         self.viewer_dock.change_output_type(dlg.output_type)
+        self.viewer_dock.setVisible(True)
+        self.viewer_dock.raise_()
 
     def load_gmf_data_as_layer(self):
         dlg = LoadGmfDataAsLayerDialog(self.iface, 'gmf_data')
@@ -430,6 +432,8 @@ class Irmt:
         dlg = LoadUhsAsLayerDialog(self.iface, 'uhs')
         dlg.exec_()
         self.viewer_dock.change_output_type(dlg.output_type)
+        self.viewer_dock.setVisible(True)
+        self.viewer_dock.raise_()
 
     def load_losses_by_asset_as_layer(self):
         dlg = LoadLossesByAssetAsLayerDialog(self.iface, 'losses_by_asset')
@@ -661,7 +665,7 @@ class Irmt:
         download from the openquake platform
         """
         # login to platform, to be able to retrieve sv indices
-        sv_downloader = get_loggedin_downloader(self.iface)
+        sv_downloader = get_loggedin_downloader(self.iface.messageBar())
         if sv_downloader is None:
             self.show_settings()
             return
@@ -692,7 +696,7 @@ class Irmt:
                 svi_themes = project_definition[
                     'children'][1]['children']
                 known_themes = []
-                with WaitCursorManager(msg, self.iface):
+                with WaitCursorManager(msg, self.iface.messageBar()):
                     while dlg.indicator_multiselect.selected_widget.count(
                             ) > 0:
                         item = \
@@ -834,7 +838,7 @@ class Irmt:
         Open dialog to select one of the integrated risk projects available on
         the OQ-Platform and download it as a qgis project
         """
-        sv_downloader = get_loggedin_downloader(self.iface)
+        sv_downloader = get_loggedin_downloader(self.iface.messageBar())
         if sv_downloader is None:
             self.show_settings()
             return
@@ -1048,7 +1052,7 @@ class Irmt:
         if self.is_iri_computable(project_definition):
             iri_node = deepcopy(project_definition)
             msg = 'Calculating %s' % iri_node['name']
-            with WaitCursorManager(msg, self.iface):
+            with WaitCursorManager(msg, self.iface.messageBar()):
                 (added_attrs_ids, discarded_feats,
                  iri_node, was_iri_computed) = calculate_composite_variable(
                     self.iface, self.iface.activeLayer(), iri_node)
@@ -1064,7 +1068,7 @@ class Irmt:
         if self.is_svi_computable(project_definition):
             svi_node = deepcopy(project_definition['children'][1])
             msg = 'Calculating %s' % svi_node['name']
-            with WaitCursorManager(msg, self.iface):
+            with WaitCursorManager(msg, self.iface.messageBar()):
                 (svi_added_attrs_ids, svi_discarded_feats,
                  svi_node, was_svi_computed) = calculate_composite_variable(
                     self.iface, self.iface.activeLayer(), svi_node)
@@ -1074,7 +1078,7 @@ class Irmt:
         if self.is_ri_computable(project_definition):
             ri_node = deepcopy(project_definition['children'][0])
             msg = 'Calculating %s' % ri_node['name']
-            with WaitCursorManager(msg, self.iface):
+            with WaitCursorManager(msg, self.iface.messageBar()):
                 (ri_added_attrs_ids, ri_discarded_feats,
                  ri_node, was_ri_computed) = calculate_composite_variable(
                     self.iface, self.iface.activeLayer(), ri_node)
@@ -1346,7 +1350,7 @@ class Irmt:
                 try:
                     msg = "Applying '%s' transformation to field '%s'" % (
                         algorithm_name, input_attr_name)
-                    with WaitCursorManager(msg, self.iface):
+                    with WaitCursorManager(msg, self.iface.messageBar()):
                         res_attr_name, invalid_input_values = ProcessLayer(
                             layer).transform_attribute(input_attr_name,
                                                        algorithm_name,

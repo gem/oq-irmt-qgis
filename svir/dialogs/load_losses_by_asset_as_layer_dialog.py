@@ -144,7 +144,8 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                     with WaitCursorManager(
                             'Creating layer for "%s", '
                             ' taxonomy "%s" and loss type "%s"...' % (
-                            rlz_or_stat, taxonomy, loss_type), self.iface):
+                            rlz_or_stat, taxonomy, loss_type),
+                            self.iface.messageBar()):
                         self.build_layer(rlz_or_stat, taxonomy=taxonomy,
                                          loss_type=loss_type)
                         self.style_maps()

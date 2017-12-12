@@ -37,7 +37,7 @@ sudo apt-get update -q
 sudo apt install -y qgis python-mock python-nose python-nose-exclude python-scipy saga python-saga curl
 sudo pip install sphinx==1.4.9 sphinx_rtd_theme
 
-curl -sfO http://artifacts.openquake.org/travis/oqdata-${OQENGINE_BRANCH}.zip || ( echo "Dump for ${OQENGINE_BRANCH} unavailable"; exit 1 )
+curl -sfLO https://artifacts.openquake.org/travis/oqdata-${OQENGINE_BRANCH}.zip || ( echo "Dump for ${OQENGINE_BRANCH} unavailable"; exit 1 )
 git clone -q -b ${OQENGINE_BRANCH} --depth=1 https://github.com/gem/oq-engine.git && echo "Running against oq-engine/${OQENGINE_BRANCH}"
 
 virtualenv oqe27

@@ -16,7 +16,7 @@ The development of an integrated risk model (IRI) arises from the convolution
 of two main components: 1) estimations of physical risk (RI), and 2) a social
 vulnerability index (SVI). The convolution of earthquake physical risk and
 social vulnerability parameters can be accomplished by, first, importing risk
-assessments from OpenQuake (or some other source) using the toolkit's risk
+assessments from OpenQuake (or some other source) using the risk
 import tool (:numref:`fig-aggregate-loss-by-zone`). To import data, users can
 click the :guilabel:`Aggregate loss by zone` button that prompts a dialog
 window to open. Here, it is possible to select layers containing estimations of
@@ -54,9 +54,9 @@ above dialog window is opened
 (:numref:`fig-zonal-aggregation-of-loss-values`). In the *Loss Layer*
 section of the dialog window, the user is invited to select one or more
 attributes from the loss layer. This selection is because the toolkit will
-calculate the sum and average values for each of the zonal layer's features,
+calculate the sum and average values for each of the zonal layer features,
 and it will add those statistics to the zonal layer as new attributes. Within
-the layer's attribute table, a subsequent attribute will be added to display
+the layer attribute table, a subsequent attribute will be added to display
 the count of loss points that are found inside the boundaries of each feature.
 The latter can be useful for troubleshooting.
 

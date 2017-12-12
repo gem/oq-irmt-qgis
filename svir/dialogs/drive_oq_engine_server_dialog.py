@@ -26,6 +26,7 @@ import os
 import json
 import tempfile
 import zipfile
+import copy
 
 from PyQt4.QtCore import (QDir,
                           Qt,
@@ -55,7 +56,6 @@ from svir.third_party.requests.exceptions import (ConnectionError,
                                                   )
 from svir.third_party.requests.packages.urllib3.exceptions import (
     LocationParseError)
-from svir.utilities.settings import get_engine_credentials
 from svir.utilities.shared import (OQ_ALL_LOADABLE_TYPES,
                                    OQ_RST_TYPES,
                                    OQ_NO_MAP_TYPES,
@@ -67,6 +67,7 @@ from svir.utilities.utils import (WaitCursorManager,
                                   get_ui_class,
                                   SvNetworkError,
                                   get_irmt_version,
+                                  get_credentials,
                                   )
 from svir.dialogs.load_ruptures_as_layer_dialog import (
     LoadRupturesAsLayerDialog)
@@ -85,6 +86,7 @@ from svir.dialogs.load_losses_by_asset_as_layer_dialog import (
 from svir.dialogs.show_full_report_dialog import ShowFullReportDialog
 from svir.dialogs.show_console_dialog import ShowConsoleDialog
 from svir.dialogs.show_params_dialog import ShowParamsDialog
+from svir.dialogs.settings_dialog import SettingsDialog
 
 FORM_CLASS = get_ui_class('ui_drive_engine_server.ui')
 
@@ -168,7 +170,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
     def login(self):
         self.session = Session()
-        self.hostname, username, password = get_engine_credentials(self.iface)
+        self.hostname, username, password = get_credentials('engine')
         # try without authentication (if authentication is disabled server
         # side)
         # NOTE: is_lockdown() can raise exceptions, to be caught from outside
@@ -177,7 +179,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             self.is_logged_in = True
             return
         if username and password:
-            with WaitCursorManager('Logging in...', self.iface):
+            with WaitCursorManager('Logging in...', self.iface.messageBar()):
                 # it can raise exceptions, caught by self.attempt_login
                 engine_login(self.hostname, username, password, self.session)
                 # if no exception occurred
@@ -234,9 +236,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                        " credentials. The call to %s was redirected to %s."
                        % (calc_list_url, resp.url))
                 log_msg(msg, level='C',
-                        message_bar=self.message_bar)
+                        message_bar=self.iface.messageBar())
                 self.is_logged_in = False
                 self.reject()
+                SettingsDialog(self.iface).exec_()
                 return
             calc_list = json.loads(resp.text)
         selected_keys = [
@@ -438,7 +441,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
     def remove_calc(self, calc_id):
         calc_remove_url = "%s/v1/calc/%s/remove" % (self.hostname, calc_id)
-        with WaitCursorManager('Removing calculation...', self.iface):
+        with WaitCursorManager('Removing calculation...',
+                               self.iface.messageBar()):
             try:
                 resp = self.session.post(calc_remove_url, timeout=10)
             except HANDLED_EXCEPTIONS as exc:
@@ -486,7 +490,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 for file_name in file_names:
                     zipped_file.write(file_name)
         run_calc_url = "%s/v1/calc/run" % self.hostname
-        with WaitCursorManager('Starting calculation...', self.iface):
+        with WaitCursorManager('Starting calculation...',
+                               self.iface.messageBar()):
             if calc_id is not None:
                 # FIXME: currently the web api is expecting a hazard_job_id
                 # although it could be any kind of job_id. This will have to be
@@ -540,7 +545,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             return
         datastore_url = "%s/v1/calc/%s/datastore" % (
             self.hostname, self.current_output_calc_id)
-        with WaitCursorManager('Getting HDF5 datastore...', self.iface):
+        with WaitCursorManager('Getting HDF5 datastore...',
+                               self.iface.messageBar()):
             try:
                 # FIXME: enable the user to set verify=True
                 resp = self.session.get(datastore_url, timeout=10,
@@ -563,7 +569,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         get_calc_params_url = "%s/v1/calc/%s/oqparam" % (
             self.hostname, self.current_pointed_calc_id)
         with WaitCursorManager('Getting calculation parameters...',
-                               self.iface):
+                               self.iface.messageBar()):
             try:
                 # FIXME: enable the user to set verify=True
                 resp = self.session.get(get_calc_params_url, timeout=10,
@@ -613,6 +619,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 if not (row['type'] == 'gmf_data'
                         and 'event_based' in calculation_mode):
                     num_actions += 1  # needs additional column for loader btn
+            if "%s_aggr" % row['type'] in OQ_NO_MAP_TYPES:
+                num_actions += 1
             max_actions = max(max_actions, num_actions)
 
         self.output_list_tbl.setRowCount(len(output_list))
@@ -631,23 +639,29 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 self.connect_button_to_action(button, action, output, outtype)
                 self.output_list_tbl.setCellWidget(row, col, button)
                 self.calc_list_tbl.setColumnWidth(col, BUTTON_WIDTH)
-            if output['type'] in (OQ_ALL_LOADABLE_TYPES |
-                                  OQ_RST_TYPES |
-                                  OQ_NO_MAP_TYPES):
-                if output['type'] in OQ_RST_TYPES | OQ_NO_MAP_TYPES:
-                    action = 'Show'
-                else:
-                    action = 'Load as layer'
-                # TODO: remove check when gmf_data will be loadable also for
-                #       event_based
-                if (output['type'] == 'gmf_data'
-                        and calculation_mode == 'event_based'):
-                    continue
-                button = QPushButton()
-                self.connect_button_to_action(
-                    button, action, output, outtype)
-                self.output_list_tbl.setCellWidget(row, col + 1, button)
-                self.calc_list_tbl.setColumnWidth(col, BUTTON_WIDTH)
+                if output['type'] in (OQ_ALL_LOADABLE_TYPES |
+                                      OQ_RST_TYPES |
+                                      OQ_NO_MAP_TYPES):
+                    if output['type'] in OQ_RST_TYPES | OQ_NO_MAP_TYPES:
+                        action = 'Show'
+                    else:
+                        action = 'Load as layer'
+                    # TODO: remove check when gmf_data will be loadable also
+                    #       for event_based
+                    if (output['type'] == 'gmf_data'
+                            and calculation_mode == 'event_based'):
+                        continue
+                    button = QPushButton()
+                    self.connect_button_to_action(
+                        button, action, output, outtype)
+                    self.output_list_tbl.setCellWidget(row, col + 1, button)
+                if "%s_aggr" % output['type'] in OQ_NO_MAP_TYPES:
+                    mod_output = copy.deepcopy(output)
+                    mod_output['type'] = "%s_aggr" % output['type']
+                    button = QPushButton()
+                    self.connect_button_to_action(
+                        button, 'Aggregate', mod_output, outtype)
+                    self.output_list_tbl.setCellWidget(row, col + 2, button)
         col_names = [key.capitalize() for key in selected_keys]
         empty_col_names = ['' for outtype in range(max_actions)]
         headers = col_names + empty_col_names
@@ -658,10 +672,12 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.output_list_tbl.resizeRowsToContents()
 
     def connect_button_to_action(self, button, action, output, outtype):
-        if action in ('Load as layer', 'Show'):
+        if action in ('Load as layer', 'Show', 'Aggregate'):
             style = 'background-color: blue; color: white;'
             if action == 'Load as layer':
-                button.setText("Load %s as layer" % outtype)
+                button.setText("Load layer")
+            elif action == 'Aggregate':
+                button.setText("Aggregate")
             else:
                 button.setText("Show")
         else:
@@ -677,7 +693,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     def on_output_action_btn_clicked(self, output, action, outtype):
         output_id = output['id']
         output_type = output['type']
-        if action == 'Show':
+        if action in ['Show', 'Aggregate']:
             dest_folder = tempfile.gettempdir()
             if output_type in OQ_NO_MAP_TYPES:
                 self.viewer_dock.load_no_map_output(
@@ -729,7 +745,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             "%s/v1/calc/result/%s?export_type=%s&dload=true" % (self.hostname,
                                                                 output_id,
                                                                 outtype))
-        with WaitCursorManager('Downloading output...', self.iface):
+        with WaitCursorManager('Downloading output...',
+                               self.iface.messageBar()):
             try:
                 # FIXME: enable the user to set verify=True
                 resp = self.session.get(output_download_url, verify=False)
@@ -774,7 +791,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         if isinstance(exc, SSLError):
             err_msg = '; '.join(exc.message.message.strerror.message[0])
             err_msg += ' (you could try prepending http:// or https://)'
-            log_msg(err_msg, level='C', message_bar=self.message_bar)
+            log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
         elif isinstance(exc, (ConnectionError,
                               InvalidSchema,
                               MissingSchema,
@@ -793,14 +810,14 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     ' (please make sure the username and password are'
                     ' spelled correctly and that you are using the right'
                     ' url and port in the host setting)')
-            log_msg(err_msg, level='C',
-                    message_bar=self.message_bar)
+            log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
         else:
             # sanity check (it should never occur)
             raise TypeError(
                 'Unable to handle exception of type %s' % type(exc))
         self.is_logged_in = False
         self.reject()
+        SettingsDialog(self.iface).exec_()
 
     def reject(self):
         self.stop_polling()

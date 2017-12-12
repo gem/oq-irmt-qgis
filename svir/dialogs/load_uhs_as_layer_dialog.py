@@ -134,6 +134,7 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
                     and poe != self.poe_cbx.currentText()):
                 continue
             with WaitCursorManager(
-                    'Creating layer for poe "%s"...' % poe, self.iface):
+                    'Creating layer for poe "%s"...'
+                    % poe, self.iface.messageBar()):
                 self.build_layer(poe=poe)
                 self.style_curves()
