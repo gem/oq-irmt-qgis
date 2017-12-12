@@ -22,8 +22,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-from qgis.PyQt.QtGui import QPushButton
-from qgis.PyQt.QtCore import QUrl
+from qgis.PyQt.QtGui import QPushButton, QLineEdit
+from qgis.PyQt.QtCore import QUrl, pyqtSlot
 from svir.dialogs.standalone_app_dialog import StandaloneAppDialog, GemApi
 
 
@@ -47,11 +47,14 @@ class IptDialog(StandaloneAppDialog):
         super(IptDialog, self).build_gui()
         self.set_example_btn = QPushButton("Set example")
         self.set_example_btn.clicked.connect(self.on_set_example_btn_clicked)
+        ipt_example = '%s/%s?tab_id=1&example_id=99' % (self.host,
+                                                        self.app_name)
+        self.example_url = QLineEdit(ipt_example)
+        self.vlayout.addWidget(self.example_url)
         self.vlayout.addWidget(self.set_example_btn)
 
     def on_set_example_btn_clicked(self):
-        qurl = QUrl('%s/%s?tab_id=1&example_id=99' % (
-            self.host, self.app_name))
+        qurl = QUrl(self.example_url.text())
         self.web_view.load(qurl)
 
 
