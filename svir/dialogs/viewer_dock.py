@@ -1040,7 +1040,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     or self.output_type == 'uhs'):
                 self.field_names = [
                     field.name()
-                    for field in self.iface.activeLayer().fields()]
+                    for field in self.iface.activeLayer().fields()
+                    if field.name() != 'fid']
                 ordinates = dict()
                 marker = dict()
                 line_style = dict()
@@ -1148,16 +1149,17 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     self.current_selection[rlz_or_stat] = {}
                 self.stats_multiselect.set_selected_items([])
                 self.stats_multiselect.set_unselected_items([])
+                self.field_names = [
+                    field.name()
+                    for field in self.iface.activeLayer().fields()
+                    if field.name() != 'fid']
                 if self.output_type == 'hcurves':
                     # fields names are like 'max_PGA_0.005'
                     imts = sorted(set(
-                        [field.name().split('_')[1]
-                         for field in self.iface.activeLayer().fields()]))
+                        [field_name.split('_')[1]
+                         for field_name in self.field_names()]))
                     self.imt_cbx.clear()
                     self.imt_cbx.addItems(imts)
-                self.field_names = [
-                    field.name()
-                    for field in self.iface.activeLayer().fields()]
                 self.rlzs_or_stats = sorted(set(
                     [field_name.split('_')[0]
                      for field_name in self.field_names]))
@@ -1348,6 +1350,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     selected_imt = self.imt_cbx.currentText()
                 field_names = []
                 for field in self.iface.activeLayer().fields():
+                    if field.name == 'fid':
+                        continue
                     if self.output_type == 'hcurves':
                         # field names are like 'mean_PGA_0.005'
                         rlz_or_stat, imt, iml = field.name().split('_')
