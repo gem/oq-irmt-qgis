@@ -1157,7 +1157,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     # fields names are like 'max_PGA_0.005'
                     imts = sorted(set(
                         [field_name.split('_')[1]
-                         for field_name in self.field_names()]))
+                         for field_name in self.field_names]))
                     self.imt_cbx.clear()
                     self.imt_cbx.addItems(imts)
                 self.rlzs_or_stats = sorted(set(
