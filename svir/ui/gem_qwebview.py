@@ -37,12 +37,14 @@ from qgis.PyQt.QtCore import (QMutex,
                               pyqtSlot,
                               )
 from qgis.PyQt.QtGui import QSizePolicy
+from svir.utilities.shared import DEBUG
 
-# # uncomment to turn on developer tools in webkit so we can get at the
-# # javascript console for debugging (it causes segfaults in tests, so it has
-# # to be kept disabled while it is not used for debugging).
-# QWebSettings.globalSettings().setAttribute(
-#     QWebSettings.DeveloperExtrasEnabled, True)
+if DEBUG:
+    # turn on developer tools in webkit so we can get at the
+    # javascript console for debugging (it causes segfaults in tests, so it has
+    # to be kept disabled while it is not used for debugging).
+    QWebSettings.globalSettings().setAttribute(
+        QWebSettings.DeveloperExtrasEnabled, True)
 
 
 class GemQWebView(QWebView):
