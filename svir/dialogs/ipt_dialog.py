@@ -24,6 +24,7 @@
 
 from qgis.PyQt.QtGui import QPushButton, QLineEdit, QHBoxLayout
 from qgis.PyQt.QtCore import QUrl, pyqtSlot
+from qgis.PyQt.QtNetwork import QNetworkRequest, QHttpMultiPart, QHttpPart
 from svir.dialogs.standalone_app_dialog import StandaloneAppDialog, GemApi
 from svir.utilities.shared import DEBUG
 
@@ -68,4 +69,36 @@ class IptPythonApi(GemApi):
     API methods that are specific for the IPT application
     (other shared methods are defined in the CommonApi)
     """
-    pass
+
+    # javascript objects come into python as dictionaries
+    @pyqtSlot(str, str, 'QVariantList', 'QVariantList')
+    def delegate_download(self, action_url, method, headers, data):
+        """
+        :param action_url: url to call on ipt api
+        :param method: string like 'POST'
+        :param headers: list of strings
+        :param data: list of dictionaries {name (string) value(string)}
+        """
+        # TODO: Accept also methods other than POST
+        assert method == 'POST', method
+        if ':' in action_url:
+            qurl = QUrl(action_url)
+        elif action_url.startswith('/'):
+            qurl = QUrl("%s%s" % (self.parent().host, action_url))
+        else:
+            qurl = QUrl(
+                "%s/%s" %
+                ('/'.join(self.parent().web_view.url().split('/')[:-1]),
+                 action_url))
+        manager = self.parent().web_view.page().networkAccessManager()
+        request = QNetworkRequest(qurl)
+        for header in headers:
+            request.setRawHeader(header['name'], header['value'])
+        multipart = QHttpMultiPart(QHttpMultiPart.FormDataType)
+        for d in data:
+            part = QHttpPart()
+            part.setHeader(QNetworkRequest.ContentDispositionHeader,
+                           "form-data; name=\"%s\"" % d['name'])
+            part.setBody(d['value'])
+            multipart.append(part)
+        manager.post(request, multipart)
