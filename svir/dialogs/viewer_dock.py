@@ -1350,7 +1350,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     selected_imt = self.imt_cbx.currentText()
                 field_names = []
                 for field in self.iface.activeLayer().fields():
-                    if field.name == 'fid':
+                    if field.name() == 'fid':
                         continue
                     if self.output_type == 'hcurves':
                         # field names are like 'mean_PGA_0.005'
