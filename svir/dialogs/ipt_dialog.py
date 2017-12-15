@@ -82,6 +82,7 @@ class IptPythonApi(GemApi):
         :param delegate_download_js_cb: javascript callback
         :param js_cb_object_id: id of the javascript object to be called back
         """
+        js_cb_object_id = 'FIXME'
         # TODO: Accept also methods other than POST
         assert method == 'POST', method
         if ':' in action_url:
@@ -95,6 +96,7 @@ class IptPythonApi(GemApi):
             qurl = QUrl(url)
         manager = self.parent().web_view.page().networkAccessManager()
         request = QNetworkRequest(qurl)
+        request.setAttribute(1001, self.manager_finished_cb)
         for header in headers:
             request.setRawHeader(header['name'], header['value'])
         multipart = QHttpMultiPart(QHttpMultiPart.FormDataType)
@@ -107,12 +109,31 @@ class IptPythonApi(GemApi):
         reply = manager.post(request, multipart)
         # NOTE: needed to avoid segfault!
         multipart.setParent(reply)  # delete the multiPart with the reply
-        manager.finished.connect(self.delegate_download_cb)
+        print('reply: %s' % reply)
+
+        request2 = QNetworkRequest(qurl)
+        for header in headers:
+            request2.setRawHeader(header['name'], header['value'])
+        multipart2 = QHttpMultiPart(QHttpMultiPart.FormDataType)
+        for d in data:
+            part = QHttpPart()
+            part.setHeader(QNetworkRequest.ContentDispositionHeader,
+                           "form-data; name=\"%s\"" % d['name'])
+            part.setBody(d['value'])
+            multipart2.append(part)
+        reply2 = manager.post(request2, multipart2)
+        # NOTE: needed to avoid segfault!
+        multipart2.setParent(reply2)  # delete the multiPart with the reply
+        print('reply2: %s' % reply2)
+
         return True
 
-    def delegate_download_cb(self, reply):
-        manager = self.parent().web_view.page().networkAccessManager()
-        manager.finished.disconnect(self.delegate_download_cb)
+    def manager_finished_cb(self, reply):
+        js_cb_object_id = reply.request().attribute(1002, None)
+        # TODO: handle case properly
+        if js_cb_object_id is None:
+            print('js_cb_object_id is None')
+            return
         content_type = reply.rawHeader('Content-Type')
         if not content_type == 'application/xml':
             pass
@@ -125,4 +146,5 @@ class IptPythonApi(GemApi):
         print("File name: %s" % filename)
         print("File content:\n%s" % reply.readAll())
         frame = self.parent().web_view.page().mainFrame()
-        frame.evaluateJavaScript('FIXME')
+        frame.evaluateJavaScript(
+            'manager_finished_cb("%s");' % js_cb_object_id)

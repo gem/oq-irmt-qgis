@@ -73,7 +73,9 @@ class GemQWebView(QWebView):
 
         self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,
                                        QSizePolicy.MinimumExpanding))
-        self.page().setNetworkAccessManager(GemQNetworkAccessManager(self))
+        manager = GemQNetworkAccessManager(self)
+        self.page().setNetworkAccessManager(manager)
+        manager.finished.connect(self.manager_finished_cb)
         self.settings().setAttribute(QWebSettings.JavascriptEnabled, True)
         self.settings().setAttribute(
             QWebSettings.JavascriptCanOpenWindows, True)
@@ -96,6 +98,11 @@ class GemQWebView(QWebView):
         #   1.  var obj = window.pyapi.json_decode(json);
         #   2.  var obj = pyapi.json_decode(json)
         self.frame.addToJavaScriptWindowObject('gem_api', self.gem_api)
+
+    def manager_finished_cb(self, reply):
+        instance_finished_cb = reply.request().attribute(1001, None)
+        if instance_finished_cb:
+            instance_finished_cb(reply)
 
     @pyqtSlot(str)
     def on_title_changed(self, title):
