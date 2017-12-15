@@ -71,13 +71,16 @@ class IptPythonApi(GemApi):
     """
 
     # javascript objects come into python as dictionaries
-    @pyqtSlot(str, str, 'QVariantList', 'QVariantList')
-    def delegate_download(self, action_url, method, headers, data):
+    @pyqtSlot(str, str, 'QVariantList', 'QVariantList')#, str, str, result=bool)
+    def delegate_download(self, action_url, method, headers, data):#,
+                          # delegate_download_js_cb, js_cb_object_id):
         """
         :param action_url: url to call on ipt api
         :param method: string like 'POST'
         :param headers: list of strings
         :param data: list of dictionaries {name (string) value(string)}
+        :param delegate_download_js_cb: javascript callback
+        :param js_cb_object_id: id of the javascript object to be called back
         """
         # TODO: Accept also methods other than POST
         assert method == 'POST', method
@@ -86,10 +89,10 @@ class IptPythonApi(GemApi):
         elif action_url.startswith('/'):
             qurl = QUrl("%s%s" % (self.parent().host, action_url))
         else:
-            qurl = QUrl(
-                "%s/%s" %
-                ('/'.join(self.parent().web_view.url().split('/')[:-1]),
-                 action_url))
+            url = "%s/%s" % (
+                '/'.join([str(x) for x in self.parent().web_view.url(
+                         ).toEncoded().split('/')[:-1]]), action_url)
+            qurl = QUrl(url)
         manager = self.parent().web_view.page().networkAccessManager()
         request = QNetworkRequest(qurl)
         for header in headers:
@@ -101,4 +104,25 @@ class IptPythonApi(GemApi):
                            "form-data; name=\"%s\"" % d['name'])
             part.setBody(d['value'])
             multipart.append(part)
-        manager.post(request, multipart)
+        reply = manager.post(request, multipart)
+        # NOTE: needed to avoid segfault!
+        multipart.setParent(reply)  # delete the multiPart with the reply
+        manager.finished.connect(self.delegate_download_cb)
+        return True
+
+    def delegate_download_cb(self, reply):
+        manager = self.parent().web_view.page().networkAccessManager()
+        manager.finished.disconnect(self.delegate_download_cb)
+        content_type = reply.rawHeader('Content-Type')
+        if not content_type == 'application/xml':
+            pass
+        content_disposition = reply.rawHeader('Content-Disposition')
+        # expected format: 'attachment; filename="exposure_model.xml"'
+        if 'filename' not in content_disposition:
+            pass
+        filename = content_disposition.split('"')[1]
+        # TODO: save to file in local filesystem
+        print("File name: %s" % filename)
+        print("File content:\n%s" % reply.readAll())
+        frame = self.parent().web_view.page().mainFrame()
+        frame.evaluateJavaScript('FIXME')
