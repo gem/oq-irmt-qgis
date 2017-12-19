@@ -43,7 +43,7 @@
                 if (typeof gem_api == 'undefined') {
                     alert("Called by normal browser")
                 } else {
-                    var fileName = gem_api.common.select_file();
+                    var fileName = gem_api.select_file();
                     console.info(fileName);
                 }
             });
@@ -51,7 +51,7 @@
                 if (typeof gem_api == 'undefined') {
                     alert("Called by normal browser")
                 } else {
-                    var fileNames = gem_api.common.select_files();
+                    var fileNames = gem_api.select_files();
                     console.info(fileNames);
                 }
             });

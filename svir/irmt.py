@@ -169,6 +169,9 @@ class Irmt:
         QgsMapLayerRegistry.instance().layersRemoved.connect(
             self.layers_removed)
 
+        # get or create directory to store input files for the OQ-Engine
+        self.ipt_dir = self.get_ipt_dir()
+
     def initGui(self):
         # create our own toolbar
         self.toolbar = self.iface.addToolBar('IRMT')
@@ -450,7 +453,7 @@ class Irmt:
 
     def ipt(self):
         if self.ipt_dlg is None:
-            self.ipt_dlg = IptDialog()
+            self.ipt_dlg = IptDialog(self.ipt_dir)
         self.ipt_dlg.show()
         self.ipt_dlg.raise_()
 
@@ -1464,3 +1467,10 @@ class Irmt:
             self.iface.mainWindow().tabifyDockWidget(
                 legend_tab, self.viewer_dock)
             self.viewer_dock.raise_()
+
+    def get_ipt_dir(self):
+        home_dir = os.path.expanduser("~")
+        ipt_dir = os.path.join(home_dir, ".ipt")
+        if not os.path.exists(ipt_dir):
+            os.makedirs(ipt_dir)
+        return ipt_dir

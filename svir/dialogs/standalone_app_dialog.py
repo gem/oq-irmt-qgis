@@ -27,12 +27,9 @@ from qgis.PyQt.QtCore import (QUrl,
                               QObject,
                               pyqtSlot,
                               QSettings,
-                              QFileInfo,
-                              QDir,
                               )
 from qgis.PyQt.QtGui import (QDialog,
                              QVBoxLayout,
-                             QFileDialog,
                              )
 from qgis.gui import QgsMessageBar
 from svir.ui.gem_qwebview import GemQWebView
@@ -152,38 +149,6 @@ class CommonApi(QObject):
     def dummy_property_get(self):
         "A getter must be defined to access instance properties"
         return self.dummy_property
-
-    @pyqtSlot(result=str)
-    def select_file(self):
-        """
-        Open a file browser to select a single file in the local filesystem,
-        and return the path of the selected files
-        """
-        default_dir = QSettings().value('ipt/default_dir',
-                                        QDir.homePath())
-        file_name = QFileDialog.getOpenFileName(
-            self.parent().parent(), 'Select file', default_dir)
-        if not file_name:
-            return
-        selected_dir = QFileInfo(file_name).dir().path()
-        QSettings().setValue('ipt/default_dir', selected_dir)
-        return file_name
-
-    @pyqtSlot(result='QStringList')
-    def select_files(self):
-        """
-        Open a file browser to select multiple files in the local filesystem,
-        and return the list of paths of selected files
-        """
-        default_dir = QSettings().value('ipt/default_dir',
-                                        QDir.homePath())
-        file_names = QFileDialog.getOpenFileNames(
-            self.parent().parent(), 'Select files', default_dir)
-        if not file_names:
-            return
-        selected_dir = QFileInfo(file_names[0]).dir().path()
-        QSettings().setValue('ipt/default_dir', selected_dir)
-        return file_names
 
 
 class GemApi(QObject):

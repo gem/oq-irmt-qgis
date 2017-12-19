@@ -22,7 +22,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-from qgis.PyQt.QtGui import QPushButton, QLineEdit, QHBoxLayout
+import os
+from qgis.PyQt.QtGui import QPushButton, QLineEdit, QHBoxLayout, QFileDialog
 from qgis.PyQt.QtCore import QUrl, pyqtSlot
 from qgis.PyQt.QtNetwork import QNetworkRequest, QHttpMultiPart, QHttpPart
 from svir.dialogs.standalone_app_dialog import StandaloneAppDialog, GemApi
@@ -35,7 +36,8 @@ class IptDialog(StandaloneAppDialog):
     standalone application
     """
 
-    def __init__(self, parent=None):
+    def __init__(self, ipt_dir, parent=None):
+        self.ipt_dir = ipt_dir
         app_name = 'ipt'
         app_descr = 'OpenQuake Input Preparation Toolkit'
         gem_header_name = "Gem--Qgis-Oq-Irmt--Ipt"
@@ -69,6 +71,28 @@ class IptPythonApi(GemApi):
     API methods that are specific for the IPT application
     (other shared methods are defined in the CommonApi)
     """
+
+    @pyqtSlot(result=str)
+    def select_file(self):
+        """
+        Open a file browser to select a single file in the local filesystem,
+        and return the name of the selected files
+        """
+        ipt_dir = self.parent().ipt_dir
+        file_name = QFileDialog.getOpenFileName(
+            self.parent().parent(), 'Select file', ipt_dir)
+        return os.path.basename(file_name)
+
+    @pyqtSlot(result='QStringList')
+    def select_files(self):
+        """
+        Open a file browser to select multiple files in the local filesystem,
+        and return the list of names of selected files
+        """
+        ipt_dir = self.parent().ipt_dir
+        file_names = QFileDialog.getOpenFileNames(
+            self.parent().parent(), 'Select files', ipt_dir)
+        return [os.path.basename(file_name) for file_name in file_names]
 
     # javascript objects come into python as dictionaries
     @pyqtSlot(str, str, 'QVariantList', 'QVariantList')#, str, str, result=bool)
