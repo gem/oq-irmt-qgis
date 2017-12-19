@@ -7,6 +7,8 @@
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <body>
         <button id='mybutton' type="button">Click Me!</button>
+        <button id='selectSingleFileBtn' type="button">Select single file</button>
+        <button id='selectMultipleFilesBtn' type="button">Select multiple files</button>
     </body>
     <script charset="utf-8">
         $(document).ready(function(){
@@ -20,19 +22,37 @@
                     <!-- console.info("1 + 2 = " + gem_api.common.add(1, 2)); -->
                     <!-- var strlist = ['a', 'b', 'c']; -->
                     <!-- console.info(gem_api.common.concat(strlist)); -->
-                    <!-- var jsobj = { -->
-                    <!--     a: 1, -->
-                    <!--     b: 'test', -->
-                    <!--     c: 1.23 -->
-                    <!-- }; -->
+                    var headers = [
+                        {'name': 'a', 'value': '1'},
+                        {'name': 'b', 'value': 'ciao'},
+                        {'name': 'c', 'value': 'nattei'}
+                    ];
+                    var data = [{'name': 'paolo', 'value': 'tormene'}, {'name': 'matteo', 'value': 'nastasi'}];
                     <!-- var json = gem_api.common.json_encode(jsobj); -->
                     <!-- console.info(json); -->
                     <!-- console.info(gem_api.common.json_decode(json)); -->
                     var url = '/taxonomy/height-of-ground-floor-level-above-grade-unknown--hf99';
-                    gem_api.point_to_taxonomy(url);
+                    <!-- gem_api.point_to_taxonomy(url); -->
+                    gem_api.delegate_download(url, 'POST', headers, data);
                     <!-- var url = 'http://localhost:8800/taxonomy/height-of-ground-floor-level-above-grade-unknown--hf99'; -->
                     <!-- window.open(url); -->
                     <!-- <1!-- window.open("https://www.w3schools.com"); --1> -->
+                }
+            });
+            $('#selectSingleFileBtn').click(function(){
+                if (typeof gem_api == 'undefined') {
+                    alert("Called by normal browser")
+                } else {
+                    var fileName = gem_api.common.select_file();
+                    console.info(fileName);
+                }
+            });
+            $('#selectMultipleFilesBtn').click(function(){
+                if (typeof gem_api == 'undefined') {
+                    alert("Called by normal browser")
+                } else {
+                    var fileNames = gem_api.common.select_files();
+                    console.info(fileNames);
                 }
             });
         });
