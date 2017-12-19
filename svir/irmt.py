@@ -1470,7 +1470,7 @@ class Irmt:
 
     def get_ipt_dir(self):
         home_dir = os.path.expanduser("~")
-        ipt_dir = os.path.join(home_dir, ".ipt")
+        ipt_dir = os.path.join(home_dir, ".gem", "irmt", "ipt")
         if not os.path.exists(ipt_dir):
             os.makedirs(ipt_dir)
         return ipt_dir
