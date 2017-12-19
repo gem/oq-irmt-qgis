@@ -33,7 +33,7 @@
                     <!-- console.info(gem_api.common.json_decode(json)); -->
                     var url = '/taxonomy/height-of-ground-floor-level-above-grade-unknown--hf99';
                     <!-- gem_api.point_to_taxonomy(url); -->
-                    gem_api.delegate_download(url, 'POST', headers, data);
+                    gem_api.delegate_download(url, 'POST', headers, data, 'delegate_download_js_cb', '42');
                     <!-- var url = 'http://localhost:8800/taxonomy/height-of-ground-floor-level-above-grade-unknown--hf99'; -->
                     <!-- window.open(url); -->
                     <!-- <1!-- window.open("https://www.w3schools.com"); --1> -->
@@ -56,5 +56,9 @@
                 }
             });
         });
+
+        function delegate_download_js_cb(js_cb_object_id){
+            alert('Download completed for id: ' + js_cb_object_id);
+        }
     </script>
 </html>

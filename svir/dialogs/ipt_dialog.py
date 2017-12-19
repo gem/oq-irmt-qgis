@@ -106,6 +106,7 @@ class IptPythonApi(GemApi):
         :param delegate_download_js_cb: javascript callback
         :param js_cb_object_id: id of the javascript object to be called back
         """
+        self.delegate_download_js_cb = delegate_download_js_cb
         # TODO: Accept also methods other than POST
         assert method == 'POST', method
         if ':' in action_url:
@@ -121,6 +122,8 @@ class IptPythonApi(GemApi):
         request = QNetworkRequest(qurl)
         request.setAttribute(REQUEST_ATTRS['instance_finished_cb'],
                              self.manager_finished_cb)
+        request.setAttribute(REQUEST_ATTRS['js_cb_object_id'],
+                             js_cb_object_id)
         for header in headers:
             request.setRawHeader(header['name'], header['value'])
         multipart = QHttpMultiPart(QHttpMultiPart.FormDataType)
@@ -152,4 +155,4 @@ class IptPythonApi(GemApi):
             f.write(file_content)
         frame = self.parent().web_view.page().mainFrame()
         frame.evaluateJavaScript(
-            'manager_finished_cb("%s");' % js_cb_object_id)
+            '%s("%s");' % (self.delegate_download_js_cb, js_cb_object_id))
