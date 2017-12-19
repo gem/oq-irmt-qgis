@@ -27,7 +27,7 @@ from qgis.PyQt.QtGui import QPushButton, QLineEdit, QHBoxLayout, QFileDialog
 from qgis.PyQt.QtCore import QUrl, pyqtSlot
 from qgis.PyQt.QtNetwork import QNetworkRequest, QHttpMultiPart, QHttpPart
 from svir.dialogs.standalone_app_dialog import StandaloneAppDialog, GemApi
-from svir.utilities.shared import DEBUG
+from svir.utilities.shared import DEBUG, REQUEST_ATTRS
 
 
 class IptDialog(StandaloneAppDialog):
@@ -95,9 +95,9 @@ class IptPythonApi(GemApi):
         return [os.path.basename(file_name) for file_name in file_names]
 
     # javascript objects come into python as dictionaries
-    @pyqtSlot(str, str, 'QVariantList', 'QVariantList')#, str, str, result=bool)
-    def delegate_download(self, action_url, method, headers, data):#,
-                          # delegate_download_js_cb, js_cb_object_id):
+    @pyqtSlot(str, str, 'QVariantList', 'QVariantList', str, str, result=bool)
+    def delegate_download(self, action_url, method, headers, data,
+                          delegate_download_js_cb, js_cb_object_id):
         """
         :param action_url: url to call on ipt api
         :param method: string like 'POST'
@@ -106,7 +106,6 @@ class IptPythonApi(GemApi):
         :param delegate_download_js_cb: javascript callback
         :param js_cb_object_id: id of the javascript object to be called back
         """
-        js_cb_object_id = 'FIXME'
         # TODO: Accept also methods other than POST
         assert method == 'POST', method
         if ':' in action_url:
@@ -120,7 +119,8 @@ class IptPythonApi(GemApi):
             qurl = QUrl(url)
         manager = self.parent().web_view.page().networkAccessManager()
         request = QNetworkRequest(qurl)
-        request.setAttribute(1001, self.manager_finished_cb)
+        request.setAttribute(REQUEST_ATTRS['instance_finished_cb'],
+                             self.manager_finished_cb)
         for header in headers:
             request.setRawHeader(header['name'], header['value'])
         multipart = QHttpMultiPart(QHttpMultiPart.FormDataType)
@@ -133,42 +133,23 @@ class IptPythonApi(GemApi):
         reply = manager.post(request, multipart)
         # NOTE: needed to avoid segfault!
         multipart.setParent(reply)  # delete the multiPart with the reply
-        print('reply: %s' % reply)
-
-        request2 = QNetworkRequest(qurl)
-        for header in headers:
-            request2.setRawHeader(header['name'], header['value'])
-        multipart2 = QHttpMultiPart(QHttpMultiPart.FormDataType)
-        for d in data:
-            part = QHttpPart()
-            part.setHeader(QNetworkRequest.ContentDispositionHeader,
-                           "form-data; name=\"%s\"" % d['name'])
-            part.setBody(d['value'])
-            multipart2.append(part)
-        reply2 = manager.post(request2, multipart2)
-        # NOTE: needed to avoid segfault!
-        multipart2.setParent(reply2)  # delete the multiPart with the reply
-        print('reply2: %s' % reply2)
-
         return True
 
     def manager_finished_cb(self, reply):
-        js_cb_object_id = reply.request().attribute(1002, None)
-        # TODO: handle case properly
-        if js_cb_object_id is None:
-            print('js_cb_object_id is None')
-            return
+        js_cb_object_id = reply.request().attribute(
+            REQUEST_ATTRS['js_cb_object_id'], None)
+        assert js_cb_object_id is not None  # sanity check
         content_type = reply.rawHeader('Content-Type')
-        if not content_type == 'application/xml':
-            pass
+        assert content_type == 'application/xml', content_type  # sanity check
         content_disposition = reply.rawHeader('Content-Disposition')
         # expected format: 'attachment; filename="exposure_model.xml"'
-        if 'filename' not in content_disposition:
-            pass
-        filename = content_disposition.split('"')[1]
-        # TODO: save to file in local filesystem
-        print("File name: %s" % filename)
-        print("File content:\n%s" % reply.readAll())
+        # sanity check
+        assert 'filename' in content_disposition, content_disposition
+        file_name = str(content_disposition.split('"')[1])
+        file_content = str(reply.readAll())
+        ipt_dir = self.parent().ipt_dir
+        with open(os.path.join(ipt_dir, file_name), "w") as f:
+            f.write(file_content)
         frame = self.parent().web_view.page().mainFrame()
         frame.evaluateJavaScript(
             'manager_finished_cb("%s");' % js_cb_object_id)

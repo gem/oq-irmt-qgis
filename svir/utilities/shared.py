@@ -238,3 +238,8 @@ DEFAULT_SETTINGS = dict(
     style_classes=10,
     force_restyling=True,
 )
+
+
+REQUEST_ATTRS = {'instance_finished_cb': 1001,
+                 'js_cb_object_id': 1002,
+                 }

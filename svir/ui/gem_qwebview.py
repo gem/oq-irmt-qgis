@@ -37,7 +37,8 @@ from qgis.PyQt.QtCore import (QMutex,
                               pyqtSlot,
                               )
 from qgis.PyQt.QtGui import QSizePolicy
-from svir.utilities.shared import DEBUG
+from svir.utilities.shared import DEBUG, REQUEST_ATTRS
+
 
 if DEBUG:
     # turn on developer tools in webkit so we can get at the
@@ -100,8 +101,9 @@ class GemQWebView(QWebView):
         self.frame.addToJavaScriptWindowObject('gem_api', self.gem_api)
 
     def manager_finished_cb(self, reply):
-        instance_finished_cb = reply.request().attribute(1001, None)
-        if instance_finished_cb:
+        instance_finished_cb = reply.request().attribute(
+            REQUEST_ATTRS['instance_finished_cb'], None)
+        if instance_finished_cb is not None:
             instance_finished_cb(reply)
 
     @pyqtSlot(str)
