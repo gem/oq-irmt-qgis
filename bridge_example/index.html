@@ -57,9 +57,9 @@
             });
         });
 
-        function delegate_download_js_cb(js_cb_object_id, success, reason) {
+        function delegate_download_js_cb(js_cb_object_id, file_name, success, reason) {
             if (success) {
-                gem_api.common.info('Download completed for id: ' + js_cb_object_id);
+                gem_api.common.info('Download completed for id: ' + js_cb_object_id + 'File name: ' + file_name);
             } else {
                 gem_api.common.error('Error while attempting to download for id ' + js_cb_object_id + ': ' + reason);
             }
