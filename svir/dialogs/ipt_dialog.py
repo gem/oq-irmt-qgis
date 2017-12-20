@@ -97,7 +97,7 @@ class IptPythonApi(GemApi):
     # javascript objects come into python as dictionaries
     @pyqtSlot(str, str, 'QVariantList', 'QVariantList', str, str, result=bool)
     def delegate_download(self, action_url, method, headers, data,
-                          delegate_download_js_cb, js_cb_object_id):
+                          js_cb_func, js_cb_object_id):
         """
         :param action_url: url to call on ipt api
         :param method: string like 'POST'
@@ -107,7 +107,10 @@ class IptPythonApi(GemApi):
         :param js_cb_object_id: id of the javascript object to be called back
         """
         # TODO: Accept also methods other than POST
-        assert method == 'POST', method
+        if method != 'POST':
+            self.call_js_cb(js_cb_func, js_cb_object_id, None, 1,
+                            'Method %s not allowed' % method)
+            return False
         if ':' in action_url:
             qurl = QUrl(action_url)
         elif action_url.startswith('/'):
@@ -124,7 +127,7 @@ class IptPythonApi(GemApi):
         request.setAttribute(REQUEST_ATTRS['js_cb_object_id'],
                              js_cb_object_id)
         request.setAttribute(REQUEST_ATTRS['js_cb_func'],
-                             delegate_download_js_cb)
+                             js_cb_func)
         for header in headers:
             request.setRawHeader(header['name'], header['value'])
         multipart = QHttpMultiPart(QHttpMultiPart.FormDataType)
@@ -146,19 +149,19 @@ class IptPythonApi(GemApi):
         js_cb_func = reply.request().attribute(
             REQUEST_ATTRS['js_cb_func'], None)
         if js_cb_object_id is None or js_cb_object_id is None:
-            self.call_js_cb(js_cb_func, js_cb_object_id, file_name, 0,
+            self.call_js_cb(js_cb_func, js_cb_object_id, file_name, 2,
                             'Unable to extract attributes from request')
             return
         content_type = reply.rawHeader('Content-Type')
         if content_type != 'application/xml':
-            self.call_js_cb(js_cb_func, js_cb_object_id, file_name, 0,
+            self.call_js_cb(js_cb_func, js_cb_object_id, file_name, 3,
                             'Unexpected content type %s' % content_type)
             return
         content_disposition = reply.rawHeader('Content-Disposition')
         # expected format: 'attachment; filename="exposure_model.xml"'
         # sanity check
         if 'filename' not in content_disposition:
-            self.call_js_cb(js_cb_func, js_cb_object_id, file_name, 0,
+            self.call_js_cb(js_cb_func, js_cb_object_id, file_name, 4,
                             'File name not found')
             return
         file_name = str(content_disposition.split('"')[1])
@@ -166,10 +169,11 @@ class IptPythonApi(GemApi):
         ipt_dir = self.parent().ipt_dir
         with open(os.path.join(ipt_dir, file_name), "w") as f:
             f.write(file_content)
-        self.call_js_cb(js_cb_func, js_cb_object_id, file_name, 1)
+        self.call_js_cb(js_cb_func, js_cb_object_id, file_name, 0)
 
     def call_js_cb(self, js_cb_func, js_cb_object_id, file_name,
                    success=1, reason='ok'):
+        js_to_call = '%s("%s", "%s", %d, "%s");' % (
+            js_cb_func, js_cb_object_id, file_name, success, reason)
         frame = self.parent().web_view.page().mainFrame()
-        frame.evaluateJavaScript('%s("%s", "%s", %d, "%s");' % (
-            js_cb_func, js_cb_object_id, file_name, success, reason))
+        frame.evaluateJavaScript(js_to_call)
