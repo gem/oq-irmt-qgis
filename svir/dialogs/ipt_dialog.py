@@ -94,6 +94,18 @@ class IptPythonApi(GemApi):
             self.parent().parent(), 'Select files', ipt_dir)
         return [os.path.basename(file_name) for file_name in file_names]
 
+    @pyqtSlot(str, str, result=bool)
+    def save_str_to_file(self, content, file_name):
+        """
+        :param content: string to be saved in the file
+        :param file_name: basename of the file to be saved
+        """
+        ipt_dir = self.parent().ipt_dir
+        basename = os.path.basename(file_name)
+        with open(os.path.join(ipt_dir, basename), "w") as f:
+            f.write(content)
+        return True
+
     # javascript objects come into python as dictionaries
     @pyqtSlot(str, str, 'QVariantList', 'QVariantList', str, str, result=bool)
     def delegate_download(self, action_url, method, headers, data,

@@ -37,6 +37,9 @@
                     <!-- var url = 'http://localhost:8800/taxonomy/height-of-ground-floor-level-above-grade-unknown--hf99'; -->
                     <!-- window.open(url); -->
                     <!-- <1!-- window.open("https://www.w3schools.com"); --1> -->
+                    var content = "This is a\nmultiline file";
+                    var filename = 'saved_string.txt';
+                    gem_api.save_str_to_file(content, filename);
                 }
             });
             $('#selectSingleFileBtn').click(function(){
