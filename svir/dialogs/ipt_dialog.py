@@ -26,6 +26,7 @@ import os
 from qgis.PyQt.QtGui import QPushButton, QLineEdit, QHBoxLayout, QFileDialog
 from qgis.PyQt.QtCore import QUrl, pyqtSlot
 from qgis.PyQt.QtNetwork import QNetworkRequest, QHttpMultiPart, QHttpPart
+from qgis.gui import QgsMessageBar
 from svir.dialogs.standalone_app_dialog import StandaloneAppDialog, GemApi
 from svir.utilities.shared import DEBUG, REQUEST_ATTRS
 
@@ -75,7 +76,7 @@ class IptPythonApi(GemApi):
     @pyqtSlot(result=str)
     def select_file(self):
         """
-        Open a file browser to select a single file in the local filesystem,
+        Open a file browser to select a single file in the ipt_dir,
         and return the name of the selected files
         """
         ipt_dir = self.parent().ipt_dir
@@ -86,7 +87,7 @@ class IptPythonApi(GemApi):
     @pyqtSlot(result='QStringList')
     def select_files(self):
         """
-        Open a file browser to select multiple files in the local filesystem,
+        Open a file browser to select multiple files in the ipt_dir,
         and return the list of names of selected files
         """
         ipt_dir = self.parent().ipt_dir
@@ -98,12 +99,33 @@ class IptPythonApi(GemApi):
     def save_str_to_file(self, content, file_name):
         """
         :param content: string to be saved in the file
-        :param file_name: basename of the file to be saved
+        :param file_name: basename of the file to be saved into the ipt_dir
         """
         ipt_dir = self.parent().ipt_dir
         basename = os.path.basename(file_name)
         with open(os.path.join(ipt_dir, basename), "w") as f:
             f.write(content)
+        return True
+
+    @pyqtSlot(result='QStringList')
+    def ls_ipt_dir(self):
+        ipt_dir = self.parent().ipt_dir
+        return os.listdir(ipt_dir)
+
+    @pyqtSlot(str, result=bool)
+    def rm_file_from_ipt_dir(self, file_name):
+        """
+        :param file_name: name of the file to be removed from the ipt_dir
+        """
+        ipt_dir = self.parent().ipt_dir
+        basename = os.path.basename(file_name)
+        file_path = os.path.join(ipt_dir, basename)
+        try:
+            os.remove(file_path)
+        except OSError as exc:
+            self.parent().message_bar.pushMessage(
+                str(exc), level=QgsMessageBar.CRITICAL)
+            return False
         return True
 
     # javascript objects come into python as dictionaries
