@@ -106,7 +106,6 @@ class IptPythonApi(GemApi):
         :param delegate_download_js_cb: javascript callback
         :param js_cb_object_id: id of the javascript object to be called back
         """
-        self.delegate_download_js_cb = delegate_download_js_cb
         # TODO: Accept also methods other than POST
         assert method == 'POST', method
         if ':' in action_url:
@@ -124,6 +123,8 @@ class IptPythonApi(GemApi):
                              self.manager_finished_cb)
         request.setAttribute(REQUEST_ATTRS['js_cb_object_id'],
                              js_cb_object_id)
+        request.setAttribute(REQUEST_ATTRS['js_cb_func'],
+                             delegate_download_js_cb)
         for header in headers:
             request.setRawHeader(header['name'], header['value'])
         multipart = QHttpMultiPart(QHttpMultiPart.FormDataType)
@@ -141,18 +142,32 @@ class IptPythonApi(GemApi):
     def manager_finished_cb(self, reply):
         js_cb_object_id = reply.request().attribute(
             REQUEST_ATTRS['js_cb_object_id'], None)
-        assert js_cb_object_id is not None  # sanity check
+        js_cb_func = reply.request().attribute(
+            REQUEST_ATTRS['js_cb_func'], None)
+        if js_cb_object_id is None or js_cb_object_id is None:
+            self.call_js_cb(js_cb_func, js_cb_object_id, 0,
+                            'Unable to extract attributes from request')
+            return
         content_type = reply.rawHeader('Content-Type')
-        assert content_type == 'application/xml', content_type  # sanity check
+        if content_type != 'application/xml':
+            self.call_js_cb(js_cb_func, js_cb_object_id, 0,
+                            'Unexpected content type %s' % content_type)
+            return
         content_disposition = reply.rawHeader('Content-Disposition')
         # expected format: 'attachment; filename="exposure_model.xml"'
         # sanity check
-        assert 'filename' in content_disposition, content_disposition
+        if 'filename' not in content_disposition:
+            self.call_js_cb(js_cb_func, js_cb_object_id, 0,
+                            'File name not found')
+            return
         file_name = str(content_disposition.split('"')[1])
         file_content = str(reply.readAll())
         ipt_dir = self.parent().ipt_dir
         with open(os.path.join(ipt_dir, file_name), "w") as f:
             f.write(file_content)
+        self.call_js_cb(js_cb_func, js_cb_object_id, 1)
+
+    def call_js_cb(self, js_cb_func, js_cb_object_id, success=1, reason='ok'):
         frame = self.parent().web_view.page().mainFrame()
-        frame.evaluateJavaScript(
-            '%s("%s");' % (self.delegate_download_js_cb, js_cb_object_id))
+        frame.evaluateJavaScript('%s("%s", %d, "%s");' % (
+            js_cb_func, js_cb_object_id, success, reason))

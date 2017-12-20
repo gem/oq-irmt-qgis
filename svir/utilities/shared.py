@@ -242,4 +242,5 @@ DEFAULT_SETTINGS = dict(
 
 REQUEST_ATTRS = {'instance_finished_cb': 1001,
                  'js_cb_object_id': 1002,
+                 'js_cb_func': 1003,
                  }

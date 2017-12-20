@@ -57,8 +57,12 @@
             });
         });
 
-        function delegate_download_js_cb(js_cb_object_id){
-            alert('Download completed for id: ' + js_cb_object_id);
+        function delegate_download_js_cb(js_cb_object_id, success, reason) {
+            if (success) {
+                alert('Download completed for id: ' + js_cb_object_id);
+            } else {
+                alert('Error while attempting to download for id ' + js_cb_object_id + ': ' + reason);
+            }
         }
     </script>
 </html>
