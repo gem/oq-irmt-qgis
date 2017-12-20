@@ -44,7 +44,7 @@
                     alert("Called by normal browser")
                 } else {
                     var fileName = gem_api.select_file();
-                    console.info(fileName);
+                    gem_api.common.info("Selected file: " + fileName);
                 }
             });
             $('#selectMultipleFilesBtn').click(function(){
@@ -52,16 +52,16 @@
                     alert("Called by normal browser")
                 } else {
                     var fileNames = gem_api.select_files();
-                    console.info(fileNames);
+                    gem_api.common.info("Selected files: " + fileNames);
                 }
             });
         });
 
         function delegate_download_js_cb(js_cb_object_id, success, reason) {
             if (success) {
-                alert('Download completed for id: ' + js_cb_object_id);
+                gem_api.common.info('Download completed for id: ' + js_cb_object_id);
             } else {
-                alert('Error while attempting to download for id ' + js_cb_object_id + ': ' + reason);
+                gem_api.common.error('Error while attempting to download for id ' + js_cb_object_id + ': ' + reason);
             }
         }
     </script>
