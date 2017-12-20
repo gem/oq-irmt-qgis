@@ -128,6 +128,25 @@ class IptPythonApi(GemApi):
             return False
         return True
 
+    @pyqtSlot(str, str, result=bool)
+    def rename_file_in_ipt_dir(self, old_name, new_name):
+        """
+        :param old_name: name of the file to be renamed
+        :param new_name: new name to be assigned to the file
+        """
+        ipt_dir = self.parent().ipt_dir
+        old_basename = os.path.basename(old_name)
+        new_basename = os.path.basename(new_name)
+        old_path = os.path.join(ipt_dir, old_basename)
+        new_path = os.path.join(ipt_dir, new_basename)
+        try:
+            os.rename(old_path, new_path)
+        except OSError as exc:
+            self.parent().message_bar.pushMessage(
+                str(exc), level=QgsMessageBar.CRITICAL)
+            return False
+        return True
+
     # javascript objects come into python as dictionaries
     @pyqtSlot(str, str, 'QVariantList', 'QVariantList', str, str, result=bool)
     def delegate_download(self, action_url, method, headers, data,
