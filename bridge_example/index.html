@@ -17,7 +17,7 @@
                 if (typeof gem_api == 'undefined') {
                     alert("Called by normal browser")
                 } else {
-                    gem_api.common.notify_click();
+                    <!-- gem_api.common.notify_click(); -->
                     <!-- alert("Called by QGIS") -->
                     <!-- console.info("1 + 2 = " + gem_api.common.add(1, 2)); -->
                     <!-- var strlist = ['a', 'b', 'c']; -->
@@ -37,8 +37,8 @@
                     <!-- var url = 'http://localhost:8800/taxonomy/height-of-ground-floor-level-above-grade-unknown--hf99'; -->
                     <!-- window.open(url); -->
                     <!-- <1!-- window.open("https://www.w3schools.com"); --1> -->
-                    var content = "This is a\nmultiline file";
-                    var filename = 'saved_string.txt';
+                    <!-- var content = "This is a\nmultiline file"; -->
+                    <!-- var filename = 'saved_string.txt'; -->
                     <!-- gem_api.save_str_to_file(content, filename); -->
                     <!-- var file_names = gem_api.ls_ipt_dir(); -->
                     <!-- console.log(file_names); -->
@@ -46,7 +46,16 @@
                     <!-- console.log(removed); -->
                     <!-- var removed = gem_api.rm_file_from_ipt_dir(filename, filename); -->
                     <!-- console.log(removed); -->
-                    gem_api.rename_file_in_ipt_dir(filename, 'changed_name.txt');
+                    <!-- gem_api.rename_file_in_ipt_dir(filename, 'changed_name.txt'); -->
+                    <!-- gem_api.run_oq_engine_calc(); -->
+                    <!-- gem_api.select_and_copy_files_to_ipt_dir(); -->
+                    var filePaths = [
+                        '/home/paolo/.gem/irmt/ipt/source_model_logic_tree.xml',
+                        '/home/paolo/.gem/irmt/ipt/gmpe_logic_tree.xml',
+                        '/home/paolo/.gem/irmt/ipt/job.ini',
+                        '/home/paolo/.gem/irmt/ipt/source_model.xml'
+                    ]
+                    gem_api.run_oq_engine_calc(filePaths);
                 }
             });
             $('#selectSingleFileBtn').click(function(){

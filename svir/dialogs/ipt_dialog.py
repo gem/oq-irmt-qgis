@@ -23,8 +23,9 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+from shutil import copyfile
 from qgis.PyQt.QtGui import QPushButton, QLineEdit, QHBoxLayout, QFileDialog
-from qgis.PyQt.QtCore import QUrl, pyqtSlot
+from qgis.PyQt.QtCore import QUrl, pyqtSlot, QSettings, QDir, QFileInfo
 from qgis.PyQt.QtNetwork import QNetworkRequest, QHttpMultiPart, QHttpPart
 from qgis.gui import QgsMessageBar
 from svir.dialogs.standalone_app_dialog import StandaloneAppDialog, GemApi
@@ -37,7 +38,8 @@ class IptDialog(StandaloneAppDialog):
     standalone application
     """
 
-    def __init__(self, ipt_dir, parent=None):
+    def __init__(self, ipt_dir, irmt, parent=None):
+        self.irmt = irmt
         self.ipt_dir = ipt_dir
         app_name = 'ipt'
         app_descr = 'OpenQuake Input Preparation Toolkit'
@@ -95,6 +97,27 @@ class IptPythonApi(GemApi):
             self.parent().parent(), 'Select files', ipt_dir)
         return [os.path.basename(file_name) for file_name in file_names]
 
+    @pyqtSlot()
+    def select_and_copy_files_to_ipt_dir(self):
+        """
+        Open a file browser pointing to the most recently browsed directory,
+        where multiple files can be selected. The selected files will be
+        copied inside the ipt_dir
+        """
+        default_dir = QSettings().value('irmt/ipt_browsed_dir',
+                                        QDir.homePath())
+        text = 'The selected files will be copied to the ipt directory'
+        file_paths = QFileDialog.getOpenFileNames(
+            self.parent().parent(), text, default_dir)
+        if not file_paths:
+            return
+        selected_dir = QFileInfo(file_paths[0]).dir().path()
+        QSettings().setValue('irmt/ipt_browsed_dir', selected_dir)
+        ipt_dir = self.parent().ipt_dir
+        for file_path in file_paths:
+            basename = os.path.basename(file_path)
+            copyfile(file_path, os.path.join(ipt_dir, basename))
+
     @pyqtSlot(str, str, result=bool)
     def save_str_to_file(self, content, file_name):
         """
@@ -146,6 +169,26 @@ class IptPythonApi(GemApi):
                 str(exc), level=QgsMessageBar.CRITICAL)
             return False
         return True
+
+    @pyqtSlot('QStringList', result='QVariantMap')
+    def run_oq_engine_calc(self, file_names):
+        """
+        It opens the dialog showing the list of calculations on the engine
+        server, and automatically runs an oq-engine calculation, given a list
+        of input files to be collected from the ipt_dir
+        :param file_names: list of names of the input files
+        :returns: a dict with a return value and a possible reason of failure
+        """
+        file_names = file_names if file_names else None
+        try:
+            self.parent().irmt.drive_oq_engine_server()
+            drive_engine_dlg = self.parent().irmt.drive_oq_engine_server_dlg
+            drive_engine_dlg.run_calc(file_names=file_names,
+                                      directory=self.parent().ipt_dir)
+        except Exception as exc:
+            return {'ret': 1, 'reason': str(exc)}
+        else:
+            return {'ret': 0, 'reason': 'ok'}
 
     # javascript objects come into python as dictionaries
     @pyqtSlot(str, str, 'QVariantList', 'QVariantList', str, str, result=bool)

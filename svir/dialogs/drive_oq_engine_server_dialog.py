@@ -457,21 +457,28 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             log_msg(msg, level='C', message_bar=self.message_bar)
         return
 
-    def run_calc(self, calc_id=None, file_names=None):
+    def run_calc(self, calc_id=None, file_names=None, directory=None):
         """
         Run a calculation. If `calc_id` is given, it means we want to run
         a calculation re-using the output of the given calculation
         """
         text = self.tr('Select the files needed to run the calculation,'
                        ' or the zip archive containing those files.')
-        default_dir = QSettings().value('irmt/run_oqengine_calc_dir',
-                                        QDir.homePath())
+        if directory is None:
+            default_dir = QSettings().value('irmt/run_oqengine_calc_dir',
+                                            QDir.homePath())
+        else:
+            default_dir = directory
         if not file_names:
             file_names = QFileDialog.getOpenFileNames(self, text, default_dir)
         if not file_names:
             return
-        selected_dir = QFileInfo(file_names[0]).dir().path()
-        QSettings().setValue('irmt/run_oqengine_calc_dir', selected_dir)
+        if directory is None:
+            selected_dir = QFileInfo(file_names[0]).dir().path()
+            QSettings().setValue('irmt/run_oqengine_calc_dir', selected_dir)
+        else:
+            file_names = [os.path.join(directory, os.path.basename(file_name))
+                          for file_name in file_names]
         if len(file_names) == 1:
             file_full_path = file_names[0]
             _, file_ext = os.path.splitext(file_full_path)

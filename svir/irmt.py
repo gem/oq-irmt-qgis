@@ -453,7 +453,8 @@ class Irmt:
 
     def ipt(self):
         if self.ipt_dlg is None:
-            self.ipt_dlg = IptDialog(self.ipt_dir)
+            # we need self because ipt must be able to drive the oq-engine
+            self.ipt_dlg = IptDialog(self.ipt_dir, self)
         self.ipt_dlg.show()
         self.ipt_dlg.raise_()
 
