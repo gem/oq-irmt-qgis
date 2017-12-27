@@ -147,8 +147,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             ('', ''),
             ('hcurves', 'Hazard Curves'),
             ('uhs', 'Uniform Hazard Spectra'),
-            ('agg_curves-rlzs', 'Aggregated loss curves (realizations)'),
-            ('agg_curves-stats', 'Aggregated loss curves (statistics)'),
+            ('agg_curves-rlzs', 'Aggregate loss curves (realizations)'),
+            ('agg_curves-stats', 'Aggregate loss curves (statistics)'),
             ('dmg_by_asset_aggr', 'Damage distribution'),
             ('losses_by_asset_aggr', 'Loss distribution'),
             ('recovery_curves', 'Recovery Curves')])

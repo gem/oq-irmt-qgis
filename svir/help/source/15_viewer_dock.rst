@@ -103,6 +103,52 @@ Spectra` (:numref:`fig-dataViewerUHS`).
     IRMT Data Viewer used for displaying Uniform Hazard Spectra
 
 
+Visualizing aggregate loss curves
+=================================
+
+Aggregate loss curves are FIXME
+When the button :guilabel:`Show` is pressed, the Data Viewer is automatically
+opened, providing a dropdown menu to select one of the available loss types,
+and a tool to select multiple realizations or statistics. By default, the first
+available loss type is pre-selected and all the realization or statistics are
+displayed in the plot. Any change in these selections produces an automatic update
+of the plot. The plot shows in abscissa the return period (in years) and in
+ordinate the aggregate loss (the measurement unit depends on the parameters of
+the OQ-Engine calculation).
+
+
+Visualizing aggregate damage by asset
+======================================
+
+FIXME scientific description
+When the button :guilabel:`Aggregate` is pressed, the Data Viewer is automatically
+opened, providing a dropdown menu to select one of the available realizations, and
+another one to select one of the available loss types. Two widgets enable the
+selection of multiple tag names and, for each tag, one or more of its values.
+The additional checkbox :guilabel:`Exclude "no damage"` is checked by default,
+excluding from the plot the damage "no damage" state, which in most cases is
+predominant with respect to the others and therefore the corresponding bar would
+look too high in proportion with the others.
+The bar plot shows the damage distribution, where each bar corresponds to one of the
+damage states, and the height of the bar corresponds to the number of asset in that
+damage state. If no filter is selected, the whole damage distribution is displayed.
+If something is selected, a text field lists the selected tags, each with the chosen value.
+If a tag is selected, but no corresponding value is chosen, the filter will not be applied.
+
+Visualizing aggregate losses by asset
+======================================
+
+FIXME scientific description
+When the button :guilabel:`Aggregate` is pressed, the Data Viewer is automatically
+opened, providing a dropdown menu to select one of the available loss types. Two widgets
+enable the selection of multiple tag names and, for each tag, one or more of its values.
+If the value :guilabel:`*` is chosen, aggregate losses for each value are reported.
+The results are presented as a table containing, for each tag and for each realization,
+the corresponding aggregate loss.
+If no filter is selected, the total losses for each realization are displayed.
+If something is selected, a text field lists the selected tags, each with the chosen value.
+If a tag is selected, but no corresponding value is chosen, the filter will not be applied.
+
 Visualizing recovery curves
 ===========================
 
