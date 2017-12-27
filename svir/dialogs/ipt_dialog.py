@@ -27,7 +27,6 @@ from shutil import copyfile
 from qgis.PyQt.QtGui import QPushButton, QLineEdit, QHBoxLayout, QFileDialog
 from qgis.PyQt.QtCore import QUrl, pyqtSlot, QSettings, QDir, QFileInfo
 from qgis.PyQt.QtNetwork import QNetworkRequest, QHttpMultiPart, QHttpPart
-from qgis.gui import QgsMessageBar
 from svir.dialogs.standalone_app_dialog import StandaloneAppDialog, GemApi
 from svir.utilities.shared import DEBUG, REQUEST_ATTRS
 
@@ -75,67 +74,91 @@ class IptPythonApi(GemApi):
     (other shared methods are defined in the CommonApi)
     """
 
-    @pyqtSlot(result=str)
+    @pyqtSlot(result='QVariantMap')
     def select_file(self):
         """
         Open a file browser to select a single file in the ipt_dir,
         and return the name of the selected files
         """
-        ipt_dir = self.parent().ipt_dir
-        file_name = QFileDialog.getOpenFileName(
-            self.parent().parent(), 'Select file', ipt_dir)
-        return os.path.basename(file_name)
+        try:
+            ipt_dir = self.parent().ipt_dir
+            file_name = QFileDialog.getOpenFileName(
+                self.parent().parent(), 'Select file', ipt_dir)
+            basename = os.path.basename(file_name)
+        except Exception as exc:
+            return {'ret': 1, 'reason': str(exc)}
+        else:
+            return {'ret': basename, 'reason': 'ok'}
 
-    @pyqtSlot(result='QStringList')
+    @pyqtSlot(result='QVariantMap')
     def select_files(self):
         """
         Open a file browser to select multiple files in the ipt_dir,
         and return the list of names of selected files
         """
-        ipt_dir = self.parent().ipt_dir
-        file_names = QFileDialog.getOpenFileNames(
-            self.parent().parent(), 'Select files', ipt_dir)
-        return [os.path.basename(file_name) for file_name in file_names]
+        try:
+            ipt_dir = self.parent().ipt_dir
+            file_names = QFileDialog.getOpenFileNames(
+                self.parent().parent(), 'Select files', ipt_dir)
+            ls = [os.path.basename(file_name) for file_name in file_names]
+        except Exception as exc:
+            return {'ret': 1, 'reason': str(exc)}
+        else:
+            return {'ret': ls, 'reason': 'ok'}
 
-    @pyqtSlot()
+    @pyqtSlot(result='QVariantMap')
     def select_and_copy_files_to_ipt_dir(self):
         """
         Open a file browser pointing to the most recently browsed directory,
         where multiple files can be selected. The selected files will be
         copied inside the ipt_dir
         """
-        default_dir = QSettings().value('irmt/ipt_browsed_dir',
-                                        QDir.homePath())
-        text = 'The selected files will be copied to the ipt directory'
-        file_paths = QFileDialog.getOpenFileNames(
-            self.parent().parent(), text, default_dir)
-        if not file_paths:
-            return
-        selected_dir = QFileInfo(file_paths[0]).dir().path()
-        QSettings().setValue('irmt/ipt_browsed_dir', selected_dir)
-        ipt_dir = self.parent().ipt_dir
-        for file_path in file_paths:
-            basename = os.path.basename(file_path)
-            copyfile(file_path, os.path.join(ipt_dir, basename))
+        try:
+            default_dir = QSettings().value('irmt/ipt_browsed_dir',
+                                            QDir.homePath())
+            text = 'The selected files will be copied to the ipt directory'
+            file_paths = QFileDialog.getOpenFileNames(
+                self.parent().parent(), text, default_dir)
+            if not file_paths:
+                return {'ret': 1, 'reason': 'No file was selected'}
+            selected_dir = QFileInfo(file_paths[0]).dir().path()
+            QSettings().setValue('irmt/ipt_browsed_dir', selected_dir)
+            ipt_dir = self.parent().ipt_dir
+            for file_path in file_paths:
+                basename = os.path.basename(file_path)
+                copyfile(file_path, os.path.join(ipt_dir, basename))
+        except Exception as exc:
+            return {'ret': 2, 'reason': str(exc)}
+        else:
+            return {'ret': 0, 'reason': 'ok'}
 
-    @pyqtSlot(str, str, result=bool)
+    @pyqtSlot(str, str, result='QVariantMap')
     def save_str_to_file(self, content, file_name):
         """
         :param content: string to be saved in the file
         :param file_name: basename of the file to be saved into the ipt_dir
         """
         ipt_dir = self.parent().ipt_dir
-        basename = os.path.basename(file_name)
-        with open(os.path.join(ipt_dir, basename), "w") as f:
-            f.write(content)
-        return True
+        try:
+            basename = os.path.basename(file_name)
+            with open(os.path.join(ipt_dir, basename), "w") as f:
+                f.write(content)
+        except Exception as exc:
+            return {'ret': 1, 'reason': str(exc)}
+        else:
+            return {'ret': 0, 'reason': 'ok'}
 
-    @pyqtSlot(result='QStringList')
+    @pyqtSlot(result='QVariantMap')
     def ls_ipt_dir(self):
         ipt_dir = self.parent().ipt_dir
-        return os.listdir(ipt_dir)
+        try:
+            ls = os.listdir(ipt_dir)
+        except OSError as exc:
+            return {'ret': 1, 'reason': str(exc)}
+        else:
+            return {'ret': ls, 'reason': 'ok'}
 
-    @pyqtSlot(str, result=bool)
+    @pyqtSlot(str, result='QVariantMap')
     def rm_file_from_ipt_dir(self, file_name):
         """
         :param file_name: name of the file to be removed from the ipt_dir
@@ -146,12 +169,11 @@ class IptPythonApi(GemApi):
         try:
             os.remove(file_path)
         except OSError as exc:
-            self.parent().message_bar.pushMessage(
-                str(exc), level=QgsMessageBar.CRITICAL)
-            return False
-        return True
+            return {'ret': 1, 'reason': str(exc)}
+        else:
+            return {'ret': 0, 'reason': 'ok'}
 
-    @pyqtSlot(str, str, result=bool)
+    @pyqtSlot(str, str, result='QVariantMap')
     def rename_file_in_ipt_dir(self, old_name, new_name):
         """
         :param old_name: name of the file to be renamed
@@ -165,10 +187,9 @@ class IptPythonApi(GemApi):
         try:
             os.rename(old_path, new_path)
         except OSError as exc:
-            self.parent().message_bar.pushMessage(
-                str(exc), level=QgsMessageBar.CRITICAL)
-            return False
-        return True
+            return {'ret': 1, 'reason': str(exc)}
+        else:
+            return {'ret': 0, 'reason': 'ok'}
 
     @pyqtSlot('QStringList', result='QVariantMap')
     def run_oq_engine_calc(self, file_names):
