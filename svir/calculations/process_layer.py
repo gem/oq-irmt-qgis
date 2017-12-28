@@ -44,7 +44,7 @@ from svir.utilities.shared import DEBUG, DOUBLE_FIELD_TYPE_NAME
 from svir.utilities.utils import LayerEditingManager, tr, log_msg
 
 
-class ProcessLayer():
+class ProcessLayer(object):
     """
     Set of utilities to manage a layer or compare layers.
 
