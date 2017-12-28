@@ -22,7 +22,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-import json
 import os
 import csv
 import numpy
@@ -60,12 +59,11 @@ from qgis.PyQt.QtGui import (QColor,
 from qgis.gui import QgsVertexMarker
 from qgis.core import QGis, QgsMapLayer, QgsFeatureRequest
 
-from svir.utilities.shared import (TEXTUAL_FIELD_TYPES,
+from svir.utilities.shared import (
                                    OQ_ALL_LOADABLE_TYPES,
                                    OQ_NO_MAP_TYPES,
                                    )
 from svir.utilities.utils import (get_ui_class,
-                                  reload_attrib_cbx,
                                   log_msg,
                                   clear_widgets_from_layout,
                                   warn_scipy_missing,
