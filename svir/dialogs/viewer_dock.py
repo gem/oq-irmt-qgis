@@ -115,6 +115,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.stats_multiselect = None
         self.rlzs_multiselect = None
 
+        self.calc_id = None
+
         # self.current_selection[None] is for recovery curves
         self.current_selection = {}  # rlz_or_stat -> feature_id -> curve
         self.current_imt = None
@@ -1129,6 +1131,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.draw()
 
     def layer_changed(self):
+        self.calc_id = None
         self.clear_plot()
         if hasattr(self, 'self.imt_cbx'):
             self.clear_imt_cbx()
@@ -1295,7 +1298,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 self,
                 self.tr('Export data'),
                 os.path.expanduser(
-                    '~/loss_curves_%s.csv' % self.current_loss_type),
+                    '~/loss_curves_%s_%s.csv' % (self.current_loss_type,
+                                                 self.calc_id)),
                 '*.csv')
         elif self.output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
             filename = QFileDialog.getSaveFileName(
