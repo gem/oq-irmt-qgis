@@ -25,6 +25,7 @@ email=staff.it@globalquakemodel.org
 changelog=
     2.9.0
     * When a OQ-Engine calculation is removed, the corresponding buttons and its list of outputs are properly cleared.
+    * If a selected OQ-Engine calculation is running, the corresponding outputs will be listed as soon as the calculation is complete.
     2.8.1
     * When interacting with the OQ-Engine or the OQ-Platform, the plugin will attempt first to use the default credentials.
       It will open the settings dialog automatically, in case the login fails with the default settings.
