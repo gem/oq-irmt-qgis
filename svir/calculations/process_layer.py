@@ -85,7 +85,7 @@ class ProcessLayer():
         ppdata = pformat(
             [feature.attributes()
              for feature in self.layer.getFeatures()])
-        logger_func(spacer + ppdata)
+        logger_func(spacer + ppdata + spacer)
 
     def has_same_projection_as(self, other_layer):
         """
