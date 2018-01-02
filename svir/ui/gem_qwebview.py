@@ -134,6 +134,15 @@ class GemQWebView(QWebView):
         file_name = str(file_name).strip('"')
         file_content = str(reply.readAll())
         file_fullpath = os.path.join(dest_dir, file_name)
+        if os.path.exists(file_fullpath):
+            name, ext = os.path.splitext(file_name)
+            i = 1
+            while True:
+                file_fullpath = os.path.join(
+                    dest_dir, '%s_%s%s' % (name, i, ext))
+                if not os.path.exists(file_fullpath):
+                    break
+                i += 1
         with open(file_fullpath, "w") as f:
             f.write(file_content)
         self.gem_api.common.info('File %s downloaded successfully'
