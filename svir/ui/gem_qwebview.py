@@ -24,11 +24,12 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-
+import os
 from qgis.PyQt.QtWebKit import QWebView, QWebSettings
 from qgis.PyQt.QtNetwork import (QNetworkAccessManager,
                                  QNetworkCookieJar,
                                  QNetworkCookie,
+                                 QNetworkReply,
                                  )
 from qgis.PyQt.QtCore import (QMutex,
                               QMutexLocker,
@@ -36,8 +37,9 @@ from qgis.PyQt.QtCore import (QMutex,
                               QByteArray,
                               pyqtSlot,
                               )
-from qgis.PyQt.QtGui import QSizePolicy
+from qgis.PyQt.QtGui import QSizePolicy, QFileDialog
 from svir.utilities.shared import DEBUG, REQUEST_ATTRS
+from svir.utilities.utils import tr
 
 
 if DEBUG:
@@ -93,6 +95,10 @@ class GemQWebView(QWebView):
         # catch the signal emitted when the title of the page is changed
         self.titleChanged[str].connect(self.on_title_changed)
 
+        self.page().setForwardUnsupportedContent(True)
+        self.page().unsupportedContent[QNetworkReply].connect(
+            self.downloadContent)
+
     def load_gem_api(self):
         # add pyapi to javascript window object
         # slots can be accessed in either of the following ways -
@@ -105,6 +111,33 @@ class GemQWebView(QWebView):
             REQUEST_ATTRS['instance_finished_cb'], None)
         if instance_finished_cb is not None:
             instance_finished_cb(reply)
+
+    def downloadContent(self, reply):
+        self.stop()
+        home = os.path.expanduser('~')
+        downloads = os.path.join(home, 'Downloads')
+        download = os.path.join(home, 'Download')
+        if os.path.isdir(downloads):
+            dest_dir = downloads
+        if os.path.isdir(download):
+            dest_dir = download
+        if not dest_dir:
+            dest_dir = QFileDialog.getExistingDirectory(
+                self, tr("Select the destination folder"),
+                home, QFileDialog.ShowDirsOnly)
+        if not dest_dir:
+            return
+        content_type = reply.rawHeader('Content-Type')
+        if content_type != 'application/xml':
+            return
+        file_name = reply.rawHeader('Content-Disposition').split('=')[1]
+        file_name = str(file_name).strip('"')
+        file_content = str(reply.readAll())
+        file_fullpath = os.path.join(dest_dir, file_name)
+        with open(file_fullpath, "w") as f:
+            f.write(file_content)
+        self.gem_api.common.info('File %s downloaded successfully'
+                                 % file_fullpath)
 
     @pyqtSlot(str)
     def on_title_changed(self, title):
