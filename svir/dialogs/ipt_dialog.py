@@ -269,11 +269,6 @@ class IptPythonApi(GemApi):
             self.call_js_cb(js_cb_func, js_cb_object_id, file_name, 2,
                             'Unable to extract attributes from request')
             return
-        content_type = reply.rawHeader('Content-Type')
-        if content_type != 'application/xml':
-            self.call_js_cb(js_cb_func, js_cb_object_id, file_name, 3,
-                            'Unexpected content type %s' % content_type)
-            return
         content_disposition = reply.rawHeader('Content-Disposition')
         # expected format: 'attachment; filename="exposure_model.xml"'
         # sanity check
