@@ -140,6 +140,11 @@ class GemQWebView(QWebView):
                 'Unable to get the file name from headers: %s\n'
                 'Exception: %s' % (header_pairs, str(exc)))
         file_content = str(reply.readAll())
+        # From
+        # http://doc.qt.io/archives/qt-4.8/qwebpage.html#unsupportedContent
+        # "The receiving slot is responsible for deleting the reply"
+        reply.close()
+        reply.deleteLater()
         file_fullpath = os.path.join(dest_dir, file_name)
         if os.path.exists(file_fullpath):
             name, ext = os.path.splitext(file_name)
