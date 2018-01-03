@@ -127,11 +127,14 @@ class GemQWebView(QWebView):
                 home, QFileDialog.ShowDirsOnly)
         if not dest_dir:
             return
-        content_type = reply.rawHeader('Content-Type')
-        if content_type != 'application/xml':
-            return
-        file_name = reply.rawHeader('Content-Disposition').split('=')[1]
-        file_name = str(file_name).strip('"')
+        try:
+            file_name = reply.rawHeader('Content-Disposition').split('=')[1]
+            file_name = str(file_name).strip('"')
+        except Exception as exc:
+            header_pairs = reply.rawHeaderPairs()
+            self.gem_api.common.error(
+                'Unable to get the file name from headers: %s\n'
+                'Exception: %s' % (header_pairs, str(exc)))
         file_content = str(reply.readAll())
         file_fullpath = os.path.join(dest_dir, file_name)
         if os.path.exists(file_fullpath):
@@ -145,8 +148,7 @@ class GemQWebView(QWebView):
                 i += 1
         with open(file_fullpath, "w") as f:
             f.write(file_content)
-        self.gem_api.common.info('File %s downloaded successfully'
-                                 % file_fullpath)
+        self.gem_api.common.info('File downloaded as: %s' % file_fullpath)
 
     @pyqtSlot(str)
     def on_title_changed(self, title):
