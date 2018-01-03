@@ -139,6 +139,7 @@ class GemQWebView(QWebView):
             self.gem_api.common.error(
                 'Unable to get the file name from headers: %s\n'
                 'Exception: %s' % (header_pairs, str(exc)))
+            return
         file_content = str(reply.readAll())
         # From
         # http://doc.qt.io/archives/qt-4.8/qwebpage.html#unsupportedContent
