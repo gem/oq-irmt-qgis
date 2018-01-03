@@ -29,7 +29,6 @@ from qgis.PyQt.QtWebKit import QWebView, QWebSettings
 from qgis.PyQt.QtNetwork import (QNetworkAccessManager,
                                  QNetworkCookieJar,
                                  QNetworkCookie,
-                                 QNetworkReply,
                                  )
 from qgis.PyQt.QtCore import (QMutex,
                               QMutexLocker,
@@ -96,7 +95,7 @@ class GemQWebView(QWebView):
         self.titleChanged[str].connect(self.on_title_changed)
 
         self.page().setForwardUnsupportedContent(True)
-        self.page().unsupportedContent[QNetworkReply].connect(
+        self.page().unsupportedContent.connect(
             self.downloadContent)
 
     def load_gem_api(self):
