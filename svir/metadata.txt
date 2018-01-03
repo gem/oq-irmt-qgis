@@ -24,7 +24,7 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     2.9.0
-    * The plugin embeds standalone OpenQuake applications and interacts dynamically with the Input Preparation Toolkit
+    * The plugin embeds 3 standalone OpenQuake applications: Input Preparation Toolkit, TaxtWEB and Taxonomy Glossary
     2.8.1
     * When interacting with the OQ-Engine or the OQ-Platform, the plugin will attempt first to use the default credentials.
       It will open the settings dialog automatically, in case the login fails with the default settings.
