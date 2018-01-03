@@ -98,6 +98,11 @@ class GemQWebView(QWebView):
         self.page().unsupportedContent.connect(
             self.downloadContent)
 
+        # NOTE: in case we need to download a link, we need also to catch the
+        #       signal downloadRequested, as described in:
+        # https://github.com/mwarning/PyQt4-Examples/blob/master/webftpclient/ftpview.py     # NOQA
+        # https://github.com/mwarning/PyQt4-Examples/blob/master/webftpclient/downloader.py  # NOQA
+
     def load_gem_api(self):
         # add pyapi to javascript window object
         # slots can be accessed in either of the following ways -
