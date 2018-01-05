@@ -519,6 +519,16 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         else:
             log_msg(resp.text, level='C', message_bar=self.message_bar)
 
+    def on_same_fs(self, checksum_file_path, ipt_checksum):
+        on_same_fs_url = "%s/v1/on_same_fs" % self.hostname
+        data = {'filename': checksum_file_path, 'checksum': ipt_checksum}
+        try:
+            resp = self.session.post(on_same_fs_url, data=data, timeout=20)
+        except HANDLED_EXCEPTIONS as exc:
+            self._handle_exception(exc)
+            return
+        return resp.ok
+
     @pyqtSlot(int, int)
     def on_calc_list_tbl_cellClicked(self, row, column):
         self.calc_list_tbl.selectRow(row)

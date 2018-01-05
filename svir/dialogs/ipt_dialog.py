@@ -74,6 +74,17 @@ class IptPythonApi(GemApi):
     (other shared methods are defined in the CommonApi)
     """
 
+    @pyqtSlot(result=bool)
+    def on_same_fs(self):
+        """
+        Check if the engine server has access to the ipt_dir
+        """
+        local_checksum = self.parent().irmt.get_ipt_checksum()
+        self.parent().irmt.drive_oq_engine_server(show=False)
+        on_same_fs = self.parent().irmt.drive_oq_engine_server_dlg.on_same_fs(
+            self.parent().irmt.checksum_file_path, local_checksum)
+        return on_same_fs
+
     @pyqtSlot(result='QVariantMap')
     def select_file(self):
         """
