@@ -79,10 +79,12 @@ class IptPythonApi(GemApi):
         """
         Check if the engine server has access to the ipt_dir
         """
-        local_checksum = self.parent().irmt.get_ipt_checksum()
+        checksum_file_path, local_checksum = \
+            self.parent().irmt.get_ipt_checksum()
         self.parent().irmt.drive_oq_engine_server(show=False)
         on_same_fs = self.parent().irmt.drive_oq_engine_server_dlg.on_same_fs(
-            self.parent().irmt.checksum_file_path, local_checksum)
+            checksum_file_path, local_checksum)
+        os.remove(checksum_file_path)
         return on_same_fs
 
     @pyqtSlot(result='QVariantMap')

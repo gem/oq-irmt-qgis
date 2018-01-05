@@ -172,7 +172,6 @@ class Irmt:
 
         # get or create directory to store input files for the OQ-Engine
         self.ipt_dir = self.get_ipt_dir()
-        self.checksum_file_path = None
 
     def initGui(self):
         # create our own toolbar
@@ -1480,7 +1479,8 @@ class Irmt:
         return ipt_dir
 
     def get_ipt_checksum(self):
-        self.checksum_file_path = os.path.join(self.ipt_dir, '.random32byte')
-        with open(self.checksum_file_path, "w") as f:
+        unique_filename = uuid.uuid4().hex
+        checksum_file_path = os.path.join(self.ipt_dir, unique_filename)
+        with open(checksum_file_path, "w") as f:
             f.write(os.urandom(32))
-        return get_checksum(self.checksum_file_path)
+        return checksum_file_path, get_checksum(checksum_file_path)
