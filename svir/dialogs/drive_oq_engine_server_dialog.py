@@ -521,7 +521,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
     def on_same_fs(self, checksum_file_path, ipt_checksum):
         on_same_fs_url = "%s/v1/on_same_fs" % self.hostname
-        data = {'filename': checksum_file_path, 'checksum': ipt_checksum}
+        data = {'filename': checksum_file_path, 'checksum': str(ipt_checksum)}
         try:
             resp = self.session.post(on_same_fs_url, data=data, timeout=20)
         except HANDLED_EXCEPTIONS as exc:
