@@ -1479,7 +1479,7 @@ class Irmt:
         return ipt_dir
 
     def get_ipt_checksum(self):
-        unique_filename = uuid.uuid4().hex
+        unique_filename = ".%s" % uuid.uuid4().hex
         checksum_file_path = os.path.join(self.ipt_dir, unique_filename)
         with open(checksum_file_path, "w") as f:
             f.write(os.urandom(32))
