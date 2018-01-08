@@ -524,10 +524,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         data = {'filename': checksum_file_path, 'checksum': ipt_checksum}
         try:
             resp = self.session.post(on_same_fs_url, data=data, timeout=20)
+            success = json.loads(resp.text)['success']
         except HANDLED_EXCEPTIONS as exc:
             self._handle_exception(exc)
             return
-        return resp.ok
+        return success
 
     @pyqtSlot(int, int)
     def on_calc_list_tbl_cellClicked(self, row, column):
