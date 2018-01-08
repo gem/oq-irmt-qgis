@@ -319,6 +319,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.set_calc_list_widths(col_widths)
         if self.current_pointed_calc_id:
             self.highlight_and_scroll_to_calc_id(self.current_pointed_calc_id)
+        # if a running calculation is selected, the corresponding outputs will
+        # be displayed (once) automatically at completion
+        if (self.current_pointed_calc_id and
+                self.output_list_tbl.rowCount() == 0):
+            self.update_output_list(self.current_pointed_calc_id)
         return True
 
     def get_row_by_calc_id(self, calc_id):
