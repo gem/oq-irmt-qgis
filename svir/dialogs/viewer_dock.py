@@ -22,7 +22,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-import json
 import os
 import csv
 import numpy
@@ -60,12 +59,11 @@ from qgis.PyQt.QtGui import (QColor,
 from qgis.gui import QgsVertexMarker
 from qgis.core import QGis, QgsMapLayer, QgsFeatureRequest
 
-from svir.utilities.shared import (TEXTUAL_FIELD_TYPES,
+from svir.utilities.shared import (
                                    OQ_ALL_LOADABLE_TYPES,
                                    OQ_NO_MAP_TYPES,
                                    )
 from svir.utilities.utils import (get_ui_class,
-                                  reload_attrib_cbx,
                                   log_msg,
                                   clear_widgets_from_layout,
                                   warn_scipy_missing,
@@ -114,6 +112,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.fields_multiselect = None
         self.stats_multiselect = None
         self.rlzs_multiselect = None
+
+        self.calc_id = None
 
         # self.current_selection[None] is for recovery curves
         self.current_selection = {}  # rlz_or_stat -> feature_id -> curve
@@ -451,8 +451,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.create_stats_multiselect()
             self.stats_multiselect.selection_changed.connect(
                 self.refresh_feature_selection)
-        elif new_output_type == 'loss_curves':
-            self.create_loss_type_selector()
         elif new_output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
             self.create_loss_type_selector()
         elif new_output_type == 'dmg_by_asset_aggr':
@@ -851,18 +849,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 title = 'Hazard curve for %s' % imt
             else:
                 title = 'Hazard curves for %s' % imt
-        elif self.output_type == 'loss_curves':
-            self.plot.set_xscale('log')
-            self.plot.set_yscale('linear')
-            self.plot.set_xlabel('Losses')
-            self.plot.set_ylabel('Probability of exceedance')
-            loss_type = self.loss_type_cbx.currentText()
-            if count_lines == 0:
-                title = ''
-            elif count_lines == 1:
-                title = 'Loss curve for %s' % loss_type
-            else:
-                title = 'Loss curves for %s' % loss_type
         elif self.output_type == 'uhs':
             self.plot.set_xscale('linear')
             self.plot.set_yscale('linear')
@@ -984,27 +970,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                             == selected_rlzs_or_stats[0])
                         and field_name.split('_')[1] == imt]
                 self.current_abscissa = imls
-            elif self.output_type == 'loss_curves':
-                err_msg = ("The selected layer does not contain loss"
-                           " curves in the expected format.")
-                try:
-                    data_str = feature[self.current_loss_type]
-                except KeyError:
-                    log_msg(err_msg, level='C',
-                            message_bar=self.iface.messageBar())
-                    self.output_type_cbx.setCurrentIndex(-1)
-                    return
-                data_dic = json.loads(data_str)
-                try:
-                    self.current_abscissa = data_dic['losses']
-                except KeyError:
-                    log_msg(err_msg, level='C',
-                            message_bar=self.iface.messageBar())
-                    self.output_type_cbx.setCurrentIndex(-1)
-                    return
-                # for a single loss type, the losses are always
-                # the same, so we can break the loop after the first feature
-                break
             elif self.output_type == 'uhs':
                 err_msg = ("The selected layer does not contain uniform"
                            " hazard spectra in the expected format.")
@@ -1130,6 +1095,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.draw()
 
     def layer_changed(self):
+        self.calc_id = None
         self.clear_plot()
         if hasattr(self, 'self.imt_cbx'):
             self.clear_imt_cbx()
@@ -1166,11 +1132,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 # Select all stats by default
                 self.stats_multiselect.add_selected_items(self.rlzs_or_stats)
                 self.stats_multiselect.setEnabled(len(self.rlzs_or_stats) > 1)
-            elif self.output_type == 'loss_curves':
-                reload_attrib_cbx(self.loss_type_cbx,
-                                  self.iface.activeLayer(),
-                                  False,
-                                  TEXTUAL_FIELD_TYPES)
             elif self.output_type == 'recovery_curves':
                 fill_fields_multiselect(
                     self.fields_multiselect, self.iface.activeLayer())
@@ -1291,13 +1252,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 self,
                 self.tr('Export data'),
                 os.path.expanduser('~/uniform_hazard_spectra.csv'),
-                '*.csv')
-        elif self.output_type == 'loss_curves':
-            filename = QFileDialog.getSaveFileName(
-                self,
-                self.tr('Export data'),
-                os.path.expanduser(
-                    '~/loss_curves_%s.csv' % self.current_loss_type),
                 '*.csv')
         elif self.output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
             filename = QFileDialog.getSaveFileName(
