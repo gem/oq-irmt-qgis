@@ -490,6 +490,12 @@ class Irmt:
             self.drive_oq_engine_server_dlg.reject()
             self.drive_oq_engine_server_dlg = None
 
+    def on_same_fs(self, checksum_file_path, local_checksum):
+        # initialize drive_oq_engine_server_dlg dialog without displaying it
+        self.drive_oq_engine_server(show=False)
+        return self.drive_oq_engine_server_dlg.on_same_fs(
+            checksum_file_path, local_checksum)
+
     def reset_engine_login(self):
         if self.drive_oq_engine_server_dlg is not None:
             self.drive_oq_engine_server_dlg.is_logged_in = False

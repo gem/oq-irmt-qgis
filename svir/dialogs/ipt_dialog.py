@@ -27,6 +27,7 @@ from shutil import copyfile
 from qgis.PyQt.QtGui import QPushButton, QLineEdit, QHBoxLayout, QFileDialog
 from qgis.PyQt.QtCore import QUrl, pyqtSlot, QSettings, QDir, QFileInfo
 from qgis.PyQt.QtNetwork import QNetworkRequest, QHttpMultiPart, QHttpPart
+from qgis.gui import QgsMessageBar
 from svir.dialogs.standalone_app_dialog import StandaloneAppDialog, GemApi
 from svir.utilities.shared import DEBUG, REQUEST_ATTRS
 
@@ -79,12 +80,17 @@ class IptPythonApi(GemApi):
         """
         Check if the engine server has access to the ipt_dir
         """
-        checksum_file_path, local_checksum = \
-            self.parent().irmt.get_ipt_checksum()
-        self.parent().irmt.drive_oq_engine_server(show=False)
-        on_same_fs = self.parent().irmt.drive_oq_engine_server_dlg.on_same_fs(
-            checksum_file_path, local_checksum)
-        os.remove(checksum_file_path)
+        try:
+            checksum_file_path, local_checksum = \
+                self.parent().irmt.get_ipt_checksum()
+            on_same_fs = self.parent().irmt.on_same_fs(
+                checksum_file_path, local_checksum)
+        except Exception as exc:
+            self.parent().message_bar.pushMessage(
+                str(exc), level=QgsMessageBar.CRITICAL)
+            return False
+        finally:
+            os.remove(checksum_file_path)
         return on_same_fs
 
     @pyqtSlot(result='QVariantMap')
