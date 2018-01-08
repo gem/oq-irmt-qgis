@@ -354,26 +354,28 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.list_of_outputs_lbl.setText('List of outputs')
         self.download_datastore_btn.setEnabled(False)
         self.download_datastore_btn.setText(
-            'Download HDF5 datastore for calculation')
+            'Download HDF5 datastore')
+        self.show_calc_params_btn.setEnabled(False)
+        self.show_calc_params_btn.setText(
+            'Show calculation parameters')
 
     def update_output_list(self, calc_id):
         calc_status = self.get_calc_status(calc_id)
-        if calc_status['status'] == 'complete':
-            self.clear_output_list()
-            output_list = self.get_output_list(calc_id)
-            self.list_of_outputs_lbl.setText(
-                'List of outputs for calculation %s' % calc_id)
-            # from engine2.5 to engine2.6, job_type was changed into
-            # calculation_mode. This check prevents the plugin to break wnen
-            # using an old version of the engine.
-            self.show_output_list(
-                output_list, calc_status.get('calculation_mode', 'unknown'))
-            self.download_datastore_btn.setEnabled(True)
-            self.download_datastore_btn.setText(
-                'Download HDF5 datastore for calculation %s'
-                % self.current_output_calc_id)
-        else:
-            self.clear_output_list()
+        self.clear_output_list()
+        if calc_status['status'] != 'complete':
+            return
+        output_list = self.get_output_list(calc_id)
+        self.list_of_outputs_lbl.setText(
+            'List of outputs for calculation %s' % calc_id)
+        # from engine2.5 to engine2.6, job_type was changed into
+        # calculation_mode. This check prevents the plugin to break wnen
+        # using an old version of the engine.
+        self.show_output_list(
+            output_list, calc_status.get('calculation_mode', 'unknown'))
+        self.download_datastore_btn.setEnabled(True)
+        self.download_datastore_btn.setText(
+            'Download HDF5 datastore for calculation %s'
+            % self.current_output_calc_id)
 
     def on_calc_action_btn_clicked(self, calc_id, action):
         # NOTE: while scrolling through the list of calculations, the tool
@@ -451,6 +453,12 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         if resp.ok:
             msg = 'Calculation %s successfully removed' % calc_id
             log_msg(msg, level='I', message_bar=self.message_bar)
+            if self.current_output_calc_id == calc_id:
+                self.current_output_calc_id = None
+                self.clear_output_list()
+            if self.current_pointed_calc_id == calc_id:
+                self.current_pointed_calc_id = None
+                self.clear_output_list()
             self.refresh_calc_list()
         else:
             msg = 'Unable to remove calculation %s' % calc_id
