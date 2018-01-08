@@ -1299,7 +1299,7 @@ class Irmt:
                     level = 'I' if not invalid_input_values else 'W'
                     log_msg(msg, level=level,
                             message_bar=self.iface.messageBar())
-                except (ValueError, NotImplementedError) as e:
+                except (ValueError, NotImplementedError, TypeError) as e:
                     log_msg(e.message, level='C',
                             message_bar=self.iface.messageBar())
                 else:  # only if the transformation was performed successfully

@@ -544,13 +544,18 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 # aggregate losses by zone (calculate count of points in the
                 # zone, sum and average loss values for the same zone)
                 loss_layer_is_vector = True
-                res = calculate_zonal_stats(loss_layer,
-                                            zonal_layer,
-                                            loss_attr_names,
-                                            loss_layer_is_vector,
-                                            zone_id_in_losses_attr_name,
-                                            zone_id_in_zones_attr_name,
-                                            self.iface)
+                try:
+                    res = calculate_zonal_stats(loss_layer,
+                                                zonal_layer,
+                                                loss_attr_names,
+                                                loss_layer_is_vector,
+                                                zone_id_in_losses_attr_name,
+                                                zone_id_in_zones_attr_name,
+                                                self.iface)
+                except TypeError as exc:
+                    log_msg(str(exc), level='C',
+                            message_bar=self.iface.messageBar())
+                    return
                 (loss_layer, zonal_layer, loss_attrs_dict) = res
         elif self.output_type in OQ_CSV_LOADABLE_TYPES:
             self.load_from_csv()

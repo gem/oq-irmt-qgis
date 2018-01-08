@@ -113,9 +113,12 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         return field_names
 
     def add_field_to_layer(self, field_name):
-        # NOTE: add_numeric_attribute uses LayerEditingManager
-        added_field_name = add_numeric_attribute(
-            field_name, self.layer)
+        try:
+            # NOTE: add_numeric_attribute uses LayerEditingManager
+            added_field_name = add_numeric_attribute(field_name, self.layer)
+        except TypeError as exc:
+            log_msg(str(exc), level='C', message_bar=self.iface.messageBar())
+            return
         return added_field_name
 
     def read_npz_into_layer(self, field_names, **kwargs):
