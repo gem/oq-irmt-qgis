@@ -22,6 +22,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
+import qgis  # NOQA: it loads the environment
+
 import os.path
 import tempfile
 import uuid
@@ -560,6 +562,8 @@ class Irmt:
 
         # remove connects
         self.iface.currentLayerChanged.disconnect(self.current_layer_changed)
+        self.iface.newProjectCreated.disconnect(self.current_layer_changed)
+        self.iface.projectRead.disconnect(self.current_layer_changed)
         QgsMapLayerRegistry.instance().layersAdded.disconnect(
             self.layers_added)
         QgsMapLayerRegistry.instance().layersRemoved.disconnect(
