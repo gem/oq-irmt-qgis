@@ -44,7 +44,7 @@ from svir.utilities.shared import DEBUG, DOUBLE_FIELD_TYPE_NAME
 from svir.utilities.utils import LayerEditingManager, tr, log_msg
 
 
-class ProcessLayer():
+class ProcessLayer(object):
     """
     Set of utilities to manage a layer or compare layers.
 
@@ -85,7 +85,7 @@ class ProcessLayer():
         ppdata = pformat(
             [feature.attributes()
              for feature in self.layer.getFeatures()])
-        logger_func(spacer + ppdata)
+        logger_func(spacer + ppdata + spacer)
 
     def has_same_projection_as(self, other_layer):
         """

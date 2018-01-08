@@ -22,6 +22,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
+import qgis  # NOQA: it loads the environment
+
 import os.path
 import tempfile
 import uuid
@@ -303,26 +305,9 @@ class Irmt:
                            self.load_losses_by_asset_as_layer,
                            enable=True,
                            submenu='OQ Engine')
-        # # Action to plot total damage reading it from a NPZ produced by a
-        # # scenario damage calculation
-        # self.add_menu_item("plot_dmg_total",
-        #                    ":/plugins/irmt/copy.svg",
-        #                    u"Plot total damage from NPZ",
-        #                    self.plot_dmg_total_from_npz,
-        #                    enable=True,
-        #                    submenu='OQ Engine')
-        # # Action to plot damage by taxonomy reading it from a NPZ produced
-        # # by a scenario damage calculation
-        # self.add_menu_item("plot_dmg_by_taxon",
-        #                    ":/plugins/irmt/copy.svg",
-        #                    u"Plot damage by taxonomy from NPZ",
-        #                    self.plot_dmg_by_taxon_from_npz,
-        #                    enable=True,
-        #                    submenu='OQ Engine')
 
-        # Action to activate the modal dialog to select a layer and one
-        # of its
-        # attributes, in order to transform that attribute
+        # Action to activate the modal dialog to select a layer and one of
+        # its attributes, in order to transform that attribute
         self.add_menu_item("transform_attributes",
                            ":/plugins/irmt/transform.svg",
                            u"&Transform attributes",
@@ -408,15 +393,6 @@ class Irmt:
     def load_losses_by_asset_as_layer(self):
         dlg = LoadLossesByAssetAsLayerDialog(self.iface, 'losses_by_asset')
         dlg.exec_()
-
-    # These 2 will have to be addressed when managing risk outputs
-    # def plot_dmg_total_from_npz(self):
-    #     dlg = PlotFromNpzDialog(self.iface, 'dmg_total')
-    #     dlg.exec_()
-
-    # def plot_dmg_by_taxon_from_npz(self):
-    #     dlg = PlotFromNpzDialog(self.iface, 'dmg_by_taxon')
-    #     dlg.exec_()
 
     def drive_oq_engine_server(self):
         if self.drive_oq_engine_server_dlg is None:
@@ -586,6 +562,8 @@ class Irmt:
 
         # remove connects
         self.iface.currentLayerChanged.disconnect(self.current_layer_changed)
+        self.iface.newProjectCreated.disconnect(self.current_layer_changed)
+        self.iface.projectRead.disconnect(self.current_layer_changed)
         QgsMapLayerRegistry.instance().layersAdded.disconnect(
             self.layers_added)
         QgsMapLayerRegistry.instance().layersRemoved.disconnect(
@@ -1325,7 +1303,7 @@ class Irmt:
                     level = 'I' if not invalid_input_values else 'W'
                     log_msg(msg, level=level,
                             message_bar=self.iface.messageBar())
-                except (ValueError, NotImplementedError) as e:
+                except (ValueError, NotImplementedError, TypeError) as e:
                     log_msg(e.message, level='C',
                             message_bar=self.iface.messageBar())
                 else:  # only if the transformation was performed successfully

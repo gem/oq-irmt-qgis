@@ -23,6 +23,8 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 # import qgis libs so that we set the correct sip api version
+import qgis  # NOQA
+
 import os
 import unittest
 import tempfile
@@ -170,6 +172,7 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
             IFACE, self.viewer_dock, 'losses_by_asset', loss_layer_path,
             zonal_layer_path=zonal_layer_path)
         dlg.load_selected_only_ckb.setChecked(True)
+        dlg.zonal_layer_gbx.setChecked(True)
         taxonomy_idx = dlg.taxonomy_cbx.findText('All')
         self.assertNotEqual(taxonomy_idx, -1, 'Taxonomy All was not found')
         dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
@@ -244,6 +247,7 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
             IFACE, self.viewer_dock, 'dmg_by_asset', dmg_layer_path,
             zonal_layer_path=zonal_layer_path)
         dlg.load_selected_only_ckb.setChecked(True)
+        dlg.zonal_layer_gbx.setChecked(True)
         taxonomy_idx = dlg.taxonomy_cbx.findText('All')
         self.assertNotEqual(taxonomy_idx, -1, 'Taxonomy All was not found')
         dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
