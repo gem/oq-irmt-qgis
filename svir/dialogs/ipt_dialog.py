@@ -27,7 +27,6 @@ from shutil import copyfile
 from qgis.PyQt.QtGui import QPushButton, QLineEdit, QHBoxLayout, QFileDialog
 from qgis.PyQt.QtCore import QUrl, pyqtSlot, QSettings, QDir, QFileInfo
 from qgis.PyQt.QtNetwork import QNetworkRequest, QHttpMultiPart, QHttpPart
-from qgis.gui import QgsMessageBar
 from svir.dialogs.standalone_app_dialog import StandaloneAppDialog, GemApi
 from svir.utilities.shared import DEBUG, REQUEST_ATTRS
 
@@ -86,8 +85,7 @@ class IptPythonApi(GemApi):
             on_same_fs = self.parent().irmt.on_same_fs(
                 checksum_file_path, local_checksum)
         except Exception as exc:
-            self.parent().message_bar.pushMessage(
-                str(exc), level=QgsMessageBar.CRITICAL)
+            self.common.error(str(exc))
             return False
         finally:
             os.remove(checksum_file_path)
