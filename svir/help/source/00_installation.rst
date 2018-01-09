@@ -25,7 +25,7 @@ On Fedora and similar:
 
 .. code-block:: bash
 
-    $ sudo dnf install python-scipy python-matplotlib
+    $ sudo dnf install python2-scipy python2-matplotlib python2-matplotlib-qt4
 
 For geospatial analysis, the plugin leverages SAGA `Clip points with polygons` algorithm.
 In case SAGA is not installed or its version is too outdated, the plugin is able to perform
