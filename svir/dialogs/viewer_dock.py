@@ -79,7 +79,7 @@ FORM_CLASS = get_ui_class('ui_viewer_dock.ui')
 
 
 class ViewerDock(QDockWidget, FORM_CLASS):
-    def __init__(self, iface, action):
+    def __init__(self, iface, action, testing=False):
         """Constructor for the viewer dock.
 
         :param iface: A QGisAppInterface instance we use to access QGIS via.
@@ -151,9 +151,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             ('agg_curves-stats', 'Aggregated loss curves (statistics)'),
             ('dmg_by_asset_aggr', 'Damage distribution'),
             ('losses_by_asset_aggr', 'Loss distribution')])
-        if QSettings().value('/irmt/experimental_enabled', False, type=bool):
-            self.output_types_names.update(
-                {'recovery_curves': 'Recovery Curves'})
+        if (testing or QSettings().value('/irmt/experimental_enabled',
+                                         False, type=bool)):
+                self.output_types_names.update(
+                    {'recovery_curves': 'Recovery Curves'})
         self.output_type_cbx.addItems(self.output_types_names.values())
 
         self.plot_figure = Figure()

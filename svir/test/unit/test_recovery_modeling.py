@@ -76,7 +76,7 @@ class DeterministicTestCase(unittest.TestCase):
 
     def test_gui_building_aggregate(self):
         mock_action = QAction(IFACE.mainWindow())
-        self.viewer_dock = ViewerDock(IFACE, mock_action)
+        self.viewer_dock = ViewerDock(IFACE, mock_action, testing=True)
         IFACE.setActiveLayer(self.dmg_by_asset_layer)
         output_type = 'Recovery Curves'
         idx = self.viewer_dock.output_type_cbx.findText(output_type)
