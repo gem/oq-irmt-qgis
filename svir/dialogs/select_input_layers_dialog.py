@@ -153,13 +153,17 @@ class SelectInputLayersDialog(QDialog, FORM_CLASS):
          zone_id_in_zones_attr_name) = ret_val
         # aggregate losses by zone (calculate count of points in the
         # zone, sum and average loss values for the same zone)
-        res = calculate_zonal_stats(loss_layer,
-                                    zonal_layer,
-                                    loss_attr_names,
-                                    loss_layer_is_vector,
-                                    zone_id_in_losses_attr_name,
-                                    zone_id_in_zones_attr_name,
-                                    self.iface)
+        try:
+            res = calculate_zonal_stats(loss_layer,
+                                        zonal_layer,
+                                        loss_attr_names,
+                                        loss_layer_is_vector,
+                                        zone_id_in_losses_attr_name,
+                                        zone_id_in_zones_attr_name,
+                                        self.iface)
+        except TypeError as exc:
+            log_msg(str(exc), level='C', message_bar=self.iface.messageBar())
+            return
         (loss_layer, zonal_layer, loss_attrs_dict) = res
 
         if self.purge_chk.isChecked():
