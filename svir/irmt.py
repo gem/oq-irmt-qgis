@@ -349,6 +349,11 @@ class Irmt:
                 return action.menu()
         return None
 
+    def experimental_enabled(self):
+        experimental_enabled = QSettings().value(
+            '/irmt/experimental_enabled', False, type=bool)
+        return experimental_enabled
+
     def recovery_modeling(self):
         if IS_SCIPY_INSTALLED:
             dlg = RecoveryModelingDialog(self.iface)
