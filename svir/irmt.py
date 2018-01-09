@@ -237,14 +237,14 @@ class Irmt:
                            ":/plugins/irmt/recovery.svg",
                            u"Run recovery modeling",
                            self.recovery_modeling,
-                           enable=True,
+                           enable=self.experimental_enabled(),
                            submenu='Recovery modeling')
         # Action to set the recovery modeling parameters
         self.add_menu_item("recovery_settings",
                            ":/plugins/irmt/recovery_settings.svg",
                            u"Recovery modeling settings",
                            self.recovery_settings,
-                           enable=True,
+                           enable=self.experimental_enabled(),
                            submenu='Recovery modeling')
         # Action to activate the modal dialog to guide the user through loss
         # aggregation by zone

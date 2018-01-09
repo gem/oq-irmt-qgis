@@ -150,8 +150,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             ('agg_curves-rlzs', 'Aggregated loss curves (realizations)'),
             ('agg_curves-stats', 'Aggregated loss curves (statistics)'),
             ('dmg_by_asset_aggr', 'Damage distribution'),
-            ('losses_by_asset_aggr', 'Loss distribution'),
-            ('recovery_curves', 'Recovery Curves')])
+            ('losses_by_asset_aggr', 'Loss distribution')])
+        if QSettings().value('/irmt/experimental_enabled', False, type=bool):
+            self.output_types_names.update(
+                {'recovery_curves': 'Recovery Curves'})
         self.output_type_cbx.addItems(self.output_types_names.values())
 
         self.plot_figure = Figure()
