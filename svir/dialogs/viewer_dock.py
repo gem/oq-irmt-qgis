@@ -83,7 +83,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         """Constructor for the viewer dock.
 
         :param iface: A QGisAppInterface instance we use to access QGIS via.
-        :type iface: QgsAppInterface
+        :param action: needed to uncheck the toolbar button on close
+        :param testing: while testing, we need to enable experimental features,
+            regardless from the user defined settings
         .. note:: We use the multiple inheritance approach from Qt4 so that
             for elements are directly accessible in the form context and we can
             use autoconnect to set up slots. See article below:
