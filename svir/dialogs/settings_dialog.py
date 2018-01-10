@@ -154,7 +154,7 @@ class SettingsDialog(QDialog, FORM_CLASS):
         self.style_classes.setValue(style['classes'])
         self.force_restyling_ckb.setChecked(style['force_restyling'])
 
-        self.developermodeCheck.setChecked(developer_mode)
+        self.developer_mode_ckb.setChecked(developer_mode)
         self.enable_experimental_ckb.setChecked(experimental_enabled)
 
     def set_button_color(self, button, color):
@@ -177,7 +177,7 @@ class SettingsDialog(QDialog, FORM_CLASS):
             else engine_hostname)
 
         mySettings.setValue('irmt/developer_mode',
-                            self.developermodeCheck.isChecked())
+                            self.developer_mode_ckb.isChecked())
         mySettings.setValue('irmt/experimental_enabled',
                             self.enable_experimental_ckb.isChecked())
         mySettings.setValue('irmt/platform_hostname', platform_hostname)

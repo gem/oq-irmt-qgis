@@ -258,7 +258,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QCheckBox" name="developermodeCheck">
+       <widget class="QCheckBox" name="developer_mode_ckb">
         <property name="toolTip">
          <string>It is recommended to keep it unchecked</string>
         </property>
