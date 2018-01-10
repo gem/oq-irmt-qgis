@@ -246,15 +246,10 @@ class SettingsDialog(QDialog, FORM_CLASS):
         # in case the engine hostname was modified, the embedded web apps that
         # were using the old hostname must be refreshed using the new one
         if current_engine_hostname != self.initial_engine_hostname:
-            # TODO: we might keep a register of web apps and run this kind of
-            # refresh on all the registered items
-            if self.irmt_main.ipt_dlg is not None:
-                self.irmt_main.ipt_dlg.set_host()
-                self.irmt_main.ipt_dlg.load_homepage()
-            if self.irmt_main.taxtweb_dlg is not None:
-                self.irmt_main.taxtweb_dlg.set_host()
-                self.irmt_main.taxtweb_dlg.load_homepage()
-            if self.irmt_main.taxonomy_dlg is not None:
-                self.irmt_main.taxonomy_dlg.set_host()
-                self.irmt_main.taxonomy_dlg.load_homepage()
+            for dlg in (self.irmt_main.ipt_dlg,
+                        self.irmt_main.taxtweb_dlg,
+                        self.irmt_main.taxonomy_dlg):
+                if dlg is not None:
+                    dlg.set_host()
+                    dlg.load_homepage()
         super(SettingsDialog, self).accept()
