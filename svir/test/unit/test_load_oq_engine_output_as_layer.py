@@ -31,7 +31,7 @@ import tempfile
 import csv
 from numpy.testing import assert_almost_equal
 
-from PyQt4.QtGui import QAction
+from qgis.PyQt.QtGui import QAction
 from qgis.core import QgsVectorLayer
 from svir.dialogs.load_dmg_by_asset_as_layer_dialog import (
     LoadDmgByAssetAsLayerDialog)

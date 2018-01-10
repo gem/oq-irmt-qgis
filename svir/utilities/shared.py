@@ -24,8 +24,8 @@
 
 import os
 from collections import OrderedDict
-from PyQt4.QtCore import QSettings
-from PyQt4.QtGui import QColor
+from qgis.PyQt.QtCore import QSettings
+from qgis.PyQt.QtGui import QColor
 from ConfigParser import ConfigParser
 from qgis.core import QgsGraduatedSymbolRendererV2
 

@@ -45,18 +45,18 @@ from qgis.core import (QgsVectorLayer,
                        )
 from qgis.gui import QgsMessageBar
 
-from PyQt4.QtCore import (QSettings,
-                          QTranslator,
-                          QCoreApplication,
-                          qVersion,
-                          QUrl,
-                          Qt)
-from PyQt4.QtGui import (QAction,
-                         QIcon,
-                         QFileDialog,
-                         QDesktopServices,
-                         QApplication,
-                         QMenu)
+from qgis.PyQt.QtCore import (QSettings,
+                              QTranslator,
+                              QCoreApplication,
+                              qVersion,
+                              QUrl,
+                              Qt)
+from qgis.PyQt.QtGui import (QAction,
+                             QIcon,
+                             QFileDialog,
+                             QDesktopServices,
+                             QApplication,
+                             QMenu)
 
 from svir.dialogs.viewer_dock import ViewerDock
 from svir.utilities.import_sv_data import get_loggedin_downloader

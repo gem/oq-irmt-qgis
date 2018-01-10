@@ -32,12 +32,12 @@ from qgis.core import (QgsVectorLayer,
                        QgsMapLayer,
                        )
 
-from PyQt4.QtCore import pyqtSlot, QDir, QUrl, QSettings, QFileInfo
+from qgis.PyQt.QtCore import pyqtSlot, QDir, QUrl, QSettings, QFileInfo
 
-from PyQt4.QtGui import (QFileDialog,
-                         QDialog,
-                         QDialogButtonBox,
-                         QMessageBox)
+from qgis.PyQt.QtGui import (QFileDialog,
+                             QDialog,
+                             QDialogButtonBox,
+                             QMessageBox)
 from svir.calculations.aggregate_loss_by_zone import (
     calculate_zonal_stats,
     purge_zones_without_loss_points)

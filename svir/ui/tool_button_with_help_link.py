@@ -15,8 +15,8 @@ __revision__ = '$Format:%H$'
 __date__ = '26/11/2015'
 
 
-from PyQt4.QtCore import QUrl, QEvent
-from PyQt4.QtGui import QToolButton, QWhatsThis, QDesktopServices
+from qgis.PyQt.QtCore import QUrl, QEvent
+from qgis.PyQt.QtGui import QToolButton, QWhatsThis, QDesktopServices
 
 
 class QToolButtonWithHelpLink(QToolButton):
