@@ -28,7 +28,7 @@ import uuid
 from numpy.testing import assert_almost_equal
 from pprint import pformat
 from types import NoneType
-from PyQt4.QtCore import QPyNullVariant
+from qgis.PyQt.QtCore import QPyNullVariant
 from qgis.core import (QgsMapLayer,
                        QGis,
                        QgsVectorLayer,
@@ -36,7 +36,7 @@ from qgis.core import (QgsMapLayer,
                        QgsMapLayerRegistry,
                        QgsField)
 
-from PyQt4.QtCore import QVariant
+from qgis.PyQt.QtCore import QVariant
 from svir.calculations.transformation_algs import TRANSFORMATION_ALGS, \
     transform
 from svir.utilities.shared import DEBUG, DOUBLE_FIELD_TYPE_NAME

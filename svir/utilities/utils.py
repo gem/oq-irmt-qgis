@@ -39,14 +39,14 @@ from qgis.core import (QgsMapLayerRegistry,
                        )
 from qgis.gui import QgsMessageBar
 
-from PyQt4 import uic
-from PyQt4.QtCore import Qt, QSettings, QUrl
-from PyQt4.QtGui import (QApplication,
-                         QProgressBar,
-                         QToolButton,
-                         QFileDialog,
-                         QMessageBox,
-                         QColor)
+from qgis.PyQt import uic
+from qgis.PyQt.QtCore import Qt, QSettings, QUrl
+from qgis.PyQt.QtGui import (QApplication,
+                             QProgressBar,
+                             QToolButton,
+                             QFileDialog,
+                             QMessageBox,
+                             QColor)
 
 from svir.third_party.poster.encode import multipart_encode
 from svir.utilities.shared import DEBUG, DEFAULT_SETTINGS

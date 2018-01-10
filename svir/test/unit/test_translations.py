@@ -20,7 +20,7 @@ __copyright__ = ('Copyright 2012, Australia Indonesia Facility for '
 import unittest
 import os
 
-from PyQt4.QtCore import QCoreApplication, QTranslator
+from qgis.PyQt.QtCore import QCoreApplication, QTranslator
 
 QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 

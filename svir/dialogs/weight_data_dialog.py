@@ -25,17 +25,17 @@
 from copy import deepcopy
 import json
 
-from PyQt4.QtCore import (Qt,
-                          QUrl,
-                          QSettings,
-                          pyqtProperty,
-                          pyqtSignal,
-                          pyqtSlot,
-                          )
-from PyQt4.QtGui import (QDialog,
-                         QDialogButtonBox,
-                         QPrinter,
-                         )
+from qgis.PyQt.QtCore import (Qt,
+                              QUrl,
+                              QSettings,
+                              pyqtProperty,
+                              pyqtSignal,
+                              pyqtSlot,
+                              )
+from qgis.PyQt.QtGui import (QDialog,
+                             QDialogButtonBox,
+                             QPrinter,
+                             )
 
 from svir.utilities.shared import (DEFAULT_OPERATOR,
                                    OPERATORS_DICT,
