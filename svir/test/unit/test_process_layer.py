@@ -27,7 +27,7 @@ import os.path
 import unittest
 from qgis.core import QgsVectorLayer, QgsField
 
-from qgis.PyQt.QtCore import QVariant
+from PyQt4.QtCore import QVariant
 
 from svir.calculations.process_layer import ProcessLayer
 from svir.utilities.shared import (INT_FIELD_TYPE_NAME,

@@ -26,7 +26,7 @@
 
 import unittest
 
-from qgis.PyQt.QtGui import QIcon
+from PyQt4.QtGui import QIcon
 
 from svir.test.utilities import get_qgis_app
 QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()

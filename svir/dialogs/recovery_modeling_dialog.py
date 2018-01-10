@@ -24,10 +24,10 @@
 
 import os
 import csv
-from qgis.PyQt.QtCore import pyqtSlot, QSettings, QDir
-from qgis.PyQt.QtGui import (QDialog,
-                             QFileDialog,
-                             QDialogButtonBox)
+from PyQt4.QtCore import pyqtSlot, QSettings, QDir
+from PyQt4.QtGui import (QDialog,
+                         QFileDialog,
+                         QDialogButtonBox)
 from qgis.core import QgsMapLayer, QgsMapLayerRegistry, QGis
 from svir.calculations.aggregate_loss_by_zone import add_zone_id_to_points
 from svir.utilities.utils import (get_ui_class,

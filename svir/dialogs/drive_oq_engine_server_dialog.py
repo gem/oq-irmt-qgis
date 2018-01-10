@@ -28,24 +28,24 @@ import tempfile
 import zipfile
 import copy
 
-from qgis.PyQt.QtCore import (QDir,
-                              Qt,
-                              QObject,
-                              SIGNAL,
-                              QTimer,
-                              pyqtSlot,
-                              QFileInfo,
-                              QSettings,
-                              )
+from PyQt4.QtCore import (QDir,
+                          Qt,
+                          QObject,
+                          SIGNAL,
+                          QTimer,
+                          pyqtSlot,
+                          QFileInfo,
+                          QSettings,
+                          )
 
-from qgis.PyQt.QtGui import (QDialog,
-                             QTableWidgetItem,
-                             QAbstractItemView,
-                             QPushButton,
-                             QFileDialog,
-                             QColor,
-                             QMessageBox,
-                             )
+from PyQt4.QtGui import (QDialog,
+                         QTableWidgetItem,
+                         QAbstractItemView,
+                         QPushButton,
+                         QFileDialog,
+                         QColor,
+                         QMessageBox,
+                         )
 from qgis.gui import QgsMessageBar
 from svir.third_party.requests import Session
 from svir.third_party.requests.exceptions import (ConnectionError,

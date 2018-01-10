@@ -26,7 +26,7 @@
 import math
 from numpy import mean, std, argwhere, amax, amin, log10, log
 from types import NoneType
-from qgis.PyQt.QtCore import QPyNullVariant
+from PyQt4.QtCore import QPyNullVariant
 
 from svir.utilities.utils import Register
 

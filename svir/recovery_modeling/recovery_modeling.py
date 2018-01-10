@@ -34,7 +34,7 @@ except ImportError as exc:
         ' a 64bit version of QGIS on Windows, please try using'
         ' a 32bit version instead. %s' % exc)
 from collections import defaultdict
-from qgis.PyQt.QtCore import QSettings
+from PyQt4.QtCore import QSettings
 from svir.recovery_modeling.building import Building
 from svir.utilities.utils import (
                                   create_progress_message_bar,

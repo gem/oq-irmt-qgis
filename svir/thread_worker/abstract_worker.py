@@ -23,12 +23,12 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import traceback
-from qgis.PyQt import QtCore
+from PyQt4 import QtCore
 from qgis.core import QgsMessageLog
 from qgis.gui import QgsMessageBar
 
-from qgis.PyQt.QtCore import Qt, QThread
-from qgis.PyQt.QtGui import QProgressBar, QPushButton
+from PyQt4.QtCore import Qt, QThread
+from PyQt4.QtGui import QProgressBar, QPushButton
 
 from svir.utilities.utils import tr, UserAbortedNotification
 

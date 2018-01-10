@@ -22,10 +22,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-from qgis.PyQt.QtCore import pyqtSlot
-from qgis.PyQt.QtGui import (QDialog,
-                             QDialogButtonBox,
-                             )
+from PyQt4.QtCore import pyqtSlot
+from PyQt4.QtGui import (QDialog,
+                         QDialogButtonBox,
+                         )
 
 from svir.utilities.utils import tr, get_ui_class
 from svir.utilities.shared import NUMERIC_FIELD_TYPES

@@ -26,10 +26,13 @@ import os
 from qgis.core import QgsRuleBasedRendererV2
 from qgis.gui import QgsMessageBar
 
-from qgis.PyQt.QtCore import Qt, QUrl, QSettings, pyqtSignal
-from qgis.PyQt.QtGui import QDialog, QSizePolicy, QDialogButtonBox
-from qgis.PyQt.QtNetwork import QNetworkCookieJar, QNetworkCookie
-from qgis.PyQt.QtWebKit import QWebSettings
+from PyQt4.QtCore import (Qt,
+                          QUrl,
+                          QSettings,
+                          pyqtSignal)
+from PyQt4.QtGui import (QDialog, QSizePolicy, QDialogButtonBox)
+from PyQt4.QtNetwork import QNetworkCookieJar, QNetworkCookie
+from PyQt4.QtWebKit import QWebSettings
 
 from svir.thread_worker.abstract_worker import start_worker
 from svir.thread_worker.upload_worker import UploadWorker

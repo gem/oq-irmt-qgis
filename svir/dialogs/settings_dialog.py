@@ -23,8 +23,8 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from qgis.PyQt.QtCore import pyqtSlot, QSettings, Qt
-from qgis.PyQt.QtGui import QDialog, QPalette, QColorDialog, QMessageBox
+from PyQt4.QtCore import pyqtSlot, QSettings, Qt
+from PyQt4.QtGui import QDialog, QPalette, QColorDialog, QMessageBox
 
 from qgis.core import QgsGraduatedSymbolRendererV2, QgsProject
 

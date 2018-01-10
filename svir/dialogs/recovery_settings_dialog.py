@@ -23,10 +23,10 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import json
-from qgis.PyQt.QtCore import pyqtSlot, QSettings, Qt
-from qgis.PyQt.QtGui import (QDialog,
-                             QTableWidgetItem,
-                             QDialogButtonBox)
+from PyQt4.QtCore import pyqtSlot, QSettings, Qt
+from PyQt4.QtGui import (QDialog,
+                         QTableWidgetItem,
+                         QDialogButtonBox)
 from qgis.core import QgsProject
 from svir.utilities.utils import (get_ui_class,
                                   get_layer_setting,

@@ -32,7 +32,7 @@ import json
 import copy
 from mock import Mock
 
-from qgis.PyQt.QtGui import QAction
+from PyQt4.QtGui import QAction
 from svir.third_party.requests import Session
 from svir.utilities.shared import (OQ_ALL_LOADABLE_TYPES,
                                    OQ_CSV_LOADABLE_TYPES,
