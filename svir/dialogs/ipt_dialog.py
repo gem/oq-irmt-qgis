@@ -103,9 +103,9 @@ class IptPythonApi(GemApi):
                 self.parent().parent(), 'Select file', ipt_dir)
             basename = os.path.basename(file_name)
         except Exception as exc:
-            return {'ret': 1, 'reason': str(exc)}
+            return {'ret': 1, 'content': None, 'reason': str(exc)}
         else:
-            return {'ret': basename, 'reason': 'ok'}
+            return {'ret': 0, 'content': basename, 'reason': 'ok'}
 
     @pyqtSlot(result='QVariantMap')
     def select_files(self):
@@ -119,9 +119,9 @@ class IptPythonApi(GemApi):
                 self.parent().parent(), 'Select files', ipt_dir)
             ls = [os.path.basename(file_name) for file_name in file_names]
         except Exception as exc:
-            return {'ret': 1, 'reason': str(exc)}
+            return {'ret': 1, 'content': None, 'reason': str(exc)}
         else:
-            return {'ret': ls, 'reason': 'ok'}
+            return {'ret': 0, 'content': ls, 'reason': 'ok'}
 
     @pyqtSlot(result='QVariantMap')
     def select_and_copy_files_to_ipt_dir(self):
@@ -171,9 +171,9 @@ class IptPythonApi(GemApi):
         try:
             ls = os.listdir(ipt_dir)
         except OSError as exc:
-            return {'ret': 1, 'reason': str(exc)}
+            return {'ret': 1, 'content': None, 'reason': str(exc)}
         else:
-            return {'ret': ls, 'reason': 'ok'}
+            return {'ret': 0, 'content': ls, 'reason': 'ok'}
 
     @pyqtSlot(str, result='QVariantMap')
     def rm_file_from_ipt_dir(self, file_name):

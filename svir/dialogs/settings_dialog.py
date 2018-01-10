@@ -111,6 +111,15 @@ class SettingsDialog(QDialog, FORM_CLASS):
                            else mySettings.value(
                                'irmt/engine_hostname',
                                DEFAULT_SETTINGS['engine_hostname']))
+        developer_mode = (DEFAULT_SETTINGS['developer_mode']
+                          if restore_defaults
+                          else mySettings.value(
+                              'irmt/developer_mode', False, type=bool))
+        experimental_enabled = (DEFAULT_SETTINGS['experimental_enabled']
+                                if restore_defaults
+                                else mySettings.value(
+                                    'irmt/experimental_enabled',
+                                    False, type=bool))
 
         # hack for strange mac behaviour
         if not platform_username:
@@ -147,8 +156,8 @@ class SettingsDialog(QDialog, FORM_CLASS):
         self.style_classes.setValue(style['classes'])
         self.force_restyling_ckb.setChecked(style['force_restyling'])
 
-        self.developermodeCheck.setChecked(
-                mySettings.value('irmt/developer_mode', False, type=bool))
+        self.developer_mode_ckb.setChecked(developer_mode)
+        self.enable_experimental_ckb.setChecked(experimental_enabled)
 
     def set_button_color(self, button, color):
         button.setStyleSheet("background-color: %s" % color.name())
@@ -170,7 +179,9 @@ class SettingsDialog(QDialog, FORM_CLASS):
             else engine_hostname)
 
         mySettings.setValue('irmt/developer_mode',
-                            self.developermodeCheck.isChecked())
+                            self.developer_mode_ckb.isChecked())
+        mySettings.setValue('irmt/experimental_enabled',
+                            self.enable_experimental_ckb.isChecked())
         mySettings.setValue('irmt/platform_hostname', platform_hostname)
         mySettings.setValue('irmt/platform_username',
                             self.platformUsernameEdit.text())
@@ -245,16 +256,14 @@ class SettingsDialog(QDialog, FORM_CLASS):
         current_engine_hostname = QSettings().value('irmt/engine_hostname')
         # in case the engine hostname was modified, the embedded web apps that
         # were using the old hostname must be refreshed using the new one
+        # (set_host is called in their __init__ when dialogs are created, and
+        # it needs to be called again here if those dialogs are already
+        # initialized and pointing to a previous engine server)
         if current_engine_hostname != self.initial_engine_hostname:
-            # TODO: we might keep a register of web apps and run this kind of
-            # refresh on all the registered items
-            if self.irmt_main.ipt_dlg is not None:
-                self.irmt_main.ipt_dlg.set_host()
-                self.irmt_main.ipt_dlg.load_homepage()
-            if self.irmt_main.taxtweb_dlg is not None:
-                self.irmt_main.taxtweb_dlg.set_host()
-                self.irmt_main.taxtweb_dlg.load_homepage()
-            if self.irmt_main.taxonomy_dlg is not None:
-                self.irmt_main.taxonomy_dlg.set_host()
-                self.irmt_main.taxonomy_dlg.load_homepage()
+            for dlg in (self.irmt_main.ipt_dlg,
+                        self.irmt_main.taxtweb_dlg,
+                        self.irmt_main.taxonomy_dlg):
+                if dlg is not None:
+                    dlg.set_host()
+                    dlg.load_homepage()
         super(SettingsDialog, self).accept()
