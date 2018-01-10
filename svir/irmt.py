@@ -220,7 +220,7 @@ class Irmt:
                            ":/plugins/irmt/ipt.svg",
                            u"OpenQuake Input Preparation Toolkit",
                            self.ipt,
-                           enable=True,
+                           enable=self.experimental_enabled(),
                            submenu='OQ Engine',
                            add_to_toolbar=True)
         # Action to drive taxtweb
@@ -228,7 +228,7 @@ class Irmt:
                            ":/plugins/irmt/taxtweb.svg",
                            u"OpenQuake TaxtWEB",
                            self.taxtweb,
-                           enable=True,
+                           enable=self.experimental_enabled(),
                            submenu='OQ Engine',
                            add_to_toolbar=True)
         # Action to drive taxonomy
@@ -236,7 +236,7 @@ class Irmt:
                            ":/plugins/irmt/taxonomy.svg",
                            u"OpenQuake Glossary for GEM Taxonomy",
                            self.taxonomy,
-                           enable=True,
+                           enable=self.experimental_enabled(),
                            submenu='OQ Engine',
                            add_to_toolbar=True)
         # Action to drive the oq-engine server
