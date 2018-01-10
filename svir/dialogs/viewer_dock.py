@@ -79,13 +79,11 @@ FORM_CLASS = get_ui_class('ui_viewer_dock.ui')
 
 
 class ViewerDock(QDockWidget, FORM_CLASS):
-    def __init__(self, iface, action, testing=False):
+    def __init__(self, iface, action):
         """Constructor for the viewer dock.
 
         :param iface: A QGisAppInterface instance we use to access QGIS via.
         :param action: needed to uncheck the toolbar button on close
-        :param testing: while testing, we need to enable experimental features,
-            regardless from the user defined settings
         .. note:: We use the multiple inheritance approach from Qt4 so that
             for elements are directly accessible in the form context and we can
             use autoconnect to set up slots. See article below:
@@ -153,10 +151,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             ('agg_curves-stats', 'Aggregated loss curves (statistics)'),
             ('dmg_by_asset_aggr', 'Damage distribution'),
             ('losses_by_asset_aggr', 'Loss distribution')])
-        if (testing or QSettings().value('/irmt/experimental_enabled',
-                                         False, type=bool)):
-                self.output_types_names.update(
-                    {'recovery_curves': 'Recovery Curves'})
+        if QSettings().value('/irmt/experimental_enabled', False, type=bool):
+            self.output_types_names.update(
+                {'recovery_curves': 'Recovery Curves'})
         self.output_type_cbx.addItems(self.output_types_names.values())
 
         self.plot_figure = Figure()
