@@ -88,7 +88,14 @@ class IptPythonApi(GemApi):
             self.common.error(str(exc))
             return False
         finally:
-            os.remove(checksum_file_path)
+            try:
+                os.remove(checksum_file_path)
+            except OSError as exc:
+                # the file should have just been created and it should be
+                # possible to remove it. Otherwise, we display a QGIS-side
+                # error with the reason why it was impossible to delete the
+                # file.
+                self.common.error(str(exc))
         return on_same_fs
 
     @pyqtSlot(result='QVariantMap')
