@@ -106,7 +106,9 @@ Spectra` (:numref:`fig-dataViewerUHS`).
 Visualizing aggregate loss curves
 =================================
 
-Aggregate loss curves are FIXME
+A loss exceedance curve defines the relation between a set of loss levels and the
+corresponding probability of exceedance within a given time span (e.g. one year).
+
 When the button :guilabel:`Show` is pressed, the Data Viewer is automatically
 opened, providing a dropdown menu to select one of the available loss types,
 and a tool to select multiple realizations or statistics. By default, the first

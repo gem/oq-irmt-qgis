@@ -123,6 +123,15 @@ representation of a hazard map fixes the value of IMT and computes over an area
 the corresponding probability of at least on exceedance in T; this typology of
 result is currently not supported by the OpenQuake-engine.
 
+A loss map provides the estimated losses for a collection of assets, for a
+certain return period (or probability of exceedance within a given interval of
+time). It is important to understand that these maps are not providing the
+distribution of losses for a seismic event or level of ground motion with the
+chosen return period, nor can the losses shown on the map be summed to obtain
+the corresponding aggregate loss with the same return period. This type of maps
+is simply providing the expected loss for a specified frequency of occurrence
+(or return period), for each asset.
+
 Other kinds of outputs (e.g. hazard curves and uniform hazard spectra) can be
 visualized in the IRMT Data Viewer (see :ref:`chap-viewer-dock`).
 
