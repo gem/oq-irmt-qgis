@@ -109,6 +109,15 @@ class SettingsDialog(QDialog, FORM_CLASS):
                            else mySettings.value(
                                'irmt/engine_hostname',
                                DEFAULT_SETTINGS['engine_hostname']))
+        developer_mode = (DEFAULT_SETTINGS['developer_mode']
+                          if restore_defaults
+                          else mySettings.value(
+                              'irmt/developer_mode', False, type=bool))
+        experimental_enabled = (DEFAULT_SETTINGS['experimental_enabled']
+                                if restore_defaults
+                                else mySettings.value(
+                                    'irmt/experimental_enabled',
+                                    False, type=bool))
 
         # hack for strange mac behaviour
         if not platform_username:
@@ -145,8 +154,8 @@ class SettingsDialog(QDialog, FORM_CLASS):
         self.style_classes.setValue(style['classes'])
         self.force_restyling_ckb.setChecked(style['force_restyling'])
 
-        self.developermodeCheck.setChecked(
-                mySettings.value('irmt/developer_mode', False, type=bool))
+        self.developer_mode_ckb.setChecked(developer_mode)
+        self.enable_experimental_ckb.setChecked(experimental_enabled)
 
     def set_button_color(self, button, color):
         button.setStyleSheet("background-color: %s" % color.name())
@@ -168,7 +177,9 @@ class SettingsDialog(QDialog, FORM_CLASS):
             else engine_hostname)
 
         mySettings.setValue('irmt/developer_mode',
-                            self.developermodeCheck.isChecked())
+                            self.developer_mode_ckb.isChecked())
+        mySettings.setValue('irmt/experimental_enabled',
+                            self.enable_experimental_ckb.isChecked())
         mySettings.setValue('irmt/platform_hostname', platform_hostname)
         mySettings.setValue('irmt/platform_username',
                             self.platformUsernameEdit.text())

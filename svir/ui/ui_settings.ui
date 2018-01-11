@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>501</width>
-    <height>664</height>
+    <height>727</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -251,7 +251,14 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_3">
       <item>
-       <widget class="QCheckBox" name="developermodeCheck">
+       <widget class="QCheckBox" name="enable_experimental_ckb">
+        <property name="text">
+         <string>Enable experimental features (requires restart)</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="developer_mode_ckb">
         <property name="toolTip">
          <string>It is recommended to keep it unchecked</string>
         </property>

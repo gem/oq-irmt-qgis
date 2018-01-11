@@ -237,4 +237,6 @@ DEFAULT_SETTINGS = dict(
     style_mode=QgsGraduatedSymbolRendererV2.Quantile,
     style_classes=10,
     force_restyling=True,
+    experimental_enabled=False,
+    developer_mode=False,
 )
