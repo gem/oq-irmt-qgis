@@ -23,7 +23,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-from PyQt4.QtGui import QDialog
+from qgis.PyQt.QtGui import QDialog
 from svir.utilities.utils import get_ui_class
 
 FORM_CLASS = get_ui_class('ui_text_browser.ui')

@@ -22,10 +22,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-from PyQt4.QtCore import pyqtSlot, QUrl
-from PyQt4.QtGui import (QDialog,
-                         QDialogButtonBox,
-                         QDesktopServices)
+from qgis.PyQt.QtCore import pyqtSlot, QUrl
+from qgis.PyQt.QtGui import (QDialog,
+                             QDialogButtonBox,
+                             QDesktopServices)
 from svir.dialogs.upload_dialog import UploadDialog
 from svir.metadata.metadata_utilities import write_iso_metadata_file
 from svir.third_party.requests.sessions import Session
