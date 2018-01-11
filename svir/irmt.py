@@ -108,6 +108,7 @@ from svir.utilities.utils import (tr,
                                   log_msg,
                                   save_layer_as_shapefile,
                                   get_style,
+                                  get_checksum,
                                   warn_scipy_missing)
 from svir.utilities.shared import (DEBUG,
                                    PROJECT_TEMPLATE,
@@ -455,19 +456,26 @@ class Irmt:
         self.taxonomy_dlg.show()
         self.taxonomy_dlg.raise_()
 
-    def drive_oq_engine_server(self):
+    def drive_oq_engine_server(self, show=True):
         if self.drive_oq_engine_server_dlg is None:
             self.drive_oq_engine_server_dlg = DriveOqEngineServerDialog(
                 self.iface, self.viewer_dock)
         else:
             self.drive_oq_engine_server_dlg.attempt_login()
-        self.drive_oq_engine_server_dlg.show()
-        self.drive_oq_engine_server_dlg.raise_()
+        if show:
+            self.drive_oq_engine_server_dlg.show()
+            self.drive_oq_engine_server_dlg.raise_()
         if self.drive_oq_engine_server_dlg.is_logged_in:
             self.drive_oq_engine_server_dlg.start_polling()
         else:
             self.drive_oq_engine_server_dlg.reject()
             self.drive_oq_engine_server_dlg = None
+
+    def on_same_fs(self, checksum_file_path, local_checksum):
+        # initialize drive_oq_engine_server_dlg dialog without displaying it
+        self.drive_oq_engine_server(show=False)
+        return self.drive_oq_engine_server_dlg.on_same_fs(
+            checksum_file_path, local_checksum)
 
     def reset_engine_login(self):
         if self.drive_oq_engine_server_dlg is not None:
@@ -1458,3 +1466,10 @@ class Irmt:
         if not os.path.exists(ipt_dir):
             os.makedirs(ipt_dir)
         return ipt_dir
+
+    def get_ipt_checksum(self):
+        unique_filename = ".%s" % uuid.uuid4().hex
+        checksum_file_path = os.path.join(self.ipt_dir, unique_filename)
+        with open(checksum_file_path, "w") as f:
+            f.write(os.urandom(32))
+        return checksum_file_path, get_checksum(checksum_file_path)

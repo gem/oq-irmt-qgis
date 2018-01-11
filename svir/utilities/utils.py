@@ -28,6 +28,7 @@ import json
 import os
 import sys
 import locale
+import zlib
 from copy import deepcopy
 from time import time
 from pprint import pformat
@@ -1052,3 +1053,9 @@ def get_credentials(server):
     password = qs.value('irmt/%s_password' % server,
                         DEFAULT_SETTINGS['%s_password' % server])
     return hostname, username, password
+
+
+def get_checksum(file_path):
+    data = open(file_path, 'rb').read()
+    checksum = zlib.adler32(data, 0) & 0xffffffff
+    return checksum

@@ -74,6 +74,30 @@ class IptPythonApi(GemApi):
     (other shared methods are defined in the CommonApi)
     """
 
+    @pyqtSlot(result=bool)
+    def on_same_fs(self):
+        """
+        Check if the engine server has access to the ipt_dir
+        """
+        try:
+            checksum_file_path, local_checksum = \
+                self.parent().irmt.get_ipt_checksum()
+            on_same_fs = self.parent().irmt.on_same_fs(
+                checksum_file_path, local_checksum)
+        except Exception as exc:
+            self.common.error(str(exc))
+            return False
+        finally:
+            try:
+                os.remove(checksum_file_path)
+            except OSError as exc:
+                # the file should have just been created and it should be
+                # possible to remove it. Otherwise, we display a QGIS-side
+                # error with the reason why it was impossible to delete the
+                # file.
+                self.common.error(str(exc))
+        return on_same_fs
+
     @pyqtSlot(result='QVariantMap')
     def select_file(self):
         """
