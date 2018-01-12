@@ -5,8 +5,9 @@
 From the root folder:
 
 ```bash
-$ docker build --rm=true -t qgis-builder -f docker/Dockerfile .
+$ docker build --build-arg uid=$(id -u) --rm=true -t qgis-builder -f docker/Dockerfile .
 ```
+On our Jenkins system `--build-arg` must be `--build-arg uid=107`
 
 ## Run the build
 

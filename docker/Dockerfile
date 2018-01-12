@@ -18,7 +18,6 @@ RUN apt install -y qgis python-qgis
 RUN apt install -y texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended && \
     apt clean all
 
-# FIXME
 ARG uid=1000
 RUN useradd -m -u $uid builder
 
