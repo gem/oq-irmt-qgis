@@ -24,6 +24,7 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     2.9.0
+    * The plugin embeds 3 standalone OpenQuake applications: Input Preparation Toolkit, TaxtWEB and Taxonomy Glossary
     * When a OQ-Engine calculation is removed, the corresponding buttons and its list of outputs are properly cleared.
     * An additional checkbox in the settings enables/disables experimental features
     * Recovery modeling functionalities are enabled only if experimental settings are enabled
