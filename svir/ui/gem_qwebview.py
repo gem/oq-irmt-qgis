@@ -111,6 +111,9 @@ class GemQWebView(QWebView):
         self.frame.addToJavaScriptWindowObject('gem_api', self.gem_api)
 
     def manager_finished_cb(self, reply):
+        # whenever the network access manager finishes satisfying a request,
+        # this function is called. If a callback function was associated with
+        # the request, it is then called.
         instance_finished_cb = reply.request().attribute(
             REQUEST_ATTRS['instance_finished_cb'], None)
         if instance_finished_cb is not None:

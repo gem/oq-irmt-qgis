@@ -241,8 +241,17 @@ DEFAULT_SETTINGS = dict(
     developer_mode=False,
 )
 
-
-REQUEST_ATTRS = {'instance_finished_cb': 1001,
+# It is possible to set custom request attributes, with numeric codes above
+# 1000. REQUEST_ATTRS dict gives a name to each custom attribute we defined.
+REQUEST_ATTRS = {
+                 # python callback function to be called as soon as the network
+                 # access manager finishes satisfying a request to which this
+                 # attribute is added
+                 'instance_finished_cb': 1001,
+                 # id of the javascript object that called the python gem_api.
+                 # It is used when calling the js callback function, to make js
+                 # know to which original object it refers
                  'js_cb_object_id': 1002,
+                 # name of the javascript callback function
                  'js_cb_func': 1003,
                  }
