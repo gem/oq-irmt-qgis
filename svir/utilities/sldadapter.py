@@ -30,7 +30,9 @@
 
 import re
 import os
-from qgis.PyQt import Qt
+# FIXME: Use wrapper as soon as it works also on Mac OS
+from PyQt4 import Qt
+# from qgis.PyQt import Qt
 from qgis.PyQt.QtXml import *
 from qgis.core import *
 

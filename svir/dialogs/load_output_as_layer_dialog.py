@@ -36,7 +36,9 @@ from qgis.core import (QgsVectorLayer,
                        QGis,
                        QgsMapLayer,
                        )
-from qgis.PyQt.QtCore import pyqtSlot, QDir, QSettings, QFileInfo, Qt
+# FIXME: Use wrapper as soon as it works also on Mac OS
+from PyQt4.QtCore import pyqtSlot, QDir, QSettings, QFileInfo, Qt
+# from qgis.PyQt.QtCore import pyqtSlot, QDir, QSettings, QFileInfo, Qt
 from qgis.PyQt.QtGui import (QDialogButtonBox,
                              QDialog,
                              QFileDialog,

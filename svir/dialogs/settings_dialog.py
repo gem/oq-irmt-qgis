@@ -23,7 +23,9 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from qgis.PyQt.QtCore import pyqtSlot, QSettings, Qt
+# FIXME: Use wrapper as soon as it works also on Mac OS
+from PyQt4.QtCore import pyqtSlot, QSettings, Qt
+# from qgis.PyQt.QtCore import pyqtSlot, QSettings, Qt
 from qgis.PyQt.QtGui import QDialog, QPalette, QColorDialog, QMessageBox
 
 from qgis.core import QgsGraduatedSymbolRendererV2, QgsProject
