@@ -259,7 +259,8 @@ class SettingsDialog(QDialog, FORM_CLASS):
         # (set_host is called in their __init__ when dialogs are created, and
         # it needs to be called again here if those dialogs are already
         # initialized and pointing to a previous engine server)
-        if current_engine_hostname != self.initial_engine_hostname:
+        if (current_engine_hostname != self.initial_engine_hostname
+                and self.irmt_main is not None):
             for dlg in (self.irmt_main.ipt_dlg,
                         self.irmt_main.taxtweb_dlg,
                         self.irmt_main.taxonomy_dlg):
