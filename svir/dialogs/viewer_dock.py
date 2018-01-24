@@ -41,7 +41,9 @@ except ImportError as exc:
         ' a 64bit version of QGIS on Windows, please try using'
         ' a 32bit version instead. %s' % exc)
 
-from qgis.PyQt.QtCore import pyqtSlot, QSettings, Qt
+# FIXME: Use wrapper as soon as it works also on Mac OS
+from PyQt4.QtCore import pyqtSlot, QSettings, Qt
+# from qgis.PyQt.QtCore import pyqtSlot, QSettings, Qt
 from qgis.PyQt.QtGui import (QColor,
                              QLabel,
                              QPlainTextEdit,

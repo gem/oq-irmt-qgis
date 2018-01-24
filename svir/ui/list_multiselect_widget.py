@@ -13,7 +13,9 @@ __author__ = 'marco@opengis.ch'
 __revision__ = '$Format:%H$'
 __date__ = '9/07/2013'
 
-from qgis.PyQt import QtGui, QtCore, Qt
+# FIXME: Use wrapper as soon as it works also on Mac OS
+from PyQt4 import QtGui, QtCore, Qt
+# from qgis.PyQt import QtGui, QtCore, Qt
 
 
 class ListMultiSelectWidget(QtGui.QGroupBox):
