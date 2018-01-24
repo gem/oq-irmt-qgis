@@ -244,7 +244,7 @@ class Irmt:
         self.add_menu_item("drive_engine_server",
                            ":/plugins/irmt/drive_oqengine.svg",
                            u"Drive the OpenQuake Engine",
-                           self.drive_oq_engine_server,
+                           self.on_drive_oq_engine_server_btn_clicked,
                            enable=True,
                            submenu='OQ Engine',
                            add_to_toolbar=True)
@@ -455,6 +455,12 @@ class Irmt:
         self.instantiate_taxonomy_dlg()
         self.taxonomy_dlg.show()
         self.taxonomy_dlg.raise_()
+
+    def on_drive_oq_engine_server_btn_clicked(self):
+        # we can't call drive_oq_engine_server directly, otherwise the signal
+        # triggered by the button would set show=False (it silently passes an
+        # additional parameter)
+        self.drive_oq_engine_server(show=True)
 
     def drive_oq_engine_server(self, show=True):
         if self.drive_oq_engine_server_dlg is None:
