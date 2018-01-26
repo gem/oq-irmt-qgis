@@ -232,14 +232,6 @@ class Irmt:
                            enable=self.experimental_enabled(),
                            submenu='OQ Engine',
                            add_to_toolbar=True)
-        # Action to drive taxonomy
-        self.add_menu_item("taxonomy",
-                           ":/plugins/irmt/taxonomy.svg",
-                           u"OpenQuake Glossary for GEM Taxonomy",
-                           self.taxonomy,
-                           enable=self.experimental_enabled(),
-                           submenu='OQ Engine',
-                           add_to_toolbar=True)
         # Action to drive the oq-engine server
         self.add_menu_item("drive_engine_server",
                            ":/plugins/irmt/drive_oqengine.svg",
