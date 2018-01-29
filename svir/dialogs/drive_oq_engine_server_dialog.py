@@ -556,21 +556,22 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         item_calc_id = self.calc_list_tbl.item(row, calc_id_col_idx)
         calc_id = int(item_calc_id.text())
         if self.current_pointed_calc_id == calc_id:
+            # if you click again on the row that was selected, it unselects it
             self.current_pointed_calc_id = None
             self.calc_list_tbl.clearSelection()
         else:
             self.current_pointed_calc_id = calc_id
             self._set_show_calc_params_btn()
-        self._set_show_calc_params_btn()
         self.update_output_list(calc_id)
+        self._set_show_calc_params_btn()
 
     def _set_show_calc_params_btn(self):
         self.show_calc_params_btn.setEnabled(
-            self.current_pointed_calc_id is not None)
-        if self.current_pointed_calc_id is not None:
+            self.current_output_calc_id is not None)
+        if self.current_output_calc_id is not None:
             self.show_calc_params_btn.setText(
                 'Show parameters for calculation %s'
-                % self.current_pointed_calc_id)
+                % self.current_output_calc_id)
         else:
             self.show_calc_params_btn.setText('Show calculation parameters')
 
@@ -601,9 +602,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     def on_show_calc_params_btn_clicked(self):
         self.params_dlg = ShowParamsDialog()
         self.params_dlg.setWindowTitle(
-            'Parameters of calculation %s' % self.current_pointed_calc_id)
+            'Parameters of calculation %s' % self.current_output_calc_id)
         get_calc_params_url = "%s/v1/calc/%s/oqparam" % (
-            self.hostname, self.current_pointed_calc_id)
+            self.hostname, self.current_output_calc_id)
         with WaitCursorManager('Getting calculation parameters...',
                                self.iface.messageBar()):
             try:
