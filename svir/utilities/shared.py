@@ -24,8 +24,8 @@
 
 import os
 from collections import OrderedDict
-from PyQt4.QtCore import QSettings
-from PyQt4.QtGui import QColor
+from qgis.PyQt.QtCore import QSettings
+from qgis.PyQt.QtGui import QColor
 from ConfigParser import ConfigParser
 from qgis.core import QgsGraduatedSymbolRendererV2
 
@@ -240,3 +240,18 @@ DEFAULT_SETTINGS = dict(
     experimental_enabled=False,
     developer_mode=False,
 )
+
+# It is possible to set custom request attributes, with numeric codes above
+# 1000. REQUEST_ATTRS dict gives a name to each custom attribute we defined.
+REQUEST_ATTRS = {
+                 # python callback function to be called as soon as the network
+                 # access manager finishes satisfying a request to which this
+                 # attribute is added
+                 'instance_finished_cb': 1001,
+                 # id of the javascript object that called the python gem_api.
+                 # It is used when calling the js callback function, to make js
+                 # know to which original object it refers
+                 'js_cb_object_id': 1002,
+                 # name of the javascript callback function
+                 'js_cb_func': 1003,
+                 }

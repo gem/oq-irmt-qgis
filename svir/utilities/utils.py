@@ -28,6 +28,7 @@ import json
 import os
 import sys
 import locale
+import zlib
 from copy import deepcopy
 from time import time
 from pprint import pformat
@@ -39,14 +40,14 @@ from qgis.core import (QgsMapLayerRegistry,
                        )
 from qgis.gui import QgsMessageBar
 
-from PyQt4 import uic
-from PyQt4.QtCore import Qt, QSettings, QUrl
-from PyQt4.QtGui import (QApplication,
-                         QProgressBar,
-                         QToolButton,
-                         QFileDialog,
-                         QMessageBox,
-                         QColor)
+from qgis.PyQt import uic
+from qgis.PyQt.QtCore import Qt, QSettings, QUrl
+from qgis.PyQt.QtGui import (QApplication,
+                             QProgressBar,
+                             QToolButton,
+                             QFileDialog,
+                             QMessageBox,
+                             QColor)
 
 from svir.third_party.poster.encode import multipart_encode
 from svir.utilities.shared import DEBUG, DEFAULT_SETTINGS
@@ -1052,3 +1053,9 @@ def get_credentials(server):
     password = qs.value('irmt/%s_password' % server,
                         DEFAULT_SETTINGS['%s_password' % server])
     return hostname, username, password
+
+
+def get_checksum(file_path):
+    data = open(file_path, 'rb').read()
+    checksum = zlib.adler32(data, 0) & 0xffffffff
+    return checksum

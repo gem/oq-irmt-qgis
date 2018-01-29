@@ -36,20 +36,22 @@ from qgis.core import (QgsVectorLayer,
                        QGis,
                        QgsMapLayer,
                        )
+# FIXME: Use wrapper as soon as it works also on Mac OS
 from PyQt4.QtCore import pyqtSlot, QDir, QSettings, QFileInfo, Qt
-from PyQt4.QtGui import (QDialogButtonBox,
-                         QDialog,
-                         QFileDialog,
-                         QColor,
-                         QComboBox,
-                         QSpinBox,
-                         QLabel,
-                         QCheckBox,
-                         QHBoxLayout,
-                         QVBoxLayout,
-                         QToolButton,
-                         QGroupBox,
-                         )
+# from qgis.PyQt.QtCore import pyqtSlot, QDir, QSettings, QFileInfo, Qt
+from qgis.PyQt.QtGui import (QDialogButtonBox,
+                             QDialog,
+                             QFileDialog,
+                             QColor,
+                             QComboBox,
+                             QSpinBox,
+                             QLabel,
+                             QCheckBox,
+                             QHBoxLayout,
+                             QVBoxLayout,
+                             QToolButton,
+                             QGroupBox,
+                             )
 from svir.calculations.process_layer import ProcessLayer
 from svir.calculations.aggregate_loss_by_zone import (
     calculate_zonal_stats)

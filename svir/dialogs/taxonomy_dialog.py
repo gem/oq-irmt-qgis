@@ -1,12 +1,11 @@
-
 # -*- coding: utf-8 -*-
 # /***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
 #                              -------------------
-#        begin                : 2013-10-24
-#        copyright            : (C) 2014 by GEM Foundation
+#        begin                : 2016-06-29
+#        copyright            : (C) 2016 by GEM Foundation
 #        email                : devops@openquake.org
 # ***************************************************************************/
 #
@@ -23,21 +22,28 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-from qgis.PyQt.QtGui import QDialog
-from svir.utilities.utils import get_ui_class
-
-FORM_CLASS = get_ui_class('ui_text_browser.ui')
+from svir.dialogs.standalone_app_dialog import StandaloneAppDialog, GemApi
 
 
-class ShowFullReportDialog(QDialog, FORM_CLASS):
+class TaxonomyDialog(StandaloneAppDialog):
     """
-    Non-modal dialog to show the full report of a OQ-Engine calculation
+    Dialog that embeds the OpenQuake Taxonomy standalone application
     """
 
-    def __init__(self, filepath):
-        QDialog.__init__(self)
-        # Set up the user interface from Designer.
-        self.setupUi(self)
-        with open(filepath, 'rb') as rst_file:
-            text = rst_file.read()
-        self.text_browser.setText(text)
+    def __init__(self, parent=None):
+        app_name = 'taxonomy'
+        app_descr = 'OpenQuake Taxonomy'
+        gem_header_name = "Gem--Qgis-Oq-Irmt--Taxonomy"
+        gem_header_value = "0.1.0"
+        super(TaxonomyDialog, self).__init__(
+            app_name, app_descr, gem_header_name, gem_header_value, parent)
+        self.gem_api = TaxonomyApi(self.message_bar, self)
+        self.build_gui()
+
+
+class TaxonomyApi(GemApi):
+    """
+    API methods that are specific for the Taxonomy application
+    (other shared methods are defined in the CommonApi)
+    """
+    pass

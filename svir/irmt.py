@@ -45,18 +45,18 @@ from qgis.core import (QgsVectorLayer,
                        )
 from qgis.gui import QgsMessageBar
 
-from PyQt4.QtCore import (QSettings,
-                          QTranslator,
-                          QCoreApplication,
-                          qVersion,
-                          QUrl,
-                          Qt)
-from PyQt4.QtGui import (QAction,
-                         QIcon,
-                         QFileDialog,
-                         QDesktopServices,
-                         QApplication,
-                         QMenu)
+from qgis.PyQt.QtCore import (QSettings,
+                              QTranslator,
+                              QCoreApplication,
+                              qVersion,
+                              QUrl,
+                              Qt)
+from qgis.PyQt.QtGui import (QAction,
+                             QIcon,
+                             QFileDialog,
+                             QDesktopServices,
+                             QApplication,
+                             QMenu)
 
 from svir.dialogs.viewer_dock import ViewerDock
 from svir.utilities.import_sv_data import get_loggedin_downloader
@@ -70,6 +70,9 @@ from svir.dialogs.upload_settings_dialog import UploadSettingsDialog
 from svir.dialogs.weight_data_dialog import WeightDataDialog
 from svir.dialogs.recovery_modeling_dialog import RecoveryModelingDialog
 from svir.dialogs.recovery_settings_dialog import RecoverySettingsDialog
+from svir.dialogs.ipt_dialog import IptDialog
+from svir.dialogs.taxtweb_dialog import TaxtwebDialog
+from svir.dialogs.taxonomy_dialog import TaxonomyDialog
 from svir.dialogs.drive_oq_engine_server_dialog import (
     DriveOqEngineServerDialog)
 from svir.dialogs.load_ruptures_as_layer_dialog import (
@@ -105,6 +108,7 @@ from svir.utilities.utils import (tr,
                                   log_msg,
                                   save_layer_as_shapefile,
                                   get_style,
+                                  get_checksum,
                                   warn_scipy_missing)
 from svir.utilities.shared import (DEBUG,
                                    PROJECT_TEMPLATE,
@@ -151,6 +155,9 @@ class Irmt:
 
         # avoid dialog to be deleted right after showing it
         self.drive_oq_engine_server_dlg = None
+        self.ipt_dlg = None
+        self.taxtweb_dlg = None
+        self.taxonomy_dlg = None
 
         # keep track of the supplemental information for each layer
         # layer_id -> {}
@@ -164,6 +171,9 @@ class Irmt:
         QgsMapLayerRegistry.instance().layersAdded.connect(self.layers_added)
         QgsMapLayerRegistry.instance().layersRemoved.connect(
             self.layers_removed)
+
+        # get or create directory to store input files for the OQ-Engine
+        self.ipt_dir = self.get_ipt_dir()
 
     def initGui(self):
         # create our own toolbar
@@ -206,11 +216,27 @@ class Irmt:
                            enable=False,
                            add_to_layer_actions=True,
                            submenu='OQ Platform')
+        # Action to drive ipt
+        self.add_menu_item("ipt",
+                           ":/plugins/irmt/ipt.svg",
+                           u"OpenQuake Input Preparation Toolkit",
+                           self.ipt,
+                           enable=self.experimental_enabled(),
+                           submenu='OQ Engine',
+                           add_to_toolbar=True)
+        # Action to drive taxtweb
+        self.add_menu_item("taxtweb",
+                           ":/plugins/irmt/taxtweb.svg",
+                           u"OpenQuake TaxtWEB",
+                           self.taxtweb,
+                           enable=self.experimental_enabled(),
+                           submenu='OQ Engine',
+                           add_to_toolbar=True)
         # Action to drive the oq-engine server
         self.add_menu_item("drive_engine_server",
                            ":/plugins/irmt/drive_oqengine.svg",
-                           u"Drive oq-engine &server",
-                           self.drive_oq_engine_server,
+                           u"Drive the OpenQuake Engine",
+                           self.on_drive_oq_engine_server_btn_clicked,
                            enable=True,
                            submenu='OQ Engine',
                            add_to_toolbar=True)
@@ -399,19 +425,55 @@ class Irmt:
         dlg = LoadLossesByAssetAsLayerDialog(self.iface, 'losses_by_asset')
         dlg.exec_()
 
-    def drive_oq_engine_server(self):
+    def ipt(self):
+        if self.ipt_dlg is None:
+            # we need self because ipt must be able to drive the oq-engine
+            self.ipt_dlg = IptDialog(self.ipt_dir, self)
+        self.ipt_dlg.show()
+        self.ipt_dlg.raise_()
+
+    def taxtweb(self):
+        if self.taxtweb_dlg is None:
+            self.instantiate_taxonomy_dlg()
+            self.taxtweb_dlg = TaxtwebDialog(self.taxonomy_dlg)
+        self.taxtweb_dlg.show()
+        self.taxtweb_dlg.raise_()
+
+    def instantiate_taxonomy_dlg(self):
+        if self.taxonomy_dlg is None:
+            self.taxonomy_dlg = TaxonomyDialog()
+
+    def taxonomy(self):
+        self.instantiate_taxonomy_dlg()
+        self.taxonomy_dlg.show()
+        self.taxonomy_dlg.raise_()
+
+    def on_drive_oq_engine_server_btn_clicked(self):
+        # we can't call drive_oq_engine_server directly, otherwise the signal
+        # triggered by the button would set show=False (it silently passes an
+        # additional parameter)
+        self.drive_oq_engine_server(show=True)
+
+    def drive_oq_engine_server(self, show=True):
         if self.drive_oq_engine_server_dlg is None:
             self.drive_oq_engine_server_dlg = DriveOqEngineServerDialog(
                 self.iface, self.viewer_dock)
         else:
             self.drive_oq_engine_server_dlg.attempt_login()
-        self.drive_oq_engine_server_dlg.show()
-        self.drive_oq_engine_server_dlg.raise_()
+        if show:
+            self.drive_oq_engine_server_dlg.show()
+            self.drive_oq_engine_server_dlg.raise_()
         if self.drive_oq_engine_server_dlg.is_logged_in:
             self.drive_oq_engine_server_dlg.start_polling()
         else:
             self.drive_oq_engine_server_dlg.reject()
             self.drive_oq_engine_server_dlg = None
+
+    def on_same_fs(self, checksum_file_path, local_checksum):
+        # initialize drive_oq_engine_server_dlg dialog without displaying it
+        self.drive_oq_engine_server(show=False)
+        return self.drive_oq_engine_server_dlg.on_same_fs(
+            checksum_file_path, local_checksum)
 
     def reset_engine_login(self):
         if self.drive_oq_engine_server_dlg is not None:
@@ -1395,3 +1457,17 @@ class Irmt:
             self.iface.mainWindow().tabifyDockWidget(
                 legend_tab, self.viewer_dock)
             self.viewer_dock.raise_()
+
+    def get_ipt_dir(self):
+        home_dir = os.path.expanduser("~")
+        ipt_dir = os.path.join(home_dir, ".gem", "irmt", "ipt")
+        if not os.path.exists(ipt_dir):
+            os.makedirs(ipt_dir)
+        return ipt_dir
+
+    def get_ipt_checksum(self):
+        unique_filename = ".%s" % uuid.uuid4().hex
+        checksum_file_path = os.path.join(self.ipt_dir, unique_filename)
+        with open(checksum_file_path, "w") as f:
+            f.write(os.urandom(32))
+        return checksum_file_path, get_checksum(checksum_file_path)

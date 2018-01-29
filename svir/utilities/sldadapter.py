@@ -30,8 +30,10 @@
 
 import re
 import os
+# FIXME: Use wrapper as soon as it works also on Mac OS
 from PyQt4 import Qt
-from PyQt4.QtXml import *
+# from qgis.PyQt import Qt
+from qgis.PyQt.QtXml import *
 from qgis.core import *
 
 SIZE_FACTOR = 4

@@ -25,7 +25,7 @@
 from copy import deepcopy
 from qgis.core import QgsField, QgsExpression
 
-from PyQt4.QtCore import QVariant, QPyNullVariant
+from qgis.PyQt.QtCore import QVariant, QPyNullVariant
 
 from svir.utilities.shared import (DOUBLE_FIELD_TYPE_NAME,
                                    STRING_FIELD_TYPE_NAME,
