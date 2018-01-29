@@ -25,6 +25,7 @@ email=staff.it@globalquakemodel.org
 changelog=
     2.9.2
     * If a selected OQ-Engine calculation is running, the corresponding outputs will be listed as soon as the calculation is complete.
+    * Fixed the button showing parameters of a OQ-Engine calculation
     2.9.1
     * Fixed a bug that made impossible to visualize the dialog that drives the OpenQuake Engine
     * Fixed issues importing Qt on macOS
