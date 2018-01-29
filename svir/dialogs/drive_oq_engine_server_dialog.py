@@ -383,7 +383,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             % calc_id)
         self.show_calc_params_btn.setEnabled(True)
         self.show_calc_params_btn.setText(
-            'Show calculation parameters for calculation %s' % calc_id)
+            'Show parameters for calculation %s' % calc_id)
 
     def on_calc_action_btn_clicked(self, calc_id, action):
         # NOTE: while scrolling through the list of calculations, the tool
