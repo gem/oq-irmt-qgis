@@ -380,7 +380,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.download_datastore_btn.setEnabled(True)
         self.download_datastore_btn.setText(
             'Download HDF5 datastore for calculation %s'
-            % self.current_calc_id)
+            % calc_id)
+        self.show_calc_params_btn.setEnabled(True)
+        self.show_calc_params_btn.setText(
+            'Show calculation parameters for calculation %s' % calc_id)
 
     def on_calc_action_btn_clicked(self, calc_id, action):
         # NOTE: while scrolling through the list of calculations, the tool
@@ -388,7 +391,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         # scrolling.  But if you click on any button, at the next refresh, the
         # view is scrolled to the top. Therefore we need to keep track of which
         # line was selected, in order to scroll to that line.
-        self.pointed_calc_id = calc_id
+        self.current_calc_id = self.pointed_calc_id = calc_id
         self._set_show_calc_params_btn()
         self.highlight_and_scroll_to_calc_id(calc_id)
         if action == 'Console':
