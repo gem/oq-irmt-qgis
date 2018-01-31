@@ -87,7 +87,7 @@ class StandaloneAppDialog(QDialog):
         self.vlayout.addWidget(self.web_view)
         initial_width = 1050
         self.resize(initial_width, self.width())
-        self.setWindowFlags(self.windowFlags() & Qt.WindowMinimizeButtonHint)
+        self.setWindowFlags(Qt.Window)
 
 
 class CommonApi(QObject):
