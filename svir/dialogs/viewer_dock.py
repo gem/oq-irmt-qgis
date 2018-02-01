@@ -978,7 +978,13 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 self.field_names = [field.name() for field in feature.fields()]
                 # reading from something like
                 # [u'rlz-000_PGA', u'rlz-000_SA(0.025)', ...]
-                unique_periods = [0.0]  # Use 0.0 for PGA
+                # the first item can be PGA (but PGA can also be missing)
+                # and the length of the array of periods must be consistent
+                # with the length of or ordinates to plot
+                if self.field_names[0].endswith("PGA"):
+                    unique_periods = [0.0]  # Use 0.0 for PGA
+                else:
+                    unique_periods = []  # PGA is not there
                 # get the number between parenthesis
                 try:
                     periods = [
