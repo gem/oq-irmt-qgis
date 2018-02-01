@@ -27,6 +27,7 @@ from qgis.PyQt.QtCore import (QUrl,
                               QObject,
                               pyqtSlot,
                               QSettings,
+                              Qt,
                               )
 from qgis.PyQt.QtGui import (QDialog,
                              QVBoxLayout,
@@ -86,6 +87,7 @@ class StandaloneAppDialog(QDialog):
         self.vlayout.addWidget(self.web_view)
         initial_width = 1050
         self.resize(initial_width, self.width())
+        self.setWindowFlags(Qt.Window)
 
 
 class CommonApi(QObject):
