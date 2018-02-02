@@ -22,13 +22,13 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-import numpy
 from qgis.core import QgsFeature, QgsGeometry, QgsPoint
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 from svir.calculations.calculate_utils import add_numeric_attribute
 from svir.utilities.utils import (LayerEditingManager,
                                   log_msg,
                                   WaitCursorManager,
+                                  extract_array,
                                   )
 from svir.utilities.shared import DEBUG
 
@@ -38,11 +38,12 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
     Modal dialog to load hazard curves from an oq-engine output, as layer
     """
 
-    def __init__(self, iface, viewer_dock, output_type='hcurves',
-                 path=None, mode=None):
+    def __init__(self, iface, viewer_dock, session, hostname, calc_id,
+                 output_type='hcurves', path=None, mode=None):
         assert output_type == 'hcurves'
         LoadOutputAsLayerDialog.__init__(
-            self, iface, viewer_dock, output_type, path, mode)
+            self, iface, viewer_dock, session, hostname, calc_id,
+            output_type, path, mode)
         self.setWindowTitle(
             'Load hazard curves from NPZ, as layer')
         self.create_num_sites_indicator()

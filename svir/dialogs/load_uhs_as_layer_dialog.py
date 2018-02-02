@@ -39,11 +39,12 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
     as layer
     """
 
-    def __init__(self, iface, viewer_dock, output_type='uhs',
-                 path=None, mode=None):
+    def __init__(self, iface, viewer_dock, session, hostname, calc_id,
+                 output_type='uhs', path=None, mode=None):
         assert output_type == 'uhs'
         LoadOutputAsLayerDialog.__init__(
-            self, iface, viewer_dock, output_type, path, mode)
+            self, iface, viewer_dock, session, hostname, calc_id,
+            output_type, path, mode)
         self.setWindowTitle(
             'Load uniform hazard spectra from NPZ, as layer')
         self.create_num_sites_indicator()

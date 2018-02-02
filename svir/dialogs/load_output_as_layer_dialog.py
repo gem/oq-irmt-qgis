@@ -72,7 +72,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     Modal dialog to load an oq-engine output as layer
     """
 
-    def __init__(self, iface, viewer_dock, output_type=None,
+    def __init__(self, iface, viewer_dock,
+                 session, hostname, calc_id, output_type=None,
                  path=None, mode=None, zonal_layer_path=None):
         # sanity check
         if output_type not in OQ_ALL_LOADABLE_TYPES:
@@ -80,6 +81,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.iface = iface
         self.viewer_dock = viewer_dock
         self.path = path
+        self.session = session
+        self.hostname = hostname
+        self.calc_id = calc_id
         self.output_type = output_type
         self.mode = mode  # if 'testing' it will avoid some user interaction
         self.zonal_layer_path = zonal_layer_path
