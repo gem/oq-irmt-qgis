@@ -51,6 +51,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         self.create_rlz_or_stat_selector()
         self.create_imt_selector()
         self.create_eid_selector()
+        # TODO: use the extract api instead of reading from npz
         if self.path:
             self.npz_file = numpy.load(self.path, 'r')
             self.populate_out_dep_widgets()

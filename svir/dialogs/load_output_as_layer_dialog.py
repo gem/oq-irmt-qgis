@@ -513,6 +513,12 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         cbx.setItemData(last_index, zonal_layer_plus_stats.id())
         cbx.setCurrentIndex(last_index)
 
+    # FIXME: create file_hlayout only in widgets that need it
+    def remove_file_hlayout(self):
+        for i in reversed(range(self.file_hlayout.count())):
+            self.file_hlayout.itemAt(i).widget().setParent(None)
+        self.vlayout.removeItem(self.file_hlayout)
+
     def accept(self):
         if self.output_type in OQ_NPZ_LOADABLE_TYPES:
             self.load_from_npz()

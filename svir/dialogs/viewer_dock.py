@@ -66,7 +66,7 @@ from svir.utilities.utils import (get_ui_class,
                                   log_msg,
                                   clear_widgets_from_layout,
                                   warn_scipy_missing,
-                                  extract_array,
+                                  extract_npz,
                                   )
 from svir.recovery_modeling.recovery_modeling import (
     RecoveryModeling, fill_fields_multiselect)
@@ -356,7 +356,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                         # NOTE: this would not work for multiple values per tag
                         params[tag_name] = value
         output_type = 'aggdamages/%s' % self.loss_type_cbx.currentText()
-        self.dmg_by_asset_aggr = extract_array(
+        self.dmg_by_asset_aggr = extract_npz(
             self.session, self.hostname, self.calc_id, output_type,
             message_bar=self.iface.messageBar(), params=params)
         if self.dmg_by_asset_aggr is None:
@@ -372,7 +372,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                         # NOTE: this would not work for multiple values per tag
                         params[tag_name] = value
         output_type = 'agglosses/%s' % self.loss_type_cbx.currentText()
-        self.losses_by_asset_aggr = extract_array(
+        self.losses_by_asset_aggr = extract_npz(
             self.session, self.hostname, self.calc_id, output_type,
             message_bar=self.iface.messageBar(), params=params)
         if self.losses_by_asset_aggr is None:
@@ -507,13 +507,13 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             raise NotImplementedError(output_type)
 
     def load_dmg_by_asset_aggr(self, calc_id, session, hostname, output_type):
-        composite_risk_model_attrs = extract_array(
+        composite_risk_model_attrs = extract_npz(
             session, hostname, calc_id, 'composite_risk_model.attrs',
             message_bar=self.iface.messageBar())
         if composite_risk_model_attrs is None:
             return
         self.dmg_states = composite_risk_model_attrs['damage_states']
-        tags_npz = extract_array(
+        tags_npz = extract_npz(
             session, hostname, calc_id, 'assetcol/tags',
             message_bar=self.iface.messageBar())
         if tags_npz is None:
@@ -532,7 +532,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 self.tags[tag_name]['values'][tag_value] = False
         self.update_list_selected_edt()
 
-        rlzs_npz = extract_array(
+        rlzs_npz = extract_npz(
             session, hostname, calc_id, 'realizations',
             message_bar=self.iface.messageBar())
         if rlzs_npz is None:
@@ -558,18 +558,18 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
     def load_losses_by_asset_aggr(
             self, calc_id, session, hostname, output_type):
-        composite_risk_model_attrs = extract_array(
+        composite_risk_model_attrs = extract_npz(
             session, hostname, calc_id, 'composite_risk_model.attrs',
             message_bar=self.iface.messageBar())
         if composite_risk_model_attrs is None:
             return
-        rlzs_npz = extract_array(
+        rlzs_npz = extract_npz(
             session, hostname, calc_id, 'realizations',
             message_bar=self.iface.messageBar())
         if rlzs_npz is None:
             return
         self.rlzs = rlzs_npz['array']['gsims']
-        tags_npz = extract_array(
+        tags_npz = extract_npz(
             session, hostname, calc_id, 'assetcol/tags',
             message_bar=self.iface.messageBar())
         if tags_npz is None:
@@ -603,7 +603,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.filter_losses_by_asset_aggr()
 
     def load_agg_curves(self, calc_id, session, hostname, output_type):
-        self.agg_curves = extract_array(
+        self.agg_curves = extract_npz(
             session, hostname, calc_id, output_type,
             message_bar=self.iface.messageBar())
         if self.agg_curves is None:

@@ -1062,7 +1062,7 @@ def get_checksum(file_path):
     return checksum
 
 
-def extract_array(
+def extract_npz(
         session, hostname, calc_id, output_type, message_bar, params=None):
     url = '%s/v1/calc/%s/extract/%s' % (hostname, calc_id, output_type)
     resp = session.get(url, params=params)
