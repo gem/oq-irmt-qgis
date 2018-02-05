@@ -513,23 +513,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         if composite_risk_model_attrs is None:
             return
         self.dmg_states = composite_risk_model_attrs['damage_states']
-        tags_npz = extract_npz(
-            session, hostname, calc_id, 'assetcol/tags',
-            message_bar=self.iface.messageBar())
-        if tags_npz is None:
-            return
-        tags_array = tags_npz['array']
-        self.tags = {}
-        for tag in tags_array:
-            # tags are in the format 'city=Benicia' (tag_name=tag_value)
-            tag_name, tag_value = tag.split('=')
-            if tag_name not in self.tags:
-                self.tags[tag_name] = {
-                    'selected': False,
-                    'values': {tag_value: False}}  # False means unselected
-            else:
-                # False means unselected
-                self.tags[tag_name]['values'][tag_value] = False
+        self._get_tags(session, hostname, calc_id, self.iface.messageBar(),
+                       with_star=False)
         self.update_list_selected_edt()
 
         rlzs_npz = extract_npz(
@@ -556,6 +541,32 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
         self.filter_dmg_by_asset_aggr()
 
+    def _get_tags(self, session, hostname, calc_id, message_bar, with_star):
+        tags_npz = extract_npz(
+            session, hostname, calc_id, 'asset_tags', message_bar=message_bar)
+        if tags_npz is None:
+            return
+        tags_list = []
+        for tag_name in tags_npz:
+            if tag_name == 'array':
+                continue
+            for tag in tags_npz[tag_name]:
+                if tag[-1] != '?':
+                    tags_list.append(tag)
+        self.tags = {}
+        for tag in tags_list:
+            # tags are in the format 'city=Benicia' (tag_name=tag_value)
+            tag_name, tag_value = tag.split('=')
+            if tag_name not in self.tags:
+                self.tags[tag_name] = {
+                    'selected': False,
+                    'values': {tag_value: False}}  # False means unselected
+            else:
+                # False means unselected
+                self.tags[tag_name]['values'][tag_value] = False
+            if with_star:
+                self.tags[tag_name]['values']['*'] = False
+
     def load_losses_by_asset_aggr(
             self, calc_id, session, hostname, output_type):
         composite_risk_model_attrs = extract_npz(
@@ -569,24 +580,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         if rlzs_npz is None:
             return
         self.rlzs = rlzs_npz['array']['gsims']
-        tags_npz = extract_npz(
-            session, hostname, calc_id, 'assetcol/tags',
-            message_bar=self.iface.messageBar())
-        if tags_npz is None:
-            return
-        tags_array = tags_npz['array']
-        self.tags = {}
-        for tag in tags_array:
-            # tags are in the format 'city=Benicia' (tag_name=tag_value)
-            tag_name, tag_value = tag.split('=')
-            if tag_name not in self.tags:
-                self.tags[tag_name] = {
-                    'selected': False,
-                    'values': {tag_value: False}}  # False means unselected
-            else:
-                # False means unselected
-                self.tags[tag_name]['values'][tag_value] = False
-            self.tags[tag_name]['values']['*'] = False
+        self._get_tags(session, hostname, calc_id, self.iface.messageBar(),
+                       with_star=True)
         self.update_list_selected_edt()
 
         loss_types = composite_risk_model_attrs['loss_types']
