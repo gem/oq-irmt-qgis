@@ -30,6 +30,7 @@ import unittest
 import tempfile
 import json
 import copy
+import csv
 from mock import Mock
 
 from qgis.PyQt.QtGui import QAction
@@ -167,9 +168,22 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 print('\t\tok')
                 return
             dlg = OUTPUT_TYPE_LOADERS[output_type](
-                IFACE, Mock(), output_type, filepath)
+                IFACE, Mock(), self.session, self.hostname, calc_id,
+                output_type, filepath)
             if dlg.ok_button.isEnabled():
+                if output_type == 'uhs':
+                    dlg.load_selected_only_ckb.setChecked(True)
+                    idx = dlg.poe_cbx.findText('0.1')
+                    self.assertEqual(idx, 0, 'POE 0.1 was not found')
+                    dlg.poe_cbx.setCurrentIndex(idx)
                 dlg.accept()
+                if output_type == 'hcurves':
+                    self.load_hcurves()
+                elif output_type == 'uhs':
+                    self._set_output_type('Uniform Hazard Spectra')
+                    self._change_selection()
+                    # test exporting the current selection to csv
+                    self._test_export()
                 print('\t\tok')
                 return
             else:
@@ -247,3 +261,67 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         if self.untested_otypes:
             raise RuntimeError('Untested output types: %s'
                                % self.untested_otypes)
+
+    def load_hcurves(self):
+        self._set_output_type('Hazard Curves')
+        self._change_selection()
+        # test changing intensity measure type
+        layer = IFACE.activeLayer()
+        # select the first 2 features (the same used to produce the reference
+        # csv)
+        layer.select([1, 2])
+        imt = 'PGA'
+        idx = self.viewer_dock.imt_cbx.findText(imt)
+        self.assertNotEqual(idx, -1, 'IMT %s not found' % imt)
+        self.viewer_dock.imt_cbx.setCurrentIndex(idx)
+        # test exporting the current selection to csv
+        _, exported_file_path = tempfile.mkstemp(suffix=".csv")
+        self._test_export()
+
+    def _test_export(self):
+        _, exported_file_path = tempfile.mkstemp(suffix=".csv")
+        layer = IFACE.activeLayer()
+        # select the first 2 features (the same used to produce the reference
+        # csv)
+        layer.select([1, 2])
+        # probably we have the wrong layer selected (uhs produce many layers)
+        self.viewer_dock.write_export_file(exported_file_path)
+        # NOTE: we are only checking that the exported CSV has at least 3 rows
+        # and 3 columns per row. We are avoiding more precise checks, because
+        # CSV tests are very fragile. On different platforms the numbers could
+        # be slightly different. With different versions of
+        # shapely/libgeos/numpy/etc the numbers could be slightly different.
+        # The parameters of the demos could change in the future and the
+        # numbers (even the number of rows and columns) could change.
+        with open(exported_file_path, 'r') as got:
+            got_reader = csv.reader(got)
+            n_rows = 0
+            for got_line in got_reader:
+                n_rows += 1
+                n_cols = 0
+                for got_element in got_line:
+                    n_cols += 1
+                self.assertGreaterEqual(
+                    n_cols, 3,
+                    "The following line of the exported file %s has"
+                    " only %s columns:\n%s" % (
+                        exported_file_path, n_cols, got_line))
+            self.assertGreaterEqual(
+                n_rows, 2,
+                "The exported file %s has only %s rows" % (
+                    exported_file_path, n_rows))
+
+    def _set_output_type(self, output_type):
+        idx = self.viewer_dock.output_type_cbx.findText(output_type)
+        self.assertNotEqual(idx, -1, 'Output type %s not found' % output_type)
+        self.viewer_dock.output_type_cbx.setCurrentIndex(idx)
+
+    def _change_selection(self):
+        layer = IFACE.activeLayer()
+        # the behavior should be slightly different (pluralizing labels, etc)
+        # depending on the amount of features selected
+        layer.select(1)
+        layer.removeSelection()
+        layer.select(2)
+        layer.selectAll()
+        layer.removeSelection()
