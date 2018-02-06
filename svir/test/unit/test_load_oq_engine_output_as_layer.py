@@ -61,6 +61,9 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
     def test_load_gmf(self):
         filepath = os.path.join(self.data_dir_name, 'hazard',
                                 'output-195-gmf_data_70.npz')
+        # TODO: in the future, we will move this to integration tests, using
+        #       session, hostname  and calc_id and the extract api, instead of
+        #       mocking
         dlg = LoadGmfDataAsLayerDialog(
             IFACE, self.viewer_dock,
             Mock(), Mock(), Mock(), 'gmf_data', filepath)
@@ -71,6 +74,9 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
         filepath = os.path.join(
             self.data_dir_name, 'hazard', 'ruptures',
             'output-607-ruptures_162.csv')
+        # TODO: in the future, we will move this to integration tests, using
+        #       session, hostname  and calc_id and the extract api, instead of
+        #       mocking
         dlg = LoadRupturesAsLayerDialog(
             IFACE, self.viewer_dock, Mock(), Mock(), Mock(), 'ruptures',
             filepath, mode='testing')
@@ -87,6 +93,9 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
     def test_load_losses_by_asset_only_selected_taxonomy_and_loss_type(self):
         filepath = os.path.join(self.data_dir_name, 'risk',
                                 'output-399-losses_by_asset_123.npz')
+        # TODO: in the future, we will move this to integration tests, using
+        #       session, hostname  and calc_id and the extract api, instead of
+        #       mocking
         dlg = LoadLossesByAssetAsLayerDialog(
             IFACE, self.viewer_dock, Mock(), Mock(), Mock(), 'losses_by_asset',
             filepath)
@@ -104,6 +113,9 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
     def test_load_losses_by_asset_all_taxonomies_only_selected_loss_type(self):
         filepath = os.path.join(self.data_dir_name, 'risk',
                                 'output-399-losses_by_asset_123.npz')
+        # TODO: in the future, we will move this to integration tests, using
+        #       session, hostname  and calc_id and the extract api, instead of
+        #       mocking
         dlg = LoadLossesByAssetAsLayerDialog(
             IFACE, self.viewer_dock, Mock(), Mock(), Mock(), 'losses_by_asset',
             filepath)
@@ -123,6 +135,9 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
                                        'output-399-losses_by_asset_123.npz')
         zonal_layer_path = os.path.join(self.data_dir_name, 'risk',
                                         'zonal_layer.shp')
+        # TODO: in the future, we will move this to integration tests, using
+        #       session, hostname  and calc_id and the extract api, instead of
+        #       mocking
         dlg = LoadLossesByAssetAsLayerDialog(
             IFACE, self.viewer_dock, Mock(), Mock(), Mock(), 'losses_by_asset',
             loss_layer_path,
@@ -157,6 +172,9 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
     def test_load_dmg_by_asset_only_selected_taxonomy(self):
         filepath = os.path.join(self.data_dir_name, 'risk',
                                 'output-1614-dmg_by_asset_356.npz')
+        # TODO: in the future, we will move this to integration tests, using
+        #       session, hostname  and calc_id and the extract api, instead of
+        #       mocking
         dlg = LoadDmgByAssetAsLayerDialog(
             IFACE, self.viewer_dock, Mock(), Mock(), Mock(), 'dmg_by_asset',
             filepath)
@@ -178,6 +196,9 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
     def test_load_dmg_by_asset_all_taxonomies(self):
         filepath = os.path.join(self.data_dir_name, 'risk',
                                 'output-1614-dmg_by_asset_356.npz')
+        # TODO: in the future, we will move this to integration tests, using
+        #       session, hostname  and calc_id and the extract api, instead of
+        #       mocking
         dlg = LoadDmgByAssetAsLayerDialog(
             IFACE, self.viewer_dock, Mock(), Mock(), Mock(), 'dmg_by_asset',
             filepath)
@@ -201,6 +222,9 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
                                       'output-1614-dmg_by_asset_356.npz')
         zonal_layer_path = os.path.join(self.data_dir_name, 'risk',
                                         'zonal_layer.shp')
+        # TODO: in the future, we will move this to integration tests, using
+        #       session, hostname  and calc_id and the extract api, instead of
+        #       mocking
         dlg = LoadDmgByAssetAsLayerDialog(
             IFACE, self.viewer_dock, Mock(), Mock(), Mock(), 'dmg_by_asset',
             dmg_layer_path, zonal_layer_path=zonal_layer_path)
