@@ -286,7 +286,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         layer.select([1, 2])
         # probably we have the wrong layer selected (uhs produce many layers)
         self.viewer_dock.write_export_file(exported_file_path)
-        # NOTE: we are only checking that the exported CSV has at least 3 rows
+        # NOTE: we are only checking that the exported CSV has at least 2 rows
         # and 3 columns per row. We are avoiding more precise checks, because
         # CSV tests are very fragile. On different platforms the numbers could
         # be slightly different. With different versions of
