@@ -24,6 +24,8 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     2.9.3
+    * Hazard maps, hazard curves and uniform hazard spectra are loaded through the "extract" API offered by the OQ Engine Server,
+      instead of using the exported npz
     * Fixed the visualization of UHS in case PGA is not present
     2.9.2
     * If a selected OQ-Engine calculation is running, the corresponding outputs will be listed as soon as the calculation is complete.

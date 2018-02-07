@@ -29,6 +29,7 @@ import os
 import unittest
 import tempfile
 import csv
+from mock import Mock
 from numpy.testing import assert_almost_equal
 
 from qgis.PyQt.QtGui import QAction
@@ -37,14 +38,8 @@ from svir.dialogs.load_dmg_by_asset_as_layer_dialog import (
     LoadDmgByAssetAsLayerDialog)
 from svir.dialogs.load_ruptures_as_layer_dialog import (
     LoadRupturesAsLayerDialog)
-from svir.dialogs.load_hmaps_as_layer_dialog import (
-    LoadHazardMapsAsLayerDialog)
-from svir.dialogs.load_hcurves_as_layer_dialog import (
-    LoadHazardCurvesAsLayerDialog)
 from svir.dialogs.load_gmf_data_as_layer_dialog import (
     LoadGmfDataAsLayerDialog)
-from svir.dialogs.load_uhs_as_layer_dialog import (
-    LoadUhsAsLayerDialog)
 from svir.dialogs.load_losses_by_asset_as_layer_dialog import (
     LoadLossesByAssetAsLayerDialog)
 from svir.dialogs.viewer_dock import ViewerDock
@@ -63,64 +58,28 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
         mock_action = QAction(IFACE.mainWindow())
         self.viewer_dock = ViewerDock(IFACE, mock_action)
 
-    def test_load_hazard_map(self):
-        filepath = os.path.join(
-            self.data_dir_name, 'hazard', 'output-3-hmaps_1.npz')
-        dlg = LoadHazardMapsAsLayerDialog(
-            IFACE, self.viewer_dock, 'hmaps', filepath)
-        dlg.accept()
-        # hazard maps have nothing to do with the Data Viewer
-
     def test_load_gmf(self):
         filepath = os.path.join(self.data_dir_name, 'hazard',
                                 'output-195-gmf_data_70.npz')
+        # TODO: in the future, we will move this to integration tests, using
+        #       session, hostname  and calc_id and the extract api, instead of
+        #       mocking
         dlg = LoadGmfDataAsLayerDialog(
-            IFACE, self.viewer_dock, 'gmf_data', filepath)
+            IFACE, self.viewer_dock,
+            Mock(), Mock(), Mock(), 'gmf_data', filepath)
         dlg.accept()
         # ground motion fields have nothing to do with the Data Viewer
-
-    def test_load_hazard_curves(self):
-        filepath = os.path.join(self.data_dir_name, 'hazard',
-                                'output-121-hcurves_27.npz')
-        dlg = LoadHazardCurvesAsLayerDialog(
-            IFACE, self.viewer_dock, 'hcurves', filepath)
-        dlg.accept()
-        self._set_output_type('Hazard Curves')
-        self._change_selection()
-        # test changing intensity measure type
-        layer = IFACE.activeLayer()
-        # select the first 2 features (the same used to produce the reference
-        # csv)
-        layer.select([1, 2])
-        imt = 'SA(0.1)'
-        idx = self.viewer_dock.imt_cbx.findText(imt)
-        self.assertNotEqual(idx, -1, 'IMT %s not found' % imt)
-        self.viewer_dock.imt_cbx.setCurrentIndex(idx)
-        # test exporting the current selection to csv
-        _, exported_file_path = tempfile.mkstemp(suffix=".csv")
-        self._test_export()
-
-    def test_load_uhs_only_selected_poe(self):
-        filepath = os.path.join(self.data_dir_name, 'hazard',
-                                'output-125-uhs_27.npz')
-        dlg = LoadUhsAsLayerDialog(
-            IFACE, self.viewer_dock, 'uhs', filepath)
-        dlg.load_selected_only_ckb.setChecked(True)
-        idx = dlg.poe_cbx.findText('0.1')
-        self.assertEqual(idx, 0, 'POE 0.1 was not found')
-        dlg.poe_cbx.setCurrentIndex(idx)
-        dlg.accept()
-        self._set_output_type('Uniform Hazard Spectra')
-        self._change_selection()
-        # test exporting the current selection to csv
-        self._test_export()
 
     def test_load_ruptures(self):
         filepath = os.path.join(
             self.data_dir_name, 'hazard', 'ruptures',
             'output-607-ruptures_162.csv')
+        # TODO: in the future, we will move this to integration tests, using
+        #       session, hostname  and calc_id and the extract api, instead of
+        #       mocking
         dlg = LoadRupturesAsLayerDialog(
-            IFACE, self.viewer_dock, 'ruptures', filepath, mode='testing')
+            IFACE, self.viewer_dock, Mock(), Mock(), Mock(), 'ruptures',
+            filepath, mode='testing')
         dlg.save_as_shp_ckb.setChecked(True)
         dlg.accept()
         current_layer = IFACE.activeLayer()
@@ -134,8 +93,12 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
     def test_load_losses_by_asset_only_selected_taxonomy_and_loss_type(self):
         filepath = os.path.join(self.data_dir_name, 'risk',
                                 'output-399-losses_by_asset_123.npz')
+        # TODO: in the future, we will move this to integration tests, using
+        #       session, hostname  and calc_id and the extract api, instead of
+        #       mocking
         dlg = LoadLossesByAssetAsLayerDialog(
-            IFACE, self.viewer_dock, 'losses_by_asset', filepath)
+            IFACE, self.viewer_dock, Mock(), Mock(), Mock(), 'losses_by_asset',
+            filepath)
         dlg.load_selected_only_ckb.setChecked(True)
         taxonomy_idx = dlg.taxonomy_cbx.findText('"Concrete"')
         self.assertNotEqual(taxonomy_idx, -1,
@@ -150,8 +113,12 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
     def test_load_losses_by_asset_all_taxonomies_only_selected_loss_type(self):
         filepath = os.path.join(self.data_dir_name, 'risk',
                                 'output-399-losses_by_asset_123.npz')
+        # TODO: in the future, we will move this to integration tests, using
+        #       session, hostname  and calc_id and the extract api, instead of
+        #       mocking
         dlg = LoadLossesByAssetAsLayerDialog(
-            IFACE, self.viewer_dock, 'losses_by_asset', filepath)
+            IFACE, self.viewer_dock, Mock(), Mock(), Mock(), 'losses_by_asset',
+            filepath)
         dlg.load_selected_only_ckb.setChecked(True)
         taxonomy_idx = dlg.taxonomy_cbx.findText('All')
         self.assertNotEqual(taxonomy_idx, -1, 'Taxonomy All was not found')
@@ -168,8 +135,12 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
                                        'output-399-losses_by_asset_123.npz')
         zonal_layer_path = os.path.join(self.data_dir_name, 'risk',
                                         'zonal_layer.shp')
+        # TODO: in the future, we will move this to integration tests, using
+        #       session, hostname  and calc_id and the extract api, instead of
+        #       mocking
         dlg = LoadLossesByAssetAsLayerDialog(
-            IFACE, self.viewer_dock, 'losses_by_asset', loss_layer_path,
+            IFACE, self.viewer_dock, Mock(), Mock(), Mock(), 'losses_by_asset',
+            loss_layer_path,
             zonal_layer_path=zonal_layer_path)
         dlg.load_selected_only_ckb.setChecked(True)
         dlg.zonal_layer_gbx.setChecked(True)
@@ -201,8 +172,12 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
     def test_load_dmg_by_asset_only_selected_taxonomy(self):
         filepath = os.path.join(self.data_dir_name, 'risk',
                                 'output-1614-dmg_by_asset_356.npz')
+        # TODO: in the future, we will move this to integration tests, using
+        #       session, hostname  and calc_id and the extract api, instead of
+        #       mocking
         dlg = LoadDmgByAssetAsLayerDialog(
-            IFACE, self.viewer_dock, 'dmg_by_asset', filepath)
+            IFACE, self.viewer_dock, Mock(), Mock(), Mock(), 'dmg_by_asset',
+            filepath)
         dlg.load_selected_only_ckb.setChecked(True)
         taxonomy_idx = dlg.taxonomy_cbx.findText('"Concrete"')
         self.assertNotEqual(taxonomy_idx, -1,
@@ -221,8 +196,12 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
     def test_load_dmg_by_asset_all_taxonomies(self):
         filepath = os.path.join(self.data_dir_name, 'risk',
                                 'output-1614-dmg_by_asset_356.npz')
+        # TODO: in the future, we will move this to integration tests, using
+        #       session, hostname  and calc_id and the extract api, instead of
+        #       mocking
         dlg = LoadDmgByAssetAsLayerDialog(
-            IFACE, self.viewer_dock, 'dmg_by_asset', filepath)
+            IFACE, self.viewer_dock, Mock(), Mock(), Mock(), 'dmg_by_asset',
+            filepath)
         dlg.load_selected_only_ckb.setChecked(True)
         taxonomy_idx = dlg.taxonomy_cbx.findText('All')
         self.assertNotEqual(taxonomy_idx, -1, 'Taxonomy All was not found')
@@ -243,9 +222,12 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
                                       'output-1614-dmg_by_asset_356.npz')
         zonal_layer_path = os.path.join(self.data_dir_name, 'risk',
                                         'zonal_layer.shp')
+        # TODO: in the future, we will move this to integration tests, using
+        #       session, hostname  and calc_id and the extract api, instead of
+        #       mocking
         dlg = LoadDmgByAssetAsLayerDialog(
-            IFACE, self.viewer_dock, 'dmg_by_asset', dmg_layer_path,
-            zonal_layer_path=zonal_layer_path)
+            IFACE, self.viewer_dock, Mock(), Mock(), Mock(), 'dmg_by_asset',
+            dmg_layer_path, zonal_layer_path=zonal_layer_path)
         dlg.load_selected_only_ckb.setChecked(True)
         dlg.zonal_layer_gbx.setChecked(True)
         taxonomy_idx = dlg.taxonomy_cbx.findText('All')
