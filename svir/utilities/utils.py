@@ -29,6 +29,7 @@ import os
 import sys
 import locale
 import zlib
+import io
 from copy import deepcopy
 from time import time
 from pprint import pformat
@@ -1059,3 +1060,20 @@ def get_checksum(file_path):
     data = open(file_path, 'rb').read()
     checksum = zlib.adler32(data, 0) & 0xffffffff
     return checksum
+
+
+def extract_npz(
+        session, hostname, calc_id, output_type, message_bar, params=None):
+    url = '%s/v1/calc/%s/extract/%s' % (hostname, calc_id, output_type)
+    resp = session.get(url, params=params)
+    if not resp.ok:
+        msg = "Unable to extract %s with parameters %s: %s" % (
+            url, params, resp.reason)
+        log_msg(msg, level='C', message_bar=message_bar)
+        return
+    resp_content = resp.content
+    if not resp_content:
+        msg = 'GET %s returned an empty content!' % url
+        log_msg(msg, level='C', message_bar=message_bar)
+        return
+    return numpy.load(io.BytesIO(resp_content))
