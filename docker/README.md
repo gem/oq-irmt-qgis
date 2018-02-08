@@ -14,5 +14,5 @@ On our Jenkins system `--build-arg` must be `--build-arg uid=107`
 From the root folder:
 
 ```bash
-$ docker run -t -i -v $(pwd):/io --rm qgis-builder package VERSION=X.YY
+$ docker run -e OSGEO_QGIS_USERNAME=<username> -e OSGEO_QGIS_PASSWORD=<password> -e GEM_QGIS_DOCS=<key path> -t -i -v $(pwd):/io --rm qgis-builder release NEW_VERSION=vX.Y.Z
 ```
