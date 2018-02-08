@@ -202,7 +202,13 @@ upload_doc: doc
 	@echo "--------------------------------------"
 	VERSION=$(VERSION) ../scripts/doc_upload.sh
 
-upload: package upload_doc
+upload: upload_plugin upload_doc
+	@echo
+	@echo "-------------------------------------------------------"
+	@echo "Uploading plugin to QGIS Plugin repo and documentation."
+	@echo "-------------------------------------------------------"
+
+upload_plugin: package
 	@echo
 	@echo "-------------------------------------"
 	@echo "Uploading plugin to QGIS Plugin repo."
