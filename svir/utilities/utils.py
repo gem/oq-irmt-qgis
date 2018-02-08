@@ -28,6 +28,8 @@ import json
 import os
 import sys
 import locale
+import zlib
+import io
 from copy import deepcopy
 from time import time
 from pprint import pformat
@@ -49,7 +51,12 @@ from qgis.PyQt.QtGui import (QApplication,
                              QColor)
 
 from svir.third_party.poster.encode import multipart_encode
-from svir.utilities.shared import DEBUG, DEFAULT_SETTINGS
+from svir.utilities.shared import (
+                                   DEBUG,
+                                   DEFAULT_SETTINGS,
+                                   DEFAULT_PLATFORM_PROFILES,
+                                   DEFAULT_ENGINE_PROFILES,
+                                   )
 
 F32 = numpy.float32
 
@@ -1045,10 +1052,39 @@ def get_credentials(server):
 
     """
     qs = QSettings()
+    default_profiles = json.loads(
+        qs.value(
+            'irmt/%s_profiles',
+            (DEFAULT_PLATFORM_PROFILES if server == 'platform'
+                else DEFAULT_ENGINE_PROFILES)))
+    default_profile = default_profiles[default_profiles.keys()[0]]
     hostname = qs.value('irmt/%s_hostname' % server,
-                        DEFAULT_SETTINGS['%s_hostname' % server])
+                        default_profile['hostname'])
     username = qs.value('irmt/%s_username' % server,
-                        DEFAULT_SETTINGS['%s_username' % server])
+                        default_profile['username'])
     password = qs.value('irmt/%s_password' % server,
-                        DEFAULT_SETTINGS['%s_password' % server])
+                        default_profile['password'])
     return hostname, username, password
+
+
+def get_checksum(file_path):
+    data = open(file_path, 'rb').read()
+    checksum = zlib.adler32(data, 0) & 0xffffffff
+    return checksum
+
+
+def extract_npz(
+        session, hostname, calc_id, output_type, message_bar, params=None):
+    url = '%s/v1/calc/%s/extract/%s' % (hostname, calc_id, output_type)
+    resp = session.get(url, params=params)
+    if not resp.ok:
+        msg = "Unable to extract %s with parameters %s: %s" % (
+            url, params, resp.reason)
+        log_msg(msg, level='C', message_bar=message_bar)
+        return
+    resp_content = resp.content
+    if not resp_content:
+        msg = 'GET %s returned an empty content!' % url
+        log_msg(msg, level='C', message_bar=message_bar)
+        return
+    return numpy.load(io.BytesIO(resp_content))

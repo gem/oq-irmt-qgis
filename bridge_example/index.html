@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width" />
+        <title>This is the title</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <body>
+        <button id='mybutton' type="button">Click Me!</button>
+        <button id='selectSingleFileBtn' type="button">Select single file</button>
+        <button id='selectMultipleFilesBtn' type="button">Select multiple files</button>
+    </body>
+    <script charset="utf-8">
+        $(document).ready(function(){
+            $('#mybutton').click(function(){
+                document.title = "Button was clicked";
+                if (typeof gem_api == 'undefined') {
+                    alert("Called by normal browser")
+                } else {
+                    <!-- gem_api.common.notify_click(); -->
+                    <!-- alert("Called by QGIS") -->
+                    <!-- console.info("1 + 2 = " + gem_api.common.add(1, 2)); -->
+                    <!-- var strlist = ['a', 'b', 'c']; -->
+                    <!-- console.info(gem_api.common.concat(strlist)); -->
+                    <!-- var headers = [ -->
+                    <!--     {'name': 'a', 'value': '1'}, -->
+                    <!--     {'name': 'b', 'value': 'ciao'}, -->
+                    <!--     {'name': 'c', 'value': 'nattei'} -->
+                    <!-- ]; -->
+                    <!-- var data = [{'name': 'paolo', 'value': 'tormene'}, {'name': 'matteo', 'value': 'nastasi'}]; -->
+                    <!-- var json = gem_api.common.json_encode(jsobj); -->
+                    <!-- console.info(json); -->
+                    <!-- console.info(gem_api.common.json_decode(json)); -->
+                    <!-- var url = '/taxonomy/height-of-ground-floor-level-above-grade-unknown--hf99'; -->
+                    <!-- gem_api.point_to_taxonomy(url); -->
+                    <!-- gem_api.delegate_download(url, 'POST', headers, data, 'delegate_download_js_cb', '42'); -->
+                    <!-- var url = 'http://localhost:8800/taxonomy/height-of-ground-floor-level-above-grade-unknown--hf99'; -->
+                    <!-- window.open(url); -->
+                    <!-- <1!-- window.open("https://www.w3schools.com"); --1> -->
+                    <!-- var content = "This is a\nmultiline file"; -->
+                    var filename = 'saved_string.txt';
+                    <!-- gem_api.save_str_to_file(content, filename); -->
+                    <!-- var file_names = gem_api.ls_ipt_dir(); -->
+                    <!-- console.log(file_names); -->
+                    <!-- var removed = gem_api.rm_file_from_ipt_dir(filename); -->
+                    <!-- console.log(removed); -->
+                    <!-- var removed = gem_api.rm_file_from_ipt_dir(filename, filename); -->
+                    <!-- console.log(removed); -->
+                    var ret = gem_api.rename_file_in_ipt_dir(filename, 'changed_name.txt');
+                    console.log(ret);
+                    <!-- gem_api.run_oq_engine_calc(); -->
+                    <!-- gem_api.select_and_copy_files_to_ipt_dir(); -->
+                    <!-- var filePaths = [ -->
+                    <!--     '/home/paolo/.gem/irmt/ipt/source_model_logic_tree.xml', -->
+                    <!--     '/home/paolo/.gem/irmt/ipt/gmpe_logic_tree.xml', -->
+                    <!--     '/home/paolo/.gem/irmt/ipt/job.ini', -->
+                    <!--     '/home/paolo/.gem/irmt/ipt/source_model.xml' -->
+                    <!-- ] -->
+                    <!-- gem_api.run_oq_engine_calc(filePaths); -->
+                }
+            });
+            $('#selectSingleFileBtn').click(function(){
+                if (typeof gem_api == 'undefined') {
+                    alert("Called by normal browser")
+                } else {
+                    var fileName = gem_api.select_file();
+                    gem_api.common.info("Selected file: " + fileName);
+                }
+            });
+            $('#selectMultipleFilesBtn').click(function(){
+                if (typeof gem_api == 'undefined') {
+                    alert("Called by normal browser")
+                } else {
+                    var fileNames = gem_api.select_files();
+                    gem_api.common.info("Selected files: " + fileNames);
+                }
+            });
+        });
+
+        function delegate_download_js_cb(js_cb_object_id, file_name, success, reason) {
+            if (success == 0) {
+                gem_api.common.info('Download completed for id: ' + js_cb_object_id + 'File name: ' + file_name);
+            } else {
+                gem_api.common.error('Error while attempting to download for id ' + js_cb_object_id + ': ' + reason);
+            }
+        }
+    </script>
+</html>

@@ -38,11 +38,12 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
     Modal dialog to load gmf_data from an oq-engine output, as layer
     """
 
-    def __init__(self, iface, viewer_dock, output_type='gmf_data',
-                 path=None, mode=None):
+    def __init__(self, iface, viewer_dock, session, hostname, calc_id,
+                 output_type='gmf_data', path=None, mode=None):
         assert output_type == 'gmf_data'
         LoadOutputAsLayerDialog.__init__(
-            self, iface, viewer_dock, output_type, path, mode)
+            self, iface, viewer_dock, session, hostname, calc_id,
+            output_type, path, mode)
         self.setWindowTitle(
             'Load ground motion fields from NPZ, as layer')
         self.create_load_selected_only_ckb()
@@ -50,6 +51,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         self.create_rlz_or_stat_selector()
         self.create_imt_selector()
         self.create_eid_selector()
+        # TODO: use the extract api instead of reading from npz
         if self.path:
             self.npz_file = numpy.load(self.path, 'r')
             self.populate_out_dep_widgets()
