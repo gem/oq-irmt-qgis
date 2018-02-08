@@ -51,7 +51,12 @@ from qgis.PyQt.QtGui import (QApplication,
                              QColor)
 
 from svir.third_party.poster.encode import multipart_encode
-from svir.utilities.shared import DEBUG, DEFAULT_SETTINGS
+from svir.utilities.shared import (
+                                   DEBUG,
+                                   DEFAULT_SETTINGS,
+                                   DEFAULT_PLATFORM_PROFILES,
+                                   DEFAULT_ENGINE_PROFILES,
+                                   )
 
 F32 = numpy.float32
 
@@ -1047,12 +1052,18 @@ def get_credentials(server):
 
     """
     qs = QSettings()
+    default_profiles = json.loads(
+        qs.value(
+            'irmt/%s_profiles',
+            (DEFAULT_PLATFORM_PROFILES if server == 'platform'
+                else DEFAULT_ENGINE_PROFILES)))
+    default_profile = default_profiles[default_profiles.keys()[0]]
     hostname = qs.value('irmt/%s_hostname' % server,
-                        DEFAULT_SETTINGS['%s_hostname' % server])
+                        default_profile['hostname'])
     username = qs.value('irmt/%s_username' % server,
-                        DEFAULT_SETTINGS['%s_username' % server])
+                        default_profile['username'])
     password = qs.value('irmt/%s_password' % server,
-                        DEFAULT_SETTINGS['%s_password' % server])
+                        default_profile['password'])
     return hostname, username, password
 
 
