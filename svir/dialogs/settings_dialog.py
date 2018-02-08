@@ -149,13 +149,23 @@ class SettingsDialog(QDialog, FORM_CLASS):
                 self.engine_profile_cbx.blockSignals(True)
                 self.engine_profile_cbx.addItem(profile)
                 self.engine_profile_cbx.blockSignals(False)
-        if cur_profile is not None:
-            if platform_or_engine == 'platform':
-                self.platform_profile_cbx.setCurrentIndex(
-                    self.platform_profile_cbx.findText(cur_profile))
-            else:  # engine
-                self.engine_profile_cbx.setCurrentIndex(
-                    self.engine_profile_cbx.findText(cur_profile))
+        if cur_profile is None:
+            cur_profile = profiles.keys()[0]
+            mySettings.setValue(
+                'irmt/current_%s_profile' % platform_or_engine,
+                cur_profile)
+        if platform_or_engine == 'platform':
+            self.platform_profile_cbx.setCurrentIndex(
+                self.platform_profile_cbx.findText(cur_profile))
+        else:  # engine
+            self.engine_profile_cbx.setCurrentIndex(
+                self.engine_profile_cbx.findText(cur_profile))
+        if platform_or_engine == 'platform':
+            self.pla_remove_btn.setEnabled(
+                self.platform_profile_cbx.count() > 1)
+        else:  # engine
+            self.eng_remove_btn.setEnabled(
+                self.engine_profile_cbx.count() > 1)
 
     def set_button_color(self, button, color):
         button.setStyleSheet("background-color: %s" % color.name())
@@ -305,6 +315,7 @@ class SettingsDialog(QDialog, FORM_CLASS):
         else:  # engine
             cur_profile = self.engine_profile_cbx.currentText()
         del profiles[cur_profile]
+        QSettings().remove('irmt/current_%s_profile' % platform_or_engine)
         self.save_profiles(platform_or_engine, profiles)
         self.refresh_profile_cbxs(platform_or_engine)
 
