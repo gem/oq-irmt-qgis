@@ -85,8 +85,8 @@ class SettingsDialog(QDialog, FORM_CLASS):
         """
         mySettings = QSettings()
 
-        self.refresh_profile_cbxs('platform')
-        self.refresh_profile_cbxs('engine')
+        self.refresh_profile_cbxs('platform', restore_defaults)
+        self.refresh_profile_cbxs('engine', restore_defaults)
 
         developer_mode = (DEFAULT_SETTINGS['developer_mode']
                           if restore_defaults
@@ -115,7 +115,7 @@ class SettingsDialog(QDialog, FORM_CLASS):
         self.developer_mode_ckb.setChecked(developer_mode)
         self.enable_experimental_ckb.setChecked(experimental_enabled)
 
-    def refresh_profile_cbxs(self, platform_or_engine):
+    def refresh_profile_cbxs(self, platform_or_engine, restore_defaults=False):
         assert platform_or_engine in ('platform', 'engine'), platform_or_engine
         if platform_or_engine == 'platform':
             self.platform_profile_cbx.blockSignals(True)
@@ -126,14 +126,20 @@ class SettingsDialog(QDialog, FORM_CLASS):
             self.engine_profile_cbx.clear()
             self.engine_profile_cbx.blockSignals(False)
         mySettings = QSettings()
-        profiles = json.loads(
-            mySettings.value(
-                'irmt/%s_profiles' % platform_or_engine,
-                (DEFAULT_PLATFORM_PROFILES
-                 if platform_or_engine == 'platform'
-                 else DEFAULT_ENGINE_PROFILES)))
-        cur_profile = mySettings.value(
-            'irmt/current_%s_profile' % platform_or_engine)
+        if restore_defaults:
+            profiles = json.loads(
+                DEFAULT_PLATFORM_PROFILES if platform_or_engine == 'platform'
+                else DEFAULT_ENGINE_PROFILES)
+            cur_profile = profiles.keys()[0]
+        else:
+            profiles = json.loads(
+                mySettings.value(
+                    'irmt/%s_profiles' % platform_or_engine,
+                    (DEFAULT_PLATFORM_PROFILES
+                     if platform_or_engine == 'platform'
+                     else DEFAULT_ENGINE_PROFILES)))
+            cur_profile = mySettings.value(
+                'irmt/current_%s_profile' % platform_or_engine)
         for profile in profiles:
             if platform_or_engine == 'platform':
                 self.platform_profile_cbx.blockSignals(True)
