@@ -27,8 +27,7 @@ import os
 import tempfile
 import shutil
 from xml.etree import ElementTree
-from qgis.PyQt import Qt
-from qgis.PyQt.QtCore import pyqtSlot
+from qgis.PyQt.QtCore import pyqtSlot, Qt
 from qgis.PyQt.QtGui import (QDialog, QDialogButtonBox, QListWidgetItem,
                              QMessageBox)
 from qgis.core import QgsVectorLayer,  QgsMapLayerRegistry

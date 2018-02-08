@@ -30,7 +30,7 @@
 
 import re
 import os
-from qgis.PyQt import Qt
+from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtXml import *
 from qgis.core import *
 

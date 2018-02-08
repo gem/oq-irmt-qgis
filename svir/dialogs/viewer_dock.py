@@ -25,7 +25,6 @@
 import os
 import csv
 import numpy
-import io
 from collections import OrderedDict
 
 try:
@@ -67,6 +66,7 @@ from svir.utilities.utils import (get_ui_class,
                                   log_msg,
                                   clear_widgets_from_layout,
                                   warn_scipy_missing,
+                                  extract_npz,
                                   )
 from svir.recovery_modeling.recovery_modeling import (
     RecoveryModeling, fill_fields_multiselect)
@@ -356,9 +356,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                         # NOTE: this would not work for multiple values per tag
                         params[tag_name] = value
         output_type = 'aggdamages/%s' % self.loss_type_cbx.currentText()
-        self.dmg_by_asset_aggr = self.extract_npz(
+        self.dmg_by_asset_aggr = extract_npz(
             self.session, self.hostname, self.calc_id, output_type,
-            params=params)
+            message_bar=self.iface.messageBar(), params=params)
         if self.dmg_by_asset_aggr is None:
             return
         self.draw_dmg_by_asset_aggr()
@@ -372,9 +372,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                         # NOTE: this would not work for multiple values per tag
                         params[tag_name] = value
         output_type = 'agglosses/%s' % self.loss_type_cbx.currentText()
-        self.losses_by_asset_aggr = self.extract_npz(
+        self.losses_by_asset_aggr = extract_npz(
             self.session, self.hostname, self.calc_id, output_type,
-            params=params)
+            message_bar=self.iface.messageBar(), params=params)
         if self.losses_by_asset_aggr is None:
             return
         self.draw_losses_by_asset_aggr()
@@ -486,22 +486,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         # else.
         self.output_type = new_output_type
 
-    def extract_npz(
-            self, session, hostname, calc_id, output_type, params=None):
-        url = '%s/v1/calc/%s/extract/%s' % (hostname, calc_id, output_type)
-        resp = session.get(url, params=params)
-        if not resp.ok:
-            msg = "Unable to extract %s with parameters %s: %s" % (
-                url, params, resp.reason)
-            log_msg(msg, level='C', message_bar=self.iface.messageBar())
-            return
-        resp_content = resp.content
-        if not resp_content:
-            msg = 'GET %s returned an empty content!' % url
-            log_msg(msg, level='C', message_bar=self.iface.messageBar())
-            return
-        return numpy.load(io.BytesIO(resp_content))
-
     def load_no_map_output(self, calc_id, session, hostname, output_type):
         self.calc_id = calc_id
         self.session = session
@@ -523,31 +507,19 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             raise NotImplementedError(output_type)
 
     def load_dmg_by_asset_aggr(self, calc_id, session, hostname, output_type):
-        composite_risk_model_attrs = self.extract_npz(
-            session, hostname, calc_id, 'composite_risk_model.attrs')
+        composite_risk_model_attrs = extract_npz(
+            session, hostname, calc_id, 'composite_risk_model.attrs',
+            message_bar=self.iface.messageBar())
         if composite_risk_model_attrs is None:
             return
         self.dmg_states = composite_risk_model_attrs['damage_states']
-        tags_npz = self.extract_npz(
-            session, hostname, calc_id, 'assetcol/tags')
-        if tags_npz is None:
-            return
-        tags_array = tags_npz['array']
-        self.tags = {}
-        for tag in tags_array:
-            # tags are in the format 'city=Benicia' (tag_name=tag_value)
-            tag_name, tag_value = tag.split('=')
-            if tag_name not in self.tags:
-                self.tags[tag_name] = {
-                    'selected': False,
-                    'values': {tag_value: False}}  # False means unselected
-            else:
-                # False means unselected
-                self.tags[tag_name]['values'][tag_value] = False
+        self._get_tags(session, hostname, calc_id, self.iface.messageBar(),
+                       with_star=False)
         self.update_list_selected_edt()
 
-        rlzs_npz = self.extract_npz(
-            session, hostname, calc_id, 'realizations')
+        rlzs_npz = extract_npz(
+            session, hostname, calc_id, 'realizations',
+            message_bar=self.iface.messageBar())
         if rlzs_npz is None:
             return
         rlzs = rlzs_npz['array']['gsims']
@@ -569,24 +541,20 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
         self.filter_dmg_by_asset_aggr()
 
-    def load_losses_by_asset_aggr(
-            self, calc_id, session, hostname, output_type):
-        composite_risk_model_attrs = self.extract_npz(
-            session, hostname, calc_id, 'composite_risk_model.attrs')
-        if composite_risk_model_attrs is None:
-            return
-        rlzs_npz = self.extract_npz(
-            session, hostname, calc_id, 'realizations')
-        if rlzs_npz is None:
-            return
-        self.rlzs = rlzs_npz['array']['gsims']
-        tags_npz = self.extract_npz(
-            session, hostname, calc_id, 'assetcol/tags')
+    def _get_tags(self, session, hostname, calc_id, message_bar, with_star):
+        tags_npz = extract_npz(
+            session, hostname, calc_id, 'asset_tags', message_bar=message_bar)
         if tags_npz is None:
             return
-        tags_array = tags_npz['array']
+        tags_list = []
+        for tag_name in tags_npz:
+            if tag_name == 'array':
+                continue
+            for tag in tags_npz[tag_name]:
+                if tag[-1] != '?':
+                    tags_list.append(tag)
         self.tags = {}
-        for tag in tags_array:
+        for tag in tags_list:
             # tags are in the format 'city=Benicia' (tag_name=tag_value)
             tag_name, tag_value = tag.split('=')
             if tag_name not in self.tags:
@@ -596,7 +564,24 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             else:
                 # False means unselected
                 self.tags[tag_name]['values'][tag_value] = False
-            self.tags[tag_name]['values']['*'] = False
+            if with_star:
+                self.tags[tag_name]['values']['*'] = False
+
+    def load_losses_by_asset_aggr(
+            self, calc_id, session, hostname, output_type):
+        composite_risk_model_attrs = extract_npz(
+            session, hostname, calc_id, 'composite_risk_model.attrs',
+            message_bar=self.iface.messageBar())
+        if composite_risk_model_attrs is None:
+            return
+        rlzs_npz = extract_npz(
+            session, hostname, calc_id, 'realizations',
+            message_bar=self.iface.messageBar())
+        if rlzs_npz is None:
+            return
+        self.rlzs = rlzs_npz['array']['gsims']
+        self._get_tags(session, hostname, calc_id, self.iface.messageBar(),
+                       with_star=True)
         self.update_list_selected_edt()
 
         loss_types = composite_risk_model_attrs['loss_types']
@@ -613,8 +598,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.filter_losses_by_asset_aggr()
 
     def load_agg_curves(self, calc_id, session, hostname, output_type):
-        self.agg_curves = self.extract_npz(
-            session, hostname, calc_id, output_type)
+        self.agg_curves = extract_npz(
+            session, hostname, calc_id, output_type,
+            message_bar=self.iface.messageBar())
         if self.agg_curves is None:
             return
         loss_types = self.agg_curves['array'].dtype.names
@@ -978,7 +964,13 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 self.field_names = [field.name() for field in feature.fields()]
                 # reading from something like
                 # [u'rlz-000_PGA', u'rlz-000_SA(0.025)', ...]
-                unique_periods = [0.0]  # Use 0.0 for PGA
+                # the first item can be PGA (but PGA can also be missing)
+                # and the length of the array of periods must be consistent
+                # with the length of or ordinates to plot
+                if self.field_names[0].endswith("PGA"):
+                    unique_periods = [0.0]  # Use 0.0 for PGA
+                else:
+                    unique_periods = []  # PGA is not there
                 # get the number between parenthesis
                 try:
                     periods = [
