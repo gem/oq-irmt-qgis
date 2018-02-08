@@ -140,7 +140,7 @@ class SettingsDialog(QDialog, FORM_CLASS):
                      else DEFAULT_ENGINE_PROFILES)))
             cur_profile = mySettings.value(
                 'irmt/current_%s_profile' % platform_or_engine)
-        for profile in profiles:
+        for profile in sorted(profiles, key=unicode.lower):
             if platform_or_engine == 'platform':
                 self.platform_profile_cbx.blockSignals(True)
                 self.platform_profile_cbx.addItem(profile)
