@@ -128,6 +128,10 @@ def log_msg(message, tag='GEM IRMT Plugin', level='I', message_bar=None,
             elif level == 'C':
                 title = 'Error'
                 duration = duration if duration is not None else 0
+            max_msg_len = 200
+            if len(message) > max_msg_len:
+                message = ("%s[...] (Please open the Log Messages Panel to"
+                           " read the full message)" % message[:max_msg_len])
             message_bar.pushMessage(tr(title),
                                     tr(message),
                                     levels[level]['bar'],
