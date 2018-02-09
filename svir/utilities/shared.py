@@ -224,6 +224,9 @@ OQ_NO_MAP_TYPES = set(
     ['agg_curves-rlzs', 'agg_curves-stats', 'dmg_by_asset_aggr',
      'losses_by_asset_aggr'])
 
+LOG_LEVELS = {'I': 'Info',
+              'W': 'Warning',
+              'C': 'Critical'}
 
 DEFAULT_SETTINGS = dict(
     color_from_rgba=QColor('#FFEBEB').rgba(),
@@ -233,6 +236,7 @@ DEFAULT_SETTINGS = dict(
     force_restyling=True,
     experimental_enabled=False,
     developer_mode=False,
+    log_level='C',
 )
 
 DEFAULT_PLATFORM_PROFILES = (
