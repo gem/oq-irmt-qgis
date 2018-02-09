@@ -111,7 +111,13 @@ def log_msg(message, tag='GEM IRMT Plugin', level='I', message_bar=None,
     if 'nose' in sys.modules and level == 'C':
         raise RuntimeError(message)
     else:
-        QgsMessageLog.logMessage(tr(message), tr(tag), levels[level]['log'])
+        log_level = QSettings().value(
+            'irmt/log_level', DEFAULT_SETTINGS['log_level'])
+        if (level == 'C'
+                or level == 'W' and log_level in ('I', 'W')
+                or level == 'I' and log_level in ('I')):
+            QgsMessageLog.logMessage(
+                tr(message), tr(tag), levels[level]['log'])
         if message_bar is not None:
             if level == 'I':
                 title = 'Info'
@@ -122,6 +128,10 @@ def log_msg(message, tag='GEM IRMT Plugin', level='I', message_bar=None,
             elif level == 'C':
                 title = 'Error'
                 duration = duration if duration is not None else 0
+            max_msg_len = 200
+            if len(message) > max_msg_len:
+                message = ("%s[...] (Please open the Log Messages Panel to"
+                           " read the full message)" % message[:max_msg_len])
             message_bar.pushMessage(tr(title),
                                     tr(message),
                                     levels[level]['bar'],

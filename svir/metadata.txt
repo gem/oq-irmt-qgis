@@ -28,6 +28,7 @@ changelog=
       instead of using the exported npz
     * Fixed the visualization of UHS in case PGA is not present
     * Multiple connection profiles can be saved, making it easier to switch between different OQ-Engine servers and OQ Platforms.
+    * It is possible to modify the log verbosity of the plugin, through a new property in the plugin settings
     2.9.2
     * If a selected OQ-Engine calculation is running, the corresponding outputs will be listed as soon as the calculation is complete.
     * Fixed the button showing parameters of a OQ-Engine calculation
