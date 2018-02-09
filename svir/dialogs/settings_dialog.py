@@ -105,7 +105,9 @@ class SettingsDialog(QDialog, FORM_CLASS):
 
         log_level = (DEFAULT_SETTINGS['log_level']
                      if restore_defaults
-                     else mySettings.value('irmt/log_level', 'C'))
+                     else mySettings.value(
+                         'irmt/log_level',
+                         DEFAULT_SETTINGS['log_level']))
         self.log_level_cbx.setCurrentIndex(
             self.log_level_cbx.findData(log_level))
 
