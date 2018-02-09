@@ -36,6 +36,7 @@ from svir.utilities.shared import (
                                    DEFAULT_SETTINGS,
                                    DEFAULT_PLATFORM_PROFILES,
                                    DEFAULT_ENGINE_PROFILES,
+                                   LOG_LEVELS,
                                    )
 
 FORM_CLASS = get_ui_class('ui_settings.ui')
@@ -72,6 +73,10 @@ class SettingsDialog(QDialog, FORM_CLASS):
         }
         for key in modes:
             self.style_mode.addItem(modes[key], key)
+
+        for log_level in LOG_LEVELS:
+            self.log_level_cbx.addItem(LOG_LEVELS[log_level], log_level)
+
         self.restore_state()
         self.initial_engine_hostname = QSettings().value(
             'irmt/engine_hostname')
@@ -97,6 +102,14 @@ class SettingsDialog(QDialog, FORM_CLASS):
                                 else mySettings.value(
                                     'irmt/experimental_enabled',
                                     False, type=bool))
+
+        log_level = (DEFAULT_SETTINGS['log_level']
+                     if restore_defaults
+                     else mySettings.value(
+                         'irmt/log_level',
+                         DEFAULT_SETTINGS['log_level']))
+        self.log_level_cbx.setCurrentIndex(
+            self.log_level_cbx.findData(log_level))
 
         style = get_style(
             self.iface.activeLayer(),
@@ -180,6 +193,9 @@ class SettingsDialog(QDialog, FORM_CLASS):
                             self.developer_mode_ckb.isChecked())
         mySettings.setValue('irmt/experimental_enabled',
                             self.enable_experimental_ckb.isChecked())
+        mySettings.setValue(
+            'irmt/log_level',
+            self.log_level_cbx.itemData(self.log_level_cbx.currentIndex()))
 
         cur_pla_profile = self.platform_profile_cbx.currentText()
         cur_eng_profile = self.engine_profile_cbx.currentText()
