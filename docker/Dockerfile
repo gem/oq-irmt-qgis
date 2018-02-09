@@ -24,6 +24,7 @@ RUN useradd -m -u $uid builder && \
     echo 'builder ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 USER builder
+ADD gitconfig /home/builder/.gitconfig
 
 WORKDIR /io
 
