@@ -34,7 +34,7 @@ from qgis.PyQt.QtGui import (QDialog,
                              )
 from qgis.gui import QgsMessageBar
 from svir.ui.gem_qwebview import GemQWebView
-from svir.utilities.shared import DEFAULT_SETTINGS
+from svir.utilities.shared import DEFAULT_ENGINE_PROFILES
 
 
 class StandaloneAppDialog(QDialog):
@@ -63,8 +63,14 @@ class StandaloneAppDialog(QDialog):
         self.set_host()
 
     def set_host(self):
-        self.host = QSettings().value(
-            'irmt/engine_hostname', DEFAULT_SETTINGS['engine_hostname'])
+        engine_profiles = json.loads(QSettings().value(
+            'irmt/engine_profiles', DEFAULT_ENGINE_PROFILES))
+        cur_eng_profile = QSettings().value('irmt/current_engine_profile')
+        if cur_eng_profile is None:
+            cur_eng_profile = engine_profiles.keys()[0]
+        engine_profile = engine_profiles[cur_eng_profile]
+        engine_hostname = engine_profile['hostname']
+        self.host = QSettings().value('irmt/engine_hostname', engine_hostname)
 
     def load_homepage(self):
         if self.web_view is not None:
