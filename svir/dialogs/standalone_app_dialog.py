@@ -34,7 +34,7 @@ from qgis.PyQt.QtGui import (QDialog,
                              )
 from qgis.gui import QgsMessageBar
 from svir.ui.gem_qwebview import GemQWebView
-from svir.utilities.shared import DEFAULT_SETTINGS, DEFAULT_ENGINE_PROFILES
+from svir.utilities.shared import DEFAULT_ENGINE_PROFILES
 
 
 class StandaloneAppDialog(QDialog):
