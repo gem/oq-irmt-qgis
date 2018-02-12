@@ -125,8 +125,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.calc_log_line = {}
         self.session = None
         self.hostname = None
-        self.current_output_calc_id = None
-        self.current_pointed_calc_id = None  # we will scroll to it
+        self.current_calc_id = None  # list of outputs refers to this calc_id
+        self.pointed_calc_id = None  # we will scroll to it
         self.is_logged_in = False
         self.timer = None
         # Keep retrieving the list of calculations (especially important to
@@ -317,8 +317,13 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.calc_list_tbl.horizontalHeader().setStyleSheet(
             "font-weight: bold;")
         self.set_calc_list_widths(col_widths)
-        if self.current_pointed_calc_id:
-            self.highlight_and_scroll_to_calc_id(self.current_pointed_calc_id)
+        if self.pointed_calc_id:
+            self.highlight_and_scroll_to_calc_id(self.pointed_calc_id)
+        # if a running calculation is selected, the corresponding outputs will
+        # be displayed (once) automatically at completion
+        if (self.pointed_calc_id and
+                self.output_list_tbl.rowCount() == 0):
+            self.update_output_list(self.pointed_calc_id)
         return True
 
     def get_row_by_calc_id(self, calc_id):
@@ -339,7 +344,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             self.calc_list_tbl.scrollToItem(
                 item_calc_id, QAbstractItemView.PositionAtCenter)
         else:
-            self.current_pointed_calc_id = None
+            self.pointed_calc_id = None
             self.calc_list_tbl.clearSelection()
 
     def set_calc_list_widths(self, widths):
@@ -375,7 +380,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.download_datastore_btn.setEnabled(True)
         self.download_datastore_btn.setText(
             'Download HDF5 datastore for calculation %s'
-            % self.current_output_calc_id)
+            % calc_id)
+        self.show_calc_params_btn.setEnabled(True)
+        self.show_calc_params_btn.setText(
+            'Show parameters for calculation %s' % calc_id)
 
     def on_calc_action_btn_clicked(self, calc_id, action):
         # NOTE: while scrolling through the list of calculations, the tool
@@ -383,7 +391,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         # scrolling.  But if you click on any button, at the next refresh, the
         # view is scrolled to the top. Therefore we need to keep track of which
         # line was selected, in order to scroll to that line.
-        self.current_pointed_calc_id = calc_id
+        self.current_calc_id = self.pointed_calc_id = calc_id
         self._set_show_calc_params_btn()
         self.highlight_and_scroll_to_calc_id(calc_id)
         if action == 'Console':
@@ -400,7 +408,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 QMessageBox.Yes | QMessageBox.No)
             if confirmed == QMessageBox.Yes:
                 self.remove_calc(calc_id)
-                if self.current_output_calc_id == calc_id:
+                if self.current_calc_id == calc_id:
                     self.clear_output_list()
         elif action == 'Outputs':
             self.update_output_list(calc_id)
@@ -453,11 +461,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         if resp.ok:
             msg = 'Calculation %s successfully removed' % calc_id
             log_msg(msg, level='I', message_bar=self.message_bar)
-            if self.current_output_calc_id == calc_id:
-                self.current_output_calc_id = None
+            if self.current_calc_id == calc_id:
+                self.current_calc_id = None
                 self.clear_output_list()
-            if self.current_pointed_calc_id == calc_id:
-                self.current_pointed_calc_id = None
+            if self.pointed_calc_id == calc_id:
+                self.pointed_calc_id = None
                 self.clear_output_list()
             self.refresh_calc_list()
         else:
@@ -550,22 +558,23 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         calc_id_col_idx = 1
         item_calc_id = self.calc_list_tbl.item(row, calc_id_col_idx)
         calc_id = int(item_calc_id.text())
-        if self.current_pointed_calc_id == calc_id:
-            self.current_pointed_calc_id = None
+        if self.pointed_calc_id == calc_id:
+            # if you click again on the row that was selected, it unselects it
+            self.pointed_calc_id = None
             self.calc_list_tbl.clearSelection()
         else:
-            self.current_pointed_calc_id = calc_id
+            self.pointed_calc_id = calc_id
             self._set_show_calc_params_btn()
-        self._set_show_calc_params_btn()
         self.update_output_list(calc_id)
+        self._set_show_calc_params_btn()
 
     def _set_show_calc_params_btn(self):
         self.show_calc_params_btn.setEnabled(
-            self.current_pointed_calc_id is not None)
-        if self.current_pointed_calc_id is not None:
+            self.current_calc_id is not None)
+        if self.current_calc_id is not None:
             self.show_calc_params_btn.setText(
                 'Show parameters for calculation %s'
-                % self.current_pointed_calc_id)
+                % self.current_calc_id)
         else:
             self.show_calc_params_btn.setText('Show calculation parameters')
 
@@ -575,7 +584,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         if not dest_folder:
             return
         datastore_url = "%s/v1/calc/%s/datastore" % (
-            self.hostname, self.current_output_calc_id)
+            self.hostname, self.current_calc_id)
         with WaitCursorManager('Getting HDF5 datastore...',
                                self.iface.messageBar()):
             try:
@@ -596,9 +605,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     def on_show_calc_params_btn_clicked(self):
         self.params_dlg = ShowParamsDialog()
         self.params_dlg.setWindowTitle(
-            'Parameters of calculation %s' % self.current_pointed_calc_id)
+            'Parameters of calculation %s' % self.current_calc_id)
         get_calc_params_url = "%s/v1/calc/%s/oqparam" % (
-            self.hostname, self.current_pointed_calc_id)
+            self.hostname, self.current_calc_id)
         with WaitCursorManager('Getting calculation parameters...',
                                self.iface.messageBar()):
             try:
@@ -625,7 +634,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 return
         if resp.ok:
             output_list = json.loads(resp.text)
-            self.current_output_calc_id = calc_id
+            self.current_calc_id = calc_id
             return output_list
         else:
             return []
@@ -728,7 +737,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             dest_folder = tempfile.gettempdir()
             if output_type in OQ_NO_MAP_TYPES:
                 self.viewer_dock.load_no_map_output(
-                    self.current_output_calc_id, self.session,
+                    self.current_calc_id, self.session,
                     self.hostname, output_type)
             elif outtype == 'rst':
                 filepath = self.download_output(
@@ -740,7 +749,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 self.full_report_dlg = ShowFullReportDialog(filepath)
                 self.full_report_dlg.setWindowTitle(
                     'Full report of calculation %s' %
-                    self.current_output_calc_id)
+                    self.current_calc_id)
                 self.full_report_dlg.show()
             else:
                 raise NotImplementedError("%s %s" % (action, outtype))
@@ -754,7 +763,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 if output_type not in OUTPUT_TYPE_LOADERS:
                     raise NotImplementedError(output_type)
                 dlg = OUTPUT_TYPE_LOADERS[output_type](
-                    self.iface, self.viewer_dock, output_type, filepath)
+                    self.iface, self.viewer_dock,
+                    self.session, self.hostname, self.current_calc_id,
+                    output_type, filepath)
                 dlg.exec_()
             else:
                 raise NotImplementedError("%s %s" % (action, outtype))

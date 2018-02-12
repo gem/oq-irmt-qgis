@@ -39,12 +39,13 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
     Modal dialog to load dmg_by_asset from an oq-engine output, as layer
     """
 
-    def __init__(self, iface, viewer_dock, output_type='dmg_by_asset',
+    def __init__(self, iface, viewer_dock, session, hostname, calc_id,
+                 output_type='dmg_by_asset',
                  path=None, mode=None, zonal_layer_path=None):
         assert output_type == 'dmg_by_asset'
         LoadOutputAsLayerDialog.__init__(
-            self, iface, viewer_dock, output_type, path, mode,
-            zonal_layer_path)
+            self, iface, viewer_dock, session, hostname, calc_id,
+            output_type, path, mode, zonal_layer_path)
         self.setWindowTitle('Load scenario damage by asset from NPZ, as layer')
         self.create_load_selected_only_ckb()
         self.load_selected_only_ckb.setEnabled(False)

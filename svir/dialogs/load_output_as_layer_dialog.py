@@ -36,9 +36,7 @@ from qgis.core import (QgsVectorLayer,
                        QGis,
                        QgsMapLayer,
                        )
-# FIXME: Use wrapper as soon as it works also on Mac OS
-from PyQt4.QtCore import pyqtSlot, QDir, QSettings, QFileInfo, Qt
-# from qgis.PyQt.QtCore import pyqtSlot, QDir, QSettings, QFileInfo, Qt
+from qgis.PyQt.QtCore import pyqtSlot, QDir, QSettings, QFileInfo, Qt
 from qgis.PyQt.QtGui import (QDialogButtonBox,
                              QDialog,
                              QFileDialog,
@@ -74,7 +72,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     Modal dialog to load an oq-engine output as layer
     """
 
-    def __init__(self, iface, viewer_dock, output_type=None,
+    def __init__(self, iface, viewer_dock,
+                 session, hostname, calc_id, output_type=None,
                  path=None, mode=None, zonal_layer_path=None):
         # sanity check
         if output_type not in OQ_ALL_LOADABLE_TYPES:
@@ -82,6 +81,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.iface = iface
         self.viewer_dock = viewer_dock
         self.path = path
+        self.session = session
+        self.hostname = hostname
+        self.calc_id = calc_id
         self.output_type = output_type
         self.mode = mode  # if 'testing' it will avoid some user interaction
         self.zonal_layer_path = zonal_layer_path
@@ -510,6 +512,12 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         last_index = cbx.count() - 1
         cbx.setItemData(last_index, zonal_layer_plus_stats.id())
         cbx.setCurrentIndex(last_index)
+
+    # FIXME: create file_hlayout only in widgets that need it
+    def remove_file_hlayout(self):
+        for i in reversed(range(self.file_hlayout.count())):
+            self.file_hlayout.itemAt(i).widget().setParent(None)
+        self.vlayout.removeItem(self.file_hlayout)
 
     def accept(self):
         if self.output_type in OQ_NPZ_LOADABLE_TYPES:
