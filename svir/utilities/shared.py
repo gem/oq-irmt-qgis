@@ -224,14 +224,11 @@ OQ_NO_MAP_TYPES = set(
     ['agg_curves-rlzs', 'agg_curves-stats', 'dmg_by_asset_aggr',
      'losses_by_asset_aggr'])
 
+LOG_LEVELS = {'I': 'Info',
+              'W': 'Warning',
+              'C': 'Critical'}
 
 DEFAULT_SETTINGS = dict(
-    platform_username='',
-    platform_password='',
-    platform_hostname='https://platform.openquake.org',
-    engine_username='',
-    engine_password='',
-    engine_hostname='http://localhost:8800',
     color_from_rgba=QColor('#FFEBEB').rgba(),
     color_to_rgba=QColor('red').rgba(),
     style_mode=QgsGraduatedSymbolRendererV2.Quantile,
@@ -239,7 +236,17 @@ DEFAULT_SETTINGS = dict(
     force_restyling=True,
     experimental_enabled=False,
     developer_mode=False,
+    log_level='C',
 )
+
+DEFAULT_PLATFORM_PROFILES = (
+    '{"OpenQuake Platform": {'
+    '"username": "", "password": "",'
+    '"hostname": "https://platform.openquake.org"}}')
+DEFAULT_ENGINE_PROFILES = (
+    '{"Local OpenQuake Engine Server": {'
+    '"username": "", "password": "",'
+    '"hostname": "http://localhost:8800"}}')
 
 # It is possible to set custom request attributes, with numeric codes above
 # 1000. REQUEST_ATTRS dict gives a name to each custom attribute we defined.

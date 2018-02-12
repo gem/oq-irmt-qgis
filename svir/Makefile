@@ -202,7 +202,7 @@ upload_doc: doc
 	@echo "--------------------------------------"
 	VERSION=$(VERSION) ../scripts/doc_upload.sh
 
-upload: package upload_doc
+upload_plugin: package tag
 	@echo
 	@echo "-------------------------------------"
 	@echo "Uploading plugin to QGIS Plugin repo."
@@ -220,8 +220,10 @@ endif
 	@echo "------------------------------------------------"
 	@git tag -a $(VERSION) -m"Tagging $(VERSION)"
 
-release: tag upload
+tag_push:
 	@git push origin --tags
+
+release: upload_plugin upload_doc tag_push
 	@echo
 	@echo "------------------------------------------------"
 	@echo "Released version $(VERSION).                   "

@@ -763,7 +763,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 if output_type not in OUTPUT_TYPE_LOADERS:
                     raise NotImplementedError(output_type)
                 dlg = OUTPUT_TYPE_LOADERS[output_type](
-                    self.iface, self.viewer_dock, output_type, filepath)
+                    self.iface, self.viewer_dock,
+                    self.session, self.hostname, self.current_calc_id,
+                    output_type, filepath)
                 dlg.exec_()
             else:
                 raise NotImplementedError("%s %s" % (action, outtype))

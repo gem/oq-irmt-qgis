@@ -23,9 +23,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import json
-# FIXME: Use wrapper as soon as it works also on Mac OS
-from PyQt4.QtCore import pyqtSlot, QSettings, Qt
-# from qgis.PyQt.QtCore import pyqtSlot, QSettings, Qt
+from qgis.PyQt.QtCore import pyqtSlot, QSettings, Qt
 from qgis.PyQt.QtGui import (QDialog,
                              QTableWidgetItem,
                              QDialogButtonBox)
