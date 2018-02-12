@@ -79,14 +79,8 @@ from svir.dialogs.load_ruptures_as_layer_dialog import (
     LoadRupturesAsLayerDialog)
 from svir.dialogs.load_dmg_by_asset_as_layer_dialog import (
     LoadDmgByAssetAsLayerDialog)
-from svir.dialogs.load_hmaps_as_layer_dialog import (
-    LoadHazardMapsAsLayerDialog)
-from svir.dialogs.load_hcurves_as_layer_dialog import (
-    LoadHazardCurvesAsLayerDialog)
 from svir.dialogs.load_gmf_data_as_layer_dialog import (
     LoadGmfDataAsLayerDialog)
-from svir.dialogs.load_uhs_as_layer_dialog import (
-    LoadUhsAsLayerDialog)
 from svir.dialogs.load_losses_by_asset_as_layer_dialog import (
     LoadLossesByAssetAsLayerDialog)
 
@@ -297,31 +291,10 @@ class Irmt:
                            enable=True,
                            submenu='OQ Engine')
 
-        self.add_menu_item("load_hmaps_as_layer",
-                           ":/plugins/irmt/load_from_oqoutput.svg",
-                           u"Load hazard maps as layer",
-                           self.load_hmaps_as_layer,
-                           enable=True,
-                           submenu='OQ Engine')
-
-        self.add_menu_item("load_hcurves_as_layer",
-                           ":/plugins/irmt/load_from_oqoutput.svg",
-                           u"Load hazard curves as layer",
-                           self.load_hcurves_as_layer,
-                           enable=True,
-                           submenu='OQ Engine')
-
         self.add_menu_item("load_gmf_data_as_layer",
                            ":/plugins/irmt/load_from_oqoutput.svg",
                            u"Load ground motion fields as layer",
                            self.load_gmf_data_as_layer,
-                           enable=True,
-                           submenu='OQ Engine')
-
-        self.add_menu_item("load_uhs_as_layer",
-                           ":/plugins/irmt/load_from_oqoutput.svg",
-                           u"Load uniform hazard spectra as layer",
-                           self.load_uhs_as_layer,
                            enable=True,
                            submenu='OQ Engine')
 
@@ -399,27 +372,9 @@ class Irmt:
         dlg = LoadDmgByAssetAsLayerDialog(self.iface, 'dmg_by_asset')
         dlg.exec_()
 
-    def load_hmaps_as_layer(self):
-        dlg = LoadHazardMapsAsLayerDialog(self.iface, 'hmaps')
-        dlg.exec_()
-
-    def load_hcurves_as_layer(self):
-        dlg = LoadHazardCurvesAsLayerDialog(self.iface, 'hcurves')
-        dlg.exec_()
-        self.viewer_dock.change_output_type(dlg.output_type)
-        self.viewer_dock.setVisible(True)
-        self.viewer_dock.raise_()
-
     def load_gmf_data_as_layer(self):
         dlg = LoadGmfDataAsLayerDialog(self.iface, 'gmf_data')
         dlg.exec_()
-
-    def load_uhs_as_layer(self):
-        dlg = LoadUhsAsLayerDialog(self.iface, 'uhs')
-        dlg.exec_()
-        self.viewer_dock.change_output_type(dlg.output_type)
-        self.viewer_dock.setVisible(True)
-        self.viewer_dock.raise_()
 
     def load_losses_by_asset_as_layer(self):
         dlg = LoadLossesByAssetAsLayerDialog(self.iface, 'losses_by_asset')
