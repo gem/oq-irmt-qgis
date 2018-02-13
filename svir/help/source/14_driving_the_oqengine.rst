@@ -110,6 +110,19 @@ calculation. When the :guilabel:`Outputs` button is pressed, the
 the file is downloaded and its full path is displayed both in the QGIS message
 bar and in the :guilabel:`Log Messages Panel`.
 
+Another button that becomes available when a calculation identified as `N`
+is selected is :guilabel:`Show parameters of calculation N`. It opens a dialog
+window with a text area displaying the parameters of the calculation
+(see :ref:`fig-calculation-parameters`).
+
+.. _fig-calculation-parameters:
+
+.. figure:: images/calculationParameters.png
+    :align: center
+    :scale: 60%
+
+    Example showing parameters of a OQ-Engine calculation
+
 A hazard map defines the geographic distribution of the values of a scalar IMT
 (see also :ref:`chap-definitions`) characterized by a fixed probability of
 being exceeded at least once in a time span T. For computing a hazard map with
