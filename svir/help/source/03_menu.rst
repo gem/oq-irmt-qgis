@@ -45,7 +45,7 @@ corresponding documentation.
   * |icon-aggregate-loss-by-zone| :ref:`chap-aggregating-loss-by-zone`
   * |icon-transform-attributes| :ref:`chap-transform-attribute`
 
-* |icon-connection-settings| :ref:`chap-irmt-settings`
+* |icon-plugin-settings| :ref:`chap-irmt-settings`
 
 * |icon-plot| :ref:`chap-viewer-dock`
 
@@ -53,7 +53,7 @@ corresponding documentation.
   version of this manual
 
 
-.. |icon-connection-settings| image:: images/iconConnectionSettings.png
+.. |icon-plugin-settings| image:: images/iconPluginSettings.png
 .. |icon-load-indicators| image:: images/iconLoadIndicators.png
 .. |icon-import-project| image:: images/iconImportProject.png
 .. |icon-transform-attributes| image:: images/iconTransformAttribute.png

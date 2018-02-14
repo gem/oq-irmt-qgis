@@ -74,7 +74,7 @@ class SettingsDialog(QDialog, FORM_CLASS):
         for key in modes:
             self.style_mode.addItem(modes[key], key)
 
-        for log_level in LOG_LEVELS:
+        for log_level in sorted(LOG_LEVELS):
             self.log_level_cbx.addItem(LOG_LEVELS[log_level], log_level)
 
         self.restore_state()
