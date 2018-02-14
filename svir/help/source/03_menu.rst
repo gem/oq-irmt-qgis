@@ -16,14 +16,18 @@ corresponding documentation.
     *Transform attributes* option will be available only as long as
     one of the loaded layers is activated.
 
-* OQ Platform
+* OpenQuake Platform
 
   * |icon-load-indicators| :ref:`chap-load-indicators`
   * |icon-import-project| :ref:`chap-download-project`
   * |icon-upload| :ref:`chap-uploading-project-to-platform`
 
-* OQ Engine
+* OpenQuake Engine
 
+  * |icon-ipt| `OpenQuake Risk Input Preparation Toolkit <https://github.com/gem/oq-platform-ipt>`_:
+    Online tools used to create exposure, fragility and vulnerability risk input models.
+  * |icon-taxtweb| `OpenQuake TaxtWEB <https://github.com/gem/oq-platform-taxtweb>`_:
+    Online graphical tool for editing GEM Taxonomy strings.
   * |icon-drive-oq-engine| :ref:`chap-drive-oq-engine`
 
 * Integrated risk
@@ -41,7 +45,7 @@ corresponding documentation.
   * |icon-aggregate-loss-by-zone| :ref:`chap-aggregating-loss-by-zone`
   * |icon-transform-attributes| :ref:`chap-transform-attribute`
 
-* |icon-connection-settings| :ref:`chap-irmt-settings`
+* |icon-plugin-settings| :ref:`chap-irmt-settings`
 
 * |icon-plot| :ref:`chap-viewer-dock`
 
@@ -49,7 +53,7 @@ corresponding documentation.
   version of this manual
 
 
-.. |icon-connection-settings| image:: images/iconConnectionSettings.png
+.. |icon-plugin-settings| image:: images/iconPluginSettings.png
 .. |icon-load-indicators| image:: images/iconLoadIndicators.png
 .. |icon-import-project| image:: images/iconImportProject.png
 .. |icon-transform-attributes| image:: images/iconTransformAttribute.png
@@ -62,3 +66,5 @@ corresponding documentation.
 .. |icon-recovery| image:: images/iconRecovery.png
 .. |icon-recovery-settings| image:: images/iconRecoverySettings.png
 .. |icon-drive-oq-engine| image:: images/iconDriveOqEngine.png
+.. |icon-ipt| image:: images/iconIpt.png
+.. |icon-taxtweb| image:: images/iconTaxtweb.png
