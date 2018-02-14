@@ -182,7 +182,7 @@ class GemQWebView(QWebView):
     @pyqtSlot()
     def on_load_started(self):
         self.progress_message_bar, self.progress = create_progress_message_bar(
-            self.parent.message_bar, "Loading...")
+            self.parent.lower_message_bar, "Loading...")
 
     @pyqtSlot(int)
     def on_load_progress(self, progress):
@@ -194,7 +194,7 @@ class GemQWebView(QWebView):
     @pyqtSlot(bool)
     def on_load_finished(self, ok):
         clear_progress_message_bar(
-            self.parent.message_bar, self.progress_message_bar)
+            self.parent.lower_message_bar, self.progress_message_bar)
 
     @pyqtSlot(str)
     def on_statusBarMessage(self, text):
