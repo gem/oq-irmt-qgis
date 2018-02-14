@@ -99,7 +99,7 @@ class StandaloneAppDialog(QDialog):
 
         self.reload_homepage_btn = QPushButton("Reload homepage")
         # FIXME: Instead of a fixed width, we should use the natural btn size
-        self.reload_homepage_btn.setFixedWidth(200)
+        self.reload_homepage_btn.setFixedWidth(150)
         self.reload_homepage_btn.clicked.connect(
                 self.on_reload_homepage_btn_clicked)
 
