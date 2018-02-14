@@ -271,7 +271,7 @@ def get_field_names(sub_tree, field_names=None):
 
 def clear_progress_message_bar(msg_bar, msg_bar_item=None):
     """
-    Clear the progress messsage bar
+    Clear the progress message bar
     """
     if msg_bar_item:
         msg_bar.popWidget(msg_bar_item)

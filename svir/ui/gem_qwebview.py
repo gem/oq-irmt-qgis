@@ -35,10 +35,14 @@ from qgis.PyQt.QtCore import (QMutex,
                               QSettings,
                               QByteArray,
                               pyqtSlot,
+                              QUrl,
                               )
 from qgis.PyQt.QtGui import QSizePolicy, QFileDialog
 from svir.utilities.shared import DEBUG, REQUEST_ATTRS
-from svir.utilities.utils import tr
+from svir.utilities.utils import (tr,
+                                  create_progress_message_bar,
+                                  clear_progress_message_bar,
+                                  )
 
 
 if DEBUG:
@@ -90,6 +94,12 @@ class GemQWebView(QWebView):
         # connected to this signal. This ensures that your objects remain
         # accessible when loading new URLs.
         self.frame.javaScriptWindowObjectCleared.connect(self.load_gem_api)
+
+        self.urlChanged.connect(self.on_url_changed)
+        self.page().linkHovered.connect(self.on_link_hovered)
+        self.loadStarted.connect(self.on_load_started)
+        self.loadProgress[int].connect(self.on_load_progress)
+        self.loadFinished[bool].connect(self.on_load_finished)
 
         # catch the signal emitted when the title of the page is changed
         self.titleChanged[str].connect(self.on_title_changed)
@@ -168,6 +178,38 @@ class GemQWebView(QWebView):
         # get the changed title of the web page and set the window title of the
         # parent widget to the same string
         self.parent.setWindowTitle(title)
+
+    @pyqtSlot()
+    def on_load_started(self):
+        self.progress_message_bar, self.progress = create_progress_message_bar(
+            self.parent.message_bar, "Loading...")
+
+    @pyqtSlot(int)
+    def on_load_progress(self, progress):
+        try:
+            self.progress.setValue(progress)
+        except RuntimeError:
+            self.gem_api.common.error("Unable to load the requested page.")
+
+    @pyqtSlot(bool)
+    def on_load_finished(self, ok):
+        clear_progress_message_bar(
+            self.parent.message_bar, self.progress_message_bar)
+
+    @pyqtSlot(str)
+    def on_statusBarMessage(self, text):
+        # it might be useful in the future
+        pass
+
+    @pyqtSlot(QUrl)
+    def on_url_changed(self, url):
+        # it might be useful in the future
+        pass
+
+    @pyqtSlot(str, str, str)
+    def on_link_hovered(self, link, title, textContent):
+        # it might be useful in the future
+        pass
 
     # on window.open(link), force window.open(link, "_self")
     # i.e., open all links in the same page
