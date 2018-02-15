@@ -67,8 +67,8 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
             bool(self.path) and self.poe_cbx.currentIndex() != -1)
 
     def populate_rlz_or_stat_cbx(self):
-        # excluding lon, lat and the final vs30
-        self.rlzs_or_stats = self.npz_file['all'].dtype.names[2:-1]
+        # excluding lon, lat
+        self.rlzs_or_stats = self.npz_file['all'].dtype.names[2:]
         self.rlz_or_stat_cbx.clear()
         self.rlz_or_stat_cbx.setEnabled(True)
         self.rlz_or_stat_cbx.addItems(self.rlzs_or_stats)
