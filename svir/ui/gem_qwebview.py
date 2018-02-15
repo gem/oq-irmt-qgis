@@ -193,6 +193,11 @@ class GemQWebView(QWebView):
 
     @pyqtSlot(bool)
     def on_load_finished(self, ok):
+        # NOTE: Intuitively, I would have used the value of ok to check if
+        # loading failed and to display an error message. However, before
+        # a failing loading finishes, the attempt to set the progress value
+        # raises a RuntimeError. I am using that to display an error message,
+        # which seems to be working fine.
         clear_progress_message_bar(
             self.parent.lower_message_bar, self.progress_message_bar)
 
