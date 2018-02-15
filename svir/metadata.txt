@@ -25,6 +25,7 @@ email=staff.it@globalquakemodel.org
 changelog=
     2.9.5
     * Several updates to the user manual
+    * Fixed bug in the GUI initialization for visualizing aggregate loss curves
     2.9.4
     * Fixed retrieval of the engine server hostname from settings
     2.9.3
