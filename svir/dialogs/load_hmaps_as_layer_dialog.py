@@ -123,6 +123,7 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
             field_names = [self.default_field_name]
         else:  # load everything
             # field names will be like "imt-poe"
+            # self.dataset contains data for the chosen rlz or stat
             field_names = self.dataset.dtype.names
         return field_names
 
