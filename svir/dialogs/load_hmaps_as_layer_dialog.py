@@ -119,7 +119,11 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         return layer_name
 
     def get_field_names(self, **kwargs):
-        field_names = [self.default_field_name]
+        if self.load_selected_only_ckb.isChecked():
+            field_names = [self.default_field_name]
+        else:  # load everything
+            # field names will be like "imt-poe"
+            field_names = self.dataset.dtype.names
         return field_names
 
     def add_field_to_layer(self, field_name):
