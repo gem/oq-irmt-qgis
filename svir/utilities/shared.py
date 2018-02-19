@@ -224,9 +224,9 @@ OQ_NO_MAP_TYPES = set(
     ['agg_curves-rlzs', 'agg_curves-stats', 'dmg_by_asset_aggr',
      'losses_by_asset_aggr'])
 
-LOG_LEVELS = {'I': 'Info',
-              'W': 'Warning',
-              'C': 'Critical'}
+LOG_LEVELS = {'I': 'Info (high verbosity)',
+              'W': 'Warning (medium verbosity)',
+              'C': 'Critical (low verbosity)'}
 
 DEFAULT_SETTINGS = dict(
     color_from_rgba=QColor('#FFEBEB').rgba(),
