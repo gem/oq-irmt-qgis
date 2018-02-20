@@ -67,8 +67,12 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
             bool(self.path) and self.poe_cbx.currentIndex() != -1)
 
     def populate_rlz_or_stat_cbx(self):
-        # excluding lon, lat
-        self.rlzs_or_stats = self.npz_file['all'].dtype.names[2:]
+        # excluding lon, lat (in old calculations, we might also find 'vs30',
+        # that has to be discarded too)
+        self.rlzs_or_stats = [
+            rlz_or_stat
+            for rlz_or_stat in self.npz_file['all'].dtype.names[2:]
+            if rlz_or_stat != 'vs30']
         self.rlz_or_stat_cbx.clear()
         self.rlz_or_stat_cbx.setEnabled(True)
         self.rlz_or_stat_cbx.addItems(self.rlzs_or_stats)
@@ -115,7 +119,12 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         return layer_name
 
     def get_field_names(self, **kwargs):
-        field_names = [self.default_field_name]
+        if self.load_selected_only_ckb.isChecked():
+            field_names = [self.default_field_name]
+        else:  # load everything
+            # field names will be like "imt-poe"
+            # self.dataset contains data for the chosen rlz or stat
+            field_names = self.dataset.dtype.names
         return field_names
 
     def add_field_to_layer(self, field_name):
