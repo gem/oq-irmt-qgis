@@ -1,3 +1,6 @@
+# Basic example for testing purposes, taken from
+# https://pythonspot.com/creating-a-webbrowser-with-python-and-pyqt-tutorial/
+
 import sys
 from browser import BrowserDialog
 from PyQt4 import QtGui
