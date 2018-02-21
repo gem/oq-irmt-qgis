@@ -453,8 +453,16 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.create_stats_multiselect()
             self.stats_multiselect.selection_changed.connect(
                 self.refresh_feature_selection)
-        elif new_output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
+        elif new_output_type == 'agg_curves-rlzs':
             self.create_loss_type_selector()
+            self.create_rlzs_multiselect()
+            self.rlzs_multiselect.selection_changed.connect(
+                lambda: self.draw_agg_curves(new_output_type))
+        elif new_output_type == 'agg_curves-stats':
+            self.create_loss_type_selector()
+            self.create_stats_multiselect()
+            self.stats_multiselect.selection_changed.connect(
+                lambda: self.draw_agg_curves(new_output_type))
         elif new_output_type == 'dmg_by_asset_aggr':
             self.create_loss_type_selector()
             self.create_rlz_selector()
@@ -609,18 +617,12 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.loss_type_cbx.blockSignals(False)
         self.loss_type_cbx.addItems(loss_types)
         if output_type == 'agg_curves-stats':
-            self.create_stats_multiselect()
-            self.stats_multiselect.selection_changed.connect(
-                lambda: self.draw_agg_curves(output_type))
-            self.stats_multiselect.add_selected_items(self.agg_curves['stats'])
+            self.stats_multiselect.set_selected_items(self.agg_curves['stats'])
             self.draw_agg_curves(output_type)
         elif output_type == 'agg_curves-rlzs':
-            self.create_rlzs_multiselect()
-            self.rlzs_multiselect.selection_changed.connect(
-                lambda: self.draw_agg_curves(output_type))
             rlzs = ["Rlz %3d" % rlz
                     for rlz in range(self.agg_curves['array'].shape[1])]
-            self.rlzs_multiselect.add_selected_items(rlzs)
+            self.rlzs_multiselect.set_selected_items(rlzs)
             self.draw_agg_curves(output_type)
         else:
             raise NotImplementedError(
