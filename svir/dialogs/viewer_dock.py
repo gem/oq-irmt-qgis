@@ -1107,6 +1107,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 self.redraw_current_selection)
 
             if self.output_type in ['hcurves', 'uhs']:
+                self.calc_id = self.iface.activeLayer().customProperty(
+                    'calc_id')
                 for rlz_or_stat in self.stats_multiselect.get_selected_items():
                     self.current_selection[rlz_or_stat] = {}
                 self.stats_multiselect.set_selected_items([])
@@ -1241,13 +1243,15 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 self,
                 self.tr('Export data'),
                 os.path.expanduser(
-                    '~/hazard_curves_%s.csv' % self.current_imt),
+                    '~/hazard_curves_%s_%s.csv' % (
+                        self.current_imt, self.calc_id)),
                 '*.csv')
         elif self.output_type == 'uhs':
             filename = QFileDialog.getSaveFileName(
                 self,
                 self.tr('Export data'),
-                os.path.expanduser('~/uniform_hazard_spectra.csv'),
+                os.path.expanduser(
+                    '~/uniform_hazard_spectra_%s.csv' % self.calc_id),
                 '*.csv')
         elif self.output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
             filename = QFileDialog.getSaveFileName(
