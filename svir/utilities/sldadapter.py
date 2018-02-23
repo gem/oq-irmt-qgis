@@ -30,8 +30,8 @@
 
 import re
 import os
-from PyQt4 import Qt
-from PyQt4.QtXml import *
+from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtXml import *
 from qgis.core import *
 
 SIZE_FACTOR = 4

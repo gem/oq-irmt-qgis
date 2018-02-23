@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>501</width>
-    <height>664</height>
+    <height>700</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,45 +17,42 @@
    <item>
     <widget class="QGroupBox" name="platform_settings_gbx">
      <property name="title">
-      <string>OpenQuake Platform connection settings</string>
+      <string>OpenQuake Platform connection profile</string>
      </property>
      <layout class="QFormLayout" name="formLayout">
       <property name="fieldGrowthPolicy">
        <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
       </property>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>User</string>
-        </property>
-       </widget>
-      </item>
       <item row="0" column="1">
-       <widget class="QLineEdit" name="platformUsernameEdit"/>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>Password</string>
-        </property>
-       </widget>
+       <widget class="QComboBox" name="platform_profile_cbx"/>
       </item>
       <item row="1" column="1">
-       <widget class="QLineEdit" name="platformPasswordEdit">
-        <property name="echoMode">
-         <enum>QLineEdit::Password</enum>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <property name="topMargin">
+         <number>0</number>
         </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_3">
-        <property name="text">
-         <string>Host</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QLineEdit" name="platformHostnameEdit"/>
+        <item>
+         <widget class="QPushButton" name="pla_remove_btn">
+          <property name="text">
+           <string>Remove</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pla_new_btn">
+          <property name="text">
+           <string>New</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pla_edit_btn">
+          <property name="text">
+           <string>Edit</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
      </layout>
     </widget>
@@ -79,45 +76,42 @@
    <item>
     <widget class="QGroupBox" name="engine_settings_gbx">
      <property name="title">
-      <string>OpenQuake Engine connection settings</string>
+      <string>OpenQuake Engine connection profile</string>
      </property>
      <layout class="QFormLayout" name="formLayout_4">
       <property name="fieldGrowthPolicy">
        <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
       </property>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_6">
-        <property name="text">
-         <string>User</string>
-        </property>
-       </widget>
-      </item>
       <item row="0" column="1">
-       <widget class="QLineEdit" name="engineUsernameEdit"/>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_7">
-        <property name="text">
-         <string>Password</string>
-        </property>
-       </widget>
+       <widget class="QComboBox" name="engine_profile_cbx"/>
       </item>
       <item row="1" column="1">
-       <widget class="QLineEdit" name="enginePasswordEdit">
-        <property name="echoMode">
-         <enum>QLineEdit::Password</enum>
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <property name="topMargin">
+         <number>0</number>
         </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_8">
-        <property name="text">
-         <string>Host</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QLineEdit" name="engineHostnameEdit"/>
+        <item>
+         <widget class="QPushButton" name="eng_remove_btn">
+          <property name="text">
+           <string>Remove</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="eng_new_btn">
+          <property name="text">
+           <string>New</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="eng_edit_btn">
+          <property name="text">
+           <string>Edit</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
      </layout>
     </widget>
@@ -251,7 +245,14 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_3">
       <item>
-       <widget class="QCheckBox" name="developermodeCheck">
+       <widget class="QCheckBox" name="enable_experimental_ckb">
+        <property name="text">
+         <string>Enable experimental features (requires restart)</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="developer_mode_ckb">
         <property name="toolTip">
          <string>It is recommended to keep it unchecked</string>
         </property>
@@ -259,6 +260,23 @@
          <string>Developer mode (requires restart)</string>
         </property>
        </widget>
+      </item>
+      <item>
+       <layout class="QFormLayout" name="formLayout_2">
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <item row="0" column="0">
+         <widget class="QLabel" name="log_level_lbl">
+          <property name="text">
+           <string>Log level</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QComboBox" name="log_level_cbx"/>
+        </item>
+       </layout>
       </item>
      </layout>
     </widget>

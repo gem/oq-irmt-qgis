@@ -24,10 +24,10 @@
 
 import os
 import csv
-from PyQt4.QtCore import pyqtSlot, QSettings, QDir
-from PyQt4.QtGui import (QDialog,
-                         QFileDialog,
-                         QDialogButtonBox)
+from qgis.PyQt.QtCore import pyqtSlot, QSettings, QDir
+from qgis.PyQt.QtGui import (QDialog,
+                             QFileDialog,
+                             QDialogButtonBox)
 from qgis.core import QgsMapLayer, QgsMapLayerRegistry, QGis
 from svir.calculations.aggregate_loss_by_zone import add_zone_id_to_points
 from svir.utilities.utils import (get_ui_class,
@@ -216,7 +216,13 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
              self.zone_field_name) = add_zone_id_to_points(
                 self.iface, self.dmg_by_asset_layer,
                 self.svi_layer, self.zone_field_name)
-        with WaitCursorManager('Generating recovery curves...', self.iface):
+        else:
+            # the layer containing points was not modified by the zonal
+            # aggregation, so the field names remained as the original ones
+            point_attrs_dict = {field.name(): field.name()
+                                for field in self.dmg_by_asset_layer.fields()}
+        with WaitCursorManager('Generating recovery curves...',
+                               self.iface.messageBar()):
             self.calculate_community_level_recovery_curve(
                 point_attrs_dict,
                 self.integrate_svi_check.isChecked())

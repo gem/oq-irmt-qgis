@@ -26,9 +26,15 @@
 import os
 import json
 import bisect
-import matplotlib.pyplot as plt
+try:
+    import matplotlib.pyplot as plt
+except ImportError as exc:
+    raise ImportError(
+        'There was a problem importing matplotlib. If you are using'
+        ' a 64bit version of QGIS on Windows, please try using'
+        ' a 32bit version instead. %s' % exc)
 from collections import defaultdict
-from PyQt4.QtCore import QSettings
+from qgis.PyQt.QtCore import QSettings
 from svir.recovery_modeling.building import Building
 from svir.utilities.utils import (
                                   create_progress_message_bar,

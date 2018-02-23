@@ -28,6 +28,8 @@ import json
 import os
 import sys
 import locale
+import zlib
+import io
 from copy import deepcopy
 from time import time
 from pprint import pformat
@@ -39,17 +41,22 @@ from qgis.core import (QgsMapLayerRegistry,
                        )
 from qgis.gui import QgsMessageBar
 
-from PyQt4 import uic
-from PyQt4.QtCore import Qt, QSettings, QUrl
-from PyQt4.QtGui import (QApplication,
-                         QProgressBar,
-                         QToolButton,
-                         QFileDialog,
-                         QMessageBox,
-                         QColor)
+from qgis.PyQt import uic
+from qgis.PyQt.QtCore import Qt, QSettings, QUrl
+from qgis.PyQt.QtGui import (QApplication,
+                             QProgressBar,
+                             QToolButton,
+                             QFileDialog,
+                             QMessageBox,
+                             QColor)
 
 from svir.third_party.poster.encode import multipart_encode
-from svir.utilities.shared import DEBUG, DEFAULT_SETTINGS
+from svir.utilities.shared import (
+                                   DEBUG,
+                                   DEFAULT_SETTINGS,
+                                   DEFAULT_PLATFORM_PROFILES,
+                                   DEFAULT_ENGINE_PROFILES,
+                                   )
 
 F32 = numpy.float32
 
@@ -104,7 +111,13 @@ def log_msg(message, tag='GEM IRMT Plugin', level='I', message_bar=None,
     if 'nose' in sys.modules and level == 'C':
         raise RuntimeError(message)
     else:
-        QgsMessageLog.logMessage(tr(message), tr(tag), levels[level]['log'])
+        log_level = QSettings().value(
+            'irmt/log_level', DEFAULT_SETTINGS['log_level'])
+        if (level == 'C'
+                or level == 'W' and log_level in ('I', 'W')
+                or level == 'I' and log_level in ('I')):
+            QgsMessageLog.logMessage(
+                tr(message), tr(tag), levels[level]['log'])
         if message_bar is not None:
             if level == 'I':
                 title = 'Info'
@@ -115,6 +128,10 @@ def log_msg(message, tag='GEM IRMT Plugin', level='I', message_bar=None,
             elif level == 'C':
                 title = 'Error'
                 duration = duration if duration is not None else 0
+            max_msg_len = 200
+            if len(message) > max_msg_len:
+                message = ("%s[...] (Please open the Log Messages Panel to"
+                           " read the full message)" % message[:max_msg_len])
             message_bar.pushMessage(tr(title),
                                     tr(message),
                                     levels[level]['bar'],
@@ -638,17 +655,17 @@ class WaitCursorManager(object):
     Wrapper to be used for a time-consuming block of code, that changes the
     mouse cursor and adds an info message to the messageBar
     """
-    def __init__(self, msg=None, iface=None):
+    def __init__(self, msg=None, message_bar=None):
         self.msg = msg
-        self.iface = iface
-        self.has_message = msg and iface
+        self.message_bar = message_bar
+        self.has_message = msg and message_bar
         self.message = None
 
     def __enter__(self):
         if self.has_message:
-            self.message = self.iface.messageBar().createMessage(
+            self.message = self.message_bar.createMessage(
                 tr('Info'), tr(self.msg))
-            self.message = self.iface.messageBar().pushWidget(
+            self.message = self.message_bar.pushWidget(
                 self.message, level=QgsMessageBar.INFO)
             QApplication.processEvents()
         QApplication.setOverrideCursor(Qt.WaitCursor)
@@ -656,7 +673,7 @@ class WaitCursorManager(object):
     def __exit__(self, type, value, traceback):
         QApplication.restoreOverrideCursor()
         if self.has_message:
-            self.iface.messageBar().popWidget(self.message)
+            self.message_bar.popWidget(self.message)
 
 
 class SvNetworkError(Exception):
@@ -725,7 +742,7 @@ def write_layer_suppl_info_to_qgs(layer_id, suppl_info):
         assert found, 'After writeEntry, readEntry did not find the same item!'
         prop_suppl_info_obj = json.loads(prop_suppl_info)
         prop_suppl_info_str = pformat(prop_suppl_info_obj, indent=4)
-        log_msg(("Project's property 'supplemental_information[%s]'"
+        log_msg(("Project property 'supplemental_information[%s]'"
                  " updated: \n%s") % (layer_id, prop_suppl_info_str))
 
 
@@ -1031,3 +1048,53 @@ def warn_scipy_missing(message_bar):
     msg = ("This functionality requires scipy. Please install it"
            " and restart QGIS to enable it.")
     log_msg(msg, level='C', message_bar=message_bar)
+
+
+def get_credentials(server):
+    """
+    Get from the QSettings the credentials to access the OpenQuake Engine
+    or the OpenQuake Platform.
+    If those settings are not found, use defaults instead.
+
+    :param server: it can be either 'platform' or 'engine'
+
+    :returns: tuple (hostname, username, password)
+
+    """
+    qs = QSettings()
+    default_profiles = json.loads(
+        qs.value(
+            'irmt/%s_profiles',
+            (DEFAULT_PLATFORM_PROFILES if server == 'platform'
+                else DEFAULT_ENGINE_PROFILES)))
+    default_profile = default_profiles[default_profiles.keys()[0]]
+    hostname = qs.value('irmt/%s_hostname' % server,
+                        default_profile['hostname'])
+    username = qs.value('irmt/%s_username' % server,
+                        default_profile['username'])
+    password = qs.value('irmt/%s_password' % server,
+                        default_profile['password'])
+    return hostname, username, password
+
+
+def get_checksum(file_path):
+    data = open(file_path, 'rb').read()
+    checksum = zlib.adler32(data, 0) & 0xffffffff
+    return checksum
+
+
+def extract_npz(
+        session, hostname, calc_id, output_type, message_bar, params=None):
+    url = '%s/v1/calc/%s/extract/%s' % (hostname, calc_id, output_type)
+    resp = session.get(url, params=params)
+    if not resp.ok:
+        msg = "Unable to extract %s with parameters %s: %s" % (
+            url, params, resp.reason)
+        log_msg(msg, level='C', message_bar=message_bar)
+        return
+    resp_content = resp.content
+    if not resp_content:
+        msg = 'GET %s returned an empty content!' % url
+        log_msg(msg, level='C', message_bar=message_bar)
+        return
+    return numpy.load(io.BytesIO(resp_content))

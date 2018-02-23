@@ -27,11 +27,9 @@ import os
 import tempfile
 import shutil
 from xml.etree import ElementTree
-from PyQt4 import Qt
-
-from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import (QDialog, QDialogButtonBox, QListWidgetItem,
-                         QMessageBox)
+from qgis.PyQt.QtCore import pyqtSlot, Qt
+from qgis.PyQt.QtGui import (QDialog, QDialogButtonBox, QListWidgetItem,
+                             QMessageBox)
 from qgis.core import QgsVectorLayer,  QgsMapLayerRegistry
 from svir.thread_worker.abstract_worker import start_worker
 from svir.thread_worker.download_platform_project_worker import (

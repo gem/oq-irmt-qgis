@@ -40,7 +40,7 @@ $ sudo apt install python-scipy python-matplotlib
 On Fedora and similar:
 
 ```bash
-$ sudo dnf install python-scipy python-matplotlib
+$ sudo dnf install python2-scipy python2-matplotlib python2-matplotlib-qt4
 ```
 
 For geospatial analysis, the plugin leverages SAGA `Clip points with polygons` algorithm.

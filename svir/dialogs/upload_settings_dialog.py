@@ -22,10 +22,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-from PyQt4.QtCore import pyqtSlot, QUrl
-from PyQt4.QtGui import (QDialog,
-                         QDialogButtonBox,
-                         QDesktopServices)
+from qgis.PyQt.QtCore import pyqtSlot, QUrl
+from qgis.PyQt.QtGui import (QDialog,
+                             QDialogButtonBox,
+                             QDesktopServices)
 from svir.dialogs.upload_dialog import UploadDialog
 from svir.metadata.metadata_utilities import write_iso_metadata_file
 from svir.third_party.requests.sessions import Session
@@ -36,7 +36,6 @@ from svir.utilities.shared import (IRMT_PLUGIN_VERSION,
                                    SUPPLEMENTAL_INFORMATION_VERSION,
                                    DEBUG,
                                    )
-from svir.utilities.settings import get_platform_credentials
 from svir.utilities.utils import (reload_attrib_cbx,
                                   tr,
                                   WaitCursorManager,
@@ -47,6 +46,7 @@ from svir.utilities.utils import (reload_attrib_cbx,
                                   insert_platform_layer_id,
                                   log_msg,
                                   get_ui_class,
+                                  get_credentials,
                                   )
 
 LICENSES = (
@@ -108,7 +108,8 @@ class UploadSettingsDialog(QDialog, FORM_CLASS):
         self.update_radio.setChecked(self.exists_on_platform)
         self.set_labels()
 
-        with WaitCursorManager("Counting layer's vertices", iface):
+        with WaitCursorManager("Counting layer's vertices",
+                               iface.messageBar()):
             self.vertices_count = ProcessLayer(
                 iface.activeLayer()).count_vertices()
 
@@ -208,9 +209,8 @@ class UploadSettingsDialog(QDialog, FORM_CLASS):
         if self.do_update:
             with WaitCursorManager(
                     'Updating project on the OpenQuake Platform',
-                    self.iface):
-                hostname, username, password = get_platform_credentials(
-                    self.iface)
+                    self.iface.messageBar()):
+                hostname, username, password = get_credentials('platform')
                 session = Session()
                 try:
                     platform_login(hostname, username, password, session)

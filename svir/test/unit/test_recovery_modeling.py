@@ -27,10 +27,12 @@ import os
 import unittest
 import json
 from nose.plugins.attrib import attr
-from PyQt4.QtGui import QAction
+from qgis.PyQt.QtGui import QAction
+from qgis.PyQt.QtCore import QSettings
 from qgis.core import QgsVectorLayer
 from svir.recovery_modeling.recovery_modeling import RecoveryModeling
 from svir.dialogs.viewer_dock import ViewerDock
+from svir.utilities.shared import DEFAULT_SETTINGS
 
 from svir.test.utilities import get_qgis_app
 
@@ -73,6 +75,15 @@ class DeterministicTestCase(unittest.TestCase):
         self.dmg_by_asset_layer = QgsVectorLayer(dmg_by_asset_layer_file_path,
                                                  'dmg_by_asset', 'ogr')
         self.regenerate_expected_values = False
+        self.initial_experimental_enabled = QSettings().value(
+            '/irmt/experimental_enabled',
+            DEFAULT_SETTINGS['experimental_enabled'],
+            type=bool)
+        QSettings().setValue('irmt/experimental_enabled', True)
+
+    def tearDown(self):
+        QSettings().setValue(
+            'irmt/experimental_enabled', self.initial_experimental_enabled)
 
     def test_gui_building_aggregate(self):
         mock_action = QAction(IFACE.mainWindow())

@@ -22,13 +22,13 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-import numpy
 from qgis.core import QgsFeature, QgsGeometry, QgsPoint
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 from svir.calculations.calculate_utils import add_numeric_attribute
 from svir.utilities.utils import (WaitCursorManager,
                                   LayerEditingManager,
                                   log_msg,
+                                  extract_npz,
                                   )
 from svir.utilities.shared import DEBUG
 
@@ -38,21 +38,27 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
     Modal dialog to load hazard maps from an oq-engine output, as layer
     """
 
-    def __init__(self, iface, viewer_dock, output_type='hmaps',
-                 path=None, mode=None):
+    def __init__(self, iface, viewer_dock, session, hostname, calc_id,
+                 output_type='hmaps', path=None, mode=None):
         assert output_type == 'hmaps'
         LoadOutputAsLayerDialog.__init__(
-            self, iface, viewer_dock, output_type, path, mode)
+            self, iface, viewer_dock, session, hostname, calc_id,
+            output_type, path, mode)
+
+        # FIXME: add layout only for output types that load from file
+        self.remove_file_hlayout()
+
         self.setWindowTitle(
-            'Load hazard maps from NPZ, as layer')
+            'Load hazard maps as layer')
         self.create_load_selected_only_ckb()
         self.create_num_sites_indicator()
         self.create_rlz_or_stat_selector()
         self.create_imt_selector()
         self.create_poe_selector()
-        if self.path:
-            self.npz_file = numpy.load(self.path, 'r')
-            self.populate_out_dep_widgets()
+        self.npz_file = extract_npz(
+            session, hostname, calc_id, output_type,
+            message_bar=iface.messageBar(), params=None)
+        self.populate_out_dep_widgets()
         self.adjustSize()
         self.set_ok_button()
 
@@ -61,8 +67,12 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
             bool(self.path) and self.poe_cbx.currentIndex() != -1)
 
     def populate_rlz_or_stat_cbx(self):
-        # excluding lon, lat and the final vs30
-        self.rlzs_or_stats = self.npz_file['all'].dtype.names[2:-1]
+        # excluding lon, lat (in old calculations, we might also find 'vs30',
+        # that has to be discarded too)
+        self.rlzs_or_stats = [
+            rlz_or_stat
+            for rlz_or_stat in self.npz_file['all'].dtype.names[2:]
+            if rlz_or_stat != 'vs30']
         self.rlz_or_stat_cbx.clear()
         self.rlz_or_stat_cbx.setEnabled(True)
         self.rlz_or_stat_cbx.addItems(self.rlzs_or_stats)
@@ -109,13 +119,21 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         return layer_name
 
     def get_field_names(self, **kwargs):
-        field_names = [self.default_field_name]
+        if self.load_selected_only_ckb.isChecked():
+            field_names = [self.default_field_name]
+        else:  # load everything
+            # field names will be like "imt-poe"
+            # self.dataset contains data for the chosen rlz or stat
+            field_names = self.dataset.dtype.names
         return field_names
 
     def add_field_to_layer(self, field_name):
-        # NOTE: add_numeric_attribute uses LayerEditingManager
-        added_field_name = add_numeric_attribute(
-            field_name, self.layer)
+        try:
+            # NOTE: add_numeric_attribute uses LayerEditingManager
+            added_field_name = add_numeric_attribute(field_name, self.layer)
+        except TypeError as exc:
+            log_msg(str(exc), level='C', message_bar=self.iface.messageBar())
+            return
         return added_field_name
 
     def read_npz_into_layer(self, field_names, **kwargs):
@@ -146,7 +164,7 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
                     and rlz_or_stat != self.rlz_or_stat_cbx.currentText()):
                 continue
             with WaitCursorManager('Creating layer for "%s"...' % rlz_or_stat,
-                                   self.iface):
+                                   self.iface.messageBar()):
                 self.build_layer(rlz_or_stat)
                 self.style_maps()
         if self.npz_file is not None:

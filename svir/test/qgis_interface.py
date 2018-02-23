@@ -22,10 +22,8 @@ from mock import Mock
 
 from qgis.core import QgsMapLayerRegistry, QgsMapLayer, QgsProject
 # pylint: disable=no-name-in-module
-from qgis.gui import (
-    QgsMapCanvasLayer,
-    QgsMessageBar)
-from PyQt4.QtCore import QObject, pyqtSlot, pyqtSignal
+from qgis.gui import QgsMapCanvasLayer, QgsMessageBar
+from qgis.PyQt.QtCore import QObject, pyqtSlot, pyqtSignal
 from svir.test.qgis_legend_interface import QgisLegend
 from qgis.gui import QgsLayerTreeMapCanvasBridge
 

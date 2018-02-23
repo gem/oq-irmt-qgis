@@ -1,6 +1,6 @@
 import random
 import math
-from PyQt4.QtCore import QSettings
+from qgis.PyQt.QtCore import QSettings
 from svir.utilities.shared import RECOVERY_DEFAULTS
 from svir.utilities.utils import get_layer_setting
 

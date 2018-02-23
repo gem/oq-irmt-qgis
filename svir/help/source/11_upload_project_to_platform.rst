@@ -68,7 +68,7 @@ The latter is a field containing unique labels (or identifiers) whether these
 are individual country names, district names, or census block numbers, etc.
 Delineating a zone field when uploading to the OQ-Platform is imperative to
 allow the graphing components of the Social Vulnerability and Integrated Risk
-Viewer to render the visualization using the zone's labels.  Without the
+Viewer to render the visualization using the zone labels.  Without the
 latter, comparisons among places within the graphing tools are not possible. It
 is also mandatory to choose a license and to click on the checkbox to confirm
 to be informed about the license conditions. By clicking the :guilabel:`Info`
@@ -76,7 +76,7 @@ button, a web browser will be opened, pointing to a page that describes the
 license selected in the :guilabel:`License` dropdown menu. When :guilabel:`OK`
 is pressed, the active layer is uploaded to the OQ-Platform and it is applied
 in the same style visible in QGIS. Furthermore, the current project definition
-is saved into the layer's metadata, inside the *Supplemental information*
+is saved into the layer metadata, inside the *Supplemental information*
 field.
 
 .. _fig-update-dialog:
@@ -89,7 +89,7 @@ field.
 
 This second version of the :guilabel:`Upload` dialog window is displayed when the active
 layer appears to have been already shared through the OQ-Platform (the ID of a
-OQ-Platform's layer was previously associated with this layer). In such cases,
+OQ-Platform layer was previously associated with this layer). In such cases,
 it is possible to create a brand new layer, ignoring the previously uploaded
 (or downloaded) project, or to update the current layer. The updating process
 consists of adding the current project definition to the set of project

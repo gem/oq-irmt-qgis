@@ -13,7 +13,7 @@ __author__ = 'marco@opengis.ch'
 __revision__ = '$Format:%H$'
 __date__ = '9/07/2013'
 
-from PyQt4 import QtGui, QtCore, Qt
+from qgis.PyQt import QtGui, QtCore
 
 
 class ListMultiSelectWidget(QtGui.QGroupBox):
@@ -135,7 +135,7 @@ class ListMultiSelectWidget(QtGui.QGroupBox):
         self._set_list_widget_defaults(self.unselected_widget)
         unselected_label = QtGui.QLabel()
         unselected_label.setText('Unselected')
-        unselected_label.setAlignment(Qt.Qt.AlignCenter)
+        unselected_label.setAlignment(QtCore.Qt.AlignCenter)
         unselected_label.setFont(italic_font)
         unselected_v_layout = QtGui.QVBoxLayout()
         unselected_v_layout.addWidget(unselected_label)
@@ -146,7 +146,7 @@ class ListMultiSelectWidget(QtGui.QGroupBox):
         self._set_list_widget_defaults(self.selected_widget)
         selected_label = QtGui.QLabel()
         selected_label.setText('Selected')
-        selected_label.setAlignment(Qt.Qt.AlignCenter)
+        selected_label.setAlignment(QtCore.Qt.AlignCenter)
         selected_label.setFont(italic_font)
         selected_v_layout = QtGui.QVBoxLayout()
         selected_v_layout.addWidget(selected_label)

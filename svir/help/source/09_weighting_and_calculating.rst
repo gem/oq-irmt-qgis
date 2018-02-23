@@ -87,7 +87,7 @@ feedback on how the map changes depending on how the project definition is set.
 Such automatic re-calculations and rendering can take some time, depending on
 the complexity of the project and number of enumeration units analysed.
 Sometimes it is more convenient to disable the on-the-fly calculations while
-changing the project's structure, and enable it again once the project has been
+changing the project structure, and enable it again once the project has been
 built. In order to do so, it is sufficient to toggle the :guilabel:`Run
 calculations on-the-fly` checkbox.
 
@@ -152,7 +152,7 @@ Setting the operators to be used to aggregate variables
 
 On the right of each node, the tree indicates the name of the operator to be
 used to combine (or aggregate) the variables making up the node. By clicking on the
-operator's name, a dialog to set weights and operators is opened. The same
+operator name, a dialog to set weights and operators is opened. The same
 happens when clicking on the name of one of the children nodes. The operator
 can be chosen from a dropdown menu. Some operators (e.g., :guilabel:`Weighted sum`) take
 into account the weights applied to the child nodes. Other operators (e.g.,
@@ -184,7 +184,7 @@ Geometric mean (ignore weights)        :math:`\sqrt[n]{\prod\limits_{i=1}^n x_i}
 In case the user wants to combine indices using a customized formula that is
 not included in the set of the available operators, it is possible to select
 from the dropdown menu the item :guilabel:`Use a custom field`, and to specify
-which one of the layer's fields has to be used to store the data. If nothing
+which one of the layer fields has to be used to store the data. If nothing
 else is specified, the tool will not modify the contents of the selected field
 anymore, assuming that the user will take full responsibility in performing the
 customized calculation and storing the results in that field. In order to keep
@@ -218,7 +218,7 @@ available, and some make use of statistical models.  For the IRMT we
 implemented a simple solution to weighting that is often based on the results
 of participatory approaches. A weight can be edited manually by clicking on its
 value and overwriting it with a new value. A weight can also be edited by
-clicking on the spinner's arrows to increase or decrease the weight. By
+clicking on the spinner arrows to increase or decrease the weight. By
 clicking :guilabel:`Update`, the weights will be re-calculated in order to make them sum
 to 1. In other words, if you have 3 variables and you set their weights to 1, 2
 and 5 and you press :guilabel:`Update`, the weights will be re-calculated to be
@@ -243,7 +243,7 @@ multiplied by -1 each time the variable is used in a calculation.
 
 .. note::
 
-    Please note that the layer's field will keep holding the original value of
+    Please note that the layer field will keep holding the original value of
     the variable, and that the inversion will be performed on-the-fly for the
     purpose of the calculation.
 

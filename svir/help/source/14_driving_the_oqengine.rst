@@ -17,7 +17,7 @@ The plugin enables to drive the `OpenQuake Engine
 <https://github.com/gem/oq-engine>`_, submitting new jobs, watching calculation
 progress, retrieving and visualizing results, seamlessly within the QGIS
 interface. This is made possible by leveraging the OpenQuake Engine
-Server's `HTTP RESTful API <https://github.com/gem/oq-engine/blob/master/doc/web-api.md>`_.
+Server `HTTP RESTful API <https://github.com/gem/oq-engine/blob/master/doc/web-api.md>`_.
 The connection with a running OQ-Engine Server has to be properly set up as described
 in :ref:`chap-irmt-settings`. The server can run locally in the same computer where
 QGIS is running, or remotely. For instance, it is possible to connect to a remote
@@ -109,6 +109,19 @@ calculation. When the :guilabel:`Outputs` button is pressed, the
 `N` is the calculation ID). By pressing it and selecting a destination folder,
 the file is downloaded and its full path is displayed both in the QGIS message
 bar and in the :guilabel:`Log Messages Panel`.
+
+Another button that becomes available when a calculation identified as `N`
+is selected is :guilabel:`Show parameters of calculation N`. It opens a dialog
+window with a text area displaying the parameters of the calculation
+(see :ref:`fig-calculation-parameters`).
+
+.. _fig-calculation-parameters:
+
+.. figure:: images/calculationParameters.png
+    :align: center
+    :scale: 60%
+
+    Example showing parameters of a OQ-Engine calculation
 
 A hazard map defines the geographic distribution of the values of a scalar IMT
 (see also :ref:`chap-definitions`) characterized by a fixed probability of

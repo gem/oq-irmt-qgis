@@ -98,7 +98,7 @@ hazard maps) are also automatically styled with respect to fields selected by
 the user. Others can be plotted as curves (e.g. hazard curves) inside a
 :guilabel:`Data Viewer` window (see :ref:`chap-viewer-dock`) that was conceived
 for this purpose.  Users that are willing to share their projects through the
-OpenQuake Platform, can use the plugin's interface to upload their work to the
+OpenQuake Platform, can use the interface of the plugin to upload their work to the
 Platform. They can also download and edit projects that were shared through the
 Platform by other users.
 

@@ -36,20 +36,20 @@ from qgis.core import (QgsVectorLayer,
                        QGis,
                        QgsMapLayer,
                        )
-from PyQt4.QtCore import pyqtSlot, QDir, QSettings, QFileInfo, Qt
-from PyQt4.QtGui import (QDialogButtonBox,
-                         QDialog,
-                         QFileDialog,
-                         QColor,
-                         QComboBox,
-                         QSpinBox,
-                         QLabel,
-                         QCheckBox,
-                         QHBoxLayout,
-                         QVBoxLayout,
-                         QToolButton,
-                         QGroupBox,
-                         )
+from qgis.PyQt.QtCore import pyqtSlot, QDir, QSettings, QFileInfo, Qt
+from qgis.PyQt.QtGui import (QDialogButtonBox,
+                             QDialog,
+                             QFileDialog,
+                             QColor,
+                             QComboBox,
+                             QSpinBox,
+                             QLabel,
+                             QCheckBox,
+                             QHBoxLayout,
+                             QVBoxLayout,
+                             QToolButton,
+                             QGroupBox,
+                             )
 from svir.calculations.process_layer import ProcessLayer
 from svir.calculations.aggregate_loss_by_zone import (
     calculate_zonal_stats)
@@ -72,7 +72,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     Modal dialog to load an oq-engine output as layer
     """
 
-    def __init__(self, iface, viewer_dock, output_type=None,
+    def __init__(self, iface, viewer_dock,
+                 session, hostname, calc_id, output_type=None,
                  path=None, mode=None, zonal_layer_path=None):
         # sanity check
         if output_type not in OQ_ALL_LOADABLE_TYPES:
@@ -80,6 +81,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.iface = iface
         self.viewer_dock = viewer_dock
         self.path = path
+        self.session = session
+        self.hostname = hostname
+        self.calc_id = calc_id
         self.output_type = output_type
         self.mode = mode  # if 'testing' it will avoid some user interaction
         self.zonal_layer_path = zonal_layer_path
@@ -100,10 +104,12 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.output_dep_vlayout.addWidget(self.num_sites_lbl)
 
     def create_rlz_or_stat_selector(self):
+        self.rlz_or_stat_lbl = QLabel('Realization')
         self.rlz_or_stat_cbx = QComboBox()
         self.rlz_or_stat_cbx.setEnabled(False)
         self.rlz_or_stat_cbx.currentIndexChanged['QString'].connect(
             self.on_rlz_or_stat_changed)
+        self.output_dep_vlayout.addWidget(self.rlz_or_stat_lbl)
         self.output_dep_vlayout.addWidget(self.rlz_or_stat_cbx)
 
     def create_imt_selector(self):
@@ -170,7 +176,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.zonal_layer_gbx = QGroupBox()
         self.zonal_layer_gbx.setTitle('Aggregate by zone (optional)')
         self.zonal_layer_gbx.setCheckable(True)
-        self.zonal_layer_gbx.setChecked(True)
+        self.zonal_layer_gbx.setChecked(False)
         self.zonal_layer_gbx_v_layout = QVBoxLayout()
         self.zonal_layer_gbx.setLayout(self.zonal_layer_gbx_v_layout)
         self.zonal_layer_cbx = QComboBox()
@@ -507,6 +513,12 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         cbx.setItemData(last_index, zonal_layer_plus_stats.id())
         cbx.setCurrentIndex(last_index)
 
+    # FIXME: create file_hlayout only in widgets that need it
+    def remove_file_hlayout(self):
+        for i in reversed(range(self.file_hlayout.count())):
+            self.file_hlayout.itemAt(i).widget().setParent(None)
+        self.vlayout.removeItem(self.file_hlayout)
+
     def accept(self):
         if self.output_type in OQ_NPZ_LOADABLE_TYPES:
             self.load_from_npz()
@@ -542,13 +554,18 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 # aggregate losses by zone (calculate count of points in the
                 # zone, sum and average loss values for the same zone)
                 loss_layer_is_vector = True
-                res = calculate_zonal_stats(loss_layer,
-                                            zonal_layer,
-                                            loss_attr_names,
-                                            loss_layer_is_vector,
-                                            zone_id_in_losses_attr_name,
-                                            zone_id_in_zones_attr_name,
-                                            self.iface)
+                try:
+                    res = calculate_zonal_stats(loss_layer,
+                                                zonal_layer,
+                                                loss_attr_names,
+                                                loss_layer_is_vector,
+                                                zone_id_in_losses_attr_name,
+                                                zone_id_in_zones_attr_name,
+                                                self.iface)
+                except TypeError as exc:
+                    log_msg(str(exc), level='C',
+                            message_bar=self.iface.messageBar())
+                    return
                 (loss_layer, zonal_layer, loss_attrs_dict) = res
         elif self.output_type in OQ_CSV_LOADABLE_TYPES:
             self.load_from_csv()

@@ -38,11 +38,12 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
     Modal dialog to load gmf_data from an oq-engine output, as layer
     """
 
-    def __init__(self, iface, viewer_dock, output_type='gmf_data',
-                 path=None, mode=None):
+    def __init__(self, iface, viewer_dock, session, hostname, calc_id,
+                 output_type='gmf_data', path=None, mode=None):
         assert output_type == 'gmf_data'
         LoadOutputAsLayerDialog.__init__(
-            self, iface, viewer_dock, output_type, path, mode)
+            self, iface, viewer_dock, session, hostname, calc_id,
+            output_type, path, mode)
         self.setWindowTitle(
             'Load ground motion fields from NPZ, as layer')
         self.create_load_selected_only_ckb()
@@ -50,6 +51,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         self.create_rlz_or_stat_selector()
         self.create_imt_selector()
         self.create_eid_selector()
+        # TODO: use the extract api instead of reading from npz
         if self.path:
             self.npz_file = numpy.load(self.path, 'r')
             self.populate_out_dep_widgets()
@@ -95,7 +97,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
                     and rlz_or_stat != self.rlz_or_stat_cbx.currentText()):
                 continue
             with WaitCursorManager('Creating layer for "%s"...'
-                                   % rlz_or_stat, self.iface):
+                                   % rlz_or_stat, self.iface.messageBar()):
                 self.build_layer(rlz_or_stat)
                 self.style_maps()
         if self.npz_file is not None:
@@ -105,8 +107,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         self.imt = self.imt_cbx.currentText()
         self.eid = self.eid_sbx.value()
         self.default_field_name = '%s-%s' % (self.imt, self.eid)
-        # layer_name = "gmf_data_%s_eid-%s" % (rlz_or_stat, self.eid)
-        layer_name = "scenario_damage_gmfs_%s_eid-%s" % (rlz_or_stat, self.eid)
+        layer_name = "scenario_gmfs_%s_eid-%s" % (rlz_or_stat, self.eid)
         return layer_name
 
     def get_field_names(self, **kwargs):

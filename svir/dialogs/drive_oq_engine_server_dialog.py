@@ -26,25 +26,26 @@ import os
 import json
 import tempfile
 import zipfile
+import copy
 
-from PyQt4.QtCore import (QDir,
-                          Qt,
-                          QObject,
-                          SIGNAL,
-                          QTimer,
-                          pyqtSlot,
-                          QFileInfo,
-                          QSettings,
-                          )
+from qgis.PyQt.QtCore import (QDir,
+                              Qt,
+                              QObject,
+                              SIGNAL,
+                              QTimer,
+                              pyqtSlot,
+                              QFileInfo,
+                              QSettings,
+                              )
 
-from PyQt4.QtGui import (QDialog,
-                         QTableWidgetItem,
-                         QAbstractItemView,
-                         QPushButton,
-                         QFileDialog,
-                         QColor,
-                         QMessageBox,
-                         )
+from qgis.PyQt.QtGui import (QDialog,
+                             QTableWidgetItem,
+                             QAbstractItemView,
+                             QPushButton,
+                             QFileDialog,
+                             QColor,
+                             QMessageBox,
+                             )
 from qgis.gui import QgsMessageBar
 from svir.third_party.requests import Session
 from svir.third_party.requests.exceptions import (ConnectionError,
@@ -55,8 +56,10 @@ from svir.third_party.requests.exceptions import (ConnectionError,
                                                   )
 from svir.third_party.requests.packages.urllib3.exceptions import (
     LocationParseError)
-from svir.utilities.settings import get_engine_credentials
-from svir.utilities.shared import OQ_ALL_LOADABLE_TYPES
+from svir.utilities.shared import (OQ_ALL_LOADABLE_TYPES,
+                                   OQ_RST_TYPES,
+                                   OQ_NO_MAP_TYPES,
+                                   )
 from svir.utilities.utils import (WaitCursorManager,
                                   engine_login,
                                   log_msg,
@@ -64,6 +67,7 @@ from svir.utilities.utils import (WaitCursorManager,
                                   get_ui_class,
                                   SvNetworkError,
                                   get_irmt_version,
+                                  get_credentials,
                                   )
 from svir.dialogs.load_ruptures_as_layer_dialog import (
     LoadRupturesAsLayerDialog)
@@ -82,6 +86,7 @@ from svir.dialogs.load_losses_by_asset_as_layer_dialog import (
 from svir.dialogs.show_full_report_dialog import ShowFullReportDialog
 from svir.dialogs.show_console_dialog import ShowConsoleDialog
 from svir.dialogs.show_params_dialog import ShowParamsDialog
+from svir.dialogs.settings_dialog import SettingsDialog
 
 FORM_CLASS = get_ui_class('ui_drive_engine_server.ui')
 
@@ -120,8 +125,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.calc_log_line = {}
         self.session = None
         self.hostname = None
-        self.current_output_calc_id = None
-        self.current_pointed_calc_id = None  # we will scroll to it
+        self.current_calc_id = None  # list of outputs refers to this calc_id
+        self.pointed_calc_id = None  # we will scroll to it
         self.is_logged_in = False
         self.timer = None
         # Keep retrieving the list of calculations (especially important to
@@ -165,7 +170,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
     def login(self):
         self.session = Session()
-        self.hostname, username, password = get_engine_credentials(self.iface)
+        self.hostname, username, password = get_credentials('engine')
         # try without authentication (if authentication is disabled server
         # side)
         # NOTE: is_lockdown() can raise exceptions, to be caught from outside
@@ -174,7 +179,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             self.is_logged_in = True
             return
         if username and password:
-            with WaitCursorManager('Logging in...', self.iface):
+            with WaitCursorManager('Logging in...', self.iface.messageBar()):
                 # it can raise exceptions, caught by self.attempt_login
                 engine_login(self.hostname, username, password, self.session)
                 # if no exception occurred
@@ -231,9 +236,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                        " credentials. The call to %s was redirected to %s."
                        % (calc_list_url, resp.url))
                 log_msg(msg, level='C',
-                        message_bar=self.message_bar)
+                        message_bar=self.iface.messageBar())
                 self.is_logged_in = False
                 self.reject()
+                SettingsDialog(self.iface).exec_()
                 return
             calc_list = json.loads(resp.text)
         selected_keys = [
@@ -311,8 +317,13 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.calc_list_tbl.horizontalHeader().setStyleSheet(
             "font-weight: bold;")
         self.set_calc_list_widths(col_widths)
-        if self.current_pointed_calc_id:
-            self.highlight_and_scroll_to_calc_id(self.current_pointed_calc_id)
+        if self.pointed_calc_id:
+            self.highlight_and_scroll_to_calc_id(self.pointed_calc_id)
+        # if a running calculation is selected, the corresponding outputs will
+        # be displayed (once) automatically at completion
+        if (self.pointed_calc_id and
+                self.output_list_tbl.rowCount() == 0):
+            self.update_output_list(self.pointed_calc_id)
         return True
 
     def get_row_by_calc_id(self, calc_id):
@@ -333,7 +344,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             self.calc_list_tbl.scrollToItem(
                 item_calc_id, QAbstractItemView.PositionAtCenter)
         else:
-            self.current_pointed_calc_id = None
+            self.pointed_calc_id = None
             self.calc_list_tbl.clearSelection()
 
     def set_calc_list_widths(self, widths):
@@ -348,26 +359,31 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.list_of_outputs_lbl.setText('List of outputs')
         self.download_datastore_btn.setEnabled(False)
         self.download_datastore_btn.setText(
-            'Download HDF5 datastore for calculation')
+            'Download HDF5 datastore')
+        self.show_calc_params_btn.setEnabled(False)
+        self.show_calc_params_btn.setText(
+            'Show calculation parameters')
 
     def update_output_list(self, calc_id):
         calc_status = self.get_calc_status(calc_id)
-        if calc_status['status'] == 'complete':
-            self.clear_output_list()
-            output_list = self.get_output_list(calc_id)
-            self.list_of_outputs_lbl.setText(
-                'List of outputs for calculation %s' % calc_id)
-            # from engine2.5 to engine2.6, job_type was changed into
-            # calculation_mode. This check prevents the plugin to break wnen
-            # using an old version of the engine.
-            self.show_output_list(
-                output_list, calc_status.get('calculation_mode', 'unknown'))
-            self.download_datastore_btn.setEnabled(True)
-            self.download_datastore_btn.setText(
-                'Download HDF5 datastore for calculation %s'
-                % self.current_output_calc_id)
-        else:
-            self.clear_output_list()
+        self.clear_output_list()
+        if calc_status['status'] != 'complete':
+            return
+        output_list = self.get_output_list(calc_id)
+        self.list_of_outputs_lbl.setText(
+            'List of outputs for calculation %s' % calc_id)
+        # from engine2.5 to engine2.6, job_type was changed into
+        # calculation_mode. This check prevents the plugin to break wnen
+        # using an old version of the engine.
+        self.show_output_list(
+            output_list, calc_status.get('calculation_mode', 'unknown'))
+        self.download_datastore_btn.setEnabled(True)
+        self.download_datastore_btn.setText(
+            'Download HDF5 datastore for calculation %s'
+            % calc_id)
+        self.show_calc_params_btn.setEnabled(True)
+        self.show_calc_params_btn.setText(
+            'Show parameters for calculation %s' % calc_id)
 
     def on_calc_action_btn_clicked(self, calc_id, action):
         # NOTE: while scrolling through the list of calculations, the tool
@@ -375,7 +391,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         # scrolling.  But if you click on any button, at the next refresh, the
         # view is scrolled to the top. Therefore we need to keep track of which
         # line was selected, in order to scroll to that line.
-        self.current_pointed_calc_id = calc_id
+        self.current_calc_id = self.pointed_calc_id = calc_id
         self._set_show_calc_params_btn()
         self.highlight_and_scroll_to_calc_id(calc_id)
         if action == 'Console':
@@ -392,7 +408,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 QMessageBox.Yes | QMessageBox.No)
             if confirmed == QMessageBox.Yes:
                 self.remove_calc(calc_id)
-                if self.current_output_calc_id == calc_id:
+                if self.current_calc_id == calc_id:
                     self.clear_output_list()
         elif action == 'Outputs':
             self.update_output_list(calc_id)
@@ -435,7 +451,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
     def remove_calc(self, calc_id):
         calc_remove_url = "%s/v1/calc/%s/remove" % (self.hostname, calc_id)
-        with WaitCursorManager('Removing calculation...', self.iface):
+        with WaitCursorManager('Removing calculation...',
+                               self.iface.messageBar()):
             try:
                 resp = self.session.post(calc_remove_url, timeout=10)
             except HANDLED_EXCEPTIONS as exc:
@@ -444,27 +461,40 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         if resp.ok:
             msg = 'Calculation %s successfully removed' % calc_id
             log_msg(msg, level='I', message_bar=self.message_bar)
+            if self.current_calc_id == calc_id:
+                self.current_calc_id = None
+                self.clear_output_list()
+            if self.pointed_calc_id == calc_id:
+                self.pointed_calc_id = None
+                self.clear_output_list()
             self.refresh_calc_list()
         else:
             msg = 'Unable to remove calculation %s' % calc_id
             log_msg(msg, level='C', message_bar=self.message_bar)
         return
 
-    def run_calc(self, calc_id=None, file_names=None):
+    def run_calc(self, calc_id=None, file_names=None, directory=None):
         """
         Run a calculation. If `calc_id` is given, it means we want to run
         a calculation re-using the output of the given calculation
         """
         text = self.tr('Select the files needed to run the calculation,'
                        ' or the zip archive containing those files.')
-        default_dir = QSettings().value('irmt/run_oqengine_calc_dir',
-                                        QDir.homePath())
+        if directory is None:
+            default_dir = QSettings().value('irmt/run_oqengine_calc_dir',
+                                            QDir.homePath())
+        else:
+            default_dir = directory
         if not file_names:
             file_names = QFileDialog.getOpenFileNames(self, text, default_dir)
         if not file_names:
             return
-        selected_dir = QFileInfo(file_names[0]).dir().path()
-        QSettings().setValue('irmt/run_oqengine_calc_dir', selected_dir)
+        if directory is None:
+            selected_dir = QFileInfo(file_names[0]).dir().path()
+            QSettings().setValue('irmt/run_oqengine_calc_dir', selected_dir)
+        else:
+            file_names = [os.path.join(directory, os.path.basename(file_name))
+                          for file_name in file_names]
         if len(file_names) == 1:
             file_full_path = file_names[0]
             _, file_ext = os.path.splitext(file_full_path)
@@ -483,7 +513,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 for file_name in file_names:
                     zipped_file.write(file_name)
         run_calc_url = "%s/v1/calc/run" % self.hostname
-        with WaitCursorManager('Starting calculation...', self.iface):
+        with WaitCursorManager('Starting calculation...',
+                               self.iface.messageBar()):
             if calc_id is not None:
                 # FIXME: currently the web api is expecting a hazard_job_id
                 # although it could be any kind of job_id. This will have to be
@@ -504,6 +535,22 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         else:
             log_msg(resp.text, level='C', message_bar=self.message_bar)
 
+    def on_same_fs(self, checksum_file_path, ipt_checksum):
+        on_same_fs_url = "%s/v1/on_same_fs" % self.hostname
+        data = {'filename': checksum_file_path, 'checksum': str(ipt_checksum)}
+        try:
+            resp = self.session.post(on_same_fs_url, data=data, timeout=20)
+        except HANDLED_EXCEPTIONS as exc:
+            self._handle_exception(exc)
+            return False
+        try:
+            result = json.loads(resp.text)['success']
+        except Exception as exc:
+            log_msg(str(exc), level='C', message_bar=self.iface.messageBar())
+            return False
+        else:
+            return result
+
     @pyqtSlot(int, int)
     def on_calc_list_tbl_cellClicked(self, row, column):
         self.calc_list_tbl.selectRow(row)
@@ -511,22 +558,23 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         calc_id_col_idx = 1
         item_calc_id = self.calc_list_tbl.item(row, calc_id_col_idx)
         calc_id = int(item_calc_id.text())
-        if self.current_pointed_calc_id == calc_id:
-            self.current_pointed_calc_id = None
+        if self.pointed_calc_id == calc_id:
+            # if you click again on the row that was selected, it unselects it
+            self.pointed_calc_id = None
             self.calc_list_tbl.clearSelection()
         else:
-            self.current_pointed_calc_id = calc_id
+            self.pointed_calc_id = calc_id
             self._set_show_calc_params_btn()
-        self._set_show_calc_params_btn()
         self.update_output_list(calc_id)
+        self._set_show_calc_params_btn()
 
     def _set_show_calc_params_btn(self):
         self.show_calc_params_btn.setEnabled(
-            self.current_pointed_calc_id is not None)
-        if self.current_pointed_calc_id is not None:
+            self.current_calc_id is not None)
+        if self.current_calc_id is not None:
             self.show_calc_params_btn.setText(
                 'Show parameters for calculation %s'
-                % self.current_pointed_calc_id)
+                % self.current_calc_id)
         else:
             self.show_calc_params_btn.setText('Show calculation parameters')
 
@@ -536,8 +584,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         if not dest_folder:
             return
         datastore_url = "%s/v1/calc/%s/datastore" % (
-            self.hostname, self.current_output_calc_id)
-        with WaitCursorManager('Getting HDF5 datastore...', self.iface):
+            self.hostname, self.current_calc_id)
+        with WaitCursorManager('Getting HDF5 datastore...',
+                               self.iface.messageBar()):
             try:
                 # FIXME: enable the user to set verify=True
                 resp = self.session.get(datastore_url, timeout=10,
@@ -556,11 +605,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     def on_show_calc_params_btn_clicked(self):
         self.params_dlg = ShowParamsDialog()
         self.params_dlg.setWindowTitle(
-            'Parameters of calculation %s' % self.current_pointed_calc_id)
+            'Parameters of calculation %s' % self.current_calc_id)
         get_calc_params_url = "%s/v1/calc/%s/oqparam" % (
-            self.hostname, self.current_pointed_calc_id)
+            self.hostname, self.current_calc_id)
         with WaitCursorManager('Getting calculation parameters...',
-                               self.iface):
+                               self.iface.messageBar()):
             try:
                 # FIXME: enable the user to set verify=True
                 resp = self.session.get(get_calc_params_url, timeout=10,
@@ -585,7 +634,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 return
         if resp.ok:
             output_list = json.loads(resp.text)
-            self.current_output_calc_id = calc_id
+            self.current_calc_id = calc_id
             return output_list
         else:
             return []
@@ -596,19 +645,22 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             self.download_datastore_btn.setEnabled(False)
             self.download_datastore_btn.setText('Download HDF5 datastore')
             return
-        exclude = ['url', 'outtypes']
+        exclude = ['url', 'outtypes', 'type']
         selected_keys = [key for key in sorted(output_list[0].keys())
                          if key not in exclude]
         max_actions = 0
         for row in output_list:
             num_actions = len(row['outtypes'])
-            if (row['type'] in OQ_ALL_LOADABLE_TYPES
-                    or row['type'] == 'fullreport'):
+            if row['type'] in (OQ_ALL_LOADABLE_TYPES |
+                               OQ_RST_TYPES |
+                               OQ_NO_MAP_TYPES):
                 # TODO: remove check when gmf_data will be loadable also for
                 #       event_based
                 if not (row['type'] == 'gmf_data'
                         and 'event_based' in calculation_mode):
                     num_actions += 1  # needs additional column for loader btn
+            if "%s_aggr" % row['type'] in OQ_NO_MAP_TYPES:
+                num_actions += 1
             max_actions = max(max_actions, num_actions)
 
         self.output_list_tbl.setRowCount(len(output_list))
@@ -627,22 +679,29 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 self.connect_button_to_action(button, action, output, outtype)
                 self.output_list_tbl.setCellWidget(row, col, button)
                 self.calc_list_tbl.setColumnWidth(col, BUTTON_WIDTH)
-            if (output['type'] in OQ_ALL_LOADABLE_TYPES
-                    or output['type'] == 'fullreport'):
-                if output['type'] == 'fullreport':
-                    action = 'Show'
-                else:
-                    action = 'Load as layer'
-                # TODO: remove check when gmf_data will be loadable also for
-                #       event_based
-                if (output['type'] == 'gmf_data'
-                        and calculation_mode == 'event_based'):
-                    continue
-                button = QPushButton()
-                self.connect_button_to_action(
-                    button, action, output, outtype)
-                self.output_list_tbl.setCellWidget(row, col + 1, button)
-                self.calc_list_tbl.setColumnWidth(col, BUTTON_WIDTH)
+                if output['type'] in (OQ_ALL_LOADABLE_TYPES |
+                                      OQ_RST_TYPES |
+                                      OQ_NO_MAP_TYPES):
+                    if output['type'] in OQ_RST_TYPES | OQ_NO_MAP_TYPES:
+                        action = 'Show'
+                    else:
+                        action = 'Load as layer'
+                    # TODO: remove check when gmf_data will be loadable also
+                    #       for event_based
+                    if (output['type'] == 'gmf_data'
+                            and calculation_mode == 'event_based'):
+                        continue
+                    button = QPushButton()
+                    self.connect_button_to_action(
+                        button, action, output, outtype)
+                    self.output_list_tbl.setCellWidget(row, col + 1, button)
+                if "%s_aggr" % output['type'] in OQ_NO_MAP_TYPES:
+                    mod_output = copy.deepcopy(output)
+                    mod_output['type'] = "%s_aggr" % output['type']
+                    button = QPushButton()
+                    self.connect_button_to_action(
+                        button, 'Aggregate', mod_output, outtype)
+                    self.output_list_tbl.setCellWidget(row, col + 2, button)
         col_names = [key.capitalize() for key in selected_keys]
         empty_col_names = ['' for outtype in range(max_actions)]
         headers = col_names + empty_col_names
@@ -653,10 +712,12 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.output_list_tbl.resizeRowsToContents()
 
     def connect_button_to_action(self, button, action, output, outtype):
-        if action in ('Load as layer', 'Show'):
+        if action in ('Load as layer', 'Show', 'Aggregate'):
             style = 'background-color: blue; color: white;'
             if action == 'Load as layer':
-                button.setText("Load %s as layer" % outtype)
+                button.setText("Load layer")
+            elif action == 'Aggregate':
+                button.setText("Aggregate")
             else:
                 button.setText("Show")
         else:
@@ -672,9 +733,13 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     def on_output_action_btn_clicked(self, output, action, outtype):
         output_id = output['id']
         output_type = output['type']
-        if action == 'Show':
+        if action in ['Show', 'Aggregate']:
             dest_folder = tempfile.gettempdir()
-            if outtype == 'rst':
+            if output_type in OQ_NO_MAP_TYPES:
+                self.viewer_dock.load_no_map_output(
+                    self.current_calc_id, self.session,
+                    self.hostname, output_type)
+            elif outtype == 'rst':
                 filepath = self.download_output(
                     output_id, outtype, dest_folder)
                 if not filepath:
@@ -684,7 +749,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 self.full_report_dlg = ShowFullReportDialog(filepath)
                 self.full_report_dlg.setWindowTitle(
                     'Full report of calculation %s' %
-                    self.current_output_calc_id)
+                    self.current_calc_id)
                 self.full_report_dlg.show()
             else:
                 raise NotImplementedError("%s %s" % (action, outtype))
@@ -698,7 +763,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 if output_type not in OUTPUT_TYPE_LOADERS:
                     raise NotImplementedError(output_type)
                 dlg = OUTPUT_TYPE_LOADERS[output_type](
-                    self.iface, self.viewer_dock, output_type, filepath)
+                    self.iface, self.viewer_dock,
+                    self.session, self.hostname, self.current_calc_id,
+                    output_type, filepath)
                 dlg.exec_()
             else:
                 raise NotImplementedError("%s %s" % (action, outtype))
@@ -720,7 +787,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             "%s/v1/calc/result/%s?export_type=%s&dload=true" % (self.hostname,
                                                                 output_id,
                                                                 outtype))
-        with WaitCursorManager('Downloading output...', self.iface):
+        with WaitCursorManager('Downloading output...',
+                               self.iface.messageBar()):
             try:
                 # FIXME: enable the user to set verify=True
                 resp = self.session.get(output_download_url, verify=False)
@@ -765,7 +833,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         if isinstance(exc, SSLError):
             err_msg = '; '.join(exc.message.message.strerror.message[0])
             err_msg += ' (you could try prepending http:// or https://)'
-            log_msg(err_msg, level='C', message_bar=self.message_bar)
+            log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
         elif isinstance(exc, (ConnectionError,
                               InvalidSchema,
                               MissingSchema,
@@ -784,14 +852,14 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     ' (please make sure the username and password are'
                     ' spelled correctly and that you are using the right'
                     ' url and port in the host setting)')
-            log_msg(err_msg, level='C',
-                    message_bar=self.message_bar)
+            log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
         else:
             # sanity check (it should never occur)
             raise TypeError(
                 'Unable to handle exception of type %s' % type(exc))
         self.is_logged_in = False
         self.reject()
+        SettingsDialog(self.iface).exec_()
 
     def reject(self):
         self.stop_polling()

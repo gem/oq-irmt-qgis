@@ -30,16 +30,21 @@ import unittest
 import tempfile
 import json
 import copy
+import csv
 from mock import Mock
 
+from qgis.PyQt.QtGui import QAction
 from svir.third_party.requests import Session
 from svir.utilities.shared import (OQ_ALL_LOADABLE_TYPES,
                                    OQ_CSV_LOADABLE_TYPES,
                                    OQ_NPZ_LOADABLE_TYPES,
+                                   OQ_RST_TYPES,
+                                   OQ_NO_MAP_TYPES,
                                    )
 from svir.test.utilities import get_qgis_app
 from svir.dialogs.drive_oq_engine_server_dialog import OUTPUT_TYPE_LOADERS
 from svir.dialogs.show_full_report_dialog import ShowFullReportDialog
+from svir.dialogs.viewer_dock import ViewerDock
 
 QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 
@@ -49,6 +54,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
     def setUp(self):
         self.session = Session()
         self.hostname = 'http://localhost:8800'
+        mock_action = QAction(IFACE.mainWindow())
+        self.viewer_dock = ViewerDock(IFACE, mock_action)
 
     def get_calc_list(self):
         calc_list_url = "%s/v1/calc/list?relevant=true" % self.hostname
@@ -101,20 +108,36 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 print(ex)
             else:
                 self.untested_otypes.discard(output['type'])
+            output_type_aggr = "%s_aggr" % output['type']
+            if output_type_aggr in OQ_NO_MAP_TYPES:
+                mod_output = copy.deepcopy(output)
+                mod_output['type'] = output_type_aggr
+                try:
+                    self.load_output(calc, mod_output)
+                except Exception:
+                    ex_type, ex, tb = sys.exc_info()
+                    failed_attempt = {'calc_id': calc_id,
+                                      'calc_description': calc['description'],
+                                      'output_type': mod_output['type'],
+                                      'traceback': tb}
+                    self.failed_attempts.append(failed_attempt)
+                    traceback.print_tb(failed_attempt['traceback'])
+                    print(ex)
+                else:
+                    self.untested_otypes.discard(output['type'])
 
     def load_output(self, calc, output):
         calc_id = calc['id']
         output_type = output['type']
-        if (output_type in OQ_ALL_LOADABLE_TYPES
-                or output_type == 'fullreport'):
+        if output_type in OQ_ALL_LOADABLE_TYPES | OQ_RST_TYPES:
             if output_type in OQ_CSV_LOADABLE_TYPES:
                 print('\tLoading output type %s...' % output_type)
                 filepath = self.download_output(output['id'], 'csv')
             elif output_type in OQ_NPZ_LOADABLE_TYPES:
                 print('\tLoading output type %s...' % output_type)
                 filepath = self.download_output(output['id'], 'npz')
-            elif output_type == 'fullreport':
-                print('\tLoading fullreport...')
+            elif output_type in OQ_RST_TYPES:
+                print('\tLoading output type %s...' % output_type)
                 # TODO: do not skip this when encoding issue is solved
                 #       engine-side
                 if calc['description'] == u'Classical PSHA — Area Source':
@@ -145,12 +168,35 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 print('\t\tok')
                 return
             dlg = OUTPUT_TYPE_LOADERS[output_type](
-                IFACE, Mock(), output_type, filepath)
+                IFACE, Mock(), self.session, self.hostname, calc_id,
+                output_type, filepath)
             if dlg.ok_button.isEnabled():
+                if output_type == 'uhs':
+                    dlg.load_selected_only_ckb.setChecked(True)
+                    idx = dlg.poe_cbx.findText('0.1')
+                    self.assertEqual(idx, 0, 'POE 0.1 was not found')
+                    dlg.poe_cbx.setCurrentIndex(idx)
                 dlg.accept()
+                if output_type == 'hcurves':
+                    self.load_hcurves()
+                elif output_type == 'uhs':
+                    self._set_output_type('Uniform Hazard Spectra')
+                    self._change_selection()
+                    # test exporting the current selection to csv
+                    self._test_export()
                 print('\t\tok')
+                return
             else:
                 raise RuntimeError('The ok button is disabled')
+        elif output_type in OQ_NO_MAP_TYPES:
+            print('\tLoading output type %s...' % output_type)
+            self.viewer_dock.load_no_map_output(
+                calc_id, self.session, self.hostname, output_type)
+            tmpfile_handler, tmpfile_name = tempfile.mkstemp()
+            self.viewer_dock.write_export_file(tmpfile_name)
+            os.close(tmpfile_handler)
+            print('\t\tok')
+            return
         else:
             self.not_implemented_loaders.add(output_type)
             print('\tLoader for output type %s is not implemented'
@@ -176,8 +222,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             calc_list = [calc for calc in calc_list
                          if calc['id'] == selected_calc_id]
         self.selected_otype = os.environ.get('SELECTED_OTYPE')
-        if (self.selected_otype not in OQ_ALL_LOADABLE_TYPES
-                and self.selected_otype != 'fullreport'):
+        if (self.selected_otype not in OQ_ALL_LOADABLE_TYPES | OQ_RST_TYPES):
             print('\n\tSELECTED_OTYPE was not set or is not valid.'
                   ' Running tests for all the available output types.')
             self.selected_otype = None
@@ -216,3 +261,67 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         if self.untested_otypes:
             raise RuntimeError('Untested output types: %s'
                                % self.untested_otypes)
+
+    def load_hcurves(self):
+        self._set_output_type('Hazard Curves')
+        self._change_selection()
+        # test changing intensity measure type
+        layer = IFACE.activeLayer()
+        # select the first 2 features (the same used to produce the reference
+        # csv)
+        layer.select([1, 2])
+        imt = 'PGA'
+        idx = self.viewer_dock.imt_cbx.findText(imt)
+        self.assertNotEqual(idx, -1, 'IMT %s not found' % imt)
+        self.viewer_dock.imt_cbx.setCurrentIndex(idx)
+        # test exporting the current selection to csv
+        _, exported_file_path = tempfile.mkstemp(suffix=".csv")
+        self._test_export()
+
+    def _test_export(self):
+        _, exported_file_path = tempfile.mkstemp(suffix=".csv")
+        layer = IFACE.activeLayer()
+        # select the first 2 features (the same used to produce the reference
+        # csv)
+        layer.select([1, 2])
+        # probably we have the wrong layer selected (uhs produce many layers)
+        self.viewer_dock.write_export_file(exported_file_path)
+        # NOTE: we are only checking that the exported CSV has at least 2 rows
+        # and 3 columns per row. We are avoiding more precise checks, because
+        # CSV tests are very fragile. On different platforms the numbers could
+        # be slightly different. With different versions of
+        # shapely/libgeos/numpy/etc the numbers could be slightly different.
+        # The parameters of the demos could change in the future and the
+        # numbers (even the number of rows and columns) could change.
+        with open(exported_file_path, 'r') as got:
+            got_reader = csv.reader(got)
+            n_rows = 0
+            for got_line in got_reader:
+                n_rows += 1
+                n_cols = 0
+                for got_element in got_line:
+                    n_cols += 1
+                self.assertGreaterEqual(
+                    n_cols, 3,
+                    "The following line of the exported file %s has"
+                    " only %s columns:\n%s" % (
+                        exported_file_path, n_cols, got_line))
+            self.assertGreaterEqual(
+                n_rows, 2,
+                "The exported file %s has only %s rows" % (
+                    exported_file_path, n_rows))
+
+    def _set_output_type(self, output_type):
+        idx = self.viewer_dock.output_type_cbx.findText(output_type)
+        self.assertNotEqual(idx, -1, 'Output type %s not found' % output_type)
+        self.viewer_dock.output_type_cbx.setCurrentIndex(idx)
+
+    def _change_selection(self):
+        layer = IFACE.activeLayer()
+        # the behavior should be slightly different (pluralizing labels, etc)
+        # depending on the amount of features selected
+        layer.select(1)
+        layer.removeSelection()
+        layer.select(2)
+        layer.selectAll()
+        layer.removeSelection()

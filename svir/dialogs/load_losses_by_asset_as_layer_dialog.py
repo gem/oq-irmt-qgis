@@ -39,12 +39,13 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
     Modal dialog to load losses by asset from an oq-engine output, as layer
     """
 
-    def __init__(self, iface, viewer_dock, output_type='losses_by_asset',
+    def __init__(self, iface, viewer_dock, session, hostname, calc_id,
+                 output_type='losses_by_asset',
                  path=None, mode=None, zonal_layer_path=None):
         assert output_type == 'losses_by_asset'
         LoadOutputAsLayerDialog.__init__(
-            self, iface, viewer_dock, output_type, path, mode,
-            zonal_layer_path)
+            self, iface, viewer_dock, session, hostname, calc_id,
+            output_type, path, mode, zonal_layer_path)
         self.setWindowTitle(
             'Load losses by asset from NPZ, aggregated by location, as layer')
         self.create_load_selected_only_ckb()
@@ -144,7 +145,8 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                     with WaitCursorManager(
                             'Creating layer for "%s", '
                             ' taxonomy "%s" and loss type "%s"...' % (
-                            rlz_or_stat, taxonomy, loss_type), self.iface):
+                            rlz_or_stat, taxonomy, loss_type),
+                            self.iface.messageBar()):
                         self.build_layer(rlz_or_stat, taxonomy=taxonomy,
                                          loss_type=loss_type)
                         self.style_maps()
