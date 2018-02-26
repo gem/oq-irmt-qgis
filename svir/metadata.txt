@@ -26,6 +26,8 @@ changelog=
     2.9.6
     * When loading hazard maps from OQ-Engine, values for all intensity measure types and probabilities of exceedance can be stored
       in a single layer.
+    * Layers built from OQ-Engine outputs have the custom property 'calc_id' storing the id of the corresponding OQ-Engine calculation.
+    * The names of files exported by the Data Viewer contain the id of the corresponding OQ-Engine calculation.
     2.9.5
     * Several updates to the user manual
     * Fixed bug in the GUI initialization for visualizing aggregate loss curves
