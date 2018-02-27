@@ -342,7 +342,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             else:
                 return investigation_time
         else:
-            # some output do not need the investigation time
+            # some outputs do not need the investigation time
             return None
 
     def build_layer(self, rlz_or_stat=None, taxonomy=None, poe=None,
@@ -377,6 +377,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         if investigation_time is not None:
             self.layer.setCustomProperty('investigation_time',
                                          investigation_time)
+        self.layer.setCustomProperty('calc_id', self.calc_id)
         QgsMapLayerRegistry.instance().addMapLayer(self.layer)
         self.iface.setActiveLayer(self.layer)
         self.iface.zoomToActiveLayer()
