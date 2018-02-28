@@ -6,10 +6,10 @@ Basic web browser in PyQt4.
 """
 
 import sys
-from PyQt4 import QtCore, QtGui, QtWebKit
+from PyQt5 import QtCore, QtGui, QtWidgets, QtWebKitWidgets
 
 
-class BasicBrowser(QtGui.QWidget):
+class BasicBrowser(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super(BasicBrowser, self).__init__(parent)
         self.initGui()
@@ -17,10 +17,10 @@ class BasicBrowser(QtGui.QWidget):
 
     def initGui(self):
         self.setWindowTitle('Browser')
-        self.lineEdit = QtGui.QLineEdit()
+        self.lineEdit = QtWidgets.QLineEdit()
         self.lineEdit.setText('http://www.google.it')
-        self.qwebview = QtWebKit.QWebView()
-        self.vlayout = QtGui.QVBoxLayout()
+        self.qwebview = QtWebKitWidgets.QWebView()
+        self.vlayout = QtWidgets.QVBoxLayout()
         self.vlayout.addWidget(self.lineEdit)
         self.vlayout.addWidget(self.qwebview)
         self.setLayout(self.vlayout)
@@ -34,7 +34,7 @@ class BasicBrowser(QtGui.QWidget):
 
 def main():
 
-    app = QtGui.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     browser = BasicBrowser()
     browser.show()
     sys.exit(app.exec_())
