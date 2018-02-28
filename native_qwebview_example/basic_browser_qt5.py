@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 
 """
-Basic web browser in PyQt4.
+Basic web browser in PyQt5.
 """
 
 import sys
-from PyQt5 import QtCore, QtGui, QtWidgets, QtWebKitWidgets
+from PyQt5 import QtCore, QtWidgets, QtWebKitWidgets
 
 
 class BasicBrowser(QtWidgets.QWidget):
