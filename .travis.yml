@@ -1,6 +1,7 @@
 env:
     - QGIS_VERSION=debian-ltr
-    - QGIS_VERSION=debian
+    # for now, let's avoid running tests on QGIS3
+    # - QGIS_VERSION=debian
 
 dist: trusty
 sudo: true
