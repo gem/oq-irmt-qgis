@@ -9,7 +9,7 @@ sudo: true
 language: python
 
 python:
-    - "2.7"
+    - "3.5"
 
 before_install:
     - if [ "$TRAVIS_PULL_REQUEST_BRANCH" != "" ]; then BRANCH=$TRAVIS_PULL_REQUEST_BRANCH; else BRANCH=$TRAVIS_BRANCH; fi
@@ -27,16 +27,16 @@ install:
     - sudo apt-get install -q -y xvfb qgis python-mock python-nose python-nose-exclude python-scipy saga python-saga
     - sudo pip install sphinx==1.4.9 sphinx_rtd_theme
     - export PYTHONPATH=$TRAVIS_BUILD_DIR:$PYTHONPATH
-    - virtualenv oqe27
-    - oqe27/bin/pip -q install -U pip
-    - oqe27/bin/pip -q install -r oq-engine/requirements-py27-linux64.txt
-    - oqe27/bin/pip -q install -e oq-engine
+    - virtualenv oqe35
+    - oqe35/bin/pip -q install -U pip
+    - oqe35/bin/pip -q install -r oq-engine/requirements-py35-linux64.txt
+    - oqe35/bin/pip -q install -e oq-engine
 
 before_script:
     - "/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -ac -screen 0 1280x1024x16"
     - "export DISPLAY=:99.0"
-    - oqe27/bin/oq restore oqdata-${BRANCH}.zip ~/oqdata
-    - oqe27/bin/oq webui start --skip-browser &> webui.log &
+    - oqe35/bin/oq restore oqdata-${BRANCH}.zip ~/oqdata
+    - oqe35/bin/oq webui start --skip-browser &> webui.log &
     - . ./scripts/run-env-linux.sh /usr
 
 script:
