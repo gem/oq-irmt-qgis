@@ -26,8 +26,15 @@ modifying markers, labels, axes, zooming level and other parameters, saving the
 plot to file and exporting the selected curves into a csv format.
 
 
+Visulalizing outputs of hazard calculations
+===========================================
+
+This section describes how to drive the user interface of the plugin to visualize
+some of the hazard outputs produced by OpenQuake Engine calculations. For an extensive
+explanation of those outputs, please refer to the user manual of the OpenQuake Engine.
+
 Visualizing hazard curves
-=========================
+-------------------------
 
 A hazard curve defines the relation between a scalar IML and the probability of
 at least one exceedance of that IML within a time span T. The OpenQuake-engine
@@ -81,7 +88,7 @@ map are highlighted.
 
 
 Visualizing uniform hazard spectra
-==================================
+----------------------------------
 
 A Uniform Hazard Spectrum (UHS) is a typology of result that is site-specific –
 as in the case of hazard curves. A UHS defines a relationship between the
@@ -103,11 +110,19 @@ Spectra` (:numref:`fig-dataViewerUHS`).
     IRMT Data Viewer used for displaying Uniform Hazard Spectra
 
 
-Visualizing aggregate loss curves
-=================================
+Visualizing outputs of risk calculations
+========================================
 
-A loss exceedance curve defines the relation between a set of loss levels and the
-corresponding probability of exceedance within a given time span (e.g. one year).
+This section describes how to drive the user interface of the plugin to visualize
+some of the risk outputs produced by OpenQuake Engine calculations. For an extensive
+explanation of those outputs, please refer to the user manual of the OpenQuake Engine.
+
+
+Visualizing aggregate loss curves
+---------------------------------
+
+Aggregate loss curves describe the exceedance probabilities for a set of loss
+values for the entire portfolio of assets defined in the exposure model.
 
 When the button :guilabel:`Show` is pressed, the Data Viewer is automatically
 opened, providing a dropdown menu to select one of the available loss types,
@@ -120,7 +135,7 @@ the OQ-Engine calculation).
 
 
 Visualizing aggregate damage by asset
-======================================
+-------------------------------------
 
 FIXME scientific description
 When the button :guilabel:`Aggregate` is pressed, the Data Viewer is automatically
@@ -137,8 +152,9 @@ damage state. If no filter is selected, the whole damage distribution is display
 If something is selected, a text field lists the selected tags, each with the chosen value.
 If a tag is selected, but no corresponding value is chosen, the filter will not be applied.
 
+
 Visualizing aggregate losses by asset
-======================================
+-------------------------------------
 
 FIXME scientific description
 When the button :guilabel:`Aggregate` is pressed, the Data Viewer is automatically
@@ -150,6 +166,13 @@ the corresponding aggregate loss.
 If no filter is selected, the total losses for each realization are displayed.
 If something is selected, a text field lists the selected tags, each with the chosen value.
 If a tag is selected, but no corresponding value is chosen, the filter will not be applied.
+
+
+Visualizing average losses
+--------------------------
+
+FIXME
+
 
 Visualizing recovery curves
 ===========================
