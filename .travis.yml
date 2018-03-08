@@ -35,10 +35,10 @@ before_script:
     - "export DISPLAY=:99.0"
     - oq restore oqdata-${BRANCH}.zip ~/oqdata
     - oq webui start --skip-browser &> webui.log &
+    - source $HOME/virtualenv/python2.7_with_system_site_packages/bin/activate
     - . ./scripts/run-env-linux.sh /usr
 
 script:
-    - source $HOME/virtualenv/python2.7_with_system_site_packages/bin/activate
     - cd $TRAVIS_BUILD_DIR/svir && make test
 
 after_success:
