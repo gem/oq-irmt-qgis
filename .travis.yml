@@ -27,7 +27,7 @@ install:
     - sudo apt-get install -q -y xvfb qgis python-mock python-nose python-nose-exclude python-scipy saga python-saga
     - sudo pip install sphinx==1.4.9 sphinx_rtd_theme
     - export PYTHONPATH=$TRAVIS_BUILD_DIR:$PYTHONPATH
-    - virtualenv oqe35
+    - python3 -m venv oqe35
     - oqe35/bin/pip -q install -U pip
     - oqe35/bin/pip -q install -r oq-engine/requirements-py35-linux64.txt
     - oqe35/bin/pip -q install -e oq-engine
