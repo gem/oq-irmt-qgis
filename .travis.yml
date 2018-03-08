@@ -25,24 +25,24 @@ before_install:
 
 install:
     - sudo apt-get install -q -y xvfb qgis python-mock python-nose python-nose-exclude python-scipy saga python-saga
-    - sudo pip install sphinx==1.4.9 sphinx_rtd_theme
     - export PYTHONPATH=$TRAVIS_BUILD_DIR:$PYTHONPATH
-    - python3 -m venv oqe35
-    - oqe35/bin/pip -q install -U pip
-    - oqe35/bin/pip -q install -r oq-engine/requirements-py35-linux64.txt
-    - oqe35/bin/pip -q install -e oq-engine
+    - pip -q install -U pip
+    - pip -q install -r oq-engine/requirements-py35-linux64.txt
+    - pip -q install -e oq-engine
 
 before_script:
     - "/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -ac -screen 0 1280x1024x16"
     - "export DISPLAY=:99.0"
-    - oqe35/bin/oq restore oqdata-${BRANCH}.zip ~/oqdata
-    - oqe35/bin/oq webui start --skip-browser &> webui.log &
+    - oq restore oqdata-${BRANCH}.zip ~/oqdata
+    - oq webui start --skip-browser &> webui.log &
     - . ./scripts/run-env-linux.sh /usr
 
 script:
+    - source $HOME/virtualenv/python2.7_with_system_site_packages/bin/activate
     - cd $TRAVIS_BUILD_DIR/svir && make test
 
 after_success:
+    - pip install sphinx==1.4.9 sphinx_rtd_theme
     - cd $TRAVIS_BUILD_DIR/svir && make build_apidoc
     - cd $TRAVIS_BUILD_DIR/svir && make build_manual_html
 
