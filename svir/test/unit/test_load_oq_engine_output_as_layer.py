@@ -90,46 +90,8 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
             reference_path, 'reference_ruptures', 'ogr')
         ProcessLayer(current_layer).has_same_content_as(reference_layer)
 
-    def test_load_losses_by_asset_only_selected_taxonomy_and_loss_type(self):
-        filepath = os.path.join(self.data_dir_name, 'risk',
-                                'output-399-losses_by_asset_123.npz')
-        # TODO: in the future, we will move this to integration tests, using
-        #       session, hostname  and calc_id and the extract api, instead of
-        #       mocking
-        dlg = LoadLossesByAssetAsLayerDialog(
-            IFACE, self.viewer_dock, Mock(), Mock(), Mock(), 'losses_by_asset',
-            filepath)
-        dlg.load_selected_only_ckb.setChecked(True)
-        taxonomy_idx = dlg.taxonomy_cbx.findText('"Concrete"')
-        self.assertNotEqual(taxonomy_idx, -1,
-                            'Taxonomy "Concrete" was not found')
-        dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
-        loss_type_idx = dlg.loss_type_cbx.findText('structural')
-        self.assertNotEqual(loss_type_idx, -1,
-                            'Loss type structural was not found')
-        dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
-        dlg.accept()
-
-    def test_load_losses_by_asset_all_taxonomies_only_selected_loss_type(self):
-        filepath = os.path.join(self.data_dir_name, 'risk',
-                                'output-399-losses_by_asset_123.npz')
-        # TODO: in the future, we will move this to integration tests, using
-        #       session, hostname  and calc_id and the extract api, instead of
-        #       mocking
-        dlg = LoadLossesByAssetAsLayerDialog(
-            IFACE, self.viewer_dock, Mock(), Mock(), Mock(), 'losses_by_asset',
-            filepath)
-        dlg.load_selected_only_ckb.setChecked(True)
-        taxonomy_idx = dlg.taxonomy_cbx.findText('All')
-        self.assertNotEqual(taxonomy_idx, -1, 'Taxonomy All was not found')
-        dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
-        loss_type_idx = dlg.loss_type_cbx.findText('structural')
-        self.assertNotEqual(loss_type_idx, -1,
-                            'Loss type structural was not found')
-        dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
-        dlg.accept()
-
     @unittest.skip("Causing segfault")
+    # FIXME: it should be replaced by a corresponding integration test
     def test_load_losses_by_asset_aggregate_by_zone(self):
         loss_layer_path = os.path.join(self.data_dir_name, 'risk',
                                        'output-399-losses_by_asset_123.npz')
