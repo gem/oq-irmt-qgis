@@ -40,8 +40,6 @@ from svir.dialogs.load_ruptures_as_layer_dialog import (
     LoadRupturesAsLayerDialog)
 from svir.dialogs.load_gmf_data_as_layer_dialog import (
     LoadGmfDataAsLayerDialog)
-from svir.dialogs.load_losses_by_asset_as_layer_dialog import (
-    LoadLossesByAssetAsLayerDialog)
 from svir.dialogs.viewer_dock import ViewerDock
 from svir.calculations.process_layer import ProcessLayer
 from svir.test.utilities import get_qgis_app
@@ -89,47 +87,6 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
         reference_layer = QgsVectorLayer(
             reference_path, 'reference_ruptures', 'ogr')
         ProcessLayer(current_layer).has_same_content_as(reference_layer)
-
-    @unittest.skip("Causing segfault")
-    # FIXME: it should be replaced by a corresponding integration test
-    def test_load_losses_by_asset_aggregate_by_zone(self):
-        loss_layer_path = os.path.join(self.data_dir_name, 'risk',
-                                       'output-399-losses_by_asset_123.npz')
-        zonal_layer_path = os.path.join(self.data_dir_name, 'risk',
-                                        'zonal_layer.shp')
-        # TODO: in the future, we will move this to integration tests, using
-        #       session, hostname  and calc_id and the extract api, instead of
-        #       mocking
-        dlg = LoadLossesByAssetAsLayerDialog(
-            IFACE, self.viewer_dock, Mock(), Mock(), Mock(), 'losses_by_asset',
-            loss_layer_path,
-            zonal_layer_path=zonal_layer_path)
-        dlg.load_selected_only_ckb.setChecked(True)
-        dlg.zonal_layer_gbx.setChecked(True)
-        taxonomy_idx = dlg.taxonomy_cbx.findText('All')
-        self.assertNotEqual(taxonomy_idx, -1, 'Taxonomy All was not found')
-        dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
-        loss_type_idx = dlg.loss_type_cbx.findText('structural')
-        self.assertNotEqual(loss_type_idx, -1,
-                            'Loss type structural was not found')
-        dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
-        self.assertTrue(dlg.zonal_layer_cbx.currentText(),
-                        'The zonal layer was not loaded')
-        dlg.accept()
-        zonal_layer_plus_stats = [layer for layer in IFACE.layers()
-                                  if layer.name() == 'Zonal data (copy)'][0]
-        zonal_layer_plus_stats_first_feat = \
-            zonal_layer_plus_stats.getFeatures().next()
-        expected_zonal_layer_path = os.path.join(
-            self.data_dir_name, 'risk',
-            'zonal_layer_plus_losses_by_asset_stats.shp')
-        expected_zonal_layer = QgsVectorLayer(
-            expected_zonal_layer_path, 'Zonal data', 'ogr')
-        expected_zonal_layer_first_feat = \
-            expected_zonal_layer.getFeatures().next()
-        assert_almost_equal(
-            zonal_layer_plus_stats_first_feat.attributes(),
-            expected_zonal_layer_first_feat.attributes())
 
     def test_load_dmg_by_asset_only_selected_taxonomy(self):
         filepath = os.path.join(self.data_dir_name, 'risk',

@@ -44,6 +44,8 @@ from svir.utilities.shared import (OQ_TO_LAYER_TYPES,
                                    )
 from svir.test.utilities import get_qgis_app
 from svir.dialogs.drive_oq_engine_server_dialog import OUTPUT_TYPE_LOADERS
+# from svir.dialogs.load_losses_by_asset_as_layer_dialog import (
+#     LoadLossesByAssetAsLayerDialog)
 from svir.dialogs.show_full_report_dialog import ShowFullReportDialog
 from svir.dialogs.viewer_dock import ViewerDock
 
@@ -203,6 +205,46 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             else:
                 raise RuntimeError('The ok button is disabled')
         elif output_type in OQ_EXTRACT_TO_VIEW_TYPES:
+            if output_type == 'losses_by_asset':
+                pass
+                # FIXME: copied/pasted from unit test causing segfault
+                # loss_layer_path = os.path.join(
+                #     self.data_dir_name, 'risk',
+                #     'output-399-losses_by_asset_123.npz')
+                # zonal_layer_path = os.path.join(self.data_dir_name, 'risk',
+                #                                 'zonal_layer.shp')
+                # dlg = LoadLossesByAssetAsLayerDialog(
+                #     IFACE, self.viewer_dock, Mock(), Mock(), Mock(),
+                #     'losses_by_asset', loss_layer_path,
+                #     zonal_layer_path=zonal_layer_path)
+                # dlg.load_selected_only_ckb.setChecked(True)
+                # dlg.zonal_layer_gbx.setChecked(True)
+                # taxonomy_idx = dlg.taxonomy_cbx.findText('All')
+                # self.assertNotEqual(taxonomy_idx, -1,
+                #                    'Taxonomy All was not found')
+                # dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
+                # loss_type_idx = dlg.loss_type_cbx.findText('structural')
+                # self.assertNotEqual(loss_type_idx, -1,
+                #                     'Loss type structural was not found')
+                # dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
+                # self.assertTrue(dlg.zonal_layer_cbx.currentText(),
+                #                 'The zonal layer was not loaded')
+                # dlg.accept()
+                # zonal_layer_plus_stats = [
+                #     layer for layer in IFACE.layers()
+                #     if layer.name() == 'Zonal data (copy)'][0]
+                # zonal_layer_plus_stats_first_feat = \
+                #     zonal_layer_plus_stats.getFeatures().next()
+                # expected_zonal_layer_path = os.path.join(
+                #     self.data_dir_name, 'risk',
+                #     'zonal_layer_plus_losses_by_asset_stats.shp')
+                # expected_zonal_layer = QgsVectorLayer(
+                #     expected_zonal_layer_path, 'Zonal data', 'ogr')
+                # expected_zonal_layer_first_feat = \
+                #     expected_zonal_layer.getFeatures().next()
+                # assert_almost_equal(
+                #     zonal_layer_plus_stats_first_feat.attributes(),
+                #     expected_zonal_layer_first_feat.attributes())
             # TODO: do not skip when encoding issue is fixed
             if output_type in ('losses_by_asset_aggr', 'dmg_by_asset_aggr'):
                 print('\tLoading output type %s...' % output_type)
