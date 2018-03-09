@@ -190,7 +190,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 raise RuntimeError('The ok button is disabled')
         elif output_type in OQ_NO_MAP_TYPES:
             # TODO: do not skip when encoding issue is fixed
-            if output_type == 'losses_by_asset_aggr':
+            if output_type in ('losses_by_asset_aggr', 'dmg_by_asset_aggr'):
                 print('\tLoading output type %s...' % output_type)
                 skipped_attempt = {
                     'calc_id': calc_id,
