@@ -292,7 +292,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
 
     def populate_rlz_or_stat_cbx(self):
         self.rlzs_or_stats = [key for key in sorted(self.npz_file)
-                              if key != 'imtls']
+                              if key not in ('imtls', 'array')]
         self.rlz_or_stat_cbx.clear()
         self.rlz_or_stat_cbx.setEnabled(True)
         self.rlz_or_stat_cbx.addItems(self.rlzs_or_stats)
