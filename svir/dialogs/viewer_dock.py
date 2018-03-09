@@ -520,7 +520,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             message_bar=self.iface.messageBar())
         if composite_risk_model_attrs is None:
             return
-        self.dmg_states = composite_risk_model_attrs['damage_states']
+        limit_states = composite_risk_model_attrs['limit_states']
+        self.dmg_states = numpy.append(['no damage'], limit_states)
         self._get_tags(session, hostname, calc_id, self.iface.messageBar(),
                        with_star=False)
         self.update_list_selected_edt()
