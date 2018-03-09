@@ -2,7 +2,6 @@ env:
     - QGIS_VERSION=debian-ltr
     # for now, let's avoid running tests on QGIS3
     # - QGIS_VERSION=debian
-    - PYTHONIOENCODING=utf_8
 
 dist: trusty
 sudo: true
@@ -40,6 +39,7 @@ before_script:
     # because QGIS 2 uses Python 2.7 and its python libraries are installed via apt.
     # Travis already provides a venv with these features
     - source $HOME/virtualenv/python2.7_with_system_site_packages/bin/activate
+    - pip install -U numpy
     - . ./scripts/run-env-linux.sh /usr
 
 script:
