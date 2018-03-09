@@ -2,8 +2,6 @@ env:
     - QGIS_VERSION=debian-ltr
     # for now, let's avoid running tests on QGIS3
     # - QGIS_VERSION=debian
-    - LANG=en_US.UTF-8
-    - PYTHONIOENCODING=utf_8
 
 dist: trusty
 sudo: true
@@ -42,6 +40,8 @@ before_script:
     # Travis already provides a venv with these features
     - source $HOME/virtualenv/python2.7_with_system_site_packages/bin/activate
     - pip install -U numpy
+    - export LANG=en_US.UTF-8
+    - export PYTHONIOENCODING=utf_8
     - . ./scripts/run-env-linux.sh /usr
 
 script:
