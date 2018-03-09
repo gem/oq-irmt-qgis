@@ -44,7 +44,7 @@ before_script:
     # because QGIS 2 uses Python 2.7 and its python libraries are installed via apt.
     # Travis already provides a venv with these features
     - source $HOME/virtualenv/python2.7_with_system_site_packages/bin/activate
-    - pip install --no-binary -U numpy
+    - pip install --no-binary -U numpy==1.11
     - . ./scripts/run-env-linux.sh /usr
 
 script:
