@@ -35,11 +35,12 @@ from mock import Mock
 
 from qgis.PyQt.QtGui import QAction
 from svir.third_party.requests import Session
-from svir.utilities.shared import (OQ_ALL_LOADABLE_TYPES,
-                                   OQ_CSV_LOADABLE_TYPES,
-                                   OQ_NPZ_LOADABLE_TYPES,
+from svir.utilities.shared import (OQ_TO_LAYER_TYPES,
+                                   OQ_CSV_TO_LAYER_TYPES,
+                                   OQ_NPZ_TO_LAYER_TYPES,
+                                   OQ_EXTRACT_TO_LAYER_TYPES,
                                    OQ_RST_TYPES,
-                                   OQ_NO_MAP_TYPES,
+                                   OQ_EXTRACT_TO_VIEW_TYPES,
                                    )
 from svir.test.utilities import get_qgis_app
 from svir.dialogs.drive_oq_engine_server_dialog import OUTPUT_TYPE_LOADERS
@@ -109,7 +110,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             else:
                 self.untested_otypes.discard(output['type'])
             output_type_aggr = "%s_aggr" % output['type']
-            if output_type_aggr in OQ_NO_MAP_TYPES:
+            if output_type_aggr in OQ_EXTRACT_TO_VIEW_TYPES:
                 mod_output = copy.deepcopy(output)
                 mod_output['type'] = output_type_aggr
                 try:
@@ -129,11 +130,13 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
     def load_output(self, calc, output):
         calc_id = calc['id']
         output_type = output['type']
-        if output_type in OQ_ALL_LOADABLE_TYPES | OQ_RST_TYPES:
-            if output_type in OQ_CSV_LOADABLE_TYPES:
+        if output_type in (OQ_CSV_TO_LAYER_TYPES |
+                           OQ_NPZ_TO_LAYER_TYPES |
+                           OQ_RST_TYPES):
+            if output_type in OQ_CSV_TO_LAYER_TYPES:
                 print('\tLoading output type %s...' % output_type)
                 filepath = self.download_output(output['id'], 'csv')
-            elif output_type in OQ_NPZ_LOADABLE_TYPES:
+            elif output_type in OQ_NPZ_TO_LAYER_TYPES:
                 print('\tLoading output type %s...' % output_type)
                 filepath = self.download_output(output['id'], 'npz')
             elif output_type in OQ_RST_TYPES:
@@ -171,6 +174,17 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 IFACE, Mock(), self.session, self.hostname, calc_id,
                 output_type, filepath)
             if dlg.ok_button.isEnabled():
+                dlg.accept()
+                print('\t\tok')
+                return
+            else:
+                raise RuntimeError('The ok button is disabled')
+        elif output_type in OQ_EXTRACT_TO_LAYER_TYPES:
+            print('\tLoading output type %s...' % output_type)
+            dlg = OUTPUT_TYPE_LOADERS[output_type](
+                IFACE, Mock(), self.session, self.hostname, calc_id,
+                output_type)
+            if dlg.ok_button.isEnabled():
                 if output_type == 'uhs':
                     dlg.load_selected_only_ckb.setChecked(True)
                     idx = dlg.poe_cbx.findText('0.1')
@@ -188,7 +202,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 return
             else:
                 raise RuntimeError('The ok button is disabled')
-        elif output_type in OQ_NO_MAP_TYPES:
+        elif output_type in OQ_EXTRACT_TO_VIEW_TYPES:
             # TODO: do not skip when encoding issue is fixed
             if output_type in ('losses_by_asset_aggr', 'dmg_by_asset_aggr'):
                 print('\tLoading output type %s...' % output_type)
@@ -216,7 +230,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         self.failed_attempts = []
         self.skipped_attempts = []
         self.not_implemented_loaders = set()
-        self.untested_otypes = copy.copy(OQ_ALL_LOADABLE_TYPES)  # it's a set
+        self.untested_otypes = copy.copy(OQ_TO_LAYER_TYPES)  # it's a set
         calc_list = self.get_calc_list()
         try:
             selected_calc_id = int(os.environ.get('SELECTED_CALC_ID'))
@@ -232,7 +246,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             calc_list = [calc for calc in calc_list
                          if calc['id'] == selected_calc_id]
         self.selected_otype = os.environ.get('SELECTED_OTYPE')
-        if (self.selected_otype not in OQ_ALL_LOADABLE_TYPES | OQ_RST_TYPES):
+        if (self.selected_otype not in OQ_TO_LAYER_TYPES | OQ_RST_TYPES):
             print('\n\tSELECTED_OTYPE was not set or is not valid.'
                   ' Running tests for all the available output types.')
             self.selected_otype = None
@@ -264,7 +278,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         if self.not_implemented_loaders:
             # sanity check
             for not_implemented_loader in self.not_implemented_loaders:
-                assert not_implemented_loader not in OQ_ALL_LOADABLE_TYPES
+                assert not_implemented_loader not in OQ_TO_LAYER_TYPES
             print('\n\nLoaders for the following output types found in the'
                   ' available calculations have not been implemented yet:')
             print(", ".join(self.not_implemented_loaders))

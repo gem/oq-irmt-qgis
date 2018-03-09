@@ -59,8 +59,8 @@ from qgis.gui import QgsVertexMarker
 from qgis.core import QGis, QgsMapLayer, QgsFeatureRequest
 
 from svir.utilities.shared import (
-                                   OQ_ALL_LOADABLE_TYPES,
-                                   OQ_NO_MAP_TYPES,
+                                   OQ_TO_LAYER_TYPES,
+                                   OQ_EXTRACT_TO_VIEW_TYPES,
                                    )
 from svir.utilities.utils import (get_ui_class,
                                   log_msg,
@@ -1178,7 +1178,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 self.on_container_hover(event, self.legend)
 
     def on_container_hover(self, event, container):
-        if self.output_type in OQ_NO_MAP_TYPES:
+        if self.output_type in OQ_EXTRACT_TO_VIEW_TYPES:
             return False
         for line in container.get_lines():
             if line.contains(event)[0]:
@@ -1400,7 +1400,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
     @pyqtSlot()
     def on_bw_chk_clicked(self):
-        if self.output_type in OQ_ALL_LOADABLE_TYPES | set('recovery_curves'):
+        if self.output_type in OQ_TO_LAYER_TYPES | set('recovery_curves'):
             self.layer_changed()
         if self.output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
             self.draw_agg_curves(self.output_type)
@@ -1413,7 +1413,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         for output_type, output_type_name in self.output_types_names.items():
             if output_type_name == otname:
                 self.set_output_type_and_its_gui(output_type)
-                if output_type not in OQ_NO_MAP_TYPES:
+                if output_type not in OQ_EXTRACT_TO_VIEW_TYPES:
                     self.layer_changed()
                 return
         output_type = None
