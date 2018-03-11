@@ -53,7 +53,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
 
     def setUp(self):
         self.session = Session()
-        self.hostname = 'http://localhost:8800'
+        self.hostname = 'http://172.17.0.1:8800'
         mock_action = QAction(IFACE.mainWindow())
         self.viewer_dock = ViewerDock(IFACE, mock_action)
 
