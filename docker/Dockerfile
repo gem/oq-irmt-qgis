@@ -30,5 +30,6 @@ WORKDIR /io
 
 ENV DISPLAY=:99
 ENV PYTHONPATH=/io
+ENV PYTHONIOENCODING=utf_8
 
 ENTRYPOINT ["/bin/bash", "/io/docker/run_make.sh"]
