@@ -27,7 +27,7 @@ install:
 
 before_script:
     - oq restore oqdata-${BRANCH}.zip ~/oqdata
-    - oq webui start --skip-browser 0.0.0.0:8800 &> webui.log &
+    - oq webui start 0.0.0.0:8800 --skip-browser &> webui.log &
 
 script:
     - docker run -e OQ_ENGINE_HOST='http://172.17.0.1:8800' --rm -v $TRAVIS_BUILD_DIR:/io qgis-builder test
