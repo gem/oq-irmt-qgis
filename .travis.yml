@@ -23,14 +23,14 @@ install:
     - pip -q install -U pip
     - pip -q install -r oq-engine/requirements-py35-linux64.txt
     - pip -q install -e oq-engine
-    - docker build -t qgis-builder -f docker/Dockerfile docker/
+    - docker build --build-arg uid=$(id -u) -t qgis-builder -f docker/Dockerfile docker/
 
 before_script:
     - oq restore oqdata-${BRANCH}.zip ~/oqdata
     - oq webui start --skip-browser 0.0.0.0:8800 &> webui.log &
 
 script:
-    - docker run --rm -v $TRAVIS_BUILD_DIR:/io qgis-builder test
+    - docker run -e OQ_ENGINE_HOST='http://172.17.0.1:8800' --rm -v $TRAVIS_BUILD_DIR:/io qgis-builder test
 
 after_success:
     - docker run --rm -v $TRAVIS_BUILD_DIR:/io qgis-builder build_apidoc
