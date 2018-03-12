@@ -57,7 +57,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
 
     def setUp(self):
         self.session = Session()
-        self.hostname = 'http://localhost:8800'
+        self.hostname = os.environ.get('OQ_ENGINE_HOST',
+                                       'http://localhost:8800')
         mock_action = QAction(IFACE.mainWindow())
         self.viewer_dock = ViewerDock(IFACE, mock_action)
 
@@ -264,16 +265,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             else:
                 raise RuntimeError('The ok button is disabled')
         elif output_type in OQ_EXTRACT_TO_VIEW_TYPES:
-            # TODO: do not skip when encoding issue is fixed
-            if output_type in ('losses_by_asset_aggr', 'dmg_by_asset_aggr'):
-                print('\tLoading output type %s...' % output_type)
-                skipped_attempt = {
-                    'calc_id': calc_id,
-                    'calc_description': calc['description'],
-                    'output_type': output_type}
-                self.skipped_attempts.append(skipped_attempt)
-                print('\t\tSKIPPED')
-                return
             print('\tLoading output type %s...' % output_type)
             self.viewer_dock.load_no_map_output(
                 calc_id, self.session, self.hostname, output_type)

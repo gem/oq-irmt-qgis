@@ -6,7 +6,7 @@ RUN echo "deb     http://qgis.org/debian-ltr xenial main" >> /etc/apt/sources.li
     apt-key adv --keyserver keyserver.ubuntu.com --recv-key CAEB3DC3BDF7FB45 && \
     apt update && \
     apt upgrade -y && \
-    apt install -y build-essential git sudo software-properties-common xvfb zip \
+    apt -q install -y build-essential git sudo software-properties-common xvfb zip \
                    python-qt4-dev pyqt4-dev-tools \
                    python-pip python-mock python-nose \
                    python-nose-exclude python-scipy \
@@ -30,5 +30,6 @@ WORKDIR /io
 
 ENV DISPLAY=:99
 ENV PYTHONPATH=/io
+ENV PYTHONIOENCODING=utf_8
 
 ENTRYPOINT ["/bin/bash", "/io/docker/run_make.sh"]

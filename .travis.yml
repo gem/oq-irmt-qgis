@@ -4,7 +4,7 @@ env:
     # - QGIS_VERSION=debian
 
 dist: trusty
-sudo: true
+services: docker
 
 language: python
 
@@ -18,36 +18,23 @@ before_install:
       fi;
     - curl -sfLO https://artifacts.openquake.org/travis/oqdata-${BRANCH}.zip || ( echo "Dump for ${BRANCH} unavailable"; exit 1 )
     - git clone -q -b ${BRANCH} --depth=1 https://github.com/gem/oq-engine.git && echo "Running against oq-engine/${BRANCH}"
-    - echo "deb http://qgis.org/$QGIS_VERSION trusty main" | sudo tee -a /etc/apt/sources.list
-    - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key CAEB3DC3BDF7FB45
-    - sudo add-apt-repository -y ppa:openquake/saga
-    - sudo apt-get update -q
 
 install:
-    - sudo apt-get install -q -y xvfb qgis python-mock python-nose python-nose-exclude python-scipy saga python-saga
-    - export PYTHONPATH=$TRAVIS_BUILD_DIR:$PYTHONPATH
     - pip -q install -U pip
     - pip -q install -r oq-engine/requirements-py35-linux64.txt
     - pip -q install -e oq-engine
+    - docker build --build-arg uid=$(id -u) -t qgis-builder -f docker/Dockerfile docker/
 
 before_script:
-    - "/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -ac -screen 0 1280x1024x16"
-    - "export DISPLAY=:99.0"
     - oq restore oqdata-${BRANCH}.zip ~/oqdata
-    - oq webui start --skip-browser &> webui.log &
-    # We need to switch to Python 2.7 and have visibility on system packages
-    # because QGIS 2 uses Python 2.7 and its python libraries are installed via apt.
-    # Travis already provides a venv with these features
-    - source $HOME/virtualenv/python2.7_with_system_site_packages/bin/activate
-    - . ./scripts/run-env-linux.sh /usr
+    - oq webui start 0.0.0.0:8800 --skip-browser &> webui.log &
 
 script:
-    - cd $TRAVIS_BUILD_DIR/svir && make test
+    - docker run -e OQ_ENGINE_HOST='http://172.17.0.1:8800' --rm -v $TRAVIS_BUILD_DIR:/io qgis-builder test
 
 after_success:
-    - pip install sphinx==1.4.9 sphinx_rtd_theme
-    - cd $TRAVIS_BUILD_DIR/svir && make build_apidoc
-    - cd $TRAVIS_BUILD_DIR/svir && make build_manual_html
+    - docker run --rm -v $TRAVIS_BUILD_DIR:/io qgis-builder build_apidoc
+    - docker run --rm -v $TRAVIS_BUILD_DIR:/io qgis-builder build_manual_html
 
 after_script:
     - cat $TRAVIS_BUILD_DIR/webui.log
