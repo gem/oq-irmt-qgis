@@ -194,17 +194,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                     self.assertEqual(idx, 0, 'POE 0.1 was not found')
                     dlg.poe_cbx.setCurrentIndex(idx)
                 elif output_type == 'losses_by_asset':
-                    # skipped_attempt = {
-                    #     'calc_id': calc_id,
-                    #     'calc_description': calc['description'],
-                    #     'output_type': output_type}
-                    # self.skipped_attempts.append(skipped_attempt)
-                    # print('\t\tSKIPPED')
-                    # return
-
-                    # FIXME: test changing settings in the dialog
-
-                    # test only a selected taxonomy
+                    # FIXME: testing only for a selected taxonomy
                     dlg.load_selected_only_ckb.setChecked(True)
                     taxonomy_idx = dlg.taxonomy_cbx.findText('"Concrete"')
                     self.assertNotEqual(taxonomy_idx, -1,
@@ -215,7 +205,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                                         'Loss type structural was not found')
                     dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
 
-                    # # FIXME: dlg.accept() for both cases
+                    # # FIXME: we need to do dlg.accept() also for the case
+                    #          loading all taxonomies, and performing the
+                    #          aggregation by zone
 
                     # # test all taxonomies
                     # dlg.load_selected_only_ckb.setChecked(True)
@@ -229,7 +221,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                     # dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
                     # dlg.accept()
 
-                    # FIXME: copied/pasted from unit test causing segfault
+                    # FIXME: copied/pasted from skipped unit test
+                    #        that was causing segfault
                     # loss_layer_path = os.path.join(
                     #     self.data_dir_name, 'risk',
                     #     'output-399-losses_by_asset_123.npz')
@@ -267,7 +260,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                     # assert_almost_equal(
                     #     zonal_layer_plus_stats_first_feat.attributes(),
                     #     expected_zonal_layer_first_feat.attributes())
-
                 dlg.accept()
                 if output_type == 'hcurves':
                     self.load_hcurves()
