@@ -134,6 +134,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
     def load_output(self, calc, output):
         calc_id = calc['id']
         output_type = output['type']
+        IFACE.newProject()
         if output_type in (OQ_CSV_TO_LAYER_TYPES |
                            OQ_NPZ_TO_LAYER_TYPES |
                            OQ_RST_TYPES):
@@ -147,7 +148,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 print('\tLoading output type %s...' % output_type)
                 filepath = self.download_output(output['id'], 'rst')
             assert filepath is not None
-            IFACE.newProject()
             # TODO: when gmf_data for event_based becomes loadable,
             #       let's not skip this
             if (output_type == 'gmf_data'
