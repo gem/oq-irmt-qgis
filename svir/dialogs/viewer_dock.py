@@ -1162,15 +1162,25 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
     def clear_imt_cbx(self):
         if self.imt_cbx is not None:
-            self.imt_cbx.blockSignals(True)
-            self.imt_cbx.clear()
-            self.imt_cbx.blockSignals(False)
+            try:
+                self.imt_cbx.blockSignals(True)
+                self.imt_cbx.clear()
+                self.imt_cbx.blockSignals(False)
+            except RuntimeError:
+                # continue if something like this occurs:
+                # "wrapped C/C++ object of type QComboBox has been deleted"
+                pass
 
     def clear_loss_type_cbx(self):
         if self.loss_type_cbx is not None:
-            self.loss_type_cbx.blockSignals(True)
-            self.loss_type_cbx.clear()
-            self.loss_type_cbx.blockSignals(False)
+            try:
+                self.loss_type_cbx.blockSignals(True)
+                self.loss_type_cbx.clear()
+                self.loss_type_cbx.blockSignals(False)
+            except RuntimeError:
+                # continue if something like this occurs:
+                # "wrapped C/C++ object of type QComboBox has been deleted"
+                pass
 
     def on_plot_hover(self, event):
         if not self.on_container_hover(event, self.plot):
