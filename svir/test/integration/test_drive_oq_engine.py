@@ -129,7 +129,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                     traceback.print_tb(failed_attempt['traceback'])
                     print(ex)
                 else:
-                    self.untested_otypes.discard(output['type'])
+                    self.untested_otypes.discard(output_type_aggr)
 
     def load_output(self, calc, output):
         calc_id = calc['id']
@@ -185,7 +185,13 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                     self.assertEqual(idx, 0, 'POE 0.1 was not found')
                     dlg.poe_cbx.setCurrentIndex(idx)
                 elif output_type == 'losses_by_asset':
-                    pass
+                    skipped_attempt = {
+                        'calc_id': calc_id,
+                        'calc_description': calc['description'],
+                        'output_type': output_type}
+                    self.skipped_attempts.append(skipped_attempt)
+                    print('\t\tSKIPPED')
+                    return
                     # FIXME: test changing settings in the dialog
 
                     # # test only a selected taxonomy
