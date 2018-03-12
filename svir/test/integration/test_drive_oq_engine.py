@@ -59,8 +59,17 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         self.session = Session()
         self.hostname = os.environ.get('OQ_ENGINE_HOST',
                                        'http://localhost:8800')
+        self.reset_gui()
+
+    def tearDown(self):
+        del self.session
+        del self.hostname
+        del self.viewer_dock
+
+    def reset_gui(self):
         mock_action = QAction(IFACE.mainWindow())
         self.viewer_dock = ViewerDock(IFACE, mock_action)
+        IFACE.newProject()
 
     def get_calc_list(self):
         calc_list_url = "%s/v1/calc/list?relevant=true" % self.hostname
@@ -132,9 +141,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                     self.untested_otypes.discard(output_type_aggr)
 
     def load_output(self, calc, output):
+        self.reset_gui()
         calc_id = calc['id']
         output_type = output['type']
-        IFACE.newProject()
         if output_type in (OQ_CSV_TO_LAYER_TYPES |
                            OQ_NPZ_TO_LAYER_TYPES |
                            OQ_RST_TYPES):
@@ -185,25 +194,26 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                     self.assertEqual(idx, 0, 'POE 0.1 was not found')
                     dlg.poe_cbx.setCurrentIndex(idx)
                 elif output_type == 'losses_by_asset':
-                    skipped_attempt = {
-                        'calc_id': calc_id,
-                        'calc_description': calc['description'],
-                        'output_type': output_type}
-                    self.skipped_attempts.append(skipped_attempt)
-                    print('\t\tSKIPPED')
-                    return
+                    # skipped_attempt = {
+                    #     'calc_id': calc_id,
+                    #     'calc_description': calc['description'],
+                    #     'output_type': output_type}
+                    # self.skipped_attempts.append(skipped_attempt)
+                    # print('\t\tSKIPPED')
+                    # return
+
                     # FIXME: test changing settings in the dialog
 
-                    # # test only a selected taxonomy
-                    # dlg.load_selected_only_ckb.setChecked(True)
-                    # taxonomy_idx = dlg.taxonomy_cbx.findText('"Concrete"')
-                    # self.assertNotEqual(taxonomy_idx, -1,
-                    #                     'Taxonomy "Concrete" was not found')
-                    # dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
-                    # loss_type_idx = dlg.loss_type_cbx.findText('structural')
-                    # self.assertNotEqual(loss_type_idx, -1,
-                    #                     'Loss type structural was not found')
-                    # dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
+                    # test only a selected taxonomy
+                    dlg.load_selected_only_ckb.setChecked(True)
+                    taxonomy_idx = dlg.taxonomy_cbx.findText('"Concrete"')
+                    self.assertNotEqual(taxonomy_idx, -1,
+                                        'Taxonomy "Concrete" was not found')
+                    dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
+                    loss_type_idx = dlg.loss_type_cbx.findText('structural')
+                    self.assertNotEqual(loss_type_idx, -1,
+                                        'Loss type structural was not found')
+                    dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
 
                     # # FIXME: dlg.accept() for both cases
 
