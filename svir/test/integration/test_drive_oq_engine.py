@@ -35,12 +35,13 @@ from mock import Mock
 
 from qgis.PyQt.QtGui import QAction
 from svir.third_party.requests import Session
-from svir.utilities.shared import (OQ_TO_LAYER_TYPES,
+from svir.utilities.shared import (
                                    OQ_CSV_TO_LAYER_TYPES,
                                    OQ_NPZ_TO_LAYER_TYPES,
                                    OQ_EXTRACT_TO_LAYER_TYPES,
                                    OQ_RST_TYPES,
                                    OQ_EXTRACT_TO_VIEW_TYPES,
+                                   OQ_ALL_TYPES,
                                    )
 from svir.test.utilities import get_qgis_app
 from svir.dialogs.drive_oq_engine_server_dialog import OUTPUT_TYPE_LOADERS
@@ -300,7 +301,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         self.failed_attempts = []
         self.skipped_attempts = []
         self.not_implemented_loaders = set()
-        self.untested_otypes = copy.copy(OQ_TO_LAYER_TYPES)  # it's a set
+        self.untested_otypes = copy.copy(OQ_ALL_TYPES)  # it's a set
         calc_list = self.get_calc_list()
         try:
             selected_calc_id = int(os.environ.get('SELECTED_CALC_ID'))
@@ -316,7 +317,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             calc_list = [calc for calc in calc_list
                          if calc['id'] == selected_calc_id]
         self.selected_otype = os.environ.get('SELECTED_OTYPE')
-        if (self.selected_otype not in OQ_TO_LAYER_TYPES | OQ_RST_TYPES):
+        if (self.selected_otype not in OQ_ALL_TYPES):
             print('\n\tSELECTED_OTYPE was not set or is not valid.'
                   ' Running tests for all the available output types.')
             self.selected_otype = None
@@ -348,7 +349,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         if self.not_implemented_loaders:
             # sanity check
             for not_implemented_loader in self.not_implemented_loaders:
-                assert not_implemented_loader not in OQ_TO_LAYER_TYPES
+                assert not_implemented_loader not in OQ_ALL_TYPES
             print('\n\nLoaders for the following output types found in the'
                   ' available calculations have not been implemented yet:')
             print(", ".join(self.not_implemented_loaders))

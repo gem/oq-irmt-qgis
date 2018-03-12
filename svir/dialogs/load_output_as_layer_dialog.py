@@ -57,6 +57,7 @@ from svir.utilities.shared import (OQ_CSV_TO_LAYER_TYPES,
                                    OQ_NPZ_TO_LAYER_TYPES,
                                    OQ_TO_LAYER_TYPES,
                                    OQ_EXTRACT_TO_LAYER_TYPES,
+                                   OQ_ALL_TYPES,
                                    )
 from svir.utilities.utils import (get_ui_class,
                                   get_style,

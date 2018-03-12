@@ -226,6 +226,7 @@ OQ_RST_TYPES = set(['fullreport'])
 OQ_EXTRACT_TO_VIEW_TYPES = set(
     ['agg_curves-rlzs', 'agg_curves-stats', 'dmg_by_asset_aggr',
      'losses_by_asset_aggr'])
+OQ_ALL_TYPES = OQ_TO_LAYER_TYPES | OQ_RST_TYPES | OQ_EXTRACT_TO_VIEW_TYPES
 
 LOG_LEVELS = {'I': 'Info (high verbosity)',
               'W': 'Warning (medium verbosity)',
