@@ -144,16 +144,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 filepath = self.download_output(output['id'], 'npz')
             elif output_type in OQ_RST_TYPES:
                 print('\tLoading output type %s...' % output_type)
-                # TODO: do not skip this when encoding issue is solved
-                #       engine-side
-                if calc['description'] == u'Classical PSHA — Area Source':
-                    skipped_attempt = {
-                        'calc_id': calc_id,
-                        'calc_description': calc['description'],
-                        'output_type': output_type}
-                    self.skipped_attempts.append(skipped_attempt)
-                    print('\t\tSKIPPED')
-                    return
                 filepath = self.download_output(output['id'], 'rst')
             assert filepath is not None
             IFACE.newProject()
