@@ -88,13 +88,6 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
             self.eid_sbx.setRange(min_eid, max_eid)
         self.set_ok_button()
 
-    def populate_rlz_or_stat_cbx(self):
-        self.rlzs_or_stats = [item[0] for item in self.npz_file.items()]
-        self.rlz_or_stat_cbx.clear()
-        self.rlz_or_stat_cbx.setEnabled(True)
-        # self.rlz_or_stat_cbx.addItem('All')
-        self.rlz_or_stat_cbx.addItems(self.rlzs_or_stats)
-
     def load_from_npz(self):
         for rlz_or_stat in self.rlzs_or_stats:
             if (self.load_selected_only_ckb.isChecked()
