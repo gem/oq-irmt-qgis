@@ -22,13 +22,13 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-import numpy
 from qgis.core import QgsFeature, QgsGeometry, QgsPoint
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 from svir.calculations.calculate_utils import add_numeric_attribute
 from svir.utilities.utils import (WaitCursorManager,
                                   LayerEditingManager,
                                   log_msg,
+                                  extract_npz,
                                   )
 from svir.utilities.shared import DEBUG
 
@@ -44,6 +44,10 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         LoadOutputAsLayerDialog.__init__(
             self, iface, viewer_dock, session, hostname, calc_id,
             output_type, path, mode)
+
+        # FIXME: add layout only for output types that load from file
+        self.remove_file_hlayout()
+
         self.setWindowTitle(
             'Load ground motion fields from NPZ, as layer')
         self.create_load_selected_only_ckb()
@@ -51,17 +55,17 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         self.create_rlz_or_stat_selector()
         self.create_imt_selector()
         self.create_eid_selector()
-        # TODO: use the extract api instead of reading from npz
-        if self.path:
-            self.npz_file = numpy.load(self.path, 'r')
-            self.populate_out_dep_widgets()
+
+        self.npz_file = extract_npz(
+            session, hostname, calc_id, output_type,
+            message_bar=iface.messageBar(), params=None)
+
+        self.populate_out_dep_widgets()
         self.adjustSize()
         self.set_ok_button()
 
     def set_ok_button(self):
-        self.ok_button.setEnabled(
-            bool(self.path)
-            and self.imt_cbx.currentIndex() != -1)
+        self.ok_button.setEnabled(self.imt_cbx.currentIndex() != -1)
 
     def on_rlz_or_stat_changed(self):
         self.dataset = self.npz_file[self.rlz_or_stat_cbx.currentText()]

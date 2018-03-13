@@ -38,8 +38,6 @@ from svir.dialogs.load_dmg_by_asset_as_layer_dialog import (
     LoadDmgByAssetAsLayerDialog)
 from svir.dialogs.load_ruptures_as_layer_dialog import (
     LoadRupturesAsLayerDialog)
-from svir.dialogs.load_gmf_data_as_layer_dialog import (
-    LoadGmfDataAsLayerDialog)
 from svir.dialogs.viewer_dock import ViewerDock
 from svir.calculations.process_layer import ProcessLayer
 from svir.test.utilities import get_qgis_app
@@ -55,18 +53,6 @@ class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):
             curr_dir_name, os.pardir, 'data')
         mock_action = QAction(IFACE.mainWindow())
         self.viewer_dock = ViewerDock(IFACE, mock_action)
-
-    def test_load_gmf(self):
-        filepath = os.path.join(self.data_dir_name, 'hazard',
-                                'output-195-gmf_data_70.npz')
-        # TODO: in the future, we will move this to integration tests, using
-        #       session, hostname  and calc_id and the extract api, instead of
-        #       mocking
-        dlg = LoadGmfDataAsLayerDialog(
-            IFACE, self.viewer_dock,
-            Mock(), Mock(), Mock(), 'gmf_data', filepath)
-        dlg.accept()
-        # ground motion fields have nothing to do with the Data Viewer
 
     def test_load_ruptures(self):
         filepath = os.path.join(
