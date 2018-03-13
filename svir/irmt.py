@@ -298,13 +298,6 @@ class Irmt:
                            enable=True,
                            submenu='OQ Engine')
 
-        self.add_menu_item("load_losses_by_asset_as_layer",
-                           ":/plugins/irmt/load_from_oqoutput.svg",
-                           u"Load losses by asset as layer",
-                           self.load_losses_by_asset_as_layer,
-                           enable=True,
-                           submenu='OQ Engine')
-
         # Action to activate the modal dialog to select a layer and one of
         # its attributes, in order to transform that attribute
         self.add_menu_item("transform_attributes",

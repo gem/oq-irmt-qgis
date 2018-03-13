@@ -63,8 +63,7 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         self.set_ok_button()
 
     def set_ok_button(self):
-        self.ok_button.setEnabled(
-            bool(self.path) and self.poe_cbx.currentIndex() != -1)
+        self.ok_button.setEnabled(self.poe_cbx.currentIndex() != -1)
 
     def populate_rlz_or_stat_cbx(self):
         # excluding lon, lat (in old calculations, we might also find 'vs30',

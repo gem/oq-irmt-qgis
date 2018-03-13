@@ -59,7 +59,7 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
         self.set_ok_button()
 
     def set_ok_button(self):
-        self.ok_button.setEnabled(bool(self.path))
+        self.ok_button.setEnabled(True)
 
     def populate_dataset(self):
         self.rlzs_or_stats = self.npz_file['all'].dtype.names[2:]

@@ -56,9 +56,9 @@ from svir.third_party.requests.exceptions import (ConnectionError,
                                                   )
 from svir.third_party.requests.packages.urllib3.exceptions import (
     LocationParseError)
-from svir.utilities.shared import (OQ_ALL_LOADABLE_TYPES,
+from svir.utilities.shared import (OQ_TO_LAYER_TYPES,
                                    OQ_RST_TYPES,
-                                   OQ_NO_MAP_TYPES,
+                                   OQ_EXTRACT_TO_VIEW_TYPES,
                                    )
 from svir.utilities.utils import (WaitCursorManager,
                                   engine_login,
@@ -656,15 +656,15 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         max_actions = 0
         for row in output_list:
             num_actions = len(row['outtypes'])
-            if row['type'] in (OQ_ALL_LOADABLE_TYPES |
+            if row['type'] in (OQ_TO_LAYER_TYPES |
                                OQ_RST_TYPES |
-                               OQ_NO_MAP_TYPES):
+                               OQ_EXTRACT_TO_VIEW_TYPES):
                 # TODO: remove check when gmf_data will be loadable also for
                 #       event_based
                 if not (row['type'] == 'gmf_data'
                         and 'event_based' in calculation_mode):
                     num_actions += 1  # needs additional column for loader btn
-            if "%s_aggr" % row['type'] in OQ_NO_MAP_TYPES:
+            if "%s_aggr" % row['type'] in OQ_EXTRACT_TO_VIEW_TYPES:
                 num_actions += 1
             max_actions = max(max_actions, num_actions)
 
@@ -684,10 +684,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 self.connect_button_to_action(button, action, output, outtype)
                 self.output_list_tbl.setCellWidget(row, col, button)
                 self.calc_list_tbl.setColumnWidth(col, BUTTON_WIDTH)
-                if output['type'] in (OQ_ALL_LOADABLE_TYPES |
+                if output['type'] in (OQ_TO_LAYER_TYPES |
                                       OQ_RST_TYPES |
-                                      OQ_NO_MAP_TYPES):
-                    if output['type'] in OQ_RST_TYPES | OQ_NO_MAP_TYPES:
+                                      OQ_EXTRACT_TO_VIEW_TYPES):
+                    if output['type'] in (OQ_RST_TYPES |
+                                          OQ_EXTRACT_TO_VIEW_TYPES):
                         action = 'Show'
                     else:
                         action = 'Load as layer'
@@ -700,7 +701,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     self.connect_button_to_action(
                         button, action, output, outtype)
                     self.output_list_tbl.setCellWidget(row, col + 1, button)
-                if "%s_aggr" % output['type'] in OQ_NO_MAP_TYPES:
+                if "%s_aggr" % output['type'] in OQ_EXTRACT_TO_VIEW_TYPES:
                     mod_output = copy.deepcopy(output)
                     mod_output['type'] = "%s_aggr" % output['type']
                     button = QPushButton()
@@ -740,7 +741,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         output_type = output['type']
         if action in ['Show', 'Aggregate']:
             dest_folder = tempfile.gettempdir()
-            if output_type in OQ_NO_MAP_TYPES:
+            if output_type in OQ_EXTRACT_TO_VIEW_TYPES:
                 self.viewer_dock.load_no_map_output(
                     self.current_calc_id, self.session,
                     self.hostname, output_type)

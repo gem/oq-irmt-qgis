@@ -931,7 +931,7 @@ def clear_widgets_from_layout(layout):
         widget = item.widget()
         if widget is not None:
             # a widget is deleted when it does not have a parent
-            widget.setParent(None)
+            widget.deleteLater()
 
 
 def import_layer_from_csv(parent,

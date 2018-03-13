@@ -35,11 +35,13 @@ from mock import Mock
 
 from qgis.PyQt.QtGui import QAction
 from svir.third_party.requests import Session
-from svir.utilities.shared import (OQ_ALL_LOADABLE_TYPES,
-                                   OQ_CSV_LOADABLE_TYPES,
-                                   OQ_NPZ_LOADABLE_TYPES,
+from svir.utilities.shared import (
+                                   OQ_CSV_TO_LAYER_TYPES,
+                                   OQ_NPZ_TO_LAYER_TYPES,
+                                   OQ_EXTRACT_TO_LAYER_TYPES,
                                    OQ_RST_TYPES,
-                                   OQ_NO_MAP_TYPES,
+                                   OQ_EXTRACT_TO_VIEW_TYPES,
+                                   OQ_ALL_TYPES,
                                    )
 from svir.test.utilities import get_qgis_app
 from svir.dialogs.drive_oq_engine_server_dialog import OUTPUT_TYPE_LOADERS
@@ -53,9 +55,19 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
 
     def setUp(self):
         self.session = Session()
-        self.hostname = 'http://localhost:8800'
+        self.hostname = os.environ.get('OQ_ENGINE_HOST',
+                                       'http://localhost:8800')
+        self.reset_gui()
+
+    def tearDown(self):
+        del self.session
+        del self.hostname
+        del self.viewer_dock
+
+    def reset_gui(self):
         mock_action = QAction(IFACE.mainWindow())
         self.viewer_dock = ViewerDock(IFACE, mock_action)
+        IFACE.newProject()
 
     def get_calc_list(self):
         calc_list_url = "%s/v1/calc/list?relevant=true" % self.hostname
@@ -109,7 +121,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             else:
                 self.untested_otypes.discard(output['type'])
             output_type_aggr = "%s_aggr" % output['type']
-            if output_type_aggr in OQ_NO_MAP_TYPES:
+            if output_type_aggr in OQ_EXTRACT_TO_VIEW_TYPES:
                 mod_output = copy.deepcopy(output)
                 mod_output['type'] = output_type_aggr
                 try:
@@ -124,33 +136,25 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                     traceback.print_tb(failed_attempt['traceback'])
                     print(ex)
                 else:
-                    self.untested_otypes.discard(output['type'])
+                    self.untested_otypes.discard(output_type_aggr)
 
     def load_output(self, calc, output):
+        self.reset_gui()
         calc_id = calc['id']
         output_type = output['type']
-        if output_type in OQ_ALL_LOADABLE_TYPES | OQ_RST_TYPES:
-            if output_type in OQ_CSV_LOADABLE_TYPES:
+        if output_type in (OQ_CSV_TO_LAYER_TYPES |
+                           OQ_NPZ_TO_LAYER_TYPES |
+                           OQ_RST_TYPES):
+            if output_type in OQ_CSV_TO_LAYER_TYPES:
                 print('\tLoading output type %s...' % output_type)
                 filepath = self.download_output(output['id'], 'csv')
-            elif output_type in OQ_NPZ_LOADABLE_TYPES:
+            elif output_type in OQ_NPZ_TO_LAYER_TYPES:
                 print('\tLoading output type %s...' % output_type)
                 filepath = self.download_output(output['id'], 'npz')
             elif output_type in OQ_RST_TYPES:
                 print('\tLoading output type %s...' % output_type)
-                # TODO: do not skip this when encoding issue is solved
-                #       engine-side
-                if calc['description'] == u'Classical PSHA — Area Source':
-                    skipped_attempt = {
-                        'calc_id': calc_id,
-                        'calc_description': calc['description'],
-                        'output_type': output_type}
-                    self.skipped_attempts.append(skipped_attempt)
-                    print('\t\tSKIPPED')
-                    return
                 filepath = self.download_output(output['id'], 'rst')
             assert filepath is not None
-            IFACE.newProject()
             # TODO: when gmf_data for event_based becomes loadable,
             #       let's not skip this
             if (output_type == 'gmf_data'
@@ -171,11 +175,89 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 IFACE, Mock(), self.session, self.hostname, calc_id,
                 output_type, filepath)
             if dlg.ok_button.isEnabled():
+                dlg.accept()
+                print('\t\tok')
+                return
+            else:
+                raise RuntimeError('The ok button is disabled')
+        elif output_type in OQ_EXTRACT_TO_LAYER_TYPES:
+            print('\tLoading output type %s...' % output_type)
+            dlg = OUTPUT_TYPE_LOADERS[output_type](
+                IFACE, Mock(), self.session, self.hostname, calc_id,
+                output_type)
+            if dlg.ok_button.isEnabled():
                 if output_type == 'uhs':
                     dlg.load_selected_only_ckb.setChecked(True)
                     idx = dlg.poe_cbx.findText('0.1')
                     self.assertEqual(idx, 0, 'POE 0.1 was not found')
                     dlg.poe_cbx.setCurrentIndex(idx)
+                elif output_type == 'losses_by_asset':
+                    # FIXME: testing only for a selected taxonomy
+                    dlg.load_selected_only_ckb.setChecked(True)
+                    taxonomy_idx = dlg.taxonomy_cbx.findText('"Concrete"')
+                    self.assertNotEqual(taxonomy_idx, -1,
+                                        'Taxonomy "Concrete" was not found')
+                    dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
+                    loss_type_idx = dlg.loss_type_cbx.findText('structural')
+                    self.assertNotEqual(loss_type_idx, -1,
+                                        'Loss type structural was not found')
+                    dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
+
+                    # # FIXME: we need to do dlg.accept() also for the case
+                    #          loading all taxonomies, and performing the
+                    #          aggregation by zone
+
+                    # # test all taxonomies
+                    # dlg.load_selected_only_ckb.setChecked(True)
+                    # taxonomy_idx = dlg.taxonomy_cbx.findText('All')
+                    # self.assertNotEqual(taxonomy_idx, -1,
+                    #                     'Taxonomy All was not found')
+                    # dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
+                    # loss_type_idx = dlg.loss_type_cbx.findText('structural')
+                    # self.assertNotEqual(loss_type_idx, -1,
+                    #                     'Loss type structural was not found')
+                    # dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
+                    # dlg.accept()
+
+                    # FIXME: copied/pasted from skipped unit test
+                    #        that was causing segfault
+                    # loss_layer_path = os.path.join(
+                    #     self.data_dir_name, 'risk',
+                    #     'output-399-losses_by_asset_123.npz')
+                    # zonal_layer_path = os.path.join(
+                    #     self.data_dir_name, 'risk', 'zonal_layer.shp')
+                    # dlg = LoadLossesByAssetAsLayerDialog(
+                    #     IFACE, self.viewer_dock, Mock(), Mock(), Mock(),
+                    #     'losses_by_asset', loss_layer_path,
+                    #     zonal_layer_path=zonal_layer_path)
+                    # dlg.load_selected_only_ckb.setChecked(True)
+                    # dlg.zonal_layer_gbx.setChecked(True)
+                    # taxonomy_idx = dlg.taxonomy_cbx.findText('All')
+                    # self.assertNotEqual(taxonomy_idx, -1,
+                    #                    'Taxonomy All was not found')
+                    # dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
+                    # loss_type_idx = dlg.loss_type_cbx.findText('structural')
+                    # self.assertNotEqual(loss_type_idx, -1,
+                    #                     'Loss type structural was not found')
+                    # dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
+                    # self.assertTrue(dlg.zonal_layer_cbx.currentText(),
+                    #                 'The zonal layer was not loaded')
+                    # dlg.accept()
+                    # zonal_layer_plus_stats = [
+                    #     layer for layer in IFACE.layers()
+                    #     if layer.name() == 'Zonal data (copy)'][0]
+                    # zonal_layer_plus_stats_first_feat = \
+                    #     zonal_layer_plus_stats.getFeatures().next()
+                    # expected_zonal_layer_path = os.path.join(
+                    #     self.data_dir_name, 'risk',
+                    #     'zonal_layer_plus_losses_by_asset_stats.shp')
+                    # expected_zonal_layer = QgsVectorLayer(
+                    #     expected_zonal_layer_path, 'Zonal data', 'ogr')
+                    # expected_zonal_layer_first_feat = \
+                    #     expected_zonal_layer.getFeatures().next()
+                    # assert_almost_equal(
+                    #     zonal_layer_plus_stats_first_feat.attributes(),
+                    #     expected_zonal_layer_first_feat.attributes())
                 dlg.accept()
                 if output_type == 'hcurves':
                     self.load_hcurves()
@@ -188,11 +270,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 return
             else:
                 raise RuntimeError('The ok button is disabled')
-        elif output_type in OQ_NO_MAP_TYPES:
+        elif output_type in OQ_EXTRACT_TO_VIEW_TYPES:
             # TODO: do not skip when encoding issue is fixed
-            # FIXME: remove False condition to re-enable this check
-            if (False and output_type in ('losses_by_asset_aggr',
-                                          'dmg_by_asset_aggr')):
+            if output_type in ('losses_by_asset_aggr', 'dmg_by_asset_aggr'):
                 print('\tLoading output type %s...' % output_type)
                 skipped_attempt = {
                     'calc_id': calc_id,
@@ -218,7 +298,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         self.failed_attempts = []
         self.skipped_attempts = []
         self.not_implemented_loaders = set()
-        self.untested_otypes = copy.copy(OQ_ALL_LOADABLE_TYPES)  # it's a set
+        self.untested_otypes = copy.copy(OQ_ALL_TYPES)  # it's a set
         calc_list = self.get_calc_list()
         try:
             selected_calc_id = int(os.environ.get('SELECTED_CALC_ID'))
@@ -234,7 +314,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             calc_list = [calc for calc in calc_list
                          if calc['id'] == selected_calc_id]
         self.selected_otype = os.environ.get('SELECTED_OTYPE')
-        if (self.selected_otype not in OQ_ALL_LOADABLE_TYPES | OQ_RST_TYPES):
+        if (self.selected_otype not in OQ_ALL_TYPES):
             print('\n\tSELECTED_OTYPE was not set or is not valid.'
                   ' Running tests for all the available output types.')
             self.selected_otype = None
@@ -266,7 +346,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         if self.not_implemented_loaders:
             # sanity check
             for not_implemented_loader in self.not_implemented_loaders:
-                assert not_implemented_loader not in OQ_ALL_LOADABLE_TYPES
+                assert not_implemented_loader not in OQ_ALL_TYPES
             print('\n\nLoaders for the following output types found in the'
                   ' available calculations have not been implemented yet:')
             print(", ".join(self.not_implemented_loaders))
