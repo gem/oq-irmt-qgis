@@ -59,11 +59,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                                        'http://localhost:8800')
         self.reset_gui()
 
-    def tearDown(self):
-        del self.session
-        del self.hostname
-        del self.viewer_dock
-
     def reset_gui(self):
         mock_action = QAction(IFACE.mainWindow())
         self.viewer_dock = ViewerDock(IFACE, mock_action)
@@ -139,6 +134,11 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                     self.untested_otypes.discard(output_type_aggr)
 
     def load_output(self, calc, output):
+        # NOTE: resetting the Data Viewer before loading each output, prevents
+        #       a segfault. For some reason, while running the actual
+        #       application, the GUI is properly re-designed while opening a
+        #       new output, but not in the testing environment (so widgets
+        #       corresponding to previous outputs are not removed from the GUI)
         self.reset_gui()
         calc_id = calc['id']
         output_type = output['type']

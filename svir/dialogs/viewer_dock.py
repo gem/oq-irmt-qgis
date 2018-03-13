@@ -22,6 +22,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
+import sys
+import traceback
 import os
 import csv
 import numpy
@@ -1256,9 +1258,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 self.imt_cbx.clear()
                 self.imt_cbx.blockSignals(False)
             except RuntimeError:
-                # continue if something like this occurs:
+                # display a warning if something like this occurs:
                 # "wrapped C/C++ object of type QComboBox has been deleted"
-                pass
+                ex_type, ex, tb = sys.exc_info()
+                msg = ''.join(traceback.format_exception(ex_type, ex, tb))
+                log_msg(msg, level='W', message_bar=self.iface.messageBar())
 
     def clear_loss_type_cbx(self):
         if self.loss_type_cbx is not None:
@@ -1267,9 +1271,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 self.loss_type_cbx.clear()
                 self.loss_type_cbx.blockSignals(False)
             except RuntimeError:
-                # continue if something like this occurs:
+                # display a warning if something like this occurs:
                 # "wrapped C/C++ object of type QComboBox has been deleted"
-                pass
+                ex_type, ex, tb = sys.exc_info()
+                msg = ''.join(traceback.format_exception(ex_type, ex, tb))
+                log_msg(msg, level='W', message_bar=self.iface.messageBar())
 
     def on_plot_hover(self, event):
         if not self.on_container_hover(event, self.plot):
