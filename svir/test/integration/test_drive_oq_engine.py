@@ -45,8 +45,6 @@ from svir.utilities.shared import (
                                    )
 from svir.test.utilities import get_qgis_app
 from svir.dialogs.drive_oq_engine_server_dialog import OUTPUT_TYPE_LOADERS
-# from svir.dialogs.load_losses_by_asset_as_layer_dialog import (
-#     LoadLossesByAssetAsLayerDialog)
 from svir.dialogs.show_full_report_dialog import ShowFullReportDialog
 from svir.dialogs.viewer_dock import ViewerDock
 
