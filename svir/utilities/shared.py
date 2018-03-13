@@ -215,14 +215,18 @@ RECOVERY_DEFAULTS['n_recovery_based_dmg_states'] = len(
 # occurs given loss-based damage state i
 
 
-OQ_CSV_LOADABLE_TYPES = set(['ruptures'])
-OQ_NPZ_LOADABLE_TYPES = set([
-    'hmaps', 'hcurves', 'uhs', 'gmf_data', 'dmg_by_asset', 'losses_by_asset'])
-OQ_ALL_LOADABLE_TYPES = OQ_CSV_LOADABLE_TYPES | OQ_NPZ_LOADABLE_TYPES
+OQ_CSV_TO_LAYER_TYPES = set(['ruptures'])
+OQ_NPZ_TO_LAYER_TYPES = set(['gmf_data', 'dmg_by_asset'])
+OQ_EXTRACT_TO_LAYER_TYPES = set([
+    'hmaps', 'hcurves', 'uhs', 'losses_by_asset'])
+OQ_TO_LAYER_TYPES = (OQ_CSV_TO_LAYER_TYPES |
+                     OQ_NPZ_TO_LAYER_TYPES |
+                     OQ_EXTRACT_TO_LAYER_TYPES)
 OQ_RST_TYPES = set(['fullreport'])
-OQ_NO_MAP_TYPES = set(
+OQ_EXTRACT_TO_VIEW_TYPES = set(
     ['agg_curves-rlzs', 'agg_curves-stats', 'dmg_by_asset_aggr',
      'losses_by_asset_aggr'])
+OQ_ALL_TYPES = OQ_TO_LAYER_TYPES | OQ_RST_TYPES | OQ_EXTRACT_TO_VIEW_TYPES
 
 LOG_LEVELS = {'I': 'Info (high verbosity)',
               'W': 'Warning (medium verbosity)',

@@ -53,9 +53,10 @@ from qgis.PyQt.QtGui import (QDialogButtonBox,
 from svir.calculations.process_layer import ProcessLayer
 from svir.calculations.aggregate_loss_by_zone import (
     calculate_zonal_stats)
-from svir.utilities.shared import (OQ_CSV_LOADABLE_TYPES,
-                                   OQ_NPZ_LOADABLE_TYPES,
-                                   OQ_ALL_LOADABLE_TYPES,
+from svir.utilities.shared import (OQ_CSV_TO_LAYER_TYPES,
+                                   OQ_NPZ_TO_LAYER_TYPES,
+                                   OQ_TO_LAYER_TYPES,
+                                   OQ_EXTRACT_TO_LAYER_TYPES,
                                    )
 from svir.utilities.utils import (get_ui_class,
                                   get_style,
@@ -76,7 +77,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                  session, hostname, calc_id, output_type=None,
                  path=None, mode=None, zonal_layer_path=None):
         # sanity check
-        if output_type not in OQ_ALL_LOADABLE_TYPES:
+        if output_type not in OQ_TO_LAYER_TYPES:
             raise NotImplementedError(output_type)
         self.iface = iface
         self.viewer_dock = viewer_dock
@@ -226,9 +227,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             # by default, set the selection to the first textual field
 
     def on_output_type_changed(self):
-        if self.output_type in OQ_NPZ_LOADABLE_TYPES:
+        if self.output_type in OQ_TO_LAYER_TYPES:
             self.create_load_selected_only_ckb()
-        elif self.output_type in OQ_CSV_LOADABLE_TYPES:
+        elif self.output_type in OQ_CSV_TO_LAYER_TYPES:
             self.create_save_as_shp_ckb()
         self.set_ok_button()
 
@@ -236,7 +237,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     def on_file_browser_tbn_clicked(self):
         path = self.open_file_dialog()
         if path:
-            if self.output_type in OQ_NPZ_LOADABLE_TYPES:
+            if self.output_type in OQ_NPZ_TO_LAYER_TYPES:
                 self.npz_file = numpy.load(self.path, 'r')
             self.populate_out_dep_widgets()
         self.set_ok_button()
@@ -265,9 +266,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         Open a file dialog to select the data file to be loaded
         """
         text = self.tr('Select the OQ-Engine output file to import')
-        if self.output_type in OQ_NPZ_LOADABLE_TYPES:
+        if self.output_type in OQ_NPZ_TO_LAYER_TYPES:
             filters = self.tr('NPZ files (*.npz)')
-        elif self.output_type in OQ_CSV_LOADABLE_TYPES:
+        elif self.output_type in OQ_CSV_TO_LAYER_TYPES:
             filters = self.tr('CSV files (*.csv)')
         else:
             raise NotImplementedError(self.output_type)
@@ -292,7 +293,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
 
     def populate_rlz_or_stat_cbx(self):
         self.rlzs_or_stats = [key for key in sorted(self.npz_file)
-                              if key != 'imtls']
+                              if key not in ('imtls', 'array')]
         self.rlz_or_stat_cbx.clear()
         self.rlz_or_stat_cbx.setEnabled(True)
         self.rlz_or_stat_cbx.addItems(self.rlzs_or_stats)
@@ -521,7 +522,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.vlayout.removeItem(self.file_hlayout)
 
     def accept(self):
-        if self.output_type in OQ_NPZ_LOADABLE_TYPES:
+        if self.output_type in (OQ_NPZ_TO_LAYER_TYPES |
+                                OQ_EXTRACT_TO_LAYER_TYPES):
             self.load_from_npz()
             if self.output_type in ('losses_by_asset', 'dmg_by_asset'):
                 loss_layer = self.layer
@@ -568,12 +570,12 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                             message_bar=self.iface.messageBar())
                     return
                 (loss_layer, zonal_layer, loss_attrs_dict) = res
-        elif self.output_type in OQ_CSV_LOADABLE_TYPES:
+        elif self.output_type in OQ_CSV_TO_LAYER_TYPES:
             self.load_from_csv()
         super(LoadOutputAsLayerDialog, self).accept()
 
     def reject(self):
         if (hasattr(self, 'npz_file') and self.npz_file is not None
-                and self.output_type in OQ_NPZ_LOADABLE_TYPES):
+                and self.output_type in OQ_TO_LAYER_TYPES):
             self.npz_file.close()
         super(LoadOutputAsLayerDialog, self).reject()
