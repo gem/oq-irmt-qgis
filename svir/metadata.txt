@@ -13,7 +13,7 @@ name=OpenQuake Integrated Risk Modelling Toolkit
 qgisMinimumVersion=2.14
 description=Tools to drive the OpenQuake Engine, to develop composite indicators and integrate them with physical risk estimations, and to predict building recovery times following an earthquake
 about=This plugin allows users to drive OpenQuake Engine calculations (https://github.com/gem/oq-engine) of physical hazard and risk, and to load the corresponding outputs as QGIS layers. For those outputs, data visualization tools are provided. The toolkit also enables users to develop composite indicators to measure and quantify social characteristics, and combine them with estimates of human or infrastructure loss. The plugin can interact with the OpenQuake Platform (https://platform.openquake.org), to browse and download socio-economic data or existing projects, edit projects locally in QGIS and upload and share them with the scientific community. A post-earthquake recovery modeling framework is incorporated into the toolkit, to produce building level and/or community level recovery functions.
-version=2.9.6
+version=2.10.0
 author=GEM Foundation
 email=staff.it@globalquakemodel.org
 
@@ -23,9 +23,14 @@ email=staff.it@globalquakemodel.org
 
 # Uncomment the following line and add your changelog entries:
 changelog=
+    2.10.0
+    * Dialogs embedding OpenQuake web applications (IPT and TaxtWEB) display a progress bar while loading a new page, and there
+      is an additional button to reload the homepage. If a page can not be loaded, an error message is displayed.
     2.9.6
     * When loading hazard maps from OQ-Engine, values for all intensity measure types and probabilities of exceedance can be stored
       in a single layer.
+    * Layers built from OQ-Engine outputs have the custom property 'calc_id' storing the id of the corresponding OQ-Engine calculation.
+    * The names of files exported by the Data Viewer contain the id of the corresponding OQ-Engine calculation.
     2.9.5
     * Several updates to the user manual
     * Fixed bug in the GUI initialization for visualizing aggregate loss curves
@@ -57,18 +62,6 @@ changelog=
     * Fix a bug in the check of layer capabilities, that was working only with QGIS locale set to English
     2.8.0
     * In aggregated loss curves, it is possible to display a chosen set of realizations or statistics (mean, quantiles, etc.)
-    2.7.3
-    * The Data Viewer is automatically set to visible only when opening oq-engine outputs that require it for their visualization
-    2.7.2
-    * When loading a OQ-Engine output, if the Data Viewer was hidden, it becomes visible
-    * When loading a gmf map, the default name is "scenario_gmfs_rlz-RLZ_eid-EID" both for scenario_risk and scenario_damage
-    * Added a check on the status code returned by the oq-engine server 'extract' API, displaying an error message in case of failure
-    2.7.1
-    * Losses can be aggregated by loss type and multiple tags, producing a table with aggregated values per realization
-    2.7.0
-    * Added the possibility to visualize oq-engine outputs of types agg_curves-rlzs, agg_curves-stats, dmg_by_asset and losses_by_asset
-    * Damage can be aggregated by realization, loss type and multiple tags, producing a bar plot displaying aggregated damages
-      for each damage state (with the possibility to include or exclude "no damage" from the chart)
 
 # tags are comma separated with spaces allowed
 tags=GEM, IRMT, SVIR, OpenQuake, Social Vulnerability, Integrated Risk, Recovery, Resilience, Risk, Hazard, Earthquake

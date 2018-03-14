@@ -62,8 +62,7 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
         self.set_ok_button()
 
     def set_ok_button(self):
-        self.ok_button.setEnabled(
-            bool(self.path) and self.poe_cbx.currentIndex() != -1)
+        self.ok_button.setEnabled(self.poe_cbx.currentIndex() != -1)
 
     def populate_dataset(self):
         self.rlzs_or_stats = [
