@@ -271,7 +271,7 @@ def get_field_names(sub_tree, field_names=None):
 
 def clear_progress_message_bar(msg_bar, msg_bar_item=None):
     """
-    Clear the progress messsage bar
+    Clear the progress message bar
     """
     if msg_bar_item:
         msg_bar.popWidget(msg_bar_item)
@@ -930,8 +930,10 @@ def clear_widgets_from_layout(layout):
         # check if the item is a widget
         widget = item.widget()
         if widget is not None:
-            # a widget is deleted when it does not have a parent
-            widget.setParent(None)
+            # NOTE: in the past, we were setting the parent to None, which
+            #       is a valid alternative to delete the widget. This approach
+            #       is probably a little safer
+            widget.deleteLater()
 
 
 def import_layer_from_csv(parent,

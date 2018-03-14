@@ -22,6 +22,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
+import sys
+import traceback
 import os
 import csv
 import numpy
@@ -59,8 +61,8 @@ from qgis.gui import QgsVertexMarker
 from qgis.core import QGis, QgsMapLayer, QgsFeatureRequest
 
 from svir.utilities.shared import (
-                                   OQ_ALL_LOADABLE_TYPES,
-                                   OQ_NO_MAP_TYPES,
+                                   OQ_TO_LAYER_TYPES,
+                                   OQ_EXTRACT_TO_VIEW_TYPES,
                                    )
 from svir.utilities.utils import (get_ui_class,
                                   log_msg,
@@ -520,7 +522,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             message_bar=self.iface.messageBar())
         if composite_risk_model_attrs is None:
             return
-        self.dmg_states = composite_risk_model_attrs['damage_states']
+        limit_states = composite_risk_model_attrs['limit_states']
+        self.dmg_states = numpy.append(['no damage'], limit_states)
         self._get_tags(session, hostname, calc_id, self.iface.messageBar(),
                        with_star=False)
         self.update_list_selected_edt()
@@ -1161,15 +1164,29 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
     def clear_imt_cbx(self):
         if self.imt_cbx is not None:
-            self.imt_cbx.blockSignals(True)
-            self.imt_cbx.clear()
-            self.imt_cbx.blockSignals(False)
+            try:
+                self.imt_cbx.blockSignals(True)
+                self.imt_cbx.clear()
+                self.imt_cbx.blockSignals(False)
+            except RuntimeError:
+                # display a warning if something like this occurs:
+                # "wrapped C/C++ object of type QComboBox has been deleted"
+                ex_type, ex, tb = sys.exc_info()
+                msg = ''.join(traceback.format_exception(ex_type, ex, tb))
+                log_msg(msg, level='W', message_bar=self.iface.messageBar())
 
     def clear_loss_type_cbx(self):
         if self.loss_type_cbx is not None:
-            self.loss_type_cbx.blockSignals(True)
-            self.loss_type_cbx.clear()
-            self.loss_type_cbx.blockSignals(False)
+            try:
+                self.loss_type_cbx.blockSignals(True)
+                self.loss_type_cbx.clear()
+                self.loss_type_cbx.blockSignals(False)
+            except RuntimeError:
+                # display a warning if something like this occurs:
+                # "wrapped C/C++ object of type QComboBox has been deleted"
+                ex_type, ex, tb = sys.exc_info()
+                msg = ''.join(traceback.format_exception(ex_type, ex, tb))
+                log_msg(msg, level='W', message_bar=self.iface.messageBar())
 
     def on_plot_hover(self, event):
         if not self.on_container_hover(event, self.plot):
@@ -1177,7 +1194,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 self.on_container_hover(event, self.legend)
 
     def on_container_hover(self, event, container):
-        if self.output_type in OQ_NO_MAP_TYPES:
+        if self.output_type in OQ_EXTRACT_TO_VIEW_TYPES:
             return False
         for line in container.get_lines():
             if line.contains(event)[0]:
@@ -1399,7 +1416,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
     @pyqtSlot()
     def on_bw_chk_clicked(self):
-        if self.output_type in OQ_ALL_LOADABLE_TYPES | set('recovery_curves'):
+        if self.output_type in OQ_TO_LAYER_TYPES | set('recovery_curves'):
             self.layer_changed()
         if self.output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
             self.draw_agg_curves(self.output_type)
@@ -1412,7 +1429,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         for output_type, output_type_name in self.output_types_names.items():
             if output_type_name == otname:
                 self.set_output_type_and_its_gui(output_type)
-                if output_type not in OQ_NO_MAP_TYPES:
+                if output_type not in OQ_EXTRACT_TO_VIEW_TYPES:
                     self.layer_changed()
                 return
         output_type = None
