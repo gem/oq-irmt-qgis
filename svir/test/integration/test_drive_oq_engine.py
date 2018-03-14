@@ -155,17 +155,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 print('\tLoading output type %s...' % output_type)
                 filepath = self.download_output(output['id'], 'rst')
             assert filepath is not None
-            # TODO: when gmf_data for event_based becomes loadable,
-            #       let's not skip this
-            if (output_type == 'gmf_data'
-                    and calc['calculation_mode'] == 'event_based'):
-                skipped_attempt = {
-                    'calc_id': calc_id,
-                    'calc_description': calc['description'],
-                    'output_type': output_type}
-                self.skipped_attempts.append(skipped_attempt)
-                print('\t\tSKIPPED')
-                return
             if output_type == 'fullreport':
                 dlg = ShowFullReportDialog(filepath)
                 dlg.accept()
@@ -182,6 +171,17 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 raise RuntimeError('The ok button is disabled')
         elif output_type in OQ_EXTRACT_TO_LAYER_TYPES:
             print('\tLoading output type %s...' % output_type)
+            # TODO: when gmf_data for event_based becomes loadable,
+            #       let's not skip this
+            if (output_type == 'gmf_data'
+                    and calc['calculation_mode'] == 'event_based'):
+                skipped_attempt = {
+                    'calc_id': calc_id,
+                    'calc_description': calc['description'],
+                    'output_type': output_type}
+                self.skipped_attempts.append(skipped_attempt)
+                print('\t\tSKIPPED')
+                return
             dlg = OUTPUT_TYPE_LOADERS[output_type](
                 IFACE, Mock(), self.session, self.hostname, calc_id,
                 output_type)

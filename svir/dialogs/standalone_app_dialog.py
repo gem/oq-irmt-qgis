@@ -31,6 +31,9 @@ from qgis.PyQt.QtCore import (QUrl,
                               )
 from qgis.PyQt.QtGui import (QDialog,
                              QVBoxLayout,
+                             QPushButton,
+                             QHBoxLayout,
+                             QMessageBox,
                              )
 from qgis.gui import QgsMessageBar
 from svir.ui.gem_qwebview import GemQWebView
@@ -89,11 +92,39 @@ class StandaloneAppDialog(QDialog):
                                     self.gem_header_value,
                                     self.gem_api,
                                     parent=self)
-        self.load_homepage()
         self.vlayout.addWidget(self.web_view)
         initial_width = 1050
         self.resize(initial_width, self.width())
         self.setWindowFlags(Qt.Window)
+
+        self.reload_homepage_btn = QPushButton("Reload homepage")
+        # FIXME: Instead of a fixed width, we should use the natural btn size
+        self.reload_homepage_btn.setFixedWidth(150)
+        self.reload_homepage_btn.clicked.connect(
+                self.on_reload_homepage_btn_clicked)
+
+        self.lower_message_bar = QgsMessageBar(self)
+
+        self.btn_hlayout = QHBoxLayout()
+        self.btn_hlayout.setAlignment(Qt.AlignLeft)
+        self.btn_hlayout.addWidget(self.reload_homepage_btn)
+        self.btn_hlayout.addWidget(self.lower_message_bar)
+        self.vlayout.addLayout(self.btn_hlayout)
+
+        self.load_homepage()
+
+    def on_reload_homepage_btn_clicked(self):
+        msg = ("Reloading the homepage, all current changes will be discarded."
+               " Are you sure?")
+        reply = QMessageBox.question(
+            self, 'Warning', msg, QMessageBox.Yes, QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            self.set_host()
+            self.load_homepage()
+
+    def on_set_example_btn_clicked(self):
+        qurl = QUrl(self.example_url.text())
+        self.web_view.load(qurl)
 
 
 class CommonApi(QObject):
