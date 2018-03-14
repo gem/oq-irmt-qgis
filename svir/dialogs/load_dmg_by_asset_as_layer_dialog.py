@@ -30,6 +30,7 @@ from svir.calculations.calculate_utils import add_numeric_attribute
 from svir.utilities.utils import (WaitCursorManager,
                                   LayerEditingManager,
                                   log_msg,
+                                  extract_npz,
                                   )
 from svir.utilities.shared import DEBUG
 
@@ -46,7 +47,11 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         LoadOutputAsLayerDialog.__init__(
             self, iface, viewer_dock, session, hostname, calc_id,
             output_type, path, mode, zonal_layer_path)
-        self.setWindowTitle('Load scenario damage by asset from NPZ, as layer')
+
+        # FIXME: add layout only for output types that load from file
+        self.remove_file_hlayout()
+
+        self.setWindowTitle('Load scenario damage by asset as layer')
         self.create_load_selected_only_ckb()
         self.load_selected_only_ckb.setEnabled(False)
         self.create_num_sites_indicator()
@@ -55,9 +60,12 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         self.create_loss_type_selector()
         self.create_dmg_state_selector()
         self.create_zonal_layer_selector()
-        if self.path:
-            self.npz_file = numpy.load(self.path, 'r')
-            self.populate_out_dep_widgets()
+
+        self.npz_file = extract_npz(
+            session, hostname, calc_id, output_type,
+            message_bar=iface.messageBar(), params=None)
+
+        self.populate_out_dep_widgets()
         if self.zonal_layer_path:
             # NOTE: it happens while running tests. We need to avoid
             #       overwriting the original layer, so we make a copy of it.
@@ -70,10 +78,8 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         self.set_ok_button()
 
     def set_ok_button(self):
-        self.ok_button.setEnabled(
-            bool(self.path)
-            and self.dmg_state_cbx.currentIndex() != -1
-            and self.loss_type_cbx.currentIndex() != -1)
+        self.ok_button.setEnabled(self.dmg_state_cbx.currentIndex() != -1
+                                  and self.loss_type_cbx.currentIndex() != -1)
 
     def on_rlz_or_stat_changed(self):
         self.dataset = self.npz_file[self.rlz_or_stat_cbx.currentText()]
