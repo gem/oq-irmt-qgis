@@ -846,7 +846,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 err_msg += ' (you could try prepending http:// or https://)'
             elif isinstance(exc, SvNetworkError):
                 err_msg += (
-                    ' (please make sure the OpenQuake Engine Server is'
+                    ' (please make sure the OpenQuake Engine Server (WebUI) is'
                     ' running, and the username and password are'
                     ' spelled correctly)')
             else:
