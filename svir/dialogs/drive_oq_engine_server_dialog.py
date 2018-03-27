@@ -101,7 +101,7 @@ class RedirectionError(Exception):
 
 HANDLED_EXCEPTIONS = (SSLError, ConnectionError, InvalidSchema, MissingSchema,
                       ReadTimeout, SvNetworkError, LocationParseError,
-                      ServerError)
+                      ServerError, RedirectionError)
 
 BUTTON_WIDTH = 75
 
@@ -863,6 +863,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                               ReadTimeout,
                               LocationParseError,
                               ServerError,
+                              RedirectionError,
                               SvNetworkError)):
             err_msg = str(exc)
             if isinstance(exc, InvalidSchema):
@@ -875,6 +876,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 err_msg += (
                     ' (please make sure the username and password are'
                     ' spelled correctly)')
+            elif isinstance(exc, RedirectionError):
+                pass  # err_msg should already be enough
             else:
                 err_msg += (
                     ' (please make sure the username and password are'
