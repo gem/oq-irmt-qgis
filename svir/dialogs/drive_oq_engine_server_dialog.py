@@ -226,9 +226,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     engine_version_url, timeout=10, verify=False,
                     allow_redirects=False)
                 if resp.status_code == 302:
-                    raise ServerError(
-                        "Error %s loading %s: %s" % (
-                            resp.status_code, resp.url, resp.reason))
+                    raise RedirectionError(
+                        "Error %s loading %s: please check the url" % (
+                            resp.status_code, resp.url))
                 if not resp.ok:
                     raise ServerError(
                         "Error %s loading %s: %s" % (
