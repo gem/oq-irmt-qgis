@@ -144,7 +144,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
         self.iface.mapCanvas().setSelectionColor(QColor('magenta'))
 
-        # TODO: re-add 'Loss Curves' when the corresponding npz is available
         self.output_types_names = OrderedDict([
             ('', ''),
             ('hcurves', 'Hazard Curves'),
@@ -1173,7 +1172,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 # "wrapped C/C++ object of type QComboBox has been deleted"
                 ex_type, ex, tb = sys.exc_info()
                 msg = ''.join(traceback.format_exception(ex_type, ex, tb))
-                log_msg(msg, level='W', message_bar=self.iface.messageBar())
+                log_msg(msg, level='C', message_bar=self.iface.messageBar())
 
     def clear_loss_type_cbx(self):
         if self.loss_type_cbx is not None:
@@ -1186,7 +1185,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 # "wrapped C/C++ object of type QComboBox has been deleted"
                 ex_type, ex, tb = sys.exc_info()
                 msg = ''.join(traceback.format_exception(ex_type, ex, tb))
-                log_msg(msg, level='W', message_bar=self.iface.messageBar())
+                log_msg(msg, level='C', message_bar=self.iface.messageBar())
 
     def on_plot_hover(self, event):
         if not self.on_container_hover(event, self.plot):

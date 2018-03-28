@@ -22,7 +22,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-import numpy
 from qgis.core import (QgsVectorLayer,
                        QgsMapLayerRegistry,
                        QgsSymbolV2,
@@ -54,7 +53,6 @@ from svir.calculations.process_layer import ProcessLayer
 from svir.calculations.aggregate_loss_by_zone import (
     calculate_zonal_stats)
 from svir.utilities.shared import (OQ_CSV_TO_LAYER_TYPES,
-                                   OQ_NPZ_TO_LAYER_TYPES,
                                    OQ_TO_LAYER_TYPES,
                                    OQ_EXTRACT_TO_LAYER_TYPES,
                                    )
@@ -237,8 +235,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     def on_file_browser_tbn_clicked(self):
         path = self.open_file_dialog()
         if path:
-            if self.output_type in OQ_NPZ_TO_LAYER_TYPES:
-                self.npz_file = numpy.load(self.path, 'r')
             self.populate_out_dep_widgets()
         self.set_ok_button()
 
@@ -266,9 +262,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         Open a file dialog to select the data file to be loaded
         """
         text = self.tr('Select the OQ-Engine output file to import')
-        if self.output_type in OQ_NPZ_TO_LAYER_TYPES:
-            filters = self.tr('NPZ files (*.npz)')
-        elif self.output_type in OQ_CSV_TO_LAYER_TYPES:
+        if self.output_type in OQ_CSV_TO_LAYER_TYPES:
             filters = self.tr('CSV files (*.csv)')
         else:
             raise NotImplementedError(self.output_type)
@@ -522,8 +516,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.vlayout.removeItem(self.file_hlayout)
 
     def accept(self):
-        if self.output_type in (OQ_NPZ_TO_LAYER_TYPES |
-                                OQ_EXTRACT_TO_LAYER_TYPES):
+        if self.output_type in OQ_EXTRACT_TO_LAYER_TYPES:
             self.load_from_npz()
             if self.output_type in ('losses_by_asset', 'dmg_by_asset'):
                 loss_layer = self.layer
