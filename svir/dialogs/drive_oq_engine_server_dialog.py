@@ -92,8 +92,18 @@ from svir.dialogs.settings_dialog import SettingsDialog
 
 FORM_CLASS = get_ui_class('ui_drive_engine_server.ui')
 
+
+class ServerError(Exception):
+    pass
+
+
+class RedirectionError(Exception):
+    pass
+
+
 HANDLED_EXCEPTIONS = (SSLError, ConnectionError, InvalidSchema, MissingSchema,
-                      ReadTimeout, SvNetworkError, LocationParseError)
+                      ReadTimeout, SvNetworkError, LocationParseError,
+                      ServerError, RedirectionError)
 
 BUTTON_WIDTH = 75
 
@@ -192,33 +202,42 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
     def is_lockdown(self):
         # try retrieving the engine version and see if the server
-        # redirects you to the login page
-        engine_version_url = "%s/engine_version" % self.hostname
+        # returns an HTTP 403 (Forbidden) error
+        engine_version_url = "%s/v1/engine_version" % self.hostname
         with WaitCursorManager():
             # it can raise exceptions, caught by self.attempt_login
             # FIXME: enable the user to set verify=True
             resp = self.session.get(
-                engine_version_url, timeout=10, verify=False)
-            # handle case of redirection to the login page
-            if not resp.ok:
-                raise ConnectionError(
-                    "%s %s: %s" % (resp.status_code, resp.url, resp.reason))
-            if resp.url != engine_version_url and 'login' in resp.url:
+                engine_version_url, timeout=10, verify=False,
+                allow_redirects=False)
+            if resp.status_code == 403:
                 return True
+            elif resp.status_code == 302:
+                raise RedirectionError(
+                    "Error %s loading %s: please check the url" % (
+                        resp.status_code, resp.url))
+            if not resp.ok:
+                raise ServerError(
+                    "Error %s loading %s: %s" % (
+                        resp.status_code, resp.url, resp.reason))
         return False
 
     def get_engine_version(self):
-        engine_version_url = "%s/engine_version" % self.hostname
+        engine_version_url = "%s/v1/engine_version" % self.hostname
         with WaitCursorManager():
             try:
                 # FIXME: enable the user to set verify=True
                 resp = self.session.get(
-                    engine_version_url, timeout=10, verify=False)
-                # handle case of redirection to the login page
+                    engine_version_url, timeout=10, verify=False,
+                    allow_redirects=False)
+                if resp.status_code == 302:
+                    raise RedirectionError(
+                        "Error %s loading %s: please check the url" % (
+                            resp.status_code, resp.url))
                 if not resp.ok:
-                    raise ConnectionError(
-                        "%s %s: %s" % (resp.status_code,
-                                       resp.url, resp.reason))
+                    raise ServerError(
+                        "Error %s loading %s: %s" % (
+                            resp.status_code, resp.url, resp.reason))
             except HANDLED_EXCEPTIONS as exc:
                 self._handle_exception(exc)
                 return
@@ -816,7 +835,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
     def start_polling(self):
         if not self.is_logged_in:
-            self.login()
+            try:
+                self.login()
+            except HANDLED_EXCEPTIONS as exc:
+                self._handle_exception(exc)
         if not self.is_logged_in:
             return
         self.refresh_calc_list()
@@ -845,14 +867,22 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                               MissingSchema,
                               ReadTimeout,
                               LocationParseError,
+                              ServerError,
+                              RedirectionError,
                               SvNetworkError)):
             err_msg = str(exc)
             if isinstance(exc, InvalidSchema):
                 err_msg += ' (you could try prepending http:// or https://)'
-            elif isinstance(exc, SvNetworkError):
+            elif isinstance(exc, ConnectionError):
+                err_msg += (
+                    ' (please make sure the OpenQuake Engine WebUI'
+                    ' is running)')
+            elif isinstance(exc, (SvNetworkError, ServerError)):
                 err_msg += (
                     ' (please make sure the username and password are'
                     ' spelled correctly)')
+            elif isinstance(exc, RedirectionError):
+                pass  # err_msg should already be enough
             else:
                 err_msg += (
                     ' (please make sure the username and password are'
