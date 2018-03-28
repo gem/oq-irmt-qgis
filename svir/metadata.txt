@@ -26,6 +26,7 @@ changelog=
     2.10.0
     * Dialogs embedding OpenQuake web applications (IPT and TaxtWEB) display a progress bar while loading a new page, and there
       is an additional button to reload the homepage. If a page can not be loaded, an error message is displayed.
+    * The GUI provides clearer error messages in case the plugin is unable to connect with the OQ Engine WebUI
     2.9.6
     * When loading hazard maps from OQ-Engine, values for all intensity measure types and probabilities of exceedance can be stored
       in a single layer.
