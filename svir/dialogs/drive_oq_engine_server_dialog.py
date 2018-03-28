@@ -71,6 +71,8 @@ from svir.utilities.utils import (WaitCursorManager,
                                   )
 from svir.dialogs.load_ruptures_as_layer_dialog import (
     LoadRupturesAsLayerDialog)
+from svir.dialogs.load_realizations_as_layer_dialog import (
+    LoadRealizationsAsLayerDialog)
 from svir.dialogs.load_dmg_by_asset_as_layer_dialog import (
     LoadDmgByAssetAsLayerDialog)
 from svir.dialogs.load_gmf_data_as_layer_dialog import (
@@ -107,6 +109,7 @@ BUTTON_WIDTH = 75
 
 OUTPUT_TYPE_LOADERS = {
     'ruptures': LoadRupturesAsLayerDialog,
+    'realizations': LoadRealizationsAsLayerDialog,
     'dmg_by_asset': LoadDmgByAssetAsLayerDialog,
     'gmf_data': LoadGmfDataAsLayerDialog,
     'hmaps': LoadHazardMapsAsLayerDialog,

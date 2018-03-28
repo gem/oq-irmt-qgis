@@ -948,20 +948,22 @@ def import_layer_from_csv(parent,
                           wkt_field=None,
                           save_as_shp=False,
                           dest_shp=None,
-                          zoom_to_layer=True):
+                          zoom_to_layer=True,
+                          has_geom=True):
     url = QUrl.fromLocalFile(csv_path)
     url.addQueryItem('type', 'csv')
-    if wkt_field is not None:
-        url.addQueryItem('wktField', wkt_field)
-    else:
-        url.addQueryItem('xField', longitude_field)
-        url.addQueryItem('yField', latitude_field)
-    url.addQueryItem('spatialIndex', 'no')
+    if has_geom:
+        if wkt_field is not None:
+            url.addQueryItem('wktField', wkt_field)
+        else:
+            url.addQueryItem('xField', longitude_field)
+            url.addQueryItem('yField', latitude_field)
+        url.addQueryItem('spatialIndex', 'no')
+        url.addQueryItem('crs', 'epsg:4326')
     url.addQueryItem('subsetIndex', 'no')
     url.addQueryItem('watchFile', 'no')
     url.addQueryItem('delimiter', delimiter)
     url.addQueryItem('quote', quote)
-    url.addQueryItem('crs', 'epsg:4326')
     url.addQueryItem('skipLines', str(lines_to_skip_count))
     url.addQueryItem('trimFields', 'yes')
     layer_uri = str(url.toEncoded())
@@ -986,7 +988,6 @@ def import_layer_from_csv(parent,
         iface.setActiveLayer(layer)
         if zoom_to_layer:
             iface.zoomToActiveLayer()
-
     else:
         msg = 'Unable to load layer'
         log_msg(msg, level='C', message_bar=iface.messageBar())

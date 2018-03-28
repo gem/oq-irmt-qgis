@@ -215,7 +215,7 @@ RECOVERY_DEFAULTS['n_recovery_based_dmg_states'] = len(
 # occurs given loss-based damage state i
 
 
-OQ_CSV_TO_LAYER_TYPES = set(['ruptures'])
+OQ_CSV_TO_LAYER_TYPES = set(['ruptures', 'realizations'])
 OQ_EXTRACT_TO_LAYER_TYPES = set([
     'hmaps', 'hcurves', 'uhs', 'losses_by_asset', 'gmf_data', 'dmg_by_asset'])
 OQ_TO_LAYER_TYPES = (OQ_CSV_TO_LAYER_TYPES |
