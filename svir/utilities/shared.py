@@ -216,11 +216,10 @@ RECOVERY_DEFAULTS['n_recovery_based_dmg_states'] = len(
 
 
 OQ_CSV_TO_LAYER_TYPES = set(['ruptures'])
-OQ_NPZ_TO_LAYER_TYPES = set(['dmg_by_asset'])
 OQ_EXTRACT_TO_LAYER_TYPES = set([
-    'hmaps', 'hcurves', 'uhs', 'losses_by_asset', 'gmf_data', 'avg_losses-stats'])
+    'hmaps', 'hcurves', 'uhs', 'losses_by_asset', 'gmf_data',
+    'dmg_by_asset', 'avg_losses-stats'])
 OQ_TO_LAYER_TYPES = (OQ_CSV_TO_LAYER_TYPES |
-                     OQ_NPZ_TO_LAYER_TYPES |
                      OQ_EXTRACT_TO_LAYER_TYPES)
 OQ_RST_TYPES = set(['fullreport'])
 OQ_EXTRACT_TO_VIEW_TYPES = set(

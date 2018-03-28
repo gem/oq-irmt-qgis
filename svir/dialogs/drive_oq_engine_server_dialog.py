@@ -107,8 +107,8 @@ OUTPUT_TYPE_LOADERS = {
     'losses_by_asset': LoadLossesByAssetAsLayerDialog,
     'avg_losses-stats': LoadAvgLossesStatsAsLayerDialog,
 }
-assert set(OUTPUT_TYPE_LOADERS) == OQ_ALL_LOADABLE_TYPES, (
-    OUTPUT_TYPE_LOADERS, OQ_ALL_LOADABLE_TYPES)
+assert set(OUTPUT_TYPE_LOADERS) == OQ_TO_LAYER_TYPES, (
+    OUTPUT_TYPE_LOADERS, OQ_TO_LAYER_TYPES)
 
 
 class DriveOqEngineServerDialog(QDialog, FORM_CLASS):

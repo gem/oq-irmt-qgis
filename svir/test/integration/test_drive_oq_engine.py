@@ -37,7 +37,6 @@ from qgis.PyQt.QtGui import QAction
 from svir.third_party.requests import Session
 from svir.utilities.shared import (
                                    OQ_CSV_TO_LAYER_TYPES,
-                                   OQ_NPZ_TO_LAYER_TYPES,
                                    OQ_EXTRACT_TO_LAYER_TYPES,
                                    OQ_RST_TYPES,
                                    OQ_EXTRACT_TO_VIEW_TYPES,
@@ -143,14 +142,10 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         calc_id = calc['id']
         output_type = output['type']
         if output_type in (OQ_CSV_TO_LAYER_TYPES |
-                           OQ_NPZ_TO_LAYER_TYPES |
                            OQ_RST_TYPES):
             if output_type in OQ_CSV_TO_LAYER_TYPES:
                 print('\tLoading output type %s...' % output_type)
                 filepath = self.download_output(output['id'], 'csv')
-            elif output_type in OQ_NPZ_TO_LAYER_TYPES:
-                print('\tLoading output type %s...' % output_type)
-                filepath = self.download_output(output['id'], 'npz')
             elif output_type in OQ_RST_TYPES:
                 print('\tLoading output type %s...' % output_type)
                 filepath = self.download_output(output['id'], 'rst')
@@ -251,6 +246,80 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                     # expected_zonal_layer_path = os.path.join(
                     #     self.data_dir_name, 'risk',
                     #     'zonal_layer_plus_losses_by_asset_stats.shp')
+                    # expected_zonal_layer = QgsVectorLayer(
+                    #     expected_zonal_layer_path, 'Zonal data', 'ogr')
+                    # expected_zonal_layer_first_feat = \
+                    #     expected_zonal_layer.getFeatures().next()
+                    # assert_almost_equal(
+                    #     zonal_layer_plus_stats_first_feat.attributes(),
+                    #     expected_zonal_layer_first_feat.attributes())
+                elif output_type == 'dmg_by_asset':
+                    # FIXME: testing only for selected taxonomy
+                    dlg.load_selected_only_ckb.setChecked(True)
+                    taxonomy_idx = dlg.taxonomy_cbx.findText('"Concrete"')
+                    self.assertNotEqual(taxonomy_idx, -1,
+                                        'Taxonomy "Concrete" was not found')
+                    dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
+                    loss_type_idx = dlg.loss_type_cbx.findText('structural')
+                    self.assertNotEqual(loss_type_idx, -1,
+                                        'Loss type structural was not found')
+                    dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
+                    dmg_state_idx = dlg.dmg_state_cbx.findText('moderate')
+                    self.assertNotEqual(dmg_state_idx, -1,
+                                        'Damage state moderate was not found')
+                    dlg.dmg_state_cbx.setCurrentIndex(dmg_state_idx)
+
+                    # # FIXME: we need to do dlg.accept() also for the case
+                    #          loading all taxonomies, and performing the
+                    #          aggregation by zone
+                    # dlg.load_selected_only_ckb.setChecked(True)
+                    # taxonomy_idx = dlg.taxonomy_cbx.findText('All')
+                    # self.assertNotEqual(
+                    #     taxonomy_idx, -1, 'Taxonomy All was not found')
+                    # dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
+                    # loss_type_idx = dlg.loss_type_cbx.findText('structural')
+                    # self.assertNotEqual(loss_type_idx, -1,
+                    #                     'Loss type structural was not found')
+                    # dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
+                    # dmg_state_idx = dlg.dmg_state_cbx.findText('moderate')
+                    # self.assertNotEqual(
+                    #     dmg_state_idx, -1,
+                    #     'Damage state moderate was not found')
+                    # dlg.dmg_state_cbx.setCurrentIndex(dmg_state_idx)
+
+                    # FIXME: copied/pasted from skipped unit test
+                    #        that was causing segfault
+                    #        (test_load_dmg_by_asset_aggregate_by_zone)
+                    # dmg_layer_path = os.path.join(
+                    #     self.data_dir_name, 'risk',
+                    #     'output-1614-dmg_by_asset_356.npz')
+                    # zonal_layer_path = os.path.join(
+                    #     self.data_dir_name, 'risk',
+                    #     'zonal_layer.shp')
+                    # dlg.load_selected_only_ckb.setChecked(True)
+                    # dlg.zonal_layer_gbx.setChecked(True)
+                    # taxonomy_idx = dlg.taxonomy_cbx.findText('All')
+                    # self.assertNotEqual(
+                    #     taxonomy_idx, -1, 'Taxonomy All was not found')
+                    # dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
+                    # loss_type_idx = dlg.loss_type_cbx.findText('structural')
+                    # self.assertNotEqual(loss_type_idx, -1,
+                    #                     'Loss type structural was not found')
+                    # dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
+                    # dmg_state_idx = dlg.dmg_state_cbx.findText('moderate')
+                    # self.assertNotEqual(
+                    #     dmg_state_idx, -1,
+                    #     'Damage state moderate was not found')
+                    # dlg.dmg_state_cbx.setCurrentIndex(dmg_state_idx)
+                    # dlg.accept()
+                    # zonal_layer_plus_stats = [
+                    #     layer for layer in IFACE.layers()
+                    #     if layer.name() == 'Zonal data (copy)'][0]
+                    # zonal_layer_plus_stats_first_feat = \
+                    #     zonal_layer_plus_stats.getFeatures().next()
+                    # expected_zonal_layer_path = os.path.join(
+                    #     self.data_dir_name, 'risk',
+                    #     'zonal_layer_plus_dmg_by_asset_stats.shp')
                     # expected_zonal_layer = QgsVectorLayer(
                     #     expected_zonal_layer_path, 'Zonal data', 'ogr')
                     # expected_zonal_layer_first_feat = \
