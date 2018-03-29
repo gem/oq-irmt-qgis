@@ -29,7 +29,6 @@ from qgis.core import (QgsVectorLayer,
                        QgsSymbolLayerV2Registry,
                        QgsOuterGlowEffect,
                        QgsSingleSymbolRendererV2,
-                       QgsVectorGradientColorRampV2,
                        QgsGraduatedSymbolRendererV2,
                        QgsRendererRangeV2,
                        QgsMapUnitScale,
@@ -410,15 +409,21 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         ramp_type_idx = default_color_ramp_names.index('Spectral')
         ramp = default_qgs_style.colorRamp(
             default_color_ramp_names[ramp_type_idx])
-        # ramp = QgsVectorGradientColorRampV2(
-        #     style['color_from'], style['color_to'])
+        mode = style['mode']
+        # in some cases, we override the user-specified setting, and use
+        # instead a setting that was required by scientists
+        if self.output_type in ('dmg_by_asset', 'losses_by_asset'):
+            mode = QgsGraduatedSymbolRendererV2.Jenks  # jenks = natural breaks
+        elif self.output_type in ('hmaps', 'gmf_data'):
+            mode = QgsGraduatedSymbolRendererV2.EqualInterval
         graduated_renderer = QgsGraduatedSymbolRendererV2.createRenderer(
             self.layer,
             self.default_field_name,
             style['classes'],
-            style['mode'],
+            mode,
             symbol,
-            ramp)
+            ramp,
+            inverted=True)
         graduated_renderer.updateRangeLowerValue(0, 0.0)
         symbol_zeros = QgsSymbolV2.defaultSymbol(self.layer.geometryType())
         symbol_zeros.setColor(QColor(222, 255, 222))
