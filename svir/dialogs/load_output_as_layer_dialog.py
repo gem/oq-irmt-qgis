@@ -29,6 +29,7 @@ from qgis.core import (QgsVectorLayer,
                        QgsSymbolLayerV2Registry,
                        QgsOuterGlowEffect,
                        QgsSingleSymbolRendererV2,
+                       QgsVectorGradientColorRampV2,
                        QgsGraduatedSymbolRendererV2,
                        QgsRendererRangeV2,
                        QgsMapUnitScale,
@@ -404,23 +405,30 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         symbol.symbolLayer(0).setOutlineStyle(Qt.PenStyle(Qt.NoPen))
 
         style = get_style(self.layer, self.iface.messageBar())
-        default_qgs_style = QgsStyleV2().defaultStyle()
-        default_color_ramp_names = default_qgs_style.colorRampNames()
-        ramp_type_idx = default_color_ramp_names.index('Spectral')
-        ramp = default_qgs_style.colorRamp(
-            default_color_ramp_names[ramp_type_idx])
-        inverted = True
+
+        # this is the default, as specified in the user settings
+        ramp = QgsVectorGradientColorRampV2(
+            style['color_from'], style['color_to'])
         mode = style['mode']
-        # in some cases, we override the user-specified setting, and use
+
+        # in most cases, we override the user-specified setting, and use
         # instead a setting that was required by scientists
-        if self.output_type in ('dmg_by_asset', 'losses_by_asset'):
-            mode = QgsGraduatedSymbolRendererV2.Jenks  # jenks = natural breaks
-            ramp_type_idx = default_color_ramp_names.index('Reds')
+        if self.output_type in OQ_TO_LAYER_TYPES:
+            default_qgs_style = QgsStyleV2().defaultStyle()
+            default_color_ramp_names = default_qgs_style.colorRampNames()
+            if self.output_type in ('dmg_by_asset', 'losses_by_asset'):
+                # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
+                # jenks = natural breaks
+                mode = QgsGraduatedSymbolRendererV2.Jenks
+                ramp_type_idx = default_color_ramp_names.index('Reds')
+                inverted = False
+            elif self.output_type in ('hmaps', 'gmf_data'):
+                # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
+                mode = QgsGraduatedSymbolRendererV2.EqualInterval
+                ramp_type_idx = default_color_ramp_names.index('Spectral')
+                inverted = True
             ramp = default_qgs_style.colorRamp(
                 default_color_ramp_names[ramp_type_idx])
-            inverted = False
-        elif self.output_type in ('hmaps', 'gmf_data'):
-            mode = QgsGraduatedSymbolRendererV2.EqualInterval
         graduated_renderer = QgsGraduatedSymbolRendererV2.createRenderer(
             self.layer,
             self.default_field_name,
@@ -429,18 +437,23 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             symbol,
             ramp,
             inverted=inverted)
-        graduated_renderer.updateRangeLowerValue(0, 0.0)
+        label_format = graduated_renderer.labelFormat()
+        # label_format.setTrimTrailingZeroes(True)  # it might be useful
+        label_format.setPrecision(2)
+        graduated_renderer.setLabelFormat(label_format, updateRanges=True)
+        VERY_SMALL_VALUE = 1e-20
+        graduated_renderer.updateRangeLowerValue(0, VERY_SMALL_VALUE)
         symbol_zeros = QgsSymbolV2.defaultSymbol(self.layer.geometryType())
         symbol_zeros.setColor(QColor(240, 240, 240))  # very light grey
         self._set_symbol_size(symbol_zeros)
         symbol_zeros.symbolLayer(0).setOutlineStyle(Qt.PenStyle(Qt.NoPen))
         zeros_min = 0.0
-        zeros_max = 0.0
+        zeros_max = VERY_SMALL_VALUE
         range_zeros = QgsRendererRangeV2(
             zeros_min, zeros_max, symbol_zeros,
-            " %.4f - %.4f" % (zeros_min, zeros_max), True)
+            " %.2f - %.2f" % (zeros_min, zeros_max), True)
         graduated_renderer.addClassRange(range_zeros)
-        graduated_renderer.moveClass(style['classes'], 0)
+        graduated_renderer.moveClass(len(graduated_renderer.ranges()) - 1, 0)
         self.layer.setRendererV2(graduated_renderer)
         self.layer.setLayerTransparency(30)  # percent
         self.layer.triggerRepaint()
