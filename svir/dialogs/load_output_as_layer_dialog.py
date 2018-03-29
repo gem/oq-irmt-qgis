@@ -426,7 +426,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             inverted=True)
         graduated_renderer.updateRangeLowerValue(0, 0.0)
         symbol_zeros = QgsSymbolV2.defaultSymbol(self.layer.geometryType())
-        symbol_zeros.setColor(QColor(222, 255, 222))
+        symbol_zeros.setColor(QColor(240, 240, 240))  # very light grey
         self._set_symbol_size(symbol_zeros)
         symbol_zeros.symbolLayer(0).setOutlineStyle(Qt.PenStyle(Qt.NoPen))
         zeros_min = 0.0
