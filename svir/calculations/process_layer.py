@@ -28,14 +28,15 @@ import uuid
 from numpy.testing import assert_almost_equal
 from pprint import pformat
 from types import NoneType
-from PyQt4.QtCore import QPyNullVariant
+from qgis.PyQt.QtCore import QPyNullVariant
 from qgis.core import (QgsMapLayer,
                        QGis,
                        QgsVectorLayer,
+                       QgsVectorDataProvider,
                        QgsMapLayerRegistry,
                        QgsField)
 
-from PyQt4.QtCore import QVariant
+from qgis.PyQt.QtCore import QVariant
 from svir.calculations.transformation_algs import TRANSFORMATION_ALGS, \
     transform
 from svir.utilities.shared import DEBUG, DOUBLE_FIELD_TYPE_NAME
@@ -43,7 +44,7 @@ from svir.utilities.shared import DEBUG, DOUBLE_FIELD_TYPE_NAME
 from svir.utilities.utils import LayerEditingManager, tr, log_msg
 
 
-class ProcessLayer():
+class ProcessLayer(object):
     """
     Set of utilities to manage a layer or compare layers.
 
@@ -84,7 +85,7 @@ class ProcessLayer():
         ppdata = pformat(
             [feature.attributes()
              for feature in self.layer.getFeatures()])
-        logger_func(spacer + ppdata)
+        logger_func(spacer + ppdata + spacer)
 
     def has_same_projection_as(self, other_layer):
         """
@@ -166,7 +167,8 @@ class ProcessLayer():
                  passed as input argument, and as values the actual names of
                  the assigned attributes
         """
-        if 'Add Attributes' not in self.layer.capabilitiesString():
+        caps = self.layer.dataProvider().capabilities()
+        if not (caps & QgsVectorDataProvider.AddAttributes):
             raise TypeError('Unable to add attributes to this kind of layer.'
                             ' (%s). Please consider saving the layer with an'
                             ' editable format before attempting to add'
@@ -246,7 +248,8 @@ class ProcessLayer():
 
         :return: true in case of success and false in case of failure
         """
-        if 'Delete Attributes' not in self.layer.capabilitiesString():
+        caps = self.layer.dataProvider().capabilities()
+        if not (caps & QgsVectorDataProvider.DeleteAttributes):
             raise TypeError('Unable to delete attributes to this kind of'
                             ' layer (%s). Please consider saving the layer'
                             ' with an editable format before attempting to'
@@ -292,7 +295,8 @@ class ProcessLayer():
                          be assigned to it
         :returns: (actual_new_attr_name, invalid_input_values)
         """
-        if 'Change Attribute Values' not in self.layer.capabilitiesString():
+        caps = self.layer.dataProvider().capabilities()
+        if not (caps & QgsVectorDataProvider.ChangeAttributeValues):
             raise TypeError('Unable to edit features of this kind of layer'
                             ' (%s). Please consider saving the layer with an'
                             ' editable format before attempting to transform'

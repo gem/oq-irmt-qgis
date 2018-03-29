@@ -22,6 +22,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
+import qgis  # NOQA: it loads the environment
+
 import os.path
 import tempfile
 import uuid
@@ -43,18 +45,18 @@ from qgis.core import (QgsVectorLayer,
                        )
 from qgis.gui import QgsMessageBar
 
-from PyQt4.QtCore import (QSettings,
-                          QTranslator,
-                          QCoreApplication,
-                          qVersion,
-                          QUrl,
-                          Qt)
-from PyQt4.QtGui import (QAction,
-                         QIcon,
-                         QFileDialog,
-                         QDesktopServices,
-                         QApplication,
-                         QMenu)
+from qgis.PyQt.QtCore import (QSettings,
+                              QTranslator,
+                              QCoreApplication,
+                              qVersion,
+                              QUrl,
+                              Qt)
+from qgis.PyQt.QtGui import (QAction,
+                             QIcon,
+                             QFileDialog,
+                             QDesktopServices,
+                             QApplication,
+                             QMenu)
 
 from svir.dialogs.viewer_dock import ViewerDock
 from svir.utilities.import_sv_data import get_loggedin_downloader
@@ -68,22 +70,13 @@ from svir.dialogs.upload_settings_dialog import UploadSettingsDialog
 from svir.dialogs.weight_data_dialog import WeightDataDialog
 from svir.dialogs.recovery_modeling_dialog import RecoveryModelingDialog
 from svir.dialogs.recovery_settings_dialog import RecoverySettingsDialog
+from svir.dialogs.ipt_dialog import IptDialog
+from svir.dialogs.taxtweb_dialog import TaxtwebDialog
+from svir.dialogs.taxonomy_dialog import TaxonomyDialog
 from svir.dialogs.drive_oq_engine_server_dialog import (
     DriveOqEngineServerDialog)
 from svir.dialogs.load_ruptures_as_layer_dialog import (
     LoadRupturesAsLayerDialog)
-from svir.dialogs.load_dmg_by_asset_as_layer_dialog import (
-    LoadDmgByAssetAsLayerDialog)
-from svir.dialogs.load_hmaps_as_layer_dialog import (
-    LoadHazardMapsAsLayerDialog)
-from svir.dialogs.load_hcurves_as_layer_dialog import (
-    LoadHazardCurvesAsLayerDialog)
-from svir.dialogs.load_gmf_data_as_layer_dialog import (
-    LoadGmfDataAsLayerDialog)
-from svir.dialogs.load_uhs_as_layer_dialog import (
-    LoadUhsAsLayerDialog)
-from svir.dialogs.load_losses_by_asset_as_layer_dialog import (
-    LoadLossesByAssetAsLayerDialog)
 
 from svir.thread_worker.abstract_worker import start_worker
 from svir.thread_worker.download_platform_data_worker import (
@@ -103,6 +96,7 @@ from svir.utilities.utils import (tr,
                                   log_msg,
                                   save_layer_as_shapefile,
                                   get_style,
+                                  get_checksum,
                                   warn_scipy_missing)
 from svir.utilities.shared import (DEBUG,
                                    PROJECT_TEMPLATE,
@@ -149,6 +143,9 @@ class Irmt:
 
         # avoid dialog to be deleted right after showing it
         self.drive_oq_engine_server_dlg = None
+        self.ipt_dlg = None
+        self.taxtweb_dlg = None
+        self.taxonomy_dlg = None
 
         # keep track of the supplemental information for each layer
         # layer_id -> {}
@@ -162,6 +159,9 @@ class Irmt:
         QgsMapLayerRegistry.instance().layersAdded.connect(self.layers_added)
         QgsMapLayerRegistry.instance().layersRemoved.connect(
             self.layers_removed)
+
+        # get or create directory to store input files for the OQ-Engine
+        self.ipt_dir = self.get_ipt_dir()
 
     def initGui(self):
         # create our own toolbar
@@ -204,11 +204,27 @@ class Irmt:
                            enable=False,
                            add_to_layer_actions=True,
                            submenu='OQ Platform')
+        # Action to drive ipt
+        self.add_menu_item("ipt",
+                           ":/plugins/irmt/ipt.svg",
+                           u"OpenQuake Input Preparation Toolkit",
+                           self.ipt,
+                           enable=self.experimental_enabled(),
+                           submenu='OQ Engine',
+                           add_to_toolbar=True)
+        # Action to drive taxtweb
+        self.add_menu_item("taxtweb",
+                           ":/plugins/irmt/taxtweb.svg",
+                           u"OpenQuake TaxtWEB",
+                           self.taxtweb,
+                           enable=self.experimental_enabled(),
+                           submenu='OQ Engine',
+                           add_to_toolbar=True)
         # Action to drive the oq-engine server
         self.add_menu_item("drive_engine_server",
                            ":/plugins/irmt/drive_oqengine.svg",
-                           u"Drive oq-engine &server",
-                           self.drive_oq_engine_server,
+                           u"Drive the OpenQuake Engine",
+                           self.on_drive_oq_engine_server_btn_clicked,
                            enable=True,
                            submenu='OQ Engine',
                            add_to_toolbar=True)
@@ -235,14 +251,14 @@ class Irmt:
                            ":/plugins/irmt/recovery.svg",
                            u"Run recovery modeling",
                            self.recovery_modeling,
-                           enable=True,
+                           enable=self.experimental_enabled(),
                            submenu='Recovery modeling')
         # Action to set the recovery modeling parameters
         self.add_menu_item("recovery_settings",
                            ":/plugins/irmt/recovery_settings.svg",
                            u"Recovery modeling settings",
                            self.recovery_settings,
-                           enable=True,
+                           enable=self.experimental_enabled(),
                            submenu='Recovery modeling')
         # Action to activate the modal dialog to guide the user through loss
         # aggregation by zone
@@ -262,67 +278,8 @@ class Irmt:
                            enable=True,
                            submenu='OQ Engine')
 
-        self.add_menu_item("load_dmg_by_asset_as_layer",
-                           ":/plugins/irmt/load_from_oqoutput.svg",
-                           u"Load damage by asset as layer",
-                           self.load_dmg_by_asset_as_layer,
-                           enable=True,
-                           submenu='OQ Engine')
-
-        self.add_menu_item("load_hmaps_as_layer",
-                           ":/plugins/irmt/load_from_oqoutput.svg",
-                           u"Load hazard maps as layer",
-                           self.load_hmaps_as_layer,
-                           enable=True,
-                           submenu='OQ Engine')
-
-        self.add_menu_item("load_hcurves_as_layer",
-                           ":/plugins/irmt/load_from_oqoutput.svg",
-                           u"Load hazard curves as layer",
-                           self.load_hcurves_as_layer,
-                           enable=True,
-                           submenu='OQ Engine')
-
-        self.add_menu_item("load_gmf_data_as_layer",
-                           ":/plugins/irmt/load_from_oqoutput.svg",
-                           u"Load ground motion fields as layer",
-                           self.load_gmf_data_as_layer,
-                           enable=True,
-                           submenu='OQ Engine')
-
-        self.add_menu_item("load_uhs_as_layer",
-                           ":/plugins/irmt/load_from_oqoutput.svg",
-                           u"Load uniform hazard spectra as layer",
-                           self.load_uhs_as_layer,
-                           enable=True,
-                           submenu='OQ Engine')
-
-        self.add_menu_item("load_losses_by_asset_as_layer",
-                           ":/plugins/irmt/load_from_oqoutput.svg",
-                           u"Load losses by asset as layer",
-                           self.load_losses_by_asset_as_layer,
-                           enable=True,
-                           submenu='OQ Engine')
-        # # Action to plot total damage reading it from a NPZ produced by a
-        # # scenario damage calculation
-        # self.add_menu_item("plot_dmg_total",
-        #                    ":/plugins/irmt/copy.svg",
-        #                    u"Plot total damage from NPZ",
-        #                    self.plot_dmg_total_from_npz,
-        #                    enable=True,
-        #                    submenu='OQ Engine')
-        # # Action to plot damage by taxonomy reading it from a NPZ produced
-        # # by a scenario damage calculation
-        # self.add_menu_item("plot_dmg_by_taxon",
-        #                    ":/plugins/irmt/copy.svg",
-        #                    u"Plot damage by taxonomy from NPZ",
-        #                    self.plot_dmg_by_taxon_from_npz,
-        #                    enable=True,
-        #                    submenu='OQ Engine')
-
-        # Action to activate the modal dialog to select a layer and one
-        # of its
-        # attributes, in order to transform that attribute
+        # Action to activate the modal dialog to select a layer and one of
+        # its attributes, in order to transform that attribute
         self.add_menu_item("transform_attributes",
                            ":/plugins/irmt/transform.svg",
                            u"&Transform attributes",
@@ -364,6 +321,11 @@ class Irmt:
                 return action.menu()
         return None
 
+    def experimental_enabled(self):
+        experimental_enabled = QSettings().value(
+            '/irmt/experimental_enabled', False, type=bool)
+        return experimental_enabled
+
     def recovery_modeling(self):
         if IS_SCIPY_INSTALLED:
             dlg = RecoveryModelingDialog(self.iface)
@@ -379,54 +341,55 @@ class Irmt:
         dlg = LoadRupturesAsLayerDialog(self.iface, 'ruptures')
         dlg.exec_()
 
-    def load_dmg_by_asset_as_layer(self):
-        dlg = LoadDmgByAssetAsLayerDialog(self.iface, 'dmg_by_asset')
-        dlg.exec_()
+    def ipt(self):
+        if self.ipt_dlg is None:
+            # we need self because ipt must be able to drive the oq-engine
+            self.ipt_dlg = IptDialog(self.ipt_dir, self)
+        self.ipt_dlg.show()
+        self.ipt_dlg.raise_()
 
-    def load_hmaps_as_layer(self):
-        dlg = LoadHazardMapsAsLayerDialog(self.iface, 'hmaps')
-        dlg.exec_()
+    def taxtweb(self):
+        if self.taxtweb_dlg is None:
+            self.instantiate_taxonomy_dlg()
+            self.taxtweb_dlg = TaxtwebDialog(self.taxonomy_dlg)
+        self.taxtweb_dlg.show()
+        self.taxtweb_dlg.raise_()
 
-    def load_hcurves_as_layer(self):
-        dlg = LoadHazardCurvesAsLayerDialog(self.iface, 'hcurves')
-        dlg.exec_()
-        self.viewer_dock.change_output_type(dlg.output_type)
+    def instantiate_taxonomy_dlg(self):
+        if self.taxonomy_dlg is None:
+            self.taxonomy_dlg = TaxonomyDialog()
 
-    def load_gmf_data_as_layer(self):
-        dlg = LoadGmfDataAsLayerDialog(self.iface, 'gmf_data')
-        dlg.exec_()
+    def taxonomy(self):
+        self.instantiate_taxonomy_dlg()
+        self.taxonomy_dlg.show()
+        self.taxonomy_dlg.raise_()
 
-    def load_uhs_as_layer(self):
-        dlg = LoadUhsAsLayerDialog(self.iface, 'uhs')
-        dlg.exec_()
-        self.viewer_dock.change_output_type(dlg.output_type)
+    def on_drive_oq_engine_server_btn_clicked(self):
+        # we can't call drive_oq_engine_server directly, otherwise the signal
+        # triggered by the button would set show=False (it silently passes an
+        # additional parameter)
+        self.drive_oq_engine_server(show=True)
 
-    def load_losses_by_asset_as_layer(self):
-        dlg = LoadLossesByAssetAsLayerDialog(self.iface, 'losses_by_asset')
-        dlg.exec_()
-
-    # These 2 will have to be addressed when managing risk outputs
-    # def plot_dmg_total_from_npz(self):
-    #     dlg = PlotFromNpzDialog(self.iface, 'dmg_total')
-    #     dlg.exec_()
-
-    # def plot_dmg_by_taxon_from_npz(self):
-    #     dlg = PlotFromNpzDialog(self.iface, 'dmg_by_taxon')
-    #     dlg.exec_()
-
-    def drive_oq_engine_server(self):
+    def drive_oq_engine_server(self, show=True):
         if self.drive_oq_engine_server_dlg is None:
             self.drive_oq_engine_server_dlg = DriveOqEngineServerDialog(
                 self.iface, self.viewer_dock)
         else:
             self.drive_oq_engine_server_dlg.attempt_login()
-        self.drive_oq_engine_server_dlg.show()
-        self.drive_oq_engine_server_dlg.raise_()
+        if show:
+            self.drive_oq_engine_server_dlg.show()
+            self.drive_oq_engine_server_dlg.raise_()
         if self.drive_oq_engine_server_dlg.is_logged_in:
             self.drive_oq_engine_server_dlg.start_polling()
         else:
             self.drive_oq_engine_server_dlg.reject()
             self.drive_oq_engine_server_dlg = None
+
+    def on_same_fs(self, checksum_file_path, local_checksum):
+        # initialize drive_oq_engine_server_dlg dialog without displaying it
+        self.drive_oq_engine_server(show=False)
+        return self.drive_oq_engine_server_dlg.on_same_fs(
+            checksum_file_path, local_checksum)
 
     def reset_engine_login(self):
         if self.drive_oq_engine_server_dlg is not None:
@@ -582,6 +545,8 @@ class Irmt:
 
         # remove connects
         self.iface.currentLayerChanged.disconnect(self.current_layer_changed)
+        self.iface.newProjectCreated.disconnect(self.current_layer_changed)
+        self.iface.projectRead.disconnect(self.current_layer_changed)
         QgsMapLayerRegistry.instance().layersAdded.disconnect(
             self.layers_added)
         QgsMapLayerRegistry.instance().layersRemoved.disconnect(
@@ -609,7 +574,7 @@ class Irmt:
         download from the openquake platform
         """
         # login to platform, to be able to retrieve sv indices
-        sv_downloader = get_loggedin_downloader(self.iface)
+        sv_downloader = get_loggedin_downloader(self.iface.messageBar())
         if sv_downloader is None:
             self.show_settings()
             return
@@ -640,7 +605,7 @@ class Irmt:
                 svi_themes = project_definition[
                     'children'][1]['children']
                 known_themes = []
-                with WaitCursorManager(msg, self.iface):
+                with WaitCursorManager(msg, self.iface.messageBar()):
                     while dlg.indicator_multiselect.selected_widget.count(
                             ) > 0:
                         item = \
@@ -782,7 +747,7 @@ class Irmt:
         Open dialog to select one of the integrated risk projects available on
         the OQ-Platform and download it as a qgis project
         """
-        sv_downloader = get_loggedin_downloader(self.iface)
+        sv_downloader = get_loggedin_downloader(self.iface.messageBar())
         if sv_downloader is None:
             self.show_settings()
             return
@@ -996,7 +961,7 @@ class Irmt:
         if self.is_iri_computable(project_definition):
             iri_node = deepcopy(project_definition)
             msg = 'Calculating %s' % iri_node['name']
-            with WaitCursorManager(msg, self.iface):
+            with WaitCursorManager(msg, self.iface.messageBar()):
                 (added_attrs_ids, discarded_feats,
                  iri_node, was_iri_computed) = calculate_composite_variable(
                     self.iface, self.iface.activeLayer(), iri_node)
@@ -1012,7 +977,7 @@ class Irmt:
         if self.is_svi_computable(project_definition):
             svi_node = deepcopy(project_definition['children'][1])
             msg = 'Calculating %s' % svi_node['name']
-            with WaitCursorManager(msg, self.iface):
+            with WaitCursorManager(msg, self.iface.messageBar()):
                 (svi_added_attrs_ids, svi_discarded_feats,
                  svi_node, was_svi_computed) = calculate_composite_variable(
                     self.iface, self.iface.activeLayer(), svi_node)
@@ -1022,7 +987,7 @@ class Irmt:
         if self.is_ri_computable(project_definition):
             ri_node = deepcopy(project_definition['children'][0])
             msg = 'Calculating %s' % ri_node['name']
-            with WaitCursorManager(msg, self.iface):
+            with WaitCursorManager(msg, self.iface.messageBar()):
                 (ri_added_attrs_ids, ri_discarded_feats,
                  ri_node, was_ri_computed) = calculate_composite_variable(
                     self.iface, self.iface.activeLayer(), ri_node)
@@ -1294,7 +1259,7 @@ class Irmt:
                 try:
                     msg = "Applying '%s' transformation to field '%s'" % (
                         algorithm_name, input_attr_name)
-                    with WaitCursorManager(msg, self.iface):
+                    with WaitCursorManager(msg, self.iface.messageBar()):
                         res_attr_name, invalid_input_values = ProcessLayer(
                             layer).transform_attribute(input_attr_name,
                                                        algorithm_name,
@@ -1321,7 +1286,7 @@ class Irmt:
                     level = 'I' if not invalid_input_values else 'W'
                     log_msg(msg, level=level,
                             message_bar=self.iface.messageBar())
-                except (ValueError, NotImplementedError) as e:
+                except (ValueError, NotImplementedError, TypeError) as e:
                     log_msg(e.message, level='C',
                             message_bar=self.iface.messageBar())
                 else:  # only if the transformation was performed successfully
@@ -1408,3 +1373,17 @@ class Irmt:
             self.iface.mainWindow().tabifyDockWidget(
                 legend_tab, self.viewer_dock)
             self.viewer_dock.raise_()
+
+    def get_ipt_dir(self):
+        home_dir = os.path.expanduser("~")
+        ipt_dir = os.path.join(home_dir, ".gem", "irmt", "ipt")
+        if not os.path.exists(ipt_dir):
+            os.makedirs(ipt_dir)
+        return ipt_dir
+
+    def get_ipt_checksum(self):
+        unique_filename = ".%s" % uuid.uuid4().hex
+        checksum_file_path = os.path.join(self.ipt_dir, unique_filename)
+        with open(checksum_file_path, "w") as f:
+            f.write(os.urandom(32))
+        return checksum_file_path, get_checksum(checksum_file_path)

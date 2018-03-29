@@ -13,7 +13,7 @@ name=OpenQuake Integrated Risk Modelling Toolkit
 qgisMinimumVersion=2.14
 description=Tools to drive the OpenQuake Engine, to develop composite indicators and integrate them with physical risk estimations, and to predict building recovery times following an earthquake
 about=This plugin allows users to drive OpenQuake Engine calculations (https://github.com/gem/oq-engine) of physical hazard and risk, and to load the corresponding outputs as QGIS layers. For those outputs, data visualization tools are provided. The toolkit also enables users to develop composite indicators to measure and quantify social characteristics, and combine them with estimates of human or infrastructure loss. The plugin can interact with the OpenQuake Platform (https://platform.openquake.org), to browse and download socio-economic data or existing projects, edit projects locally in QGIS and upload and share them with the scientific community. A post-earthquake recovery modeling framework is incorporated into the toolkit, to produce building level and/or community level recovery functions.
-version=2.7.1
+version=2.10.0
 author=GEM Foundation
 email=staff.it@globalquakemodel.org
 
@@ -23,32 +23,46 @@ email=staff.it@globalquakemodel.org
 
 # Uncomment the following line and add your changelog entries:
 changelog=
-    2.7.1
-    * Losses can be aggregated by loss type and multiple tags, producing a table with aggregated values per realization
-    2.7.0
-    * Added the possibility to visualize oq-engine outputs of types agg_curves-rlzs, agg_curves-stats, dmg_by_asset and losses_by_asset
-    * Damage can be aggregated by realization, loss type and multiple tags, producing a bar plot displaying aggregated damages
-      for each damage state (with the possibility to include or exclude "no damage" from the chart)
-    2.6.1
-    * For hazard curves and uniform hazard spectra, it is possible to plot together multiple statistical outputs (e.g. mean and quantiles)
-    * Fixed an offset issue with markers
-    * The plugin works even if scipy is not installed and it requests to install it only on the attempt of using
-      recovery modeling functionalities
-    * Added a button to reset the default plugin settings
-    * While driving the OQ-Engine, notifications are displayed on top of the widget instead of using the main messageBar
-    * The widget driving the OQ-Engine handles also the LocationParseError exception
-    * One single widget loads losses_by_asset or dmg_by_asset and aggregates points by polygons taken from a zonal layer
-    * When the active layer has an assigned output type, other output types can not be selected in the Data Viewer
-    * Fixed an error occurring while switching between a layer that does not use the Data Viewer and one that uses it,
-      that was caused by a missing re-initialization in a corner case
-    2.6.0
-    * The plugin is aligned with OQ-Engine version 2.6
-    * Added a warning message in case of connection with a potentially incompatible version of the OQ-Engine Server
-    * The list of calculations displays the Calculation Mode instead of the Job Type
-    * Loaders for OQ-Engine hazard outputs can read the new format introduced in OQ-Engine version 2.6
-    * Layers for hazard curves are stored in a more convenient way, keeping a scalar value per cell instead of a json string
-    * Integration tests check that all implemented loaders for OQ-Engine outputs are tested at least once
-    * Both workflows aggregating loss points by zone are tested on Travis (1: using SAGA; 2: using the fallback algorithm)
+    2.10.0
+    * Dialogs embedding OpenQuake web applications (IPT and TaxtWEB) display a progress bar while loading a new page, and there
+      is an additional button to reload the homepage. If a page can not be loaded, an error message is displayed.
+    * The GUI provides clearer error messages in case the plugin is unable to connect with the OQ Engine WebUI
+    2.9.6
+    * When loading hazard maps from OQ-Engine, values for all intensity measure types and probabilities of exceedance can be stored
+      in a single layer.
+    * Layers built from OQ-Engine outputs have the custom property 'calc_id' storing the id of the corresponding OQ-Engine calculation.
+    * The names of files exported by the Data Viewer contain the id of the corresponding OQ-Engine calculation.
+    2.9.5
+    * Several updates to the user manual
+    * Fixed bug in the GUI initialization for visualizing aggregate loss curves
+    2.9.4
+    * Fixed retrieval of the engine server hostname from settings
+    2.9.3
+    * Hazard maps, hazard curves and uniform hazard spectra are loaded through the "extract" API offered by the OQ Engine Server,
+      instead of using the exported npz
+    * Fixed the visualization of UHS in case PGA is not present
+    * Multiple connection profiles can be saved, making it easier to switch between different OQ-Engine servers and OQ Platforms.
+    * It is possible to modify the log verbosity of the plugin, through a new property in the plugin settings
+    2.9.2
+    * If a selected OQ-Engine calculation is running, the corresponding outputs will be listed as soon as the calculation is complete.
+    * Fixed the button showing parameters of a OQ-Engine calculation
+    2.9.1
+    * Fixed a bug that made impossible to visualize the dialog that drives the OpenQuake Engine
+    * Fixed issues importing Qt on macOS
+    2.9.0
+    * The plugin embeds 3 standalone OpenQuake applications: Input Preparation Toolkit, TaxtWEB and Taxonomy Glossary
+    * When a OQ-Engine calculation is removed, the corresponding buttons and its list of outputs are properly cleared.
+    * An additional checkbox in the settings enables/disables experimental features
+    * Recovery modeling functionalities and the embedded standalone OpenQuake applications are enabled only if experimental
+      features are enabled from the plugin settings.
+    2.8.1
+    * When interacting with the OQ-Engine or the OQ-Platform, the plugin will attempt first to use the default credentials.
+      It will open the settings dialog automatically, in case the login fails with the default settings.
+    * When a problem causes the widget that drives the OQ-Engine to be closed, error messages are displayed in the general
+      QGIS message bar, instead of using the inner message bar of the widget (otherwise, they would not be visible to the user)
+    * Fix a bug in the check of layer capabilities, that was working only with QGIS locale set to English
+    2.8.0
+    * In aggregated loss curves, it is possible to display a chosen set of realizations or statistics (mean, quantiles, etc.)
 
 # tags are comma separated with spaces allowed
 tags=GEM, IRMT, SVIR, OpenQuake, Social Vulnerability, Integrated Risk, Recovery, Resilience, Risk, Hazard, Earthquake

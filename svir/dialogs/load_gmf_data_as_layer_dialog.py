@@ -22,13 +22,13 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-import numpy
 from qgis.core import QgsFeature, QgsGeometry, QgsPoint
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 from svir.calculations.calculate_utils import add_numeric_attribute
 from svir.utilities.utils import (WaitCursorManager,
                                   LayerEditingManager,
                                   log_msg,
+                                  extract_npz,
                                   )
 from svir.utilities.shared import DEBUG
 
@@ -38,11 +38,16 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
     Modal dialog to load gmf_data from an oq-engine output, as layer
     """
 
-    def __init__(self, iface, viewer_dock, output_type='gmf_data',
-                 path=None, mode=None):
+    def __init__(self, iface, viewer_dock, session, hostname, calc_id,
+                 output_type='gmf_data', path=None, mode=None):
         assert output_type == 'gmf_data'
         LoadOutputAsLayerDialog.__init__(
-            self, iface, viewer_dock, output_type, path, mode)
+            self, iface, viewer_dock, session, hostname, calc_id,
+            output_type, path, mode)
+
+        # FIXME: add layout only for output types that load from file
+        self.remove_file_hlayout()
+
         self.setWindowTitle(
             'Load ground motion fields from NPZ, as layer')
         self.create_load_selected_only_ckb()
@@ -50,16 +55,17 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         self.create_rlz_or_stat_selector()
         self.create_imt_selector()
         self.create_eid_selector()
-        if self.path:
-            self.npz_file = numpy.load(self.path, 'r')
-            self.populate_out_dep_widgets()
+
+        self.npz_file = extract_npz(
+            session, hostname, calc_id, output_type,
+            message_bar=iface.messageBar(), params=None)
+
+        self.populate_out_dep_widgets()
         self.adjustSize()
         self.set_ok_button()
 
     def set_ok_button(self):
-        self.ok_button.setEnabled(
-            bool(self.path)
-            and self.imt_cbx.currentIndex() != -1)
+        self.ok_button.setEnabled(self.imt_cbx.currentIndex() != -1)
 
     def on_rlz_or_stat_changed(self):
         self.dataset = self.npz_file[self.rlz_or_stat_cbx.currentText()]
@@ -82,20 +88,13 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
             self.eid_sbx.setRange(min_eid, max_eid)
         self.set_ok_button()
 
-    def populate_rlz_or_stat_cbx(self):
-        self.rlzs_or_stats = [item[0] for item in self.npz_file.items()]
-        self.rlz_or_stat_cbx.clear()
-        self.rlz_or_stat_cbx.setEnabled(True)
-        # self.rlz_or_stat_cbx.addItem('All')
-        self.rlz_or_stat_cbx.addItems(self.rlzs_or_stats)
-
     def load_from_npz(self):
         for rlz_or_stat in self.rlzs_or_stats:
             if (self.load_selected_only_ckb.isChecked()
                     and rlz_or_stat != self.rlz_or_stat_cbx.currentText()):
                 continue
             with WaitCursorManager('Creating layer for "%s"...'
-                                   % rlz_or_stat, self.iface):
+                                   % rlz_or_stat, self.iface.messageBar()):
                 self.build_layer(rlz_or_stat)
                 self.style_maps()
         if self.npz_file is not None:
@@ -105,8 +104,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         self.imt = self.imt_cbx.currentText()
         self.eid = self.eid_sbx.value()
         self.default_field_name = '%s-%s' % (self.imt, self.eid)
-        # layer_name = "gmf_data_%s_eid-%s" % (rlz_or_stat, self.eid)
-        layer_name = "scenario_damage_gmfs_%s_eid-%s" % (rlz_or_stat, self.eid)
+        layer_name = "scenario_gmfs_%s_eid-%s" % (rlz_or_stat, self.eid)
         return layer_name
 
     def get_field_names(self, **kwargs):

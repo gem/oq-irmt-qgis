@@ -24,8 +24,8 @@
 
 import os
 from collections import OrderedDict
-from PyQt4.QtCore import QSettings
-from PyQt4.QtGui import QColor
+from qgis.PyQt.QtCore import QSettings
+from qgis.PyQt.QtGui import QColor
 from ConfigParser import ConfigParser
 from qgis.core import QgsGraduatedSymbolRendererV2
 
@@ -215,26 +215,52 @@ RECOVERY_DEFAULTS['n_recovery_based_dmg_states'] = len(
 # occurs given loss-based damage state i
 
 
-OQ_CSV_LOADABLE_TYPES = set(['ruptures'])
-OQ_NPZ_LOADABLE_TYPES = set([
-    'hmaps', 'hcurves', 'uhs', 'gmf_data', 'dmg_by_asset', 'losses_by_asset'])
-OQ_ALL_LOADABLE_TYPES = OQ_CSV_LOADABLE_TYPES | OQ_NPZ_LOADABLE_TYPES
+OQ_CSV_TO_LAYER_TYPES = set(['ruptures'])
+OQ_EXTRACT_TO_LAYER_TYPES = set([
+    'hmaps', 'hcurves', 'uhs', 'losses_by_asset', 'gmf_data', 'dmg_by_asset'])
+OQ_TO_LAYER_TYPES = (OQ_CSV_TO_LAYER_TYPES |
+                     OQ_EXTRACT_TO_LAYER_TYPES)
 OQ_RST_TYPES = set(['fullreport'])
-OQ_NO_MAP_TYPES = set(
+OQ_EXTRACT_TO_VIEW_TYPES = set(
     ['agg_curves-rlzs', 'agg_curves-stats', 'dmg_by_asset_aggr',
      'losses_by_asset_aggr'])
+OQ_ALL_TYPES = OQ_TO_LAYER_TYPES | OQ_RST_TYPES | OQ_EXTRACT_TO_VIEW_TYPES
 
+LOG_LEVELS = {'I': 'Info (high verbosity)',
+              'W': 'Warning (medium verbosity)',
+              'C': 'Critical (low verbosity)'}
 
 DEFAULT_SETTINGS = dict(
-    platform_username='',
-    platform_password='',
-    platform_hostname='https://platform.openquake.org',
-    engine_username='',
-    engine_password='',
-    engine_hostname='http://localhost:8800',
     color_from_rgba=QColor('#FFEBEB').rgba(),
     color_to_rgba=QColor('red').rgba(),
     style_mode=QgsGraduatedSymbolRendererV2.Quantile,
     style_classes=10,
     force_restyling=True,
+    experimental_enabled=False,
+    developer_mode=False,
+    log_level='C',
 )
+
+DEFAULT_PLATFORM_PROFILES = (
+    '{"OpenQuake Platform": {'
+    '"username": "", "password": "",'
+    '"hostname": "https://platform.openquake.org"}}')
+DEFAULT_ENGINE_PROFILES = (
+    '{"Local OpenQuake Engine Server": {'
+    '"username": "", "password": "",'
+    '"hostname": "http://localhost:8800"}}')
+
+# It is possible to set custom request attributes, with numeric codes above
+# 1000. REQUEST_ATTRS dict gives a name to each custom attribute we defined.
+REQUEST_ATTRS = {
+                 # python callback function to be called as soon as the network
+                 # access manager finishes satisfying a request to which this
+                 # attribute is added
+                 'instance_finished_cb': 1001,
+                 # id of the javascript object that called the python gem_api.
+                 # It is used when calling the js callback function, to make js
+                 # know to which original object it refers
+                 'js_cb_object_id': 1002,
+                 # name of the javascript callback function
+                 'js_cb_func': 1003,
+                 }

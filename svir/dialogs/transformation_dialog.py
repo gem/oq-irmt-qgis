@@ -22,9 +22,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import (QDialog,
-                         QDialogButtonBox)
+from qgis.PyQt.QtCore import pyqtSlot
+from qgis.PyQt.QtGui import (QDialog,
+                             QDialogButtonBox)
 
 from svir.calculations.transformation_algs import (RANK_VARIANTS,
                                                    QUADRATIC_VARIANTS,
@@ -176,10 +176,15 @@ class TransformationDialog(QDialog, FORM_CLASS):
             if self.overwrite_ckb.isChecked():
                 new_attr_name = attribute_name
             else:
-                new_attr_name = \
-                    ProcessLayer(self.iface.activeLayer()).transform_attribute(
-                        attribute_name, algorithm_name, variant,
-                        inverse, simulate=True)
+                try:
+                    new_attr_name = ProcessLayer(
+                        self.iface.activeLayer()).transform_attribute(
+                            attribute_name, algorithm_name, variant,
+                            inverse, simulate=True)
+                except TypeError as exc:
+                    log_msg(str(exc), level='C',
+                            message_bar=self.iface.messageBar())
+                    return
             self.new_field_name_txt.setText(new_attr_name)
             self.attr_name_user_def = False
 

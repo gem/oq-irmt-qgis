@@ -6,6 +6,7 @@
 import xmlrpclib
 import sys
 import getpass
+import os
 from optparse import OptionParser
 
 # Configuration
@@ -65,16 +66,24 @@ if __name__ == "__main__":
         options.server = SERVER
     if not options.port:
         options.port = PORT
-    if not options.username:
-        # interactive mode
-        username = getpass.getuser()
-        print("Please enter user name [%s] :" % username,)
-        res = raw_input()
-        if res != "":
-            options.username = res
-        else:
-            options.username = username
-    if not options.password:
-        # interactive mode
-        options.password = getpass.getpass()
+    env_username = os.environ.get('OSGEO_QGIS_USERNAME')
+    if env_username is None:
+        if not options.username:
+            # interactive mode
+            username = getpass.getuser()
+            print("Please enter user name [%s] :" % username,)
+            res = raw_input()
+            if res != "":
+                options.username = res
+            else:
+                options.username = username
+    else:
+        options.username = env_username
+    env_password = os.environ.get('OSGEO_QGIS_PASSWORD')
+    if env_password is None:
+        if not options.password:
+            # interactive mode
+            options.password = getpass.getpass()
+    else:
+        options.password = env_password
     main(options, args)

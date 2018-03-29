@@ -22,13 +22,13 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-import numpy
 from qgis.core import QgsFeature, QgsGeometry, QgsPoint
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 from svir.calculations.calculate_utils import add_numeric_attribute
 from svir.utilities.utils import (LayerEditingManager,
                                   log_msg,
                                   WaitCursorManager,
+                                  extract_npz,
                                   )
 from svir.utilities.shared import DEBUG
 
@@ -38,22 +38,28 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
     Modal dialog to load hazard curves from an oq-engine output, as layer
     """
 
-    def __init__(self, iface, viewer_dock, output_type='hcurves',
-                 path=None, mode=None):
+    def __init__(self, iface, viewer_dock, session, hostname, calc_id,
+                 output_type='hcurves', path=None, mode=None):
         assert output_type == 'hcurves'
         LoadOutputAsLayerDialog.__init__(
-            self, iface, viewer_dock, output_type, path, mode)
+            self, iface, viewer_dock, session, hostname, calc_id,
+            output_type, path, mode)
+
+        # FIXME: add layout only for output types that load from file
+        self.remove_file_hlayout()
+
         self.setWindowTitle(
-            'Load hazard curves from NPZ, as layer')
+            'Load hazard curves as layer')
         self.create_num_sites_indicator()
-        if self.path:
-            self.npz_file = numpy.load(self.path, 'r')
-            self.populate_out_dep_widgets()
+        self.npz_file = extract_npz(
+            session, hostname, calc_id, output_type,
+            message_bar=iface.messageBar(), params=None)
+        self.populate_out_dep_widgets()
         self.adjustSize()
         self.set_ok_button()
 
     def set_ok_button(self):
-        self.ok_button.setEnabled(bool(self.path))
+        self.ok_button.setEnabled(True)
 
     def populate_dataset(self):
         self.rlzs_or_stats = self.npz_file['all'].dtype.names[2:]
@@ -105,7 +111,7 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
 
     def load_from_npz(self):
-        with WaitCursorManager('Creating layer...', self.iface):
+        with WaitCursorManager('Creating layer...', self.iface.messageBar()):
             self.build_layer()
             self.style_curves()
         if self.npz_file is not None:

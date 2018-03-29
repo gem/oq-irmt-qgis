@@ -30,6 +30,7 @@ from svir.calculations.calculate_utils import add_numeric_attribute
 from svir.utilities.utils import (WaitCursorManager,
                                   LayerEditingManager,
                                   log_msg,
+                                  extract_npz,
                                   )
 from svir.utilities.shared import DEBUG
 
@@ -39,23 +40,31 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
     Modal dialog to load losses by asset from an oq-engine output, as layer
     """
 
-    def __init__(self, iface, viewer_dock, output_type='losses_by_asset',
+    def __init__(self, iface, viewer_dock, session, hostname, calc_id,
+                 output_type='losses_by_asset',
                  path=None, mode=None, zonal_layer_path=None):
         assert output_type == 'losses_by_asset'
         LoadOutputAsLayerDialog.__init__(
-            self, iface, viewer_dock, output_type, path, mode,
-            zonal_layer_path)
+            self, iface, viewer_dock, session, hostname, calc_id,
+            output_type, path, mode, zonal_layer_path)
+
+        # FIXME: add layout only for output types that load from file
+        self.remove_file_hlayout()
+
         self.setWindowTitle(
-            'Load losses by asset from NPZ, aggregated by location, as layer')
+            'Load losses by asset, aggregated by location, as layer')
         self.create_load_selected_only_ckb()
         self.create_num_sites_indicator()
         self.create_rlz_or_stat_selector()
         self.create_taxonomy_selector()
         self.create_loss_type_selector()
         self.create_zonal_layer_selector()
-        if self.path:
-            self.npz_file = numpy.load(self.path, 'r')
-            self.populate_out_dep_widgets()
+
+        self.npz_file = extract_npz(
+            session, hostname, calc_id, output_type,
+            message_bar=iface.messageBar(), params=None)
+
+        self.populate_out_dep_widgets()
         if self.zonal_layer_path:
             # NOTE: it happens while running tests. We need to avoid
             #       overwriting the original layer, so we make a copy of it.
@@ -68,7 +77,7 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         self.set_ok_button()
 
     def set_ok_button(self):
-        self.ok_button.setEnabled(bool(self.path))
+        self.ok_button.setEnabled(True)
 
     def on_rlz_or_stat_changed(self):
         self.dataset = self.npz_file[self.rlz_or_stat_cbx.currentText()]
@@ -144,7 +153,8 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                     with WaitCursorManager(
                             'Creating layer for "%s", '
                             ' taxonomy "%s" and loss type "%s"...' % (
-                            rlz_or_stat, taxonomy, loss_type), self.iface):
+                            rlz_or_stat, taxonomy, loss_type),
+                            self.iface.messageBar()):
                         self.build_layer(rlz_or_stat, taxonomy=taxonomy,
                                          loss_type=loss_type)
                         self.style_maps()
