@@ -59,6 +59,7 @@ from svir.third_party.requests.packages.urllib3.exceptions import (
 from svir.utilities.shared import (OQ_TO_LAYER_TYPES,
                                    OQ_RST_TYPES,
                                    OQ_EXTRACT_TO_VIEW_TYPES,
+                                   OQ_BASIC_CSV_TO_LAYER_TYPES,
                                    )
 from svir.utilities.utils import (WaitCursorManager,
                                   engine_login,
@@ -71,10 +72,8 @@ from svir.utilities.utils import (WaitCursorManager,
                                   )
 from svir.dialogs.load_ruptures_as_layer_dialog import (
     LoadRupturesAsLayerDialog)
-from svir.dialogs.load_realizations_as_layer_dialog import (
-    LoadRealizationsAsLayerDialog)
-from svir.dialogs.load_sourcegroups_as_layer_dialog import (
-    LoadSourcegroupsAsLayerDialog)
+from svir.dialogs.load_basic_csv_as_layer_dialog import (
+    LoadBasicCsvAsLayerDialog)
 from svir.dialogs.load_dmg_by_asset_as_layer_dialog import (
     LoadDmgByAssetAsLayerDialog)
 from svir.dialogs.load_gmf_data_as_layer_dialog import (
@@ -111,8 +110,8 @@ BUTTON_WIDTH = 75
 
 OUTPUT_TYPE_LOADERS = {
     'ruptures': LoadRupturesAsLayerDialog,
-    'realizations': LoadRealizationsAsLayerDialog,
-    'sourcegroups': LoadSourcegroupsAsLayerDialog,
+    'realizations': LoadBasicCsvAsLayerDialog,
+    'sourcegroups': LoadBasicCsvAsLayerDialog,
     'dmg_by_asset': LoadDmgByAssetAsLayerDialog,
     'gmf_data': LoadGmfDataAsLayerDialog,
     'hmaps': LoadHazardMapsAsLayerDialog,

@@ -42,13 +42,18 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
         LoadOutputAsLayerDialog.__init__(
             self, iface, viewer_dock, session, hostname, calc_id,
             output_type, path, mode)
+        self.create_file_size_indicator()
         self.create_save_as_shp_ckb()
+        self.populate_out_dep_widgets()
         self.setWindowTitle('Load ruptures from CSV, as layer')
         self.adjustSize()
         self.set_ok_button()
 
     def set_ok_button(self):
         self.ok_button.setEnabled(bool(self.path))
+
+    def populate_out_dep_widgets(self):
+        self.show_file_size()
 
     def load_from_csv(self):
         if self.mode == 'testing':
@@ -80,7 +85,3 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
             lines_to_skip_count=1,
             save_as_shp=self.save_as_shp_ckb.isChecked(), dest_shp=dest_shp)
         self.layer.setCustomProperty('investigation_time', investigation_time)
-
-    def populate_out_dep_widgets(self):
-        # no widgets to populate
-        pass
