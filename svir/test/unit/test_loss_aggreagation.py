@@ -128,8 +128,13 @@ class AggregateLossByZoneTestCase(unittest.TestCase):
         expected_loss_layer = QgsVectorLayer(expected_loss_layer_path,
                                              'Loss points plus zone ids',
                                              'ogr')
-        expected_zonal_layer_path = os.path.join(
-            self.data_dir_name, 'svi_zones_plus_loss_stats_zone_ids.shp')
+        if sum_only:
+            expected_zonal_layer_path = os.path.join(
+                self.data_dir_name,
+                'svi_zones_plus_loss_stats_zone_ids_sum_only.shp')
+        else:
+            expected_zonal_layer_path = os.path.join(
+                self.data_dir_name, 'svi_zones_plus_loss_stats_zone_ids.shp')
         expected_zonal_layer = QgsVectorLayer(
             expected_zonal_layer_path, 'Expected zonal layer', 'ogr')
         self._check_output_layer(output_loss_layer, expected_loss_layer)
@@ -175,4 +180,4 @@ class AggregateLossByZoneTestCase(unittest.TestCase):
             ProcessLayer(output_layer).pprint(usage='testing')
             ProcessLayer(expected_layer).pprint(usage='testing')
             raise Exception(
-                'The output layer is different than expected')
+                'The output layer is different than expected (see above)')
