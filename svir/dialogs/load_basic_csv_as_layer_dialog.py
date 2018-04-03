@@ -65,3 +65,4 @@ class LoadBasicCsvAsLayerDialog(LoadOutputAsLayerDialog):
             self, csv_path, layer_name, self.iface,
             save_as_shp=False, dest_shp=dest_shp,
             zoom_to_layer=False, has_geom=False)
+        self.iface.showAttributeTable(self.layer)
