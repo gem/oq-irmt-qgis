@@ -375,9 +375,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     if self.tags[tag_name]['values'][value]:
                         # NOTE: this would not work for multiple values per tag
                         params[tag_name] = value
-        output_type = 'agglosses/%s' % self.loss_type_cbx.currentText()
+        to_extract = 'agglosses/%s' % self.loss_type_cbx.currentText()
         self.losses_by_asset_aggr = extract_npz(
-            self.session, self.hostname, self.calc_id, output_type,
+            self.session, self.hostname, self.calc_id, to_extract,
             message_bar=self.iface.messageBar(), params=params)
         if self.losses_by_asset_aggr is None:
             return
@@ -391,9 +391,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     if self.tags[tag_name]['values'][value]:
                         # NOTE: this would not work for multiple values per tag
                         params[tag_name] = value
-        output_type = 'agglosses/%s' % self.loss_type_cbx.currentText()
+        to_extract = 'agglosses/%s' % self.loss_type_cbx.currentText()
         self.avg_losses_stats_aggr = extract_npz(
-            self.session, self.hostname, self.calc_id, output_type,
+            self.session, self.hostname, self.calc_id, to_extract,
             message_bar=self.iface.messageBar(), params=params)
         if self.avg_losses_stats_aggr is None:
             return
@@ -641,19 +641,12 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.filter_losses_by_asset_aggr()
 
     def load_avg_losses_stats_aggr(
-        # FIXME: we have a number per stat, not per gsim
             self, calc_id, session, hostname, output_type):
         composite_risk_model_attrs = extract_npz(
             session, hostname, calc_id, 'composite_risk_model.attrs',
             message_bar=self.iface.messageBar())
         if composite_risk_model_attrs is None:
             return
-        rlzs_npz = extract_npz(
-            session, hostname, calc_id, 'realizations',
-            message_bar=self.iface.messageBar())
-        if rlzs_npz is None:
-            return
-        self.rlzs = rlzs_npz['array']['gsims']
         self._get_tags(session, hostname, calc_id, self.iface.messageBar(),
                        with_star=True)
         self.update_list_selected_edt()
@@ -663,6 +656,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.loss_type_cbx.clear()
         self.loss_type_cbx.addItems(loss_types)
         self.loss_type_cbx.blockSignals(False)
+
+        to_extract = 'agglosses/%s' % loss_types[0]
+        npz = extract_npz(session, hostname, calc_id, to_extract,
+                          message_bar=self.iface.messageBar())
+        self.stats = str(npz['stats']).split()
 
         self.tag_names_multiselect.set_unselected_items(self.tags.keys())
         self.tag_names_multiselect.set_selected_items([])
@@ -863,7 +861,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         table = QTableWidget(nrows, ncols)
         table.setSizePolicy(
             QSizePolicy.Preferred, QSizePolicy.MinimumExpanding)
-        table.setHorizontalHeaderLabels(self.rlzs)
+        table.setHorizontalHeaderLabels(self.stats)
         if tags is not None:
             table.setVerticalHeaderLabels(tags)
         table.setEditTriggers(QAbstractItemView.NoEditTriggers)
@@ -1369,7 +1367,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                                         self.current_loss_type,
                                         self.calc_id)),
                 '*.csv')
-        elif self.output_type in ['dmg_by_asset_aggr', 'losses_by_asset_aggr']:
+        elif self.output_type in ('dmg_by_asset_aggr',
+                                  'losses_by_asset_aggr',
+                                  'avg_losses-stats_aggr'):
             filename = QFileDialog.getSaveFileName(
                 self,
                 self.tr('Export data'),
@@ -1494,6 +1494,30 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 if tags is not None:
                     for row_idx, row in enumerate(
                             self.losses_by_asset_aggr['array']):
+                        values = [tags[row_idx]]
+                        values.extend(losses_array[row_idx])
+                        writer.writerow(values)
+                else:
+                    writer.writerow(losses_array[0])
+            elif self.output_type == 'avg_losses-stats_aggr':
+                csv_file.write(
+                    "# Loss type: %s\n" % self.loss_type_cbx.currentText())
+                csv_file.write(
+                    "# Tags: %s\n" % (
+                        self.list_selected_edt.toPlainText() or 'None'))
+                try:
+                    tags = self.avg_losses_stats_aggr['tags']
+                    headers = ['tag']
+                except KeyError:
+                    tags = None
+                    headers = []
+                headers.extend(self.stats)
+                writer.writerow(headers)
+                losses_array = self.avg_losses_stats_aggr['array']
+                losses_array = self._to_2d(losses_array)
+                if tags is not None:
+                    for row_idx, row in enumerate(
+                            self.avg_losses_stats_aggr['array']):
                         values = [tags[row_idx]]
                         values.extend(losses_array[row_idx])
                         writer.writerow(values)

@@ -37,7 +37,7 @@ from svir.utilities.shared import DEBUG
 
 class LoadAvgLossesStatsAsLayerDialog(LoadOutputAsLayerDialog):
     """
-    Modal dialog to load losses by asset from an oq-engine output, as layer
+    Modal dialog to load avg asset losses from an oq-engine output, as layer
     """
 
     def __init__(self, iface, viewer_dock, session, hostname, calc_id,
@@ -60,8 +60,9 @@ class LoadAvgLossesStatsAsLayerDialog(LoadOutputAsLayerDialog):
         self.create_loss_type_selector()
         self.create_zonal_layer_selector()
 
+        # NOTE: it's correct to use 'losses_by_asset' instead of output_type
         self.npz_file = extract_npz(
-            session, hostname, calc_id, output_type,
+            session, hostname, calc_id, 'losses_by_asset',
             message_bar=iface.messageBar(), params=None)
 
         self.populate_out_dep_widgets()
@@ -82,7 +83,6 @@ class LoadAvgLossesStatsAsLayerDialog(LoadOutputAsLayerDialog):
 
     def on_rlz_or_stat_changed(self):
         self.dataset = self.npz_file[self.rlz_or_stat_cbx.currentText()]
-        import pdb; pdb.set_trace()
         self.taxonomies = numpy.unique(self.dataset['taxonomy']).tolist()
         self.populate_taxonomy_cbx(self.taxonomies)
         # discarding 'asset_ref', 'taxonomy', 'lon', 'lat'
