@@ -26,6 +26,7 @@ changelog=
     2.10.1
     * Added loaders for realizations and sourcegroups, from csv
     * Default styles for layers imported from OQ-Engine outputs depend on the output type
+    * Fixed a bug that prevented from loading existing projects from the OpenQuake Platform
     2.10.0
     * Dialogs embedding OpenQuake web applications (IPT and TaxtWEB) display a progress bar while loading a new page, and there
       is an additional button to reload the homepage. If a page can not be loaded, an error message is displayed.
