@@ -13,7 +13,7 @@ name=OpenQuake Integrated Risk Modelling Toolkit
 qgisMinimumVersion=2.14
 description=Tools to drive the OpenQuake Engine, to develop composite indicators and integrate them with physical risk estimations, and to predict building recovery times following an earthquake
 about=This plugin allows users to drive OpenQuake Engine calculations (https://github.com/gem/oq-engine) of physical hazard and risk, and to load the corresponding outputs as QGIS layers. For those outputs, data visualization tools are provided. The toolkit also enables users to develop composite indicators to measure and quantify social characteristics, and combine them with estimates of human or infrastructure loss. The plugin can interact with the OpenQuake Platform (https://platform.openquake.org), to browse and download socio-economic data or existing projects, edit projects locally in QGIS and upload and share them with the scientific community. A post-earthquake recovery modeling framework is incorporated into the toolkit, to produce building level and/or community level recovery functions.
-version=2.10.0
+version=2.10.1
 author=GEM Foundation
 email=staff.it@globalquakemodel.org
 
@@ -23,6 +23,11 @@ email=staff.it@globalquakemodel.org
 
 # Uncomment the following line and add your changelog entries:
 changelog=
+    2.10.1
+    * Added loaders for realizations and sourcegroups, from csv
+    * Default styles for layers imported from OQ-Engine outputs depend on the output type
+    * When importing damages or losses from the OQ-Engine and aggregating them by zone, only sums are added to the zonal layer
+    * Fixed a bug that prevented from loading existing projects from the OpenQuake Platform
     2.10.0
     * Dialogs embedding OpenQuake web applications (IPT and TaxtWEB) display a progress bar while loading a new page, and there
       is an additional button to reload the homepage. If a page can not be loaded, an error message is displayed.

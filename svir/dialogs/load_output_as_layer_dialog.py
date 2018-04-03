@@ -24,6 +24,7 @@
 
 from qgis.core import (QgsVectorLayer,
                        QgsMapLayerRegistry,
+                       QgsStyleV2,
                        QgsSymbolV2,
                        QgsSymbolLayerV2Registry,
                        QgsOuterGlowEffect,
@@ -53,6 +54,7 @@ from svir.calculations.process_layer import ProcessLayer
 from svir.calculations.aggregate_loss_by_zone import (
     calculate_zonal_stats)
 from svir.utilities.shared import (OQ_CSV_TO_LAYER_TYPES,
+                                   OQ_COMPLEX_CSV_TO_LAYER_TYPES,
                                    OQ_TO_LAYER_TYPES,
                                    OQ_EXTRACT_TO_LAYER_TYPES,
                                    )
@@ -61,6 +63,7 @@ from svir.utilities.utils import (get_ui_class,
                                   clear_widgets_from_layout,
                                   log_msg,
                                   tr,
+                                  get_file_size,
                                   )
 
 FORM_CLASS = get_ui_class('ui_load_output_as_layer.ui')
@@ -101,6 +104,11 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.num_sites_msg = 'Number of sites: %s'
         self.num_sites_lbl = QLabel(self.num_sites_msg % '')
         self.output_dep_vlayout.addWidget(self.num_sites_lbl)
+
+    def create_file_size_indicator(self):
+        self.file_size_msg = 'File size: %s'
+        self.file_size_lbl = QLabel(self.file_size_msg % '')
+        self.output_dep_vlayout.addWidget(self.file_size_lbl)
 
     def create_rlz_or_stat_selector(self):
         self.rlz_or_stat_lbl = QLabel('Realization')
@@ -227,7 +235,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     def on_output_type_changed(self):
         if self.output_type in OQ_TO_LAYER_TYPES:
             self.create_load_selected_only_ckb()
-        elif self.output_type in OQ_CSV_TO_LAYER_TYPES:
+        elif self.output_type in OQ_COMPLEX_CSV_TO_LAYER_TYPES:
             self.create_save_as_shp_ckb()
         self.set_ok_button()
 
@@ -404,27 +412,55 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         symbol.symbolLayer(0).setOutlineStyle(Qt.PenStyle(Qt.NoPen))
 
         style = get_style(self.layer, self.iface.messageBar())
+
+        # this is the default, as specified in the user settings
         ramp = QgsVectorGradientColorRampV2(
             style['color_from'], style['color_to'])
+        mode = style['mode']
+
+        # in most cases, we override the user-specified setting, and use
+        # instead a setting that was required by scientists
+        if self.output_type in OQ_TO_LAYER_TYPES:
+            default_qgs_style = QgsStyleV2().defaultStyle()
+            default_color_ramp_names = default_qgs_style.colorRampNames()
+            if self.output_type in ('dmg_by_asset', 'losses_by_asset'):
+                # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
+                # jenks = natural breaks
+                mode = QgsGraduatedSymbolRendererV2.Jenks
+                ramp_type_idx = default_color_ramp_names.index('Reds')
+                inverted = False
+            elif self.output_type in ('hmaps', 'gmf_data'):
+                # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
+                mode = QgsGraduatedSymbolRendererV2.EqualInterval
+                ramp_type_idx = default_color_ramp_names.index('Spectral')
+                inverted = True
+            ramp = default_qgs_style.colorRamp(
+                default_color_ramp_names[ramp_type_idx])
         graduated_renderer = QgsGraduatedSymbolRendererV2.createRenderer(
             self.layer,
             self.default_field_name,
             style['classes'],
-            style['mode'],
+            mode,
             symbol,
-            ramp)
-        graduated_renderer.updateRangeLowerValue(0, 0.0)
+            ramp,
+            inverted=inverted)
+        label_format = graduated_renderer.labelFormat()
+        # label_format.setTrimTrailingZeroes(True)  # it might be useful
+        label_format.setPrecision(2)
+        graduated_renderer.setLabelFormat(label_format, updateRanges=True)
+        VERY_SMALL_VALUE = 1e-20
+        graduated_renderer.updateRangeLowerValue(0, VERY_SMALL_VALUE)
         symbol_zeros = QgsSymbolV2.defaultSymbol(self.layer.geometryType())
-        symbol_zeros.setColor(QColor(222, 255, 222))
+        symbol_zeros.setColor(QColor(240, 240, 240))  # very light grey
         self._set_symbol_size(symbol_zeros)
         symbol_zeros.symbolLayer(0).setOutlineStyle(Qt.PenStyle(Qt.NoPen))
         zeros_min = 0.0
-        zeros_max = 0.0
+        zeros_max = VERY_SMALL_VALUE
         range_zeros = QgsRendererRangeV2(
             zeros_min, zeros_max, symbol_zeros,
-            " %.4f - %.4f" % (zeros_min, zeros_max), True)
+            " %.2f - %.2f" % (zeros_min, zeros_max), True)
         graduated_renderer.addClassRange(range_zeros)
-        graduated_renderer.moveClass(style['classes'], 0)
+        graduated_renderer.moveClass(len(graduated_renderer.ranges()) - 1, 0)
         self.layer.setRendererV2(graduated_renderer)
         self.layer.setLayerTransparency(30)  # percent
         self.layer.triggerRepaint()
@@ -515,6 +551,10 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             self.file_hlayout.itemAt(i).widget().setParent(None)
         self.vlayout.removeItem(self.file_hlayout)
 
+    def show_file_size(self):
+        file_size = get_file_size(self.path)
+        self.file_size_lbl.setText(self.file_size_msg % file_size)
+
     def accept(self):
         if self.output_type in OQ_EXTRACT_TO_LAYER_TYPES:
             self.load_from_npz()
@@ -557,7 +597,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                                                 loss_layer_is_vector,
                                                 zone_id_in_losses_attr_name,
                                                 zone_id_in_zones_attr_name,
-                                                self.iface)
+                                                self.iface,
+                                                extra=False)
                 except TypeError as exc:
                     log_msg(str(exc), level='C',
                             message_bar=self.iface.messageBar())
