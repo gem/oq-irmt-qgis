@@ -25,6 +25,7 @@ email=staff.it@globalquakemodel.org
 changelog=
     2.10.1
     * Added loaders for realizations and sourcegroups, from csv
+    * Added the loader for Average Asset Losses Statistics and the visualization of aggregated values in the Data Viewer
     * Default styles for layers imported from OQ-Engine outputs depend on the output type
     * When importing damages or losses from the OQ-Engine and aggregating them by zone, only sums are added to the zonal layer
     * Fixed a bug that prevented from loading existing projects from the OpenQuake Platform
