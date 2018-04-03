@@ -52,7 +52,8 @@ class LoadAvgLossesStatsAsLayerDialog(LoadOutputAsLayerDialog):
         self.remove_file_hlayout()
 
         self.setWindowTitle(
-            'Load average losses (stats), aggregated by location, as layer')
+            'Load average asset losses (statistics),'
+            ' aggregated by location, as layer')
         self.create_load_selected_only_ckb()
         self.create_num_sites_indicator()
         self.create_rlz_or_stat_selector()
@@ -79,7 +80,7 @@ class LoadAvgLossesStatsAsLayerDialog(LoadOutputAsLayerDialog):
         self.set_ok_button()
 
     def set_ok_button(self):
-        self.ok_button.setEnabled(bool(self.path))
+        self.ok_button.setEnabled(True)
 
     def on_rlz_or_stat_changed(self):
         self.dataset = self.npz_file[self.rlz_or_stat_cbx.currentText()]
