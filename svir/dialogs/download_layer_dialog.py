@@ -78,7 +78,7 @@ class DownloadLayerDialog(QDialog, FORM_CLASS):
 
     @pyqtSlot()
     def on_layers_lst_itemSelectionChanged(self):
-        layer_id = self.layers_lst.currentItem().data(Qt.Qt.ToolTipRole)
+        layer_id = self.layers_lst.currentItem().data(Qt.ToolTipRole)
         if layer_id is not None:
             self.layer_id = layer_id
             self.layer_lbl.setText('Project details for "%s"' % layer_id)
@@ -144,8 +144,8 @@ class DownloadLayerDialog(QDialog, FORM_CLASS):
 
                     # update combo box
                     item = QListWidgetItem()
-                    item.setData(Qt.Qt.DisplayRole, title)
-                    item.setData(Qt.Qt.ToolTipRole, layer_id)
+                    item.setData(Qt.DisplayRole, title)
+                    item.setData(Qt.ToolTipRole, layer_id)
                     self.layers_lst.addItem(item)
             except AttributeError:
                 continue
