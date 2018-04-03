@@ -71,7 +71,7 @@ def calculate_zonal_stats(loss_layer,
                           iface,
                           force_saga=False,
                           force_fallback=False,
-                          sum_only=False):
+                          extra=True):
     """
     :param loss_layer: vector or raster layer containing loss data points
     :param zonal_layer: vector layer containing zonal data
@@ -90,8 +90,8 @@ def calculate_zonal_stats(loss_layer,
         if True, the fallback algorithm will be used instead
         of SAGA, even if a recent SAGA installation is available
         (useful to test that specific workflow)
-    :param sum_only:
-        if True, NUM_POINTS and AVG will not be added
+    :param extra:
+        if True, also NUM_POINTS and AVG will be added
 
     force_saga and force_fallback can't both be True at the same time.
 
@@ -112,7 +112,7 @@ def calculate_zonal_stats(loss_layer,
     # for all the other loss attributes)
     # TODO remove debugging trace
     loss_attrs_dict = {}
-    if not sum_only:
+    if extra:  # adding also NUM_POINTS and AVG
         count_field = QgsField(
                 'NUM_POINTS', QVariant.Int)
         count_field.setTypeName(INT_FIELD_TYPE_NAME)
@@ -130,7 +130,7 @@ def calculate_zonal_stats(loss_layer,
             ProcessLayer(zonal_layer).add_attributes([sum_field])
         # see comment above
         loss_attrs_dict[loss_attr_name]['sum'] = sum_added.values()[0]
-        if not sum_only:
+        if extra:  # adding also NUM_POINTS and AVG
             avg_field = QgsField('AVG_%s' % loss_attr_name, QVariant.Double)
             avg_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
             avg_added = \
@@ -146,7 +146,7 @@ def calculate_zonal_stats(loss_layer,
             res = calculate_vector_stats_aggregating_by_zone_id(
                     loss_layer, zonal_layer, zone_id_in_losses_attr_name,
                     zone_id_in_zones_attr_name, loss_attr_names,
-                    loss_attrs_dict, iface, sum_only=sum_only)
+                    loss_attrs_dict, iface, extra=extra)
             (loss_layer, zonal_layer, loss_attrs_dict) = res
         else:
             if not zone_id_in_zones_attr_name:
@@ -187,7 +187,7 @@ def calculate_zonal_stats(loss_layer,
                     zone_id_in_losses_attr_name,
                     zone_id_in_zones_attr_name,
                     loss_attr_names, loss_attrs_dict, iface,
-                    old_field_to_new_field, sum_only=sum_only)
+                    old_field_to_new_field, extra=extra)
             (loss_layer, zonal_layer, loss_attrs_dict) = res
 
     else:
@@ -468,7 +468,7 @@ def get_saga_install_error():
 def calculate_vector_stats_aggregating_by_zone_id(
         loss_layer, zonal_layer, zone_id_in_losses_attr_name,
         zone_id_in_zones_attr_name, loss_attr_names, loss_attrs_dict,
-        iface, old_field_to_new_field=None, sum_only=False):
+        iface, old_field_to_new_field=None, extra=True):
     """
     Once we know the zone id of each point in the loss map, we
     can count how many points are in each zone, sum and average their values
@@ -503,7 +503,7 @@ def calculate_vector_stats_aggregating_by_zone_id(
                 zone_stats[zone_id][loss_attr_name]['count'] += 1
                 zone_stats[zone_id][loss_attr_name]['sum'] += loss_value
     clear_progress_message_bar(iface.messageBar(), msg_bar_item)
-    if not sum_only:
+    if extra:
         msg = tr("Step 3 of 3: writing point counts, loss sums and averages"
                  " into the zonal layer...")
     else:
@@ -515,7 +515,7 @@ def calculate_vector_stats_aggregating_by_zone_id(
         with LayerEditingManager(zonal_layer,
                                  msg,
                                  DEBUG):
-            if not sum_only:
+            if extra:
                 count_idx = zonal_layer.fieldNameIndex(
                         loss_attrs_dict['count'])
                 avg_idx = {}
@@ -523,7 +523,7 @@ def calculate_vector_stats_aggregating_by_zone_id(
             for loss_attr_name in loss_attr_names:
                 sum_idx[loss_attr_name] = zonal_layer.fieldNameIndex(
                         loss_attrs_dict[loss_attr_name]['sum'])
-                if not sum_only:
+                if extra:
                     avg_idx[loss_attr_name] = zonal_layer.fieldNameIndex(
                             loss_attrs_dict[loss_attr_name]['avg'])
             for current_zone, zone_feat in enumerate(
@@ -536,12 +536,12 @@ def calculate_vector_stats_aggregating_by_zone_id(
                 # to zero, and update them afterwards only if the zone
                 # contains at least one loss point
                 points_count = 0
-                if not sum_only:
+                if extra:
                     loss_avg = {}
                 loss_sum = {}
                 for loss_attr_name in loss_attr_names:
                     loss_sum[loss_attr_name] = 0.0
-                    if not sum_only:
+                    if extra:
                         loss_avg[loss_attr_name] = 0.0
                 # retrieve count and sum from the dictionary, using
                 # the zone id as key to get the values from the
@@ -552,7 +552,7 @@ def calculate_vector_stats_aggregating_by_zone_id(
                             zone_stats[zone_id][loss_attr_name]['sum']
                         points_count = \
                             zone_stats[zone_id][loss_attr_name]['count']
-                        if not sum_only:
+                        if extra:
                             # division by zero should be impossible, because
                             # we are computing this only for zones containing
                             # at least one point (otherwise we keep all zeros)
@@ -563,7 +563,7 @@ def calculate_vector_stats_aggregating_by_zone_id(
                                 loss_avg[loss_attr_name])
                 # without casting to int and to float, it wouldn't work
                 fid = zone_feat.id()
-                if not sum_only:
+                if extra:
                     zonal_layer.changeAttributeValue(
                             fid, count_idx, int(points_count))
                 for loss_attr_name in loss_attr_names:
@@ -571,7 +571,7 @@ def calculate_vector_stats_aggregating_by_zone_id(
                         zonal_layer.changeAttributeValue(
                                 fid, sum_idx[loss_attr_name],
                                 float(loss_sum[loss_attr_name]))
-                        if not sum_only:
+                        if extra:
                             zonal_layer.changeAttributeValue(
                                     fid, avg_idx[loss_attr_name],
                                     float(loss_avg[loss_attr_name]))
@@ -581,20 +581,20 @@ def calculate_vector_stats_aggregating_by_zone_id(
                         zonal_layer.changeAttributeValue(
                                 fid, sum_idx[loss_attr_name],
                                 QPyNullVariant(float))
-                        if not sum_only:
+                        if extra:
                             zonal_layer.changeAttributeValue(
                                     fid, avg_idx[loss_attr_name],
                                     QPyNullVariant(float))
     clear_progress_message_bar(iface.messageBar(), msg_bar_item)
     notify_loss_aggregation_by_zone_complete(
-            loss_attrs_dict, loss_attr_names, iface, sum_only=sum_only)
+            loss_attrs_dict, loss_attr_names, iface, extra=extra)
     return (loss_layer, zonal_layer, loss_attrs_dict)
 
 
 def notify_loss_aggregation_by_zone_complete(
-        loss_attrs_dict, loss_attr_names, iface, sum_only=False):
+        loss_attrs_dict, loss_attr_names, iface, extra=True):
     added_attrs = []
-    if not sum_only:
+    if extra:
         added_attrs.append(loss_attrs_dict['count'])
     for loss_attr_name in loss_attr_names:
         added_attrs.extend(loss_attrs_dict[loss_attr_name].values())

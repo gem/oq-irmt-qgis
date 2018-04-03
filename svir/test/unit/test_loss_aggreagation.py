@@ -87,7 +87,7 @@ class AggregateLossByZoneTestCase(unittest.TestCase):
         self._check_output_layer(output_zonal_layer, expected_zonal_layer)
 
     def _aggregate_using_geometries(
-            self, force_saga=False, force_fallback=False, sum_only=False):
+            self, force_saga=False, force_fallback=False, extra=True):
         # TODO: manage both with or without SAGA
         loss_layer_path = os.path.join(
             self.data_dir_name, 'loss_points.shp')
@@ -112,7 +112,7 @@ class AggregateLossByZoneTestCase(unittest.TestCase):
                                     IFACE,
                                     force_saga,
                                     force_fallback,
-                                    sum_only=sum_only)
+                                    extra=extra)
         (output_loss_layer, output_zonal_layer, output_loss_attrs_dict) = res
         _, output_loss_layer_shp_path = tempfile.mkstemp(suffix='.shp')
         _, output_zonal_layer_shp_path = tempfile.mkstemp(suffix='.shp')
@@ -128,13 +128,13 @@ class AggregateLossByZoneTestCase(unittest.TestCase):
         expected_loss_layer = QgsVectorLayer(expected_loss_layer_path,
                                              'Loss points plus zone ids',
                                              'ogr')
-        if sum_only:
+        if extra:  # adding also count and avg
+            expected_zonal_layer_path = os.path.join(
+                self.data_dir_name, 'svi_zones_plus_loss_stats_zone_ids.shp')
+        else:  # sum only
             expected_zonal_layer_path = os.path.join(
                 self.data_dir_name,
                 'svi_zones_plus_loss_stats_zone_ids_sum_only.shp')
-        else:
-            expected_zonal_layer_path = os.path.join(
-                self.data_dir_name, 'svi_zones_plus_loss_stats_zone_ids.shp')
         expected_zonal_layer = QgsVectorLayer(
             expected_zonal_layer_path, 'Expected zonal layer', 'ogr')
         self._check_output_layer(output_loss_layer, expected_loss_layer)
@@ -150,7 +150,7 @@ class AggregateLossByZoneTestCase(unittest.TestCase):
         self._aggregate_using_geometries(force_fallback=True)
 
     def test_aggregate_using_geometries_sum_only(self):
-        self._aggregate_using_geometries(sum_only=True)
+        self._aggregate_using_geometries(extra=False)
 
     def test_purge_empty_zones(self):
         loss_attrs_dict = {

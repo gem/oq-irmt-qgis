@@ -587,7 +587,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                                                 zone_id_in_losses_attr_name,
                                                 zone_id_in_zones_attr_name,
                                                 self.iface,
-                                                sum_only=True)
+                                                extra=False)
                 except TypeError as exc:
                     log_msg(str(exc), level='C',
                             message_bar=self.iface.messageBar())
