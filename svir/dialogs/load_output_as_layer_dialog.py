@@ -54,6 +54,7 @@ from svir.calculations.process_layer import ProcessLayer
 from svir.calculations.aggregate_loss_by_zone import (
     calculate_zonal_stats)
 from svir.utilities.shared import (OQ_CSV_TO_LAYER_TYPES,
+                                   OQ_COMPLEX_CSV_TO_LAYER_TYPES,
                                    OQ_TO_LAYER_TYPES,
                                    OQ_EXTRACT_TO_LAYER_TYPES,
                                    )
@@ -62,6 +63,7 @@ from svir.utilities.utils import (get_ui_class,
                                   clear_widgets_from_layout,
                                   log_msg,
                                   tr,
+                                  get_file_size,
                                   )
 
 FORM_CLASS = get_ui_class('ui_load_output_as_layer.ui')
@@ -102,6 +104,11 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.num_sites_msg = 'Number of sites: %s'
         self.num_sites_lbl = QLabel(self.num_sites_msg % '')
         self.output_dep_vlayout.addWidget(self.num_sites_lbl)
+
+    def create_file_size_indicator(self):
+        self.file_size_msg = 'File size: %s'
+        self.file_size_lbl = QLabel(self.file_size_msg % '')
+        self.output_dep_vlayout.addWidget(self.file_size_lbl)
 
     def create_rlz_or_stat_selector(self):
         self.rlz_or_stat_lbl = QLabel('Realization')
@@ -228,7 +235,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     def on_output_type_changed(self):
         if self.output_type in OQ_TO_LAYER_TYPES:
             self.create_load_selected_only_ckb()
-        elif self.output_type in OQ_CSV_TO_LAYER_TYPES:
+        elif self.output_type in OQ_COMPLEX_CSV_TO_LAYER_TYPES:
             self.create_save_as_shp_ckb()
         self.set_ok_button()
 
@@ -543,6 +550,10 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         for i in reversed(range(self.file_hlayout.count())):
             self.file_hlayout.itemAt(i).widget().setParent(None)
         self.vlayout.removeItem(self.file_hlayout)
+
+    def show_file_size(self):
+        file_size = get_file_size(self.path)
+        self.file_size_lbl.setText(self.file_size_msg % file_size)
 
     def accept(self):
         if self.output_type in OQ_EXTRACT_TO_LAYER_TYPES:

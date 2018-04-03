@@ -948,20 +948,22 @@ def import_layer_from_csv(parent,
                           wkt_field=None,
                           save_as_shp=False,
                           dest_shp=None,
-                          zoom_to_layer=True):
+                          zoom_to_layer=True,
+                          has_geom=True):
     url = QUrl.fromLocalFile(csv_path)
     url.addQueryItem('type', 'csv')
-    if wkt_field is not None:
-        url.addQueryItem('wktField', wkt_field)
-    else:
-        url.addQueryItem('xField', longitude_field)
-        url.addQueryItem('yField', latitude_field)
-    url.addQueryItem('spatialIndex', 'no')
+    if has_geom:
+        if wkt_field is not None:
+            url.addQueryItem('wktField', wkt_field)
+        else:
+            url.addQueryItem('xField', longitude_field)
+            url.addQueryItem('yField', latitude_field)
+        url.addQueryItem('spatialIndex', 'no')
+        url.addQueryItem('crs', 'epsg:4326')
     url.addQueryItem('subsetIndex', 'no')
     url.addQueryItem('watchFile', 'no')
     url.addQueryItem('delimiter', delimiter)
     url.addQueryItem('quote', quote)
-    url.addQueryItem('crs', 'epsg:4326')
     url.addQueryItem('skipLines', str(lines_to_skip_count))
     url.addQueryItem('trimFields', 'yes')
     layer_uri = str(url.toEncoded())
@@ -986,7 +988,6 @@ def import_layer_from_csv(parent,
         iface.setActiveLayer(layer)
         if zoom_to_layer:
             iface.zoomToActiveLayer()
-
     else:
         msg = 'Unable to load layer'
         log_msg(msg, level='C', message_bar=iface.messageBar())
@@ -1100,3 +1101,22 @@ def extract_npz(
         log_msg(msg, level='C', message_bar=message_bar)
         return
     return numpy.load(io.BytesIO(resp_content))
+
+
+def convert_bytes(num):
+    """
+    this function will convert bytes to MB.... GB... etc
+    """
+    for x in ['bytes', 'KB', 'MB', 'GB', 'TB']:
+        if num < 1024.0:
+            return "%3.1f %s" % (num, x)
+        num /= 1024.0
+
+
+def get_file_size(file_path):
+    """
+    this function will return the file size
+    """
+    if os.path.isfile(file_path):
+        file_info = os.stat(file_path)
+        return convert_bytes(file_info.st_size)

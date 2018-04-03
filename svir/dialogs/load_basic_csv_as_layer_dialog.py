@@ -5,7 +5,7 @@
 # OpenQuake Integrated Risk Modelling Toolkit
 #                              -------------------
 #        begin                : 2013-10-24
-#        copyright            : (C) 2014 by GEM Foundation
+#        copyright            : (C) 2018 by GEM Foundation
 #        email                : devops@openquake.org
 # ***************************************************************************/
 #
@@ -24,28 +24,26 @@
 
 import os
 import tempfile
-from svir.utilities.utils import (import_layer_from_csv,
-                                  get_params_from_comment_line,
-                                  log_msg,
-                                  )
+from svir.utilities.utils import import_layer_from_csv
+from svir.utilities.shared import OQ_BASIC_CSV_TO_LAYER_TYPES
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 
 
-class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
+class LoadBasicCsvAsLayerDialog(LoadOutputAsLayerDialog):
     """
-    Modal dialog to load ruptures from an oq-engine output, as layer
+    Modal dialog to load as layer a basic csv with no geometries, to be
+    browsed through its attribute table
     """
 
     def __init__(self, iface, viewer_dock, session, hostname, calc_id,
-                 output_type='ruptures', path=None, mode=None):
-        assert output_type == 'ruptures'
+                 output_type, path=None, mode=None):
+        assert output_type in OQ_BASIC_CSV_TO_LAYER_TYPES, output_type
         LoadOutputAsLayerDialog.__init__(
             self, iface, viewer_dock, session, hostname, calc_id,
             output_type, path, mode)
         self.create_file_size_indicator()
-        self.create_save_as_shp_ckb()
+        self.setWindowTitle('Load %s from CSV, as layer' % output_type)
         self.populate_out_dep_widgets()
-        self.setWindowTitle('Load ruptures from CSV, as layer')
         self.adjustSize()
         self.set_ok_button()
 
@@ -61,27 +59,10 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
         else:
             dest_shp = None  # the destination file will be selected via GUI
         csv_path = self.path_le.text()
-        # extract the investigation_time from the heading commented line
-        with open(csv_path, 'r') as f:
-            comment_line = f.readline()
-            try:
-                params_dict = get_params_from_comment_line(comment_line)
-            except LookupError as exc:
-                log_msg(exc.message, level='C',
-                        message_bar=self.iface.messageBar())
-                return
-            try:
-                investigation_time = params_dict['investigation_time']
-            except KeyError:
-                log_msg('Investigation time not found', level='C',
-                        message_bar=self.iface.messageBar())
-                return
         # extract the name of the csv file and remove the extension
         layer_name = os.path.splitext(os.path.basename(csv_path))[0]
-        layer_name += '_%sy' % investigation_time
         self.layer = import_layer_from_csv(
             self, csv_path, layer_name, self.iface,
-            wkt_field='boundary', delimiter='\t',
-            lines_to_skip_count=1,
-            save_as_shp=self.save_as_shp_ckb.isChecked(), dest_shp=dest_shp)
-        self.layer.setCustomProperty('investigation_time', investigation_time)
+            save_as_shp=False, dest_shp=dest_shp,
+            zoom_to_layer=False, has_geom=False)
+        self.iface.showAttributeTable(self.layer)
