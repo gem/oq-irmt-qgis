@@ -560,7 +560,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     def accept(self):
         if self.output_type in OQ_EXTRACT_TO_LAYER_TYPES:
             self.load_from_npz()
-            if self.output_type in ('losses_by_asset', 'dmg_by_asset'):
+            if self.output_type in ('losses_by_asset',
+                                    'dmg_by_asset',
+                                    'avg_losses-stats'):
                 loss_layer = self.layer
                 if (not self.zonal_layer_cbx.currentText() or
                         not self.zonal_layer_gbx.isChecked()):
