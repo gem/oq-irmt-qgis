@@ -660,10 +660,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         to_extract = 'agglosses/%s' % loss_types[0]
         npz = extract_npz(session, hostname, calc_id, to_extract,
                           message_bar=self.iface.messageBar())
-        self.stats = str(npz['stats']).split()
-        if not self.stats:
+        if npz['stats'] == numpy.array(None):
             self.stats = ['rlz-0']
-
+        else:
+            self.stats = str(npz['stats']).split()
         self.tag_names_multiselect.set_unselected_items(self.tags.keys())
         self.tag_names_multiselect.set_selected_items([])
         self.tag_values_multiselect.set_unselected_items([])
