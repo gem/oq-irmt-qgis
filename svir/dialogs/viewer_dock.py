@@ -1261,7 +1261,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 # "wrapped C/C++ object of type QComboBox has been deleted"
                 ex_type, ex, tb = sys.exc_info()
                 msg = ''.join(traceback.format_exception(ex_type, ex, tb))
-                log_msg(msg, level='C', message_bar=self.iface.messageBar())
+                # we log it as a warning, but it should not bother the user,
+                # so we are not displaying it in the message bar
+                log_msg(msg, level='W')
 
     def clear_loss_type_cbx(self):
         if self.loss_type_cbx is not None:
@@ -1274,7 +1276,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 # "wrapped C/C++ object of type QComboBox has been deleted"
                 ex_type, ex, tb = sys.exc_info()
                 msg = ''.join(traceback.format_exception(ex_type, ex, tb))
-                log_msg(msg, level='C', message_bar=self.iface.messageBar())
+                # we log it as a warning, but it should not bother the user,
+                # so we are not displaying it in the message bar
+                log_msg(msg, level='W')
 
     def on_plot_hover(self, event):
         if not self.on_container_hover(event, self.plot):
