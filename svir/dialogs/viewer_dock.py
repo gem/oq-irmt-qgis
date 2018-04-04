@@ -662,7 +662,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                           message_bar=self.iface.messageBar())
         self.stats = str(npz['stats']).split()
         if not self.stats:
-            self.stats = 'rlz-0'
+            self.stats = ['rlz-0']
 
         self.tag_names_multiselect.set_unselected_items(self.tags.keys())
         self.tag_names_multiselect.set_selected_items([])
