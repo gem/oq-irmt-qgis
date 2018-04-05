@@ -660,7 +660,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         to_extract = 'agglosses/%s' % loss_types[0]
         npz = extract_npz(session, hostname, calc_id, to_extract,
                           message_bar=self.iface.messageBar())
+        # stats might be unavailable in case of a single realization
         if npz['stats'] == numpy.array(None):
+            # NOTE: writing 'mean' instead of 'rlz-0' would be equivalent
             self.stats = ['rlz-0']
         else:
             self.stats = str(npz['stats']).split()
@@ -858,6 +860,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         try:
             tags = self.avg_losses_stats_aggr['tags']
         except KeyError:
+            # tags are only available when the '*' is chosen
             pass
         nrows, ncols = losses_array.shape
         table = QTableWidget(nrows, ncols)
@@ -865,6 +868,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             QSizePolicy.Preferred, QSizePolicy.MinimumExpanding)
         table.setHorizontalHeaderLabels(self.stats)
         if tags is not None:
+            # tags are only displayed (as row labels) when the '*' is chosen
             table.setVerticalHeaderLabels(tags)
         table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         for row in range(nrows):
