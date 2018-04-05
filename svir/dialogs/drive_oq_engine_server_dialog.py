@@ -59,7 +59,6 @@ from svir.third_party.requests.packages.urllib3.exceptions import (
 from svir.utilities.shared import (OQ_TO_LAYER_TYPES,
                                    OQ_RST_TYPES,
                                    OQ_EXTRACT_TO_VIEW_TYPES,
-                                   OQ_BASIC_CSV_TO_LAYER_TYPES,
                                    )
 from svir.utilities.utils import (WaitCursorManager,
                                   engine_login,
@@ -86,8 +85,6 @@ from svir.dialogs.load_uhs_as_layer_dialog import (
     LoadUhsAsLayerDialog)
 from svir.dialogs.load_losses_by_asset_as_layer_dialog import (
     LoadLossesByAssetAsLayerDialog)
-from svir.dialogs.load_avg_losses_stats_as_layer_dialog import (
-    LoadAvgLossesStatsAsLayerDialog)
 from svir.dialogs.show_full_report_dialog import ShowFullReportDialog
 from svir.dialogs.show_console_dialog import ShowConsoleDialog
 from svir.dialogs.show_params_dialog import ShowParamsDialog
@@ -120,7 +117,7 @@ OUTPUT_TYPE_LOADERS = {
     'hcurves': LoadHazardCurvesAsLayerDialog,
     'uhs': LoadUhsAsLayerDialog,
     'losses_by_asset': LoadLossesByAssetAsLayerDialog,
-    'avg_losses-stats': LoadAvgLossesStatsAsLayerDialog,
+    'avg_losses-stats': LoadLossesByAssetAsLayerDialog,
 }
 assert set(OUTPUT_TYPE_LOADERS) == OQ_TO_LAYER_TYPES, (
     OUTPUT_TYPE_LOADERS, OQ_TO_LAYER_TYPES)
