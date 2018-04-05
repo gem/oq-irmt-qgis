@@ -37,13 +37,14 @@ from svir.utilities.shared import DEBUG
 
 class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
     """
-    Modal dialog to load losses by asset from an oq-engine output, as layer
+    Modal dialog to load losses by asset or average asset losses from an
+    oq-engine output, as layer
     """
 
     def __init__(self, iface, viewer_dock, session, hostname, calc_id,
-                 output_type='losses_by_asset',
+                 output_type=None,
                  path=None, mode=None, zonal_layer_path=None):
-        assert output_type == 'losses_by_asset'
+        assert output_type in ('losses_by_asset', 'avg_losses-stats')
         LoadOutputAsLayerDialog.__init__(
             self, iface, viewer_dock, session, hostname, calc_id,
             output_type, path, mode, zonal_layer_path)
@@ -51,8 +52,15 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         # FIXME: add layout only for output types that load from file
         self.remove_file_hlayout()
 
-        self.setWindowTitle(
-            'Load losses by asset, aggregated by location, as layer')
+        if self.output_type == 'losses_by_asset':
+            self.setWindowTitle(
+                'Load losses by asset, aggregated by location, as layer')
+        elif self.output_type == 'avg_losses-stats':
+            self.setWindowTitle(
+                'Load average asset losses (statistics),'
+                ' aggregated by location, as layer')
+        else:
+            raise NotImplementedError(output_type)
         self.create_load_selected_only_ckb()
         self.create_num_sites_indicator()
         self.create_rlz_or_stat_selector()
@@ -60,8 +68,10 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         self.create_loss_type_selector()
         self.create_zonal_layer_selector()
 
+        # NOTE: it's correct to use 'losses_by_asset' instead of output_type,
+        #       both in case of losses_by_asset and in case of avg_losses-stats
         self.npz_file = extract_npz(
-            session, hostname, calc_id, output_type,
+            session, hostname, calc_id, 'losses_by_asset',
             message_bar=iface.messageBar(), params=None)
 
         self.populate_out_dep_widgets()
@@ -97,8 +107,14 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
     def build_layer_name(self, rlz_or_stat, **kwargs):
         taxonomy = kwargs['taxonomy']
         loss_type = kwargs['loss_type']
-        layer_name = "losses_by_asset_%s_%s_%s" % (
-            rlz_or_stat, taxonomy, loss_type)
+        if self.output_type == 'losses_by_asset':
+            layer_name = "losses_by_asset_%s_%s_%s" % (
+                rlz_or_stat, taxonomy, loss_type)
+        elif self.output_type == 'avg_losses-stats':
+            layer_name = "avg_losses-stats_%s_%s_%s" % (
+                rlz_or_stat, taxonomy, loss_type)
+        else:
+            raise NotImplementedError(self.output_type)
         return layer_name
 
     def get_field_names(self, **kwargs):
