@@ -27,6 +27,7 @@ import collections
 import json
 import os
 import sys
+import traceback
 import locale
 import zlib
 import io
@@ -444,19 +445,8 @@ def platform_login(host, username, password, session):
     :param session: The session to be autenticated
     :type session: Session
     """
-
     login_url = host + '/account/ajax_login'
-    session_resp = session.post(login_url,
-                                data={
-                                    "username": username,
-                                    "password": password
-                                },
-                                timeout=10,
-                                )
-    if session_resp.status_code != 200:  # 200 means successful:OK
-        error_message = ('Unable to get session for login: %s' %
-                         session_resp.text)
-        raise SvNetworkError(error_message)
+    _login(login_url, username, password, session)
 
 
 def engine_login(host, username, password, session):
@@ -472,17 +462,24 @@ def engine_login(host, username, password, session):
     :param session: The session to be autenticated
     :type session: Session
     """
-
     login_url = host + '/accounts/ajax_login/'
-    session_resp = session.post(login_url,
-                                data={
-                                    "username": username,
-                                    "password": password
-                                },
-                                timeout=10,
-                                )
+    _login(login_url, username, password, session)
+
+
+def _login(login_url, username, password, session):
+    try:
+        session_resp = session.post(login_url,
+                                    data={
+                                        "username": username,
+                                        "password": password
+                                    },
+                                    timeout=10,
+                                    )
+    except Exception:
+        msg = "Unable to login. %s" % traceback.format_exc()
+        raise SvNetworkError(msg)
     if session_resp.status_code != 200:  # 200 means successful:OK
-        error_message = ('Unable to get session for login: %s' %
+        error_message = ('Unable to login: %s' %
                          session_resp.text)
         raise SvNetworkError(error_message)
 
@@ -1120,3 +1117,34 @@ def get_file_size(file_path):
     if os.path.isfile(file_path):
         file_info = os.stat(file_path)
         return convert_bytes(file_info.st_size)
+
+
+class ServerError(Exception):
+    pass
+
+
+class RedirectionError(Exception):
+    pass
+
+
+def check_is_lockdown(hostname, session):
+    # try retrieving the engine version and see if the server
+    # returns an HTTP 403 (Forbidden) error
+    engine_version_url = "%s/v1/engine_version" % hostname
+    with WaitCursorManager():
+        # it can raise exceptions, caught by self.attempt_login
+        # FIXME: enable the user to set verify=True
+        resp = session.get(
+            engine_version_url, timeout=10, verify=False,
+            allow_redirects=False)
+        if resp.status_code == 403:
+            return True
+        elif resp.status_code == 302:
+            raise RedirectionError(
+                "Error %s loading %s: please check the url" % (
+                    resp.status_code, resp.url))
+        if not resp.ok:
+            raise ServerError(
+                "Error %s loading %s: %s" % (
+                    resp.status_code, resp.url, resp.reason))
+    return False
