@@ -68,9 +68,14 @@ from svir.utilities.utils import (WaitCursorManager,
                                   SvNetworkError,
                                   get_irmt_version,
                                   get_credentials,
+                                  check_is_lockdown,
+                                  ServerError,
+                                  RedirectionError,
                                   )
 from svir.dialogs.load_ruptures_as_layer_dialog import (
     LoadRupturesAsLayerDialog)
+from svir.dialogs.load_basic_csv_as_layer_dialog import (
+    LoadBasicCsvAsLayerDialog)
 from svir.dialogs.load_dmg_by_asset_as_layer_dialog import (
     LoadDmgByAssetAsLayerDialog)
 from svir.dialogs.load_gmf_data_as_layer_dialog import (
@@ -90,20 +95,27 @@ from svir.dialogs.settings_dialog import SettingsDialog
 
 FORM_CLASS = get_ui_class('ui_drive_engine_server.ui')
 
+
 HANDLED_EXCEPTIONS = (SSLError, ConnectionError, InvalidSchema, MissingSchema,
-                      ReadTimeout, SvNetworkError, LocationParseError)
+                      ReadTimeout, SvNetworkError, LocationParseError,
+                      ServerError, RedirectionError)
 
 BUTTON_WIDTH = 75
 
 OUTPUT_TYPE_LOADERS = {
     'ruptures': LoadRupturesAsLayerDialog,
+    'realizations': LoadBasicCsvAsLayerDialog,
+    'sourcegroups': LoadBasicCsvAsLayerDialog,
     'dmg_by_asset': LoadDmgByAssetAsLayerDialog,
     'gmf_data': LoadGmfDataAsLayerDialog,
     'hmaps': LoadHazardMapsAsLayerDialog,
     'hcurves': LoadHazardCurvesAsLayerDialog,
     'uhs': LoadUhsAsLayerDialog,
-    'losses_by_asset': LoadLossesByAssetAsLayerDialog}
-assert set(OUTPUT_TYPE_LOADERS) == OQ_TO_LAYER_TYPES
+    'losses_by_asset': LoadLossesByAssetAsLayerDialog,
+    'avg_losses-stats': LoadLossesByAssetAsLayerDialog,
+}
+assert set(OUTPUT_TYPE_LOADERS) == OQ_TO_LAYER_TYPES, (
+    OUTPUT_TYPE_LOADERS, OQ_TO_LAYER_TYPES)
 
 
 class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
@@ -146,8 +158,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         except HANDLED_EXCEPTIONS as exc:
             self._handle_exception(exc)
         else:
-            self.refresh_calc_list()
-            self.check_engine_compatibility()
+            if self.is_logged_in:
+                self.refresh_calc_list()
+                self.check_engine_compatibility()
 
     def check_engine_compatibility(self):
         engine_version = self.get_engine_version()
@@ -173,47 +186,36 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.hostname, username, password = get_credentials('engine')
         # try without authentication (if authentication is disabled server
         # side)
-        # NOTE: is_lockdown() can raise exceptions, to be caught from outside
-        is_lockdown = self.is_lockdown()
+        # NOTE: check_is_lockdown() can raise exceptions,
+        #       to be caught from outside
+        is_lockdown = check_is_lockdown(self.hostname, self.session)
         if not is_lockdown:
             self.is_logged_in = True
             return
-        if username and password:
-            with WaitCursorManager('Logging in...', self.iface.messageBar()):
-                # it can raise exceptions, caught by self.attempt_login
-                engine_login(self.hostname, username, password, self.session)
-                # if no exception occurred
-                self.is_logged_in = True
-
-    def is_lockdown(self):
-        # try retrieving the engine version and see if the server
-        # redirects you to the login page
-        engine_version_url = "%s/engine_version" % self.hostname
-        with WaitCursorManager():
+        with WaitCursorManager('Logging in...', self.iface.messageBar()):
             # it can raise exceptions, caught by self.attempt_login
-            # FIXME: enable the user to set verify=True
-            resp = self.session.get(
-                engine_version_url, timeout=10, verify=False)
-            # handle case of redirection to the login page
-            if not resp.ok:
-                raise ConnectionError(
-                    "%s %s: %s" % (resp.status_code, resp.url, resp.reason))
-            if resp.url != engine_version_url and 'login' in resp.url:
-                return True
-        return False
+            engine_login(self.hostname, username, password, self.session)
+            # if no exception occurred
+            self.is_logged_in = True
+            return
+        self.is_logged_in = False
 
     def get_engine_version(self):
-        engine_version_url = "%s/engine_version" % self.hostname
+        engine_version_url = "%s/v1/engine_version" % self.hostname
         with WaitCursorManager():
             try:
                 # FIXME: enable the user to set verify=True
                 resp = self.session.get(
-                    engine_version_url, timeout=10, verify=False)
-                # handle case of redirection to the login page
+                    engine_version_url, timeout=10, verify=False,
+                    allow_redirects=False)
+                if resp.status_code == 302:
+                    raise RedirectionError(
+                        "Error %s loading %s: please check the url" % (
+                            resp.status_code, resp.url))
                 if not resp.ok:
-                    raise ConnectionError(
-                        "%s %s: %s" % (resp.status_code,
-                                       resp.url, resp.reason))
+                    raise ServerError(
+                        "Error %s loading %s: %s" % (
+                            resp.status_code, resp.url, resp.reason))
             except HANDLED_EXCEPTIONS as exc:
                 self._handle_exception(exc)
                 return
@@ -226,21 +228,19 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             try:
                 # FIXME: enable the user to set verify=True
                 resp = self.session.get(
-                    calc_list_url, timeout=10, verify=False)
+                    calc_list_url, timeout=10, verify=False,
+                    allow_redirects=False)
+                if resp.status_code == 302:
+                    raise RedirectionError(
+                        "Error %s loading %s: please check the url" % (
+                            resp.status_code, resp.url))
+                if not resp.ok:
+                    raise ServerError(
+                        "Error %s loading %s: %s" % (
+                            resp.status_code, resp.url, resp.reason))
             except HANDLED_EXCEPTIONS as exc:
                 self._handle_exception(exc)
-                return
-            # handle case of redirection to the login page
-            if resp.url != calc_list_url and 'login' in resp.url:
-                msg = ("Please check OpenQuake Engine connection settings and"
-                       " credentials. The call to %s was redirected to %s."
-                       % (calc_list_url, resp.url))
-                log_msg(msg, level='C',
-                        message_bar=self.iface.messageBar())
-                self.is_logged_in = False
-                self.reject()
-                SettingsDialog(self.iface).exec_()
-                return
+                return False
             calc_list = json.loads(resp.text)
         selected_keys = [
             'description', 'id', 'calculation_mode', 'owner', 'status']
@@ -258,7 +258,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 self.calc_list_tbl.horizontalHeader().setStyleSheet(
                     "font-weight: bold;")
                 self.set_calc_list_widths(col_widths)
-            return
+            return False
         actions = [
             {'label': 'Console', 'bg_color': '#3cb3c5', 'txt_color': 'white'},
             {'label': 'Remove', 'bg_color': '#d9534f', 'txt_color': 'white'},
@@ -811,7 +811,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
     def start_polling(self):
         if not self.is_logged_in:
-            self.login()
+            try:
+                self.login()
+            except HANDLED_EXCEPTIONS as exc:
+                self._handle_exception(exc)
         if not self.is_logged_in:
             return
         self.refresh_calc_list()
@@ -840,14 +843,22 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                               MissingSchema,
                               ReadTimeout,
                               LocationParseError,
+                              ServerError,
+                              RedirectionError,
                               SvNetworkError)):
             err_msg = str(exc)
             if isinstance(exc, InvalidSchema):
                 err_msg += ' (you could try prepending http:// or https://)'
-            elif isinstance(exc, SvNetworkError):
+            elif isinstance(exc, ConnectionError):
+                err_msg += (
+                    ' (please make sure the OpenQuake Engine WebUI'
+                    ' is running)')
+            elif isinstance(exc, (SvNetworkError, ServerError)):
                 err_msg += (
                     ' (please make sure the username and password are'
                     ' spelled correctly)')
+            elif isinstance(exc, RedirectionError):
+                pass  # err_msg should already be enough
             else:
                 err_msg += (
                     ' (please make sure the username and password are'

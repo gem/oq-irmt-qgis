@@ -450,8 +450,8 @@ def encodeSldUom(outputUnit, scaleFactor):
 
 def symbolLayer_to_sld(symbolLayer, document, element, props):
     if (not hasattr(symbolLayer, 'brushStyle')
-            or symbolLayer.brushStyle() == Qt.Qt.NoBrush
-            and symbolLayer.borderStyle() == Qt.Qt.NoPen):
+            or symbolLayer.brushStyle() == Qt.NoBrush
+            and symbolLayer.borderStyle() == Qt.NoPen):
         return
     symbolizerElem = document.createElement('sld:PolygonSymbolizer')
     if 'uom' in props:
@@ -459,13 +459,13 @@ def symbolLayer_to_sld(symbolLayer, document, element, props):
     element.appendChild(symbolizerElem)
     # geometry
     createGeometryElement(document, symbolizerElem, props.get('geom', ''))
-    if symbolLayer.brushStyle() != Qt.Qt.NoBrush:
+    if symbolLayer.brushStyle() != Qt.NoBrush:
         # fill
         fillElem = document.createElement('sld:Fill')
         symbolizerElem.appendChild(fillElem)
         fill_to_sld(symbolLayer, document, fillElem,
                     symbolLayer.brushStyle(), symbolLayer.color())
-    if symbolLayer.borderStyle() != Qt.Qt.NoPen:
+    if symbolLayer.borderStyle() != Qt.NoPen:
         # stroke
         strokeElem = document.createElement('sld:Stroke')
         symbolizerElem.appendChild(strokeElem)
@@ -495,26 +495,26 @@ def create_displacement_element(document, element, offset):
 def line_to_sld(document, element, penStyle, color, width,
                 penJoinStyle, customDashPattern, dashOffset):
     dashPattern = []
-    if penStyle == Qt.Qt.CustomDashLine and not customDashPattern:
+    if penStyle == Qt.CustomDashLine and not customDashPattern:
         element.appendChild(document.createComment(
             "WARNING: Custom dash pattern required but not provided."
             " Using default dash pattern."))
-        penStyle = Qt.Qt.DashLine
-    if penStyle == Qt.Qt.NoPen:
+        penStyle = Qt.DashLine
+    if penStyle == Qt.NoPen:
         return
-    if penStyle != Qt.Qt.SolidLine:
-        if penStyle == Qt.Qt.DashLine:
+    if penStyle != Qt.SolidLine:
+        if penStyle == Qt.DashLine:
             dashPattern.append(4.0)
             dashPattern.append(2.0)
-        elif penStyle == Qt.Qt.DotLine:
+        elif penStyle == Qt.DotLine:
             dashPattern.append(1.0)
             dashPattern.append(2.0)
-        elif penStyle == Qt.Qt.DashDotLine:
+        elif penStyle == Qt.DashDotLine:
             dashPattern.append(4.0)
             dashPattern.append(2.0)
             dashPattern.append(1.0)
             dashPattern.append(2.0)
-        elif penStyle == Qt.Qt.DashDotDotLine:
+        elif penStyle == Qt.DashDotDotLine:
             dashPattern.append(4.0)
             dashPattern.append(2.0)
             dashPattern.append(1.0)
@@ -658,9 +658,9 @@ def createCssParameterElement(document, name, value):
 
 def fill_to_sld(symbolLayer, document, element, brushStyle, color):
     patternName = ''
-    if brushStyle == Qt.Qt.NoBrush:
+    if brushStyle == Qt.NoBrush:
         return
-    elif brushStyle == Qt.Qt.SolidPattern:
+    elif brushStyle == Qt.SolidPattern:
         if color.isValid():
             cssElement = createCssParameterElement(document,
                                                    'fill',
@@ -672,20 +672,20 @@ def fill_to_sld(symbolLayer, document, element, brushStyle, color):
                     QgsSymbolLayerV2Utils.encodeSldAlpha(color.alpha()))
                 element.appendChild()
         return
-    elif brushStyle in (Qt.Qt.CrossPattern,
-                        Qt.Qt.CrossPattern,
-                        Qt.Qt.DiagCrossPattern,
-                        Qt.Qt.HorPattern,
-                        Qt.Qt.VerPattern,
-                        Qt.Qt.BDiagPattern,
-                        Qt.Qt.FDiagPattern,
-                        Qt.Qt.Dense1Pattern,
-                        Qt.Qt.Dense2Pattern,
-                        Qt.Qt.Dense3Pattern,
-                        Qt.Qt.Dense4Pattern,
-                        Qt.Qt.Dense5Pattern,
-                        Qt.Qt.Dense6Pattern,
-                        Qt.Qt.Dense7Pattern,
+    elif brushStyle in (Qt.CrossPattern,
+                        Qt.CrossPattern,
+                        Qt.DiagCrossPattern,
+                        Qt.HorPattern,
+                        Qt.VerPattern,
+                        Qt.BDiagPattern,
+                        Qt.FDiagPattern,
+                        Qt.Dense1Pattern,
+                        Qt.Dense2Pattern,
+                        Qt.Dense3Pattern,
+                        Qt.Dense4Pattern,
+                        Qt.Dense5Pattern,
+                        Qt.Dense6Pattern,
+                        Qt.Dense7Pattern,
                         ):
         patternName = QgsSymbolLayerV2Utils.encodeSldBrushStyle(brushStyle)
         return
@@ -701,7 +701,7 @@ def fill_to_sld(symbolLayer, document, element, brushStyle, color):
     # Use WellKnownName tag to handle QT brush styles.
     QgsSymbolLayerV2Utils.wellKnownMarkerToSld(
         document, graphicElem, patternName, fillColor,
-        borderColor, Qt.Qt.SolidLine, -1, -1)
+        borderColor, Qt.SolidLine, -1, -1)
 
 
 def createGeometryElement(document, element, geomFunc):
