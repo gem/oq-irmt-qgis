@@ -68,6 +68,9 @@ from svir.utilities.utils import (WaitCursorManager,
                                   SvNetworkError,
                                   get_irmt_version,
                                   get_credentials,
+                                  check_is_lockdown,
+                                  ServerError,
+                                  RedirectionError,
                                   )
 from svir.dialogs.load_ruptures_as_layer_dialog import (
     LoadRupturesAsLayerDialog)
@@ -91,14 +94,6 @@ from svir.dialogs.show_params_dialog import ShowParamsDialog
 from svir.dialogs.settings_dialog import SettingsDialog
 
 FORM_CLASS = get_ui_class('ui_drive_engine_server.ui')
-
-
-class ServerError(Exception):
-    pass
-
-
-class RedirectionError(Exception):
-    pass
 
 
 HANDLED_EXCEPTIONS = (SSLError, ConnectionError, InvalidSchema, MissingSchema,
@@ -191,8 +186,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.hostname, username, password = get_credentials('engine')
         # try without authentication (if authentication is disabled server
         # side)
-        # NOTE: is_lockdown() can raise exceptions, to be caught from outside
-        is_lockdown = self.is_lockdown()
+        # NOTE: check_is_lockdown() can raise exceptions,
+        #       to be caught from outside
+        is_lockdown = check_is_lockdown(self.hostname, self.session)
         if not is_lockdown:
             self.is_logged_in = True
             return
@@ -203,28 +199,6 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             self.is_logged_in = True
             return
         self.is_logged_in = False
-
-    def is_lockdown(self):
-        # try retrieving the engine version and see if the server
-        # returns an HTTP 403 (Forbidden) error
-        engine_version_url = "%s/v1/engine_version" % self.hostname
-        with WaitCursorManager():
-            # it can raise exceptions, caught by self.attempt_login
-            # FIXME: enable the user to set verify=True
-            resp = self.session.get(
-                engine_version_url, timeout=10, verify=False,
-                allow_redirects=False)
-            if resp.status_code == 403:
-                return True
-            elif resp.status_code == 302:
-                raise RedirectionError(
-                    "Error %s loading %s: please check the url" % (
-                        resp.status_code, resp.url))
-            if not resp.ok:
-                raise ServerError(
-                    "Error %s loading %s: %s" % (
-                        resp.status_code, resp.url, resp.reason))
-        return False
 
     def get_engine_version(self):
         engine_version_url = "%s/v1/engine_version" % self.hostname

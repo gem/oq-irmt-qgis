@@ -27,6 +27,7 @@ import collections
 import json
 import os
 import sys
+import traceback
 import locale
 import zlib
 import io
@@ -79,7 +80,7 @@ def get_irmt_version():
 
 
 def log_msg(message, tag='GEM IRMT Plugin', level='I', message_bar=None,
-            duration=None):
+            duration=None, exc_tuple=None):
     """
     Add a message to the QGIS message log. If a messageBar is provided,
     the same message will be displayed also in the messageBar. In the latter
@@ -94,9 +95,12 @@ def log_msg(message, tag='GEM IRMT Plugin', level='I', message_bar=None,
         'W' -> QgsMessageLog.WARNING,
         'C' -> QgsMessageLog.CRITICAL
     :param message_bar: a `QgsMessageBar` instance
-    :param duration: how long (in seconds) the message will be displayed (use 0
-                     to keep the message visible indefinitely, or None to use
-                     the default duration of the chosen level
+    :param duration: how long (in seconds) the message will be displayed
+        (use 0 to keep the message visible indefinitely, or None to use
+        the default duration of the chosen level)
+    :param exception: an optional exception tuple, in the format
+        (exc_class, exc_value, exc_tb), from which the traceback will be
+        extracted and written only in the log
     """
     levels = {'I': {'log': QgsMessageLog.INFO,
                     'bar': QgsMessageBar.INFO},
@@ -106,6 +110,10 @@ def log_msg(message, tag='GEM IRMT Plugin', level='I', message_bar=None,
                     'bar': QgsMessageBar.CRITICAL}}
     if level not in levels:
         raise ValueError('Level must be one of %s' % levels.keys())
+    tb_text = ''
+    if exc_tuple is not None:
+        tb_lines = traceback.format_exception(*exc_tuple)
+        tb_text = '\n' + ''.join(tb_lines)
 
     # if we are running nosetests, exit on critical errors
     if 'nose' in sys.modules and level == 'C':
@@ -117,7 +125,7 @@ def log_msg(message, tag='GEM IRMT Plugin', level='I', message_bar=None,
                 or level == 'W' and log_level in ('I', 'W')
                 or level == 'I' and log_level in ('I')):
             QgsMessageLog.logMessage(
-                tr(message), tr(tag), levels[level]['log'])
+                tr(message) + tb_text, tr(tag), levels[level]['log'])
         if message_bar is not None:
             if level == 'I':
                 title = 'Info'
@@ -444,19 +452,8 @@ def platform_login(host, username, password, session):
     :param session: The session to be autenticated
     :type session: Session
     """
-
     login_url = host + '/account/ajax_login'
-    session_resp = session.post(login_url,
-                                data={
-                                    "username": username,
-                                    "password": password
-                                },
-                                timeout=10,
-                                )
-    if session_resp.status_code != 200:  # 200 means successful:OK
-        error_message = ('Unable to get session for login: %s' %
-                         session_resp.text)
-        raise SvNetworkError(error_message)
+    _login(login_url, username, password, session)
 
 
 def engine_login(host, username, password, session):
@@ -472,17 +469,24 @@ def engine_login(host, username, password, session):
     :param session: The session to be autenticated
     :type session: Session
     """
-
     login_url = host + '/accounts/ajax_login/'
-    session_resp = session.post(login_url,
-                                data={
-                                    "username": username,
-                                    "password": password
-                                },
-                                timeout=10,
-                                )
+    _login(login_url, username, password, session)
+
+
+def _login(login_url, username, password, session):
+    try:
+        session_resp = session.post(login_url,
+                                    data={
+                                        "username": username,
+                                        "password": password
+                                    },
+                                    timeout=10,
+                                    )
+    except Exception:
+        msg = "Unable to login. %s" % traceback.format_exc()
+        raise SvNetworkError(msg)
     if session_resp.status_code != 200:  # 200 means successful:OK
-        error_message = ('Unable to get session for login: %s' %
+        error_message = ('Unable to login: %s' %
                          session_resp.text)
         raise SvNetworkError(error_message)
 
@@ -1120,3 +1124,34 @@ def get_file_size(file_path):
     if os.path.isfile(file_path):
         file_info = os.stat(file_path)
         return convert_bytes(file_info.st_size)
+
+
+class ServerError(Exception):
+    pass
+
+
+class RedirectionError(Exception):
+    pass
+
+
+def check_is_lockdown(hostname, session):
+    # try retrieving the engine version and see if the server
+    # returns an HTTP 403 (Forbidden) error
+    engine_version_url = "%s/v1/engine_version" % hostname
+    with WaitCursorManager():
+        # it can raise exceptions, caught by self.attempt_login
+        # FIXME: enable the user to set verify=True
+        resp = session.get(
+            engine_version_url, timeout=10, verify=False,
+            allow_redirects=False)
+        if resp.status_code == 403:
+            return True
+        elif resp.status_code == 302:
+            raise RedirectionError(
+                "Error %s loading %s: please check the url" % (
+                    resp.status_code, resp.url))
+        if not resp.ok:
+            raise ServerError(
+                "Error %s loading %s: %s" % (
+                    resp.status_code, resp.url, resp.reason))
+    return False
