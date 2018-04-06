@@ -31,7 +31,9 @@ Visulalizing outputs of hazard calculations
 
 This section describes how to drive the user interface of the plugin to visualize
 some of the hazard outputs produced by OpenQuake Engine calculations. For an extensive
-explanation of those outputs, please refer to the user manual of the OpenQuake Engine.
+explanation of those outputs, please refer to
+the `user manual of the OpenQuake Engine <https://docs.openquake.org/oq-engine/stable/>_`.
+
 
 Visualizing hazard curves
 -------------------------
@@ -115,7 +117,8 @@ Visualizing outputs of risk calculations
 
 This section describes how to drive the user interface of the plugin to visualize
 some of the risk outputs produced by OpenQuake Engine calculations. For an extensive
-explanation of those outputs, please refer to the user manual of the OpenQuake Engine.
+explanation of those outputs, please refer to
+the `user manual of the OpenQuake Engine <https://docs.openquake.org/oq-engine/stable/>_`.
 
 
 Visualizing aggregate loss curves
