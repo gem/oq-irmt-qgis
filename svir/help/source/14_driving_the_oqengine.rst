@@ -13,8 +13,8 @@ Driving the OpenQuake Engine
     |icon-drive-oq-engine| Dialog to run the OpenQuake Engine server
 
 
-The plugin enables to drive the `OpenQuake Engine
-<https://github.com/gem/oq-engine>`_, submitting new jobs, watching calculation
+The plugin enables to drive the `OpenQuake Engine <https://github.com/gem/oq-engine>`_,
+submitting new jobs, watching calculation
 progress, retrieving and visualizing results, seamlessly within the QGIS
 interface. This is made possible by leveraging the OpenQuake Engine
 Server `HTTP RESTful API <https://github.com/gem/oq-engine/blob/master/doc/web-api.md>`_.
