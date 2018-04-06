@@ -53,7 +53,9 @@ remove existing ones. For instance, you might want to use alternatively an OpenQ
 Engine Server running on your local machine and a remote one running on a cluster.
 For this purpose, you can create the two connection profiles, and then select
 one or the other from the :guilabel:`OpenQuake Engine connection profile` dropdown
-menu.
+menu. The buttons :guilabel:`Test connection` can be used to check if the
+plugin is able to connect to the corresponding server using the specified
+host name and credentials.
 
 When the plugin loads an OQ-Engine hazard/risk map as a layer or when integrated risk
 indices are calculated, the corresponding map is automatically styled applying a rule-based
