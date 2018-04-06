@@ -24,13 +24,24 @@
 
 
 import json
+import sys
 from qgis.PyQt.QtCore import pyqtSlot, QSettings, Qt
 from qgis.PyQt.QtGui import QDialog, QPalette, QColorDialog, QMessageBox
 
 from qgis.core import QgsGraduatedSymbolRendererV2, QgsProject
+from qgis.gui import QgsMessageBar
 
+from svir.third_party.requests import Session
 from svir.dialogs.connection_profile_dialog import ConnectionProfileDialog
-from svir.utilities.utils import get_ui_class, get_style
+from svir.utilities.utils import (
+                                  get_ui_class,
+                                  get_style,
+                                  platform_login,
+                                  engine_login,
+                                  log_msg,
+                                  WaitCursorManager,
+                                  check_is_lockdown,
+                                  )
 from svir.utilities.shared import (
                                    PLATFORM_REGISTRATION_URL,
                                    DEFAULT_SETTINGS,
@@ -54,6 +65,8 @@ class SettingsDialog(QDialog, FORM_CLASS):
         self.irmt_main = irmt_main
         # Set up the user interface from Designer.
         self.setupUi(self)
+        self.message_bar = QgsMessageBar(self)
+        self.layout().insertWidget(0, self.message_bar)
         link_text = ('<a href="%s">Register to the OpenQuake Platform</a>'
                      % PLATFORM_REGISTRATION_URL)
         self.registration_link_lbl.setText(link_text)
@@ -299,6 +312,64 @@ class SettingsDialog(QDialog, FORM_CLASS):
             'platform', parent=self)
         if self.profile_dlg.exec_():
             self.refresh_profile_cbxs('platform')
+
+    @pyqtSlot()
+    def on_pla_test_btn_clicked(self):
+        server = 'platform'
+        profile_name = self.platform_profile_cbx.currentText()
+        with WaitCursorManager('Logging in...', self.message_bar):
+            self._attempt_login(server, profile_name)
+
+    @pyqtSlot()
+    def on_eng_test_btn_clicked(self):
+        server = 'engine'
+        profile_name = self.engine_profile_cbx.currentText()
+        with WaitCursorManager('Logging in...', self.message_bar):
+            self._attempt_login(server, profile_name)
+
+    def _attempt_login(self, server, profile_name):
+        if server == 'platform':
+            default_profiles = DEFAULT_PLATFORM_PROFILES
+            login_func = platform_login
+        elif server == 'engine':
+            default_profiles = DEFAULT_ENGINE_PROFILES
+            login_func = engine_login
+        else:
+            raise NotImplementedError(server)
+        mySettings = QSettings()
+        profiles = json.loads(mySettings.value(
+            'irmt/%s_profiles' % server, default_profiles))
+        profile = profiles[profile_name]
+        session = Session()
+        hostname, username, password = (profile['hostname'],
+                                        profile['username'],
+                                        profile['password'])
+        if server == 'engine':
+            try:
+                is_lockdown = check_is_lockdown(hostname, session)
+            except Exception:
+                err_msg = ("Unable to connect"
+                           " (see Log Message Panel for details)")
+                exc_tuple = sys.exc_info()
+                log_msg(err_msg, level='C', message_bar=self.message_bar,
+                        exc_tuple=exc_tuple)
+                return
+            else:
+                if not is_lockdown:
+                    msg = 'Able to connect'
+                    log_msg(msg, level='I', message_bar=self.message_bar,
+                            duration=3)
+                    return
+        try:
+            login_func(hostname, username, password, session)
+        except Exception:
+            err_msg = "Unable to connect (see Log Message Panel for details)"
+            exc_tuple = sys.exc_info()
+            log_msg(err_msg, level='C', message_bar=self.message_bar,
+                    exc_tuple=exc_tuple)
+        else:
+            msg = 'Able to connect'
+            log_msg(msg, level='I', message_bar=self.message_bar, duration=3)
 
     @pyqtSlot()
     def on_eng_new_btn_clicked(self):
