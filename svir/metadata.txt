@@ -30,6 +30,7 @@ changelog=
     * When importing damages or losses from the OQ-Engine and aggregating them by zone, only sums are added to the zonal layer,
       and the zonal layer is automatically styled, classifying with respect to the sum of losses/damage
     * Fixed a bug that prevented from loading existing projects from the OpenQuake Platform
+    * It is possible to check the connection with the OQ-Platform or with the OQ-Engine from within the plugin settings dialog
     2.10.0
     * Dialogs embedding OpenQuake web applications (IPT and TaxtWEB) display a progress bar while loading a new page, and there
       is an additional button to reload the homepage. If a page can not be loaded, an error message is displayed.
