@@ -140,7 +140,8 @@ the OQ-Engine calculation).
 Visualizing aggregate damage by asset
 -------------------------------------
 
-FIXME scientific description
+.. FIXME scientific description
+
 When the button :guilabel:`Aggregate` is pressed, the Data Viewer is automatically
 opened, providing a dropdown menu to select one of the available realizations, and
 another one to select one of the available loss types. Two widgets enable the
@@ -159,7 +160,8 @@ If a tag is selected, but no corresponding value is chosen, the filter will not 
 Visualizing aggregate losses by asset
 -------------------------------------
 
-FIXME scientific description
+.. FIXME scientific description
+
 When the button :guilabel:`Aggregate` is pressed, the Data Viewer is automatically
 opened, providing a dropdown menu to select one of the available loss types. Two widgets
 enable the selection of multiple tag names and, for each tag, one or more of its values.
@@ -169,12 +171,6 @@ the corresponding aggregate loss.
 If no filter is selected, the total losses for each realization are displayed.
 If something is selected, a text field lists the selected tags, each with the chosen value.
 If a tag is selected, but no corresponding value is chosen, the filter will not be applied.
-
-
-Visualizing average losses
---------------------------
-
-FIXME
 
 
 Visualizing recovery curves
