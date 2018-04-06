@@ -35,6 +35,7 @@ from qgis.core import (QgsVectorLayer,
                        QgsMapUnitScale,
                        QGis,
                        QgsMapLayer,
+                       QgsMarkerSymbolV2,
                        )
 from qgis.PyQt.QtCore import pyqtSlot, QDir, QSettings, QFileInfo, Qt
 from qgis.PyQt.QtGui import (QDialogButtonBox,
@@ -403,15 +404,21 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         map_unit_scale.maxSizeMM = 10
         symbol.symbolLayer(0).setSizeMapUnitScale(map_unit_scale)
 
-    def style_maps(self):
-        symbol = QgsSymbolV2.defaultSymbol(self.layer.geometryType())
+    def style_maps(self, layer=None, style_by=None):
+        if layer is None:
+            layer = self.layer
+        if style_by is None:
+            style_by = self.default_field_name
+        symbol = QgsSymbolV2.defaultSymbol(layer.geometryType())
         # see properties at:
         # https://qgis.org/api/qgsmarkersymbollayerv2_8cpp_source.html#l01073
         symbol.setAlpha(1)  # opacity
-        self._set_symbol_size(symbol)
-        symbol.symbolLayer(0).setOutlineStyle(Qt.PenStyle(Qt.NoPen))
+        if isinstance(symbol, QgsMarkerSymbolV2):
+            # do it only for the layer with points
+            self._set_symbol_size(symbol)
+            symbol.symbolLayer(0).setOutlineStyle(Qt.PenStyle(Qt.NoPen))
 
-        style = get_style(self.layer, self.iface.messageBar())
+        style = get_style(layer, self.iface.messageBar())
 
         # this is the default, as specified in the user settings
         ramp = QgsVectorGradientColorRampV2(
@@ -423,7 +430,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         if self.output_type in OQ_TO_LAYER_TYPES:
             default_qgs_style = QgsStyleV2().defaultStyle()
             default_color_ramp_names = default_qgs_style.colorRampNames()
-            if self.output_type in ('dmg_by_asset', 'losses_by_asset'):
+            if self.output_type in ('dmg_by_asset',
+                                    'losses_by_asset',
+                                    'avg_losses-stats'):
                 # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
                 # jenks = natural breaks
                 mode = QgsGraduatedSymbolRendererV2.Jenks
@@ -437,8 +446,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             ramp = default_qgs_style.colorRamp(
                 default_color_ramp_names[ramp_type_idx])
         graduated_renderer = QgsGraduatedSymbolRendererV2.createRenderer(
-            self.layer,
-            self.default_field_name,
+            layer,
+            style_by,
             style['classes'],
             mode,
             symbol,
@@ -450,10 +459,12 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         graduated_renderer.setLabelFormat(label_format, updateRanges=True)
         VERY_SMALL_VALUE = 1e-20
         graduated_renderer.updateRangeLowerValue(0, VERY_SMALL_VALUE)
-        symbol_zeros = QgsSymbolV2.defaultSymbol(self.layer.geometryType())
+        symbol_zeros = QgsSymbolV2.defaultSymbol(layer.geometryType())
         symbol_zeros.setColor(QColor(240, 240, 240))  # very light grey
-        self._set_symbol_size(symbol_zeros)
-        symbol_zeros.symbolLayer(0).setOutlineStyle(Qt.PenStyle(Qt.NoPen))
+        if isinstance(symbol, QgsMarkerSymbolV2):
+            # do it only for the layer with points
+            self._set_symbol_size(symbol_zeros)
+            symbol_zeros.symbolLayer(0).setOutlineStyle(Qt.PenStyle(Qt.NoPen))
         zeros_min = 0.0
         zeros_max = VERY_SMALL_VALUE
         range_zeros = QgsRendererRangeV2(
@@ -461,10 +472,10 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             " %.2f - %.2f" % (zeros_min, zeros_max), True)
         graduated_renderer.addClassRange(range_zeros)
         graduated_renderer.moveClass(len(graduated_renderer.ranges()) - 1, 0)
-        self.layer.setRendererV2(graduated_renderer)
-        self.layer.setLayerTransparency(30)  # percent
-        self.layer.triggerRepaint()
-        self.iface.legendInterface().refreshLayerSymbology(self.layer)
+        layer.setRendererV2(graduated_renderer)
+        layer.setLayerTransparency(30)  # percent
+        layer.triggerRepaint()
+        self.iface.legendInterface().refreshLayerSymbology(layer)
         self.iface.mapCanvas().refresh()
 
     def style_curves(self):
@@ -558,7 +569,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     def accept(self):
         if self.output_type in OQ_EXTRACT_TO_LAYER_TYPES:
             self.load_from_npz()
-            if self.output_type in ('losses_by_asset', 'dmg_by_asset'):
+            if self.output_type in ('losses_by_asset',
+                                    'dmg_by_asset',
+                                    'avg_losses-stats'):
                 loss_layer = self.layer
                 if (not self.zonal_layer_cbx.currentText() or
                         not self.zonal_layer_gbx.isChecked()):
@@ -604,6 +617,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                             message_bar=self.iface.messageBar())
                     return
                 (loss_layer, zonal_layer, loss_attrs_dict) = res
+                style_by = loss_attrs_dict[
+                    self.loss_type_cbx.currentText()]['sum']
+                self.style_maps(layer=zonal_layer, style_by=style_by)
         elif self.output_type in OQ_CSV_TO_LAYER_TYPES:
             self.load_from_csv()
         super(LoadOutputAsLayerDialog, self).accept()

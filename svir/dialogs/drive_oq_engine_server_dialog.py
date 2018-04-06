@@ -59,7 +59,6 @@ from svir.third_party.requests.packages.urllib3.exceptions import (
 from svir.utilities.shared import (OQ_TO_LAYER_TYPES,
                                    OQ_RST_TYPES,
                                    OQ_EXTRACT_TO_VIEW_TYPES,
-                                   OQ_BASIC_CSV_TO_LAYER_TYPES,
                                    )
 from svir.utilities.utils import (WaitCursorManager,
                                   engine_login,
@@ -117,8 +116,11 @@ OUTPUT_TYPE_LOADERS = {
     'hmaps': LoadHazardMapsAsLayerDialog,
     'hcurves': LoadHazardCurvesAsLayerDialog,
     'uhs': LoadUhsAsLayerDialog,
-    'losses_by_asset': LoadLossesByAssetAsLayerDialog}
-assert set(OUTPUT_TYPE_LOADERS) == OQ_TO_LAYER_TYPES
+    'losses_by_asset': LoadLossesByAssetAsLayerDialog,
+    'avg_losses-stats': LoadLossesByAssetAsLayerDialog,
+}
+assert set(OUTPUT_TYPE_LOADERS) == OQ_TO_LAYER_TYPES, (
+    OUTPUT_TYPE_LOADERS, OQ_TO_LAYER_TYPES)
 
 
 class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
