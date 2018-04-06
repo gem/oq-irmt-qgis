@@ -80,7 +80,7 @@ def get_irmt_version():
 
 
 def log_msg(message, tag='GEM IRMT Plugin', level='I', message_bar=None,
-            duration=None):
+            duration=None, exc_tuple=None):
     """
     Add a message to the QGIS message log. If a messageBar is provided,
     the same message will be displayed also in the messageBar. In the latter
@@ -95,9 +95,12 @@ def log_msg(message, tag='GEM IRMT Plugin', level='I', message_bar=None,
         'W' -> QgsMessageLog.WARNING,
         'C' -> QgsMessageLog.CRITICAL
     :param message_bar: a `QgsMessageBar` instance
-    :param duration: how long (in seconds) the message will be displayed (use 0
-                     to keep the message visible indefinitely, or None to use
-                     the default duration of the chosen level
+    :param duration: how long (in seconds) the message will be displayed
+        (use 0 to keep the message visible indefinitely, or None to use
+        the default duration of the chosen level)
+    :param exception: an optional exception tuple, in the format
+        (exc_class, exc_value, exc_tb), from which the traceback will be
+        extracted and written only in the log
     """
     levels = {'I': {'log': QgsMessageLog.INFO,
                     'bar': QgsMessageBar.INFO},
@@ -107,6 +110,10 @@ def log_msg(message, tag='GEM IRMT Plugin', level='I', message_bar=None,
                     'bar': QgsMessageBar.CRITICAL}}
     if level not in levels:
         raise ValueError('Level must be one of %s' % levels.keys())
+    tb_text = ''
+    if exc_tuple is not None:
+        tb_lines = traceback.format_exception(*exc_tuple)
+        tb_text = '\n' + ''.join(tb_lines)
 
     # if we are running nosetests, exit on critical errors
     if 'nose' in sys.modules and level == 'C':
@@ -118,7 +125,7 @@ def log_msg(message, tag='GEM IRMT Plugin', level='I', message_bar=None,
                 or level == 'W' and log_level in ('I', 'W')
                 or level == 'I' and log_level in ('I')):
             QgsMessageLog.logMessage(
-                tr(message), tr(tag), levels[level]['log'])
+                tr(message) + tb_text, tr(tag), levels[level]['log'])
         if message_bar is not None:
             if level == 'I':
                 title = 'Info'

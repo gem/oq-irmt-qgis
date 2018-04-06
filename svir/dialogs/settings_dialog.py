@@ -24,7 +24,7 @@
 
 
 import json
-import traceback
+import sys
 from qgis.PyQt.QtCore import pyqtSlot, QSettings, Qt
 from qgis.PyQt.QtGui import QDialog, QPalette, QColorDialog, QMessageBox
 
@@ -348,8 +348,11 @@ class SettingsDialog(QDialog, FORM_CLASS):
             try:
                 is_lockdown = check_is_lockdown(hostname, session)
             except Exception:
-                err_msg = "Unable to connect. %s" % traceback.format_exc()
-                log_msg(err_msg, level='C', message_bar=self.message_bar)
+                err_msg = ("Unable to connect"
+                           " (see Log Message Panel for details)")
+                exc_tuple = sys.exc_info()
+                log_msg(err_msg, level='C', message_bar=self.message_bar,
+                        exc_tuple=exc_tuple)
                 return
             else:
                 if not is_lockdown:
@@ -359,9 +362,11 @@ class SettingsDialog(QDialog, FORM_CLASS):
                     return
         try:
             login_func(hostname, username, password, session)
-        except Exception as exc:
-            err_msg = str(exc)
-            log_msg(err_msg, level='C', message_bar=self.message_bar)
+        except Exception:
+            err_msg = "Unable to connect (see Log Message Panel for details)"
+            exc_tuple = sys.exc_info()
+            log_msg(err_msg, level='C', message_bar=self.message_bar,
+                    exc_tuple=exc_tuple)
         else:
             msg = 'Able to connect'
             log_msg(msg, level='I', message_bar=self.message_bar, duration=3)
