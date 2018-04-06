@@ -64,6 +64,8 @@ principal IMT used in the OpenQuake-engine are:
 
 An Intensity Measure Level (IML) is a value of a specific IMT.
 
+.. FIXME add definitions needed while describing risk outputs
+
 
 .. [ESRI98]
     ESRI Shapefile Technical Description,

@@ -26,8 +26,17 @@ modifying markers, labels, axes, zooming level and other parameters, saving the
 plot to file and exporting the selected curves into a csv format.
 
 
+Visulalizing outputs of hazard calculations
+===========================================
+
+This section describes how to drive the user interface of the plugin to visualize
+some of the hazard outputs produced by OpenQuake Engine calculations. For an extensive
+explanation of those outputs, please refer to
+the `user manual of the OpenQuake Engine <https://docs.openquake.org/oq-engine/stable/>`_.
+
+
 Visualizing hazard curves
-=========================
+-------------------------
 
 A hazard curve defines the relation between a scalar IML and the probability of
 at least one exceedance of that IML within a time span T. The OpenQuake-engine
@@ -81,7 +90,7 @@ map are highlighted.
 
 
 Visualizing uniform hazard spectra
-==================================
+----------------------------------
 
 A Uniform Hazard Spectrum (UHS) is a typology of result that is site-specific –
 as in the case of hazard curves. A UHS defines a relationship between the
@@ -101,6 +110,67 @@ Spectra` (:numref:`fig-dataViewerUHS`).
     :scale: 60%
 
     IRMT Data Viewer used for displaying Uniform Hazard Spectra
+
+
+Visualizing outputs of risk calculations
+========================================
+
+This section describes how to drive the user interface of the plugin to visualize
+some of the risk outputs produced by OpenQuake Engine calculations. For an extensive
+explanation of those outputs, please refer to
+the `user manual of the OpenQuake Engine <https://docs.openquake.org/oq-engine/stable/>`_.
+
+
+Visualizing aggregate loss curves
+---------------------------------
+
+Aggregate loss curves describe the exceedance probabilities for a set of loss
+values for the entire portfolio of assets defined in the exposure model.
+
+When the button :guilabel:`Show` is pressed, the Data Viewer is automatically
+opened, providing a dropdown menu to select one of the available loss types,
+and a tool to select multiple realizations or statistics. By default, the first
+available loss type is pre-selected and all the realization or statistics are
+displayed in the plot. Any change in these selections produces an automatic update
+of the plot. The plot shows in abscissa the return period (in years) and in
+ordinate the aggregate loss (the measurement unit depends on the parameters of
+the OQ-Engine calculation).
+
+
+Visualizing aggregate damage by asset
+-------------------------------------
+
+.. FIXME scientific description
+
+When the button :guilabel:`Aggregate` is pressed, the Data Viewer is automatically
+opened, providing a dropdown menu to select one of the available realizations, and
+another one to select one of the available loss types. Two widgets enable the
+selection of multiple tag names and, for each tag, one or more of its values.
+The additional checkbox :guilabel:`Exclude "no damage"` is checked by default,
+excluding from the plot the damage "no damage" state, which in most cases is
+predominant with respect to the others and therefore the corresponding bar would
+look too high in proportion with the others.
+The bar plot shows the damage distribution, where each bar corresponds to one of the
+damage states, and the height of the bar corresponds to the number of asset in that
+damage state. If no filter is selected, the whole damage distribution is displayed.
+If something is selected, a text field lists the selected tags, each with the chosen value.
+If a tag is selected, but no corresponding value is chosen, the filter will not be applied.
+
+
+Visualizing aggregate losses by asset
+-------------------------------------
+
+.. FIXME scientific description
+
+When the button :guilabel:`Aggregate` is pressed, the Data Viewer is automatically
+opened, providing a dropdown menu to select one of the available loss types. Two widgets
+enable the selection of multiple tag names and, for each tag, one or more of its values.
+If the value :guilabel:`*` is chosen, aggregate losses for each value are reported.
+The results are presented as a table containing, for each tag and for each realization,
+the corresponding aggregate loss.
+If no filter is selected, the total losses for each realization are displayed.
+If something is selected, a text field lists the selected tags, each with the chosen value.
+If a tag is selected, but no corresponding value is chosen, the filter will not be applied.
 
 
 Visualizing recovery curves
