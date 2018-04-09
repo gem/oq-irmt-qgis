@@ -25,6 +25,7 @@ email=staff.it@globalquakemodel.org
 changelog=
     3.0.1
     * After aggregating loss/damage by zone, the layer containing points is made invisible
+    * Fixed styling of scenario damage after aggregating damage by zone
     3.0.0
     * Added loaders for realizations and sourcegroups, from csv
     * Added the loader for Average Asset Losses Statistics and the visualization of aggregated values in the Data Viewer

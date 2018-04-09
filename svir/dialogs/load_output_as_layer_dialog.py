@@ -619,8 +619,17 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                             message_bar=self.iface.messageBar())
                     return
                 (loss_layer, zonal_layer, loss_attrs_dict) = res
-                style_by = loss_attrs_dict[
-                    self.loss_type_cbx.currentText()]['sum']
+                # sanity check
+                assert len(loss_attrs_dict) == 1, (
+                    "Only one attribute should be added to the zonal layer."
+                    " %s were added insted" % len(loss_attrs_dict))
+                # NOTE: in scenario damage, keys are like
+                #       u'structural_no_damage_mean', and not just
+                #       u'structural', therefore we can't just use the selected
+                #       loss type, but we must use the actual only key in the
+                #       dict
+                added_loss_attr = loss_attrs_dict.keys()[0]
+                style_by = loss_attrs_dict[added_loss_attr]['sum']
                 self.style_maps(layer=zonal_layer, style_by=style_by)
         elif self.output_type in OQ_CSV_TO_LAYER_TYPES:
             self.load_from_csv()
