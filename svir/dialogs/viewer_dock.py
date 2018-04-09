@@ -798,7 +798,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         table = QTableWidget(nrows, ncols)
         table.setSizePolicy(
             QSizePolicy.Preferred, QSizePolicy.MinimumExpanding)
-        table.setHorizontalHeaderLabels(self.rlzs)
+        if self.output_type == 'losses_by_asset_aggr':
+            table.setHorizontalHeaderLabels(self.rlzs)
+        else:  # self.output_type == 'avg_losses-stats_aggr'
+            table.setHorizontalHeaderLabels(self.stats)
         if tags is not None:
             table.setVerticalHeaderLabels(tags)
         table.setEditTriggers(QAbstractItemView.NoEditTriggers)
