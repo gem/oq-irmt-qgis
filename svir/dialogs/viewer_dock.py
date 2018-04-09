@@ -1415,7 +1415,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 values = self.dmg_by_asset_aggr[
                     'array'][self.rlz_cbx.currentIndex()]
                 writer.writerow(values)
-            elif self.output_type == 'losses_by_asset_aggr':
+            elif self.output_type in ('losses_by_asset_aggr',
+                                      'avg_losses-stats_aggr'):
                 csv_file.write(
                     "# Loss type: %s\n" % self.loss_type_cbx.currentText())
                 csv_file.write(
@@ -1427,37 +1428,16 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 except KeyError:
                     tags = None
                     headers = []
-                headers.extend(self.rlzs)
+                if self.output_type == 'losses_by_asset_aggr':
+                    headers.extend(self.rlzs)
+                else:  # self.output_type == 'avg_losses-stats_aggr':
+                    headers.extend(self.stats)
                 writer.writerow(headers)
                 losses_array = self.losses_by_asset_aggr['array']
                 losses_array = self._to_2d(losses_array)
                 if tags is not None:
                     for row_idx, row in enumerate(
                             self.losses_by_asset_aggr['array']):
-                        values = [tags[row_idx]]
-                        values.extend(losses_array[row_idx])
-                        writer.writerow(values)
-                else:
-                    writer.writerow(losses_array[0])
-            elif self.output_type == 'avg_losses-stats_aggr':
-                csv_file.write(
-                    "# Loss type: %s\n" % self.loss_type_cbx.currentText())
-                csv_file.write(
-                    "# Tags: %s\n" % (
-                        self.list_selected_edt.toPlainText() or 'None'))
-                try:
-                    tags = self.avg_losses_stats_aggr['tags']
-                    headers = ['tag']
-                except KeyError:
-                    tags = None
-                    headers = []
-                headers.extend(self.stats)
-                writer.writerow(headers)
-                losses_array = self.avg_losses_stats_aggr['array']
-                losses_array = self._to_2d(losses_array)
-                if tags is not None:
-                    for row_idx, row in enumerate(
-                            self.avg_losses_stats_aggr['array']):
                         values = [tags[row_idx]]
                         values.extend(losses_array[row_idx])
                         writer.writerow(values)
