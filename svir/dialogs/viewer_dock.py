@@ -1436,7 +1436,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                         self.list_selected_edt.toPlainText() or 'None'))
                 try:
                     tags = self.losses_by_asset_aggr['tags']
-                    headers = ['tag']
+                    tag = tags[0]
+                    # a tag is like 'taxonomy=Wood'
+                    tag_name = tag.split('=')[0]
+                    headers = [tag_name]
                 except KeyError:
                     tags = None
                     headers = []
