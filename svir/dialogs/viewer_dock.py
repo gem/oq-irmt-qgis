@@ -407,6 +407,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             # deselect all tag values for tags that are unselected
             for value in self.tags[tag_name]['values']:
                 self.tags[tag_name]['values'][value] = False
+                if self.tag_with_all_values == tag_name:
+                    self.tag_with_all_values = None
         self.tag_values_multiselect.setEnabled(
             tag_name in list(self.tag_names_multiselect.get_selected_items()))
         self.update_list_selected_edt()
