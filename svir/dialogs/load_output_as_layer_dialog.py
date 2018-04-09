@@ -628,7 +628,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 #       u'structural', therefore we can't just use the selected
                 #       loss type, but we must use the actual only key in the
                 #       dict
-                added_loss_attr = loss_attrs_dict.keys()[0]
+                [added_loss_attr] = loss_attrs_dict
                 style_by = loss_attrs_dict[added_loss_attr]['sum']
                 self.style_maps(layer=zonal_layer, style_by=style_by)
         elif self.output_type in OQ_CSV_TO_LAYER_TYPES:
