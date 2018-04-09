@@ -805,7 +805,14 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         else:  # self.output_type == 'avg_losses-stats_aggr'
             table.setHorizontalHeaderLabels(self.stats)
         if tags is not None:
-            table.setVerticalHeaderLabels(tags)
+            # tags are like
+            # array(['taxonomy=Wood',
+            #        'taxonomy=Adobe',
+            #        'taxonomy=Stone-Masonry',
+            #        'taxonomy=Unreinforced-Brick-Masonry',
+            #        'taxonomy=Concrete'], dtype='|S35')
+            tag_values = [tag.split('=')[1] for tag in tags]
+            table.setVerticalHeaderLabels(tag_values)
         table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         for row in range(nrows):
             for col in range(ncols):
@@ -1443,7 +1450,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 if tags is not None:
                     for row_idx, row in enumerate(
                             self.losses_by_asset_aggr['array']):
-                        values = [tags[row_idx]]
+                        tag = tags[row_idx]
+                        # a tag is like 'taxonomy=Wood'
+                        tag_value = tag.split('=')[1]
+                        values = [tag_value]
                         values.extend(losses_array[row_idx])
                         writer.writerow(values)
                 else:
