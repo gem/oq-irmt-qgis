@@ -383,22 +383,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             return
         self.draw_losses_by_asset_aggr()
 
-    def filter_avg_losses_stats_aggr(self):
-        params = {}
-        for tag_name in self.tags:
-            if self.tags[tag_name]['selected']:
-                for value in self.tags[tag_name]['values']:
-                    if self.tags[tag_name]['values'][value]:
-                        # NOTE: this would not work for multiple values per tag
-                        params[tag_name] = value
-        to_extract = 'agglosses/%s' % self.loss_type_cbx.currentText()
-        self.avg_losses_stats_aggr = extract_npz(
-            self.session, self.hostname, self.calc_id, to_extract,
-            message_bar=self.iface.messageBar(), params=params)
-        if self.avg_losses_stats_aggr is None:
-            return
-        self.draw_avg_losses_stats_aggr()
-
     def update_selected_tag_names(self):
         for tag_name in self.tag_names_multiselect.get_selected_items():
             self.tags[tag_name]['selected'] = True
@@ -412,10 +396,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.update_list_selected_edt()
         if self.output_type == 'dmg_by_asset_aggr':
             self.filter_dmg_by_asset_aggr()
-        elif self.output_type == 'losses_by_asset_aggr':
+        elif self.output_type in ('losses_by_asset_aggr',
+                                  'avg_losses-stats_aggr'):
             self.filter_losses_by_asset_aggr()
-        elif self.output_type == 'avg_losses-stats_aggr':
-            self.filter_avg_losses_stats_aggr()
 
     def update_selected_tag_values(self):
         for tag_value in self.tag_values_multiselect.get_selected_items():
@@ -432,10 +415,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             elif (self.tag_with_all_values == self.current_tag_name and
                     "*" in self.tag_values_multiselect.get_unselected_items()):
                 self.tag_with_all_values = None
-            if self.output_type == 'losses_by_asset_aggr':
+            if self.output_type in ('losses_by_asset_aggr',
+                                    'avg_losses-stats_aggr'):
                 self.filter_losses_by_asset_aggr()
-            elif self.output_type == 'avg_losses-stats_aggr':
-                self.filter_avg_losses_stats_aggr()
 
     def create_list_selected_edt(self):
         self.list_selected_edt = QPlainTextEdit('Selected tags:')
@@ -499,12 +481,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.create_tag_values_multiselect()
             self.create_list_selected_edt()
             self.create_exclude_no_dmg_ckb()
-        elif new_output_type == 'losses_by_asset_aggr':
-            self.create_loss_type_selector()
-            self.create_tag_names_multiselect()
-            self.create_tag_values_multiselect()
-            self.create_list_selected_edt()
-        elif new_output_type == 'avg_losses-stats_aggr':
+        elif new_output_type in ('losses_by_asset_aggr',
+                                 'avg_losses-stats_aggr'):
             self.create_loss_type_selector()
             self.create_tag_names_multiselect()
             self.create_tag_values_multiselect()
@@ -542,11 +520,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         elif output_type == 'dmg_by_asset_aggr':
             self.load_dmg_by_asset_aggr(
                 calc_id, session, hostname, output_type)
-        elif output_type == 'losses_by_asset_aggr':
+        elif output_type in ('losses_by_asset_aggr',
+                             'avg_losses-stats-aggr'):
             self.load_losses_by_asset_aggr(
-                calc_id, session, hostname, output_type)
-        elif output_type == 'avg_losses-stats_aggr':
-            self.load_avg_losses_stats_aggr(
                 calc_id, session, hostname, output_type)
         else:
             raise NotImplementedError(output_type)
@@ -620,12 +596,13 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             message_bar=self.iface.messageBar())
         if composite_risk_model_attrs is None:
             return
-        rlzs_npz = extract_npz(
-            session, hostname, calc_id, 'realizations',
-            message_bar=self.iface.messageBar())
-        if rlzs_npz is None:
-            return
-        self.rlzs = rlzs_npz['array']['gsims']
+        if self.output_type == 'losses_by_asset_aggr':
+            rlzs_npz = extract_npz(
+                session, hostname, calc_id, 'realizations',
+                message_bar=self.iface.messageBar())
+            if rlzs_npz is None:
+                return
+            self.rlzs = rlzs_npz['array']['gsims']
         self._get_tags(session, hostname, calc_id, self.iface.messageBar(),
                        with_star=True)
         self.update_list_selected_edt()
@@ -635,6 +612,17 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.loss_type_cbx.clear()
         self.loss_type_cbx.addItems(loss_types)
         self.loss_type_cbx.blockSignals(False)
+
+        if self.output_type == 'avg_losses-stats_aggr':
+            to_extract = 'agglosses/%s' % loss_types[0]
+            npz = extract_npz(session, hostname, calc_id, to_extract,
+                              message_bar=self.iface.messageBar())
+            # stats might be unavailable in case of a single realization
+            if npz['stats'] == numpy.array(None):
+                # NOTE: writing 'mean' instead of 'rlz-0' would be equivalent
+                self.stats = ['rlz-0']
+            else:
+                self.stats = str(npz['stats']).split()
 
         self.tag_names_multiselect.set_unselected_items(self.tags.keys())
         self.tag_names_multiselect.set_selected_items([])
@@ -642,39 +630,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.tag_values_multiselect.set_selected_items([])
 
         self.filter_losses_by_asset_aggr()
-
-    def load_avg_losses_stats_aggr(
-            self, calc_id, session, hostname, output_type):
-        composite_risk_model_attrs = extract_npz(
-            session, hostname, calc_id, 'composite_risk_model.attrs',
-            message_bar=self.iface.messageBar())
-        if composite_risk_model_attrs is None:
-            return
-        self._get_tags(session, hostname, calc_id, self.iface.messageBar(),
-                       with_star=True)
-        self.update_list_selected_edt()
-
-        loss_types = composite_risk_model_attrs['loss_types']
-        self.loss_type_cbx.blockSignals(True)
-        self.loss_type_cbx.clear()
-        self.loss_type_cbx.addItems(loss_types)
-        self.loss_type_cbx.blockSignals(False)
-
-        to_extract = 'agglosses/%s' % loss_types[0]
-        npz = extract_npz(session, hostname, calc_id, to_extract,
-                          message_bar=self.iface.messageBar())
-        # stats might be unavailable in case of a single realization
-        if npz['stats'] == numpy.array(None):
-            # NOTE: writing 'mean' instead of 'rlz-0' would be equivalent
-            self.stats = ['rlz-0']
-        else:
-            self.stats = str(npz['stats']).split()
-        self.tag_names_multiselect.set_unselected_items(self.tags.keys())
-        self.tag_names_multiselect.set_selected_items([])
-        self.tag_values_multiselect.set_unselected_items([])
-        self.tag_values_multiselect.set_selected_items([])
-
-        self.filter_avg_losses_stats_aggr()
 
     def load_agg_curves(self, calc_id, session, hostname, output_type):
         self.agg_curves = extract_npz(
@@ -845,33 +800,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             QSizePolicy.Preferred, QSizePolicy.MinimumExpanding)
         table.setHorizontalHeaderLabels(self.rlzs)
         if tags is not None:
-            table.setVerticalHeaderLabels(tags)
-        table.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        for row in range(nrows):
-            for col in range(ncols):
-                table.setItem(
-                    row, col, QTableWidgetItem(str(losses_array[row, col])))
-        table.resizeColumnsToContents()
-        self.table_layout.addWidget(table)
-
-    def draw_avg_losses_stats_aggr(self):
-        self.plot_canvas.hide()
-        clear_widgets_from_layout(self.table_layout)
-        losses_array = self.avg_losses_stats_aggr['array']
-        losses_array = self._to_2d(losses_array)
-        tags = None
-        try:
-            tags = self.avg_losses_stats_aggr['tags']
-        except KeyError:
-            # tags are only available when the '*' is chosen
-            pass
-        nrows, ncols = losses_array.shape
-        table = QTableWidget(nrows, ncols)
-        table.setSizePolicy(
-            QSizePolicy.Preferred, QSizePolicy.MinimumExpanding)
-        table.setHorizontalHeaderLabels(self.stats)
-        if tags is not None:
-            # tags are only displayed (as row labels) when the '*' is chosen
             table.setVerticalHeaderLabels(tags)
         table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         for row in range(nrows):
@@ -1322,10 +1250,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.draw_agg_curves(self.output_type)
         elif self.output_type == 'dmg_by_asset_aggr':
             self.filter_dmg_by_asset_aggr()
-        elif self.output_type == 'losses_by_asset_aggr':
+        elif self.output_type in ('losses_by_asset_aggr',
+                                  'avg_losses-stats_aggr'):
             self.filter_losses_by_asset_aggr()
-        elif self.output_type == 'avg_losses-stats_aggr':
-            self.filter_avg_losses_stats_aggr()
         else:
             self.was_loss_type_switched = True
             self.redraw_current_selection()
