@@ -521,7 +521,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.load_dmg_by_asset_aggr(
                 calc_id, session, hostname, output_type)
         elif output_type in ('losses_by_asset_aggr',
-                             'avg_losses-stats-aggr'):
+                             'avg_losses-stats_aggr'):
             self.load_losses_by_asset_aggr(
                 calc_id, session, hostname, output_type)
         else:
