@@ -573,6 +573,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                                     'dmg_by_asset',
                                     'avg_losses-stats'):
                 loss_layer = self.layer
+                self.iface.legendInterface().setLayerVisible(loss_layer, False)
                 if (not self.zonal_layer_cbx.currentText() or
                         not self.zonal_layer_gbx.isChecked()):
                     super(LoadOutputAsLayerDialog, self).accept()
