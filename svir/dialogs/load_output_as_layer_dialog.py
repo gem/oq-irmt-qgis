@@ -572,12 +572,13 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             if self.output_type in ('losses_by_asset',
                                     'dmg_by_asset',
                                     'avg_losses-stats'):
-                loss_layer = self.layer
-                self.iface.legendInterface().setLayerVisible(loss_layer, False)
+                # check if also aggregating by zone or not
                 if (not self.zonal_layer_cbx.currentText() or
                         not self.zonal_layer_gbx.isChecked()):
                     super(LoadOutputAsLayerDialog, self).accept()
                     return
+                loss_layer = self.layer
+                self.iface.legendInterface().setLayerVisible(loss_layer, False)
                 zonal_layer_id = self.zonal_layer_cbx.itemData(
                     self.zonal_layer_cbx.currentIndex())
                 zonal_layer = QgsMapLayerRegistry.instance().mapLayer(
