@@ -24,6 +24,7 @@
 
 import os
 import tempfile
+from collections import OrderedDict
 from svir.utilities.utils import (import_layer_from_csv,
                                   get_params_from_comment_line,
                                   log_msg,
@@ -42,8 +43,13 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
         LoadOutputAsLayerDialog.__init__(
             self, iface, viewer_dock, session, hostname, calc_id,
             output_type, path, mode)
+        self.style_by_items = OrderedDict([
+            ('Tectonic region type', 'trt'),
+            ('Magnitude', 'mag'),
+        ])
         self.create_file_size_indicator()
         self.create_save_as_shp_ckb()
+        self.create_style_by_selector()
         self.populate_out_dep_widgets()
         self.setWindowTitle('Load ruptures from CSV, as layer')
         self.adjustSize()
@@ -54,6 +60,12 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
 
     def populate_out_dep_widgets(self):
         self.show_file_size()
+        self.populate_style_by_cbx()
+
+    def populate_style_by_cbx(self):
+        self.style_by_cbx.clear()
+        for item in self.style_by_items:
+            self.style_by_cbx.addItem(item, self.style_by_items[item])
 
     def load_from_csv(self):
         if self.mode == 'testing':
@@ -85,3 +97,8 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
             lines_to_skip_count=1,
             save_as_shp=self.save_as_shp_ckb.isChecked(), dest_shp=dest_shp)
         self.layer.setCustomProperty('investigation_time', investigation_time)
+        style_by = self.style_by_cbx.itemData(self.style_by_cbx.currentIndex())
+        if style_by == 'mag':
+            self.style_maps(layer=self.layer, style_by=style_by)
+        else:  # 'trt'
+            self.style_categorized(layer=self.layer, style_by=style_by)

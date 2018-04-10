@@ -22,6 +22,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
+from random import randrange
 from qgis.core import (QgsVectorLayer,
                        QgsMapLayerRegistry,
                        QgsStyleV2,
@@ -36,6 +37,9 @@ from qgis.core import (QgsVectorLayer,
                        QGis,
                        QgsMapLayer,
                        QgsMarkerSymbolV2,
+                       QgsSimpleFillSymbolLayerV2,
+                       QgsRendererCategoryV2,
+                       QgsCategorizedSymbolRendererV2,
                        )
 from qgis.PyQt.QtCore import pyqtSlot, QDir, QSettings, QFileInfo, Qt
 from qgis.PyQt.QtGui import (QDialogButtonBox,
@@ -169,6 +173,12 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.taxonomy_cbx.setEnabled(False)
         self.output_dep_vlayout.addWidget(self.taxonomy_lbl)
         self.output_dep_vlayout.addWidget(self.taxonomy_cbx)
+
+    def create_style_by_selector(self):
+        self.style_by_lbl = QLabel('Style by')
+        self.style_by_cbx = QComboBox()
+        self.output_dep_vlayout.addWidget(self.style_by_lbl)
+        self.output_dep_vlayout.addWidget(self.style_by_cbx)
 
     def create_load_selected_only_ckb(self):
         self.load_selected_only_ckb = QCheckBox("Load only the selected items")
@@ -430,6 +440,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         if self.output_type in OQ_TO_LAYER_TYPES:
             default_qgs_style = QgsStyleV2().defaultStyle()
             default_color_ramp_names = default_qgs_style.colorRampNames()
+            # FIXME: which default for ruptures?
             if self.output_type in ('dmg_by_asset',
                                     'losses_by_asset',
                                     'avg_losses-stats'):
@@ -438,7 +449,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 mode = QgsGraduatedSymbolRendererV2.Jenks
                 ramp_type_idx = default_color_ramp_names.index('Reds')
                 inverted = False
-            elif self.output_type in ('hmaps', 'gmf_data'):
+            elif self.output_type in ('hmaps', 'gmf_data', 'ruptures'):
                 # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
                 mode = QgsGraduatedSymbolRendererV2.EqualInterval
                 ramp_type_idx = default_color_ramp_names.index('Spectral')
@@ -474,6 +485,38 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         graduated_renderer.moveClass(len(graduated_renderer.ranges()) - 1, 0)
         layer.setRendererV2(graduated_renderer)
         layer.setLayerTransparency(30)  # percent
+        layer.triggerRepaint()
+        self.iface.legendInterface().refreshLayerSymbology(layer)
+        self.iface.mapCanvas().refresh()
+
+    def style_categorized(self, layer, style_by):
+        # get unique values
+        fni = layer.fieldNameIndex(style_by)
+        unique_values = layer.dataProvider().uniqueValues(fni)
+        # define categories
+        categories = []
+        for unique_value in unique_values:
+            # initialize the default symbol for this geometry type
+            symbol = QgsSymbolV2.defaultSymbol(layer.geometryType())
+            # configure a symbol layer
+            layer_style = {}
+            layer_style['color'] = '%d, %d, %d' % (
+                randrange(0, 256), randrange(0, 256), randrange(0, 256))
+            layer_style['outline'] = '#000000'
+            symbol_layer = QgsSimpleFillSymbolLayerV2.create(layer_style)
+            # replace default symbol layer with the configured one
+            if symbol_layer is not None:
+                symbol.changeSymbolLayer(0, symbol_layer)
+            # create renderer object
+            category = QgsRendererCategoryV2(
+                unique_value, symbol, str(unique_value))
+            # entry for the list of category items
+            categories.append(category)
+        # create renderer object
+        renderer = QgsCategorizedSymbolRendererV2(style_by, categories)
+        # assign the created renderer to the layer
+        if renderer is not None:
+            layer.setRendererV2(renderer)
         layer.triggerRepaint()
         self.iface.legendInterface().refreshLayerSymbology(layer)
         self.iface.mapCanvas().refresh()
