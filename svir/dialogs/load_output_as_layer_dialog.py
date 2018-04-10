@@ -65,7 +65,6 @@ from svir.utilities.utils import (get_ui_class,
                                   log_msg,
                                   tr,
                                   get_file_size,
-                                  extract_npz,
                                   )
 
 FORM_CLASS = get_ui_class('ui_load_output_as_layer.ui')
@@ -301,20 +300,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.rlz_or_stat_cbx.clear()
         self.rlz_or_stat_cbx.setEnabled(True)
         self.rlz_or_stat_cbx.addItems(self.rlzs_or_stats)
-
-    def get_loss_types(self, session, hostname, calc_id):
-        composite_risk_model_attrs = extract_npz(
-            session, hostname, calc_id, 'composite_risk_model.attrs',
-            message_bar=self.iface.messageBar())
-        if composite_risk_model_attrs is None:
-            return
-        # casting loss_types to string, otherwise numpy complains when creating
-        # array of zeros with data type as follows:
-        # [('lon', F32), ('lat', F32), (loss_type, F32)])
-        loss_types = [
-            str(loss_type)
-            for loss_type in composite_risk_model_attrs['loss_types']]
-        return loss_types
 
     def populate_loss_type_cbx(self, loss_types):
         self.loss_type_cbx.clear()

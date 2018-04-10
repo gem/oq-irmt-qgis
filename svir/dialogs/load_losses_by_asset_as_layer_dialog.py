@@ -31,6 +31,7 @@ from svir.utilities.utils import (WaitCursorManager,
                                   LayerEditingManager,
                                   log_msg,
                                   extract_npz,
+                                  get_loss_types,
                                   )
 from svir.utilities.shared import DEBUG
 
@@ -74,7 +75,7 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             session, hostname, calc_id, 'losses_by_asset',
             message_bar=iface.messageBar(), params=None)
 
-        self.loss_types = self.get_loss_types(session, hostname, calc_id)
+        self.loss_types = get_loss_types(session, hostname, calc_id)
 
         self.populate_out_dep_widgets()
         if self.zonal_layer_path:
