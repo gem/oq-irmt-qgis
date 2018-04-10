@@ -25,6 +25,7 @@ email=staff.it@globalquakemodel.org
 changelog=
     3.1.0
     * Ruptures imported from the OQ-Engine can be styled automatically by tectonic region type or by magnitude
+    * Improved visualization of aggregate outputs in the Data Viewer
     3.0.2
     * Fixed styling of scenario damage after aggregating damage by zone
     * Fixed selection/deselection of tag values in aggregate losses/damages visualization in the Data Viewer
