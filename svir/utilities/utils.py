@@ -1155,3 +1155,16 @@ def check_is_lockdown(hostname, session):
                 "Error %s loading %s: %s" % (
                     resp.status_code, resp.url, resp.reason))
     return False
+
+
+def get_loss_types(session, hostname, calc_id, message_bar):
+    composite_risk_model_attrs = extract_npz(
+        session, hostname, calc_id, 'composite_risk_model.attrs',
+        message_bar=message_bar)
+    # casting loss_types to string, otherwise numpy complains when creating
+    # array of zeros with data type as follows:
+    # [('lon', F32), ('lat', F32), (loss_type, F32)])
+    loss_types = [
+        str(loss_type)
+        for loss_type in composite_risk_model_attrs['loss_types']]
+    return loss_types
