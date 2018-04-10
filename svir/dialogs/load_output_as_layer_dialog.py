@@ -308,7 +308,12 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             message_bar=self.iface.messageBar())
         if composite_risk_model_attrs is None:
             return
-        loss_types = composite_risk_model_attrs['loss_types']
+        # casting loss_types to string, otherwise numpy complains when creating
+        # array of zeros with data type as follows:
+        # [('lon', F32), ('lat', F32), (loss_type, F32)])
+        loss_types = [
+            str(loss_type)
+            for loss_type in composite_risk_model_attrs['loss_types']]
         return loss_types
 
     def populate_loss_type_cbx(self, loss_types):
