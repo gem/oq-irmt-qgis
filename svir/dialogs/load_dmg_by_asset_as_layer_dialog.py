@@ -66,7 +66,8 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             session, hostname, calc_id, output_type,
             message_bar=iface.messageBar(), params=None)
 
-        self.loss_types = get_loss_types(session, hostname, calc_id)
+        self.loss_types = get_loss_types(
+            session, hostname, calc_id, self.iface.messageBar())
 
         self.populate_out_dep_widgets()
         if self.zonal_layer_path:
