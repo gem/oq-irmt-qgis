@@ -451,7 +451,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             elif self.output_type in ('hmaps', 'gmf_data', 'ruptures'):
                 # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
                 if self.output_type == 'ruptures':
-                    mode = QgsGraduatedSymbolRendererV2.PrettyBreaks
+                    mode = QgsGraduatedSymbolRendererV2.Pretty
                 else:
                     mode = QgsGraduatedSymbolRendererV2.EqualInterval
                 ramp_type_idx = default_color_ramp_names.index('Spectral')
