@@ -440,7 +440,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         if self.output_type in OQ_TO_LAYER_TYPES:
             default_qgs_style = QgsStyleV2().defaultStyle()
             default_color_ramp_names = default_qgs_style.colorRampNames()
-            # FIXME: which default for ruptures?
             if self.output_type in ('dmg_by_asset',
                                     'losses_by_asset',
                                     'avg_losses-stats'):
@@ -451,7 +450,10 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 inverted = False
             elif self.output_type in ('hmaps', 'gmf_data', 'ruptures'):
                 # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
-                mode = QgsGraduatedSymbolRendererV2.EqualInterval
+                if self.output_type == 'ruptures':
+                    mode = QgsGraduatedSymbolRendererV2.PrettyBreaks
+                else:
+                    mode = QgsGraduatedSymbolRendererV2.EqualInterval
                 ramp_type_idx = default_color_ramp_names.index('Spectral')
                 inverted = True
             ramp = default_qgs_style.colorRamp(
@@ -464,25 +466,29 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             symbol,
             ramp,
             inverted=inverted)
-        label_format = graduated_renderer.labelFormat()
-        # label_format.setTrimTrailingZeroes(True)  # it might be useful
-        label_format.setPrecision(2)
-        graduated_renderer.setLabelFormat(label_format, updateRanges=True)
-        VERY_SMALL_VALUE = 1e-20
-        graduated_renderer.updateRangeLowerValue(0, VERY_SMALL_VALUE)
-        symbol_zeros = QgsSymbolV2.defaultSymbol(layer.geometryType())
-        symbol_zeros.setColor(QColor(240, 240, 240))  # very light grey
-        if isinstance(symbol, QgsMarkerSymbolV2):
-            # do it only for the layer with points
-            self._set_symbol_size(symbol_zeros)
-            symbol_zeros.symbolLayer(0).setOutlineStyle(Qt.PenStyle(Qt.NoPen))
-        zeros_min = 0.0
-        zeros_max = VERY_SMALL_VALUE
-        range_zeros = QgsRendererRangeV2(
-            zeros_min, zeros_max, symbol_zeros,
-            " %.2f - %.2f" % (zeros_min, zeros_max), True)
-        graduated_renderer.addClassRange(range_zeros)
-        graduated_renderer.moveClass(len(graduated_renderer.ranges()) - 1, 0)
+        # add a class for 0 values, unless while styling ruptures
+        if self.output_type != 'ruptures':
+            label_format = graduated_renderer.labelFormat()
+            # label_format.setTrimTrailingZeroes(True)  # it might be useful
+            label_format.setPrecision(2)
+            graduated_renderer.setLabelFormat(label_format, updateRanges=True)
+            VERY_SMALL_VALUE = 1e-20
+            graduated_renderer.updateRangeLowerValue(0, VERY_SMALL_VALUE)
+            symbol_zeros = QgsSymbolV2.defaultSymbol(layer.geometryType())
+            symbol_zeros.setColor(QColor(240, 240, 240))  # very light grey
+            if isinstance(symbol, QgsMarkerSymbolV2):
+                # do it only for the layer with points
+                self._set_symbol_size(symbol_zeros)
+                symbol_zeros.symbolLayer(0).setOutlineStyle(
+                    Qt.PenStyle(Qt.NoPen))
+            zeros_min = 0.0
+            zeros_max = VERY_SMALL_VALUE
+            range_zeros = QgsRendererRangeV2(
+                zeros_min, zeros_max, symbol_zeros,
+                " %.2f - %.2f" % (zeros_min, zeros_max), True)
+            graduated_renderer.addClassRange(range_zeros)
+            graduated_renderer.moveClass(
+                len(graduated_renderer.ranges()) - 1, 0)
         layer.setRendererV2(graduated_renderer)
         layer.setLayerTransparency(30)  # percent
         layer.triggerRepaint()
