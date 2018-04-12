@@ -22,6 +22,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
+from random import randrange
 from qgis.core import (QgsVectorLayer,
                        QgsMapLayerRegistry,
                        QgsStyleV2,
@@ -36,6 +37,9 @@ from qgis.core import (QgsVectorLayer,
                        QGis,
                        QgsMapLayer,
                        QgsMarkerSymbolV2,
+                       QgsSimpleFillSymbolLayerV2,
+                       QgsRendererCategoryV2,
+                       QgsCategorizedSymbolRendererV2,
                        )
 from qgis.PyQt.QtCore import pyqtSlot, QDir, QSettings, QFileInfo, Qt
 from qgis.PyQt.QtGui import (QDialogButtonBox,
@@ -169,6 +173,12 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.taxonomy_cbx.setEnabled(False)
         self.output_dep_vlayout.addWidget(self.taxonomy_lbl)
         self.output_dep_vlayout.addWidget(self.taxonomy_cbx)
+
+    def create_style_by_selector(self):
+        self.style_by_lbl = QLabel('Style by')
+        self.style_by_cbx = QComboBox()
+        self.output_dep_vlayout.addWidget(self.style_by_lbl)
+        self.output_dep_vlayout.addWidget(self.style_by_cbx)
 
     def create_load_selected_only_ckb(self):
         self.load_selected_only_ckb = QCheckBox("Load only the selected items")
@@ -438,9 +448,12 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 mode = QgsGraduatedSymbolRendererV2.Jenks
                 ramp_type_idx = default_color_ramp_names.index('Reds')
                 inverted = False
-            elif self.output_type in ('hmaps', 'gmf_data'):
+            elif self.output_type in ('hmaps', 'gmf_data', 'ruptures'):
                 # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
-                mode = QgsGraduatedSymbolRendererV2.EqualInterval
+                if self.output_type == 'ruptures':
+                    mode = QgsGraduatedSymbolRendererV2.Pretty
+                else:
+                    mode = QgsGraduatedSymbolRendererV2.EqualInterval
                 ramp_type_idx = default_color_ramp_names.index('Spectral')
                 inverted = True
             ramp = default_qgs_style.colorRamp(
@@ -457,23 +470,59 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         # label_format.setTrimTrailingZeroes(True)  # it might be useful
         label_format.setPrecision(2)
         graduated_renderer.setLabelFormat(label_format, updateRanges=True)
-        VERY_SMALL_VALUE = 1e-20
-        graduated_renderer.updateRangeLowerValue(0, VERY_SMALL_VALUE)
-        symbol_zeros = QgsSymbolV2.defaultSymbol(layer.geometryType())
-        symbol_zeros.setColor(QColor(240, 240, 240))  # very light grey
-        if isinstance(symbol, QgsMarkerSymbolV2):
-            # do it only for the layer with points
-            self._set_symbol_size(symbol_zeros)
-            symbol_zeros.symbolLayer(0).setOutlineStyle(Qt.PenStyle(Qt.NoPen))
-        zeros_min = 0.0
-        zeros_max = VERY_SMALL_VALUE
-        range_zeros = QgsRendererRangeV2(
-            zeros_min, zeros_max, symbol_zeros,
-            " %.2f - %.2f" % (zeros_min, zeros_max), True)
-        graduated_renderer.addClassRange(range_zeros)
-        graduated_renderer.moveClass(len(graduated_renderer.ranges()) - 1, 0)
+        # add a class for 0 values, unless while styling ruptures
+        if self.output_type != 'ruptures':
+            VERY_SMALL_VALUE = 1e-20
+            graduated_renderer.updateRangeLowerValue(0, VERY_SMALL_VALUE)
+            symbol_zeros = QgsSymbolV2.defaultSymbol(layer.geometryType())
+            symbol_zeros.setColor(QColor(240, 240, 240))  # very light grey
+            if isinstance(symbol, QgsMarkerSymbolV2):
+                # do it only for the layer with points
+                self._set_symbol_size(symbol_zeros)
+                symbol_zeros.symbolLayer(0).setOutlineStyle(
+                    Qt.PenStyle(Qt.NoPen))
+            zeros_min = 0.0
+            zeros_max = VERY_SMALL_VALUE
+            range_zeros = QgsRendererRangeV2(
+                zeros_min, zeros_max, symbol_zeros,
+                " %.2f - %.2f" % (zeros_min, zeros_max), True)
+            graduated_renderer.addClassRange(range_zeros)
+            graduated_renderer.moveClass(
+                len(graduated_renderer.ranges()) - 1, 0)
         layer.setRendererV2(graduated_renderer)
         layer.setLayerTransparency(30)  # percent
+        layer.triggerRepaint()
+        self.iface.legendInterface().refreshLayerSymbology(layer)
+        self.iface.mapCanvas().refresh()
+
+    def style_categorized(self, layer, style_by):
+        # get unique values
+        fni = layer.fieldNameIndex(style_by)
+        unique_values = layer.dataProvider().uniqueValues(fni)
+        # define categories
+        categories = []
+        for unique_value in unique_values:
+            # initialize the default symbol for this geometry type
+            symbol = QgsSymbolV2.defaultSymbol(layer.geometryType())
+            # configure a symbol layer
+            layer_style = {}
+            layer_style['color'] = '%d, %d, %d' % (
+                randrange(0, 256), randrange(0, 256), randrange(0, 256))
+            layer_style['outline'] = '#000000'
+            symbol_layer = QgsSimpleFillSymbolLayerV2.create(layer_style)
+            # replace default symbol layer with the configured one
+            if symbol_layer is not None:
+                symbol.changeSymbolLayer(0, symbol_layer)
+            # create renderer object
+            category = QgsRendererCategoryV2(
+                unique_value, symbol, str(unique_value))
+            # entry for the list of category items
+            categories.append(category)
+        # create renderer object
+        renderer = QgsCategorizedSymbolRendererV2(style_by, categories)
+        # assign the created renderer to the layer
+        if renderer is not None:
+            layer.setRendererV2(renderer)
         layer.triggerRepaint()
         self.iface.legendInterface().refreshLayerSymbology(layer)
         self.iface.mapCanvas().refresh()
