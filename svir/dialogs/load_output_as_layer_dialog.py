@@ -466,12 +466,12 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             symbol,
             ramp,
             inverted=inverted)
+        label_format = graduated_renderer.labelFormat()
+        # label_format.setTrimTrailingZeroes(True)  # it might be useful
+        label_format.setPrecision(2)
+        graduated_renderer.setLabelFormat(label_format, updateRanges=True)
         # add a class for 0 values, unless while styling ruptures
         if self.output_type != 'ruptures':
-            label_format = graduated_renderer.labelFormat()
-            # label_format.setTrimTrailingZeroes(True)  # it might be useful
-            label_format.setPrecision(2)
-            graduated_renderer.setLabelFormat(label_format, updateRanges=True)
             VERY_SMALL_VALUE = 1e-20
             graduated_renderer.updateRangeLowerValue(0, VERY_SMALL_VALUE)
             symbol_zeros = QgsSymbolV2.defaultSymbol(layer.geometryType())
