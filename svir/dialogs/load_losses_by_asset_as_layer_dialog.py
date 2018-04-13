@@ -50,9 +50,6 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             self, iface, viewer_dock, session, hostname, calc_id,
             output_type, path, mode, zonal_layer_path)
 
-        # FIXME: add layout only for output types that load from file
-        self.remove_file_hlayout()
-
         if self.output_type == 'losses_by_asset':
             self.setWindowTitle(
                 'Load losses by asset, aggregated by location, as layer')

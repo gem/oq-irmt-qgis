@@ -41,11 +41,15 @@ class LoadBasicCsvAsLayerDialog(LoadOutputAsLayerDialog):
         LoadOutputAsLayerDialog.__init__(
             self, iface, viewer_dock, session, hostname, calc_id,
             output_type, path, mode)
+        self.create_file_hlayout()
         self.create_file_size_indicator()
         self.setWindowTitle('Load %s from CSV, as layer' % output_type)
         self.populate_out_dep_widgets()
         self.adjustSize()
         self.set_ok_button()
+        self.file_browser_tbn.setEnabled(True)
+        if self.path:
+            self.path_le.setText(self.path)
 
     def set_ok_button(self):
         self.ok_button.setEnabled(bool(self.path))

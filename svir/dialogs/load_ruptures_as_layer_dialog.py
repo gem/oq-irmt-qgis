@@ -47,6 +47,7 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
             ('Tectonic region type', 'trt'),
             ('Magnitude', 'mag'),
         ])
+        self.create_file_hlayout()
         self.create_file_size_indicator()
         self.create_save_as_shp_ckb()
         self.create_style_by_selector()
@@ -54,6 +55,9 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
         self.setWindowTitle('Load ruptures from CSV, as layer')
         self.adjustSize()
         self.set_ok_button()
+        self.file_browser_tbn.setEnabled(True)
+        if self.path:
+            self.path_le.setText(self.path)
 
     def set_ok_button(self):
         self.ok_button.setEnabled(bool(self.path))
