@@ -47,9 +47,6 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             self, iface, viewer_dock, session, hostname, calc_id,
             output_type, path, mode, zonal_layer_path)
 
-        # FIXME: add layout only for output types that load from file
-        self.remove_file_hlayout()
-
         self.setWindowTitle('Load scenario damage by asset as layer')
         self.create_load_selected_only_ckb()
         self.load_selected_only_ckb.setEnabled(False)

@@ -15,36 +15,7 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
-    <layout class="QVBoxLayout" name="vlayout">
-     <item>
-      <layout class="QHBoxLayout" name="file_hlayout">
-       <item>
-        <widget class="QLabel" name="file_lbl">
-         <property name="text">
-          <string>File to load</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QToolButton" name="file_browser_tbn">
-         <property name="text">
-          <string>...</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="path_le">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QVBoxLayout" name="output_dep_vlayout"/>
-     </item>
-    </layout>
+    <layout class="QVBoxLayout" name="vlayout"/>
    </item>
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">

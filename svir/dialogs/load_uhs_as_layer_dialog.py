@@ -45,9 +45,6 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
             self, iface, viewer_dock, session, hostname, calc_id,
             output_type, path, mode)
 
-        # FIXME: add layout only for output types that load from file
-        self.remove_file_hlayout()
-
         self.setWindowTitle(
             'Load uniform hazard spectra as layer')
         self.create_num_sites_indicator()
