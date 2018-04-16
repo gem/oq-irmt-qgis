@@ -29,19 +29,22 @@ from numpy.testing import assert_almost_equal
 from pprint import pformat
 from types import NoneType
 from qgis.PyQt.QtCore import QPyNullVariant
-from qgis.core import (QgsMapLayer,
+from qgis.core import (
+                       QgsMapLayer,
                        QGis,
                        QgsVectorLayer,
                        QgsVectorDataProvider,
                        QgsMapLayerRegistry,
-                       QgsField)
+                       QgsField,
+                       edit,
+                       )
 
 from qgis.PyQt.QtCore import QVariant
 from svir.calculations.transformation_algs import TRANSFORMATION_ALGS, \
     transform
 from svir.utilities.shared import DEBUG, DOUBLE_FIELD_TYPE_NAME
 
-from svir.utilities.utils import LayerEditingManager, tr, log_msg
+from svir.utilities.utils import tr, log_msg
 
 
 class ProcessLayer(object):
@@ -162,6 +165,9 @@ class ProcessLayer(object):
 
         :param attribute_list: list of QgsField to add to the layer
         :type attribute_list: list of QgsField
+        :param simulate: if True, fields will not be added, but their addition
+            will be simulated in order to find out the field names that would
+            be assigned after the original names are laundered
 
         :return: dict having as keys the elements of the list of attributes
                  passed as input argument, and as values the actual names of
@@ -174,14 +180,10 @@ class ProcessLayer(object):
                             ' editable format before attempting to add'
                             ' attributes to it.'
                             % self.layer.providerType())
-        if simulate:
-            description = 'Simulate add attributes'
-        else:
-            description = 'Add attributes'
         aliases = dict()
         proposed_attribute_dict = {}
         proposed_attribute_list = []
-        with LayerEditingManager(self.layer, description, DEBUG):
+        with edit(self.layer):
             # add attributes
             layer_pr = self.layer.dataProvider()
             for input_attribute in attribute_list:
@@ -226,7 +228,8 @@ class ProcessLayer(object):
                     raise AttributeError(
                         'Unable to add attributes %s' %
                         proposed_attribute_list)
-        with LayerEditingManager(self.layer, 'add aliases', DEBUG):
+        with edit(self.layer):
+            # add aliases
             if not simulate:
                 for proposed_attribute_name in aliases:
                     attribute_id = self.layer.fieldNameIndex(
@@ -256,7 +259,7 @@ class ProcessLayer(object):
                             ' delete attributes from it.'
                             % self.layer.providerType())
         attr_idx_list = []
-        with LayerEditingManager(self.layer, 'Remove attributes', DEBUG):
+        with edit(self.layer):
             layer_pr = self.layer.dataProvider()
             for attribute in attribute_list:
                 if isinstance(attribute, basestring):
@@ -357,11 +360,11 @@ class ProcessLayer(object):
             # get the id of the new attribute
             new_attr_id = self.find_attribute_id(actual_new_attr_name)
         if new_attr_alias:
-            with LayerEditingManager(self.layer, 'add alias', DEBUG):
+            with edit(self.layer):
                 self.layer.addAttributeAlias(new_attr_id, new_attr_alias)
 
-        with LayerEditingManager(
-                self.layer, 'Write transformed values', DEBUG):
+        with edit(self.layer):
+            # write transformed values
             for feat in self.layer.getFeatures():
                 feat_id = feat.id()
                 value = transformed_dict[feat_id]
@@ -428,7 +431,9 @@ class ProcessLayer(object):
         my_uuid = str(uuid.uuid4())
         uri = '%s?crs=%s&index=yes&uuid=%s' % (type_str, crs, my_uuid)
         mem_layer = QgsVectorLayer(uri, new_name, 'memory')
-        with LayerEditingManager(mem_layer, 'Duplicating layer', DEBUG):
+
+        # duplicate layer
+        with edit(mem_layer):
             mem_provider = mem_layer.dataProvider()
 
             provider = self.layer.dataProvider()

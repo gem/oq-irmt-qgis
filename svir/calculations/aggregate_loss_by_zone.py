@@ -30,6 +30,7 @@ from qgis.core import (QgsVectorLayer,
                        QgsSpatialIndex,
                        QgsFeatureRequest,
                        QGis,
+                       edit,
                        )
 from qgis.analysis import QgsZonalStatistics
 
@@ -40,7 +41,7 @@ import processing
 
 from svir.calculations.process_layer import ProcessLayer
 
-from svir.utilities.utils import (LayerEditingManager,
+from svir.utilities.utils import (
                                   tr,
                                   TraceTimeManager,
                                   clear_progress_message_bar,
@@ -163,9 +164,7 @@ def calculate_zonal_stats(loss_layer,
                 # we get a dict, from which we find the actual attribute name
                 # in the only dict value
                 zone_id_in_zones_attr_name = attr_dict.values()[0]
-                with LayerEditingManager(zonal_layer,
-                                         'Copy feature id into the new field',
-                                         DEBUG):
+                with edit(zonal_layer):
                     unique_id_idx = zonal_layer.fieldNameIndex(
                             zone_id_in_zones_attr_name)
                     for feat in zonal_layer.getFeatures():
@@ -325,9 +324,7 @@ def _add_zone_id_to_points_internal(iface, loss_layer, zonal_layer,
             progress.setValue(progress_perc)
             spatial_index.insertFeature(loss_feature)
     clear_progress_message_bar(iface.messageBar(), msg_bar_item)
-    with LayerEditingManager(loss_layer_plus_zones,
-                             tr("Label each point with the zone id"),
-                             DEBUG):
+    with edit(loss_layer_plus_zones):
         # to show the overall progress, cycling through zones
         tot_zones = zonal_layer.featureCount()
         msg = tr("Step 3 of 3: labeling points by zone id...")
@@ -512,9 +509,7 @@ def calculate_vector_stats_aggregating_by_zone_id(
         tot_zones = zonal_layer.featureCount()
         msg_bar_item, progress = create_progress_message_bar(
                 iface.messageBar(), msg)
-        with LayerEditingManager(zonal_layer,
-                                 msg,
-                                 DEBUG):
+        with edit(zonal_layer):
             if extra:
                 count_idx = zonal_layer.fieldNameIndex(
                         loss_attrs_dict['count'])
@@ -638,7 +633,7 @@ def purge_zones_without_loss_points(
     msg_bar_item, progress = create_progress_message_bar(
             iface.messageBar(), msg)
 
-    with LayerEditingManager(zonal_layer, msg, DEBUG):
+    with edit(zonal_layer):
         for current_zone, zone_feature in enumerate(zonal_layer.getFeatures()):
             progress_percent = current_zone / float(tot_zones) * 100
             progress.setValue(progress_percent)

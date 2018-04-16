@@ -24,16 +24,14 @@
 
 import numpy
 import collections
-from qgis.core import QgsFeature, QgsGeometry, QgsPoint
+from qgis.core import QgsFeature, QgsGeometry, QgsPoint, edit
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 from svir.calculations.calculate_utils import add_numeric_attribute
 from svir.utilities.utils import (WaitCursorManager,
-                                  LayerEditingManager,
                                   log_msg,
                                   extract_npz,
                                   get_loss_types,
                                   )
-from svir.utilities.shared import DEBUG
 
 
 class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
@@ -130,7 +128,7 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         return field_names
 
     def add_field_to_layer(self, field_name):
-        # NOTE: add_numeric_attribute uses LayerEditingManager
+        # NOTE: add_numeric_attribute uses the native qgis editing manager
         added_field_name = add_numeric_attribute(
             field_name, self.layer)
         return added_field_name
@@ -139,7 +137,7 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         rlz_or_stat = kwargs['rlz_or_stat']
         loss_type = kwargs['loss_type']
         taxonomy = kwargs['taxonomy']
-        with LayerEditingManager(self.layer, 'Reading npz', DEBUG):
+        with edit(self.layer):
             feats = []
             grouped_by_site = self.group_by_site(
                 self.npz_file, rlz_or_stat, loss_type, taxonomy)
