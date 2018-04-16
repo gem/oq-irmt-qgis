@@ -124,14 +124,14 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.file_size_lbl = QLabel(self.file_size_msg % '')
         self.vlayout.addWidget(self.file_size_lbl)
 
-    def create_gsim_selector(self):
-        self.gsim_lbl = QLabel('GSIM')
-        self.gsim_cbx = QComboBox()
-        self.gsim_cbx.setEnabled(False)
-        self.gsim_cbx.currentIndexChanged['QString'].connect(
-            self.on_gsim_changed)
-        self.vlayout.addWidget(self.gsim_lbl)
-        self.vlayout.addWidget(self.gsim_cbx)
+    def create_gmpe_selector(self):
+        self.gmpe_lbl = QLabel('GMPE')
+        self.gmpe_cbx = QComboBox()
+        self.gmpe_cbx.setEnabled(False)
+        self.gmpe_cbx.currentIndexChanged['QString'].connect(
+            self.on_gmpe_changed)
+        self.vlayout.addWidget(self.gmpe_lbl)
+        self.vlayout.addWidget(self.gmpe_cbx)
 
     def create_rlz_or_stat_selector(self):
         self.rlz_or_stat_lbl = QLabel('Realization')
@@ -378,10 +378,10 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             return None
 
     def build_layer(self, rlz_or_stat=None, taxonomy=None, poe=None,
-                    loss_type=None, dmg_state=None, gsim=None):
+                    loss_type=None, dmg_state=None, gmpe=None):
         layer_name = self.build_layer_name(
             rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
-            loss_type=loss_type, dmg_state=dmg_state, gsim=gsim)
+            loss_type=loss_type, dmg_state=dmg_state, gmpe=gmpe)
         field_names = self.get_field_names(
             rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
             loss_type=loss_type, dmg_state=dmg_state)
