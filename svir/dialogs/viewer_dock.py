@@ -69,6 +69,7 @@ from svir.utilities.utils import (get_ui_class,
                                   clear_widgets_from_layout,
                                   warn_scipy_missing,
                                   extract_npz,
+                                  get_loss_types,
                                   )
 from svir.recovery_modeling.recovery_modeling import (
     RecoveryModeling, fill_fields_multiselect)
@@ -593,11 +594,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
     def load_losses_by_asset_aggr(
             self, calc_id, session, hostname, output_type):
-        composite_risk_model_attrs = extract_npz(
-            session, hostname, calc_id, 'composite_risk_model.attrs',
-            message_bar=self.iface.messageBar())
-        if composite_risk_model_attrs is None:
-            return
         if self.output_type == 'losses_by_asset_aggr':
             rlzs_npz = extract_npz(
                 session, hostname, calc_id, 'realizations',
@@ -609,7 +605,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                        with_star=True)
         self.update_list_selected_edt()
 
-        loss_types = composite_risk_model_attrs['loss_types']
+        loss_types = get_loss_types(
+            session, hostname, calc_id, self.iface.messageBar())
         self.loss_type_cbx.blockSignals(True)
         self.loss_type_cbx.clear()
         self.loss_type_cbx.addItems(loss_types)
@@ -639,7 +636,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             message_bar=self.iface.messageBar())
         if self.agg_curves is None:
             return
-        loss_types = self.agg_curves['array'].dtype.names
+        loss_types = get_loss_types(
+            session, hostname, calc_id, self.iface.messageBar())
         self.loss_type_cbx.blockSignals(True)
         self.loss_type_cbx.clear()
         self.loss_type_cbx.blockSignals(False)

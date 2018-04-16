@@ -22,6 +22,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
+from random import randrange
 from qgis.core import (QgsVectorLayer,
                        QgsMapLayerRegistry,
                        QgsStyleV2,
@@ -36,6 +37,9 @@ from qgis.core import (QgsVectorLayer,
                        QGis,
                        QgsMapLayer,
                        QgsMarkerSymbolV2,
+                       QgsSimpleFillSymbolLayerV2,
+                       QgsRendererCategoryV2,
+                       QgsCategorizedSymbolRendererV2,
                        )
 from qgis.PyQt.QtCore import pyqtSlot, QDir, QSettings, QFileInfo, Qt
 from qgis.PyQt.QtGui import (QDialogButtonBox,
@@ -50,6 +54,7 @@ from qgis.PyQt.QtGui import (QDialogButtonBox,
                              QVBoxLayout,
                              QToolButton,
                              QGroupBox,
+                             QLineEdit,
                              )
 from svir.calculations.process_layer import ProcessLayer
 from svir.calculations.aggregate_loss_by_zone import (
@@ -61,7 +66,6 @@ from svir.utilities.shared import (OQ_CSV_TO_LAYER_TYPES,
                                    )
 from svir.utilities.utils import (get_ui_class,
                                   get_style,
-                                  clear_widgets_from_layout,
                                   log_msg,
                                   tr,
                                   get_file_size,
@@ -96,20 +100,29 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         # Disable ok_button until all user options are set
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         self.ok_button.setDisabled(True)
-        self.file_browser_tbn.setEnabled(True)
-        if self.path:
-            self.path_le.setText(self.path)
-        clear_widgets_from_layout(self.output_dep_vlayout)
+
+    def create_file_hlayout(self):
+        self.file_hlayout = QHBoxLayout()
+        self.file_lbl = QLabel('File to load')
+        self.file_browser_tbn = QToolButton()
+        self.file_browser_tbn.setText('...')
+        self.file_browser_tbn.clicked.connect(self.on_file_browser_tbn_clicked)
+        self.path_le = QLineEdit()
+        self.path_le.setEnabled(False)
+        self.file_hlayout.addWidget(self.file_lbl)
+        self.file_hlayout.addWidget(self.file_browser_tbn)
+        self.file_hlayout.addWidget(self.path_le)
+        self.vlayout.addLayout(self.file_hlayout)
 
     def create_num_sites_indicator(self):
         self.num_sites_msg = 'Number of sites: %s'
         self.num_sites_lbl = QLabel(self.num_sites_msg % '')
-        self.output_dep_vlayout.addWidget(self.num_sites_lbl)
+        self.vlayout.addWidget(self.num_sites_lbl)
 
     def create_file_size_indicator(self):
         self.file_size_msg = 'File size: %s'
         self.file_size_lbl = QLabel(self.file_size_msg % '')
-        self.output_dep_vlayout.addWidget(self.file_size_lbl)
+        self.vlayout.addWidget(self.file_size_lbl)
 
     def create_rlz_or_stat_selector(self):
         self.rlz_or_stat_lbl = QLabel('Realization')
@@ -117,8 +130,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.rlz_or_stat_cbx.setEnabled(False)
         self.rlz_or_stat_cbx.currentIndexChanged['QString'].connect(
             self.on_rlz_or_stat_changed)
-        self.output_dep_vlayout.addWidget(self.rlz_or_stat_lbl)
-        self.output_dep_vlayout.addWidget(self.rlz_or_stat_cbx)
+        self.vlayout.addWidget(self.rlz_or_stat_lbl)
+        self.vlayout.addWidget(self.rlz_or_stat_cbx)
 
     def create_imt_selector(self):
         self.imt_lbl = QLabel('Intensity Measure Type')
@@ -126,8 +139,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.imt_cbx.setEnabled(False)
         self.imt_cbx.currentIndexChanged['QString'].connect(
             self.on_imt_changed)
-        self.output_dep_vlayout.addWidget(self.imt_lbl)
-        self.output_dep_vlayout.addWidget(self.imt_cbx)
+        self.vlayout.addWidget(self.imt_lbl)
+        self.vlayout.addWidget(self.imt_cbx)
 
     def create_poe_selector(self):
         self.poe_lbl = QLabel('Probability of Exceedance')
@@ -135,8 +148,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.poe_cbx.setEnabled(False)
         self.poe_cbx.currentIndexChanged['QString'].connect(
             self.on_poe_changed)
-        self.output_dep_vlayout.addWidget(self.poe_lbl)
-        self.output_dep_vlayout.addWidget(self.poe_cbx)
+        self.vlayout.addWidget(self.poe_lbl)
+        self.vlayout.addWidget(self.poe_cbx)
 
     def create_loss_type_selector(self):
         self.loss_type_lbl = QLabel('Loss Type')
@@ -144,15 +157,15 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.loss_type_cbx.setEnabled(False)
         self.loss_type_cbx.currentIndexChanged['QString'].connect(
             self.on_loss_type_changed)
-        self.output_dep_vlayout.addWidget(self.loss_type_lbl)
-        self.output_dep_vlayout.addWidget(self.loss_type_cbx)
+        self.vlayout.addWidget(self.loss_type_lbl)
+        self.vlayout.addWidget(self.loss_type_cbx)
 
     def create_eid_selector(self):
         self.eid_lbl = QLabel('Event ID')
         self.eid_sbx = QSpinBox()
         self.eid_sbx.setEnabled(False)
-        self.output_dep_vlayout.addWidget(self.eid_lbl)
-        self.output_dep_vlayout.addWidget(self.eid_sbx)
+        self.vlayout.addWidget(self.eid_lbl)
+        self.vlayout.addWidget(self.eid_sbx)
 
     def create_dmg_state_selector(self):
         self.dmg_state_lbl = QLabel('Damage state')
@@ -160,25 +173,31 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.dmg_state_cbx.setEnabled(False)
         self.dmg_state_cbx.currentIndexChanged['QString'].connect(
             self.on_dmg_state_changed)
-        self.output_dep_vlayout.addWidget(self.dmg_state_lbl)
-        self.output_dep_vlayout.addWidget(self.dmg_state_cbx)
+        self.vlayout.addWidget(self.dmg_state_lbl)
+        self.vlayout.addWidget(self.dmg_state_cbx)
 
     def create_taxonomy_selector(self):
         self.taxonomy_lbl = QLabel('Taxonomy')
         self.taxonomy_cbx = QComboBox()
         self.taxonomy_cbx.setEnabled(False)
-        self.output_dep_vlayout.addWidget(self.taxonomy_lbl)
-        self.output_dep_vlayout.addWidget(self.taxonomy_cbx)
+        self.vlayout.addWidget(self.taxonomy_lbl)
+        self.vlayout.addWidget(self.taxonomy_cbx)
+
+    def create_style_by_selector(self):
+        self.style_by_lbl = QLabel('Style by')
+        self.style_by_cbx = QComboBox()
+        self.vlayout.addWidget(self.style_by_lbl)
+        self.vlayout.addWidget(self.style_by_cbx)
 
     def create_load_selected_only_ckb(self):
         self.load_selected_only_ckb = QCheckBox("Load only the selected items")
         self.load_selected_only_ckb.setChecked(True)
-        self.output_dep_vlayout.addWidget(self.load_selected_only_ckb)
+        self.vlayout.addWidget(self.load_selected_only_ckb)
 
     def create_save_as_shp_ckb(self):
         self.save_as_shp_ckb = QCheckBox("Save the loaded layer as shapefile")
         self.save_as_shp_ckb.setChecked(False)
-        self.output_dep_vlayout.addWidget(self.save_as_shp_ckb)
+        self.vlayout.addWidget(self.save_as_shp_ckb)
 
     def create_zonal_layer_selector(self):
         self.zonal_layer_gbx = QGroupBox()
@@ -201,7 +220,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.zone_id_field_cbx = QComboBox()
         self.zonal_layer_gbx_v_layout.addWidget(self.zone_id_field_lbl)
         self.zonal_layer_gbx_v_layout.addWidget(self.zone_id_field_cbx)
-        self.output_dep_vlayout.addWidget(self.zonal_layer_gbx)
+        self.vlayout.addWidget(self.zonal_layer_gbx)
         self.zonal_layer_tbn.clicked.connect(
             self.on_zonal_layer_tbn_clicked)
         self.zonal_layer_cbx.currentIndexChanged[int].connect(
@@ -438,9 +457,12 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 mode = QgsGraduatedSymbolRendererV2.Jenks
                 ramp_type_idx = default_color_ramp_names.index('Reds')
                 inverted = False
-            elif self.output_type in ('hmaps', 'gmf_data'):
+            elif self.output_type in ('hmaps', 'gmf_data', 'ruptures'):
                 # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
-                mode = QgsGraduatedSymbolRendererV2.EqualInterval
+                if self.output_type == 'ruptures':
+                    mode = QgsGraduatedSymbolRendererV2.Pretty
+                else:
+                    mode = QgsGraduatedSymbolRendererV2.EqualInterval
                 ramp_type_idx = default_color_ramp_names.index('Spectral')
                 inverted = True
             ramp = default_qgs_style.colorRamp(
@@ -457,23 +479,59 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         # label_format.setTrimTrailingZeroes(True)  # it might be useful
         label_format.setPrecision(2)
         graduated_renderer.setLabelFormat(label_format, updateRanges=True)
-        VERY_SMALL_VALUE = 1e-20
-        graduated_renderer.updateRangeLowerValue(0, VERY_SMALL_VALUE)
-        symbol_zeros = QgsSymbolV2.defaultSymbol(layer.geometryType())
-        symbol_zeros.setColor(QColor(240, 240, 240))  # very light grey
-        if isinstance(symbol, QgsMarkerSymbolV2):
-            # do it only for the layer with points
-            self._set_symbol_size(symbol_zeros)
-            symbol_zeros.symbolLayer(0).setOutlineStyle(Qt.PenStyle(Qt.NoPen))
-        zeros_min = 0.0
-        zeros_max = VERY_SMALL_VALUE
-        range_zeros = QgsRendererRangeV2(
-            zeros_min, zeros_max, symbol_zeros,
-            " %.2f - %.2f" % (zeros_min, zeros_max), True)
-        graduated_renderer.addClassRange(range_zeros)
-        graduated_renderer.moveClass(len(graduated_renderer.ranges()) - 1, 0)
+        # add a class for 0 values, unless while styling ruptures
+        if self.output_type != 'ruptures':
+            VERY_SMALL_VALUE = 1e-20
+            graduated_renderer.updateRangeLowerValue(0, VERY_SMALL_VALUE)
+            symbol_zeros = QgsSymbolV2.defaultSymbol(layer.geometryType())
+            symbol_zeros.setColor(QColor(240, 240, 240))  # very light grey
+            if isinstance(symbol, QgsMarkerSymbolV2):
+                # do it only for the layer with points
+                self._set_symbol_size(symbol_zeros)
+                symbol_zeros.symbolLayer(0).setOutlineStyle(
+                    Qt.PenStyle(Qt.NoPen))
+            zeros_min = 0.0
+            zeros_max = VERY_SMALL_VALUE
+            range_zeros = QgsRendererRangeV2(
+                zeros_min, zeros_max, symbol_zeros,
+                " %.2f - %.2f" % (zeros_min, zeros_max), True)
+            graduated_renderer.addClassRange(range_zeros)
+            graduated_renderer.moveClass(
+                len(graduated_renderer.ranges()) - 1, 0)
         layer.setRendererV2(graduated_renderer)
         layer.setLayerTransparency(30)  # percent
+        layer.triggerRepaint()
+        self.iface.legendInterface().refreshLayerSymbology(layer)
+        self.iface.mapCanvas().refresh()
+
+    def style_categorized(self, layer, style_by):
+        # get unique values
+        fni = layer.fieldNameIndex(style_by)
+        unique_values = layer.dataProvider().uniqueValues(fni)
+        # define categories
+        categories = []
+        for unique_value in unique_values:
+            # initialize the default symbol for this geometry type
+            symbol = QgsSymbolV2.defaultSymbol(layer.geometryType())
+            # configure a symbol layer
+            layer_style = {}
+            layer_style['color'] = '%d, %d, %d' % (
+                randrange(0, 256), randrange(0, 256), randrange(0, 256))
+            layer_style['outline'] = '#000000'
+            symbol_layer = QgsSimpleFillSymbolLayerV2.create(layer_style)
+            # replace default symbol layer with the configured one
+            if symbol_layer is not None:
+                symbol.changeSymbolLayer(0, symbol_layer)
+            # create renderer object
+            category = QgsRendererCategoryV2(
+                unique_value, symbol, str(unique_value))
+            # entry for the list of category items
+            categories.append(category)
+        # create renderer object
+        renderer = QgsCategorizedSymbolRendererV2(style_by, categories)
+        # assign the created renderer to the layer
+        if renderer is not None:
+            layer.setRendererV2(renderer)
         layer.triggerRepaint()
         self.iface.legendInterface().refreshLayerSymbology(layer)
         self.iface.mapCanvas().refresh()
@@ -555,12 +613,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         last_index = cbx.count() - 1
         cbx.setItemData(last_index, zonal_layer_plus_stats.id())
         cbx.setCurrentIndex(last_index)
-
-    # FIXME: create file_hlayout only in widgets that need it
-    def remove_file_hlayout(self):
-        for i in reversed(range(self.file_hlayout.count())):
-            self.file_hlayout.itemAt(i).widget().setParent(None)
-        self.vlayout.removeItem(self.file_hlayout)
 
     def show_file_size(self):
         file_size = get_file_size(self.path)

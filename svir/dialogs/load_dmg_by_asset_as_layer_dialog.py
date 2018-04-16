@@ -31,6 +31,7 @@ from svir.utilities.utils import (WaitCursorManager,
                                   LayerEditingManager,
                                   log_msg,
                                   extract_npz,
+                                  get_loss_types,
                                   )
 from svir.utilities.shared import DEBUG
 
@@ -48,9 +49,6 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             self, iface, viewer_dock, session, hostname, calc_id,
             output_type, path, mode, zonal_layer_path)
 
-        # FIXME: add layout only for output types that load from file
-        self.remove_file_hlayout()
-
         self.setWindowTitle('Load scenario damage by asset as layer')
         self.create_load_selected_only_ckb()
         self.load_selected_only_ckb.setEnabled(False)
@@ -64,6 +62,9 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         self.npz_file = extract_npz(
             session, hostname, calc_id, output_type,
             message_bar=iface.messageBar(), params=None)
+
+        self.loss_types = get_loss_types(
+            session, hostname, calc_id, self.iface.messageBar())
 
         self.populate_out_dep_widgets()
         if self.zonal_layer_path:
@@ -85,10 +86,12 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         self.dataset = self.npz_file[self.rlz_or_stat_cbx.currentText()]
         self.taxonomies = numpy.unique(self.dataset['taxonomy']).tolist()
         self.populate_taxonomy_cbx(self.taxonomies)
-        # discarding 'asset_ref', 'taxonomy', 'lon', 'lat'
-        self.loss_types = self.dataset.dtype.names[4:]
-        self.populate_loss_type_cbx(self.loss_types)
         self.set_ok_button()
+
+    def populate_out_dep_widgets(self):
+        self.populate_rlz_or_stat_cbx()
+        self.populate_loss_type_cbx(self.loss_types)
+        self.show_num_sites()
 
     def populate_taxonomy_cbx(self, taxonomies):
         self.taxonomies.insert(0, 'All')
