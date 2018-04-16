@@ -125,7 +125,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.vlayout.addWidget(self.file_size_lbl)
 
     def create_gmpe_selector(self):
-        self.gmpe_lbl = QLabel('GMPE')
+        self.gmpe_lbl = QLabel('Ground Motion Prediction Equation')
         self.gmpe_cbx = QComboBox()
         self.gmpe_cbx.setEnabled(False)
         self.gmpe_cbx.currentIndexChanged['QString'].connect(
