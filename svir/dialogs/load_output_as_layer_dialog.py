@@ -124,17 +124,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.file_size_lbl = QLabel(self.file_size_msg % '')
         self.vlayout.addWidget(self.file_size_lbl)
 
-    def create_gmpe_selector(self):
-        self.gmpe_lbl = QLabel('Ground Motion Prediction Equation')
-        self.gmpe_cbx = QComboBox()
-        self.gmpe_cbx.setEnabled(False)
-        self.gmpe_cbx.currentIndexChanged['QString'].connect(
-            self.on_gmpe_changed)
-        self.vlayout.addWidget(self.gmpe_lbl)
-        self.vlayout.addWidget(self.gmpe_cbx)
-
-    def create_rlz_or_stat_selector(self):
-        self.rlz_or_stat_lbl = QLabel('Realization')
+    def create_rlz_or_stat_selector(self, label='Realization'):
+        self.rlz_or_stat_lbl = QLabel(label)
         self.rlz_or_stat_cbx = QComboBox()
         self.rlz_or_stat_cbx.setEnabled(False)
         self.rlz_or_stat_cbx.currentIndexChanged['QString'].connect(
