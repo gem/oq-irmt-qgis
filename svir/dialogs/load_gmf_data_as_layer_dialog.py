@@ -68,12 +68,16 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         self.populate_gmpe_cbx()
         self.show_num_sites()
 
+    def _format_rlz(self, gmpe_idx):
+        # NOTE: assuming that rlzs are always in the format rlz-XXX
+        return "rlz-%03d" % gmpe_idx
+
     def show_num_sites(self):
         # NOTE: we are assuming all realizations have the same number of sites,
         #       which currently is always true.
         #       If different realizations have a different number of sites, we
         #       need to move this block of code inside on_rlz_or_stat_changed()
-        rlz = "rlz-%03d" % self.gmpe_cbx.currentIndex()
+        rlz = self._format_rlz(self.gmpe_cbx.currentIndex())
         gmpe_data = self.npz_file[rlz]
         self.num_sites_lbl.setText(
             self.num_sites_msg % gmpe_data.shape)
@@ -86,11 +90,12 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         self.gmpe_cbx.clear()
         self.gmpe_cbx.setEnabled(True)
         self.gmpe_cbx.addItems(self.gmpes)
-        self.rlzs_or_stats = ["rlz-%03d" % i for i in range(len(self.gmpes))]
-        self.gmpe_to_rlz = dict(zip(self.gmpes, self.rlzs_or_stats))
+        self.rlzs_or_stats = [
+            self._format_rlz(gmpe_idx) for gmpe_idx in range(len(self.gmpes))]
+        self.gmpe2rlz = dict(zip(self.gmpes, self.rlzs_or_stats))
 
     def on_gmpe_changed(self):
-        rlz = "rlz-%03d" % self.gmpe_cbx.currentIndex()
+        rlz = self._format_rlz(self.gmpe_cbx.currentIndex())
         self.dataset = self.npz_file[rlz]
         imts = self.dataset.dtype.names[2:]
         self.imt_cbx.clear()
@@ -118,13 +123,13 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
                 continue
             with WaitCursorManager('Creating layer for "%s"...'
                                    % gmpe, self.iface.messageBar()):
-                self.build_layer(rlz_or_stat=self.gmpe_to_rlz[gmpe],
+                self.build_layer(rlz_or_stat=self.gmpe2rlz[gmpe],
                                  gmpe=gmpe)
                 self.style_maps()
         if self.npz_file is not None:
             self.npz_file.close()
 
-    def build_layer_name(self, gmpe, **kwargs):
+    def build_layer_name(self, gmpe=None, **kwargs):
         self.imt = self.imt_cbx.currentText()
         self.eid = self.eid_sbx.value()
         self.default_field_name = '%s-%s' % (self.imt, self.eid)

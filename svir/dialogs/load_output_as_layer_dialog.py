@@ -346,7 +346,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     def set_ok_button(self):
         raise NotImplementedError()
 
-    def build_layer_name(self, rlz_or_stat, **kwargs):
+    def build_layer_name(self, *args, **kwargs):
         raise NotImplementedError()
 
     def get_field_names(self, **kwargs):
