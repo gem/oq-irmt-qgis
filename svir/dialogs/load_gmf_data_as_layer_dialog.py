@@ -83,9 +83,10 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
             message_bar=self.iface.messageBar(), params=None)
         # NOTE: gmpe and gsim are synonyms
         self.gmpes = self.rlzs_npz['array']['gsims']
-        assert len(self.rlzs_or_stats) == len(self.gmpes), (
+        assert len(self.rlzs_or_stats) == len(set(self.gmpes)), (
             "For scenario calculations, the number of realizations should be"
-            " equal to the number of GMPEs.\nRealizations: %s\nGMPEs: %s"
+            " equal to the number of distinct GMPEs.\n"
+            "Realizations: %s\nGMPEs: %s"
             % (self.rlzs_or_stats, self.gmpes))
         self.rlz_or_stat_cbx.clear()
         self.rlz_or_stat_cbx.setEnabled(True)
