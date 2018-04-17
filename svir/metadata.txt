@@ -24,7 +24,7 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     3.1.1
-    * When loading Ground Motion Fields, the names of the GMPEs are displayed instead of the realization names
+    * When loading Ground Motion Fields for scenario calculations, the names of the GMPEs are displayed instead of the realization names
     3.1.0
     * Ruptures imported from the OQ-Engine can be styled automatically by tectonic region type or by magnitude
     * Improved visualization of aggregate outputs in the Data Viewer

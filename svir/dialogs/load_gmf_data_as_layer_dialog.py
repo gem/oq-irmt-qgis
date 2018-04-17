@@ -68,13 +68,13 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         self.populate_gmpe_cbx()
         self.show_num_sites()
 
-    def _format_rlz(self, gmpe_idx):
+    def _format_rlz(self, rlz_idx):
         # NOTE: assuming that rlzs are always in the format rlz-XXX
-        return "rlz-%03d" % gmpe_idx
+        return "rlz-%03d" % rlz_idx
 
     def show_num_sites(self):
         # NOTE: we are assuming all realizations have the same number of sites,
-        #       which currently is always true.
+        #       which is always true for scenario calculations.
         #       If different realizations have a different number of sites, we
         #       need to move this block of code inside on_rlz_or_stat_changed()
         rlz = self._format_rlz(self.gmpe_cbx.currentIndex())
@@ -91,7 +91,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         self.gmpe_cbx.setEnabled(True)
         self.gmpe_cbx.addItems(self.gmpes)
         self.rlzs_or_stats = [
-            self._format_rlz(gmpe_idx) for gmpe_idx in range(len(self.gmpes))]
+            self._format_rlz(rlz_idx) for rlz_idx in range(len(self.gmpes))]
         self.gmpe2rlz = dict(zip(self.gmpes, self.rlzs_or_stats))
 
     def on_gmpe_changed(self):
