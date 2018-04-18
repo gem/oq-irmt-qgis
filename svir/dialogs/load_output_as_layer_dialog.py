@@ -124,8 +124,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.file_size_lbl = QLabel(self.file_size_msg % '')
         self.vlayout.addWidget(self.file_size_lbl)
 
-    def create_rlz_or_stat_selector(self):
-        self.rlz_or_stat_lbl = QLabel('Realization')
+    def create_rlz_or_stat_selector(self, label='Realization'):
+        self.rlz_or_stat_lbl = QLabel(label)
         self.rlz_or_stat_cbx = QComboBox()
         self.rlz_or_stat_cbx.setEnabled(False)
         self.rlz_or_stat_cbx.currentIndexChanged['QString'].connect(
@@ -337,7 +337,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     def set_ok_button(self):
         raise NotImplementedError()
 
-    def build_layer_name(self, rlz_or_stat, **kwargs):
+    def build_layer_name(self, *args, **kwargs):
         raise NotImplementedError()
 
     def get_field_names(self, **kwargs):
@@ -369,10 +369,10 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             return None
 
     def build_layer(self, rlz_or_stat=None, taxonomy=None, poe=None,
-                    loss_type=None, dmg_state=None):
+                    loss_type=None, dmg_state=None, gsim=None):
         layer_name = self.build_layer_name(
             rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
-            loss_type=loss_type, dmg_state=dmg_state)
+            loss_type=loss_type, dmg_state=dmg_state, gsim=gsim)
         field_names = self.get_field_names(
             rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
             loss_type=loss_type, dmg_state=dmg_state)
