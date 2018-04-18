@@ -104,7 +104,7 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
             self.poe_cbx.addItems(self.imts[self.imt])
         self.set_ok_button()
 
-    def build_layer_name(self, rlz_or_stat, **kwargs):
+    def build_layer_name(self, rlz_or_stat=None, **kwargs):
         imt = self.imt_cbx.currentText()
         poe = self.poe_cbx.currentText()
         self.default_field_name = '%s-%s' % (imt, poe)

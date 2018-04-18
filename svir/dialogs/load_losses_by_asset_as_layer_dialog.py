@@ -105,7 +105,7 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         self.taxonomy_cbx.addItems(taxonomies)
         self.taxonomy_cbx.setEnabled(True)
 
-    def build_layer_name(self, rlz_or_stat, **kwargs):
+    def build_layer_name(self, rlz_or_stat=None, **kwargs):
         taxonomy = kwargs['taxonomy']
         loss_type = kwargs['loss_type']
         if self.output_type == 'losses_by_asset':

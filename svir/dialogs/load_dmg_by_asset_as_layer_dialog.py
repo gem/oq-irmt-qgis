@@ -112,7 +112,7 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         self.dmg_state_cbx.setEnabled(True)
         self.dmg_state_cbx.addItems(self.dmg_states)
 
-    def build_layer_name(self, rlz_or_stat, **kwargs):
+    def build_layer_name(self, rlz_or_stat=None, **kwargs):
         taxonomy = kwargs['taxonomy']
         loss_type = kwargs['loss_type']
         dmg_state = kwargs['dmg_state']
