@@ -369,10 +369,10 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             return None
 
     def build_layer(self, rlz_or_stat=None, taxonomy=None, poe=None,
-                    loss_type=None, dmg_state=None, gmpe=None):
+                    loss_type=None, dmg_state=None, gsim=None):
         layer_name = self.build_layer_name(
             rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
-            loss_type=loss_type, dmg_state=dmg_state, gmpe=gmpe)
+            loss_type=loss_type, dmg_state=dmg_state, gsim=gsim)
         field_names = self.get_field_names(
             rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
             loss_type=loss_type, dmg_state=dmg_state)

@@ -49,6 +49,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
             'Load ground motion fields from NPZ, as layer')
         self.create_load_selected_only_ckb()
         self.create_num_sites_indicator()
+        # NOTE: gmpe and gsim are synonyms
         self.create_rlz_or_stat_selector('Ground Motion Prediction Equation')
         self.create_imt_selector()
         self.create_eid_selector()
@@ -71,9 +72,9 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         #       need to move this block of code inside on_rlz_or_stat_changed()
         rlz = self.rlz_or_stat_cbx.itemData(
             self.rlz_or_stat_cbx.currentIndex())
-        gmpe_data = self.npz_file[rlz]
+        gmf_data = self.npz_file[rlz]
         self.num_sites_lbl.setText(
-            self.num_sites_msg % gmpe_data.shape)
+            self.num_sites_msg % gmf_data.shape)
 
     def populate_rlz_or_stat_cbx(self):
         self.rlzs_or_stats = [key for key in sorted(self.npz_file)
@@ -81,18 +82,12 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         self.rlzs_npz = extract_npz(
             self.session, self.hostname, self.calc_id, 'realizations',
             message_bar=self.iface.messageBar(), params=None)
-        # NOTE: gmpe and gsim are synonyms
-        self.gmpes = self.rlzs_npz['array']['gsims']
-        assert len(self.rlzs_or_stats) == len(set(self.gmpes)), (
-            "For scenario calculations, the number of realizations should be"
-            " equal to the number of distinct GMPEs.\n"
-            "Realizations: %s\nGMPEs: %s"
-            % (self.rlzs_or_stats, self.gmpes))
+        self.gsims = self.rlzs_npz['array']['gsims']
         self.rlz_or_stat_cbx.clear()
         self.rlz_or_stat_cbx.setEnabled(True)
-        for gmpe, rlz in zip(self.gmpes, self.rlzs_or_stats):
-            # storing gmpe as text, rlz as hidden data
-            self.rlz_or_stat_cbx.addItem(gmpe, userData=rlz)
+        for gsim, rlz in zip(self.gsims, self.rlzs_or_stats):
+            # storing gsim as text, rlz as hidden data
+            self.rlz_or_stat_cbx.addItem(gsim, userData=rlz)
 
     def on_rlz_or_stat_changed(self):
         rlz = self.rlz_or_stat_cbx.itemData(
@@ -118,23 +113,23 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         self.set_ok_button()
 
     def load_from_npz(self):
-        for rlz, gmpe in zip(self.rlzs_or_stats, self.gmpes):
+        for rlz, gsim in zip(self.rlzs_or_stats, self.gsims):
             if (self.load_selected_only_ckb.isChecked()
-                    and gmpe != self.rlz_or_stat_cbx.currentText()):
+                    and gsim != self.rlz_or_stat_cbx.currentText()):
                 continue
             with WaitCursorManager('Creating layer for "%s"...'
-                                   % gmpe, self.iface.messageBar()):
-                self.build_layer(rlz_or_stat=rlz, gmpe=gmpe)
+                                   % gsim, self.iface.messageBar()):
+                self.build_layer(rlz_or_stat=rlz, gsim=gsim)
                 self.style_maps()
         if self.npz_file is not None:
             self.npz_file.close()
 
-    def build_layer_name(self, gmpe=None, **kwargs):
+    def build_layer_name(self, gsim=None, **kwargs):
         self.imt = self.imt_cbx.currentText()
         self.eid = self.eid_sbx.value()
         self.default_field_name = '%s-%s' % (self.imt, self.eid)
         # NOTE: assuming it's a scenario calculation
-        layer_name = "scenario_gmfs_%s_eid-%s" % (gmpe, self.eid)
+        layer_name = "scenario_gmfs_%s_eid-%s" % (gsim, self.eid)
         return layer_name
 
     def get_field_names(self, **kwargs):
