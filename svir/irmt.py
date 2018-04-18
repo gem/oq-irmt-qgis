@@ -24,6 +24,12 @@
 
 import qgis  # NOQA: it loads the environment
 
+import threading
+import tornado.httpserver
+import tornado.websocket
+import tornado.ioloop
+import tornado.web
+
 import os.path
 import tempfile
 import uuid
@@ -57,6 +63,8 @@ from qgis.PyQt.QtGui import (QAction,
                              QDesktopServices,
                              QApplication,
                              QMenu)
+
+from svir.websocket import WebSocketServer
 
 from svir.dialogs.viewer_dock import ViewerDock
 from svir.utilities.import_sv_data import get_loggedin_downloader
@@ -162,6 +170,8 @@ class Irmt:
 
         # get or create directory to store input files for the OQ-Engine
         self.ipt_dir = self.get_ipt_dir()
+
+        self.tornado_thread = None
 
     def initGui(self):
         # create our own toolbar
@@ -307,6 +317,14 @@ class Irmt:
                            ":/plugins/irmt/manual.svg",
                            u"IRMT &manual",
                            self.show_manual,
+                           enable=True,
+                           add_to_toolbar=True)
+
+        # Action to open the plugin's manual
+        self.add_menu_item("websocket",
+                           ":/plugins/irmt/manual.svg",
+                           u"WebSocket",
+                           self.start_websocket,
                            enable=True,
                            add_to_toolbar=True)
 
@@ -551,6 +569,9 @@ class Irmt:
             self.layers_added)
         QgsMapLayerRegistry.instance().layersRemoved.disconnect(
             self.layers_removed)
+
+        # shutdown websocket server
+        self.stop_websocket()
 
     def aggregate_losses(self):
         """
@@ -1387,3 +1408,28 @@ class Irmt:
         with open(checksum_file_path, "w") as f:
             f.write(os.urandom(32))
         return checksum_file_path, get_checksum(checksum_file_path)
+
+    def start_tornado(self):
+        self.webapp = tornado.web.Application([
+            (r'/websocketserver', WebSocketServer),
+        ])
+        self.http_server = tornado.httpserver.HTTPServer(self.webapp)
+        server_port = 8010
+        self.http_server.listen(server_port)
+        print("Starting Tornado")
+        tornado.ioloop.IOLoop.instance().start()
+        print("Tornado stopped")
+
+    def stop_tornado(self):
+        ioloop = tornado.ioloop.IOLoop.instance()
+        ioloop.add_callback(ioloop.stop)
+        print("Asked Tornado to exit")
+
+    def start_websocket(self):
+        self.tornado_thread = threading.Thread(target=self.start_tornado)
+        self.tornado_thread.start()
+
+    def stop_websocket(self):
+        if self.tornado_thread is not None:
+            self.stop_tornado()
+            self.tornado_thread.join()
