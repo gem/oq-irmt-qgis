@@ -25,6 +25,7 @@ email=staff.it@globalquakemodel.org
 changelog=
     3.1.1
     * When loading Ground Motion Fields for scenario calculations, the names of the GMPEs are displayed instead of the realization names
+    * Added loaders for dmg_by_event and losses_by_event, from csv
     3.1.0
     * Ruptures imported from the OQ-Engine can be styled automatically by tectonic region type or by magnitude
     * Improved visualization of aggregate outputs in the Data Viewer
