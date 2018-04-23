@@ -13,6 +13,10 @@
   <property name="windowTitle">
    <string>IRMT Settings</string>
   </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>../resources/oq_icon.svg</normaloff>../resources/oq_icon.svg</iconset>
+  </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QGroupBox" name="platform_settings_gbx">

@@ -34,6 +34,7 @@ from qgis.PyQt.QtGui import (QDialog,
                              QPushButton,
                              QHBoxLayout,
                              QMessageBox,
+                             QIcon,
                              )
 from qgis.gui import QgsMessageBar
 from svir.ui.gem_qwebview import GemQWebView
@@ -85,6 +86,7 @@ class StandaloneAppDialog(QDialog):
 
     def build_gui(self):
         self.setWindowTitle(self.app_descr)
+        self.setWindowIcon(QIcon(":/plugins/irmt/weights.svg"))
         self.vlayout = QVBoxLayout()
         self.setLayout(self.vlayout)
         self.vlayout.addWidget(self.message_bar)
