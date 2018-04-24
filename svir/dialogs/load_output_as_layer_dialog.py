@@ -402,6 +402,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         if investigation_time is not None:
             self.layer.setCustomProperty('investigation_time',
                                          investigation_time)
+        if self.engine_version is not None:
+            self.layer.setCustomProperty('engine_version', self.engine_version)
         self.layer.setCustomProperty('calc_id', self.calc_id)
         QgsMapLayerRegistry.instance().addMapLayer(self.layer)
         self.iface.setActiveLayer(self.layer)

@@ -37,11 +37,13 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
     """
 
     def __init__(self, iface, viewer_dock, session, hostname, calc_id,
-                 output_type='hmaps', path=None, mode=None):
+                 output_type='hmaps', path=None, mode=None,
+                 engine_version=None):
         assert output_type == 'hmaps'
         LoadOutputAsLayerDialog.__init__(
             self, iface, viewer_dock, session, hostname, calc_id,
-            output_type, path, mode)
+            output_type=output_type, path=path, mode=mode,
+            engine_version=engine_version)
 
         self.setWindowTitle(
             'Load hazard maps as layer')

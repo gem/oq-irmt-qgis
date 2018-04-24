@@ -38,11 +38,13 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
     """
 
     def __init__(self, iface, viewer_dock, session, hostname, calc_id,
-                 output_type='ruptures', path=None, mode=None):
+                 output_type='ruptures', path=None, mode=None,
+                 engine_version=None):
         assert output_type == 'ruptures'
         LoadOutputAsLayerDialog.__init__(
             self, iface, viewer_dock, session, hostname, calc_id,
-            output_type, path, mode)
+            output_type=output_type, path=path, mode=mode,
+            engine_version=engine_version)
         self.style_by_items = OrderedDict([
             ('Tectonic region type', 'trt'),
             ('Magnitude', 'mag'),

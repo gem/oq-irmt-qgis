@@ -1145,6 +1145,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         if (self.iface.activeLayer() is not None
                 and self.iface.activeLayer().type() == QgsMapLayer.VectorLayer
                 and self.iface.activeLayer().geometryType() == QGis.Point):
+            self.engine_version = self.iface.activeLayer().customProperty(
+                'engine_version', None)
             self.iface.activeLayer().selectionChanged.connect(
                 self.redraw_current_selection)
 
@@ -1349,9 +1351,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         # and OpenQuake Integrated Risk Modelling Toolkit vX.Y.Z
         current_datetime = datetime.now().strftime('%Y/%m/%d %H:%M:%S')
         csv_headline = "# Generated %s by " % current_datetime
-        if self.engine_version:  # engine version is a tuple
+        if self.engine_version:  # engine version is like 'x.y.z'
             csv_headline += (
-                "OpenQuake Engine v%d.%d.%d and " % self.engine_version)
+                "OpenQuake Engine v%s and " % self.engine_version)
         irmt_version = get_irmt_version()  # irmt version is like 'x.y.z'
         csv_headline += (
             "OpenQuake Integrated Risk Modelling Toolkit v%s\n" % irmt_version)
