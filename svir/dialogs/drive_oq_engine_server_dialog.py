@@ -150,6 +150,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.message_bar = QgsMessageBar(self)
         self.layout().insertWidget(0, self.message_bar)
 
+        self.engine_version = None
         self.attempt_login()
 
     def attempt_login(self):
@@ -165,8 +166,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     def check_engine_compatibility(self):
         engine_version = self.get_engine_version()
         assert engine_version is not None
-        engine_version = engine_version.split('-')[0]
-        engine_version = tuple(int(x) for x in engine_version.split('.'))
+        self.engine_version = engine_version.split('-')[0]
+        engine_version = tuple(int(x) for x in self.engine_version.split('.'))
         irmt_version = get_irmt_version()
         irmt_version = tuple(int(x) for x in irmt_version.split('.'))
         irmt_major_minor = irmt_version[:2]
@@ -739,7 +740,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             if output_type in OQ_EXTRACT_TO_VIEW_TYPES:
                 self.viewer_dock.load_no_map_output(
                     self.current_calc_id, self.session,
-                    self.hostname, output_type)
+                    self.hostname, output_type, self.engine_version)
             elif outtype == 'rst':
                 filepath = self.download_output(
                     output_id, outtype, dest_folder)
@@ -766,7 +767,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 dlg = OUTPUT_TYPE_LOADERS[output_type](
                     self.iface, self.viewer_dock,
                     self.session, self.hostname, self.current_calc_id,
-                    output_type, filepath)
+                    output_type, path=filepath,
+                    engine_version=self.engine_version)
                 dlg.exec_()
             else:
                 raise NotImplementedError("%s %s" % (action, outtype))
