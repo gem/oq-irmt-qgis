@@ -88,6 +88,8 @@ from svir.dialogs.load_uhs_as_layer_dialog import (
     LoadUhsAsLayerDialog)
 from svir.dialogs.load_losses_by_asset_as_layer_dialog import (
     LoadLossesByAssetAsLayerDialog)
+from svir.dialogs.load_losses_by_event_as_layer_dialog import (
+    LoadLossesByEventAsLayerDialog)
 from svir.dialogs.show_full_report_dialog import ShowFullReportDialog
 from svir.dialogs.show_console_dialog import ShowConsoleDialog
 from svir.dialogs.show_params_dialog import ShowParamsDialog
@@ -113,6 +115,8 @@ OUTPUT_TYPE_LOADERS = {
     'uhs': LoadUhsAsLayerDialog,
     'losses_by_asset': LoadLossesByAssetAsLayerDialog,
     'avg_losses-stats': LoadLossesByAssetAsLayerDialog,
+    'losses_by_event': LoadLossesByEventAsLayerDialog,
+    'agg_loss_table': LoadLossesByEventAsLayerDialog,
 }
 assert set(OUTPUT_TYPE_LOADERS) == OQ_TO_LAYER_TYPES, (
     OUTPUT_TYPE_LOADERS, OQ_TO_LAYER_TYPES)

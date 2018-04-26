@@ -221,7 +221,7 @@ OQ_CSV_TO_LAYER_TYPES = (
     OQ_BASIC_CSV_TO_LAYER_TYPES | OQ_COMPLEX_CSV_TO_LAYER_TYPES)
 OQ_EXTRACT_TO_LAYER_TYPES = set([
     'hmaps', 'hcurves', 'uhs', 'losses_by_asset', 'gmf_data',
-    'dmg_by_asset', 'avg_losses-stats'])
+    'dmg_by_asset', 'avg_losses-stats', 'losses_by_event', 'agg_loss_table'])
 OQ_TO_LAYER_TYPES = (OQ_CSV_TO_LAYER_TYPES |
                      OQ_EXTRACT_TO_LAYER_TYPES)
 OQ_RST_TYPES = set(['fullreport'])
