@@ -162,6 +162,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             if self.is_logged_in:
                 self.refresh_calc_list()
                 self.check_engine_compatibility()
+                self.setWindowTitle(
+                    'Drive the OpenQuake Engine v%s (%s)' % (
+                        self.engine_version, self.hostname))
 
     def check_engine_compatibility(self):
         engine_version = self.get_engine_version()
