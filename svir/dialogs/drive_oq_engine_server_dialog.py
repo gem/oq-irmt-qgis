@@ -196,7 +196,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         if not is_lockdown:
             self.is_logged_in = True
             return
-        with WaitCursorManager('Logging in...', self.iface.messageBar()):
+        with WaitCursorManager('Logging in...', self.message_bar):
             # it can raise exceptions, caught by self.attempt_login
             engine_login(self.hostname, username, password, self.session)
             # if no exception occurred
@@ -455,8 +455,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
     def remove_calc(self, calc_id):
         calc_remove_url = "%s/v1/calc/%s/remove" % (self.hostname, calc_id)
-        with WaitCursorManager('Removing calculation...',
-                               self.iface.messageBar()):
+        with WaitCursorManager('Removing calculation...', self.message_bar):
             try:
                 resp = self.session.post(calc_remove_url, timeout=10)
             except HANDLED_EXCEPTIONS as exc:
@@ -517,8 +516,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 for file_name in file_names:
                     zipped_file.write(file_name)
         run_calc_url = "%s/v1/calc/run" % self.hostname
-        with WaitCursorManager('Starting calculation...',
-                               self.iface.messageBar()):
+        with WaitCursorManager('Starting calculation...', self.message_bar):
             if calc_id is not None:
                 # FIXME: currently the web api is expecting a hazard_job_id
                 # although it could be any kind of job_id. This will have to be
@@ -590,7 +588,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         datastore_url = "%s/v1/calc/%s/datastore" % (
             self.hostname, self.current_calc_id)
         with WaitCursorManager('Getting HDF5 datastore...',
-                               self.iface.messageBar()):
+                               self.message_bar):
             try:
                 # FIXME: enable the user to set verify=True
                 resp = self.session.get(datastore_url, timeout=10,
@@ -613,7 +611,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         get_calc_params_url = "%s/v1/calc/%s/oqparam" % (
             self.hostname, self.current_calc_id)
         with WaitCursorManager('Getting calculation parameters...',
-                               self.iface.messageBar()):
+                               self.message_bar):
             try:
                 # FIXME: enable the user to set verify=True
                 resp = self.session.get(get_calc_params_url, timeout=10,
@@ -794,7 +792,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                                                                 output_id,
                                                                 outtype))
         with WaitCursorManager('Downloading output...',
-                               self.iface.messageBar()):
+                               self.message_bar):
             try:
                 # FIXME: enable the user to set verify=True
                 resp = self.session.get(output_download_url, verify=False)
