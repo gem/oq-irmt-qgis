@@ -13,17 +13,14 @@
   <property name="windowTitle">
    <string>Project definitions manager</string>
   </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>../resources/oq_icon.svg</normaloff>../resources/oq_icon.svg</iconset>
+  </property>
   <property name="modal">
    <bool>true</bool>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="0">
-    <widget class="QLabel" name="label">
-     <property name="text">
-      <string>Please select one of the available project definitions</string>
-     </property>
-    </widget>
-   </item>
    <item row="2" column="0">
     <layout class="QHBoxLayout" name="horizontalLayout">
      <property name="topMargin">
@@ -41,6 +38,26 @@
      </item>
     </layout>
    </item>
+   <item row="14" column="0">
+    <widget class="QPlainTextEdit" name="proj_def_raw"/>
+   </item>
+   <item row="13" column="0">
+    <widget class="QLabel" name="label_4">
+     <property name="text">
+      <string>Raw textual representation</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="0">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Please select one of the available project definitions</string>
+     </property>
+    </widget>
+   </item>
+   <item row="12" column="0">
+    <widget class="QPlainTextEdit" name="proj_def_descr"/>
+   </item>
    <item row="10" column="0">
     <widget class="QLineEdit" name="proj_def_title"/>
    </item>
@@ -48,6 +65,13 @@
     <widget class="QLabel" name="label_2">
      <property name="text">
       <string>Title</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QPushButton" name="clone_btn">
+     <property name="text">
+      <string>Make a copy of the selected project definition</string>
      </property>
     </widget>
    </item>
@@ -59,34 +83,28 @@
     </widget>
    </item>
    <item row="15" column="0">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <property name="topMargin">
+      <number>0</number>
      </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-     </property>
-    </widget>
-   </item>
-   <item row="14" column="0">
-    <widget class="QPlainTextEdit" name="proj_def_raw"/>
-   </item>
-   <item row="12" column="0">
-    <widget class="QPlainTextEdit" name="proj_def_descr"/>
-   </item>
-   <item row="13" column="0">
-    <widget class="QLabel" name="label_4">
-     <property name="text">
-      <string>Raw textual representation</string>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="0">
-    <widget class="QPushButton" name="clone_btn">
-     <property name="text">
-      <string>Make a copy of the selected project definition</string>
-     </property>
-    </widget>
+     <item>
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/plugins/irmt/oq_logo.svg.png&quot;/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDialogButtonBox" name="buttonBox">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="standardButtons">
+        <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
   </layout>
  </widget>

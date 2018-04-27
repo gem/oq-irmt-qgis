@@ -19,6 +19,8 @@
     <file alias="ipt.svg">resources/ipt.svg</file>
     <file alias="taxtweb.svg">resources/taxtweb.svg</file>
     <file alias="taxonomy.svg">resources/taxonomy.svg</file>
+    <file alias="oq_logo.svg">resources/oq_logo.svg</file>
+    <file alias="oq_logo.svg.png">resources/oq_logo.svg.png</file>
     <file alias="weight_data.html">resources/weight_data.html</file>
     <file alias="js/d3.js">resources/js/d3.min.js</file>
     <file alias="js/irmt_viewer_d3_tree.js">resources/js/irmt_viewer_d3_tree.js</file>

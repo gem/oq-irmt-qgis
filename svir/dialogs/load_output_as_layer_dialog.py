@@ -69,6 +69,7 @@ from svir.utilities.utils import (get_ui_class,
                                   log_msg,
                                   tr,
                                   get_file_size,
+                                  get_irmt_version,
                                   )
 
 FORM_CLASS = get_ui_class('ui_load_output_as_layer.ui')
@@ -81,7 +82,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
 
     def __init__(self, iface, viewer_dock,
                  session, hostname, calc_id, output_type=None,
-                 path=None, mode=None, zonal_layer_path=None):
+                 path=None, mode=None, zonal_layer_path=None,
+                 engine_version=None):
         # sanity check
         if output_type not in OQ_TO_LAYER_TYPES:
             raise NotImplementedError(output_type)
@@ -94,6 +96,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.output_type = output_type
         self.mode = mode  # if 'testing' it will avoid some user interaction
         self.zonal_layer_path = zonal_layer_path
+        self.engine_version = engine_version
         QDialog.__init__(self)
         # Set up the user interface from Designer.
         self.setupUi(self)
@@ -400,6 +403,10 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         if investigation_time is not None:
             self.layer.setCustomProperty('investigation_time',
                                          investigation_time)
+        if self.engine_version is not None:
+            self.layer.setCustomProperty('engine_version', self.engine_version)
+        irmt_version = get_irmt_version()
+        self.layer.setCustomProperty('irmt_version', irmt_version)
         self.layer.setCustomProperty('calc_id', self.calc_id)
         QgsMapLayerRegistry.instance().addMapLayer(self.layer)
         self.iface.setActiveLayer(self.layer)

@@ -22,15 +22,13 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-from qgis.core import QgsFeature, QgsGeometry, QgsPoint
+from qgis.core import QgsFeature, QgsGeometry, QgsPoint, edit
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 from svir.calculations.calculate_utils import add_numeric_attribute
 from svir.utilities.utils import (WaitCursorManager,
-                                  LayerEditingManager,
                                   log_msg,
                                   extract_npz,
                                   )
-from svir.utilities.shared import DEBUG
 
 
 class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
@@ -39,11 +37,13 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
     """
 
     def __init__(self, iface, viewer_dock, session, hostname, calc_id,
-                 output_type='hmaps', path=None, mode=None):
+                 output_type='hmaps', path=None, mode=None,
+                 engine_version=None):
         assert output_type == 'hmaps'
         LoadOutputAsLayerDialog.__init__(
             self, iface, viewer_dock, session, hostname, calc_id,
-            output_type, path, mode)
+            output_type=output_type, path=path, mode=mode,
+            engine_version=engine_version)
 
         self.setWindowTitle(
             'Load hazard maps as layer')
@@ -125,7 +125,7 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
 
     def add_field_to_layer(self, field_name):
         try:
-            # NOTE: add_numeric_attribute uses LayerEditingManager
+            # NOTE: add_numeric_attribute uses the native qgis editing manager
             added_field_name = add_numeric_attribute(field_name, self.layer)
         except TypeError as exc:
             log_msg(str(exc), level='C', message_bar=self.iface.messageBar())
@@ -133,7 +133,7 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         return added_field_name
 
     def read_npz_into_layer(self, field_names, **kwargs):
-        with LayerEditingManager(self.layer, 'Reading npz', DEBUG):
+        with edit(self.layer):
             lons = self.npz_file['all']['lon']
             lats = self.npz_file['all']['lat']
             feats = []

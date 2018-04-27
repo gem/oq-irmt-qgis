@@ -22,15 +22,14 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-from qgis.core import QgsFeature, QgsGeometry, QgsPoint
+from qgis.core import QgsFeature, QgsGeometry, QgsPoint, edit
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 from svir.calculations.calculate_utils import add_numeric_attribute
-from svir.utilities.utils import (LayerEditingManager,
+from svir.utilities.utils import (
                                   log_msg,
                                   WaitCursorManager,
                                   extract_npz,
                                   )
-from svir.utilities.shared import DEBUG
 
 
 class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
@@ -39,11 +38,13 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
     """
 
     def __init__(self, iface, viewer_dock, session, hostname, calc_id,
-                 output_type='hcurves', path=None, mode=None):
+                 output_type='hcurves', path=None, mode=None,
+                 engine_version=None):
         assert output_type == 'hcurves'
         LoadOutputAsLayerDialog.__init__(
             self, iface, viewer_dock, session, hostname, calc_id,
-            output_type, path, mode)
+            output_type=output_type, path=path, mode=mode,
+            engine_version=engine_version)
 
         self.setWindowTitle(
             'Load hazard curves as layer')
@@ -89,7 +90,7 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
         return added_field_name
 
     def read_npz_into_layer(self, field_names, **kwargs):
-        with LayerEditingManager(self.layer, 'Reading npz', DEBUG):
+        with edit(self.layer):
             lons = self.npz_file['all']['lon']
             lats = self.npz_file['all']['lat']
             feats = []
