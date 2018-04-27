@@ -27,6 +27,7 @@ import traceback
 import os
 import csv
 import numpy
+from datetime import datetime
 from collections import OrderedDict
 
 try:
@@ -70,6 +71,7 @@ from svir.utilities.utils import (get_ui_class,
                                   warn_scipy_missing,
                                   extract_npz,
                                   get_loss_types,
+                                  get_irmt_version,
                                   )
 from svir.recovery_modeling.recovery_modeling import (
     RecoveryModeling, fill_fields_multiselect)
@@ -117,6 +119,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.rlzs_multiselect = None
 
         self.calc_id = None
+
+        self.engine_version = None
 
         # self.current_selection[None] is for recovery curves
         self.current_selection = {}  # rlz_or_stat -> feature_id -> curve
@@ -509,13 +513,15 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         # else.
         self.output_type = new_output_type
 
-    def load_no_map_output(self, calc_id, session, hostname, output_type):
+    def load_no_map_output(
+            self, calc_id, session, hostname, output_type, engine_version):
         self.calc_id = calc_id
         self.session = session
         self.hostname = hostname
         self.current_tag_name = None
         self.tag_with_all_values = None
         self.change_output_type(output_type)
+        self.engine_version = engine_version
         self.setVisible(True)
         self.raise_()
         if output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
@@ -1139,6 +1145,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         if (self.iface.activeLayer() is not None
                 and self.iface.activeLayer().type() == QgsMapLayer.VectorLayer
                 and self.iface.activeLayer().geometryType() == QGis.Point):
+            self.engine_version = self.iface.activeLayer().customProperty(
+                'engine_version', None)
             self.iface.activeLayer().selectionChanged.connect(
                 self.redraw_current_selection)
 
@@ -1338,7 +1346,19 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.write_export_file(filename)
 
     def write_export_file(self, filename):
+        # The header should be like:
+        # Generated DATETIME by OpenQuake Engine vX.Y.Z
+        # and OpenQuake Integrated Risk Modelling Toolkit vX.Y.Z
+        current_datetime = datetime.now().strftime('%Y/%m/%d %H:%M:%S')
+        csv_headline = "# Generated %s by " % current_datetime
+        if self.engine_version:  # engine version is like 'x.y.z'
+            csv_headline += (
+                "OpenQuake Engine v%s and " % self.engine_version)
+        irmt_version = get_irmt_version()  # irmt version is like 'x.y.z'
+        csv_headline += (
+            "OpenQuake Integrated Risk Modelling Toolkit v%s\n" % irmt_version)
         with open(filename, 'w') as csv_file:
+            csv_file.write(csv_headline)
             writer = csv.writer(csv_file)
             if self.output_type == 'recovery_curves':
                 headers = ['lon', 'lat']

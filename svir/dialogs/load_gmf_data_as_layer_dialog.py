@@ -22,15 +22,13 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-from qgis.core import QgsFeature, QgsGeometry, QgsPoint
+from qgis.core import QgsFeature, QgsGeometry, QgsPoint, edit
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 from svir.calculations.calculate_utils import add_numeric_attribute
 from svir.utilities.utils import (WaitCursorManager,
-                                  LayerEditingManager,
                                   log_msg,
                                   extract_npz,
                                   )
-from svir.utilities.shared import DEBUG
 
 
 class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
@@ -39,11 +37,13 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
     """
 
     def __init__(self, iface, viewer_dock, session, hostname, calc_id,
-                 output_type='gmf_data', path=None, mode=None):
+                 output_type='gmf_data', path=None, mode=None,
+                 engine_version=None):
         assert output_type == 'gmf_data'
         LoadOutputAsLayerDialog.__init__(
             self, iface, viewer_dock, session, hostname, calc_id,
-            output_type, path, mode)
+            output_type=output_type, path=path, mode=mode,
+            engine_version=engine_version)
 
         self.setWindowTitle(
             'Load ground motion fields from NPZ, as layer')
@@ -146,7 +146,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         return added_field_name
 
     def read_npz_into_layer(self, field_names, **kwargs):
-        with LayerEditingManager(self.layer, 'Reading npz', DEBUG):
+        with edit(self.layer):
             feats = []
             fields = self.layer.pendingFields()
             layer_field_names = [field.name() for field in fields]

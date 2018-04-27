@@ -13,29 +13,20 @@
   <property name="windowTitle">
    <string>Download project from the OpenQuake Platform</string>
   </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>../resources/oq_icon.svg</normaloff>../resources/oq_icon.svg</iconset>
+  </property>
   <property name="modal">
    <bool>true</bool>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="4" column="0">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="0">
-    <widget class="QLabel" name="label">
+   <item row="2" column="0">
+    <widget class="QLabel" name="layer_lbl">
      <property name="text">
-      <string>Please select one of the available projects</string>
+      <string>Project details</string>
      </property>
     </widget>
-   </item>
-   <item row="1" column="0">
-    <widget class="QListWidget" name="layers_lst"/>
    </item>
    <item row="3" column="0">
     <widget class="QTextEdit" name="layer_detail">
@@ -51,12 +42,39 @@ p, li { white-space: pre-wrap; }
      </property>
     </widget>
    </item>
-   <item row="2" column="0">
-    <widget class="QLabel" name="layer_lbl">
+   <item row="0" column="0">
+    <widget class="QLabel" name="label">
      <property name="text">
-      <string>Project details</string>
+      <string>Please select one of the available projects</string>
      </property>
     </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QListWidget" name="layers_lst"/>
+   </item>
+   <item row="5" column="0">
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/plugins/irmt/oq_logo.svg.png&quot;/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDialogButtonBox" name="buttonBox">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="standardButtons">
+        <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
   </layout>
  </widget>

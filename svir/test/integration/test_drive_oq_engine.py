@@ -56,12 +56,29 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         self.session = Session()
         self.hostname = os.environ.get('OQ_ENGINE_HOST',
                                        'http://localhost:8800')
+        self.engine_version = self.get_engine_version().split('-')[0]
         self.reset_gui()
 
     def reset_gui(self):
         mock_action = QAction(IFACE.mainWindow())
         self.viewer_dock = ViewerDock(IFACE, mock_action)
         IFACE.newProject()
+
+    def get_engine_version(self):
+        engine_version_url = "%s/v1/engine_version" % self.hostname
+        # FIXME: enable the user to set verify=True
+        resp = self.session.get(
+            engine_version_url, timeout=10, verify=False,
+            allow_redirects=False)
+        if resp.status_code == 302:
+            raise RuntimeError(
+                "Error %s loading %s: please check the url" % (
+                    resp.status_code, resp.url))
+        if not resp.ok:
+            raise RuntimeError(
+                "Error %s loading %s: %s" % (
+                    resp.status_code, resp.url, resp.reason))
+        return resp.text
 
     def get_calc_list(self):
         calc_list_url = "%s/v1/calc/list?relevant=true" % self.hostname
@@ -342,7 +359,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         elif output_type in OQ_EXTRACT_TO_VIEW_TYPES:
             print('\tLoading output type %s...' % output_type)
             self.viewer_dock.load_no_map_output(
-                calc_id, self.session, self.hostname, output_type)
+                calc_id, self.session, self.hostname, output_type,
+                self.engine_version)
             tmpfile_handler, tmpfile_name = tempfile.mkstemp()
             self.viewer_dock.write_export_file(tmpfile_name)
             os.close(tmpfile_handler)
@@ -448,6 +466,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             got_reader = csv.reader(got)
             n_rows = 0
             for got_line in got_reader:
+                if got_line[0].startswith('#'):
+                    continue
                 n_rows += 1
                 n_cols = 0
                 for got_element in got_line:

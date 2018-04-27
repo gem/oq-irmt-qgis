@@ -23,7 +23,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 from copy import deepcopy
-from qgis.core import QgsField, QgsExpression
+from qgis.core import QgsField, QgsExpression, edit
 
 from qgis.PyQt.QtCore import QVariant, QPyNullVariant
 
@@ -36,7 +36,7 @@ from svir.utilities.shared import (DOUBLE_FIELD_TYPE_NAME,
                                    IGNORING_WEIGHT_OPERATORS,
                                    DiscardedFeature)
 from svir.calculations.process_layer import ProcessLayer
-from svir.utilities.utils import LayerEditingManager, log_msg
+from svir.utilities.utils import log_msg
 
 
 class InvalidNode(Exception):
@@ -226,9 +226,7 @@ def calculate_node(
             # attempt to retrieve a formula from the description and to
             # calculate the field values based on that formula
             expression.prepare(layer.fields())
-            with LayerEditingManager(layer,
-                                     'Calculating %s' % node_attr_name,
-                                     DEBUG):
+            with edit(layer):
                 for feat in layer.getFeatures():
                     value = expression.evaluate(feat)
                     if value == QPyNullVariant(float):
@@ -240,9 +238,7 @@ def calculate_node(
             return discarded_feats
     # the existance of children should already be checked
     children = node['children']
-    with LayerEditingManager(layer,
-                             'Calculating %s' % node_attr_name,
-                             DEBUG):
+    with edit(layer):
         for feat in layer.getFeatures():
             # If a feature contains any NULL value, discard_feat will
             # be set to True and the corresponding node value will be

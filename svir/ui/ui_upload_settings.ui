@@ -7,17 +7,21 @@
     <x>0</x>
     <y>0</y>
     <width>509</width>
-    <height>369</height>
+    <height>418</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Upload</string>
   </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>../resources/oq_icon.svg</normaloff>../resources/oq_icon.svg</iconset>
+  </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QLabel" name="situation_lbl">
      <property name="text">
-         <string>It looks like this layer was downloaded from the OpenQuake Platform
+      <string>It looks like this layer was downloaded from the OpenQuake Platform
 or an older version was previously uploaded there.
 You can create a new layer or just upload the current project definition.</string>
      </property>
@@ -139,14 +143,28 @@ You can create a new layer or just upload the current project definition.</strin
     </widget>
    </item>
    <item>
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <property name="topMargin">
+      <number>0</number>
      </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-     </property>
-    </widget>
+     <item>
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/plugins/irmt/oq_logo.svg.png&quot;/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDialogButtonBox" name="buttonBox">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="standardButtons">
+        <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
   </layout>
  </widget>

@@ -36,11 +36,12 @@ class LoadBasicCsvAsLayerDialog(LoadOutputAsLayerDialog):
     """
 
     def __init__(self, iface, viewer_dock, session, hostname, calc_id,
-                 output_type, path=None, mode=None):
+                 output_type, path=None, mode=None, engine_version=None):
         assert output_type in OQ_BASIC_CSV_TO_LAYER_TYPES, output_type
         LoadOutputAsLayerDialog.__init__(
             self, iface, viewer_dock, session, hostname, calc_id,
-            output_type, path, mode)
+            output_type=output_type, path=path, mode=mode,
+            engine_version=engine_version)
         self.create_file_hlayout()
         self.create_file_size_indicator()
         self.setWindowTitle('Load %s from CSV, as layer' % output_type)
