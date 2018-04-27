@@ -69,6 +69,7 @@ from svir.utilities.utils import (get_ui_class,
                                   log_msg,
                                   tr,
                                   get_file_size,
+                                  get_irmt_version,
                                   )
 
 FORM_CLASS = get_ui_class('ui_load_output_as_layer.ui')
@@ -404,6 +405,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                                          investigation_time)
         if self.engine_version is not None:
             self.layer.setCustomProperty('engine_version', self.engine_version)
+        irmt_version = get_irmt_version()
+        self.layer.setCustomProperty('irmt_version', irmt_version)
         self.layer.setCustomProperty('calc_id', self.calc_id)
         QgsMapLayerRegistry.instance().addMapLayer(self.layer)
         self.iface.setActiveLayer(self.layer)

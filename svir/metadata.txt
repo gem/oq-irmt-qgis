@@ -27,6 +27,8 @@ changelog=
     * When loading Ground Motion Fields for scenario calculations, the names of the GMPEs are displayed instead of the realization names
     * When loading a OQ-Engine output as layer, the engine version is saved as a custom property of the layer
     * When exporting data with the Data Viewer, the versions of the OQ-Engine and of the plugin are saved on top of the output file
+    * While driving the OQ-Engine, the engine version and the url of the connected engine server are displayed on top of the window
+    * Layers loaded from OQ-Engine outputs store as custom properties the versions of the OQ-Engine and of the IRMT plugin
     3.1.0
     * Ruptures imported from the OQ-Engine can be styled automatically by tectonic region type or by magnitude
     * Improved visualization of aggregate outputs in the Data Viewer
