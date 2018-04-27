@@ -50,6 +50,7 @@ from qgis.PyQt.QtCore import (QSettings,
                               QCoreApplication,
                               qVersion,
                               QUrl,
+                              pyqtSlot,
                               Qt)
 from qgis.PyQt.QtGui import (QAction,
                              QIcon,
@@ -81,6 +82,10 @@ from svir.dialogs.load_ruptures_as_layer_dialog import (
 from svir.thread_worker.abstract_worker import start_worker
 from svir.thread_worker.download_platform_data_worker import (
     DownloadPlatformDataWorker)
+from svir.websocket.simple_websocket_server import (
+                                                    WebSocket,
+                                                    SimpleWebSocketServer,
+                                                    )
 from svir.calculations.calculate_utils import calculate_composite_variable
 from svir.calculations.process_layer import ProcessLayer
 from svir.utilities.utils import (tr,
@@ -162,6 +167,8 @@ class Irmt:
 
         # get or create directory to store input files for the OQ-Engine
         self.ipt_dir = self.get_ipt_dir()
+
+        self.websocket_thread = None
 
     def initGui(self):
         # create our own toolbar
@@ -307,6 +314,14 @@ class Irmt:
                            ":/plugins/irmt/manual.svg",
                            u"IRMT &manual",
                            self.show_manual,
+                           enable=True,
+                           add_to_toolbar=True)
+
+        # Action to open the plugin's manual
+        self.add_menu_item("websocket",
+                           ":/plugins/irmt/manual.svg",
+                           u"WebSocket",
+                           self.start_websocket,
                            enable=True,
                            add_to_toolbar=True)
 
@@ -551,6 +566,9 @@ class Irmt:
             self.layers_added)
         QgsMapLayerRegistry.instance().layersRemoved.disconnect(
             self.layers_removed)
+
+        # shutdown websocket server
+        self.stop_websocket()
 
     def aggregate_losses(self):
         """
@@ -1387,3 +1405,51 @@ class Irmt:
         with open(checksum_file_path, "w") as f:
             f.write(os.urandom(32))
         return checksum_file_path, get_checksum(checksum_file_path)
+
+    # def start_tornado(self):
+    #     self.webapp = tornado.web.Application([
+    #         (r'/websocketserver', WebSocketServer),
+    #     ])
+    #     self.http_server = tornado.httpserver.HTTPServer(self.webapp)
+    #     server_port = 8010
+    #     self.http_server.listen(server_port)
+    #     print("Starting Tornado")
+    #     tornado.ioloop.IOLoop.instance().start()
+    #     print("Tornado stopped")
+
+    # def stop_tornado(self):
+    #     ioloop = tornado.ioloop.IOLoop.instance()
+    #     ioloop.add_callback(ioloop.stop)
+    #     print("Asked Tornado to exit")
+
+    @pyqtSlot(str)
+    def handle_socketsig(self, data):
+        log_msg("simplewebsocketserversig: %s" % data,
+                message_bar=self.iface.messageBar())
+
+    def start_websocket(self):
+        host = 'localhost'
+        port = 8000
+        self.websocket_thread = SimpleWebSocketServer(
+            host, port, SimpleEcho)
+        self.websocket_thread.simplewebsocketserversig[str].connect(
+            self.handle_socketsig)
+        self.websocket_thread.start()
+        log_msg("Server loop running in thread:", self.websocket_thread.name)
+
+    def stop_websocket(self):
+        if self.websocket_thread is not None:
+            self.websocket_thread.close()
+            self.websocket_thread.join()
+
+
+class SimpleEcho(WebSocket):
+
+    def handleMessage(self):
+        self.sendMessage(self.data)
+
+    def handleConnected(self):
+        pass
+
+    def handleClose(self):
+        pass
