@@ -1420,6 +1420,8 @@ class Irmt:
     def handle_fromwebsocketsig(self, data):
         log_msg("fromwebsocketsig: %s" % data,
                 message_bar=self.iface.messageBar())
+        if data == 'Drive engine':
+            self.drive_oq_engine_server()
 
     def start_websocket(self):
         if self.websocket_thread is not None:
