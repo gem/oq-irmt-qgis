@@ -700,6 +700,7 @@ class SimpleWebSocketServer(QThread):
    def serveforever(self):
       while self.do_run == True:
          self.serveonce()
+      self.close()
 
    def run(self):
       self.serveforever()
