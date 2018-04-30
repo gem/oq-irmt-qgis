@@ -1422,6 +1422,11 @@ class Irmt:
                 message_bar=self.iface.messageBar())
 
     def start_websocket(self):
+        if self.websocket_thread is not None:
+            log_msg("Server loop already running in thread: %s"
+                    % self.websocket_thread.name,
+                    message_bar=self.iface.messageBar())
+            return
         host = 'localhost'
         port = 8000
         self.websocket_thread = SimpleWebSocketServer(
@@ -1432,7 +1437,7 @@ class Irmt:
             self.handle_fromwebsocketsig)
         self.websocket_thread.do_run = True
         self.websocket_thread.start()
-        log_msg("Server loop running in thread: %s"
+        log_msg("Server loop started in thread: %s"
                 % self.websocket_thread.name,
                 message_bar=self.iface.messageBar())
 
