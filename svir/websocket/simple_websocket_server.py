@@ -580,6 +580,7 @@ class WebSocket(QObject):
 
 class SimpleWebSocketServer(QThread):
    simplewebsocketserversig = pyqtSignal(str)
+   fromwebsocketsig = pyqtSignal(str)
 
    def __init__(self, host, port, websocketclass, selectInterval = 0.1):
       self.websocketclass = websocketclass
@@ -596,7 +597,7 @@ class SimpleWebSocketServer(QThread):
 
    @pyqtSlot(str)
    def handle_websocketsig(self, data):
-       self.simplewebsocketserversig.emit(data)
+       self.fromwebsocketsig.emit(data)
 
    def _decorateSocket(self, sock):
       return sock
@@ -638,6 +639,8 @@ class SimpleWebSocketServer(QThread):
          client = self.connections[ready]
          try:
             while client.sendq:
+               if not self.do_run:
+                   raise Exception("closing websocket server")
                opcode, payload = client.sendq.popleft()
                remaining = client._sendBuffer(payload)
                if remaining is not None:
@@ -648,7 +651,7 @@ class SimpleWebSocketServer(QThread):
                       raise Exception('received client close')
 
          except Exception as n:
-            print(n)  # FIXME
+            self.simplewebsocketserversig.emit(str(n))
             self._handleClose(client)
             del self.connections[ready]
             self.listeners.remove(ready)
@@ -657,6 +660,8 @@ class SimpleWebSocketServer(QThread):
          if ready == self.serversocket:
             sock = None
             try:
+               if not self.do_run:
+                   raise Exception("closing websocket server")
                sock, address = self.serversocket.accept()
                newsock = self._decorateSocket(sock)
                newsock.setblocking(0)
@@ -666,7 +671,7 @@ class SimpleWebSocketServer(QThread):
                   self.handle_websocketsig)
                self.listeners.append(fileno)
             except Exception as n:
-               print(n)  # FIXME
+               self.simplewebsocketserversig.emit(str(n))
                if sock is not None:
                   sock.close()
          else:
@@ -674,9 +679,11 @@ class SimpleWebSocketServer(QThread):
                 continue
             client = self.connections[ready]
             try:
+               if not self.do_run:
+                   raise Exception("closing websocket server")
                client._handleData()
             except Exception as n:
-               print(n)  # FIXME
+               self.simplewebsocketserversig.emit(str(n))
                self._handleClose(client)
                del self.connections[ready]
                self.listeners.remove(ready)
@@ -694,7 +701,7 @@ class SimpleWebSocketServer(QThread):
             self.listeners.remove(failed)
 
    def serveforever(self):
-      while True:
+      while self.do_run == True:
          self.serveonce()
 
    def run(self):

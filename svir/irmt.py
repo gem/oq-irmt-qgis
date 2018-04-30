@@ -317,11 +317,16 @@ class Irmt:
                            enable=True,
                            add_to_toolbar=True)
 
-        # Action to open the plugin's manual
-        self.add_menu_item("websocket",
+        self.add_menu_item("start_websocket",
                            ":/plugins/irmt/manual.svg",
-                           u"WebSocket",
+                           u"Start WebSocket server",
                            self.start_websocket,
+                           enable=True,
+                           add_to_toolbar=True)
+        self.add_menu_item("stop_websocket",
+                           ":/plugins/irmt/manual.svg",
+                           u"Stop WebSocket server",
+                           self.stop_websocket,
                            enable=True,
                            add_to_toolbar=True)
 
@@ -1406,25 +1411,14 @@ class Irmt:
             f.write(os.urandom(32))
         return checksum_file_path, get_checksum(checksum_file_path)
 
-    # def start_tornado(self):
-    #     self.webapp = tornado.web.Application([
-    #         (r'/websocketserver', WebSocketServer),
-    #     ])
-    #     self.http_server = tornado.httpserver.HTTPServer(self.webapp)
-    #     server_port = 8010
-    #     self.http_server.listen(server_port)
-    #     print("Starting Tornado")
-    #     tornado.ioloop.IOLoop.instance().start()
-    #     print("Tornado stopped")
-
-    # def stop_tornado(self):
-    #     ioloop = tornado.ioloop.IOLoop.instance()
-    #     ioloop.add_callback(ioloop.stop)
-    #     print("Asked Tornado to exit")
+    @pyqtSlot(str)
+    def handle_seimplewebsocketserversig(self, data):
+        log_msg("simplewebsocketserversig: %s" % data,
+                message_bar=self.iface.messageBar())
 
     @pyqtSlot(str)
-    def handle_socketsig(self, data):
-        log_msg("simplewebsocketserversig: %s" % data,
+    def handle_fromwebsocketsig(self, data):
+        log_msg("fromwebsocketsig: %s" % data,
                 message_bar=self.iface.messageBar())
 
     def start_websocket(self):
@@ -1433,14 +1427,27 @@ class Irmt:
         self.websocket_thread = SimpleWebSocketServer(
             host, port, SimpleEcho)
         self.websocket_thread.simplewebsocketserversig[str].connect(
-            self.handle_socketsig)
+            self.handle_seimplewebsocketserversig)
+        self.websocket_thread.fromwebsocketsig[str].connect(
+            self.handle_fromwebsocketsig)
+        self.websocket_thread.do_run = True
         self.websocket_thread.start()
-        log_msg("Server loop running in thread:", self.websocket_thread.name)
+        log_msg("Server loop running in thread: %s"
+                % self.websocket_thread.name,
+                message_bar=self.iface.messageBar())
 
     def stop_websocket(self):
         if self.websocket_thread is not None:
-            self.websocket_thread.close()
-            self.websocket_thread.join()
+            self.websocket_thread.do_run = False
+            if self.websocket_thread.wait(5000):
+                log_msg("Web socket server stopped",
+                        message_bar=self.iface.messageBar())
+            else:  # timed out before finishing execution
+                self.websocket_thread.terminate()
+                log_msg("Web socket server stopped with force",
+                        level='W', message_bar=self.iface.messageBar())
+            self.websocket_thread.exit()
+            self.websocket_thread = None
 
 
 class SimpleEcho(WebSocket):
