@@ -18,15 +18,12 @@ import hashlib
 import base64
 import socket
 import struct
-import ssl
 import errno
 import codecs
 from collections import deque
 from select import select
 
-__all__ = ['WebSocket',
-            'SimpleWebSocketServer',
-            'SimpleSSLWebSocketServer']
+__all__ = ['WebSocket', 'SimpleWebSocketServer']
 
 def _check_unicode(val):
     if VER >= 3:
@@ -706,30 +703,3 @@ class SimpleWebSocketServer(QThread):
 
    def run(self):
       self.serveforever()
-
-
-class SimpleSSLWebSocketServer(SimpleWebSocketServer):
-
-   def __init__(self, host, port, websocketclass, certfile,
-                keyfile, version = ssl.PROTOCOL_TLSv1, selectInterval = 0.1):
-
-      SimpleWebSocketServer.__init__(self, host, port,
-                                        websocketclass, selectInterval)
-
-      self.context = ssl.SSLContext(version)
-      self.context.load_cert_chain(certfile, keyfile)
-
-   def close(self):
-      super(SimpleSSLWebSocketServer, self).close()
-
-   def _decorateSocket(self, sock):
-      sslsock = self.context.wrap_socket(sock, server_side=True)
-      return sslsock
-
-   def _constructWebSocket(self, sock, address):
-      ws = self.websocketclass(self, sock, address)
-      ws.usingssl = True
-      return ws
-
-   def serveforever(self):
-      super(SimpleSSLWebSocketServer, self).serveforever()
