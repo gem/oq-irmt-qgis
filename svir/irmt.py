@@ -1437,7 +1437,6 @@ class Irmt:
             self.handle_seimplewebsocketserversig)
         self.websocket_thread.fromwebsocketsig[str].connect(
             self.handle_fromwebsocketsig)
-        self.websocket_thread.do_run = True
         self.websocket_thread.start()
         log_msg("Server loop started in thread: %s"
                 % self.websocket_thread.name,
@@ -1445,7 +1444,7 @@ class Irmt:
 
     def stop_websocket(self):
         if self.websocket_thread is not None:
-            self.websocket_thread.do_run = False
+            self.websocket_thread.stop_running()
             if self.websocket_thread.wait(5000):
                 log_msg("Web socket server stopped",
                         message_bar=self.iface.messageBar())

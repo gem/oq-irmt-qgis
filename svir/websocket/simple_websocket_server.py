@@ -3,7 +3,7 @@ The MIT License (MIT)
 Copyright (c) 2013 Dave P.
 '''
 import sys
-from PyQt4.QtCore import pyqtSignal, pyqtSlot, QObject, QThread
+from PyQt4.QtCore import pyqtSignal, pyqtSlot, QObject, QThread, QMutex
 import hashlib
 import base64
 import socket
@@ -590,6 +590,8 @@ class SimpleWebSocketServer(QThread):
         self.connections = {}
         self.listeners = [self.serversocket]
         self.name = "Tredd"
+        self.mutex = QMutex()
+        self.do_run = True
 
         super(SimpleWebSocketServer, self).__init__()
 
@@ -639,7 +641,10 @@ class SimpleWebSocketServer(QThread):
             client = self.connections[ready]
             try:
                 while client.sendq:
-                    if not self.do_run:
+                    self.mutex.lock()
+                    do_run = self.do_run
+                    self.mutex.unlock()
+                    if not do_run:
                         raise Exception("closing websocket server")
                     opcode, payload = client.sendq.popleft()
                     remaining = client._sendBuffer(payload)
@@ -659,8 +664,11 @@ class SimpleWebSocketServer(QThread):
         for ready in rList:
             if ready == self.serversocket:
                 sock = None
+                self.mutex.lock()
+                do_run = self.do_run
+                self.mutex.unlock()
                 try:
-                    if not self.do_run:
+                    if not do_run:
                         raise Exception("closing websocket server")
                     sock, address = self.serversocket.accept()
                     newsock = self._decorateSocket(sock)
@@ -679,8 +687,11 @@ class SimpleWebSocketServer(QThread):
                 if ready not in self.connections:
                     continue
                 client = self.connections[ready]
+                self.mutex.lock()
+                do_run = self.do_run
+                self.mutex.unlock()
                 try:
-                    if not self.do_run:
+                    if not do_run:
                         raise Exception("closing websocket server")
                     client._handleData()
                 except Exception as n:
@@ -702,9 +713,20 @@ class SimpleWebSocketServer(QThread):
                 self.listeners.remove(failed)
 
     def serveforever(self):
-        while self.do_run is True:
+        self.mutex.lock()
+        do_run = self.do_run
+        self.mutex.unlock()
+        while do_run is True:
             self.serveonce()
+            self.mutex.lock()
+            do_run = self.do_run
+            self.mutex.unlock()
         self.close()
+
+    def stop_running(self):
+        self.mutex.lock()
+        self.do_run = False
+        self.mutex.unlock()
 
     def run(self):
         self.serveforever()
