@@ -27,8 +27,10 @@ import qgis  # NOQA: it loads the environment
 import os.path
 import tempfile
 import uuid
+from uuid import uuid4
 import fileinput
 import re
+import json
 
 from copy import deepcopy
 from math import floor, ceil
@@ -350,11 +352,19 @@ class Irmt:
         dlg.exec_()
 
     def ipt(self):
-        if self.ipt_dlg is None:
-            # we need self because ipt must be able to drive the oq-engine
-            self.ipt_dlg = IptDialog(self.ipt_dir, self)
-        self.ipt_dlg.show()
-        self.ipt_dlg.raise_()
+        uuid = uuid4().get_urn()[9:]
+        data = {
+            "app": "app_one",
+            "msg": {
+                "uuid": uuid,
+                "msg": {
+                    "command": "window_open",
+                    "args": []}
+                }
+        }
+        data_js = json.dumps(data)
+        data_js_unicode = unicode(data_js, "utf-8")
+        self.websocket_thread.send_message(data_js_unicode)
 
     def taxtweb(self):
         if self.taxtweb_dlg is None:

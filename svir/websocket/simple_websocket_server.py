@@ -712,6 +712,14 @@ class SimpleWebSocketServer(QThread):
                 del self.connections[failed]
                 self.listeners.remove(failed)
 
+    def send_message(self, data):
+        self.mutex.lock()
+        for fileno, conn in self.connections.iteritems():
+            if conn == self.serversocket:
+                continue
+            conn.sendMessage(data)
+        self.mutex.unlock()
+
     def serveforever(self):
         self.mutex.lock()
         do_run = self.do_run
