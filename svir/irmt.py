@@ -169,6 +169,7 @@ class Irmt:
         self.ipt_dir = self.get_ipt_dir()
 
         self.websocket_thread = None
+        self.start_websocket()
 
     def initGui(self):
         # create our own toolbar
@@ -314,19 +315,6 @@ class Irmt:
                            ":/plugins/irmt/manual.svg",
                            u"IRMT &manual",
                            self.show_manual,
-                           enable=True,
-                           add_to_toolbar=True)
-
-        self.add_menu_item("start_websocket",
-                           ":/plugins/irmt/manual.svg",
-                           u"Start WebSocket server",
-                           self.start_websocket,
-                           enable=True,
-                           add_to_toolbar=True)
-        self.add_menu_item("stop_websocket",
-                           ":/plugins/irmt/manual.svg",
-                           u"Stop WebSocket server",
-                           self.stop_websocket,
                            enable=True,
                            add_to_toolbar=True)
 
