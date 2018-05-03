@@ -622,36 +622,10 @@ class TraceTimeManager(object):
             log_msg(self.message)
             self.t_start = time()
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, exc_type, exc_value, traceback):
         if self.debug:
             self.t_stop = time()
             log_msg("Completed in %f" % (self.t_stop - self.t_start))
-
-
-class LayerEditingManager(object):
-    """
-    Wrapper to be used to edit a layer,
-    that executes startEditing and commitChanges
-
-    :param layer: the layer that is being edited
-    :param message: description of the task that is being performed
-    :param debug: if False, nothing will be logged
-    """
-    def __init__(self, layer, message, debug=False):
-        self.layer = layer
-        self.message = message
-        self.debug = debug
-
-    def __enter__(self):
-        self.layer.startEditing()
-        if self.debug:
-            log_msg("BEGIN %s" % self.message)
-
-    def __exit__(self, type, value, traceback):
-        self.layer.commitChanges()
-        self.layer.updateExtents()
-        if self.debug:
-            log_msg("END %s" % self.message)
 
 
 class WaitCursorManager(object):
@@ -674,7 +648,7 @@ class WaitCursorManager(object):
             QApplication.processEvents()
         QApplication.setOverrideCursor(Qt.WaitCursor)
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, exc_type, exc_value, traceback):
         QApplication.restoreOverrideCursor()
         if self.has_message:
             self.message_bar.popWidget(self.message)

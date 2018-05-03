@@ -69,6 +69,7 @@ from svir.utilities.utils import (get_ui_class,
                                   log_msg,
                                   tr,
                                   get_file_size,
+                                  get_irmt_version,
                                   )
 
 FORM_CLASS = get_ui_class('ui_load_output_as_layer.ui')
@@ -81,7 +82,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
 
     def __init__(self, iface, viewer_dock,
                  session, hostname, calc_id, output_type=None,
-                 path=None, mode=None, zonal_layer_path=None):
+                 path=None, mode=None, zonal_layer_path=None,
+                 engine_version=None):
         # sanity check
         if output_type not in OQ_TO_LAYER_TYPES:
             raise NotImplementedError(output_type)
@@ -94,6 +96,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.output_type = output_type
         self.mode = mode  # if 'testing' it will avoid some user interaction
         self.zonal_layer_path = zonal_layer_path
+        self.engine_version = engine_version
         QDialog.__init__(self)
         # Set up the user interface from Designer.
         self.setupUi(self)
@@ -124,8 +127,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.file_size_lbl = QLabel(self.file_size_msg % '')
         self.vlayout.addWidget(self.file_size_lbl)
 
-    def create_rlz_or_stat_selector(self):
-        self.rlz_or_stat_lbl = QLabel('Realization')
+    def create_rlz_or_stat_selector(self, label='Realization'):
+        self.rlz_or_stat_lbl = QLabel(label)
         self.rlz_or_stat_cbx = QComboBox()
         self.rlz_or_stat_cbx.setEnabled(False)
         self.rlz_or_stat_cbx.currentIndexChanged['QString'].connect(
@@ -337,7 +340,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     def set_ok_button(self):
         raise NotImplementedError()
 
-    def build_layer_name(self, rlz_or_stat, **kwargs):
+    def build_layer_name(self, *args, **kwargs):
         raise NotImplementedError()
 
     def get_field_names(self, **kwargs):
@@ -369,10 +372,10 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             return None
 
     def build_layer(self, rlz_or_stat=None, taxonomy=None, poe=None,
-                    loss_type=None, dmg_state=None):
+                    loss_type=None, dmg_state=None, gsim=None):
         layer_name = self.build_layer_name(
             rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
-            loss_type=loss_type, dmg_state=dmg_state)
+            loss_type=loss_type, dmg_state=dmg_state, gsim=gsim)
         field_names = self.get_field_names(
             rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
             loss_type=loss_type, dmg_state=dmg_state)
@@ -400,6 +403,10 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         if investigation_time is not None:
             self.layer.setCustomProperty('investigation_time',
                                          investigation_time)
+        if self.engine_version is not None:
+            self.layer.setCustomProperty('engine_version', self.engine_version)
+        irmt_version = get_irmt_version()
+        self.layer.setCustomProperty('irmt_version', irmt_version)
         self.layer.setCustomProperty('calc_id', self.calc_id)
         QgsMapLayerRegistry.instance().addMapLayer(self.layer)
         self.iface.setActiveLayer(self.layer)
