@@ -26,7 +26,6 @@ import qgis  # NOQA: it loads the environment
 
 import os.path
 import tempfile
-import uuid
 from uuid import uuid4
 import fileinput
 import re
@@ -352,11 +351,10 @@ class Irmt:
         dlg.exec_()
 
     def ipt(self):
-        uuid = uuid4().get_urn()[9:]
         data = {
             "app": "app_one",
             "msg": {
-                "uuid": uuid,
+                "uuid": uuid4().get_urn()[9:],
                 "msg": {
                     "command": "window_open",
                     "args": []}
@@ -1348,7 +1346,7 @@ class Irmt:
         Open a dialog to upload the current project to the OpenQuake Platform
         """
         temp_dir = tempfile.gettempdir()
-        file_stem = '%s%sqgis_irmt_%s' % (temp_dir, os.path.sep, uuid.uuid4())
+        file_stem = '%s%sqgis_irmt_%s' % (temp_dir, os.path.sep, uuid4())
 
         active_layer_id = self.iface.activeLayer().id()
         read_layer_suppl_info_from_qgs(
@@ -1403,7 +1401,7 @@ class Irmt:
         return ipt_dir
 
     def get_ipt_checksum(self):
-        unique_filename = ".%s" % uuid.uuid4().hex
+        unique_filename = ".%s" % uuid4().hex
         checksum_file_path = os.path.join(self.ipt_dir, unique_filename)
         with open(checksum_file_path, "w") as f:
             f.write(os.urandom(32))
@@ -1436,8 +1434,7 @@ class Irmt:
         self.websocket_thread.fromwebsocketsig[str].connect(
             self.handle_fromwebsocketsig)
         self.websocket_thread.start()
-        log_msg("Server loop started in thread: %s"
-                % self.websocket_thread.name,
+        log_msg("Web socket server started",
                 message_bar=self.iface.messageBar())
 
     def stop_websocket(self):

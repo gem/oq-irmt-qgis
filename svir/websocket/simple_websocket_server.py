@@ -589,7 +589,6 @@ class SimpleWebSocketServer(QThread):
         self.selectInterval = selectInterval
         self.connections = {}
         self.listeners = [self.serversocket]
-        self.name = "Tredd"
         self.mutex = QMutex()
         self.do_run = True
 
