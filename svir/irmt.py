@@ -1394,8 +1394,8 @@ class Irmt:
                 message_bar=self.iface.messageBar())
 
     @pyqtSlot(str)
-    def handle_from_socket_sig(self, data):
-        log_msg("from_socket_sig: %s" % data,
+    def handle_from_socket_received(self, data):
+        log_msg("from_socket_received: %s" % data,
                 message_bar=self.iface.messageBar())
         hyb_msg = json.loads(data)
         if ('app' not in hyb_msg or hyb_msg['app'] not in self.web_apps or
@@ -1409,6 +1409,11 @@ class Irmt:
 
         app.receive(api_msg)
 
+    @pyqtSlot(str)
+    def handle_from_socket_sent(self, data):
+        log_msg("from_socket_sent: %s" % data,
+                message_bar=self.iface.messageBar())
+
     def start_websocket(self):
         if self.websocket_thread is not None:
             log_msg("Server loop already running in thread: %s"
@@ -1420,8 +1425,10 @@ class Irmt:
         self.websocket_thread = SimpleWebSocketServer(
             host, port, AppRouter)
         self.websocket_thread.wss_sig[str].connect(self.handle_wss_sig)
-        self.websocket_thread.from_socket_sig[str].connect(
-            self.handle_from_socket_sig)
+        self.websocket_thread.from_socket_received[str].connect(
+            self.handle_from_socket_received)
+        self.websocket_thread.from_socket_sent[str].connect(
+            self.handle_from_socket_sent)
         self.websocket_thread.start()
         log_msg("Web socket server started",
                 message_bar=self.iface.messageBar())

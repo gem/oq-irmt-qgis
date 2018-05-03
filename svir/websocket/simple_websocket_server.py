@@ -74,7 +74,8 @@ MAXPAYLOAD = 33554432
 
 
 class WebSocket(QObject):
-    websocketsig = pyqtSignal(str)
+    socket_received = pyqtSignal(str)
+    socket_sent = pyqtSignal(str)
 
     def __init__(self, server, sock, address):
         self.server = server
@@ -120,7 +121,7 @@ class WebSocket(QObject):
             If the frame is Text then self.data is a unicode object.
             If the frame is Binary then self.data is a bytearray object.
         """
-        self.websocketsig.emit(self.data)
+        self.socket_received.emit(self.data)
 
     def handleConnected(self):
         """
@@ -379,7 +380,7 @@ class WebSocket(QObject):
         if _check_unicode(data):
             opcode = TEXT
         self._sendMessage(False, opcode, data)
-        # self.websocketsig.emit(data)
+        self.socket_sent.emit(data)
 
     def _sendMessage(self, fin, opcode, data):
 
@@ -578,7 +579,8 @@ class WebSocket(QObject):
 
 class SimpleWebSocketServer(QThread):
     wss_sig = pyqtSignal(str)
-    from_socket_sig = pyqtSignal(str)
+    from_socket_received = pyqtSignal(str)
+    from_socket_sent = pyqtSignal(str)
 
     def __init__(self, host, port, websocketclass, selectInterval=0.1):
         self.websocketclass = websocketclass
@@ -595,8 +597,12 @@ class SimpleWebSocketServer(QThread):
         super(SimpleWebSocketServer, self).__init__()
 
     @pyqtSlot(str)
-    def handle_websocketsig(self, data):
-        self.from_socket_sig.emit(data)
+    def handle_socket_received(self, data):
+        self.from_socket_received.emit(data)
+
+    @pyqtSlot(str)
+    def handle_socket_sent(self, data):
+        self.from_socket_sent.emit(data)
 
     def _decorateSocket(self, sock):
         return sock
@@ -675,8 +681,10 @@ class SimpleWebSocketServer(QThread):
                     fileno = newsock.fileno()
                     self.connections[fileno] = self._constructWebSocket(
                         newsock, address)
-                    self.connections[fileno].websocketsig[str].connect(
-                       self.handle_websocketsig)
+                    self.connections[fileno].socket_received[str].connect(
+                       self.handle_socket_received)
+                    self.connections[fileno].socket_sent[str].connect(
+                       self.handle_socket_sent)
                     self.listeners.append(fileno)
                 except Exception as n:
                     self.wss_sig.emit(str(n))
