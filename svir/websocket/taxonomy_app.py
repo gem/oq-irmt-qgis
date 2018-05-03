@@ -26,6 +26,5 @@ from svir.websocket.web_app import WebApp
 
 
 class TaxonomyApp(WebApp):
-    def __init__(self, wss):
-        self.app_name = 'taxonomy'
-        self.wss = wss  # thread running the websocket server
+    def __init__(self, wss, app_name='taxonomy'):
+        super(TaxonomyApp, self).__init__(wss, app_name)

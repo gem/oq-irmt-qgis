@@ -3,6 +3,7 @@ The MIT License (MIT)
 Copyright (c) 2013 Dave P.
 '''
 import sys
+import json
 from PyQt4.QtCore import pyqtSignal, pyqtSlot, QObject, QThread, QMutex
 import hashlib
 import base64
@@ -120,7 +121,6 @@ class WebSocket(QObject):
             If the frame is Binary then self.data is a bytearray object.
         """
         self.websocketsig.emit(self.data)
-        pass
 
     def handleConnected(self):
         """
@@ -379,7 +379,7 @@ class WebSocket(QObject):
         if _check_unicode(data):
             opcode = TEXT
         self._sendMessage(False, opcode, data)
-        self.websocketsig.emit(data)
+        # self.websocketsig.emit(data)
 
     def _sendMessage(self, fin, opcode, data):
 
@@ -577,8 +577,8 @@ class WebSocket(QObject):
 
 
 class SimpleWebSocketServer(QThread):
-    simplewebsocketserversig = pyqtSignal(str)
-    fromwebsocketsig = pyqtSignal(str)
+    wss_sig = pyqtSignal(str)
+    from_socket_sig = pyqtSignal(str)
 
     def __init__(self, host, port, websocketclass, selectInterval=0.1):
         self.websocketclass = websocketclass
@@ -596,7 +596,7 @@ class SimpleWebSocketServer(QThread):
 
     @pyqtSlot(str)
     def handle_websocketsig(self, data):
-        self.fromwebsocketsig.emit(data)
+        self.from_socket_sig.emit(data)
 
     def _decorateSocket(self, sock):
         return sock
@@ -655,7 +655,7 @@ class SimpleWebSocketServer(QThread):
                             raise Exception('received client close')
 
             except Exception as n:
-                self.simplewebsocketserversig.emit(str(n))
+                self.wss_sig.emit(str(n))
                 self._handleClose(client)
                 del self.connections[ready]
                 self.listeners.remove(ready)
@@ -679,7 +679,7 @@ class SimpleWebSocketServer(QThread):
                        self.handle_websocketsig)
                     self.listeners.append(fileno)
                 except Exception as n:
-                    self.simplewebsocketserversig.emit(str(n))
+                    self.wss_sig.emit(str(n))
                     if sock is not None:
                         sock.close()
             else:
@@ -694,7 +694,7 @@ class SimpleWebSocketServer(QThread):
                         raise Exception("closing websocket server")
                     client._handleData()
                 except Exception as n:
-                    self.simplewebsocketserversig.emit(str(n))
+                    self.wss_sig.emit(str(n))
                     self._handleClose(client)
                     del self.connections[ready]
                     self.listeners.remove(ready)
@@ -712,12 +712,17 @@ class SimpleWebSocketServer(QThread):
                 self.listeners.remove(failed)
 
     def send_message(self, data):
+        data_js = json.dumps(data)
+        data_js_unicode = unicode(data_js, 'utf-8')
         self.mutex.lock()
+        ret = False
         for fileno, conn in self.connections.iteritems():
             if conn == self.serversocket:
                 continue
-            conn.sendMessage(data)
+            conn.sendMessage(data_js_unicode)
+            ret = True
         self.mutex.unlock()
+        return ret
 
     def serveforever(self):
         self.mutex.lock()

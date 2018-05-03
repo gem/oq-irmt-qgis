@@ -34,9 +34,8 @@ from svir.websocket.web_app import WebApp
 
 
 class IptApp(WebApp):
-    def __init__(self, wss):
-        self.app_name = 'ipt'
-        self.wss = wss  # thread running the websocket server
+    def __init__(self, wss, app_name='ipt'):
+        super(IptApp, self).__init__(wss, app_name)
 
 
 class IptPythonApi(GemApi):

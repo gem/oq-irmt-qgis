@@ -29,6 +29,7 @@ import tempfile
 from uuid import uuid4
 import fileinput
 import re
+import json
 
 from copy import deepcopy
 from math import floor, ceil
@@ -148,9 +149,6 @@ class Irmt:
 
         # avoid dialog to be deleted right after showing it
         self.drive_oq_engine_server_dlg = None
-        self.ipt_app = None
-        self.taxtweb_app = None
-        self.taxonomy_app = None
 
         # keep track of the supplemental information for each layer
         # layer_id -> {}
@@ -169,8 +167,12 @@ class Irmt:
         self.ipt_dir = self.get_ipt_dir()
 
         self.websocket_thread = None
-        self.webapps = ['ipt', 'taxtweb', 'taxonomy']
         self.start_websocket()
+        self.ipt_app = None
+        self.taxtweb_app = None
+        self.taxonomy_app = None
+        self.web_apps = {}
+        self.instantiate_web_apps()
 
     def initGui(self):
         # create our own toolbar
@@ -351,16 +353,13 @@ class Irmt:
         dlg.exec_()
 
     def ipt(self):
-        self.ipt_app = IptApp(self.websocket_thread)
-        self.ipt_app.open_webapp()
+        self.ipt_app.open()
 
     def taxtweb(self):
-        self.taxtweb_app = TaxtwebApp(self.websocket_thread)
-        self.taxtweb_app.open_webapp()
+        self.taxtweb_app.open()
 
     def taxonomy(self):
-        self.taxonomy_app = TaxonomyApp(self.websocket_thread)
-        self.taxonomy_app.open_webapp()
+        self.taxonomy_app.open()
 
     def on_drive_oq_engine_server_btn_clicked(self):
         # we can't call drive_oq_engine_server directly, otherwise the signal
@@ -1390,16 +1389,25 @@ class Irmt:
         return checksum_file_path, get_checksum(checksum_file_path)
 
     @pyqtSlot(str)
-    def handle_seimplewebsocketserversig(self, data):
-        log_msg("simplewebsocketserversig: %s" % data,
+    def handle_wss_sig(self, data):
+        log_msg("wss_sig: %s" % data,
                 message_bar=self.iface.messageBar())
 
     @pyqtSlot(str)
-    def handle_fromwebsocketsig(self, data):
-        log_msg("fromwebsocketsig: %s" % data,
+    def handle_from_socket_sig(self, data):
+        log_msg("from_socket_sig: %s" % data,
                 message_bar=self.iface.messageBar())
-        if data == 'Drive engine':
-            self.drive_oq_engine_server()
+        hyb_msg = json.loads(data)
+        if ('app' not in hyb_msg or hyb_msg['app'] not in self.web_apps or
+                'msg' not in hyb_msg):
+            print('Malformed msg: [%s]' % data)
+            return
+
+        app_name = hyb_msg['app']
+        api_msg = hyb_msg['msg']
+        app = self.web_apps[app_name]
+
+        app.receive(api_msg)
 
     def start_websocket(self):
         if self.websocket_thread is not None:
@@ -1410,11 +1418,10 @@ class Irmt:
         host = 'localhost'
         port = 8000
         self.websocket_thread = SimpleWebSocketServer(
-            host, port, SimpleEcho)
-        self.websocket_thread.simplewebsocketserversig[str].connect(
-            self.handle_seimplewebsocketserversig)
-        self.websocket_thread.fromwebsocketsig[str].connect(
-            self.handle_fromwebsocketsig)
+            host, port, AppRouter)
+        self.websocket_thread.wss_sig[str].connect(self.handle_wss_sig)
+        self.websocket_thread.from_socket_sig[str].connect(
+            self.handle_from_socket_sig)
         self.websocket_thread.start()
         log_msg("Web socket server started",
                 message_bar=self.iface.messageBar())
@@ -1432,11 +1439,33 @@ class Irmt:
             self.websocket_thread.exit()
             self.websocket_thread = None
 
+    def instantiate_web_apps(self):
+        self.ipt_app = IptApp(self.websocket_thread)
+        self.taxtweb_app = TaxtwebApp(self.websocket_thread)
+        self.taxonomy_app = TaxonomyApp(self.websocket_thread)
+        self.web_apps = {'ipt': self.ipt_app,
+                         'taxtweb': self.taxtweb_app,
+                         'taxonomy': self.taxonomy}
 
-class SimpleEcho(WebSocket):
+
+class AppRouter(WebSocket):
 
     def handleMessage(self):
-        self.sendMessage(self.data)
+        pass
+        # self.sendMessage(self.data)
+        # message = self.data
+        # print('\nNew message: %s' % message)
+        # hyb_msg = json.loads(message)
+        # if ('app' not in hyb_msg or hyb_msg['app'] not in self.web_apps or
+        #         'msg' not in hyb_msg):
+        #     print('Malformed msg: [%s]' % message)
+        #     return
+
+        # app_name = hyb_msg['app']
+        # api_msg = hyb_msg['msg']
+        # app = apps[app_name]
+
+        # app.receive(api_msg)
 
     def handleConnected(self):
         pass

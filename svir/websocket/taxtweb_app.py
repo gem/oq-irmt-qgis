@@ -29,9 +29,8 @@ from svir.websocket.web_app import WebApp
 
 
 class TaxtwebApp(WebApp):
-    def __init__(self, wss):
-        self.app_name = 'taxtweb'
-        self.wss = wss  # thread running the websocket server
+    def __init__(self, wss, app_name='taxtweb'):
+        super(TaxtwebApp, self).__init__(wss, app_name)
 
 
 class TaxtwebApi(GemApi):
