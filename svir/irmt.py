@@ -29,7 +29,6 @@ import tempfile
 from uuid import uuid4
 import fileinput
 import re
-import json
 
 from copy import deepcopy
 from math import floor, ceil
@@ -72,9 +71,6 @@ from svir.dialogs.upload_settings_dialog import UploadSettingsDialog
 from svir.dialogs.weight_data_dialog import WeightDataDialog
 from svir.dialogs.recovery_modeling_dialog import RecoveryModelingDialog
 from svir.dialogs.recovery_settings_dialog import RecoverySettingsDialog
-from svir.dialogs.ipt_dialog import IptDialog
-from svir.dialogs.taxtweb_dialog import TaxtwebDialog
-from svir.dialogs.taxonomy_dialog import TaxonomyDialog
 from svir.dialogs.drive_oq_engine_server_dialog import (
     DriveOqEngineServerDialog)
 from svir.dialogs.load_ruptures_as_layer_dialog import (
@@ -87,6 +83,9 @@ from svir.websocket.simple_websocket_server import (
                                                     WebSocket,
                                                     SimpleWebSocketServer,
                                                     )
+from svir.websocket.ipt_app import IptApp
+from svir.websocket.taxonomy_app import TaxonomyApp
+from svir.websocket.taxtweb_app import TaxtwebApp
 from svir.calculations.calculate_utils import calculate_composite_variable
 from svir.calculations.process_layer import ProcessLayer
 from svir.utilities.utils import (tr,
@@ -149,9 +148,9 @@ class Irmt:
 
         # avoid dialog to be deleted right after showing it
         self.drive_oq_engine_server_dlg = None
-        self.ipt_dlg = None
-        self.taxtweb_dlg = None
-        self.taxonomy_dlg = None
+        self.ipt_app = None
+        self.taxtweb_app = None
+        self.taxonomy_app = None
 
         # keep track of the supplemental information for each layer
         # layer_id -> {}
@@ -170,6 +169,7 @@ class Irmt:
         self.ipt_dir = self.get_ipt_dir()
 
         self.websocket_thread = None
+        self.webapps = ['ipt', 'taxtweb', 'taxonomy']
         self.start_websocket()
 
     def initGui(self):
@@ -351,34 +351,16 @@ class Irmt:
         dlg.exec_()
 
     def ipt(self):
-        data = {
-            "app": "app_one",
-            "msg": {
-                "uuid": uuid4().get_urn()[9:],
-                "msg": {
-                    "command": "window_open",
-                    "args": []}
-                }
-        }
-        data_js = json.dumps(data)
-        data_js_unicode = unicode(data_js, "utf-8")
-        self.websocket_thread.send_message(data_js_unicode)
+        self.ipt_app = IptApp(self.websocket_thread)
+        self.ipt_app.open_webapp()
 
     def taxtweb(self):
-        if self.taxtweb_dlg is None:
-            self.instantiate_taxonomy_dlg()
-            self.taxtweb_dlg = TaxtwebDialog(self.taxonomy_dlg)
-        self.taxtweb_dlg.show()
-        self.taxtweb_dlg.raise_()
-
-    def instantiate_taxonomy_dlg(self):
-        if self.taxonomy_dlg is None:
-            self.taxonomy_dlg = TaxonomyDialog()
+        self.taxtweb_app = TaxtwebApp(self.websocket_thread)
+        self.taxtweb_app.open_webapp()
 
     def taxonomy(self):
-        self.instantiate_taxonomy_dlg()
-        self.taxonomy_dlg.show()
-        self.taxonomy_dlg.raise_()
+        self.taxonomy_app = TaxonomyApp(self.websocket_thread)
+        self.taxonomy_app.open_webapp()
 
     def on_drive_oq_engine_server_btn_clicked(self):
         # we can't call drive_oq_engine_server directly, otherwise the signal
