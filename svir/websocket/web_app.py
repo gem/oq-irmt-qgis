@@ -7,10 +7,11 @@ class WebApp(object):
         assert app_name is not None
         self.wss = wss  # thread running the websocket server
         self.app_name = app_name
-        self.allowed_meths = ['window_open']
+        # self.allowed_meths = ['window_open']
+        self.allowed_meths = []
         self.pending = {}
 
-    def open(self):
+    def window_open(self):
         self.run_command("window_open")
 
     def run_command(self, command, args=()):

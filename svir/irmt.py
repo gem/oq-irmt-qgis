@@ -52,6 +52,8 @@ from qgis.PyQt.QtCore import (QSettings,
                               qVersion,
                               QUrl,
                               pyqtSlot,
+                              pyqtSignal,
+                              QObject,
                               Qt)
 from qgis.PyQt.QtGui import (QAction,
                              QIcon,
@@ -115,8 +117,12 @@ import svir.resources_rc  # pylint: disable=unused-import  # NOQA
 from svir import IS_SCIPY_INSTALLED
 
 
-class Irmt:
+class Irmt(QObject):
+
+    irmt_sig = pyqtSignal(str)
+
     def __init__(self, iface):
+        super(Irmt, self).__init__()
         # Save reference to the QGIS interface
         self.iface = iface
         self.canvas = self.iface.mapCanvas()
@@ -350,13 +356,14 @@ class Irmt:
         dlg.exec_()
 
     def ipt(self):
-        self.ipt_app.open()
+        self.ipt_app.window_open()
+        self.irmt_sig.emit('hello Matteo')
 
     def taxtweb(self):
-        self.taxtweb_app.open()
+        self.taxtweb_app.window_open()
 
     def taxonomy(self):
-        self.taxonomy_app.open()
+        self.taxonomy_app.window_open()
 
     def on_drive_oq_engine_server_btn_clicked(self):
         # we can't call drive_oq_engine_server directly, otherwise the signal
@@ -1419,7 +1426,7 @@ class Irmt:
             return
         host = 'localhost'
         port = 8000
-        self.websocket_thread = SimpleWebSocketServer(host, port)
+        self.websocket_thread = SimpleWebSocketServer(host, port, self)
         self.websocket_thread.wss_sig[str].connect(self.handle_wss_sig)
         self.websocket_thread.from_socket_received[str].connect(
             self.handle_from_socket_received)

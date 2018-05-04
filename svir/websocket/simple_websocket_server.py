@@ -582,8 +582,9 @@ class SimpleWebSocketServer(QThread):
     from_socket_received = pyqtSignal(str)
     from_socket_sent = pyqtSignal(str)
 
-    def __init__(self, host, port, selectInterval=0.1):
+    def __init__(self, host, port, irmt_thread, selectInterval=0.1):
         self.websocketclass = WebSocket
+        self.irmt_thread = irmt_thread
         self.serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.serversocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.serversocket.bind((host, port))
@@ -595,6 +596,12 @@ class SimpleWebSocketServer(QThread):
         self.do_run = True
 
         super(SimpleWebSocketServer, self).__init__()
+
+        self.irmt_thread.irmt_sig[str].connect(self.handle_irmt_sig)
+
+    @pyqtSlot(str)
+    def handle_irmt_sig(self, data):
+        print('From irmt_sig: %s' % data)
 
     @pyqtSlot(str)
     def handle_socket_received(self, data):
