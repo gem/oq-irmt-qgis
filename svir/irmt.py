@@ -120,6 +120,7 @@ from svir import IS_SCIPY_INSTALLED
 class Irmt(QObject):
 
     irmt_sig = pyqtSignal(str)
+    send_to_wss_sig = pyqtSignal(str)
 
     def __init__(self, iface):
         super(Irmt, self).__init__()

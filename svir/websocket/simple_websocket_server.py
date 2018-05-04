@@ -3,7 +3,6 @@ The MIT License (MIT)
 Copyright (c) 2013 Dave P.
 '''
 import sys
-import json
 from PyQt4.QtCore import pyqtSignal, pyqtSlot, QObject, QThread, QMutex
 import hashlib
 import base64
@@ -598,10 +597,22 @@ class SimpleWebSocketServer(QThread):
         super(SimpleWebSocketServer, self).__init__()
 
         self.irmt_thread.irmt_sig[str].connect(self.handle_irmt_sig)
+        self.irmt_thread.send_to_wss_sig[str].connect(self.send_to_wss)
 
     @pyqtSlot(str)
     def handle_irmt_sig(self, data):
         print('From irmt_sig: %s' % data)
+
+    @pyqtSlot(str)
+    def send_to_wss(self, data):
+        ret = False
+        for fileno, conn in self.connections.iteritems():
+            if conn == self.serversocket:
+                continue
+            conn.sendMessage(data)
+            ret = True
+        if ret is False:
+            self.wss_sig.emit('Send failed! No connections')
 
     @pyqtSlot(str)
     def handle_socket_received(self, data):
@@ -725,19 +736,6 @@ class SimpleWebSocketServer(QThread):
                 self._handleClose(client)
                 del self.connections[failed]
                 self.listeners.remove(failed)
-
-    def send_message(self, data):
-        data_js = json.dumps(data)
-        data_js_unicode = unicode(data_js, 'utf-8')
-        self.mutex.lock()
-        ret = False
-        for fileno, conn in self.connections.iteritems():
-            if conn == self.serversocket:
-                continue
-            conn.sendMessage(data_js_unicode)
-            ret = True
-        self.mutex.unlock()
-        return ret
 
     def serveforever(self):
         self.mutex.lock()
