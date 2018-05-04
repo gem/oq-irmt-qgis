@@ -80,10 +80,7 @@ from svir.dialogs.load_ruptures_as_layer_dialog import (
 from svir.thread_worker.abstract_worker import start_worker
 from svir.thread_worker.download_platform_data_worker import (
     DownloadPlatformDataWorker)
-from svir.websocket.simple_websocket_server import (
-                                                    WebSocket,
-                                                    SimpleWebSocketServer,
-                                                    )
+from svir.websocket.simple_websocket_server import SimpleWebSocketServer
 from svir.websocket.ipt_app import IptApp
 from svir.websocket.taxonomy_app import TaxonomyApp
 from svir.websocket.taxtweb_app import TaxtwebApp
@@ -1422,8 +1419,7 @@ class Irmt:
             return
         host = 'localhost'
         port = 8000
-        self.websocket_thread = SimpleWebSocketServer(
-            host, port, AppRouter)
+        self.websocket_thread = SimpleWebSocketServer(host, port)
         self.websocket_thread.wss_sig[str].connect(self.handle_wss_sig)
         self.websocket_thread.from_socket_received[str].connect(
             self.handle_from_socket_received)
@@ -1453,29 +1449,3 @@ class Irmt:
         self.web_apps = {'ipt': self.ipt_app,
                          'taxtweb': self.taxtweb_app,
                          'taxonomy': self.taxonomy}
-
-
-class AppRouter(WebSocket):
-
-    def handleMessage(self):
-        pass
-        # self.sendMessage(self.data)
-        # message = self.data
-        # print('\nNew message: %s' % message)
-        # hyb_msg = json.loads(message)
-        # if ('app' not in hyb_msg or hyb_msg['app'] not in self.web_apps or
-        #         'msg' not in hyb_msg):
-        #     print('Malformed msg: [%s]' % message)
-        #     return
-
-        # app_name = hyb_msg['app']
-        # api_msg = hyb_msg['msg']
-        # app = apps[app_name]
-
-        # app.receive(api_msg)
-
-    def handleConnected(self):
-        pass
-
-    def handleClose(self):
-        pass

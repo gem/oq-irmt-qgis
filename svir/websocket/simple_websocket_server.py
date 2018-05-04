@@ -582,8 +582,8 @@ class SimpleWebSocketServer(QThread):
     from_socket_received = pyqtSignal(str)
     from_socket_sent = pyqtSignal(str)
 
-    def __init__(self, host, port, websocketclass, selectInterval=0.1):
-        self.websocketclass = websocketclass
+    def __init__(self, host, port, selectInterval=0.1):
+        self.websocketclass = WebSocket
         self.serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.serversocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.serversocket.bind((host, port))
