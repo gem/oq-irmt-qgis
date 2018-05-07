@@ -9,13 +9,13 @@ class WebApp(object):
         self.wss = wss  # thread running the websocket server
         self.app_name = app_name
         # self.allowed_meths = ['window_open']
-        self.allowed_meths = []
+        self.allowed_meths = ['window_open']
         self.pending = {}
 
-    def window_open(self):
-        self.run_command("window_open")
-
     def run_command(self, command, args=()):
+        # called when IRMT wants to send a command to the websocket
+        if command not in self.allowed_meths:
+            return 'Method "%s" not allowed' % command
         uuid = uuid4().get_urn()[9:]
         api_msg = {
             'uuid': uuid,
@@ -28,6 +28,7 @@ class WebApp(object):
         self.pending[uuid] = api_msg
 
     def receive(self, api_msg):
+        # it happens when the websocket receives a message
         api_uuid = api_msg['uuid']
         if 'reply' in api_msg:
             app_msg = api_msg['reply']
@@ -44,8 +45,13 @@ class WebApp(object):
             app_msg = api_msg['msg']
             command = app_msg['command']
             if command not in self.allowed_meths:
-                api_reply = {'uuid': api_uuid, 'reply': {
-                    'success': False, 'msg': 'method not found'}}
+                api_reply = {
+                    'uuid': api_uuid,
+                    'reply': {
+                        'success': False,
+                        'msg': 'Method "%s" not allowed' % command
+                    }
+                }
                 self.send(api_reply)
 
             args = app_msg['args']
@@ -58,6 +64,7 @@ class WebApp(object):
             self.send(api_reply)
 
     def send(self, api_msg):
+        # it sends a message to the websocket
         hyb_msg = {'app': self.app_name, 'msg': api_msg}
         hyb_msg_str = json.dumps(hyb_msg)
         hyb_msg_unicode = unicode(hyb_msg_str, 'utf-8')

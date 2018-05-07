@@ -357,14 +357,20 @@ class Irmt(QObject):
         dlg.exec_()
 
     def ipt(self):
-        self.ipt_app.window_open()
+        resp = self.ipt_app.run_command('window_open')
+        if resp is not None:
+            log_msg(resp, level='C', message_bar=self.iface.messageBar())
         self.irmt_sig.emit('hello Matteo')
 
     def taxtweb(self):
-        self.taxtweb_app.window_open()
+        resp = self.taxtweb_app.run_command('window_open')
+        if resp is not None:
+            log_msg(resp, level='C', message_bar=self.iface.messageBar())
 
     def taxonomy(self):
-        self.taxonomy_app.window_open()
+        resp = self.taxonomy_app.run_command('window_open')
+        if resp is not None:
+            log_msg(resp, level='C', message_bar=self.iface.messageBar())
 
     def on_drive_oq_engine_server_btn_clicked(self):
         # we can't call drive_oq_engine_server directly, otherwise the signal
