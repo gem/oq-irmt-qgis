@@ -73,8 +73,6 @@ MAXPAYLOAD = 33554432
 
 
 class WebSocket(QObject):
-    socket_received = pyqtSignal(str)
-    socket_sent = pyqtSignal(str)
 
     def __init__(self, server, sock, address):
         self.server = server
@@ -120,7 +118,7 @@ class WebSocket(QObject):
             If the frame is Text then self.data is a unicode object.
             If the frame is Binary then self.data is a bytearray object.
         """
-        self.socket_received.emit(self.data)
+        self.server.handle_socket_received(self.data)
 
     def handleConnected(self):
         """
@@ -379,7 +377,7 @@ class WebSocket(QObject):
         if _check_unicode(data):
             opcode = TEXT
         self._sendMessage(False, opcode, data)
-        self.socket_sent.emit(data)
+        self.server.handle_socket_sent(data)
 
     def _sendMessage(self, fin, opcode, data):
 
@@ -614,11 +612,9 @@ class SimpleWebSocketServer(QThread):
         if ret is False:
             self.wss_sig.emit('Send failed! No connections')
 
-    @pyqtSlot(str)
     def handle_socket_received(self, data):
         self.from_socket_received.emit(data)
 
-    @pyqtSlot(str)
     def handle_socket_sent(self, data):
         self.from_socket_sent.emit(data)
 
@@ -699,10 +695,6 @@ class SimpleWebSocketServer(QThread):
                     fileno = newsock.fileno()
                     self.connections[fileno] = self._constructWebSocket(
                         newsock, address)
-                    self.connections[fileno].socket_received[str].connect(
-                       self.handle_socket_received)
-                    self.connections[fileno].socket_sent[str].connect(
-                       self.handle_socket_sent)
                     self.listeners.append(fileno)
                 except Exception as n:
                     self.wss_sig.emit(str(n))
