@@ -1400,12 +1400,11 @@ class Irmt(QObject):
 
     @pyqtSlot(str)
     def handle_wss_sig(self, data):
-        log_msg("wss_sig: %s" % data,
-                message_bar=self.iface.messageBar())
+        log_msg("wss_sig: %s" % data)
 
     @pyqtSlot('QVariantMap')
     def handle_from_socket_received(self, hyb_msg):
-        print("handle_from_socket_received: %s" % hyb_msg)
+        log_msg("handle_from_socket_received: %s" % hyb_msg)
 
         app_name = hyb_msg['app']
         api_msg = hyb_msg['msg']
@@ -1415,8 +1414,7 @@ class Irmt(QObject):
 
     @pyqtSlot('QVariantMap')
     def handle_from_socket_sent(self, data):
-        log_msg("from_socket_sent: %s" % data,
-                message_bar=self.iface.messageBar())
+        log_msg("from_socket_sent: %s" % data)
 
     def start_websocket(self):
         if self.websocket_thread is not None:
