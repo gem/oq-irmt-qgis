@@ -1,5 +1,4 @@
 from uuid import uuid4
-import json
 
 
 class WebApp(object):
@@ -66,9 +65,4 @@ class WebApp(object):
     def send(self, api_msg):
         # it sends a message to the websocket
         hyb_msg = {'app': self.app_name, 'msg': api_msg}
-        hyb_msg_str = json.dumps(hyb_msg)
-        hyb_msg_unicode = unicode(hyb_msg_str, 'utf-8')
-        self.wss.irmt_thread.send_to_wss_sig.emit(hyb_msg_unicode)
-        # ret = self.wss.send_message(hyb_msg)
-        # if ret is False:
-        #     print('Send failed! No connections')
+        self.wss.irmt_thread.send_to_wss_sig.emit(hyb_msg)

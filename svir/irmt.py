@@ -29,7 +29,6 @@ import tempfile
 from uuid import uuid4
 import fileinput
 import re
-import json
 
 from copy import deepcopy
 from math import floor, ceil
@@ -119,8 +118,8 @@ from svir import IS_SCIPY_INSTALLED
 
 class Irmt(QObject):
 
-    irmt_sig = pyqtSignal(str)
-    send_to_wss_sig = pyqtSignal(str)
+    irmt_sig = pyqtSignal('QVariantMap')
+    send_to_wss_sig = pyqtSignal('QVariantMap')
 
     def __init__(self, iface):
         super(Irmt, self).__init__()
@@ -360,7 +359,7 @@ class Irmt(QObject):
         resp = self.ipt_app.run_command('window_open')
         if resp is not None:
             log_msg(resp, level='C', message_bar=self.iface.messageBar())
-        self.irmt_sig.emit('hello Matteo')
+        self.irmt_sig.emit({'msg': 'hello Matteo'})
 
     def taxtweb(self):
         resp = self.taxtweb_app.run_command('window_open')
@@ -1404,15 +1403,10 @@ class Irmt(QObject):
         log_msg("wss_sig: %s" % data,
                 message_bar=self.iface.messageBar())
 
-    @pyqtSlot(str)
-    def handle_from_socket_received(self, data):
-        log_msg("from_socket_received: %s" % data,
+    @pyqtSlot('QVariantMap')
+    def handle_from_socket_received(self, hyb_msg):
+        log_msg("from_socket_received: %s" % hyb_msg,
                 message_bar=self.iface.messageBar())
-        hyb_msg = json.loads(data)
-        if ('app' not in hyb_msg or hyb_msg['app'] not in self.web_apps or
-                'msg' not in hyb_msg):
-            print('Malformed msg: [%s]' % data)
-            return
 
         app_name = hyb_msg['app']
         api_msg = hyb_msg['msg']
@@ -1420,7 +1414,7 @@ class Irmt(QObject):
 
         app.receive(api_msg)
 
-    @pyqtSlot(str)
+    @pyqtSlot('QVariantMap')
     def handle_from_socket_sent(self, data):
         log_msg("from_socket_sent: %s" % data,
                 message_bar=self.iface.messageBar())
@@ -1434,10 +1428,11 @@ class Irmt(QObject):
         host = 'localhost'
         port = 8000
         self.websocket_thread = SimpleWebSocketServer(host, port, self)
-        self.websocket_thread.wss_sig[str].connect(self.handle_wss_sig)
-        self.websocket_thread.from_socket_received[str].connect(
+        self.websocket_thread.wss_sig['QVariantMap'].connect(
+            self.handle_wss_sig)
+        self.websocket_thread.from_socket_received['QVariantMap'].connect(
             self.handle_from_socket_received)
-        self.websocket_thread.from_socket_sent[str].connect(
+        self.websocket_thread.from_socket_sent['QVariantMap'].connect(
             self.handle_from_socket_sent)
         self.websocket_thread.start()
         log_msg("Web socket server started",

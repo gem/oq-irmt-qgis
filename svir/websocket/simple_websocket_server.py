@@ -3,6 +3,7 @@ The MIT License (MIT)
 Copyright (c) 2013 Dave P.
 '''
 import sys
+import json
 from PyQt4.QtCore import pyqtSignal, pyqtSlot, QObject, QThread, QMutex
 import hashlib
 import base64
@@ -575,9 +576,9 @@ class WebSocket(QObject):
 
 
 class SimpleWebSocketServer(QThread):
-    wss_sig = pyqtSignal(str)
-    from_socket_received = pyqtSignal(str)
-    from_socket_sent = pyqtSignal(str)
+    wss_sig = pyqtSignal('QVariantMap')
+    from_socket_received = pyqtSignal('QVariantMap')
+    from_socket_sent = pyqtSignal('QVariantMap')
 
     def __init__(self, host, port, irmt_thread, selectInterval=0.1):
         self.websocketclass = WebSocket
@@ -594,29 +595,50 @@ class SimpleWebSocketServer(QThread):
 
         super(SimpleWebSocketServer, self).__init__()
 
-        self.irmt_thread.irmt_sig[str].connect(self.handle_irmt_sig)
-        self.irmt_thread.send_to_wss_sig[str].connect(self.send_to_wss)
+        self.irmt_thread.irmt_sig['QVariantMap'].connect(self.handle_irmt_sig)
+        self.irmt_thread.send_to_wss_sig['QVariantMap'].connect(
+            self.send_to_wss)
 
     @pyqtSlot(str)
     def handle_irmt_sig(self, data):
         print('From irmt_sig: %s' % data)
 
-    @pyqtSlot(str)
-    def send_to_wss(self, data):
+    @pyqtSlot('QVariantMap')
+    def send_to_wss(self, hyb_msg):
+        hyb_msg_str = json.dumps(hyb_msg)
+        hyb_msg_unicode = unicode(hyb_msg_str, 'utf-8')
         ret = False
         for fileno, conn in self.connections.iteritems():
             if conn == self.serversocket:
                 continue
-            conn.sendMessage(data)
+            conn.sendMessage(hyb_msg_unicode)
             ret = True
         if ret is False:
-            self.wss_sig.emit('Send failed! No connections')
+            self.wss_sig.emit({'msg': 'Send failed! No connections'})
 
     def handle_socket_received(self, data):
-        self.from_socket_received.emit(data)
+        try:
+            hyb_msg = self._loads(data)
+        except ValueError:
+            print('Malformed msg: [%s]' % data)
+            return
+        self.from_socket_received.emit(hyb_msg)
 
     def handle_socket_sent(self, data):
-        self.from_socket_sent.emit(data)
+        try:
+            hyb_msg = self._loads(data)
+        except ValueError:
+            print('Malformed msg: [%s]' % data)
+            return
+        self.from_socket_sent.emit(hyb_msg)
+
+    def _loads(self, data):
+        hyb_msg = json.loads(data)
+        if ('app' not in hyb_msg
+                or hyb_msg['app'] not in self.irmt_thread.web_apps
+                or 'msg' not in hyb_msg):
+            raise ValueError
+        return hyb_msg
 
     def _decorateSocket(self, sock):
         return sock
@@ -675,7 +697,7 @@ class SimpleWebSocketServer(QThread):
                             raise Exception('received client close')
 
             except Exception as n:
-                self.wss_sig.emit(str(n))
+                self.wss_sig.emit({'msg': str(n)})
                 self._handleClose(client)
                 del self.connections[ready]
                 self.listeners.remove(ready)
@@ -697,7 +719,7 @@ class SimpleWebSocketServer(QThread):
                         newsock, address)
                     self.listeners.append(fileno)
                 except Exception as n:
-                    self.wss_sig.emit(str(n))
+                    self.wss_sig.emit({'msg': str(n)})
                     if sock is not None:
                         sock.close()
             else:
@@ -712,7 +734,7 @@ class SimpleWebSocketServer(QThread):
                         raise Exception("closing websocket server")
                     client._handleData()
                 except Exception as n:
-                    self.wss_sig.emit(str(n))
+                    self.wss_sig.emit({'msg': str(n)})
                     self._handleClose(client)
                     del self.connections[ready]
                     self.listeners.remove(ready)
