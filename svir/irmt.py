@@ -1405,8 +1405,7 @@ class Irmt(QObject):
 
     @pyqtSlot('QVariantMap')
     def handle_from_socket_received(self, hyb_msg):
-        log_msg("from_socket_received: %s" % hyb_msg,
-                message_bar=self.iface.messageBar())
+        print("handle_from_socket_received: %s" % hyb_msg)
 
         app_name = hyb_msg['app']
         api_msg = hyb_msg['msg']

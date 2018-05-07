@@ -52,6 +52,7 @@ class WebApp(object):
                     }
                 }
                 self.send(api_reply)
+                return
 
             args = app_msg['args']
             meth = getattr(self, command)
