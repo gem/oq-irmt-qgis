@@ -10,7 +10,7 @@ class WebApp(object):
         self.message_bar = message_bar
         self.app_name = app_name
         # self.allowed_meths = ['window_open']
-        self.allowed_meths = ['window_open', 'ext_app_open']
+        self.allowed_meths = ['window_open', 'ext_app_open', 'set_cells']
         self.pending = {}
 
     def ext_app_open(self, *args):

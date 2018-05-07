@@ -219,6 +219,22 @@ class Irmt(QObject):
                            add_to_layer_actions=True,
                            submenu='OQ Platform')
         # Action to drive ipt
+        self.add_menu_item("ipt_set_cells",
+                           ":/plugins/irmt/ipt.svg",
+                           u"IPT set cells",
+                           self.ipt_set_cells,
+                           enable=self.experimental_enabled(),
+                           submenu='OQ Engine',
+                           add_to_toolbar=True)
+        # Action to drive ipt
+        self.add_menu_item("taxtweb_set_cells",
+                           ":/plugins/irmt/taxtweb.svg",
+                           u"Taxtweb set cells",
+                           self.taxtweb_set_cells,
+                           enable=self.experimental_enabled(),
+                           submenu='OQ Engine',
+                           add_to_toolbar=True)
+        # Action to drive ipt
         self.add_menu_item("ipt",
                            ":/plugins/irmt/ipt.svg",
                            u"OpenQuake Input Preparation Toolkit",
@@ -354,6 +370,17 @@ class Irmt(QObject):
     def load_ruptures_as_layer(self):
         dlg = LoadRupturesAsLayerDialog(self.iface, 'ruptures')
         dlg.exec_()
+
+    def ipt_set_cells(self):
+        self._set_cells(self.ipt_app)
+
+    def taxtweb_set_cells(self):
+        self._set_cells(self.ipt_app)
+
+    def _set_cells(self, web_app):
+        resp = web_app.run_command('set_cells', args=['pippo', 'pluto'])
+        if resp is not None:
+            log_msg(resp, level='C', message_bar=self.iface.messageBar())
 
     def ipt(self):
         resp = self.ipt_app.run_command('window_open')
