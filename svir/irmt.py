@@ -1451,9 +1451,11 @@ class Irmt(QObject):
             self.websocket_thread = None
 
     def instantiate_web_apps(self):
-        self.ipt_app = IptApp(self.websocket_thread)
-        self.taxtweb_app = TaxtwebApp(self.websocket_thread)
-        self.taxonomy_app = TaxonomyApp(self.websocket_thread)
+        self.ipt_app = IptApp(self.websocket_thread, self.iface.messageBar())
+        self.taxtweb_app = TaxtwebApp(
+            self.websocket_thread, self.iface.messageBar())
+        self.taxonomy_app = TaxonomyApp(
+            self.websocket_thread, self.iface.messageBar())
         self.web_apps = {'ipt': self.ipt_app,
                          'taxtweb': self.taxtweb_app,
                          'taxonomy': self.taxonomy}

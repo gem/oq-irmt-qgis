@@ -1,15 +1,22 @@
 from uuid import uuid4
+from svir.utilities.utils import log_msg
 
 
 class WebApp(object):
 
-    def __init__(self, wss, app_name=None):
+    def __init__(self, app_name, wss, message_bar):
         assert app_name is not None
         self.wss = wss  # thread running the websocket server
+        self.message_bar = message_bar
         self.app_name = app_name
         # self.allowed_meths = ['window_open']
-        self.allowed_meths = ['window_open']
+        self.allowed_meths = ['window_open', 'ext_app_open']
         self.pending = {}
+
+    def ext_app_open(self, *args):
+        msg = "%s ext_app_open: %s" % (self.app_name, args[0])
+        log_msg(msg, message_bar=self.message_bar)
+        return {'success': True}
 
     def run_command(self, command, args=()):
         # called when IRMT wants to send a command to the websocket
