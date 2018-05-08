@@ -449,6 +449,7 @@ class Irmt(object):
         self.registered_actions[action_name] = action
 
         if add_to_layer_actions:
+            return
             self.iface.legendInterface().addLegendLayerAction(
                 action,
                 u"IRMT",
