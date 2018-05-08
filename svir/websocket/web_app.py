@@ -14,6 +14,8 @@ class WebApp(object):
         self.pending = {}
 
     def ext_app_open(self, *args):
+        # FIXME: the name is misleading. This method just prints in the message
+        # bar a string specified in the first arg
         msg = "%s ext_app_open: %s" % (self.app_name, args[0])
         log_msg(msg, message_bar=self.message_bar)
         return {'success': True}

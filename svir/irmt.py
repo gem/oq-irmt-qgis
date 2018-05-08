@@ -375,7 +375,7 @@ class Irmt(QObject):
         self._set_cells(self.ipt_app)
 
     def taxtweb_set_cells(self):
-        self._set_cells(self.ipt_app)
+        self._set_cells(self.taxtweb_app)
 
     def _set_cells(self, web_app):
         resp = web_app.run_command('set_cells', args=['pippo', 'pluto'])
