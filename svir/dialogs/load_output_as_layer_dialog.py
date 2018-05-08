@@ -25,22 +25,22 @@ from builtins import str
 
 from random import randrange
 from qgis.core import (QgsVectorLayer,
-                       QgsMapLayerRegistry,
-                       QgsStyleV2,
-                       QgsSymbolV2,
-                       QgsSymbolLayerV2Registry,
+                       QgsProject,
+                       QgsStyle,
+                       QgsSymbol,
+                       QgsSymbolLayerRegistry,
                        QgsOuterGlowEffect,
-                       QgsSingleSymbolRendererV2,
-                       QgsVectorGradientColorRampV2,
-                       QgsGraduatedSymbolRendererV2,
-                       QgsRendererRangeV2,
+                       QgsSingleSymbolRenderer,
+                       QgsVectorGradientColorRamp,
+                       QgsGraduatedSymbolRenderer,
+                       QgsRendererRange,
                        QgsMapUnitScale,
-                       QGis,
+                       Qgis,
                        QgsMapLayer,
-                       QgsMarkerSymbolV2,
-                       QgsSimpleFillSymbolLayerV2,
-                       QgsRendererCategoryV2,
-                       QgsCategorizedSymbolRendererV2,
+                       QgsMarkerSymbol,
+                       QgsSimpleFillSymbolLayer,
+                       QgsRendererCategory,
+                       QgsCategorizedSymbolRenderer,
                        )
 from qgis.PyQt.QtCore import pyqtSlot, QDir, QSettings, QFileInfo, Qt
 from qgis.PyQt.QtWidgets import QDialogButtonBox, QDialog, QFileDialog, QComboBox, QSpinBox, QLabel, QCheckBox, QHBoxLayout, QVBoxLayout, QToolButton, QGroupBox, QLineEdit
@@ -220,11 +220,11 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
 
     def pre_populate_zonal_layer_cbx(self):
         for key, layer in \
-                QgsMapLayerRegistry.instance().mapLayers().items():
+                QgsProject.instance().mapLayers().items():
             # populate loss cbx only with layers containing points
             if layer.type() != QgsMapLayer.VectorLayer:
                 continue
-            if layer.geometryType() == QGis.Polygon:
+            if layer.geometryType() == Qgis.Polygon:
                 self.zonal_layer_cbx.addItem(layer.name())
                 self.zonal_layer_cbx.setItemData(
                     self.zonal_layer_cbx.count()-1, layer.id())
@@ -235,7 +235,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         if not self.zonal_layer_cbx.currentText():
             return
         zonal_layer_id = self.zonal_layer_cbx.itemData(new_index)
-        zonal_layer = QgsMapLayerRegistry.instance().mapLayer(zonal_layer_id)
+        zonal_layer = QgsProject.instance().mapLayer(zonal_layer_id)
         # if the zonal_layer doesn't have a field containing a unique zone id,
         # the user can choose to add such unique id
         self.zone_id_field_cbx.addItem("Add field with unique zone id")
@@ -397,14 +397,14 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         irmt_version = get_irmt_version()
         self.layer.setCustomProperty('irmt_version', irmt_version)
         self.layer.setCustomProperty('calc_id', self.calc_id)
-        QgsMapLayerRegistry.instance().addMapLayer(self.layer)
+        QgsProject.instance().addMapLayer(self.layer)
         self.iface.setActiveLayer(self.layer)
         self.iface.zoomToActiveLayer()
 
     def _set_symbol_size(self, symbol):
-        if self.iface.mapCanvas().mapUnits() == QGis.Degrees:
+        if self.iface.mapCanvas().mapUnits() == Qgis.Degrees:
             point_size = 0.05
-        elif self.iface.mapCanvas().mapUnits() == QGis.Meters:
+        elif self.iface.mapCanvas().mapUnits() == Qgis.Meters:
             point_size = 4000
         else:
             # it is not obvious how to choose the point size in the other
@@ -424,11 +424,11 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             layer = self.layer
         if style_by is None:
             style_by = self.default_field_name
-        symbol = QgsSymbolV2.defaultSymbol(layer.geometryType())
+        symbol = QgsSymbol.defaultSymbol(layer.geometryType())
         # see properties at:
         # https://qgis.org/api/qgsmarkersymbollayerv2_8cpp_source.html#l01073
         symbol.setAlpha(1)  # opacity
-        if isinstance(symbol, QgsMarkerSymbolV2):
+        if isinstance(symbol, QgsMarkerSymbol):
             # do it only for the layer with points
             self._set_symbol_size(symbol)
             symbol.symbolLayer(0).setOutlineStyle(Qt.PenStyle(Qt.NoPen))
@@ -436,34 +436,34 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         style = get_style(layer, self.iface.messageBar())
 
         # this is the default, as specified in the user settings
-        ramp = QgsVectorGradientColorRampV2(
+        ramp = QgsVectorGradientColorRamp(
             style['color_from'], style['color_to'])
         mode = style['mode']
 
         # in most cases, we override the user-specified setting, and use
         # instead a setting that was required by scientists
         if self.output_type in OQ_TO_LAYER_TYPES:
-            default_qgs_style = QgsStyleV2().defaultStyle()
+            default_qgs_style = QgsStyle().defaultStyle()
             default_color_ramp_names = default_qgs_style.colorRampNames()
             if self.output_type in ('dmg_by_asset',
                                     'losses_by_asset',
                                     'avg_losses-stats'):
                 # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
                 # jenks = natural breaks
-                mode = QgsGraduatedSymbolRendererV2.Jenks
+                mode = QgsGraduatedSymbolRenderer.Jenks
                 ramp_type_idx = default_color_ramp_names.index('Reds')
                 inverted = False
             elif self.output_type in ('hmaps', 'gmf_data', 'ruptures'):
                 # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
                 if self.output_type == 'ruptures':
-                    mode = QgsGraduatedSymbolRendererV2.Pretty
+                    mode = QgsGraduatedSymbolRenderer.Pretty
                 else:
-                    mode = QgsGraduatedSymbolRendererV2.EqualInterval
+                    mode = QgsGraduatedSymbolRenderer.EqualInterval
                 ramp_type_idx = default_color_ramp_names.index('Spectral')
                 inverted = True
             ramp = default_qgs_style.colorRamp(
                 default_color_ramp_names[ramp_type_idx])
-        graduated_renderer = QgsGraduatedSymbolRendererV2.createRenderer(
+        graduated_renderer = QgsGraduatedSymbolRenderer.createRenderer(
             layer,
             style_by,
             style['classes'],
@@ -479,22 +479,22 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         if self.output_type != 'ruptures':
             VERY_SMALL_VALUE = 1e-20
             graduated_renderer.updateRangeLowerValue(0, VERY_SMALL_VALUE)
-            symbol_zeros = QgsSymbolV2.defaultSymbol(layer.geometryType())
+            symbol_zeros = QgsSymbol.defaultSymbol(layer.geometryType())
             symbol_zeros.setColor(QColor(240, 240, 240))  # very light grey
-            if isinstance(symbol, QgsMarkerSymbolV2):
+            if isinstance(symbol, QgsMarkerSymbol):
                 # do it only for the layer with points
                 self._set_symbol_size(symbol_zeros)
                 symbol_zeros.symbolLayer(0).setOutlineStyle(
                     Qt.PenStyle(Qt.NoPen))
             zeros_min = 0.0
             zeros_max = VERY_SMALL_VALUE
-            range_zeros = QgsRendererRangeV2(
+            range_zeros = QgsRendererRange(
                 zeros_min, zeros_max, symbol_zeros,
                 " %.2f - %.2f" % (zeros_min, zeros_max), True)
             graduated_renderer.addClassRange(range_zeros)
             graduated_renderer.moveClass(
                 len(graduated_renderer.ranges()) - 1, 0)
-        layer.setRendererV2(graduated_renderer)
+        layer.setRenderer(graduated_renderer)
         layer.setLayerTransparency(30)  # percent
         layer.triggerRepaint()
         self.iface.legendInterface().refreshLayerSymbology(layer)
@@ -508,40 +508,40 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         categories = []
         for unique_value in unique_values:
             # initialize the default symbol for this geometry type
-            symbol = QgsSymbolV2.defaultSymbol(layer.geometryType())
+            symbol = QgsSymbol.defaultSymbol(layer.geometryType())
             # configure a symbol layer
             layer_style = {}
             layer_style['color'] = '%d, %d, %d' % (
                 randrange(0, 256), randrange(0, 256), randrange(0, 256))
             layer_style['outline'] = '#000000'
-            symbol_layer = QgsSimpleFillSymbolLayerV2.create(layer_style)
+            symbol_layer = QgsSimpleFillSymbolLayer.create(layer_style)
             # replace default symbol layer with the configured one
             if symbol_layer is not None:
                 symbol.changeSymbolLayer(0, symbol_layer)
             # create renderer object
-            category = QgsRendererCategoryV2(
+            category = QgsRendererCategory(
                 unique_value, symbol, str(unique_value))
             # entry for the list of category items
             categories.append(category)
         # create renderer object
-        renderer = QgsCategorizedSymbolRendererV2(style_by, categories)
+        renderer = QgsCategorizedSymbolRenderer(style_by, categories)
         # assign the created renderer to the layer
         if renderer is not None:
-            layer.setRendererV2(renderer)
+            layer.setRenderer(renderer)
         layer.triggerRepaint()
         self.iface.legendInterface().refreshLayerSymbology(layer)
         self.iface.mapCanvas().refresh()
 
     def style_curves(self):
-        registry = QgsSymbolLayerV2Registry.instance()
+        registry = QgsSymbolLayerRegistry.instance()
         cross = registry.symbolLayerMetadata("SimpleMarker").createSymbolLayer(
             {'name': 'cross2', 'color': '0,0,0', 'color_border': '0,0,0',
              'offset': '0,0', 'size': '1.5', 'angle': '0'})
-        symbol = QgsSymbolV2.defaultSymbol(self.layer.geometryType())
+        symbol = QgsSymbol.defaultSymbol(self.layer.geometryType())
         symbol.deleteSymbolLayer(0)
         symbol.appendSymbolLayer(cross)
         self._set_symbol_size(symbol)
-        renderer = QgsSingleSymbolRendererV2(symbol)
+        renderer = QgsSingleSymbolRenderer(symbol)
         effect = QgsOuterGlowEffect()
         effect.setSpread(0.5)
         effect.setTransparency(0)
@@ -549,7 +549,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         effect.setBlurLevel(1)
         renderer.paintEffect().appendEffect(effect)
         renderer.paintEffect().setEnabled(True)
-        self.layer.setRendererV2(renderer)
+        self.layer.setRenderer(renderer)
         self.layer.setLayerTransparency(30)  # percent
         self.layer.triggerRepaint()
         self.iface.legendInterface().refreshLayerSymbology(
@@ -578,7 +578,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     def load_zonal_layer(self, zonal_layer_path, make_a_copy=False):
         # Load zonal layer
         zonal_layer = QgsVectorLayer(zonal_layer_path, tr('Zonal data'), 'ogr')
-        if not zonal_layer.geometryType() == QGis.Polygon:
+        if not zonal_layer.geometryType() == Qgis.Polygon:
             msg = 'Zonal layer must contain zone polygons'
             log_msg(msg, level='C', message_bar=self.iface.messageBar())
             return False
@@ -590,7 +590,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             zonal_layer_plus_stats = zonal_layer
         # Add zonal layer to registry
         if zonal_layer_plus_stats.isValid():
-            QgsMapLayerRegistry.instance().addMapLayer(zonal_layer_plus_stats)
+            QgsProject.instance().addMapLayer(zonal_layer_plus_stats)
         else:
             msg = 'Invalid zonal layer'
             log_msg(msg, level='C', message_bar=self.iface.messageBar())
@@ -600,7 +600,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     def on_zonal_layer_tbn_clicked(self):
         zonal_layer_plus_stats = self.open_zonal_layer_dialog()
         if (zonal_layer_plus_stats and
-                zonal_layer_plus_stats.geometryType() == QGis.Polygon):
+                zonal_layer_plus_stats.geometryType() == Qgis.Polygon):
             self.populate_zonal_layer_cbx(zonal_layer_plus_stats)
 
     def populate_zonal_layer_cbx(self, zonal_layer_plus_stats):
@@ -629,7 +629,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 self.iface.legendInterface().setLayerVisible(loss_layer, False)
                 zonal_layer_id = self.zonal_layer_cbx.itemData(
                     self.zonal_layer_cbx.currentIndex())
-                zonal_layer = QgsMapLayerRegistry.instance().mapLayer(
+                zonal_layer = QgsProject.instance().mapLayer(
                     zonal_layer_id)
                 # if the two layers have different projections, display an
                 # error message and return

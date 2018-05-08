@@ -50,7 +50,7 @@ from qgis.PyQt.QtCore import pyqtSlot, QSettings, Qt
 from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtWidgets import QLabel, QPlainTextEdit, QComboBox, QSizePolicy, QSpinBox, QPushButton, QCheckBox, QDockWidget, QFileDialog, QAbstractItemView, QTableWidget, QTableWidgetItem
 from qgis.gui import QgsVertexMarker
-from qgis.core import QGis, QgsMapLayer, QgsFeatureRequest
+from qgis.core import Qgis, QgsMapLayer, QgsFeatureRequest
 
 from svir.utilities.shared import (
                                    OQ_TO_LAYER_TYPES,
@@ -78,7 +78,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     def __init__(self, iface, action):
         """Constructor for the viewer dock.
 
-        :param iface: A QGisAppInterface instance we use to access QGIS via.
+        :param iface: A QgisAppInterface instance we use to access QGIS via.
         :param action: needed to uncheck the toolbar button on close
         .. note:: We use the multiple inheritance approach from Qt4 so that
             for elements are directly accessible in the form context and we can
@@ -440,7 +440,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             return
         # feature selection triggers the redrawing of plots
         layer = self.iface.activeLayer()
-        selected_feats = layer.selectedFeaturesIds()
+        selected_feats = layer.selectedFeatureIds()
         layer.blockSignals(True)
         layer.removeSelection()
         layer.blockSignals(False)
@@ -513,7 +513,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.tag_with_all_values = None
         self.change_output_type(output_type)
         self.engine_version = engine_version
-        self.setVisible(True)
+        self.setVisible(
+            True)
         self.raise_()
         if output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
             self.load_agg_curves(calc_id, session, hostname, output_type)
@@ -1135,7 +1136,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
         if (self.iface.activeLayer() is not None
                 and self.iface.activeLayer().type() == QgsMapLayer.VectorLayer
-                and self.iface.activeLayer().geometryType() == QGis.Point):
+                and self.iface.activeLayer().geometryType() == Qgis.Point):
             self.engine_version = self.iface.activeLayer().customProperty(
                 'engine_version', None)
             self.iface.activeLayer().selectionChanged.connect(
@@ -1185,7 +1186,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             pass
 
     def redraw_current_selection(self):
-        selected = self.iface.activeLayer().selectedFeaturesIds()
+        selected = self.iface.activeLayer().selectedFeatureIds()
         self.redraw(selected, [], None)
 
     def clear_plot(self):

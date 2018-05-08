@@ -24,7 +24,7 @@
 
 import numpy
 import collections
-from qgis.core import QgsFeature, QgsGeometry, QgsPoint, edit
+from qgis.core import QgsFeature, QgsGeometry, QgsPointXY, edit
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 from svir.calculations.calculate_utils import add_numeric_attribute
 from svir.utilities.utils import (WaitCursorManager,
@@ -155,10 +155,10 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                         continue
                     value = float(row[field_name_idx])
                     feat.setAttribute(field_names[field_name_idx], value)
-                feat.setGeometry(QgsGeometry.fromPoint(
-                    QgsPoint(row['lon'], row['lat'])))
+                feat.setGeometry(QgsGeometry.fromPointXY(
+                    QgsPointXY(row['lon'], row['lat'])))
                 feats.append(feat)
-            added_ok = self.layer.addFeatures(feats, makeSelected=False)
+            added_ok = self.layer.addFeatures(feats)
             if not added_ok:
                 msg = 'There was a problem adding features to the layer.'
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())

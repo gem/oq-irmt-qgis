@@ -20,7 +20,7 @@ Contact : ole.moller.nielsen@gmail.com
 import logging
 from mock import Mock
 
-from qgis.core import QgsMapLayerRegistry, QgsMapLayer, QgsProject
+from qgis.core import QgsProject, QgsMapLayer
 # pylint: disable=no-name-in-module
 from qgis.gui import QgsMapCanvasLayer, QgsMessageBar
 from qgis.PyQt.QtCore import QObject, pyqtSlot, pyqtSignal
@@ -62,11 +62,11 @@ class QgisInterface(QObject):
         # are added.
         LOGGER.debug('Initialising canvas...')
         # noinspection PyArgumentList
-        QgsMapLayerRegistry.instance().layersAdded.connect(self.addLayers)
+        QgsProject.instance().layersAdded.connect(self.addLayers)
         # noinspection PyArgumentList
-        QgsMapLayerRegistry.instance().layerWasAdded.connect(self.addLayer)
+        QgsProject.instance().layerWasAdded.connect(self.addLayer)
         # noinspection PyArgumentList
-        QgsMapLayerRegistry.instance().removeAll.connect(self.removeAllLayers)
+        QgsProject.instance().removeAll.connect(self.removeAllLayers)
 
         # For processing module
         self.destCrs = None
@@ -145,7 +145,7 @@ class QgisInterface(QObject):
     def layers(self):
         # It's for processing module
         # simulate iface.legendInterface().layers()
-        return list(QgsMapLayerRegistry.instance().mapLayers().values())
+        return list(QgsProject.instance().mapLayers().values())
 
     @pyqtSlot('QStringList')
     def addLayers(self, layers):
@@ -191,8 +191,8 @@ class QgisInterface(QObject):
     def removeAllLayers(self, ):
         """Remove layers from the canvas before they get deleted.
 
-        .. note:: This is NOT part of the QGisInterface API but is needed
-            to support QgsMapLayerRegistry.removeAllLayers().
+        .. note:: This is NOT part of the QgisInterface API but is needed
+            to support QgsProject.removeAllLayers().
 
         """
         self.canvas.setLayerSet([])
@@ -201,7 +201,7 @@ class QgisInterface(QObject):
     def newProject(self):
         """Create new project."""
         # noinspection PyArgumentList
-        QgsMapLayerRegistry.instance().removeAllMapLayers()
+        QgsProject.instance().removeAllMapLayers()
 
     # ---------------- API Mock for QgsInterface follows -------------------
 

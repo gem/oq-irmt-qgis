@@ -34,10 +34,10 @@ from types import NoneType
 from qgis.PyQt.QtCore import QPyNullVariant
 from qgis.core import (
                        QgsMapLayer,
-                       QGis,
+                       Qgis,
                        QgsVectorLayer,
                        QgsVectorDataProvider,
-                       QgsMapLayerRegistry,
+                       QgsProject,
                        QgsField,
                        edit,
                        )
@@ -109,8 +109,8 @@ class ProcessLayer(object):
                 if they use different projections,
                 specifying the projections in the message
         """
-        this_layer_projection = self.layer.crs().geographicCRSAuthId()
-        other_layer_projection = other_layer.crs().geographicCRSAuthId()
+        this_layer_projection = self.layer.crs().geographicCrsAuthId()
+        other_layer_projection = other_layer.crs().geographicCrsAuthId()
         if (this_layer_projection != other_layer_projection):
             msg = tr("The two layers use different coordinate"
                      " reference systems (%s vs %s)"
@@ -411,19 +411,19 @@ class ProcessLayer(object):
 
         if self.layer.type() == QgsMapLayer.VectorLayer:
             v_type = self.layer.wkbType()
-            if v_type == QGis.WKBPoint:
+            if v_type == Qgis.WKBPoint:
                 type_str = "point"
-            elif v_type == QGis.WKBLineString:
+            elif v_type == Qgis.WKBLineString:
                 type_str = "linestring"
-            elif v_type == QGis.WKBPolygon:
+            elif v_type == Qgis.WKBPolygon:
                 type_str = "polygon"
-            elif v_type == QGis.WKBMultiPoint:
+            elif v_type == Qgis.WKBMultiPoint:
                 type_str = "multipoint"
-            elif v_type == QGis.WKBMultiLineString:
+            elif v_type == Qgis.WKBMultiLineString:
                 type_str = "multilinestring"
-            elif v_type == QGis.WKBMultiPolygon:
+            elif v_type == Qgis.WKBMultiPolygon:
                 type_str = "multipolygon"
-            elif v_type == QGis.WKBNoGeometry:
+            elif v_type == Qgis.WKBNoGeometry:
                 type_str = ""
             else:
                 raise TypeError('Layer type %s can not be accepted' % v_type)
@@ -453,7 +453,7 @@ class ProcessLayer(object):
 
         if add_to_registry:
             if mem_layer.isValid():
-                QgsMapLayerRegistry.instance().addMapLayer(mem_layer)
+                QgsProject.instance().addMapLayer(mem_layer)
             else:
                 raise RuntimeError('Layer invalid')
 
@@ -467,17 +467,17 @@ class ProcessLayer(object):
         """
         if self.layer.type() == QgsMapLayer.VectorLayer:
             v_type = self.layer.wkbType()
-            if v_type == QGis.WKBPoint:
+            if v_type == Qgis.WKBPoint:
                 type_str = "point"
-            elif v_type == QGis.WKBLineString:
+            elif v_type == Qgis.WKBLineString:
                 type_str = "linestring"
-            elif v_type == QGis.WKBPolygon:
+            elif v_type == Qgis.WKBPolygon:
                 type_str = "polygon"
-            elif v_type == QGis.WKBMultiPoint:
+            elif v_type == Qgis.WKBMultiPoint:
                 type_str = "multipoint"
-            elif v_type == QGis.WKBMultiLineString:
+            elif v_type == Qgis.WKBMultiLineString:
                 type_str = "multilinestring"
-            elif v_type == QGis.WKBMultiPolygon:
+            elif v_type == Qgis.WKBMultiPolygon:
                 type_str = "multipolygon"
             else:
                 raise TypeError('Layer type %s can not be accepted' % v_type)
@@ -501,7 +501,7 @@ class ProcessLayer(object):
             feature_vertices = 0
             geom = feat.geometry()
             geom_type = geom.type()
-            if geom_type == QGis.Polygon:
+            if geom_type == Qgis.Polygon:
                 if geom.isMultipart():
                     polygons = geom.asMultiPolygon()
                 else:
@@ -509,14 +509,14 @@ class ProcessLayer(object):
                 for polygon in polygons:
                     for ring in polygon:
                         feature_vertices += len(ring)
-            elif geom_type == QGis.Line:
+            elif geom_type == Qgis.Line:
                 if geom.isMultipart():
                     lines = geom.asMultiPolyline()
                 else:
                     lines = [geom.asPolyline()]
                 for line in lines:
                     feature_vertices += len(line)
-            elif geom_type == QGis.Point:
+            elif geom_type == Qgis.Point:
                 if geom.isMultipart():
                     points = geom.asMultiPoint()
                 else:

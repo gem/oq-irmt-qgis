@@ -29,7 +29,7 @@ from qgis.PyQt.QtCore import pyqtSlot, QSettings, Qt
 from qgis.PyQt.QtWidgets import QDialog, QColorDialog, QMessageBox
 from qgis.PyQt.QtGui import QPalette
 
-from qgis.core import QgsGraduatedSymbolRendererV2, QgsProject
+from qgis.core import QgsGraduatedSymbolRenderer, QgsProject
 from qgis.gui import QgsMessageBar
 
 from svir.third_party.requests import Session
@@ -76,14 +76,14 @@ class SettingsDialog(QDialog, FORM_CLASS):
         self.style_color_to.setFocusPolicy(Qt.NoFocus)
 
         modes = {
-            QgsGraduatedSymbolRendererV2.EqualInterval: self.tr(
+            QgsGraduatedSymbolRenderer.EqualInterval: self.tr(
                 'Equal Interval'),
-            QgsGraduatedSymbolRendererV2.Quantile: self.tr(
+            QgsGraduatedSymbolRenderer.Quantile: self.tr(
                 'Quantile (Equal Count)'),
-            QgsGraduatedSymbolRendererV2.Jenks: self.tr(
+            QgsGraduatedSymbolRenderer.Jenks: self.tr(
                 'Natural Breaks (Jenks)'),
-            QgsGraduatedSymbolRendererV2.StdDev: self.tr('Standard Deviation'),
-            QgsGraduatedSymbolRendererV2.Pretty: self.tr('Pretty Breaks'),
+            QgsGraduatedSymbolRenderer.StdDev: self.tr('Standard Deviation'),
+            QgsGraduatedSymbolRenderer.Pretty: self.tr('Pretty Breaks'),
         }
         for key in modes:
             self.style_mode.addItem(modes[key], key)

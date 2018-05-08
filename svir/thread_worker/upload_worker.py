@@ -54,7 +54,7 @@ class UploadWorker(AbstractWorker):
         # So we need to check if the active layer is stored as a shapefile and,
         # if it isn't, save it as a shapefile
         data_file = '%s%s' % (self.file_stem, '.shp')
-        projection = self.current_layer.crs().geographicCRSAuthId()
+        projection = self.current_layer.crs().geographicCrsAuthId()
         if (self.current_layer.storageType() == 'ESRI Shapefile'
                 and projection == 'EPSG:4326'):
             # copy the shapefile (with all its files) into the temporary

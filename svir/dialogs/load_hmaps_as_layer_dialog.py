@@ -23,7 +23,7 @@ from builtins import str
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-from qgis.core import QgsFeature, QgsGeometry, QgsPoint, edit
+from qgis.core import QgsFeature, QgsGeometry, QgsPointXY, edit
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 from svir.calculations.calculate_utils import add_numeric_attribute
 from svir.utilities.utils import (WaitCursorManager,
@@ -147,10 +147,10 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
                     #       numpy type
                     value = float(row[field_name])
                     feat.setAttribute(field_name, value)
-                feat.setGeometry(QgsGeometry.fromPoint(
-                    QgsPoint(lons[row_idx], lats[row_idx])))
+                feat.setGeometry(QgsGeometry.fromPointXY(
+                    QgsPointXY(lons[row_idx], lats[row_idx])))
                 feats.append(feat)
-            added_ok = self.layer.addFeatures(feats, makeSelected=False)
+            added_ok = self.layer.addFeatures(feats)
             if not added_ok:
                 msg = 'There was a problem adding features to the layer.'
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())

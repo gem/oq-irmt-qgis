@@ -212,7 +212,7 @@ def calculate_node(
                     'Use a custom field (no recalculation)'):
         customFormula = node.get('customFormula', '')
         expression = QgsExpression(customFormula)
-        if not QgsExpression.isValid(customFormula, None, None):
+        if not QgsExpression.checkExpression(customFormula, None, None):
             raise InvalidFormula('Invalid formula: %s' % customFormula)
         if customFormula == '':
             # use the custom field values instead of recalculating them

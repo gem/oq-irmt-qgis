@@ -26,12 +26,12 @@ from builtins import range
 
 import tempfile
 from qgis.core import (QgsVectorLayer,
-                       QgsMapLayerRegistry,
+                       QgsProject,
                        QgsField,
                        QgsGeometry,
                        QgsSpatialIndex,
                        QgsFeatureRequest,
-                       QGis,
+                       Qgis,
                        edit,
                        )
 from qgis.analysis import QgsZonalStatistics
@@ -404,7 +404,7 @@ def _add_zone_id_to_points_saga(loss_layer, zonal_layer,
             'Points labeled by zone',
             'ogr')
     if DEBUG:
-        QgsMapLayerRegistry.instance().addMapLayer(
+        QgsProject.instance().addMapLayer(
                 loss_layer_plus_zones)
     # NOTE: In previous versions, we were identifying the
     # zone_field_name as the difference between the sets of
@@ -451,7 +451,7 @@ def get_saga_install_error():
             if saga_version_str is None:
                 err_msg = 'SAGA is not installed.'
             else:
-                qgis_version_int = QGis.QGIS_VERSION_INT
+                qgis_version_int = Qgis.QGIS_VERSION_INT
                 if qgis_version_int >= 21400:
                     (saga_major, saga_minor) = list(map(
                         int, saga_version_str.split('.')[:2]))
@@ -608,7 +608,7 @@ def calculate_raster_stats(loss_layer, zonal_layer, iface):
     """
     zonal_statistics = QgsZonalStatistics(
             zonal_layer,
-            loss_layer.dataProvider().dataSourceUri())
+            loss_layer)
     progress_dialog = QProgressDialog(
             tr('Calculating zonal statistics'),
             tr('Abort...'),

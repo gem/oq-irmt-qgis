@@ -30,7 +30,7 @@ from collections import OrderedDict
 from qgis.PyQt.QtCore import QSettings
 from qgis.PyQt.QtGui import QColor
 from configparser import ConfigParser
-from qgis.core import QgsGraduatedSymbolRendererV2
+from qgis.core import QgsGraduatedSymbolRenderer
 
 DEBUG = QSettings().value('/irmt/developer_mode', False, type=bool)
 
@@ -240,7 +240,7 @@ LOG_LEVELS = {'I': 'Info (high verbosity)',
 DEFAULT_SETTINGS = dict(
     color_from_rgba=QColor('#FFEBEB').rgba(),
     color_to_rgba=QColor('red').rgba(),
-    style_mode=QgsGraduatedSymbolRendererV2.Quantile,
+    style_mode=QgsGraduatedSymbolRenderer.Quantile,
     style_classes=10,
     force_restyling=True,
     experimental_enabled=False,

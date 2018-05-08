@@ -38,7 +38,7 @@ import io
 from copy import deepcopy
 from time import time
 from pprint import pformat
-from qgis.core import (QgsMapLayerRegistry,
+from qgis.core import (QgsProject,
                        QgsProject,
                        QgsMessageLog,
                        QgsVectorLayer,
@@ -340,7 +340,7 @@ def reload_layers_in_cbx(combo, layer_types=None, skip_layer_ids=None):
     :type skip_layer_ids: [QgsMapLayer ...]
     """
     combo.clear()
-    for l in list(QgsMapLayerRegistry.instance().mapLayers().values()):
+    for l in list(QgsProject.instance().mapLayers().values()):
         layer_type_allowed = bool(layer_types is None
                                   or l.type() in layer_types)
         layer_id_allowed = bool(skip_layer_ids is None
@@ -962,7 +962,7 @@ def import_layer_from_csv(parent,
             raise RuntimeError('Could not save shapefile')
         layer = QgsVectorLayer(dest_filename, layer_name, 'ogr')
     if layer.isValid():
-        QgsMapLayerRegistry.instance().addMapLayer(layer)
+        QgsProject.instance().addMapLayer(layer)
         iface.setActiveLayer(layer)
         if zoom_to_layer:
             iface.zoomToActiveLayer()

@@ -23,7 +23,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
-from qgis.core import QgsRuleBasedRendererV2
+from qgis.core import QgsRuleBasedRenderer
 from qgis.gui import QgsMessageBar
 
 from qgis.PyQt.QtCore import Qt, QUrl, QSettings, pyqtSignal
@@ -159,8 +159,8 @@ class UploadDialog(QDialog, FORM_CLASS):
             # rule-based styles. Only in those cases, we should add a style to
             # the layer to be uploaded. Otherwise, it's fine to use the default
             # basic geonode style.
-            if isinstance(self.iface.activeLayer().rendererV2(),
-                          QgsRuleBasedRendererV2):
+            if isinstance(self.iface.activeLayer().renderer(),
+                          QgsRuleBasedRenderer):
                 self._update_layer_style()
             else:
                 self.message_bar.pushMessage(
