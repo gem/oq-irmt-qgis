@@ -28,7 +28,7 @@ import unittest
 from svir.calculations.transformation_algs import (
     transform,
     TRANSFORMATION_ALGS)
-from qgis.PyQt.QtCore import QPyNullVariant
+from qgis.core import NULL
 
 
 class MissingValuesTestCase(unittest.TestCase):

@@ -31,7 +31,7 @@ from qgis.core import (QgsVectorLayer,
                        QgsSymbolLayerRegistry,
                        QgsOuterGlowEffect,
                        QgsSingleSymbolRenderer,
-                       QgsVectorGradientColorRamp,
+                       QgsGradientColorRamp,
                        QgsGraduatedSymbolRenderer,
                        QgsRendererRange,
                        QgsMapUnitScale,
@@ -436,7 +436,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         style = get_style(layer, self.iface.messageBar())
 
         # this is the default, as specified in the user settings
-        ramp = QgsVectorGradientColorRamp(
+        ramp = QgsGradientColorRamp(
             style['color_from'], style['color_to'])
         mode = style['mode']
 

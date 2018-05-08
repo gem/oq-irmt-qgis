@@ -338,6 +338,7 @@ def getStyleAsSld(layer, styleName):
         return None
 
 
+# TODO FIX for QGIS3
 def rule_to_sld(rule, document, element, props):
     if (hasattr(rule, 'symbols') and rule.symbols()  # working before QGIS 2.12
             or hasattr(rule, 'symbols2') and rule.symbols2()):  # working after

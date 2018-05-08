@@ -30,8 +30,6 @@ import sys
 import uuid
 from numpy.testing import assert_almost_equal
 from pprint import pformat
-from types import NoneType
-from qgis.PyQt.QtCore import QPyNullVariant
 from qgis.core import (
                        QgsMapLayer,
                        Qgis,
@@ -40,6 +38,7 @@ from qgis.core import (
                        QgsProject,
                        QgsField,
                        edit,
+                       NULL,
                        )
 
 from qgis.PyQt.QtCore import QVariant
@@ -371,7 +370,7 @@ class ProcessLayer(object):
             for feat in self.layer.getFeatures():
                 feat_id = feat.id()
                 value = transformed_dict[feat_id]
-                if type(value) not in (QPyNullVariant, NoneType):
+                if type(value) not in (QPyNullVariant, type(None)):
                     value = float(value)
                 self.layer.changeAttributeValue(feat_id, new_attr_id, value)
         return actual_new_attr_name, invalid_input_values

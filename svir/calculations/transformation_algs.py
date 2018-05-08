@@ -26,8 +26,7 @@ from builtins import zip
 
 import math
 from numpy import mean, std, argwhere, amax, amin, log10, log
-from types import NoneType
-from qgis.PyQt.QtCore import QPyNullVariant
+from qgis.core import NULL
 
 from svir.utilities.utils import Register
 
@@ -60,7 +59,7 @@ def transform(features_dict, algorithm, variant_name="", inverse=False):
     # re-added afterwards
     dict_of_null_values = {}
     for key, value in f_dict_copy.items():
-        if type(value) in (QPyNullVariant, NoneType):
+        if type(value) in (QPyNullVariant, type(None)):
             dict_of_null_values[key] = value
     for key in list(dict_of_null_values.keys()):
         del f_dict_copy[key]

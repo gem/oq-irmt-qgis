@@ -33,10 +33,11 @@ from qgis.core import (QgsVectorLayer,
                        QgsFeatureRequest,
                        Qgis,
                        edit,
+                       NULL,
                        )
 from qgis.analysis import QgsZonalStatistics
 
-from qgis.PyQt.QtCore import QVariant, QPyNullVariant
+from qgis.PyQt.QtCore import QVariant
 from qgis.PyQt.QtWidgets import QProgressDialog
 
 import processing

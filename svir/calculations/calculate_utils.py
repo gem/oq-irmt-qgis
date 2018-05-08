@@ -24,9 +24,9 @@ from builtins import str
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 from copy import deepcopy
-from qgis.core import QgsField, QgsExpression, edit
+from qgis.core import QgsField, QgsExpression, edit, NULL
 
-from qgis.PyQt.QtCore import QVariant, QPyNullVariant
+from qgis.PyQt.QtCore import QVariant
 
 from svir.utilities.shared import (DOUBLE_FIELD_TYPE_NAME,
                                    STRING_FIELD_TYPE_NAME,
