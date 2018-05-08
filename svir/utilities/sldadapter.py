@@ -31,8 +31,8 @@
 import re
 import os
 from qgis.PyQt.QtCore import Qt
-from qgis.PyQt.QtXml import *
-from qgis.core import *
+from qgis.PyQt.QtXml import (QDomDocument, )
+from qgis.core import (QgsSingleBandGrayRenderer, QgsExpression, QgsOgcUtils, QgsSingleBandPseudoColorRenderer)
 
 SIZE_FACTOR = 4
 RASTER_SLD_TEMPLATE = (
