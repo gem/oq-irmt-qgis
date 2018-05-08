@@ -1427,7 +1427,8 @@ class Irmt(QObject):
 
     @pyqtSlot(str)
     def handle_wss_error_sig(self, data):
-        log_msg("wss_error_sig: %s" % data)
+        log_msg("wss_error_sig: %s" % data, level='C',
+                message_bar=self.iface.messageBar())
 
     @pyqtSlot('QVariantMap')
     def handle_from_socket_received(self, hyb_msg):

@@ -614,7 +614,9 @@ class SimpleWebSocketServer(QThread):
             conn.sendMessage(hyb_msg_unicode)
             ret = True
         if ret is False:
-            self.wss_error_sig.emit({'msg': 'Send failed! No connections'})
+            app = hyb_msg['app']
+            self.wss_error_sig.emit(
+                {'app': app, 'msg': 'Send failed! No connections'})
 
     def handle_socket_received(self, data):
         try:
