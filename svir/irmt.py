@@ -36,13 +36,12 @@ import re
 from copy import deepcopy
 from math import floor, ceil
 from qgis.core import (QgsVectorLayer,
-                       QgsMapLayerRegistry,
                        QgsMapLayer,
                        QgsVectorFileWriter,
-                       QgsGraduatedSymbolRendererV2,
-                       QgsSymbolV2, QgsVectorGradientColorRampV2,
-                       QgsRuleBasedRendererV2,
-                       QgsFillSymbolV2,
+                       QgsGraduatedSymbolRenderer,
+                       QgsSymbol, QgsGradientColorRamp,
+                       QgsRuleBasedRenderer,
+                       QgsFillSymbol,
                        QgsProject,
                        QgsExpression,
                        )
@@ -150,8 +149,8 @@ class Irmt(object):
         self.iface.currentLayerChanged.connect(self.current_layer_changed)
         self.iface.newProjectCreated.connect(self.current_layer_changed)
         self.iface.projectRead.connect(self.current_layer_changed)
-        QgsMapLayerRegistry.instance().layersAdded.connect(self.layers_added)
-        QgsMapLayerRegistry.instance().layersRemoved.connect(
+        QgsProject.instance().layersAdded.connect(self.layers_added)
+        QgsProject.instance().layersRemoved.connect(
             self.layers_removed)
 
         # get or create directory to store input files for the OQ-Engine
@@ -482,7 +481,7 @@ class Irmt(object):
         """
         Enable plugin's actions depending on the current status of the workflow
         """
-        reg = QgsMapLayerRegistry.instance()
+        reg = QgsProject.instance()
         layer_count = len(list(reg.mapLayers()))
         # Enable/disable "transform" action
         self.registered_actions["transform_attributes"].setDisabled(
@@ -541,9 +540,9 @@ class Irmt(object):
         self.iface.currentLayerChanged.disconnect(self.current_layer_changed)
         self.iface.newProjectCreated.disconnect(self.current_layer_changed)
         self.iface.projectRead.disconnect(self.current_layer_changed)
-        QgsMapLayerRegistry.instance().layersAdded.disconnect(
+        QgsProject.instance().layersAdded.disconnect(
             self.layers_added)
-        QgsMapLayerRegistry.instance().layersRemoved.disconnect(
+        QgsProject.instance().layersRemoved.disconnect(
             self.layers_removed)
 
     def aggregate_losses(self):
@@ -703,7 +702,7 @@ class Irmt(object):
                                     'delimitedtext')
         if not load_geometries:
             if vlayer_csv.isValid():
-                QgsMapLayerRegistry.instance().addMapLayer(vlayer_csv)
+                QgsProject.instance().addMapLayer(vlayer_csv)
             else:
                 raise RuntimeError('Layer invalid')
             layer = vlayer_csv
@@ -714,7 +713,7 @@ class Irmt(object):
             layer = QgsVectorLayer(
                 dest_filename, 'Socioeconomic data', 'ogr')
             if layer.isValid():
-                QgsMapLayerRegistry.instance().addMapLayer(layer)
+                QgsProject.instance().addMapLayer(layer)
             else:
                 raise RuntimeError('Layer invalid')
         self.iface.setActiveLayer(layer)
@@ -826,7 +825,7 @@ class Irmt(object):
                     tr('Select features with incomplete data'),
                     self.iface.activeLayer(),
                     discarded_feats_ids_missing,
-                    self.iface.activeLayer().selectedFeaturesIds())
+                    self.iface.activeLayer().selectedFeatureIds())
                 self.iface.messageBar().pushWidget(widget,
                                                    QgsMessageBar.WARNING)
             discarded_feats_ids_invalid = [
@@ -843,7 +842,7 @@ class Irmt(object):
                     tr('Select features with invalid data'),
                     self.iface.activeLayer(),
                     discarded_feats_ids_invalid,
-                    self.iface.activeLayer().selectedFeaturesIds())
+                    self.iface.activeLayer().selectedFeatureIds())
                 self.iface.messageBar().pushWidget(widget,
                                                    QgsMessageBar.WARNING)
 
@@ -1149,14 +1148,14 @@ class Irmt(object):
         self.iface.mapCanvas().refresh()
 
     def _apply_style(self, style, target_field):
-        rule_renderer = QgsRuleBasedRendererV2(
-            QgsSymbolV2.defaultSymbol(self.iface.activeLayer().geometryType()))
+        rule_renderer = QgsRuleBasedRenderer(
+            QgsSymbol.defaultSymbol(self.iface.activeLayer().geometryType()))
         root_rule = rule_renderer.rootRule()
 
         not_null_rule = root_rule.children()[0].clone()
         # strip parentheses from stringified color HSL
         col_str = str(style['color_from'].getHsl())[1:-1]
-        not_null_rule.setSymbol(QgsFillSymbolV2.createSimple(
+        not_null_rule.setSymbol(QgsFillSymbol.createSimple(
             {'color': col_str,
              'color_border': '0,0,0,255'}))
         not_null_rule.setFilterExpression('%s IS NOT NULL' % target_field)
@@ -1164,7 +1163,7 @@ class Irmt(object):
         root_rule.appendChild(not_null_rule)
 
         null_rule = root_rule.children()[0].clone()
-        null_rule.setSymbol(QgsFillSymbolV2.createSimple(
+        null_rule.setSymbol(QgsFillSymbol.createSimple(
             {'style': 'no',
              'color_border': '255,255,0,255',
              'width_border': '0.5'}))
@@ -1172,14 +1171,14 @@ class Irmt(object):
         null_rule.setLabel(tr('Invalid value'))
         root_rule.appendChild(null_rule)
 
-        ramp = QgsVectorGradientColorRampV2(
+        ramp = QgsGradientColorRamp(
             style['color_from'], style['color_to'])
-        graduated_renderer = QgsGraduatedSymbolRendererV2.createRenderer(
+        graduated_renderer = QgsGraduatedSymbolRenderer.createRenderer(
             self.iface.activeLayer(),
             target_field,
             style['classes'],
             style['mode'],
-            QgsSymbolV2.defaultSymbol(self.iface.activeLayer().geometryType()),
+            QgsSymbol.defaultSymbol(self.iface.activeLayer().geometryType()),
             ramp)
 
         if graduated_renderer.ranges():
@@ -1205,7 +1204,7 @@ class Irmt(object):
         # remove default rule
         root_rule.removeChildAt(0)
 
-        self.iface.activeLayer().setRendererV2(rule_renderer)
+        self.iface.activeLayer().setRenderer(rule_renderer)
 
     def show_settings(self):
         """
@@ -1220,7 +1219,7 @@ class Irmt(object):
         more attributes of the active layer, using one of the available
         algorithms and variants
         """
-        reg = QgsMapLayerRegistry.instance()
+        reg = QgsProject.instance()
         if not reg.count():
             msg = 'No layer available for transformation'
             log_msg(msg, level='C', message_bar=self.iface.messageBar())
