@@ -1426,8 +1426,8 @@ class Irmt(QObject):
         return checksum_file_path, get_checksum(checksum_file_path)
 
     @pyqtSlot(str)
-    def handle_wss_sig(self, data):
-        log_msg("wss_sig: %s" % data)
+    def handle_wss_error_sig(self, data):
+        log_msg("wss_error_sig: %s" % data)
 
     @pyqtSlot('QVariantMap')
     def handle_from_socket_received(self, hyb_msg):
@@ -1452,8 +1452,8 @@ class Irmt(QObject):
         host = 'localhost'
         port = 8000
         self.websocket_thread = SimpleWebSocketServer(host, port, self)
-        self.websocket_thread.wss_sig['QVariantMap'].connect(
-            self.handle_wss_sig)
+        self.websocket_thread.wss_error_sig['QVariantMap'].connect(
+            self.handle_wss_error_sig)
         self.websocket_thread.from_socket_received['QVariantMap'].connect(
             self.handle_from_socket_received)
         self.websocket_thread.from_socket_sent['QVariantMap'].connect(

@@ -576,7 +576,7 @@ class WebSocket(QObject):
 
 
 class SimpleWebSocketServer(QThread):
-    wss_sig = pyqtSignal('QVariantMap')
+    wss_error_sig = pyqtSignal('QVariantMap')
     from_socket_received = pyqtSignal('QVariantMap')
     from_socket_sent = pyqtSignal('QVariantMap')
 
@@ -614,7 +614,7 @@ class SimpleWebSocketServer(QThread):
             conn.sendMessage(hyb_msg_unicode)
             ret = True
         if ret is False:
-            self.wss_sig.emit({'msg': 'Send failed! No connections'})
+            self.wss_error_sig.emit({'msg': 'Send failed! No connections'})
 
     def handle_socket_received(self, data):
         try:
@@ -697,7 +697,7 @@ class SimpleWebSocketServer(QThread):
                             raise Exception('received client close')
 
             except Exception as n:
-                self.wss_sig.emit({'msg': str(n)})
+                self.wss_error_sig.emit({'msg': str(n)})
                 self._handleClose(client)
                 del self.connections[ready]
                 self.listeners.remove(ready)
@@ -719,7 +719,7 @@ class SimpleWebSocketServer(QThread):
                         newsock, address)
                     self.listeners.append(fileno)
                 except Exception as n:
-                    self.wss_sig.emit({'msg': str(n)})
+                    self.wss_error_sig.emit({'msg': str(n)})
                     if sock is not None:
                         sock.close()
             else:
@@ -734,7 +734,7 @@ class SimpleWebSocketServer(QThread):
                         raise Exception("closing websocket server")
                     client._handleData()
                 except Exception as n:
-                    self.wss_sig.emit({'msg': str(n)})
+                    self.wss_error_sig.emit({'msg': str(n)})
                     self._handleClose(client)
                     del self.connections[ready]
                     self.listeners.remove(ready)
