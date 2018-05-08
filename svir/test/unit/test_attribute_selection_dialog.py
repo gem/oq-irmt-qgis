@@ -29,7 +29,7 @@ __copyright__ = 'Copyright 2014, GEM Foundation'
 import unittest
 import os.path
 
-from qgis.PyQt.QtGui import QDialogButtonBox, QDialog
+from qgis.PyQt.QtWidgets import QDialogButtonBox, QDialog
 
 from qgis.core import QgsVectorLayer
 

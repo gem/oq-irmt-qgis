@@ -1,3 +1,4 @@
+from builtins import zip
 # -*- coding: utf-8 -*-
 # /***************************************************************************
 # Irmt
@@ -27,7 +28,7 @@ import os
 import unittest
 import json
 from nose.plugins.attrib import attr
-from qgis.PyQt.QtGui import QAction
+from qgis.PyQt.QtWidgets import QAction
 from qgis.PyQt.QtCore import QSettings
 from qgis.core import QgsVectorLayer
 from svir.recovery_modeling.recovery_modeling import RecoveryModeling
@@ -102,7 +103,7 @@ class DeterministicTestCase(unittest.TestCase):
     def test_building_aggregate(self):
         approach = 'Aggregate'
         # using only 1 asset
-        dmg_by_asset_features = [self.dmg_by_asset_layer.getFeatures().next()]
+        dmg_by_asset_features = [next(self.dmg_by_asset_layer.getFeatures())]
         expected_curve_path = os.path.join(
             self.data_dir_name, 'building_aggregate_1sim.txt')
         calculate_and_check_recovery_curve(
@@ -122,7 +123,7 @@ class DeterministicTestCase(unittest.TestCase):
     def test_building_disaggregate(self):
         approach = 'Disaggregate'
         # using only 1 asset
-        dmg_by_asset_features = [self.dmg_by_asset_layer.getFeatures().next()]
+        dmg_by_asset_features = [next(self.dmg_by_asset_layer.getFeatures())]
         expected_curve_path = os.path.join(
             self.data_dir_name, 'building_disaggregate_1sim.txt')
         calculate_and_check_recovery_curve(
@@ -156,7 +157,7 @@ class StochasticTestCase(unittest.TestCase):
     def test_building_aggregate(self):
         approach = 'Aggregate'
         # using only 1 asset
-        dmg_by_asset_features = [self.dmg_by_asset_layer.getFeatures().next()]
+        dmg_by_asset_features = [next(self.dmg_by_asset_layer.getFeatures())]
         expected_curve_path = os.path.join(
             self.data_dir_name, 'building_aggregate_200sim.txt')
         calculate_and_check_recovery_curve(
@@ -176,7 +177,7 @@ class StochasticTestCase(unittest.TestCase):
     def test_building_disaggregate(self):
         approach = 'Disaggregate'
         # using only 1 asset
-        dmg_by_asset_features = [self.dmg_by_asset_layer.getFeatures().next()]
+        dmg_by_asset_features = [next(self.dmg_by_asset_layer.getFeatures())]
         expected_curve_path = os.path.join(
             self.data_dir_name, 'building_disaggregate_200sim.txt')
         calculate_and_check_recovery_curve(

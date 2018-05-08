@@ -23,9 +23,8 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 from qgis.PyQt.QtCore import pyqtSlot, QUrl
-from qgis.PyQt.QtGui import (QDialog,
-                             QDialogButtonBox,
-                             QDesktopServices)
+from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox
+from qgis.PyQt.QtGui import QDesktopServices
 from svir.dialogs.upload_dialog import UploadDialog
 from svir.metadata.metadata_utilities import write_iso_metadata_file
 from svir.third_party.requests.sessions import Session

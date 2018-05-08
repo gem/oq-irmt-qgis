@@ -1,3 +1,6 @@
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
 # -*- coding: utf-8 -*-
 # /***************************************************************************
 # Irmt
@@ -26,7 +29,7 @@ import os
 from collections import OrderedDict
 from qgis.PyQt.QtCore import QSettings
 from qgis.PyQt.QtGui import QColor
-from ConfigParser import ConfigParser
+from configparser import ConfigParser
 from qgis.core import QgsGraduatedSymbolRendererV2
 
 DEBUG = QSettings().value('/irmt/developer_mode', False, type=bool)

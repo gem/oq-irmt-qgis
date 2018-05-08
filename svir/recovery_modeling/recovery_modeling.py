@@ -1,3 +1,6 @@
+from builtins import str
+from builtins import range
+from builtins import object
 
 # -*- coding: utf-8 -*-
 # /***************************************************************************
@@ -426,7 +429,7 @@ class RecoveryModeling(object):
         #     maxTime = int(round(maxTime * SVI_WEIGHT_COEFF * svi_value))
 
         # Time List
-        timeList = range(maxTime)
+        timeList = list(range(maxTime))
 
         # Calculate lead time by mutiply lead time factor
         # TODO: use enumerate instead

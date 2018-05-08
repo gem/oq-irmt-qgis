@@ -22,6 +22,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import print_function
 import os
 import shutil
 import json
@@ -143,5 +144,6 @@ class UploadWorker(AbstractWorker):
             self.set_message.emit(
                 self.upload_size_msg + ' ' + tr('(processing on Platform)'))
         if DEBUG:
-            print("PROGRESS: {0} ({1}) - {2:d}/{3:d} - {4:.2f}%").format(
-                param.name, param.filename, current, total, progress)
+            # fix_print_with_import
+            print(("PROGRESS: {0} ({1}) - {2:d}/{3:d} - {4:.2f}%").format(
+                param.name, param.filename, current, total, progress))

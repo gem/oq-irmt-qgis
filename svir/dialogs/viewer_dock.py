@@ -1,3 +1,6 @@
+from builtins import next
+from builtins import str
+from builtins import range
 # -*- coding: utf-8 -*-
 # /***************************************************************************
 # Irmt
@@ -44,20 +47,8 @@ except ImportError as exc:
         ' a 32bit version instead. %s' % exc)
 
 from qgis.PyQt.QtCore import pyqtSlot, QSettings, Qt
-from qgis.PyQt.QtGui import (QColor,
-                             QLabel,
-                             QPlainTextEdit,
-                             QComboBox,
-                             QSizePolicy,
-                             QSpinBox,
-                             QPushButton,
-                             QCheckBox,
-                             QDockWidget,
-                             QFileDialog,
-                             QAbstractItemView,
-                             QTableWidget,
-                             QTableWidgetItem,
-                             )
+from qgis.PyQt.QtGui import QColor
+from qgis.PyQt.QtWidgets import QLabel, QPlainTextEdit, QComboBox, QSizePolicy, QSpinBox, QPushButton, QCheckBox, QDockWidget, QFileDialog, QAbstractItemView, QTableWidget, QTableWidgetItem
 from qgis.gui import QgsVertexMarker
 from qgis.core import QGis, QgsMapLayer, QgsFeatureRequest
 
@@ -163,7 +154,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         if QSettings().value('/irmt/experimental_enabled', False, type=bool):
             self.output_types_names.update(
                 {'recovery_curves': 'Recovery Curves'})
-        self.output_type_cbx.addItems(self.output_types_names.values())
+        self.output_type_cbx.addItems(list(self.output_types_names.values()))
 
         self.plot_figure = Figure()
         self.plot_canvas = FigureCanvas(self.plot_figure)
@@ -565,7 +556,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.loss_type_cbx.addItems(loss_types)
         self.loss_type_cbx.blockSignals(False)
 
-        self.tag_names_multiselect.set_unselected_items(self.tags.keys())
+        self.tag_names_multiselect.set_unselected_items(list(self.tags.keys()))
         self.tag_names_multiselect.set_selected_items([])
         self.tag_values_multiselect.set_unselected_items([])
         self.tag_values_multiselect.set_selected_items([])
@@ -629,7 +620,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             else:
                 self.stats = str(npz['stats']).split()
 
-        self.tag_names_multiselect.set_unselected_items(self.tags.keys())
+        self.tag_names_multiselect.set_unselected_items(list(self.tags.keys()))
         self.tag_names_multiselect.set_selected_items([])
         self.tag_values_multiselect.set_unselected_items([])
         self.tag_values_multiselect.set_selected_items([])
@@ -847,7 +838,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
         for rlz_or_stat in selected_rlzs_or_stats:
             for i, (site, curve) in enumerate(
-                    self.current_selection[rlz_or_stat].iteritems()):
+                    self.current_selection[rlz_or_stat].items()):
                 # NOTE: we associated the same cumulative curve to all the
                 # selected points (ugly), and here we need to get only one
                 if self.output_type == 'recovery_curves' and i > 0:
@@ -1115,7 +1106,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             recovery.generate_community_level_recovery_curve(
                 'ALL', zonal_dmg_by_asset_probs, zonal_asset_refs,
                 n_simulations=n_simulations)
-        self.current_abscissa = range(len(recovery_function))
+        self.current_abscissa = list(range(len(recovery_function)))
         color = QColor('black')
         color_hex = color.name()
         # NOTE: differently with respect to the other approaches, we are
@@ -1245,7 +1236,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             if line.contains(event)[0]:
                 # matplotlib needs a string when exporting to svg, so here we
                 # must cast back to long
-                fid = long(line.get_gid())
+                fid = int(line.get_gid())
                 feature = next(self.iface.activeLayer().getFeatures(
                         QgsFeatureRequest().setFilterFid(fid)))
 
@@ -1302,7 +1293,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     def on_export_data_button_clicked(self):
         filename = None
         if self.output_type == 'hcurves':
-            filename = QFileDialog.getSaveFileName(
+            filename, __ = QFileDialog.getSaveFileName(
                 self,
                 self.tr('Export data'),
                 os.path.expanduser(
@@ -1310,14 +1301,14 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                         self.current_imt, self.calc_id)),
                 '*.csv')
         elif self.output_type == 'uhs':
-            filename = QFileDialog.getSaveFileName(
+            filename, __ = QFileDialog.getSaveFileName(
                 self,
                 self.tr('Export data'),
                 os.path.expanduser(
                     '~/uniform_hazard_spectra_%s.csv' % self.calc_id),
                 '*.csv')
         elif self.output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
-            filename = QFileDialog.getSaveFileName(
+            filename, __ = QFileDialog.getSaveFileName(
                 self,
                 self.tr('Export data'),
                 os.path.expanduser(
@@ -1328,14 +1319,14 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         elif self.output_type in ('dmg_by_asset_aggr',
                                   'losses_by_asset_aggr',
                                   'avg_losses-stats_aggr'):
-            filename = QFileDialog.getSaveFileName(
+            filename, __ = QFileDialog.getSaveFileName(
                 self,
                 self.tr('Export data'),
                 os.path.expanduser(
                     '~/%s_%s.csv' % (self.output_type, self.calc_id)),
                 '*.csv')
         elif self.output_type == 'recovery_curves':
-            filename = QFileDialog.getSaveFileName(
+            filename, __ = QFileDialog.getSaveFileName(
                 self,
                 self.tr('Export data'),
                 os.path.expanduser(
@@ -1369,7 +1360,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 feature = self.iface.activeLayer().selectedFeatures()[0]
                 lon = feature.geometry().asPoint().x()
                 lat = feature.geometry().asPoint().y()
-                values = self.current_selection[None].values()[0]
+                values = list(self.current_selection[None].values())[0]
                 row = [lon, lat]
                 if values:
                     row.extend(values['ordinates'])
@@ -1496,7 +1487,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     @pyqtSlot(int)
     def on_output_type_cbx_currentIndexChanged(self, index):
         otname = self.output_type_cbx.currentText()
-        for output_type, output_type_name in self.output_types_names.items():
+        for output_type, output_type_name in list(self.output_types_names.items()):
             if output_type_name == otname:
                 self.set_output_type_and_its_gui(output_type)
                 if output_type not in OQ_EXTRACT_TO_VIEW_TYPES:

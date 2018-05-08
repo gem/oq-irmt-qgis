@@ -25,9 +25,7 @@
 import os
 import csv
 from qgis.PyQt.QtCore import pyqtSlot, QSettings, QDir
-from qgis.PyQt.QtGui import (QDialog,
-                             QFileDialog,
-                             QDialogButtonBox)
+from qgis.PyQt.QtWidgets import QDialog, QFileDialog, QDialogButtonBox
 from qgis.core import QgsMapLayer, QgsMapLayerRegistry, QGis
 from svir.calculations.aggregate_loss_by_zone import add_zone_id_to_points
 from svir.utilities.utils import (get_ui_class,
@@ -78,7 +76,7 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
 
     def populate_layers_in_combos(self):
         for key, layer in \
-                QgsMapLayerRegistry.instance().mapLayers().iteritems():
+                QgsMapLayerRegistry.instance().mapLayers().items():
             if layer.type() != QgsMapLayer.VectorLayer:
                 continue
             if layer.geometryType() == QGis.Point:
@@ -198,7 +196,7 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         n_zones = len(zonal_dmg_by_asset_probs)
         # for each zone, calculate a zone-level recovery function
         for zone_index, zone_id in enumerate(
-                zonal_dmg_by_asset_probs.keys(), start=1):
+                list(zonal_dmg_by_asset_probs.keys()), start=1):
             seed = None
             if DEBUG:
                 seed = 42

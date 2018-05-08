@@ -1,3 +1,5 @@
+from builtins import range
+from builtins import object
 import random
 import math
 from qgis.PyQt.QtCore import QSettings

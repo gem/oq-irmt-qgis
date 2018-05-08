@@ -1,3 +1,6 @@
+from builtins import str
+from builtins import range
+from builtins import object
 # -*- coding: utf-8 -*-
 # /***************************************************************************
 # Irmt
@@ -140,15 +143,15 @@ class ProcessLayer(object):
         # we already checked that the layers have the same number of features
         # and now we want to make sure that for each feature the contents are
         # the same
-        for i in xrange(len_this):
-            this_feature = this_features.next()
-            other_feature = other_features.next()
+        for i in range(len_this):
+            this_feature = next(this_features)
+            other_feature = next(other_features)
             this_feat_data = this_feature.attributes()
             other_feat_data = other_feature.attributes()
             if len(this_feat_data) != len(other_feat_data):
                 return False
-            for j in xrange(len(this_feat_data)):
-                if isinstance(this_feat_data[j], (int, long, float, complex)):
+            for j in range(len(this_feat_data)):
+                if isinstance(this_feat_data[j], (int, float, complex)):
                     try:
                         assert_almost_equal(this_feat_data[j],
                                             other_feat_data[j])
@@ -262,7 +265,7 @@ class ProcessLayer(object):
         with edit(self.layer):
             layer_pr = self.layer.dataProvider()
             for attribute in attribute_list:
-                if isinstance(attribute, basestring):
+                if isinstance(attribute, str):
                     attr_idx = layer_pr.fieldNameIndex(attribute)
                 else:
                     attr_idx = attribute

@@ -1,10 +1,12 @@
+from builtins import str
+from builtins import object
 import zlib
 import io
 from socket import timeout as SocketTimeout
 
 from ._collections import HTTPHeaderDict
 from .exceptions import ProtocolError, DecodeError, ReadTimeoutError
-from .packages.six import string_types as basestring, binary_type
+from .packages.six import string_types as str, binary_type
 from .connection import HTTPException, BaseSSLError
 from .util.response import is_fp_closed
 
@@ -91,7 +93,7 @@ class HTTPResponse(io.IOBase):
         self._original_response = original_response
         self._fp_bytes_read = 0
 
-        if body and isinstance(body, (basestring, binary_type)):
+        if body and isinstance(body, (str, binary_type)):
             self._body = body
 
         self._pool = pool

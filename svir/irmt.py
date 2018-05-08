@@ -1,3 +1,6 @@
+from __future__ import print_function
+from builtins import str
+from builtins import object
 # -*- coding: utf-8 -*-
 # /***************************************************************************
 # Irmt
@@ -45,18 +48,9 @@ from qgis.core import (QgsVectorLayer,
                        )
 from qgis.gui import QgsMessageBar
 
-from qgis.PyQt.QtCore import (QSettings,
-                              QTranslator,
-                              QCoreApplication,
-                              qVersion,
-                              QUrl,
-                              Qt)
-from qgis.PyQt.QtGui import (QAction,
-                             QIcon,
-                             QFileDialog,
-                             QDesktopServices,
-                             QApplication,
-                             QMenu)
+from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, qVersion, QUrl, Qt
+from qgis.PyQt.QtWidgets import QAction, QFileDialog, QApplication, QMenu
+from qgis.PyQt.QtGui import QIcon, QDesktopServices
 
 from svir.dialogs.viewer_dock import ViewerDock
 from svir.utilities.import_sv_data import get_loggedin_downloader
@@ -112,7 +106,7 @@ import svir.resources_rc  # pylint: disable=unused-import  # NOQA
 from svir import IS_SCIPY_INSTALLED
 
 
-class Irmt:
+class Irmt(object):
     def __init__(self, iface):
         # Save reference to the QGIS interface
         self.iface = iface
@@ -581,7 +575,7 @@ class Irmt:
         try:
             dlg = SelectSvVariablesDialog(sv_downloader)
             if dlg.exec_():
-                dest_filename = QFileDialog.getSaveFileName(
+                dest_filename, __, __ = QFileDialog.getSaveFileName(
                     dlg,
                     'Download destination',
                     os.path.expanduser("~"),

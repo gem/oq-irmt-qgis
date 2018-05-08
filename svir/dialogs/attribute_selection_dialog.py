@@ -23,9 +23,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 from qgis.PyQt.QtCore import pyqtSlot
-from qgis.PyQt.QtGui import (QDialog,
-                             QDialogButtonBox,
-                             )
+from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox
 
 from svir.utilities.utils import tr, get_ui_class
 from svir.utilities.shared import NUMERIC_FIELD_TYPES

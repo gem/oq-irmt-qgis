@@ -1,3 +1,4 @@
+from builtins import zip
 # -*- coding: utf-8 -*-
 # /***************************************************************************
 # Irmt
@@ -152,7 +153,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
             layer_field_names = [field.name() for field in fields]
             dataset_field_names = self.get_field_names()
             d2l_field_names = dict(
-                zip(dataset_field_names[2:], layer_field_names))
+                list(zip(dataset_field_names[2:], layer_field_names)))
             for row in self.dataset:
                 # add a feature
                 feat = QgsFeature(fields)

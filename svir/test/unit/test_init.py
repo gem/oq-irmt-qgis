@@ -1,5 +1,7 @@
 # coding=utf-8
 """Tests QGIS plugin init."""
+from future import standard_library
+standard_library.install_aliases()
 # This file was generated from the QGIS Plugin builder plugin
 # See https://github.com/g-sherman/Qgis-Plugin-Builder/
 
@@ -13,7 +15,7 @@ __copyright__ += 'Disaster Reduction'
 import os
 import unittest
 import logging
-import ConfigParser
+import configparser
 
 LOGGER = logging.getLogger('QGIS')
 
@@ -49,7 +51,7 @@ class TestInit(unittest.TestCase):
             'metadata.txt'))
         LOGGER.info(file_path)
         metadata = []
-        parser = ConfigParser.ConfigParser()
+        parser = configparser.ConfigParser()
         parser.optionxform = str
         parser.read(file_path)
         message = 'Cannot find a section named "general" in %s' % file_path

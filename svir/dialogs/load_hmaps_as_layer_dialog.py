@@ -1,3 +1,4 @@
+from builtins import str
 # -*- coding: utf-8 -*-
 # /***************************************************************************
 # Irmt
@@ -85,7 +86,7 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
                 self.imts[imt].append(poe)
         self.imt_cbx.clear()
         self.imt_cbx.setEnabled(True)
-        self.imt_cbx.addItems(self.imts.keys())
+        self.imt_cbx.addItems(list(self.imts.keys()))
         self.set_ok_button()
 
     def show_num_sites(self):

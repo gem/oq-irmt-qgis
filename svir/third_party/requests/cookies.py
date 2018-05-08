@@ -5,6 +5,9 @@ Compatibility code to be able to use `cookielib.CookieJar` with requests.
 
 requests.utils imports from here, so be careful with imports.
 """
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
 
 import time
 import collections
@@ -207,7 +210,7 @@ class RequestsCookieJar(cookielib.CookieJar, collections.MutableMapping):
     def keys(self):
         """Dict-like keys() that returns a list of names of cookies from the jar.
         See values() and items()."""
-        return list(self.iterkeys())
+        return list(self.keys())
 
     def itervalues(self):
         """Dict-like itervalues() that returns an iterator of values of cookies from the jar.
@@ -218,7 +221,7 @@ class RequestsCookieJar(cookielib.CookieJar, collections.MutableMapping):
     def values(self):
         """Dict-like values() that returns a list of values of cookies from the jar.
         See keys() and items()."""
-        return list(self.itervalues())
+        return list(self.values())
 
     def iteritems(self):
         """Dict-like iteritems() that returns an iterator of name-value tuples from the jar.
@@ -230,7 +233,7 @@ class RequestsCookieJar(cookielib.CookieJar, collections.MutableMapping):
         """Dict-like items() that returns a list of name-value tuples from the jar.
         See keys() and values(). Allows client-code to call "dict(RequestsCookieJar)
         and get a vanilla python dict of key value pairs."""
-        return list(self.iteritems())
+        return list(self.items())
 
     def list_domains(self):
         """Utility method to list all the domains in the jar."""

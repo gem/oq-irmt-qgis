@@ -1,3 +1,4 @@
+from builtins import str
 # -*- coding: utf-8 -*-
 # /***************************************************************************
 # Irmt
@@ -34,10 +35,7 @@ from qgis.core import (QgsVectorLayer,
 
 from qgis.PyQt.QtCore import pyqtSlot, QDir, QUrl, QSettings, QFileInfo
 
-from qgis.PyQt.QtGui import (QFileDialog,
-                             QDialog,
-                             QDialogButtonBox,
-                             QMessageBox)
+from qgis.PyQt.QtWidgets import QFileDialog, QDialog, QDialogButtonBox, QMessageBox
 from svir.calculations.aggregate_loss_by_zone import (
     calculate_zonal_stats,
     purge_zones_without_loss_points)
@@ -93,7 +91,7 @@ class SelectInputLayersDialog(QDialog, FORM_CLASS):
             raise RuntimeError('Invalid dialog_type: {}'.format(dialog_type))
         default_dir = QSettings().value('irmt/select_layer_dir',
                                         QDir.homePath())
-        file_name, file_type = QFileDialog.getOpenFileNameAndFilter(
+        file_name, file_type = QFileDialog.getOpenFileName(
             self, text, default_dir, filters)
         if dialog_type == 'zonal_layer':
             if not file_name:
@@ -221,7 +219,7 @@ class SelectInputLayersDialog(QDialog, FORM_CLASS):
 
     def populate_cbx(self):
         for key, layer in \
-                QgsMapLayerRegistry.instance().mapLayers().iteritems():
+                QgsMapLayerRegistry.instance().mapLayers().items():
             # populate loss cbx only with layers containing points
             if layer.type() != QgsMapLayer.VectorLayer:
                 continue

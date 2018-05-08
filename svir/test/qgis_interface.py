@@ -106,9 +106,9 @@ class QgisInterface(QObject):
             Processing.initialize()
             # FIXME: Had some weird bug in QGIS 2.18 MacOSX (KyngChaos)
             try:
-                providers = Processing.algs.values()
+                providers = list(Processing.algs.values())
             except:
-                providers = Processing.algs().values()
+                providers = list(Processing.algs().values())
 
             for provider in providers:
                 if name in provider:
@@ -145,7 +145,7 @@ class QgisInterface(QObject):
     def layers(self):
         # It's for processing module
         # simulate iface.legendInterface().layers()
-        return QgsMapLayerRegistry.instance().mapLayers().values()
+        return list(QgsMapLayerRegistry.instance().mapLayers().values())
 
     @pyqtSlot('QStringList')
     def addLayers(self, layers):

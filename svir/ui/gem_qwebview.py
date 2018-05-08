@@ -23,21 +23,16 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
+from builtins import str
 
 import os
-from qgis.PyQt.QtWebKit import QWebView, QWebSettings
+from qgis.PyQt.QtWebKitWidgets import QWebView
 from qgis.PyQt.QtNetwork import (QNetworkAccessManager,
                                  QNetworkCookieJar,
                                  QNetworkCookie,
                                  )
-from qgis.PyQt.QtCore import (QMutex,
-                              QMutexLocker,
-                              QSettings,
-                              QByteArray,
-                              pyqtSlot,
-                              QUrl,
-                              )
-from qgis.PyQt.QtGui import QSizePolicy, QFileDialog
+from qgis.PyQt.QtCore import QMutex, QSettings, QByteArray, pyqtSlot, QUrl
+from qgis.PyQt.QtWidgets import QSizePolicy, QFileDialog
 from svir.utilities.shared import DEBUG, REQUEST_ATTRS
 from svir.utilities.utils import (tr,
                                   create_progress_message_bar,

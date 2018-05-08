@@ -26,7 +26,8 @@
 import json
 import sys
 from qgis.PyQt.QtCore import pyqtSlot, QSettings, Qt
-from qgis.PyQt.QtGui import QDialog, QPalette, QColorDialog, QMessageBox
+from qgis.PyQt.QtWidgets import QDialog, QColorDialog, QMessageBox
+from qgis.PyQt.QtGui import QPalette
 
 from qgis.core import QgsGraduatedSymbolRendererV2, QgsProject
 from qgis.gui import QgsMessageBar
@@ -156,7 +157,7 @@ class SettingsDialog(QDialog, FORM_CLASS):
             profiles = json.loads(
                 DEFAULT_PLATFORM_PROFILES if platform_or_engine == 'platform'
                 else DEFAULT_ENGINE_PROFILES)
-            cur_profile = profiles.keys()[0]
+            cur_profile = list(profiles.keys())[0]
         else:
             profiles = json.loads(
                 mySettings.value(
@@ -166,7 +167,7 @@ class SettingsDialog(QDialog, FORM_CLASS):
                      else DEFAULT_ENGINE_PROFILES)))
             cur_profile = mySettings.value(
                 'irmt/current_%s_profile' % platform_or_engine)
-        for profile in sorted(profiles, key=unicode.lower):
+        for profile in sorted(profiles, key=str.lower):
             if platform_or_engine == 'platform':
                 self.platform_profile_cbx.blockSignals(True)
                 self.platform_profile_cbx.addItem(profile)
@@ -176,7 +177,7 @@ class SettingsDialog(QDialog, FORM_CLASS):
                 self.engine_profile_cbx.addItem(profile)
                 self.engine_profile_cbx.blockSignals(False)
         if cur_profile is None:
-            cur_profile = profiles.keys()[0]
+            cur_profile = list(profiles.keys())[0]
             mySettings.setValue(
                 'irmt/current_%s_profile' % platform_or_engine,
                 cur_profile)

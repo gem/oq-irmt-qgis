@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import range
 # -*- coding: utf-8 -*-
 # /***************************************************************************
 # Irmt
@@ -28,24 +30,10 @@ import tempfile
 import zipfile
 import copy
 
-from qgis.PyQt.QtCore import (QDir,
-                              Qt,
-                              QObject,
-                              SIGNAL,
-                              QTimer,
-                              pyqtSlot,
-                              QFileInfo,
-                              QSettings,
-                              )
+from qgis.PyQt.QtCore import QDir, Qt, QObject, QTimer, pyqtSlot, QFileInfo, QSettings
 
-from qgis.PyQt.QtGui import (QDialog,
-                             QTableWidgetItem,
-                             QAbstractItemView,
-                             QPushButton,
-                             QFileDialog,
-                             QColor,
-                             QMessageBox,
-                             )
+from qgis.PyQt.QtWidgets import QDialog, QTableWidgetItem, QAbstractItemView, QPushButton, QFileDialog, QMessageBox
+from qgis.PyQt.QtGui import QColor
 from qgis.gui import QgsMessageBar
 from svir.third_party.requests import Session
 from svir.third_party.requests.exceptions import (ConnectionError,
@@ -309,9 +297,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 style = 'background-color: %s; color: %s' % (
                     action['bg_color'], action['txt_color'])
                 button.setStyleSheet(style)
-                QObject.connect(
-                    button, SIGNAL("clicked()"),
-                    lambda calc_id=calc['id'], action=action['label']: (
+                button.clicked.connect(lambda calc_id=calc['id'], action=action['label']: (
                         self.on_calc_action_btn_clicked(calc_id, action)))
                 self.calc_list_tbl.setCellWidget(row, col, button)
                 self.calc_list_tbl.setColumnWidth(col, BUTTON_WIDTH)
@@ -333,7 +319,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     def get_row_by_calc_id(self, calc_id):
         # find QTableItem corresponding to that calc_id
         calc_id_col_idx = 1
-        for row in xrange(self.calc_list_tbl.rowCount()):
+        for row in range(self.calc_list_tbl.rowCount()):
             item_calc_id = self.calc_list_tbl.item(row, calc_id_col_idx)
             if int(item_calc_id.text()) == calc_id:
                 return row
@@ -489,7 +475,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         else:
             default_dir = directory
         if not file_names:
-            file_names = QFileDialog.getOpenFileNames(self, text, default_dir)
+            file_names, __ = QFileDialog.getOpenFileNames(self, text, default_dir)
         if not file_names:
             return
         if directory is None:
@@ -727,11 +713,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             style = 'background-color: #3cb3c5; color: white;'
             button.setText("%s %s" % (action, outtype))
         button.setStyleSheet(style)
-        QObject.connect(
-            button, SIGNAL("clicked()"),
-            lambda output=output, action=action, outtype=outtype: (
-                self.on_output_action_btn_clicked(output, action, outtype))
-        )
+        button.clicked.connect(lambda output=output, action=action, outtype=outtype: (
+                self.on_output_action_btn_clicked(output, action, outtype)))
 
     def on_output_action_btn_clicked(self, output, action, outtype):
         output_id = output['id']
@@ -822,8 +805,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             return
         self.refresh_calc_list()
         self.timer = QTimer()
-        QObject.connect(
-            self.timer, SIGNAL('timeout()'), self.refresh_calc_list)
+        self.timer.timeout.connect(self.refresh_calc_list)
         self.timer.start(5000)  # refresh calc list time in milliseconds
 
     def stop_polling(self):

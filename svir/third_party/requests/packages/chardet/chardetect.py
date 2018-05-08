@@ -12,6 +12,7 @@ Example::
 If no paths are provided, it takes its input from stdin.
 
 """
+from __future__ import print_function
 from io import open
 from sys import argv, stdin
 

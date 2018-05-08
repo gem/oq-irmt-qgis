@@ -25,7 +25,7 @@
 
 import json
 from qgis.PyQt.QtCore import pyqtSlot, QSettings
-from qgis.PyQt.QtGui import QDialog, QDialogButtonBox
+from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox
 from svir.utilities.utils import get_ui_class
 from svir.utilities.shared import (
                                    DEFAULT_PLATFORM_PROFILES,

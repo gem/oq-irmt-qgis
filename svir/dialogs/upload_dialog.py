@@ -27,7 +27,7 @@ from qgis.core import QgsRuleBasedRendererV2
 from qgis.gui import QgsMessageBar
 
 from qgis.PyQt.QtCore import Qt, QUrl, QSettings, pyqtSignal
-from qgis.PyQt.QtGui import QDialog, QSizePolicy, QDialogButtonBox
+from qgis.PyQt.QtWidgets import QDialog, QSizePolicy, QDialogButtonBox
 from qgis.PyQt.QtNetwork import QNetworkCookieJar, QNetworkCookie
 from qgis.PyQt.QtWebKit import QWebSettings
 

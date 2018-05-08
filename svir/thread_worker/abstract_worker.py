@@ -1,3 +1,5 @@
+from future import standard_library
+standard_library.install_aliases()
 # -*- coding: utf-8 -*-
 #/***************************************************************************
 # Irmt
@@ -28,7 +30,7 @@ from qgis.core import QgsMessageLog
 from qgis.gui import QgsMessageBar
 
 from qgis.PyQt.QtCore import Qt, QThread
-from qgis.PyQt.QtGui import QProgressBar, QPushButton
+from qgis.PyQt.QtWidgets import QProgressBar, QPushButton
 
 from svir.utilities.utils import tr, UserAbortedNotification
 
@@ -38,7 +40,7 @@ class AbstractWorker(QtCore.QObject):
 
     # available signals
     finished = QtCore.pyqtSignal(object)
-    error = QtCore.pyqtSignal(Exception, basestring)
+    error = QtCore.pyqtSignal(Exception, str)
     progress = QtCore.pyqtSignal(float)
     toggle_show_progress = QtCore.pyqtSignal(bool)
     toggle_show_cancel = QtCore.pyqtSignal(bool)
@@ -58,7 +60,7 @@ class AbstractWorker(QtCore.QObject):
             self.finished.emit(result)
         except UserAbortedNotification:
             self.finished.emit(None)
-        except Exception, e:
+        except Exception as e:
             # forward the exception upstream
             self.error.emit(e, traceback.format_exc())
             self.finished.emit(None)

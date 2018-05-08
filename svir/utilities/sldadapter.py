@@ -1,3 +1,4 @@
+from builtins import str
 # -*- coding: utf-8 -*-
 #/***************************************************************************
 # Irmt
@@ -31,7 +32,7 @@
 import re
 import os
 from qgis.PyQt.QtCore import Qt
-from qgis.PyQt.QtXml import (QDomDocument, )
+from qgis.PyQt.QtXml import QDomDocument
 from qgis.core import (QgsSingleBandGrayRenderer, QgsExpression, QgsOgcUtils, QgsSingleBandPseudoColorRenderer)
 
 SIZE_FACTOR = 4
@@ -291,7 +292,7 @@ def getStyleAsSld(layer, styleName):
         rule_to_sld(rule, document, featureTypeStyleElem, props)
         userNode.appendChild(featureTypeStyleElem)
 
-        return unicode(document.toString(4))
+        return str(document.toString(4))
     elif layer.type() == layer.RasterLayer:
         renderer = layer.renderer()
         if isinstance(renderer, QgsSingleBandGrayRenderer):
@@ -315,7 +316,7 @@ def getStyleAsSld(layer, styleName):
                     color.red(), color.green(), color.blue())
                 symbolizerCode += ('<ColorMapEntry color="' + rgb
                                    + '" quantity="'
-                                   + unicode(item.value) + '" />')
+                                   + str(item.value) + '" />')
             symbolizerCode += "</ColorMap>"
             sld = RASTER_SLD_TEMPLATE.replace(
                 "SYMBOLIZER_CODE", symbolizerCode).replace("STYLE_NAME",

@@ -8,6 +8,7 @@ Contact : marco@opengis.ch
      the Free Software Foundation; either version 2 of the License, or
      (at your option) any later version.
 """
+from __future__ import print_function
 from svir.utilities.shared import DEBUG
 
 __author__ = 'marco@opengis.ch'
@@ -16,7 +17,8 @@ __date__ = '26/11/2015'
 
 
 from qgis.PyQt.QtCore import QUrl, QEvent
-from qgis.PyQt.QtGui import QToolButton, QWhatsThis, QDesktopServices
+from qgis.PyQt.QtWidgets import QToolButton, QWhatsThis
+from qgis.PyQt.QtGui import QDesktopServices
 
 
 class QToolButtonWithHelpLink(QToolButton):

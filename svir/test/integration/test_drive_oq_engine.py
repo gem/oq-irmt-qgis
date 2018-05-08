@@ -23,6 +23,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 # import qgis libs so that we set the correct sip api version
+from __future__ import print_function
 import os
 import sys
 import traceback
@@ -33,7 +34,7 @@ import copy
 import csv
 from mock import Mock
 
-from qgis.PyQt.QtGui import QAction
+from qgis.PyQt.QtWidgets import QAction
 from svir.third_party.requests import Session
 from svir.utilities.shared import (
                                    OQ_CSV_TO_LAYER_TYPES,

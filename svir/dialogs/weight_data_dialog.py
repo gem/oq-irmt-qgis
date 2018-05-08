@@ -1,3 +1,4 @@
+from builtins import str
 # -*- coding: utf-8 -*-
 # /***************************************************************************
 # Irmt
@@ -25,17 +26,9 @@
 from copy import deepcopy
 import json
 
-from qgis.PyQt.QtCore import (Qt,
-                              QUrl,
-                              QSettings,
-                              pyqtProperty,
-                              pyqtSignal,
-                              pyqtSlot,
-                              )
-from qgis.PyQt.QtGui import (QDialog,
-                             QDialogButtonBox,
-                             QPrinter,
-                             )
+from qgis.PyQt.QtCore import Qt, QUrl, QSettings, pyqtProperty, pyqtSignal, pyqtSlot
+from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox
+from qgis.PyQt.QtPrintSupport import QPrinter
 
 from svir.utilities.shared import (DEFAULT_OPERATOR,
                                    OPERATORS_DICT,
@@ -267,7 +260,7 @@ class WeightDataDialog(QDialog, FORM_CLASS):
 
     @pyqtProperty(str)
     def OPERATORS(self):
-        return ';'.join(OPERATORS_DICT.values())
+        return ';'.join(list(OPERATORS_DICT.values()))
 
     @pyqtProperty(str)
     def ACTIVE_LAYER_NUMERIC_FIELDS(self):
@@ -279,7 +272,7 @@ class WeightDataDialog(QDialog, FORM_CLASS):
 
     @pyqtProperty(str)
     def NODE_TYPES(self):
-        return ';'.join(["%s:%s" % (k, v) for k, v in NODE_TYPES.iteritems()])
+        return ';'.join(["%s:%s" % (k, v) for k, v in NODE_TYPES.items()])
 
     def print_self_for_debug(self):
         msg = """

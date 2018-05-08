@@ -1,3 +1,4 @@
+from builtins import str
 # -*- coding: utf-8 -*-
 # /***************************************************************************
 # Irmt
@@ -42,20 +43,8 @@ from qgis.core import (QgsVectorLayer,
                        QgsCategorizedSymbolRendererV2,
                        )
 from qgis.PyQt.QtCore import pyqtSlot, QDir, QSettings, QFileInfo, Qt
-from qgis.PyQt.QtGui import (QDialogButtonBox,
-                             QDialog,
-                             QFileDialog,
-                             QColor,
-                             QComboBox,
-                             QSpinBox,
-                             QLabel,
-                             QCheckBox,
-                             QHBoxLayout,
-                             QVBoxLayout,
-                             QToolButton,
-                             QGroupBox,
-                             QLineEdit,
-                             )
+from qgis.PyQt.QtWidgets import QDialogButtonBox, QDialog, QFileDialog, QComboBox, QSpinBox, QLabel, QCheckBox, QHBoxLayout, QVBoxLayout, QToolButton, QGroupBox, QLineEdit
+from qgis.PyQt.QtGui import QColor
 from svir.calculations.process_layer import ProcessLayer
 from svir.calculations.aggregate_loss_by_zone import (
     calculate_zonal_stats)
@@ -231,7 +220,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
 
     def pre_populate_zonal_layer_cbx(self):
         for key, layer in \
-                QgsMapLayerRegistry.instance().mapLayers().iteritems():
+                QgsMapLayerRegistry.instance().mapLayers().items():
             # populate loss cbx only with layers containing points
             if layer.type() != QgsMapLayer.VectorLayer:
                 continue
@@ -299,7 +288,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             raise NotImplementedError(self.output_type)
         default_dir = QSettings().value('irmt/load_as_layer_dir',
                                         QDir.homePath())
-        path = QFileDialog.getOpenFileName(
+        path, __ = QFileDialog.getOpenFileName(
             self, text, default_dir, filters)
         if not path:
             return
@@ -577,7 +566,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                           'All files (*.*)')
         default_dir = QSettings().value('irmt/select_layer_dir',
                                         QDir.homePath())
-        file_name, file_type = QFileDialog.getOpenFileNameAndFilter(
+        file_name, file_type = QFileDialog.getOpenFileName(
             self, text, default_dir, filters)
         if not file_name:
             return None

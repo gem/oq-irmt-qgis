@@ -1,3 +1,5 @@
+from future import standard_library
+standard_library.install_aliases()
 # -*- coding: utf-8 -*-
 #/***************************************************************************
 # Irmt
@@ -22,7 +24,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-import StringIO
+import io
 import zipfile
 
 from svir.thread_worker.abstract_worker import AbstractWorker
@@ -52,5 +54,5 @@ class DownloadPlatformProjectWorker(AbstractWorker):
         shape_url = shape_url_fmt % (self.downloader.host, self.layer_id)
         request = self.downloader.sess.get(shape_url)
 
-        downloaded_zip = zipfile.ZipFile(StringIO.StringIO(request.content))
+        downloaded_zip = zipfile.ZipFile(io.StringIO(request.content))
         return downloaded_zip

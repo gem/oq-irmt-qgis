@@ -1,3 +1,7 @@
+from builtins import str
+from builtins import next
+from builtins import range
+from builtins import object
 # -*- coding: utf-8 -*-
 # /***************************************************************************
 # Irmt
@@ -44,12 +48,8 @@ from qgis.gui import QgsMessageBar
 
 from qgis.PyQt import uic
 from qgis.PyQt.QtCore import Qt, QSettings, QUrl
-from qgis.PyQt.QtGui import (QApplication,
-                             QProgressBar,
-                             QToolButton,
-                             QFileDialog,
-                             QMessageBox,
-                             QColor)
+from qgis.PyQt.QtWidgets import QApplication, QProgressBar, QToolButton, QFileDialog, QMessageBox
+from qgis.PyQt.QtGui import QColor
 
 from svir.third_party.poster.encode import multipart_encode
 from svir.utilities.shared import (
@@ -109,7 +109,7 @@ def log_msg(message, tag='GEM IRMT Plugin', level='I', message_bar=None,
               'C': {'log': QgsMessageLog.CRITICAL,
                     'bar': QgsMessageBar.CRITICAL}}
     if level not in levels:
-        raise ValueError('Level must be one of %s' % levels.keys())
+        raise ValueError('Level must be one of %s' % list(levels.keys()))
     tb_text = ''
     if exc_tuple is not None:
         tb_lines = traceback.format_exception(*exc_tuple)
@@ -340,7 +340,7 @@ def reload_layers_in_cbx(combo, layer_types=None, skip_layer_ids=None):
     :type skip_layer_ids: [QgsMapLayer ...]
     """
     combo.clear()
-    for l in QgsMapLayerRegistry.instance().mapLayers().values():
+    for l in list(QgsMapLayerRegistry.instance().mapLayers().values()):
         layer_type_allowed = bool(layer_types is None
                                   or l.type() in layer_types)
         layer_id_allowed = bool(skip_layer_ids is None
@@ -898,7 +898,7 @@ def clear_widgets_from_layout(layout):
     layouts. If any of such widgets is a layout, then clear its widgets
     instead of deleting it.
     """
-    for i in reversed(range(layout.count())):
+    for i in reversed(list(range(layout.count()))):
         item = layout.itemAt(i)
         # check if the item is a sub-layout (nested inside the layout)
         sublayout = item.layout()
@@ -1048,7 +1048,7 @@ def get_credentials(server):
             'irmt/%s_profiles',
             (DEFAULT_PLATFORM_PROFILES if server == 'platform'
                 else DEFAULT_ENGINE_PROFILES)))
-    default_profile = default_profiles[default_profiles.keys()[0]]
+    default_profile = default_profiles[list(default_profiles.keys())[0]]
     hostname = qs.value('irmt/%s_hostname' % server,
                         default_profile['hostname'])
     username = qs.value('irmt/%s_username' % server,

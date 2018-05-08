@@ -1,3 +1,5 @@
+from builtins import map
+from builtins import range
 # -*- coding: utf-8 -*-
 # /***************************************************************************
 # Irmt
@@ -35,7 +37,7 @@ from qgis.core import (QgsVectorLayer,
 from qgis.analysis import QgsZonalStatistics
 
 from qgis.PyQt.QtCore import QVariant, QPyNullVariant
-from qgis.PyQt.QtGui import QProgressDialog
+from qgis.PyQt.QtWidgets import QProgressDialog
 
 import processing
 
@@ -122,7 +124,7 @@ def calculate_zonal_stats(loss_layer,
         # add_attributes returns a dict
         #     proposed_attr_name -> assigned_attr_name
         # so the actual count attribute name is the first value of the dict
-        loss_attrs_dict['count'] = count_added.values()[0]
+        loss_attrs_dict['count'] = list(count_added.values())[0]
     for loss_attr_name in loss_attr_names:
         loss_attrs_dict[loss_attr_name] = {}
         sum_field = QgsField('SUM_%s' % loss_attr_name, QVariant.Double)
@@ -130,14 +132,14 @@ def calculate_zonal_stats(loss_layer,
         sum_added = \
             ProcessLayer(zonal_layer).add_attributes([sum_field])
         # see comment above
-        loss_attrs_dict[loss_attr_name]['sum'] = sum_added.values()[0]
+        loss_attrs_dict[loss_attr_name]['sum'] = list(sum_added.values())[0]
         if extra:  # adding also NUM_POINTS and AVG
             avg_field = QgsField('AVG_%s' % loss_attr_name, QVariant.Double)
             avg_field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
             avg_added = \
                 ProcessLayer(zonal_layer).add_attributes([avg_field])
             # see comment above
-            loss_attrs_dict[loss_attr_name]['avg'] = avg_added.values()[0]
+            loss_attrs_dict[loss_attr_name]['avg'] = list(avg_added.values())[0]
     if loss_layer_is_vector:
         # check if the user specified that the loss_layer contains an
         # attribute specifying what's the zone id for each loss point
@@ -163,7 +165,7 @@ def calculate_zonal_stats(loss_layer,
                     ProcessLayer(zonal_layer).add_attributes([new_attr])
                 # we get a dict, from which we find the actual attribute name
                 # in the only dict value
-                zone_id_in_zones_attr_name = attr_dict.values()[0]
+                zone_id_in_zones_attr_name = list(attr_dict.values())[0]
                 with edit(zonal_layer):
                     unique_id_idx = zonal_layer.fieldNameIndex(
                             zone_id_in_zones_attr_name)
@@ -304,7 +306,7 @@ def _add_zone_id_to_points_internal(iface, loss_layer, zonal_layer,
     assigned_attr_names_dict = \
         ProcessLayer(loss_layer_plus_zones).add_attributes(
                 [zone_id_field])
-    zone_id_in_losses_attr_name = assigned_attr_names_dict.values()[0]
+    zone_id_in_losses_attr_name = list(assigned_attr_names_dict.values())[0]
     # get the index of the new attribute, to be used to update its values
     zone_id_attr_idx = loss_layer_plus_zones.fieldNameIndex(
             zone_id_in_losses_attr_name)
@@ -351,8 +353,8 @@ def _add_zone_id_to_points_internal(iface, loss_layer, zonal_layer,
                         # Get the point feature by the point's id
                         request = QgsFeatureRequest().setFilterFid(
                                 point_id)
-                        point_feature = loss_layer_plus_zones.getFeatures(
-                                request).next()
+                        point_feature = next(loss_layer_plus_zones.getFeatures(
+                                request))
                         point_geometry = QgsGeometry(
                                 point_feature.geometry())
                         # check if the point is actually inside the zone
@@ -451,8 +453,8 @@ def get_saga_install_error():
             else:
                 qgis_version_int = QGis.QGIS_VERSION_INT
                 if qgis_version_int >= 21400:
-                    (saga_major, saga_minor) = map(
-                        int, saga_version_str.split('.')[:2])
+                    (saga_major, saga_minor) = list(map(
+                        int, saga_version_str.split('.')[:2]))
                     if (saga_major, saga_minor) < (2, 3):
                         err_msg = ('QGIS 2.14 and above do not support SAGA'
                                    ' versions below 2.3, and you are using'
@@ -592,7 +594,7 @@ def notify_loss_aggregation_by_zone_complete(
     if extra:
         added_attrs.append(loss_attrs_dict['count'])
     for loss_attr_name in loss_attr_names:
-        added_attrs.extend(loss_attrs_dict[loss_attr_name].values())
+        added_attrs.extend(list(loss_attrs_dict[loss_attr_name].values()))
     msg = "New attributes [%s] have been added to the zonal layer" % (
         ', '.join(added_attrs))
     log_msg(msg, level='I', message_bar=iface.messageBar())

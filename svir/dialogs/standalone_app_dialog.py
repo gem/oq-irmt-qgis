@@ -23,19 +23,9 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import json
-from qgis.PyQt.QtCore import (QUrl,
-                              QObject,
-                              pyqtSlot,
-                              QSettings,
-                              Qt,
-                              )
-from qgis.PyQt.QtGui import (QDialog,
-                             QVBoxLayout,
-                             QPushButton,
-                             QHBoxLayout,
-                             QMessageBox,
-                             QIcon,
-                             )
+from qgis.PyQt.QtCore import QUrl, QObject, pyqtSlot, QSettings, Qt
+from qgis.PyQt.QtWidgets import QDialog, QVBoxLayout, QPushButton, QHBoxLayout, QMessageBox
+from qgis.PyQt.QtGui import QIcon
 from qgis.gui import QgsMessageBar
 from svir.ui.gem_qwebview import GemQWebView
 from svir.utilities.shared import DEFAULT_ENGINE_PROFILES
@@ -71,7 +61,7 @@ class StandaloneAppDialog(QDialog):
             'irmt/engine_profiles', DEFAULT_ENGINE_PROFILES))
         cur_eng_profile = QSettings().value('irmt/current_engine_profile')
         if cur_eng_profile is None:
-            cur_eng_profile = engine_profiles.keys()[0]
+            cur_eng_profile = list(engine_profiles.keys())[0]
         engine_profile = engine_profiles[cur_eng_profile]
         engine_hostname = engine_profile['hostname']
         self.host = QSettings().value('irmt/engine_hostname', engine_hostname)

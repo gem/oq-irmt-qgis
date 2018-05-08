@@ -1,3 +1,7 @@
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import object
 # -*- coding: utf-8 -*-
 # /***************************************************************************
 # Irmt
@@ -24,7 +28,7 @@
 
 import os
 import tempfile
-import StringIO
+import io
 import csv
 
 from svir.third_party.requests import Session
@@ -98,8 +102,8 @@ class SvDownloader(object):
         themes = []
         result = self.sess.get(page)
         if result.status_code == 200:
-            reader = csv.reader(StringIO.StringIO(result.content))
-            themes = reader.next()
+            reader = csv.reader(io.StringIO(result.content))
+            themes = next(reader)
         return themes
 
     def get_subthemes_by_theme(self, theme):
@@ -114,8 +118,8 @@ class SvDownloader(object):
         subthemes = []
         result = self.sess.get(page, params=params)
         if result.status_code == 200:
-            reader = csv.reader(StringIO.StringIO(result.content))
-            subthemes = reader.next()
+            reader = csv.reader(io.StringIO(result.content))
+            subthemes = next(reader)
         return subthemes
 
     def get_indicators_info(
@@ -140,7 +144,7 @@ class SvDownloader(object):
         result = self.sess.get(page, params=params)
         indicators_info = {}
         if result.status_code == 200:
-            reader = csv.reader(StringIO.StringIO(result.content))
+            reader = csv.reader(io.StringIO(result.content))
             header = None
             for row in reader:
                 if row[0].startswith('#'):
@@ -174,7 +178,7 @@ class SvDownloader(object):
         result = self.sess.get(page)
         countries_info = {}
         if result.status_code == 200:
-            reader = csv.reader(StringIO.StringIO(result.content))
+            reader = csv.reader(io.StringIO(result.content))
             header = None
             for row in reader:
                 if row[0].startswith('#'):
