@@ -343,7 +343,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 item = unselected_items[i]
                 if item.text() == "*":
                     item.setFlags(Qt.ItemIsEnabled)
-                    item.setBackgroundColor(QColor('darkGray'))
+                    item.setBackground(QColor('darkGray'))
         self.tag_values_multiselect.setEnabled(
             tag_name in list(self.tag_names_multiselect.get_selected_items()))
 

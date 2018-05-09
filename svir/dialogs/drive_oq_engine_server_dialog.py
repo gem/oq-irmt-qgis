@@ -33,7 +33,7 @@ import copy
 from qgis.PyQt.QtCore import QDir, Qt, QObject, QTimer, pyqtSlot, QFileInfo, QSettings
 
 from qgis.PyQt.QtWidgets import QDialog, QTableWidgetItem, QAbstractItemView, QPushButton, QFileDialog, QMessageBox
-from qgis.PyQt.QtGui import QColor
+from qgis.PyQt.QtGui import QColor, QBrush
 from qgis.gui import QgsMessageBar
 from svir.third_party.requests import Session
 from svir.third_party.requests.exceptions import (ConnectionError,
@@ -283,8 +283,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     row_bg_color = QColor('#f2dede')
                 elif calc['status'] == 'complete':
                     row_bg_color = QColor('#dff0d8')
-                item.setBackgroundColor(row_bg_color)
-                item.setTextColor(row_txt_color)
+                item.setBackground(row_bg_color)
+                item.setForeground(QBrush(row_txt_color))
                 self.calc_list_tbl.setItem(row, col, item)
             for col, action in enumerate(actions, len(selected_keys)):
                 # display the Continue and Output buttons only if the
@@ -713,10 +713,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             style = 'background-color: #3cb3c5; color: white;'
             button.setText("%s %s" % (action, outtype))
         button.setStyleSheet(style)
-        button.clicked.connect(lambda output=output, action=action, outtype=outtype: (
-                self.on_output_action_btn_clicked(output, action, outtype)))
+        button.clicked.connect(lambda checked=False, output=output, action=action, outtype=outtype: (
+                self.on_output_action_btn_clicked(checked, output, action, outtype)))
 
-    def on_output_action_btn_clicked(self, output, action, outtype):
+    def on_output_action_btn_clicked(self, checked, output, action, outtype):
         output_id = output['id']
         output_type = output['type']
         if action in ['Show', 'Aggregate']:

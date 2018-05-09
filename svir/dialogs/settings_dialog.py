@@ -24,7 +24,6 @@
 
 
 import json
-import sys
 from qgis.PyQt.QtCore import pyqtSlot, QSettings, Qt
 from qgis.PyQt.QtWidgets import QDialog, QColorDialog, QMessageBox
 from qgis.PyQt.QtGui import QPalette
