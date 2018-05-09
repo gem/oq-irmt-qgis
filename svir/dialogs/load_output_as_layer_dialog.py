@@ -469,8 +469,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             style['classes'],
             mode,
             symbol,
-            ramp,
-            inverted=inverted)
+            ramp)
         label_format = graduated_renderer.labelFormat()
         # label_format.setTrimTrailingZeroes(True)  # it might be useful
         label_format.setPrecision(2)
@@ -497,6 +496,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         layer.setRenderer(graduated_renderer)
         layer.setLayerTransparency(30)  # percent
         layer.triggerRepaint()
+        # TODO check QGIS3 legend implementation
         self.iface.legendInterface().refreshLayerSymbology(layer)
         self.iface.mapCanvas().refresh()
 
@@ -529,6 +529,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         if renderer is not None:
             layer.setRenderer(renderer)
         layer.triggerRepaint()
+        # TODO check QGIS3 legend implementation
         self.iface.legendInterface().refreshLayerSymbology(layer)
         self.iface.mapCanvas().refresh()
 

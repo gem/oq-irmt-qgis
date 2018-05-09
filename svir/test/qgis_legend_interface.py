@@ -4,6 +4,8 @@ from builtins import object
 from qgis.core import QgsProject
 
 
+# TODO probably need to mock all this for QGIS3
+
 class QgisLegend(object):
     """A fake QgsLegendInterface with minimal implementation."""
 

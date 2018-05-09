@@ -22,7 +22,7 @@ from mock import Mock
 
 from qgis.core import QgsProject, QgsMapLayer
 # pylint: disable=no-name-in-module
-from qgis.gui import QgsMapCanvasLayer, QgsMessageBar
+from qgis.gui import QgsMessageBar
 from qgis.PyQt.QtCore import QObject, pyqtSlot, pyqtSignal
 from svir.test.qgis_legend_interface import QgisLegend
 from qgis.gui import QgsLayerTreeMapCanvasBridge
@@ -40,6 +40,8 @@ __copyright__ = (
 LOGGER = logging.getLogger('IRMT')
 
 
+#TODO check all things for QGIS3
+
 # noinspection PyMethodMayBeStatic,PyPep8Naming
 class QgisInterface(QObject):
     """Class to expose qgis objects and functions to plugins.
@@ -47,7 +49,7 @@ class QgisInterface(QObject):
     This class is here for enabling us to run unit tests only,
     so most methods are simply stubs.
     """
-    currentLayerChanged = pyqtSignal(QgsMapCanvasLayer)
+    currentLayerChanged = pyqtSignal(QgsMapLayer)
     layerSavedAs = pyqtSignal(QgsMapLayer, str)
 
     def __init__(self, canvas):
@@ -56,6 +58,7 @@ class QgisInterface(QObject):
         """
         QObject.__init__(self)
         self.canvas = canvas
+        # TODO QGIS3 this probably needs to be fixed
         self.legend = QgisLegend(canvas)
         self.message_bar = QgsMessageBar(None)
         # Set up slots so we can mimic the behaviour of QGIS when layers
@@ -164,11 +167,11 @@ class QgisInterface(QObject):
         # We need to keep the record of the registered layers on our canvas!
         registered_layers = []
         for layer in current_layers:
-            final_layers.append(QgsMapCanvasLayer(layer))
+            final_layers.append(QgsMapLayer(layer))
             registered_layers.append(layer.id())
         for layer in layers:
             if layer.id() not in registered_layers:
-                final_layers.append(QgsMapCanvasLayer(layer))
+                final_layers.append(QgsMapLayer(layer))
 
         self.canvas.setLayerSet(final_layers)
         # LOGGER.debug('Layer Count After: %s' % len(self.canvas.layers()))

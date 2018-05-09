@@ -117,7 +117,7 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
             feats = []
             for row_idx, row in enumerate(self.dataset):
                 # add a feature
-                feat = QgsFeature(self.layer.pendingFields())
+                feat = QgsFeature(self.layer.fields())
                 for field_name_idx, field_name in enumerate(field_names):
                     rlz_or_stat, imt = field_name.split('_')
                     iml = row[rlz_or_stat][poe][imt]

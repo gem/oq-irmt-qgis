@@ -142,7 +142,7 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                 self.npz_file, rlz_or_stat, loss_type, taxonomy)
             for row in grouped_by_site:
                 # add a feature
-                feat = QgsFeature(self.layer.pendingFields())
+                feat = QgsFeature(self.layer.fields())
                 for field_name_idx, field_name in enumerate(field_names):
                     if field_name in ['lon', 'lat']:
                         continue

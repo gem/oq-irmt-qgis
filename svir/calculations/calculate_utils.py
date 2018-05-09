@@ -217,7 +217,7 @@ def calculate_node(
         if customFormula == '':
             # use the custom field values instead of recalculating them
             for feat in layer.getFeatures():
-                if feat[node['field']] == QPyNullVariant(float):
+                if feat[node['field']] == NULL:
                     discard_feat = True
                     discarded_feat = DiscardedFeature(
                         feat.id(), 'Missing value')
@@ -230,7 +230,7 @@ def calculate_node(
             with edit(layer):
                 for feat in layer.getFeatures():
                     value = expression.evaluate(feat)
-                    if value == QPyNullVariant(float):
+                    if value == NULL:
                         discard_feat = True
                         discarded_feat = DiscardedFeature(
                             feat.id(), 'Missing value')
@@ -262,7 +262,7 @@ def calculate_node(
                     # also the IRI can't be calculated
                     # But it shouldn't happen, because all the children
                     # should be previously linked to corresponding fields
-                if feat[child['field']] == QPyNullVariant(float):
+                if feat[child['field']] == NULL:
                     discard_feat = True
                     discarded_feat = DiscardedFeature(feat_id, 'Missing value')
                     discarded_feats.add(discarded_feat)
@@ -290,7 +290,7 @@ def calculate_node(
                     error_message = 'Invalid operator: %s' % operator
                     raise RuntimeError(error_message)
             if discard_feat:
-                node_value = QPyNullVariant(float)
+                node_value = NULL
             elif operator == OPERATORS_DICT['AVG']:
                 # it is equivalent to do a weighted sum with equal weights, or
                 # to do the simple sum (ignoring weights) and dividing by the
@@ -305,7 +305,7 @@ def calculate_node(
                 # it can raise ValueError: negative number cannot be raised
                 #                          to a fractional power
                 except ValueError:
-                    node_value = QPyNullVariant(float)
+                    node_value = NULL
                     discarded_feat = DiscardedFeature(feat_id, 'Invalid value')
                     discarded_feats.add(discarded_feat)
             layer.changeAttributeValue(

@@ -140,7 +140,7 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
             feats = []
             for row_idx, row in enumerate(self.dataset):
                 # add a feature
-                feat = QgsFeature(self.layer.pendingFields())
+                feat = QgsFeature(self.layer.fields())
                 for field_name in field_names:
                     # NOTE: without casting to float, it produces a
                     #       null because it does not recognize the

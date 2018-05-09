@@ -578,11 +578,11 @@ def calculate_vector_stats_aggregating_by_zone_id(
                         # sum and average be NULL instead of 0
                         zonal_layer.changeAttributeValue(
                                 fid, sum_idx[loss_attr_name],
-                                QPyNullVariant(float))
+                                NULL)
                         if extra:
                             zonal_layer.changeAttributeValue(
                                     fid, avg_idx[loss_attr_name],
-                                    QPyNullVariant(float))
+                                    NULL)
     clear_progress_message_bar(iface.messageBar(), msg_bar_item)
     notify_loss_aggregation_by_zone_complete(
             loss_attrs_dict, loss_attr_names, iface, extra=extra)

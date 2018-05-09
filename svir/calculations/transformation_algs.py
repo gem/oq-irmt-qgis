@@ -256,7 +256,7 @@ def log10_(input_list,
             output_list = []
             for input_value in input_list:
                 if input_value == 0:
-                    output_value = QPyNullVariant(float)
+                    output_value = NULL
                     output_list.append(output_value)
                 else:
                     output_list.append(log10(input_value))
@@ -314,7 +314,7 @@ def sigmoid(input_list, variant_name="", inverse=False):
             try:
                 output = log(y / (1 - y))
             except:
-                output = QPyNullVariant(float)
+                output = NULL
                 invalid_input_values.append(y)
             output_list.append(output)
     else:  # direct
@@ -322,7 +322,7 @@ def sigmoid(input_list, variant_name="", inverse=False):
             try:
                 output = 1 / (1 + math.exp(-x))
             except:
-                output = QPyNullVariant(float)
+                output = NULL
                 invalid_input_values.append(x)
             output_list.append(output)
     return output_list, invalid_input_values
