@@ -38,17 +38,24 @@ import io
 from copy import deepcopy
 from time import time
 from pprint import pformat
-from qgis.core import (QgsProject,
+from qgis.core import (
                        QgsProject,
                        QgsMessageLog,
                        QgsVectorLayer,
                        QgsVectorFileWriter,
                        )
+from qgis.core import Qgis
 from qgis.gui import QgsMessageBar
 
 from qgis.PyQt import uic
 from qgis.PyQt.QtCore import Qt, QSettings, QUrl
-from qgis.PyQt.QtWidgets import QApplication, QProgressBar, QToolButton, QFileDialog, QMessageBox
+from qgis.PyQt.QtWidgets import (
+                                 QApplication,
+                                 QProgressBar,
+                                 QToolButton,
+                                 QFileDialog,
+                                 QMessageBox,
+                                 )
 from qgis.PyQt.QtGui import QColor
 
 from svir.third_party.poster.encode import multipart_encode
@@ -79,8 +86,8 @@ def get_irmt_version():
     return _IRMT_VERSION
 
 
-def log_msg(message, tag='GEM IRMT Plugin', level='I', message_bar=None,
-            duration=None, exc_tuple=None):
+def log_msg(message, tag='GEM IRMT plugin', level='I', message_bar=None,
+            duration=None, exception=None):
     """
     Add a message to the QGIS message log. If a messageBar is provided,
     the same message will be displayed also in the messageBar. In the latter
@@ -91,41 +98,41 @@ def log_msg(message, tag='GEM IRMT Plugin', level='I', message_bar=None,
     :param tag: the log topic
     :param level:
         the importance level
-        'I' -> QgsMessageLog.INFO,
-        'W' -> QgsMessageLog.WARNING,
-        'C' -> QgsMessageLog.CRITICAL
+        'I' -> Qgis.Info,
+        'W' -> Qgis.Warning,
+        'C' -> Qgis.Critical,
+        'S' -> Qgis.Success,
     :param message_bar: a `QgsMessageBar` instance
-    :param duration: how long (in seconds) the message will be displayed
-        (use 0 to keep the message visible indefinitely, or None to use
-        the default duration of the chosen level)
-    :param exception: an optional exception tuple, in the format
-        (exc_class, exc_value, exc_tb), from which the traceback will be
+    :param duration: how long (in seconds) the message will be displayed (use 0
+        to keep the message visible indefinitely, or None to use
+        the default duration of the chosen level
+    :param exception: an optional exception, from which the traceback will be
         extracted and written only in the log
     """
-    levels = {'I': {'log': QgsMessageLog.INFO,
-                    'bar': QgsMessageBar.INFO},
-              'W': {'log': QgsMessageLog.WARNING,
-                    'bar': QgsMessageBar.WARNING},
-              'C': {'log': QgsMessageLog.CRITICAL,
-                    'bar': QgsMessageBar.CRITICAL}}
+    levels = {
+              'I': Qgis.Info,
+              'W': Qgis.Warning,
+              'C': Qgis.Critical,
+              'S': Qgis.Success,
+              }
     if level not in levels:
-        raise ValueError('Level must be one of %s' % list(levels.keys()))
+        raise ValueError('Level must be one of %s' % levels.keys())
     tb_text = ''
-    if exc_tuple is not None:
-        tb_lines = traceback.format_exception(*exc_tuple)
+    if exception is not None:
+        tb_lines = traceback.format_exception(
+            exception.__class__, exception, exception.__traceback__)
         tb_text = '\n' + ''.join(tb_lines)
 
     # if we are running nosetests, exit on critical errors
     if 'nose' in sys.modules and level == 'C':
         raise RuntimeError(message)
     else:
-        log_level = QSettings().value(
-            'irmt/log_level', DEFAULT_SETTINGS['log_level'])
+        log_verbosity = QSettings().value('oq_utils/log_verbosity', 'W')
         if (level == 'C'
-                or level == 'W' and log_level in ('I', 'W')
-                or level == 'I' and log_level in ('I')):
+                or level == 'W' and log_verbosity in ('S', 'I', 'W')
+                or level in ('I', 'S') and log_verbosity in ('I', 'S')):
             QgsMessageLog.logMessage(
-                tr(message) + tb_text, tr(tag), levels[level]['log'])
+                tr(message) + tb_text, tr(tag), levels[level])
         if message_bar is not None:
             if level == 'I':
                 title = 'Info'
@@ -136,13 +143,16 @@ def log_msg(message, tag='GEM IRMT Plugin', level='I', message_bar=None,
             elif level == 'C':
                 title = 'Error'
                 duration = duration if duration is not None else 0
+            elif level == 'S':
+                title = 'Success'
+                duration = duration if duration is not None else 8
             max_msg_len = 200
             if len(message) > max_msg_len:
                 message = ("%s[...] (Please open the Log Messages Panel to"
                            " read the full message)" % message[:max_msg_len])
             message_bar.pushMessage(tr(title),
                                     tr(message),
-                                    levels[level]['bar'],
+                                    levels[level],
                                     duration)
 
 
@@ -644,7 +654,7 @@ class WaitCursorManager(object):
             self.message = self.message_bar.createMessage(
                 tr('Info'), tr(self.msg))
             self.message = self.message_bar.pushWidget(
-                self.message, level=QgsMessageBar.INFO)
+                self.message, level=Qgis.Info)
             QApplication.processEvents()
         QApplication.setOverrideCursor(Qt.WaitCursor)
 

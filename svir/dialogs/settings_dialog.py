@@ -348,12 +348,11 @@ class SettingsDialog(QDialog, FORM_CLASS):
         if server == 'engine':
             try:
                 is_lockdown = check_is_lockdown(hostname, session)
-            except Exception:
+            except Exception as exc:
                 err_msg = ("Unable to connect"
                            " (see Log Message Panel for details)")
-                exc_tuple = sys.exc_info()
                 log_msg(err_msg, level='C', message_bar=self.message_bar,
-                        exc_tuple=exc_tuple)
+                        exception=exc)
                 return
             else:
                 if not is_lockdown:
@@ -363,11 +362,10 @@ class SettingsDialog(QDialog, FORM_CLASS):
                     return
         try:
             login_func(hostname, username, password, session)
-        except Exception:
+        except Exception as exc:
             err_msg = "Unable to connect (see Log Message Panel for details)"
-            exc_tuple = sys.exc_info()
             log_msg(err_msg, level='C', message_bar=self.message_bar,
-                    exc_tuple=exc_tuple)
+                    exception=exc)
         else:
             msg = 'Able to connect'
             log_msg(msg, level='I', message_bar=self.message_bar, duration=3)
