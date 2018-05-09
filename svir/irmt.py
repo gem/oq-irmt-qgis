@@ -75,8 +75,6 @@ from svir.dialogs.taxtweb_dialog import TaxtwebDialog
 from svir.dialogs.taxonomy_dialog import TaxonomyDialog
 from svir.dialogs.drive_oq_engine_server_dialog import (
     DriveOqEngineServerDialog)
-from svir.dialogs.load_ruptures_as_layer_dialog import (
-    LoadRupturesAsLayerDialog)
 
 from svir.thread_worker.abstract_worker import start_worker
 from svir.thread_worker.download_platform_data_worker import (
@@ -271,13 +269,6 @@ class Irmt:
                            add_to_toolbar=True,
                            submenu='Utilities')
 
-        self.add_menu_item("load_ruptures_as_layer",
-                           ":/plugins/irmt/load_from_oqoutput.svg",
-                           u"Load ruptures as layer",
-                           self.load_ruptures_as_layer,
-                           enable=True,
-                           submenu='OQ Engine')
-
         # Action to activate the modal dialog to select a layer and one of
         # its attributes, in order to transform that attribute
         self.add_menu_item("transform_attributes",
@@ -335,10 +326,6 @@ class Irmt:
 
     def recovery_settings(self):
         dlg = RecoverySettingsDialog(self.iface)
-        dlg.exec_()
-
-    def load_ruptures_as_layer(self):
-        dlg = LoadRupturesAsLayerDialog(self.iface, 'ruptures')
         dlg.exec_()
 
     def ipt(self):
