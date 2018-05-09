@@ -31,7 +31,7 @@ from qgis.PyQt.QtGui import QPalette
 from qgis.core import QgsGraduatedSymbolRenderer, QgsProject
 from qgis.gui import QgsMessageBar
 
-from svir.third_party.requests import Session
+from requests import Session
 from svir.dialogs.connection_profile_dialog import ConnectionProfileDialog
 from svir.utilities.utils import (
                                   get_ui_class,

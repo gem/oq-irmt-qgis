@@ -35,14 +35,15 @@ from qgis.PyQt.QtCore import QDir, Qt, QObject, QTimer, pyqtSlot, QFileInfo, QSe
 from qgis.PyQt.QtWidgets import QDialog, QTableWidgetItem, QAbstractItemView, QPushButton, QFileDialog, QMessageBox
 from qgis.PyQt.QtGui import QColor, QBrush
 from qgis.gui import QgsMessageBar
-from svir.third_party.requests import Session
-from svir.third_party.requests.exceptions import (ConnectionError,
-                                                  InvalidSchema,
-                                                  MissingSchema,
-                                                  ReadTimeout,
-                                                  SSLError,
-                                                  )
-from svir.third_party.requests.packages.urllib3.exceptions import (
+
+from requests import Session
+from requests.exceptions import (ConnectionError,
+                                 InvalidSchema,
+                                 MissingSchema,
+                                 ReadTimeout,
+                                 SSLError,
+                                 )
+from requests.packages.urllib3.exceptions import (
     LocationParseError)
 from svir.utilities.shared import (OQ_TO_LAYER_TYPES,
                                    OQ_RST_TYPES,

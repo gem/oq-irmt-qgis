@@ -33,8 +33,10 @@ from qgis.PyQt.QtWebKit import QWebSettings
 
 from svir.thread_worker.abstract_worker import start_worker
 from svir.thread_worker.upload_worker import UploadWorker
-from svir.third_party.requests.sessions import Session
-from svir.third_party.requests.utils import dict_from_cookiejar
+
+from requests.sessions import Session
+from requests.utils import dict_from_cookiejar
+
 from svir.utilities.sldadapter import getGsCompatibleSld
 from svir.utilities.utils import (platform_login,
                                   create_progress_message_bar,

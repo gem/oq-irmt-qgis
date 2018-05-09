@@ -27,7 +27,8 @@ from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox
 from qgis.PyQt.QtGui import QDesktopServices
 from svir.dialogs.upload_dialog import UploadDialog
 from svir.metadata.metadata_utilities import write_iso_metadata_file
-from svir.third_party.requests.sessions import Session
+
+from requests.sessions import Session
 
 from svir.utilities.defaults import DEFAULTS
 from svir.calculations.process_layer import ProcessLayer

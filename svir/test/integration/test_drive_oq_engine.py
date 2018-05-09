@@ -35,7 +35,7 @@ import csv
 from mock import Mock
 
 from qgis.PyQt.QtWidgets import QAction
-from svir.third_party.requests import Session
+from requests import Session
 from svir.utilities.shared import (
                                    OQ_CSV_TO_LAYER_TYPES,
                                    OQ_EXTRACT_TO_LAYER_TYPES,

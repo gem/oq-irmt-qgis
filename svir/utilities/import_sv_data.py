@@ -31,12 +31,12 @@ import tempfile
 import io
 import csv
 
-from svir.third_party.requests import Session
-from svir.third_party.requests.exceptions import (ConnectionError,
-                                                  InvalidSchema,
-                                                  MissingSchema,
-                                                  ReadTimeout,
-                                                  )
+from requests import Session
+from requests.exceptions import (ConnectionError,
+                                 InvalidSchema,
+                                 MissingSchema,
+                                 ReadTimeout,
+                                 )
 from svir.utilities.utils import (SvNetworkError,
                                   platform_login,
                                   WaitCursorManager,
