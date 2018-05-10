@@ -517,7 +517,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
 
     def style_categorized(self, layer, style_by):
         # get unique values
-        fni = layer.fieldNameIndex(style_by)
+        fni = layer.fields().indexOf(style_by)
         unique_values = layer.dataProvider().uniqueValues(fni)
         # define categories
         categories = []

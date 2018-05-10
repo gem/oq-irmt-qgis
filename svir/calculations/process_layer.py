@@ -234,7 +234,7 @@ class ProcessLayer(object):
             # add aliases
             if not simulate:
                 for proposed_attribute_name in aliases:
-                    attribute_id = self.layer.fieldNameIndex(
+                    attribute_id = self.layer.fields().indexOf(
                         proposed_attribute_name)
                     self.layer.addAttributeAlias(
                         attribute_id, aliases[proposed_attribute_name])
@@ -262,10 +262,11 @@ class ProcessLayer(object):
                             % self.layer.providerType())
         attr_idx_list = []
         with edit(self.layer):
+            # TODO QGIS3: check if usage of dataProvider is needed
             layer_pr = self.layer.dataProvider()
             for attribute in attribute_list:
                 if isinstance(attribute, str):
-                    attr_idx = layer_pr.fieldNameIndex(attribute)
+                    attr_idx = layer_pr.fields().indexOf(attribute)
                 else:
                     attr_idx = attribute
                 attr_idx_list.append(attr_idx)

@@ -182,7 +182,7 @@ def get_node_attr_id_and_name(node, layer):
         node_attr_name = node['field']
         # check that the field is still in the layer (the user might have
         # deleted it). If it is not there anymore, add a new field
-        if layer.fieldNameIndex(node_attr_name) == -1:  # not found
+        if layer.fields().indexOf(node_attr_name) == -1:  # not found
             proposed_node_attr_name = node_attr_name
             node_attr_name = add_numeric_attribute(
                 proposed_node_attr_name, layer)

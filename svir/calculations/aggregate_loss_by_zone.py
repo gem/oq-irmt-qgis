@@ -168,7 +168,7 @@ def calculate_zonal_stats(loss_layer,
                 # in the only dict value
                 zone_id_in_zones_attr_name = list(attr_dict.values())[0]
                 with edit(zonal_layer):
-                    unique_id_idx = zonal_layer.fieldNameIndex(
+                    unique_id_idx = zonal_layer.fields().indexOf(
                             zone_id_in_zones_attr_name)
                     for feat in zonal_layer.getFeatures():
                         zonal_layer.changeAttributeValue(
@@ -309,7 +309,7 @@ def _add_zone_id_to_points_internal(iface, loss_layer, zonal_layer,
                 [zone_id_field])
     zone_id_in_losses_attr_name = list(assigned_attr_names_dict.values())[0]
     # get the index of the new attribute, to be used to update its values
-    zone_id_attr_idx = loss_layer_plus_zones.fieldNameIndex(
+    zone_id_attr_idx = loss_layer_plus_zones.fields().indexOf(
             zone_id_in_losses_attr_name)
     # to show the overall progress, cycling through points
     tot_points = loss_layer_plus_zones.featureCount()
@@ -514,15 +514,15 @@ def calculate_vector_stats_aggregating_by_zone_id(
                 iface.messageBar(), msg)
         with edit(zonal_layer):
             if extra:
-                count_idx = zonal_layer.fieldNameIndex(
+                count_idx = zonal_layer.fields().indexOf(
                         loss_attrs_dict['count'])
                 avg_idx = {}
             sum_idx = {}
             for loss_attr_name in loss_attr_names:
-                sum_idx[loss_attr_name] = zonal_layer.fieldNameIndex(
+                sum_idx[loss_attr_name] = zonal_layer.fields().indexOf(
                         loss_attrs_dict[loss_attr_name]['sum'])
                 if extra:
-                    avg_idx[loss_attr_name] = zonal_layer.fieldNameIndex(
+                    avg_idx[loss_attr_name] = zonal_layer.fields().indexOf(
                             loss_attrs_dict[loss_attr_name]['avg'])
             for current_zone, zone_feat in enumerate(
                     zonal_layer.getFeatures()):

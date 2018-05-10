@@ -88,7 +88,7 @@ class RecoveryModeling(object):
         except IndexError:
             return zonal_dmg_by_asset_probs, zonal_asset_refs
         probs_fields_idxs = sorted([
-            first_feat.fieldNameIndex(probs_field_names[i])
+            first_feat.fields().indexOf(probs_field_names[i])
             for i in range(len(probs_field_names))])
         if integrate_svi and self.svi_layer is not None:
             # FIXME self.svi_field_name is temporarily ignored

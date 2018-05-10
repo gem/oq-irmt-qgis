@@ -1133,7 +1133,7 @@ class Irmt(object):
         else:  # if none of them can be rendered, then do nothing
             return
         # proceed only if the target field is actually a field of the layer
-        if self.iface.activeLayer().fieldNameIndex(target_field) == -1:
+        if self.iface.activeLayer().fields().indexOf(target_field) == -1:
             return
         if DEBUG:
             import pprint
