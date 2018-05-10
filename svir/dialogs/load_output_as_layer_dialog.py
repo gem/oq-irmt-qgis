@@ -36,6 +36,7 @@ from qgis.core import (QgsVectorLayer,
                        QgsRendererRange,
                        QgsMapUnitScale,
                        Qgis,
+                       QgsWkbTypes,
                        QgsMapLayer,
                        QgsMarkerSymbol,
                        QgsSimpleFillSymbolLayer,
@@ -237,7 +238,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             # populate loss cbx only with layers containing points
             if layer.type() != QgsMapLayer.VectorLayer:
                 continue
-            if layer.geometryType() == Qgis.Polygon:
+            if layer.geometryType() == QgsWkbTypes.PolygonGeometry:
                 self.zonal_layer_cbx.addItem(layer.name())
                 self.zonal_layer_cbx.setItemData(
                     self.zonal_layer_cbx.count()-1, layer.id())
@@ -597,7 +598,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     def load_zonal_layer(self, zonal_layer_path, make_a_copy=False):
         # Load zonal layer
         zonal_layer = QgsVectorLayer(zonal_layer_path, tr('Zonal data'), 'ogr')
-        if not zonal_layer.geometryType() == Qgis.Polygon:
+        if not zonal_layer.geometryType() == QgsWkbTypes.PolygonGeometry:
             msg = 'Zonal layer must contain zone polygons'
             log_msg(msg, level='C', message_bar=self.iface.messageBar())
             return False
@@ -619,7 +620,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     def on_zonal_layer_tbn_clicked(self):
         zonal_layer_plus_stats = self.open_zonal_layer_dialog()
         if (zonal_layer_plus_stats and
-                zonal_layer_plus_stats.geometryType() == Qgis.Polygon):
+                zonal_layer_plus_stats.geometryType() == QgsWkbTypes.PolygonGeometry):
             self.populate_zonal_layer_cbx(zonal_layer_plus_stats)
 
     def populate_zonal_layer_cbx(self, zonal_layer_plus_stats):

@@ -27,6 +27,7 @@ from builtins import str
 import os.path
 from qgis.core import (QgsVectorLayer,
                        Qgis,
+                       QgsWkbTypes,
                        QgsRasterLayer,
                        QgsProject,
                        QgsVectorFileWriter,
@@ -198,7 +199,7 @@ class SelectInputLayersDialog(QDialog, FORM_CLASS):
     @pyqtSlot()
     def on_loss_layer_tbn_clicked(self):
         layer = self.open_file_dialog('loss_layer')
-        if layer and layer.geometryType() == Qgis.Point:
+        if layer and layer.geometryType() == QgsWkbTypes.PointGeometry:
             cbx = self.loss_layer_cbx
             cbx.addItem(layer.name())
             last_index = cbx.count() - 1
@@ -209,7 +210,7 @@ class SelectInputLayersDialog(QDialog, FORM_CLASS):
     @pyqtSlot()
     def on_zonal_layer_tbn_clicked(self):
         layer = self.open_file_dialog('zonal_layer')
-        if layer and layer.geometryType() == Qgis.Polygon:
+        if layer and layer.geometryType() == QgsWkbTypes.PolygonGeometry:
             cbx = self.zonal_layer_cbx
             cbx.addItem(layer.name())
             last_index = cbx.count() - 1
@@ -223,11 +224,11 @@ class SelectInputLayersDialog(QDialog, FORM_CLASS):
             # populate loss cbx only with layers containing points
             if layer.type() != QgsMapLayer.VectorLayer:
                 continue
-            if layer.geometryType() == Qgis.Point:
+            if layer.geometryType() == QgsWkbTypes.PointGeometry:
                 self.loss_layer_cbx.addItem(layer.name())
                 self.loss_layer_cbx.setItemData(
                     self.loss_layer_cbx.count()-1, layer.id())
-            if layer.geometryType() == Qgis.Polygon:
+            if layer.geometryType() == QgsWkbTypes.PolygonGeometry:
                 self.zonal_layer_cbx.addItem(layer.name())
                 self.zonal_layer_cbx.setItemData(
                     self.zonal_layer_cbx.count()-1, layer.id())
@@ -292,7 +293,7 @@ class SelectInputLayersDialog(QDialog, FORM_CLASS):
         # Load loss layer
         if self.loss_layer_is_vector:
             loss_layer = QgsVectorLayer(loss_layer_path, tr('Loss map'), 'ogr')
-            if not loss_layer.geometryType() == Qgis.Point:
+            if not loss_layer.geometryType() == QgsWkbTypes.PointGeometry:
                 msg = 'Loss map must contain points'
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
                 return False
@@ -311,7 +312,7 @@ class SelectInputLayersDialog(QDialog, FORM_CLASS):
     def load_zonal_layer(self, zonal_layer_path):
         # Load zonal layer
         zonal_layer = QgsVectorLayer(zonal_layer_path, tr('Zonal data'), 'ogr')
-        if not zonal_layer.geometryType() == Qgis.Polygon:
+        if not zonal_layer.geometryType() == QgsWkbTypes.PolygonGeometry:
             msg = 'Zonal layer must contain zone polygons'
             log_msg(msg, level='C', message_bar=self.iface.messageBar())
             return False

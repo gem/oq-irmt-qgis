@@ -26,7 +26,7 @@ import os
 import csv
 from qgis.PyQt.QtCore import pyqtSlot, QSettings, QDir
 from qgis.PyQt.QtWidgets import QDialog, QFileDialog, QDialogButtonBox
-from qgis.core import QgsMapLayer, QgsProject, Qgis
+from qgis.core import QgsMapLayer, QgsProject, QgsWkbTypes
 from svir.calculations.aggregate_loss_by_zone import add_zone_id_to_points
 from svir.utilities.utils import (get_ui_class,
                                   reload_attrib_cbx,
@@ -79,9 +79,9 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
                 QgsProject.instance().mapLayers().items():
             if layer.type() != QgsMapLayer.VectorLayer:
                 continue
-            if layer.geometryType() == Qgis.Point:
+            if layer.geometryType() == QgsWkbTypes.PointGeometry:
                 self.dmg_by_asset_layer_cbx.addItem(layer.name(), layer)
-            if layer.geometryType() == Qgis.Polygon:
+            if layer.geometryType() == QgsWkbTypes.PolygonGeometry:
                 self.svi_layer_cbx.addItem(layer.name(), layer)
         # if the active layer contains points, preselect it
         active_layer = self.iface.activeLayer()

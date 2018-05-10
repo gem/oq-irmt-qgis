@@ -33,6 +33,7 @@ from pprint import pformat
 from qgis.core import (
                        QgsMapLayer,
                        Qgis,
+                       QgsWkbTypes,
                        QgsVectorLayer,
                        QgsVectorDataProvider,
                        QgsProject,
@@ -500,7 +501,7 @@ class ProcessLayer(object):
             feature_vertices = 0
             geom = feat.geometry()
             geom_type = geom.type()
-            if geom_type == Qgis.Polygon:
+            if geom_type == QgsWkbTypes.PolygonGeometry:
                 if geom.isMultipart():
                     polygons = geom.asMultiPolygon()
                 else:
@@ -508,14 +509,14 @@ class ProcessLayer(object):
                 for polygon in polygons:
                     for ring in polygon:
                         feature_vertices += len(ring)
-            elif geom_type == Qgis.Line:
+            elif geom_type == QgsWkbTypes.LineGeometry:
                 if geom.isMultipart():
                     lines = geom.asMultiPolyline()
                 else:
                     lines = [geom.asPolyline()]
                 for line in lines:
                     feature_vertices += len(line)
-            elif geom_type == Qgis.Point:
+            elif geom_type == QgsWkbTypes.PointGeometry:
                 if geom.isMultipart():
                     points = geom.asMultiPoint()
                 else:

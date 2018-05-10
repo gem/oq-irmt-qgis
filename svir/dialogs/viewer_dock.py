@@ -52,7 +52,7 @@ from qgis.PyQt.QtCore import pyqtSlot, QSettings, Qt
 from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtWidgets import QLabel, QPlainTextEdit, QComboBox, QSizePolicy, QSpinBox, QPushButton, QCheckBox, QDockWidget, QFileDialog, QAbstractItemView, QTableWidget, QTableWidgetItem
 from qgis.gui import QgsVertexMarker
-from qgis.core import Qgis, QgsMapLayer, QgsFeatureRequest
+from qgis.core import Qgis, QgsMapLayer, QgsFeatureRequest, QgsWkbTypes
 
 from svir.utilities.shared import (
                                    OQ_TO_LAYER_TYPES,
@@ -1138,7 +1138,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
         if (self.iface.activeLayer() is not None
                 and self.iface.activeLayer().type() == QgsMapLayer.VectorLayer
-                and self.iface.activeLayer().geometryType() == Qgis.Point):
+                and self.iface.activeLayer().geometryType() == QgsWkbTypes.PointGeometry):
             self.engine_version = self.iface.activeLayer().customProperty(
                 'engine_version', None)
             self.iface.activeLayer().selectionChanged.connect(
