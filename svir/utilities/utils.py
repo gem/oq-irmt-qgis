@@ -315,7 +315,7 @@ def create_progress_message_bar(msg_bar, msg, no_percentage=False):
     if no_percentage:
         progress.setRange(0, 0)
     progress_message_bar.layout().addWidget(progress)
-    msg_bar.pushWidget(progress_message_bar, msg_bar.INFO)
+    msg_bar.pushWidget(progress_message_bar, Qgis.Info)
     return progress_message_bar, progress
 
 
