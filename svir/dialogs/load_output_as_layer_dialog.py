@@ -510,7 +510,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             graduated_renderer.moveClass(
                 len(graduated_renderer.ranges()) - 1, 0)
         layer.setRenderer(graduated_renderer)
-        layer.setLayerTransparency(30)  # percent
+        layer.setOpacity(0.7)
         layer.triggerRepaint()
         # NOTE QGIS3: probably not needed
         # self.iface.layerTreeView().refreshLayerSymbology(layer.id())
@@ -570,7 +570,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         renderer.paintEffect().appendEffect(effect)
         renderer.paintEffect().setEnabled(True)
         self.layer.setRenderer(renderer)
-        self.layer.setLayerTransparency(30)  # percent
+        self.layer.setOpacity(0.7)
         self.layer.triggerRepaint()
 
         # NOTE QGIS3: probably not needed
