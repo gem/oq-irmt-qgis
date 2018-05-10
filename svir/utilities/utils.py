@@ -48,7 +48,7 @@ from qgis.core import Qgis
 from qgis.gui import QgsMessageBar
 
 from qgis.PyQt import uic
-from qgis.PyQt.QtCore import Qt, QSettings, QUrl
+from qgis.PyQt.QtCore import Qt, QSettings, QUrl, QUrlQuery
 from qgis.PyQt.QtWidgets import (
                                  QApplication,
                                  QProgressBar,
@@ -939,22 +939,24 @@ def import_layer_from_csv(parent,
                           zoom_to_layer=True,
                           has_geom=True):
     url = QUrl.fromLocalFile(csv_path)
-    url.addQueryItem('type', 'csv')
+    url_query = QUrlQuery(url)
+    url_query.addQueryItem('type', 'csv')
     if has_geom:
         if wkt_field is not None:
-            url.addQueryItem('wktField', wkt_field)
+            url_query.addQueryItem('wktField', wkt_field)
         else:
-            url.addQueryItem('xField', longitude_field)
-            url.addQueryItem('yField', latitude_field)
-        url.addQueryItem('spatialIndex', 'no')
-        url.addQueryItem('crs', 'epsg:4326')
-    url.addQueryItem('subsetIndex', 'no')
-    url.addQueryItem('watchFile', 'no')
-    url.addQueryItem('delimiter', delimiter)
-    url.addQueryItem('quote', quote)
-    url.addQueryItem('skipLines', str(lines_to_skip_count))
-    url.addQueryItem('trimFields', 'yes')
-    layer_uri = str(url.toEncoded())
+            url_query.addQueryItem('xField', longitude_field)
+            url_query.addQueryItem('yField', latitude_field)
+        url_query.addQueryItem('spatialIndex', 'no')
+        url_query.addQueryItem('crs', 'epsg:4326')
+    url_query.addQueryItem('subsetIndex', 'no')
+    url_query.addQueryItem('watchFile', 'no')
+    url_query.addQueryItem('delimiter', delimiter)
+    url_query.addQueryItem('quote', quote)
+    url_query.addQueryItem('skipLines', str(lines_to_skip_count))
+    url_query.addQueryItem('trimFields', 'yes')
+    layer_uri = url_query.toString()
+    print("FIXME: %s" % layer_uri)
     layer = QgsVectorLayer(layer_uri, layer_name, "delimitedtext")
     if save_as_shp:
         dest_filename = dest_shp or QFileDialog.getSaveFileName(

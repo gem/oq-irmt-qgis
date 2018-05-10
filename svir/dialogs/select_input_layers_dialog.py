@@ -33,7 +33,7 @@ from qgis.core import (QgsVectorLayer,
                        QgsMapLayer,
                        )
 
-from qgis.PyQt.QtCore import pyqtSlot, QDir, QUrl, QSettings, QFileInfo
+from qgis.PyQt.QtCore import pyqtSlot, QDir, QUrl, QSettings, QFileInfo, QUrlQuery
 
 from qgis.PyQt.QtWidgets import QFileDialog, QDialog, QDialogButtonBox, QMessageBox
 from svir.calculations.aggregate_loss_by_zone import (
@@ -249,17 +249,18 @@ class SelectInputLayersDialog(QDialog, FORM_CLASS):
         latitude_field = 'LAT'
         lines_to_skip_count = count_heading_commented_lines(csv_file_path)
         url = QUrl.fromLocalFile(csv_file_path)
-        url.addQueryItem('type', 'csv')
-        url.addQueryItem('xField', longitude_field)
-        url.addQueryItem('yField', latitude_field)
-        url.addQueryItem('spatialIndex', 'no')
-        url.addQueryItem('subsetIndex', 'no')
-        url.addQueryItem('watchFile', 'no')
-        url.addQueryItem('delimiter', ',')
-        url.addQueryItem('crs', 'epsg:4326')
-        url.addQueryItem('skipLines', str(lines_to_skip_count))
-        url.addQueryItem('trimFields', 'yes')
-        layer_uri = str(url.toEncoded())
+        url_query = QUrlQuery(url)
+        url_query.addQueryItem('type', 'csv')
+        url_query.addQueryItem('xField', longitude_field)
+        url_query.addQueryItem('yField', latitude_field)
+        url_query.addQueryItem('spatialIndex', 'no')
+        url_query.addQueryItem('subsetIndex', 'no')
+        url_query.addQueryItem('watchFile', 'no')
+        url_query.addQueryItem('delimiter', ',')
+        url_query.addQueryItem('crs', 'epsg:4326')
+        url_query.addQueryItem('skipLines', str(lines_to_skip_count))
+        url_query.addQueryItem('trimFields', 'yes')
+        layer_uri = url_query.toString()
         csv_layer = QgsVectorLayer(layer_uri, 'Loss', "delimitedtext")
         dest_filename = dest_shp or QFileDialog.getSaveFileName(
             self,

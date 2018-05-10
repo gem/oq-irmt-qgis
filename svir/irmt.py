@@ -47,7 +47,7 @@ from qgis.core import (QgsVectorLayer,
                        )
 from qgis.gui import QgsMessageBar
 
-from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, qVersion, QUrl, Qt
+from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, qVersion, QUrl, Qt, QUrlQuery
 from qgis.PyQt.QtWidgets import QAction, QFileDialog, QApplication, QMenu
 from qgis.PyQt.QtGui import QIcon, QDesktopServices
 
@@ -526,7 +526,7 @@ class Irmt(object):
         for action_name in self.registered_actions:
             action = self.registered_actions[action_name]
             # Remove the actions in the layer legend
-            self.iface.legendInterface().removeLegendLayerAction(action)
+            self.iface.removeCustomActionForLayerType(action)
             self.iface.removeToolBarIcon(action)
         clear_progress_message_bar(self.iface.messageBar())
 
@@ -689,13 +689,14 @@ class Irmt(object):
         lines_to_skip_count = count_heading_commented_lines(fname)
 
         url = QUrl.fromLocalFile(fname)
-        url.addQueryItem('delimiter', ',')
-        url.addQueryItem('skipLines', str(lines_to_skip_count))
-        url.addQueryItem('trimFields', 'yes')
+        url_query = QUrlQuery(url)
+        url_query.addQueryItem('delimiter', ',')
+        url_query.addQueryItem('skipLines', str(lines_to_skip_count))
+        url_query.addQueryItem('trimFields', 'yes')
         if load_geometries:
-            url.addQueryItem('crs', 'epsg:4326')
-            url.addQueryItem('wktField', 'geometry')
-        layer_uri = str(url.toEncoded())
+            url_query.addQueryItem('crs', 'epsg:4326')
+            url_query.addQueryItem('wktField', 'geometry')
+        layer_uri = url_query.toString()
         # create vector layer from the csv file exported by the
         # platform (it is still not editable!)
         vlayer_csv = QgsVectorLayer(layer_uri,
