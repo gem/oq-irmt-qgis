@@ -441,7 +441,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         symbol = QgsSymbol.defaultSymbol(layer.geometryType())
         # see properties at:
         # https://qgis.org/api/qgsmarkersymbollayerv2_8cpp_source.html#l01073
-        symbol.setAlpha(1)  # opacity
+        symbol.setOpacity(1)
         if isinstance(symbol, QgsMarkerSymbol):
             # do it only for the layer with points
             self._set_symbol_size(symbol)

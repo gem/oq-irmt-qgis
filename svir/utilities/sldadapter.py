@@ -33,7 +33,8 @@ import re
 import os
 from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtXml import QDomDocument
-from qgis.core import (QgsSingleBandGrayRenderer, QgsExpression, QgsOgcUtils, QgsSingleBandPseudoColorRenderer)
+from qgis.core import (QgsSingleBandGrayRenderer, QgsExpression, QgsOgcUtils,
+        QgsSingleBandPseudoColorRenderer, QgsSymbolLayerUtils, QgsSymbol)
 
 SIZE_FACTOR = 4
 RASTER_SLD_TEMPLATE = (
@@ -427,7 +428,7 @@ def rule_to_sld(rule, document, element, props):
 
 
 def symbolv2_to_sld(symbol, document, element, props):
-    props['alpha'] = str(symbol.alpha())
+    props['alpha'] = str(symbol.opacity())
     scaleFactor = 1.0
     (scaleFactor, props['uom']) = encodeSldUom(symbol.outputUnit(),
                                                scaleFactor)
