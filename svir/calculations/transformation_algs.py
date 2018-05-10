@@ -59,7 +59,7 @@ def transform(features_dict, algorithm, variant_name="", inverse=False):
     # re-added afterwards
     dict_of_null_values = {}
     for key, value in f_dict_copy.items():
-        if type(value) in (QPyNullVariant, type(None)):
+        if type(value) in (NULL, type(None)):
             dict_of_null_values[key] = value
     for key in list(dict_of_null_values.keys()):
         del f_dict_copy[key]
