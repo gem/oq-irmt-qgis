@@ -28,14 +28,12 @@ from qgis.core import (QgsVectorLayer,
                        QgsProject,
                        QgsStyle,
                        QgsSymbol,
-                       QgsSymbolLayerRegistry,
                        QgsOuterGlowEffect,
                        QgsSingleSymbolRenderer,
                        QgsGradientColorRamp,
                        QgsGraduatedSymbolRenderer,
                        QgsRendererRange,
                        QgsMapUnitScale,
-                       QgsUnitTypes,
                        QgsWkbTypes,
                        QgsMapLayer,
                        QgsMarkerSymbol,
@@ -447,7 +445,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         if isinstance(symbol, QgsMarkerSymbol):
             # do it only for the layer with points
             self._set_symbol_size(symbol)
-            symbol.symbolLayer(0).setOutlineStyle(Qt.PenStyle(Qt.NoPen))
+            symbol.symbolLayer(0).setStrokeStyle(Qt.PenStyle(Qt.NoPen))
 
         style = get_style(layer, self.iface.messageBar())
 
@@ -499,7 +497,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             if isinstance(symbol, QgsMarkerSymbol):
                 # do it only for the layer with points
                 self._set_symbol_size(symbol_zeros)
-                symbol_zeros.symbolLayer(0).setOutlineStyle(
+                symbol_zeros.symbolLayer(0).setStrokeStyle(
                     Qt.PenStyle(Qt.NoPen))
             zeros_min = 0.0
             zeros_max = VERY_SMALL_VALUE

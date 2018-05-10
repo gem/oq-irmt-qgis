@@ -250,7 +250,7 @@ class SelectInputLayersDialog(QDialog, FORM_CLASS):
         latitude_field = 'LAT'
         lines_to_skip_count = count_heading_commented_lines(csv_file_path)
         url = QUrl.fromLocalFile(csv_file_path)
-        url_query = QUrlQuery(url)
+        url_query = QUrlQuery()
         url_query.addQueryItem('type', 'csv')
         url_query.addQueryItem('xField', longitude_field)
         url_query.addQueryItem('yField', latitude_field)
@@ -261,7 +261,8 @@ class SelectInputLayersDialog(QDialog, FORM_CLASS):
         url_query.addQueryItem('crs', 'epsg:4326')
         url_query.addQueryItem('skipLines', str(lines_to_skip_count))
         url_query.addQueryItem('trimFields', 'yes')
-        layer_uri = url_query.toString()
+        url.setQuery(url_query)
+        layer_uri = url.toString()
         csv_layer = QgsVectorLayer(layer_uri, 'Loss', "delimitedtext")
         dest_filename = dest_shp or QFileDialog.getSaveFileName(
             self,

@@ -687,14 +687,15 @@ class Irmt(object):
         lines_to_skip_count = count_heading_commented_lines(fname)
 
         url = QUrl.fromLocalFile(fname)
-        url_query = QUrlQuery(url)
+        url_query = QUrlQuery()
         url_query.addQueryItem('delimiter', ',')
         url_query.addQueryItem('skipLines', str(lines_to_skip_count))
         url_query.addQueryItem('trimFields', 'yes')
         if load_geometries:
             url_query.addQueryItem('crs', 'epsg:4326')
             url_query.addQueryItem('wktField', 'geometry')
-        layer_uri = url_query.toString()
+        url.setQuery(url_query)
+        layer_uri = url.toString()
         # create vector layer from the csv file exported by the
         # platform (it is still not editable!)
         vlayer_csv = QgsVectorLayer(layer_uri,

@@ -939,7 +939,7 @@ def import_layer_from_csv(parent,
                           zoom_to_layer=True,
                           has_geom=True):
     url = QUrl.fromLocalFile(csv_path)
-    url_query = QUrlQuery(url)
+    url_query = QUrlQuery()
     url_query.addQueryItem('type', 'csv')
     if has_geom:
         if wkt_field is not None:
@@ -955,8 +955,8 @@ def import_layer_from_csv(parent,
     url_query.addQueryItem('quote', quote)
     url_query.addQueryItem('skipLines', str(lines_to_skip_count))
     url_query.addQueryItem('trimFields', 'yes')
-    layer_uri = url_query.toString()
-    print("FIXME: %s" % layer_uri)
+    url.setQuery(url_query)
+    layer_uri = url.toString()
     layer = QgsVectorLayer(layer_uri, layer_name, "delimitedtext")
     if save_as_shp:
         dest_filename = dest_shp or QFileDialog.getSaveFileName(
