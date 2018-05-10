@@ -34,8 +34,10 @@ from datetime import datetime
 from collections import OrderedDict
 
 try:
+    import matplotlib
+    matplotlib.use('Qt5Agg')
     from matplotlib.figure import Figure
-    from matplotlib.backends.backend_qt4agg import (
+    from matplotlib.backends.backend_qt5agg import (
         FigureCanvasQTAgg as FigureCanvas,
         NavigationToolbar2QT as NavigationToolbar
     )
