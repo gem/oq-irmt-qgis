@@ -83,7 +83,8 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         self.rlzs_npz = extract_npz(
             self.session, self.hostname, self.calc_id, 'realizations',
             message_bar=self.iface.messageBar(), params=None)
-        self.gsims = self.rlzs_npz['array']['gsims']
+        self.gsims = [gsim.decode()
+                      for gsim in self.rlzs_npz['array']['gsims']]
         self.rlz_or_stat_cbx.clear()
         self.rlz_or_stat_cbx.setEnabled(True)
         for gsim, rlz in zip(self.gsims, self.rlzs_or_stats):
