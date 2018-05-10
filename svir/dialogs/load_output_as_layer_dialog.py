@@ -42,6 +42,8 @@ from qgis.core import (QgsVectorLayer,
                        QgsSimpleFillSymbolLayer,
                        QgsRendererCategory,
                        QgsCategorizedSymbolRenderer,
+                       QgsApplication,
+                       QgsUnitTypes,
                        )
 from qgis.PyQt.QtCore import pyqtSlot, QDir, QSettings, QFileInfo, Qt
 from qgis.PyQt.QtWidgets import (
@@ -424,7 +426,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             # it is not obvious how to choose the point size in the other
             # cases, so we conservatively keep the default sizing
             return
-        symbol.symbolLayer(0).setSizeUnit(symbol.MapUnit)
+        symbol.symbolLayer(0).setSizeUnit(QgsUnitTypes.RenderMapUnits)
         symbol.symbolLayer(0).setSize(point_size)
         map_unit_scale = QgsMapUnitScale()
         map_unit_scale.maxSizeMMEnabled = True
@@ -551,7 +553,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.iface.mapCanvas().refresh()
 
     def style_curves(self):
-        registry = QgsSymbolLayerRegistry.instance()
+        registry = QgsApplication.symbolLayerRegistry()
         cross = registry.symbolLayerMetadata("SimpleMarker").createSymbolLayer(
             {'name': 'cross2', 'color': '0,0,0', 'color_border': '0,0,0',
              'offset': '0,0', 'size': '1.5', 'angle': '0'})
@@ -562,7 +564,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         renderer = QgsSingleSymbolRenderer(symbol)
         effect = QgsOuterGlowEffect()
         effect.setSpread(0.5)
-        effect.setTransparency(0)
+        effect.setOpacity(1)
         effect.setColor(QColor(255, 255, 255))
         effect.setBlurLevel(1)
         renderer.paintEffect().appendEffect(effect)

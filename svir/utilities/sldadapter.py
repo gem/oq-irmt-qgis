@@ -33,8 +33,10 @@ import re
 import os
 from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtXml import QDomDocument
-from qgis.core import (QgsSingleBandGrayRenderer, QgsExpression, QgsOgcUtils,
-        QgsSingleBandPseudoColorRenderer, QgsSymbolLayerUtils, QgsSymbol)
+from qgis.core import (
+    QgsSingleBandGrayRenderer, QgsExpression, QgsOgcUtils,
+    QgsSingleBandPseudoColorRenderer, QgsSymbolLayerUtils, QgsSymbol,
+    QgsUnitTypes)
 
 SIZE_FACTOR = 4
 RASTER_SLD_TEMPLATE = (
@@ -438,7 +440,7 @@ def symbolv2_to_sld(symbol, document, element, props):
 
 
 def encodeSldUom(outputUnit, scaleFactor):
-    if outputUnit == QgsSymbol.MapUnit:
+    if outputUnit == QgsUnitTypes.RenderMapUnits:
         if scaleFactor:
             scaleFactor = 0.001  # from millimeters to meters
         return (scaleFactor, "http://www.opengeospatial.org/se/units/metre")
