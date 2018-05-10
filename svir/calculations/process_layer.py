@@ -236,7 +236,7 @@ class ProcessLayer(object):
                 for proposed_attribute_name in aliases:
                     attribute_id = self.layer.fields().indexOf(
                         proposed_attribute_name)
-                    self.layer.addAttributeAlias(
+                    self.layer.setFieldAlias(
                         attribute_id, aliases[proposed_attribute_name])
         return proposed_attribute_dict
 
@@ -364,7 +364,7 @@ class ProcessLayer(object):
             new_attr_id = self.find_attribute_id(actual_new_attr_name)
         if new_attr_alias:
             with edit(self.layer):
-                self.layer.addAttributeAlias(new_attr_id, new_attr_alias)
+                self.layer.setFieldAlias(new_attr_id, new_attr_alias)
 
         with edit(self.layer):
             # write transformed values

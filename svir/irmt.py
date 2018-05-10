@@ -727,13 +727,13 @@ class Irmt(object):
         # assign ind_name as alias for each ind_code
         for field_idx, field in enumerate(layer.fields()):
             if field.name() in indicators_info_dict:
-                layer.addAttributeAlias(
+                layer.setFieldAlias(
                     field_idx, indicators_info_dict[field.name()]['name'])
             elif field.name() == 'ISO':
-                layer.addAttributeAlias(
+                layer.setFieldAlias(
                     field_idx, 'Country ISO code')
             elif field.name() == 'COUNTRY_NA':
-                layer.addAttributeAlias(
+                layer.setFieldAlias(
                     field_idx, 'Country name')
 
     def download_layer(self):
