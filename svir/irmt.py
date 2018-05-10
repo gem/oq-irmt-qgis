@@ -1143,8 +1143,10 @@ class Irmt(object):
         if style['force_restyling']:
             self._apply_style(style, target_field)
 
-        self.iface.legendInterface().refreshLayerSymbology(
-            self.iface.activeLayer())
+        # NOTE QGIS3 probably not needed
+        # self.iface.layerTreeView().refreshLayerSymbology(
+        #     self.iface.activeLayer().id())
+
         self.iface.mapCanvas().refresh()
 
     def _apply_style(self, style, target_field):

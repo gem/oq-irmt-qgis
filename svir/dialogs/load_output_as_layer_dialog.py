@@ -43,7 +43,20 @@ from qgis.core import (QgsVectorLayer,
                        QgsCategorizedSymbolRenderer,
                        )
 from qgis.PyQt.QtCore import pyqtSlot, QDir, QSettings, QFileInfo, Qt
-from qgis.PyQt.QtWidgets import QDialogButtonBox, QDialog, QFileDialog, QComboBox, QSpinBox, QLabel, QCheckBox, QHBoxLayout, QVBoxLayout, QToolButton, QGroupBox, QLineEdit
+from qgis.PyQt.QtWidgets import (
+                                 QDialogButtonBox,
+                                 QDialog,
+                                 QFileDialog,
+                                 QComboBox,
+                                 QSpinBox,
+                                 QLabel,
+                                 QCheckBox,
+                                 QHBoxLayout,
+                                 QVBoxLayout,
+                                 QToolButton,
+                                 QGroupBox,
+                                 QLineEdit,
+                                 )
 from qgis.PyQt.QtGui import QColor
 from svir.calculations.process_layer import ProcessLayer
 from svir.calculations.aggregate_loss_by_zone import (
@@ -496,8 +509,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         layer.setRenderer(graduated_renderer)
         layer.setLayerTransparency(30)  # percent
         layer.triggerRepaint()
-        # TODO check QGIS3 legend implementation
-        self.iface.legendInterface().refreshLayerSymbology(layer)
+        # NOTE QGIS3: probably not needed
+        # self.iface.layerTreeView().refreshLayerSymbology(layer.id())
+
         self.iface.mapCanvas().refresh()
 
     def style_categorized(self, layer, style_by):
@@ -529,8 +543,10 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         if renderer is not None:
             layer.setRenderer(renderer)
         layer.triggerRepaint()
-        # TODO check QGIS3 legend implementation
-        self.iface.legendInterface().refreshLayerSymbology(layer)
+
+        # NOTE QGIS3: probably not needed
+        # self.iface.layerTreeView().refreshLayerSymbology(layer.id())
+
         self.iface.mapCanvas().refresh()
 
     def style_curves(self):
@@ -553,8 +569,10 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.layer.setRenderer(renderer)
         self.layer.setLayerTransparency(30)  # percent
         self.layer.triggerRepaint()
-        self.iface.legendInterface().refreshLayerSymbology(
-            self.layer)
+
+        # NOTE QGIS3: probably not needed
+        # self.iface.layerTreeView().refreshLayerSymbology(self.layer.id())
+
         self.iface.mapCanvas().refresh()
 
     def open_zonal_layer_dialog(self):
@@ -627,7 +645,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                     super(LoadOutputAsLayerDialog, self).accept()
                     return
                 loss_layer = self.layer
-                self.iface.legendInterface().setLayerVisible(loss_layer, False)
+                QgsProject.instance().layerTreeRoot().findLayer(
+                    loss_layer.id()).setItemVisibilityChecked(False)
                 zonal_layer_id = self.zonal_layer_cbx.itemData(
                     self.zonal_layer_cbx.currentIndex())
                 zonal_layer = QgsProject.instance().mapLayer(

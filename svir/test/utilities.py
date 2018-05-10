@@ -65,6 +65,7 @@ def get_qgis_app():
         # TODO see if QGIS3 needs this
         # def do_nothing(layer):
         #     pass
+        # NOTE QGIS3: probably not needed
         # IFACE.legendInterface().refreshLayerSymbology = do_nothing
 
     return QGIS_APP, CANVAS, IFACE, PARENT
