@@ -52,7 +52,7 @@ from qgis.PyQt.QtCore import pyqtSlot, QSettings, Qt
 from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtWidgets import QLabel, QPlainTextEdit, QComboBox, QSizePolicy, QSpinBox, QPushButton, QCheckBox, QDockWidget, QFileDialog, QAbstractItemView, QTableWidget, QTableWidgetItem
 from qgis.gui import QgsVertexMarker
-from qgis.core import Qgis, QgsMapLayer, QgsFeatureRequest, QgsWkbTypes
+from qgis.core import QgsMapLayer, QgsFeatureRequest, QgsWkbTypes
 
 from svir.utilities.shared import (
                                    OQ_TO_LAYER_TYPES,
@@ -547,7 +547,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             message_bar=self.iface.messageBar())
         if rlzs_npz is None:
             return
-        rlzs = rlzs_npz['array']['gsims']
+        rlzs = [rlz.decode() for rlz in rlzs_npz['array']['gsims']]
         self.rlz_cbx.blockSignals(True)
         self.rlz_cbx.clear()
         self.rlz_cbx.addItems(rlzs)
@@ -559,7 +559,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.loss_type_cbx.addItems(loss_types)
         self.loss_type_cbx.blockSignals(False)
 
-        self.tag_names_multiselect.set_unselected_items(list(self.tags.keys()))
+        self.tag_names_multiselect.set_unselected_items(self.tags.keys())
         self.tag_names_multiselect.set_selected_items([])
         self.tag_values_multiselect.set_unselected_items([])
         self.tag_values_multiselect.set_selected_items([])
@@ -577,7 +577,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 continue
             for tag in tags_npz[tag_name]:
                 if tag[-1] != '?':
-                    tags_list.append(tag)
+                    tags_list.append(tag.decode())
         self.tags = {}
         for tag in tags_list:
             # tags are in the format 'city=Benicia' (tag_name=tag_value)
