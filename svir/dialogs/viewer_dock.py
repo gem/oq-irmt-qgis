@@ -600,7 +600,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 message_bar=self.iface.messageBar())
             if rlzs_npz is None:
                 return
-            self.rlzs = rlzs_npz['array']['gsims']
+            self.rlzs = [rlz.decode() for rlz in rlzs_npz['array']['gsims']]
         self._get_tags(session, hostname, calc_id, self.iface.messageBar(),
                        with_star=True)
         self.update_list_selected_edt()
@@ -791,7 +791,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         losses_array = self._to_2d(losses_array)
         tags = None
         try:
-            tags = self.losses_by_asset_aggr['tags']
+            tags = [tag.decode() for tag in self.losses_by_asset_aggr['tags']]
         except KeyError:
             pass
         nrows, ncols = losses_array.shape
