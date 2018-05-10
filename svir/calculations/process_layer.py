@@ -32,7 +32,6 @@ from numpy.testing import assert_almost_equal
 from pprint import pformat
 from qgis.core import (
                        QgsMapLayer,
-                       Qgis,
                        QgsWkbTypes,
                        QgsVectorLayer,
                        QgsVectorDataProvider,
@@ -371,7 +370,7 @@ class ProcessLayer(object):
             for feat in self.layer.getFeatures():
                 feat_id = feat.id()
                 value = transformed_dict[feat_id]
-                if type(value) not in (QPyNullVariant, type(None)):
+                if type(value) not in (NULL, type(None)):
                     value = float(value)
                 self.layer.changeAttributeValue(feat_id, new_attr_id, value)
         return actual_new_attr_name, invalid_input_values
@@ -411,19 +410,19 @@ class ProcessLayer(object):
 
         if self.layer.type() == QgsMapLayer.VectorLayer:
             v_type = self.layer.wkbType()
-            if v_type == Qgis.WKBPoint:
+            if v_type == QgsWkbTypes.Point:
                 type_str = "point"
-            elif v_type == Qgis.WKBLineString:
+            elif v_type == QgsWkbTypes.LineString:
                 type_str = "linestring"
-            elif v_type == Qgis.WKBPolygon:
+            elif v_type == QgsWkbTypes.Polygon:
                 type_str = "polygon"
-            elif v_type == Qgis.WKBMultiPoint:
+            elif v_type == QgsWkbTypes.MultiPoint:
                 type_str = "multipoint"
-            elif v_type == Qgis.WKBMultiLineString:
+            elif v_type == QgsWkbTypes.MultiLineString:
                 type_str = "multilinestring"
-            elif v_type == Qgis.WKBMultiPolygon:
+            elif v_type == QgsWkbTypes.MultiPolygon:
                 type_str = "multipolygon"
-            elif v_type == Qgis.WKBNoGeometry:
+            elif v_type == QgsWkbTypes.NoGeometry:
                 type_str = ""
             else:
                 raise TypeError('Layer type %s can not be accepted' % v_type)
@@ -467,17 +466,17 @@ class ProcessLayer(object):
         """
         if self.layer.type() == QgsMapLayer.VectorLayer:
             v_type = self.layer.wkbType()
-            if v_type == Qgis.WKBPoint:
+            if v_type == QgsWkbTypes.Point:
                 type_str = "point"
-            elif v_type == Qgis.WKBLineString:
+            elif v_type == QgsWkbTypes.LineString:
                 type_str = "linestring"
-            elif v_type == Qgis.WKBPolygon:
+            elif v_type == QgsWkbTypes.Polygon:
                 type_str = "polygon"
-            elif v_type == Qgis.WKBMultiPoint:
+            elif v_type == QgsWkbTypes.MultiPoint:
                 type_str = "multipoint"
-            elif v_type == Qgis.WKBMultiLineString:
+            elif v_type == QgsWkbTypes.MultiLineString:
                 type_str = "multilinestring"
-            elif v_type == Qgis.WKBMultiPolygon:
+            elif v_type == QgsWkbTypes.MultiPolygon:
                 type_str = "multipolygon"
             else:
                 raise TypeError('Layer type %s can not be accepted' % v_type)
