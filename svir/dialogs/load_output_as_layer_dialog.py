@@ -35,7 +35,7 @@ from qgis.core import (QgsVectorLayer,
                        QgsGraduatedSymbolRenderer,
                        QgsRendererRange,
                        QgsMapUnitScale,
-                       Qgis,
+                       QgsUnitTypes,
                        QgsWkbTypes,
                        QgsMapLayer,
                        QgsMarkerSymbol,
@@ -416,9 +416,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.iface.zoomToActiveLayer()
 
     def _set_symbol_size(self, symbol):
-        if self.iface.mapCanvas().mapUnits() == Qgis.Degrees:
+        if self.iface.mapCanvas().mapUnits() == QgsUnitTypes.DistanceDegrees:
             point_size = 0.05
-        elif self.iface.mapCanvas().mapUnits() == Qgis.Meters:
+        elif self.iface.mapCanvas().mapUnits() == QgsUnitTypes.DistanceMeters:
             point_size = 4000
         else:
             # it is not obvious how to choose the point size in the other
