@@ -643,7 +643,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.loss_type_cbx.blockSignals(False)
         self.loss_type_cbx.addItems(loss_types)
         if output_type == 'agg_curves-stats':
-            self.stats_multiselect.set_selected_items(self.agg_curves['stats'])
+            agg_curves_stats = [stat.decode()
+                                for stat in self.agg_curves['stats']]
+            self.stats_multiselect.set_selected_items(agg_curves_stats)
             self.draw_agg_curves(output_type)
         elif output_type == 'agg_curves-rlzs':
             rlzs = ["Rlz %3d" % rlz
@@ -1447,7 +1449,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     "# Tags: %s\n" % (
                         self.list_selected_edt.toPlainText() or 'None'))
                 try:
-                    tags = self.losses_by_asset_aggr['tags']
+                    tags = [tag.decode()
+                            for tag in self.losses_by_asset_aggr['tags']]
                     tag = tags[0]
                     # a tag is like 'taxonomy=Wood'
                     tag_name = tag.split('=')[0]
