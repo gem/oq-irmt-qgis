@@ -30,9 +30,19 @@ import tempfile
 import zipfile
 import copy
 
-from qgis.PyQt.QtCore import QDir, Qt, QObject, QTimer, pyqtSlot, QFileInfo, QSettings
+from qgis.PyQt.QtCore import (QDir,
+                              Qt,
+                              QTimer,
+                              pyqtSlot,
+                              QFileInfo,
+                              QSettings)
 
-from qgis.PyQt.QtWidgets import QDialog, QTableWidgetItem, QAbstractItemView, QPushButton, QFileDialog, QMessageBox
+from qgis.PyQt.QtWidgets import (QDialog,
+                                 QTableWidgetItem,
+                                 QAbstractItemView,
+                                 QPushButton,
+                                 QFileDialog,
+                                 QMessageBox)
 from qgis.PyQt.QtGui import QColor, QBrush
 from qgis.gui import QgsMessageBar
 
@@ -298,7 +308,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 style = 'background-color: %s; color: %s' % (
                     action['bg_color'], action['txt_color'])
                 button.setStyleSheet(style)
-                button.clicked.connect(lambda calc_id=calc['id'], action=action['label']: (
+                button.clicked.connect(lambda checked=False, calc_id=calc['id'], action=action['label']: (
                         self.on_calc_action_btn_clicked(calc_id, action)))
                 self.calc_list_tbl.setCellWidget(row, col, button)
                 self.calc_list_tbl.setColumnWidth(col, BUTTON_WIDTH)
@@ -438,7 +448,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 self._handle_exception(exc)
                 return
             calc_status = json.loads(resp.text)
-            return calc_status
+        return calc_status
 
     def remove_calc(self, calc_id):
         calc_remove_url = "%s/v1/calc/%s/remove" % (self.hostname, calc_id)
@@ -476,7 +486,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         else:
             default_dir = directory
         if not file_names:
-            file_names, __ = QFileDialog.getOpenFileNames(self, text, default_dir)
+            file_names, __ = QFileDialog.getOpenFileNames(
+                self, text, default_dir)
         if not file_names:
             return
         if directory is None:
@@ -715,9 +726,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             button.setText("%s %s" % (action, outtype))
         button.setStyleSheet(style)
         button.clicked.connect(lambda checked=False, output=output, action=action, outtype=outtype: (
-                self.on_output_action_btn_clicked(checked, output, action, outtype)))
+                self.on_output_action_btn_clicked(output, action, outtype)))
 
-    def on_output_action_btn_clicked(self, checked, output, action, outtype):
+    def on_output_action_btn_clicked(self, output, action, outtype):
         output_id = output['id']
         output_type = output['type']
         if action in ['Show', 'Aggregate']:
@@ -850,7 +861,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     ' (please make sure the username and password are'
                     ' spelled correctly and that you are using the right'
                     ' url and port in the host setting)')
-            log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
+            log_msg(err_msg, level='C', message_bar=self.iface.messageBar(),
+                    exception=exc)
         else:
             # sanity check (it should never occur)
             raise TypeError(
