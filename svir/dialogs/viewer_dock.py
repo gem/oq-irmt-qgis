@@ -1300,7 +1300,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     def on_export_data_button_clicked(self):
         filename = None
         if self.output_type == 'hcurves':
-            filename, __ = QFileDialog.getSaveFileName(
+            filename, _ = QFileDialog.getSaveFileName(
                 self,
                 self.tr('Export data'),
                 os.path.expanduser(
@@ -1308,14 +1308,14 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                         self.current_imt, self.calc_id)),
                 '*.csv')
         elif self.output_type == 'uhs':
-            filename, __ = QFileDialog.getSaveFileName(
+            filename, _ = QFileDialog.getSaveFileName(
                 self,
                 self.tr('Export data'),
                 os.path.expanduser(
                     '~/uniform_hazard_spectra_%s.csv' % self.calc_id),
                 '*.csv')
         elif self.output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
-            filename, __ = QFileDialog.getSaveFileName(
+            filename, _ = QFileDialog.getSaveFileName(
                 self,
                 self.tr('Export data'),
                 os.path.expanduser(
@@ -1326,14 +1326,14 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         elif self.output_type in ('dmg_by_asset_aggr',
                                   'losses_by_asset_aggr',
                                   'avg_losses-stats_aggr'):
-            filename, __ = QFileDialog.getSaveFileName(
+            filename, _ = QFileDialog.getSaveFileName(
                 self,
                 self.tr('Export data'),
                 os.path.expanduser(
                     '~/%s_%s.csv' % (self.output_type, self.calc_id)),
                 '*.csv')
         elif self.output_type == 'recovery_curves':
-            filename, __ = QFileDialog.getSaveFileName(
+            filename, _ = QFileDialog.getSaveFileName(
                 self,
                 self.tr('Export data'),
                 os.path.expanduser(

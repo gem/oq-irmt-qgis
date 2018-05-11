@@ -574,7 +574,7 @@ class Irmt(object):
         try:
             dlg = SelectSvVariablesDialog(sv_downloader)
             if dlg.exec_():
-                dest_filename, __, __ = QFileDialog.getSaveFileName(
+                dest_filename, _ = QFileDialog.getSaveFileName(
                     dlg,
                     'Download destination',
                     os.path.expanduser("~"),
