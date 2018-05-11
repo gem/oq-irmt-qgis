@@ -621,7 +621,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 # NOTE: writing 'mean' instead of 'rlz-0' would be equivalent
                 self.stats = ['rlz-0']
             else:
-                self.stats = str(npz['stats']).split()
+                self.stats = str(npz['stats'], 'utf8').split()
 
         self.tag_names_multiselect.set_unselected_items(list(self.tags.keys()))
         self.tag_names_multiselect.set_selected_items([])
