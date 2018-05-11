@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#/***************************************************************************
+# /***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
@@ -103,7 +103,7 @@ class DownloadPlatformDataWorker(AbstractWorker):
                         raise UserAbortedNotification(
                             'Download aborted by user')
 
-                    csv_file.write(line + os.linesep)
+                    csv_file.write(line.decode('utf8') + os.linesep)
                     n_downloaded_countries += 1
                     progress = (1.0 * n_downloaded_countries /
                                 n_countries_to_download * 100)

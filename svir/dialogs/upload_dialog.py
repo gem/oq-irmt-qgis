@@ -23,7 +23,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
-from qgis.core import QgsRuleBasedRenderer
+from qgis.core import QgsRuleBasedRenderer, Qgis
 from qgis.gui import QgsMessageBar
 
 from qgis.PyQt.QtCore import Qt, QUrl, QSettings, pyqtSignal
@@ -106,7 +106,7 @@ class UploadDialog(QDialog, FORM_CLASS):
             error_msg = (
                 'Unable to login to the platform: ' + e.message)
             self.message_bar.pushMessage(
-                'Error', error_msg, duration=0, level=QgsMessageBar.CRITICAL)
+                'Error', error_msg, duration=0, level=Qgis.Critical)
             return
 
         # adding by emitting signal in different thread
@@ -130,7 +130,7 @@ class UploadDialog(QDialog, FORM_CLASS):
                 'Unable to export the styled layer descriptor: ' + e.message)
             self.message_bar.pushMessage(
                 'Style error', error_msg, duration=0,
-                level=QgsMessageBar.CRITICAL)
+                level=Qgis.Critical)
             return
 
         if DEBUG:
@@ -151,7 +151,7 @@ class UploadDialog(QDialog, FORM_CLASS):
                 'Error while styling the uploaded layer: ' + resp.reason)
             self.message_bar.pushMessage(
                 'Style error', error_msg, duration=0,
-                level=QgsMessageBar.CRITICAL)
+                level=Qgis.Critical)
 
     def upload_done(self, result):
         layer_url, success = result
@@ -168,7 +168,7 @@ class UploadDialog(QDialog, FORM_CLASS):
                 self.message_bar.pushMessage(
                     'Info',
                     'Using the basic default style',
-                    level=QgsMessageBar.INFO)
+                    level=Qgis.Info)
             self.message_bar_item, _ = create_progress_message_bar(
                 self.message_bar, 'Loading page......', no_percentage=True)
             self.web_view.load(QUrl(layer_url))
@@ -179,7 +179,7 @@ class UploadDialog(QDialog, FORM_CLASS):
             clear_progress_message_bar(self.message_bar)
             self.message_bar.pushMessage(
                 'Upload error', error_msg, duration=0,
-                level=QgsMessageBar.CRITICAL)
+                level=Qgis.Critical)
 
     def load_finished(self):
         clear_progress_message_bar(self.message_bar, self.message_bar_item)
