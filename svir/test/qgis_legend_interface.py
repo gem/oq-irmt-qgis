@@ -1,12 +1,13 @@
+
 # coding=utf-8
+
 """Mock like implementation for the QgsLegendInterface - used for testing."""
-from builtins import object
+
 from qgis.core import QgsProject
 
 
-# TODO probably need to mock all this for QGIS3
+class QgisLegend():
 
-class QgisLegend(object):
     """A fake QgsLegendInterface with minimal implementation."""
 
     def __init__(self, canvas):
@@ -19,7 +20,7 @@ class QgisLegend(object):
         self.canvas = canvas
 
     def layers(self):
-        """Fake implementation for QgisLegendInterface.layers().
+        """Fake implementation for QgisLegendInterface.layers.
 
         :returns: A list of QgsMapLayers - one per layer present in the
             map layer list will be returned.
