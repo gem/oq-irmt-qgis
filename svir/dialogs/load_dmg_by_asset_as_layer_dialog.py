@@ -85,7 +85,8 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
     def on_rlz_or_stat_changed(self):
         self.dataset = self.npz_file[self.rlz_or_stat_cbx.currentText()]
         self.taxonomies = numpy.unique(self.dataset['taxonomy']).tolist()
-        self.taxonomies = [taxonomy.decode() for taxonomy in self.taxonomies]
+        self.taxonomies = [taxonomy.decode('utf8')
+                           for taxonomy in self.taxonomies]
         self.populate_taxonomy_cbx(self.taxonomies)
         self.set_ok_button()
 

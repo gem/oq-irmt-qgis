@@ -547,7 +547,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             message_bar=self.iface.messageBar())
         if rlzs_npz is None:
             return
-        rlzs = [rlz.decode() for rlz in rlzs_npz['array']['gsims']]
+        rlzs = [rlz.decode('utf8') for rlz in rlzs_npz['array']['gsims']]
         self.rlz_cbx.blockSignals(True)
         self.rlz_cbx.clear()
         self.rlz_cbx.addItems(rlzs)
@@ -577,7 +577,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 continue
             for tag in tags_npz[tag_name]:
                 if tag[-1] != '?':
-                    tags_list.append(tag.decode())
+                    tags_list.append(tag.decode('utf8'))
         self.tags = {}
         for tag in tags_list:
             # tags are in the format 'city=Benicia' (tag_name=tag_value)
@@ -600,7 +600,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 message_bar=self.iface.messageBar())
             if rlzs_npz is None:
                 return
-            self.rlzs = [rlz.decode() for rlz in rlzs_npz['array']['gsims']]
+            self.rlzs = [rlz.decode('utf8')
+                         for rlz in rlzs_npz['array']['gsims']]
         self._get_tags(session, hostname, calc_id, self.iface.messageBar(),
                        with_star=True)
         self.update_list_selected_edt()
@@ -643,7 +644,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.loss_type_cbx.blockSignals(False)
         self.loss_type_cbx.addItems(loss_types)
         if output_type == 'agg_curves-stats':
-            agg_curves_stats = [stat.decode()
+            agg_curves_stats = [stat.decode('utf8')
                                 for stat in self.agg_curves['stats']]
             self.stats_multiselect.set_selected_items(agg_curves_stats)
             self.draw_agg_curves(output_type)
@@ -793,7 +794,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         losses_array = self._to_2d(losses_array)
         tags = None
         try:
-            tags = [tag.decode() for tag in self.losses_by_asset_aggr['tags']]
+            tags = [tag.decode('utf8')
+                    for tag in self.losses_by_asset_aggr['tags']]
         except KeyError:
             pass
         nrows, ncols = losses_array.shape
@@ -1449,7 +1451,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     "# Tags: %s\n" % (
                         self.list_selected_edt.toPlainText() or 'None'))
                 try:
-                    tags = [tag.decode()
+                    tags = [tag.decode('utf8')
                             for tag in self.losses_by_asset_aggr['tags']]
                     tag = tags[0]
                     # a tag is like 'taxonomy=Wood'
