@@ -26,7 +26,7 @@ standard_library.install_aliases()
 
 import traceback
 from qgis.PyQt import QtCore
-from qgis.core import QgsMessageLog
+from qgis.core import QgsMessageLog, Qgis
 from qgis.gui import QgsMessageBar
 
 from qgis.PyQt.QtCore import Qt, QThread
@@ -99,7 +99,7 @@ def start_worker(worker, message_bar, message):
     cancel_button.clicked.connect(worker.kill)
     message_bar_item.layout().addWidget(progress_bar)
     message_bar_item.layout().addWidget(cancel_button)
-    message_bar.pushWidget(message_bar_item, message_bar.INFO)
+    message_bar.pushWidget(message_bar_item, Qgis.Info)
 
     # start the worker in a new thread
     thread = QThread(message_bar.parent())
@@ -186,8 +186,8 @@ def worker_error(e, exception_string, message_bar):
     message_bar.pushMessage(
         'Something went wrong! See the message log for more information.',
         duration=0,
-        level=QgsMessageBar.CRITICAL)
+        level=Qgis.Critical)
     QgsMessageLog.logMessage(
         'Worker thread raised an exception: %s' % exception_string,
         'IRMT worker',
-        level=QgsMessageLog.CRITICAL)
+        level=Qgis.Critical)

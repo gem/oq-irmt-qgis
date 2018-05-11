@@ -26,6 +26,7 @@ import json
 from qgis.PyQt.QtCore import QUrl, QObject, pyqtSlot, QSettings, Qt
 from qgis.PyQt.QtWidgets import QDialog, QVBoxLayout, QPushButton, QHBoxLayout, QMessageBox
 from qgis.PyQt.QtGui import QIcon
+from qgis.core import Qgis
 from qgis.gui import QgsMessageBar
 from svir.ui.gem_qwebview import GemQWebView
 from svir.utilities.shared import DEFAULT_ENGINE_PROFILES
@@ -166,15 +167,15 @@ class CommonApi(QObject):
 
     @pyqtSlot(str)
     def info(self, message):
-        self.message_bar.pushMessage(message, level=QgsMessageBar.INFO)
+        self.message_bar.pushMessage(message, level=Qgis.Info)
 
     @pyqtSlot(str)
     def warning(self, message):
-        self.message_bar.pushMessage(message, level=QgsMessageBar.WARNING)
+        self.message_bar.pushMessage(message, level=Qgis.Warning)
 
     @pyqtSlot(str)
     def error(self, message):
-        self.message_bar.pushMessage(message, level=QgsMessageBar.CRITICAL)
+        self.message_bar.pushMessage(message, level=Qgis.Critical)
 
     @pyqtSlot(result=int)
     def dummy_property_get(self):

@@ -44,6 +44,7 @@ from qgis.core import (QgsVectorLayer,
                        QgsFillSymbol,
                        QgsProject,
                        QgsExpression,
+                       Qgis,
                        )
 from qgis.gui import QgsMessageBar
 
@@ -827,8 +828,7 @@ class Irmt(object):
                     self.iface.activeLayer(),
                     discarded_feats_ids_missing,
                     self.iface.activeLayer().selectedFeatureIds())
-                self.iface.messageBar().pushWidget(widget,
-                                                   QgsMessageBar.WARNING)
+                self.iface.messageBar().pushWidget(widget, Qgis.Warning)
             discarded_feats_ids_invalid = [
                 feat.feature_id for feat in discarded_feats
                 if feat.reason == 'Invalid value']
@@ -844,8 +844,7 @@ class Irmt(object):
                     self.iface.activeLayer(),
                     discarded_feats_ids_invalid,
                     self.iface.activeLayer().selectedFeatureIds())
-                self.iface.messageBar().pushWidget(widget,
-                                                   QgsMessageBar.WARNING)
+                self.iface.messageBar().pushWidget(widget, Qgis.Warning)
 
     def weight_data(self):
         """
