@@ -813,10 +813,10 @@ def save_layer_as_shapefile(orig_layer, dest_path, crs=None):
         crs = orig_layer.crs()
     old_lc_numeric = locale.getlocale(locale.LC_NUMERIC)
     locale.setlocale(locale.LC_NUMERIC, 'C')
-    write_success = QgsVectorFileWriter.writeAsVectorFormat(
+    writer_error = QgsVectorFileWriter.writeAsVectorFormat(
         orig_layer, dest_path, 'utf-8', crs, 'ESRI Shapefile')
     locale.setlocale(locale.LC_NUMERIC, old_lc_numeric)
-    return write_success
+    return writer_error
 
 
 def _check_type(
@@ -969,9 +969,11 @@ def import_layer_from_csv(parent,
                 dest_filename += ".shp"
         else:
             return
-        result = save_layer_as_shapefile(layer, dest_filename)
-        if result != QgsVectorFileWriter.NoError:
-            raise RuntimeError('Could not save shapefile')
+        writer_error, error_msg = save_layer_as_shapefile(layer, dest_filename)
+        if writer_error:
+            raise RuntimeError(
+                'Could not save shapefile. %s: %s' % (writer_error,
+                                                      error_msg))
         layer = QgsVectorLayer(dest_filename, layer_name, 'ogr')
     if layer.isValid():
         QgsProject.instance().addMapLayer(layer)
