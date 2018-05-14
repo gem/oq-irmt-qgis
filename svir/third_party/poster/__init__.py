@@ -26,7 +26,7 @@ New releases of poster will always have a version number that compares greater
 than an older version of poster.
 New in version 0.6."""
 
-#import third_party.poster.streaminghttp
-#import third_party.poster.encode
+import svir.third_party.poster.streaminghttp
+import svir.third_party.poster.encode
 
-version = (0, 8, 1)  # Thanks JP!
+version = (0, 8, 1) # Thanks JP!
