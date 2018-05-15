@@ -24,7 +24,7 @@ from builtins import str
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 from copy import deepcopy
-from qgis.core import QgsField, QgsExpression, edit, NULL
+from qgis.core import QgsField, QgsExpression, edit, NULL, QgsExpressionContext
 
 from qgis.PyQt.QtCore import QVariant
 
@@ -212,7 +212,7 @@ def calculate_node(
                     'Use a custom field (no recalculation)'):
         customFormula = node.get('customFormula', '')
         expression = QgsExpression(customFormula)
-        if not QgsExpression.checkExpression(customFormula, None, None):
+        if not QgsExpression.checkExpression(customFormula, None):
             raise InvalidFormula('Invalid formula: %s' % customFormula)
         if customFormula == '':
             # use the custom field values instead of recalculating them
@@ -226,10 +226,12 @@ def calculate_node(
         else:
             # attempt to retrieve a formula from the description and to
             # calculate the field values based on that formula
-            expression.prepare(layer.fields())
+            expression.prepare(
+                QgsExpressionContext().setFields((layer.fields())))
             with edit(layer):
                 for feat in layer.getFeatures():
-                    value = expression.evaluate(feat)
+                    value = expression.evaluate(
+                        QgsExpressionContext().setFeature(feat))
                     if value == NULL:
                         discard_feat = True
                         discarded_feat = DiscardedFeature(
