@@ -66,6 +66,9 @@ except:
     saga_was_imported = False
 
 
+# TODO: use new processing algorithm instead. See:
+# https://gis.stackexchange.com/questions/209596/replicating-join-attributes-by-location-using-pyqgis  # NOQA
+# https://anitagraser.com/2018/03/24/revisiting-point-polygon-joins/  # NOQA
 def calculate_zonal_stats(loss_layer,
                           zonal_layer,
                           loss_attr_names,
@@ -140,7 +143,8 @@ def calculate_zonal_stats(loss_layer,
             avg_added = \
                 ProcessLayer(zonal_layer).add_attributes([avg_field])
             # see comment above
-            loss_attrs_dict[loss_attr_name]['avg'] = list(avg_added.values())[0]
+            loss_attrs_dict[loss_attr_name]['avg'] = list(
+                avg_added.values())[0]
     if loss_layer_is_vector:
         # check if the user specified that the loss_layer contains an
         # attribute specifying what's the zone id for each loss point
