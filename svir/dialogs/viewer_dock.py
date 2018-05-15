@@ -50,7 +50,20 @@ except ImportError as exc:
 
 from qgis.PyQt.QtCore import pyqtSlot, QSettings, Qt
 from qgis.PyQt.QtGui import QColor
-from qgis.PyQt.QtWidgets import QLabel, QPlainTextEdit, QComboBox, QSizePolicy, QSpinBox, QPushButton, QCheckBox, QDockWidget, QFileDialog, QAbstractItemView, QTableWidget, QTableWidgetItem
+from qgis.PyQt.QtWidgets import (
+                                 QLabel,
+                                 QPlainTextEdit,
+                                 QComboBox,
+                                 QSizePolicy,
+                                 QSpinBox,
+                                 QPushButton,
+                                 QCheckBox,
+                                 QDockWidget,
+                                 QFileDialog,
+                                 QAbstractItemView,
+                                 QTableWidget,
+                                 QTableWidgetItem,
+                                 )
 from qgis.gui import QgsVertexMarker
 from qgis.core import QgsMapLayer, QgsFeatureRequest, QgsWkbTypes
 
@@ -1142,7 +1155,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
         if (self.iface.activeLayer() is not None
                 and self.iface.activeLayer().type() == QgsMapLayer.VectorLayer
-                and self.iface.activeLayer().geometryType() == QgsWkbTypes.PointGeometry):
+                and self.iface.activeLayer().geometryType()
+                == QgsWkbTypes.PointGeometry):
             self.engine_version = self.iface.activeLayer().customProperty(
                 'engine_version', None)
             self.iface.activeLayer().selectionChanged.connect(
@@ -1495,7 +1509,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     @pyqtSlot(int)
     def on_output_type_cbx_currentIndexChanged(self, index):
         otname = self.output_type_cbx.currentText()
-        for output_type, output_type_name in list(self.output_types_names.items()):
+        for output_type, output_type_name in list(
+                self.output_types_names.items()):
             if output_type_name == otname:
                 self.set_output_type_and_its_gui(output_type)
                 if output_type not in OQ_EXTRACT_TO_VIEW_TYPES:
