@@ -26,7 +26,7 @@ from __future__ import print_function
 import os
 import shutil
 import json
-from qgis.core import QgsVectorFileWriter, QgsCoordinateReferenceSystem
+from qgis.core import QgsCoordinateReferenceSystem
 
 from svir.thread_worker.abstract_worker import AbstractWorker
 from svir.utilities.shared import DEBUG
@@ -72,12 +72,14 @@ class UploadWorker(AbstractWorker):
             # we need to build a shapefile from it
             self.set_message.emit(tr(
                 'Writing the shapefile to be uploaded...'))
-            result = save_layer_as_shapefile(
+            writer_error, error_msg = save_layer_as_shapefile(
                 self.current_layer, data_file,
                 crs=QgsCoordinateReferenceSystem(
                     4326, QgsCoordinateReferenceSystem.EpsgCrsId))
-            if result != QgsVectorFileWriter.NoError:
-                raise RuntimeError('Could not save shapefile')
+            if writer_error:
+                raise RuntimeError(
+                    'Could not save shapefile. %s: %s' % (writer_error,
+                                                          error_msg))
         file_size_mb = os.path.getsize(data_file)
         file_size_mb += os.path.getsize(self.file_stem + '.shx')
         file_size_mb += os.path.getsize(self.file_stem + '.dbf')

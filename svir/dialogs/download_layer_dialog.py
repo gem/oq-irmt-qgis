@@ -112,7 +112,7 @@ class DownloadLayerDialog(QDialog, FORM_CLASS):
         url = '%s%s%s' % (self.sv_downloader.host, wfs, params)
         result = self.sv_downloader.sess.get(url)
         if result.status_code == 200:
-            self.parse_get_capabilities(result.content)
+            self.parse_get_capabilities(result.content.decode('utf8'))
         else:
             raise SvNetworkError(
                 "Unable to download layers: %s" % result.error)
@@ -234,7 +234,7 @@ class DownloadLayerDialog(QDialog, FORM_CLASS):
             log_msg(msg, level='C', message_bar=self.iface.messageBar())
             return
         supplemental_information = json.loads(
-            get_supplemental_information_resp.content)
+            get_supplemental_information_resp.content.decode('utf8'))
         # attempt to convert supplemental information in old list format
         # or those that did not nest project definitions into a
         # project_definitions attribute

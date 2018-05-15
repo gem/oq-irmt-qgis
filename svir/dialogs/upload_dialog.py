@@ -194,7 +194,8 @@ class UploadDialog(QDialog, FORM_CLASS):
         platform_login(
             self.hostname, self.username, self.password, self.session)
         sessionid = dict_from_cookiejar(self.session.cookies)['sessionid']
-        sessionid_cookie = QNetworkCookie('sessionid', sessionid)
+        sessionid_cookie = QNetworkCookie(
+            b'sessionid', sessionid.encode('utf8'))
         self.cookie_jar.setCookiesFromUrl(
             [sessionid_cookie], QUrl(self.hostname))
 

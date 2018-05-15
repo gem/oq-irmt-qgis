@@ -1,7 +1,5 @@
-from future import standard_library
-standard_library.install_aliases()
 # -*- coding: utf-8 -*-
-#/***************************************************************************
+# /***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
@@ -54,5 +52,5 @@ class DownloadPlatformProjectWorker(AbstractWorker):
         shape_url = shape_url_fmt % (self.downloader.host, self.layer_id)
         request = self.downloader.sess.get(shape_url)
 
-        downloaded_zip = zipfile.ZipFile(io.StringIO(request.content))
+        downloaded_zip = zipfile.ZipFile(io.BytesIO(request.content))
         return downloaded_zip

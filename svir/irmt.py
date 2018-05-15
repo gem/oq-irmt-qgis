@@ -35,9 +35,9 @@ import re
 
 from copy import deepcopy
 from math import floor, ceil
-from qgis.core import (QgsVectorLayer,
+from qgis.core import (
+                       QgsVectorLayer,
                        QgsMapLayer,
-                       QgsVectorFileWriter,
                        QgsGraduatedSymbolRenderer,
                        QgsSymbol, QgsGradientColorRamp,
                        QgsRuleBasedRenderer,
@@ -46,9 +46,16 @@ from qgis.core import (QgsVectorLayer,
                        QgsExpression,
                        Qgis,
                        )
-from qgis.gui import QgsMessageBar
 
-from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, qVersion, QUrl, Qt, QUrlQuery
+from qgis.PyQt.QtCore import (
+                              QSettings,
+                              QTranslator,
+                              QCoreApplication,
+                              qVersion,
+                              QUrl,
+                              Qt,
+                              QUrlQuery,
+                              )
 from qgis.PyQt.QtWidgets import QAction, QFileDialog, QApplication, QMenu
 from qgis.PyQt.QtGui import QIcon, QDesktopServices
 
@@ -709,9 +716,12 @@ class Irmt(object):
                 raise RuntimeError('Layer invalid')
             layer = vlayer_csv
         else:
-            result = save_layer_as_shapefile(vlayer_csv, dest_filename)
-            if result != QgsVectorFileWriter.NoError:
-                raise RuntimeError('Could not save shapefile')
+            writer_error, error_msg = save_layer_as_shapefile(
+                vlayer_csv, dest_filename)
+            if writer_error:
+                raise RuntimeError(
+                    'Could not save shapefile. %s: %s' % (writer_error,
+                                                          error_msg))
             layer = QgsVectorLayer(
                 dest_filename, 'Socioeconomic data', 'ogr')
             if layer.isValid():

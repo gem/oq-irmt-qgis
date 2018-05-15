@@ -25,18 +25,27 @@ from builtins import str
 
 # create the dialog for zoom to point
 import os.path
-from qgis.core import (QgsVectorLayer,
-                       Qgis,
+from qgis.core import (
+                       QgsVectorLayer,
                        QgsWkbTypes,
                        QgsRasterLayer,
                        QgsProject,
-                       QgsVectorFileWriter,
                        QgsMapLayer,
                        )
-
-from qgis.PyQt.QtCore import pyqtSlot, QDir, QUrl, QSettings, QFileInfo, QUrlQuery
-
-from qgis.PyQt.QtWidgets import QFileDialog, QDialog, QDialogButtonBox, QMessageBox
+from qgis.PyQt.QtCore import (
+                              pyqtSlot,
+                              QDir,
+                              QUrl,
+                              QSettings,
+                              QFileInfo,
+                              QUrlQuery,
+                              )
+from qgis.PyQt.QtWidgets import (
+                                 QFileDialog,
+                                 QDialog,
+                                 QDialogButtonBox,
+                                 QMessageBox,
+                                 )
 from svir.calculations.aggregate_loss_by_zone import (
     calculate_zonal_stats,
     purge_zones_without_loss_points)
@@ -274,9 +283,11 @@ class SelectInputLayersDialog(QDialog, FORM_CLASS):
                 dest_filename += ".shp"
         else:
             return
-        result = save_layer_as_shapefile(csv_layer, dest_filename)
-        if result != QgsVectorFileWriter.NoError:
-            raise RuntimeError('Could not save shapefile')
+        writer_error, error_msg = save_layer_as_shapefile(
+            csv_layer, dest_filename)
+        if writer_error:
+            raise RuntimeError(
+                'Could not save shapefile. %s: %s' % (writer_error, error_msg))
         shp_layer = QgsVectorLayer(
             dest_filename, 'Loss data', 'ogr')
         if delete_lon_lat:
