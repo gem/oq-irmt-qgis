@@ -24,7 +24,7 @@
 
 import os
 import tempfile
-from svir.utilities.utils import import_layer_from_csv
+from svir.utilities.utils import import_layer_from_csv, log_msg
 from svir.utilities.shared import OQ_BASIC_CSV_TO_LAYER_TYPES
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 
@@ -66,8 +66,12 @@ class LoadBasicCsvAsLayerDialog(LoadOutputAsLayerDialog):
         csv_path = self.path_le.text()
         # extract the name of the csv file and remove the extension
         layer_name = os.path.splitext(os.path.basename(csv_path))[0]
-        self.layer = import_layer_from_csv(
-            self, csv_path, layer_name, self.iface,
-            save_as_shp=False, dest_shp=dest_shp,
-            zoom_to_layer=False, has_geom=False)
+        try:
+            self.layer = import_layer_from_csv(
+                self, csv_path, layer_name, self.iface,
+                save_as_shp=False, dest_shp=dest_shp,
+                zoom_to_layer=False, has_geom=False)
+        except RuntimeError as exc:
+            log_msg(str(exc), level='C', message_bar=self.iface.messageBar())
+            return
         self.iface.showAttributeTable(self.layer)

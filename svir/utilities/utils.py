@@ -961,11 +961,13 @@ def import_layer_from_csv(parent,
     layer_uri = url.toString()
     layer = QgsVectorLayer(layer_uri, layer_name, "delimitedtext")
     if save_as_shp:
-        dest_filename = dest_shp or QFileDialog.getSaveFileName(
-            parent,
-            'Save loss shapefile as...',
-            os.path.expanduser("~"),
-            'Shapefiles (*.shp)')
+        dest_filename = dest_shp
+        if not dest_filename:
+            dest_filename, file_filter = QFileDialog.getSaveFileName(
+                parent,
+                'Save shapefile as...',
+                os.path.expanduser("~"),
+                'Shapefiles (*.shp)')
         if dest_filename:
             if dest_filename[-4:] != ".shp":
                 dest_filename += ".shp"
@@ -977,15 +979,16 @@ def import_layer_from_csv(parent,
                 'Could not save shapefile. %s: %s' % (writer_error,
                                                       error_msg))
         layer = QgsVectorLayer(dest_filename, layer_name, 'ogr')
+    print('*' * 30)
+    print('Valid? %s' % layer.isValid())
+    print('*' * 30)
     if layer.isValid():
         QgsProject.instance().addMapLayer(layer)
         iface.setActiveLayer(layer)
         if zoom_to_layer:
             iface.zoomToActiveLayer()
     else:
-        msg = 'Unable to load layer'
-        log_msg(msg, level='C', message_bar=iface.messageBar())
-        return None
+        raise RuntimeError('Unable to load layer')
     return layer
 
 

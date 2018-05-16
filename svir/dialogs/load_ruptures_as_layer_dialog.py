@@ -97,11 +97,16 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
         # extract the name of the csv file and remove the extension
         layer_name = os.path.splitext(os.path.basename(csv_path))[0]
         layer_name += '_%sy' % investigation_time
-        self.layer = import_layer_from_csv(
-            self, csv_path, layer_name, self.iface,
-            wkt_field='boundary', delimiter='\t',
-            lines_to_skip_count=1,
-            save_as_shp=self.save_as_shp_ckb.isChecked(), dest_shp=dest_shp)
+        try:
+            self.layer = import_layer_from_csv(
+                self, csv_path, layer_name, self.iface,
+                wkt_field='boundary', delimiter='\\t',
+                lines_to_skip_count=1,
+                save_as_shp=self.save_as_shp_ckb.isChecked(),
+                dest_shp=dest_shp)
+        except RuntimeError as exc:
+            log_msg(str(exc), level='C', message_bar=self.iface.messageBar())
+            return
         self.layer.setCustomProperty('investigation_time', investigation_time)
         style_by = self.style_by_cbx.itemData(self.style_by_cbx.currentIndex())
         if style_by == 'mag':
