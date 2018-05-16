@@ -700,7 +700,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         for idx, rlz_or_stat in enumerate(rlzs_or_stats):
             marker[idx] = self.markers[idx % len(self.markers)]
             if self.bw_chk.isChecked():
-                line_styles_whole_cycles = idx / len(self.line_styles)
+                line_styles_whole_cycles = idx // len(self.line_styles)
                 # NOTE: 85 is approximately 256 / 3
                 r = g = b = format(
                     (85 * line_styles_whole_cycles) % 256, '02x')
@@ -1078,7 +1078,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                         (i + rlz_or_stat_idx) % len(self.markers)]
                     if self.bw_chk.isChecked():
                         line_styles_whole_cycles = (
-                            (i + rlz_or_stat_idx) / len(self.line_styles))
+                            (i + rlz_or_stat_idx) // len(self.line_styles))
                         # NOTE: 85 is approximately 256 / 3
                         r = g = b = format(
                             (85 * line_styles_whole_cycles) % 256, '02x')
