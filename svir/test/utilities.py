@@ -22,7 +22,7 @@ IFACE = None
 LOGGER = logging.getLogger('IRMT')
 GEOCRS = 4326  # constant for EPSG:GEOCRS Geographic CRS id
 GOOGLECRS = 3857  # constant for EPSG:GOOGLECRS Google Mercator id
-DEVNULL = open(os.devnull, 'w')
+# DEVNULL = open(os.devnull, 'w')
 
 
 __copyright__ = "Copyright 2016, The InaSAFE Project"
