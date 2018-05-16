@@ -288,9 +288,8 @@ class RecoveryModeling(object):
 
         if self.output_data_dir is not None:
             # Save community recovery function
-            f3 = open(filestem + '.txt', "w")
-            f3.write(str(New_communityRecoveryFunction))
-            f3.close()
+            with open(filestem + '.txt', "w") as f3:
+                f3.write(str(New_communityRecoveryFunction))
         return New_communityRecoveryFunction
 
     def generate_simulation_recovery_curve(

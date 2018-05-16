@@ -109,7 +109,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         filename = resp.headers['content-disposition'].split(
             'filename=')[1]
         filepath = os.path.join(dest_folder, filename)
-        open(filepath, "wb").write(resp.content)
+        with open(filepath, "wb") as f:
+            f.write(resp.content)
         return filepath
 
     def load_calc_outputs(self, calc):

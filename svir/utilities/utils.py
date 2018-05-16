@@ -1075,7 +1075,8 @@ def get_credentials(server):
 
 
 def get_checksum(file_path):
-    data = open(file_path, 'rb').read()
+    with open(file_path, 'rb') as f:
+        data = f.read()
     checksum = zlib.adler32(data, 0) & 0xffffffff
     return checksum
 

@@ -522,7 +522,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 data = {'hazard_job_id': calc_id}
             else:
                 data = {}
-            files = {'archive': open(zipped_file_name, 'rb')}
+            with open(zipped_file_name, 'rb') as f:
+                archive = f.read()
+            files = {'archive': archive}
             try:
                 resp = self.session.post(
                     run_calc_url, files=files, data=data, timeout=20)
@@ -597,7 +599,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             filename = resp.headers['content-disposition'].split(
                 'filename=')[1]
             filepath = os.path.join(dest_folder, os.path.basename(filename))
-            open(filepath, "wb").write(resp.content)
+            with open(filepath, "wb") as f:
+                f.write(resp.content)
             log_msg('The datastore has been saved as %s' % filepath,
                     level='I', message_bar=self.message_bar)
 
@@ -804,7 +807,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             filename = resp.headers['content-disposition'].split(
                 'filename=')[1]
             filepath = os.path.join(dest_folder, filename)
-            open(filepath, "wb").write(resp.content)
+            with open(filepath, "wb") as f:
+                f.write(resp.content)
         return filepath
 
     def start_polling(self):

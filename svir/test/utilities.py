@@ -166,7 +166,8 @@ def hash_for_file(filename):
     :param filename:
     """
     path = filename
-    data = open(path, 'rb').read()
+    with open(path, 'rb') as f:
+        data = f.read()
     data_hash = hashlib.md5()
     data_hash.update(data)
     data_hash = data_hash.hexdigest()
