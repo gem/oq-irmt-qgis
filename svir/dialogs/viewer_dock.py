@@ -1410,8 +1410,15 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 headers.extend(field_names)
                 writer.writerow(headers)
                 for feature in self.iface.activeLayer().selectedFeatures():
-                    values = [feature[field_name]
-                              for field_name in field_names]
+                    # FIXME QGIS3: the list comprehension gives a bizarre error
+                    # while testing (no problem in the GUI), so I'm temporarily
+                    # substituting it with a loop
+                    # values = [feature[field_name]
+                    #           for field_name in field_names]
+                    values = []
+                    for field_name in field_names:
+                        value = feature[field_name]
+                        values.append(value)
                     lon = feature.geometry().asPoint().x()
                     lat = feature.geometry().asPoint().y()
                     row = [lon, lat]
