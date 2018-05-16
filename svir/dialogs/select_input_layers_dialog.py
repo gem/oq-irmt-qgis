@@ -273,11 +273,13 @@ class SelectInputLayersDialog(QDialog, FORM_CLASS):
         url.setQuery(url_query)
         layer_uri = url.toString()
         csv_layer = QgsVectorLayer(layer_uri, 'Loss', "delimitedtext")
-        dest_filename = dest_shp or QFileDialog.getSaveFileName(
-            self,
-            'Save loss shapefile as...',
-            os.path.expanduser("~"),
-            'Shapefiles (*.shp)')
+        dest_filename = dest_shp
+        if not dest_filename:
+            dest_filename, _ = QFileDialog.getSaveFileName(
+                self,
+                'Save shapefile as...',
+                os.path.expanduser("~"),
+                'Shapefiles (*.shp)')
         if dest_filename:
             if dest_filename[-4:] != ".shp":
                 dest_filename += ".shp"

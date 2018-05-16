@@ -545,7 +545,7 @@ def ask_for_destination_full_path_name(
 
     :returns: full path name of the destination file
     """
-    full_path_name, filter_string = QFileDialog.getSaveFileName(
+    full_path_name, _ = QFileDialog.getSaveFileName(
         parent, text, directory=os.path.expanduser("~"), filter=filter)
     if full_path_name:
         return full_path_name
