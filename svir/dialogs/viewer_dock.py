@@ -1410,7 +1410,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 headers.extend(field_names)
                 writer.writerow(headers)
                 for feature in self.iface.activeLayer().selectedFeatures():
-                    values = [feature.attribute(field_name)
+                    values = [feature[field_name]
                               for field_name in field_names]
                     lon = feature.geometry().asPoint().x()
                     lat = feature.geometry().asPoint().y()
