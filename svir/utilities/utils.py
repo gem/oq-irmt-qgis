@@ -979,9 +979,6 @@ def import_layer_from_csv(parent,
                 'Could not save shapefile. %s: %s' % (writer_error,
                                                       error_msg))
         layer = QgsVectorLayer(dest_filename, layer_name, 'ogr')
-    print('*' * 30)
-    print('Valid? %s' % layer.isValid())
-    print('*' * 30)
     if layer.isValid():
         QgsProject.instance().addMapLayer(layer)
         iface.setActiveLayer(layer)
