@@ -210,10 +210,14 @@ def calculate_node(
     # 'Use a custom field (no recalculation) as the new one with no parentheses
     if operator in (OPERATORS_DICT['CUSTOM'],
                     'Use a custom field (no recalculation)'):
+        # FIXME QGIS3: still unable to evaluate correctly a formula that
+        # includes fields in the calculation
         customFormula = node.get('customFormula', '')
         expression = QgsExpression(customFormula)
-        if not QgsExpression.checkExpression(customFormula, None):
-            raise InvalidFormula('Invalid formula: %s' % customFormula)
+        valid, err_msg = QgsExpression.checkExpression(customFormula, None)
+        if not valid:
+            raise InvalidFormula(
+                'Invalid formula "%s": %s' % (customFormula, err_msg))
         if customFormula == '':
             # use the custom field values instead of recalculating them
             for feat in layer.getFeatures():
@@ -227,7 +231,7 @@ def calculate_node(
             # attempt to retrieve a formula from the description and to
             # calculate the field values based on that formula
             expression.prepare(
-                QgsExpressionContext().setFields((layer.fields())))
+                QgsExpressionContext().setFields(layer.fields()))
             with edit(layer):
                 for feat in layer.getFeatures():
                     value = expression.evaluate(
