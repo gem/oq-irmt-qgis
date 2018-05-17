@@ -303,9 +303,14 @@ def calculate_node(
                 # (see http://en.wikipedia.org/wiki/Geometric_mean)
                 # is the product of the N combined items, elevated by 1/N
                 try:
+                    # NOTE: in python2 this check was the default. In python3
+                    # it would produce a complex number without raising any
+                    # error
+                    if (node_value < 0
+                            and not (1. / len(children)).is_integer()):
+                        raise ValueError('negative number cannot be raised'
+                                         ' to a fractional power')
                     node_value **= 1. / len(children)
-                # it can raise ValueError: negative number cannot be raised
-                #                          to a fractional power
                 except ValueError:
                     node_value = NULL
                     discarded_feat = DiscardedFeature(feat_id, 'Invalid value')
