@@ -1011,14 +1011,14 @@ def get_params_from_comment_line(comment_line):
     >>> get_params_from_comment_line('h1, h2, h3')
     Traceback (most recent call last):
         ...
-    InvalidHeaderError: Unable to extract parameters from line:
+    svir.utilities.utils.InvalidHeaderError: Unable to extract parameters from line:
     h1, h2, h3
     because the line does not start with "# "
 
     >>> get_params_from_comment_line("# p1=10,p2=20")
     Traceback (most recent call last):
         ...
-    InvalidHeaderError: Unable to extract parameters from line:
+    svir.utilities.utils.InvalidHeaderError: Unable to extract parameters from line:
     # p1=10,p2=20
     """
     err_msg = 'Unable to extract parameters from line:\n%s' % comment_line
