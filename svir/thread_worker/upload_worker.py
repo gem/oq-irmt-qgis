@@ -93,34 +93,15 @@ class UploadWorker(AbstractWorker):
                                  [self.username, "layer_admin"]]
                        }
 
-        with open('%s.shp' % self.file_stem, 'rb') as f:
-            base_file = f.read()
-        with open('%s.dbf' % self.file_stem, 'rb') as f:
-            dbf_file = f.read()
-        with open('%s.shx' % self.file_stem, 'rb') as f:
-            shx_file = f.read()
-        with open('%s.prj' % self.file_stem, 'rb') as f:
-            prj_file = f.read()
-        with open('%s.xml' % self.file_stem, 'rb') as f:
-            xml_file = f.read()
         data = {'layer_title': os.path.basename(self.file_stem),
-                'base_file': base_file,
-                'dbf_file': dbf_file,
-                'shx_file': shx_file,
-                'prj_file': prj_file,
-                'xml_file': xml_file,
+                'base_file': open('%s.shp' % self.file_stem, 'rb'),
+                'dbf_file': open('%s.dbf' % self.file_stem, 'rb'),
+                'shx_file': open('%s.shx' % self.file_stem, 'rb'),
+                'prj_file': open('%s.prj' % self.file_stem, 'rb'),
+                'xml_file': open('%s.xml' % self.file_stem, 'rb'),
                 'charset': 'UTF-8',
                 'permissions': json.dumps(permissions)
                 }
-        # data = {'layer_title': os.path.basename(self.file_stem),
-        #         'base_file': open('%s.shp' % self.file_stem, 'rb'),
-        #         'dbf_file': open('%s.dbf' % self.file_stem, 'rb'),
-        #         'shx_file': open('%s.shx' % self.file_stem, 'rb'),
-        #         'prj_file': open('%s.prj' % self.file_stem, 'rb'),
-        #         'xml_file': open('%s.xml' % self.file_stem, 'rb'),
-        #         'charset': 'UTF-8',
-        #         'permissions': json.dumps(permissions)
-        #         }
 
         # generate headers and data-generator an a requests-compatible format
         # and provide our progress-callback

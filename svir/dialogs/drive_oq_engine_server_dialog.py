@@ -522,9 +522,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 data = {'hazard_job_id': calc_id}
             else:
                 data = {}
-            with open(zipped_file_name, 'rb') as f:
-                archive = f.read()
-            files = {'archive': archive}
+            files = {'archive': open(zipped_file_name, 'rb')}
             try:
                 resp = self.session.post(
                     run_calc_url, files=files, data=data, timeout=20)
