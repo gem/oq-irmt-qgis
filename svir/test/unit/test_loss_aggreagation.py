@@ -143,6 +143,7 @@ class AggregateLossByZoneTestCase(unittest.TestCase):
     def test_aggregate_using_geometries(self):
         self._aggregate_using_geometries()
 
+    @unittest.skip('Temporarily disabled for QGIS3')
     def test_aggregate_using_geometries_forcing_saga(self):
         self._aggregate_using_geometries(force_saga=True)
 
