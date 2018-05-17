@@ -528,8 +528,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.tag_with_all_values = None
         self.change_output_type(output_type)
         self.engine_version = engine_version
-        self.setVisible(
-            True)
+        self.setVisible(True)
         self.raise_()
         if output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
             self.load_agg_curves(calc_id, session, hostname, output_type)

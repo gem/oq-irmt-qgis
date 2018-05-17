@@ -440,7 +440,10 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         layer = IFACE.activeLayer()
         # select the first 2 features (the same used to produce the reference
         # csv)
-        layer.select([1, 2])
+        if layer.featureCount() > 1:
+            layer.select([1, 2])
+        else:
+            layer.select([1])
         imt = 'PGA'
         idx = self.viewer_dock.imt_cbx.findText(imt)
         self.assertNotEqual(idx, -1, 'IMT %s not found' % imt)
@@ -454,7 +457,10 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         layer = IFACE.activeLayer()
         # select the first 2 features (the same used to produce the reference
         # csv)
-        layer.select([1, 2])
+        if layer.featureCount() > 1:
+            layer.select([1, 2])
+        else:
+            layer.select([1])
         # probably we have the wrong layer selected (uhs produce many layers)
         self.viewer_dock.write_export_file(exported_file_path)
         # NOTE: we are only checking that the exported CSV has at least 2 rows
@@ -495,6 +501,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         # depending on the amount of features selected
         layer.select(1)
         layer.removeSelection()
-        layer.select(2)
+        if layer.featureCount() > 1:
+            layer.select(2)
         layer.selectAll()
         layer.removeSelection()
