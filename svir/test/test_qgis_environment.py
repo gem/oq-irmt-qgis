@@ -44,30 +44,6 @@ class QGISTest(unittest.TestCase):
         assert 'delimitedtext' in r.providerList()
         # assert 'wfs' in r.providerList()
 
-    def test_proj_interpretation(self):
-        """Test that QGIS properly parses a proj4 string.
-        see https://github.com/AIFDR/inasafe/issues/349
-        """
-        # noinspection PyCallingNonCallable
-        crs = QgsCoordinateReferenceSystem()
-        proj4 = (
-            'GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",'
-            'SPHEROID["WGS_1984",6378137.0,298.257223563]],'
-            'PRIMEM["Greenwich",0.0],UNIT["Degree",'
-            '0.0174532925199433]]')
-        crs.createFromWkt(proj4)
-        auth_id = crs.authid()
-        expected_auth_id = 'EPSG:4326'
-        self.assertEqual(auth_id, expected_auth_id)
-
-        # now test for a loaded layer
-        path = standard_data_path('hazard', 'jakarta_flood_design.tif')
-        title = 'Jakarta Flood'
-        # noinspection PyCallingNonCallable
-        layer = QgsRasterLayer(path, title)
-        auth_id = layer.crs().authid()
-        self.assertEqual(auth_id, expected_auth_id)
-
 
 if __name__ == '__main__':
     unittest.main()
