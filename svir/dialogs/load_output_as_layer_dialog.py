@@ -477,6 +477,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 inverted = True
             ramp = default_qgs_style.colorRamp(
                 default_color_ramp_names[ramp_type_idx])
+            if inverted:
+                ramp.invert()
         graduated_renderer = QgsGraduatedSymbolRenderer.createRenderer(
             layer,
             style_by,
