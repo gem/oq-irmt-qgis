@@ -9,13 +9,14 @@ RUN apt update && apt -q install -y gnupg2 && \
     apt-key adv --keyserver keyserver.ubuntu.com --recv-key CAEB3DC3BDF7FB45 && \
     apt update && \
     apt upgrade -y && \
-    apt -q install -y build-essential git sudo xvfb zip \
+    apt -q install -y locales build-essential git sudo xvfb zip \
                    qt5-default pyqt5-dev pyqt5-dev-tools \
                    python3-pyqt5.qtwebkit python3-pip \
                    python3-mock python3-nose \
                    python3-nose-exclude python3-scipy \
                    texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended && \
-    pip3 install sphinx==1.4.9 sphinx_rtd_theme
+    pip3 install sphinx==1.4.9 sphinx_rtd_theme && \
+    locale-gen en_US.UTF-8
 
 RUN apt install -y qgis python-qgis && \
     apt clean all
