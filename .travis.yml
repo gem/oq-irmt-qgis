@@ -1,7 +1,7 @@
 env:
-    - QGIS_VERSION=debian-ltr
-    # for now, let's avoid running tests on QGIS3
-    # - QGIS_VERSION=debian
+    # Let's avoid testing on QGIS2
+    # - QGIS_VERSION=debian-ltr
+    - QGIS_VERSION=debian
 
 dist: trusty
 services: docker
