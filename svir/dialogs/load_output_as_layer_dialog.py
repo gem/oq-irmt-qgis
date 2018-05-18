@@ -302,7 +302,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             raise NotImplementedError(self.output_type)
         default_dir = QSettings().value('irmt/load_as_layer_dir',
                                         QDir.homePath())
-        path, __ = QFileDialog.getOpenFileName(
+        path, _ = QFileDialog.getOpenFileName(
             self, text, default_dir, filters)
         if not path:
             return
@@ -586,7 +586,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                           'All files (*.*)')
         default_dir = QSettings().value('irmt/select_layer_dir',
                                         QDir.homePath())
-        file_name, file_type = QFileDialog.getOpenFileName(
+        file_name, _ = QFileDialog.getOpenFileName(
             self, text, default_dir, filters)
         if not file_name:
             return None
