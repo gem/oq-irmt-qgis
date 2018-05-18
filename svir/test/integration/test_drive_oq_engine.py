@@ -440,7 +440,10 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         layer = IFACE.activeLayer()
         # select the first 2 features (the same used to produce the reference
         # csv)
-        if layer.featureCount() > 1:
+        num_feats = layer.featureCount()
+        self.assertGreater(
+            num_feats, 0, 'The layer does not contain any feature!')
+        if num_feats > 1:
             layer.select([1, 2])
         else:
             layer.select([1])
@@ -457,7 +460,10 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         layer = IFACE.activeLayer()
         # select the first 2 features (the same used to produce the reference
         # csv)
-        if layer.featureCount() > 1:
+        num_feats = layer.featureCount()
+        self.assertGreater(
+            num_feats, 0, 'The layer does not contain any feature!')
+        if num_feats > 1:
             layer.select([1, 2])
         else:
             layer.select([1])
@@ -499,9 +505,12 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         layer = IFACE.activeLayer()
         # the behavior should be slightly different (pluralizing labels, etc)
         # depending on the amount of features selected
+        num_feats = layer.featureCount()
+        self.assertGreater(
+            num_feats, 0, 'The layer does not contain any feature!')
         layer.select(1)
         layer.removeSelection()
-        if layer.featureCount() > 1:
+        if num_feats > 1:
             layer.select(2)
         layer.selectAll()
         layer.removeSelection()
