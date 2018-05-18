@@ -49,6 +49,7 @@ class TestInit(unittest.TestCase):
             os.path.join(
                 os.path.dirname(__file__),
                 os.pardir,
+                os.pardir,
                 'metadata.txt'))
         LOGGER.info(file_path)
         metadata = []
