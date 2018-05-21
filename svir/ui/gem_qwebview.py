@@ -23,7 +23,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
-from builtins import str
 
 import os
 from qgis.PyQt.QtWebKitWidgets import QWebView

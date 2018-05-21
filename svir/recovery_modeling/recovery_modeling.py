@@ -1,7 +1,3 @@
-from builtins import str
-from builtins import range
-from builtins import object
-
 # -*- coding: utf-8 -*-
 # /***************************************************************************
 # Irmt

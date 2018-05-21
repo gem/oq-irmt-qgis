@@ -1,8 +1,5 @@
-
 # coding=utf-8
 """Tests for map creation in QGIS plugin."""
-from future import standard_library
-standard_library.install_aliases()
 
 __author__ = 'Tim Sutton <tim@kartoza.com>'
 __revision__ = '$Format:%H$'
