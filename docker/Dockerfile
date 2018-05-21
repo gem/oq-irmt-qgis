@@ -18,7 +18,12 @@ RUN apt update && apt -q install -y gnupg2 && \
     pip3 install sphinx==1.4.9 sphinx_rtd_theme && \
     locale-gen en_US.UTF-8
 
-RUN apt install -y qgis python-qgis && \
+# Perform cache invalidation when new packages are out
+# a new 'apt update' is always performed to comply
+# with the cache invalidation
+ADD http://qgis.org/debian/dists/bionic/main/binary-amd64/Packages /tmp/nocache.json
+RUN apt update && \
+    apt install -y qgis python-qgis && \
     apt clean all
 
 ARG uid=1000
