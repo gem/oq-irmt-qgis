@@ -27,11 +27,19 @@ from builtins import str
 
 import os
 from qgis.PyQt.QtWebKitWidgets import QWebView
+from qgis.PyQt.QtWebKit import QWebSettings
 from qgis.PyQt.QtNetwork import (QNetworkAccessManager,
                                  QNetworkCookieJar,
                                  QNetworkCookie,
                                  )
-from qgis.PyQt.QtCore import QMutex, QSettings, QByteArray, pyqtSlot, QUrl
+from qgis.PyQt.QtCore import (
+                              QMutex,
+                              QSettings,
+                              QByteArray,
+                              pyqtSlot,
+                              QUrl,
+                              QMutexLocker,
+                              )
 from qgis.PyQt.QtWidgets import QSizePolicy, QFileDialog
 from svir.utilities.shared import DEBUG, REQUEST_ATTRS
 from svir.utilities.utils import (tr,
@@ -269,6 +277,6 @@ class PersistentCookieJar(QNetworkCookieJar):
 
     def load_cookies(self):
         with QMutexLocker(self.mutex):
-            data = QSettings().value("irmt/cookies", "")
+            data = QSettings().value("irmt/cookies", QByteArray())
             cookies = QNetworkCookie.parseCookies(data)
             self.setAllCookies(cookies)
