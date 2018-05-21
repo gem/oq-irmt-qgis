@@ -1,6 +1,4 @@
-from __future__ import print_function
 from builtins import str
-from builtins import object
 # -*- coding: utf-8 -*-
 # /***************************************************************************
 # Irmt
@@ -29,7 +27,7 @@ import qgis  # NOQA: it loads the environment
 
 import os.path
 import tempfile
-import uuid
+from uuid import uuid4
 import fileinput
 import re
 
@@ -55,6 +53,9 @@ from qgis.PyQt.QtCore import (
                               QUrl,
                               Qt,
                               QUrlQuery,
+                              pyqtSlot,
+                              pyqtSignal,
+                              QObject,
                               )
 from qgis.PyQt.QtWidgets import QAction, QFileDialog, QApplication, QMenu
 from qgis.PyQt.QtGui import QIcon, QDesktopServices
@@ -71,9 +72,9 @@ from svir.dialogs.upload_settings_dialog import UploadSettingsDialog
 from svir.dialogs.weight_data_dialog import WeightDataDialog
 # from svir.dialogs.recovery_modeling_dialog import RecoveryModelingDialog
 # from svir.dialogs.recovery_settings_dialog import RecoverySettingsDialog
-from svir.dialogs.ipt_dialog import IptDialog
-from svir.dialogs.taxtweb_dialog import TaxtwebDialog
-from svir.dialogs.taxonomy_dialog import TaxonomyDialog
+# from svir.dialogs.ipt_dialog import IptDialog
+# from svir.dialogs.taxtweb_dialog import TaxtwebDialog
+# from svir.dialogs.taxonomy_dialog import TaxonomyDialog
 from svir.dialogs.drive_oq_engine_server_dialog import (
     DriveOqEngineServerDialog)
 from svir.dialogs.load_ruptures_as_layer_dialog import (
@@ -82,6 +83,10 @@ from svir.dialogs.load_ruptures_as_layer_dialog import (
 from svir.thread_worker.abstract_worker import start_worker
 from svir.thread_worker.download_platform_data_worker import (
     DownloadPlatformDataWorker)
+from svir.websocket.simple_websocket_server import SimpleWebSocketServer
+from svir.websocket.ipt_app import IptApp
+from svir.websocket.taxonomy_app import TaxonomyApp
+from svir.websocket.taxtweb_app import TaxtwebApp
 from svir.calculations.calculate_utils import calculate_composite_variable
 from svir.calculations.process_layer import ProcessLayer
 from svir.utilities.utils import (tr,
@@ -113,8 +118,13 @@ import svir.resources_rc  # pylint: disable=unused-import  # NOQA
 from svir import IS_SCIPY_INSTALLED
 
 
-class Irmt(object):
+class Irmt(QObject):
+
+    irmt_sig = pyqtSignal('QVariantMap')
+    send_to_wss_sig = pyqtSignal('QVariantMap')
+
     def __init__(self, iface):
+        super(Irmt, self).__init__()
         # Save reference to the QGIS interface
         self.iface = iface
         self.canvas = self.iface.mapCanvas()
@@ -144,9 +154,6 @@ class Irmt(object):
 
         # avoid dialog to be deleted right after showing it
         self.drive_oq_engine_server_dlg = None
-        self.ipt_dlg = None
-        self.taxtweb_dlg = None
-        self.taxonomy_dlg = None
 
         # keep track of the supplemental information for each layer
         # layer_id -> {}
@@ -163,6 +170,14 @@ class Irmt(object):
 
         # get or create directory to store input files for the OQ-Engine
         self.ipt_dir = self.get_ipt_dir()
+
+        self.websocket_thread = None
+        self.start_websocket()
+        self.ipt_app = None
+        self.taxtweb_app = None
+        self.taxonomy_app = None
+        self.web_apps = {}
+        self.instantiate_web_apps()
 
     def initGui(self):
         # create our own toolbar
@@ -205,6 +220,22 @@ class Irmt(object):
                            enable=False,
                            add_to_layer_actions=True,
                            submenu='OQ Platform')
+        # Action to drive ipt
+        self.add_menu_item("ipt_set_cells",
+                           ":/plugins/irmt/ipt.svg",
+                           u"IPT set cells",
+                           self.ipt_set_cells,
+                           enable=self.experimental_enabled(),
+                           submenu='OQ Engine',
+                           add_to_toolbar=True)
+        # Action to drive ipt
+        self.add_menu_item("taxtweb_set_cells",
+                           ":/plugins/irmt/taxtweb.svg",
+                           u"Taxtweb set cells",
+                           self.taxtweb_set_cells,
+                           enable=self.experimental_enabled(),
+                           submenu='OQ Engine',
+                           add_to_toolbar=True)
         # Action to drive ipt
         self.add_menu_item("ipt",
                            ":/plugins/irmt/ipt.svg",
@@ -344,28 +375,32 @@ class Irmt(object):
         dlg = LoadRupturesAsLayerDialog(self.iface, 'ruptures')
         dlg.exec_()
 
+    def ipt_set_cells(self):
+        self._set_cells(self.ipt_app)
+
+    def taxtweb_set_cells(self):
+        self._set_cells(self.taxtweb_app)
+
+    def _set_cells(self, web_app):
+        resp = web_app.run_command('set_cells', args=['pippo', 'pluto'])
+        if resp is not None:
+            log_msg(resp, level='C', message_bar=self.iface.messageBar())
+
     def ipt(self):
-        if self.ipt_dlg is None:
-            # we need self because ipt must be able to drive the oq-engine
-            self.ipt_dlg = IptDialog(self.ipt_dir, self)
-        self.ipt_dlg.show()
-        self.ipt_dlg.raise_()
+        resp = self.ipt_app.run_command('window_open')
+        if resp is not None:
+            log_msg(resp, level='C', message_bar=self.iface.messageBar())
+        self.irmt_sig.emit({'msg': 'hello Matteo'})
 
     def taxtweb(self):
-        if self.taxtweb_dlg is None:
-            self.instantiate_taxonomy_dlg()
-            self.taxtweb_dlg = TaxtwebDialog(self.taxonomy_dlg)
-        self.taxtweb_dlg.show()
-        self.taxtweb_dlg.raise_()
-
-    def instantiate_taxonomy_dlg(self):
-        if self.taxonomy_dlg is None:
-            self.taxonomy_dlg = TaxonomyDialog()
+        resp = self.taxtweb_app.run_command('window_open')
+        if resp is not None:
+            log_msg(resp, level='C', message_bar=self.iface.messageBar())
 
     def taxonomy(self):
-        self.instantiate_taxonomy_dlg()
-        self.taxonomy_dlg.show()
-        self.taxonomy_dlg.raise_()
+        resp = self.taxonomy_app.run_command('window_open')
+        if resp is not None:
+            log_msg(resp, level='C', message_bar=self.iface.messageBar())
 
     def on_drive_oq_engine_server_btn_clicked(self):
         # we can't call drive_oq_engine_server directly, otherwise the signal
@@ -553,6 +588,9 @@ class Irmt(object):
             self.layers_added)
         QgsProject.instance().layersRemoved.disconnect(
             self.layers_removed)
+
+        # shutdown websocket server
+        self.stop_websocket()
 
     def aggregate_losses(self):
         """
@@ -1334,7 +1372,7 @@ class Irmt(object):
         Open a dialog to upload the current project to the OpenQuake Platform
         """
         temp_dir = tempfile.gettempdir()
-        file_stem = '%s%sqgis_irmt_%s' % (temp_dir, os.path.sep, uuid.uuid4())
+        file_stem = '%s%sqgis_irmt_%s' % (temp_dir, os.path.sep, uuid4())
 
         active_layer_id = self.iface.activeLayer().id()
         read_layer_suppl_info_from_qgs(
@@ -1389,8 +1427,69 @@ class Irmt(object):
         return ipt_dir
 
     def get_ipt_checksum(self):
-        unique_filename = ".%s" % uuid.uuid4().hex
+        unique_filename = ".%s" % uuid4().hex
         checksum_file_path = os.path.join(self.ipt_dir, unique_filename)
         with open(checksum_file_path, "w") as f:
             f.write(os.urandom(32))
         return checksum_file_path, get_checksum(checksum_file_path)
+
+    @pyqtSlot(str)
+    def handle_wss_error_sig(self, data):
+        log_msg("wss_error_sig: %s" % data, level='C',
+                message_bar=self.iface.messageBar())
+
+    @pyqtSlot('QVariantMap')
+    def handle_from_socket_received(self, hyb_msg):
+        log_msg("handle_from_socket_received: %s" % hyb_msg)
+
+        app_name = hyb_msg['app']
+        api_msg = hyb_msg['msg']
+        app = self.web_apps[app_name]
+
+        app.receive(api_msg)
+
+    @pyqtSlot('QVariantMap')
+    def handle_from_socket_sent(self, data):
+        log_msg("from_socket_sent: %s" % data)
+
+    def start_websocket(self):
+        if self.websocket_thread is not None:
+            log_msg("Server loop already running in thread: %s"
+                    % self.websocket_thread.name,
+                    message_bar=self.iface.messageBar())
+            return
+        host = 'localhost'
+        port = 8000
+        self.websocket_thread = SimpleWebSocketServer(host, port, self)
+        self.websocket_thread.wss_error_sig['QVariantMap'].connect(
+            self.handle_wss_error_sig)
+        self.websocket_thread.from_socket_received['QVariantMap'].connect(
+            self.handle_from_socket_received)
+        self.websocket_thread.from_socket_sent['QVariantMap'].connect(
+            self.handle_from_socket_sent)
+        self.websocket_thread.start()
+        log_msg("Web socket server started",
+                message_bar=self.iface.messageBar())
+
+    def stop_websocket(self):
+        if self.websocket_thread is not None:
+            self.websocket_thread.stop_running()
+            if self.websocket_thread.wait(5000):
+                log_msg("Web socket server stopped",
+                        message_bar=self.iface.messageBar())
+            else:  # timed out before finishing execution
+                self.websocket_thread.terminate()
+                log_msg("Web socket server stopped with force",
+                        level='W', message_bar=self.iface.messageBar())
+            self.websocket_thread.exit()
+            self.websocket_thread = None
+
+    def instantiate_web_apps(self):
+        self.ipt_app = IptApp(self.websocket_thread, self.iface.messageBar())
+        self.taxtweb_app = TaxtwebApp(
+            self.websocket_thread, self.iface.messageBar())
+        self.taxonomy_app = TaxonomyApp(
+            self.websocket_thread, self.iface.messageBar())
+        self.web_apps = {'ipt': self.ipt_app,
+                         'taxtweb': self.taxtweb_app,
+                         'taxonomy': self.taxonomy}
