@@ -23,8 +23,8 @@ install:
     - pip -q install -U pip
     - pip -q install -r oq-engine/requirements-py35-linux64.txt
     - pip -q install -e oq-engine
-    # - docker build --build-arg uid=$(id -u) -t openquake/qgis-builder:3 -f docker/Dockerfile docker/
     - docker pull openquake/qgis-builder:3
+    - docker build --build-arg uid=$(id -u) -t openquake/qgis-builder:3 -f docker/Dockerfile docker/
 
 before_script:
     - oq restore oqdata-${BRANCH}.zip ~/oqdata
