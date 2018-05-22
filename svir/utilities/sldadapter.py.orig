@@ -47,9 +47,9 @@ RASTER_SLD_TEMPLATE = (
     '<sld:Name>STYLE_NAME</sld:Name>'
     '<sld:Title/>'
     '<sld:FeatureTypeStyle>'
-    # '<sld:Name>name</sld:Name>'
+    '<sld:Name>name</sld:Name>'
     '<sld:Rule>'
-    # '<sld:Name>Single symbol</sld:Name>'
+    '<sld:Name>Single symbol</sld:Name>'
     '<RasterSymbolizer>'
     'SYMBOLIZER_CODE'
     '</RasterSymbolizer>'
@@ -141,116 +141,15 @@ def adaptGsToQgs(sld):
 
 
 def getGsCompatibleSld(layer, style_name):
+
+    print(style_name)
+
     sld = getStyleAsSld(layer, style_name)
+
     if sld is not None:
-        return adaptQgsToGs(sld, layer)
+        return sld
     else:
         return None
-# QDomElement QgsFeatureRendererV2::writeSld( QDomDocument& doc, const QString& styleName ) const
-#   492 {
-#   493   QDomElement userStyleElem = doc.createElement( "UserStyle" );
-#   494
-#   495   QDomElement nameElem = doc.createElement( "se:Name" );
-#   496   nameElem.appendChild( doc.createTextNode( styleName ) );
-#   497   userStyleElem.appendChild( nameElem );
-#   498
-#   499   QDomElement featureTypeStyleElem = doc.createElement( "se:FeatureTypeStyle" );
-#   500   toSld( doc, featureTypeStyleElem );
-#   501   userStyleElem.appendChild( featureTypeStyleElem );
-#   502
-#   503   return userStyleElem;
-#   504 }
-
- # void QgsRuleBasedRendererV2::Rule::toSld( QDomDocument& doc, QDomElement &element, QgsStringMap props )
- #  300 {
- #  301   // do not convert this rule if there are no symbols
- #  302   if ( symbols().isEmpty() )
- #  303     return;
- #  304
- #  305   if ( !mFilterExp.isEmpty() )
- #  306   {
- #  307     if ( !props.value( "filter", "" ).isEmpty() )
- #  308       props[ "filter" ] += " AND ";
- #  309     props[ "filter" ] += mFilterExp;
- #  310   }
- #  311
- #  312   if ( mScaleMinDenom != 0 )
- #  313   {
- #  314     bool ok;
- #  315     int parentScaleMinDenom = props.value( "scaleMinDenom", "0" ).toInt( &ok );
- #  316     if ( !ok || parentScaleMinDenom <= 0 )
- #  317       props[ "scaleMinDenom" ] = QString::number( mScaleMinDenom );
- #  318     else
- #  319       props[ "scaleMinDenom" ] = QString::number( qMax( parentScaleMinDenom, mScaleMinDenom ) );
- #  320   }
- #  321
- #  322   if ( mScaleMaxDenom != 0 )
- #  323   {
- #  324     bool ok;
- #  325     int parentScaleMaxDenom = props.value( "scaleMaxDenom", "0" ).toInt( &ok );
- #  326     if ( !ok || parentScaleMaxDenom <= 0 )
- #  327       props[ "scaleMaxDenom" ] = QString::number( mScaleMaxDenom );
- #  328     else
- #  329       props[ "scaleMaxDenom" ] = QString::number( qMin( parentScaleMaxDenom, mScaleMaxDenom ) );
- #  330   }
- #  331
- #  332   if ( mSymbol )
- #  333   {
- #  334     QDomElement ruleElem = doc.createElement( "se:Rule" );
- #  335     element.appendChild( ruleElem );
- #  336
- #  337     //XXX: <se:Name> is the rule identifier, but our the Rule objects
- #  338     // have no properties could be used as identifier. Use the label.
- #  339     QDomElement nameElem = doc.createElement( "se:Name" );
- #  340     nameElem.appendChild( doc.createTextNode( mLabel ) );
- #  341     ruleElem.appendChild( nameElem );
- #  342
- #  343     if ( !mLabel.isEmpty() || !mDescription.isEmpty() )
- #  344     {
- #  345       QDomElement descrElem = doc.createElement( "se:Description" );
- #  346       if ( !mLabel.isEmpty() )
- #  347       {
- #  348         QDomElement titleElem = doc.createElement( "se:Title" );
- #  349         titleElem.appendChild( doc.createTextNode( mLabel ) );
- #  350         descrElem.appendChild( titleElem );
- #  351       }
- #  352       if ( !mDescription.isEmpty() )
- #  353       {
- #  354         QDomElement abstractElem = doc.createElement( "se:Abstract" );
- #  355         abstractElem.appendChild( doc.createTextNode( mDescription ) );
- #  356         descrElem.appendChild( abstractElem );
- #  357       }
- #  358       ruleElem.appendChild( descrElem );
- #  359     }
- #  360
- #  361     if ( !props.value( "filter", "" ).isEmpty() )
- #  362     {
- #  363       QgsSymbolLayerV2Utils::createFunctionElement( doc, ruleElem, props.value( "filter", "" ) );
- #  364     }
- #  365
- #  366     if ( !props.value( "scaleMinDenom", "" ).isEmpty() )
- #  367     {
- #  368       QDomElement scaleMinDenomElem = doc.createElement( "se:MinScaleDenominator" );
- #  369       scaleMinDenomElem.appendChild( doc.createTextNode( props.value( "scaleMinDenom", "" ) ) );
- #  370       ruleElem.appendChild( scaleMinDenomElem );
- #  371     }
- #  372
- #  373     if ( !props.value( "scaleMaxDenom", "" ).isEmpty() )
- #  374     {
- #  375       QDomElement scaleMaxDenomElem = doc.createElement( "se:MaxScaleDenominator" );
- #  376       scaleMaxDenomElem.appendChild( doc.createTextNode( props.value( "scaleMaxDenom", "" ) ) );
- #  377       ruleElem.appendChild( scaleMaxDenomElem );
- #  378     }
- #  379
- #  380     mSymbol->toSld( doc, ruleElem, props );
- #  381   }
- #  382
- #  383   // loop into childern rule list
- #  384   for ( RuleList::iterator it = mChildren.begin(); it != mChildren.end(); ++it )
- #  385   {
- #  386     ( *it )->toSld( doc, element, props );
- #  387   }
- #  388 }
 
 
 def getStyleAsSld(layer, styleName):
