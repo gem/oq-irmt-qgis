@@ -85,11 +85,7 @@ class UploadWorker(AbstractWorker):
         self.upload_size_msg = tr('Uploading ~%s MB...' % file_size_mb)
         self.set_message.emit(self.upload_size_msg)
         permissions = {
-                       # "authenticated": "_none",
-                       # "anonymous": "_none",
-                       # "users": [[self.username, "layer_readwrite"],
-                       #           [self.username, "layer_admin"]]
-                       "users": {  # "anonymousUser": [],
+                       "users": {
                                  self.username: [
                                      'change_layer_data',
                                      'change_layer_style', 'add_layer',
@@ -102,20 +98,6 @@ class UploadWorker(AbstractWorker):
                                      'change_resourcebase_permissions',
                                      'publish_resourcebase',
                                   ]
-                                 }
-                       "groups": {  # "anonymousUser": [],
-                                 # self.group: [
-                                 'change_layer_data',
-                                 'change_layer_style', 'add_layer',
-                                 'change_layer', 'delete_layer',
-                                 'view_resourcebase',
-                                 'download_resourcebase',
-                                 'change_resourcebase_metadata',
-                                 'change_resourcebase',
-                                 'delete_resourcebase',
-                                 'change_resourcebase_permissions',
-                                 'publish_resourcebase',
-                                 # ]
                                  }
                        }
         data = {'layer_title': os.path.basename(self.file_stem),
