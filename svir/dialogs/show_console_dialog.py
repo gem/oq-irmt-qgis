@@ -22,7 +22,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-from qgis.PyQt.QtCore import QTimer, QObject
+from qgis.PyQt.QtCore import QTimer
 from qgis.PyQt.QtWidgets import QDialog
 from svir.utilities.utils import get_ui_class
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#/***************************************************************************
+# /***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
@@ -31,9 +31,9 @@ from qgis.PyQt.QtGui import QIcon
 from svir.test.utilities import get_qgis_app
 QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 
-#import irmt
-#IRMT = irmt.classFactory(IFACE)
-#IRMT.ui = irmt.plugin.dlg.ui  # useful for shorthand later
+# import irmt
+# IRMT = irmt.classFactory(IFACE)
+# IRMT.ui = irmt.plugin.dlg.ui  # useful for shorthand later
 
 
 class IrmtTest(unittest.TestCase):
@@ -54,9 +54,10 @@ class IrmtTest(unittest.TestCase):
         self.assertFalse(icon.isNull())
 
     def test_toggle_active_actions(self):
-        #print(IRMT.registered_actions())
-        #self.assertFalse()
+        # print(IRMT.registered_actions())
+        # self.assertFalse()
         pass
+
 
 if __name__ == "__main__":
     suite = unittest.makeSuite(IrmtTest)

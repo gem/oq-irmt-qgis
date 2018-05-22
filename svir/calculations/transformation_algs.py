@@ -64,7 +64,8 @@ def transform(features_dict, algorithm, variant_name="", inverse=False):
         del f_dict_copy[key]
     transformed_list, invalid_input_values = algorithm(
         list(f_dict_copy.values()), variant_name, inverse)
-    transformed_dict = dict(list(zip(list(f_dict_copy.keys()), transformed_list)))
+    transformed_dict = dict(
+        list(zip(list(f_dict_copy.keys()), transformed_list)))
     # add to the transformed_dict the null elements that were removed
     transformed_dict.update(dict_of_null_values)
     return transformed_dict, invalid_input_values
@@ -286,7 +287,8 @@ def simple_quadratic(input_list, variant_name="INCREASING", inverse=False):
     if variant_name == "INCREASING":
         output_list = [(x - bottom) ** 2 / squared_range for x in input_list]
     elif variant_name == "DECREASING":
-        output_list = [(max_input - (x - bottom)) ** 2 / squared_range for x in input_list]
+        output_list = [(max_input - (x - bottom)) ** 2 / squared_range
+                       for x in input_list]
 
     else:
         raise NotImplementedError("%s variant not implemented" % variant_name)

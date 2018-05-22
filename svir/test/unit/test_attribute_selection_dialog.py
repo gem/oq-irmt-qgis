@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#/***************************************************************************
+# /***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
@@ -79,6 +79,7 @@ class AttributeSelectionDialogTest(unittest.TestCase):
         button.click()
         result = self.dialog.result()
         self.assertEqual(result, QDialog.Rejected)
+
 
 if __name__ == "__main__":
     suite = unittest.makeSuite(AttributeSelectionDialogTest)

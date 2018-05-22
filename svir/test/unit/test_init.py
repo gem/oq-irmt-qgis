@@ -1,3 +1,8 @@
+import os
+import unittest
+import logging
+import configparser
+
 # coding=utf-8
 """Tests for map creation in QGIS plugin."""
 
@@ -7,11 +12,6 @@ __date__ = '17/10/2010'
 __license__ = "GPL"
 __copyright__ = 'Copyright 2012, Australia Indonesia Facility for '
 __copyright__ += 'Disaster Reduction'
-
-import os
-import unittest
-import logging
-import configparser
 
 LOGGER = logging.getLogger('IRMT')
 

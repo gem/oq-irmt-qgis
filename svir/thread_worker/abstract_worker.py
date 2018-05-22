@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#/***************************************************************************
+# /***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
@@ -25,7 +25,6 @@
 import traceback
 from qgis.PyQt import QtCore
 from qgis.core import QgsMessageLog, Qgis
-from qgis.gui import QgsMessageBar
 
 from qgis.PyQt.QtCore import Qt, QThread
 from qgis.PyQt.QtWidgets import QProgressBar, QPushButton
