@@ -458,7 +458,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 return
         if resp.ok:
             msg = 'Calculation %s successfully removed' % calc_id
-            log_msg(msg, level='I', message_bar=self.message_bar)
+            log_msg(msg, level='S', message_bar=self.message_bar)
             if self.current_calc_id == calc_id:
                 self.current_calc_id = None
                 self.clear_output_list()
@@ -598,7 +598,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             with open(filepath, "wb") as f:
                 f.write(resp.content)
             log_msg('The datastore has been saved as %s' % filepath,
-                    level='I', message_bar=self.message_bar)
+                    level='S', message_bar=self.message_bar)
 
     @pyqtSlot()
     def on_show_calc_params_btn_clicked(self):
@@ -772,7 +772,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             if not filepath:
                 return
             msg = 'Calculation %s was saved as %s' % (output_id, filepath)
-            log_msg(msg, level='I', message_bar=self.message_bar)
+            log_msg(msg, level='S', message_bar=self.message_bar)
         else:
             raise NotImplementedError(action)
 

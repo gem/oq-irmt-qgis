@@ -248,7 +248,7 @@ class DownloadLayerDialog(QDialog, FORM_CLASS):
         if layer.isValid():
             QgsProject.instance().addMapLayer(layer)
             msg = 'Shapefile imported to %s' % new_shp_file_path
-            log_msg(msg, level='I', message_bar=self.iface.messageBar())
+            log_msg(msg, level='S', message_bar=self.iface.messageBar())
         else:
             msg = 'Layer invalid'
             log_msg(msg, level='C', message_bar=self.iface.messageBar())

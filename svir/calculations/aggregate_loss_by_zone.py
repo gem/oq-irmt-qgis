@@ -600,7 +600,7 @@ def notify_loss_aggregation_by_zone_complete(
         added_attrs.extend(list(loss_attrs_dict[loss_attr_name].values()))
     msg = "New attributes [%s] have been added to the zonal layer" % (
         ', '.join(added_attrs))
-    log_msg(msg, level='I', message_bar=iface.messageBar())
+    log_msg(msg, level='S', message_bar=iface.messageBar())
 
 
 def calculate_raster_stats(loss_layer, zonal_layer, iface):

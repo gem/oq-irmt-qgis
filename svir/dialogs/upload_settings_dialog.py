@@ -230,7 +230,7 @@ class UploadSettingsDialog(QDialog, FORM_CLASS):
                     hostname, session, self.project_definition,
                     self.suppl_info['platform_layer_id'])
                 if response.ok:
-                    log_msg(tr(response.text), level='I',
+                    log_msg(tr(response.text), level='S',
                             message_bar=self.iface.messageBar())
                 else:
                     error_msg = response.text

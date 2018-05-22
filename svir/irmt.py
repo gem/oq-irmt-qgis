@@ -95,7 +95,8 @@ from svir.utilities.utils import (tr,
                                   save_layer_as_shapefile,
                                   get_style,
                                   get_checksum,
-                                  warn_scipy_missing)
+                                  # warn_scipy_missing)
+                                  )
 from svir.utilities.shared import (DEBUG,
                                    PROJECT_TEMPLATE,
                                    THEME_TEMPLATE,
@@ -107,7 +108,7 @@ from svir.ui.tool_button_with_help_link import QToolButtonWithHelpLink
 # noinspection PyUnresolvedReferences
 import svir.resources_rc  # pylint: disable=unused-import  # NOQA
 
-from svir import IS_SCIPY_INSTALLED
+# from svir import IS_SCIPY_INSTALLED
 
 
 class Irmt(object):
@@ -675,7 +676,7 @@ class Irmt(object):
         """
         fname, msg = result
         display_msg = tr("Socioeconomic data loaded in a new layer")
-        log_msg(display_msg, level='I', message_bar=self.iface.messageBar())
+        log_msg(display_msg, level='S', message_bar=self.iface.messageBar())
         # don't remove the file, otherwise there will be concurrency
         # problems
 
@@ -823,7 +824,7 @@ class Irmt(object):
                                  for attr_id in added_attrs_ids]
             msg = ('New attributes have been added to the layer: %s'
                    % ', '.join(added_attrs_names))
-            log_msg(msg, level='I', message_bar=self.iface.messageBar())
+            log_msg(msg, level='S', message_bar=self.iface.messageBar())
         if discarded_feats:
             discarded_feats_ids_missing = [
                 feat.feature_id for feat in discarded_feats
@@ -1287,7 +1288,7 @@ class Irmt(object):
                         msg += (' The transformation could not'
                                 ' be performed for the following'
                                 ' input values: %s' % invalid_input_values)
-                    level = 'I' if not invalid_input_values else 'W'
+                    level = 'S' if not invalid_input_values else 'W'
                     log_msg(msg, level=level,
                             message_bar=self.iface.messageBar())
                 except (ValueError, NotImplementedError, TypeError) as e:
@@ -1323,7 +1324,7 @@ class Irmt(object):
                 layer.commitChanges()
                 layer.triggerRepaint()
                 msg = 'Calculation performed on layer %s' % layer.name()
-                log_msg(msg, level='I', message_bar=self.iface.messageBar())
+                log_msg(msg, level='S', message_bar=self.iface.messageBar())
         self.update_actions_status()
 
     def upload(self):

@@ -356,7 +356,7 @@ class SettingsDialog(QDialog, FORM_CLASS):
             else:
                 if not is_lockdown:
                     msg = 'Able to connect'
-                    log_msg(msg, level='I', message_bar=self.message_bar,
+                    log_msg(msg, level='S', message_bar=self.message_bar,
                             duration=3)
                     return
         try:
@@ -367,7 +367,7 @@ class SettingsDialog(QDialog, FORM_CLASS):
                     exception=exc)
         else:
             msg = 'Able to connect'
-            log_msg(msg, level='I', message_bar=self.message_bar, duration=3)
+            log_msg(msg, level='S', message_bar=self.message_bar, duration=3)
 
     @pyqtSlot()
     def on_eng_new_btn_clicked(self):

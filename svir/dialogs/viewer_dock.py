@@ -1491,7 +1491,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             else:
                 raise NotImplementedError(self.output_type)
         msg = 'Data exported to %s' % filename
-        log_msg(msg, level='I', message_bar=self.iface.messageBar())
+        log_msg(msg, level='S', message_bar=self.iface.messageBar())
 
     @pyqtSlot()
     def on_bw_chk_clicked(self):

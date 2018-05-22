@@ -225,6 +225,6 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
                 point_attrs_dict,
                 self.integrate_svi_check.isChecked())
         msg = 'Recovery curves have been saved to [%s]' % self.output_data_dir
-        log_msg(msg, level='I', message_bar=self.iface.messageBar())
+        log_msg(msg, level='S', message_bar=self.iface.messageBar())
         self.save_state()
         super(RecoveryModelingDialog, self).accept()

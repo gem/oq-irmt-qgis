@@ -230,7 +230,7 @@ class WeightDataDialog(QDialog, FORM_CLASS):
         else:
             msg = ('Project definition printed as pdf and saved to: %s'
                    % dest_full_path_name)
-            log_msg(msg, level='I', message_bar=self.iface.messageBar())
+            log_msg(msg, level='S', message_bar=self.iface.messageBar())
 
     @pyqtSlot(str)
     def on_style_by_field_cbx_currentIndexChanged(self):
