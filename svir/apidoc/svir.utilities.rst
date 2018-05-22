@@ -36,14 +36,6 @@ svir.utilities.shared module
     :undoc-members:
     :show-inheritance:
 
-svir.utilities.sldadapter module
---------------------------------
-
-.. automodule:: svir.utilities.sldadapter
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 svir.utilities.utils module
 ---------------------------
 
