@@ -103,20 +103,20 @@ class UploadWorker(AbstractWorker):
                                      'publish_resourcebase',
                                   ]
                                  }
-                       # "groups": {  # "anonymousUser": [],
-                       #           # self.group: [
-                       #           'change_layer_data',
-                       #           'change_layer_style', 'add_layer',
-                       #           'change_layer', 'delete_layer',
-                       #           'view_resourcebase',
-                       #           'download_resourcebase',
-                       #           'change_resourcebase_metadata',
-                       #           'change_resourcebase',
-                       #           'delete_resourcebase',
-                       #           'change_resourcebase_permissions',
-                       #           'publish_resourcebase',
-                       #           # ]
-                       #           }
+                       "groups": {  # "anonymousUser": [],
+                                 # self.group: [
+                                 'change_layer_data',
+                                 'change_layer_style', 'add_layer',
+                                 'change_layer', 'delete_layer',
+                                 'view_resourcebase',
+                                 'download_resourcebase',
+                                 'change_resourcebase_metadata',
+                                 'change_resourcebase',
+                                 'delete_resourcebase',
+                                 'change_resourcebase_permissions',
+                                 'publish_resourcebase',
+                                 # ]
+                                 }
                        }
         data = {'layer_title': os.path.basename(self.file_stem),
                 'base_file': open('%s.shp' % self.file_stem, 'rb'),
