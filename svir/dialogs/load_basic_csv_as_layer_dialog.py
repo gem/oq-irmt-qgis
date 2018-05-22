@@ -74,4 +74,6 @@ class LoadBasicCsvAsLayerDialog(LoadOutputAsLayerDialog):
         except RuntimeError as exc:
             log_msg(str(exc), level='C', message_bar=self.iface.messageBar())
             return
+        log_msg('Layer %s was loaded successfully' % layer_name,
+                level='S', message_bar=self.iface.messageBar())
         self.iface.showAttributeTable(self.layer)

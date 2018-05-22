@@ -413,6 +413,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         QgsProject.instance().addMapLayer(self.layer)
         self.iface.setActiveLayer(self.layer)
         self.iface.zoomToActiveLayer()
+        log_msg('Layer %s was created successfully' % layer_name, level='S',
+                message_bar=self.iface.messageBar())
 
     def _set_symbol_size(self, symbol):
         if self.iface.mapCanvas().mapUnits() == QgsUnitTypes.DistanceDegrees:

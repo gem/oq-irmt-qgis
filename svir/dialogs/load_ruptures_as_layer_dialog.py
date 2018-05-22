@@ -113,3 +113,5 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
             self.style_maps(layer=self.layer, style_by=style_by)
         else:  # 'trt'
             self.style_categorized(layer=self.layer, style_by=style_by)
+        log_msg('Layer %s was loaded successfully' % layer_name,
+                level='S', message_bar=self.iface.messageBar())
