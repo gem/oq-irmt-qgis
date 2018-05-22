@@ -35,16 +35,13 @@ from svir.thread_worker.abstract_worker import start_worker
 from svir.thread_worker.upload_worker import UploadWorker
 from svir.third_party.requests.sessions import Session
 from svir.third_party.requests.utils import dict_from_cookiejar
-from svir.utilities.sldadapter import getGsCompatibleSld
 from svir.utilities.utils import (platform_login,
                                   create_progress_message_bar,
                                   clear_progress_message_bar,
                                   SvNetworkError,
-                                  log_msg,
                                   get_ui_class,
                                   get_credentials,
                                   )
-from svir.utilities.shared import DEBUG
 
 FORM_CLASS = get_ui_class('ui_upload_metadata.ui')
 
@@ -121,36 +118,6 @@ class UploadDialog(QDialog, FORM_CLASS):
         # Since the style name is set by default substituting '-' with '_',
         # tp get the right style we need to do the same substitution
         style_name = layer_name.replace('-', '_')
-        try:
-            sld = getGsCompatibleSld(self.iface.activeLayer(), style_name)
-        except Exception as e:
-            error_msg = (
-                'Unable to export the styled layer descriptor: ' + e.message)
-            self.message_bar.pushMessage(
-                'Style error', error_msg, duration=0,
-                level=QgsMessageBar.CRITICAL)
-            return
-
-        if DEBUG:
-            import tempfile
-            fd, fname = tempfile.mkstemp(suffix=".sld")
-            os.close(fd)
-            with open(fname, 'w') as f:
-                f.write(sld)
-            os.system('tidy -xml -i %s' % fname)
-        headers = {'content-type': 'application/vnd.ogc.sld+xml'}
-        resp = self.session.get(
-            self.hostname + '/gs/rest/styles/%s' % style_name,
-            data=sld, headers=headers)
-        print(resp)
-        if DEBUG:
-            log_msg('Style upload response: %s' % resp)
-        if not resp.ok:
-            error_msg = (
-                'Error while styling the uploaded layer: ' + resp.reason)
-            self.message_bar.pushMessage(
-                'Style error', error_msg, duration=0,
-                level=QgsMessageBar.CRITICAL)
 
     def upload_done(self, result):
         layer_url, success = result
