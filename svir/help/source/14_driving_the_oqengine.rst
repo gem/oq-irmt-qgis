@@ -93,7 +93,7 @@ styling is applied, based on parameters chosen by the user. In some cases (e.g.,
 damage by asset), while loading the layer, it is also possible to aggregate
 points by zone. In order to do so, it is necessary to specify another available
 layer, with polygons geospatially containing the points to be collected.
-The aggregation is performed as described in :ref:`_chap-aggregating-loss-by-zone`.
+The aggregation is performed as described in :ref:`chap-aggregating-loss-by-zone`.
 
 .. warning:: The layers that are automatically imported from OQ-Engine outputs
              are stored `in memory`, unless they are explicitly saved by the

@@ -30,20 +30,12 @@ import numpy
 from datetime import datetime
 from collections import OrderedDict
 
-try:
-    import matplotlib
-    matplotlib.use('Qt5Agg')
-    from matplotlib.figure import Figure
-    from matplotlib.backends.backend_qt5agg import (
-        FigureCanvasQTAgg as FigureCanvas,
-        NavigationToolbar2QT as NavigationToolbar
-    )
-    from matplotlib.lines import Line2D
-except ImportError as exc:
-    raise ImportError(
-        'There was a problem importing matplotlib. If you are using'
-        ' a 64bit version of QGIS on Windows, please try using'
-        ' a 32bit version instead. %s' % exc)
+from matplotlib.backends.qt_compat import QtCore, QtWidgets
+from matplotlib.backends.backend_qt5agg import (
+    FigureCanvas,
+    NavigationToolbar2QT as NavigationToolbar)
+from matplotlib.figure import Figure
+from matplotlib.lines import Line2D
 
 from qgis.PyQt.QtCore import pyqtSlot, QSettings, Qt
 from qgis.PyQt.QtGui import QColor
