@@ -227,6 +227,10 @@ def calculate_node(
                     discarded_feats.add(discarded_feat)
             return discarded_feats
         else:
+            # FIXME: Remove this error as soon as it becomes possible to use
+            # custom formulas that include field names
+            raise ValueError('The IRMT plugin still does not support'
+                             ' custom expressions in QGIS3')
             # attempt to retrieve a formula from the description and to
             # calculate the field values based on that formula
             expression.prepare(
