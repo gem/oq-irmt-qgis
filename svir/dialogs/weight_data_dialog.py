@@ -25,7 +25,9 @@
 from copy import deepcopy
 import json
 
-from qgis.PyQt.QtCore import Qt, QUrl, QSettings, pyqtProperty, pyqtSignal, pyqtSlot
+from qgis.PyQt.QtCore import (
+    Qt, QUrl, QSettings, pyqtProperty, pyqtSignal, pyqtSlot)
+from qgis.PyQt.QtWebKit import QWebSettings
 from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox
 from qgis.PyQt.QtPrintSupport import QPrinter
 
@@ -42,6 +44,14 @@ from svir.utilities.utils import (get_field_names,
                                   )
 
 FORM_CLASS = get_ui_class('ui_weight_data.ui')
+
+
+if DEBUG:
+    # turn on developer tools in webkit so we can get at the
+    # javascript console for debugging (it causes segfaults in tests, so it has
+    # to be kept disabled while it is not used for debugging).
+    QWebSettings.globalSettings().setAttribute(
+        QWebSettings.DeveloperExtrasEnabled, True)
 
 
 class WeightDataDialog(QDialog, FORM_CLASS):
@@ -113,7 +123,11 @@ class WeightDataDialog(QDialog, FORM_CLASS):
         self.json_updated.connect(self.handle_json_updated)
         self.populate_style_by_field_cbx()
 
-        self.web_view.setContextMenuPolicy(Qt.NoContextMenu)
+        if not DEBUG:
+            self.web_view.setContextMenuPolicy(Qt.NoContextMenu)
+
+        self.web_view.settings().setAttribute(
+            QWebSettings.JavascriptEnabled, True)
 
     def closeEvent(self, event):
         confirmation_on_close(self, event)
