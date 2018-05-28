@@ -23,7 +23,6 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 # import qgis libs so that we set the correct sip api version
-from __future__ import print_function
 import os
 import sys
 import traceback
