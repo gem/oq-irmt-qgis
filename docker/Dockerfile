@@ -21,9 +21,7 @@ RUN apt update && apt -q install -y gnupg2 && \
 # a new 'apt update' is always performed to comply
 # with the cache invalidation
 ADD http://qgis.org/debian-ltr/dists/bionic/main/binary-amd64/Packages /tmp/nocache.json
-RUN add-apt-repository -y ppa:openquake/saga && \
-    apt update && \
-    apt install -y qgis python-qgis \
+RUN apt install -y qgis python-qgis \
                    saga python-saga && \
     apt clean all
 
