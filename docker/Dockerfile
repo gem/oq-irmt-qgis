@@ -1,8 +1,8 @@
 # vi:syntax=dockerfile
-FROM ubuntu:xenial
+FROM ubuntu:bionic
 MAINTAINER Daniele Viganò <daniele@openquake.org>
 
-RUN echo "deb     http://qgis.org/debian-ltr xenial main" >> /etc/apt/sources.list && \
+RUN echo "deb     http://qgis.org/debian-ltr bionic main" >> /etc/apt/sources.list && \
     apt-key adv --keyserver keyserver.ubuntu.com --recv-key CAEB3DC3BDF7FB45 && \
     apt update && \
     apt upgrade -y && \
