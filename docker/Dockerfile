@@ -1,11 +1,11 @@
 # vi:syntax=dockerfile
-FROM ubuntu:bionic
+FROM ubuntu:xenial
 MAINTAINER Daniele Viganò <daniele@openquake.org>
 
 ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt update && apt -q install -y gnupg2 && \
-    echo "deb     http://qgis.org/debian-ltr bionic main" >> /etc/apt/sources.list && \
+    echo "deb     http://qgis.org/debian-ltr xenial main" >> /etc/apt/sources.list && \
     apt-key adv --keyserver keyserver.ubuntu.com --recv-key CAEB3DC3BDF7FB45 && \
     apt update && \
     apt upgrade -y && \
@@ -20,7 +20,7 @@ RUN apt update && apt -q install -y gnupg2 && \
 # Perform cache invalidation when new packages are out
 # a new 'apt update' is always performed to comply
 # with the cache invalidation
-ADD http://qgis.org/debian-ltr/dists/bionic/main/binary-amd64/Packages /tmp/nocache.json
+ADD http://qgis.org/debian-ltr/dists/xenial/main/binary-amd64/Packages /tmp/nocache.json
 RUN apt install -y qgis python-qgis && \
     apt clean all
 
