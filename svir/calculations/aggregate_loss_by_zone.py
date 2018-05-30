@@ -54,14 +54,6 @@ from svir.utilities.shared import (INT_FIELD_TYPE_NAME,
                                    DEBUG,
                                    )
 
-try:
-    from processing.algs.saga import SagaUtils
-
-    saga_was_imported = True
-except:
-    log_msg("Unable to import SagaUtils module from processing.algs.saga")
-    saga_was_imported = False
-
 
 def calculate_zonal_stats(loss_layer,
                           zonal_layer,
@@ -70,8 +62,6 @@ def calculate_zonal_stats(loss_layer,
                           zone_id_in_losses_attr_name,
                           zone_id_in_zones_attr_name,
                           iface,
-                          force_saga=False,
-                          force_fallback=False,
                           extra=True):
     """
     :param loss_layer: vector or raster layer containing loss data points
@@ -84,29 +74,18 @@ def calculate_zonal_stats(loss_layer,
     :param zone_id_in_zones_attr_name:
         name of the field containing the id of each zone (or None)
     :param iface: QGIS interface
-    :param force_saga:
-        if True, the plugin will try to use SAGA and it will raise an error in
-        case it does not work (useful to test that specific workflow)
-    :param force_fallback:
-        if True, the fallback algorithm will be used instead
-        of SAGA, even if a recent SAGA installation is available
-        (useful to test that specific workflow)
     :param extra:
         if True, also NUM_POINTS and AVG will be added
-
-    force_saga and force_fallback can't both be True at the same time.
 
     At the end of the workflow, we will have, for each feature (zone):
 
     * a "NUM_POINTS" attribute, specifying how many points are
-      inside the zone
+      inside the zone (added if extra=True)
     * for each variable:
         * a "SUM" attribute, summing the values for all the
           points that are inside the zone
-        * a "AVG" attribute, averaging for each zone
+        * a "AVG" attribute, averaging for each zone (added if extra=True)
     """
-    # sanity check
-    assert not (force_saga and force_fallback)
 
     # add count, sum and avg fields for aggregating statistics
     # (one new attribute for the count of points, then a sum and an average
@@ -173,8 +152,7 @@ def calculate_zonal_stats(loss_layer,
 
             (_, loss_layer_plus_zones,
              zone_id_in_losses_attr_name) = add_zone_id_to_points(
-                    iface, loss_layer, zonal_layer,
-                    zone_id_in_zones_attr_name, force_saga, force_fallback)
+                    iface, loss_layer, zonal_layer, zone_id_in_zones_attr_name)
 
             old_field_to_new_field = {}
             for idx, field in enumerate(loss_layer.fields()):
@@ -195,8 +173,7 @@ def calculate_zonal_stats(loss_layer,
     return loss_layer, zonal_layer, loss_attrs_dict
 
 
-def add_zone_id_to_points(iface, point_layer, zonal_layer, zones_id_attr_name,
-                          force_saga=False, force_fallback=False):
+def add_zone_id_to_points(iface, point_layer, zonal_layer, zones_id_attr_name):
     """
     Given a layer with points and a layer with zones, add to the points layer a
     new field containing the id of the zone inside which it is located.
@@ -215,48 +192,9 @@ def add_zone_id_to_points(iface, point_layer, zonal_layer, zones_id_attr_name,
           points layer, containing the zone id
     """
     orig_fieldnames = [field.name() for field in point_layer.fields()]
-    use_fallback_calculation = False
-    if force_fallback:
-        use_fallback_calculation = True
-    else:
-        saga_install_err = get_saga_install_error()
-        if saga_install_err is None:
-            try:
-                (point_layer, res,
-                 points_zone_id_attr_name, point_layer_plus_zones) = \
-                    _add_zone_id_to_points_saga(point_layer,
-                                                zonal_layer,
-                                                zones_id_attr_name)
-                if not point_layer_plus_zones.fields():
-                    raise RuntimeError('SAGA does not handle correctly the'
-                                       ' case in which none of the zones'
-                                       ' contains any of the points.')
-            except (AttributeError, RuntimeError) as exc:
-                # NOTE: In the testing environment we are still unable to use
-                #       the saga:clippointswithpolygons algorithm, so it does
-                #       not run properly and it returns an AttributeError. We
-                #       are forced to use the fallback approach in that case.
-                msg = ("An error occurred while attempting to"
-                       " compute zonal statistics with SAGA: %s Therefore"
-                       " an alternative algorithm is used." % exc.message)
-                log_msg(msg, level='C', message_bar=iface.messageBar())
-                use_fallback_calculation = True
-        else:
-            saga_install_err += (
-                "\nIn order to cope with complex geometries, "
-                "a working and compatible installation of SAGA is "
-                "recommended.")
-            log_msg(saga_install_err, level='W',
-                    message_bar=iface.messageBar())
-            if force_saga:
-                raise RuntimeError(saga_install_err)
-            else:
-                use_fallback_calculation = True
-    if use_fallback_calculation:
-        point_layer_plus_zones, points_zone_id_attr_name = \
-            _add_zone_id_to_points_internal(
-                    iface, point_layer, zonal_layer,
-                    zones_id_attr_name)
+    point_layer_plus_zones, points_zone_id_attr_name = \
+        _add_zone_id_to_points_internal(
+            iface, point_layer, zonal_layer, zones_id_attr_name)
     # fieldnames might have been laundered to max 10 characters
     final_fieldnames = [
         field.name() for field in point_layer_plus_zones.fields()]
@@ -272,8 +210,8 @@ def _add_zone_id_to_points_internal(iface, loss_layer, zonal_layer,
                                     zone_id_in_zones_attr_name):
     """
        On the hypothesis that we don't know what is the zone in which
-       each point was collected (and if we can't use SAGA),
-       we use an alternative implementation of what SAGA does, i.e.,
+       each point was collected we use an alternative implementation of what
+       SAGA does, i.e.,
        we add a field to the loss layer, containing the id of the zone
        to which it belongs. In order to achieve that:
        * we create a spatial index of the loss points
@@ -361,7 +299,7 @@ def _add_zone_id_to_points_internal(iface, loss_layer, zonal_layer,
                             zone_id = zone_feature[
                                 zone_id_in_zones_attr_name]
                             loss_layer_plus_zones.changeAttributeValue(
-                                    point_id, zone_id_attr_idx, zone_id)
+                                point_id, zone_id_attr_idx, zone_id)
         # for consistency with the SAGA algorithm, remove points that don't
         # belong to any zone
         for point_feature in loss_layer_plus_zones.getFeatures():
@@ -369,97 +307,6 @@ def _add_zone_id_to_points_internal(iface, loss_layer, zonal_layer,
                 loss_layer_plus_zones.deleteFeature(point_feature.id())
     clear_progress_message_bar(iface.messageBar(), msg_bar_item)
     return loss_layer_plus_zones, zone_id_in_losses_attr_name
-
-
-def _add_zone_id_to_points_saga(loss_layer, zonal_layer,
-                                zone_id_in_zones_attr_name):
-    # using SAGA to find out in which zone each point is
-    # (it does not compute any other statistics)
-    # NOTE: The algorithm builds a new loss layer, in which
-    #       each point will have an additional attribute,
-    #       indicating the zone to which the point belongs.
-    if loss_layer.providerType() != 'ogr':
-        _, loss_layer_shp_path = tempfile.mkstemp(suffix='.shp')
-        save_layer_as_shapefile(loss_layer, loss_layer_shp_path)
-        loss_layer = QgsVectorLayer(
-            loss_layer_shp_path, loss_layer.name(), 'ogr')
-    if zonal_layer.providerType() != 'ogr':
-        _, zonal_layer_shp_path = tempfile.mkstemp(suffix='.shp')
-        save_layer_as_shapefile(zonal_layer, zonal_layer_shp_path)
-        zonal_layer = QgsVectorLayer(
-            zonal_layer_shp_path, zonal_layer.name(), 'ogr')
-    res = processing.runalg('saga:clippointswithpolygons',
-                            loss_layer,
-                            zonal_layer,
-                            zone_id_in_zones_attr_name,
-                            0,
-                            None)
-    if res is None:
-        raise RuntimeError
-
-    loss_layer_plus_zones = QgsVectorLayer(
-            res['CLIPS'],
-            'Points labeled by zone',
-            'ogr')
-    if DEBUG:
-        QgsMapLayerRegistry.instance().addMapLayer(
-                loss_layer_plus_zones)
-    # NOTE: In previous versions, we were identifying the
-    # zone_field_name as the difference between the sets of
-    # field names before and after running the
-    # clippointswithpolygons algorithm (supposing that the only
-    # difference was an additional field with the zone ids). It
-    # was good also for the corner case in which the field name
-    # for zone ids was already taken in the loss layer, and it
-    # was therefore modified by saga). BUT... it was not taking
-    # into account the case of long field names in the loss
-    # layer (for instance, using a csv-based layer instead of a
-    # shapefile). In such case, saga produces a shapefile with
-    # laundered names, and the "difference" approach does not
-    # work anymore. THEREFORE... we are forced to make a little
-    # hack, assuming that the field added by saga (the one
-    # containing zone ids) will be the last one.
-    if (len(loss_layer_plus_zones.fields())
-            - len(loss_layer.fields()) == 1):
-        # NOTE: we are assuming that the field containing zone
-        # ids will be added by saga as the last field in the
-        # layer
-        zone_field_name = \
-            loss_layer_plus_zones.fields()[-1].name()
-    else:
-        zone_field_name = None
-    if zone_field_name is not None:
-        zone_id_in_losses_attr_name = zone_field_name
-    else:
-        zone_id_in_losses_attr_name = \
-            zone_id_in_zones_attr_name
-    return (loss_layer, res,
-            zone_id_in_losses_attr_name, loss_layer_plus_zones)
-
-
-def get_saga_install_error():
-    # if SAGA is not installed, the check will return a error msg
-    err_msg = None
-    if saga_was_imported:
-        try:
-            saga_version_str = SagaUtils.getSagaInstalledVersion()
-        except AttributeError:
-            err_msg = 'Unable to get the SAGA installed version.'
-        else:
-            if saga_version_str is None:
-                err_msg = 'SAGA is not installed.'
-            else:
-                qgis_version_int = QGis.QGIS_VERSION_INT
-                if qgis_version_int >= 21400:
-                    (saga_major, saga_minor) = map(
-                        int, saga_version_str.split('.')[:2])
-                    if (saga_major, saga_minor) < (2, 3):
-                        err_msg = ('QGIS 2.14 and above do not support SAGA'
-                                   ' versions below 2.3, and you are using'
-                                   ' SAGA version %s' % saga_version_str)
-    else:
-        err_msg = 'SagaUtils was not imported.'
-    return err_msg
 
 
 def calculate_vector_stats_aggregating_by_zone_id(

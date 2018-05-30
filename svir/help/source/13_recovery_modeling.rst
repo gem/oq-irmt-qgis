@@ -190,7 +190,7 @@ algorithm in the QGIS software enables the users to adapt the workflow to their
 needs, leveraging all the features provided by the QGIS framework. The QGIS
 Processing Toolbox gives access to a wide variety of geoalgorithms, seamlessly
 integrating several different open-source resources, such as R, SAGA or GDAL.
-For instance, a SAGA algorithm, the 'Add Polygon Attributes to Points', can be
+For instance, they can be
 used to aggregate by zone a set of selected assets, resulting in relating each
 asset to the identifier of the geographical area (zone) where it belongs.
 Following, the selection of the set of assets to be considered in the analysis
