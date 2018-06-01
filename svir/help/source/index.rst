@@ -29,7 +29,6 @@ Contents:
     10_aggregate_loss_by_zone.rst
     11_upload_project_to_platform.rst
     12_using_r_scripts.rst
-    13_recovery_modeling.rst
     14_driving_the_oqengine.rst
     15_viewer_dock.rst
 
