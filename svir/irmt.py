@@ -60,7 +60,6 @@ from svir.dialogs.viewer_dock import ViewerDock
 from svir.utilities.import_sv_data import get_loggedin_downloader
 from svir.dialogs.download_layer_dialog import DownloadLayerDialog
 from svir.dialogs.projects_manager_dialog import ProjectsManagerDialog
-from svir.dialogs.select_input_layers_dialog import SelectInputLayersDialog
 from svir.dialogs.select_sv_variables_dialog import SelectSvVariablesDialog
 from svir.dialogs.settings_dialog import SettingsDialog
 from svir.dialogs.transformation_dialog import TransformationDialog
@@ -495,22 +494,6 @@ class Irmt(object):
             self.layers_added)
         QgsProject.instance().layersRemoved.disconnect(
             self.layers_removed)
-
-    def aggregate_losses(self):
-        """
-        Open a modal dialog to select a layer containing zonal data for social
-        vulnerability and a layer containing loss data points.
-
-        After data are loaded, calculate_zonal_stats() is automatically called,
-        in order to aggregate loss points with respect to the same geometries
-        defined for the socioeconomic data, and to compute zonal statistics
-        (point count, loss sum, and average for each zone)
-        """
-        # Create the dialog (after translation) and keep reference
-        dlg = SelectInputLayersDialog(self.iface)
-        # Run the dialog event loop
-        dlg.exec_()
-        self.update_actions_status()
 
     def import_sv_variables(self):
         """
