@@ -31,6 +31,8 @@ from qgis.core import (QgsVectorLayer,
                        QgsSingleSymbolRenderer,
                        QgsGradientColorRamp,
                        QgsGraduatedSymbolRenderer,
+                       QgsRuleBasedRenderer,
+                       QgsFillSymbol,
                        QgsRendererRange,
                        QgsMapUnitScale,
                        QgsWkbTypes,
@@ -422,7 +424,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         map_unit_scale.maxSizeMM = 10
         symbol.symbolLayer(0).setSizeMapUnitScale(map_unit_scale)
 
-    def style_maps(self, layer=None, style_by=None):
+    def style_maps(self, layer=None, style_by=None, add_null_class=False):
         if layer is None:
             layer = self.layer
         if style_by is None:
@@ -479,28 +481,38 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         # label_format.setTrimTrailingZeroes(True)  # it might be useful
         label_format.setPrecision(2)
         graduated_renderer.setLabelFormat(label_format, updateRanges=True)
-        # add a class for 0 values, unless while styling ruptures
-        if self.output_type != 'ruptures':
-            VERY_SMALL_VALUE = 1e-20
-            graduated_renderer.updateRangeLowerValue(0, VERY_SMALL_VALUE)
-            symbol_zeros = QgsSymbol.defaultSymbol(layer.geometryType())
-            symbol_zeros.setColor(QColor(240, 240, 240))  # very light grey
-            if isinstance(symbol, QgsMarkerSymbol):
-                # do it only for the layer with points
-                self._set_symbol_size(symbol_zeros)
-                symbol_zeros.symbolLayer(0).setStrokeStyle(
-                    Qt.PenStyle(Qt.NoPen))
-            zeros_min = 0.0
-            zeros_max = VERY_SMALL_VALUE
-            range_zeros = QgsRendererRange(
-                zeros_min, zeros_max, symbol_zeros,
-                " %.2f - %.2f" % (zeros_min, zeros_max), True)
-            graduated_renderer.addClassRange(range_zeros)
-            graduated_renderer.moveClass(
-                len(graduated_renderer.ranges()) - 1, 0)
-        layer.setRenderer(graduated_renderer)
+        if add_null_class:
+            # add a class for NULL values
+            rule_renderer = QgsRuleBasedRenderer(
+                QgsSymbol.defaultSymbol(layer.geometryType()))
+            root_rule = rule_renderer.rootRule()
+            not_null_rule = root_rule.children()[0].clone()
+            # strip parentheses from stringified color HSL
+            not_null_rule.setFilterExpression('%s IS NOT NULL' % style_by)
+            not_null_rule.setLabel('%s:' % style_by)
+            root_rule.appendChild(not_null_rule)
+            null_rule = root_rule.children()[0].clone()
+            # symbol_zeros.setColor(QColor(240, 240, 240))  # very light grey
+            null_rule.setSymbol(QgsFillSymbol.createSimple(
+                {'style': 'no',
+                'color_border': '255,255,0,255',
+                'width_border': '0.5'}))
+            null_rule.setFilterExpression('%s IS NULL' % style_by)
+            null_rule.setLabel(tr('No points'))
+            root_rule.appendChild(null_rule)
+            # create value ranges
+            rule_renderer.refineRuleRanges(not_null_rule, graduated_renderer)
+            # remove default rule
+            root_rule.removeChildAt(0)
+            layer.setRenderer(rule_renderer)
+        else:
+            layer.setRenderer(graduated_renderer)
         layer.setOpacity(0.7)
         layer.triggerRepaint()
+        self.iface.setActiveLayer(layer)
+        self.iface.zoomToActiveLayer()
+        log_msg('Layer %s was created successfully' % layer.name(), level='S',
+                message_bar=self.iface.messageBar())
         # NOTE QGIS3: probably not needed
         # self.iface.layerTreeView().refreshLayerSymbology(layer.id())
 
@@ -670,7 +682,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 added_loss_attr = "%s_sum" % loss_attr_name
                 style_by = added_loss_attr
                 self.style_maps(
-                    layer=zonal_layer_plus_sum, style_by=style_by)
+                    layer=zonal_layer_plus_sum, style_by=style_by,
+                    add_null_class=True)
         elif self.output_type in OQ_CSV_TO_LAYER_TYPES:
             self.load_from_csv()
         super(LoadOutputAsLayerDialog, self).accept()
