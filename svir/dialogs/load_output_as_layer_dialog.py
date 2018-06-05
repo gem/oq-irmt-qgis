@@ -492,11 +492,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             not_null_rule.setLabel('%s:' % style_by)
             root_rule.appendChild(not_null_rule)
             null_rule = root_rule.children()[0].clone()
-            # symbol_zeros.setColor(QColor(240, 240, 240))  # very light grey
             null_rule.setSymbol(QgsFillSymbol.createSimple(
-                {'style': 'no',
-                'color_border': '255,255,0,255',
-                'width_border': '0.5'}))
+                {'color': '240,240,240'}))  # very light grey
             null_rule.setFilterExpression('%s IS NULL' % style_by)
             null_rule.setLabel(tr('No points'))
             root_rule.appendChild(null_rule)
@@ -649,6 +646,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                     self.zonal_layer_cbx.currentIndex())
                 zonal_layer = QgsProject.instance().mapLayer(
                     zonal_layer_id)
+                QgsProject.instance().layerTreeRoot().findLayer(
+                    zonal_layer.id()).setItemVisibilityChecked(False)
                 # if the two layers have different projections, display a
                 # warning, but try proceeding anyway
                 have_same_projection, check_projection_msg = ProcessLayer(
