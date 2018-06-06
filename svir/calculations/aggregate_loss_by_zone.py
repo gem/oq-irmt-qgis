@@ -30,6 +30,9 @@ import processing
 # (the full description of the algorithm can be obtained as follows:
 #  processing.algorithmHelp('qgis:joinbylocationsummary') and it includes
 #  the lists of predicates and summaries)
+# The code of the algorithm is here:
+# https://github.com/qgis/QGIS/blob/483b4ff977e3d36b166fac792254c31e89e3aeae/python/plugins/processing/algs/qgis/SpatialJoinSummary.py  # NOQA
+
 summary_keys = (
     'count unique min max range sum mean median stddev minority majority '
     'q1 q3 iqr empty filled min_length max_length mean_length').split()
