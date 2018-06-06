@@ -24,22 +24,6 @@
 
 import processing
 
-# NOTE: summaries and predicates might be changed externally, so we need
-# some integration tests between the plugin and the QGIS processing
-# library, to identify those possible changes
-# (the full description of the algorithm can be obtained as follows:
-#  processing.algorithmHelp('qgis:joinbylocationsummary') and it includes
-#  the lists of predicates and summaries)
-# The code of the algorithm is here:
-# https://github.com/qgis/QGIS/blob/483b4ff977e3d36b166fac792254c31e89e3aeae/python/plugins/processing/algs/qgis/SpatialJoinSummary.py  # NOQA
-
-summary_keys = (
-    'count unique min max range sum mean median stddev minority majority '
-    'q1 q3 iqr empty filled min_length max_length mean_length').split()
-SUMMARIES = dict(zip(summary_keys, range(len(summary_keys))))
-predicate_keys = (
-    'intersects contains equals touches overlaps within crosses').split()
-PREDICATES = dict(zip(predicate_keys, range(len(predicate_keys))))
 
 def calculate_zonal_stats(zonal_layer, points_layer, join_fields,
                           output_layer_name, discard_nonmatching=False,
@@ -55,6 +39,11 @@ def calculate_zonal_stats(zonal_layer, points_layer, join_fields,
     layer in the resulting one. The algorithm calculates a statistical summary
     for the values from matching features in the second layer (e.g. maximum
     value, mean value, etc).
+    The full description of the algorithm can be obtained as follows:
+    processing.algorithmHelp('qgis:joinbylocationsummary') and it includes
+    the lists of predicates and summaries.
+    The code of the algorithm is here:
+    https://github.com/qgis/QGIS/blob/483b4ff977e3d36b166fac792254c31e89e3aeae/python/plugins/processing/algs/qgis/SpatialJoinSummary.py  # NOQA
 
     :param zonal_layer: vector layer containing polygons (or its path)
     :param points_layer: vector layer containing points (or its path)
@@ -69,6 +58,16 @@ def calculate_zonal_stats(zonal_layer, points_layer, join_fields,
 
     :returns: the output QgsVectorLayer
     """
+
+    # make sure to use the actual lists of predicates and summaries as defined
+    # in the algorithm while running the initAlgorithm method
+    alg = processing.algs.qgis.SpatialJoinSummary.SpatialJoinSummary()
+    alg.initAlgorithm()
+    predicate_keys = [predicate[0] for predicate in alg.predicates]
+    PREDICATES = dict(zip(predicate_keys, range(len(predicate_keys))))
+    summary_keys = [statistic[0] for statistic in alg.statistics]
+    SUMMARIES = dict(zip(summary_keys, range(len(summary_keys))))
+
     res = processing.run(
         "qgis:joinbylocationsummary",
         {'DISCARD_NONMATCHING': discard_nonmatching,
