@@ -27,13 +27,15 @@ import processing
 # NOTE: summaries and predicates might be changed externally, so we need
 # some integration tests between the plugin and the QGIS processing
 # library, to identify those possible changes
+# (the full description of the algorithm can be obtained as follows:
+#  processing.algorithmHelp('qgis:joinbylocationsummary') and it includes
+#  the lists of predicates and summaries)
 summary_keys = (
     'count unique min max range sum mean median stddev minority majority '
     'q1 q3 iqr empty filled min_length max_length mean_length').split()
 SUMMARIES = dict(zip(summary_keys, range(len(summary_keys))))
-# TODO: check that predicates are in the correct order
 predicate_keys = (
-    'intersects overlaps contains within equals crosses touches').split()
+    'intersects contains equals touches overlaps within crosses').split()
 PREDICATES = dict(zip(predicate_keys, range(len(predicate_keys))))
 
 def calculate_zonal_stats(zonal_layer, points_layer, join_fields,
