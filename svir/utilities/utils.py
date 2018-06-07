@@ -1037,12 +1037,6 @@ def get_params_from_comment_line(comment_line):
     return params_dict
 
 
-def warn_scipy_missing(message_bar):
-    msg = ("This functionality requires scipy. Please install it"
-           " and restart QGIS to enable it.")
-    log_msg(msg, level='C', message_bar=message_bar)
-
-
 def get_credentials(server):
     """
     Get from the QSettings the credentials to access the OpenQuake Engine

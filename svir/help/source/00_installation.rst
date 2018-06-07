@@ -11,21 +11,20 @@ On Microsoft Windows and Mac OS X, QGIS includes all the software dependencies n
 On Microsoft Windows, we recommend to use the 32 bit version of QGIS, because some library issues are
 still open in the 64 bit version.
 
-On Linux, please make sure that `Scipy <https://www.scipy.org/install.html>`_
-and `Matplotlib <https://matplotlib.org/users/installing.html>`_ with Qt4 backend
+On Linux, please make sure that `Matplotlib <https://matplotlib.org/users/installing.html>`_ with Qt5 backend
 are installed.
 
 On Ubuntu (Debian and similar):
 
 .. code-block:: bash
 
-    $ sudo apt install python-scipy python-matplotlib
+    $ sudo apt install python-matplotlib
 
 On Fedora and similar:
 
 .. code-block:: bash
 
-    $ sudo dnf install python2-scipy python2-matplotlib python2-matplotlib-qt4
+    $ sudo dnf install python3-matplotlib python3-matplotlib-qt5
 
 On Fedora, please follow these `instructions <https://copr.fedorainfracloud.org/coprs/dani/QGIS-latest-stable/>`_.
 
@@ -53,7 +52,7 @@ How to run tests on Ubuntu 16.04 LTS
 
 In order to run tests on Ubuntu 16.04 LTS and above, QGIS has to be installed
 as described above and the following additional packages are required:
-``python-scipy``, ``python-nose``, ``python-coverage``, ``python-mock``
+``python-nose``, ``python-coverage``, ``python-mock``
 
 If the environment is not already set, run the script ``run-env-linux.sh``,
 providing the required argument (in most cases, specifying the directory `/usr`)

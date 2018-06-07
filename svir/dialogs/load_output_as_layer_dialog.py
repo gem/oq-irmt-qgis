@@ -31,6 +31,8 @@ from qgis.core import (QgsVectorLayer,
                        QgsSingleSymbolRenderer,
                        QgsGradientColorRamp,
                        QgsGraduatedSymbolRenderer,
+                       QgsRuleBasedRenderer,
+                       QgsFillSymbol,
                        QgsRendererRange,
                        QgsMapUnitScale,
                        QgsWkbTypes,
@@ -221,15 +223,13 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.zonal_layer_h_layout.addWidget(self.zonal_layer_tbn)
         self.zonal_layer_gbx_v_layout.addWidget(self.zonal_layer_lbl)
         self.zonal_layer_gbx_v_layout.addLayout(self.zonal_layer_h_layout)
-        self.zone_id_field_lbl = QLabel('Field containing zone ids')
-        self.zone_id_field_cbx = QComboBox()
-        self.zonal_layer_gbx_v_layout.addWidget(self.zone_id_field_lbl)
-        self.zonal_layer_gbx_v_layout.addWidget(self.zone_id_field_cbx)
         self.vlayout.addWidget(self.zonal_layer_gbx)
         self.zonal_layer_tbn.clicked.connect(
             self.on_zonal_layer_tbn_clicked)
         self.zonal_layer_cbx.currentIndexChanged[int].connect(
             self.on_zonal_layer_cbx_currentIndexChanged)
+        self.zonal_layer_gbx.toggled[bool].connect(
+            self.on_zonal_layer_gbx_toggled)
 
     def pre_populate_zonal_layer_cbx(self):
         for key, layer in \
@@ -243,19 +243,20 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                     self.zonal_layer_cbx.count()-1, layer.id())
 
     def on_zonal_layer_cbx_currentIndexChanged(self, new_index):
-        self.zone_id_field_cbx.clear()
         zonal_layer = None
         if not self.zonal_layer_cbx.currentText():
+            if self.zonal_layer_gbx.isChecked():
+                self.ok_button.setEnabled(False)
             return
         zonal_layer_id = self.zonal_layer_cbx.itemData(new_index)
         zonal_layer = QgsProject.instance().mapLayer(zonal_layer_id)
-        # if the zonal_layer doesn't have a field containing a unique zone id,
-        # the user can choose to add such unique id
-        self.zone_id_field_cbx.addItem("Add field with unique zone id")
-        for field in zonal_layer.fields():
-            # for the zone id accept both numeric or textual fields
-            self.zone_id_field_cbx.addItem(field.name())
-            # by default, set the selection to the first textual field
+        self.set_ok_button()
+
+    def on_zonal_layer_gbx_toggled(self, on):
+        if on and not self.zonal_layer_cbx.currentText():
+            self.ok_button.setEnabled(False)
+        else:
+            self.set_ok_button()
 
     def on_output_type_changed(self):
         if self.output_type in OQ_TO_LAYER_TYPES:
@@ -434,7 +435,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         map_unit_scale.maxSizeMM = 10
         symbol.symbolLayer(0).setSizeMapUnitScale(map_unit_scale)
 
-    def style_maps(self, layer=None, style_by=None):
+    def style_maps(self, layer=None, style_by=None, add_null_class=False):
         if layer is None:
             layer = self.layer
         if style_by is None:
@@ -491,28 +492,35 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         # label_format.setTrimTrailingZeroes(True)  # it might be useful
         label_format.setPrecision(2)
         graduated_renderer.setLabelFormat(label_format, updateRanges=True)
-        # add a class for 0 values, unless while styling ruptures
-        if self.output_type != 'ruptures':
-            VERY_SMALL_VALUE = 1e-20
-            graduated_renderer.updateRangeLowerValue(0, VERY_SMALL_VALUE)
-            symbol_zeros = QgsSymbol.defaultSymbol(layer.geometryType())
-            symbol_zeros.setColor(QColor(240, 240, 240))  # very light grey
-            if isinstance(symbol, QgsMarkerSymbol):
-                # do it only for the layer with points
-                self._set_symbol_size(symbol_zeros)
-                symbol_zeros.symbolLayer(0).setStrokeStyle(
-                    Qt.PenStyle(Qt.NoPen))
-            zeros_min = 0.0
-            zeros_max = VERY_SMALL_VALUE
-            range_zeros = QgsRendererRange(
-                zeros_min, zeros_max, symbol_zeros,
-                " %.2f - %.2f" % (zeros_min, zeros_max), True)
-            graduated_renderer.addClassRange(range_zeros)
-            graduated_renderer.moveClass(
-                len(graduated_renderer.ranges()) - 1, 0)
-        layer.setRenderer(graduated_renderer)
+        if add_null_class:
+            # add a class for NULL values
+            rule_renderer = QgsRuleBasedRenderer(
+                QgsSymbol.defaultSymbol(layer.geometryType()))
+            root_rule = rule_renderer.rootRule()
+            not_null_rule = root_rule.children()[0].clone()
+            # strip parentheses from stringified color HSL
+            not_null_rule.setFilterExpression('%s IS NOT NULL' % style_by)
+            not_null_rule.setLabel('%s:' % style_by)
+            root_rule.appendChild(not_null_rule)
+            null_rule = root_rule.children()[0].clone()
+            null_rule.setSymbol(QgsFillSymbol.createSimple(
+                {'color': '240,240,240'}))  # very light grey
+            null_rule.setFilterExpression('%s IS NULL' % style_by)
+            null_rule.setLabel(tr('No points'))
+            root_rule.appendChild(null_rule)
+            # create value ranges
+            rule_renderer.refineRuleRanges(not_null_rule, graduated_renderer)
+            # remove default rule
+            root_rule.removeChildAt(0)
+            layer.setRenderer(rule_renderer)
+        else:
+            layer.setRenderer(graduated_renderer)
         layer.setOpacity(0.7)
         layer.triggerRepaint()
+        self.iface.setActiveLayer(layer)
+        self.iface.zoomToActiveLayer()
+        log_msg('Layer %s was created successfully' % layer.name(), level='S',
+                message_bar=self.iface.messageBar())
         # NOTE QGIS3: probably not needed
         # self.iface.layerTreeView().refreshLayerSymbology(layer.id())
 
@@ -595,42 +603,36 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             return None
         selected_dir = QFileInfo(file_name).dir().path()
         QSettings().setValue('irmt/select_layer_dir', selected_dir)
-        zonal_layer_plus_stats = self.load_zonal_layer(file_name)
-        return zonal_layer_plus_stats
+        zonal_layer = self.load_zonal_layer(file_name)
+        return zonal_layer
 
-    def load_zonal_layer(self, zonal_layer_path, make_a_copy=False):
+    def load_zonal_layer(self, zonal_layer_path):
         # Load zonal layer
         zonal_layer = QgsVectorLayer(zonal_layer_path, tr('Zonal data'), 'ogr')
         if not zonal_layer.geometryType() == QgsWkbTypes.PolygonGeometry:
             msg = 'Zonal layer must contain zone polygons'
             log_msg(msg, level='C', message_bar=self.iface.messageBar())
             return False
-        if make_a_copy:
-            # Make a copy, where stats will be added
-            zonal_layer_plus_stats = ProcessLayer(
-                zonal_layer).duplicate_in_memory()
-        else:
-            zonal_layer_plus_stats = zonal_layer
         # Add zonal layer to registry
-        if zonal_layer_plus_stats.isValid():
-            QgsProject.instance().addMapLayer(zonal_layer_plus_stats)
+        if zonal_layer.isValid():
+            QgsProject.instance().addMapLayer(zonal_layer)
         else:
             msg = 'Invalid zonal layer'
             log_msg(msg, level='C', message_bar=self.iface.messageBar())
             return None
-        return zonal_layer_plus_stats
+        return zonal_layer
 
     def on_zonal_layer_tbn_clicked(self):
-        zonal_layer_plus_stats = self.open_zonal_layer_dialog()
-        if (zonal_layer_plus_stats and
-                zonal_layer_plus_stats.geometryType() == QgsWkbTypes.PolygonGeometry):
-            self.populate_zonal_layer_cbx(zonal_layer_plus_stats)
+        zonal_layer = self.open_zonal_layer_dialog()
+        if (zonal_layer and
+                zonal_layer.geometryType() == QgsWkbTypes.PolygonGeometry):
+            self.populate_zonal_layer_cbx(zonal_layer)
 
-    def populate_zonal_layer_cbx(self, zonal_layer_plus_stats):
+    def populate_zonal_layer_cbx(self, zonal_layer):
         cbx = self.zonal_layer_cbx
-        cbx.addItem(zonal_layer_plus_stats.name())
+        cbx.addItem(zonal_layer.name())
         last_index = cbx.count() - 1
-        cbx.setItemData(last_index, zonal_layer_plus_stats.id())
+        cbx.setItemData(last_index, zonal_layer.id())
         cbx.setCurrentIndex(last_index)
 
     def show_file_size(self):
@@ -655,54 +657,43 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                     self.zonal_layer_cbx.currentIndex())
                 zonal_layer = QgsProject.instance().mapLayer(
                     zonal_layer_id)
-                # if the two layers have different projections, display an
-                # error message and return
+                QgsProject.instance().layerTreeRoot().findLayer(
+                    zonal_layer.id()).setItemVisibilityChecked(False)
+                # if the two layers have different projections, display a
+                # warning, but try proceeding anyway
                 have_same_projection, check_projection_msg = ProcessLayer(
                     loss_layer).has_same_projection_as(zonal_layer)
                 if not have_same_projection:
-                    log_msg(check_projection_msg, level='C',
+                    log_msg(check_projection_msg, level='W',
                             message_bar=self.iface.messageBar())
-                    # TODO: load only loss layer
-                    super(LoadOutputAsLayerDialog, self).accept()
-                    return
-                loss_attr_names = [
+                [loss_attr_name] = [
                     field.name() for field in loss_layer.fields()]
-                zone_id_in_losses_attr_name = None
-                # index 0 is for "Add field with unique zone id"
-                if self.zone_id_field_cbx.currentIndex() == 0:
-                    zone_id_in_zones_attr_name = None
-                else:
-                    zone_id_in_zones_attr_name = \
-                        self.zone_id_field_cbx.currentText()
-                # aggregate losses by zone (calculate count of points in the
-                # zone, sum and average loss values for the same zone)
-                loss_layer_is_vector = True
+                zonal_layer_plus_sum_name = "%s_sum" % zonal_layer.name()
                 try:
-                    res = calculate_zonal_stats(loss_layer,
-                                                zonal_layer,
-                                                loss_attr_names,
-                                                loss_layer_is_vector,
-                                                zone_id_in_losses_attr_name,
-                                                zone_id_in_zones_attr_name,
-                                                self.iface,
-                                                extra=False)
-                except TypeError as exc:
+                    zonal_layer_plus_sum = calculate_zonal_stats(
+                        zonal_layer, loss_layer, (loss_attr_name,),
+                        zonal_layer_plus_sum_name)
+                except Exception as exc:
                     log_msg(str(exc), level='C',
                             message_bar=self.iface.messageBar())
                     return
-                (loss_layer, zonal_layer, loss_attrs_dict) = res
-                # sanity check
-                assert len(loss_attrs_dict) == 1, (
-                    "Only one attribute should be added to the zonal layer."
-                    " %s were added insted" % len(loss_attrs_dict))
+                # Add zonal layer to registry
+                if zonal_layer_plus_sum.isValid():
+                    QgsProject.instance().addMapLayer(zonal_layer_plus_sum)
+                else:
+                    msg = 'The layer aggregating data by zone is invalid.'
+                    log_msg(msg, level='C', message_bar=self.iface.messageBar())
+                    return None
                 # NOTE: in scenario damage, keys are like
                 #       u'structural_no_damage_mean', and not just
                 #       u'structural', therefore we can't just use the selected
                 #       loss type, but we must use the actual only key in the
                 #       dict
-                [added_loss_attr] = loss_attrs_dict
-                style_by = loss_attrs_dict[added_loss_attr]['sum']
-                self.style_maps(layer=zonal_layer, style_by=style_by)
+                added_loss_attr = "%s_sum" % loss_attr_name
+                style_by = added_loss_attr
+                self.style_maps(
+                    layer=zonal_layer_plus_sum, style_by=style_by,
+                    add_null_class=True)
         elif self.output_type in OQ_CSV_TO_LAYER_TYPES:
             self.load_from_csv()
         super(LoadOutputAsLayerDialog, self).accept()

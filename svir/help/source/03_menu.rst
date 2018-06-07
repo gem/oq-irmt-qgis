@@ -35,11 +35,6 @@ corresponding documentation.
   * |icon-project-definitions-manager| :ref:`chap-project-definitions-manager`
   * |icon-weight-and-calculate| :ref:`chap-weighting-and-calculating`
 
-* Recovery modeling
-
-  * |icon-recovery| :ref:`chap-recovery-modeling`
-  * |icon-recovery-settings| :ref:`sec-recovery-modeling-settings`
-
 * Utilities
 
   * |icon-aggregate-loss-by-zone| :ref:`chap-aggregating-loss-by-zone`
@@ -63,8 +58,6 @@ corresponding documentation.
 .. |icon-upload| image:: images/iconUpload.png
 .. |icon-manual| image:: images/iconManual.png
 .. |icon-plot| image:: images/iconPlot.png
-.. |icon-recovery| image:: images/iconRecovery.png
-.. |icon-recovery-settings| image:: images/iconRecoverySettings.png
 .. |icon-drive-oq-engine| image:: images/iconDriveOqEngine.png
 .. |icon-ipt| image:: images/iconIpt.png
 .. |icon-taxtweb| image:: images/iconTaxtweb.png
