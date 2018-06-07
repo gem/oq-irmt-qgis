@@ -13,7 +13,7 @@ name=OpenQuake Integrated Risk Modelling Toolkit
 qgisMinimumVersion=3.0
 description=Tools to drive the OpenQuake Engine, to develop composite indicators and integrate them with physical risk estimations. 
 about=This plugin allows users to drive OpenQuake Engine calculations (https://github.com/gem/oq-engine) of physical hazard and risk, and to load the corresponding outputs as QGIS layers. For those outputs, data visualization tools are provided. The toolkit also enables users to develop composite indicators to measure and quantify social characteristics, and combine them with estimates of human or infrastructure loss. The plugin can interact with the OpenQuake Platform (https://platform.openquake.org), to browse and download socio-economic data or existing projects, edit projects locally in QGIS and upload and share them with the scientific community.
-version=3.1.1
+version=3.2.0
 author=GEM Foundation
 email=staff.it@globalquakemodel.org
 
@@ -23,6 +23,13 @@ email=staff.it@globalquakemodel.org
 
 # Uncomment the following line and add your changelog entries:
 changelog=
+    3.2.0
+    * Plugin migrated to QGIS3 (with PyQt5, Python3)
+    * Removed recovery modeling functionalities and the corresponding dependency from Scipy
+    * Removed dialog to aggregate losses by zone (replaced by "Join attributes by location (summary)" algorithm in the processing toolbox)
+    * Removed dependency from SAGA and the internal implementation of the geospatial aggregtion of points by zone.
+    * When loading OQ-Engine outputs that can be aggregated by zone, if the option to run the aggregation is checked, the ok button is
+      disabled until a valid zonal layer is loaded
     3.1.1
     * When loading Ground Motion Fields for scenario calculations, the names of the GMPEs are displayed instead of the realization names
     * When loading a OQ-Engine output as layer, the engine version is saved as a custom property of the layer
