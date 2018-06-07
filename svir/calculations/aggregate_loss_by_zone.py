@@ -23,6 +23,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import processing
+from qgis.core import QgsApplication
 
 
 def calculate_zonal_stats(zonal_layer, points_layer, join_fields,
@@ -61,7 +62,7 @@ def calculate_zonal_stats(zonal_layer, points_layer, join_fields,
 
     # make sure to use the actual lists of predicates and summaries as defined
     # in the algorithm while running the initAlgorithm method
-    alg = processing.algs.qgis.SpatialJoinSummary.SpatialJoinSummary()
+    alg = QgsApplication.processingRegistry().algorithmById('qgis:joinbylocationsummary')
     alg.initAlgorithm()
     predicate_keys = [predicate[0] for predicate in alg.predicates]
     PREDICATES = dict(zip(predicate_keys, range(len(predicate_keys))))
