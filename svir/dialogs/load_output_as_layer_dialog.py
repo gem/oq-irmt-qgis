@@ -228,6 +228,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             self.on_zonal_layer_tbn_clicked)
         self.zonal_layer_cbx.currentIndexChanged[int].connect(
             self.on_zonal_layer_cbx_currentIndexChanged)
+        self.zonal_layer_gbx.toggled[bool].connect(
+            self.on_zonal_layer_gbx_toggled)
 
     def pre_populate_zonal_layer_cbx(self):
         for key, layer in \
@@ -243,9 +245,18 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     def on_zonal_layer_cbx_currentIndexChanged(self, new_index):
         zonal_layer = None
         if not self.zonal_layer_cbx.currentText():
+            if self.zonal_layer_gbx.isChecked():
+                self.ok_button.setEnabled(False)
             return
         zonal_layer_id = self.zonal_layer_cbx.itemData(new_index)
         zonal_layer = QgsProject.instance().mapLayer(zonal_layer_id)
+        self.set_ok_button()
+
+    def on_zonal_layer_gbx_toggled(self, on):
+        if on and not self.zonal_layer_cbx.currentText():
+            self.ok_button.setEnabled(False)
+        else:
+            self.set_ok_button()
 
     def on_output_type_changed(self):
         if self.output_type in OQ_TO_LAYER_TYPES:
