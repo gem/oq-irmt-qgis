@@ -755,7 +755,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             else:
                 raise NotImplementedError("%s %s" % (action, outtype))
         elif action == 'Download':
-            filepath = self.download_output(output_id, outtype)
+            dest_folder = ask_for_download_destination_folder(self)
+            if not dest_folder:
+                return
+            filepath = self.download_output(output_id, outtype, dest_folder)
             if not filepath:
                 return
             self.notify_downloaded(output_id, filepath)
@@ -785,11 +788,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         msg = 'Calculation %s was saved as %s' % (output_id, filepath)
         log_msg(msg, level='S', message_bar=self.message_bar)
 
-    def download_output(self, output_id, outtype, dest_folder=None):
-        if not dest_folder:
-            dest_folder = ask_for_download_destination_folder(self)
-            if not dest_folder:
-                return
+    def download_output(self, output_id, outtype, dest_folder):
         output_download_url = (
             "%s/v1/calc/result/%s?export_type=%s&dload=true" % (self.hostname,
                                                                 output_id,
