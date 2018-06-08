@@ -741,13 +741,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     output_id, outtype, dest_folder)
                 if not filepath:
                     return
-                # NOTE: it might be created here directly instead, but this way
-                # we can use the qt-designer
-                self.full_report_dlg = ShowFullReportDialog(filepath)
-                self.full_report_dlg.setWindowTitle(
-                    'Full report of calculation %s' %
-                    self.current_calc_id)
-                self.full_report_dlg.show()
+                self.open_full_report(filepath)
             else:
                 raise NotImplementedError("%s %s" % (action, outtype))
         elif action == 'Load as layer':
@@ -757,24 +751,39 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     output_id, outtype, dest_folder)
                 if not filepath:
                     return
-                if output_type not in OUTPUT_TYPE_LOADERS:
-                    raise NotImplementedError(output_type)
-                dlg = OUTPUT_TYPE_LOADERS[output_type](
-                    self.iface, self.viewer_dock,
-                    self.session, self.hostname, self.current_calc_id,
-                    output_type, path=filepath,
-                    engine_version=self.engine_version)
-                dlg.exec_()
+                self.open_output(filepath, output_type)
             else:
                 raise NotImplementedError("%s %s" % (action, outtype))
         elif action == 'Download':
             filepath = self.download_output(output_id, outtype)
             if not filepath:
                 return
-            msg = 'Calculation %s was saved as %s' % (output_id, filepath)
-            log_msg(msg, level='S', message_bar=self.message_bar)
+            self.notify_downloaded(output_id, filepath)
         else:
             raise NotImplementedError(action)
+
+    def open_full_report(self, filepath):
+        # NOTE: it might be created here directly instead, but this way
+        # we can use the qt-designer
+        self.full_report_dlg = ShowFullReportDialog(filepath)
+        self.full_report_dlg.setWindowTitle(
+            'Full report of calculation %s' %
+            self.current_calc_id)
+        self.full_report_dlg.show()
+
+    def open_output(self, filepath, output_type):
+        if output_type not in OUTPUT_TYPE_LOADERS:
+            raise NotImplementedError(output_type)
+        dlg = OUTPUT_TYPE_LOADERS[output_type](
+            self.iface, self.viewer_dock,
+            self.session, self.hostname, self.current_calc_id,
+            output_type, path=filepath,
+            engine_version=self.engine_version)
+        dlg.exec_()
+
+    def notify_downloaded(self, output_id, filepath):
+        msg = 'Calculation %s was saved as %s' % (output_id, filepath)
+        log_msg(msg, level='S', message_bar=self.message_bar)
 
     def download_output(self, output_id, outtype, dest_folder=None):
         if not dest_folder:
