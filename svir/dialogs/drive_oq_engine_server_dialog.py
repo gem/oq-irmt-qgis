@@ -43,6 +43,7 @@ from qgis.PyQt.QtWidgets import (QDialog,
                                  QMessageBox)
 from qgis.PyQt.QtGui import QColor, QBrush
 from qgis.gui import QgsMessageBar
+from qgis.core import QgsTask, QgsApplication
 
 from requests import Session
 from requests.exceptions import (ConnectionError,
@@ -583,6 +584,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             return
         datastore_url = "%s/v1/calc/%s/datastore" % (
             self.hostname, self.current_calc_id)
+        # FIXME: use a task
         with WaitCursorManager('Getting HDF5 datastore...',
                                self.message_bar):
             try:
@@ -737,35 +739,38 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     self.current_calc_id, self.session,
                     self.hostname, output_type, self.engine_version)
             elif outtype == 'rst':
-                filepath = self.download_output(
-                    output_id, outtype, dest_folder)
-                if not filepath:
-                    return
-                self.open_full_report(filepath)
+                download_task = DownloadOqOutputTask(
+                    'Download', QgsTask.CanCancel, output_id, outtype,
+                    output_type, dest_folder, self.session, self.hostname,
+                    self.open_full_report, self.notify_error)
+                QgsApplication.taskManager().addTask(download_task)
             else:
                 raise NotImplementedError("%s %s" % (action, outtype))
         elif action == 'Load as layer':
             dest_folder = tempfile.gettempdir()
             if outtype in ('npz', 'csv'):
-                filepath = self.download_output(
-                    output_id, outtype, dest_folder)
-                if not filepath:
-                    return
-                self.open_output(filepath, output_type)
+                download_task = DownloadOqOutputTask(
+                    'Download', QgsTask.CanCancel, output_id, outtype,
+                    output_type, dest_folder, self.session, self.hostname,
+                    self.open_output, self.notify_error)
+                QgsApplication.taskManager().addTask(download_task)
             else:
                 raise NotImplementedError("%s %s" % (action, outtype))
         elif action == 'Download':
             dest_folder = ask_for_download_destination_folder(self)
             if not dest_folder:
                 return
-            filepath = self.download_output(output_id, outtype, dest_folder)
-            if not filepath:
-                return
-            self.notify_downloaded(output_id, filepath)
+            download_task = DownloadOqOutputTask(
+                'Download', QgsTask.CanCancel, output_id, outtype,
+                output_type, dest_folder, self.session, self.hostname,
+                self.notify_downloaded, self.notify_error)
+            QgsApplication.taskManager().addTask(download_task)
         else:
             raise NotImplementedError(action)
 
-    def open_full_report(self, filepath):
+    def open_full_report(
+            self, output_id=None, output_type=None, filepath=None):
+        assert(filepath is not None)
         # NOTE: it might be created here directly instead, but this way
         # we can use the qt-designer
         self.full_report_dlg = ShowFullReportDialog(filepath)
@@ -774,7 +779,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             self.current_calc_id)
         self.full_report_dlg.show()
 
-    def open_output(self, filepath, output_type):
+    def open_output(self, output_id=None, output_type=None, filepath=None):
+        assert(filepath is not None)
+        assert(output_type is not None)
         if output_type not in OUTPUT_TYPE_LOADERS:
             raise NotImplementedError(output_type)
         dlg = OUTPUT_TYPE_LOADERS[output_type](
@@ -784,36 +791,16 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             engine_version=self.engine_version)
         dlg.exec_()
 
-    def notify_downloaded(self, output_id, filepath):
+    def notify_downloaded(
+            self, output_id=None, output_type=None, filepath=None):
+        assert(output_id is not None)
+        assert(filepath is not None)
         msg = 'Calculation %s was saved as %s' % (output_id, filepath)
         log_msg(msg, level='S', message_bar=self.message_bar)
 
-    def download_output(self, output_id, outtype, dest_folder):
-        output_download_url = (
-            "%s/v1/calc/result/%s?export_type=%s&dload=true" % (self.hostname,
-                                                                output_id,
-                                                                outtype))
-        with WaitCursorManager('Downloading output...',
-                               self.message_bar):
-            try:
-                # FIXME: enable the user to set verify=True
-                resp = self.session.get(output_download_url, verify=False)
-            except HANDLED_EXCEPTIONS as exc:
-                self._handle_exception(exc)
-                return
-            if not resp.ok:
-                err_msg = (
-                    'Unable to download the output.\n%s: %s.\n%s'
-                    % (resp.status_code, resp.reason, resp.text))
-                log_msg(err_msg, level='C',
-                        message_bar=self.message_bar)
-                return
-            filename = resp.headers['content-disposition'].split(
-                'filename=')[1]
-            filepath = os.path.join(dest_folder, filename)
-            with open(filepath, "wb") as f:
-                f.write(resp.content)
-        return filepath
+    def notify_error(self, exc):
+        msg = 'Unable to download output'
+        log_msg(msg, level='C', message_bar=self.message_bar, exception=exc)
 
     def start_polling(self):
         if not self.is_logged_in:
@@ -882,3 +869,69 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     def reject(self):
         self.stop_polling()
         super(DriveOqEngineServerDialog, self).reject()
+
+
+class TaskCanceled(Exception):
+    pass
+
+
+class DownloadFailed(Exception):
+    pass
+
+
+class DownloadOqOutputTask(QgsTask):
+
+    def __init__(self, description, flags, output_id, outtype,
+            output_type, dest_folder, session, hostname, on_success, on_error):
+        super().__init__(description, flags)
+        self.output_id = output_id
+        self.outtype = outtype
+        self.output_type = output_type
+        self.dest_folder = dest_folder
+        self.session = session
+        self.hostname = hostname
+        self.on_success = on_success
+        self.on_error = on_error
+
+    def run(self):
+        try:
+            self.download_output(self.output_id, self.outtype,
+                                 self.dest_folder, self.session, self.hostname)
+        except Exception as exc:
+            self.exception = exc
+            return False
+        else:
+            return True
+
+    def finished(self, success):
+        if success:
+            self.on_success(
+                output_id=self.output_id, output_type=self.output_type,
+                filepath=self.filepath)
+        else:
+            self.on_error(self.exception)
+
+    def download_output(self, output_id, outtype, dest_folder,
+                        session, hostname):
+        output_download_url = (
+            "%s/v1/calc/result/%s?export_type=%s&dload=true" % (hostname,
+                                                                output_id,
+                                                                outtype))
+        try:
+            # FIXME: enable the user to set verify=True
+            resp = session.get(output_download_url, verify=False)
+        except HANDLED_EXCEPTIONS as exc:
+            raise exc
+            return False
+        if not resp.ok:
+            err_msg = (
+                'Unable to download the output.\n%s: %s.\n%s'
+                % (resp.status_code, resp.reason, resp.text))
+            raise DownloadFailed(err_msg)
+            return False
+        filename = resp.headers['content-disposition'].split(
+            'filename=')[1]
+        self.filepath = os.path.join(dest_folder, filename)
+        with open(self.filepath, "wb") as f:
+            f.write(resp.content)
+        return True
