@@ -27,6 +27,7 @@ import json
 import tempfile
 import zipfile
 import copy
+from uuid import uuid4
 
 from qgis.PyQt.QtCore import (QDir,
                               Qt,
@@ -150,6 +151,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
         self.engine_version = None
         self.attempt_login()
+
+        self.download_tasks = {}
 
     def attempt_login(self):
         try:
@@ -582,25 +585,14 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         dest_folder = ask_for_download_destination_folder(self)
         if not dest_folder:
             return
-        datastore_url = "%s/v1/calc/%s/datastore" % (
-            self.hostname, self.current_calc_id)
-        # FIXME: use a task
-        with WaitCursorManager('Getting HDF5 datastore...',
-                               self.message_bar):
-            try:
-                # FIXME: enable the user to set verify=True
-                resp = self.session.get(datastore_url, timeout=10,
-                                        verify=False)
-            except HANDLED_EXCEPTIONS as exc:
-                self._handle_exception(exc)
-                return
-            filename = resp.headers['content-disposition'].split(
-                'filename=')[1]
-            filepath = os.path.join(dest_folder, os.path.basename(filename))
-            with open(filepath, "wb") as f:
-                f.write(resp.content)
-            log_msg('The datastore has been saved as %s' % filepath,
-                    level='S', message_bar=self.message_bar)
+        task_id = uuid4()
+        download_task = DownloadOqOutputTask(
+            'Download', QgsTask.CanCancel, task_id, None, None,
+            None, dest_folder, self.session, self.hostname,
+            self.notify_downloaded, self.notify_error,
+            current_calc_id=self.current_calc_id)
+        self.download_tasks[task_id] = download_task
+        QgsApplication.taskManager().addTask(download_task)
 
     @pyqtSlot()
     def on_show_calc_params_btn_clicked(self):
@@ -739,20 +731,24 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     self.current_calc_id, self.session,
                     self.hostname, output_type, self.engine_version)
             elif outtype == 'rst':
+                task_id = uuid4()
                 download_task = DownloadOqOutputTask(
-                    'Download', QgsTask.CanCancel, output_id, outtype,
+                    'Download', QgsTask.CanCancel, task_id, output_id, outtype,
                     output_type, dest_folder, self.session, self.hostname,
                     self.open_full_report, self.notify_error)
+                self.download_tasks[task_id] = download_task
                 QgsApplication.taskManager().addTask(download_task)
             else:
                 raise NotImplementedError("%s %s" % (action, outtype))
         elif action == 'Load as layer':
             dest_folder = tempfile.gettempdir()
             if outtype in ('npz', 'csv'):
+                task_id = uuid4()
                 download_task = DownloadOqOutputTask(
-                    'Download', QgsTask.CanCancel, output_id, outtype,
+                    'Download', QgsTask.CanCancel, task_id, output_id, outtype,
                     output_type, dest_folder, self.session, self.hostname,
                     self.open_output, self.notify_error)
+                self.download_tasks[task_id] = download_task
                 QgsApplication.taskManager().addTask(download_task)
             else:
                 raise NotImplementedError("%s %s" % (action, outtype))
@@ -760,17 +756,20 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             dest_folder = ask_for_download_destination_folder(self)
             if not dest_folder:
                 return
+            task_id = uuid4()
             download_task = DownloadOqOutputTask(
-                'Download', QgsTask.CanCancel, output_id, outtype,
+                'Download', QgsTask.CanCancel, task_id, output_id, outtype,
                 output_type, dest_folder, self.session, self.hostname,
                 self.notify_downloaded, self.notify_error)
+            self.download_tasks[task_id] = download_task
             QgsApplication.taskManager().addTask(download_task)
         else:
             raise NotImplementedError(action)
 
     def open_full_report(
-            self, output_id=None, output_type=None, filepath=None):
+            self, task_id, output_id=None, output_type=None, filepath=None):
         assert(filepath is not None)
+        del(self.download_tasks[task_id])
         # NOTE: it might be created here directly instead, but this way
         # we can use the qt-designer
         self.full_report_dlg = ShowFullReportDialog(filepath)
@@ -779,7 +778,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             self.current_calc_id)
         self.full_report_dlg.show()
 
-    def open_output(self, output_id=None, output_type=None, filepath=None):
+    def open_output(
+            self, task_id, output_id=None, output_type=None, filepath=None):
+        del(self.download_tasks[task_id])
         assert(filepath is not None)
         assert(output_type is not None)
         if output_type not in OUTPUT_TYPE_LOADERS:
@@ -792,14 +793,17 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         dlg.exec_()
 
     def notify_downloaded(
-            self, output_id=None, output_type=None, filepath=None):
-        assert(output_id is not None)
+            self, task_id, output_id=None, output_type=None, filepath=None):
         assert(filepath is not None)
-        msg = 'Calculation %s was saved as %s' % (output_id, filepath)
+        if output_id is not None:
+            msg = 'Calculation %s was saved as %s' % (output_id, filepath)
+        else:
+            msg = 'HDF5 datastore saved as %s' % filepath
         log_msg(msg, level='S', message_bar=self.message_bar)
+        del(self.download_tasks[task_id])
 
     def notify_error(self, exc):
-        msg = 'Unable to download output'
+        msg = 'Unable to download the output'
         log_msg(msg, level='C', message_bar=self.message_bar, exception=exc)
 
     def start_polling(self):
@@ -881,9 +885,11 @@ class DownloadFailed(Exception):
 
 class DownloadOqOutputTask(QgsTask):
 
-    def __init__(self, description, flags, output_id, outtype,
-            output_type, dest_folder, session, hostname, on_success, on_error):
+    def __init__(self, description, flags, task_id, output_id, outtype,
+            output_type, dest_folder, session, hostname, on_success, on_error,
+            current_calc_id=None):
         super().__init__(description, flags)
+        self.task_id = task_id
         self.output_id = output_id
         self.outtype = outtype
         self.output_type = output_type
@@ -892,11 +898,18 @@ class DownloadOqOutputTask(QgsTask):
         self.hostname = hostname
         self.on_success = on_success
         self.on_error = on_error
+        self.current_calc_id = current_calc_id
 
     def run(self):
+        if self.current_calc_id:
+            download_url = "%s/v1/calc/%s/datastore" % (
+                self.hostname, self.current_calc_id)
+        else:
+            download_url = (
+                "%s/v1/calc/result/%s?export_type=%s&dload=true" % (
+                    self.hostname, self.output_id, self.outtype))
         try:
-            self.download_output(self.output_id, self.outtype,
-                                 self.dest_folder, self.session, self.hostname)
+            self.download_output(self.dest_folder, self.session, download_url)
         except Exception as exc:
             self.exception = exc
             return False
@@ -906,32 +919,43 @@ class DownloadOqOutputTask(QgsTask):
     def finished(self, success):
         if success:
             self.on_success(
-                output_id=self.output_id, output_type=self.output_type,
+                self.task_id, output_id=self.output_id,
+                output_type=self.output_type,
                 filepath=self.filepath)
         else:
-            self.on_error(self.exception)
+            self.on_error(self.task_id, self.exception)
 
-    def download_output(self, output_id, outtype, dest_folder,
-                        session, hostname):
-        output_download_url = (
-            "%s/v1/calc/result/%s?export_type=%s&dload=true" % (hostname,
-                                                                output_id,
-                                                                outtype))
+    def download_output(self, dest_folder, session, download_url):
         try:
             # FIXME: enable the user to set verify=True
-            resp = session.get(output_download_url, verify=False)
+            resp = session.get(download_url, verify=False, stream=True)
         except HANDLED_EXCEPTIONS as exc:
+            print(exc)
             raise exc
-            return False
         if not resp.ok:
             err_msg = (
                 'Unable to download the output.\n%s: %s.\n%s'
                 % (resp.status_code, resp.reason, resp.text))
             raise DownloadFailed(err_msg)
-            return False
         filename = resp.headers['content-disposition'].split(
             'filename=')[1]
+        print('filename: %s' % filename)
         self.filepath = os.path.join(dest_folder, filename)
+        print('self.filepath: %s' % self.filepath)
+        print(resp.headers)
+        tot_len = resp.headers.get('content-length')
+        print('tot_len: %s' % tot_len)
         with open(self.filepath, "wb") as f:
-            f.write(resp.content)
+            if tot_len is None:
+                f.write(resp.content)
+            else:
+                dl = 0
+                for data in response.iter_content(chunk_size=tot_len/100):
+                    dl += len(data)
+                    f.write(data)
+                    progress = dl / tot_len
+                    print('progress: %s' % progress)
+                    self.setProgress(progress)
+                    if self.isCancelled():
+                        raise TaskCanceled
         return True
