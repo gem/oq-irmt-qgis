@@ -885,7 +885,8 @@ class DownloadFailed(Exception):
 
 class DownloadOqOutputTask(QgsTask):
 
-    def __init__(self, description, flags, task_id, output_id, outtype,
+    def __init__(
+            self, description, flags, task_id, output_id, outtype,
             output_type, dest_folder, session, hostname, on_success, on_error,
             current_calc_id=None):
         super().__init__(description, flags)
@@ -950,7 +951,7 @@ class DownloadOqOutputTask(QgsTask):
                 f.write(resp.content)
             else:
                 dl = 0
-                for data in response.iter_content(chunk_size=tot_len/100):
+                for data in resp.iter_content(chunk_size=tot_len/100):
                     dl += len(data)
                     f.write(data)
                     progress = dl / tot_len
