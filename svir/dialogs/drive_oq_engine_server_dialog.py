@@ -310,8 +310,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 style = 'background-color: %s; color: %s' % (
                     action['bg_color'], action['txt_color'])
                 button.setStyleSheet(style)
-                button.clicked.connect(lambda checked=False, calc_id=calc['id'], action=action['label']: (
-                        self.on_calc_action_btn_clicked(calc_id, action)))
+                button.clicked.connect(lambda checked=False, calc_id=calc['id'], action=action['label']: (  # NOQA
+                    self.on_calc_action_btn_clicked(calc_id, action)))
                 self.calc_list_tbl.setCellWidget(row, col, button)
                 self.calc_list_tbl.setColumnWidth(col, BUTTON_WIDTH)
         empty_col_names = [''] * len(actions)
@@ -718,8 +718,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             style = 'background-color: #3cb3c5; color: white;'
             button.setText("%s %s" % (action, outtype))
         button.setStyleSheet(style)
-        button.clicked.connect(lambda checked=False, output=output, action=action, outtype=outtype: (
-                self.on_output_action_btn_clicked(output, action, outtype)))
+        button.clicked.connect(lambda checked=False, output=output, action=action, outtype=outtype: (  # NOQA
+            self.on_output_action_btn_clicked(output, action, outtype)))
 
     def on_output_action_btn_clicked(self, output, action, outtype):
         output_id = output['id']
