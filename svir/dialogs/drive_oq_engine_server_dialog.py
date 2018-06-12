@@ -589,7 +589,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         download_task = DownloadOqOutputTask(
             'Download', QgsTask.CanCancel, task_id, None, None,
             None, dest_folder, self.session, self.hostname,
-            self.notify_downloaded, self.notify_error,
+            self.notify_downloaded, self.notify_error, self.del_task,
             current_calc_id=self.current_calc_id)
         self.download_tasks[task_id] = download_task
         QgsApplication.taskManager().addTask(download_task)
@@ -735,7 +735,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 download_task = DownloadOqOutputTask(
                     'Download', QgsTask.CanCancel, task_id, output_id, outtype,
                     output_type, dest_folder, self.session, self.hostname,
-                    self.open_full_report, self.notify_error)
+                    self.open_full_report, self.notify_error, self.del_task)
                 self.download_tasks[task_id] = download_task
                 QgsApplication.taskManager().addTask(download_task)
             else:
@@ -747,7 +747,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 download_task = DownloadOqOutputTask(
                     'Download', QgsTask.CanCancel, task_id, output_id, outtype,
                     output_type, dest_folder, self.session, self.hostname,
-                    self.open_output, self.notify_error)
+                    self.open_output, self.notify_error, self.del_task)
                 self.download_tasks[task_id] = download_task
                 QgsApplication.taskManager().addTask(download_task)
             else:
@@ -760,16 +760,20 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             download_task = DownloadOqOutputTask(
                 'Download', QgsTask.CanCancel, task_id, output_id, outtype,
                 output_type, dest_folder, self.session, self.hostname,
-                self.notify_downloaded, self.notify_error)
+                self.notify_downloaded, self.notify_error, self.del_task)
             self.download_tasks[task_id] = download_task
             QgsApplication.taskManager().addTask(download_task)
         else:
             raise NotImplementedError(action)
 
-    def open_full_report(
-            self, task_id, output_id=None, output_type=None, filepath=None):
-        assert(filepath is not None)
+    def del_task(self, task_id):
+        print('Before deleting: %s' % self.download_tasks)
         del(self.download_tasks[task_id])
+        print('After deleting: %s' % self.download_tasks)
+
+    def open_full_report(
+            self, output_id=None, output_type=None, filepath=None):
+        assert(filepath is not None)
         # NOTE: it might be created here directly instead, but this way
         # we can use the qt-designer
         self.full_report_dlg = ShowFullReportDialog(filepath)
@@ -779,8 +783,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.full_report_dlg.show()
 
     def open_output(
-            self, task_id, output_id=None, output_type=None, filepath=None):
-        del(self.download_tasks[task_id])
+            self, output_id=None, output_type=None, filepath=None):
         assert(filepath is not None)
         assert(output_type is not None)
         if output_type not in OUTPUT_TYPE_LOADERS:
@@ -793,14 +796,13 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         dlg.exec_()
 
     def notify_downloaded(
-            self, task_id, output_id=None, output_type=None, filepath=None):
+            self, output_id=None, output_type=None, filepath=None):
         assert(filepath is not None)
         if output_id is not None:
             msg = 'Calculation %s was saved as %s' % (output_id, filepath)
         else:
             msg = 'HDF5 datastore saved as %s' % filepath
         log_msg(msg, level='S', message_bar=self.message_bar)
-        del(self.download_tasks[task_id])
 
     def notify_error(self, exc):
         msg = 'Unable to download the output'
@@ -888,7 +890,7 @@ class DownloadOqOutputTask(QgsTask):
     def __init__(
             self, description, flags, task_id, output_id, outtype,
             output_type, dest_folder, session, hostname, on_success, on_error,
-            current_calc_id=None):
+            del_task, current_calc_id=None):
         super().__init__(description, flags)
         self.task_id = task_id
         self.output_id = output_id
@@ -899,6 +901,7 @@ class DownloadOqOutputTask(QgsTask):
         self.hostname = hostname
         self.on_success = on_success
         self.on_error = on_error
+        self.del_task = del_task
         self.current_calc_id = current_calc_id
 
     def run(self):
@@ -920,11 +923,12 @@ class DownloadOqOutputTask(QgsTask):
     def finished(self, success):
         if success:
             self.on_success(
-                self.task_id, output_id=self.output_id,
+                output_id=self.output_id,
                 output_type=self.output_type,
                 filepath=self.filepath)
         else:
-            self.on_error(self.task_id, self.exception)
+            self.on_error(self.exception)
+        self.del_task(self.task_id)
 
     def download_output(self, dest_folder, session, download_url):
         try:
