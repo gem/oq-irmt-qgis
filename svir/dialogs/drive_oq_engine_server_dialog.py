@@ -805,8 +805,12 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         log_msg(msg, level='S', message_bar=self.message_bar)
 
     def notify_error(self, exc):
-        msg = 'Unable to download the output'
-        log_msg(msg, level='C', message_bar=self.message_bar, exception=exc)
+        if isinstance(exc, TaskCanceled):
+            msg = 'Download canceled'
+            log_msg(msg, level='W', message_bar=self.iface.messageBar())
+        else:
+            msg = 'Unable to download the output'
+            log_msg(msg, level='C', message_bar=self.message_bar, exception=exc)
 
     def start_polling(self):
         if not self.is_logged_in:
