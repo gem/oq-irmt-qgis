@@ -954,13 +954,14 @@ class DownloadOqOutputTask(QgsTask):
             if tot_len is None:
                 f.write(resp.content)
             else:
+                tot_len = int(tot_len)
                 dl = 0
-                for data in resp.iter_content(chunk_size=tot_len/100):
+                for data in resp.iter_content(chunk_size=tot_len//100):
                     dl += len(data)
                     f.write(data)
                     progress = dl / tot_len
                     print('progress: %s' % progress)
                     self.setProgress(progress)
-                    if self.isCancelled():
+                    if self.isCanceled():
                         raise TaskCanceled
         return True
