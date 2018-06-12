@@ -959,7 +959,7 @@ class DownloadOqOutputTask(QgsTask):
                 for data in resp.iter_content(chunk_size=tot_len//100):
                     dl += len(data)
                     f.write(data)
-                    progress = dl / tot_len
+                    progress = dl / tot_len * 100
                     print('progress: %s' % progress)
                     self.setProgress(progress)
                     if self.isCanceled():
