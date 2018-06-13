@@ -27,7 +27,6 @@ import json
 import tempfile
 import zipfile
 import copy
-from uuid import uuid4
 
 from qgis.PyQt.QtCore import (QDir,
                               Qt,
@@ -152,7 +151,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.engine_version = None
         self.attempt_login()
 
-        self.download_tasks = {}
+        self.download_task = None
 
     def attempt_login(self):
         try:
@@ -580,19 +579,27 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         else:
             self.show_calc_params_btn.setText('Show calculation parameters')
 
+    def is_another_download_running(self):
+        if self.download_task is not None:
+            msg = ('Another download is running. Please wait until its'
+                   ' completion or cancel it, before proceeding with a'
+                   ' new download')
+            log_msg(msg, level='W', duration=4, message_bar=self.message_bar)
+            return True
+
     @pyqtSlot()
     def on_download_datastore_btn_clicked(self):
         dest_folder = ask_for_download_destination_folder(self)
         if not dest_folder:
             return
-        task_id = uuid4()
-        download_task = DownloadOqOutputTask(
-            'Downloading HDF5 datastore', QgsTask.CanCancel, task_id,
+        if self.is_another_download_running():
+            return
+        self.download_task = DownloadOqOutputTask(
+            'Downloading HDF5 datastore', QgsTask.CanCancel,
             None, None, None, dest_folder, self.session, self.hostname,
             self.notify_downloaded, self.notify_error, self.del_task,
             current_calc_id=self.current_calc_id)
-        self.download_tasks[task_id] = download_task
-        QgsApplication.taskManager().addTask(download_task)
+        QgsApplication.taskManager().addTask(self.download_task)
 
     @pyqtSlot()
     def on_show_calc_params_btn_clicked(self):
@@ -731,51 +738,49 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     self.current_calc_id, self.session,
                     self.hostname, output_type, self.engine_version)
             elif outtype == 'rst':
-                task_id = uuid4()
+                if self.is_another_download_running():
+                    return
                 descr = ('Download full report for calculation %s'
                          % self.current_calc_id)
-                download_task = DownloadOqOutputTask(
-                    descr, QgsTask.CanCancel, task_id, output_id, outtype,
+                self.download_task = DownloadOqOutputTask(
+                    descr, QgsTask.CanCancel, output_id, outtype,
                     output_type, dest_folder, self.session, self.hostname,
                     self.open_full_report, self.notify_error, self.del_task)
-                self.download_tasks[task_id] = download_task
-                QgsApplication.taskManager().addTask(download_task)
+                QgsApplication.taskManager().addTask(self.download_task)
             else:
                 raise NotImplementedError("%s %s" % (action, outtype))
         elif action == 'Load as layer':
             dest_folder = tempfile.gettempdir()
             if outtype in ('npz', 'csv'):
-                task_id = uuid4()
+                if self.is_another_download_running():
+                    return
                 descr = 'Download %s for calculation %s' % (
                     output_type, self.current_calc_id)
-                download_task = DownloadOqOutputTask(
-                    descr, QgsTask.CanCancel, task_id, output_id, outtype,
+                self.download_task = DownloadOqOutputTask(
+                    descr, QgsTask.CanCancel, output_id, outtype,
                     output_type, dest_folder, self.session, self.hostname,
                     self.open_output, self.notify_error, self.del_task)
-                self.download_tasks[task_id] = download_task
-                QgsApplication.taskManager().addTask(download_task)
+                QgsApplication.taskManager().addTask(self.download_task)
             else:
                 raise NotImplementedError("%s %s" % (action, outtype))
         elif action == 'Download':
             dest_folder = ask_for_download_destination_folder(self)
             if not dest_folder:
                 return
-            task_id = uuid4()
+            if self.is_another_download_running():
+                return
             descr = 'Download %s for calculation %s' % (
                 output_type, self.current_calc_id)
-            download_task = DownloadOqOutputTask(
-                descr, QgsTask.CanCancel, task_id, output_id, outtype,
+            self.download_task = DownloadOqOutputTask(
+                descr, QgsTask.CanCancel, output_id, outtype,
                 output_type, dest_folder, self.session, self.hostname,
                 self.notify_downloaded, self.notify_error, self.del_task)
-            self.download_tasks[task_id] = download_task
-            QgsApplication.taskManager().addTask(download_task)
+            QgsApplication.taskManager().addTask(self.download_task)
         else:
             raise NotImplementedError(action)
 
-    def del_task(self, task_id):
-        print('Before deleting: %s' % self.download_tasks)
-        del(self.download_tasks[task_id])
-        print('After deleting: %s' % self.download_tasks)
+    def del_task(self):
+        self.download_task = None
 
     def open_full_report(
             self, output_id=None, output_type=None, filepath=None):
@@ -899,11 +904,10 @@ class DownloadFailed(Exception):
 class DownloadOqOutputTask(QgsTask):
 
     def __init__(
-            self, description, flags, task_id, output_id, outtype,
+            self, description, flags, output_id, outtype,
             output_type, dest_folder, session, hostname, on_success, on_error,
             del_task, current_calc_id=None):
         super().__init__(description, flags)
-        self.task_id = task_id
         self.output_id = output_id
         self.outtype = outtype
         self.output_type = output_type
@@ -939,9 +943,10 @@ class DownloadOqOutputTask(QgsTask):
                 filepath=self.filepath)
         else:
             self.on_error(self.exception)
-        self.del_task(self.task_id)
+        self.del_task()
 
     def download_output(self, dest_folder, session, download_url):
+        self.setProgress(10)
         try:
             # FIXME: enable the user to set verify=True
             resp = session.get(download_url, verify=False, stream=True)
