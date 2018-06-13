@@ -587,8 +587,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             return
         task_id = uuid4()
         download_task = DownloadOqOutputTask(
-            'Download', QgsTask.CanCancel, task_id, None, None,
-            None, dest_folder, self.session, self.hostname,
+            'Downloading HDF5 datastore', QgsTask.CanCancel, task_id,
+            None, None, None, dest_folder, self.session, self.hostname,
             self.notify_downloaded, self.notify_error, self.del_task,
             current_calc_id=self.current_calc_id)
         self.download_tasks[task_id] = download_task
@@ -732,8 +732,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     self.hostname, output_type, self.engine_version)
             elif outtype == 'rst':
                 task_id = uuid4()
+                descr = ('Download full report for calculation %s'
+                         % self.current_calc_id)
                 download_task = DownloadOqOutputTask(
-                    'Download', QgsTask.CanCancel, task_id, output_id, outtype,
+                    descr, QgsTask.CanCancel, task_id, output_id, outtype,
                     output_type, dest_folder, self.session, self.hostname,
                     self.open_full_report, self.notify_error, self.del_task)
                 self.download_tasks[task_id] = download_task
@@ -744,8 +746,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             dest_folder = tempfile.gettempdir()
             if outtype in ('npz', 'csv'):
                 task_id = uuid4()
+                descr = 'Download %s for calculation %s' % (
+                    output_type, self.current_calc_id)
                 download_task = DownloadOqOutputTask(
-                    'Download', QgsTask.CanCancel, task_id, output_id, outtype,
+                    descr, QgsTask.CanCancel, task_id, output_id, outtype,
                     output_type, dest_folder, self.session, self.hostname,
                     self.open_output, self.notify_error, self.del_task)
                 self.download_tasks[task_id] = download_task
@@ -757,8 +761,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             if not dest_folder:
                 return
             task_id = uuid4()
+            descr = 'Download %s for calculation %s' % (
+                output_type, self.current_calc_id)
             download_task = DownloadOqOutputTask(
-                'Download', QgsTask.CanCancel, task_id, output_id, outtype,
+                descr, QgsTask.CanCancel, task_id, output_id, outtype,
                 output_type, dest_folder, self.session, self.hostname,
                 self.notify_downloaded, self.notify_error, self.del_task)
             self.download_tasks[task_id] = download_task
@@ -810,7 +816,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             log_msg(msg, level='W', message_bar=self.iface.messageBar())
         else:
             msg = 'Unable to download the output'
-            log_msg(msg, level='C', message_bar=self.message_bar, exception=exc)
+            log_msg(
+                msg, level='C', message_bar=self.message_bar, exception=exc)
 
     def start_polling(self):
         if not self.is_logged_in:
@@ -939,7 +946,6 @@ class DownloadOqOutputTask(QgsTask):
             # FIXME: enable the user to set verify=True
             resp = session.get(download_url, verify=False, stream=True)
         except HANDLED_EXCEPTIONS as exc:
-            print(exc)
             raise exc
         if not resp.ok:
             err_msg = (
@@ -948,12 +954,8 @@ class DownloadOqOutputTask(QgsTask):
             raise DownloadFailed(err_msg)
         filename = resp.headers['content-disposition'].split(
             'filename=')[1]
-        print('filename: %s' % filename)
         self.filepath = os.path.join(dest_folder, filename)
-        print('self.filepath: %s' % self.filepath)
-        print(resp.headers)
         tot_len = resp.headers.get('content-length')
-        print('tot_len: %s' % tot_len)
         with open(self.filepath, "wb") as f:
             if tot_len is None:
                 f.write(resp.content)
@@ -964,7 +966,6 @@ class DownloadOqOutputTask(QgsTask):
                     dl += len(data)
                     f.write(data)
                     progress = dl / tot_len * 100
-                    print('progress: %s' % progress)
                     self.setProgress(progress)
                     if self.isCanceled():
                         raise TaskCanceled
