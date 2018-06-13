@@ -978,7 +978,8 @@ class DownloadOqOutputTask(QgsTask):
             else:
                 tot_len = int(tot_len)
                 dl = 0
-                for data in resp.iter_content(chunk_size=tot_len//100):
+                chunk_size = max(tot_len//100, 100)  # avoid size 0
+                for data in resp.iter_content(chunk_size=chunk_size):
                     if self.isCanceled():
                         raise TaskCanceled
                     dl += len(data)
