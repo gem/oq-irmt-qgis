@@ -36,12 +36,12 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
     Dialog to load gmf_data from an oq-engine output, as layer
     """
 
-    def __init__(self, dlg_id, iface, viewer_dock, session, hostname, calc_id,
+    def __init__(self, iface, viewer_dock, session, hostname, calc_id,
                  output_type='gmf_data', path=None, mode=None,
                  engine_version=None):
         assert output_type == 'gmf_data'
         LoadOutputAsLayerDialog.__init__(
-            self, dlg_id, iface, viewer_dock, session, hostname, calc_id,
+            self, iface, viewer_dock, session, hostname, calc_id,
             output_type=output_type, path=path, mode=mode,
             engine_version=engine_version)
 

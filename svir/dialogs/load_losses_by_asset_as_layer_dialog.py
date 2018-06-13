@@ -40,13 +40,13 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
     oq-engine output, as layer
     """
 
-    def __init__(self, dlg_id, iface, viewer_dock, session, hostname, calc_id,
+    def __init__(self, iface, viewer_dock, session, hostname, calc_id,
                  output_type=None,
                  path=None, mode=None, zonal_layer_path=None,
                  engine_version=None):
         assert output_type in ('losses_by_asset', 'avg_losses-stats')
         LoadOutputAsLayerDialog.__init__(
-            self, dlg_id, iface, viewer_dock, session, hostname, calc_id,
+            self, iface, viewer_dock, session, hostname, calc_id,
             output_type=output_type, path=path, mode=mode,
             zonal_layer_path=zonal_layer_path, engine_version=engine_version)
 

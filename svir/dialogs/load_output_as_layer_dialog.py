@@ -82,14 +82,13 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     Dialog to load an oq-engine output as layer
     """
 
-    def __init__(self, dlg_id, iface, viewer_dock,
+    def __init__(self, iface, viewer_dock,
                  session, hostname, calc_id, output_type=None,
                  path=None, mode=None, zonal_layer_path=None,
                  engine_version=None):
         # sanity check
         if output_type not in OQ_TO_LAYER_TYPES:
             raise NotImplementedError(output_type)
-        self.dlg_id = dlg_id
         self.iface = iface
         self.viewer_dock = viewer_dock
         self.path = path

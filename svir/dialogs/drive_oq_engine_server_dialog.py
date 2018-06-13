@@ -807,7 +807,6 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             raise NotImplementedError(output_type)
         dlg_id = uuid4()
         open_output_dlg = OUTPUT_TYPE_LOADERS[output_type](
-            dlg_id,
             self.iface, self.viewer_dock,
             self.session, self.hostname, self.current_calc_id,
             output_type, path=filepath,
