@@ -957,16 +957,17 @@ class DownloadOqOutputTask(QgsTask):
 
     def download_output(self, dest_folder, session, download_url):
         self.setProgress(10)
-        try:
-            # FIXME: enable the user to set verify=True
-            resp = session.get(download_url, verify=False, stream=True)
-        except HANDLED_EXCEPTIONS as exc:
-            raise exc
+        if self.isCanceled():
+            raise TaskCanceled
+        # FIXME: enable the user to set verify=True
+        resp = session.get(download_url, verify=False, stream=True)
         if not resp.ok:
             err_msg = (
                 'Unable to download the output.\n%s: %s.\n%s'
                 % (resp.status_code, resp.reason, resp.text))
             raise DownloadFailed(err_msg)
+        if self.isCanceled():
+            raise TaskCanceled
         filename = resp.headers['content-disposition'].split(
             'filename=')[1]
         self.filepath = os.path.join(dest_folder, filename)
@@ -978,10 +979,10 @@ class DownloadOqOutputTask(QgsTask):
                 tot_len = int(tot_len)
                 dl = 0
                 for data in resp.iter_content(chunk_size=tot_len//100):
+                    if self.isCanceled():
+                        raise TaskCanceled
                     dl += len(data)
                     f.write(data)
                     progress = dl / tot_len * 100
                     self.setProgress(progress)
-                    if self.isCanceled():
-                        raise TaskCanceled
         return True
