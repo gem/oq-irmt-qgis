@@ -33,15 +33,15 @@ from svir.utilities.utils import (WaitCursorManager,
 
 class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
     """
-    Modal dialog to load hazard maps from an oq-engine output, as layer
+    Dialog to load hazard maps from an oq-engine output, as layer
     """
 
-    def __init__(self, iface, viewer_dock, session, hostname, calc_id,
+    def __init__(self, dlg_id, iface, viewer_dock, session, hostname, calc_id,
                  output_type='hmaps', path=None, mode=None,
                  engine_version=None):
         assert output_type == 'hmaps'
         LoadOutputAsLayerDialog.__init__(
-            self, iface, viewer_dock, session, hostname, calc_id,
+            self, dlg_id, iface, viewer_dock, session, hostname, calc_id,
             output_type=output_type, path=path, mode=mode,
             engine_version=engine_version)
 

@@ -27,6 +27,7 @@ import json
 import tempfile
 import zipfile
 import copy
+from uuid import uuid4
 
 from qgis.PyQt.QtCore import (QDir,
                               Qt,
@@ -131,6 +132,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.params_dlg = None
         self.console_dlg = None
         self.full_report_dlg = None
+        self.open_output_dlg = None
         # keep track of the log lines acquired for each calculation
         self.calc_log_line = {}
         self.session = None
@@ -152,6 +154,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.attempt_login()
 
         self.download_task = None
+        self.open_output_dlgs = {}
 
     def attempt_login(self):
         try:
@@ -782,6 +785,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     def del_task(self):
         self.download_task = None
 
+    def del_dlg(self, dlg_id):
+        del(self.open_output_dlgs[dlg_id])
+
     def open_full_report(
             self, output_id=None, output_type=None, filepath=None):
         assert(filepath is not None)
@@ -799,12 +805,17 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         assert(output_type is not None)
         if output_type not in OUTPUT_TYPE_LOADERS:
             raise NotImplementedError(output_type)
-        dlg = OUTPUT_TYPE_LOADERS[output_type](
+        dlg_id = uuid4()
+        open_output_dlg = OUTPUT_TYPE_LOADERS[output_type](
+            dlg_id,
             self.iface, self.viewer_dock,
             self.session, self.hostname, self.current_calc_id,
             output_type, path=filepath,
             engine_version=self.engine_version)
-        dlg.exec_()
+        self.open_output_dlgs[dlg_id] = open_output_dlg
+        open_output_dlg.finished[int].connect(
+            lambda result: self.del_dlg(dlg_id))
+        open_output_dlg.show()
 
     def notify_downloaded(
             self, output_id=None, output_type=None, filepath=None):

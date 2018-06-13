@@ -381,6 +381,8 @@ class Irmt(object):
 
     def reset_engine_login(self):
         if self.drive_oq_engine_server_dlg is not None:
+            self.drive_oq_engine_server_dlg.current_calc_id = None
+            self.drive_oq_engine_server_dlg.pointed_calc_id = None
             self.drive_oq_engine_server_dlg.is_logged_in = False
             self.drive_oq_engine_server_dlg.clear_output_list()
 

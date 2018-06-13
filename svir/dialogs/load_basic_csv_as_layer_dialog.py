@@ -31,15 +31,15 @@ from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 
 class LoadBasicCsvAsLayerDialog(LoadOutputAsLayerDialog):
     """
-    Modal dialog to load as layer a basic csv with no geometries, to be
+    Dialog to load as layer a basic csv with no geometries, to be
     browsed through its attribute table
     """
 
-    def __init__(self, iface, viewer_dock, session, hostname, calc_id,
+    def __init__(self, dlg_id, iface, viewer_dock, session, hostname, calc_id,
                  output_type, path=None, mode=None, engine_version=None):
         assert output_type in OQ_BASIC_CSV_TO_LAYER_TYPES, output_type
         LoadOutputAsLayerDialog.__init__(
-            self, iface, viewer_dock, session, hostname, calc_id,
+            self, dlg_id, iface, viewer_dock, session, hostname, calc_id,
             output_type=output_type, path=path, mode=mode,
             engine_version=engine_version)
         self.create_file_hlayout()
