@@ -132,7 +132,6 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.params_dlg = None
         self.console_dlg = None
         self.full_report_dlg = None
-        self.open_output_dlg = None
         # keep track of the log lines acquired for each calculation
         self.calc_log_line = {}
         self.session = None
