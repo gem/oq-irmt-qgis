@@ -23,7 +23,9 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+from time import sleep
 from qgis.core import QgsTask
+from qgis.PyQt.QtCore import QThread, pyqtSignal, pyqtSlot
 
 
 class TaskCanceled(Exception):
@@ -35,6 +37,8 @@ class DownloadFailed(Exception):
 
 
 class DownloadOqOutputTask(QgsTask):
+
+    is_canceled_sig = pyqtSignal()
 
     def __init__(
             self, description, flags, output_id, outtype,
@@ -61,7 +65,7 @@ class DownloadOqOutputTask(QgsTask):
                 "%s/v1/calc/result/%s?export_type=%s&dload=true" % (
                     self.hostname, self.output_id, self.outtype))
         try:
-            self.download_output(self.dest_folder, self.session, download_url)
+            self.download_output(self.session, download_url)
         except Exception as exc:
             self.exception = exc
             return False
@@ -78,24 +82,61 @@ class DownloadOqOutputTask(QgsTask):
             self.on_error(self.exception)
         self.del_task()
 
-    def download_output(self, dest_folder, session, download_url):
-        self.setProgress(10)
+    def download_output(self, session, download_url):
+        self.setProgress(1)
         if self.isCanceled():
+            self.is_canceled_sig.emit()
             raise TaskCanceled
+        self.download_thread = DownloadThread(
+            session, download_url, self.dest_folder)
+        self.download_thread.progress_sig[float].connect(self.set_progress)
+        self.download_thread.filepath_sig[str].connect(self.set_filepath)
+        self.is_canceled_sig.connect(self.download_thread.set_caneceled)
+        self.download_thread.start()
+        while True:
+            sleep(0.1)
+            if self.download_thread.isFinished():
+                return True
+            if self.isCanceled():
+                # self.download_thread.deleteLater()
+                del(self.download_thread)
+                raise TaskCanceled
+
+    @pyqtSlot(float)
+    def set_progress(self, progress):
+        self.setProgress(progress)
+
+    @pyqtSlot(str)
+    def set_filepath(self, filepath):
+        self.filepath = filepath
+
+
+class DownloadThread(QThread):
+
+    progress_sig = pyqtSignal(float)
+    filepath_sig = pyqtSignal(str)
+
+    def __init__(self, session, url, dest_folder):
+        self.session = session
+        self.url = url
+        self.dest_folder = dest_folder
+        self.is_canceled = False
+        super().__init__()
+
+    def run(self):
         # FIXME: enable the user to set verify=True
-        resp = session.get(download_url, verify=False, stream=True)
+        resp = self.session.get(self.url, verify=False, stream=True)
         if not resp.ok:
             err_msg = (
                 'Unable to download the output.\n%s: %s.\n%s'
                 % (resp.status_code, resp.reason, resp.text))
             raise DownloadFailed(err_msg)
-        if self.isCanceled():
-            raise TaskCanceled
         filename = resp.headers['content-disposition'].split(
             'filename=')[1]
-        self.filepath = os.path.join(dest_folder, filename)
+        filepath = os.path.join(self.dest_folder, filename)
+        self.filepath_sig.emit(filepath)
         tot_len = resp.headers.get('content-length')
-        with open(self.filepath, "wb") as f:
+        with open(filepath, "wb") as f:
             if tot_len is None:
                 f.write(resp.content)
             else:
@@ -103,10 +144,12 @@ class DownloadOqOutputTask(QgsTask):
                 dl = 0
                 chunk_size = max(tot_len//100, 100)  # avoid size 0
                 for data in resp.iter_content(chunk_size=chunk_size):
-                    if self.isCanceled():
+                    if self.is_canceled:
                         raise TaskCanceled
                     dl += len(data)
                     f.write(data)
                     progress = dl / tot_len * 100
-                    self.setProgress(progress)
-        return True
+                    self.progress_sig.emit(progress)
+
+    def set_caneceled(self):
+        self.is_canceled = True
