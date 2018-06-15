@@ -91,13 +91,16 @@ class DownloadOqOutputTask(QgsTask):
             session, download_url, self.dest_folder)
         self.download_thread.progress_sig[float].connect(self.set_progress)
         self.download_thread.filepath_sig[str].connect(self.set_filepath)
-        self.is_canceled_sig.connect(self.download_thread.set_caneceled)
+        self.is_canceled_sig.connect(self.download_thread.set_canceled)
         self.download_thread.start()
         while True:
             sleep(0.1)
             if self.download_thread.isFinished():
                 return True
             if self.isCanceled():
+                # NOTE: deleteLater would be a cleaner way, but it does not
+                # actually kill the get, so the machine remains busy until a
+                # response is produced
                 # self.download_thread.deleteLater()
                 del(self.download_thread)
                 raise TaskCanceled
@@ -151,5 +154,5 @@ class DownloadThread(QThread):
                     progress = dl / tot_len * 100
                     self.progress_sig.emit(progress)
 
-    def set_caneceled(self):
+    def set_canceled(self):
         self.is_canceled = True
