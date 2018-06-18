@@ -333,7 +333,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     def get_row_by_calc_id(self, calc_id):
         # find QTableItem corresponding to that calc_id
         calc_id_col_idx = 1
-        for row in xrange(self.calc_list_tbl.rowCount()):
+        for row in range(self.calc_list_tbl.rowCount()):
             item_calc_id = self.calc_list_tbl.item(row, calc_id_col_idx)
             if int(item_calc_id.text()) == calc_id:
                 return row
@@ -757,14 +757,16 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             else:
                 raise NotImplementedError("%s %s" % (action, outtype))
         elif action == 'Load as layer':
-            dest_folder = tempfile.gettempdir()
-            if outtype in ('npz', 'csv'):
+            filepath = None
+            if output_type not in OUTPUT_TYPE_LOADERS:
+                raise NotImplementedError(output_type)
+            if outtype == 'csv':
+                dest_folder = tempfile.gettempdir()
                 filepath = self.download_output(
                     output_id, outtype, dest_folder)
                 if not filepath:
                     return
-                if output_type not in OUTPUT_TYPE_LOADERS:
-                    raise NotImplementedError(output_type)
+            if outtype in ('npz', 'csv'):
                 dlg = OUTPUT_TYPE_LOADERS[output_type](
                     self.iface, self.viewer_dock,
                     self.session, self.hostname, self.current_calc_id,
