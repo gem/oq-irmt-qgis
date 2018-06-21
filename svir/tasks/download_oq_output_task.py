@@ -83,7 +83,7 @@ class DownloadOqOutputTask(QgsTask):
         self.del_task()
 
     def download_output(self, session, download_url):
-        self.setProgress(1)
+        self.setProgress(-1)
         if self.isCanceled():
             self.is_canceled_sig.emit()
             raise TaskCanceled
