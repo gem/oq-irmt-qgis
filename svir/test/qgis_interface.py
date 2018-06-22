@@ -76,35 +76,6 @@ class QgisInterface(QObject):
         # pylint: enable=F0401, E0611
         processing.classFactory(self)
 
-        # We create our own getAlgorithm function below which will will monkey
-        # patch in to the Processing class in QGIS in order to ensure that the
-        # Processing.initialize() call is made before asking for an alg.
-
-        @staticmethod
-        def mock_getAlgorithm(name):
-            """
-            Modified version of the original getAlgorithm function.
-
-            :param name: Name of the algorithm to load.
-            :type name: str
-
-            :return: An algorithm concrete class.
-            :rtype: QgsAlgorithm  ?
-            """
-            Processing.initialize()
-            # FIXME: Had some weird bug in QGIS 2.18 MacOSX (KyngChaos)
-            try:
-                providers = list(Processing.algs.values())
-            except BaseException:
-                providers = list(Processing.algs().values())
-
-            for provider in providers:
-                if name in provider:
-                    return provider[name]
-            return None
-
-        # Now we let the monkey loose!
-        Processing.getAlgorithm = mock_getAlgorithm
         # We also need to make dataobjects think that this iface is 'the one'
         # Note. the placement here (after the getAlgorithm monkey patch above)
         # is significant, so don't move it!
