@@ -21,10 +21,15 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
+from functools import partial
 
-import processing
-from qgis.core import QgsApplication
+from qgis.core import (
+    QgsApplication, QgsProcessingFeedback, QgsProcessingContext,
+    QgsProcessingAlgRunnerTask, QgsProject, QgsMessageLog
+    )
 
+
+OUTPUT_LAYER = None
 
 def calculate_zonal_stats(zonal_layer, points_layer, join_fields,
                           output_layer_name, discard_nonmatching=False,
@@ -44,7 +49,9 @@ def calculate_zonal_stats(zonal_layer, points_layer, join_fields,
     processing.algorithmHelp('qgis:joinbylocationsummary') and it includes
     the lists of predicates and summaries.
     The code of the algorithm is here:
-    https://github.com/qgis/QGIS/blob/483b4ff977e3d36b166fac792254c31e89e3aeae/python/plugins/processing/algs/qgis/SpatialJoinSummary.py  # NOQA
+    https://github.com/qgis/QGIS/blob
+    /483b4ff977e3d36b166fac792254c31e89e3aeae/python/plugins/processing/algs
+    /qgis/SpatialJoinSummary.py  # NOQA
 
     :param zonal_layer: vector layer containing polygons (or its path)
     :param points_layer: vector layer containing points (or its path)
@@ -59,24 +66,46 @@ def calculate_zonal_stats(zonal_layer, points_layer, join_fields,
 
     :returns: the output QgsVectorLayer
     """
+    global OUTPUT_LAYER
 
     # make sure to use the actual lists of predicates and summaries as defined
     # in the algorithm while running the initAlgorithm method
-    alg = QgsApplication.processingRegistry().algorithmById('qgis:joinbylocationsummary')
-    alg.initAlgorithm()
+    alg = QgsApplication.processingRegistry().algorithmById(
+        'qgis:joinbylocationsummary')
+
+    # not required, done automatically by the task
+    # alg.initAlgorithm()
     predicate_keys = [predicate[0] for predicate in alg.predicates]
     PREDICATES = dict(zip(predicate_keys, range(len(predicate_keys))))
     summary_keys = [statistic[0] for statistic in alg.statistics]
     SUMMARIES = dict(zip(summary_keys, range(len(summary_keys))))
 
-    res = processing.run(
-        "qgis:joinbylocationsummary",
-        {'DISCARD_NONMATCHING': discard_nonmatching,
-         'INPUT': zonal_layer,
-         'JOIN': points_layer,
-         'PREDICATE': [PREDICATES[predicate] for predicate in predicates],
-         'JOIN_FIELDS': join_fields,
-         'SUMMARIES': [SUMMARIES[summary] for summary in summaries],
-         'OUTPUT':'memory:%s' % output_layer_name})
-    output_layer = res['OUTPUT']
-    return output_layer
+    context = QgsProcessingContext()
+    feedback = QgsProcessingFeedback()
+
+    params = {
+        'DISCARD_NONMATCHING': discard_nonmatching,
+        'INPUT': zonal_layer,
+        'JOIN': points_layer,
+        'PREDICATE': [PREDICATES[predicate] for predicate in predicates],
+        'JOIN_FIELDS': join_fields,
+        'SUMMARIES': [SUMMARIES[summary] for summary in summaries],
+        'OUTPUT': 'memory:%s' % output_layer_name
+        }
+
+    task = QgsProcessingAlgRunnerTask(alg, params, context, feedback)
+    task.executed.connect(partial(task_finished, context))
+    QgsApplication.taskManager().addTask(task)
+    QgsMessageLog.logMessage('Started task {}'.format(task.description()))
+
+    task.waitForFinished()
+    QgsApplication.processEvents()
+    return OUTPUT_LAYER
+
+
+def task_finished(context, successful, results):
+    global OUTPUT_LAYER
+    if not successful:
+        return False
+
+    OUTPUT_LAYER = context.takeResultLayer(results['OUTPUT'])
