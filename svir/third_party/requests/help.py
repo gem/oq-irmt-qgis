@@ -7,13 +7,13 @@ import sys
 import ssl
 
 import idna
-import urllib3
 import chardet
 
+from .packages import urllib3
 from . import __version__ as requests_version
 
 try:
-    from urllib3.contrib import pyopenssl
+    from .packages.urllib3.contrib import pyopenssl
 except ImportError:
     pyopenssl = None
     OpenSSL = None
