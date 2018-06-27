@@ -30,21 +30,6 @@ import numpy
 from datetime import datetime
 from collections import OrderedDict
 
-try:
-    import matplotlib
-    matplotlib.use('Qt4Agg')
-    from matplotlib.figure import Figure
-    from matplotlib.backends.backend_qt4agg import (
-        FigureCanvasQTAgg as FigureCanvas,
-        NavigationToolbar2QT as NavigationToolbar
-    )
-    from matplotlib.lines import Line2D
-except ImportError as exc:
-    raise ImportError(
-        'There was a problem importing matplotlib. If you are using'
-        ' a 64bit version of QGIS on Windows, please try using'
-        ' a 32bit version instead. %s' % exc)
-
 from qgis.PyQt.QtCore import pyqtSlot, QSettings, Qt
 from qgis.PyQt.QtGui import (QColor,
                              QLabel,
@@ -81,6 +66,15 @@ from svir.ui.list_multiselect_widget import ListMultiSelectWidget
 from svir.ui.list_multiselect_mono_widget import ListMultiSelectMonoWidget
 
 from svir import IS_SCIPY_INSTALLED
+
+import matplotlib
+matplotlib.use('Qt4Agg')
+from matplotlib.figure import Figure  # NOQA
+from matplotlib.backends.backend_qt4agg import (  # NOQA
+    FigureCanvasQTAgg as FigureCanvas,
+    NavigationToolbar2QT as NavigationToolbar
+)
+from matplotlib.lines import Line2D  # NOQA
 
 FORM_CLASS = get_ui_class('ui_viewer_dock.ui')
 
@@ -1247,7 +1241,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             if line.contains(event)[0]:
                 # matplotlib needs a string when exporting to svg, so here we
                 # must cast back to long
-                fid = long(line.get_gid())
+                fid = long(line.get_gid())  # NOQA
                 feature = next(self.iface.activeLayer().getFeatures(
                         QgsFeatureRequest().setFilterFid(fid)))
 

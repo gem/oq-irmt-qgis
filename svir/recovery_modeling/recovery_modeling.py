@@ -26,15 +26,6 @@
 import os
 import json
 import bisect
-try:
-    import matplotlib
-    matplotlib.use('Qt4Agg')
-    import matplotlib.pyplot as plt
-except ImportError as exc:
-    raise ImportError(
-        'There was a problem importing matplotlib. If you are using'
-        ' a 64bit version of QGIS on Windows, please try using'
-        ' a 32bit version instead. %s' % exc)
 from collections import defaultdict
 from qgis.PyQt.QtCore import QSettings
 from svir.recovery_modeling.building import Building
@@ -44,6 +35,10 @@ from svir.utilities.utils import (
                                   get_layer_setting,
                                   )
 from svir.utilities.shared import NUMERIC_FIELD_TYPES, RECOVERY_DEFAULTS
+
+import matplotlib
+matplotlib.use('Qt4Agg')
+import matplotlib.pyplot as plt  # NOQA
 
 HEADING_FIELDS_TO_DISCARD = 4
 DAYS_BEFORE_EVENT = 0
@@ -108,13 +103,13 @@ class RecoveryModeling(object):
                 # but it is stored as Real
                 try:
                     zone_id = str(int(zone_id))
-                except:
+                except Exception:
                     zone_id = str(zone_id)
                 # FIXME: same hack as above
                 asset_ref = dmg_by_asset_feat['asset_ref']
                 try:
                     asset_ref = str(int(asset_ref))
-                except:
+                except Exception:
                     asset_ref = str(asset_ref)
                 dmg_by_asset_probs = [dmg_by_asset_feat.attributes()[idx]
                                       for idx in probs_fields_idxs]
@@ -474,7 +469,7 @@ def fill_fields_multiselect(fields_multiselect, layer):
         HEADING_FIELDS_TO_DISCARD + 2*n_loss_based_dmg_states, 2)
     try:
         default_field_names = field_names[probs_slice]
-    except:
+    except Exception:
         default_field_names = []
     other_fields = [field for field in fields
                     if field.name() not in default_field_names
