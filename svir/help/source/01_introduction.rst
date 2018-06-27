@@ -102,6 +102,14 @@ OpenQuake Platform, can use the interface of the plugin to upload their work to 
 Platform. They can also download and edit projects that were shared through the
 Platform by other users.
 
+Another important addition to the IRMT plugin is a module for post-earthquake
+recovery modeling (see :ref:`chap-recovery-modeling`), that was supported by
+the State of California, Alfred E. Alquist Seismic Safety Commission, as part
+of a collaborative effort between the Global Earthquake Model (GEM) and the
+University of California at Los Angeles (UCLA), Department of Civil and
+Environmental Engineering. GEM implemented in the QGIS environment the
+scientific methodology developed by UCLA [BDL+15]_.
+
 .. [PMW+14]
     Pagani, M., Monelli, D., Weatherill, G., Danciu, L., Crowley, H., Silva,
     V., Henshaw, P., Butler, L., Nastasi, M., Panzeri, L., Simionato, M. and

@@ -65,6 +65,8 @@ from svir.dialogs.settings_dialog import SettingsDialog
 from svir.dialogs.transformation_dialog import TransformationDialog
 from svir.dialogs.upload_settings_dialog import UploadSettingsDialog
 from svir.dialogs.weight_data_dialog import WeightDataDialog
+# from svir.dialogs.recovery_modeling_dialog import RecoveryModelingDialog
+# from svir.dialogs.recovery_settings_dialog import RecoverySettingsDialog
 from svir.dialogs.ipt_dialog import IptDialog
 from svir.dialogs.taxtweb_dialog import TaxtwebDialog
 from svir.dialogs.taxonomy_dialog import TaxonomyDialog
@@ -90,6 +92,7 @@ from svir.utilities.utils import (tr,
                                   save_layer_as_shapefile,
                                   get_style,
                                   get_checksum,
+                                  # warn_scipy_missing)
                                   )
 from svir.utilities.shared import (DEBUG,
                                    PROJECT_TEMPLATE,
@@ -101,6 +104,8 @@ from svir.ui.tool_button_with_help_link import QToolButtonWithHelpLink
 # DO NOT REMOVE THIS
 # noinspection PyUnresolvedReferences
 import svir.resources_rc  # pylint: disable=unused-import  # NOQA
+
+# from svir import IS_SCIPY_INSTALLED
 
 
 class Irmt(object):
@@ -237,6 +242,33 @@ class Irmt(object):
                            add_to_layer_actions=True,
                            add_to_toolbar=True,
                            submenu='Integrated risk')
+
+        # # Action to run the recovery analysis
+        # self.add_menu_item("recovery_modeling",
+        #                    ":/plugins/irmt/recovery.svg",
+        #                    u"Run recovery modeling",
+        #                    self.recovery_modeling,
+        #                    enable=self.experimental_enabled(),
+        #                    submenu='Recovery modeling')
+        # # Action to set the recovery modeling parameters
+        # self.add_menu_item("recovery_settings",
+        #                    ":/plugins/irmt/recovery_settings.svg",
+        #                    u"Recovery modeling settings",
+        #                    self.recovery_settings,
+        #                    enable=self.experimental_enabled(),
+        #                    submenu='Recovery modeling')
+
+        # Action to activate the modal dialog to guide the user through loss
+        # aggregation by zone
+        self.add_menu_item("aggregate_losses",
+                           ":/plugins/irmt/aggregate.svg",
+                           u"&Aggregate loss by zone",
+                           self.aggregate_losses,
+                           enable=True,
+                           add_to_layer_actions=False,
+                           add_to_toolbar=True,
+                           submenu='Utilities')
+
         # Action to activate the modal dialog to select a layer and one of
         # its attributes, in order to transform that attribute
         self.add_menu_item("transform_attributes",
@@ -284,6 +316,17 @@ class Irmt(object):
         experimental_enabled = QSettings().value(
             '/irmt/experimental_enabled', False, type=bool)
         return experimental_enabled
+
+    # def recovery_modeling(self):
+    #     if IS_SCIPY_INSTALLED:
+    #         dlg = RecoveryModelingDialog(self.iface)
+    #         dlg.exec_()
+    #     else:
+    #         warn_scipy_missing(self.iface.messageBar())
+
+    # def recovery_settings(self):
+    #     dlg = RecoverySettingsDialog(self.iface)
+    #     dlg.exec_()
 
     def ipt(self):
         if self.ipt_dlg is None:

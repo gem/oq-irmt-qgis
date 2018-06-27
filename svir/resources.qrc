@@ -13,6 +13,8 @@
     <file alias="weights.svg">resources/weights.svg</file>
     <file alias="manual.svg">resources/manual.svg</file>
     <file alias="drive_oqengine.svg">resources/drive_oqengine.svg</file>
+    <file alias="recovery.svg">resources/recovery.svg</file>
+    <file alias="recovery_settings.svg">resources/recovery_settings.svg</file>
     <file alias="plot.svg">resources/plot.svg</file>
     <file alias="ipt.svg">resources/ipt.svg</file>
     <file alias="taxtweb.svg">resources/taxtweb.svg</file>

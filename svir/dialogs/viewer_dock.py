@@ -63,12 +63,17 @@ from svir.utilities.shared import (
 from svir.utilities.utils import (get_ui_class,
                                   log_msg,
                                   clear_widgets_from_layout,
+                                  warn_scipy_missing,
                                   extract_npz,
                                   get_loss_types,
                                   get_irmt_version,
                                   )
+from svir.recovery_modeling.recovery_modeling import (
+    RecoveryModeling, fill_fields_multiselect)
 from svir.ui.list_multiselect_widget import ListMultiSelectWidget
 from svir.ui.list_multiselect_mono_widget import ListMultiSelectMonoWidget
+
+from svir import IS_SCIPY_INSTALLED
 
 FORM_CLASS = get_ui_class('ui_viewer_dock.ui')
 
@@ -112,6 +117,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
         self.engine_version = None
 
+        # self.current_selection[None] is for recovery curves
         self.current_selection = {}  # rlz_or_stat -> feature_id -> curve
         self.current_imt = None
         self.current_loss_type = None
@@ -149,6 +155,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             ('avg_losses-stats_aggr', 'Average assets losses (statistics)'),
         ])
 
+        if QSettings().value('/irmt/experimental_enabled', False, type=bool):
+            self.output_types_names.update(
+                {'recovery_curves': 'Recovery Curves'})
         self.output_type_cbx.addItems(list(self.output_types_names.values()))
 
         self.plot_figure = Figure()
@@ -213,6 +222,23 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.on_exclude_no_dmg_ckb_state_changed)
         self.typeDepVLayout.addWidget(self.exclude_no_dmg_ckb)
 
+    def create_approach_selector(self):
+        self.approach_lbl = QLabel('Recovery time approach')
+        self.approach_lbl.setSizePolicy(
+            QSizePolicy.Minimum, QSizePolicy.Minimum)
+        approach_explanation = (
+            'Aggregate: building-level recovery model as a single process\n'
+            'Disaggregate: Building-level recovery modelled using four'
+            ' processes: inspection, assessment, mobilization and repair.')
+        self.approach_lbl.setToolTip(approach_explanation)
+        self.approach_cbx = QComboBox()
+        self.approach_cbx.setToolTip(approach_explanation)
+        self.approach_cbx.addItems(['Disaggregate', 'Aggregate'])
+        self.approach_cbx.currentIndexChanged['QString'].connect(
+            self.on_approach_changed)
+        self.typeDepHLayout1.addWidget(self.approach_lbl)
+        self.typeDepHLayout1.addWidget(self.approach_cbx)
+
     def create_n_simulations_spinbox(self):
         simulations_explanation = (
             'Number of damage realizations used in Monte Carlo Simulation')
@@ -235,6 +261,12 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             ' the application might become irresponsive or run out of memory')
         self.warning_n_simulations_lbl.setWordWrap(True)
         self.typeDepVLayout.addWidget(self.warning_n_simulations_lbl)
+
+    def create_recalculate_curve_btn(self):
+        self.recalculate_curve_btn = QPushButton('Calculate recovery curve')
+        self.typeDepVLayout.addWidget(self.recalculate_curve_btn)
+        self.recalculate_curve_btn.clicked.connect(
+            self.on_recalculate_curve_btn_clicked)
 
     def create_fields_multiselect(self):
         title = (
@@ -461,6 +493,15 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.create_stats_multiselect()
             self.stats_multiselect.selection_changed.connect(
                 self.refresh_feature_selection)
+        elif new_output_type == 'recovery_curves':
+            if not IS_SCIPY_INSTALLED:
+                warn_scipy_missing(self.iface.messageBar())
+                self.output_type = None
+                return
+            self.create_approach_selector()
+            self.create_n_simulations_spinbox()
+            self.create_fields_multiselect()
+            self.create_recalculate_curve_btn()
         # NOTE: the window's size is automatically adjusted even without
         # calling self.adjustSize(). If that method is called, it might cause
         # the window to shrink unexpectedly until the focus is moved somewhere
@@ -806,6 +847,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         for rlz_or_stat in selected_rlzs_or_stats:
             for i, (site, curve) in enumerate(
                     self.current_selection[rlz_or_stat].items()):
+                # NOTE: we associated the same cumulative curve to all the
+                # selected points (ugly), and here we need to get only one
+                if self.output_type == 'recovery_curves' and i > 0:
+                    break
                 feature = next(self.iface.activeLayer().getFeatures(
                     QgsFeatureRequest().setFilterFid(site)))
 
@@ -846,6 +891,18 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 title = 'Uniform hazard spectrum'
             else:
                 title = 'Uniform hazard spectra'
+        elif self.output_type == 'recovery_curves':
+            self.plot.set_xscale('linear')
+            self.plot.set_yscale('linear')
+            self.plot.set_xlabel('Time [days]')
+            self.plot.set_ylabel('Normalized recovery level')
+            self.plot.set_ylim((0.0, 1.2))
+            if count_lines == 0:
+                title = ''
+            elif count_lines == 1:
+                title = 'Building level recovery curve'
+            else:
+                title = 'Community level recovery curve'
         if self.output_type == 'hcurves':
             ylim_bottom, ylim_top = self.plot.get_ylim()
             self.plot.set_ylim(ylim_bottom, ylim_top * 1.5)
@@ -862,7 +919,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             title += ' (%s years)' % investigation_time
         self.plot.set_title(title)
         self.plot.grid(which='both')
-        if 1 <= count_lines <= 20:
+        if self.output_type != 'recovery_curves' and 1 <= count_lines <= 20:
             if self.output_type == 'uhs':
                 location = 'upper right'
             else:
@@ -916,10 +973,21 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                         del self.current_selection[rlz_or_stat][fid]
                     except KeyError:
                         pass
+            else:  # recovery curves
+                try:
+                    del self.current_selection[None][fid]
+                except KeyError:
+                    pass
         for fid in selected:
             if hasattr(self, 'rlzs_or_stats'):
                 for rlz_or_stat in self.rlzs_or_stats:
                     self.current_selection[rlz_or_stat] = {}
+            else:  # recovery curves
+                self.current_selection[None] = {}
+        if self.output_type == 'recovery_curves':
+            if len(selected) > 0:
+                self.redraw_recovery_curve(selected)
+            return
         if not selected_rlzs_or_stats or not self.current_selection:
             return
         self.current_abscissa = []
@@ -1032,6 +1100,37 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.was_loss_type_switched = False
         self.draw()
 
+    def redraw_recovery_curve(self, selected):
+        features = list(self.iface.activeLayer().getFeatures(
+            QgsFeatureRequest().setFilterFids(selected)))
+        approach = self.approach_cbx.currentText()
+        recovery = RecoveryModeling(features, approach, self.iface)
+        integrate_svi = False
+        probs_field_names = list(self.fields_multiselect.get_selected_items())
+        zonal_dmg_by_asset_probs, zonal_asset_refs = \
+            recovery.collect_zonal_data(probs_field_names, integrate_svi)
+        n_simulations = self.n_simulations_sbx.value()
+        recovery_function = \
+            recovery.generate_community_level_recovery_curve(
+                'ALL', zonal_dmg_by_asset_probs, zonal_asset_refs,
+                n_simulations=n_simulations)
+        self.current_abscissa = list(range(len(recovery_function)))
+        color = QColor('black')
+        color_hex = color.name()
+        # NOTE: differently with respect to the other approaches, we are
+        # associating only a single feature with the cumulative recovery curve.
+        # It might be a little ugly, but otherwise it would be inefficient.
+        if len(features) > 0:
+            self.current_selection[None] = {}
+            self.current_selection[None][features[0].id()] = {
+                'abscissa': self.current_abscissa,
+                'ordinates': recovery_function,
+                'color': color_hex,
+                'line_style': "-",  # solid
+                'marker': "None",
+            }
+        self.draw()
+
     def layer_changed(self):
         self.calc_id = None
         self.clear_plot()
@@ -1075,6 +1174,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 # Select all stats by default
                 self.stats_multiselect.add_selected_items(self.rlzs_or_stats)
                 self.stats_multiselect.setEnabled(len(self.rlzs_or_stats) > 1)
+            elif self.output_type == 'recovery_curves':
+                fill_fields_multiselect(
+                    self.fields_multiselect, self.iface.activeLayer())
             else:  # no plots for this layer
                 self.current_selection = {}
             self.redraw_current_selection()
@@ -1232,6 +1334,14 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 os.path.expanduser(
                     '~/%s_%s.csv' % (self.output_type, self.calc_id)),
                 '*.csv')
+        elif self.output_type == 'recovery_curves':
+            filename, _ = QFileDialog.getSaveFileName(
+                self,
+                self.tr('Export data'),
+                os.path.expanduser(
+                    '~/recovery_curves_%s.csv' %
+                    self.approach_cbx.currentText()),
+                '*.csv')
         if filename:
             self.write_export_file(filename)
 
@@ -1250,7 +1360,21 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         with open(filename, 'w') as csv_file:
             csv_file.write(csv_headline)
             writer = csv.writer(csv_file)
-            if self.output_type in ['hcurves', 'uhs']:
+            if self.output_type == 'recovery_curves':
+                headers = ['lon', 'lat']
+                headers.extend(self.current_abscissa)
+                writer.writerow(headers)
+                # NOTE: taking the first element, because they are all the
+                # same
+                feature = self.iface.activeLayer().selectedFeatures()[0]
+                lon = feature.geometry().asPoint().x()
+                lat = feature.geometry().asPoint().y()
+                values = list(self.current_selection[None].values())[0]
+                row = [lon, lat]
+                if values:
+                    row.extend(values['ordinates'])
+                writer.writerow(row)
+            elif self.output_type in ['hcurves', 'uhs']:
                 selected_rlzs_or_stats = list(
                     self.stats_multiselect.get_selected_items())
                 if self.output_type == 'hcurves':
@@ -1363,7 +1487,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
     @pyqtSlot()
     def on_bw_chk_clicked(self):
-        if self.output_type in OQ_TO_LAYER_TYPES:
+        if self.output_type in OQ_TO_LAYER_TYPES | set('recovery_curves'):
             self.layer_changed()
         if self.output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
             self.draw_agg_curves(self.output_type)
