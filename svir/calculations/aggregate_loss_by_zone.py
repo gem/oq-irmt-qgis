@@ -21,17 +21,16 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
+import time
 from functools import partial
 
 from qgis.core import (
     QgsApplication, QgsProcessingFeedback, QgsProcessingContext,
-    QgsProcessingAlgRunnerTask, QgsProject, QgsMessageLog
+    QgsProcessingAlgRunnerTask,
     )
 
 
-OUTPUT_LAYER = None
-
-def calculate_zonal_stats(zonal_layer, points_layer, join_fields,
+def calculate_zonal_stats(callback, zonal_layer, points_layer, join_fields,
                           output_layer_name, discard_nonmatching=False,
                           predicates=('intersects',), summaries=('sum',)):
     """
@@ -66,15 +65,11 @@ def calculate_zonal_stats(zonal_layer, points_layer, join_fields,
 
     :returns: the output QgsVectorLayer
     """
-    global OUTPUT_LAYER
 
-    # make sure to use the actual lists of predicates and summaries as defined
-    # in the algorithm while running the initAlgorithm method
     alg = QgsApplication.processingRegistry().algorithmById(
         'qgis:joinbylocationsummary')
-
-    # not required, done automatically by the task
-    # alg.initAlgorithm()
+    # make sure to use the actual lists of predicates and summaries as defined
+    # in the algorithm when it is instantiated
     predicate_keys = [predicate[0] for predicate in alg.predicates]
     PREDICATES = dict(zip(predicate_keys, range(len(predicate_keys))))
     summary_keys = [statistic[0] for statistic in alg.statistics]
@@ -94,18 +89,19 @@ def calculate_zonal_stats(zonal_layer, points_layer, join_fields,
         }
 
     task = QgsProcessingAlgRunnerTask(alg, params, context, feedback)
-    task.executed.connect(partial(task_finished, context))
+    task.executed.connect(partial(task_finished, context, callback))
     QgsApplication.taskManager().addTask(task)
-    QgsMessageLog.logMessage('Started task {}'.format(task.description()))
 
-    task.waitForFinished()
-    QgsApplication.processEvents()
-    return OUTPUT_LAYER
+    while True:
+        QgsApplication.processEvents()
+        # status can be queued, onhold, running, complete, terminated
+        if task.status() > 2:  # Complete or terminated
+            return
+        time.sleep(0.1)
 
 
-def task_finished(context, successful, results):
-    global OUTPUT_LAYER
+def task_finished(context, callback, successful, results):
     if not successful:
-        return False
-
-    OUTPUT_LAYER = context.takeResultLayer(results['OUTPUT'])
+        callback(None)
+    output_layer = context.takeResultLayer(results['OUTPUT'])
+    callback(output_layer)

@@ -640,6 +640,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.file_size_lbl.setText(self.file_size_msg % file_size)
 
     def accept(self):
+        self.hide()
         if self.output_type in OQ_EXTRACT_TO_LAYER_TYPES:
             self.load_from_npz()
             if self.output_type in ('losses_by_asset',
@@ -648,7 +649,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 # check if also aggregating by zone or not
                 if (not self.zonal_layer_cbx.currentText() or
                         not self.zonal_layer_gbx.isChecked()):
-                    super(LoadOutputAsLayerDialog, self).accept()
+                    super().accept()
                     return
                 loss_layer = self.layer
                 QgsProject.instance().layerTreeRoot().findLayer(
@@ -666,40 +667,51 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 if not have_same_projection:
                     log_msg(check_projection_msg, level='W',
                             message_bar=self.iface.messageBar())
-                [loss_attr_name] = [
+                [self.loss_attr_name] = [
                     field.name() for field in loss_layer.fields()]
                 zonal_layer_plus_sum_name = "%s_sum" % zonal_layer.name()
                 try:
-                    zonal_layer_plus_sum = calculate_zonal_stats(
-                        zonal_layer, loss_layer, (loss_attr_name,),
+                    calculate_zonal_stats(
+                        self.on_calculate_zonal_stats_completed,
+                        zonal_layer, loss_layer, (self.loss_attr_name,),
                         zonal_layer_plus_sum_name)
                 except Exception as exc:
                     log_msg(str(exc), level='C',
                             message_bar=self.iface.messageBar())
+                    super().accept()
                     return
-                # Add zonal layer to registry
-                if zonal_layer_plus_sum.isValid():
-                    QgsProject.instance().addMapLayer(zonal_layer_plus_sum)
-                else:
-                    msg = 'The layer aggregating data by zone is invalid.'
-                    log_msg(msg, level='C', message_bar=self.iface.messageBar())
-                    return None
-                # NOTE: in scenario damage, keys are like
-                #       u'structural_no_damage_mean', and not just
-                #       u'structural', therefore we can't just use the selected
-                #       loss type, but we must use the actual only key in the
-                #       dict
-                added_loss_attr = "%s_sum" % loss_attr_name
-                style_by = added_loss_attr
-                self.style_maps(
-                    layer=zonal_layer_plus_sum, style_by=style_by,
-                    add_null_class=True)
+            else:
+                super().accept()
         elif self.output_type in OQ_CSV_TO_LAYER_TYPES:
             self.load_from_csv()
-        super(LoadOutputAsLayerDialog, self).accept()
+            super().accept()
+
+    def on_calculate_zonal_stats_completed(self, zonal_layer_plus_sum):
+        if zonal_layer_plus_sum is None:
+            msg = 'The calculation of zonal statistics was not completed'
+            log_msg(msg, level='C', message_bar=self.iface.messageBar())
+            return None
+        # Add zonal layer to registry
+        if zonal_layer_plus_sum.isValid():
+            QgsProject.instance().addMapLayer(zonal_layer_plus_sum)
+        else:
+            msg = 'The layer aggregating data by zone is invalid.'
+            log_msg(msg, level='C', message_bar=self.iface.messageBar())
+            return None
+        # NOTE: in scenario damage, keys are like
+        #       u'structural_no_damage_mean', and not just
+        #       u'structural', therefore we can't just use the selected
+        #       loss type, but we must use the actual only key in the
+        #       dict
+        added_loss_attr = "%s_sum" % self.loss_attr_name
+        style_by = added_loss_attr
+        self.style_maps(
+            layer=zonal_layer_plus_sum, style_by=style_by,
+            add_null_class=True)
+        super().accept()
 
     def reject(self):
         if (hasattr(self, 'npz_file') and self.npz_file is not None
                 and self.output_type in OQ_TO_LAYER_TYPES):
             self.npz_file.close()
-        super(LoadOutputAsLayerDialog, self).reject()
+        super().reject()
