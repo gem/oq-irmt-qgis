@@ -31,6 +31,8 @@ from datetime import datetime
 from collections import OrderedDict
 
 try:
+    import matplotlib
+    matplotlib.use('Qt4Agg')
     from matplotlib.figure import Figure
     from matplotlib.backends.backend_qt4agg import (
         FigureCanvasQTAgg as FigureCanvas,

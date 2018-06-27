@@ -27,6 +27,8 @@ import os
 import json
 import bisect
 try:
+    import matplotlib
+    matplotlib.use('Qt4Agg')
     import matplotlib.pyplot as plt
 except ImportError as exc:
     raise ImportError(
