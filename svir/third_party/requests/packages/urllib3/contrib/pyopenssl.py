@@ -75,7 +75,7 @@ __all__ = ['inject_into_urllib3', 'extract_from_urllib3']
 # SNI always works.
 HAS_SNI = True
 
-# Map from urllib3 to PyOpenSSL compatible parameter-values.
+# Map from .packages.urllib3 to PyOpenSSL compatible parameter-values.
 _openssl_versions = {
     ssl.PROTOCOL_SSLv23: OpenSSL.SSL.SSLv23_METHOD,
     ssl.PROTOCOL_TLSv1: OpenSSL.SSL.TLSv1_METHOD,

@@ -40,9 +40,9 @@ is at <http://python-requests.org>.
 :license: Apache 2.0, see LICENSE for more details.
 """
 
-import urllib3
 import chardet
 import warnings
+from .packages import urllib3
 from .exceptions import RequestsDependencyWarning
 
 
@@ -92,7 +92,7 @@ except (AssertionError, ValueError):
 
 # Attempt to enable urllib3's SNI support, if possible
 try:
-    from urllib3.contrib import pyopenssl
+    from .packages.urllib3.contrib import pyopenssl
     pyopenssl.inject_into_urllib3()
 
     # Check cryptography version
@@ -102,7 +102,7 @@ except ImportError:
     pass
 
 # urllib3's DependencyWarnings should be silenced.
-from urllib3.exceptions import DependencyWarning
+from .packages.urllib3.exceptions import DependencyWarning
 warnings.simplefilter('ignore', DependencyWarning)
 
 from .__version__ import __title__, __description__, __url__, __version__

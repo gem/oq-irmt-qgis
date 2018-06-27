@@ -30,6 +30,7 @@ changelog=
       disabled until a valid zonal layer is loaded
     * Fixed a bug in the workflow loading outputs from the OQ-Engine (npz files were unnecessarily downloaded, before extracting the
       same data through the "extract API")
+    * Fixed third party imports and certifi
     3.1.1
     * When loading Ground Motion Fields for scenario calculations, the names of the GMPEs are displayed instead of the realization names
     * When loading a OQ-Engine output as layer, the engine version is saved as a custom property of the layer
