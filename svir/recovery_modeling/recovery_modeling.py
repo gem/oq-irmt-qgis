@@ -142,7 +142,7 @@ class RecoveryModeling(object):
     def generate_community_level_recovery_curve(
             self, zone_id, zonal_dmg_by_asset_probs,
             zonal_asset_refs, writer=None, integrate_svi=False, seed=None,
-            n_simulations=1, n_zones=1, zone_index=1):
+            n_simulations=1, n_zones=1, zone_index=1, usage='gui'):
 
         # TODO: use svi_by_zone[zone_id] to adjust recovery times (how?)
 
@@ -193,7 +193,7 @@ class RecoveryModeling(object):
                     RecoveryBasedDamageStateProbabilities, inspectionTimes,
                     recoveryTimes, repairTimes, assessmentTimes,
                     mobilizationTimes, zone_id, asset_refs, zone_index,
-                    n_zones, sim, n_simulations, seed)
+                    n_zones, sim, n_simulations, seed, usage)
             # Sum up all building level recovery function
             # TODO: use enumerate instead
             for timePoint in range(len(timeList)):
@@ -286,16 +286,18 @@ class RecoveryModeling(object):
             RecoveryBasedDamageStateProbabilities, inspectionTimes,
             recoveryTimes, repairTimes, assessmentTimes, mobilizationTimes,
             zone_id, asset_refs, zone_index, n_zones, simulation,
-            n_simulations, seed=None):
+            n_simulations, seed=None, usage='gui'):
         # Looping over all buildings in community
         # Initialize building level recovery function
         simulationRecoveryFunction = [
             0 for x in range(len(timeList))]
-        msg = ('Calculating recovery curve for '
-               'zone %s (%s/%s), simulation %s/%s'
-               % (zone_id, zone_index, n_zones, simulation + 1, n_simulations))
-        msg_bar_item, progress = create_progress_message_bar(
-            self.iface.messageBar(), msg)
+        if usage == 'gui':
+            msg = ('Calculating recovery curve for '
+                   'zone %s (%s/%s), simulation %s/%s'
+                   % (zone_id, zone_index, n_zones,
+                      simulation + 1, n_simulations))
+            msg_bar_item, progress = create_progress_message_bar(
+                self.iface.messageBar(), msg)
         tot_bldgs = len(LossBasedDamageStateProbabilities)
         # TODO: use enumerate instead
         # TODO: perhaps iterate enumerating by asset_ref
@@ -343,8 +345,10 @@ class RecoveryModeling(object):
                 simulationRecoveryFunction[timePoint] += \
                     building_level_recovery_function[timePoint]
             progress_perc = bldg_idx / float(tot_bldgs) * 100
-            progress.setValue(progress_perc)
-        clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
+            if usage == 'gui':
+                progress.setValue(progress_perc)
+        if usage == 'gui':
+            clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
         return simulationRecoveryFunction
 
     def loss_based_to_recovery_based_probs(self, dmg_by_asset_probs):
