@@ -22,12 +22,30 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 import time
+import processing
 from functools import partial
 
 from qgis.core import (
     QgsApplication, QgsProcessingFeedback, QgsProcessingContext,
     QgsProcessingAlgRunnerTask,
     )
+
+
+def add_zone_id_to_points(points_layer, zonal_layer, zone_field_name):
+    params = {'DISCARD_NONMATCHING': False,
+              'INPUT': points_layer,
+              'JOIN': zonal_layer,
+              'JOIN_FIELDS': [zone_field_name],
+              'METHOD': 1,  # one-to-one
+              'OUTPUT': 'memory:points_layer_plus_zone_id',
+              'PREDICATE': [0],  # intersects
+              'PREFIX': ''}
+    res = processing.run('qgis:joinattributesbylocation', params)
+    output_layer = res['OUTPUT']
+    point_attrs_dict = {field.name(): field.name()
+                        for field in points_layer.fields()}
+
+    return point_attrs_dict, output_layer, zone_field_name
 
 
 def calculate_zonal_stats(callback, zonal_layer, points_layer, join_fields,

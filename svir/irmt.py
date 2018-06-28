@@ -258,17 +258,6 @@ class Irmt(object):
                            enable=self.experimental_enabled(),
                            submenu='Recovery modeling')
 
-        # Action to activate the modal dialog to guide the user through loss
-        # aggregation by zone
-        self.add_menu_item("aggregate_losses",
-                           ":/plugins/irmt/aggregate.svg",
-                           u"&Aggregate loss by zone",
-                           self.aggregate_losses,
-                           enable=True,
-                           add_to_layer_actions=False,
-                           add_to_toolbar=True,
-                           submenu='Utilities')
-
         # Action to activate the modal dialog to select a layer and one of
         # its attributes, in order to transform that attribute
         self.add_menu_item("transform_attributes",

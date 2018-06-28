@@ -65,7 +65,7 @@ def calculate_and_check_recovery_curve(
             testcase.assertAlmostEqual(actual, expected, places=2)
 
 
-@unittest.skip('Temporarily disabled for QGIS3')
+# @unittest.skip('Temporarily disabled for QGIS3')
 class DeterministicTestCase(unittest.TestCase):
     def setUp(self):
         curr_dir_name = os.path.dirname(__file__)
@@ -142,7 +142,7 @@ class DeterministicTestCase(unittest.TestCase):
 
 
 @attr('slow')
-@unittest.skip('Temporarily disabled for QGIS3')
+# @unittest.skip('Temporarily disabled for QGIS3')
 class StochasticTestCase(unittest.TestCase):
 
     def setUp(self):

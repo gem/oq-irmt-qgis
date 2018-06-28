@@ -105,13 +105,13 @@ class RecoveryModeling(object):
                 # but it is stored as Real
                 try:
                     zone_id = str(int(zone_id))
-                except:
+                except Exception:
                     zone_id = str(zone_id)
                 # FIXME: same hack as above
                 asset_ref = dmg_by_asset_feat['asset_ref']
                 try:
                     asset_ref = str(int(asset_ref))
-                except:
+                except Exception:
                     asset_ref = str(asset_ref)
                 dmg_by_asset_probs = [dmg_by_asset_feat.attributes()[idx]
                                       for idx in probs_fields_idxs]
@@ -471,7 +471,7 @@ def fill_fields_multiselect(fields_multiselect, layer):
         HEADING_FIELDS_TO_DISCARD + 2*n_loss_based_dmg_states, 2)
     try:
         default_field_names = field_names[probs_slice]
-    except:
+    except Exception:
         default_field_names = []
     other_fields = [field for field in fields
                     if field.name() not in default_field_names
