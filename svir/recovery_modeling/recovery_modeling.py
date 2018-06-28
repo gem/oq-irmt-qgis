@@ -39,6 +39,7 @@ from svir.utilities.utils import (
                                   create_progress_message_bar,
                                   clear_progress_message_bar,
                                   get_layer_setting,
+                                  WaitCursorManager,
                                   )
 from svir.utilities.shared import NUMERIC_FIELD_TYPES, RECOVERY_DEFAULTS
 
@@ -95,46 +96,37 @@ class RecoveryModeling(object):
                 # svi_value = zone_feat[self.svi_field_name]
                 # svi_by_zone[zone_id] = svi_value
             msg = 'Reading damage state probabilities...'
-            msg_bar_item, progress = create_progress_message_bar(
-                self.iface.messageBar(), msg)
-            tot_features = len(self.dmg_by_asset_features)
-            for feat_idx, dmg_by_asset_feat in enumerate(
-                    self.dmg_by_asset_features, start=1):
-                zone_id = dmg_by_asset_feat[zone_field_name]
-                # FIXME: hack to handle case in which the zone id is an integer
-                # but it is stored as Real
-                try:
-                    zone_id = str(int(zone_id))
-                except Exception:
-                    zone_id = str(zone_id)
-                # FIXME: same hack as above
-                asset_ref = dmg_by_asset_feat['asset_ref']
-                try:
-                    asset_ref = str(int(asset_ref))
-                except Exception:
-                    asset_ref = str(asset_ref)
-                dmg_by_asset_probs = [dmg_by_asset_feat.attributes()[idx]
-                                      for idx in probs_fields_idxs]
-                zonal_dmg_by_asset_probs[zone_id].append(dmg_by_asset_probs)
-                zonal_asset_refs[zone_id].append(asset_ref)
-                progress_perc = feat_idx / float(tot_features) * 100
-                progress.setValue(progress_perc)
-            clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
+            with WaitCursorManager(msg):
+                for feat_idx, dmg_by_asset_feat in enumerate(
+                        self.dmg_by_asset_features, start=1):
+                    zone_id = dmg_by_asset_feat[zone_field_name]
+                    # FIXME: hack to handle case in which the zone id is an
+                    # integer but it is stored as Real
+                    try:
+                        zone_id = str(int(zone_id))
+                    except Exception:
+                        zone_id = str(zone_id)
+                    # FIXME: same hack as above
+                    asset_ref = dmg_by_asset_feat['asset_ref']
+                    try:
+                        asset_ref = str(int(asset_ref))
+                    except Exception:
+                        asset_ref = str(asset_ref)
+                    dmg_by_asset_probs = [dmg_by_asset_feat.attributes()[idx]
+                                          for idx in probs_fields_idxs]
+                    zonal_dmg_by_asset_probs[zone_id].append(
+                        dmg_by_asset_probs)
+                    zonal_asset_refs[zone_id].append(asset_ref)
         else:  # ignore svi
             msg = 'Reading damage state probabilities...'
-            msg_bar_item, progress = create_progress_message_bar(
-                self.iface.messageBar(), msg)
-            tot_features = len(self.dmg_by_asset_features)
-            for idx, dmg_by_asset_feat in enumerate(
-                    self.dmg_by_asset_features, start=1):
-                dmg_by_asset_probs = [dmg_by_asset_feat.attributes()[idx]
-                                      for idx in probs_fields_idxs]
-                asset_ref = dmg_by_asset_feat['asset_ref']
-                zonal_dmg_by_asset_probs['ALL'].append(dmg_by_asset_probs)
-                zonal_asset_refs['ALL'].append(asset_ref)
-                progress_perc = idx / float(tot_features) * 100
-                progress.setValue(progress_perc)
-            clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
+            with WaitCursorManager(msg):
+                for idx, dmg_by_asset_feat in enumerate(
+                        self.dmg_by_asset_features, start=1):
+                    dmg_by_asset_probs = [dmg_by_asset_feat.attributes()[idx]
+                                          for idx in probs_fields_idxs]
+                    asset_ref = dmg_by_asset_feat['asset_ref']
+                    zonal_dmg_by_asset_probs['ALL'].append(dmg_by_asset_probs)
+                    zonal_asset_refs['ALL'].append(asset_ref)
         return zonal_dmg_by_asset_probs, zonal_asset_refs
 
     def get_times(self, times_type):
