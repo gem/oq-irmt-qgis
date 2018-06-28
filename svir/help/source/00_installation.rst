@@ -8,8 +8,6 @@ This plugin runs with `QGIS 2.14LTR <http://qgis.org/it/site/forusers/alldownloa
 and above.
 
 On Microsoft Windows and Mac OS X, QGIS includes all the software dependencies needed by the plugin.
-On Microsoft Windows, we recommend to use the 32 bit version of QGIS, because some library issues are
-still open in the 64 bit version.
 
 On Linux, please make sure that `Scipy <https://www.scipy.org/install.html>`_
 and `Matplotlib <https://matplotlib.org/users/installing.html>`_ with Qt4 backend

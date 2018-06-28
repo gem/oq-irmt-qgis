@@ -32,8 +32,12 @@ from qgis.core import QgsGraduatedSymbolRenderer
 DEBUG = QSettings().value('/irmt/developer_mode', False, type=bool)
 
 cp = ConfigParser()
-cp.readfp(open(os.path.dirname(os.path.realpath(__file__)) +
-               '/../metadata.txt'))
+metadata_file_path = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)),
+    os.pardir,
+    'metadata.txt')
+with open(metadata_file_path, 'r') as f:
+    cp.read_file(f)
 IRMT_PLUGIN_VERSION = cp.get('general', 'version')
 PLATFORM_REGISTRATION_URL = 'https://platform.openquake.org/account/signup/'
 SUPPLEMENTAL_INFORMATION_VERSION = '1.0'

@@ -25,13 +25,6 @@
 import os
 import json
 import bisect
-try:
-    import matplotlib.pyplot as plt
-except ImportError as exc:
-    raise ImportError(
-        'There was a problem importing matplotlib. If you are using'
-        ' a 64bit version of QGIS on Windows, please try using'
-        ' a 32bit version instead. %s' % exc)
 from collections import defaultdict
 from qgis.PyQt.QtCore import QSettings
 from svir.recovery_modeling.building import Building
@@ -42,6 +35,10 @@ from svir.utilities.utils import (
                                   WaitCursorManager,
                                   )
 from svir.utilities.shared import NUMERIC_FIELD_TYPES, RECOVERY_DEFAULTS
+
+import matplotlib
+matplotlib.use('Qt5Agg')
+import matplotlib.pyplot as plt  # NOQA
 
 HEADING_FIELDS_TO_DISCARD = 4
 DAYS_BEFORE_EVENT = 0
