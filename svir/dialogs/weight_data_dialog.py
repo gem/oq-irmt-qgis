@@ -22,6 +22,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
+from copy import deepcopy
 import json
 
 from qgis.PyQt.QtCore import (
@@ -90,7 +91,7 @@ class WeightDataDialog(QDialog, FORM_CLASS):
         # behavior.
         self.style_by_field_selected = False
 
-        self.project_definition = project_definition.copy()
+        self.project_definition = deepcopy(project_definition)
         try:
             proj_title = self.project_definition['title']
         except KeyError:
@@ -135,7 +136,7 @@ class WeightDataDialog(QDialog, FORM_CLASS):
         confirmation_on_close(self)
 
     def update_project_definition(self, project_definition):
-        self.project_definition = project_definition.copy()
+        self.project_definition = deepcopy(project_definition)
         self.populate_style_by_field_cbx()
 
     def update_active_layer_numeric_fields(self):
