@@ -26,7 +26,6 @@ import os
 import json
 import tempfile
 import zipfile
-import copy
 
 from qgis.PyQt.QtCore import (QDir,
                               Qt,
@@ -696,7 +695,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                         button, action, output, outtype)
                     self.output_list_tbl.setCellWidget(row, col + 1, button)
                 if "%s_aggr" % output['type'] in OQ_EXTRACT_TO_VIEW_TYPES:
-                    mod_output = copy.deepcopy(output)
+                    mod_output = output.copy()
                     mod_output['type'] = "%s_aggr" % output['type']
                     button = QPushButton()
                     self.connect_button_to_action(

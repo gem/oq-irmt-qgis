@@ -108,7 +108,7 @@ def calculate_composite_variable(iface, layer, node):
     """
     # Avoid touching the original node, and manipulate a copy instead.
     # If anything fails, the original node will be returned
-    edited_node = deepcopy(node)
+    edited_node = node.copy()
     # keep a list of attributes added to the layer, so they can be deleted if
     # the calculation can not be completed, and they can be notified to the
     # user if the calculation is done without errors
@@ -131,7 +131,7 @@ def calculate_composite_variable(iface, layer, node):
         if child_was_changed:
             # update the subtree with the modified child
             # e.g., a theme might have been linked to a new layer's field
-            edited_node['children'][child_idx] = deepcopy(child)
+            edited_node['children'][child_idx] = child.copy()
     try:
         node_attr_id, node_attr_name, field_was_added = \
             get_node_attr_id_and_name(edited_node, layer)

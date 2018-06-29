@@ -30,7 +30,6 @@ import uuid
 import fileinput
 import re
 
-from copy import deepcopy
 from math import floor, ceil
 from qgis.core import (
                        QgsVectorLayer,
@@ -588,7 +587,7 @@ class Irmt(object):
                 # Retrieve the indices selected by the user
                 indices_list = []
                 iso_codes_list = []
-                project_definition = deepcopy(PROJECT_TEMPLATE)
+                project_definition = PROJECT_TEMPLATE.copy()
                 svi_themes = project_definition[
                     'children'][1]['children']
                 known_themes = []
@@ -762,7 +761,7 @@ class Irmt(object):
                        indicator_field):
         """add a new theme to the project_definition"""
 
-        theme = deepcopy(THEME_TEMPLATE)
+        theme = THEME_TEMPLATE.copy()
         theme['name'] = indicator_theme
         if theme['name'] not in known_themes:
             known_themes.append(theme['name'])
@@ -770,7 +769,7 @@ class Irmt(object):
         theme_position = known_themes.index(theme['name'])
         level = float('4.%d' % theme_position)
         # add a new indicator to a theme
-        new_indicator = deepcopy(INDICATOR_TEMPLATE)
+        new_indicator = INDICATOR_TEMPLATE.copy()
         new_indicator['name'] = indicator_name
         new_indicator['field'] = indicator_field
         new_indicator['level'] = level
@@ -857,12 +856,12 @@ class Irmt(object):
             orig_project_definition = suppl_info['project_definitions'][
                 suppl_info['selected_project_definition_idx']]
         except KeyError:
-            orig_project_definition = deepcopy(PROJECT_TEMPLATE)
+            orig_project_definition = PROJECT_TEMPLATE.copy()
             suppl_info = {'selected_project_definition_idx': 0,
                           'project_definitions': [orig_project_definition]
                           }
             write_layer_suppl_info_to_qgs(active_layer_id, suppl_info)
-        edited_project_definition = deepcopy(orig_project_definition)
+        edited_project_definition = orig_project_definition.copy()
 
         # Save the style so the following styling can be undone
         fd, sld_file_name = tempfile.mkstemp(suffix=".sld")
@@ -905,7 +904,7 @@ class Irmt(object):
                 dlg.added_attrs_ids.update(added_attrs_ids)
                 dlg.discarded_feats = discarded_feats
             else:
-                edited_project_definition = deepcopy(dlg.project_definition)
+                edited_project_definition = dlg.project_definition.copy()
             self.notify_added_attrs_and_discarded_feats(
                 dlg.added_attrs_ids, dlg.discarded_feats)
             self.update_actions_status()
@@ -917,7 +916,7 @@ class Irmt(object):
             # Therefore we recalculate the indices using the old project
             # definition
             if dlg.any_changes_made:
-                edited_project_definition = deepcopy(orig_project_definition)
+                edited_project_definition = orig_project_definition.copy()
                 iri_node = edited_project_definition
                 ri_node = edited_project_definition['children'][0]
                 svi_node = edited_project_definition['children'][1]
@@ -932,8 +931,8 @@ class Irmt(object):
         dlg.json_cleaned.disconnect()
         # store the correct project definitions
         selected_idx = suppl_info['selected_project_definition_idx']
-        suppl_info['project_definitions'][selected_idx] = deepcopy(
-            edited_project_definition)
+        suppl_info['project_definitions'][selected_idx] = \
+            edited_project_definition.copy()
         write_layer_suppl_info_to_qgs(active_layer_id, suppl_info)
         self.redraw_ir_layer(edited_project_definition)
 
@@ -946,16 +945,16 @@ class Irmt(object):
         self.redraw_ir_layer(project_definition)
 
     def _recalculate_indexes(self, data):
-        project_definition = deepcopy(data)
+        project_definition = data.copy()
 
         if self.is_iri_computable(project_definition):
-            iri_node = deepcopy(project_definition)
+            iri_node = project_definition.copy()
             msg = 'Calculating %s' % iri_node['name']
             with WaitCursorManager(msg, self.iface.messageBar()):
                 (added_attrs_ids, discarded_feats,
                  iri_node, was_iri_computed) = calculate_composite_variable(
                     self.iface, self.iface.activeLayer(), iri_node)
-            project_definition = deepcopy(iri_node)
+            project_definition = iri_node.copy()
             return added_attrs_ids, discarded_feats, project_definition
 
         svi_added_attrs_ids = set()
@@ -965,23 +964,23 @@ class Irmt(object):
 
         was_svi_computed = False
         if self.is_svi_computable(project_definition):
-            svi_node = deepcopy(project_definition['children'][1])
+            svi_node = project_definition['children'][1].copy()
             msg = 'Calculating %s' % svi_node['name']
             with WaitCursorManager(msg, self.iface.messageBar()):
                 (svi_added_attrs_ids, svi_discarded_feats,
                  svi_node, was_svi_computed) = calculate_composite_variable(
                     self.iface, self.iface.activeLayer(), svi_node)
-            project_definition['children'][1] = deepcopy(svi_node)
+            project_definition['children'][1] = svi_node.copy()
 
         was_ri_computed = False
         if self.is_ri_computable(project_definition):
-            ri_node = deepcopy(project_definition['children'][0])
+            ri_node = project_definition['children'][0].copy()
             msg = 'Calculating %s' % ri_node['name']
             with WaitCursorManager(msg, self.iface.messageBar()):
                 (ri_added_attrs_ids, ri_discarded_feats,
                  ri_node, was_ri_computed) = calculate_composite_variable(
                     self.iface, self.iface.activeLayer(), ri_node)
-            project_definition['children'][0] = deepcopy(ri_node)
+            project_definition['children'][0] = ri_node.copy()
 
         if not was_svi_computed and not was_ri_computed:
             return set(), set(), data

@@ -23,7 +23,6 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import json
-from copy import deepcopy
 from qgis.core import QgsProject
 
 from qgis.PyQt.QtCore import pyqtSlot
@@ -61,7 +60,7 @@ class ProjectsManagerDialog(QDialog, FORM_CLASS):
         if is_available and suppl_info_str:
             self.suppl_info = json.loads(suppl_info_str)
         else:
-            project_definition = deepcopy(PROJECT_TEMPLATE)
+            project_definition = PROJECT_TEMPLATE.copy()
             self.suppl_info = {'selected_project_definition_idx': 0,
                                'project_definitions': [project_definition]
                                }
@@ -115,7 +114,7 @@ class ProjectsManagerDialog(QDialog, FORM_CLASS):
 
     def add_proj_def(self, title, proj_def=None):
         if proj_def is None:
-            proj_def = deepcopy(PROJECT_TEMPLATE)
+            proj_def = PROJECT_TEMPLATE.copy()
         proj_def['title'] = title
         self.suppl_info['project_definitions'].append(proj_def)
         self.suppl_info['selected_project_definition_idx'] = \

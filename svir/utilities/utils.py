@@ -31,7 +31,6 @@ import traceback
 import locale
 import zlib
 import io
-from copy import deepcopy
 from time import time
 from pprint import pformat
 from qgis.core import (
@@ -233,7 +232,7 @@ def set_operator(sub_tree, operator):
     :param operator: the operator to be applied
     :returns: the modified subtree
     """
-    node = deepcopy(sub_tree)
+    node = sub_tree.copy()
     if 'children' in node:
         for child_idx, child in enumerate(node['children']):
             modified_child = set_operator(child, operator)

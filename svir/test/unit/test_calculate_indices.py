@@ -26,7 +26,6 @@ import unittest
 import os
 import sys
 import tempfile
-from copy import deepcopy
 from qgis.core import QgsVectorLayer
 from svir.test.utilities import get_qgis_app
 from svir.calculations.calculate_utils import (calculate_node,
@@ -141,9 +140,8 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         # Avoid modifying the original files
         self.layer = ProcessLayer(orig_layer).duplicate_in_memory()
 
-    @unittest.skip('FIXME: evaluate expressions including field names')
     def test_custom_operator(self):
-        proj_def = deepcopy(self.project_definition)
+        proj_def = self.project_definition.copy()
         operator = OPERATORS_DICT['CUSTOM']
         # set economy's operator to custom and use a custom formula
         proj_def['children'][1]['children'][0]['operator'] = operator
@@ -174,7 +172,7 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
             raise
 
     def test_simple_sum(self):
-        proj_def = deepcopy(self.project_definition)
+        proj_def = self.project_definition.copy()
         operator = OPERATORS_DICT['SUM_S']
         node_attr_id, node_attr_name, discarded_feats = \
             calculate_education_node(proj_def, operator, self.layer)
@@ -191,7 +189,7 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         self.assertEqual(res, True)
 
     def test_weighted_sum(self):
-        proj_def = deepcopy(self.project_definition)
+        proj_def = self.project_definition.copy()
         operator = OPERATORS_DICT['SUM_W']
         node_attr_id, node_attr_name, discarded_feats = \
             calculate_education_node(proj_def, operator, self.layer)
@@ -208,7 +206,7 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         self.assertEqual(res, True)
 
     def test_simple_multiplication(self):
-        proj_def = deepcopy(self.project_definition)
+        proj_def = self.project_definition.copy()
         operator = OPERATORS_DICT['MUL_S']
         node_attr_id, node_attr_name, discarded_feats = \
             calculate_education_node(proj_def, operator, self.layer)
@@ -225,7 +223,7 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         self.assertEqual(res, True)
 
     def test_weighted_multiplication(self):
-        proj_def = deepcopy(self.project_definition)
+        proj_def = self.project_definition.copy()
         operator = OPERATORS_DICT['MUL_W']
         node_attr_id, node_attr_name, discarded_feats = \
             calculate_education_node(proj_def, operator, self.layer)
@@ -242,7 +240,7 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         self.assertEqual(res, True)
 
     def test_average(self):
-        proj_def = deepcopy(self.project_definition)
+        proj_def = self.project_definition.copy()
         operator = OPERATORS_DICT['AVG']
         node_attr_id, node_attr_name, discarded_feats = \
             calculate_education_node(proj_def, operator, self.layer)
@@ -259,7 +257,7 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         self.assertEqual(res, True)
 
     def test_geometric_mean_positive_argument(self):
-        proj_def = deepcopy(self.project_definition)
+        proj_def = self.project_definition.copy()
         operator = OPERATORS_DICT['GEOM_MEAN']
         node_attr_id, node_attr_name, discarded_feats = \
             calculate_education_node(proj_def, operator, self.layer)
@@ -276,7 +274,7 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         self.assertEqual(res, True)
 
     def test_geometric_mean_negative_argument(self):
-        proj_def = deepcopy(self.project_definition)
+        proj_def = self.project_definition.copy()
         # do not invert EDUEOCSAM ==> it should cause the geometric mean to
         # attempt calculating the root of a negative number, so we should have
         # the corresponding field discarded with 'Invalid value' reason
@@ -301,7 +299,7 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         self.assertEqual(res, True)
 
     def test_calculate_svi(self):
-        proj_def = deepcopy(self.project_definition)
+        proj_def = self.project_definition.copy()
         svi_node = proj_def['children'][1]
         added_attrs_ids, discarded_feats, edited_node, any_change = \
             calculate_composite_variable(IFACE, self.layer, svi_node)

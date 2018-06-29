@@ -134,7 +134,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 self.untested_otypes.discard(output['type'])
             output_type_aggr = "%s_aggr" % output['type']
             if output_type_aggr in OQ_EXTRACT_TO_VIEW_TYPES:
-                mod_output = copy.deepcopy(output)
+                mod_output = output.copy()
                 mod_output['type'] = output_type_aggr
                 try:
                     self.load_output(calc, mod_output)
