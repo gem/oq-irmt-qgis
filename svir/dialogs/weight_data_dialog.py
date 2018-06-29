@@ -238,7 +238,7 @@ class WeightDataDialog(QDialog, FORM_CLASS):
         self.printer.setOutputFileName(dest_full_path_name)
         try:
             self.web_view.print_(self.printer)
-        except:
+        except Exception:
             msg = 'It was impossible to create the pdf'
             log_msg(msg, level='C', message_bar=self.iface.messageBar())
         else:

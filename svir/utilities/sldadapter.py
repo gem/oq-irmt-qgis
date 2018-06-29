@@ -134,7 +134,7 @@ def getLabelingAsSld(layer):
         s += "</PointPlacement></LabelPlacement>"
         s += "</TextSymbolizer>"
         return s
-    except:
+    except Exception:
         return ""
 
 

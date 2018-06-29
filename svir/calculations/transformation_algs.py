@@ -314,7 +314,7 @@ def sigmoid(input_list, variant_name="", inverse=False):
         for y in input_list:
             try:
                 output = log(y / (1 - y))
-            except:
+            except Exception:
                 output = NULL
                 invalid_input_values.append(y)
             output_list.append(output)
@@ -322,7 +322,7 @@ def sigmoid(input_list, variant_name="", inverse=False):
         for x in input_list:
             try:
                 output = 1 / (1 + math.exp(-x))
-            except:
+            except Exception:
                 output = NULL
                 invalid_input_values.append(x)
             output_list.append(output)
