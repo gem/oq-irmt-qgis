@@ -869,7 +869,6 @@ def get_style(layer, message_bar, restore_defaults=False):
                    DEFAULT_SETTINGS['style_classes'],
                    type=int))
     # look for the setting associated to the layer if available
-    import pdb; pdb.set_trace()
     force_restyling = None
     if layer is not None:
         # NOTE: We can't use %s/%s instead of %s_%s, because / is a special
