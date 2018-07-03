@@ -30,6 +30,9 @@ import numpy
 from datetime import datetime
 from collections import OrderedDict
 
+import matplotlib
+matplotlib.use('Qt5Agg')
+from matplotlib.backends.qt_compat import QtCore, QtWidgets
 from matplotlib.backends.backend_qt5agg import (
     FigureCanvas,
     NavigationToolbar2QT as NavigationToolbar)
