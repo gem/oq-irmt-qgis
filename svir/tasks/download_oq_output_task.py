@@ -55,6 +55,7 @@ class DownloadOqOutputTask(QgsTask):
         self.on_error = on_error
         self.del_task = del_task
         self.current_calc_id = current_calc_id
+        self.exception = None
 
     def run(self):
         if self.current_calc_id:
@@ -91,10 +92,14 @@ class DownloadOqOutputTask(QgsTask):
             session, download_url, self.dest_folder)
         self.download_thread.progress_sig[float].connect(self.set_progress)
         self.download_thread.filepath_sig[str].connect(self.set_filepath)
+        self.download_thread.exception_sig[Exception].connect(
+            self.set_exception)
         self.is_canceled_sig.connect(self.download_thread.set_canceled)
         self.download_thread.start()
         while True:
             sleep(0.1)
+            if self.exception is not None:
+                raise self.exception
             if self.download_thread.isFinished():
                 return True
             if self.isCanceled():
@@ -113,11 +118,16 @@ class DownloadOqOutputTask(QgsTask):
     def set_filepath(self, filepath):
         self.filepath = filepath
 
+    @pyqtSlot(Exception)
+    def set_exception(self, exception):
+        self.exception = exception
+
 
 class DownloadThread(QThread):
 
     progress_sig = pyqtSignal(float)
     filepath_sig = pyqtSignal(str)
+    exception_sig = pyqtSignal(Exception)
 
     def __init__(self, session, url, dest_folder):
         self.session = session
@@ -133,7 +143,8 @@ class DownloadThread(QThread):
             err_msg = (
                 'Unable to download the output.\n%s: %s.\n%s'
                 % (resp.status_code, resp.reason, resp.text))
-            raise DownloadFailed(err_msg)
+            self.exception_sig.emit(DownloadFailed(err_msg))
+            return
         filename = resp.headers['content-disposition'].split(
             'filename=')[1]
         filepath = os.path.join(self.dest_folder, filename)

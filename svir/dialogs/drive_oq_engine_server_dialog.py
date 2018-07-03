@@ -825,6 +825,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         else:
             msg = 'HDF5 datastore saved as %s' % filepath
         log_msg(msg, level='S', message_bar=self.message_bar)
+        self.del_task()
 
     def notify_error(self, exc):
         if isinstance(exc, TaskCanceled):
@@ -834,6 +835,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             msg = 'Unable to download the output'
             log_msg(
                 msg, level='C', message_bar=self.message_bar, exception=exc)
+        self.del_task()
 
     def start_polling(self):
         if not self.is_logged_in:
