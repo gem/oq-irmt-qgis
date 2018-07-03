@@ -70,6 +70,8 @@ def calculate_zonal_stats(callback, zonal_layer, points_layer, join_fields,
     /483b4ff977e3d36b166fac792254c31e89e3aeae/python/plugins/processing/algs
     /qgis/SpatialJoinSummary.py  # NOQA
 
+    :param callback: function to be called once the aggregation is complete,
+        passing the output zonal layer as a parameter
     :param zonal_layer: vector layer containing polygons (or its path)
     :param points_layer: vector layer containing points (or its path)
     :param join_fields: fields for which we want to calculate statistics
@@ -80,8 +82,11 @@ def calculate_zonal_stats(callback, zonal_layer, points_layer, join_fields,
         (in our case, purge zones that contain no loss/damage points)
     :param predicates: geometric predicates (default: 'intersects')
     :param summaries: statistics to be calculated for each join field
+        (default: 'sum')
 
-    :returns: the output QgsVectorLayer
+    :returns: it waits until the task is complete or terminated, then it
+        calls the callback function, passing the output QgsVectorLayer as
+        parameter, or None in case of failure
     """
 
     alg = QgsApplication.processingRegistry().algorithmById(
