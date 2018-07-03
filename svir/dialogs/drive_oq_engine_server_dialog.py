@@ -754,10 +754,12 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             else:
                 raise NotImplementedError("%s %s" % (action, outtype))
         elif action == 'Load as layer':
-            dest_folder = tempfile.gettempdir()
-            if outtype in ('npz', 'csv'):
+            if outtype == 'npz':
+                self.open_output(output_id, output_type)
+            elif outtype == 'csv':
                 if self.is_another_download_running():
                     return
+                dest_folder = tempfile.gettempdir()
                 descr = 'Download %s for calculation %s' % (
                     output_type, self.current_calc_id)
                 self.download_task = DownloadOqOutputTask(
@@ -802,7 +804,6 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
     def open_output(
             self, output_id=None, output_type=None, filepath=None):
-        assert(filepath is not None)
         assert(output_type is not None)
         if output_type not in OUTPUT_TYPE_LOADERS:
             raise NotImplementedError(output_type)
@@ -815,7 +816,6 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.open_output_dlgs[dlg_id] = open_output_dlg
         open_output_dlg.finished[int].connect(
             lambda result: self.del_dlg(dlg_id))
-        open_output_dlg.show()
 
     def notify_downloaded(
             self, output_id=None, output_type=None, filepath=None):

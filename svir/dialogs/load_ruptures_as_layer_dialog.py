@@ -60,6 +60,7 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
         self.file_browser_tbn.setEnabled(True)
         if self.path:
             self.path_le.setText(self.path)
+        self.show()
 
     def set_ok_button(self):
         self.ok_button.setEnabled(bool(self.path))
