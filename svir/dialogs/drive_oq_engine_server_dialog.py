@@ -154,7 +154,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.engine_version = None
         self.attempt_login()
 
-        self.download_task = None
+        self.download_tasks = {}
         self.open_output_dlgs = {}
 
     def attempt_login(self):
@@ -583,27 +583,18 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         else:
             self.show_calc_params_btn.setText('Show calculation parameters')
 
-    def is_another_download_running(self):
-        if self.download_task is not None:
-            msg = ('Another download is running. Please wait until its'
-                   ' completion or cancel it, before proceeding with a'
-                   ' new download')
-            log_msg(msg, level='W', duration=4, message_bar=self.message_bar)
-            return True
-
     @pyqtSlot()
     def on_download_datastore_btn_clicked(self):
         dest_folder = ask_for_download_destination_folder(self)
         if not dest_folder:
             return
-        if self.is_another_download_running():
-            return
-        self.download_task = DownloadOqOutputTask(
+        task_id = uuid4()
+        self.download_tasks[task_id] = DownloadOqOutputTask(
             'Downloading HDF5 datastore', QgsTask.CanCancel,
             None, None, None, dest_folder, self.session, self.hostname,
-            self.notify_downloaded, self.notify_error, self.del_task,
+            self.notify_downloaded, self.notify_error, self.del_task, task_id,
             current_calc_id=self.current_calc_id)
-        QgsApplication.taskManager().addTask(self.download_task)
+        QgsApplication.taskManager().addTask(self.download_tasks[task_id])
 
     @pyqtSlot()
     def on_show_calc_params_btn_clicked(self):
@@ -742,51 +733,53 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     self.current_calc_id, self.session,
                     self.hostname, output_type, self.engine_version)
             elif outtype == 'rst':
-                if self.is_another_download_running():
-                    return
                 descr = ('Download full report for calculation %s'
                          % self.current_calc_id)
-                self.download_task = DownloadOqOutputTask(
+                task_id = uuid4()
+                self.download_tasks[task_id] = DownloadOqOutputTask(
                     descr, QgsTask.CanCancel, output_id, outtype,
                     output_type, dest_folder, self.session, self.hostname,
-                    self.open_full_report, self.notify_error, self.del_task)
-                QgsApplication.taskManager().addTask(self.download_task)
+                    self.open_full_report, self.notify_error, self.del_task,
+                    task_id)
+                QgsApplication.taskManager().addTask(
+                    self.download_tasks[task_id])
             else:
                 raise NotImplementedError("%s %s" % (action, outtype))
         elif action == 'Load as layer':
             if outtype == 'npz':
                 self.open_output(output_id, output_type)
             elif outtype == 'csv':
-                if self.is_another_download_running():
-                    return
                 dest_folder = tempfile.gettempdir()
                 descr = 'Download %s for calculation %s' % (
                     output_type, self.current_calc_id)
-                self.download_task = DownloadOqOutputTask(
+                task_id = uuid4()
+                self.download_tasks[task_id] = DownloadOqOutputTask(
                     descr, QgsTask.CanCancel, output_id, outtype,
                     output_type, dest_folder, self.session, self.hostname,
-                    self.open_output, self.notify_error, self.del_task)
-                QgsApplication.taskManager().addTask(self.download_task)
+                    self.open_output, self.notify_error, self.del_task,
+                    task_id)
+                QgsApplication.taskManager().addTask(
+                    self.download_tasks[task_id])
             else:
                 raise NotImplementedError("%s %s" % (action, outtype))
         elif action == 'Download':
             dest_folder = ask_for_download_destination_folder(self)
             if not dest_folder:
                 return
-            if self.is_another_download_running():
-                return
             descr = 'Download %s for calculation %s' % (
                 output_type, self.current_calc_id)
-            self.download_task = DownloadOqOutputTask(
+            task_id = uuid4()
+            self.download_tasks[task_id] = DownloadOqOutputTask(
                 descr, QgsTask.CanCancel, output_id, outtype,
                 output_type, dest_folder, self.session, self.hostname,
-                self.notify_downloaded, self.notify_error, self.del_task)
-            QgsApplication.taskManager().addTask(self.download_task)
+                self.notify_downloaded, self.notify_error, self.del_task,
+                task_id)
+            QgsApplication.taskManager().addTask(self.download_tasks[task_id])
         else:
             raise NotImplementedError(action)
 
-    def del_task(self):
-        self.download_task = None
+    def del_task(self, task_id):
+        del(self.download_tasks[task_id])
 
     def del_dlg(self, dlg_id):
         del(self.open_output_dlgs[dlg_id])
@@ -825,7 +818,6 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         else:
             msg = 'HDF5 datastore saved as %s' % filepath
         log_msg(msg, level='S', message_bar=self.message_bar)
-        self.del_task()
 
     def notify_error(self, exc):
         if isinstance(exc, TaskCanceled):
@@ -835,7 +827,6 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             msg = 'Unable to download the output'
             log_msg(
                 msg, level='C', message_bar=self.message_bar, exception=exc)
-        self.del_task()
 
     def start_polling(self):
         if not self.is_logged_in:

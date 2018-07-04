@@ -43,7 +43,7 @@ class DownloadOqOutputTask(QgsTask):
     def __init__(
             self, description, flags, output_id, outtype,
             output_type, dest_folder, session, hostname, on_success, on_error,
-            del_task, current_calc_id=None):
+            del_task, task_id, current_calc_id=None):
         super().__init__(description, flags)
         self.output_id = output_id
         self.outtype = outtype
@@ -54,6 +54,7 @@ class DownloadOqOutputTask(QgsTask):
         self.on_success = on_success
         self.on_error = on_error
         self.del_task = del_task
+        self.task_id = task_id
         self.current_calc_id = current_calc_id
         self.exception = None
 
@@ -81,7 +82,7 @@ class DownloadOqOutputTask(QgsTask):
                 filepath=self.filepath)
         else:
             self.on_error(self.exception)
-        self.del_task()
+        self.del_task(self.task_id)
 
     def download_output(self, session, download_url):
         self.setProgress(-1)
