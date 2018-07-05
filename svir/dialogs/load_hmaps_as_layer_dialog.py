@@ -22,20 +22,18 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-from qgis.core import QgsFeature, QgsGeometry, QgsPointXY, edit
+from qgis.core import (
+    QgsFeature, QgsGeometry, QgsPointXY, edit, QgsTask, QgsApplication)
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 from svir.calculations.calculate_utils import add_numeric_attribute
-from svir.utilities.utils import (WaitCursorManager,
-                                  log_msg,
-                                  extract_npz,
-                                  )
+from svir.utilities.utils import WaitCursorManager, log_msg
+from svir.tasks.extract_npz_task import ExtractNpzTask
 
 
 class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
     """
-    Modal dialog to load hazard maps from an oq-engine output, as layer
+    Dialog to load hazard maps from an oq-engine output, as layer
     """
-
     def __init__(self, iface, viewer_dock, session, hostname, calc_id,
                  output_type='hmaps', path=None, mode=None,
                  engine_version=None):
@@ -52,12 +50,12 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         self.create_rlz_or_stat_selector()
         self.create_imt_selector()
         self.create_poe_selector()
-        self.npz_file = extract_npz(
-            session, hostname, calc_id, output_type,
-            message_bar=iface.messageBar(), params=None)
-        self.populate_out_dep_widgets()
-        self.adjustSize()
-        self.set_ok_button()
+
+        self.extract_npz_task = ExtractNpzTask(
+            'Extract hazard maps', QgsTask.CanCancel, self.session,
+            self.hostname, self.calc_id, self.output_type, self.finalize_init,
+            self.on_extract_error)
+        QgsApplication.taskManager().addTask(self.extract_npz_task)
 
     def set_ok_button(self):
         self.ok_button.setEnabled(self.poe_cbx.currentIndex() != -1)

@@ -42,7 +42,8 @@ from qgis.core import (QgsVectorLayer,
                        QgsApplication,
                        QgsUnitTypes,
                        )
-from qgis.PyQt.QtCore import pyqtSlot, QDir, QSettings, QFileInfo, Qt
+from qgis.PyQt.QtCore import (
+    pyqtSlot, pyqtSignal, QDir, QSettings, QFileInfo, Qt)
 from qgis.PyQt.QtWidgets import (
                                  QDialogButtonBox,
                                  QDialog,
@@ -73,14 +74,18 @@ from svir.utilities.utils import (get_ui_class,
                                   get_file_size,
                                   get_irmt_version,
                                   )
+from svir.tasks.extract_npz_task import TaskCanceled
 
 FORM_CLASS = get_ui_class('ui_load_output_as_layer.ui')
 
 
 class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     """
-    Modal dialog to load an oq-engine output as layer
+    Dialog to load an oq-engine output as layer
     """
+    init_done = pyqtSignal()
+    loading_completed = pyqtSignal()
+    loading_exception = pyqtSignal(Exception)
 
     def __init__(self, iface, viewer_dock,
                  session, hostname, calc_id, output_type=None,
@@ -105,6 +110,23 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         # Disable ok_button until all user options are set
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         self.ok_button.setDisabled(True)
+
+    def on_extract_error(self, exception):
+        if isinstance(exception, TaskCanceled):
+            msg = 'Data extraction canceled'
+            log_msg(msg, level='W', message_bar=self.iface.messageBar())
+        else:
+            log_msg('Unable to complete data extraction', level='C',
+                    message_bar=self.iface.messageBar(), exception=exception)
+        self.reject()
+
+    def finalize_init(self, extracted_npz):
+        self.npz_file = extracted_npz
+        self.populate_out_dep_widgets()
+        self.adjustSize()
+        self.set_ok_button()
+        self.show()
+        self.init_done.emit()
 
     def create_file_hlayout(self):
         self.file_hlayout = QHBoxLayout()
@@ -623,7 +645,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     def on_zonal_layer_tbn_clicked(self):
         zonal_layer_plus_stats = self.open_zonal_layer_dialog()
         if (zonal_layer_plus_stats and
-                zonal_layer_plus_stats.geometryType() == QgsWkbTypes.PolygonGeometry):
+                zonal_layer_plus_stats.geometryType() == QgsWkbTypes.PolygonGeometry):  # NOQA
             self.populate_zonal_layer_cbx(zonal_layer_plus_stats)
 
     def populate_zonal_layer_cbx(self, zonal_layer_plus_stats):

@@ -24,19 +24,20 @@
 
 import numpy
 import collections
-from qgis.core import QgsFeature, QgsGeometry, QgsPointXY, edit
+from qgis.core import (
+    QgsFeature, QgsGeometry, QgsPointXY, edit, QgsTask, QgsApplication)
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 from svir.calculations.calculate_utils import add_numeric_attribute
 from svir.utilities.utils import (WaitCursorManager,
                                   log_msg,
-                                  extract_npz,
                                   get_loss_types,
                                   )
+from svir.tasks.extract_npz_task import ExtractNpzTask
 
 
 class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
     """
-    Modal dialog to load dmg_by_asset from an oq-engine output, as layer
+    Dialog to load dmg_by_asset from an oq-engine output, as layer
     """
 
     def __init__(self, iface, viewer_dock, session, hostname, calc_id,
@@ -59,14 +60,24 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         self.create_dmg_state_selector()
         self.create_zonal_layer_selector()
 
-        self.npz_file = extract_npz(
-            session, hostname, calc_id, output_type,
-            message_bar=iface.messageBar(), params=None)
+        self.extract_npz_task = ExtractNpzTask(
+            'Extract damage by asset', QgsTask.CanCancel, self.session,
+            self.hostname, self.calc_id, self.output_type, self.finalize_init,
+            self.on_extract_error)
+        QgsApplication.taskManager().addTask(self.extract_npz_task)
 
-        self.loss_types = get_loss_types(
-            session, hostname, calc_id, self.iface.messageBar())
+    def finalize_init(self, extracted_npz):
+        self.npz_file = extracted_npz
+
+        # NOTE: still running this synchronously, because it's small stuff
+        with WaitCursorManager('Loading loss types...',
+                               self.iface.messageBar()):
+            self.loss_types = get_loss_types(
+                self.session, self.hostname, self.calc_id,
+                self.iface.messageBar())
 
         self.populate_out_dep_widgets()
+
         if self.zonal_layer_path:
             # NOTE: it happens while running tests. We need to avoid
             #       overwriting the original layer, so we make a copy of it.
@@ -77,6 +88,8 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             self.pre_populate_zonal_layer_cbx()
         self.adjustSize()
         self.set_ok_button()
+        self.show()
+        self.init_done.emit()
 
     def set_ok_button(self):
         self.ok_button.setEnabled(self.dmg_state_cbx.currentIndex() != -1

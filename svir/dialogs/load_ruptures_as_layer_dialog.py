@@ -34,7 +34,7 @@ from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 
 class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
     """
-    Modal dialog to load ruptures from an oq-engine output, as layer
+    Dialog to load ruptures from an oq-engine output, as layer
     """
 
     def __init__(self, iface, viewer_dock, session, hostname, calc_id,
@@ -60,6 +60,7 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
         self.file_browser_tbn.setEnabled(True)
         if self.path:
             self.path_le.setText(self.path)
+        self.show()
 
     def set_ok_button(self):
         self.ok_button.setEnabled(bool(self.path))
