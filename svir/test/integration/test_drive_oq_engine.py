@@ -32,6 +32,7 @@ import json
 import copy
 import csv
 import time
+import operator
 from mock import Mock
 
 from qgis.PyQt.QtWidgets import QAction
@@ -470,7 +471,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         if self.time_consuming_outputs:
             print('\n\nSome loaders took longer than %s seconds:' %
                   LONG_LOADING_TIME)
-            for output in self.time_consuming_outputs:
+            for output in sorted(self.time_consuming_outputs,
+                                 key=operator.itemgetter('loading_time'),
+                                 reverse=True):
                 print('\t%s' % output)
         if self.not_implemented_loaders:
             # sanity check
