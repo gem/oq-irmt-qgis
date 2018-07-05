@@ -24,19 +24,17 @@
 
 import numpy
 import collections
-from qgis.core import QgsFeature, QgsGeometry, QgsPointXY, edit
+from qgis.core import (
+    QgsFeature, QgsGeometry, QgsPointXY, edit, QgsTask, QgsApplication)
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 from svir.calculations.calculate_utils import add_numeric_attribute
-from svir.utilities.utils import (WaitCursorManager,
-                                  log_msg,
-                                  extract_npz,
-                                  get_loss_types,
-                                  )
+from svir.utilities.utils import WaitCursorManager, log_msg, get_loss_types
+from svir.tasks.extract_npz_task import ExtractNpzTask
 
 
 class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
     """
-    Modal dialog to load losses by asset or average asset losses from an
+    Dialog to load losses by asset or average asset losses from an
     oq-engine output, as layer
     """
 
@@ -68,14 +66,24 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
 
         # NOTE: it's correct to use 'losses_by_asset' instead of output_type,
         #       both in case of losses_by_asset and in case of avg_losses-stats
-        self.npz_file = extract_npz(
-            session, hostname, calc_id, 'losses_by_asset',
-            message_bar=iface.messageBar(), params=None)
+        self.extract_npz_task = ExtractNpzTask(
+            'Extract losses by asset', QgsTask.CanCancel, self.session,
+            self.hostname, self.calc_id, 'losses_by_asset', self.finalize_init,
+            self.on_extract_error)
+        QgsApplication.taskManager().addTask(self.extract_npz_task)
 
-        self.loss_types = get_loss_types(
-            session, hostname, calc_id, self.iface.messageBar())
+    def finalize_init(self, extracted_npz):
+        self.npz_file = extracted_npz
+
+        # NOTE: still running this synchronously, because it's small stuff
+        with WaitCursorManager('Loading loss types...',
+                               self.iface.messageBar()):
+            self.loss_types = get_loss_types(
+                self.session, self.hostname, self.calc_id,
+                self.iface.messageBar())
 
         self.populate_out_dep_widgets()
+
         if self.zonal_layer_path:
             zonal_layer = self.load_zonal_layer(self.zonal_layer_path)
             self.populate_zonal_layer_cbx(zonal_layer)
@@ -83,6 +91,8 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             self.pre_populate_zonal_layer_cbx()
         self.adjustSize()
         self.set_ok_button()
+        self.show()
+        self.init_done.emit()
 
     def set_ok_button(self):
         self.ok_button.setEnabled(True)

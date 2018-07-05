@@ -29,6 +29,7 @@ changelog=
     * Removed dependency from SAGA and the internal implementation of the geospatial aggregtion of points by zone.
     * When loading OQ-Engine outputs that can be aggregated by zone, if the option to run the aggregation is checked, the ok button is
       disabled until a valid zonal layer is loaded
+    * Files produced by the OQ-Engine are downloaded in separate threads, displaying a progress bar while streaming
     3.1.1
     * When loading Ground Motion Fields for scenario calculations, the names of the GMPEs are displayed instead of the realization names
     * When loading a OQ-Engine output as layer, the engine version is saved as a custom property of the layer

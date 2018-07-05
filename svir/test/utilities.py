@@ -662,3 +662,11 @@ def dict_values_sorted(d):
         return {k: dict_values_sorted(v) for k, v in d.items()}
     else:
         return d
+
+
+def assert_and_emit(signal, assertion, p1, p2, msg):
+    try:
+        assertion(p1, p2, msg)
+    except Exception as exc:
+        signal.emit(exc)
+        raise exc

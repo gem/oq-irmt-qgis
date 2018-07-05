@@ -69,6 +69,7 @@ from svir.utilities.utils import (get_ui_class,
                                   extract_npz,
                                   get_loss_types,
                                   get_irmt_version,
+                                  WaitCursorManager,
                                   )
 from svir.recovery_modeling.recovery_modeling import (
     RecoveryModeling, fill_fields_multiselect)
@@ -362,9 +363,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                         # NOTE: this would not work for multiple values per tag
                         params[tag_name] = value
         output_type = 'aggdamages/%s' % self.loss_type_cbx.currentText()
-        self.dmg_by_asset_aggr = extract_npz(
-            self.session, self.hostname, self.calc_id, output_type,
-            message_bar=self.iface.messageBar(), params=params)
+        with WaitCursorManager(
+                'Extracting...', message_bar=self.iface.messageBar()):
+            self.dmg_by_asset_aggr = extract_npz(
+                self.session, self.hostname, self.calc_id, output_type,
+                message_bar=self.iface.messageBar(), params=params)
         if self.dmg_by_asset_aggr is None:
             return
         self.draw_dmg_by_asset_aggr()
@@ -378,9 +381,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                         # NOTE: this would not work for multiple values per tag
                         params[tag_name] = value
         to_extract = 'agglosses/%s' % self.loss_type_cbx.currentText()
-        self.losses_by_asset_aggr = extract_npz(
-            self.session, self.hostname, self.calc_id, to_extract,
-            message_bar=self.iface.messageBar(), params=params)
+        with WaitCursorManager(
+                'Extracting...', message_bar=self.iface.messageBar()):
+            self.losses_by_asset_aggr = extract_npz(
+                self.session, self.hostname, self.calc_id, to_extract,
+                message_bar=self.iface.messageBar(), params=params)
         if self.losses_by_asset_aggr is None:
             return
         self.draw_losses_by_asset_aggr()
@@ -534,9 +539,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             raise NotImplementedError(output_type)
 
     def load_dmg_by_asset_aggr(self, calc_id, session, hostname, output_type):
-        composite_risk_model_attrs = extract_npz(
-            session, hostname, calc_id, 'composite_risk_model.attrs',
-            message_bar=self.iface.messageBar())
+        with WaitCursorManager(
+                'Extracting...', message_bar=self.iface.messageBar()):
+            composite_risk_model_attrs = extract_npz(
+                session, hostname, calc_id, 'composite_risk_model.attrs',
+                message_bar=self.iface.messageBar())
         if composite_risk_model_attrs is None:
             return
         limit_states = composite_risk_model_attrs['limit_states']
@@ -545,9 +552,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                        with_star=False)
         self.update_list_selected_edt()
 
-        rlzs_npz = extract_npz(
-            session, hostname, calc_id, 'realizations',
-            message_bar=self.iface.messageBar())
+        with WaitCursorManager(
+                'Extracting...', message_bar=self.iface.messageBar()):
+            rlzs_npz = extract_npz(
+                session, hostname, calc_id, 'realizations',
+                message_bar=self.iface.messageBar())
         if rlzs_npz is None:
             return
         rlzs = [rlz.decode('utf8') for rlz in rlzs_npz['array']['gsims']]
@@ -570,8 +579,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.filter_dmg_by_asset_aggr()
 
     def _get_tags(self, session, hostname, calc_id, message_bar, with_star):
-        tags_npz = extract_npz(
-            session, hostname, calc_id, 'asset_tags', message_bar=message_bar)
+        with WaitCursorManager(
+                'Extracting...', message_bar=self.iface.messageBar()):
+            tags_npz = extract_npz(
+                session, hostname, calc_id, 'asset_tags',
+                message_bar=message_bar)
         if tags_npz is None:
             return
         tags_list = []
@@ -598,9 +610,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     def load_losses_by_asset_aggr(
             self, calc_id, session, hostname, output_type):
         if self.output_type == 'losses_by_asset_aggr':
-            rlzs_npz = extract_npz(
-                session, hostname, calc_id, 'realizations',
-                message_bar=self.iface.messageBar())
+            with WaitCursorManager(
+                    'Extracting...', message_bar=self.iface.messageBar()):
+                rlzs_npz = extract_npz(
+                    session, hostname, calc_id, 'realizations',
+                    message_bar=self.iface.messageBar())
             if rlzs_npz is None:
                 return
             self.rlzs = [rlz.decode('utf8')
