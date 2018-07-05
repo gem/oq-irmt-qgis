@@ -152,170 +152,170 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
 
     def on_init_done(self, dlg):
         # set dialog options and accept
+        if dlg.output_type == 'uhs':
+            dlg.load_selected_only_ckb.setChecked(True)
+            idx = dlg.poe_cbx.findText('0.1')
+            assert_and_emit(dlg.loading_exception, self.assertEqual,
+                            idx, 0, 'POE 0.1 was not found')
+            dlg.poe_cbx.setCurrentIndex(idx)
+        elif dlg.output_type == 'losses_by_asset':
+            # FIXME: testing only for a selected taxonomy
+            dlg.load_selected_only_ckb.setChecked(True)
+            taxonomy_idx = dlg.taxonomy_cbx.findText('"Concrete"')
+            assert_and_emit(dlg.loading_exception, self.assertNotEqual,
+                            taxonomy_idx, -1,
+                            'Taxonomy "Concrete" was not found')
+            dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
+            loss_type_idx = dlg.loss_type_cbx.findText('structural')
+            assert_and_emit(dlg.loading_exception, self.assertNotEqual,
+                            loss_type_idx, -1,
+                            'Loss type structural was not found')
+            dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
+
+            # # FIXME: we need to do dlg.accept() also for the case
+            #          loading all taxonomies, and performing the
+            #          aggregation by zone
+
+            # # test all taxonomies
+            # dlg.load_selected_only_ckb.setChecked(True)
+            # taxonomy_idx = dlg.taxonomy_cbx.findText('All')
+            # self.assertNotEqual(taxonomy_idx, -1,
+            #                     'Taxonomy All was not found')
+            # dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
+            # loss_type_idx = dlg.loss_type_cbx.findText('structural')
+            # self.assertNotEqual(loss_type_idx, -1,
+            #                     'Loss type structural was not found')
+            # dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
+            # dlg.accept()
+
+            # FIXME: copied/pasted from skipped unit test
+            #        that was causing segfault
+            # loss_layer_path = os.path.join(
+            #     self.data_dir_name, 'risk',
+            #     'output-399-losses_by_asset_123.npz')
+            # zonal_layer_path = os.path.join(
+            #     self.data_dir_name, 'risk', 'zonal_layer.shp')
+            # dlg = LoadLossesByAssetAsLayerDialog(
+            #     IFACE, self.viewer_dock, Mock(), Mock(), Mock(),
+            #     'losses_by_asset', loss_layer_path,
+            #     zonal_layer_path=zonal_layer_path)
+            # dlg.load_selected_only_ckb.setChecked(True)
+            # dlg.zonal_layer_gbx.setChecked(True)
+            # taxonomy_idx = dlg.taxonomy_cbx.findText('All')
+            # self.assertNotEqual(taxonomy_idx, -1,
+            #                    'Taxonomy All was not found')
+            # dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
+            # loss_type_idx = dlg.loss_type_cbx.findText('structural')
+            # self.assertNotEqual(loss_type_idx, -1,
+            #                     'Loss type structural was not found')
+            # dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
+            # self.assertTrue(dlg.zonal_layer_cbx.currentText(),
+            #                 'The zonal layer was not loaded')
+            # dlg.accept()
+            # zonal_layer_plus_stats = [
+            #     layer for layer in IFACE.layers()
+            #     if layer.name() == 'Zonal data (copy)'][0]
+            # zonal_layer_plus_stats_first_feat = \
+            #     zonal_layer_plus_stats.getFeatures().next()
+            # expected_zonal_layer_path = os.path.join(
+            #     self.data_dir_name, 'risk',
+            #     'zonal_layer_plus_losses_by_asset_stats.shp')
+            # expected_zonal_layer = QgsVectorLayer(
+            #     expected_zonal_layer_path, 'Zonal data', 'ogr')
+            # expected_zonal_layer_first_feat = \
+            #     expected_zonal_layer.getFeatures().next()
+            # assert_almost_equal(
+            #     zonal_layer_plus_stats_first_feat.attributes(),
+            #     expected_zonal_layer_first_feat.attributes())
+        elif dlg.output_type == 'dmg_by_asset':
+            # FIXME: testing only for selected taxonomy
+            dlg.load_selected_only_ckb.setChecked(True)
+            taxonomy_idx = dlg.taxonomy_cbx.findText('"Concrete"')
+            assert_and_emit(dlg.loading_exception, self.assertNotEqual,
+                            taxonomy_idx, -1,
+                            'Taxonomy "Concrete" was not found')
+            dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
+            loss_type_idx = dlg.loss_type_cbx.findText('structural')
+            assert_and_emit(dlg.loading_exception, self.assertNotEqual,
+                            loss_type_idx, -1,
+                            'Loss type structural was not found')
+            dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
+            dmg_state_idx = dlg.dmg_state_cbx.findText('moderate')
+            assert_and_emit(dlg.loading_exception, self.assertNotEqual,
+                            dmg_state_idx, -1,
+                            'Damage state moderate was not found')
+            dlg.dmg_state_cbx.setCurrentIndex(dmg_state_idx)
+
+            # # FIXME: we need to do dlg.accept() also for the case
+            #          loading all taxonomies, and performing the
+            #          aggregation by zone
+            # dlg.load_selected_only_ckb.setChecked(True)
+            # taxonomy_idx = dlg.taxonomy_cbx.findText('All')
+            # self.assertNotEqual(
+            #     taxonomy_idx, -1, 'Taxonomy All was not found')
+            # dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
+            # loss_type_idx = dlg.loss_type_cbx.findText('structural')
+            # self.assertNotEqual(loss_type_idx, -1,
+            #                     'Loss type structural was not found')
+            # dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
+            # dmg_state_idx = dlg.dmg_state_cbx.findText('moderate')
+            # self.assertNotEqual(
+            #     dmg_state_idx, -1,
+            #     'Damage state moderate was not found')
+            # dlg.dmg_state_cbx.setCurrentIndex(dmg_state_idx)
+
+            # FIXME: copied/pasted from skipped unit test
+            #        that was causing segfault
+            #        (test_load_dmg_by_asset_aggregate_by_zone)
+            # dmg_layer_path = os.path.join(
+            #     self.data_dir_name, 'risk',
+            #     'output-1614-dmg_by_asset_356.npz')
+            # zonal_layer_path = os.path.join(
+            #     self.data_dir_name, 'risk',
+            #     'zonal_layer.shp')
+            # dlg.load_selected_only_ckb.setChecked(True)
+            # dlg.zonal_layer_gbx.setChecked(True)
+            # taxonomy_idx = dlg.taxonomy_cbx.findText('All')
+            # self.assertNotEqual(
+            #     taxonomy_idx, -1, 'Taxonomy All was not found')
+            # dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
+            # loss_type_idx = dlg.loss_type_cbx.findText('structural')
+            # self.assertNotEqual(loss_type_idx, -1,
+            #                     'Loss type structural was not found')
+            # dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
+            # dmg_state_idx = dlg.dmg_state_cbx.findText('moderate')
+            # self.assertNotEqual(
+            #     dmg_state_idx, -1,
+            #     'Damage state moderate was not found')
+            # dlg.dmg_state_cbx.setCurrentIndex(dmg_state_idx)
+            # dlg.accept()
+            # zonal_layer_plus_stats = [
+            #     layer for layer in IFACE.layers()
+            #     if layer.name() == 'Zonal data (copy)'][0]
+            # zonal_layer_plus_stats_first_feat = \
+            #     zonal_layer_plus_stats.getFeatures().next()
+            # expected_zonal_layer_path = os.path.join(
+            #     self.data_dir_name, 'risk',
+            #     'zonal_layer_plus_dmg_by_asset_stats.shp')
+            # expected_zonal_layer = QgsVectorLayer(
+            #     expected_zonal_layer_path, 'Zonal data', 'ogr')
+            # expected_zonal_layer_first_feat = \
+            #     expected_zonal_layer.getFeatures().next()
+            # assert_almost_equal(
+            #     zonal_layer_plus_stats_first_feat.attributes(),
+            #     expected_zonal_layer_first_feat.attributes())
         if dlg.ok_button.isEnabled():
-            if dlg.output_type == 'uhs':
-                dlg.load_selected_only_ckb.setChecked(True)
-                idx = dlg.poe_cbx.findText('0.1')
-                assert_and_emit(dlg.loading_exception, self.assertEqual,
-                                idx, 0, 'POE 0.1 was not found')
-                dlg.poe_cbx.setCurrentIndex(idx)
-            elif dlg.output_type == 'losses_by_asset':
-                # FIXME: testing only for a selected taxonomy
-                dlg.load_selected_only_ckb.setChecked(True)
-                taxonomy_idx = dlg.taxonomy_cbx.findText('"Concrete"')
-                assert_and_emit(dlg.loading_exception, self.assertNotEqual,
-                                taxonomy_idx, -1,
-                                'Taxonomy "Concrete" was not found')
-                dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
-                loss_type_idx = dlg.loss_type_cbx.findText('structural')
-                assert_and_emit(dlg.loading_exception, self.assertNotEqual,
-                                loss_type_idx, -1,
-                                'Loss type structural was not found')
-                dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
-
-                # # FIXME: we need to do dlg.accept() also for the case
-                #          loading all taxonomies, and performing the
-                #          aggregation by zone
-
-                # # test all taxonomies
-                # dlg.load_selected_only_ckb.setChecked(True)
-                # taxonomy_idx = dlg.taxonomy_cbx.findText('All')
-                # self.assertNotEqual(taxonomy_idx, -1,
-                #                     'Taxonomy All was not found')
-                # dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
-                # loss_type_idx = dlg.loss_type_cbx.findText('structural')
-                # self.assertNotEqual(loss_type_idx, -1,
-                #                     'Loss type structural was not found')
-                # dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
-                # dlg.accept()
-
-                # FIXME: copied/pasted from skipped unit test
-                #        that was causing segfault
-                # loss_layer_path = os.path.join(
-                #     self.data_dir_name, 'risk',
-                #     'output-399-losses_by_asset_123.npz')
-                # zonal_layer_path = os.path.join(
-                #     self.data_dir_name, 'risk', 'zonal_layer.shp')
-                # dlg = LoadLossesByAssetAsLayerDialog(
-                #     IFACE, self.viewer_dock, Mock(), Mock(), Mock(),
-                #     'losses_by_asset', loss_layer_path,
-                #     zonal_layer_path=zonal_layer_path)
-                # dlg.load_selected_only_ckb.setChecked(True)
-                # dlg.zonal_layer_gbx.setChecked(True)
-                # taxonomy_idx = dlg.taxonomy_cbx.findText('All')
-                # self.assertNotEqual(taxonomy_idx, -1,
-                #                    'Taxonomy All was not found')
-                # dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
-                # loss_type_idx = dlg.loss_type_cbx.findText('structural')
-                # self.assertNotEqual(loss_type_idx, -1,
-                #                     'Loss type structural was not found')
-                # dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
-                # self.assertTrue(dlg.zonal_layer_cbx.currentText(),
-                #                 'The zonal layer was not loaded')
-                # dlg.accept()
-                # zonal_layer_plus_stats = [
-                #     layer for layer in IFACE.layers()
-                #     if layer.name() == 'Zonal data (copy)'][0]
-                # zonal_layer_plus_stats_first_feat = \
-                #     zonal_layer_plus_stats.getFeatures().next()
-                # expected_zonal_layer_path = os.path.join(
-                #     self.data_dir_name, 'risk',
-                #     'zonal_layer_plus_losses_by_asset_stats.shp')
-                # expected_zonal_layer = QgsVectorLayer(
-                #     expected_zonal_layer_path, 'Zonal data', 'ogr')
-                # expected_zonal_layer_first_feat = \
-                #     expected_zonal_layer.getFeatures().next()
-                # assert_almost_equal(
-                #     zonal_layer_plus_stats_first_feat.attributes(),
-                #     expected_zonal_layer_first_feat.attributes())
-            elif dlg.output_type == 'dmg_by_asset':
-                # FIXME: testing only for selected taxonomy
-                dlg.load_selected_only_ckb.setChecked(True)
-                taxonomy_idx = dlg.taxonomy_cbx.findText('"Concrete"')
-                assert_and_emit(dlg.loading_exception, self.assertNotEqual,
-                                taxonomy_idx, -1,
-                                'Taxonomy "Concrete" was not found')
-                dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
-                loss_type_idx = dlg.loss_type_cbx.findText('structural')
-                assert_and_emit(dlg.loading_exception, self.assertNotEqual,
-                                loss_type_idx, -1,
-                                'Loss type structural was not found')
-                dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
-                dmg_state_idx = dlg.dmg_state_cbx.findText('moderate')
-                assert_and_emit(dlg.loading_exception, self.assertNotEqual,
-                                dmg_state_idx, -1,
-                                'Damage state moderate was not found')
-                dlg.dmg_state_cbx.setCurrentIndex(dmg_state_idx)
-
-                # # FIXME: we need to do dlg.accept() also for the case
-                #          loading all taxonomies, and performing the
-                #          aggregation by zone
-                # dlg.load_selected_only_ckb.setChecked(True)
-                # taxonomy_idx = dlg.taxonomy_cbx.findText('All')
-                # self.assertNotEqual(
-                #     taxonomy_idx, -1, 'Taxonomy All was not found')
-                # dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
-                # loss_type_idx = dlg.loss_type_cbx.findText('structural')
-                # self.assertNotEqual(loss_type_idx, -1,
-                #                     'Loss type structural was not found')
-                # dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
-                # dmg_state_idx = dlg.dmg_state_cbx.findText('moderate')
-                # self.assertNotEqual(
-                #     dmg_state_idx, -1,
-                #     'Damage state moderate was not found')
-                # dlg.dmg_state_cbx.setCurrentIndex(dmg_state_idx)
-
-                # FIXME: copied/pasted from skipped unit test
-                #        that was causing segfault
-                #        (test_load_dmg_by_asset_aggregate_by_zone)
-                # dmg_layer_path = os.path.join(
-                #     self.data_dir_name, 'risk',
-                #     'output-1614-dmg_by_asset_356.npz')
-                # zonal_layer_path = os.path.join(
-                #     self.data_dir_name, 'risk',
-                #     'zonal_layer.shp')
-                # dlg.load_selected_only_ckb.setChecked(True)
-                # dlg.zonal_layer_gbx.setChecked(True)
-                # taxonomy_idx = dlg.taxonomy_cbx.findText('All')
-                # self.assertNotEqual(
-                #     taxonomy_idx, -1, 'Taxonomy All was not found')
-                # dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
-                # loss_type_idx = dlg.loss_type_cbx.findText('structural')
-                # self.assertNotEqual(loss_type_idx, -1,
-                #                     'Loss type structural was not found')
-                # dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
-                # dmg_state_idx = dlg.dmg_state_cbx.findText('moderate')
-                # self.assertNotEqual(
-                #     dmg_state_idx, -1,
-                #     'Damage state moderate was not found')
-                # dlg.dmg_state_cbx.setCurrentIndex(dmg_state_idx)
-                # dlg.accept()
-                # zonal_layer_plus_stats = [
-                #     layer for layer in IFACE.layers()
-                #     if layer.name() == 'Zonal data (copy)'][0]
-                # zonal_layer_plus_stats_first_feat = \
-                #     zonal_layer_plus_stats.getFeatures().next()
-                # expected_zonal_layer_path = os.path.join(
-                #     self.data_dir_name, 'risk',
-                #     'zonal_layer_plus_dmg_by_asset_stats.shp')
-                # expected_zonal_layer = QgsVectorLayer(
-                #     expected_zonal_layer_path, 'Zonal data', 'ogr')
-                # expected_zonal_layer_first_feat = \
-                #     expected_zonal_layer.getFeatures().next()
-                # assert_almost_equal(
-                #     zonal_layer_plus_stats_first_feat.attributes(),
-                #     expected_zonal_layer_first_feat.attributes())
             dlg.accept()
-            if dlg.output_type == 'hcurves':
-                self.load_hcurves()
-            elif dlg.output_type == 'uhs':
-                self._set_output_type('Uniform Hazard Spectra')
-                self._change_selection()
-                # test exporting the current selection to csv
-                self._test_export()
-            dlg.loading_completed.emit()
         else:
             raise RuntimeError('The ok button is disabled')
+        if dlg.output_type == 'hcurves':
+            self.load_hcurves()
+        elif dlg.output_type == 'uhs':
+            self._set_output_type('Uniform Hazard Spectra')
+            self._change_selection()
+            # test exporting the current selection to csv
+            self._test_export()
+        dlg.loading_completed.emit()
 
     def load_output(self, calc, output):
         # NOTE: resetting the Data Viewer before loading each output, prevents

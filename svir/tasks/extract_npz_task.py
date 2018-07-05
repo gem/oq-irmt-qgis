@@ -69,7 +69,6 @@ class ExtractNpzTask(QgsTask):
 
     def finished(self, success):
         if success:
-            # FIXME
             self.on_success(self.extracted_npz)
         else:
             self.on_error(self.exception)
