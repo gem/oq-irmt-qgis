@@ -141,7 +141,6 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         # Avoid modifying the original files
         self.layer = ProcessLayer(orig_layer).duplicate_in_memory()
 
-    @unittest.skip('FIXME: evaluate expressions including field names')
     def test_custom_operator(self):
         proj_def = deepcopy(self.project_definition)
         operator = OPERATORS_DICT['CUSTOM']
