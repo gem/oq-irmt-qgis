@@ -116,6 +116,7 @@ def calculate_zonal_stats(callback, zonal_layer, points_layer, join_fields,
     QgsApplication.taskManager().addTask(task)
 
     while True:
+        # the user can "cancel" the task, interrupting this loop
         QgsApplication.processEvents()
         # status can be queued, onhold, running, complete, terminated
         if task.status() > 2:  # Complete or terminated

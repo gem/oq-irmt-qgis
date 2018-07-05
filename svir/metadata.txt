@@ -26,7 +26,8 @@ changelog=
     3.2.0
     * Plugin migrated to QGIS3 (with PyQt5, Python3)
     * Removed dialog to aggregate losses by zone (replaced by "Join attributes by location (summary)" algorithm in the processing toolbox)
-    * Removed dependency from SAGA and the internal implementation of the geospatial aggregtion of points by zone.
+    * All the aggregations of losses/damages by zone leverage algorithms of the processing toolbox, running as tasks in separate threads
+    * Removed dependency from SAGA and the internal implementation of the geospatial aggregtion of points by zone
     * When loading OQ-Engine outputs that can be aggregated by zone, if the option to run the aggregation is checked, the ok button is
       disabled until a valid zonal layer is loaded
     * Files produced by the OQ-Engine are downloaded in separate threads, displaying a progress bar while streaming
