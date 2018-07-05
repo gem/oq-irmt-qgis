@@ -49,6 +49,7 @@ from svir.dialogs.show_full_report_dialog import ShowFullReportDialog
 from svir.dialogs.viewer_dock import ViewerDock
 
 QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
+LONG_LOADING_TIME = 10  # seconds
 
 
 class LoadOqEngineOutputsTestCase(unittest.TestCase):
@@ -116,6 +117,10 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         calc_id = calc['id']
         output_list = self.get_output_list(calc_id)
         for output in output_list:
+            output_dict = {'calc_id': calc_id,
+                           'calc_description': calc['description'],
+                           'output_type': output['type']}
+            start_time = time.time()
             if (self.selected_otype is not None
                     and output['type'] != self.selected_otype):
                 continue
@@ -123,31 +128,39 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 self.load_output(calc, output)
             except Exception:
                 ex_type, ex, tb = sys.exc_info()
-                failed_attempt = {'calc_id': calc_id,
-                                  'calc_description': calc['description'],
-                                  'output_type': output['type'],
-                                  'traceback': tb}
+                failed_attempt = copy.deepcopy(output_dict)
+                failed_attempt['traceback'] = tb
                 self.failed_attempts.append(failed_attempt)
                 traceback.print_tb(failed_attempt['traceback'])
                 print(ex)
             else:
+                loading_time = time.time() - start_time
+                print('\t\t(loading time: %.4f sec)' % loading_time)
+                if loading_time > LONG_LOADING_TIME:
+                    output_dict['loading_time'] = loading_time
+                    self.time_consuming_outputs.append(output_dict)
                 self.untested_otypes.discard(output['type'])
             output_type_aggr = "%s_aggr" % output['type']
             if output_type_aggr in OQ_EXTRACT_TO_VIEW_TYPES:
-                mod_output = copy.deepcopy(output)
-                mod_output['type'] = output_type_aggr
+                aggr_output = copy.deepcopy(output)
+                aggr_output['type'] = output_type_aggr
+                aggr_output_dict = copy.deepcopy(output_dict)
+                aggr_output_dict['output_type'] = aggr_output['type']
                 try:
-                    self.load_output(calc, mod_output)
+                    self.load_output(calc, aggr_output)
                 except Exception:
                     ex_type, ex, tb = sys.exc_info()
-                    failed_attempt = {'calc_id': calc_id,
-                                      'calc_description': calc['description'],
-                                      'output_type': mod_output['type'],
-                                      'traceback': tb}
+                    failed_attempt = copy.deepcopy(output_dict)
+                    failed_attempt['traceback'] = tb
                     self.failed_attempts.append(failed_attempt)
                     traceback.print_tb(failed_attempt['traceback'])
                     print(ex)
                 else:
+                    loading_time = time.time() - start_time
+                    print('\t\t(loading time: %.4f sec)' % loading_time)
+                    if loading_time > LONG_LOADING_TIME:
+                        aggr_output_dict['loading_time'] = loading_time
+                        self.time_consuming_outputs.append(aggr_output_dict)
                     self.untested_otypes.discard(output_type_aggr)
 
     def on_init_done(self, dlg):
@@ -407,6 +420,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
     def test_load_outputs(self):
         self.failed_attempts = []
         self.skipped_attempts = []
+        self.time_consuming_outputs = []
         self.not_implemented_loaders = set()
         self.untested_otypes = copy.copy(OQ_ALL_TYPES)  # it's a set
         calc_list = self.get_calc_list()
@@ -453,6 +467,11 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 print('\t\tOutput type: %s' % failed_attempt['output_type'])
             raise RuntimeError(
                 'At least one output was not successfully loaded')
+        if self.time_consuming_outputs:
+            print('\n\nSome loaders took longer than %s seconds:' %
+                  LONG_LOADING_TIME)
+            for output in self.time_consuming_outputs:
+                print('\t%s' % output)
         if self.not_implemented_loaders:
             # sanity check
             for not_implemented_loader in self.not_implemented_loaders:
