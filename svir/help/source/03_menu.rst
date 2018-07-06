@@ -42,7 +42,6 @@ corresponding documentation.
 
 * Utilities
 
-  * |icon-aggregate-loss-by-zone| :ref:`chap-aggregating-loss-by-zone`
   * |icon-transform-attributes| :ref:`chap-transform-attribute`
 
 * |icon-plugin-settings| :ref:`chap-irmt-settings`
@@ -59,7 +58,6 @@ corresponding documentation.
 .. |icon-transform-attributes| image:: images/iconTransformAttribute.png
 .. |icon-project-definitions-manager| image:: images/iconProjectDefinitionManager.png
 .. |icon-weight-and-calculate| image:: images/iconWeightAndCalculate.png
-.. |icon-aggregate-loss-by-zone| image:: images/iconAggregateLossByZone.png
 .. |icon-upload| image:: images/iconUpload.png
 .. |icon-manual| image:: images/iconManual.png
 .. |icon-plot| image:: images/iconPlot.png
