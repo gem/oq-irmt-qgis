@@ -34,8 +34,8 @@ script:
     - docker run -ti -e OQ_ENGINE_HOST='http://172.17.0.1:8800' --rm -v $TRAVIS_BUILD_DIR:/io openquake/qgis-builder:3 test
 
 after_success:
-    - docker run -ti --rm -v $TRAVIS_BUILD_DIR:/io qgis-builder build_apidoc
-    - docker run -ti --rm -v $TRAVIS_BUILD_DIR:/io qgis-builder build_manual_html
+    - docker run -ti --rm -v $TRAVIS_BUILD_DIR:/io openquake/qgis-builder:3 build_apidoc
+    - docker run -ti --rm -v $TRAVIS_BUILD_DIR:/io openquake/qgis-builder:3 build_manual_html
 
 after_script:
     - cat $TRAVIS_BUILD_DIR/webui.log
