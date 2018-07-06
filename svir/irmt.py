@@ -197,7 +197,7 @@ class Irmt(object):
                            ":/plugins/irmt/upload.svg",
                            u"&Upload project to the OpenQuake Platform",
                            self.upload,
-                           enable=False,
+                           enable=self.experimental_enabled(),
                            add_to_layer_actions=True,
                            submenu='OQ Platform')
         # Action to drive ipt
@@ -484,7 +484,8 @@ class Irmt(object):
             self.registered_actions["transform_attributes"].setEnabled(True)
             read_layer_suppl_info_from_qgs(
                 self.iface.activeLayer().id(), self.supplemental_information)
-            self.registered_actions["upload"].setEnabled(True)
+            self.registered_actions["upload"].setEnabled(
+                self.experimental_enabled())
         except KeyError:
             # self.supplemental_information[self.iface.activeLayer().id()]
             # is not defined
