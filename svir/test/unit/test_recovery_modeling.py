@@ -51,7 +51,7 @@ def calculate_and_check_recovery_curve(
     zone_id = 'ALL'
     recovery_curve = recovery.generate_community_level_recovery_curve(
         zone_id, zonal_dmg_by_asset_probs, zonal_asset_refs, seed=seed,
-        n_simulations=n_simulations)
+        n_simulations=n_simulations, usage='testing')
     if regenerate_expected_values:
         with open(expected_curve_path, 'w') as f:
             f.write(json.dumps(recovery_curve))
@@ -65,7 +65,6 @@ def calculate_and_check_recovery_curve(
             testcase.assertAlmostEqual(actual, expected, places=2)
 
 
-@unittest.skip('Temporarily disabled for QGIS3')
 class DeterministicTestCase(unittest.TestCase):
     def setUp(self):
         curr_dir_name = os.path.dirname(__file__)
@@ -142,7 +141,6 @@ class DeterministicTestCase(unittest.TestCase):
 
 
 @attr('slow')
-@unittest.skip('Temporarily disabled for QGIS3')
 class StochasticTestCase(unittest.TestCase):
 
     def setUp(self):

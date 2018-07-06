@@ -212,7 +212,7 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
             self.zone_field_name = self.zone_field_name_cbx.currentText()
             (point_attrs_dict, self.dmg_by_asset_layer,
              self.zone_field_name) = add_zone_id_to_points(
-                self.iface, self.dmg_by_asset_layer,
+                self.dmg_by_asset_layer,
                 self.svi_layer, self.zone_field_name)
         else:
             # the layer containing points was not modified by the zonal

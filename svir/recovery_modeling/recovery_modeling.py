@@ -32,6 +32,7 @@ from svir.utilities.utils import (
                                   create_progress_message_bar,
                                   clear_progress_message_bar,
                                   get_layer_setting,
+                                  WaitCursorManager,
                                   )
 from svir.utilities.shared import NUMERIC_FIELD_TYPES, RECOVERY_DEFAULTS
 
@@ -92,46 +93,37 @@ class RecoveryModeling(object):
                 # svi_value = zone_feat[self.svi_field_name]
                 # svi_by_zone[zone_id] = svi_value
             msg = 'Reading damage state probabilities...'
-            msg_bar_item, progress = create_progress_message_bar(
-                self.iface.messageBar(), msg)
-            tot_features = len(self.dmg_by_asset_features)
-            for feat_idx, dmg_by_asset_feat in enumerate(
-                    self.dmg_by_asset_features, start=1):
-                zone_id = dmg_by_asset_feat[zone_field_name]
-                # FIXME: hack to handle case in which the zone id is an integer
-                # but it is stored as Real
-                try:
-                    zone_id = str(int(zone_id))
-                except Exception:
-                    zone_id = str(zone_id)
-                # FIXME: same hack as above
-                asset_ref = dmg_by_asset_feat['asset_ref']
-                try:
-                    asset_ref = str(int(asset_ref))
-                except Exception:
-                    asset_ref = str(asset_ref)
-                dmg_by_asset_probs = [dmg_by_asset_feat.attributes()[idx]
-                                      for idx in probs_fields_idxs]
-                zonal_dmg_by_asset_probs[zone_id].append(dmg_by_asset_probs)
-                zonal_asset_refs[zone_id].append(asset_ref)
-                progress_perc = feat_idx / float(tot_features) * 100
-                progress.setValue(progress_perc)
-            clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
+            with WaitCursorManager(msg):
+                for feat_idx, dmg_by_asset_feat in enumerate(
+                        self.dmg_by_asset_features, start=1):
+                    zone_id = dmg_by_asset_feat[zone_field_name]
+                    # FIXME: hack to handle case in which the zone id is an
+                    # integer but it is stored as Real
+                    try:
+                        zone_id = str(int(zone_id))
+                    except Exception:
+                        zone_id = str(zone_id)
+                    # FIXME: same hack as above
+                    asset_ref = dmg_by_asset_feat['asset_ref']
+                    try:
+                        asset_ref = str(int(asset_ref))
+                    except Exception:
+                        asset_ref = str(asset_ref)
+                    dmg_by_asset_probs = [dmg_by_asset_feat.attributes()[idx]
+                                          for idx in probs_fields_idxs]
+                    zonal_dmg_by_asset_probs[zone_id].append(
+                        dmg_by_asset_probs)
+                    zonal_asset_refs[zone_id].append(asset_ref)
         else:  # ignore svi
             msg = 'Reading damage state probabilities...'
-            msg_bar_item, progress = create_progress_message_bar(
-                self.iface.messageBar(), msg)
-            tot_features = len(self.dmg_by_asset_features)
-            for idx, dmg_by_asset_feat in enumerate(
-                    self.dmg_by_asset_features, start=1):
-                dmg_by_asset_probs = [dmg_by_asset_feat.attributes()[idx]
-                                      for idx in probs_fields_idxs]
-                asset_ref = dmg_by_asset_feat['asset_ref']
-                zonal_dmg_by_asset_probs['ALL'].append(dmg_by_asset_probs)
-                zonal_asset_refs['ALL'].append(asset_ref)
-                progress_perc = idx / float(tot_features) * 100
-                progress.setValue(progress_perc)
-            clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
+            with WaitCursorManager(msg):
+                for idx, dmg_by_asset_feat in enumerate(
+                        self.dmg_by_asset_features, start=1):
+                    dmg_by_asset_probs = [dmg_by_asset_feat.attributes()[idx]
+                                          for idx in probs_fields_idxs]
+                    asset_ref = dmg_by_asset_feat['asset_ref']
+                    zonal_dmg_by_asset_probs['ALL'].append(dmg_by_asset_probs)
+                    zonal_asset_refs['ALL'].append(asset_ref)
         return zonal_dmg_by_asset_probs, zonal_asset_refs
 
     def get_times(self, times_type):
@@ -147,7 +139,7 @@ class RecoveryModeling(object):
     def generate_community_level_recovery_curve(
             self, zone_id, zonal_dmg_by_asset_probs,
             zonal_asset_refs, writer=None, integrate_svi=False, seed=None,
-            n_simulations=1, n_zones=1, zone_index=1):
+            n_simulations=1, n_zones=1, zone_index=1, usage='gui'):
 
         # TODO: use svi_by_zone[zone_id] to adjust recovery times (how?)
 
@@ -198,7 +190,7 @@ class RecoveryModeling(object):
                     RecoveryBasedDamageStateProbabilities, inspectionTimes,
                     recoveryTimes, repairTimes, assessmentTimes,
                     mobilizationTimes, zone_id, asset_refs, zone_index,
-                    n_zones, sim, n_simulations, seed)
+                    n_zones, sim, n_simulations, seed, usage)
             # Sum up all building level recovery function
             # TODO: use enumerate instead
             for timePoint in range(len(timeList)):
@@ -291,16 +283,18 @@ class RecoveryModeling(object):
             RecoveryBasedDamageStateProbabilities, inspectionTimes,
             recoveryTimes, repairTimes, assessmentTimes, mobilizationTimes,
             zone_id, asset_refs, zone_index, n_zones, simulation,
-            n_simulations, seed=None):
+            n_simulations, seed=None, usage='gui'):
         # Looping over all buildings in community
         # Initialize building level recovery function
         simulationRecoveryFunction = [
             0 for x in range(len(timeList))]
-        msg = ('Calculating recovery curve for '
-               'zone %s (%s/%s), simulation %s/%s'
-               % (zone_id, zone_index, n_zones, simulation + 1, n_simulations))
-        msg_bar_item, progress = create_progress_message_bar(
-            self.iface.messageBar(), msg)
+        if usage == 'gui':
+            msg = ('Calculating recovery curve for '
+                   'zone %s (%s/%s), simulation %s/%s'
+                   % (zone_id, zone_index, n_zones,
+                      simulation + 1, n_simulations))
+            msg_bar_item, progress = create_progress_message_bar(
+                self.iface.messageBar(), msg)
         tot_bldgs = len(LossBasedDamageStateProbabilities)
         # TODO: use enumerate instead
         # TODO: perhaps iterate enumerating by asset_ref
@@ -348,8 +342,10 @@ class RecoveryModeling(object):
                 simulationRecoveryFunction[timePoint] += \
                     building_level_recovery_function[timePoint]
             progress_perc = bldg_idx / float(tot_bldgs) * 100
-            progress.setValue(progress_perc)
-        clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
+            if usage == 'gui':
+                progress.setValue(progress_perc)
+        if usage == 'gui':
+            clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
         return simulationRecoveryFunction
 
     def loss_based_to_recovery_based_probs(self, dmg_by_asset_probs):
