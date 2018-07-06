@@ -186,5 +186,5 @@ def worker_error(e, exception_string, message_bar):
         level=Qgis.Critical)
     QgsMessageLog.logMessage(
         'Worker thread raised an exception: %s' % exception_string,
-        'IRMT worker',
+        'OpenQuake IRMT worker',
         level=Qgis.Critical)

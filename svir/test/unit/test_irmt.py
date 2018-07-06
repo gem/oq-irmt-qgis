@@ -37,7 +37,7 @@ QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 
 
 class IrmtTest(unittest.TestCase):
-    """Test IRMT works."""
+    """Test OpenQuake IRMT works."""
 
     def setUp(self):
         """Runs before each test."""

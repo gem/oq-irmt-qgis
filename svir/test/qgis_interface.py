@@ -22,7 +22,7 @@ __copyright__ = (
     'Copyright (c) 2014 Tim Sutton, tim@kartoza.com'
 )
 
-LOGGER = logging.getLogger('IRMT')
+LOGGER = logging.getLogger('OpenQuake')
 
 
 # noinspection PyMethodMayBeStatic,PyPep8Naming

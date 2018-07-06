@@ -82,7 +82,7 @@ def get_irmt_version():
     return _IRMT_VERSION
 
 
-def log_msg(message, tag='GEM IRMT plugin', level='I', message_bar=None,
+def log_msg(message, tag='GEM OpenQuake plugin', level='I', message_bar=None,
             duration=None, exception=None):
     """
     Add a message to the QGIS message log. If a messageBar is provided,

@@ -13,7 +13,7 @@ __license__ = "GPL"
 __copyright__ = 'Copyright 2012, Australia Indonesia Facility for '
 __copyright__ += 'Disaster Reduction'
 
-LOGGER = logging.getLogger('IRMT')
+LOGGER = logging.getLogger('OpenQuake')
 
 
 class TestInit(unittest.TestCase):

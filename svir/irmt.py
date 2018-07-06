@@ -132,7 +132,7 @@ class Irmt(object):
 
         # our own menu
         self.menu = QMenu(self.iface.mainWindow())
-        self.menu.setTitle("IRMT")
+        self.menu.setTitle("OpenQuake IRMT")
 
         # keep a list of the menu items, in order to easily unload them later
         self.registered_actions = dict()
@@ -161,11 +161,11 @@ class Irmt(object):
 
     def initGui(self):
         # create our own toolbar
-        self.toolbar = self.iface.addToolBar('IRMT')
+        self.toolbar = self.iface.addToolBar('OpenQuake IRMT')
         self.toolbar.setObjectName('IRMTToolBar')
 
         menu_bar = self.iface.mainWindow().menuBar()
-        get_menu = self.get_menu(menu_bar, 'IRMT')
+        get_menu = self.get_menu(menu_bar, 'OpenQuake IRMT')
 
         if get_menu is not None:
             self.menu = get_menu
@@ -275,7 +275,7 @@ class Irmt(object):
         # connection with the platform
         self.add_menu_item("show_settings",
                            ":/plugins/irmt/settings.svg",
-                           u"&IRMT settings",
+                           u"&OpenQuake IRMT settings",
                            self.show_settings,
                            enable=True,
                            add_to_toolbar=True)
@@ -285,7 +285,7 @@ class Irmt(object):
         # Action to open the plugin's manual
         self.add_menu_item("help",
                            ":/plugins/irmt/manual.svg",
-                           u"IRMT &manual",
+                           u"OpenQuake IRMT &manual",
                            self.show_manual,
                            enable=True,
                            add_to_toolbar=True)
@@ -417,7 +417,7 @@ class Irmt(object):
                       add_to_toolbar=False,
                       ):
         """
-        Add an item to the IRMT menu and a corresponding toolbar icon
+        Add an item to the OpenQuake IRMT menu and a corresponding toolbar icon
 
         :param icon_path: path of the icon associated to the action
         :param label: name of the action, visible to the user
@@ -436,7 +436,7 @@ class Irmt(object):
         if add_to_layer_actions:
             self.iface.addCustomActionForLayerType(
                 action,
-                u"IRMT",
+                u"OpenQuake IRMT",
                 layers_type,
                 True)
 

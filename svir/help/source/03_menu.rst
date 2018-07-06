@@ -2,7 +2,7 @@
 The plugin menu
 ***************
 
-When the IRMT plugin is installed, it adds its own menu to those available
+When the OpenQuake IRMT plugin is installed, it adds its own menu to those available
 on the QGIS graphical user interface. The plugin menu contains the
 options listed below. For each option, this manual provides a separate chapter
 with the description of its functionality and of the typical workflows in which
@@ -48,7 +48,7 @@ corresponding documentation.
 
 * |icon-plot| :ref:`chap-viewer-dock`
 
-* |icon-manual| IRMT manual: a web browser will be opened, showing the html
+* |icon-manual| OpenQuake IRMT manual: a web browser will be opened, showing the html
   version of this manual
 
 
