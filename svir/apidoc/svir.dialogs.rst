@@ -4,14 +4,6 @@ svir.dialogs package
 Submodules
 ----------
 
-svir.dialogs.attribute_selection_dialog module
-----------------------------------------------
-
-.. automodule:: svir.dialogs.attribute_selection_dialog
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 svir.dialogs.download_layer_dialog module
 -----------------------------------------
 
@@ -92,14 +84,6 @@ svir.dialogs.load_uhs_as_layer_dialog module
     :undoc-members:
     :show-inheritance:
 
-svir.dialogs.plot_from_npz_dialog module
-----------------------------------------
-
-.. automodule:: svir.dialogs.plot_from_npz_dialog
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 svir.dialogs.projects_manager_dialog module
 -------------------------------------------
 
@@ -120,14 +104,6 @@ svir.dialogs.recovery_settings_dialog module
 --------------------------------------------
 
 .. automodule:: svir.dialogs.recovery_settings_dialog
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-svir.dialogs.select_input_layers_dialog module
-----------------------------------------------
-
-.. automodule:: svir.dialogs.select_input_layers_dialog
     :members:
     :undoc-members:
     :show-inheritance:
