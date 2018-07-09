@@ -30,15 +30,6 @@ import numpy
 from datetime import datetime
 from collections import OrderedDict
 
-import matplotlib
-matplotlib.use('Qt5Agg')
-from matplotlib.backends.qt_compat import QtCore, QtWidgets
-from matplotlib.backends.backend_qt5agg import (
-    FigureCanvas,
-    NavigationToolbar2QT as NavigationToolbar)
-from matplotlib.figure import Figure
-from matplotlib.lines import Line2D
-
 from qgis.PyQt.QtCore import pyqtSlot, QSettings, Qt
 from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtWidgets import (
@@ -79,13 +70,14 @@ from svir.ui.list_multiselect_mono_widget import ListMultiSelectMonoWidget
 from svir import IS_SCIPY_INSTALLED
 
 import matplotlib
-matplotlib.use('Qt4Agg')
-from matplotlib.figure import Figure  # NOQA
-from matplotlib.backends.backend_qt4agg import (  # NOQA
-    FigureCanvasQTAgg as FigureCanvas,
-    NavigationToolbar2QT as NavigationToolbar
-)
-from matplotlib.lines import Line2D  # NOQA
+matplotlib.use('Qt5Agg')  # NOQA
+from matplotlib.backends.qt_compat import QtCore, QtWidgets  # NOQA
+from matplotlib.backends.backend_qt5agg import (
+    FigureCanvas,
+    NavigationToolbar2QT as NavigationToolbar)
+from matplotlib.figure import Figure
+from matplotlib.lines import Line2D
+
 
 FORM_CLASS = get_ui_class('ui_viewer_dock.ui')
 
