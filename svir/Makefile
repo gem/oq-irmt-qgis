@@ -49,10 +49,10 @@ default: compile
 compile: $(COMPILED_RESOURCE_FILES)
 
 %_rc.py : %.qrc $(RESOURCE_SRC)
-	pyrcc4 -o $*_rc.py  $<
+	pyrcc5 -o $*_rc.py  $<
 
 %.py : %.ui
-	pyuic4 -o $@ $<
+	pyuic5 -o $@ $<
 
 %.qm : %.ts
 	lrelease $<
@@ -66,7 +66,7 @@ fastunittest: compile transcompile
 	@export PYTHONPATH=`pwd`:$(PYTHONPATH); \
 		export QGIS_DEBUG=0; \
 		export QGIS_LOG_FILE=/dev/null; \
-		nosetests -s -a'!slow' -v --with-doctest --with-id --exclude-dir=third_party --exclude-dir=test/integration\
+		nosetests3 -s -a'!slow' -v --with-doctest --with-id --exclude-dir=third_party --exclude-dir=test/integration\
 		3>&1 1>&2 2>&3 3>&-
 	@echo "----------------------"
 	@echo "If you get 'no module...' errors, try sourcing"
@@ -83,7 +83,7 @@ unittest: compile transcompile
 	@export PYTHONPATH=`pwd`:$(PYTHONPATH); \
 		export QGIS_DEBUG=0; \
 		export QGIS_LOG_FILE=/dev/null; \
-		nosetests -s -v --with-doctest --with-id --exclude-dir=third_party --exclude-dir=test/integration\
+		nosetests3 -s -v --with-doctest --with-id --exclude-dir=third_party --exclude-dir=test/integration\
 		3>&1 1>&2 2>&3 3>&-
 	@echo "----------------------"
 	@echo "If you get 'no module...' errors, try sourcing"
@@ -100,7 +100,7 @@ integrationtest: compile transcompile
 	@export PYTHONPATH=`pwd`:$(PYTHONPATH); \
 		export QGIS_DEBUG=0; \
 		export QGIS_LOG_FILE=/dev/null; \
-		nosetests -s -v --with-id test/integration\
+		nosetests3 -s -v --with-id test/integration\
 		3>&1 1>&2 2>&3 3>&-
 	@echo "----------------------"
 	@echo "If you get 'no module...' errors, try sourcing"

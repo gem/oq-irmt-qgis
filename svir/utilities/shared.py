@@ -26,14 +26,18 @@ import os
 from collections import OrderedDict
 from qgis.PyQt.QtCore import QSettings
 from qgis.PyQt.QtGui import QColor
-from ConfigParser import ConfigParser
-from qgis.core import QgsGraduatedSymbolRendererV2
+from configparser import ConfigParser
+from qgis.core import QgsGraduatedSymbolRenderer
 
 DEBUG = QSettings().value('/irmt/developer_mode', False, type=bool)
 
 cp = ConfigParser()
-cp.readfp(open(os.path.dirname(os.path.realpath(__file__)) +
-               '/../metadata.txt'))
+metadata_file_path = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)),
+    os.pardir,
+    'metadata.txt')
+with open(metadata_file_path, 'r') as f:
+    cp.read_file(f)
 IRMT_PLUGIN_VERSION = cp.get('general', 'version')
 PLATFORM_REGISTRATION_URL = 'https://platform.openquake.org/account/signup/'
 SUPPLEMENTAL_INFORMATION_VERSION = '1.0'
@@ -237,7 +241,7 @@ LOG_LEVELS = {'I': 'Info (high verbosity)',
 DEFAULT_SETTINGS = dict(
     color_from_rgba=QColor('#FFEBEB').rgba(),
     color_to_rgba=QColor('red').rgba(),
-    style_mode=QgsGraduatedSymbolRendererV2.Quantile,
+    style_mode=QgsGraduatedSymbolRenderer.Quantile,
     style_classes=10,
     force_restyling=True,
     experimental_enabled=False,

@@ -25,10 +25,8 @@
 import os
 import csv
 from qgis.PyQt.QtCore import pyqtSlot, QSettings, QDir
-from qgis.PyQt.QtGui import (QDialog,
-                             QFileDialog,
-                             QDialogButtonBox)
-from qgis.core import QgsMapLayer, QgsMapLayerRegistry, QGis
+from qgis.PyQt.QtWidgets import QDialog, QFileDialog, QDialogButtonBox
+from qgis.core import QgsMapLayer, QgsProject, QgsWkbTypes
 from svir.calculations.aggregate_loss_by_zone import add_zone_id_to_points
 from svir.utilities.utils import (get_ui_class,
                                   reload_attrib_cbx,
@@ -78,12 +76,12 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
 
     def populate_layers_in_combos(self):
         for key, layer in \
-                QgsMapLayerRegistry.instance().mapLayers().iteritems():
+                QgsProject.instance().mapLayers().items():
             if layer.type() != QgsMapLayer.VectorLayer:
                 continue
-            if layer.geometryType() == QGis.Point:
+            if layer.geometryType() == QgsWkbTypes.PointGeometry:
                 self.dmg_by_asset_layer_cbx.addItem(layer.name(), layer)
-            if layer.geometryType() == QGis.Polygon:
+            if layer.geometryType() == QgsWkbTypes.PolygonGeometry:
                 self.svi_layer_cbx.addItem(layer.name(), layer)
         # if the active layer contains points, preselect it
         active_layer = self.iface.activeLayer()
@@ -198,7 +196,7 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         n_zones = len(zonal_dmg_by_asset_probs)
         # for each zone, calculate a zone-level recovery function
         for zone_index, zone_id in enumerate(
-                zonal_dmg_by_asset_probs.keys(), start=1):
+                list(zonal_dmg_by_asset_probs.keys()), start=1):
             seed = None
             if DEBUG:
                 seed = 42
@@ -214,7 +212,7 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
             self.zone_field_name = self.zone_field_name_cbx.currentText()
             (point_attrs_dict, self.dmg_by_asset_layer,
              self.zone_field_name) = add_zone_id_to_points(
-                self.iface, self.dmg_by_asset_layer,
+                self.dmg_by_asset_layer,
                 self.svi_layer, self.zone_field_name)
         else:
             # the layer containing points was not modified by the zonal
@@ -227,6 +225,6 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
                 point_attrs_dict,
                 self.integrate_svi_check.isChecked())
         msg = 'Recovery curves have been saved to [%s]' % self.output_data_dir
-        log_msg(msg, level='I', message_bar=self.iface.messageBar())
+        log_msg(msg, level='S', message_bar=self.iface.messageBar())
         self.save_state()
         super(RecoveryModelingDialog, self).accept()

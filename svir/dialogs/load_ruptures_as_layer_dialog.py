@@ -34,7 +34,7 @@ from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 
 class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
     """
-    Modal dialog to load ruptures from an oq-engine output, as layer
+    Dialog to load ruptures from an oq-engine output, as layer
     """
 
     def __init__(self, iface, viewer_dock, session, hostname, calc_id,
@@ -60,6 +60,7 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
         self.file_browser_tbn.setEnabled(True)
         if self.path:
             self.path_le.setText(self.path)
+        self.show()
 
     def set_ok_button(self):
         self.ok_button.setEnabled(bool(self.path))
@@ -97,14 +98,21 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
         # extract the name of the csv file and remove the extension
         layer_name = os.path.splitext(os.path.basename(csv_path))[0]
         layer_name += '_%sy' % investigation_time
-        self.layer = import_layer_from_csv(
-            self, csv_path, layer_name, self.iface,
-            wkt_field='boundary', delimiter='\t',
-            lines_to_skip_count=1,
-            save_as_shp=self.save_as_shp_ckb.isChecked(), dest_shp=dest_shp)
+        try:
+            self.layer = import_layer_from_csv(
+                self, csv_path, layer_name, self.iface,
+                wkt_field='boundary', delimiter='\\t',
+                lines_to_skip_count=1,
+                save_as_shp=self.save_as_shp_ckb.isChecked(),
+                dest_shp=dest_shp)
+        except RuntimeError as exc:
+            log_msg(str(exc), level='C', message_bar=self.iface.messageBar())
+            return
         self.layer.setCustomProperty('investigation_time', investigation_time)
         style_by = self.style_by_cbx.itemData(self.style_by_cbx.currentIndex())
         if style_by == 'mag':
             self.style_maps(layer=self.layer, style_by=style_by)
         else:  # 'trt'
             self.style_categorized(layer=self.layer, style_by=style_by)
+        log_msg('Layer %s was loaded successfully' % layer_name,
+                level='S', message_bar=self.iface.messageBar())

@@ -4,28 +4,28 @@
 Installation and troubleshooting
 ********************************
 
-This plugin runs with `QGIS 2.14LTR <http://qgis.org/it/site/forusers/alldownloads.html>`_
+This plugin runs with `QGIS 3.0 <http://qgis.org/it/site/forusers/alldownloads.html>`_
 and above.
 
 On Microsoft Windows and Mac OS X, QGIS includes all the software dependencies needed by the plugin.
 
 On Linux, please make sure that `Scipy <https://www.scipy.org/install.html>`_
-and `Matplotlib <https://matplotlib.org/users/installing.html>`_ with Qt4 backend
+and `Matplotlib <https://matplotlib.org/users/installing.html>`_ with Qt5 backend
 are installed.
 
 On Ubuntu (Debian and similar):
 
 .. code-block:: bash
 
-    $ sudo apt install python-scipy python-matplotlib
+    $ sudo apt install python3-scipy python3-matplotlib
 
 On Fedora and similar:
 
 .. code-block:: bash
 
-    $ sudo dnf install python2-scipy python2-matplotlib python2-matplotlib-qt4
+    $ sudo dnf install python3-scipy python3-matplotlib python3-matplotlib-qt5
 
-On Fedora, please follow these `instructions <https://copr.fedorainfracloud.org/coprs/dani/QGIS-latest-stable/>`_.
+On Fedora, please follow these `instructions <https://copr.fedorainfracloud.org/coprs/dani/qgis/>`_.
 
 The plugin can be installed using the QGIS Plugins Manager, that is accessible
 through the QGIS menu as :guilabel:`Plugins -> Manage and install plugins`.
@@ -41,17 +41,13 @@ Some users reported issues about `upgrading` the plugin to its latest version.
 We recommend to `reinstall` the plugin instead, in order to make sure the new installation is
 done in a clean folder.
 
-Please note that QGIS 2.18.8 contained some
-`critical bugs <http://www.mail-archive.com/qgis-user@lists.osgeo.org/msg37309.html>`_
-that were fixed in version 2.18.9.
 
-
-How to run tests on Ubuntu 16.04 LTS
+How to run tests on Ubuntu 18.04 LTS
 ====================================
 
-In order to run tests on Ubuntu 16.04 LTS and above, QGIS has to be installed
+In order to run tests on Ubuntu 18.04 LTS and above, QGIS has to be installed
 as described above and the following additional packages are required:
-``python-scipy``, ``python-nose``, ``python-coverage``, ``python-mock``
+``python3-scipy``, ``python3-nose``, ``python3-coverage``, ``python3-mock``
 
 If the environment is not already set, run the script ``run-env-linux.sh``,
 providing the required argument (in most cases, specifying the directory `/usr`)

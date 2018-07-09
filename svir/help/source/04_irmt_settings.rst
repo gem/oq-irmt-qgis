@@ -1,7 +1,7 @@
 .. _chap-irmt-settings:
 
 *************
-IRMT settings
+OpenQuake IRMT settings
 *************
 
 .. _fig-plugin-settings:
@@ -10,14 +10,14 @@ IRMT settings
     :align: center
     :scale: 60%
     
-    |icon-plugin-settings| IRMT settings
+    |icon-plugin-settings| OpenQuake IRMT settings
 
 Some of the functionalities provided by the plugin, such as the ability to work
 with GEM data, require the interaction between the plugin itself and the
 OpenQuake Platform (OQ-Platform) or the OpenQuake Engine (OQ-Engine).
 
 The OQ-Platform is a web-based portal to visualize, explore and share GEM's
-datasets, tools and models. In the :guilabel:`IRMT Settings` dialog displayed
+datasets, tools and models. In the :guilabel:`OpenQuake IRMT Settings` dialog displayed
 in :numref:`fig-plugin-settings`, credentials must be inserted to
 authenticate the user and to allow the user to log into the OQ-Platform. In the
 :guilabel:`Host` field insert the URL of GEM production installation of the
@@ -40,7 +40,7 @@ application that allows users to compute seismic hazard and seismic risk of
 earthquakes on a global scale. It can run locally on the user's machine, or on
 a remote workstation or cluster. The `OQ Engine Server
 <https://github.com/gem/oq-engine/blob/master/doc/running/server.md>`_ provides
-an HTTP RESTful API. The IRMT plugin leverages this API to enable the user to
+an HTTP RESTful API. The OpenQuake IRMT plugin leverages this API to enable the user to
 drive the OQ-Engine directly from within QGIS. In order to interface the plugin
 with a running OQ Engine Server, it is necessary to insert in this dialog the
 user credentials (if they are required by the server) and the web URL where the

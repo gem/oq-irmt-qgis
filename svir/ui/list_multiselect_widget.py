@@ -8,15 +8,19 @@ Contact : marco@opengis.ch
      the Free Software Foundation; either version 2 of the License, or
      (at your option) any later version.
 """
-
 __author__ = 'marco@opengis.ch'
 __revision__ = '$Format:%H$'
 __date__ = '9/07/2013'
 
-from qgis.PyQt import QtGui, QtCore
+from qgis.PyQt.QtCore import (pyqtSignal, Qt, QSize)
+from qgis.PyQt.QtGui import (QFont)
+from qgis.PyQt.QtWidgets import (
+    QGroupBox, QSizePolicy, QHBoxLayout,
+    QVBoxLayout, QLabel, QListWidget, QPushButton, QAbstractItemView,
+    )
 
 
-class ListMultiSelectWidget(QtGui.QGroupBox):
+class ListMultiSelectWidget(QGroupBox):
     """Widget to show two parallel lists and move elements between the two
 
     usage from code:
@@ -28,10 +32,10 @@ class ListMultiSelectWidget(QtGui.QGroupBox):
         promote it to ListMultiSelectWidget
     """
 
-    selection_changed = QtCore.pyqtSignal()
+    selection_changed = pyqtSignal()
 
     def __init__(self, parent=None, title=None):
-        QtGui.QGroupBox.__init__(self)
+        QGroupBox.__init__(self)
         self.setTitle(title)
 
         self.selected_widget = None
@@ -117,39 +121,39 @@ class ListMultiSelectWidget(QtGui.QGroupBox):
 
     def _setupUI(self):
         self.setSizePolicy(
-            QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Ignored)
+            QSizePolicy.Preferred, QSizePolicy.Ignored)
 
         self.setMinimumHeight(180)
 
-        self.main_horizontal_layout = QtGui.QHBoxLayout(self)
+        self.main_horizontal_layout = QHBoxLayout(self)
 
-        italic_font = QtGui.QFont()
+        italic_font = QFont()
         italic_font.setItalic(True)
 
         # unselected widget
-        self.unselected_widget = QtGui.QListWidget(self)
+        self.unselected_widget = QListWidget(self)
         self._set_list_widget_defaults(self.unselected_widget)
-        unselected_label = QtGui.QLabel()
+        unselected_label = QLabel()
         unselected_label.setText('Unselected')
-        unselected_label.setAlignment(QtCore.Qt.AlignCenter)
+        unselected_label.setAlignment(Qt.AlignCenter)
         unselected_label.setFont(italic_font)
-        unselected_v_layout = QtGui.QVBoxLayout()
+        unselected_v_layout = QVBoxLayout()
         unselected_v_layout.addWidget(unselected_label)
         unselected_v_layout.addWidget(self.unselected_widget)
 
         # selected widget
-        self.selected_widget = QtGui.QListWidget(self)
+        self.selected_widget = QListWidget(self)
         self._set_list_widget_defaults(self.selected_widget)
-        selected_label = QtGui.QLabel()
+        selected_label = QLabel()
         selected_label.setText('Selected')
-        selected_label.setAlignment(QtCore.Qt.AlignCenter)
+        selected_label.setAlignment(Qt.AlignCenter)
         selected_label.setFont(italic_font)
-        selected_v_layout = QtGui.QVBoxLayout()
+        selected_v_layout = QVBoxLayout()
         selected_v_layout.addWidget(selected_label)
         selected_v_layout.addWidget(self.selected_widget)
 
         # buttons
-        self.buttons_vertical_layout = QtGui.QVBoxLayout()
+        self.buttons_vertical_layout = QVBoxLayout()
         self.buttons_vertical_layout.setContentsMargins(0, -1, 0, -1)
 
         self.select_all_btn = SmallQPushButton('>>')
@@ -162,10 +166,10 @@ class ListMultiSelectWidget(QtGui.QGroupBox):
         self.deselect_all_btn.setToolTip('Remove all')
 
         # add buttons
-        spacer_label = QtGui.QLabel()  # pragmatic way to create a spacer with
-                                       # the same height of the labels on top
-                                       # of the lists, in order to align the
-                                       # buttons with the lists.
+        spacer_label = QLabel()  # pragmatic way to create a spacer with
+        # the same height of the labels on top
+        # of the lists, in order to align the
+        # buttons with the lists.
         self.buttons_vertical_layout.addWidget(spacer_label)
         self.buttons_vertical_layout.addWidget(self.select_btn)
         self.buttons_vertical_layout.addWidget(self.deselect_btn)
@@ -181,17 +185,17 @@ class ListMultiSelectWidget(QtGui.QGroupBox):
         widget.setAlternatingRowColors(True)
         widget.setSortingEnabled(True)
         widget.setDragEnabled(True)
-        widget.setDragDropMode(QtGui.QAbstractItemView.DragDrop)
+        widget.setDragDropMode(QAbstractItemView.DragDrop)
         widget.setDragDropOverwriteMode(False)
-        widget.setDefaultDropAction(QtCore.Qt.MoveAction)
-        widget.setSelectionMode(QtGui.QAbstractItemView.MultiSelection)
+        widget.setDefaultDropAction(Qt.MoveAction)
+        widget.setSelectionMode(QAbstractItemView.MultiSelection)
 
 
-class SmallQPushButton(QtGui.QPushButton):
+class SmallQPushButton(QPushButton):
     def __init__(self, text):
-        QtGui.QPushButton.__init__(self)
+        QPushButton.__init__(self)
         self.setText(text)
-        buttons_size_policy = QtGui.QSizePolicy(
-            QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        buttons_size_policy = QSizePolicy(
+            QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.setSizePolicy(buttons_size_policy)
-        self.setMaximumSize(QtCore.QSize(30, 30))
+        self.setMaximumSize(QSize(30, 30))

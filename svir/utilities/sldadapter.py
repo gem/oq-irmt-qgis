@@ -31,8 +31,11 @@
 import re
 import os
 from qgis.PyQt.QtCore import Qt
-from qgis.PyQt.QtXml import *
-from qgis.core import *
+from qgis.PyQt.QtXml import QDomDocument
+from qgis.core import (
+    QgsSingleBandGrayRenderer, QgsExpression, QgsOgcUtils,
+    QgsSingleBandPseudoColorRenderer, QgsSymbolLayerUtils, QgsSymbol,
+    QgsUnitTypes)
 
 SIZE_FACTOR = 4
 RASTER_SLD_TEMPLATE = (
@@ -131,7 +134,7 @@ def getLabelingAsSld(layer):
         s += "</PointPlacement></LabelPlacement>"
         s += "</TextSymbolizer>"
         return s
-    except:
+    except Exception:
         return ""
 
 
@@ -146,7 +149,7 @@ def getGsCompatibleSld(layer, style_name):
         return adaptQgsToGs(sld, layer)
     else:
         return None
-# QDomElement QgsFeatureRendererV2::writeSld( QDomDocument& doc, const QString& styleName ) const
+# QDomElement QgsFeatureRenderer::writeSld( QDomDocument& doc, const QString& styleName ) const
 #   492 {
 #   493   QDomElement userStyleElem = doc.createElement( "UserStyle" );
 #   494
@@ -161,7 +164,7 @@ def getGsCompatibleSld(layer, style_name):
 #   503   return userStyleElem;
 #   504 }
 
- # void QgsRuleBasedRendererV2::Rule::toSld( QDomDocument& doc, QDomElement &element, QgsStringMap props )
+ # void QgsRuleBasedRenderer::Rule::toSld( QDomDocument& doc, QDomElement &element, QgsStringMap props )
  #  300 {
  #  301   // do not convert this rule if there are no symbols
  #  302   if ( symbols().isEmpty() )
@@ -225,7 +228,7 @@ def getGsCompatibleSld(layer, style_name):
  #  360
  #  361     if ( !props.value( "filter", "" ).isEmpty() )
  #  362     {
- #  363       QgsSymbolLayerV2Utils::createFunctionElement( doc, ruleElem, props.value( "filter", "" ) );
+ #  363       QgsSymbolLayerUtils::createFunctionElement( doc, ruleElem, props.value( "filter", "" ) );
  #  364     }
  #  365
  #  366     if ( !props.value( "scaleMinDenom", "" ).isEmpty() )
@@ -286,12 +289,12 @@ def getStyleAsSld(layer, styleName):
         titleElem.appendChild(document.createTextNode(styleName))
         userNode.appendChild(titleElem)
 
-        rule = layer.rendererV2().rootRule()
+        rule = layer.renderer().rootRule()
         props = {}  # QgsStringMap() can be see as a python dictionary
         rule_to_sld(rule, document, featureTypeStyleElem, props)
         userNode.appendChild(featureTypeStyleElem)
 
-        return unicode(document.toString(4))
+        return str(document.toString(4))
     elif layer.type() == layer.RasterLayer:
         renderer = layer.renderer()
         if isinstance(renderer, QgsSingleBandGrayRenderer):
@@ -315,7 +318,7 @@ def getStyleAsSld(layer, styleName):
                     color.red(), color.green(), color.blue())
                 symbolizerCode += ('<ColorMapEntry color="' + rgb
                                    + '" quantity="'
-                                   + unicode(item.value) + '" />')
+                                   + str(item.value) + '" />')
             symbolizerCode += "</ColorMap>"
             sld = RASTER_SLD_TEMPLATE.replace(
                 "SYMBOLIZER_CODE", symbolizerCode).replace("STYLE_NAME",
@@ -337,6 +340,7 @@ def getStyleAsSld(layer, styleName):
         return None
 
 
+# TODO FIX for QGIS3
 def rule_to_sld(rule, document, element, props):
     if (hasattr(rule, 'symbols') and rule.symbols()  # working before QGIS 2.12
             or hasattr(rule, 'symbols2') and rule.symbols2()):  # working after
@@ -425,7 +429,7 @@ def rule_to_sld(rule, document, element, props):
 
 
 def symbolv2_to_sld(symbol, document, element, props):
-    props['alpha'] = str(symbol.alpha())
+    props['alpha'] = str(symbol.opacity())
     scaleFactor = 1.0
     (scaleFactor, props['uom']) = encodeSldUom(symbol.outputUnit(),
                                                scaleFactor)
@@ -435,7 +439,7 @@ def symbolv2_to_sld(symbol, document, element, props):
 
 
 def encodeSldUom(outputUnit, scaleFactor):
-    if outputUnit == QgsSymbolV2.MapUnit:
+    if outputUnit == QgsUnitTypes.RenderMapUnits:
         if scaleFactor:
             scaleFactor = 0.001  # from millimeters to meters
         return (scaleFactor, "http://www.opengeospatial.org/se/units/metre")
@@ -530,19 +534,19 @@ def line_to_sld(document, element, penStyle, color, width,
         if color.alpha() < 255:
             element.appendChild(createCssParameterElement(
                 document, "stroke-opacity",
-                QgsSymbolLayerV2Utils.encodeSldAlpha(color.alpha())))
+                QgsSymbolLayerUtils.encodeSldAlpha(color.alpha())))
     if width > 0:
         element.appendChild(createCssParameterElement(
             document, "stroke-width", str(width)))
     if penJoinStyle:
         element.appendChild(createCssParameterElement(
             document, "stroke-linejoin",
-            QgsSymbolLayerV2Utils.encodeSldLineJoinStyle(penJoinStyle)))
+            QgsSymbolLayerUtils.encodeSldLineJoinStyle(penJoinStyle)))
     # TODO: manage penCapStyle
     if len(dashPattern) > 0:
         element.appendChild(createCssParameterElement(
             document, "stroke-dasharray",
-            QgsSymbolLayerV2Utils.encodeSldRealVector(dashPattern)))  # " ".join(dashPattern)))
+            QgsSymbolLayerUtils.encodeSldRealVector(dashPattern)))  # " ".join(dashPattern)))
         # FIXME: what's dashOffset? qgsDoubleNear expects a singular number,
         # not a tuple
         # if qgsDoubleNear(dashOffset, 0.0):
@@ -550,7 +554,7 @@ def line_to_sld(document, element, penStyle, color, width,
         #     element.appendChild(createCssParameterElement(
         #         document, "stroke-dashoffset", str(dashOffset)))
 
- # 1763 void QgsSymbolLayerV2Utils::lineToSld( QDomDocument &doc, QDomElement &element,
+ # 1763 void QgsSymbolLayerUtils::lineToSld( QDomDocument &doc, QDomElement &element,
  # 1764                                        Qt::PenStyle penStyle, QColor color, double width,
  # 1765                                        const Qt::PenJoinStyle *penJoinStyle, const Qt::PenCapStyle *penCapStyle,
  # 1766                                        const QVector<qreal> *customDashPattern, double dashOffset )
@@ -626,7 +630,7 @@ def line_to_sld(document, element, penStyle, color, width,
  # 1836   }
  # 1837 }
 
-  # 448 QString QgsSymbolLayerV2Utils::encodeSldRealVector( const QVector<qreal>& v )
+  # 448 QString QgsSymbolLayerUtils::encodeSldRealVector( const QVector<qreal>& v )
   # 449 {
   # 450   QString vectorString;
   # 451   QVector<qreal>::const_iterator it = v.constBegin();
@@ -647,7 +651,7 @@ def createCssParameterElement(document, name, value):
     nodeElem.setAttribute('name', name)
     nodeElem.appendChild(document.createTextNode(value))
     return nodeElem
- # 2515 QDomElement QgsSymbolLayerV2Utils::createSvgParameterElement( QDomDocument &doc, QString name, QString value )
+ # 2515 QDomElement QgsSymbolLayerUtils::createSvgParameterElement( QDomDocument &doc, QString name, QString value )
  # 2516 {
  # 2517   QDomElement nodeElem = doc.createElement( "se:SvgParameter" );
  # 2518   nodeElem.setAttribute( "name", name );
@@ -669,7 +673,7 @@ def fill_to_sld(symbolLayer, document, element, brushStyle, color):
             if color.alpha() < 255:
                 cssElement = createCssParameterElement(
                     document, 'fill-opacity',
-                    QgsSymbolLayerV2Utils.encodeSldAlpha(color.alpha()))
+                    QgsSymbolLayerUtils.encodeSldAlpha(color.alpha()))
                 element.appendChild()
         return
     elif brushStyle in (Qt.CrossPattern,
@@ -687,7 +691,7 @@ def fill_to_sld(symbolLayer, document, element, brushStyle, color):
                         Qt.Dense6Pattern,
                         Qt.Dense7Pattern,
                         ):
-        patternName = QgsSymbolLayerV2Utils.encodeSldBrushStyle(brushStyle)
+        patternName = QgsSymbolLayerUtils.encodeSldBrushStyle(brushStyle)
         return
     else:
         element.appendChild(document.createComment('Brush not supported'))
@@ -699,7 +703,7 @@ def fill_to_sld(symbolLayer, document, element, brushStyle, color):
     borderColor = \
         color if not patternName.startswith('brush://') else Qt.QColor()
     # Use WellKnownName tag to handle QT brush styles.
-    QgsSymbolLayerV2Utils.wellKnownMarkerToSld(
+    QgsSymbolLayerUtils.wellKnownMarkerToSld(
         document, graphicElem, patternName, fillColor,
         borderColor, Qt.SolidLine, -1, -1)
 
@@ -710,7 +714,7 @@ def createGeometryElement(document, element, geomFunc):
     geometryElem = document.createElement('Geometry')
     element.appendChild(geometryElem)
     createFunctionElement(document, geometryElem, geomFunc)
-# void QgsSymbolLayerV2Utils::createGeometryElement( QDomDocument &doc, QDomElement &element, QString geomFunc )
+# void QgsSymbolLayerUtils::createGeometryElement( QDomDocument &doc, QDomElement &element, QString geomFunc )
 #  2388 {
 #  2389   if ( geomFunc.isEmpty() )
 #  2390     return;
@@ -755,7 +759,7 @@ def createFunctionElement(document, element, function):
         element.appendChild(filterElem[0])  # TODO: check filterElem tuple
     return True
 
-# bool QgsSymbolLayerV2Utils::createFunctionElement( QDomDocument &doc, QDomElement &element, QString function )
+# bool QgsSymbolLayerUtils::createFunctionElement( QDomDocument &doc, QDomElement &element, QString function )
 #  2431 {
 #  2432   // let's use QgsExpression to generate the SLD for the function
 #  2433   QgsExpression expr( function );

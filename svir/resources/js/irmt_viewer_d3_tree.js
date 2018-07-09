@@ -642,7 +642,10 @@
         var svg = d3.select("#projectDefDialog")
             .append("svg")
             .attr("width", "100%")
-            .attr("height", "100%")
+            // FIXME: on QGIS3 the height is not set automatically, hiding the bottom of the tree
+            //        As a temporary solution, I'm forcing the height manually (in this case it should not be a problem) 
+            // .attr("height", "100%")
+            .attr("height", "2000px")
             .attr("id", "project-definition-svg")
             .call(d3.behavior.zoom().scaleExtent([0.1, 5]).on("zoom", function () {
                 svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")");

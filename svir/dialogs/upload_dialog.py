@@ -23,18 +23,20 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
-from qgis.core import QgsRuleBasedRendererV2
+from qgis.core import QgsRuleBasedRenderer, Qgis
 from qgis.gui import QgsMessageBar
 
 from qgis.PyQt.QtCore import Qt, QUrl, QSettings, pyqtSignal
-from qgis.PyQt.QtGui import QDialog, QSizePolicy, QDialogButtonBox
+from qgis.PyQt.QtWidgets import QDialog, QSizePolicy, QDialogButtonBox
 from qgis.PyQt.QtNetwork import QNetworkCookieJar, QNetworkCookie
 from qgis.PyQt.QtWebKit import QWebSettings
 
 from svir.thread_worker.abstract_worker import start_worker
 from svir.thread_worker.upload_worker import UploadWorker
-from svir.third_party.requests.sessions import Session
-from svir.third_party.requests.utils import dict_from_cookiejar
+
+from requests.sessions import Session
+from requests.utils import dict_from_cookiejar
+
 from svir.utilities.sldadapter import getGsCompatibleSld
 from svir.utilities.utils import (platform_login,
                                   create_progress_message_bar,
@@ -104,7 +106,7 @@ class UploadDialog(QDialog, FORM_CLASS):
             error_msg = (
                 'Unable to login to the platform: ' + e.message)
             self.message_bar.pushMessage(
-                'Error', error_msg, duration=0, level=QgsMessageBar.CRITICAL)
+                'Error', error_msg, duration=0, level=Qgis.Critical)
             return
 
         # adding by emitting signal in different thread
@@ -128,7 +130,7 @@ class UploadDialog(QDialog, FORM_CLASS):
                 'Unable to export the styled layer descriptor: ' + e.message)
             self.message_bar.pushMessage(
                 'Style error', error_msg, duration=0,
-                level=QgsMessageBar.CRITICAL)
+                level=Qgis.Critical)
             return
 
         if DEBUG:
@@ -149,7 +151,7 @@ class UploadDialog(QDialog, FORM_CLASS):
                 'Error while styling the uploaded layer: ' + resp.reason)
             self.message_bar.pushMessage(
                 'Style error', error_msg, duration=0,
-                level=QgsMessageBar.CRITICAL)
+                level=Qgis.Critical)
 
     def upload_done(self, result):
         layer_url, success = result
@@ -159,14 +161,14 @@ class UploadDialog(QDialog, FORM_CLASS):
             # rule-based styles. Only in those cases, we should add a style to
             # the layer to be uploaded. Otherwise, it's fine to use the default
             # basic geonode style.
-            if isinstance(self.iface.activeLayer().rendererV2(),
-                          QgsRuleBasedRendererV2):
+            if isinstance(self.iface.activeLayer().renderer(),
+                          QgsRuleBasedRenderer):
                 self._update_layer_style()
             else:
                 self.message_bar.pushMessage(
                     'Info',
                     'Using the basic default style',
-                    level=QgsMessageBar.INFO)
+                    level=Qgis.Info)
             self.message_bar_item, _ = create_progress_message_bar(
                 self.message_bar, 'Loading page......', no_percentage=True)
             self.web_view.load(QUrl(layer_url))
@@ -177,7 +179,7 @@ class UploadDialog(QDialog, FORM_CLASS):
             clear_progress_message_bar(self.message_bar)
             self.message_bar.pushMessage(
                 'Upload error', error_msg, duration=0,
-                level=QgsMessageBar.CRITICAL)
+                level=Qgis.Critical)
 
     def load_finished(self):
         clear_progress_message_bar(self.message_bar, self.message_bar_item)
@@ -192,7 +194,8 @@ class UploadDialog(QDialog, FORM_CLASS):
         platform_login(
             self.hostname, self.username, self.password, self.session)
         sessionid = dict_from_cookiejar(self.session.cookies)['sessionid']
-        sessionid_cookie = QNetworkCookie('sessionid', sessionid)
+        sessionid_cookie = QNetworkCookie(
+            b'sessionid', sessionid.encode('utf8'))
         self.cookie_jar.setCookiesFromUrl(
             [sessionid_cookie], QUrl(self.hostname))
 

@@ -2,7 +2,7 @@
 The plugin menu
 ***************
 
-When the IRMT plugin is installed, it adds its own menu to those available
+When the OpenQuake IRMT plugin is installed, it adds its own menu to those available
 on the QGIS graphical user interface. The plugin menu contains the
 options listed below. For each option, this manual provides a separate chapter
 with the description of its functionality and of the typical workflows in which
@@ -42,14 +42,13 @@ corresponding documentation.
 
 * Utilities
 
-  * |icon-aggregate-loss-by-zone| :ref:`chap-aggregating-loss-by-zone`
   * |icon-transform-attributes| :ref:`chap-transform-attribute`
 
 * |icon-plugin-settings| :ref:`chap-irmt-settings`
 
 * |icon-plot| :ref:`chap-viewer-dock`
 
-* |icon-manual| IRMT manual: a web browser will be opened, showing the html
+* |icon-manual| OpenQuake IRMT manual: a web browser will be opened, showing the html
   version of this manual
 
 
@@ -59,7 +58,6 @@ corresponding documentation.
 .. |icon-transform-attributes| image:: images/iconTransformAttribute.png
 .. |icon-project-definitions-manager| image:: images/iconProjectDefinitionManager.png
 .. |icon-weight-and-calculate| image:: images/iconWeightAndCalculate.png
-.. |icon-aggregate-loss-by-zone| image:: images/iconAggregateLossByZone.png
 .. |icon-upload| image:: images/iconUpload.png
 .. |icon-manual| image:: images/iconManual.png
 .. |icon-plot| image:: images/iconPlot.png

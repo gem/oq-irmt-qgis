@@ -24,19 +24,20 @@
 
 import numpy
 import collections
-from qgis.core import QgsFeature, QgsGeometry, QgsPoint, edit
+from qgis.core import (
+    QgsFeature, QgsGeometry, QgsPointXY, edit, QgsTask, QgsApplication)
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 from svir.calculations.calculate_utils import add_numeric_attribute
 from svir.utilities.utils import (WaitCursorManager,
                                   log_msg,
-                                  extract_npz,
                                   get_loss_types,
                                   )
+from svir.tasks.extract_npz_task import ExtractNpzTask
 
 
 class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
     """
-    Modal dialog to load dmg_by_asset from an oq-engine output, as layer
+    Dialog to load dmg_by_asset from an oq-engine output, as layer
     """
 
     def __init__(self, iface, viewer_dock, session, hostname, calc_id,
@@ -59,24 +60,33 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         self.create_dmg_state_selector()
         self.create_zonal_layer_selector()
 
-        self.npz_file = extract_npz(
-            session, hostname, calc_id, output_type,
-            message_bar=iface.messageBar(), params=None)
+        self.extract_npz_task = ExtractNpzTask(
+            'Extract damage by asset', QgsTask.CanCancel, self.session,
+            self.hostname, self.calc_id, self.output_type, self.finalize_init,
+            self.on_extract_error)
+        QgsApplication.taskManager().addTask(self.extract_npz_task)
 
-        self.loss_types = get_loss_types(
-            session, hostname, calc_id, self.iface.messageBar())
+    def finalize_init(self, extracted_npz):
+        self.npz_file = extracted_npz
+
+        # NOTE: still running this synchronously, because it's small stuff
+        with WaitCursorManager('Loading loss types...',
+                               self.iface.messageBar()):
+            self.loss_types = get_loss_types(
+                self.session, self.hostname, self.calc_id,
+                self.iface.messageBar())
 
         self.populate_out_dep_widgets()
+
         if self.zonal_layer_path:
-            # NOTE: it happens while running tests. We need to avoid
-            #       overwriting the original layer, so we make a copy of it.
-            zonal_layer_plus_stats = self.load_zonal_layer(
-                self.zonal_layer_path, make_a_copy=True)
-            self.populate_zonal_layer_cbx(zonal_layer_plus_stats)
+            zonal_layer = self.load_zonal_layer(self.zonal_layer_path)
+            self.populate_zonal_layer_cbx(zonal_layer)
         else:
             self.pre_populate_zonal_layer_cbx()
         self.adjustSize()
         self.set_ok_button()
+        self.show()
+        self.init_done.emit()
 
     def set_ok_button(self):
         self.ok_button.setEnabled(self.dmg_state_cbx.currentIndex() != -1
@@ -85,6 +95,8 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
     def on_rlz_or_stat_changed(self):
         self.dataset = self.npz_file[self.rlz_or_stat_cbx.currentText()]
         self.taxonomies = numpy.unique(self.dataset['taxonomy']).tolist()
+        self.taxonomies = [taxonomy.decode('utf8')
+                           for taxonomy in self.taxonomies]
         self.populate_taxonomy_cbx(self.taxonomies)
         self.set_ok_button()
 
@@ -149,16 +161,16 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                 self.npz_file, rlz_or_stat, loss_type, dmg_state, taxonomy)
             for row in grouped_by_site:
                 # add a feature
-                feat = QgsFeature(self.layer.pendingFields())
+                feat = QgsFeature(self.layer.fields())
                 for field_name_idx, field_name in enumerate(field_names):
                     if field_name in ['lon', 'lat']:
                         continue
                     value = float(row[field_name_idx])
                     feat.setAttribute(field_names[field_name_idx], value)
-                feat.setGeometry(QgsGeometry.fromPoint(
-                    QgsPoint(row['lon'], row['lat'])))
+                feat.setGeometry(QgsGeometry.fromPointXY(
+                    QgsPointXY(row['lon'], row['lat'])))
                 feats.append(feat)
-            added_ok = self.layer.addFeatures(feats, makeSelected=False)
+            added_ok = self.layer.addFeatures(feats)
             if not added_ok:
                 msg = 'There was a problem adding features to the layer.'
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())

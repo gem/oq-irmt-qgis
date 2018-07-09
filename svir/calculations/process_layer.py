@@ -27,16 +27,15 @@ import sys
 import uuid
 from numpy.testing import assert_almost_equal
 from pprint import pformat
-from types import NoneType
-from qgis.PyQt.QtCore import QPyNullVariant
 from qgis.core import (
                        QgsMapLayer,
-                       QGis,
+                       QgsWkbTypes,
                        QgsVectorLayer,
                        QgsVectorDataProvider,
-                       QgsMapLayerRegistry,
+                       QgsProject,
                        QgsField,
                        edit,
+                       NULL,
                        )
 
 from qgis.PyQt.QtCore import QVariant
@@ -106,8 +105,8 @@ class ProcessLayer(object):
                 if they use different projections,
                 specifying the projections in the message
         """
-        this_layer_projection = self.layer.crs().geographicCRSAuthId()
-        other_layer_projection = other_layer.crs().geographicCRSAuthId()
+        this_layer_projection = self.layer.crs().geographicCrsAuthId()
+        other_layer_projection = other_layer.crs().geographicCrsAuthId()
         if (this_layer_projection != other_layer_projection):
             msg = tr("The two layers use different coordinate"
                      " reference systems (%s vs %s)"
@@ -140,15 +139,15 @@ class ProcessLayer(object):
         # we already checked that the layers have the same number of features
         # and now we want to make sure that for each feature the contents are
         # the same
-        for i in xrange(len_this):
-            this_feature = this_features.next()
-            other_feature = other_features.next()
+        for i in range(len_this):
+            this_feature = next(this_features)
+            other_feature = next(other_features)
             this_feat_data = this_feature.attributes()
             other_feat_data = other_feature.attributes()
             if len(this_feat_data) != len(other_feat_data):
                 return False
-            for j in xrange(len(this_feat_data)):
-                if isinstance(this_feat_data[j], (int, long, float, complex)):
+            for j in range(len(this_feat_data)):
+                if isinstance(this_feat_data[j], (int, float, complex)):
                     try:
                         assert_almost_equal(this_feat_data[j],
                                             other_feat_data[j])
@@ -232,9 +231,9 @@ class ProcessLayer(object):
             # add aliases
             if not simulate:
                 for proposed_attribute_name in aliases:
-                    attribute_id = self.layer.fieldNameIndex(
+                    attribute_id = self.layer.fields().indexOf(
                         proposed_attribute_name)
-                    self.layer.addAttributeAlias(
+                    self.layer.setFieldAlias(
                         attribute_id, aliases[proposed_attribute_name])
         return proposed_attribute_dict
 
@@ -260,10 +259,11 @@ class ProcessLayer(object):
                             % self.layer.providerType())
         attr_idx_list = []
         with edit(self.layer):
+            # TODO QGIS3: check if usage of dataProvider is needed
             layer_pr = self.layer.dataProvider()
             for attribute in attribute_list:
-                if isinstance(attribute, basestring):
-                    attr_idx = layer_pr.fieldNameIndex(attribute)
+                if isinstance(attribute, str):
+                    attr_idx = layer_pr.fields().indexOf(attribute)
                 else:
                     attr_idx = attribute
                 attr_idx_list.append(attr_idx)
@@ -361,14 +361,14 @@ class ProcessLayer(object):
             new_attr_id = self.find_attribute_id(actual_new_attr_name)
         if new_attr_alias:
             with edit(self.layer):
-                self.layer.addAttributeAlias(new_attr_id, new_attr_alias)
+                self.layer.setFieldAlias(new_attr_id, new_attr_alias)
 
         with edit(self.layer):
             # write transformed values
             for feat in self.layer.getFeatures():
                 feat_id = feat.id()
                 value = transformed_dict[feat_id]
-                if type(value) not in (QPyNullVariant, NoneType):
+                if type(value) not in (NULL, type(None)):
                     value = float(value)
                 self.layer.changeAttributeValue(feat_id, new_attr_id, value)
         return actual_new_attr_name, invalid_input_values
@@ -408,19 +408,19 @@ class ProcessLayer(object):
 
         if self.layer.type() == QgsMapLayer.VectorLayer:
             v_type = self.layer.wkbType()
-            if v_type == QGis.WKBPoint:
+            if v_type == QgsWkbTypes.Point:
                 type_str = "point"
-            elif v_type == QGis.WKBLineString:
+            elif v_type == QgsWkbTypes.LineString:
                 type_str = "linestring"
-            elif v_type == QGis.WKBPolygon:
+            elif v_type == QgsWkbTypes.Polygon:
                 type_str = "polygon"
-            elif v_type == QGis.WKBMultiPoint:
+            elif v_type == QgsWkbTypes.MultiPoint:
                 type_str = "multipoint"
-            elif v_type == QGis.WKBMultiLineString:
+            elif v_type == QgsWkbTypes.MultiLineString:
                 type_str = "multilinestring"
-            elif v_type == QGis.WKBMultiPolygon:
+            elif v_type == QgsWkbTypes.MultiPolygon:
                 type_str = "multipolygon"
-            elif v_type == QGis.WKBNoGeometry:
+            elif v_type == QgsWkbTypes.NoGeometry:
                 type_str = ""
             else:
                 raise TypeError('Layer type %s can not be accepted' % v_type)
@@ -450,7 +450,7 @@ class ProcessLayer(object):
 
         if add_to_registry:
             if mem_layer.isValid():
-                QgsMapLayerRegistry.instance().addMapLayer(mem_layer)
+                QgsProject.instance().addMapLayer(mem_layer)
             else:
                 raise RuntimeError('Layer invalid')
 
@@ -464,17 +464,17 @@ class ProcessLayer(object):
         """
         if self.layer.type() == QgsMapLayer.VectorLayer:
             v_type = self.layer.wkbType()
-            if v_type == QGis.WKBPoint:
+            if v_type == QgsWkbTypes.Point:
                 type_str = "point"
-            elif v_type == QGis.WKBLineString:
+            elif v_type == QgsWkbTypes.LineString:
                 type_str = "linestring"
-            elif v_type == QGis.WKBPolygon:
+            elif v_type == QgsWkbTypes.Polygon:
                 type_str = "polygon"
-            elif v_type == QGis.WKBMultiPoint:
+            elif v_type == QgsWkbTypes.MultiPoint:
                 type_str = "multipoint"
-            elif v_type == QGis.WKBMultiLineString:
+            elif v_type == QgsWkbTypes.MultiLineString:
                 type_str = "multilinestring"
-            elif v_type == QGis.WKBMultiPolygon:
+            elif v_type == QgsWkbTypes.MultiPolygon:
                 type_str = "multipolygon"
             else:
                 raise TypeError('Layer type %s can not be accepted' % v_type)
@@ -498,7 +498,7 @@ class ProcessLayer(object):
             feature_vertices = 0
             geom = feat.geometry()
             geom_type = geom.type()
-            if geom_type == QGis.Polygon:
+            if geom_type == QgsWkbTypes.PolygonGeometry:
                 if geom.isMultipart():
                     polygons = geom.asMultiPolygon()
                 else:
@@ -506,14 +506,14 @@ class ProcessLayer(object):
                 for polygon in polygons:
                     for ring in polygon:
                         feature_vertices += len(ring)
-            elif geom_type == QGis.Line:
+            elif geom_type == QgsWkbTypes.LineGeometry:
                 if geom.isMultipart():
                     lines = geom.asMultiPolyline()
                 else:
                     lines = [geom.asPolyline()]
                 for line in lines:
                     feature_vertices += len(line)
-            elif geom_type == QGis.Point:
+            elif geom_type == QgsWkbTypes.PointGeometry:
                 if geom.isMultipart():
                     points = geom.asMultiPoint()
                 else:

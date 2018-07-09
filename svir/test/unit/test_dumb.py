@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 # /***************************************************************************
 # Irmt
@@ -6,9 +5,11 @@
 # OpenQuake Integrated Risk Modelling Toolkit
 #                              -------------------
 #        begin                : 2013-10-24
-#        copyright            : (C) 2014 by GEM Foundation
+#        copyright            : (C) 2013 by GEM Foundation
 #        email                : devops@openquake.org
 # ***************************************************************************/
+#
+# Copyright (c) 2013-2014, GEM Foundation.
 #
 # OpenQuake is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Affero General Public License as published
@@ -23,21 +24,22 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-from qgis.PyQt.QtWidgets import QDialog
-from svir.utilities.utils import get_ui_class
+import unittest
 
-FORM_CLASS = get_ui_class('ui_text_browser.ui')
+# from svir.test.utilities import get_qgis_app
+# QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 
 
-class ShowFullReportDialog(QDialog, FORM_CLASS):
-    """
-    Non-modal dialog to show the full report of a OQ-Engine calculation
-    """
+class DumbTest(unittest.TestCase):
+    """Test nothing."""
 
-    def __init__(self, filepath):
-        QDialog.__init__(self)
-        # Set up the user interface from Designer.
-        self.setupUi(self)
-        with open(filepath, 'r') as rst_file:
-            text = rst_file.read()
-        self.text_browser.setText(text)
+    def setUp(self):
+        """Runs before each test."""
+        pass
+
+    def tearDown(self):
+        """Runs after each test."""
+        pass
+
+    def test_dumb(self):
+        pass

@@ -31,10 +31,12 @@ import tempfile
 import json
 import copy
 import csv
+import time
+import operator
 from mock import Mock
 
-from qgis.PyQt.QtGui import QAction
-from svir.third_party import requests
+from qgis.PyQt.QtWidgets import QAction
+import requests
 from svir.utilities.shared import (
                                    OQ_CSV_TO_LAYER_TYPES,
                                    OQ_EXTRACT_TO_LAYER_TYPES,
@@ -42,12 +44,13 @@ from svir.utilities.shared import (
                                    OQ_EXTRACT_TO_VIEW_TYPES,
                                    OQ_ALL_TYPES,
                                    )
-from svir.test.utilities import get_qgis_app
+from svir.test.utilities import get_qgis_app, assert_and_emit
 from svir.dialogs.drive_oq_engine_server_dialog import OUTPUT_TYPE_LOADERS
 from svir.dialogs.show_full_report_dialog import ShowFullReportDialog
 from svir.dialogs.viewer_dock import ViewerDock
 
 QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
+LONG_LOADING_TIME = 10  # seconds
 
 
 class LoadOqEngineOutputsTestCase(unittest.TestCase):
@@ -107,13 +110,18 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         filename = resp.headers['content-disposition'].split(
             'filename=')[1]
         filepath = os.path.join(dest_folder, filename)
-        open(filepath, "wb").write(resp.content)
+        with open(filepath, "wb") as f:
+            f.write(resp.content)
         return filepath
 
     def load_calc_outputs(self, calc):
         calc_id = calc['id']
         output_list = self.get_output_list(calc_id)
         for output in output_list:
+            output_dict = {'calc_id': calc_id,
+                           'calc_description': calc['description'],
+                           'output_type': output['type']}
+            start_time = time.time()
             if (self.selected_otype is not None
                     and output['type'] != self.selected_otype):
                 continue
@@ -121,32 +129,207 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 self.load_output(calc, output)
             except Exception:
                 ex_type, ex, tb = sys.exc_info()
-                failed_attempt = {'calc_id': calc_id,
-                                  'calc_description': calc['description'],
-                                  'output_type': output['type'],
-                                  'traceback': tb}
+                failed_attempt = copy.deepcopy(output_dict)
+                failed_attempt['traceback'] = tb
                 self.failed_attempts.append(failed_attempt)
                 traceback.print_tb(failed_attempt['traceback'])
                 print(ex)
             else:
+                loading_time = time.time() - start_time
+                print('\t\t(loading time: %.4f sec)' % loading_time)
+                if loading_time > LONG_LOADING_TIME:
+                    output_dict['loading_time'] = loading_time
+                    self.time_consuming_outputs.append(output_dict)
                 self.untested_otypes.discard(output['type'])
             output_type_aggr = "%s_aggr" % output['type']
             if output_type_aggr in OQ_EXTRACT_TO_VIEW_TYPES:
-                mod_output = copy.deepcopy(output)
-                mod_output['type'] = output_type_aggr
+                aggr_output = copy.deepcopy(output)
+                aggr_output['type'] = output_type_aggr
+                aggr_output_dict = copy.deepcopy(output_dict)
+                aggr_output_dict['output_type'] = aggr_output['type']
                 try:
-                    self.load_output(calc, mod_output)
+                    self.load_output(calc, aggr_output)
                 except Exception:
                     ex_type, ex, tb = sys.exc_info()
-                    failed_attempt = {'calc_id': calc_id,
-                                      'calc_description': calc['description'],
-                                      'output_type': mod_output['type'],
-                                      'traceback': tb}
+                    failed_attempt = copy.deepcopy(output_dict)
+                    failed_attempt['traceback'] = tb
                     self.failed_attempts.append(failed_attempt)
                     traceback.print_tb(failed_attempt['traceback'])
                     print(ex)
                 else:
+                    loading_time = time.time() - start_time
+                    print('\t\t(loading time: %.4f sec)' % loading_time)
+                    if loading_time > LONG_LOADING_TIME:
+                        aggr_output_dict['loading_time'] = loading_time
+                        self.time_consuming_outputs.append(aggr_output_dict)
                     self.untested_otypes.discard(output_type_aggr)
+
+    def on_init_done(self, dlg):
+        # set dialog options and accept
+        if dlg.output_type == 'uhs':
+            dlg.load_selected_only_ckb.setChecked(True)
+            idx = dlg.poe_cbx.findText('0.1')
+            assert_and_emit(dlg.loading_exception, self.assertEqual,
+                            idx, 0, 'POE 0.1 was not found')
+            dlg.poe_cbx.setCurrentIndex(idx)
+        elif dlg.output_type == 'losses_by_asset':
+            # FIXME: testing only for a selected taxonomy
+            dlg.load_selected_only_ckb.setChecked(True)
+            taxonomy_idx = dlg.taxonomy_cbx.findText('"Concrete"')
+            assert_and_emit(dlg.loading_exception, self.assertNotEqual,
+                            taxonomy_idx, -1,
+                            'Taxonomy "Concrete" was not found')
+            dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
+            loss_type_idx = dlg.loss_type_cbx.findText('structural')
+            assert_and_emit(dlg.loading_exception, self.assertNotEqual,
+                            loss_type_idx, -1,
+                            'Loss type structural was not found')
+            dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
+
+            # # FIXME: we need to do dlg.accept() also for the case
+            #          loading all taxonomies, and performing the
+            #          aggregation by zone
+
+            # # test all taxonomies
+            # dlg.load_selected_only_ckb.setChecked(True)
+            # taxonomy_idx = dlg.taxonomy_cbx.findText('All')
+            # self.assertNotEqual(taxonomy_idx, -1,
+            #                     'Taxonomy All was not found')
+            # dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
+            # loss_type_idx = dlg.loss_type_cbx.findText('structural')
+            # self.assertNotEqual(loss_type_idx, -1,
+            #                     'Loss type structural was not found')
+            # dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
+            # dlg.accept()
+
+            # FIXME: copied/pasted from skipped unit test
+            #        that was causing segfault
+            # loss_layer_path = os.path.join(
+            #     self.data_dir_name, 'risk',
+            #     'output-399-losses_by_asset_123.npz')
+            # zonal_layer_path = os.path.join(
+            #     self.data_dir_name, 'risk', 'zonal_layer.shp')
+            # dlg = LoadLossesByAssetAsLayerDialog(
+            #     IFACE, self.viewer_dock, Mock(), Mock(), Mock(),
+            #     'losses_by_asset', loss_layer_path,
+            #     zonal_layer_path=zonal_layer_path)
+            # dlg.load_selected_only_ckb.setChecked(True)
+            # dlg.zonal_layer_gbx.setChecked(True)
+            # taxonomy_idx = dlg.taxonomy_cbx.findText('All')
+            # self.assertNotEqual(taxonomy_idx, -1,
+            #                    'Taxonomy All was not found')
+            # dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
+            # loss_type_idx = dlg.loss_type_cbx.findText('structural')
+            # self.assertNotEqual(loss_type_idx, -1,
+            #                     'Loss type structural was not found')
+            # dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
+            # self.assertTrue(dlg.zonal_layer_cbx.currentText(),
+            #                 'The zonal layer was not loaded')
+            # dlg.accept()
+            # zonal_layer_plus_stats = [
+            #     layer for layer in IFACE.layers()
+            #     if layer.name() == 'Zonal data (copy)'][0]
+            # zonal_layer_plus_stats_first_feat = \
+            #     zonal_layer_plus_stats.getFeatures().next()
+            # expected_zonal_layer_path = os.path.join(
+            #     self.data_dir_name, 'risk',
+            #     'zonal_layer_plus_losses_by_asset_stats.shp')
+            # expected_zonal_layer = QgsVectorLayer(
+            #     expected_zonal_layer_path, 'Zonal data', 'ogr')
+            # expected_zonal_layer_first_feat = \
+            #     expected_zonal_layer.getFeatures().next()
+            # assert_almost_equal(
+            #     zonal_layer_plus_stats_first_feat.attributes(),
+            #     expected_zonal_layer_first_feat.attributes())
+        elif dlg.output_type == 'dmg_by_asset':
+            # FIXME: testing only for selected taxonomy
+            dlg.load_selected_only_ckb.setChecked(True)
+            taxonomy_idx = dlg.taxonomy_cbx.findText('"Concrete"')
+            assert_and_emit(dlg.loading_exception, self.assertNotEqual,
+                            taxonomy_idx, -1,
+                            'Taxonomy "Concrete" was not found')
+            dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
+            loss_type_idx = dlg.loss_type_cbx.findText('structural')
+            assert_and_emit(dlg.loading_exception, self.assertNotEqual,
+                            loss_type_idx, -1,
+                            'Loss type structural was not found')
+            dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
+            dmg_state_idx = dlg.dmg_state_cbx.findText('moderate')
+            assert_and_emit(dlg.loading_exception, self.assertNotEqual,
+                            dmg_state_idx, -1,
+                            'Damage state moderate was not found')
+            dlg.dmg_state_cbx.setCurrentIndex(dmg_state_idx)
+
+            # # FIXME: we need to do dlg.accept() also for the case
+            #          loading all taxonomies, and performing the
+            #          aggregation by zone
+            # dlg.load_selected_only_ckb.setChecked(True)
+            # taxonomy_idx = dlg.taxonomy_cbx.findText('All')
+            # self.assertNotEqual(
+            #     taxonomy_idx, -1, 'Taxonomy All was not found')
+            # dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
+            # loss_type_idx = dlg.loss_type_cbx.findText('structural')
+            # self.assertNotEqual(loss_type_idx, -1,
+            #                     'Loss type structural was not found')
+            # dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
+            # dmg_state_idx = dlg.dmg_state_cbx.findText('moderate')
+            # self.assertNotEqual(
+            #     dmg_state_idx, -1,
+            #     'Damage state moderate was not found')
+            # dlg.dmg_state_cbx.setCurrentIndex(dmg_state_idx)
+
+            # FIXME: copied/pasted from skipped unit test
+            #        that was causing segfault
+            #        (test_load_dmg_by_asset_aggregate_by_zone)
+            # dmg_layer_path = os.path.join(
+            #     self.data_dir_name, 'risk',
+            #     'output-1614-dmg_by_asset_356.npz')
+            # zonal_layer_path = os.path.join(
+            #     self.data_dir_name, 'risk',
+            #     'zonal_layer.shp')
+            # dlg.load_selected_only_ckb.setChecked(True)
+            # dlg.zonal_layer_gbx.setChecked(True)
+            # taxonomy_idx = dlg.taxonomy_cbx.findText('All')
+            # self.assertNotEqual(
+            #     taxonomy_idx, -1, 'Taxonomy All was not found')
+            # dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
+            # loss_type_idx = dlg.loss_type_cbx.findText('structural')
+            # self.assertNotEqual(loss_type_idx, -1,
+            #                     'Loss type structural was not found')
+            # dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
+            # dmg_state_idx = dlg.dmg_state_cbx.findText('moderate')
+            # self.assertNotEqual(
+            #     dmg_state_idx, -1,
+            #     'Damage state moderate was not found')
+            # dlg.dmg_state_cbx.setCurrentIndex(dmg_state_idx)
+            # dlg.accept()
+            # zonal_layer_plus_stats = [
+            #     layer for layer in IFACE.layers()
+            #     if layer.name() == 'Zonal data (copy)'][0]
+            # zonal_layer_plus_stats_first_feat = \
+            #     zonal_layer_plus_stats.getFeatures().next()
+            # expected_zonal_layer_path = os.path.join(
+            #     self.data_dir_name, 'risk',
+            #     'zonal_layer_plus_dmg_by_asset_stats.shp')
+            # expected_zonal_layer = QgsVectorLayer(
+            #     expected_zonal_layer_path, 'Zonal data', 'ogr')
+            # expected_zonal_layer_first_feat = \
+            #     expected_zonal_layer.getFeatures().next()
+            # assert_almost_equal(
+            #     zonal_layer_plus_stats_first_feat.attributes(),
+            #     expected_zonal_layer_first_feat.attributes())
+        if dlg.ok_button.isEnabled():
+            dlg.accept()
+        else:
+            raise RuntimeError('The ok button is disabled')
+        if dlg.output_type == 'hcurves':
+            self.load_hcurves()
+        elif dlg.output_type == 'uhs':
+            self._set_output_type('Uniform Hazard Spectra')
+            self._change_selection()
+            # test exporting the current selection to csv
+            self._test_export()
+        dlg.loading_completed.emit()
 
     def load_output(self, calc, output):
         # NOTE: resetting the Data Viewer before loading each output, prevents
@@ -196,165 +379,24 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             dlg = OUTPUT_TYPE_LOADERS[output_type](
                 IFACE, Mock(), requests, self.hostname, calc_id,
                 output_type)
-            if dlg.ok_button.isEnabled():
-                if output_type == 'uhs':
-                    dlg.load_selected_only_ckb.setChecked(True)
-                    idx = dlg.poe_cbx.findText('0.1')
-                    self.assertEqual(idx, 0, 'POE 0.1 was not found')
-                    dlg.poe_cbx.setCurrentIndex(idx)
-                elif output_type == 'losses_by_asset':
-                    # FIXME: testing only for a selected taxonomy
-                    dlg.load_selected_only_ckb.setChecked(True)
-                    taxonomy_idx = dlg.taxonomy_cbx.findText('"Concrete"')
-                    self.assertNotEqual(taxonomy_idx, -1,
-                                        'Taxonomy "Concrete" was not found')
-                    dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
-                    loss_type_idx = dlg.loss_type_cbx.findText('structural')
-                    self.assertNotEqual(loss_type_idx, -1,
-                                        'Loss type structural was not found')
-                    dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
-
-                    # # FIXME: we need to do dlg.accept() also for the case
-                    #          loading all taxonomies, and performing the
-                    #          aggregation by zone
-
-                    # # test all taxonomies
-                    # dlg.load_selected_only_ckb.setChecked(True)
-                    # taxonomy_idx = dlg.taxonomy_cbx.findText('All')
-                    # self.assertNotEqual(taxonomy_idx, -1,
-                    #                     'Taxonomy All was not found')
-                    # dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
-                    # loss_type_idx = dlg.loss_type_cbx.findText('structural')
-                    # self.assertNotEqual(loss_type_idx, -1,
-                    #                     'Loss type structural was not found')
-                    # dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
-                    # dlg.accept()
-
-                    # FIXME: copied/pasted from skipped unit test
-                    #        that was causing segfault
-                    # loss_layer_path = os.path.join(
-                    #     self.data_dir_name, 'risk',
-                    #     'output-399-losses_by_asset_123.npz')
-                    # zonal_layer_path = os.path.join(
-                    #     self.data_dir_name, 'risk', 'zonal_layer.shp')
-                    # dlg = LoadLossesByAssetAsLayerDialog(
-                    #     IFACE, self.viewer_dock, Mock(), Mock(), Mock(),
-                    #     'losses_by_asset', loss_layer_path,
-                    #     zonal_layer_path=zonal_layer_path)
-                    # dlg.load_selected_only_ckb.setChecked(True)
-                    # dlg.zonal_layer_gbx.setChecked(True)
-                    # taxonomy_idx = dlg.taxonomy_cbx.findText('All')
-                    # self.assertNotEqual(taxonomy_idx, -1,
-                    #                    'Taxonomy All was not found')
-                    # dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
-                    # loss_type_idx = dlg.loss_type_cbx.findText('structural')
-                    # self.assertNotEqual(loss_type_idx, -1,
-                    #                     'Loss type structural was not found')
-                    # dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
-                    # self.assertTrue(dlg.zonal_layer_cbx.currentText(),
-                    #                 'The zonal layer was not loaded')
-                    # dlg.accept()
-                    # zonal_layer_plus_stats = [
-                    #     layer for layer in IFACE.layers()
-                    #     if layer.name() == 'Zonal data (copy)'][0]
-                    # zonal_layer_plus_stats_first_feat = \
-                    #     zonal_layer_plus_stats.getFeatures().next()
-                    # expected_zonal_layer_path = os.path.join(
-                    #     self.data_dir_name, 'risk',
-                    #     'zonal_layer_plus_losses_by_asset_stats.shp')
-                    # expected_zonal_layer = QgsVectorLayer(
-                    #     expected_zonal_layer_path, 'Zonal data', 'ogr')
-                    # expected_zonal_layer_first_feat = \
-                    #     expected_zonal_layer.getFeatures().next()
-                    # assert_almost_equal(
-                    #     zonal_layer_plus_stats_first_feat.attributes(),
-                    #     expected_zonal_layer_first_feat.attributes())
-                elif output_type == 'dmg_by_asset':
-                    # FIXME: testing only for selected taxonomy
-                    dlg.load_selected_only_ckb.setChecked(True)
-                    taxonomy_idx = dlg.taxonomy_cbx.findText('"Concrete"')
-                    self.assertNotEqual(taxonomy_idx, -1,
-                                        'Taxonomy "Concrete" was not found')
-                    dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
-                    loss_type_idx = dlg.loss_type_cbx.findText('structural')
-                    self.assertNotEqual(loss_type_idx, -1,
-                                        'Loss type structural was not found')
-                    dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
-                    dmg_state_idx = dlg.dmg_state_cbx.findText('moderate')
-                    self.assertNotEqual(dmg_state_idx, -1,
-                                        'Damage state moderate was not found')
-                    dlg.dmg_state_cbx.setCurrentIndex(dmg_state_idx)
-
-                    # # FIXME: we need to do dlg.accept() also for the case
-                    #          loading all taxonomies, and performing the
-                    #          aggregation by zone
-                    # dlg.load_selected_only_ckb.setChecked(True)
-                    # taxonomy_idx = dlg.taxonomy_cbx.findText('All')
-                    # self.assertNotEqual(
-                    #     taxonomy_idx, -1, 'Taxonomy All was not found')
-                    # dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
-                    # loss_type_idx = dlg.loss_type_cbx.findText('structural')
-                    # self.assertNotEqual(loss_type_idx, -1,
-                    #                     'Loss type structural was not found')
-                    # dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
-                    # dmg_state_idx = dlg.dmg_state_cbx.findText('moderate')
-                    # self.assertNotEqual(
-                    #     dmg_state_idx, -1,
-                    #     'Damage state moderate was not found')
-                    # dlg.dmg_state_cbx.setCurrentIndex(dmg_state_idx)
-
-                    # FIXME: copied/pasted from skipped unit test
-                    #        that was causing segfault
-                    #        (test_load_dmg_by_asset_aggregate_by_zone)
-                    # dmg_layer_path = os.path.join(
-                    #     self.data_dir_name, 'risk',
-                    #     'output-1614-dmg_by_asset_356.npz')
-                    # zonal_layer_path = os.path.join(
-                    #     self.data_dir_name, 'risk',
-                    #     'zonal_layer.shp')
-                    # dlg.load_selected_only_ckb.setChecked(True)
-                    # dlg.zonal_layer_gbx.setChecked(True)
-                    # taxonomy_idx = dlg.taxonomy_cbx.findText('All')
-                    # self.assertNotEqual(
-                    #     taxonomy_idx, -1, 'Taxonomy All was not found')
-                    # dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
-                    # loss_type_idx = dlg.loss_type_cbx.findText('structural')
-                    # self.assertNotEqual(loss_type_idx, -1,
-                    #                     'Loss type structural was not found')
-                    # dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
-                    # dmg_state_idx = dlg.dmg_state_cbx.findText('moderate')
-                    # self.assertNotEqual(
-                    #     dmg_state_idx, -1,
-                    #     'Damage state moderate was not found')
-                    # dlg.dmg_state_cbx.setCurrentIndex(dmg_state_idx)
-                    # dlg.accept()
-                    # zonal_layer_plus_stats = [
-                    #     layer for layer in IFACE.layers()
-                    #     if layer.name() == 'Zonal data (copy)'][0]
-                    # zonal_layer_plus_stats_first_feat = \
-                    #     zonal_layer_plus_stats.getFeatures().next()
-                    # expected_zonal_layer_path = os.path.join(
-                    #     self.data_dir_name, 'risk',
-                    #     'zonal_layer_plus_dmg_by_asset_stats.shp')
-                    # expected_zonal_layer = QgsVectorLayer(
-                    #     expected_zonal_layer_path, 'Zonal data', 'ogr')
-                    # expected_zonal_layer_first_feat = \
-                    #     expected_zonal_layer.getFeatures().next()
-                    # assert_almost_equal(
-                    #     zonal_layer_plus_stats_first_feat.attributes(),
-                    #     expected_zonal_layer_first_feat.attributes())
-                dlg.accept()
-                if output_type == 'hcurves':
-                    self.load_hcurves()
-                elif output_type == 'uhs':
-                    self._set_output_type('Uniform Hazard Spectra')
-                    self._change_selection()
-                    # test exporting the current selection to csv
-                    self._test_export()
-                print('\t\tok')
-                return
-            else:
-                raise RuntimeError('The ok button is disabled')
+            self.loading_completed = False
+            self.loading_exception = None
+            dlg.loading_completed.connect(self.on_loading_completed)
+            dlg.loading_exception[Exception].connect(self.on_loading_exception)
+            dlg.init_done.connect(
+                lambda: self.on_init_done(dlg))
+            timeout = 10
+            start_time = time.time()
+            while time.time() - start_time < timeout:
+                QGIS_APP.processEvents()
+                if self.loading_completed:
+                    print('\t\tok')
+                    return
+                if self.loading_exception:
+                    raise self.loading_exception
+                time.sleep(0.1)
+            raise TimeoutError(
+                'Loading time exceeded %s seconds' % timeout)
         elif output_type in OQ_EXTRACT_TO_VIEW_TYPES:
             print('\tLoading output type %s...' % output_type)
             self.viewer_dock.load_no_map_output(
@@ -370,9 +412,16 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             print('\tLoader for output type %s is not implemented'
                   % output_type)
 
+    def on_loading_completed(self):
+        self.loading_completed = True
+
+    def on_loading_exception(self, exception):
+        self.loading_exception = exception
+
     def test_load_outputs(self):
         self.failed_attempts = []
         self.skipped_attempts = []
+        self.time_consuming_outputs = []
         self.not_implemented_loaders = set()
         self.untested_otypes = copy.copy(OQ_ALL_TYPES)  # it's a set
         calc_list = self.get_calc_list()
@@ -419,6 +468,13 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 print('\t\tOutput type: %s' % failed_attempt['output_type'])
             raise RuntimeError(
                 'At least one output was not successfully loaded')
+        if self.time_consuming_outputs:
+            print('\n\nSome loaders took longer than %s seconds:' %
+                  LONG_LOADING_TIME)
+            for output in sorted(self.time_consuming_outputs,
+                                 key=operator.itemgetter('loading_time'),
+                                 reverse=True):
+                print('\t%s' % output)
         if self.not_implemented_loaders:
             # sanity check
             for not_implemented_loader in self.not_implemented_loaders:
@@ -437,7 +493,13 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         layer = IFACE.activeLayer()
         # select the first 2 features (the same used to produce the reference
         # csv)
-        layer.select([1, 2])
+        num_feats = layer.featureCount()
+        self.assertGreater(
+            num_feats, 0, 'The layer does not contain any feature!')
+        if num_feats > 1:
+            layer.select([1, 2])
+        else:
+            layer.select([1])
         imt = 'PGA'
         idx = self.viewer_dock.imt_cbx.findText(imt)
         self.assertNotEqual(idx, -1, 'IMT %s not found' % imt)
@@ -451,7 +513,13 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         layer = IFACE.activeLayer()
         # select the first 2 features (the same used to produce the reference
         # csv)
-        layer.select([1, 2])
+        num_feats = layer.featureCount()
+        self.assertGreater(
+            num_feats, 0, 'The layer does not contain any feature!')
+        if num_feats > 1:
+            layer.select([1, 2])
+        else:
+            layer.select([1])
         # probably we have the wrong layer selected (uhs produce many layers)
         self.viewer_dock.write_export_file(exported_file_path)
         # NOTE: we are only checking that the exported CSV has at least 2 rows
@@ -490,8 +558,12 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         layer = IFACE.activeLayer()
         # the behavior should be slightly different (pluralizing labels, etc)
         # depending on the amount of features selected
+        num_feats = layer.featureCount()
+        self.assertGreater(
+            num_feats, 0, 'The layer does not contain any feature!')
         layer.select(1)
         layer.removeSelection()
-        layer.select(2)
+        if num_feats > 1:
+            layer.select(2)
         layer.selectAll()
         layer.removeSelection()

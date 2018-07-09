@@ -24,9 +24,9 @@
 
 import os
 from shutil import copyfile
-from qgis.PyQt.QtGui import QPushButton, QLineEdit, QHBoxLayout, QFileDialog
+from qgis.PyQt.QtWidgets import QPushButton, QLineEdit, QHBoxLayout, QFileDialog
 from qgis.PyQt.QtCore import QUrl, pyqtSlot, QSettings, QDir, QFileInfo
-from qgis.PyQt.QtNetwork import QNetworkRequest, QHttpMultiPart, QHttpPart
+from qgis.PyQt.QtNetwork import QNetworkRequest
 from svir.dialogs.standalone_app_dialog import StandaloneAppDialog, GemApi
 from svir.utilities.shared import DEBUG, REQUEST_ATTRS
 
@@ -106,7 +106,7 @@ class IptPythonApi(GemApi):
         """
         try:
             ipt_dir = self.parent().ipt_dir
-            file_name = QFileDialog.getOpenFileName(
+            file_name, __ = QFileDialog.getOpenFileName(
                 self.parent().parent(), 'Select file', ipt_dir)
             basename = os.path.basename(file_name)
         except Exception as exc:
@@ -122,7 +122,7 @@ class IptPythonApi(GemApi):
         """
         try:
             ipt_dir = self.parent().ipt_dir
-            file_names = QFileDialog.getOpenFileNames(
+            file_names, __ = QFileDialog.getOpenFileNames(
                 self.parent().parent(), 'Select files', ipt_dir)
             ls = [os.path.basename(file_name) for file_name in file_names]
         except Exception as exc:
@@ -141,7 +141,7 @@ class IptPythonApi(GemApi):
             default_dir = QSettings().value('irmt/ipt_browsed_dir',
                                             QDir.homePath())
             text = 'The selected files will be copied to the ipt directory'
-            file_paths = QFileDialog.getOpenFileNames(
+            file_paths, __ = QFileDialog.getOpenFileNames(
                 self.parent().parent(), text, default_dir)
             if not file_paths:
                 return {'ret': 1, 'reason': 'No file was selected'}

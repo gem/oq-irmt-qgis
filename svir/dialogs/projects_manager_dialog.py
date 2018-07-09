@@ -27,9 +27,7 @@ from copy import deepcopy
 from qgis.core import QgsProject
 
 from qgis.PyQt.QtCore import pyqtSlot
-from qgis.PyQt.QtGui import (QDialog,
-                             QDialogButtonBox,
-                             QInputDialog)
+from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox, QInputDialog
 
 from svir.utilities.utils import tr, log_msg, get_ui_class
 from svir.utilities.shared import PROJECT_TEMPLATE

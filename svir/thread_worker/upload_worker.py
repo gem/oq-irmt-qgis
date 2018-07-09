@@ -22,10 +22,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import print_function
 import os
 import shutil
 import json
-from qgis.core import QgsVectorFileWriter, QgsCoordinateReferenceSystem
+from qgis.core import QgsCoordinateReferenceSystem
 
 from svir.thread_worker.abstract_worker import AbstractWorker
 from svir.utilities.shared import DEBUG
@@ -53,7 +54,7 @@ class UploadWorker(AbstractWorker):
         # So we need to check if the active layer is stored as a shapefile and,
         # if it isn't, save it as a shapefile
         data_file = '%s%s' % (self.file_stem, '.shp')
-        projection = self.current_layer.crs().geographicCRSAuthId()
+        projection = self.current_layer.crs().geographicCrsAuthId()
         if (self.current_layer.storageType() == 'ESRI Shapefile'
                 and projection == 'EPSG:4326'):
             # copy the shapefile (with all its files) into the temporary
@@ -71,12 +72,14 @@ class UploadWorker(AbstractWorker):
             # we need to build a shapefile from it
             self.set_message.emit(tr(
                 'Writing the shapefile to be uploaded...'))
-            result = save_layer_as_shapefile(
+            writer_error, error_msg = save_layer_as_shapefile(
                 self.current_layer, data_file,
                 crs=QgsCoordinateReferenceSystem(
                     4326, QgsCoordinateReferenceSystem.EpsgCrsId))
-            if result != QgsVectorFileWriter.NoError:
-                raise RuntimeError('Could not save shapefile')
+            if writer_error:
+                raise RuntimeError(
+                    'Could not save shapefile. %s: %s' % (writer_error,
+                                                          error_msg))
         file_size_mb = os.path.getsize(data_file)
         file_size_mb += os.path.getsize(self.file_stem + '.shx')
         file_size_mb += os.path.getsize(self.file_stem + '.dbf')
@@ -143,5 +146,6 @@ class UploadWorker(AbstractWorker):
             self.set_message.emit(
                 self.upload_size_msg + ' ' + tr('(processing on Platform)'))
         if DEBUG:
-            print("PROGRESS: {0} ({1}) - {2:d}/{3:d} - {4:.2f}%").format(
-                param.name, param.filename, current, total, progress)
+            # fix_print_with_import
+            print(("PROGRESS: {0} ({1}) - {2:d}/{3:d} - {4:.2f}%").format(
+                param.name, param.filename, current, total, progress))

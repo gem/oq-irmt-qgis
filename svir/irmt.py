@@ -32,37 +32,34 @@ import re
 
 from copy import deepcopy
 from math import floor, ceil
-from qgis.core import (QgsVectorLayer,
-                       QgsMapLayerRegistry,
+from qgis.core import (
+                       QgsVectorLayer,
                        QgsMapLayer,
-                       QgsVectorFileWriter,
-                       QgsGraduatedSymbolRendererV2,
-                       QgsSymbolV2, QgsVectorGradientColorRampV2,
-                       QgsRuleBasedRendererV2,
-                       QgsFillSymbolV2,
+                       QgsGraduatedSymbolRenderer,
+                       QgsSymbol, QgsGradientColorRamp,
+                       QgsRuleBasedRenderer,
+                       QgsFillSymbol,
                        QgsProject,
                        QgsExpression,
+                       Qgis,
                        )
-from qgis.gui import QgsMessageBar
 
-from qgis.PyQt.QtCore import (QSettings,
+from qgis.PyQt.QtCore import (
+                              QSettings,
                               QTranslator,
                               QCoreApplication,
                               qVersion,
                               QUrl,
-                              Qt)
-from qgis.PyQt.QtGui import (QAction,
-                             QIcon,
-                             QFileDialog,
-                             QDesktopServices,
-                             QApplication,
-                             QMenu)
+                              Qt,
+                              QUrlQuery,
+                              )
+from qgis.PyQt.QtWidgets import QAction, QFileDialog, QApplication, QMenu
+from qgis.PyQt.QtGui import QIcon, QDesktopServices
 
 from svir.dialogs.viewer_dock import ViewerDock
 from svir.utilities.import_sv_data import get_loggedin_downloader
 from svir.dialogs.download_layer_dialog import DownloadLayerDialog
 from svir.dialogs.projects_manager_dialog import ProjectsManagerDialog
-from svir.dialogs.select_input_layers_dialog import SelectInputLayersDialog
 from svir.dialogs.select_sv_variables_dialog import SelectSvVariablesDialog
 from svir.dialogs.settings_dialog import SettingsDialog
 from svir.dialogs.transformation_dialog import TransformationDialog
@@ -95,7 +92,8 @@ from svir.utilities.utils import (tr,
                                   save_layer_as_shapefile,
                                   get_style,
                                   get_checksum,
-                                  warn_scipy_missing)
+                                  warn_scipy_missing,
+                                  )
 from svir.utilities.shared import (DEBUG,
                                    PROJECT_TEMPLATE,
                                    THEME_TEMPLATE,
@@ -110,7 +108,7 @@ import svir.resources_rc  # pylint: disable=unused-import  # NOQA
 from svir import IS_SCIPY_INSTALLED
 
 
-class Irmt:
+class Irmt(object):
     def __init__(self, iface):
         # Save reference to the QGIS interface
         self.iface = iface
@@ -134,7 +132,7 @@ class Irmt:
 
         # our own menu
         self.menu = QMenu(self.iface.mainWindow())
-        self.menu.setTitle("IRMT")
+        self.menu.setTitle("OpenQuake IRMT")
 
         # keep a list of the menu items, in order to easily unload them later
         self.registered_actions = dict()
@@ -154,8 +152,8 @@ class Irmt:
         self.iface.currentLayerChanged.connect(self.current_layer_changed)
         self.iface.newProjectCreated.connect(self.current_layer_changed)
         self.iface.projectRead.connect(self.current_layer_changed)
-        QgsMapLayerRegistry.instance().layersAdded.connect(self.layers_added)
-        QgsMapLayerRegistry.instance().layersRemoved.connect(
+        QgsProject.instance().layersAdded.connect(self.layers_added)
+        QgsProject.instance().layersRemoved.connect(
             self.layers_removed)
 
         # get or create directory to store input files for the OQ-Engine
@@ -163,11 +161,11 @@ class Irmt:
 
     def initGui(self):
         # create our own toolbar
-        self.toolbar = self.iface.addToolBar('IRMT')
+        self.toolbar = self.iface.addToolBar('OpenQuake IRMT')
         self.toolbar.setObjectName('IRMTToolBar')
 
         menu_bar = self.iface.mainWindow().menuBar()
-        get_menu = self.get_menu(menu_bar, 'IRMT')
+        get_menu = self.get_menu(menu_bar, 'OpenQuake IRMT')
 
         if get_menu is not None:
             self.menu = get_menu
@@ -199,7 +197,7 @@ class Irmt:
                            ":/plugins/irmt/upload.svg",
                            u"&Upload project to the OpenQuake Platform",
                            self.upload,
-                           enable=False,
+                           enable=self.experimental_enabled(),
                            add_to_layer_actions=True,
                            submenu='OQ Platform')
         # Action to drive ipt
@@ -244,6 +242,7 @@ class Irmt:
                            add_to_layer_actions=True,
                            add_to_toolbar=True,
                            submenu='Integrated risk')
+
         # Action to run the recovery analysis
         self.add_menu_item("recovery_modeling",
                            ":/plugins/irmt/recovery.svg",
@@ -258,16 +257,6 @@ class Irmt:
                            self.recovery_settings,
                            enable=self.experimental_enabled(),
                            submenu='Recovery modeling')
-        # Action to activate the modal dialog to guide the user through loss
-        # aggregation by zone
-        self.add_menu_item("aggregate_losses",
-                           ":/plugins/irmt/aggregate.svg",
-                           u"&Aggregate loss by zone",
-                           self.aggregate_losses,
-                           enable=True,
-                           add_to_layer_actions=False,
-                           add_to_toolbar=True,
-                           submenu='Utilities')
 
         # Action to activate the modal dialog to select a layer and one of
         # its attributes, in order to transform that attribute
@@ -286,7 +275,7 @@ class Irmt:
         # connection with the platform
         self.add_menu_item("show_settings",
                            ":/plugins/irmt/settings.svg",
-                           u"&IRMT settings",
+                           u"&OpenQuake IRMT settings",
                            self.show_settings,
                            enable=True,
                            add_to_toolbar=True)
@@ -296,7 +285,7 @@ class Irmt:
         # Action to open the plugin's manual
         self.add_menu_item("help",
                            ":/plugins/irmt/manual.svg",
-                           u"IRMT &manual",
+                           u"OpenQuake IRMT &manual",
                            self.show_manual,
                            enable=True,
                            add_to_toolbar=True)
@@ -380,6 +369,8 @@ class Irmt:
 
     def reset_engine_login(self):
         if self.drive_oq_engine_server_dlg is not None:
+            self.drive_oq_engine_server_dlg.current_calc_id = None
+            self.drive_oq_engine_server_dlg.pointed_calc_id = None
             self.drive_oq_engine_server_dlg.is_logged_in = False
             self.drive_oq_engine_server_dlg.clear_output_list()
 
@@ -426,7 +417,7 @@ class Irmt:
                       add_to_toolbar=False,
                       ):
         """
-        Add an item to the IRMT menu and a corresponding toolbar icon
+        Add an item to the OpenQuake IRMT menu and a corresponding toolbar icon
 
         :param icon_path: path of the icon associated to the action
         :param label: name of the action, visible to the user
@@ -443,10 +434,9 @@ class Irmt:
         self.registered_actions[action_name] = action
 
         if add_to_layer_actions:
-            self.iface.legendInterface().addLegendLayerAction(
+            self.iface.addCustomActionForLayerType(
                 action,
-                u"IRMT",
-                action_name,
+                u"OpenQuake IRMT",
                 layers_type,
                 True)
 
@@ -475,7 +465,7 @@ class Irmt:
         """
         Enable plugin's actions depending on the current status of the workflow
         """
-        reg = QgsMapLayerRegistry.instance()
+        reg = QgsProject.instance()
         layer_count = len(list(reg.mapLayers()))
         # Enable/disable "transform" action
         self.registered_actions["transform_attributes"].setDisabled(
@@ -494,7 +484,8 @@ class Irmt:
             self.registered_actions["transform_attributes"].setEnabled(True)
             read_layer_suppl_info_from_qgs(
                 self.iface.activeLayer().id(), self.supplemental_information)
-            self.registered_actions["upload"].setEnabled(True)
+            self.registered_actions["upload"].setEnabled(
+                self.experimental_enabled())
         except KeyError:
             # self.supplemental_information[self.iface.activeLayer().id()]
             # is not defined
@@ -519,7 +510,7 @@ class Irmt:
         for action_name in self.registered_actions:
             action = self.registered_actions[action_name]
             # Remove the actions in the layer legend
-            self.iface.legendInterface().removeLegendLayerAction(action)
+            self.iface.removeCustomActionForLayerType(action)
             self.iface.removeToolBarIcon(action)
         clear_progress_message_bar(self.iface.messageBar())
 
@@ -534,26 +525,10 @@ class Irmt:
         self.iface.currentLayerChanged.disconnect(self.current_layer_changed)
         self.iface.newProjectCreated.disconnect(self.current_layer_changed)
         self.iface.projectRead.disconnect(self.current_layer_changed)
-        QgsMapLayerRegistry.instance().layersAdded.disconnect(
+        QgsProject.instance().layersAdded.disconnect(
             self.layers_added)
-        QgsMapLayerRegistry.instance().layersRemoved.disconnect(
+        QgsProject.instance().layersRemoved.disconnect(
             self.layers_removed)
-
-    def aggregate_losses(self):
-        """
-        Open a modal dialog to select a layer containing zonal data for social
-        vulnerability and a layer containing loss data points.
-
-        After data are loaded, calculate_zonal_stats() is automatically called,
-        in order to aggregate loss points with respect to the same geometries
-        defined for the socioeconomic data, and to compute zonal statistics
-        (point count, loss sum, and average for each zone)
-        """
-        # Create the dialog (after translation) and keep reference
-        dlg = SelectInputLayersDialog(self.iface)
-        # Run the dialog event loop
-        dlg.exec_()
-        self.update_actions_status()
 
     def import_sv_variables(self):
         """
@@ -568,7 +543,7 @@ class Irmt:
         try:
             dlg = SelectSvVariablesDialog(sv_downloader)
             if dlg.exec_():
-                dest_filename = QFileDialog.getSaveFileName(
+                dest_filename, _ = QFileDialog.getSaveFileName(
                     dlg,
                     'Download destination',
                     os.path.expanduser("~"),
@@ -663,7 +638,7 @@ class Irmt:
         """
         fname, msg = result
         display_msg = tr("Socioeconomic data loaded in a new layer")
-        log_msg(display_msg, level='I', message_bar=self.iface.messageBar())
+        log_msg(display_msg, level='S', message_bar=self.iface.messageBar())
         # don't remove the file, otherwise there will be concurrency
         # problems
 
@@ -682,13 +657,15 @@ class Irmt:
         lines_to_skip_count = count_heading_commented_lines(fname)
 
         url = QUrl.fromLocalFile(fname)
-        url.addQueryItem('delimiter', ',')
-        url.addQueryItem('skipLines', str(lines_to_skip_count))
-        url.addQueryItem('trimFields', 'yes')
+        url_query = QUrlQuery()
+        url_query.addQueryItem('delimiter', ',')
+        url_query.addQueryItem('skipLines', str(lines_to_skip_count))
+        url_query.addQueryItem('trimFields', 'yes')
         if load_geometries:
-            url.addQueryItem('crs', 'epsg:4326')
-            url.addQueryItem('wktField', 'geometry')
-        layer_uri = str(url.toEncoded())
+            url_query.addQueryItem('crs', 'epsg:4326')
+            url_query.addQueryItem('wktField', 'geometry')
+        url.setQuery(url_query)
+        layer_uri = url.toString()
         # create vector layer from the csv file exported by the
         # platform (it is still not editable!)
         vlayer_csv = QgsVectorLayer(layer_uri,
@@ -696,18 +673,21 @@ class Irmt:
                                     'delimitedtext')
         if not load_geometries:
             if vlayer_csv.isValid():
-                QgsMapLayerRegistry.instance().addMapLayer(vlayer_csv)
+                QgsProject.instance().addMapLayer(vlayer_csv)
             else:
                 raise RuntimeError('Layer invalid')
             layer = vlayer_csv
         else:
-            result = save_layer_as_shapefile(vlayer_csv, dest_filename)
-            if result != QgsVectorFileWriter.NoError:
-                raise RuntimeError('Could not save shapefile')
+            writer_error, error_msg = save_layer_as_shapefile(
+                vlayer_csv, dest_filename)
+            if writer_error:
+                raise RuntimeError(
+                    'Could not save shapefile. %s: %s' % (writer_error,
+                                                          error_msg))
             layer = QgsVectorLayer(
                 dest_filename, 'Socioeconomic data', 'ogr')
             if layer.isValid():
-                QgsMapLayerRegistry.instance().addMapLayer(layer)
+                QgsProject.instance().addMapLayer(layer)
             else:
                 raise RuntimeError('Layer invalid')
         self.iface.setActiveLayer(layer)
@@ -720,13 +700,13 @@ class Irmt:
         # assign ind_name as alias for each ind_code
         for field_idx, field in enumerate(layer.fields()):
             if field.name() in indicators_info_dict:
-                layer.addAttributeAlias(
+                layer.setFieldAlias(
                     field_idx, indicators_info_dict[field.name()]['name'])
             elif field.name() == 'ISO':
-                layer.addAttributeAlias(
+                layer.setFieldAlias(
                     field_idx, 'Country ISO code')
             elif field.name() == 'COUNTRY_NA':
-                layer.addAttributeAlias(
+                layer.setFieldAlias(
                     field_idx, 'Country name')
 
     def download_layer(self):
@@ -806,7 +786,7 @@ class Irmt:
                                  for attr_id in added_attrs_ids]
             msg = ('New attributes have been added to the layer: %s'
                    % ', '.join(added_attrs_names))
-            log_msg(msg, level='I', message_bar=self.iface.messageBar())
+            log_msg(msg, level='S', message_bar=self.iface.messageBar())
         if discarded_feats:
             discarded_feats_ids_missing = [
                 feat.feature_id for feat in discarded_feats
@@ -819,9 +799,8 @@ class Irmt:
                     tr('Select features with incomplete data'),
                     self.iface.activeLayer(),
                     discarded_feats_ids_missing,
-                    self.iface.activeLayer().selectedFeaturesIds())
-                self.iface.messageBar().pushWidget(widget,
-                                                   QgsMessageBar.WARNING)
+                    self.iface.activeLayer().selectedFeatureIds())
+                self.iface.messageBar().pushWidget(widget, Qgis.Warning)
             discarded_feats_ids_invalid = [
                 feat.feature_id for feat in discarded_feats
                 if feat.reason == 'Invalid value']
@@ -836,9 +815,8 @@ class Irmt:
                     tr('Select features with invalid data'),
                     self.iface.activeLayer(),
                     discarded_feats_ids_invalid,
-                    self.iface.activeLayer().selectedFeaturesIds())
-                self.iface.messageBar().pushWidget(widget,
-                                                   QgsMessageBar.WARNING)
+                    self.iface.activeLayer().selectedFeatureIds())
+                self.iface.messageBar().pushWidget(widget, Qgis.Warning)
 
     def weight_data(self):
         """
@@ -1126,7 +1104,7 @@ class Irmt:
         else:  # if none of them can be rendered, then do nothing
             return
         # proceed only if the target field is actually a field of the layer
-        if self.iface.activeLayer().fieldNameIndex(target_field) == -1:
+        if self.iface.activeLayer().fields().indexOf(target_field) == -1:
             return
         if DEBUG:
             import pprint
@@ -1137,19 +1115,21 @@ class Irmt:
         if style['force_restyling']:
             self._apply_style(style, target_field)
 
-        self.iface.legendInterface().refreshLayerSymbology(
-            self.iface.activeLayer())
+        # NOTE QGIS3 probably not needed
+        # self.iface.layerTreeView().refreshLayerSymbology(
+        #     self.iface.activeLayer().id())
+
         self.iface.mapCanvas().refresh()
 
     def _apply_style(self, style, target_field):
-        rule_renderer = QgsRuleBasedRendererV2(
-            QgsSymbolV2.defaultSymbol(self.iface.activeLayer().geometryType()))
+        rule_renderer = QgsRuleBasedRenderer(
+            QgsSymbol.defaultSymbol(self.iface.activeLayer().geometryType()))
         root_rule = rule_renderer.rootRule()
 
         not_null_rule = root_rule.children()[0].clone()
         # strip parentheses from stringified color HSL
         col_str = str(style['color_from'].getHsl())[1:-1]
-        not_null_rule.setSymbol(QgsFillSymbolV2.createSimple(
+        not_null_rule.setSymbol(QgsFillSymbol.createSimple(
             {'color': col_str,
              'color_border': '0,0,0,255'}))
         not_null_rule.setFilterExpression('%s IS NOT NULL' % target_field)
@@ -1157,7 +1137,7 @@ class Irmt:
         root_rule.appendChild(not_null_rule)
 
         null_rule = root_rule.children()[0].clone()
-        null_rule.setSymbol(QgsFillSymbolV2.createSimple(
+        null_rule.setSymbol(QgsFillSymbol.createSimple(
             {'style': 'no',
              'color_border': '255,255,0,255',
              'width_border': '0.5'}))
@@ -1165,14 +1145,14 @@ class Irmt:
         null_rule.setLabel(tr('Invalid value'))
         root_rule.appendChild(null_rule)
 
-        ramp = QgsVectorGradientColorRampV2(
+        ramp = QgsGradientColorRamp(
             style['color_from'], style['color_to'])
-        graduated_renderer = QgsGraduatedSymbolRendererV2.createRenderer(
+        graduated_renderer = QgsGraduatedSymbolRenderer.createRenderer(
             self.iface.activeLayer(),
             target_field,
             style['classes'],
             style['mode'],
-            QgsSymbolV2.defaultSymbol(self.iface.activeLayer().geometryType()),
+            QgsSymbol.defaultSymbol(self.iface.activeLayer().geometryType()),
             ramp)
 
         if graduated_renderer.ranges():
@@ -1198,7 +1178,7 @@ class Irmt:
         # remove default rule
         root_rule.removeChildAt(0)
 
-        self.iface.activeLayer().setRendererV2(rule_renderer)
+        self.iface.activeLayer().setRenderer(rule_renderer)
 
     def show_settings(self):
         """
@@ -1213,7 +1193,7 @@ class Irmt:
         more attributes of the active layer, using one of the available
         algorithms and variants
         """
-        reg = QgsMapLayerRegistry.instance()
+        reg = QgsProject.instance()
         if not reg.count():
             msg = 'No layer available for transformation'
             log_msg(msg, level='C', message_bar=self.iface.messageBar())
@@ -1270,7 +1250,7 @@ class Irmt:
                         msg += (' The transformation could not'
                                 ' be performed for the following'
                                 ' input values: %s' % invalid_input_values)
-                    level = 'I' if not invalid_input_values else 'W'
+                    level = 'S' if not invalid_input_values else 'W'
                     log_msg(msg, level=level,
                             message_bar=self.iface.messageBar())
                 except (ValueError, NotImplementedError, TypeError) as e:
@@ -1306,7 +1286,7 @@ class Irmt:
                 layer.commitChanges()
                 layer.triggerRepaint()
                 msg = 'Calculation performed on layer %s' % layer.name()
-                log_msg(msg, level='I', message_bar=self.iface.messageBar())
+                log_msg(msg, level='S', message_bar=self.iface.messageBar())
         self.update_actions_status()
 
     def upload(self):

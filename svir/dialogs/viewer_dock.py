@@ -30,23 +30,33 @@ import numpy
 from datetime import datetime
 from collections import OrderedDict
 
+import matplotlib
+matplotlib.use('Qt5Agg')
+from matplotlib.backends.qt_compat import QtCore, QtWidgets
+from matplotlib.backends.backend_qt5agg import (
+    FigureCanvas,
+    NavigationToolbar2QT as NavigationToolbar)
+from matplotlib.figure import Figure
+from matplotlib.lines import Line2D
+
 from qgis.PyQt.QtCore import pyqtSlot, QSettings, Qt
-from qgis.PyQt.QtGui import (QColor,
-                             QLabel,
-                             QPlainTextEdit,
-                             QComboBox,
-                             QSizePolicy,
-                             QSpinBox,
-                             QPushButton,
-                             QCheckBox,
-                             QDockWidget,
-                             QFileDialog,
-                             QAbstractItemView,
-                             QTableWidget,
-                             QTableWidgetItem,
-                             )
+from qgis.PyQt.QtGui import QColor
+from qgis.PyQt.QtWidgets import (
+                                 QLabel,
+                                 QPlainTextEdit,
+                                 QComboBox,
+                                 QSizePolicy,
+                                 QSpinBox,
+                                 QPushButton,
+                                 QCheckBox,
+                                 QDockWidget,
+                                 QFileDialog,
+                                 QAbstractItemView,
+                                 QTableWidget,
+                                 QTableWidgetItem,
+                                 )
 from qgis.gui import QgsVertexMarker
-from qgis.core import QGis, QgsMapLayer, QgsFeatureRequest
+from qgis.core import QgsMapLayer, QgsFeatureRequest, QgsWkbTypes
 
 from svir.utilities.shared import (
                                    OQ_TO_LAYER_TYPES,
@@ -59,6 +69,7 @@ from svir.utilities.utils import (get_ui_class,
                                   extract_npz,
                                   get_loss_types,
                                   get_irmt_version,
+                                  WaitCursorManager,
                                   )
 from svir.recovery_modeling.recovery_modeling import (
     RecoveryModeling, fill_fields_multiselect)
@@ -83,7 +94,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     def __init__(self, iface, action):
         """Constructor for the viewer dock.
 
-        :param iface: A QGisAppInterface instance we use to access QGIS via.
+        :param iface: A QgisAppInterface instance we use to access QGIS via.
         :param action: needed to uncheck the toolbar button on close
         .. note:: We use the multiple inheritance approach from Qt4 so that
             for elements are directly accessible in the form context and we can
@@ -159,7 +170,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         if QSettings().value('/irmt/experimental_enabled', False, type=bool):
             self.output_types_names.update(
                 {'recovery_curves': 'Recovery Curves'})
-        self.output_type_cbx.addItems(self.output_types_names.values())
+        self.output_type_cbx.addItems(list(self.output_types_names.values()))
 
         self.plot_figure = Figure()
         self.plot_canvas = FigureCanvas(self.plot_figure)
@@ -348,7 +359,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 item = unselected_items[i]
                 if item.text() == "*":
                     item.setFlags(Qt.ItemIsEnabled)
-                    item.setBackgroundColor(QColor('darkGray'))
+                    item.setBackground(QColor('darkGray'))
         self.tag_values_multiselect.setEnabled(
             tag_name in list(self.tag_names_multiselect.get_selected_items()))
 
@@ -361,9 +372,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                         # NOTE: this would not work for multiple values per tag
                         params[tag_name] = value
         output_type = 'aggdamages/%s' % self.loss_type_cbx.currentText()
-        self.dmg_by_asset_aggr = extract_npz(
-            self.session, self.hostname, self.calc_id, output_type,
-            message_bar=self.iface.messageBar(), params=params)
+        with WaitCursorManager(
+                'Extracting...', message_bar=self.iface.messageBar()):
+            self.dmg_by_asset_aggr = extract_npz(
+                self.session, self.hostname, self.calc_id, output_type,
+                message_bar=self.iface.messageBar(), params=params)
         if self.dmg_by_asset_aggr is None:
             return
         self.draw_dmg_by_asset_aggr()
@@ -377,9 +390,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                         # NOTE: this would not work for multiple values per tag
                         params[tag_name] = value
         to_extract = 'agglosses/%s' % self.loss_type_cbx.currentText()
-        self.losses_by_asset_aggr = extract_npz(
-            self.session, self.hostname, self.calc_id, to_extract,
-            message_bar=self.iface.messageBar(), params=params)
+        with WaitCursorManager(
+                'Extracting...', message_bar=self.iface.messageBar()):
+            self.losses_by_asset_aggr = extract_npz(
+                self.session, self.hostname, self.calc_id, to_extract,
+                message_bar=self.iface.messageBar(), params=params)
         if self.losses_by_asset_aggr is None:
             return
         self.draw_losses_by_asset_aggr()
@@ -445,7 +460,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             return
         # feature selection triggers the redrawing of plots
         layer = self.iface.activeLayer()
-        selected_feats = layer.selectedFeaturesIds()
+        selected_feats = layer.selectedFeatureIds()
         layer.blockSignals(True)
         layer.removeSelection()
         layer.blockSignals(False)
@@ -533,9 +548,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             raise NotImplementedError(output_type)
 
     def load_dmg_by_asset_aggr(self, calc_id, session, hostname, output_type):
-        composite_risk_model_attrs = extract_npz(
-            session, hostname, calc_id, 'composite_risk_model.attrs',
-            message_bar=self.iface.messageBar())
+        with WaitCursorManager(
+                'Extracting...', message_bar=self.iface.messageBar()):
+            composite_risk_model_attrs = extract_npz(
+                session, hostname, calc_id, 'composite_risk_model.attrs',
+                message_bar=self.iface.messageBar())
         if composite_risk_model_attrs is None:
             return
         limit_states = composite_risk_model_attrs['limit_states']
@@ -544,12 +561,14 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                        with_star=False)
         self.update_list_selected_edt()
 
-        rlzs_npz = extract_npz(
-            session, hostname, calc_id, 'realizations',
-            message_bar=self.iface.messageBar())
+        with WaitCursorManager(
+                'Extracting...', message_bar=self.iface.messageBar()):
+            rlzs_npz = extract_npz(
+                session, hostname, calc_id, 'realizations',
+                message_bar=self.iface.messageBar())
         if rlzs_npz is None:
             return
-        rlzs = rlzs_npz['array']['gsims']
+        rlzs = [rlz.decode('utf8') for rlz in rlzs_npz['array']['gsims']]
         self.rlz_cbx.blockSignals(True)
         self.rlz_cbx.clear()
         self.rlz_cbx.addItems(rlzs)
@@ -569,8 +588,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.filter_dmg_by_asset_aggr()
 
     def _get_tags(self, session, hostname, calc_id, message_bar, with_star):
-        tags_npz = extract_npz(
-            session, hostname, calc_id, 'asset_tags', message_bar=message_bar)
+        with WaitCursorManager(
+                'Extracting...', message_bar=self.iface.messageBar()):
+            tags_npz = extract_npz(
+                session, hostname, calc_id, 'asset_tags',
+                message_bar=message_bar)
         if tags_npz is None:
             return
         tags_list = []
@@ -579,7 +601,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 continue
             for tag in tags_npz[tag_name]:
                 if tag[-1] != '?':
-                    tags_list.append(tag)
+                    tags_list.append(tag.decode('utf8'))
         self.tags = {}
         for tag in tags_list:
             # tags are in the format 'city=Benicia' (tag_name=tag_value)
@@ -597,12 +619,15 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     def load_losses_by_asset_aggr(
             self, calc_id, session, hostname, output_type):
         if self.output_type == 'losses_by_asset_aggr':
-            rlzs_npz = extract_npz(
-                session, hostname, calc_id, 'realizations',
-                message_bar=self.iface.messageBar())
+            with WaitCursorManager(
+                    'Extracting...', message_bar=self.iface.messageBar()):
+                rlzs_npz = extract_npz(
+                    session, hostname, calc_id, 'realizations',
+                    message_bar=self.iface.messageBar())
             if rlzs_npz is None:
                 return
-            self.rlzs = rlzs_npz['array']['gsims']
+            self.rlzs = [rlz.decode('utf8')
+                         for rlz in rlzs_npz['array']['gsims']]
         self._get_tags(session, hostname, calc_id, self.iface.messageBar(),
                        with_star=True)
         self.update_list_selected_edt()
@@ -623,9 +648,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 # NOTE: writing 'mean' instead of 'rlz-0' would be equivalent
                 self.stats = ['rlz-0']
             else:
-                self.stats = str(npz['stats']).split()
+                self.stats = str(npz['stats'], 'utf8').split()
 
-        self.tag_names_multiselect.set_unselected_items(self.tags.keys())
+        self.tag_names_multiselect.set_unselected_items(list(self.tags.keys()))
         self.tag_names_multiselect.set_selected_items([])
         self.tag_values_multiselect.set_unselected_items([])
         self.tag_values_multiselect.set_selected_items([])
@@ -645,7 +670,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.loss_type_cbx.blockSignals(False)
         self.loss_type_cbx.addItems(loss_types)
         if output_type == 'agg_curves-stats':
-            self.stats_multiselect.set_selected_items(self.agg_curves['stats'])
+            agg_curves_stats = [stat.decode('utf8')
+                                for stat in self.agg_curves['stats']]
+            self.stats_multiselect.set_selected_items(agg_curves_stats)
             self.draw_agg_curves(output_type)
         elif output_type == 'agg_curves-rlzs':
             rlzs = ["Rlz %3d" % rlz
@@ -686,7 +713,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         for idx, rlz_or_stat in enumerate(rlzs_or_stats):
             marker[idx] = self.markers[idx % len(self.markers)]
             if self.bw_chk.isChecked():
-                line_styles_whole_cycles = idx / len(self.line_styles)
+                line_styles_whole_cycles = idx // len(self.line_styles)
                 # NOTE: 85 is approximately 256 / 3
                 r = g = b = format(
                     (85 * line_styles_whole_cycles) % 256, '02x')
@@ -793,7 +820,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         losses_array = self._to_2d(losses_array)
         tags = None
         try:
-            tags = self.losses_by_asset_aggr['tags']
+            tags = [tag.decode('utf8')
+                    for tag in self.losses_by_asset_aggr['tags']]
         except KeyError:
             pass
         nrows, ncols = losses_array.shape
@@ -843,7 +871,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
         for rlz_or_stat in selected_rlzs_or_stats:
             for i, (site, curve) in enumerate(
-                    self.current_selection[rlz_or_stat].iteritems()):
+                    self.current_selection[rlz_or_stat].items()):
                 # NOTE: we associated the same cumulative curve to all the
                 # selected points (ugly), and here we need to get only one
                 if self.output_type == 'recovery_curves' and i > 0:
@@ -1063,7 +1091,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                         (i + rlz_or_stat_idx) % len(self.markers)]
                     if self.bw_chk.isChecked():
                         line_styles_whole_cycles = (
-                            (i + rlz_or_stat_idx) / len(self.line_styles))
+                            (i + rlz_or_stat_idx) // len(self.line_styles))
                         # NOTE: 85 is approximately 256 / 3
                         r = g = b = format(
                             (85 * line_styles_whole_cycles) % 256, '02x')
@@ -1111,7 +1139,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             recovery.generate_community_level_recovery_curve(
                 'ALL', zonal_dmg_by_asset_probs, zonal_asset_refs,
                 n_simulations=n_simulations)
-        self.current_abscissa = range(len(recovery_function))
+        self.current_abscissa = list(range(len(recovery_function)))
         color = QColor('black')
         color_hex = color.name()
         # NOTE: differently with respect to the other approaches, we are
@@ -1140,7 +1168,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
         if (self.iface.activeLayer() is not None
                 and self.iface.activeLayer().type() == QgsMapLayer.VectorLayer
-                and self.iface.activeLayer().geometryType() == QGis.Point):
+                and self.iface.activeLayer().geometryType()
+                == QgsWkbTypes.PointGeometry):
             self.engine_version = self.iface.activeLayer().customProperty(
                 'engine_version', None)
             self.iface.activeLayer().selectionChanged.connect(
@@ -1190,7 +1219,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             pass
 
     def redraw_current_selection(self):
-        selected = self.iface.activeLayer().selectedFeaturesIds()
+        selected = self.iface.activeLayer().selectedFeatureIds()
         self.redraw(selected, [], None)
 
     def clear_plot(self):
@@ -1241,7 +1270,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             if line.contains(event)[0]:
                 # matplotlib needs a string when exporting to svg, so here we
                 # must cast back to long
-                fid = long(line.get_gid())  # NOQA
+                fid = int(line.get_gid())
                 feature = next(self.iface.activeLayer().getFeatures(
                         QgsFeatureRequest().setFilterFid(fid)))
 
@@ -1298,7 +1327,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     def on_export_data_button_clicked(self):
         filename = None
         if self.output_type == 'hcurves':
-            filename = QFileDialog.getSaveFileName(
+            filename, _ = QFileDialog.getSaveFileName(
                 self,
                 self.tr('Export data'),
                 os.path.expanduser(
@@ -1306,14 +1335,14 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                         self.current_imt, self.calc_id)),
                 '*.csv')
         elif self.output_type == 'uhs':
-            filename = QFileDialog.getSaveFileName(
+            filename, _ = QFileDialog.getSaveFileName(
                 self,
                 self.tr('Export data'),
                 os.path.expanduser(
                     '~/uniform_hazard_spectra_%s.csv' % self.calc_id),
                 '*.csv')
         elif self.output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
-            filename = QFileDialog.getSaveFileName(
+            filename, _ = QFileDialog.getSaveFileName(
                 self,
                 self.tr('Export data'),
                 os.path.expanduser(
@@ -1324,14 +1353,14 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         elif self.output_type in ('dmg_by_asset_aggr',
                                   'losses_by_asset_aggr',
                                   'avg_losses-stats_aggr'):
-            filename = QFileDialog.getSaveFileName(
+            filename, _ = QFileDialog.getSaveFileName(
                 self,
                 self.tr('Export data'),
                 os.path.expanduser(
                     '~/%s_%s.csv' % (self.output_type, self.calc_id)),
                 '*.csv')
         elif self.output_type == 'recovery_curves':
-            filename = QFileDialog.getSaveFileName(
+            filename, _ = QFileDialog.getSaveFileName(
                 self,
                 self.tr('Export data'),
                 os.path.expanduser(
@@ -1365,7 +1394,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 feature = self.iface.activeLayer().selectedFeatures()[0]
                 lon = feature.geometry().asPoint().x()
                 lat = feature.geometry().asPoint().y()
-                values = self.current_selection[None].values()[0]
+                values = list(self.current_selection[None].values())[0]
                 row = [lon, lat]
                 if values:
                     row.extend(values['ordinates'])
@@ -1394,7 +1423,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 headers.extend(field_names)
                 writer.writerow(headers)
                 for feature in self.iface.activeLayer().selectedFeatures():
-                    values = [feature.attribute(field_name)
+                    values = [feature[field_name]
                               for field_name in field_names]
                     lon = feature.geometry().asPoint().x()
                     lat = feature.geometry().asPoint().y()
@@ -1449,7 +1478,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     "# Tags: %s\n" % (
                         self.list_selected_edt.toPlainText() or 'None'))
                 try:
-                    tags = self.losses_by_asset_aggr['tags']
+                    tags = [tag.decode('utf8')
+                            for tag in self.losses_by_asset_aggr['tags']]
                     tag = tags[0]
                     # a tag is like 'taxonomy=Wood'
                     tag_name = tag.split('=')[0]
@@ -1478,7 +1508,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             else:
                 raise NotImplementedError(self.output_type)
         msg = 'Data exported to %s' % filename
-        log_msg(msg, level='I', message_bar=self.iface.messageBar())
+        log_msg(msg, level='S', message_bar=self.iface.messageBar())
 
     @pyqtSlot()
     def on_bw_chk_clicked(self):
@@ -1492,7 +1522,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     @pyqtSlot(int)
     def on_output_type_cbx_currentIndexChanged(self, index):
         otname = self.output_type_cbx.currentText()
-        for output_type, output_type_name in self.output_types_names.items():
+        for output_type, output_type_name in list(
+                self.output_types_names.items()):
             if output_type_name == otname:
                 self.set_output_type_and_its_gui(output_type)
                 if output_type not in OQ_EXTRACT_TO_VIEW_TYPES:

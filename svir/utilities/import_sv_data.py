@@ -24,15 +24,15 @@
 
 import os
 import tempfile
-import StringIO
+import io
 import csv
 
-from svir.third_party.requests import Session
-from svir.third_party.requests.exceptions import (ConnectionError,
-                                                  InvalidSchema,
-                                                  MissingSchema,
-                                                  ReadTimeout,
-                                                  )
+from requests import Session
+from requests.exceptions import (ConnectionError,
+                                 InvalidSchema,
+                                 MissingSchema,
+                                 ReadTimeout,
+                                 )
 from svir.utilities.utils import (SvNetworkError,
                                   platform_login,
                                   WaitCursorManager,
@@ -98,8 +98,8 @@ class SvDownloader(object):
         themes = []
         result = self.sess.get(page)
         if result.status_code == 200:
-            reader = csv.reader(StringIO.StringIO(result.content))
-            themes = reader.next()
+            reader = csv.reader(io.StringIO(result.content.decode('utf8')))
+            themes = next(reader)
         return themes
 
     def get_subthemes_by_theme(self, theme):
@@ -114,8 +114,8 @@ class SvDownloader(object):
         subthemes = []
         result = self.sess.get(page, params=params)
         if result.status_code == 200:
-            reader = csv.reader(StringIO.StringIO(result.content))
-            subthemes = reader.next()
+            reader = csv.reader(io.StringIO(result.content.decode('utf8')))
+            subthemes = next(reader)
         return subthemes
 
     def get_indicators_info(
@@ -140,7 +140,7 @@ class SvDownloader(object):
         result = self.sess.get(page, params=params)
         indicators_info = {}
         if result.status_code == 200:
-            reader = csv.reader(StringIO.StringIO(result.content))
+            reader = csv.reader(io.StringIO(result.content.decode('utf8')))
             header = None
             for row in reader:
                 if row[0].startswith('#'):
@@ -150,16 +150,14 @@ class SvDownloader(object):
                     continue
                 code = row[0]
                 indicators_info[code] = dict()
-                indicators_info[code]['name'] = row[1].decode('utf-8')
-                indicators_info[code]['theme'] = row[2].decode('utf-8')
-                indicators_info[code]['subtheme'] = row[3].decode('utf-8')
-                indicators_info[code]['description'] = row[4].decode('utf-8')
-                indicators_info[code]['measurement_type'] = \
-                    row[5].decode('utf-8')
-                indicators_info[code]['source'] = row[6].decode('utf-8')
-                indicators_info[code]['aggregation_method'] = \
-                    row[7].decode('utf-8')
-                indicators_info[code]['keywords_str'] = row[8].decode('utf-8')
+                indicators_info[code]['name'] = row[1]
+                indicators_info[code]['theme'] = row[2]
+                indicators_info[code]['subtheme'] = row[3]
+                indicators_info[code]['description'] = row[4]
+                indicators_info[code]['measurement_type'] = row[5]
+                indicators_info[code]['source'] = row[6]
+                indicators_info[code]['aggregation_method'] = row[7]
+                indicators_info[code]['keywords_str'] = row[8]
                 # names.append(indicators_main_info[code])
         return indicators_info
 
@@ -174,7 +172,7 @@ class SvDownloader(object):
         result = self.sess.get(page)
         countries_info = {}
         if result.status_code == 200:
-            reader = csv.reader(StringIO.StringIO(result.content))
+            reader = csv.reader(io.StringIO(result.content.decode('utf8')))
             header = None
             for row in reader:
                 if row[0].startswith('#'):
@@ -183,7 +181,7 @@ class SvDownloader(object):
                     header = row
                     continue
                 iso = row[0]
-                countries_info[iso] = row[1].decode('utf-8')
+                countries_info[iso] = row[1]
         return countries_info
 
     def get_sv_data(self,

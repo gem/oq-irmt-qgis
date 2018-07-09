@@ -1,6 +1,10 @@
-# coding=utf-8
-"""Tests for QGIS functionality.
 
+# coding=utf-8
+"""
+InaSAFE Disaster risk assessment tool developed by AusAid -
+**ISClipper test suite.**
+
+Contact : ole.moller.nielsen@gmail.com
 
 .. note:: This program is free software; you can redistribute it and/or modify
      it under the terms of the GNU General Public License as published by
@@ -8,21 +12,14 @@
      (at your option) any later version.
 
 """
-
-# This file was generated from the QGIS Plugin builder plugin
-# See https://github.com/g-sherman/Qgis-Plugin-Builder/
-
-__author__ = 'tim@linfiniti.com'
+__author__ = 'tim@kartoza.com'
 __date__ = '20/01/2011'
 __copyright__ = ('Copyright 2012, Australia Indonesia Facility for '
                  'Disaster Reduction')
 
-import os
 import unittest
-from qgis.core import (
-    QgsProviderRegistry,
-    QgsCoordinateReferenceSystem,
-    QgsRasterLayer)
+
+from qgis.core import QgsProviderRegistry
 
 from svir.test.utilities import get_qgis_app
 
@@ -30,37 +27,19 @@ QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 
 
 class QGISTest(unittest.TestCase):
-    """Test the QGIS Environment"""
+    """Test the QGIS Environment."""
 
     def test_qgis_environment(self):
-        """QGIS environment has the expected providers"""
-
+        """QGIS environment has the expected providers."""
+        # noinspection PyUnresolvedReferences
         r = QgsProviderRegistry.instance()
-        self.assertIn('gdal', r.providerList())
-        self.assertIn('ogr', r.providerList())
-        self.assertIn('postgres', r.providerList())
 
-    def test_projection(self):
-        """Test that QGIS properly parses a wkt string.
-        """
-        crs = QgsCoordinateReferenceSystem()
-        wkt = (
-            'GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",'
-            'SPHEROID["WGS_1984",6378137.0,298.257223563]],'
-            'PRIMEM["Greenwich",0.0],UNIT["Degree",'
-            '0.0174532925199433]]')
-        crs.createFromWkt(wkt)
-        auth_id = crs.authid()
-        expected_auth_id = 'EPSG:4326'
-        self.assertEqual(auth_id, expected_auth_id)
-
-        # now test for a loaded layer
-        path = os.path.join(os.path.dirname(__file__), os.pardir,
-                            'data', 'raster', 'tenbytenraster.asc')
-        title = 'TestRaster'
-        layer = QgsRasterLayer(path, title)
-        auth_id = layer.crs().authid()
-        self.assertEqual(auth_id, expected_auth_id)
+        # print 'Provider count: %s' % len(r.providerList())
+        assert 'gdal' in r.providerList()
+        assert 'ogr' in r.providerList()
+        assert 'postgres' in r.providerList()
+        assert 'delimitedtext' in r.providerList()
+        # assert 'wfs' in r.providerList()
 
 
 if __name__ == '__main__':

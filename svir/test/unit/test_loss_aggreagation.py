@@ -26,13 +26,11 @@
 import os.path
 import unittest
 import tempfile
+import shutil
+import time
 from qgis.core import QgsVectorLayer
 from svir.calculations.process_layer import ProcessLayer
-from svir.calculations.aggregate_loss_by_zone import (
-    calculate_zonal_stats,
-    purge_zones_without_loss_points,
-    )
-from svir.utilities.utils import save_layer_as_shapefile
+from svir.calculations.aggregate_loss_by_zone import calculate_zonal_stats
 from svir.test.utilities import get_qgis_app
 QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 
@@ -47,122 +45,57 @@ class AggregateLossByZoneTestCase(unittest.TestCase):
         self.loss_attr_names = ['FATALITIES', 'STRUCTURAL']
         self.loss_layer_is_vector = True
 
-    def test_aggregate_using_zone_id(self):
-        loss_layer_path = os.path.join(
-            self.data_dir_name, 'loss_points_having_zone_ids.shp')
-        orig_loss_layer = QgsVectorLayer(
-            loss_layer_path, 'Loss points having zone ids', 'ogr')
+    def test_sum_point_values_by_zone(self):
+        # NOTE: it shouldn't be necessary to make copies of gpkg files, because
+        # they are not modified by the test. However, when QGIS opens a gpkg
+        # (and it's not protected from writing), it modifies the file even if
+        # no changes are made and if it's not saved afterwards. It seems like a
+        # bug in QGIS.
+        points_layer_path = os.path.join(
+            self.data_dir_name, 'loss_points.gpkg')
+        self.points_copy_path = tempfile.NamedTemporaryFile(
+            suffix='.gpkg').name
+        shutil.copyfile(points_layer_path, self.points_copy_path)
+        points_layer = QgsVectorLayer(
+            self.points_copy_path, 'Loss points having zone ids', 'ogr')
         zonal_layer_path = os.path.join(
-            self.data_dir_name, 'svi_zones.shp')
-        orig_zonal_layer = QgsVectorLayer(
-            zonal_layer_path, 'SVI zones', 'ogr')
-        # avoid modifying the original layers
-        copied_loss_layer = ProcessLayer(orig_loss_layer).duplicate_in_memory()
-        copied_zonal_layer = ProcessLayer(
-            orig_zonal_layer).duplicate_in_memory()
-        zone_id_in_zones_attr_name = 'ZONE_NAME'
-        zone_id_in_losses_attr_name = 'ZONE_NAME'
-        res = calculate_zonal_stats(copied_loss_layer,
-                                    copied_zonal_layer,
-                                    self.loss_attr_names,
-                                    self.loss_layer_is_vector,
-                                    zone_id_in_losses_attr_name,
-                                    zone_id_in_zones_attr_name,
-                                    IFACE)
-        (output_loss_layer, output_zonal_layer, output_loss_attrs_dict) = res
-        _, output_loss_layer_shp_path = tempfile.mkstemp(suffix='.shp')
-        _, output_zonal_layer_shp_path = tempfile.mkstemp(suffix='.shp')
-        save_layer_as_shapefile(output_loss_layer, output_loss_layer_shp_path)
-        save_layer_as_shapefile(output_zonal_layer,
-                                output_zonal_layer_shp_path)
-        output_loss_layer = QgsVectorLayer(
-            output_loss_layer_shp_path, 'Loss points having zone ids', 'ogr')
-        output_zonal_layer = QgsVectorLayer(
-            output_zonal_layer_shp_path, 'Zonal layer', 'ogr')
+            self.data_dir_name, 'svi_zones.gpkg')
+        self.zonal_copy_path = tempfile.NamedTemporaryFile(suffix='.gpkg').name
+        shutil.copyfile(zonal_layer_path, self.zonal_copy_path)
+        zonal_layer = QgsVectorLayer(
+            self.zonal_copy_path, 'SVI zones', 'ogr')
+        self.is_test_complete = False
+        calculate_zonal_stats(
+            self.on_calculate_zonal_stats_finished,
+            zonal_layer, points_layer, self.loss_attr_names,
+            'output', discard_nonmatching=False,
+            predicates=('intersects',), summaries=('sum',))
+        timeout = 5
+        start_time = time.time()
+        while time.time() - start_time < timeout:
+            QGIS_APP.processEvents()
+            time.sleep(0.01)
+            print(self.is_test_complete)
+            if self.is_test_complete:
+                return
+        raise TimeoutError(
+            'Unable to run the aggregation within %s seconds' % timeout)
 
+    def on_calculate_zonal_stats_finished(self, output_zonal_layer):
+        if output_zonal_layer is None:
+            raise RuntimeError('Unable to produce the output zonal layer')
         expected_zonal_layer_path = os.path.join(
-            self.data_dir_name, 'svi_zones_plus_loss_stats_zone_names.shp')
+            self.data_dir_name,
+            'svi_zones_plus_loss_stats.gpkg')
+        expected_copy_path = tempfile.NamedTemporaryFile(suffix='.gpkg').name
+        shutil.copyfile(expected_zonal_layer_path, expected_copy_path)
         expected_zonal_layer = QgsVectorLayer(
-            expected_zonal_layer_path, 'Expected zonal layer', 'ogr')
+            expected_copy_path, 'Expected zonal layer', 'ogr')
         self._check_output_layer(output_zonal_layer, expected_zonal_layer)
-
-    def _aggregate_using_geometries(self, extra=True):
-        loss_layer_path = os.path.join(
-            self.data_dir_name, 'loss_points.shp')
-        orig_loss_layer = QgsVectorLayer(loss_layer_path, 'Loss points', 'ogr')
-        zonal_layer_path = os.path.join(
-            self.data_dir_name, 'svi_zones.shp')
-        orig_zonal_layer = QgsVectorLayer(
-            zonal_layer_path, 'SVI zones', 'ogr')
-        # avoid modifying the original layers
-        copied_loss_layer = ProcessLayer(orig_loss_layer).duplicate_in_memory()
-        copied_zonal_layer = ProcessLayer(
-            orig_zonal_layer).duplicate_in_memory()
-        zone_id_in_losses_attr_name = None
-        zone_id_in_zones_attr_name = None
-
-        res = calculate_zonal_stats(copied_loss_layer,
-                                    copied_zonal_layer,
-                                    self.loss_attr_names,
-                                    self.loss_layer_is_vector,
-                                    zone_id_in_losses_attr_name,
-                                    zone_id_in_zones_attr_name,
-                                    IFACE,
-                                    extra=extra)
-        (output_loss_layer, output_zonal_layer, output_loss_attrs_dict) = res
-        _, output_loss_layer_shp_path = tempfile.mkstemp(suffix='.shp')
-        _, output_zonal_layer_shp_path = tempfile.mkstemp(suffix='.shp')
-        save_layer_as_shapefile(output_loss_layer, output_loss_layer_shp_path)
-        save_layer_as_shapefile(output_zonal_layer,
-                                output_zonal_layer_shp_path)
-        output_loss_layer = QgsVectorLayer(
-            output_loss_layer_shp_path, 'Loss points plus zone ids', 'ogr')
-        output_zonal_layer = QgsVectorLayer(
-            output_zonal_layer_shp_path, 'Zonal layer', 'ogr')
-        expected_loss_layer_path = os.path.join(
-            self.data_dir_name, 'loss_points_added_zone_ids.shp')
-        expected_loss_layer = QgsVectorLayer(expected_loss_layer_path,
-                                             'Loss points plus zone ids',
-                                             'ogr')
-        if extra:  # adding also count and avg
-            expected_zonal_layer_path = os.path.join(
-                self.data_dir_name, 'svi_zones_plus_loss_stats_zone_ids.shp')
-        else:  # sum only
-            expected_zonal_layer_path = os.path.join(
-                self.data_dir_name,
-                'svi_zones_plus_loss_stats_zone_ids_sum_only.shp')
-        expected_zonal_layer = QgsVectorLayer(
-            expected_zonal_layer_path, 'Expected zonal layer', 'ogr')
-        self._check_output_layer(output_loss_layer, expected_loss_layer)
-        self._check_output_layer(output_zonal_layer, expected_zonal_layer)
-
-    def test_aggregate_using_geometries(self):
-        self._aggregate_using_geometries()
-
-    def test_aggregate_using_geometries_sum_only(self):
-        self._aggregate_using_geometries(extra=False)
-
-    def test_purge_empty_zones(self):
-        loss_attrs_dict = {
-            'count': u'NUM_POINTS',
-            'FATALITIES': {'sum': u'SUM_FATALITIES',
-                           'avg': u'AVG_FATALITIES'},
-            'STRUCTURAL': {'sum': u'SUM_STRUCTURAL',
-                           'avg': u'AVG_STRUCTURAL'}}
-        orig_zonal_layer_path = os.path.join(
-            self.data_dir_name, 'svi_zones_plus_loss_stats_zone_ids.shp')
-        orig_zonal_layer = QgsVectorLayer(
-            orig_zonal_layer_path, 'Zonal layer plus stats', 'ogr')
-        # avoid modifying the original layers
-        copied_zonal_layer = \
-            ProcessLayer(orig_zonal_layer).duplicate_in_memory()
-        output_zonal_layer = purge_zones_without_loss_points(
-            copied_zonal_layer, loss_attrs_dict, IFACE)
-        expected_zonal_layer_path = os.path.join(
-            self.data_dir_name, 'svi_zones_plus_loss_stats_purged.shp')
-        expected_zonal_layer = QgsVectorLayer(
-            expected_zonal_layer_path, 'Expected zonal purged layer', 'ogr')
-        self._check_output_layer(output_zonal_layer, expected_zonal_layer)
+        os.remove(self.points_copy_path)
+        os.remove(self.zonal_copy_path)
+        os.remove(expected_copy_path)
+        self.is_test_complete = True
 
     def _check_output_layer(self, output_layer, expected_layer):
         if not ProcessLayer(output_layer).has_same_content_as(

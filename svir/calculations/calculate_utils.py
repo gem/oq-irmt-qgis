@@ -23,9 +23,16 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 from copy import deepcopy
-from qgis.core import QgsField, QgsExpression, edit
+from qgis.core import (
+                       QgsField,
+                       QgsExpression,
+                       edit,
+                       NULL,
+                       QgsExpressionContext,
+                       QgsExpressionContextUtils,
+                       )
 
-from qgis.PyQt.QtCore import QVariant, QPyNullVariant
+from qgis.PyQt.QtCore import QVariant
 
 from svir.utilities.shared import (DOUBLE_FIELD_TYPE_NAME,
                                    STRING_FIELD_TYPE_NAME,
@@ -181,7 +188,7 @@ def get_node_attr_id_and_name(node, layer):
         node_attr_name = node['field']
         # check that the field is still in the layer (the user might have
         # deleted it). If it is not there anymore, add a new field
-        if layer.fieldNameIndex(node_attr_name) == -1:  # not found
+        if layer.fields().indexOf(node_attr_name) == -1:  # not found
             proposed_node_attr_name = node_attr_name
             node_attr_name = add_numeric_attribute(
                 proposed_node_attr_name, layer)
@@ -211,12 +218,14 @@ def calculate_node(
                     'Use a custom field (no recalculation)'):
         customFormula = node.get('customFormula', '')
         expression = QgsExpression(customFormula)
-        if not QgsExpression.isValid(customFormula, None, None):
-            raise InvalidFormula('Invalid formula: %s' % customFormula)
+        valid, err_msg = QgsExpression.checkExpression(customFormula, None)
+        if not valid:
+            raise InvalidFormula(
+                'Invalid formula "%s": %s' % (customFormula, err_msg))
         if customFormula == '':
             # use the custom field values instead of recalculating them
             for feat in layer.getFeatures():
-                if feat[node['field']] == QPyNullVariant(float):
+                if feat[node['field']] == NULL:
                     discard_feat = True
                     discarded_feat = DiscardedFeature(
                         feat.id(), 'Missing value')
@@ -225,11 +234,16 @@ def calculate_node(
         else:
             # attempt to retrieve a formula from the description and to
             # calculate the field values based on that formula
-            expression.prepare(layer.fields())
+            context = QgsExpressionContext()
+            context.appendScope(QgsExpressionContextUtils.layerScope(layer))
+            expression.prepare(context)
             with edit(layer):
                 for feat in layer.getFeatures():
-                    value = expression.evaluate(feat)
-                    if value == QPyNullVariant(float):
+                    context.setFeature(feat)
+                    value = expression.evaluate(context)
+                    if expression.hasEvalError():
+                        raise ValueError(expression.evalErrorString())
+                    if value == NULL:
                         discard_feat = True
                         discarded_feat = DiscardedFeature(
                             feat.id(), 'Missing value')
@@ -261,7 +275,7 @@ def calculate_node(
                     # also the IRI can't be calculated
                     # But it shouldn't happen, because all the children
                     # should be previously linked to corresponding fields
-                if feat[child['field']] == QPyNullVariant(float):
+                if feat[child['field']] == NULL:
                     discard_feat = True
                     discarded_feat = DiscardedFeature(feat_id, 'Missing value')
                     discarded_feats.add(discarded_feat)
@@ -289,7 +303,7 @@ def calculate_node(
                     error_message = 'Invalid operator: %s' % operator
                     raise RuntimeError(error_message)
             if discard_feat:
-                node_value = QPyNullVariant(float)
+                node_value = NULL
             elif operator == OPERATORS_DICT['AVG']:
                 # it is equivalent to do a weighted sum with equal weights, or
                 # to do the simple sum (ignoring weights) and dividing by the
@@ -300,11 +314,16 @@ def calculate_node(
                 # (see http://en.wikipedia.org/wiki/Geometric_mean)
                 # is the product of the N combined items, elevated by 1/N
                 try:
+                    # NOTE: in python2 this check was the default. In python3
+                    # it would produce a complex number without raising any
+                    # error
+                    if (node_value < 0
+                            and not (1. / len(children)).is_integer()):
+                        raise ValueError('negative number cannot be raised'
+                                         ' to a fractional power')
                     node_value **= 1. / len(children)
-                # it can raise ValueError: negative number cannot be raised
-                #                          to a fractional power
                 except ValueError:
-                    node_value = QPyNullVariant(float)
+                    node_value = NULL
                     discarded_feat = DiscardedFeature(feat_id, 'Invalid value')
                     discarded_feats.add(discarded_feat)
             layer.changeAttributeValue(

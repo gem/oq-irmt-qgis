@@ -4,26 +4,10 @@ svir.test.unit package
 Submodules
 ----------
 
-svir.test.unit.test_attribute_selection_dialog module
------------------------------------------------------
-
-.. automodule:: svir.test.unit.test_attribute_selection_dialog
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 svir.test.unit.test_calculate_indices module
 --------------------------------------------
 
 .. automodule:: svir.test.unit.test_calculate_indices
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-svir.test.unit.test_import_loss_from_csv module
------------------------------------------------
-
-.. automodule:: svir.test.unit.test_import_loss_from_csv
     :members:
     :undoc-members:
     :show-inheritance:

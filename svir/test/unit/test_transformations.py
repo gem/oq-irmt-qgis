@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#/***************************************************************************
+# /***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
@@ -27,7 +27,7 @@ import unittest
 from svir.calculations.transformation_algs import (
     transform,
     TRANSFORMATION_ALGS)
-from qgis.PyQt.QtCore import QPyNullVariant
+from qgis.core import NULL
 
 
 class MissingValuesTestCase(unittest.TestCase):
@@ -37,7 +37,9 @@ class MissingValuesTestCase(unittest.TestCase):
         # NULL in case of missing values, where the type of those NULL elements
         # is QPyNullVariant
         # Here we test that case and the case of simple None elements
-        null_values = (QPyNullVariant(float), None)
+        # FIXME QGIS3: we should test also with NULL values
+        # null_values = (NULL, None)
+        null_values = (None, )
         for null_value in null_values:
             features_dict = {'0': 7,
                              '1': 6,
@@ -243,8 +245,8 @@ class Log10TestCase(unittest.TestCase):
             input_list, variant_name='IGNORE ZEROS')
         expected_list = [5.005391,
                          4.973507,
-                         QPyNullVariant(float),
-                         QPyNullVariant(float),
+                         NULL,
+                         NULL,
                          5.241965]
         for i in range(len(input_list)):
             self.assertAlmostEqual(log10_list[i], expected_list[i], places=6)
@@ -355,12 +357,12 @@ class SigmoidTestCase(unittest.TestCase):
         sigmoid_list, invalid_input_values = self.alg(input_list, inverse=True)
         expected_list = [-1,
                          0,
-                         QPyNullVariant(float),
+                         NULL,
                          -0.3,
                          0.3]
         self.assertEqual(invalid_input_values, [1])
         for i in range(len(input_list)):
-            if expected_list[i] != QPyNullVariant(float):
+            if expected_list[i] != NULL:
                 self.assertAlmostEqual(
                     sigmoid_list[i], expected_list[i], places=4)
 

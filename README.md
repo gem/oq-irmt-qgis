@@ -21,7 +21,7 @@ This plugin has been created by the [GEM Foundation](http://www.globalquakemodel
 
 ## Installation and troubleshooting
 
-This plugin runs with [QGIS 2.14LTR](http://qgis.org/en/site/forusers/alldownloads.html)
+This plugin runs with [QGIS 3.0 and above](http://qgis.org/en/site/forusers/alldownloads.html)
 and above.
 
 On Microsoft Windows and Mac OS X, QGIS includes all the software dependencies needed by the plugin.
@@ -32,16 +32,16 @@ On Linux, please make sure that [Scipy](https://www.scipy.org/install.html) and
 On Ubuntu (Debian and similar):
 
 ```bash
-$ sudo apt install python-scipy python-matplotlib
+$ sudo apt install python3-scipy python3-matplotlib
 ```
 
 On Fedora and similar:
 
 ```bash
-$ sudo dnf install python2-scipy python2-matplotlib python2-matplotlib-qt4
+$ sudo dnf install python3-scipy python3-matplotlib python3-matplotlib-qt5
 ```
 
-On Fedora, please follow these [instructions](https://copr.fedorainfracloud.org/coprs/dani/QGIS-latest-stable/).
+On Fedora, please follow these [instructions](https://copr.fedorainfracloud.org/coprs/dani/qgis/).
 
 The plugin can be installed using the QGIS Plugins Manager, that is accessible through the
 QGIS menu as **Plugins -> Manage and install plugins**. Please note that the **Settings** of
@@ -55,11 +55,6 @@ break or to behave unexpectedly.
 Some users reported issues about `upgrading` the plugin to its latest version.
 We recommend to `reinstall` the plugin instead, in order to make sure the new installation is
 done in a clean folder.
-
-Please note that QGIS 2.18.8 contained some
-[critical bugs](http://www.mail-archive.com/qgis-user@lists.osgeo.org/msg37309.html)
-that were fixed in version 2.18.9.
-
 
 ## User manual
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-/***************************************************************************
+/ ***************************************************************************
  Svir
                                  A QGIS plugin
  OpenQuake Social Vulnerability and Integrated Risk
@@ -24,7 +24,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from qgis.PyQt.QtGui import QAbstractItemView
+from qgis.PyQt.QtWidgets import QAbstractItemView
 from svir.ui.list_multiselect_widget import ListMultiSelectWidget
 
 

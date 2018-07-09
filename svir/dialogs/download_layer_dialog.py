@@ -28,9 +28,13 @@ import tempfile
 import shutil
 from xml.etree import ElementTree
 from qgis.PyQt.QtCore import pyqtSlot, Qt
-from qgis.PyQt.QtGui import (QDialog, QDialogButtonBox, QListWidgetItem,
-                             QMessageBox)
-from qgis.core import QgsVectorLayer,  QgsMapLayerRegistry
+from qgis.PyQt.QtWidgets import (
+                                 QDialog,
+                                 QDialogButtonBox,
+                                 QListWidgetItem,
+                                 QMessageBox,
+                                 )
+from qgis.core import QgsVectorLayer,  QgsProject
 from svir.thread_worker.abstract_worker import start_worker
 from svir.thread_worker.download_platform_project_worker import (
     DownloadPlatformProjectWorker)
@@ -112,7 +116,7 @@ class DownloadLayerDialog(QDialog, FORM_CLASS):
         url = '%s%s%s' % (self.sv_downloader.host, wfs, params)
         result = self.sv_downloader.sess.get(url)
         if result.status_code == 200:
-            self.parse_get_capabilities(result.content)
+            self.parse_get_capabilities(result.content.decode('utf8'))
         else:
             raise SvNetworkError(
                 "Unable to download layers: %s" % result.error)
@@ -234,7 +238,7 @@ class DownloadLayerDialog(QDialog, FORM_CLASS):
             log_msg(msg, level='C', message_bar=self.iface.messageBar())
             return
         supplemental_information = json.loads(
-            get_supplemental_information_resp.content)
+            get_supplemental_information_resp.content.decode('utf8'))
         # attempt to convert supplemental information in old list format
         # or those that did not nest project definitions into a
         # project_definitions attribute
@@ -247,9 +251,9 @@ class DownloadLayerDialog(QDialog, FORM_CLASS):
             new_shp_file_path,
             parent_dlg.extra_infos[parent_dlg.layer_id]['Title'], 'ogr')
         if layer.isValid():
-            QgsMapLayerRegistry.instance().addMapLayer(layer)
-            msg = 'Shapefile imported to %s' % new_shp_file_path
-            log_msg(msg, level='I', message_bar=self.iface.messageBar())
+            QgsProject.instance().addMapLayer(layer)
+            msg = 'Shapefile was imported to %s' % new_shp_file_path
+            log_msg(msg, level='S', message_bar=self.iface.messageBar())
         else:
             msg = 'Layer invalid'
             log_msg(msg, level='C', message_bar=self.iface.messageBar())

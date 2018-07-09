@@ -22,8 +22,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-from qgis.PyQt.QtCore import QTimer, QObject, SIGNAL
-from qgis.PyQt.QtGui import QDialog
+from qgis.PyQt.QtCore import QTimer
+from qgis.PyQt.QtWidgets import QDialog
 from svir.utilities.utils import get_ui_class
 
 FORM_CLASS = get_ui_class('ui_text_browser.ui')
@@ -44,8 +44,7 @@ class ShowConsoleDialog(QDialog, FORM_CLASS):
         # the beginning
         self.driver_dialog.calc_log_line[calc_id] = 0
         self.timer = QTimer()
-        QObject.connect(
-            self.timer, SIGNAL('timeout()'), self.refresh_calc_log)
+        self.timer.timeout.connect(self.refresh_calc_log)
         self.timer.start(1000)  # refresh time in milliseconds
         # show the log before the first iteration of the timer
         self.refresh_calc_log()

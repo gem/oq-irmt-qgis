@@ -23,8 +23,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 from qgis.PyQt.QtCore import pyqtSlot
-from qgis.PyQt.QtGui import (QDialog,
-                             QDialogButtonBox)
+from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox
 
 from svir.calculations.transformation_algs import (RANK_VARIANTS,
                                                    QUADRATIC_VARIANTS,
@@ -57,7 +56,7 @@ class TransformationDialog(QDialog, FORM_CLASS):
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         self.fill_fields_multiselect()
 
-        alg_list = TRANSFORMATION_ALGS.keys()
+        alg_list = list(TRANSFORMATION_ALGS.keys())
         self.algorithm_cbx.addItems(alg_list)
         if self.algorithm_cbx.currentText() in ['RANK', 'QUADRATIC']:
             self.reload_variant_cbx()

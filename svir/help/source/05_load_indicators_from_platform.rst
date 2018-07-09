@@ -20,7 +20,7 @@ their relevance to the phenomenon being measured, analytical soundness,
 accessibility, and completeness [NSST08]_. Proxy measures for social and
 economic vulnerability have been provided by the Global Earthquake Model that
 have been stringently tested for representativeness, robustness, coverage and
-analytical soundness [KBT+14]_. These are currently accessible in the IRMT at
+analytical soundness [KBT+14]_. These are currently accessible in the OpenQuake IRMT at
 the national level of geography (gadm L1). Future software releases will add
 access to data at gadm level 2 (L2) for a selection of countries and regions.
 This will include the eight Andean countries of South America and countries
@@ -92,7 +92,7 @@ within an area topology without destroying its essential shape.
     Layer attribute table
 
 :numref:`fig-attribute-table` shows the attribute table of a sample vector
-layer compiled and downloaded within the IRMT.
+layer compiled and downloaded within the OpenQuake IRMT.
 
 .. note::
 

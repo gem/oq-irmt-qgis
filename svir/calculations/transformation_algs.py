@@ -25,8 +25,7 @@
 
 import math
 from numpy import mean, std, argwhere, amax, amin, log10, log
-from types import NoneType
-from qgis.PyQt.QtCore import QPyNullVariant
+from qgis.core import NULL
 
 from svir.utilities.utils import Register
 
@@ -58,14 +57,15 @@ def transform(features_dict, algorithm, variant_name="", inverse=False):
     # elements with null value will be saved in another dict, so they can be
     # re-added afterwards
     dict_of_null_values = {}
-    for key, value in f_dict_copy.iteritems():
-        if type(value) in (QPyNullVariant, NoneType):
+    for key, value in f_dict_copy.items():
+        if type(value) in (NULL, type(None)):
             dict_of_null_values[key] = value
-    for key in dict_of_null_values.keys():
+    for key in list(dict_of_null_values.keys()):
         del f_dict_copy[key]
     transformed_list, invalid_input_values = algorithm(
-        f_dict_copy.values(), variant_name, inverse)
-    transformed_dict = dict(zip(f_dict_copy.keys(), transformed_list))
+        list(f_dict_copy.values()), variant_name, inverse)
+    transformed_dict = dict(
+        list(zip(list(f_dict_copy.keys()), transformed_list)))
     # add to the transformed_dict the null elements that were removed
     transformed_dict.update(dict_of_null_values)
     return transformed_dict, invalid_input_values
@@ -216,11 +216,9 @@ def min_max(input_list, variant_name=None, inverse=False):
                          " if the range of valid values (max-min) is zero.")
     # Transform
     if inverse:
-        output_list = map(
-            lambda x: 1.0 - ((x - list_min) / list_range), input_list)
+        output_list = [1.0 - ((x - list_min) / list_range) for x in input_list]
     else:
-        output_list = map(
-            lambda x: (x - list_min) / list_range, input_list)
+        output_list = [(x - list_min) / list_range for x in input_list]
     return output_list, None
 
 
@@ -258,7 +256,7 @@ def log10_(input_list,
             output_list = []
             for input_value in input_list:
                 if input_value == 0:
-                    output_value = QPyNullVariant(float)
+                    output_value = NULL
                     output_list.append(output_value)
                 else:
                     output_list.append(log10(input_value))
@@ -287,12 +285,10 @@ def simple_quadratic(input_list, variant_name="INCREASING", inverse=False):
                                 "input value is 0")
     squared_range = (max_input - bottom) ** 2
     if variant_name == "INCREASING":
-        output_list = map(
-            lambda x: (x - bottom) ** 2 / squared_range, input_list)
+        output_list = [(x - bottom) ** 2 / squared_range for x in input_list]
     elif variant_name == "DECREASING":
-        output_list = map(
-            lambda x: (max_input - (x - bottom)) ** 2 / squared_range,
-            input_list)
+        output_list = [(max_input - (x - bottom)) ** 2 / squared_range
+                       for x in input_list]
 
     else:
         raise NotImplementedError("%s variant not implemented" % variant_name)
@@ -318,16 +314,16 @@ def sigmoid(input_list, variant_name="", inverse=False):
         for y in input_list:
             try:
                 output = log(y / (1 - y))
-            except:
-                output = QPyNullVariant(float)
+            except Exception:
+                output = NULL
                 invalid_input_values.append(y)
             output_list.append(output)
     else:  # direct
         for x in input_list:
             try:
                 output = 1 / (1 + math.exp(-x))
-            except:
-                output = QPyNullVariant(float)
+            except Exception:
+                output = NULL
                 invalid_input_values.append(x)
             output_list.append(output)
     return output_list, invalid_input_values

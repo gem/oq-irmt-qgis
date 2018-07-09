@@ -20,13 +20,13 @@ and to partially correct for data
 quality problems. The QGIS platform natively provides a :guilabel:`Field calculator` that
 can be used to update existing fields, or to create new ones, in order to
 perform a wide variety of mathematical operations for the
-standardization/transformation of data. In addition, the  IRMT provides a
+standardization/transformation of data. In addition, the  OpenQuake IRMT provides a
 number of transformation functions found in popular statistical and
 mathematical modelling packages (:numref:`tab-transformation-functions`).
 
 .. _tab-transformation-functions:
 
-.. table:: Selection of transformation functions with equations found in the IRMT.
+.. table:: Selection of transformation functions with equations found in the OpenQuake IRMT.
 
   =============================  =================================================================================================================================
   Standardization (or Z-scores)  :math:`Z(x_i) = \frac{x_i-\mu_x}{\sigma_x} \; (\mu_x = mean \; \sigma_x = stddev)`
@@ -77,14 +77,14 @@ These include:
    shape (sigmoid curve). A Sigmoid function is used to transform values on
    :math:`(-\infty, \infty)` into numbers on :math:`(0, 1)`. The Sigmoid function is often
    utilized because the transformation is relative to a convergence upon an
-   upper limit as defined by the S-curve. The IRMT utilizes a *simple sigmoid
+   upper limit as defined by the S-curve. The OpenQuake IRMT utilizes a *simple sigmoid
    function* as well as its inverse. The Inverse of the Sigmoid function is a
    logit function which transfers variables on :math:`(0, 1)` into a new variable on
    :math:`(-\infty, \infty)`.
  
 6. **Quadratic or U-shaped functions** are the product of a
    polynomial equation of degree 2. In a quadratic function, the variable is
-   always squared resulting in a parabola or U-shaped curve. The IRMT offers
+   always squared resulting in a parabola or U-shaped curve. The OpenQuake IRMT offers
    an increasing or decreasing variant of the quadratic equation for
    horizontal translations and the respective inverses of the two for vertical
    translations.
@@ -151,7 +151,7 @@ By clicking the :guilabel:`Advanced Calculator` button, the native QGIS field ca
 is opened. Please refer to the `code documentation
 <../../../apidoc/_build/html/svir.calculations.html#module-svir.calculations.transformation_algs>`_
 for the detailed description of all the agorithms and variants provided by
-the IRMT.
+the OpenQuake IRMT.
 
 
 .. |icon-transform-attributes| image:: images/iconTransformAttribute.png

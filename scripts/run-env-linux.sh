@@ -1,6 +1,6 @@
 #!/bin/bash
 
-QGIS_PREFIX_PATH=/usr/local/qgis-2.0
+QGIS_PREFIX_PATH=/usr/local/qgis
 if [ -n "$1" ]; then
     QGIS_PREFIX_PATH=$1
 fi
@@ -20,7 +20,7 @@ export QGIS_LOG_FILE=/tmp/irmt/logs/qgis.log
 export PATH=${QGIS_PREFIX_PATH}/bin:$PATH
 
 echo "This script is intended to be sourced to set up your shell to"
-echo "use a QGIS 2.0 built in $QGIS_PREFIX_PATH"
+echo "use a QGIS built in $QGIS_PREFIX_PATH"
 echo
 echo "To use it do:"
 echo "source $BASH_SOURCE /your/optional/install/path"

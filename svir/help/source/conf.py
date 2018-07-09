@@ -13,6 +13,7 @@
 
 import sys
 import os
+from svir.utilities.utils import get_irmt_version
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -20,7 +21,6 @@ import os
 svir_path = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), '..', '..', '..')
 sys.path.insert(0, svir_path)
-from svir.utilities.utils import get_irmt_version
 
 # -- General configuration ----------------------------------------------------
 

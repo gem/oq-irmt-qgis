@@ -29,7 +29,7 @@ import os
 import unittest
 from mock import Mock
 
-from qgis.PyQt.QtGui import QAction
+from qgis.PyQt.QtWidgets import QAction
 from qgis.core import QgsVectorLayer
 from svir.dialogs.load_ruptures_as_layer_dialog import (
     LoadRupturesAsLayerDialog)

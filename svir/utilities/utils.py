@@ -34,22 +34,25 @@ import io
 from copy import deepcopy
 from time import time
 from pprint import pformat
-from qgis.core import (QgsMapLayerRegistry,
+from qgis.core import (
                        QgsProject,
                        QgsMessageLog,
                        QgsVectorLayer,
                        QgsVectorFileWriter,
                        )
+from qgis.core import Qgis
 from qgis.gui import QgsMessageBar
 
 from qgis.PyQt import uic
-from qgis.PyQt.QtCore import Qt, QSettings, QUrl
-from qgis.PyQt.QtGui import (QApplication,
-                             QProgressBar,
-                             QToolButton,
-                             QFileDialog,
-                             QMessageBox,
-                             QColor)
+from qgis.PyQt.QtCore import Qt, QSettings, QUrl, QUrlQuery
+from qgis.PyQt.QtWidgets import (
+                                 QApplication,
+                                 QProgressBar,
+                                 QToolButton,
+                                 QFileDialog,
+                                 QMessageBox,
+                                 )
+from qgis.PyQt.QtGui import QColor
 
 from svir.third_party.poster.encode import multipart_encode
 from svir.utilities.shared import (
@@ -79,8 +82,8 @@ def get_irmt_version():
     return _IRMT_VERSION
 
 
-def log_msg(message, tag='GEM IRMT Plugin', level='I', message_bar=None,
-            duration=None, exc_tuple=None):
+def log_msg(message, tag='GEM OpenQuake plugin', level='I', message_bar=None,
+            duration=None, exception=None):
     """
     Add a message to the QGIS message log. If a messageBar is provided,
     the same message will be displayed also in the messageBar. In the latter
@@ -91,41 +94,41 @@ def log_msg(message, tag='GEM IRMT Plugin', level='I', message_bar=None,
     :param tag: the log topic
     :param level:
         the importance level
-        'I' -> QgsMessageLog.INFO,
-        'W' -> QgsMessageLog.WARNING,
-        'C' -> QgsMessageLog.CRITICAL
+        'I' -> Qgis.Info,
+        'W' -> Qgis.Warning,
+        'C' -> Qgis.Critical,
+        'S' -> Qgis.Success,
     :param message_bar: a `QgsMessageBar` instance
-    :param duration: how long (in seconds) the message will be displayed
-        (use 0 to keep the message visible indefinitely, or None to use
-        the default duration of the chosen level)
-    :param exception: an optional exception tuple, in the format
-        (exc_class, exc_value, exc_tb), from which the traceback will be
+    :param duration: how long (in seconds) the message will be displayed (use 0
+        to keep the message visible indefinitely, or None to use
+        the default duration of the chosen level
+    :param exception: an optional exception, from which the traceback will be
         extracted and written only in the log
     """
-    levels = {'I': {'log': QgsMessageLog.INFO,
-                    'bar': QgsMessageBar.INFO},
-              'W': {'log': QgsMessageLog.WARNING,
-                    'bar': QgsMessageBar.WARNING},
-              'C': {'log': QgsMessageLog.CRITICAL,
-                    'bar': QgsMessageBar.CRITICAL}}
+    levels = {
+              'I': Qgis.Info,
+              'W': Qgis.Warning,
+              'C': Qgis.Critical,
+              'S': Qgis.Success,
+              }
     if level not in levels:
         raise ValueError('Level must be one of %s' % levels.keys())
     tb_text = ''
-    if exc_tuple is not None:
-        tb_lines = traceback.format_exception(*exc_tuple)
+    if exception is not None:
+        tb_lines = traceback.format_exception(
+            exception.__class__, exception, exception.__traceback__)
         tb_text = '\n' + ''.join(tb_lines)
 
     # if we are running nosetests, exit on critical errors
     if 'nose' in sys.modules and level == 'C':
         raise RuntimeError(message)
     else:
-        log_level = QSettings().value(
-            'irmt/log_level', DEFAULT_SETTINGS['log_level'])
+        log_verbosity = QSettings().value('oq_utils/log_verbosity', 'W')
         if (level == 'C'
-                or level == 'W' and log_level in ('I', 'W')
-                or level == 'I' and log_level in ('I')):
+                or level == 'W' and log_verbosity in ('S', 'I', 'W')
+                or level in ('I', 'S') and log_verbosity in ('I', 'S')):
             QgsMessageLog.logMessage(
-                tr(message) + tb_text, tr(tag), levels[level]['log'])
+                tr(message) + tb_text, tr(tag), levels[level])
         if message_bar is not None:
             if level == 'I':
                 title = 'Info'
@@ -136,13 +139,16 @@ def log_msg(message, tag='GEM IRMT Plugin', level='I', message_bar=None,
             elif level == 'C':
                 title = 'Error'
                 duration = duration if duration is not None else 0
+            elif level == 'S':
+                title = 'Success'
+                duration = duration if duration is not None else 8
             max_msg_len = 200
             if len(message) > max_msg_len:
                 message = ("%s[...] (Please open the Log Messages Panel to"
                            " read the full message)" % message[:max_msg_len])
             message_bar.pushMessage(tr(title),
                                     tr(message),
-                                    levels[level]['bar'],
+                                    levels[level],
                                     duration)
 
 
@@ -305,7 +311,7 @@ def create_progress_message_bar(msg_bar, msg, no_percentage=False):
     if no_percentage:
         progress.setRange(0, 0)
     progress_message_bar.layout().addWidget(progress)
-    msg_bar.pushWidget(progress_message_bar, msg_bar.INFO)
+    msg_bar.pushWidget(progress_message_bar, Qgis.Info)
     return progress_message_bar, progress
 
 
@@ -340,7 +346,7 @@ def reload_layers_in_cbx(combo, layer_types=None, skip_layer_ids=None):
     :type skip_layer_ids: [QgsMapLayer ...]
     """
     combo.clear()
-    for l in QgsMapLayerRegistry.instance().mapLayers().values():
+    for l in list(QgsProject.instance().mapLayers().values()):
         layer_type_allowed = bool(layer_types is None
                                   or l.type() in layer_types)
         layer_id_allowed = bool(skip_layer_ids is None
@@ -397,9 +403,9 @@ def toggle_select_features(layer, use_new, new_feature_ids, old_feature_ids):
     :type old_feature_ids: QgsFeatureIds
     """
     if use_new:
-        layer.setSelectedFeatures(list(new_feature_ids))
+        layer.selectByIds(list(new_feature_ids))
     else:
-        layer.setSelectedFeatures(list(old_feature_ids))
+        layer.selectByIds(list(old_feature_ids))
 
 
 def toggle_select_features_widget(title, text, button_text, layer,
@@ -535,8 +541,10 @@ def ask_for_destination_full_path_name(
 
     :returns: full path name of the destination file
     """
-    return QFileDialog.getSaveFileName(
+    full_path_name, _ = QFileDialog.getSaveFileName(
         parent, text, directory=os.path.expanduser("~"), filter=filter)
+    if full_path_name:
+        return full_path_name
 
 
 def ask_for_download_destination_folder(parent, text='Download destination'):
@@ -644,7 +652,7 @@ class WaitCursorManager(object):
             self.message = self.message_bar.createMessage(
                 tr('Info'), tr(self.msg))
             self.message = self.message_bar.pushWidget(
-                self.message, level=QgsMessageBar.INFO)
+                self.message, level=Qgis.Info)
             QApplication.processEvents()
         QApplication.setOverrideCursor(Qt.WaitCursor)
 
@@ -803,10 +811,10 @@ def save_layer_as_shapefile(orig_layer, dest_path, crs=None):
         crs = orig_layer.crs()
     old_lc_numeric = locale.getlocale(locale.LC_NUMERIC)
     locale.setlocale(locale.LC_NUMERIC, 'C')
-    write_success = QgsVectorFileWriter.writeAsVectorFormat(
+    writer_error = QgsVectorFileWriter.writeAsVectorFormat(
         orig_layer, dest_path, 'utf-8', crs, 'ESRI Shapefile')
     locale.setlocale(locale.LC_NUMERIC, old_lc_numeric)
-    return write_success
+    return writer_error
 
 
 def _check_type(
@@ -871,12 +879,16 @@ def get_style(layer, message_bar, restore_defaults=False):
             force_restyling = value
     if restore_defaults:
         force_restyling = DEFAULT_SETTINGS['force_restyling']
+    # FIXME QGIS3: at project level, qgis pretends to find a value as false,
+    #              even when it should be not found, so it prevents layers
+    #              to be styled
+    #
     # otherwise look for the setting at project level
-    if force_restyling is None:
-        value, found = QgsProject.instance().readBoolEntry(
-            'irmt', 'force_restyling')
-        if found:
-            force_restyling = value
+    # if force_restyling is None:
+    #     value, found = QgsProject.instance().readBoolEntry(
+    #         'irmt', 'force_restyling')
+    #     if found:
+    #         force_restyling = value
     # if again the setting is not found, look for it at the general level
     if force_restyling is None:
         force_restyling = settings.value(
@@ -898,7 +910,7 @@ def clear_widgets_from_layout(layout):
     layouts. If any of such widgets is a layout, then clear its widgets
     instead of deleting it.
     """
-    for i in reversed(range(layout.count())):
+    for i in reversed(list(range(layout.count()))):
         item = layout.itemAt(i)
         # check if the item is a sub-layout (nested inside the layout)
         sublayout = item.layout()
@@ -929,47 +941,51 @@ def import_layer_from_csv(parent,
                           zoom_to_layer=True,
                           has_geom=True):
     url = QUrl.fromLocalFile(csv_path)
-    url.addQueryItem('type', 'csv')
+    url_query = QUrlQuery()
+    url_query.addQueryItem('type', 'csv')
     if has_geom:
         if wkt_field is not None:
-            url.addQueryItem('wktField', wkt_field)
+            url_query.addQueryItem('wktField', wkt_field)
         else:
-            url.addQueryItem('xField', longitude_field)
-            url.addQueryItem('yField', latitude_field)
-        url.addQueryItem('spatialIndex', 'no')
-        url.addQueryItem('crs', 'epsg:4326')
-    url.addQueryItem('subsetIndex', 'no')
-    url.addQueryItem('watchFile', 'no')
-    url.addQueryItem('delimiter', delimiter)
-    url.addQueryItem('quote', quote)
-    url.addQueryItem('skipLines', str(lines_to_skip_count))
-    url.addQueryItem('trimFields', 'yes')
-    layer_uri = str(url.toEncoded())
+            url_query.addQueryItem('xField', longitude_field)
+            url_query.addQueryItem('yField', latitude_field)
+        url_query.addQueryItem('spatialIndex', 'no')
+        url_query.addQueryItem('crs', 'epsg:4326')
+    url_query.addQueryItem('subsetIndex', 'no')
+    url_query.addQueryItem('watchFile', 'no')
+    url_query.addQueryItem('delimiter', delimiter)
+    url_query.addQueryItem('quote', quote)
+    url_query.addQueryItem('skipLines', str(lines_to_skip_count))
+    url_query.addQueryItem('trimFields', 'yes')
+    url.setQuery(url_query)
+    layer_uri = url.toString()
     layer = QgsVectorLayer(layer_uri, layer_name, "delimitedtext")
     if save_as_shp:
-        dest_filename = dest_shp or QFileDialog.getSaveFileName(
-            parent,
-            'Save loss shapefile as...',
-            os.path.expanduser("~"),
-            'Shapefiles (*.shp)')
+        dest_filename = dest_shp
+        if not dest_filename:
+            dest_filename, file_filter = QFileDialog.getSaveFileName(
+                parent,
+                'Save shapefile as...',
+                os.path.expanduser("~"),
+                'Shapefiles (*.shp)')
         if dest_filename:
             if dest_filename[-4:] != ".shp":
                 dest_filename += ".shp"
         else:
             return
-        result = save_layer_as_shapefile(layer, dest_filename)
-        if result != QgsVectorFileWriter.NoError:
-            raise RuntimeError('Could not save shapefile')
+        writer_error, error_msg = save_layer_as_shapefile(layer, dest_filename)
+        if writer_error:
+            raise RuntimeError(
+                'Could not save shapefile. %s: %s' % (writer_error,
+                                                      error_msg))
         layer = QgsVectorLayer(dest_filename, layer_name, 'ogr')
     if layer.isValid():
-        QgsMapLayerRegistry.instance().addMapLayer(layer)
+        QgsProject.instance().addMapLayer(layer)
         iface.setActiveLayer(layer)
         if zoom_to_layer:
             iface.zoomToActiveLayer()
     else:
-        msg = 'Unable to load layer'
-        log_msg(msg, level='C', message_bar=iface.messageBar())
-        return None
+        raise RuntimeError('Unable to load layer')
     return layer
 
 
@@ -995,14 +1011,14 @@ def get_params_from_comment_line(comment_line):
     >>> get_params_from_comment_line('h1, h2, h3')
     Traceback (most recent call last):
         ...
-    InvalidHeaderError: Unable to extract parameters from line:
+    svir.utilities.utils.InvalidHeaderError: Unable to extract parameters from line:
     h1, h2, h3
     because the line does not start with "# "
 
     >>> get_params_from_comment_line("# p1=10,p2=20")
     Traceback (most recent call last):
         ...
-    InvalidHeaderError: Unable to extract parameters from line:
+    svir.utilities.utils.InvalidHeaderError: Unable to extract parameters from line:
     # p1=10,p2=20
     """
     err_msg = 'Unable to extract parameters from line:\n%s' % comment_line
@@ -1048,7 +1064,7 @@ def get_credentials(server):
             'irmt/%s_profiles',
             (DEFAULT_PLATFORM_PROFILES if server == 'platform'
                 else DEFAULT_ENGINE_PROFILES)))
-    default_profile = default_profiles[default_profiles.keys()[0]]
+    default_profile = default_profiles[list(default_profiles.keys())[0]]
     hostname = qs.value('irmt/%s_hostname' % server,
                         default_profile['hostname'])
     username = qs.value('irmt/%s_username' % server,
@@ -1059,7 +1075,8 @@ def get_credentials(server):
 
 
 def get_checksum(file_path):
-    data = open(file_path, 'rb').read()
+    with open(file_path, 'rb') as f:
+        data = f.read()
     checksum = zlib.adler32(data, 0) & 0xffffffff
     return checksum
 

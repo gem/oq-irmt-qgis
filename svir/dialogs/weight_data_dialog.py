@@ -25,17 +25,11 @@
 from copy import deepcopy
 import json
 
-from qgis.PyQt.QtCore import (Qt,
-                              QUrl,
-                              QSettings,
-                              pyqtProperty,
-                              pyqtSignal,
-                              pyqtSlot,
-                              )
-from qgis.PyQt.QtGui import (QDialog,
-                             QDialogButtonBox,
-                             QPrinter,
-                             )
+from qgis.PyQt.QtCore import (
+    Qt, QUrl, QSettings, pyqtProperty, pyqtSignal, pyqtSlot)
+from qgis.PyQt.QtWebKit import QWebSettings
+from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox
+from qgis.PyQt.QtPrintSupport import QPrinter
 
 from svir.utilities.shared import (DEFAULT_OPERATOR,
                                    OPERATORS_DICT,
@@ -50,6 +44,14 @@ from svir.utilities.utils import (get_field_names,
                                   )
 
 FORM_CLASS = get_ui_class('ui_weight_data.ui')
+
+
+if DEBUG:
+    # turn on developer tools in webkit so we can get at the
+    # javascript console for debugging (it causes segfaults in tests, so it has
+    # to be kept disabled while it is not used for debugging).
+    QWebSettings.globalSettings().setAttribute(
+        QWebSettings.DeveloperExtrasEnabled, True)
 
 
 class WeightDataDialog(QDialog, FORM_CLASS):
@@ -121,7 +123,11 @@ class WeightDataDialog(QDialog, FORM_CLASS):
         self.json_updated.connect(self.handle_json_updated)
         self.populate_style_by_field_cbx()
 
-        self.web_view.setContextMenuPolicy(Qt.NoContextMenu)
+        if not DEBUG:
+            self.web_view.setContextMenuPolicy(Qt.NoContextMenu)
+
+        self.web_view.settings().setAttribute(
+            QWebSettings.JavascriptEnabled, True)
 
     def closeEvent(self, event):
         confirmation_on_close(self, event)
@@ -232,13 +238,13 @@ class WeightDataDialog(QDialog, FORM_CLASS):
         self.printer.setOutputFileName(dest_full_path_name)
         try:
             self.web_view.print_(self.printer)
-        except:
+        except Exception:
             msg = 'It was impossible to create the pdf'
             log_msg(msg, level='C', message_bar=self.iface.messageBar())
         else:
             msg = ('Project definition printed as pdf and saved to: %s'
                    % dest_full_path_name)
-            log_msg(msg, level='I', message_bar=self.iface.messageBar())
+            log_msg(msg, level='S', message_bar=self.iface.messageBar())
 
     @pyqtSlot(str)
     def on_style_by_field_cbx_currentIndexChanged(self):
@@ -267,7 +273,7 @@ class WeightDataDialog(QDialog, FORM_CLASS):
 
     @pyqtProperty(str)
     def OPERATORS(self):
-        return ';'.join(OPERATORS_DICT.values())
+        return ';'.join(list(OPERATORS_DICT.values()))
 
     @pyqtProperty(str)
     def ACTIVE_LAYER_NUMERIC_FIELDS(self):
@@ -279,7 +285,7 @@ class WeightDataDialog(QDialog, FORM_CLASS):
 
     @pyqtProperty(str)
     def NODE_TYPES(self):
-        return ';'.join(["%s:%s" % (k, v) for k, v in NODE_TYPES.iteritems()])
+        return ';'.join(["%s:%s" % (k, v) for k, v in NODE_TYPES.items()])
 
     def print_self_for_debug(self):
         msg = """

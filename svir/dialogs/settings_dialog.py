@@ -24,14 +24,14 @@
 
 
 import json
-import sys
 from qgis.PyQt.QtCore import pyqtSlot, QSettings, Qt
-from qgis.PyQt.QtGui import QDialog, QPalette, QColorDialog, QMessageBox
+from qgis.PyQt.QtWidgets import QDialog, QColorDialog, QMessageBox
+from qgis.PyQt.QtGui import QPalette
 
-from qgis.core import QgsGraduatedSymbolRendererV2, QgsProject
+from qgis.core import QgsGraduatedSymbolRenderer, QgsProject
 from qgis.gui import QgsMessageBar
 
-from svir.third_party.requests import Session
+from requests import Session
 from svir.dialogs.connection_profile_dialog import ConnectionProfileDialog
 from svir.utilities.utils import (
                                   get_ui_class,
@@ -75,14 +75,14 @@ class SettingsDialog(QDialog, FORM_CLASS):
         self.style_color_to.setFocusPolicy(Qt.NoFocus)
 
         modes = {
-            QgsGraduatedSymbolRendererV2.EqualInterval: self.tr(
+            QgsGraduatedSymbolRenderer.EqualInterval: self.tr(
                 'Equal Interval'),
-            QgsGraduatedSymbolRendererV2.Quantile: self.tr(
+            QgsGraduatedSymbolRenderer.Quantile: self.tr(
                 'Quantile (Equal Count)'),
-            QgsGraduatedSymbolRendererV2.Jenks: self.tr(
+            QgsGraduatedSymbolRenderer.Jenks: self.tr(
                 'Natural Breaks (Jenks)'),
-            QgsGraduatedSymbolRendererV2.StdDev: self.tr('Standard Deviation'),
-            QgsGraduatedSymbolRendererV2.Pretty: self.tr('Pretty Breaks'),
+            QgsGraduatedSymbolRenderer.StdDev: self.tr('Standard Deviation'),
+            QgsGraduatedSymbolRenderer.Pretty: self.tr('Pretty Breaks'),
         }
         for key in modes:
             self.style_mode.addItem(modes[key], key)
@@ -156,7 +156,7 @@ class SettingsDialog(QDialog, FORM_CLASS):
             profiles = json.loads(
                 DEFAULT_PLATFORM_PROFILES if platform_or_engine == 'platform'
                 else DEFAULT_ENGINE_PROFILES)
-            cur_profile = profiles.keys()[0]
+            cur_profile = list(profiles.keys())[0]
         else:
             profiles = json.loads(
                 mySettings.value(
@@ -166,7 +166,7 @@ class SettingsDialog(QDialog, FORM_CLASS):
                      else DEFAULT_ENGINE_PROFILES)))
             cur_profile = mySettings.value(
                 'irmt/current_%s_profile' % platform_or_engine)
-        for profile in sorted(profiles, key=unicode.lower):
+        for profile in sorted(profiles, key=str.lower):
             if platform_or_engine == 'platform':
                 self.platform_profile_cbx.blockSignals(True)
                 self.platform_profile_cbx.addItem(profile)
@@ -176,7 +176,7 @@ class SettingsDialog(QDialog, FORM_CLASS):
                 self.engine_profile_cbx.addItem(profile)
                 self.engine_profile_cbx.blockSignals(False)
         if cur_profile is None:
-            cur_profile = profiles.keys()[0]
+            cur_profile = list(profiles.keys())[0]
             mySettings.setValue(
                 'irmt/current_%s_profile' % platform_or_engine,
                 cur_profile)
@@ -347,29 +347,27 @@ class SettingsDialog(QDialog, FORM_CLASS):
         if server == 'engine':
             try:
                 is_lockdown = check_is_lockdown(hostname, session)
-            except Exception:
+            except Exception as exc:
                 err_msg = ("Unable to connect"
                            " (see Log Message Panel for details)")
-                exc_tuple = sys.exc_info()
                 log_msg(err_msg, level='C', message_bar=self.message_bar,
-                        exc_tuple=exc_tuple)
+                        exception=exc)
                 return
             else:
                 if not is_lockdown:
                     msg = 'Able to connect'
-                    log_msg(msg, level='I', message_bar=self.message_bar,
+                    log_msg(msg, level='S', message_bar=self.message_bar,
                             duration=3)
                     return
         try:
             login_func(hostname, username, password, session)
-        except Exception:
+        except Exception as exc:
             err_msg = "Unable to connect (see Log Message Panel for details)"
-            exc_tuple = sys.exc_info()
             log_msg(err_msg, level='C', message_bar=self.message_bar,
-                    exc_tuple=exc_tuple)
+                    exception=exc)
         else:
             msg = 'Able to connect'
-            log_msg(msg, level='I', message_bar=self.message_bar, duration=3)
+            log_msg(msg, level='S', message_bar=self.message_bar, duration=3)
 
     @pyqtSlot()
     def on_eng_new_btn_clicked(self):

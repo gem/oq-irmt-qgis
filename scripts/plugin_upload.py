@@ -28,13 +28,13 @@ def main(options, args):
             xmlrpclib.Binary(open(args[0]).read()))
         print("Plugin ID: %s" % plugin_id)
         print("Version ID: %s" % version_id)
-    except xmlrpclib.ProtocolError, err:
+    except xmlrpclib.ProtocolError as err:
         print("A protocol error occurred")
         print("URL: %s" % hidepassword(err.url, 0))
         print("HTTP/HTTPS headers: %s" % err.headers)
         print("Error code: %d" % err.errcode)
         print("Error message: %s" % err.errmsg)
-    except xmlrpclib.Fault, err:
+    except xmlrpclib.Fault as err:
         print("A fault occurred")
         print("Fault code: %d" % err.faultCode)
         print("Fault string: %s" % err.faultString)

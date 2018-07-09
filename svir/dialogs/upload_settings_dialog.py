@@ -23,12 +23,12 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 from qgis.PyQt.QtCore import pyqtSlot, QUrl
-from qgis.PyQt.QtGui import (QDialog,
-                             QDialogButtonBox,
-                             QDesktopServices)
+from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox
+from qgis.PyQt.QtGui import QDesktopServices
 from svir.dialogs.upload_dialog import UploadDialog
 from svir.metadata.metadata_utilities import write_iso_metadata_file
-from svir.third_party.requests.sessions import Session
+
+from requests.sessions import Session
 
 from svir.utilities.defaults import DEFAULTS
 from svir.calculations.process_layer import ProcessLayer
@@ -230,7 +230,7 @@ class UploadSettingsDialog(QDialog, FORM_CLASS):
                     hostname, session, self.project_definition,
                     self.suppl_info['platform_layer_id'])
                 if response.ok:
-                    log_msg(tr(response.text), level='I',
+                    log_msg(tr(response.text), level='S',
                             message_bar=self.iface.messageBar())
                 else:
                     error_msg = response.text

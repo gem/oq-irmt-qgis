@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-/***************************************************************************
+/ ***************************************************************************
  Irmt
                                  A QGIS plugin
  OpenQuake Social Vulnerability and Integrated Risk
@@ -25,19 +25,21 @@
 """
 
 import os
-from qgis.PyQt.QtWebKit import QWebView, QWebSettings
+from qgis.PyQt.QtWebKitWidgets import QWebView
+from qgis.PyQt.QtWebKit import QWebSettings
 from qgis.PyQt.QtNetwork import (QNetworkAccessManager,
                                  QNetworkCookieJar,
                                  QNetworkCookie,
                                  )
-from qgis.PyQt.QtCore import (QMutex,
-                              QMutexLocker,
+from qgis.PyQt.QtCore import (
+                              QMutex,
                               QSettings,
                               QByteArray,
                               pyqtSlot,
                               QUrl,
+                              QMutexLocker,
                               )
-from qgis.PyQt.QtGui import QSizePolicy, QFileDialog
+from qgis.PyQt.QtWidgets import QSizePolicy, QFileDialog
 from svir.utilities.shared import DEBUG, REQUEST_ATTRS
 from svir.utilities.utils import (tr,
                                   create_progress_message_bar,
@@ -274,6 +276,6 @@ class PersistentCookieJar(QNetworkCookieJar):
 
     def load_cookies(self):
         with QMutexLocker(self.mutex):
-            data = QSettings().value("irmt/cookies", "")
+            data = QSettings().value("irmt/cookies", QByteArray())
             cookies = QNetworkCookie.parseCookies(data)
             self.setAllCookies(cookies)

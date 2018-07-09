@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>IRMT Settings</string>
+   <string>OpenQuake IRMT Settings</string>
   </property>
   <property name="windowIcon">
    <iconset>

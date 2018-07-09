@@ -21,7 +21,7 @@
     <normaloff>../resources/oq_icon.svg</normaloff>../resources/oq_icon.svg</iconset>
   </property>
   <property name="windowTitle">
-   <string>IRMT Data Viewer</string>
+   <string>OpenQuake Data Viewer</string>
   </property>
   <widget class="QWidget" name="container">
    <layout class="QVBoxLayout" name="verticalLayout">
