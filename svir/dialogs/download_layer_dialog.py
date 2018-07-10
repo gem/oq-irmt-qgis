@@ -1,4 +1,3 @@
-from builtins import next
 # -*- coding: utf-8 -*-
 # /***************************************************************************
 # Irmt
@@ -29,7 +28,12 @@ import tempfile
 import shutil
 from xml.etree import ElementTree
 from qgis.PyQt.QtCore import pyqtSlot, Qt
-from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox, QListWidgetItem, QMessageBox
+from qgis.PyQt.QtWidgets import (
+                                 QDialog,
+                                 QDialogButtonBox,
+                                 QListWidgetItem,
+                                 QMessageBox,
+                                 )
 from qgis.core import QgsVectorLayer,  QgsProject
 from svir.thread_worker.abstract_worker import start_worker
 from svir.thread_worker.download_platform_project_worker import (
@@ -248,8 +252,8 @@ class DownloadLayerDialog(QDialog, FORM_CLASS):
             parent_dlg.extra_infos[parent_dlg.layer_id]['Title'], 'ogr')
         if layer.isValid():
             QgsProject.instance().addMapLayer(layer)
-            msg = 'Shapefile imported to %s' % new_shp_file_path
-            log_msg(msg, level='I', message_bar=self.iface.messageBar())
+            msg = 'Shapefile was imported to %s' % new_shp_file_path
+            log_msg(msg, level='S', message_bar=self.iface.messageBar())
         else:
             msg = 'Layer invalid'
             log_msg(msg, level='C', message_bar=self.iface.messageBar())

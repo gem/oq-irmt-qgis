@@ -1,4 +1,3 @@
-from builtins import zip
 # -*- coding: utf-8 -*-
 #
 # /***************************************************************************
@@ -65,7 +64,8 @@ def transform(features_dict, algorithm, variant_name="", inverse=False):
         del f_dict_copy[key]
     transformed_list, invalid_input_values = algorithm(
         list(f_dict_copy.values()), variant_name, inverse)
-    transformed_dict = dict(list(zip(list(f_dict_copy.keys()), transformed_list)))
+    transformed_dict = dict(
+        list(zip(list(f_dict_copy.keys()), transformed_list)))
     # add to the transformed_dict the null elements that were removed
     transformed_dict.update(dict_of_null_values)
     return transformed_dict, invalid_input_values
@@ -287,7 +287,8 @@ def simple_quadratic(input_list, variant_name="INCREASING", inverse=False):
     if variant_name == "INCREASING":
         output_list = [(x - bottom) ** 2 / squared_range for x in input_list]
     elif variant_name == "DECREASING":
-        output_list = [(max_input - (x - bottom)) ** 2 / squared_range for x in input_list]
+        output_list = [(max_input - (x - bottom)) ** 2 / squared_range
+                       for x in input_list]
 
     else:
         raise NotImplementedError("%s variant not implemented" % variant_name)
@@ -313,7 +314,7 @@ def sigmoid(input_list, variant_name="", inverse=False):
         for y in input_list:
             try:
                 output = log(y / (1 - y))
-            except:
+            except Exception:
                 output = NULL
                 invalid_input_values.append(y)
             output_list.append(output)
@@ -321,7 +322,7 @@ def sigmoid(input_list, variant_name="", inverse=False):
         for x in input_list:
             try:
                 output = 1 / (1 + math.exp(-x))
-            except:
+            except Exception:
                 output = NULL
                 invalid_input_values.append(x)
             output_list.append(output)

@@ -1,4 +1,3 @@
-from builtins import str
 # -*- coding: utf-8 -*-
 #/***************************************************************************
 # Irmt
@@ -135,7 +134,7 @@ def getLabelingAsSld(layer):
         s += "</PointPlacement></LabelPlacement>"
         s += "</TextSymbolizer>"
         return s
-    except:
+    except Exception:
         return ""
 
 

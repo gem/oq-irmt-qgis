@@ -1,7 +1,5 @@
-from future import standard_library
-standard_library.install_aliases()
 # -*- coding: utf-8 -*-
-#/***************************************************************************
+# /***************************************************************************
 # Irmt
 #                                 A QGIS plugin
 # OpenQuake Integrated Risk Modelling Toolkit
@@ -27,7 +25,6 @@ standard_library.install_aliases()
 import traceback
 from qgis.PyQt import QtCore
 from qgis.core import QgsMessageLog, Qgis
-from qgis.gui import QgsMessageBar
 
 from qgis.PyQt.QtCore import Qt, QThread
 from qgis.PyQt.QtWidgets import QProgressBar, QPushButton
@@ -189,5 +186,5 @@ def worker_error(e, exception_string, message_bar):
         level=Qgis.Critical)
     QgsMessageLog.logMessage(
         'Worker thread raised an exception: %s' % exception_string,
-        'IRMT worker',
+        'OpenQuake IRMT worker',
         level=Qgis.Critical)

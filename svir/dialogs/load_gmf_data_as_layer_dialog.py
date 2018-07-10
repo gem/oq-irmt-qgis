@@ -1,4 +1,3 @@
-from builtins import zip
 # -*- coding: utf-8 -*-
 # /***************************************************************************
 # Irmt
@@ -23,18 +22,17 @@ from builtins import zip
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-from qgis.core import QgsFeature, QgsGeometry, QgsPointXY, edit
+from qgis.core import (
+    QgsFeature, QgsGeometry, QgsPointXY, edit, QgsTask, QgsApplication)
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 from svir.calculations.calculate_utils import add_numeric_attribute
-from svir.utilities.utils import (WaitCursorManager,
-                                  log_msg,
-                                  extract_npz,
-                                  )
+from svir.utilities.utils import WaitCursorManager, log_msg, extract_npz
+from svir.tasks.extract_npz_task import ExtractNpzTask
 
 
 class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
     """
-    Modal dialog to load gmf_data from an oq-engine output, as layer
+    Dialog to load gmf_data from an oq-engine output, as layer
     """
 
     def __init__(self, iface, viewer_dock, session, hostname, calc_id,
@@ -47,7 +45,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
             engine_version=engine_version)
 
         self.setWindowTitle(
-            'Load ground motion fields from NPZ, as layer')
+            'Load ground motion fields as layer')
         self.create_load_selected_only_ckb()
         self.create_num_sites_indicator()
         # NOTE: gmpe and gsim are synonyms
@@ -55,13 +53,11 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         self.create_imt_selector()
         self.create_eid_selector()
 
-        self.npz_file = extract_npz(
-            session, hostname, calc_id, output_type,
-            message_bar=iface.messageBar(), params=None)
-
-        self.populate_out_dep_widgets()
-        self.adjustSize()
-        self.set_ok_button()
+        self.extract_npz_task = ExtractNpzTask(
+            'Extract ground motion fields', QgsTask.CanCancel, self.session,
+            self.hostname, self.calc_id, self.output_type, self.finalize_init,
+            self.on_extract_error)
+        QgsApplication.taskManager().addTask(self.extract_npz_task)
 
     def set_ok_button(self):
         self.ok_button.setEnabled(self.imt_cbx.currentIndex() != -1)
@@ -80,9 +76,11 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
     def populate_rlz_or_stat_cbx(self):
         self.rlzs_or_stats = [key for key in sorted(self.npz_file)
                               if key not in ('imtls', 'array')]
-        self.rlzs_npz = extract_npz(
-            self.session, self.hostname, self.calc_id, 'realizations',
-            message_bar=self.iface.messageBar(), params=None)
+        with WaitCursorManager(
+                'Extracting...', message_bar=self.iface.messageBar()):
+            self.rlzs_npz = extract_npz(
+                self.session, self.hostname, self.calc_id, 'realizations',
+                message_bar=self.iface.messageBar(), params=None)
         self.gsims = [gsim.decode('utf8')
                       for gsim in self.rlzs_npz['array']['gsims']]
         self.rlz_or_stat_cbx.clear()

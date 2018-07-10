@@ -1,12 +1,12 @@
 .. _chap-viewer-dock:
 
 ********************
-The IRMT Data Viewer
+The OpenQuake IRMT Data Viewer
 ********************
 
-The IRMT Data Viewer is a dock window added to QGIS by the IRMT plugin,
+The OpenQuake IRMT Data Viewer is a dock window added to QGIS by the OpenQuake IRMT plugin,
 used for data visualization. It is shown/hidden by pressing the
-button :guilabel:`Toggle IRMT Data Viewer`.
+button :guilabel:`Toggle OpenQuake IRMT Data Viewer`.
 
 In its initial state, the window displays a :guilabel:`Output Type` selector,
 that enables to trigger the visualization of different types of data, and
@@ -86,7 +86,7 @@ map are highlighted.
     :align: center
     :scale: 60%
 
-    IRMT Data Viewer used for displaying hazard curves
+    OpenQuake IRMT Data Viewer used for displaying hazard curves
 
 
 Visualizing uniform hazard spectra
@@ -109,7 +109,7 @@ Spectra` (:numref:`fig-dataViewerUHS`).
     :align: center
     :scale: 60%
 
-    IRMT Data Viewer used for displaying Uniform Hazard Spectra
+    OpenQuake IRMT Data Viewer used for displaying Uniform Hazard Spectra
 
 
 Visualizing outputs of risk calculations
@@ -182,7 +182,7 @@ Visualizing recovery curves
     :align: center
     :scale: 60%
 
-    IRMT Data Viewer used for recovery modeling analysis
+    OpenQuake IRMT Data Viewer used for recovery modeling analysis
 
 Please refer to :ref:`chap-recovery-modeling` for a general overview of
 the recovery modeling workflow, its scientific background and the description

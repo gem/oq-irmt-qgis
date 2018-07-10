@@ -19,7 +19,7 @@ QGIS_APP = None  # Static variable used to hold hand to running QGIS app
 CANVAS = None
 PARENT = None
 IFACE = None
-LOGGER = logging.getLogger('IRMT')
+LOGGER = logging.getLogger('OpenQuake')
 GEOCRS = 4326  # constant for EPSG:GEOCRS Geographic CRS id
 GOOGLECRS = 3857  # constant for EPSG:GOOGLECRS Google Mercator id
 # DEVNULL = open(os.devnull, 'w')
@@ -85,7 +85,7 @@ def get_qgis_app():
         # noinspection PyCallByClass,PyArgumentList
         QCoreApplication.setOrganizationDomain('qgis.org')
         # noinspection PyCallByClass,PyArgumentList
-        QCoreApplication.setApplicationName('QGIS3IRMTTesting')
+        QCoreApplication.setApplicationName('QGIS3_OpenQuake_Testing')
 
         # noinspection PyPep8Naming
         if 'argv' in dir(sys):
@@ -662,3 +662,11 @@ def dict_values_sorted(d):
         return {k: dict_values_sorted(v) for k, v in d.items()}
     else:
         return d
+
+
+def assert_and_emit(signal, assertion, p1, p2, msg):
+    try:
+        assertion(p1, p2, msg)
+    except Exception as exc:
+        signal.emit(exc)
+        raise exc

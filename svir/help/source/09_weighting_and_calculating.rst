@@ -28,7 +28,7 @@ assumptions, and could ignore or incorporate weights.
 
 The :guilabel:`Weight data and calculate indices` widget
 (:numref:`fig-weighting-and-calculating`) is the key module of the IMRT. It
-contains the model building functionality of the IRMT, and it is used to
+contains the model building functionality of the OpenQuake IRMT, and it is used to
 create, edit, and manage composite indicator(s) and integrated risk model
 development. It provides users with an intuitive way to develop composite
 models by building and editing the selected project definition through the use
@@ -49,7 +49,7 @@ indices.  
 
     Composite indicator types
 
-Currently, the IRMT supports the development of two composite model types: a)
+Currently, the OpenQuake IRMT supports the development of two composite model types: a)
 deductive and, b) hierarchical (:numref:`fig-composite-indicator-types`
 [#citation]_).
 Deductive models typically contain fewer than ten indicators that are
@@ -214,7 +214,7 @@ Central to the construction of composite indicators in the need to combine data
 which implies decisions on weighting. The dialog to
 set weights is opened in the same way as described in
 :ref:`sec-setting-operators`. Several weighting techniques are
-available, and some make use of statistical models.  For the IRMT we
+available, and some make use of statistical models.  For the OpenQuake IRMT we
 implemented a simple solution to weighting that is often based on the results
 of participatory approaches. A weight can be edited manually by clicking on its
 value and overwriting it with a new value. A weight can also be edited by

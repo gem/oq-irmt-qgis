@@ -1,8 +1,10 @@
+import os
+import unittest
+import logging
+import configparser
 
 # coding=utf-8
 """Tests for map creation in QGIS plugin."""
-from future import standard_library
-standard_library.install_aliases()
 
 __author__ = 'Tim Sutton <tim@kartoza.com>'
 __revision__ = '$Format:%H$'
@@ -11,12 +13,7 @@ __license__ = "GPL"
 __copyright__ = 'Copyright 2012, Australia Indonesia Facility for '
 __copyright__ += 'Disaster Reduction'
 
-import os
-import unittest
-import logging
-import configparser
-
-LOGGER = logging.getLogger('IRMT')
+LOGGER = logging.getLogger('OpenQuake')
 
 
 class TestInit(unittest.TestCase):

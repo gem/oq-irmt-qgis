@@ -9,7 +9,7 @@ Safety Commission and is part of a collaborative effort between the Global
 Earthquake Model (GEM) and the University of California at Los Angeles (UCLA),
 Department of Civil and Environmental Engineering. GEM implemented the
 scientific methodology developed by UCLA [BDL+15]_ and integrated it into
-the QGIS framework as part of the IRMT plugin.
+the QGIS framework as part of the OpenQuake IRMT plugin.
 
 This computational tool was developed to quantify the effectiveness of specific
 resilience-building actions (preparedness and response) that would
@@ -55,7 +55,7 @@ following:
 The recovery framework previously described was incorporated into this plugin,
 resulting in a dynamic and user-friendly software tool for generating both
 building-by-building and community level post-earthquake recovery predictions.
-The IRMT allows users to:
+The OpenQuake IRMT allows users to:
 
 #. incorporate their local knowledge and data;
 #. develop composite indicators (or indices) to measure social vulnerability
@@ -167,8 +167,8 @@ The user can select individual buildings (or a group of buildings) and the
 respective recovery curve (single or aggregated) is automatically developed.
 The curve can be edited, digitized and exported as a CSV, as well as saved as
 an image. The user requests the development of recovery curves by selecting the
-relevant layer, opening the :guilabel:`IRMT Data Viewer` (making sure that the
-:guilabel:`Toggle viewer dock` option is checked in the IRMT menu), and setting
+relevant layer, opening the :guilabel:`OpenQuake IRMT Data Viewer` (making sure that the
+:guilabel:`Toggle viewer dock` option is checked in the OpenQuake IRMT menu), and setting
 the :guilabel:`Output Type` tab to :guilabel:`Recovery Curves`. One of two
 available algorithmic approaches, regarding the estimation of the recovery, has
 to be chosen. The :guilabel:`Aggregate` approach produces the recovery model as
@@ -190,7 +190,7 @@ algorithm in the QGIS software enables the users to adapt the workflow to their
 needs, leveraging all the features provided by the QGIS framework. The QGIS
 Processing Toolbox gives access to a wide variety of geoalgorithms, seamlessly
 integrating several different open-source resources, such as R, SAGA or GDAL.
-For instance, a SAGA algorithm, the 'Add Polygon Attributes to Points', can be
+For instance, they can be
 used to aggregate by zone a set of selected assets, resulting in relating each
 asset to the identifier of the geographical area (zone) where it belongs.
 Following, the selection of the set of assets to be considered in the analysis

@@ -1,4 +1,3 @@
-from builtins import str
 # -*- coding: utf-8 -*-
 # /***************************************************************************
 # Irmt
@@ -64,21 +63,18 @@ from svir.dialogs.viewer_dock import ViewerDock
 from svir.utilities.import_sv_data import get_loggedin_downloader
 from svir.dialogs.download_layer_dialog import DownloadLayerDialog
 from svir.dialogs.projects_manager_dialog import ProjectsManagerDialog
-from svir.dialogs.select_input_layers_dialog import SelectInputLayersDialog
 from svir.dialogs.select_sv_variables_dialog import SelectSvVariablesDialog
 from svir.dialogs.settings_dialog import SettingsDialog
 from svir.dialogs.transformation_dialog import TransformationDialog
 from svir.dialogs.upload_settings_dialog import UploadSettingsDialog
 from svir.dialogs.weight_data_dialog import WeightDataDialog
-# from svir.dialogs.recovery_modeling_dialog import RecoveryModelingDialog
-# from svir.dialogs.recovery_settings_dialog import RecoverySettingsDialog
-# from svir.dialogs.ipt_dialog import IptDialog
-# from svir.dialogs.taxtweb_dialog import TaxtwebDialog
-# from svir.dialogs.taxonomy_dialog import TaxonomyDialog
+from svir.dialogs.recovery_modeling_dialog import RecoveryModelingDialog
+from svir.dialogs.recovery_settings_dialog import RecoverySettingsDialog
+from svir.dialogs.ipt_dialog import IptDialog
+from svir.dialogs.taxtweb_dialog import TaxtwebDialog
+from svir.dialogs.taxonomy_dialog import TaxonomyDialog
 from svir.dialogs.drive_oq_engine_server_dialog import (
     DriveOqEngineServerDialog)
-from svir.dialogs.load_ruptures_as_layer_dialog import (
-    LoadRupturesAsLayerDialog)
 
 from svir.thread_worker.abstract_worker import start_worker
 from svir.thread_worker.download_platform_data_worker import (
@@ -103,7 +99,8 @@ from svir.utilities.utils import (tr,
                                   save_layer_as_shapefile,
                                   get_style,
                                   get_checksum,
-                                  warn_scipy_missing)
+                                  warn_scipy_missing,
+                                  )
 from svir.utilities.shared import (DEBUG,
                                    PROJECT_TEMPLATE,
                                    THEME_TEMPLATE,
@@ -147,7 +144,7 @@ class Irmt(QObject):
 
         # our own menu
         self.menu = QMenu(self.iface.mainWindow())
-        self.menu.setTitle("IRMT")
+        self.menu.setTitle("OpenQuake IRMT")
 
         # keep a list of the menu items, in order to easily unload them later
         self.registered_actions = dict()
@@ -181,11 +178,11 @@ class Irmt(QObject):
 
     def initGui(self):
         # create our own toolbar
-        self.toolbar = self.iface.addToolBar('IRMT')
+        self.toolbar = self.iface.addToolBar('OpenQuake IRMT')
         self.toolbar.setObjectName('IRMTToolBar')
 
         menu_bar = self.iface.mainWindow().menuBar()
-        get_menu = self.get_menu(menu_bar, 'IRMT')
+        get_menu = self.get_menu(menu_bar, 'OpenQuake IRMT')
 
         if get_menu is not None:
             self.menu = get_menu
@@ -217,7 +214,7 @@ class Irmt(QObject):
                            ":/plugins/irmt/upload.svg",
                            u"&Upload project to the OpenQuake Platform",
                            self.upload,
-                           enable=False,
+                           enable=self.experimental_enabled(),
                            add_to_layer_actions=True,
                            submenu='OQ Platform')
         # Action to drive ipt
@@ -279,38 +276,20 @@ class Irmt(QObject):
                            add_to_toolbar=True,
                            submenu='Integrated risk')
 
-        # # Action to run the recovery analysis
-        # self.add_menu_item("recovery_modeling",
-        #                    ":/plugins/irmt/recovery.svg",
-        #                    u"Run recovery modeling",
-        #                    self.recovery_modeling,
-        #                    enable=self.experimental_enabled(),
-        #                    submenu='Recovery modeling')
-        # # Action to set the recovery modeling parameters
-        # self.add_menu_item("recovery_settings",
-        #                    ":/plugins/irmt/recovery_settings.svg",
-        #                    u"Recovery modeling settings",
-        #                    self.recovery_settings,
-        #                    enable=self.experimental_enabled(),
-        #                    submenu='Recovery modeling')
-
-        # Action to activate the modal dialog to guide the user through loss
-        # aggregation by zone
-        self.add_menu_item("aggregate_losses",
-                           ":/plugins/irmt/aggregate.svg",
-                           u"&Aggregate loss by zone",
-                           self.aggregate_losses,
-                           enable=True,
-                           add_to_layer_actions=False,
-                           add_to_toolbar=True,
-                           submenu='Utilities')
-
-        self.add_menu_item("load_ruptures_as_layer",
-                           ":/plugins/irmt/load_from_oqoutput.svg",
-                           u"Load ruptures as layer",
-                           self.load_ruptures_as_layer,
-                           enable=True,
-                           submenu='OQ Engine')
+        # Action to run the recovery analysis
+        self.add_menu_item("recovery_modeling",
+                           ":/plugins/irmt/recovery.svg",
+                           u"Run recovery modeling",
+                           self.recovery_modeling,
+                           enable=self.experimental_enabled(),
+                           submenu='Recovery modeling')
+        # Action to set the recovery modeling parameters
+        self.add_menu_item("recovery_settings",
+                           ":/plugins/irmt/recovery_settings.svg",
+                           u"Recovery modeling settings",
+                           self.recovery_settings,
+                           enable=self.experimental_enabled(),
+                           submenu='Recovery modeling')
 
         # Action to activate the modal dialog to select a layer and one of
         # its attributes, in order to transform that attribute
@@ -329,7 +308,7 @@ class Irmt(QObject):
         # connection with the platform
         self.add_menu_item("show_settings",
                            ":/plugins/irmt/settings.svg",
-                           u"&IRMT settings",
+                           u"&OpenQuake IRMT settings",
                            self.show_settings,
                            enable=True,
                            add_to_toolbar=True)
@@ -339,7 +318,7 @@ class Irmt(QObject):
         # Action to open the plugin's manual
         self.add_menu_item("help",
                            ":/plugins/irmt/manual.svg",
-                           u"IRMT &manual",
+                           u"OpenQuake IRMT &manual",
                            self.show_manual,
                            enable=True,
                            add_to_toolbar=True)
@@ -360,19 +339,15 @@ class Irmt(QObject):
             '/irmt/experimental_enabled', False, type=bool)
         return experimental_enabled
 
-    # def recovery_modeling(self):
-    #     if IS_SCIPY_INSTALLED:
-    #         dlg = RecoveryModelingDialog(self.iface)
-    #         dlg.exec_()
-    #     else:
-    #         warn_scipy_missing(self.iface.messageBar())
+    def recovery_modeling(self):
+        if IS_SCIPY_INSTALLED:
+            dlg = RecoveryModelingDialog(self.iface)
+            dlg.exec_()
+        else:
+            warn_scipy_missing(self.iface.messageBar())
 
-    # def recovery_settings(self):
-    #     dlg = RecoverySettingsDialog(self.iface)
-    #     dlg.exec_()
-
-    def load_ruptures_as_layer(self):
-        dlg = LoadRupturesAsLayerDialog(self.iface, 'ruptures')
+    def recovery_settings(self):
+        dlg = RecoverySettingsDialog(self.iface)
         dlg.exec_()
 
     def ipt_set_cells(self):
@@ -431,6 +406,8 @@ class Irmt(QObject):
 
     def reset_engine_login(self):
         if self.drive_oq_engine_server_dlg is not None:
+            self.drive_oq_engine_server_dlg.current_calc_id = None
+            self.drive_oq_engine_server_dlg.pointed_calc_id = None
             self.drive_oq_engine_server_dlg.is_logged_in = False
             self.drive_oq_engine_server_dlg.clear_output_list()
 
@@ -477,7 +454,7 @@ class Irmt(QObject):
                       add_to_toolbar=False,
                       ):
         """
-        Add an item to the IRMT menu and a corresponding toolbar icon
+        Add an item to the OpenQuake IRMT menu and a corresponding toolbar icon
 
         :param icon_path: path of the icon associated to the action
         :param label: name of the action, visible to the user
@@ -496,7 +473,7 @@ class Irmt(QObject):
         if add_to_layer_actions:
             self.iface.addCustomActionForLayerType(
                 action,
-                u"IRMT",
+                u"OpenQuake IRMT",
                 layers_type,
                 True)
 
@@ -544,7 +521,8 @@ class Irmt(QObject):
             self.registered_actions["transform_attributes"].setEnabled(True)
             read_layer_suppl_info_from_qgs(
                 self.iface.activeLayer().id(), self.supplemental_information)
-            self.registered_actions["upload"].setEnabled(True)
+            self.registered_actions["upload"].setEnabled(
+                self.experimental_enabled())
         except KeyError:
             # self.supplemental_information[self.iface.activeLayer().id()]
             # is not defined
@@ -591,22 +569,6 @@ class Irmt(QObject):
 
         # shutdown websocket server
         self.stop_websocket()
-
-    def aggregate_losses(self):
-        """
-        Open a modal dialog to select a layer containing zonal data for social
-        vulnerability and a layer containing loss data points.
-
-        After data are loaded, calculate_zonal_stats() is automatically called,
-        in order to aggregate loss points with respect to the same geometries
-        defined for the socioeconomic data, and to compute zonal statistics
-        (point count, loss sum, and average for each zone)
-        """
-        # Create the dialog (after translation) and keep reference
-        dlg = SelectInputLayersDialog(self.iface)
-        # Run the dialog event loop
-        dlg.exec_()
-        self.update_actions_status()
 
     def import_sv_variables(self):
         """
@@ -716,7 +678,7 @@ class Irmt(QObject):
         """
         fname, msg = result
         display_msg = tr("Socioeconomic data loaded in a new layer")
-        log_msg(display_msg, level='I', message_bar=self.iface.messageBar())
+        log_msg(display_msg, level='S', message_bar=self.iface.messageBar())
         # don't remove the file, otherwise there will be concurrency
         # problems
 
@@ -864,7 +826,7 @@ class Irmt(QObject):
                                  for attr_id in added_attrs_ids]
             msg = ('New attributes have been added to the layer: %s'
                    % ', '.join(added_attrs_names))
-            log_msg(msg, level='I', message_bar=self.iface.messageBar())
+            log_msg(msg, level='S', message_bar=self.iface.messageBar())
         if discarded_feats:
             discarded_feats_ids_missing = [
                 feat.feature_id for feat in discarded_feats
@@ -1328,7 +1290,7 @@ class Irmt(QObject):
                         msg += (' The transformation could not'
                                 ' be performed for the following'
                                 ' input values: %s' % invalid_input_values)
-                    level = 'I' if not invalid_input_values else 'W'
+                    level = 'S' if not invalid_input_values else 'W'
                     log_msg(msg, level=level,
                             message_bar=self.iface.messageBar())
                 except (ValueError, NotImplementedError, TypeError) as e:
@@ -1364,7 +1326,7 @@ class Irmt(QObject):
                 layer.commitChanges()
                 layer.triggerRepaint()
                 msg = 'Calculation performed on layer %s' % layer.name()
-                log_msg(msg, level='I', message_bar=self.iface.messageBar())
+                log_msg(msg, level='S', message_bar=self.iface.messageBar())
         self.update_actions_status()
 
     def upload(self):

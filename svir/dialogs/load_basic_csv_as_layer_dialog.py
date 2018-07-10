@@ -31,7 +31,7 @@ from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 
 class LoadBasicCsvAsLayerDialog(LoadOutputAsLayerDialog):
     """
-    Modal dialog to load as layer a basic csv with no geometries, to be
+    Dialog to load as layer a basic csv with no geometries, to be
     browsed through its attribute table
     """
 
@@ -51,6 +51,7 @@ class LoadBasicCsvAsLayerDialog(LoadOutputAsLayerDialog):
         self.file_browser_tbn.setEnabled(True)
         if self.path:
             self.path_le.setText(self.path)
+        self.show()
 
     def set_ok_button(self):
         self.ok_button.setEnabled(bool(self.path))
@@ -74,4 +75,6 @@ class LoadBasicCsvAsLayerDialog(LoadOutputAsLayerDialog):
         except RuntimeError as exc:
             log_msg(str(exc), level='C', message_bar=self.iface.messageBar())
             return
+        log_msg('Layer %s was loaded successfully' % layer_name,
+                level='S', message_bar=self.iface.messageBar())
         self.iface.showAttributeTable(self.layer)

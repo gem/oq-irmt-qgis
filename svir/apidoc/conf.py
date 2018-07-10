@@ -59,7 +59,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'IRMT'
+project = u'OpenQuake IRMT'
 copyright = u'2017, GEM Foundation'
 author = u'GEM Foundation'
 
@@ -272,7 +272,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'IRMT.tex', u'IRMT Documentation',
+    (master_doc, 'IRMT.tex', u'OpenQuake IRMT Documentation',
      u'GEM Foundation', 'manual'),
 ]
 
@@ -314,7 +314,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'irmt', u'IRMT Documentation',
+    (master_doc, 'irmt', u'OpenQuake IRMT Documentation',
      [author], 1)
 ]
 
@@ -329,7 +329,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'IRMT', u'IRMT Documentation',
+    (master_doc, 'IRMT', u'OpenQuake IRMT Documentation',
      author, 'IRMT', 'IRMT apidoc.',
      'Miscellaneous'),
 ]

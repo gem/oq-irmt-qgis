@@ -212,7 +212,7 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
             self.zone_field_name = self.zone_field_name_cbx.currentText()
             (point_attrs_dict, self.dmg_by_asset_layer,
              self.zone_field_name) = add_zone_id_to_points(
-                self.iface, self.dmg_by_asset_layer,
+                self.dmg_by_asset_layer,
                 self.svi_layer, self.zone_field_name)
         else:
             # the layer containing points was not modified by the zonal
@@ -225,6 +225,6 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
                 point_attrs_dict,
                 self.integrate_svi_check.isChecked())
         msg = 'Recovery curves have been saved to [%s]' % self.output_data_dir
-        log_msg(msg, level='I', message_bar=self.iface.messageBar())
+        log_msg(msg, level='S', message_bar=self.iface.messageBar())
         self.save_state()
         super(RecoveryModelingDialog, self).accept()

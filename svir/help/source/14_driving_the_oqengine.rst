@@ -93,7 +93,8 @@ styling is applied, based on parameters chosen by the user. In some cases (e.g.,
 damage by asset), while loading the layer, it is also possible to aggregate
 points by zone. In order to do so, it is necessary to specify another available
 layer, with polygons geospatially containing the points to be collected.
-The aggregation is performed as described in :ref:`_chap-aggregating-loss-by-zone`.
+The aggregation is performed leveraging an algorithm provided by the QGIS
+processing toolbox, called "Join attributes by location (summary)".
 
 .. warning:: The layers that are automatically imported from OQ-Engine outputs
              are stored `in memory`, unless they are explicitly saved by the
@@ -146,7 +147,7 @@ is simply providing the expected loss for a specified frequency of occurrence
 (or return period), for each asset.
 
 Other kinds of outputs (e.g. hazard curves and uniform hazard spectra) can be
-visualized in the IRMT Data Viewer (see :ref:`chap-viewer-dock`).
+visualized in the OpenQuake IRMT Data Viewer (see :ref:`chap-viewer-dock`).
 
 .. _fig-hazard-map:
 

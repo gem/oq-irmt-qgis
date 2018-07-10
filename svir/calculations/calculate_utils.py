@@ -1,4 +1,3 @@
-from builtins import str
 # -*- coding: utf-8 -*-
 # /***************************************************************************
 # Irmt
@@ -24,7 +23,14 @@ from builtins import str
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 from copy import deepcopy
-from qgis.core import QgsField, QgsExpression, edit, NULL, QgsExpressionContext
+from qgis.core import (
+                       QgsField,
+                       QgsExpression,
+                       edit,
+                       NULL,
+                       QgsExpressionContext,
+                       QgsExpressionContextUtils,
+                       )
 
 from qgis.PyQt.QtCore import QVariant
 
@@ -210,8 +216,6 @@ def calculate_node(
     # 'Use a custom field (no recalculation) as the new one with no parentheses
     if operator in (OPERATORS_DICT['CUSTOM'],
                     'Use a custom field (no recalculation)'):
-        # FIXME QGIS3: still unable to evaluate correctly a formula that
-        # includes fields in the calculation
         customFormula = node.get('customFormula', '')
         expression = QgsExpression(customFormula)
         valid, err_msg = QgsExpression.checkExpression(customFormula, None)
@@ -230,12 +234,15 @@ def calculate_node(
         else:
             # attempt to retrieve a formula from the description and to
             # calculate the field values based on that formula
-            expression.prepare(
-                QgsExpressionContext().setFields(layer.fields()))
+            context = QgsExpressionContext()
+            context.appendScope(QgsExpressionContextUtils.layerScope(layer))
+            expression.prepare(context)
             with edit(layer):
                 for feat in layer.getFeatures():
-                    value = expression.evaluate(
-                        QgsExpressionContext().setFeature(feat))
+                    context.setFeature(feat)
+                    value = expression.evaluate(context)
+                    if expression.hasEvalError():
+                        raise ValueError(expression.evalErrorString())
                     if value == NULL:
                         discard_feat = True
                         discarded_feat = DiscardedFeature(

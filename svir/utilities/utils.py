@@ -1,7 +1,3 @@
-from builtins import str
-from builtins import next
-from builtins import range
-from builtins import object
 # -*- coding: utf-8 -*-
 # /***************************************************************************
 # Irmt
@@ -86,7 +82,7 @@ def get_irmt_version():
     return _IRMT_VERSION
 
 
-def log_msg(message, tag='GEM IRMT plugin', level='I', message_bar=None,
+def log_msg(message, tag='GEM OpenQuake plugin', level='I', message_bar=None,
             duration=None, exception=None):
     """
     Add a message to the QGIS message log. If a messageBar is provided,
@@ -883,12 +879,16 @@ def get_style(layer, message_bar, restore_defaults=False):
             force_restyling = value
     if restore_defaults:
         force_restyling = DEFAULT_SETTINGS['force_restyling']
+    # FIXME QGIS3: at project level, qgis pretends to find a value as false,
+    #              even when it should be not found, so it prevents layers
+    #              to be styled
+    #
     # otherwise look for the setting at project level
-    if force_restyling is None:
-        value, found = QgsProject.instance().readBoolEntry(
-            'irmt', 'force_restyling')
-        if found:
-            force_restyling = value
+    # if force_restyling is None:
+    #     value, found = QgsProject.instance().readBoolEntry(
+    #         'irmt', 'force_restyling')
+    #     if found:
+    #         force_restyling = value
     # if again the setting is not found, look for it at the general level
     if force_restyling is None:
         force_restyling = settings.value(

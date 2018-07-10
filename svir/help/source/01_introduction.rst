@@ -17,8 +17,8 @@ capacity of populations to respond to damaging events and to provide a set of
 metrics for priority setting and decision-making.  
 
 The employment  of a methodology and workflow necessary for the evaluation of
-seismic risk that is integrated and holistic begins with the Integrated Risk
-Modelling Toolkit (IRMT). The IRMT is QGIS plugin that was developed by the
+seismic risk that is integrated and holistic begins with the OpenQuake Integrated Risk
+Modelling Toolkit (OpenQuake IRMT). The OpenQuake IRMT is QGIS plugin that was developed by the
 `Global Earthquake Model (GEM) Foundation <http://www.globalquakemodel.org/>`_
 and co-designed by GEM and the `Center for Disaster Management and Risk
 Reduction Technology (CEDIM) <https://www.cedim.de/english/index.php>`_. The
@@ -36,7 +36,7 @@ of change (up or down; increasing or decreasing). The mathematical combination
 (or aggregation as it is termed) of a set of indicators forms a composite
 indicator (or composite index or indices).
 
-As part of the workflow, the IRMT facilitates the integration of composite
+As part of the workflow, the OpenQuake IRMT facilitates the integration of composite
 indicators of socio-economic characteristics with measures of physical risk
 (i.e. estimations of human or economic loss) from the OpenQuake Engine
 (OQ-engine) ([PMW+14]_ and [SCP+14]_), or other sources, to form what is referred to
@@ -80,13 +80,13 @@ resources ([NSST05]_ and [NSST08]_) aimed at providing a guide for the
 construction and use of composite indicators.
 
 This literature outlines the process of robust composite indicator construction
-that contains a number of steps. The IRMT leverages the QGIS platform to guide
+that contains a number of steps. The OpenQuake IRMT leverages the QGIS platform to guide
 the user through the major steps for index construction. These steps include 1)
 the selection of variables; 2) data normalization/standardization; 3) weighting
 and aggregation to produce composite indicators; 4) risk integration using
 OpenQuake risk estimates; and 5) the presentation of the results.
 
-The IRMT plugin has been extended significantly with respect to its original
+The OpenQuake IRMT plugin has been extended significantly with respect to its original
 purposes, in order to make it operate seamlessly with the other main components
 of the OpenQuake suite, i.e., the `OpenQuake Engine <https://github.com/gem/oq-engine>`_
 and the `OpenQuake Platform <https://platform.openquake.org/>`_. This enables
@@ -102,7 +102,7 @@ OpenQuake Platform, can use the interface of the plugin to upload their work to 
 Platform. They can also download and edit projects that were shared through the
 Platform by other users.
 
-Another important addition to the IRMT plugin is a module for post-earthquake
+Another important addition to the OpenQuake IRMT plugin is a module for post-earthquake
 recovery modeling (see :ref:`chap-recovery-modeling`), that was supported by
 the State of California, Alfred E. Alquist Seismic Safety Commission, as part
 of a collaborative effort between the Global Earthquake Model (GEM) and the

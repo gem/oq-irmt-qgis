@@ -246,15 +246,23 @@
         }
 
         function operatorOptions(){
+            // disable custom operator if there's no available numeric field to
+            // be used to store data (e.g. if all numeric fields are already
+            // included in the tree)
+            var fieldOpts = fieldOptions(pdData);
+            var customDisabled = fieldOpts ? false : true;
             var options = '';
             for (var i = 0; i < OPERATORS.length; i++) {
                 var c = OPERATORS[i];
-                if (c == DEFAULT_OPERATOR){
-                    options += '<option value="' + c + '" selected="selected">' + c + '</option>';
+                var selected = (c == DEFAULT_OPERATOR) ? true : false;
+                options += '<option value="' + c +'"';
+                if (selected) {
+                    options += ' selected';
                 }
-                else{
-                    options += '<option value="' + c + '">' + c + '</option>';
+                if (c == 'Use a custom field' && customDisabled){
+                    options += ' disabled';
                 }
+                options += '>' + c + '</option>';
             }
             return options;
         }
@@ -634,7 +642,10 @@
         var svg = d3.select("#projectDefDialog")
             .append("svg")
             .attr("width", "100%")
-            .attr("height", "100%")
+            // FIXME: on QGIS3 the height is not set automatically, hiding the bottom of the tree
+            //        As a temporary solution, I'm forcing the height manually (in this case it should not be a problem) 
+            // .attr("height", "100%")
+            .attr("height", "2000px")
             .attr("id", "project-definition-svg")
             .call(d3.behavior.zoom().scaleExtent([0.1, 5]).on("zoom", function () {
                 svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")");

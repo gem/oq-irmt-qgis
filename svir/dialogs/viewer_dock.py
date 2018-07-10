@@ -1,6 +1,3 @@
-from builtins import next
-from builtins import str
-from builtins import range
 # -*- coding: utf-8 -*-
 # /***************************************************************************
 # Irmt
@@ -33,21 +30,6 @@ import numpy
 from datetime import datetime
 from collections import OrderedDict
 
-try:
-    import matplotlib
-    matplotlib.use('Qt5Agg')
-    from matplotlib.figure import Figure
-    from matplotlib.backends.backend_qt5agg import (
-        FigureCanvasQTAgg as FigureCanvas,
-        NavigationToolbar2QT as NavigationToolbar
-    )
-    from matplotlib.lines import Line2D
-except ImportError as exc:
-    raise ImportError(
-        'There was a problem importing matplotlib. If you are using'
-        ' a 64bit version of QGIS on Windows, please try using'
-        ' a 32bit version instead. %s' % exc)
-
 from qgis.PyQt.QtCore import pyqtSlot, QSettings, Qt
 from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtWidgets import (
@@ -78,6 +60,7 @@ from svir.utilities.utils import (get_ui_class,
                                   extract_npz,
                                   get_loss_types,
                                   get_irmt_version,
+                                  WaitCursorManager,
                                   )
 from svir.recovery_modeling.recovery_modeling import (
     RecoveryModeling, fill_fields_multiselect)
@@ -85,6 +68,16 @@ from svir.ui.list_multiselect_widget import ListMultiSelectWidget
 from svir.ui.list_multiselect_mono_widget import ListMultiSelectMonoWidget
 
 from svir import IS_SCIPY_INSTALLED
+
+import matplotlib
+matplotlib.use('Qt5Agg')  # NOQA
+from matplotlib.backends.qt_compat import QtCore, QtWidgets  # NOQA
+from matplotlib.backends.backend_qt5agg import (
+    FigureCanvas,
+    NavigationToolbar2QT as NavigationToolbar)
+from matplotlib.figure import Figure
+from matplotlib.lines import Line2D
+
 
 FORM_CLASS = get_ui_class('ui_viewer_dock.ui')
 
@@ -371,9 +364,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                         # NOTE: this would not work for multiple values per tag
                         params[tag_name] = value
         output_type = 'aggdamages/%s' % self.loss_type_cbx.currentText()
-        self.dmg_by_asset_aggr = extract_npz(
-            self.session, self.hostname, self.calc_id, output_type,
-            message_bar=self.iface.messageBar(), params=params)
+        with WaitCursorManager(
+                'Extracting...', message_bar=self.iface.messageBar()):
+            self.dmg_by_asset_aggr = extract_npz(
+                self.session, self.hostname, self.calc_id, output_type,
+                message_bar=self.iface.messageBar(), params=params)
         if self.dmg_by_asset_aggr is None:
             return
         self.draw_dmg_by_asset_aggr()
@@ -387,9 +382,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                         # NOTE: this would not work for multiple values per tag
                         params[tag_name] = value
         to_extract = 'agglosses/%s' % self.loss_type_cbx.currentText()
-        self.losses_by_asset_aggr = extract_npz(
-            self.session, self.hostname, self.calc_id, to_extract,
-            message_bar=self.iface.messageBar(), params=params)
+        with WaitCursorManager(
+                'Extracting...', message_bar=self.iface.messageBar()):
+            self.losses_by_asset_aggr = extract_npz(
+                self.session, self.hostname, self.calc_id, to_extract,
+                message_bar=self.iface.messageBar(), params=params)
         if self.losses_by_asset_aggr is None:
             return
         self.draw_losses_by_asset_aggr()
@@ -543,9 +540,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             raise NotImplementedError(output_type)
 
     def load_dmg_by_asset_aggr(self, calc_id, session, hostname, output_type):
-        composite_risk_model_attrs = extract_npz(
-            session, hostname, calc_id, 'composite_risk_model.attrs',
-            message_bar=self.iface.messageBar())
+        with WaitCursorManager(
+                'Extracting...', message_bar=self.iface.messageBar()):
+            composite_risk_model_attrs = extract_npz(
+                session, hostname, calc_id, 'composite_risk_model.attrs',
+                message_bar=self.iface.messageBar())
         if composite_risk_model_attrs is None:
             return
         limit_states = composite_risk_model_attrs['limit_states']
@@ -554,9 +553,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                        with_star=False)
         self.update_list_selected_edt()
 
-        rlzs_npz = extract_npz(
-            session, hostname, calc_id, 'realizations',
-            message_bar=self.iface.messageBar())
+        with WaitCursorManager(
+                'Extracting...', message_bar=self.iface.messageBar()):
+            rlzs_npz = extract_npz(
+                session, hostname, calc_id, 'realizations',
+                message_bar=self.iface.messageBar())
         if rlzs_npz is None:
             return
         rlzs = [rlz.decode('utf8') for rlz in rlzs_npz['array']['gsims']]
@@ -579,8 +580,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.filter_dmg_by_asset_aggr()
 
     def _get_tags(self, session, hostname, calc_id, message_bar, with_star):
-        tags_npz = extract_npz(
-            session, hostname, calc_id, 'asset_tags', message_bar=message_bar)
+        with WaitCursorManager(
+                'Extracting...', message_bar=self.iface.messageBar()):
+            tags_npz = extract_npz(
+                session, hostname, calc_id, 'asset_tags',
+                message_bar=message_bar)
         if tags_npz is None:
             return
         tags_list = []
@@ -607,9 +611,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     def load_losses_by_asset_aggr(
             self, calc_id, session, hostname, output_type):
         if self.output_type == 'losses_by_asset_aggr':
-            rlzs_npz = extract_npz(
-                session, hostname, calc_id, 'realizations',
-                message_bar=self.iface.messageBar())
+            with WaitCursorManager(
+                    'Extracting...', message_bar=self.iface.messageBar()):
+                rlzs_npz = extract_npz(
+                    session, hostname, calc_id, 'realizations',
+                    message_bar=self.iface.messageBar())
             if rlzs_npz is None:
                 return
             self.rlzs = [rlz.decode('utf8')
@@ -1494,7 +1500,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             else:
                 raise NotImplementedError(self.output_type)
         msg = 'Data exported to %s' % filename
-        log_msg(msg, level='I', message_bar=self.iface.messageBar())
+        log_msg(msg, level='S', message_bar=self.iface.messageBar())
 
     @pyqtSlot()
     def on_bw_chk_clicked(self):

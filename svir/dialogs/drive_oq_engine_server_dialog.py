@@ -1,5 +1,3 @@
-from builtins import str
-from builtins import range
 # -*- coding: utf-8 -*-
 # /***************************************************************************
 # Irmt
@@ -29,6 +27,7 @@ import json
 import tempfile
 import zipfile
 import copy
+from uuid import uuid4
 
 from qgis.PyQt.QtCore import (QDir,
                               Qt,
@@ -45,6 +44,7 @@ from qgis.PyQt.QtWidgets import (QDialog,
                                  QMessageBox)
 from qgis.PyQt.QtGui import QColor, QBrush
 from qgis.gui import QgsMessageBar
+from qgis.core import QgsTask, QgsApplication
 
 from requests import Session
 from requests.exceptions import (ConnectionError,
@@ -91,6 +91,8 @@ from svir.dialogs.show_full_report_dialog import ShowFullReportDialog
 from svir.dialogs.show_console_dialog import ShowConsoleDialog
 from svir.dialogs.show_params_dialog import ShowParamsDialog
 from svir.dialogs.settings_dialog import SettingsDialog
+from svir.tasks.download_oq_output_task import (
+    DownloadOqOutputTask, TaskCanceled)
 
 FORM_CLASS = get_ui_class('ui_drive_engine_server.ui')
 
@@ -151,6 +153,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
         self.engine_version = None
         self.attempt_login()
+
+        self.download_tasks = {}
+        self.open_output_dlgs = {}
 
     def attempt_login(self):
         try:
@@ -308,8 +313,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 style = 'background-color: %s; color: %s' % (
                     action['bg_color'], action['txt_color'])
                 button.setStyleSheet(style)
-                button.clicked.connect(lambda checked=False, calc_id=calc['id'], action=action['label']: (
-                        self.on_calc_action_btn_clicked(calc_id, action)))
+                button.clicked.connect(lambda checked=False, calc_id=calc['id'], action=action['label']: (  # NOQA
+                    self.on_calc_action_btn_clicked(calc_id, action)))
                 self.calc_list_tbl.setCellWidget(row, col, button)
                 self.calc_list_tbl.setColumnWidth(col, BUTTON_WIDTH)
         empty_col_names = [''] * len(actions)
@@ -460,7 +465,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 return
         if resp.ok:
             msg = 'Calculation %s successfully removed' % calc_id
-            log_msg(msg, level='I', message_bar=self.message_bar)
+            log_msg(msg, level='S', message_bar=self.message_bar)
             if self.current_calc_id == calc_id:
                 self.current_calc_id = None
                 self.clear_output_list()
@@ -583,24 +588,13 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         dest_folder = ask_for_download_destination_folder(self)
         if not dest_folder:
             return
-        datastore_url = "%s/v1/calc/%s/datastore" % (
-            self.hostname, self.current_calc_id)
-        with WaitCursorManager('Getting HDF5 datastore...',
-                               self.message_bar):
-            try:
-                # FIXME: enable the user to set verify=True
-                resp = self.session.get(datastore_url, timeout=10,
-                                        verify=False)
-            except HANDLED_EXCEPTIONS as exc:
-                self._handle_exception(exc)
-                return
-            filename = resp.headers['content-disposition'].split(
-                'filename=')[1]
-            filepath = os.path.join(dest_folder, os.path.basename(filename))
-            with open(filepath, "wb") as f:
-                f.write(resp.content)
-            log_msg('The datastore has been saved as %s' % filepath,
-                    level='I', message_bar=self.message_bar)
+        task_id = uuid4()
+        self.download_tasks[task_id] = DownloadOqOutputTask(
+            'Downloading HDF5 datastore', QgsTask.CanCancel,
+            None, None, None, dest_folder, self.session, self.hostname,
+            self.notify_downloaded, self.notify_error, self.del_task, task_id,
+            current_calc_id=self.current_calc_id)
+        QgsApplication.taskManager().addTask(self.download_tasks[task_id])
 
     @pyqtSlot()
     def on_show_calc_params_btn_clicked(self):
@@ -726,8 +720,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             style = 'background-color: #3cb3c5; color: white;'
             button.setText("%s %s" % (action, outtype))
         button.setStyleSheet(style)
-        button.clicked.connect(lambda checked=False, output=output, action=action, outtype=outtype: (
-                self.on_output_action_btn_clicked(output, action, outtype)))
+        button.clicked.connect(lambda checked=False, output=output, action=action, outtype=outtype: (  # NOQA
+            self.on_output_action_btn_clicked(output, action, outtype)))
 
     def on_output_action_btn_clicked(self, output, action, outtype):
         output_id = output['id']
@@ -739,75 +733,100 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     self.current_calc_id, self.session,
                     self.hostname, output_type, self.engine_version)
             elif outtype == 'rst':
-                filepath = self.download_output(
-                    output_id, outtype, dest_folder)
-                if not filepath:
-                    return
-                # NOTE: it might be created here directly instead, but this way
-                # we can use the qt-designer
-                self.full_report_dlg = ShowFullReportDialog(filepath)
-                self.full_report_dlg.setWindowTitle(
-                    'Full report of calculation %s' %
-                    self.current_calc_id)
-                self.full_report_dlg.show()
+                descr = ('Download full report for calculation %s'
+                         % self.current_calc_id)
+                task_id = uuid4()
+                self.download_tasks[task_id] = DownloadOqOutputTask(
+                    descr, QgsTask.CanCancel, output_id, outtype,
+                    output_type, dest_folder, self.session, self.hostname,
+                    self.open_full_report, self.notify_error, self.del_task,
+                    task_id)
+                QgsApplication.taskManager().addTask(
+                    self.download_tasks[task_id])
             else:
                 raise NotImplementedError("%s %s" % (action, outtype))
         elif action == 'Load as layer':
-            dest_folder = tempfile.gettempdir()
-            if outtype in ('npz', 'csv'):
-                filepath = self.download_output(
-                    output_id, outtype, dest_folder)
-                if not filepath:
-                    return
-                if output_type not in OUTPUT_TYPE_LOADERS:
-                    raise NotImplementedError(output_type)
-                dlg = OUTPUT_TYPE_LOADERS[output_type](
-                    self.iface, self.viewer_dock,
-                    self.session, self.hostname, self.current_calc_id,
-                    output_type, path=filepath,
-                    engine_version=self.engine_version)
-                dlg.exec_()
+            if outtype == 'npz':
+                self.open_output(output_id, output_type)
+            elif outtype == 'csv':
+                dest_folder = tempfile.gettempdir()
+                descr = 'Download %s for calculation %s' % (
+                    output_type, self.current_calc_id)
+                task_id = uuid4()
+                self.download_tasks[task_id] = DownloadOqOutputTask(
+                    descr, QgsTask.CanCancel, output_id, outtype,
+                    output_type, dest_folder, self.session, self.hostname,
+                    self.open_output, self.notify_error, self.del_task,
+                    task_id)
+                QgsApplication.taskManager().addTask(
+                    self.download_tasks[task_id])
             else:
                 raise NotImplementedError("%s %s" % (action, outtype))
         elif action == 'Download':
-            filepath = self.download_output(output_id, outtype)
-            if not filepath:
-                return
-            msg = 'Calculation %s was saved as %s' % (output_id, filepath)
-            log_msg(msg, level='I', message_bar=self.message_bar)
-        else:
-            raise NotImplementedError(action)
-
-    def download_output(self, output_id, outtype, dest_folder=None):
-        if not dest_folder:
             dest_folder = ask_for_download_destination_folder(self)
             if not dest_folder:
                 return
-        output_download_url = (
-            "%s/v1/calc/result/%s?export_type=%s&dload=true" % (self.hostname,
-                                                                output_id,
-                                                                outtype))
-        with WaitCursorManager('Downloading output...',
-                               self.message_bar):
-            try:
-                # FIXME: enable the user to set verify=True
-                resp = self.session.get(output_download_url, verify=False)
-            except HANDLED_EXCEPTIONS as exc:
-                self._handle_exception(exc)
-                return
-            if not resp.ok:
-                err_msg = (
-                    'Unable to download the output.\n%s: %s.\n%s'
-                    % (resp.status_code, resp.reason, resp.text))
-                log_msg(err_msg, level='C',
-                        message_bar=self.message_bar)
-                return
-            filename = resp.headers['content-disposition'].split(
-                'filename=')[1]
-            filepath = os.path.join(dest_folder, filename)
-            with open(filepath, "wb") as f:
-                f.write(resp.content)
-        return filepath
+            descr = 'Download %s for calculation %s' % (
+                output_type, self.current_calc_id)
+            task_id = uuid4()
+            self.download_tasks[task_id] = DownloadOqOutputTask(
+                descr, QgsTask.CanCancel, output_id, outtype,
+                output_type, dest_folder, self.session, self.hostname,
+                self.notify_downloaded, self.notify_error, self.del_task,
+                task_id)
+            QgsApplication.taskManager().addTask(self.download_tasks[task_id])
+        else:
+            raise NotImplementedError(action)
+
+    def del_task(self, task_id):
+        del(self.download_tasks[task_id])
+
+    def del_dlg(self, dlg_id):
+        del(self.open_output_dlgs[dlg_id])
+
+    def open_full_report(
+            self, output_id=None, output_type=None, filepath=None):
+        assert(filepath is not None)
+        # NOTE: it might be created here directly instead, but this way
+        # we can use the qt-designer
+        self.full_report_dlg = ShowFullReportDialog(filepath)
+        self.full_report_dlg.setWindowTitle(
+            'Full report of calculation %s' %
+            self.current_calc_id)
+        self.full_report_dlg.show()
+
+    def open_output(
+            self, output_id=None, output_type=None, filepath=None):
+        assert(output_type is not None)
+        if output_type not in OUTPUT_TYPE_LOADERS:
+            raise NotImplementedError(output_type)
+        dlg_id = uuid4()
+        open_output_dlg = OUTPUT_TYPE_LOADERS[output_type](
+            self.iface, self.viewer_dock,
+            self.session, self.hostname, self.current_calc_id,
+            output_type, path=filepath,
+            engine_version=self.engine_version)
+        self.open_output_dlgs[dlg_id] = open_output_dlg
+        open_output_dlg.finished[int].connect(
+            lambda result: self.del_dlg(dlg_id))
+
+    def notify_downloaded(
+            self, output_id=None, output_type=None, filepath=None):
+        assert(filepath is not None)
+        if output_id is not None:
+            msg = 'Calculation %s was saved as %s' % (output_id, filepath)
+        else:
+            msg = 'HDF5 datastore saved as %s' % filepath
+        log_msg(msg, level='S', message_bar=self.message_bar)
+
+    def notify_error(self, exc):
+        if isinstance(exc, TaskCanceled):
+            msg = 'Download canceled'
+            log_msg(msg, level='W', message_bar=self.iface.messageBar())
+        else:
+            msg = 'Unable to download the output'
+            log_msg(
+                msg, level='C', message_bar=self.message_bar, exception=exc)
 
     def start_polling(self):
         if not self.is_logged_in:
