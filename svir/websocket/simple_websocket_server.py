@@ -599,7 +599,7 @@ class SimpleWebSocketServer(QThread):
         self.irmt_thread.send_to_wss_sig['QVariantMap'].connect(
             self.send_to_wss)
 
-    @pyqtSlot(str)
+    @pyqtSlot('QVariantMap')
     def handle_irmt_sig(self, data):
         print('From irmt_sig: %s' % data)
 

@@ -70,9 +70,9 @@ from svir.dialogs.upload_settings_dialog import UploadSettingsDialog
 from svir.dialogs.weight_data_dialog import WeightDataDialog
 from svir.dialogs.recovery_modeling_dialog import RecoveryModelingDialog
 from svir.dialogs.recovery_settings_dialog import RecoverySettingsDialog
-from svir.dialogs.ipt_dialog import IptDialog
-from svir.dialogs.taxtweb_dialog import TaxtwebDialog
-from svir.dialogs.taxonomy_dialog import TaxonomyDialog
+# from svir.dialogs.ipt_dialog import IptDialog
+# from svir.dialogs.taxtweb_dialog import TaxtwebDialog
+# from svir.dialogs.taxonomy_dialog import TaxonomyDialog
 from svir.dialogs.drive_oq_engine_server_dialog import (
     DriveOqEngineServerDialog)
 
@@ -1395,7 +1395,7 @@ class Irmt(QObject):
             f.write(os.urandom(32))
         return checksum_file_path, get_checksum(checksum_file_path)
 
-    @pyqtSlot(str)
+    @pyqtSlot('QVariantMap')
     def handle_wss_error_sig(self, data):
         log_msg("wss_error_sig: %s" % data, level='C',
                 message_bar=self.iface.messageBar())
