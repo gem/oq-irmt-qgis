@@ -363,7 +363,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     if self.tags[tag_name]['values'][value]:
                         # NOTE: this would not work for multiple values per tag
                         params[tag_name] = value
-        output_type = 'aggdamages/%s' % self.loss_type_cbx.currentText()
+        output_type = 'agg_damages/%s' % self.loss_type_cbx.currentText()
         with WaitCursorManager(
                 'Extracting...', message_bar=self.iface.messageBar()):
             self.dmg_by_asset_aggr = extract_npz(
@@ -399,7 +399,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     if self.tags[tag_name]['values'][value]:
                         # NOTE: this would not work for multiple values per tag
                         params[tag_name] = value
-        to_extract = 'agglosses/%s' % self.loss_type_cbx.currentText()
+        to_extract = 'agg_losses/%s' % self.loss_type_cbx.currentText()
         with WaitCursorManager(
                 'Extracting...', message_bar=self.iface.messageBar()):
             self.losses_by_asset_aggr = extract_npz(
@@ -659,7 +659,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.loss_type_cbx.blockSignals(False)
 
         if self.output_type == 'avg_losses-stats_aggr':
-            to_extract = 'agglosses/%s' % loss_types[0]
+            to_extract = 'agg_losses/%s' % loss_types[0]
             with WaitCursorManager(
                     'Extracting...', message_bar=self.iface.messageBar()):
                 npz = extract_npz(session, hostname, calc_id, to_extract,
