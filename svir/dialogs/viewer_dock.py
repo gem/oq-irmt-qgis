@@ -737,7 +737,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.plot.set_xscale('log')
         self.plot.set_yscale('linear')
         self.plot.set_xlabel('Return period (years)')
-        self.plot.set_ylabel('Loss (%s)' % unit)
+        self.plot.set_ylabel('Loss (%s)' % unit.decode('utf8'))
         title = 'Loss type: %s' % loss_type
         self.plot.set_title(title)
         self.plot.grid(which='both')
