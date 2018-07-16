@@ -618,8 +618,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             if tag_name == 'array':
                 continue
             for tag in tags_npz[tag_name]:
+                tag = tag.decode('utf8')
                 if tag[-1] != '?':
-                    tags_list.append(tag.decode('utf8'))
+                    tags_list.append(tag)
         self.tags = {}
         for tag in tags_list:
             # tags are in the format 'city=Benicia' (tag_name=tag_value)
