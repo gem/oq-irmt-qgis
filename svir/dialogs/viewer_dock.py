@@ -697,7 +697,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                           for stat in self.agg_curves['stats']]
             self.stats_multiselect.set_selected_items(self.stats)
             self._get_tags(session, hostname, calc_id, self.iface.messageBar(),
-                           with_star=True)
+                           with_star=False)
             self.update_list_selected_edt()
             self.tag_names_multiselect.set_unselected_items(
                 list(self.tags.keys()))
