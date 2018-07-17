@@ -409,8 +409,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.agg_curves = extract_npz(
                 self.session, self.hostname, self.calc_id, to_extract,
                 message_bar=self.iface.messageBar(), params=params)
-        if self.agg_curves is None:
-            return
         self.draw_agg_curves(self.output_type)
 
     def filter_losses_by_asset_aggr(self):
@@ -765,6 +763,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             ordinates = self.agg_curves['array']
             unit = self.agg_curves['units'][0]
         self.plot.clear()
+        if not ordinates.any():  # too much filtering
+            self.plot_canvas.draw()
+            return
         marker = dict()
         line_style = dict()
         color_hex = dict()
