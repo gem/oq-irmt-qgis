@@ -1529,7 +1529,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     row = [return_period]
                     for stat_idx, stat in enumerate(stats):
                         row.append(self.agg_curves[
-                            'array'][stat_idx][return_period_idx])
+                            'array'][stat_idx, return_period_idx])
                     writer.writerow(row)
             elif self.output_type == 'dmg_by_asset_aggr':
                 csv_file.write(
