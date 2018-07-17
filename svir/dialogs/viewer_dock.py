@@ -375,6 +375,28 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
     def filter_agg_curves(self):
         params = {}
+        # NOTE: self.tags is structured like:
+        # {'taxonomy': {
+        #     'selected': True,
+        #     'values': {
+        #         'Wood': False,
+        #         'Adobe': False,
+        #         'Stone-Masonry': False,
+        #         'Unreinforced-Brick-Masonry': False,
+        #         'Concrete': True
+        #     }
+        #  },
+        #  'NAME_1': {
+        #      'selected': False,
+        #      'values': {
+        #          'Mid-Western': False,
+        #          'Far-Western': False,
+        #          'West': False,
+        #          'East': False,
+        #          'Central': False
+        #      }
+        #  },
+        # }
         for tag_name in self.tags:
             if self.tags[tag_name]['selected']:
                 for value in self.tags[tag_name]['values']:
