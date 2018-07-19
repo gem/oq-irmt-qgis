@@ -696,10 +696,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                         action = 'Show'
                     else:
                         action = 'Load as layer'
-                    # TODO: remove check when gmf_data will be loadable also
-                    #       for event_based
-                    # TODO: remove check when dmg_by_event and losses_by_event
-                    #       will be loadable also for event_based
+                    # TODO: remove check when gmf_data, dmg_by_event and
+                    # losses_by_event will be loadable also for event_based
                     if (output['type'] in ['gmf_data',
                                            'dmg_by_event',
                                            'losses_by_event']
