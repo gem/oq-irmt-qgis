@@ -397,7 +397,6 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             btn_text += 'for calculation %s (%.2f MB)' % (calc_id, size_mb)
         self.download_datastore_btn.setEnabled(size_mb is not None)
         self.download_datastore_btn.setText(btn_text)
-        # self.show_calc_params_btn.setEnabled(size_mb is not None)
         self.show_calc_params_btn.setEnabled(True)
         self.show_calc_params_btn.setText(
             'Show parameters for calculation %s' % calc_id)
