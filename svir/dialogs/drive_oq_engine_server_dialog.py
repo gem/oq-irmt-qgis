@@ -640,7 +640,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             self.download_datastore_btn.setEnabled(False)
             self.download_datastore_btn.setText('Download HDF5 datastore')
             return
-        exclude = ['url', 'outtypes', 'type']
+        exclude = ['url', 'outtypes', 'type', 'size_mb']
         selected_keys = [key for key in sorted(output_list[0].keys())
                          if key not in exclude]
         max_actions = 0
