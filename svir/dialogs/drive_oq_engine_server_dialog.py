@@ -372,6 +372,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             'Show calculation parameters')
 
     def get_calc_info(self, calc_id):
+        # NOTE: while a calc is incomplete, this returns None
         for calc_info in self.calc_list:
             if calc_info['id'] == calc_id:
                 return calc_info
@@ -391,10 +392,12 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             output_list, calc_status.get('calculation_mode', 'unknown'))
         calc_info = self.get_calc_info(calc_id)
         size_mb = calc_info['size_mb']
-        self.download_datastore_btn.setEnabled(True)
-        self.download_datastore_btn.setText(
-            'Download HDF5 datastore for calculation %s (%.2f MB)'
-            % (calc_id, size_mb))
+        btn_text = 'Download HDF5 datastore'
+        if size_mb is not None:
+            btn_text += 'for calculation %s (%.2f MB)' % (calc_id, size_mb)
+        self.download_datastore_btn.setEnabled(size_mb is not None)
+        self.download_datastore_btn.setText(btn_text)
+        # self.show_calc_params_btn.setEnabled(size_mb is not None)
         self.show_calc_params_btn.setEnabled(True)
         self.show_calc_params_btn.setText(
             'Show parameters for calculation %s' % calc_id)
