@@ -200,22 +200,22 @@ class Irmt(object):
                            enable=self.experimental_enabled(),
                            add_to_layer_actions=True,
                            submenu='OQ Platform')
-        # Action to drive ipt
-        self.add_menu_item("ipt",
-                           ":/plugins/irmt/ipt.svg",
-                           u"OpenQuake Input Preparation Toolkit",
-                           self.ipt,
-                           enable=self.experimental_enabled(),
-                           submenu='OQ Engine',
-                           add_to_toolbar=True)
-        # Action to drive taxtweb
-        self.add_menu_item("taxtweb",
-                           ":/plugins/irmt/taxtweb.svg",
-                           u"OpenQuake TaxtWEB",
-                           self.taxtweb,
-                           enable=self.experimental_enabled(),
-                           submenu='OQ Engine',
-                           add_to_toolbar=True)
+        # # Action to drive ipt
+        # self.add_menu_item("ipt",
+        #                    ":/plugins/irmt/ipt.svg",
+        #                    u"OpenQuake Input Preparation Toolkit",
+        #                    self.ipt,
+        #                    enable=self.experimental_enabled(),
+        #                    submenu='OQ Engine',
+        #                    add_to_toolbar=True)
+        # # Action to drive taxtweb
+        # self.add_menu_item("taxtweb",
+        #                    ":/plugins/irmt/taxtweb.svg",
+        #                    u"OpenQuake TaxtWEB",
+        #                    self.taxtweb,
+        #                    enable=self.experimental_enabled(),
+        #                    submenu='OQ Engine',
+        #                    add_to_toolbar=True)
         # Action to drive the oq-engine server
         self.add_menu_item("drive_engine_server",
                            ":/plugins/irmt/drive_oqengine.svg",
