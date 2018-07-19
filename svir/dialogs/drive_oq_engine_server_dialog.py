@@ -138,6 +138,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.calc_log_line = {}
         self.session = None
         self.hostname = None
+        self.calc_list = None
         self.current_calc_id = None  # list of outputs refers to this calc_id
         self.pointed_calc_id = None  # we will scroll to it
         self.is_logged_in = False
@@ -249,13 +250,13 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             except HANDLED_EXCEPTIONS as exc:
                 self._handle_exception(exc)
                 return False
-            calc_list = json.loads(resp.text)
+            self.calc_list = json.loads(resp.text)
         selected_keys = [
             'description', 'id', 'calculation_mode', 'owner', 'status']
         col_names = [
             'Description', 'Job ID', 'Calculation Mode', 'Owner', 'Status']
         col_widths = [340, 60, 135, 70, 80]
-        if not calc_list:
+        if not self.calc_list:
             if self.calc_list_tbl.rowCount() > 0:
                 self.calc_list_tbl.clearContents()
                 self.calc_list_tbl.setRowCount(0)
@@ -274,13 +275,13 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             {'label': 'Continue', 'bg_color': 'white', 'txt_color': 'black'}
         ]
         self.calc_list_tbl.clearContents()
-        self.calc_list_tbl.setRowCount(len(calc_list))
+        self.calc_list_tbl.setRowCount(len(self.calc_list))
         self.calc_list_tbl.setColumnCount(len(selected_keys) + len(actions))
-        for row, calc in enumerate(calc_list):
+        for row, calc in enumerate(self.calc_list):
             for col, key in enumerate(selected_keys):
                 item = QTableWidgetItem()
                 try:
-                    value = calc_list[row][key]
+                    value = self.calc_list[row][key]
                 except KeyError:
                     # from engine2.5 to engine2.6, job_type was changed into
                     # calculation_mode. This check prevents the plugin to break
@@ -370,6 +371,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.show_calc_params_btn.setText(
             'Show calculation parameters')
 
+    def get_calc_info(self, calc_id):
+        for calc_info in self.calc_list:
+            if calc_info['id'] == calc_id:
+                return calc_info
+
     def update_output_list(self, calc_id):
         calc_status = self.get_calc_status(calc_id)
         self.clear_output_list()
@@ -383,10 +389,12 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         # using an old version of the engine.
         self.show_output_list(
             output_list, calc_status.get('calculation_mode', 'unknown'))
+        calc_info = self.get_calc_info(calc_id)
+        size_mb = calc_info['size_mb']
         self.download_datastore_btn.setEnabled(True)
         self.download_datastore_btn.setText(
-            'Download HDF5 datastore for calculation %s'
-            % calc_id)
+            'Download HDF5 datastore for calculation %s (%.2f MB)'
+            % (calc_id, size_mb))
         self.show_calc_params_btn.setEnabled(True)
         self.show_calc_params_btn.setText(
             'Show parameters for calculation %s' % calc_id)
