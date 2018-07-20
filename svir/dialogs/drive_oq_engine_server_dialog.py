@@ -27,6 +27,7 @@ import json
 import tempfile
 import zipfile
 import copy
+from operator import itemgetter
 from uuid import uuid4
 
 from qgis.PyQt.QtCore import (QDir,
@@ -650,6 +651,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             self.download_datastore_btn.setEnabled(False)
             self.download_datastore_btn.setText('Download HDF5 datastore')
             return
+        output_list.sort(key=itemgetter('name'))
         exclude = ['url', 'outtypes', 'type', 'size_mb']
         selected_keys = [key for key in sorted(output_list[0].keys())
                          if key not in exclude]
