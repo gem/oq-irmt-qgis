@@ -108,6 +108,8 @@ OUTPUT_TYPE_LOADERS = {
     'ruptures': LoadRupturesAsLayerDialog,
     'realizations': LoadBasicCsvAsLayerDialog,
     'sourcegroups': LoadBasicCsvAsLayerDialog,
+    'dmg_by_event': LoadBasicCsvAsLayerDialog,
+    'losses_by_event': LoadBasicCsvAsLayerDialog,
     'dmg_by_asset': LoadDmgByAssetAsLayerDialog,
     'gmf_data': LoadGmfDataAsLayerDialog,
     'hmaps': LoadHazardMapsAsLayerDialog,
@@ -661,9 +663,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             if row['type'] in (OQ_TO_LAYER_TYPES |
                                OQ_RST_TYPES |
                                OQ_EXTRACT_TO_VIEW_TYPES):
-                # TODO: remove check when gmf_data will be loadable also for
-                #       event_based
-                if not (row['type'] == 'gmf_data'
+                # TODO: remove check when gmf_data, dmg_by_event and
+                #       losses_by_event will be loadable also for event_based
+                if not (row['type'] in ['gmf_data',
+                                        'dmg_by_event',
+                                        'losses_by_event']
                         and 'event_based' in calculation_mode):
                     num_actions += 1  # needs additional column for loader btn
             if "%s_aggr" % row['type'] in OQ_EXTRACT_TO_VIEW_TYPES:
@@ -694,9 +698,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                         action = 'Show'
                     else:
                         action = 'Load as layer'
-                    # TODO: remove check when gmf_data will be loadable also
-                    #       for event_based
-                    if (output['type'] == 'gmf_data'
+                    # TODO: remove check when gmf_data, dmg_by_event and
+                    # losses_by_event will be loadable also for event_based
+                    if (output['type'] in ['gmf_data',
+                                           'dmg_by_event',
+                                           'losses_by_event']
                             and calculation_mode == 'event_based'):
                         continue
                     button = QPushButton()
