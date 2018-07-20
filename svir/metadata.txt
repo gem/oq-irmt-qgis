@@ -27,6 +27,7 @@ changelog=
     * Added loaders for dmg_by_event and losses_by_event, from csv (disabled for event-based calculations)
     3.2.3
     * The button to download a calculation datastore remains disabled until the calculation is complete (and its size is known)
+    * Outputs of a selected oq-engine calculation are sorted by name in alphabetical order
     3.2.2
     * The button to download the datastore of a oq-engine calculation displays the corresponding size
     3.2.1
