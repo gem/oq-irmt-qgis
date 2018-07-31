@@ -52,11 +52,17 @@ LONG_LOADING_TIME = 10  # seconds
 class OutputsLoader(object):
 
     def __init__(self, selected_calc_id, selected_otype):
+        # example:
+        # exec(open('~/projects/oq-irmt-qgis/scripts/outputs_loader.py'.encode('utf-8')).read())
+        # calc_id = 26
+        # output_type = 'hmaps'
+        # OutputsLoader(calc_id, output_type)
         self.hostname = os.environ.get('OQ_ENGINE_HOST',
                                        'http://localhost:8800')
         self.engine_version = self.get_engine_version().split('-')[0]
         self.selected_calc_id = selected_calc_id
         self.selected_otype = selected_otype
+        self.test_load_outputs()
 
     def get_engine_version(self):
         engine_version_url = "%s/v1/engine_version" % self.hostname
