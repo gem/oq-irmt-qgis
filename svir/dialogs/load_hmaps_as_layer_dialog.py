@@ -108,8 +108,8 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         imt = self.imt_cbx.currentText()
         poe = self.poe_cbx.currentText()
         self.default_field_name = '%s-%s' % (imt, poe)
-        investigation_time = self.get_investigation_time()
-        layer_name = "hazard_map_%s_%sy" % (rlz_or_stat, investigation_time)
+        # investigation_time = self.get_investigation_time()
+        layer_name = "hazard_map_%s_%s_%s" % (rlz_or_stat, imt, poe)
         return layer_name
 
     def get_field_names(self, **kwargs):
@@ -161,5 +161,5 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
                                    self.iface.messageBar()):
                 self.build_layer(rlz_or_stat)
                 self.style_maps()
-        if self.npz_file is not None:
-            self.npz_file.close()
+        # if self.npz_file is not None:
+        #     self.npz_file.close()
