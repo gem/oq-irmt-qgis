@@ -50,6 +50,7 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         self.create_rlz_or_stat_selector()
         self.create_imt_selector()
         self.create_poe_selector()
+        self.create_show_return_time_ckb()
 
         self.extract_npz_task = ExtractNpzTask(
             'Extract hazard maps', QgsTask.CanCancel, self.session,
@@ -109,7 +110,13 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         poe = self.poe_cbx.currentText()
         self.default_field_name = '%s-%s' % (imt, poe)
         investigation_time = self.get_investigation_time()
-        layer_name = "hazard_map_%s_%sy" % (rlz_or_stat, investigation_time)
+        if self.show_return_time_chk.isChecked():
+            return_time = int(float(investigation_time) / float(poe))
+            layer_name = "hmap_%s_%s_%syr" % (
+                rlz_or_stat, imt, return_time)
+        else:
+            layer_name = "hmap_%s_%s_poe-%s_%sy" % (
+                rlz_or_stat, imt, poe, investigation_time)
         return layer_name
 
     def get_field_names(self, **kwargs):
