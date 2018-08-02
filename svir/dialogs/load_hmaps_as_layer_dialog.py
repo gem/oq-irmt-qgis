@@ -105,8 +105,6 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         self.set_ok_button()
 
     def build_layer_name(self, rlz_or_stat=None, **kwargs):
-        # imt = self.imt_cbx.currentText()
-        # poe = self.poe_cbx.currentText()
         imt = kwargs['imt']
         poe = kwargs['poe']
         self.default_field_name = '%s-%s' % (imt, poe)
@@ -121,16 +119,9 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         return layer_name
 
     def get_field_names(self, **kwargs):
-        rlz_or_stat = kwargs['rlz_or_stat']
         imt = kwargs['imt']
         poe = kwargs['poe']
         field_names = ['%s-%s' % (imt, poe)]
-        # if self.load_selected_only_ckb.isChecked():
-        #     field_names = [self.default_field_name]
-        # else:  # load everything
-        #     # field names will be like "imt-poe"
-        #     # self.dataset contains data for the chosen rlz or stat
-        #     field_names = self.dataset.dtype.names
         return field_names
 
     def add_field_to_layer(self, field_name):
