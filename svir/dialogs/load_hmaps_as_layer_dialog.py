@@ -45,11 +45,10 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
 
         self.setWindowTitle(
             'Load hazard maps as layer')
-        self.create_load_selected_only_ckb()
         self.create_num_sites_indicator()
-        self.create_rlz_or_stat_selector()
-        self.create_imt_selector()
-        self.create_poe_selector()
+        self.create_rlz_or_stat_selector(all_ckb=True)
+        self.create_imt_selector(all_ckb=True)
+        self.create_poe_selector(all_ckb=True)
         self.create_show_return_time_ckb()
 
         self.extract_npz_task = ExtractNpzTask(
@@ -106,8 +105,8 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         self.set_ok_button()
 
     def build_layer_name(self, rlz_or_stat=None, **kwargs):
-        imt = self.imt_cbx.currentText()
-        poe = self.poe_cbx.currentText()
+        imt = kwargs['imt']
+        poe = kwargs['poe']
         self.default_field_name = '%s-%s' % (imt, poe)
         investigation_time = self.get_investigation_time()
         if self.show_return_time_chk.isChecked():
@@ -120,12 +119,9 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         return layer_name
 
     def get_field_names(self, **kwargs):
-        if self.load_selected_only_ckb.isChecked():
-            field_names = [self.default_field_name]
-        else:  # load everything
-            # field names will be like "imt-poe"
-            # self.dataset contains data for the chosen rlz or stat
-            field_names = self.dataset.dtype.names
+        imt = kwargs['imt']
+        poe = kwargs['poe']
+        field_names = ['%s-%s' % (imt, poe)]
         return field_names
 
     def add_field_to_layer(self, field_name):
@@ -161,12 +157,21 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
 
     def load_from_npz(self):
         for rlz_or_stat in self.rlzs_or_stats:
-            if (self.load_selected_only_ckb.isChecked()
+            if (not self.load_all_rlzs_or_stats_chk.isChecked()
                     and rlz_or_stat != self.rlz_or_stat_cbx.currentText()):
                 continue
-            with WaitCursorManager('Creating layer for "%s"...' % rlz_or_stat,
-                                   self.iface.messageBar()):
-                self.build_layer(rlz_or_stat)
-                self.style_maps()
+            for imt in self.imts:
+                if (not self.load_all_imts_chk.isChecked()
+                        and imt != self.imt_cbx.currentText()):
+                    continue
+                for poe in self.imts[imt]:
+                    if (not self.load_all_poes_chk.isChecked()
+                            and poe != self.poe_cbx.currentText()):
+                        continue
+                    with WaitCursorManager(
+                        'Creating layer for "%s, %s, %s"...' % (
+                            rlz_or_stat, imt, poe), self.iface.messageBar()):
+                        self.build_layer(rlz_or_stat, imt=imt, poe=poe)
+                        self.style_maps()
         if self.npz_file is not None:
             self.npz_file.close()
