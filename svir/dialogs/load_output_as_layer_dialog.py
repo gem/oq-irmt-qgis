@@ -152,6 +152,11 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.file_size_lbl = QLabel(self.file_size_msg % '')
         self.vlayout.addWidget(self.file_size_lbl)
 
+    def create_load_multicol_ckb(self):
+        self.load_multicol_ckb = QCheckBox(
+            'Load one layer per realization or statistic')
+        self.vlayout.addWidget(self.load_multicol_ckb)
+
     def create_rlz_or_stat_selector(self, all_ckb=False, label='Realization'):
         self.rlz_or_stat_lbl = QLabel(label)
         self.rlz_or_stat_cbx = QComboBox()
