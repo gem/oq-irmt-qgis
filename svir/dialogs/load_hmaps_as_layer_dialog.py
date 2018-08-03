@@ -65,6 +65,21 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
     def on_load_multicol_ckb_stateChanged(self, state):
         if state == Qt.Checked:
             self.show_return_time_chk.setChecked(False)
+            self.show_return_time_chk.setEnabled(False)
+            self.load_all_poes_chk.setChecked(True)
+            self.load_all_poes_chk.setEnabled(False)
+            self.poe_cbx.setEnabled(True)
+            self.load_all_imts_chk.setChecked(True)
+            self.load_all_imts_chk.setEnabled(False)
+            self.imt_cbx.setEnabled(True)
+        else:
+            self.show_return_time_chk.setEnabled(True)
+            self.load_all_poes_chk.setChecked(False)
+            self.load_all_poes_chk.setEnabled(True)
+            self.poe_cbx.setEnabled(True)
+            self.load_all_imts_chk.setChecked(False)
+            self.load_all_imts_chk.setEnabled(True)
+            self.imt_cbx.setEnabled(True)
 
     def set_ok_button(self):
         self.ok_button.setEnabled(self.poe_cbx.currentIndex() != -1)
