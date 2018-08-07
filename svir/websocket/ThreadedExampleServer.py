@@ -9,7 +9,7 @@ import ssl
 # import time
 from qgis.PyQt.QtCore import pyqtSlot
 from qgis.PyQt.QtWidgets import QApplication
-from SimpleWebSocketServer import (
+from svir.websocket.SimpleWebSocketServer import (
                                    WebSocket,
                                    SimpleWebSocketServer,
                                    SimpleSSLWebSocketServer,
