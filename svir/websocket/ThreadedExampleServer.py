@@ -40,14 +40,14 @@ class SimpleChat(WebSocket):
                 client.sendMessage(self.address[0] + u' - ' + self.data)
 
     def handleConnected(self):
-        print (self.address, 'connected')
+        print(self.address, 'connected')
         for client in clients:
             client.sendMessage(self.address[0] + u' - connected')
         clients.append(self)
 
     def handleClose(self):
         clients.remove(self)
-        print (self.address, 'closed')
+        print(self.address, 'closed')
         for client in clients:
             client.sendMessage(self.address[0] + u' - disconnected')
 
@@ -109,14 +109,13 @@ if __name__ == "__main__":
     # # Exit the server thread when the main thread terminates
     # server_thread.daemon = True
     server_thread.start()
-    print "Server loop running in thread:", server_thread.name
+    print("Server loop running in thread:", server_thread.name)
 
     app = QApplication([])
     signal.signal(signal.SIGINT, signal.SIG_DFL)
     sys.exit(app.exec_())
     # server_thread.close()
     # sys.exit()
-
 
     # while True:
     #     try:
