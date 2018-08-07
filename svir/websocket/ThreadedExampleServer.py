@@ -8,7 +8,7 @@ import sys
 import ssl
 # import time
 from qgis.PyQt.QtCore import pyqtSlot
-from qgis.PyQt.QtWidget import QApplication
+from qgis.PyQt.QtWidgets import QApplication
 from SimpleWebSocketServer import (
                                    WebSocket,
                                    SimpleWebSocketServer,
