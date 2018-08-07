@@ -209,6 +209,24 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     def on_load_all_poes_chk_stateChanged(self, state):
         self.poe_cbx.setEnabled(state == Qt.Unchecked)
 
+    def create_iml_selector(self, all_ckb=False):
+        self.iml_lbl = QLabel('Intensity measure level')
+        self.iml_cbx = QComboBox()
+        self.iml_cbx.setEnabled(False)
+        self.iml_cbx.currentIndexChanged['QString'].connect(
+            self.on_iml_changed)
+        if all_ckb:
+            self.load_all_imls_chk = QCheckBox(
+                'Load all intensity measure levels')
+            self.load_all_imls_chk.stateChanged[int].connect(
+                self.on_load_all_imls_chk_stateChanged)
+            self.vlayout.addWidget(self.load_all_imls_chk)
+        self.vlayout.addWidget(self.iml_lbl)
+        self.vlayout.addWidget(self.iml_cbx)
+
+    def on_load_all_imls_chk_stateChanged(self, state):
+        self.iml_cbx.setEnabled(state == Qt.Unchecked)
+
     def create_loss_type_selector(self):
         self.loss_type_lbl = QLabel('Loss Type')
         self.loss_type_cbx = QComboBox()
