@@ -430,10 +430,12 @@ class SettingsDialog(QDialog, FORM_CLASS):
         # initialized and pointing to a previous engine server)
         if (current_engine_hostname != self.initial_engine_hostname
                 and self.irmt_main is not None):
-            for dlg in (self.irmt_main.ipt_dlg,
-                        self.irmt_main.taxtweb_dlg,
-                        self.irmt_main.taxonomy_dlg):
-                if dlg is not None:
-                    dlg.set_host()
-                    dlg.load_homepage()
+            for app in (self.irmt_main.ipt_app,
+                        self.irmt_main.taxtweb_app,
+                        self.irmt_main.taxonomy_app):
+                if app is not None:
+                    # FIXME: migrate from old dlgs to apps
+                    pass
+                    # app.set_host()
+                    # app.load_homepage()
         super(SettingsDialog, self).accept()
