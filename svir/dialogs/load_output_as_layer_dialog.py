@@ -33,7 +33,6 @@ from qgis.core import (QgsVectorLayer,
                        QgsGraduatedSymbolRenderer,
                        QgsRuleBasedRenderer,
                        QgsFillSymbol,
-                       QgsRendererRange,
                        QgsMapUnitScale,
                        QgsWkbTypes,
                        QgsMapLayer,
@@ -153,32 +152,62 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.file_size_lbl = QLabel(self.file_size_msg % '')
         self.vlayout.addWidget(self.file_size_lbl)
 
-    def create_rlz_or_stat_selector(self, label='Realization'):
+    def create_load_multicol_ckb(self):
+        self.load_multicol_ckb = QCheckBox(
+            'Load one layer per realization or statistic')
+        self.vlayout.addWidget(self.load_multicol_ckb)
+
+    def create_rlz_or_stat_selector(self, all_ckb=False, label='Realization'):
         self.rlz_or_stat_lbl = QLabel(label)
         self.rlz_or_stat_cbx = QComboBox()
         self.rlz_or_stat_cbx.setEnabled(False)
         self.rlz_or_stat_cbx.currentIndexChanged['QString'].connect(
             self.on_rlz_or_stat_changed)
+        if all_ckb:
+            self.load_all_rlzs_or_stats_chk = QCheckBox(
+                'Load all realizations')
+            self.load_all_rlzs_or_stats_chk.stateChanged[int].connect(
+                self.on_load_all_rlzs_or_stats_chk_stateChanged)
+            self.vlayout.addWidget(self.load_all_rlzs_or_stats_chk)
         self.vlayout.addWidget(self.rlz_or_stat_lbl)
         self.vlayout.addWidget(self.rlz_or_stat_cbx)
 
-    def create_imt_selector(self):
+    def on_load_all_rlzs_or_stats_chk_stateChanged(self, state):
+        self.rlz_or_stat_cbx.setEnabled(state == Qt.Unchecked)
+
+    def create_imt_selector(self, all_ckb=False):
         self.imt_lbl = QLabel('Intensity Measure Type')
         self.imt_cbx = QComboBox()
         self.imt_cbx.setEnabled(False)
         self.imt_cbx.currentIndexChanged['QString'].connect(
             self.on_imt_changed)
+        if all_ckb:
+            self.load_all_imts_chk = QCheckBox('Load all IMTs')
+            self.load_all_imts_chk.stateChanged[int].connect(
+                self.on_load_all_imts_chk_stateChanged)
+            self.vlayout.addWidget(self.load_all_imts_chk)
         self.vlayout.addWidget(self.imt_lbl)
         self.vlayout.addWidget(self.imt_cbx)
 
-    def create_poe_selector(self):
+    def on_load_all_imts_chk_stateChanged(self, state):
+        self.imt_cbx.setEnabled(state == Qt.Unchecked)
+
+    def create_poe_selector(self, all_ckb=False):
         self.poe_lbl = QLabel('Probability of Exceedance')
         self.poe_cbx = QComboBox()
         self.poe_cbx.setEnabled(False)
         self.poe_cbx.currentIndexChanged['QString'].connect(
             self.on_poe_changed)
+        if all_ckb:
+            self.load_all_poes_chk = QCheckBox('Load all PoEs')
+            self.load_all_poes_chk.stateChanged[int].connect(
+                self.on_load_all_poes_chk_stateChanged)
+            self.vlayout.addWidget(self.load_all_poes_chk)
         self.vlayout.addWidget(self.poe_lbl)
         self.vlayout.addWidget(self.poe_cbx)
+
+    def on_load_all_poes_chk_stateChanged(self, state):
+        self.poe_cbx.setEnabled(state == Qt.Unchecked)
 
     def create_loss_type_selector(self):
         self.loss_type_lbl = QLabel('Loss Type')
@@ -222,6 +251,12 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.load_selected_only_ckb = QCheckBox("Load only the selected items")
         self.load_selected_only_ckb.setChecked(True)
         self.vlayout.addWidget(self.load_selected_only_ckb)
+
+    def create_show_return_time_ckb(self):
+        self.show_return_time_chk = QCheckBox(
+            "Show the return time in layer names")
+        self.show_return_time_chk.setChecked(False)
+        self.vlayout.addWidget(self.show_return_time_chk)
 
     def create_save_as_shp_ckb(self):
         self.save_as_shp_ckb = QCheckBox("Save the loaded layer as shapefile")
@@ -397,13 +432,13 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             return None
 
     def build_layer(self, rlz_or_stat=None, taxonomy=None, poe=None,
-                    loss_type=None, dmg_state=None, gsim=None):
+                    loss_type=None, dmg_state=None, gsim=None, imt=None):
         layer_name = self.build_layer_name(
             rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
-            loss_type=loss_type, dmg_state=dmg_state, gsim=gsim)
+            loss_type=loss_type, dmg_state=dmg_state, gsim=gsim, imt=imt)
         field_names = self.get_field_names(
             rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
-            loss_type=loss_type, dmg_state=dmg_state)
+            loss_type=loss_type, dmg_state=dmg_state, imt=imt)
 
         # create layer
         self.layer = QgsVectorLayer(
@@ -422,7 +457,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
 
         self.read_npz_into_layer(
             field_names, rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
-            loss_type=loss_type, dmg_state=dmg_state)
+            loss_type=loss_type, dmg_state=dmg_state, imt=imt)
         self.layer.setCustomProperty('output_type', self.output_type)
         investigation_time = self.get_investigation_time()
         if investigation_time is not None:

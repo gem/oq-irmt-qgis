@@ -24,6 +24,7 @@
 
 from qgis.core import (
     QgsFeature, QgsGeometry, QgsPointXY, edit, QgsTask, QgsApplication)
+from qgis.PyQt.QtCore import Qt
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 from svir.calculations.calculate_utils import add_numeric_attribute
 from svir.utilities.utils import WaitCursorManager, log_msg
@@ -45,17 +46,40 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
 
         self.setWindowTitle(
             'Load hazard maps as layer')
-        self.create_load_selected_only_ckb()
         self.create_num_sites_indicator()
-        self.create_rlz_or_stat_selector()
-        self.create_imt_selector()
-        self.create_poe_selector()
+        self.create_load_multicol_ckb()
+        self.create_rlz_or_stat_selector(all_ckb=True)
+        self.create_imt_selector(all_ckb=True)
+        self.create_poe_selector(all_ckb=True)
+        self.create_show_return_time_ckb()
+
+        self.load_multicol_ckb.stateChanged[int].connect(
+            self.on_load_multicol_ckb_stateChanged)
 
         self.extract_npz_task = ExtractNpzTask(
             'Extract hazard maps', QgsTask.CanCancel, self.session,
             self.hostname, self.calc_id, self.output_type, self.finalize_init,
             self.on_extract_error)
         QgsApplication.taskManager().addTask(self.extract_npz_task)
+
+    def on_load_multicol_ckb_stateChanged(self, state):
+        if state == Qt.Checked:
+            self.show_return_time_chk.setChecked(False)
+            self.show_return_time_chk.setEnabled(False)
+            self.load_all_poes_chk.setChecked(True)
+            self.load_all_poes_chk.setEnabled(False)
+            self.poe_cbx.setEnabled(True)
+            self.load_all_imts_chk.setChecked(True)
+            self.load_all_imts_chk.setEnabled(False)
+            self.imt_cbx.setEnabled(True)
+        else:
+            self.show_return_time_chk.setEnabled(True)
+            self.load_all_poes_chk.setChecked(False)
+            self.load_all_poes_chk.setEnabled(True)
+            self.poe_cbx.setEnabled(True)
+            self.load_all_imts_chk.setChecked(False)
+            self.load_all_imts_chk.setEnabled(True)
+            self.imt_cbx.setEnabled(True)
 
     def set_ok_button(self):
         self.ok_button.setEnabled(self.poe_cbx.currentIndex() != -1)
@@ -105,20 +129,33 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         self.set_ok_button()
 
     def build_layer_name(self, rlz_or_stat=None, **kwargs):
-        imt = self.imt_cbx.currentText()
-        poe = self.poe_cbx.currentText()
+        if self.load_multicol_ckb.isChecked():
+            imt = self.imt_cbx.currentText()
+            poe = self.poe_cbx.currentText()
+        else:
+            imt = kwargs['imt']
+            poe = kwargs['poe']
         self.default_field_name = '%s-%s' % (imt, poe)
         investigation_time = self.get_investigation_time()
-        layer_name = "hazard_map_%s_%sy" % (rlz_or_stat, investigation_time)
+        if self.load_multicol_ckb.isChecked():
+            layer_name = "hazard_map_%s_%sy" % (
+                rlz_or_stat, investigation_time)
+        elif self.show_return_time_chk.isChecked():
+            return_time = int(float(investigation_time) / float(poe))
+            layer_name = "hmap_%s_%s_%syr" % (
+                rlz_or_stat, imt, return_time)
+        else:
+            layer_name = "hmap_%s_%s_poe-%s_%sy" % (
+                rlz_or_stat, imt, poe, investigation_time)
         return layer_name
 
     def get_field_names(self, **kwargs):
-        if self.load_selected_only_ckb.isChecked():
-            field_names = [self.default_field_name]
-        else:  # load everything
-            # field names will be like "imt-poe"
-            # self.dataset contains data for the chosen rlz or stat
+        if self.load_multicol_ckb.isChecked():
             field_names = self.dataset.dtype.names
+        else:
+            imt = kwargs['imt']
+            poe = kwargs['poe']
+            field_names = ['%s-%s' % (imt, poe)]
         return field_names
 
     def add_field_to_layer(self, field_name):
@@ -154,12 +191,29 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
 
     def load_from_npz(self):
         for rlz_or_stat in self.rlzs_or_stats:
-            if (self.load_selected_only_ckb.isChecked()
+            if (not self.load_all_rlzs_or_stats_chk.isChecked()
                     and rlz_or_stat != self.rlz_or_stat_cbx.currentText()):
                 continue
-            with WaitCursorManager('Creating layer for "%s"...' % rlz_or_stat,
-                                   self.iface.messageBar()):
-                self.build_layer(rlz_or_stat)
-                self.style_maps()
+            if self.load_multicol_ckb.isChecked():
+                with WaitCursorManager(
+                        'Creating layer for "%s"...' % rlz_or_stat,
+                        self.iface.messageBar()):
+                    self.build_layer(rlz_or_stat)
+                    self.style_maps()
+            else:
+                for imt in self.imts:
+                    if (not self.load_all_imts_chk.isChecked()
+                            and imt != self.imt_cbx.currentText()):
+                        continue
+                    for poe in self.imts[imt]:
+                        if (not self.load_all_poes_chk.isChecked()
+                                and poe != self.poe_cbx.currentText()):
+                            continue
+                        with WaitCursorManager(
+                                'Creating layer for "%s, %s, %s"...' % (
+                                    rlz_or_stat, imt, poe),
+                                self.iface.messageBar()):
+                            self.build_layer(rlz_or_stat, imt=imt, poe=poe)
+                            self.style_maps()
         if self.npz_file is not None:
             self.npz_file.close()

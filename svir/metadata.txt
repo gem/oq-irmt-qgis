@@ -13,7 +13,7 @@ name=OpenQuake Integrated Risk Modelling Toolkit
 qgisMinimumVersion=3.0
 description=Tools to drive the OpenQuake Engine, to develop composite indicators and integrate them with physical risk estimations, and to predict building recovery times following an earthquake
 about=This plugin allows users to drive OpenQuake Engine calculations (https://github.com/gem/oq-engine) of physical hazard and risk, and to load the corresponding outputs as QGIS layers. For those outputs, data visualization tools are provided. The toolkit also enables users to develop composite indicators to measure and quantify social characteristics, and combine them with estimates of human or infrastructure loss. The plugin can interact with the OpenQuake Platform (https://platform.openquake.org), to browse and download socio-economic data or existing projects, edit projects locally in QGIS and upload and share them with the scientific community. A post-earthquake recovery modeling framework is incorporated into the toolkit, to produce building level and/or community level recovery functions.
-version=3.2.0
+version=3.2.5
 author=GEM Foundation
 email=staff.it@globalquakemodel.org
 
@@ -23,6 +23,17 @@ email=staff.it@globalquakemodel.org
 
 # Uncomment the following line and add your changelog entries:
 changelog=
+    3.2.5
+    * Hazard maps can be loaded as one layer per realization/statistic or as multiple layers, per each combination of realization/statistic-imt-poe
+    3.2.4
+    * Added loaders for dmg_by_event and losses_by_event, from csv (disabled for event-based calculations)
+    * Outputs of a selected oq-engine calculation are sorted by name in alphabetical order
+    3.2.3
+    * The button to download a calculation datastore remains disabled until the calculation is complete (and its size is known)
+    3.2.2
+    * The button to download the datastore of a oq-engine calculation displays the corresponding size
+    3.2.1
+    * Added the possibility to plot loss curves aggregated by tag in event based risk
     3.2.0
     * Plugin migrated to QGIS3 (with PyQt5, Python3)
     * Removed dialog to aggregate losses by zone (replaced by "Join attributes by location (summary)" algorithm in the processing toolbox)
