@@ -49,10 +49,8 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
         self.create_num_sites_indicator()
         self.create_rlz_or_stat_selector(all_ckb=True)
         self.create_imt_selector(all_ckb=True)
-        self.create_iml_selector(all_ckb=True)
         self.load_all_rlzs_or_stats_chk.setChecked(True)
         self.load_all_imts_chk.setChecked(True)
-        self.load_all_imls_chk.setChecked(True)
 
         self.extract_npz_task = ExtractNpzTask(
             'Extract hazard curves', QgsTask.CanCancel, self.session,
@@ -81,13 +79,6 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
             self.imt_cbx.addItem(imt)
 
     def on_imt_changed(self):
-        rlz_or_stat = self.rlz_or_stat_cbx.currentText()
-        imt = self.imt_cbx.currentText()
-        dataset = self.npz_file['all'][rlz_or_stat][imt]
-        self.imls = dataset.dtype.names
-        self.iml_cbx.clear()
-        for iml in self.imls:
-            self.iml_cbx.addItem(iml)
         self.set_ok_button()
 
     def show_num_sites(self):
@@ -115,9 +106,6 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
                         and imt != self.imt_cbx.currentText()):
                     continue
                 for iml in self.dataset[rlz_or_stat][imt].dtype.names:
-                    if (not self.load_all_imls_chk.isChecked()
-                            and iml != self.iml_cbx.currentText()):
-                        continue
                     field_name = "%s_%s_%s" % (rlz_or_stat, imt, iml)
                     field_names.append(field_name)
         return field_names
