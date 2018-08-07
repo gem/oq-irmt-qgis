@@ -7,8 +7,8 @@ import signal
 import sys
 import ssl
 # import time
-from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QApplication
+from qgis.PyQt.QtCore import pyqtSlot
+from qgis.PyQt.QtGui import QApplication
 from SimpleWebSocketServer import (
                                    WebSocket,
                                    SimpleWebSocketServer,
