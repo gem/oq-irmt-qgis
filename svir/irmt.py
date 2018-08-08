@@ -80,6 +80,7 @@ from svir.websocket.simple_websocket_server import SimpleWebSocketServer
 from svir.websocket.ipt_app import IptApp
 from svir.websocket.taxonomy_app import TaxonomyApp
 from svir.websocket.taxtweb_app import TaxtwebApp
+from svir.websocket.apptest_app import AppTestApp
 from svir.calculations.calculate_utils import calculate_composite_variable
 from svir.calculations.process_layer import ProcessLayer
 from svir.utilities.utils import (tr,
@@ -214,6 +215,14 @@ class Irmt(QObject):
                            enable=self.experimental_enabled(),
                            add_to_layer_actions=True,
                            submenu='OQ Platform')
+        # Action to apptest web apps
+        self.add_menu_item("apptest",
+                           ":/plugins/irmt/ipt.svg",
+                           u"Test web apps",
+                           self.apptest,
+                           enable=self.experimental_enabled(),
+                           submenu='OQ Engine',
+                           add_to_toolbar=True)
         # Action to drive ipt
         self.add_menu_item("ipt_set_cells",
                            ":/plugins/irmt/ipt.svg",
@@ -363,6 +372,12 @@ class Irmt(QObject):
         if resp is not None:
             log_msg(resp, level='C', message_bar=self.iface.messageBar())
         self.irmt_sig.emit({'msg': 'hello Matteo'})
+
+    def apptest(self):
+        resp = self.apptest_app.run_command('window_open')
+        if resp is not None:
+            log_msg(resp, level='C', message_bar=self.iface.messageBar())
+        self.irmt_sig.emit({'msg': 'hello Test'})
 
     def taxtweb(self):
         resp = self.taxtweb_app.run_command('window_open')
@@ -1449,6 +1464,9 @@ class Irmt(QObject):
             self.websocket_thread, self.iface.messageBar())
         self.taxonomy_app = TaxonomyApp(
             self.websocket_thread, self.iface.messageBar())
+        self.apptest_app = AppTestApp(
+            self.websocket_thread, self.iface.messageBar())
         self.web_apps = {'ipt': self.ipt_app,
                          'taxtweb': self.taxtweb_app,
-                         'taxonomy': self.taxonomy}
+                         'taxonomy': self.taxonomy_app,
+                         'apptest': self.apptest_app}
