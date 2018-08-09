@@ -1,5 +1,5 @@
 import os
-from shutil import copyfile
+from shutil import copyfile, rmtree
 from qgis.PyQt.QtWidgets import QFileDialog
 from qgis.PyQt.QtCore import QSettings, QDir, QFileInfo
 from uuid import uuid4
@@ -17,8 +17,9 @@ class WebApp(object):
         self.allowed_meths = [
             'window_open', 'ext_app_open', 'set_cells', 'select_file',
             'select_files', 'ls_ipt_dir', 'on_same_fs',
-            'rename_file_in_ipt_dir',
+            'rm_file_from_ipt_dir', 'rename_file_in_ipt_dir',
             'run_oq_engine_calc', 'save_str_to_file',
+            'clear_ipt_dir',
             'select_and_copy_files_to_ipt_dir']
         self.pending = {}
 
@@ -90,24 +91,28 @@ class WebApp(object):
         """
         Check if the engine server has access to the ipt_dir
         """
+        checksum_file_path = None
         try:
             checksum_file_path, local_checksum = \
-                self.wss.irmt_thread.irmt.get_ipt_checksum()
-            on_same_fs = self.wss.irmt_thread.irmt.on_same_fs(
+                self.wss.irmt_thread.get_ipt_checksum()
+            on_same_fs = self.wss.irmt_thread.on_same_fs(
                 checksum_file_path, local_checksum)
         except Exception as exc:
-            self.common.error(str(exc))
-            return False
+            return {'ret': 1, 'content': None, 'reason': str(exc)}
+        else:
+            return {'ret': 0, 'content': on_same_fs, 'reason': 'ok'}
         finally:
-            try:
-                os.remove(checksum_file_path)
-            except OSError as exc:
-                # the file should have just been created and it should be
-                # possible to remove it. Otherwise, we display a QGIS-side
-                # error with the reason why it was impossible to delete the
-                # file.
-                self.common.error(str(exc))
-        return on_same_fs
+            os.remove(checksum_file_path)
+            # FIXME
+            # try:
+            #     os.remove(checksum_file_path)
+            # except OSError as exc:
+            #     # the file should have just been created and it should be
+            #     # possible to remove it. Otherwise, we display a QGIS-side
+            #     # error with the reason why it was impossible to delete the
+            #     # file.
+            #     resp = {'ret': 1, 'content': None, 'reason': str(exc)}
+            #     return resp
 
     def select_file(self):
         """
@@ -116,13 +121,14 @@ class WebApp(object):
         """
         try:
             ipt_dir = self.wss.irmt_thread.ipt_dir
-            file_name = QFileDialog.getOpenFileName(
+            file_name, _ = QFileDialog.getOpenFileName(
                 self.wss.irmt_thread.parent(), 'Select file', ipt_dir)
             basename = os.path.basename(file_name)
         except Exception as exc:
-            return {'ret': 1, 'content': None, 'reason': str(exc)}
+            resp = {'ret': 1, 'content': None, 'reason': str(exc)}
         else:
-            return {'ret': 0, 'content': basename, 'reason': 'ok'}
+            resp = {'ret': 0, 'content': basename, 'reason': 'ok'}
+        return resp
 
     def select_files(self):
         """
@@ -131,7 +137,7 @@ class WebApp(object):
         """
         try:
             ipt_dir = self.wss.irmt_thread.ipt_dir
-            file_names = QFileDialog.getOpenFileNames(
+            file_names, _ = QFileDialog.getOpenFileNames(
                 self.wss.irmt_thread.parent(), 'Select files', ipt_dir)
             ls = [os.path.basename(file_name) for file_name in file_names]
         except Exception as exc:
@@ -149,7 +155,7 @@ class WebApp(object):
             default_dir = QSettings().value('irmt/ipt_browsed_dir',
                                             QDir.homePath())
             text = 'The selected files will be copied to the ipt directory'
-            file_paths = QFileDialog.getOpenFileNames(
+            file_paths, _ = QFileDialog.getOpenFileNames(
                 self.wss.irmt_thread.parent(), text, default_dir)
             if not file_paths:
                 return {'ret': 1, 'reason': 'No file was selected'}
@@ -184,9 +190,21 @@ class WebApp(object):
         try:
             ls = os.listdir(ipt_dir)
         except OSError as exc:
-            return {'ret': 1, 'content': None, 'reason': str(exc)}
+            resp = {'ret': 1, 'content': None, 'reason': str(exc)}
         else:
-            return {'ret': 0, 'content': ls, 'reason': 'ok'}
+            resp = {'ret': 0, 'content': ls, 'reason': 'ok'}
+        return resp
+
+    def clear_ipt_dir(self):
+        try:
+            ipt_dir = self.wss.irmt_thread.ipt_dir
+            rmtree(ipt_dir)
+            ipt_dir = self.wss.irmt_thread.get_ipt_dir()
+        except Exception as exc:
+            resp = {'ret': 1, 'content': None, 'reason': str(exc)}
+        else:
+            resp = {'ret': 0, 'content': None, 'reason': 'ok'}
+        return resp
 
     def rm_file_from_ipt_dir(self, file_name):
         """
@@ -229,9 +247,9 @@ class WebApp(object):
         """
         file_names = file_names if file_names else None
         try:
-            self.wss.irmt_thread.irmt.drive_oq_engine_server()
+            self.wss.irmt_thread.drive_oq_engine_server()
             drive_engine_dlg = \
-                self.wss.irmt_thread.irmt.drive_oq_engine_server_dlg
+                self.wss.irmt_thread.drive_oq_engine_server_dlg
             drive_engine_dlg.run_calc(file_names=file_names,
                                       directory=self.wss.irmt_thread.ipt_dir)
         except Exception as exc:

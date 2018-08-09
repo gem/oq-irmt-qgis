@@ -215,14 +215,6 @@ class Irmt(QObject):
                            enable=self.experimental_enabled(),
                            add_to_layer_actions=True,
                            submenu='OQ Platform')
-        # Action to apptest web apps
-        self.add_menu_item("apptest",
-                           ":/plugins/irmt/ipt.svg",
-                           u"Test web apps",
-                           self.apptest,
-                           enable=self.experimental_enabled(),
-                           submenu='OQ Engine',
-                           add_to_toolbar=True)
         # Action to drive ipt
         self.add_menu_item("ipt_set_cells",
                            ":/plugins/irmt/ipt.svg",
@@ -1403,7 +1395,7 @@ class Irmt(QObject):
     def get_ipt_checksum(self):
         unique_filename = ".%s" % uuid4().hex
         checksum_file_path = os.path.join(self.ipt_dir, unique_filename)
-        with open(checksum_file_path, "w") as f:
+        with open(checksum_file_path, "wb") as f:
             f.write(os.urandom(32))
         return checksum_file_path, get_checksum(checksum_file_path)
 
