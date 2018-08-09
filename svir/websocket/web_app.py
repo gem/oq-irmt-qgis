@@ -18,6 +18,7 @@ class WebApp(object):
             'window_open', 'ext_app_open', 'set_cells', 'select_file',
             'select_files', 'ls_ipt_dir', 'on_same_fs',
             'rm_file_from_ipt_dir', 'rename_file_in_ipt_dir',
+            'read_file_in_ipt_dir',
             'run_oq_engine_calc', 'save_str_to_file',
             'clear_ipt_dir',
             'select_and_copy_files_to_ipt_dir']
@@ -184,6 +185,20 @@ class WebApp(object):
             return {'ret': 1, 'reason': str(exc)}
         else:
             return {'ret': 0, 'reason': 'ok'}
+
+    def read_file_in_ipt_dir(self, file_name):
+        """
+        :param file_name: basename of the file to be read from the ipt_dir
+        """
+        ipt_dir = self.wss.irmt_thread.ipt_dir
+        try:
+            basename = os.path.basename(file_name)
+            with open(os.path.join(ipt_dir, basename), "r") as f:
+                content = f.read()
+        except Exception as exc:
+            return {'ret': 1, 'content': None, 'reason': str(exc)}
+        else:
+            return {'ret': 0, 'content': content, 'reason': 'ok'}
 
     def ls_ipt_dir(self):
         ipt_dir = self.wss.irmt_thread.ipt_dir
