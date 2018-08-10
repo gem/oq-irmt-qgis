@@ -23,26 +23,17 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from qgis.PyQt.QtCore import QUrl, pyqtSlot
-from svir.dialogs.standalone_app_dialog import StandaloneAppDialog, GemApi
+from qgis.PyQt.QtCore import QUrl
 from svir.websocket.web_app import WebApp
 
 
 class TaxtwebApp(WebApp):
     def __init__(self, wss, message_bar):
         super(TaxtwebApp, self).__init__('taxtweb', wss, message_bar)
+        # FIXME
+        # self.taxonomy_dlg = taxonomy_dlg
 
-
-class TaxtwebApi(GemApi):
-    """
-    API methods that are specific for the TaxtWEB application
-    (other shared methods are defined in the CommonApi)
-    """
-    def __init__(self, message_bar, taxonomy_dlg, parent=None):
-        super(TaxtwebApi, self).__init__(message_bar, parent)
-        self.taxonomy_dlg = taxonomy_dlg
-
-    @pyqtSlot(str)
+    # FIXME
     def point_to_taxonomy(self, url):
         qurl = QUrl("%s%s" % (self.parent().host, url))
         self.taxonomy_dlg.web_view.load(qurl)
