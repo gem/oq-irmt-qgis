@@ -9,11 +9,11 @@ import ssl
 # import time
 from qgis.PyQt.QtCore import pyqtSlot
 from qgis.PyQt.QtWidgets import QApplication
-from svir.websocket.SimpleWebSocketServer import (
-                                   WebSocket,
-                                   SimpleWebSocketServer,
-                                   SimpleSSLWebSocketServer,
-                                   )
+from svir.websocket.simple_websocket_server import (
+    WebSocket,
+    SimpleWebSocketServer,
+    SimpleSSLWebSocketServer,
+    )
 from optparse import OptionParser
 
 
