@@ -168,6 +168,7 @@ class Irmt(QObject):
 
         self.websocket_thread = None
         self.start_websocket()
+        self.apptest_app = None
         self.ipt_app = None
         self.taxtweb_app = None
         self.taxonomy_app = None
@@ -215,6 +216,14 @@ class Irmt(QObject):
                            enable=self.experimental_enabled(),
                            add_to_layer_actions=True,
                            submenu='OQ Platform')
+        # Action to drive apptest
+        self.add_menu_item("apptest",
+                           ":/plugins/irmt/ipt.svg",
+                           u"OpenQuake Input Preparation Toolkit",
+                           self.apptest,
+                           enable=self.experimental_enabled(),
+                           submenu='OQ Engine',
+                           add_to_toolbar=True)
         # Action to drive ipt
         self.add_menu_item("ipt_set_cells",
                            ":/plugins/irmt/ipt.svg",
