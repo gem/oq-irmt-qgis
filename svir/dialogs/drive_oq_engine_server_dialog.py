@@ -236,24 +236,23 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     def refresh_calc_list(self):
         # returns True if the list is correctly retrieved
         calc_list_url = "%s/v1/calc/list?relevant=true" % self.hostname
-        with WaitCursorManager():
-            try:
-                # FIXME: enable the user to set verify=True
-                resp = self.session.get(
-                    calc_list_url, timeout=10, verify=False,
-                    allow_redirects=False)
-                if resp.status_code == 302:
-                    raise RedirectionError(
-                        "Error %s loading %s: please check the url" % (
-                            resp.status_code, resp.url))
-                if not resp.ok:
-                    raise ServerError(
-                        "Error %s loading %s: %s" % (
-                            resp.status_code, resp.url, resp.reason))
-            except HANDLED_EXCEPTIONS as exc:
-                self._handle_exception(exc)
-                return False
-            self.calc_list = json.loads(resp.text)
+        try:
+            # FIXME: enable the user to set verify=True
+            resp = self.session.get(
+                calc_list_url, timeout=10, verify=False,
+                allow_redirects=False)
+            if resp.status_code == 302:
+                raise RedirectionError(
+                    "Error %s loading %s: please check the url" % (
+                        resp.status_code, resp.url))
+            if not resp.ok:
+                raise ServerError(
+                    "Error %s loading %s: %s" % (
+                        resp.status_code, resp.url, resp.reason))
+        except HANDLED_EXCEPTIONS as exc:
+            self._handle_exception(exc)
+            return False
+        self.calc_list = json.loads(resp.text)
         selected_keys = [
             'description', 'id', 'calculation_mode', 'owner', 'status']
         col_names = [
