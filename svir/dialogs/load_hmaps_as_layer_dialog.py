@@ -69,17 +69,25 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
             self.load_all_poes_chk.setChecked(True)
             self.load_all_poes_chk.setEnabled(False)
             self.poe_cbx.setEnabled(True)
+            self.poe_lbl.setText(
+                'Probability of Exceedance (used for styling)')
             self.load_all_imts_chk.setChecked(True)
             self.load_all_imts_chk.setEnabled(False)
             self.imt_cbx.setEnabled(True)
+            self.imt_lbl.setText(
+                'Intensity Measure Type (used for styling)')
         else:
             self.show_return_time_chk.setEnabled(True)
             self.load_all_poes_chk.setChecked(False)
             self.load_all_poes_chk.setEnabled(True)
             self.poe_cbx.setEnabled(True)
+            self.poe_lbl.setText(
+                'Probability of Exceedance')
             self.load_all_imts_chk.setChecked(False)
             self.load_all_imts_chk.setEnabled(True)
             self.imt_cbx.setEnabled(True)
+            self.imt_lbl.setText(
+                'Intensity Measure Type')
 
     def set_ok_button(self):
         self.ok_button.setEnabled(self.poe_cbx.currentIndex() != -1)
