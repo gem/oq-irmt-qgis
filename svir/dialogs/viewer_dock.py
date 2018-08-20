@@ -1088,6 +1088,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                         if (field_name.split('_')[0]
                             == selected_rlzs_or_stats[0])
                         and field_name.split('_')[1] == imt]
+                try:
+                    imls = [float(iml) for iml in imls]
+                except ValueError:
+                    log_msg('Intensity measure levels are not numeric',
+                            level='W', message_bar=self.iface.messageBar())
                 self.current_abscissa = imls
             elif self.output_type == 'uhs':
                 err_msg = ("The selected layer does not contain uniform"
