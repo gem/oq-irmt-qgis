@@ -25,8 +25,10 @@
 import os
 from shutil import copyfile, rmtree
 from qgis.PyQt.QtWidgets import QFileDialog
-from qgis.PyQt.QtCore import QSettings, QDir, QFileInfo
+from qgis.PyQt.QtCore import QSettings, QDir, QFileInfo, QUrl
+from qgis.PyQt.QtNetwork import QNetworkRequest, QHttpMultiPart, QHttpPart
 from svir.websocket.web_app import WebApp
+from svir.utilities.shared import REQUEST_ATTRS
 
 
 class IptApp(WebApp):
