@@ -601,11 +601,14 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         if not dest_folder:
             return
         task_id = uuid4()
+        msg = 'Downloading HDF5 datastore'
         self.download_tasks[task_id] = DownloadOqOutputTask(
-            'Downloading HDF5 datastore', QgsTask.CanCancel,
+            msg, QgsTask.CanCancel,
             None, None, None, dest_folder, self.session, self.hostname,
             self.notify_downloaded, self.notify_error, self.del_task, task_id,
             current_calc_id=self.current_calc_id)
+        log_msg('%s starting. Watch progress in QGIS task bar' % msg,
+                level='I', message_bar=self.message_bar)
         QgsApplication.taskManager().addTask(self.download_tasks[task_id])
 
     @pyqtSlot()
@@ -746,6 +749,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         if action in ['Show', 'Aggregate']:
             dest_folder = tempfile.gettempdir()
             if output_type in OQ_EXTRACT_TO_VIEW_TYPES:
+                log_msg('Please use the OpenQuake Data Viewer to'
+                        ' visualize data',
+                        level='I', message_bar=self.message_bar)
                 self.viewer_dock.load_no_map_output(
                     self.current_calc_id, self.session,
                     self.hostname, output_type, self.engine_version)
@@ -758,6 +764,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     output_type, dest_folder, self.session, self.hostname,
                     self.open_full_report, self.notify_error, self.del_task,
                     task_id)
+                log_msg('%s starting. Watch progress in QGIS task bar' % descr,
+                        level='I', message_bar=self.message_bar)
                 QgsApplication.taskManager().addTask(
                     self.download_tasks[task_id])
             else:
@@ -775,6 +783,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     output_type, dest_folder, self.session, self.hostname,
                     self.open_output, self.notify_error, self.del_task,
                     task_id)
+                log_msg('%s starting. Watch progress in QGIS task bar' % descr,
+                        level='I', message_bar=self.message_bar)
                 QgsApplication.taskManager().addTask(
                     self.download_tasks[task_id])
             else:
@@ -791,6 +801,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 output_type, dest_folder, self.session, self.hostname,
                 self.notify_downloaded, self.notify_error, self.del_task,
                 task_id)
+            log_msg('%s starting. Watch progress in QGIS task bar' % descr,
+                    level='I', message_bar=self.message_bar)
             QgsApplication.taskManager().addTask(self.download_tasks[task_id])
         else:
             raise NotImplementedError(action)
@@ -818,6 +830,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         if output_type not in OUTPUT_TYPE_LOADERS:
             raise NotImplementedError(output_type)
         dlg_id = uuid4()
+        log_msg('Loading output started. Watch progress in QGIS task bar',
+                level='I', message_bar=self.message_bar)
         open_output_dlg = OUTPUT_TYPE_LOADERS[output_type](
             self.iface, self.viewer_dock,
             self.session, self.hostname, self.current_calc_id,
