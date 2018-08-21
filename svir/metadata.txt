@@ -26,6 +26,8 @@ changelog=
     3.2.5
     * Hazard maps can be loaded as one layer per realization/statistic or as multiple layers, per each combination of realization/statistic-imt-poe
     * Intensity measure levels are casted to float when possible, fixing a plotting issue in hazard curves with IMT=PGV
+    * The cursor does not switch to "waiting" while refreshing the OQ-Engine calculation list
+    * When feedback is shown outside the dialog that drives the OQ-Engine, a message suggests the user where to look
     3.2.4
     * Added loaders for dmg_by_event and losses_by_event, from csv (disabled for event-based calculations)
     * Outputs of a selected oq-engine calculation are sorted by name in alphabetical order
