@@ -26,7 +26,8 @@ import os
 from shutil import copyfile, rmtree
 from qgis.PyQt.QtWidgets import QFileDialog
 from qgis.PyQt.QtCore import QSettings, QDir, QFileInfo, QUrl
-from qgis.PyQt.QtNetwork import QNetworkRequest, QHttpMultiPart, QHttpPart
+from qgis.PyQt.QtNetwork import (
+    QNetworkRequest, QHttpMultiPart, QHttpPart, QNetworkAccessManager)
 from svir.websocket.web_app import WebApp
 from svir.utilities.shared import REQUEST_ATTRS
 
@@ -40,7 +41,8 @@ class IptApp(WebApp):
             'rm_file_from_ipt_dir', 'rename_file_in_ipt_dir',
             'read_file_in_ipt_dir', 'run_oq_engine_calc',
             'save_str_to_file', 'clear_ipt_dir',
-            'select_and_copy_files_to_ipt_dir']
+            'select_and_copy_files_to_ipt_dir',
+            'delegate_download']
         self.allowed_meths.extend(ipt_allowed_meths)
 
     def on_same_fs(self):
@@ -227,8 +229,8 @@ class IptApp(WebApp):
         else:
             return {'ret': 0, 'reason': 'ok'}
 
-    def delegate_download(self, action_url, method, headers, data,
-                          js_cb_func, js_cb_object_id):
+    def delegate_download_old(self, action_url, method, headers, data,
+                              js_cb_func, js_cb_object_id):
         """
         :param action_url: url to call on ipt api
         :param method: string like 'POST'
@@ -273,7 +275,105 @@ class IptApp(WebApp):
         multipart.setParent(reply)  # delete the multiPart with the reply
         return True
 
+    def delegate_download(self, action_url, method, headers, data):
+        """
+        :param action_url: url to call on ipt api
+        :param method: string like 'POST'
+        :param headers: list of strings
+        :param data: list of dictionaries {name (string) value(string)}
+        """
+        # TODO: Accept also methods other than POST
+        if method != 'POST':
+            # self.call_js_cb(js_cb_func, None, 1,
+            #                 'Method %s not allowed' % method)
+            return False
+        if ':' in action_url:
+            qurl = QUrl(action_url)
+        elif action_url.startswith('/'):
+            qurl = QUrl("%s%s" % (self.wss.irmt_thread.host, action_url))
+        else:
+            # FIXME: build the full url, if needed
+            url = "%s/%s" % (
+                '/'.join([str(x) for x in self.wss.irmt_thread.web_view.url(
+                         ).toEncoded().split('/')[:-1]]), action_url)
+            qurl = QUrl(url)
+        print('qurl: %s' % qurl)
+        # manager = self.wss.irmt_thread.web_view.page().networkAccessManager()
+        gem_header_name = b"Gem--Qgis-Oq-Irmt--Ipt"
+        gem_header_value = b"0.1.0"
+        manager = GemQNetworkAccessManager(
+            gem_header_name, gem_header_value, parent=self)
+        # manager = QNetworkAccessManager()
+        manager.finished.connect(self.manager_finished_cb)
+        request = QNetworkRequest(qurl)
+        request.setAttribute(REQUEST_ATTRS['instance_finished_cb'],
+                             self.manager_finished_cb)
+        # request.setAttribute(REQUEST_ATTRS['js_cb_object_id'],
+        #                      js_cb_object_id)
+        request.setAttribute(REQUEST_ATTRS['uuid'], u'UUID')
+        for header in headers:
+            name = header['name'].encode('utf-8')
+            value = header['value'].encode('utf-8') 
+            request.setRawHeader(name, value)
+            print(name)
+            print(value)
+        print(headers)
+        multipart = QHttpMultiPart(QHttpMultiPart.FormDataType)
+        for d in data:
+            part = QHttpPart()
+            part.setHeader(QNetworkRequest.ContentDispositionHeader,
+                           "form-data; name=\"%s\"" % d['name'])
+            part.setBody(d['value'].encode('utf-8'))
+            multipart.append(part)
+        reply = manager.post(request, multipart)
+        # reply = manager.post(request)
+        # # NOTE: needed to avoid segfault!
+        multipart.setParent(reply)  # delete the multiPart with the reply
+        # request.setParent(reply)
+        print('Right after POST')
+        print(reply)
+        # 1/0
+        # import time
+        # time.sleep(10)
+        # return reply
+        resp = {'ret': 1, 'content': None, 'reason': 'started'}
+        return resp
+
     def manager_finished_cb(self, reply):
+        print('*' * 20)
+        print('manager_finished_cb')
+        print(reply)
+        file_name = None
+        # js_cb_object_id = reply.request().attribute(
+        #     REQUEST_ATTRS['js_cb_object_id'], None)
+        # js_cb_func = reply.request().attribute(
+        #     REQUEST_ATTRS['js_cb_func'], None)
+        # if js_cb_object_id is None or js_cb_object_id is None:
+        #     self.call_js_cb(js_cb_func, js_cb_object_id, file_name, 2,
+        #                     'Unable to extract attributes from request')
+        #     return
+        content_disposition = reply.rawHeader(
+            'Content-Disposition'.encode('utf-8'))
+        # expected format: 'attachment; filename="exposure_model.xml"'
+        # sanity check
+        print(content_disposition)
+        if 'filename'.encode('utf-8') not in content_disposition:
+            # resp = {'ret': 0, 'content': file_name, 'reason': 'ok'}
+            # self.call_js_cb(js_cb_func, file_name, 4,
+            #                 'File name not found')
+            return
+        file_name = str(content_disposition.split('"')[1])
+        file_content = str(reply.readAll())
+        print(file_content)
+        # FIXME
+        ipt_dir = self.parent().ipt_dir
+        with open(os.path.join(ipt_dir, file_name), "w") as f:
+            f.write(file_content)
+        # self.call_js_cb(js_cb_func, file_name, 0)
+        resp = {'ret': 0, 'content': file_name, 'reason': 'ok'}
+        return resp
+
+    def manager_finished_cb_old(self, reply):
         file_name = None
         js_cb_object_id = reply.request().attribute(
             REQUEST_ATTRS['js_cb_object_id'], None)
@@ -297,9 +397,38 @@ class IptApp(WebApp):
             f.write(file_content)
         self.call_js_cb(js_cb_func, js_cb_object_id, file_name, 0)
 
+    def call_js_cb_old(self, js_cb_func, js_cb_object_id, file_name,
+                   success=1, reason='ok'):
+        js_to_call = '%s("%s", "%s", %d, "%s");' % (
+            js_cb_func, js_cb_object_id, file_name, success, reason)
+        frame = self.parent().web_view.page().mainFrame()
+        frame.evaluateJavaScript(js_to_call)
+
     def call_js_cb(self, js_cb_func, js_cb_object_id, file_name,
                    success=1, reason='ok'):
         js_to_call = '%s("%s", "%s", %d, "%s");' % (
             js_cb_func, js_cb_object_id, file_name, success, reason)
         frame = self.parent().web_view.page().mainFrame()
         frame.evaluateJavaScript(js_to_call)
+
+
+class GemQNetworkAccessManager(QNetworkAccessManager):
+    """
+    A modified version of QNetworkAccessManager, that adds a header to each
+    request and that uses a persistent cookie jar.
+    """
+
+    def __init__(self, gem_header_name, gem_header_value, parent=None):
+        super().__init__(parent)
+        self.gem_header_name = gem_header_name
+        self.gem_header_value = gem_header_value
+        # self.setCookieJar(PersistentCookieJar())
+
+    def createRequest(self, op, req, outgoingData):
+        req = self.add_header_to_request(req)
+        return super(GemQNetworkAccessManager, self).createRequest(
+            op, req, outgoingData)
+
+    def add_header_to_request(self, request):
+        request.setRawHeader(self.gem_header_name, self.gem_header_value)
+        return request

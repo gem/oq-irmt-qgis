@@ -23,14 +23,16 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 from uuid import uuid4
+from qgis.PyQt.QtCore import QObject
 from qgis.core import Qgis
 from svir.utilities.utils import log_msg
 
 
-class WebApp(object):
+class WebApp(QObject):
 
-    def __init__(self, app_name, wss, message_bar):
+    def __init__(self, app_name, wss, message_bar, parent=None):
         assert app_name is not None
+        super().__init__(parent)
         self.wss = wss  # thread running the websocket server
         self.message_bar = message_bar
         self.app_name = app_name

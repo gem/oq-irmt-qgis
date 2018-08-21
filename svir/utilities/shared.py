@@ -266,10 +266,11 @@ REQUEST_ATTRS = {
                  # access manager finishes satisfying a request to which this
                  # attribute is added
                  'instance_finished_cb': 1001,
-                 # id of the javascript object that called the python gem_api.
-                 # It is used when calling the js callback function, to make js
-                 # know to which original object it refers
-                 'js_cb_object_id': 1002,
-                 # name of the javascript callback function
-                 'js_cb_func': 1003,
+                 'uuid': 1002,
+                 # # id of the javascript object that called the python gem_api.
+                 # # It is used when calling the js callback function, to make js
+                 # # know to which original object it refers
+                 # 'js_cb_object_id': 1002,
+                 # # name of the javascript callback function
+                 # 'js_cb_func': 1003,
                  }
