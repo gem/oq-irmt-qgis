@@ -59,9 +59,9 @@ class IptApp(WebApp):
                 checksum_file_path, local_checksum)
         except Exception as exc:
             log_msg(traceback.format_exc(), level='C')
-            return {'ret': 1, 'content': None, 'reason': str(exc)}
+            return {'success': False, 'content': None, 'reason': str(exc)}
         else:
-            return {'ret': 0, 'content': on_same_fs, 'reason': 'ok'}
+            return {'success': True, 'content': on_same_fs, 'reason': 'ok'}
         finally:
             os.remove(checksum_file_path)
             # FIXME
@@ -72,7 +72,8 @@ class IptApp(WebApp):
             #     # possible to remove it. Otherwise, we display a QGIS-side
             #     # error with the reason why it was impossible to delete the
             #     # file.
-            #     resp = {'ret': 1, 'content': None, 'reason': str(exc)}
+            #     resp = {
+            #    '    success': False, 'content': None, 'reason': str(exc)}
             #     return resp
 
     def select_file(self, api_uuid=None):
@@ -87,9 +88,9 @@ class IptApp(WebApp):
             basename = os.path.basename(file_name)
         except Exception as exc:
             log_msg(traceback.format_exc(), level='C')
-            resp = {'ret': 1, 'content': None, 'reason': str(exc)}
+            resp = {'success': False, 'content': None, 'reason': str(exc)}
         else:
-            resp = {'ret': 0, 'content': basename, 'reason': 'ok'}
+            resp = {'success': True, 'content': basename, 'reason': 'ok'}
         return resp
 
     def select_files(self, api_uuid=None):
@@ -104,9 +105,9 @@ class IptApp(WebApp):
             ls = [os.path.basename(file_name) for file_name in file_names]
         except Exception as exc:
             log_msg(traceback.format_exc(), level='C')
-            return {'ret': 1, 'content': None, 'reason': str(exc)}
+            return {'success': False, 'content': None, 'reason': str(exc)}
         else:
-            return {'ret': 0, 'content': ls, 'reason': 'ok'}
+            return {'success': True, 'content': ls, 'reason': 'ok'}
 
     def select_and_copy_files_to_ipt_dir(self, api_uuid=None):
         """
@@ -121,7 +122,7 @@ class IptApp(WebApp):
             file_paths, _ = QFileDialog.getOpenFileNames(
                 self.wss.irmt_thread.parent(), text, default_dir)
             if not file_paths:
-                return {'ret': 1,
+                return {'success': False,
                         'content': None,
                         'reason': 'No file was selected'}
             selected_dir = QFileInfo(file_paths[0]).dir().path()
@@ -134,10 +135,9 @@ class IptApp(WebApp):
                 copyfile(file_path, os.path.join(ipt_dir, basename))
         except Exception as exc:
             log_msg(traceback.format_exc(), level='C')
-            # FIXME: why ret 2?
-            return {'ret': 2, 'content': basenames, 'reason': str(exc)}
+            return {'success': False, 'content': basenames, 'reason': str(exc)}
         else:
-            return {'ret': 0, 'content': basenames, 'reason': 'ok'}
+            return {'success': True, 'content': basenames, 'reason': 'ok'}
 
     def save_str_to_file(self, content, file_name, api_uuid=None):
         """
@@ -151,9 +151,9 @@ class IptApp(WebApp):
                 f.write(content)
         except Exception as exc:
             log_msg(traceback.format_exc(), level='C')
-            return {'ret': 1, 'content': None, 'reason': str(exc)}
+            return {'success': False, 'content': None, 'reason': str(exc)}
         else:
-            return {'ret': 0, 'content': None, 'reason': 'ok'}
+            return {'success': True, 'content': None, 'reason': 'ok'}
 
     def read_file_in_ipt_dir(self, file_name, api_uuid=None):
         """
@@ -166,18 +166,18 @@ class IptApp(WebApp):
                 content = f.read()
         except Exception as exc:
             log_msg(traceback.format_exc(), level='C')
-            return {'ret': 1, 'content': None, 'reason': str(exc)}
+            return {'success': False, 'content': None, 'reason': str(exc)}
         else:
-            return {'ret': 0, 'content': content, 'reason': 'ok'}
+            return {'success': True, 'content': content, 'reason': 'ok'}
 
     def ls_ipt_dir(self, api_uuid=None):
         ipt_dir = self.wss.irmt_thread.ipt_dir
         try:
             ls = os.listdir(ipt_dir)
         except OSError as exc:
-            resp = {'ret': 1, 'content': None, 'reason': str(exc)}
+            resp = {'success': False, 'content': None, 'reason': str(exc)}
         else:
-            resp = {'ret': 0, 'content': ls, 'reason': 'ok'}
+            resp = {'success': True, 'content': ls, 'reason': 'ok'}
         return resp
 
     def clear_ipt_dir(self, api_uuid=None):
@@ -187,9 +187,9 @@ class IptApp(WebApp):
             ipt_dir = self.wss.irmt_thread.get_ipt_dir()
         except Exception as exc:
             log_msg(traceback.format_exc(), level='C')
-            resp = {'ret': 1, 'content': None, 'reason': str(exc)}
+            resp = {'success': False, 'content': None, 'reason': str(exc)}
         else:
-            resp = {'ret': 0, 'content': None, 'reason': 'ok'}
+            resp = {'success': True, 'content': None, 'reason': 'ok'}
         return resp
 
     def rm_file_from_ipt_dir(self, file_name, api_uuid=None):
@@ -202,9 +202,9 @@ class IptApp(WebApp):
         try:
             os.remove(file_path)
         except OSError as exc:
-            return {'ret': 1, 'content': None, 'reason': str(exc)}
+            return {'success': False, 'content': None, 'reason': str(exc)}
         else:
-            return {'ret': 0, 'content': None, 'reason': 'ok'}
+            return {'success': True, 'content': None, 'reason': 'ok'}
 
     def rename_file_in_ipt_dir(self, old_name, new_name, api_uuid=None):
         """
@@ -219,9 +219,9 @@ class IptApp(WebApp):
         try:
             os.rename(old_path, new_path)
         except OSError as exc:
-            return {'ret': 1, 'content': None, 'reason': str(exc)}
+            return {'success': False, 'content': None, 'reason': str(exc)}
         else:
-            return {'ret': 0, 'content': None, 'reason': 'ok'}
+            return {'success': True, 'content': None, 'reason': 'ok'}
 
     def run_oq_engine_calc(self, file_names, api_uuid=None):
         """
@@ -240,9 +240,9 @@ class IptApp(WebApp):
                                       directory=self.wss.irmt_thread.ipt_dir)
         except Exception as exc:
             log_msg(traceback.format_exc(), level='C')
-            return {'ret': 1, 'content': None, 'reason': str(exc)}
+            return {'success': False, 'content': None, 'reason': str(exc)}
         else:
-            return {'ret': 0, 'content': None, 'reason': 'ok'}
+            return {'success': True, 'content': None, 'reason': 'ok'}
 
     # def delegate_download_old(self, action_url, method, headers, data,
     #                           js_cb_func, js_cb_object_id, api_uuid=None):
@@ -351,10 +351,10 @@ class IptApp(WebApp):
             multipart.setParent(reply)  # delete the multiPart with the reply
             print('Right after POST')
             print(reply)
-            result = {'ret': 0, 'content': None, 'reason': 'started'}
+            result = {'success': True, 'content': None, 'reason': 'started'}
         except Exception as exc:
             log_msg(traceback.format_exc(), level='C')
-            result = {'ret': 1, 'content': None, 'reason': str(exc)}
+            result = {'success': False, 'content': None, 'reason': str(exc)}
         return {'result': result, 'complete': False}
 # // hyb_msg = {'app':<app_name> , 'msg':<api_msg>}
 # // api_msg = {'msg'|'reply': <app_msg>, 'uuid':<uuid> }
@@ -382,7 +382,8 @@ class IptApp(WebApp):
             # sanity check
             print(content_disposition)
             if 'filename'.encode('utf-8') not in content_disposition:
-                # resp = {'ret': 0, 'content': file_name, 'reason': 'ok'}
+                # resp = {
+                #    'success': True, 'content': file_name, 'reason': 'ok'}
                 # self.call_js_cb(js_cb_func, file_name, 4,
                 #                 'File name not found')
                 return
@@ -390,16 +391,15 @@ class IptApp(WebApp):
             print(file_name)
             file_content = str(reply.readAll(), 'utf-8')
             print(file_content)
-            1/0  # FIXME
             ipt_dir = self.wss.irmt_thread.ipt_dir
             with open(os.path.join(ipt_dir, file_name), "w") as f:
                 f.write(file_content)
             # self.call_js_cb(js_cb_func, file_name, 0)
-            result = {'ret': 0, 'content': file_name, 'reason': 'ok'}
+            result = {'success': True, 'content': file_name, 'reason': 'ok'}
             app_msg = {'result': result, 'complete': True}
         except Exception as exc:
             log_msg(traceback.format_exc(), level='C')
-            result = {'ret': 1, 'content': None, 'reason': str(exc)}
+            result = {'success': False, 'content': None, 'reason': str(exc)}
             app_msg = {'result': result, 'complete': True}
         api_msg = {'reply': app_msg, 'uuid': uuid}
         self.send(api_msg)
