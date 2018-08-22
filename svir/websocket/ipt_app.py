@@ -229,51 +229,51 @@ class IptApp(WebApp):
         else:
             return {'ret': 0, 'reason': 'ok'}
 
-    def delegate_download_old(self, action_url, method, headers, data,
-                              js_cb_func, js_cb_object_id):
-        """
-        :param action_url: url to call on ipt api
-        :param method: string like 'POST'
-        :param headers: list of strings
-        :param data: list of dictionaries {name (string) value(string)}
-        :param js_cb_func: javascript callback
-        :param js_cb_object_id: id of the javascript object to be called back
-        """
-        # TODO: Accept also methods other than POST
-        if method != 'POST':
-            self.call_js_cb(js_cb_func, js_cb_object_id, None, 1,
-                            'Method %s not allowed' % method)
-            return False
-        if ':' in action_url:
-            qurl = QUrl(action_url)
-        elif action_url.startswith('/'):
-            qurl = QUrl("%s%s" % (self.wss.irmt_thread.host, action_url))
-        else:
-            url = "%s/%s" % (
-                '/'.join([str(x) for x in self.wss.irmt_thread.web_view.url(
-                         ).toEncoded().split('/')[:-1]]), action_url)
-            qurl = QUrl(url)
-        manager = self.wss.irmt_thread.web_view.page().networkAccessManager()
-        request = QNetworkRequest(qurl)
-        request.setAttribute(REQUEST_ATTRS['instance_finished_cb'],
-                             self.manager_finished_cb)
-        request.setAttribute(REQUEST_ATTRS['js_cb_object_id'],
-                             js_cb_object_id)
-        request.setAttribute(REQUEST_ATTRS['js_cb_func'],
-                             js_cb_func)
-        for header in headers:
-            request.setRawHeader(header['name'], header['value'])
-        multipart = QHttpMultiPart(QHttpMultiPart.FormDataType)
-        for d in data:
-            part = QHttpPart()
-            part.setHeader(QNetworkRequest.ContentDispositionHeader,
-                           "form-data; name=\"%s\"" % d['name'])
-            part.setBody(d['value'])
-            multipart.append(part)
-        reply = manager.post(request, multipart)
-        # NOTE: needed to avoid segfault!
-        multipart.setParent(reply)  # delete the multiPart with the reply
-        return True
+    # def delegate_download_old(self, action_url, method, headers, data,
+    #                           js_cb_func, js_cb_object_id):
+    #     """
+    #     :param action_url: url to call on ipt api
+    #     :param method: string like 'POST'
+    #     :param headers: list of strings
+    #     :param data: list of dictionaries {name (string) value(string)}
+    #     :param js_cb_func: javascript callback
+    #     :param js_cb_object_id: id of the javascript object to be called back
+    #     """
+    #     # TODO: Accept also methods other than POST
+    #     if method != 'POST':
+    #         self.call_js_cb(js_cb_func, js_cb_object_id, None, 1,
+    #                         'Method %s not allowed' % method)
+    #         return False
+    #     if ':' in action_url:
+    #         qurl = QUrl(action_url)
+    #     elif action_url.startswith('/'):
+    #         qurl = QUrl("%s%s" % (self.wss.irmt_thread.host, action_url))
+    #     else:
+    #         url = "%s/%s" % (
+    #             '/'.join([str(x) for x in self.wss.irmt_thread.web_view.url(
+    #                      ).toEncoded().split('/')[:-1]]), action_url)
+    #         qurl = QUrl(url)
+    #     manager = self.wss.irmt_thread.web_view.page().networkAccessManager()
+    #     request = QNetworkRequest(qurl)
+    #     request.setAttribute(REQUEST_ATTRS['instance_finished_cb'],
+    #                          self.manager_finished_cb)
+    #     request.setAttribute(REQUEST_ATTRS['js_cb_object_id'],
+    #                          js_cb_object_id)
+    #     request.setAttribute(REQUEST_ATTRS['js_cb_func'],
+    #                          js_cb_func)
+    #     for header in headers:
+    #         request.setRawHeader(header['name'], header['value'])
+    #     multipart = QHttpMultiPart(QHttpMultiPart.FormDataType)
+    #     for d in data:
+    #         part = QHttpPart()
+    #         part.setHeader(QNetworkRequest.ContentDispositionHeader,
+    #                        "form-data; name=\"%s\"" % d['name'])
+    #         part.setBody(d['value'])
+    #         multipart.append(part)
+    #     reply = manager.post(request, multipart)
+    #     # NOTE: needed to avoid segfault!
+    #     multipart.setParent(reply)  # delete the multiPart with the reply
+    #     return True
 
     def delegate_download(self, action_url, method, headers, data):
         """
@@ -329,13 +329,8 @@ class IptApp(WebApp):
         # reply = manager.post(request)
         # # NOTE: needed to avoid segfault!
         multipart.setParent(reply)  # delete the multiPart with the reply
-        # request.setParent(reply)
         print('Right after POST')
         print(reply)
-        # 1/0
-        # import time
-        # time.sleep(10)
-        # return reply
         resp = {'ret': 1, 'content': None, 'reason': 'started'}
         return resp
 
@@ -362,47 +357,47 @@ class IptApp(WebApp):
             # self.call_js_cb(js_cb_func, file_name, 4,
             #                 'File name not found')
             return
-        file_name = str(content_disposition.split('"')[1])
-        file_content = str(reply.readAll())
+        file_name = str(content_disposition.split('"')[1], 'utf-8')
+        print(file_name)
+        file_content = str(reply.readAll(), 'utf-8')
         print(file_content)
-        # FIXME
-        ipt_dir = self.parent().ipt_dir
+        ipt_dir = self.wss.irmt_thread.ipt_dir
         with open(os.path.join(ipt_dir, file_name), "w") as f:
             f.write(file_content)
         # self.call_js_cb(js_cb_func, file_name, 0)
         resp = {'ret': 0, 'content': file_name, 'reason': 'ok'}
         return resp
 
-    def manager_finished_cb_old(self, reply):
-        file_name = None
-        js_cb_object_id = reply.request().attribute(
-            REQUEST_ATTRS['js_cb_object_id'], None)
-        js_cb_func = reply.request().attribute(
-            REQUEST_ATTRS['js_cb_func'], None)
-        if js_cb_object_id is None or js_cb_object_id is None:
-            self.call_js_cb(js_cb_func, js_cb_object_id, file_name, 2,
-                            'Unable to extract attributes from request')
-            return
-        content_disposition = reply.rawHeader('Content-Disposition')
-        # expected format: 'attachment; filename="exposure_model.xml"'
-        # sanity check
-        if 'filename' not in content_disposition:
-            self.call_js_cb(js_cb_func, js_cb_object_id, file_name, 4,
-                            'File name not found')
-            return
-        file_name = str(content_disposition.split('"')[1])
-        file_content = str(reply.readAll())
-        ipt_dir = self.parent().ipt_dir
-        with open(os.path.join(ipt_dir, file_name), "w") as f:
-            f.write(file_content)
-        self.call_js_cb(js_cb_func, js_cb_object_id, file_name, 0)
+    # def manager_finished_cb_old(self, reply):
+    #     file_name = None
+    #     js_cb_object_id = reply.request().attribute(
+    #         REQUEST_ATTRS['js_cb_object_id'], None)
+    #     js_cb_func = reply.request().attribute(
+    #         REQUEST_ATTRS['js_cb_func'], None)
+    #     if js_cb_object_id is None or js_cb_object_id is None:
+    #         self.call_js_cb(js_cb_func, js_cb_object_id, file_name, 2,
+    #                         'Unable to extract attributes from request')
+    #         return
+    #     content_disposition = reply.rawHeader('Content-Disposition')
+    #     # expected format: 'attachment; filename="exposure_model.xml"'
+    #     # sanity check
+    #     if 'filename' not in content_disposition:
+    #         self.call_js_cb(js_cb_func, js_cb_object_id, file_name, 4,
+    #                         'File name not found')
+    #         return
+    #     file_name = str(content_disposition.split('"')[1])
+    #     file_content = str(reply.readAll())
+    #     ipt_dir = self.parent().ipt_dir
+    #     with open(os.path.join(ipt_dir, file_name), "w") as f:
+    #         f.write(file_content)
+    #     self.call_js_cb(js_cb_func, js_cb_object_id, file_name, 0)
 
-    def call_js_cb_old(self, js_cb_func, js_cb_object_id, file_name,
-                   success=1, reason='ok'):
-        js_to_call = '%s("%s", "%s", %d, "%s");' % (
-            js_cb_func, js_cb_object_id, file_name, success, reason)
-        frame = self.parent().web_view.page().mainFrame()
-        frame.evaluateJavaScript(js_to_call)
+    # def call_js_cb_old(self, js_cb_func, js_cb_object_id, file_name,
+    #                success=1, reason='ok'):
+    #     js_to_call = '%s("%s", "%s", %d, "%s");' % (
+    #         js_cb_func, js_cb_object_id, file_name, success, reason)
+    #     frame = self.parent().web_view.page().mainFrame()
+    #     frame.evaluateJavaScript(js_to_call)
 
     def call_js_cb(self, js_cb_func, js_cb_object_id, file_name,
                    success=1, reason='ok'):
