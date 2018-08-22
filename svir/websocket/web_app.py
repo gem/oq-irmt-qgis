@@ -37,7 +37,8 @@ class WebApp(QObject):
         self.message_bar = message_bar
         self.app_name = app_name
         self.allowed_meths = [
-            'window_open', 'ext_app_open', 'set_cells']
+            'window_open', 'ext_app_open', 'set_cells',
+            'notify_click', 'info', 'warning', 'error']
         self.pending = {}
 
     def run_command(self, command, args=()):
@@ -103,7 +104,7 @@ class WebApp(QObject):
         # bar a string specified in the first arg
         msg = "%s ext_app_open: %s" % (self.app_name, content)
         log_msg(msg, message_bar=self.message_bar)
-        return {'success': True}
+        return {'ret': 0, 'content': None, 'reason': 'ok'}
 
     # FIXME: adapt the following to the new websocket approach
 
@@ -123,19 +124,19 @@ class WebApp(QObject):
 
     def notify_click(self, api_uuid=None):
         self.info("Clicked!")
-        return {'success': True}
+        return {'ret': 0, 'content': None, 'reason': 'ok'}
 
     def info(self, message, api_uuid=None):
         self.message_bar.pushMessage(message, level=Qgis.Info)
-        return {'success': True}
+        return {'ret': 0, 'content': None, 'reason': 'ok'}
 
     def warning(self, message, api_uuid=None):
         self.message_bar.pushMessage(message, level=Qgis.Warning)
-        return {'success': True}
+        return {'ret': 0, 'content': None, 'reason': 'ok'}
 
     def error(self, message, api_uuid=None):
         self.message_bar.pushMessage(message, level=Qgis.Critical)
-        return {'success': True}
+        return {'ret': 0, 'content': None, 'reason': 'ok'}
 
     # @pyqtSlot(result=int)
     # def dummy_property_get(self):
