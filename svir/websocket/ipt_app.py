@@ -23,12 +23,14 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import traceback
 from shutil import copyfile, rmtree
 from qgis.PyQt.QtWidgets import QFileDialog
 from qgis.PyQt.QtCore import QSettings, QDir, QFileInfo, QUrl
 from qgis.PyQt.QtNetwork import (
     QNetworkRequest, QHttpMultiPart, QHttpPart, QNetworkAccessManager)
 from svir.websocket.web_app import WebApp
+from svir.utilities.utils import log_msg
 from svir.utilities.shared import REQUEST_ATTRS
 
 
@@ -56,6 +58,7 @@ class IptApp(WebApp):
             on_same_fs = self.wss.irmt_thread.on_same_fs(
                 checksum_file_path, local_checksum)
         except Exception as exc:
+            log_msg(traceback.format_exc(), level='C')
             return {'ret': 1, 'content': None, 'reason': str(exc)}
         else:
             return {'ret': 0, 'content': on_same_fs, 'reason': 'ok'}
@@ -83,6 +86,7 @@ class IptApp(WebApp):
                 self.wss.irmt_thread.parent(), 'Select file', ipt_dir)
             basename = os.path.basename(file_name)
         except Exception as exc:
+            log_msg(traceback.format_exc(), level='C')
             resp = {'ret': 1, 'content': None, 'reason': str(exc)}
         else:
             resp = {'ret': 0, 'content': basename, 'reason': 'ok'}
@@ -99,6 +103,7 @@ class IptApp(WebApp):
                 self.wss.irmt_thread.parent(), 'Select files', ipt_dir)
             ls = [os.path.basename(file_name) for file_name in file_names]
         except Exception as exc:
+            log_msg(traceback.format_exc(), level='C')
             return {'ret': 1, 'content': None, 'reason': str(exc)}
         else:
             return {'ret': 0, 'content': ls, 'reason': 'ok'}
@@ -116,17 +121,23 @@ class IptApp(WebApp):
             file_paths, _ = QFileDialog.getOpenFileNames(
                 self.wss.irmt_thread.parent(), text, default_dir)
             if not file_paths:
-                return {'ret': 1, 'reason': 'No file was selected'}
+                return {'ret': 1,
+                        'content': None,
+                        'reason': 'No file was selected'}
             selected_dir = QFileInfo(file_paths[0]).dir().path()
             QSettings().setValue('irmt/ipt_browsed_dir', selected_dir)
             ipt_dir = self.wss.irmt_thread.ipt_dir
+            basenames = []
             for file_path in file_paths:
                 basename = os.path.basename(file_path)
+                basenames.append(basename)
                 copyfile(file_path, os.path.join(ipt_dir, basename))
         except Exception as exc:
-            return {'ret': 2, 'reason': str(exc)}
+            log_msg(traceback.format_exc(), level='C')
+            # FIXME: why ret 2?
+            return {'ret': 2, 'content': basenames, 'reason': str(exc)}
         else:
-            return {'ret': 0, 'reason': 'ok'}
+            return {'ret': 0, 'content': basenames, 'reason': 'ok'}
 
     def save_str_to_file(self, content, file_name, api_uuid=None):
         """
@@ -139,9 +150,10 @@ class IptApp(WebApp):
             with open(os.path.join(ipt_dir, basename), "w") as f:
                 f.write(content)
         except Exception as exc:
-            return {'ret': 1, 'reason': str(exc)}
+            log_msg(traceback.format_exc(), level='C')
+            return {'ret': 1, 'content': None, 'reason': str(exc)}
         else:
-            return {'ret': 0, 'reason': 'ok'}
+            return {'ret': 0, 'content': None, 'reason': 'ok'}
 
     def read_file_in_ipt_dir(self, file_name, api_uuid=None):
         """
@@ -153,6 +165,7 @@ class IptApp(WebApp):
             with open(os.path.join(ipt_dir, basename), "r") as f:
                 content = f.read()
         except Exception as exc:
+            log_msg(traceback.format_exc(), level='C')
             return {'ret': 1, 'content': None, 'reason': str(exc)}
         else:
             return {'ret': 0, 'content': content, 'reason': 'ok'}
@@ -173,6 +186,7 @@ class IptApp(WebApp):
             rmtree(ipt_dir)
             ipt_dir = self.wss.irmt_thread.get_ipt_dir()
         except Exception as exc:
+            log_msg(traceback.format_exc(), level='C')
             resp = {'ret': 1, 'content': None, 'reason': str(exc)}
         else:
             resp = {'ret': 0, 'content': None, 'reason': 'ok'}
@@ -188,9 +202,9 @@ class IptApp(WebApp):
         try:
             os.remove(file_path)
         except OSError as exc:
-            return {'ret': 1, 'reason': str(exc)}
+            return {'ret': 1, 'content': None, 'reason': str(exc)}
         else:
-            return {'ret': 0, 'reason': 'ok'}
+            return {'ret': 0, 'content': None, 'reason': 'ok'}
 
     def rename_file_in_ipt_dir(self, old_name, new_name, api_uuid=None):
         """
@@ -205,9 +219,9 @@ class IptApp(WebApp):
         try:
             os.rename(old_path, new_path)
         except OSError as exc:
-            return {'ret': 1, 'reason': str(exc)}
+            return {'ret': 1, 'content': None, 'reason': str(exc)}
         else:
-            return {'ret': 0, 'reason': 'ok'}
+            return {'ret': 0, 'content': None, 'reason': 'ok'}
 
     def run_oq_engine_calc(self, file_names, api_uuid=None):
         """
@@ -225,9 +239,10 @@ class IptApp(WebApp):
             drive_engine_dlg.run_calc(file_names=file_names,
                                       directory=self.wss.irmt_thread.ipt_dir)
         except Exception as exc:
-            return {'ret': 1, 'reason': str(exc)}
+            log_msg(traceback.format_exc(), level='C')
+            return {'ret': 1, 'content': None, 'reason': str(exc)}
         else:
-            return {'ret': 0, 'reason': 'ok'}
+            return {'ret': 0, 'content': None, 'reason': 'ok'}
 
     # def delegate_download_old(self, action_url, method, headers, data,
     #                           js_cb_func, js_cb_object_id, api_uuid=None):
@@ -282,97 +297,110 @@ class IptApp(WebApp):
         :param method: string like 'POST'
         :param headers: list of strings
         :param data: list of dictionaries {name (string) value(string)}
+        :param api_uuid: id of the request coming from the websocket, to be
+            used to keep track of pending requests
         """
-        # TODO: Accept also methods other than POST
-        if method != 'POST':
-            # self.call_js_cb(js_cb_func, None, 1,
-            #                 'Method %s not allowed' % method)
-            return False
-        if ':' in action_url:
+        try:
+            # TODO: Accept also methods other than POST
+            if method != 'POST':
+                # self.call_js_cb(js_cb_func, None, 1,
+                #                 'Method %s not allowed' % method)
+                return False
+            # if ':' in action_url:
+            #     qurl = QUrl(action_url)
+            # elif action_url.startswith('/'):
+            #     qurl = QUrl("%s%s" % (self.wss.irmt_thread.host, action_url))
+            # else:
+            #     # FIXME: build the full url, if needed
+            #     url = "%s/%s" % (
+            #         '/'.join([str(x) for x in self.wss.irmt_thread.web_view.url(
+            #                  ).toEncoded().split('/')[:-1]]), action_url)
+            #     qurl = QUrl(url)
             qurl = QUrl(action_url)
-        elif action_url.startswith('/'):
-            qurl = QUrl("%s%s" % (self.wss.irmt_thread.host, action_url))
-        else:
-            # FIXME: build the full url, if needed
-            url = "%s/%s" % (
-                '/'.join([str(x) for x in self.wss.irmt_thread.web_view.url(
-                         ).toEncoded().split('/')[:-1]]), action_url)
-            qurl = QUrl(url)
-        print('qurl: %s' % qurl)
-        # manager = self.wss.irmt_thread.web_view.page().networkAccessManager()
-        gem_header_name = b"Gem--Qgis-Oq-Irmt--Ipt"
-        gem_header_value = b"0.1.0"
-        manager = GemQNetworkAccessManager(
-            gem_header_name, gem_header_value, parent=self)
-        # manager = QNetworkAccessManager()
-        manager.finished.connect(self.manager_finished_cb)
-        request = QNetworkRequest(qurl)
-        request.setAttribute(REQUEST_ATTRS['instance_finished_cb'],
-                             self.manager_finished_cb)
-        # request.setAttribute(REQUEST_ATTRS['js_cb_object_id'],
-        #                      js_cb_object_id)
-        request.setAttribute(REQUEST_ATTRS['uuid'], api_uuid)
-        for header in headers:
-            name = header['name'].encode('utf-8')
-            value = header['value'].encode('utf-8')
-            request.setRawHeader(name, value)
-            print(name)
-            print(value)
-        print(headers)
-        multipart = QHttpMultiPart(QHttpMultiPart.FormDataType)
-        for d in data:
-            part = QHttpPart()
-            part.setHeader(QNetworkRequest.ContentDispositionHeader,
-                           "form-data; name=\"%s\"" % d['name'])
-            part.setBody(d['value'].encode('utf-8'))
-            multipart.append(part)
-        reply = manager.post(request, multipart)
-        # reply = manager.post(request)
-        # # NOTE: needed to avoid segfault!
-        multipart.setParent(reply)  # delete the multiPart with the reply
-        print('Right after POST')
-        print(reply)
-        result = {'ret': 1, 'content': None, 'reason': 'started'}
+            print('qurl: %s' % qurl)
+            # manager = self.wss.irmt_thread.web_view.page().networkAccessManager()
+            gem_header_name = b"Gem--Qgis-Oq-Irmt--Ipt"
+            gem_header_value = b"0.1.0"
+            manager = GemQNetworkAccessManager(
+                gem_header_name, gem_header_value, parent=self)
+            # manager = QNetworkAccessManager()
+            manager.finished.connect(self.manager_finished_cb)
+            request = QNetworkRequest(qurl)
+            request.setAttribute(REQUEST_ATTRS['instance_finished_cb'],
+                                self.manager_finished_cb)
+            # request.setAttribute(REQUEST_ATTRS['js_cb_object_id'],
+            #                      js_cb_object_id)
+            request.setAttribute(REQUEST_ATTRS['uuid'], api_uuid)
+            for header in headers:
+                name = header['name'].encode('utf-8')
+                value = header['value'].encode('utf-8')
+                request.setRawHeader(name, value)
+                print(name)
+                print(value)
+            print(headers)
+            multipart = QHttpMultiPart(QHttpMultiPart.FormDataType)
+            for d in data:
+                part = QHttpPart()
+                part.setHeader(QNetworkRequest.ContentDispositionHeader,
+                            "form-data; name=\"%s\"" % d['name'])
+                part.setBody(d['value'].encode('utf-8'))
+                multipart.append(part)
+            reply = manager.post(request, multipart)
+            # reply = manager.post(request)
+            # # NOTE: needed to avoid segfault!
+            multipart.setParent(reply)  # delete the multiPart with the reply
+            print('Right after POST')
+            print(reply)
+            result = {'ret': 0, 'content': None, 'reason': 'started'}
+        except Exception as exc:
+            log_msg(traceback.format_exc(), level='C')
+            result = {'ret': 1, 'content': None, 'reason': str(exc)}
         return {'result': result, 'complete': False}
 # // hyb_msg = {'app':<app_name> , 'msg':<api_msg>}
 # // api_msg = {'msg'|'reply': <app_msg>, 'uuid':<uuid> }
 # // app_msg = {<('command', 'args':[])|('result': <obj|bool>, complete: <True|False>)>}
 
     def manager_finished_cb(self, reply):
-        print('*' * 20)
-        print('manager_finished_cb')
-        print(reply)
-        file_name = None
-        uuid = reply.request().attribute(
-            REQUEST_ATTRS['uuid'], None)
-        # js_cb_object_id = reply.request().attribute(
-        #     REQUEST_ATTRS['js_cb_object_id'], None)
-        # js_cb_func = reply.request().attribute(
-        #     REQUEST_ATTRS['js_cb_func'], None)
-        # if js_cb_object_id is None or js_cb_object_id is None:
-        #     self.call_js_cb(js_cb_func, js_cb_object_id, file_name, 2,
-        #                     'Unable to extract attributes from request')
-        #     return
-        content_disposition = reply.rawHeader(
-            'Content-Disposition'.encode('utf-8'))
-        # expected format: 'attachment; filename="exposure_model.xml"'
-        # sanity check
-        print(content_disposition)
-        if 'filename'.encode('utf-8') not in content_disposition:
-            # resp = {'ret': 0, 'content': file_name, 'reason': 'ok'}
-            # self.call_js_cb(js_cb_func, file_name, 4,
-            #                 'File name not found')
-            return
-        file_name = str(content_disposition.split('"')[1], 'utf-8')
-        print(file_name)
-        file_content = str(reply.readAll(), 'utf-8')
-        print(file_content)
-        ipt_dir = self.wss.irmt_thread.ipt_dir
-        with open(os.path.join(ipt_dir, file_name), "w") as f:
-            f.write(file_content)
-        # self.call_js_cb(js_cb_func, file_name, 0)
-        result = {'ret': 0, 'content': file_name, 'reason': 'ok'}
-        app_msg = {'result': result, 'complete': True}
+        try:
+            print('*' * 20)
+            print('manager_finished_cb')
+            print(reply)
+            file_name = None
+            uuid = reply.request().attribute(
+                REQUEST_ATTRS['uuid'], None)
+            # js_cb_object_id = reply.request().attribute(
+            #     REQUEST_ATTRS['js_cb_object_id'], None)
+            # js_cb_func = reply.request().attribute(
+            #     REQUEST_ATTRS['js_cb_func'], None)
+            # if js_cb_object_id is None or js_cb_object_id is None:
+            #     self.call_js_cb(js_cb_func, js_cb_object_id, file_name, 2,
+            #                     'Unable to extract attributes from request')
+            #     return
+            content_disposition = reply.rawHeader(
+                'Content-Disposition'.encode('utf-8'))
+            # expected format: 'attachment; filename="exposure_model.xml"'
+            # sanity check
+            print(content_disposition)
+            if 'filename'.encode('utf-8') not in content_disposition:
+                # resp = {'ret': 0, 'content': file_name, 'reason': 'ok'}
+                # self.call_js_cb(js_cb_func, file_name, 4,
+                #                 'File name not found')
+                return
+            file_name = str(content_disposition.split('"')[1], 'utf-8')
+            print(file_name)
+            file_content = str(reply.readAll(), 'utf-8')
+            print(file_content)
+            1/0  # FIXME
+            ipt_dir = self.wss.irmt_thread.ipt_dir
+            with open(os.path.join(ipt_dir, file_name), "w") as f:
+                f.write(file_content)
+            # self.call_js_cb(js_cb_func, file_name, 0)
+            result = {'ret': 0, 'content': file_name, 'reason': 'ok'}
+            app_msg = {'result': result, 'complete': True}
+        except Exception as exc:
+            log_msg(traceback.format_exc(), level='C')
+            result = {'ret': 1, 'content': None, 'reason': str(exc)}
+            app_msg = {'result': result, 'complete': True}
         api_msg = {'reply': app_msg, 'uuid': uuid}
         self.send(api_msg)
     # def manager_finished_cb_old(self, reply):
@@ -405,13 +433,6 @@ class IptApp(WebApp):
     #         js_cb_func, js_cb_object_id, file_name, success, reason)
     #     frame = self.parent().web_view.page().mainFrame()
     #     frame.evaluateJavaScript(js_to_call)
-
-    def call_js_cb(self, js_cb_func, js_cb_object_id, file_name,
-                   success=1, reason='ok'):
-        js_to_call = '%s("%s", "%s", %d, "%s");' % (
-            js_cb_func, js_cb_object_id, file_name, success, reason)
-        frame = self.parent().web_view.page().mainFrame()
-        frame.evaluateJavaScript(js_to_call)
 
 
 class GemQNetworkAccessManager(QNetworkAccessManager):

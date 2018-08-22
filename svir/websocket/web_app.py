@@ -123,15 +123,19 @@ class WebApp(QObject):
 
     def notify_click(self, api_uuid=None):
         self.info("Clicked!")
+        return {'success': True}
 
     def info(self, message, api_uuid=None):
         self.message_bar.pushMessage(message, level=Qgis.Info)
+        return {'success': True}
 
     def warning(self, message, api_uuid=None):
         self.message_bar.pushMessage(message, level=Qgis.Warning)
+        return {'success': True}
 
     def error(self, message, api_uuid=None):
         self.message_bar.pushMessage(message, level=Qgis.Critical)
+        return {'success': True}
 
     # @pyqtSlot(result=int)
     # def dummy_property_get(self):
