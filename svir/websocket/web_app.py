@@ -87,7 +87,7 @@ class WebApp(QObject):
             meth = getattr(self, command)
 
             # FIXME: manage command exception
-            ret = meth(*args)
+            ret = meth(*args, api_uuid=api_uuid)
 
             api_reply = {'uuid': api_uuid, 'reply': ret}
             self.send(api_reply)
@@ -97,10 +97,11 @@ class WebApp(QObject):
         hyb_msg = {'app': self.app_name, 'msg': api_msg}
         self.wss.irmt_thread.send_to_wss_sig.emit(hyb_msg)
 
-    def ext_app_open(self, *args):
+    # Deprecated
+    def ext_app_open(self, content, api_uuid=None):
         # FIXME: the name is misleading. This method just prints in the message
         # bar a string specified in the first arg
-        msg = "%s ext_app_open: %s" % (self.app_name, args[0])
+        msg = "%s ext_app_open: %s" % (self.app_name, content)
         log_msg(msg, message_bar=self.message_bar)
         return {'success': True}
 
@@ -120,16 +121,16 @@ class WebApp(QObject):
     # def json_decode(self, jsstr):
     #     return json.loads(jsstr)
 
-    def notify_click(self):
+    def notify_click(self, api_uuid=None):
         self.info("Clicked!")
 
-    def info(self, message):
+    def info(self, message, api_uuid=None):
         self.message_bar.pushMessage(message, level=Qgis.Info)
 
-    def warning(self, message):
+    def warning(self, message, api_uuid=None):
         self.message_bar.pushMessage(message, level=Qgis.Warning)
 
-    def error(self, message):
+    def error(self, message, api_uuid=None):
         self.message_bar.pushMessage(message, level=Qgis.Critical)
 
     # @pyqtSlot(result=int)

@@ -45,7 +45,7 @@ class IptApp(WebApp):
             'delegate_download']
         self.allowed_meths.extend(ipt_allowed_meths)
 
-    def on_same_fs(self):
+    def on_same_fs(self, api_uuid=None):
         """
         Check if the engine server has access to the ipt_dir
         """
@@ -72,7 +72,7 @@ class IptApp(WebApp):
             #     resp = {'ret': 1, 'content': None, 'reason': str(exc)}
             #     return resp
 
-    def select_file(self):
+    def select_file(self, api_uuid=None):
         """
         Open a file browser to select a single file in the ipt_dir,
         and return the name of the selected files
@@ -88,7 +88,7 @@ class IptApp(WebApp):
             resp = {'ret': 0, 'content': basename, 'reason': 'ok'}
         return resp
 
-    def select_files(self):
+    def select_files(self, api_uuid=None):
         """
         Open a file browser to select multiple files in the ipt_dir,
         and return the list of names of selected files
@@ -103,7 +103,7 @@ class IptApp(WebApp):
         else:
             return {'ret': 0, 'content': ls, 'reason': 'ok'}
 
-    def select_and_copy_files_to_ipt_dir(self):
+    def select_and_copy_files_to_ipt_dir(self, api_uuid=None):
         """
         Open a file browser pointing to the most recently browsed directory,
         where multiple files can be selected. The selected files will be
@@ -128,7 +128,7 @@ class IptApp(WebApp):
         else:
             return {'ret': 0, 'reason': 'ok'}
 
-    def save_str_to_file(self, content, file_name):
+    def save_str_to_file(self, content, file_name, api_uuid=None):
         """
         :param content: string to be saved in the file
         :param file_name: basename of the file to be saved into the ipt_dir
@@ -143,7 +143,7 @@ class IptApp(WebApp):
         else:
             return {'ret': 0, 'reason': 'ok'}
 
-    def read_file_in_ipt_dir(self, file_name):
+    def read_file_in_ipt_dir(self, file_name, api_uuid=None):
         """
         :param file_name: basename of the file to be read from the ipt_dir
         """
@@ -157,7 +157,7 @@ class IptApp(WebApp):
         else:
             return {'ret': 0, 'content': content, 'reason': 'ok'}
 
-    def ls_ipt_dir(self):
+    def ls_ipt_dir(self, api_uuid=None):
         ipt_dir = self.wss.irmt_thread.ipt_dir
         try:
             ls = os.listdir(ipt_dir)
@@ -167,7 +167,7 @@ class IptApp(WebApp):
             resp = {'ret': 0, 'content': ls, 'reason': 'ok'}
         return resp
 
-    def clear_ipt_dir(self):
+    def clear_ipt_dir(self, api_uuid=None):
         try:
             ipt_dir = self.wss.irmt_thread.ipt_dir
             rmtree(ipt_dir)
@@ -178,7 +178,7 @@ class IptApp(WebApp):
             resp = {'ret': 0, 'content': None, 'reason': 'ok'}
         return resp
 
-    def rm_file_from_ipt_dir(self, file_name):
+    def rm_file_from_ipt_dir(self, file_name, api_uuid=None):
         """
         :param file_name: name of the file to be removed from the ipt_dir
         """
@@ -192,7 +192,7 @@ class IptApp(WebApp):
         else:
             return {'ret': 0, 'reason': 'ok'}
 
-    def rename_file_in_ipt_dir(self, old_name, new_name):
+    def rename_file_in_ipt_dir(self, old_name, new_name, api_uuid=None):
         """
         :param old_name: name of the file to be renamed
         :param new_name: new name to be assigned to the file
@@ -209,7 +209,7 @@ class IptApp(WebApp):
         else:
             return {'ret': 0, 'reason': 'ok'}
 
-    def run_oq_engine_calc(self, file_names):
+    def run_oq_engine_calc(self, file_names, api_uuid=None):
         """
         It opens the dialog showing the list of calculations on the engine
         server, and automatically runs an oq-engine calculation, given a list
@@ -230,7 +230,7 @@ class IptApp(WebApp):
             return {'ret': 0, 'reason': 'ok'}
 
     # def delegate_download_old(self, action_url, method, headers, data,
-    #                           js_cb_func, js_cb_object_id):
+    #                           js_cb_func, js_cb_object_id, api_uuid=None):
     #     """
     #     :param action_url: url to call on ipt api
     #     :param method: string like 'POST'
@@ -275,7 +275,8 @@ class IptApp(WebApp):
     #     multipart.setParent(reply)  # delete the multiPart with the reply
     #     return True
 
-    def delegate_download(self, action_url, method, headers, data):
+    def delegate_download(
+            self, action_url, method, headers, data, api_uuid=None):
         """
         :param action_url: url to call on ipt api
         :param method: string like 'POST'
@@ -310,10 +311,10 @@ class IptApp(WebApp):
                              self.manager_finished_cb)
         # request.setAttribute(REQUEST_ATTRS['js_cb_object_id'],
         #                      js_cb_object_id)
-        request.setAttribute(REQUEST_ATTRS['uuid'], u'UUID')
+        request.setAttribute(REQUEST_ATTRS['uuid'], api_uuid)
         for header in headers:
             name = header['name'].encode('utf-8')
-            value = header['value'].encode('utf-8') 
+            value = header['value'].encode('utf-8')
             request.setRawHeader(name, value)
             print(name)
             print(value)
@@ -331,14 +332,19 @@ class IptApp(WebApp):
         multipart.setParent(reply)  # delete the multiPart with the reply
         print('Right after POST')
         print(reply)
-        resp = {'ret': 1, 'content': None, 'reason': 'started'}
-        return resp
+        result = {'ret': 1, 'content': None, 'reason': 'started'}
+        return {'result': result, 'complete': False}
+# // hyb_msg = {'app':<app_name> , 'msg':<api_msg>}
+# // api_msg = {'msg'|'reply': <app_msg>, 'uuid':<uuid> }
+# // app_msg = {<('command', 'args':[])|('result': <obj|bool>, complete: <True|False>)>}
 
     def manager_finished_cb(self, reply):
         print('*' * 20)
         print('manager_finished_cb')
         print(reply)
         file_name = None
+        uuid = reply.request().attribute(
+            REQUEST_ATTRS['uuid'], None)
         # js_cb_object_id = reply.request().attribute(
         #     REQUEST_ATTRS['js_cb_object_id'], None)
         # js_cb_func = reply.request().attribute(
@@ -365,9 +371,10 @@ class IptApp(WebApp):
         with open(os.path.join(ipt_dir, file_name), "w") as f:
             f.write(file_content)
         # self.call_js_cb(js_cb_func, file_name, 0)
-        resp = {'ret': 0, 'content': file_name, 'reason': 'ok'}
-        return resp
-
+        result = {'ret': 0, 'content': file_name, 'reason': 'ok'}
+        app_msg = {'result': result, 'complete': True}
+        api_msg = {'reply': app_msg, 'uuid': uuid}
+        self.send(api_msg)
     # def manager_finished_cb_old(self, reply):
     #     file_name = None
     #     js_cb_object_id = reply.request().attribute(
