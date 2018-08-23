@@ -3,6 +3,7 @@ The MIT License (MIT)
 Copyright (c) 2013 Dave P.
 '''
 import sys
+import ssl
 import json
 from qgis.PyQt.QtCore import pyqtSignal, pyqtSlot, QObject, QThread, QMutex
 import hashlib
@@ -770,3 +771,34 @@ class SimpleWebSocketServer(QThread):
 
     def run(self):
         self.serveforever()
+
+
+class SimpleSSLWebSocketServer(SimpleWebSocketServer):
+
+    def __init__(self, host, port, websocketclass, certfile, keyfile,
+                 version=ssl.PROTOCOL_TLSv1):
+
+        SimpleWebSocketServer.__init__(self, host, port, websocketclass)
+
+        self.cerfile = certfile
+        self.keyfile = keyfile
+        self.version = version
+
+    def close(self):
+        super(SimpleSSLWebSocketServer, self).close()
+
+    def _decorateSocket(self, sock):
+        sslsock = ssl.wrap_socket(sock,
+                                  server_side=True,
+                                  certfile=self.cerfile,
+                                  keyfile=self.keyfile,
+                                  ssl_version=self.version)
+        return sslsock
+
+    def _constructWebSocket(self, sock, address):
+        ws = self.websocketclass(self, sock, address)
+        ws.usingssl = True
+        return ws
+
+    def serveforever(self):
+        super(SimpleSSLWebSocketServer, self).serveforever()
