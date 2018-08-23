@@ -223,9 +223,9 @@ class Irmt(QObject):
                            self.apptest,
                            enable=self.experimental_enabled(),
                            submenu='OQ Engine',
-                           add_to_toolbar=True,
-                           set_checkable=True,
-                           set_checked=False)
+                           # set_checkable=True,
+                           # set_checked=False,
+                           add_to_toolbar=True)
         # Action to drive ipt
         self.add_menu_item("ipt_set_cells",
                            ":/plugins/irmt/ipt.svg",
@@ -249,9 +249,9 @@ class Irmt(QObject):
                            self.ipt,
                            enable=self.experimental_enabled(),
                            submenu='OQ Engine',
-                           add_to_toolbar=True,
-                           set_checkable=True,
-                           set_checked=False)
+                           # set_checkable=True,
+                           # set_checked=False,
+                           add_to_toolbar=True)
         # Action to drive taxtweb
         self.add_menu_item("taxtweb",
                            ":/plugins/irmt/taxtweb.svg",
@@ -259,9 +259,9 @@ class Irmt(QObject):
                            self.taxtweb,
                            enable=self.experimental_enabled(),
                            submenu='OQ Engine',
-                           add_to_toolbar=True,
-                           set_checkable=True,
-                           set_checked=False)
+                           # set_checkable=True,
+                           # set_checked=False,
+                           add_to_toolbar=True)
         # Action to drive the oq-engine server
         self.add_menu_item("drive_engine_server",
                            ":/plugins/irmt/drive_oqengine.svg",
@@ -378,27 +378,27 @@ class Irmt(QObject):
         resp = self.ipt_app.run_command('window_open')
         if resp is not None:
             log_msg(resp, level='C', message_bar=self.iface.messageBar())
-        self.registered_actions['ipt'].setChecked(True)
+        # self.registered_actions['ipt'].setChecked(True)
         self.irmt_sig.emit({'msg': 'hello Matteo'})
 
     def apptest(self):
         resp = self.apptest_app.run_command('window_open')
         if resp is not None:
             log_msg(resp, level='C', message_bar=self.iface.messageBar())
-        self.registered_actions['apptest'].setChecked(True)
+        # self.registered_actions['apptest'].setChecked(True)
         self.irmt_sig.emit({'msg': 'hello Test'})
 
     def taxtweb(self):
         resp = self.taxtweb_app.run_command('window_open')
         if resp is not None:
             log_msg(resp, level='C', message_bar=self.iface.messageBar())
-        self.registered_actions['taxtweb'].setChecked(True)
+        # self.registered_actions['taxtweb'].setChecked(True)
 
     def taxonomy(self):
         resp = self.taxonomy_app.run_command('window_open')
         if resp is not None:
             log_msg(resp, level='C', message_bar=self.iface.messageBar())
-        self.registered_actions['taxonomy'].setChecked(True)
+        # self.registered_actions['taxonomy'].setChecked(True)
 
     def on_drive_oq_engine_server_btn_clicked(self):
         # we can't call drive_oq_engine_server directly, otherwise the signal
