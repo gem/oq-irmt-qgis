@@ -25,6 +25,7 @@ email=staff.it@globalquakemodel.org
 changelog=
     3.2.5
     * Hazard maps can be loaded as one layer per realization/statistic or as multiple layers, per each combination of realization/statistic-imt-poe
+    * It is possible to load hazard curves for a selected combination of realization/statistic and intensity measure type
     * Intensity measure levels are casted to float when possible, fixing a plotting issue in hazard curves with IMT=PGV
     * The cursor does not switch to "waiting" while refreshing the OQ-Engine calculation list
     * When feedback is shown outside the dialog that drives the OQ-Engine, a message suggests the user where to look
