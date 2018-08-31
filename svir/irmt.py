@@ -1457,7 +1457,7 @@ class Irmt(QObject):
                     message_bar=self.iface.messageBar())
             return
         host = 'localhost'
-        port = 8000
+        port = 8040
         self.websocket_thread = SimpleWebSocketServer(host, port, self)
         self.websocket_thread.wss_error_sig['QVariantMap'].connect(
             self.handle_wss_error_sig)
