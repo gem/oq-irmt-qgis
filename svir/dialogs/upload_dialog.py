@@ -133,18 +133,23 @@ class UploadDialog(QDialog, FORM_CLASS):
                 level=QgsMessageBar.CRITICAL)
             return
 
-        if DEBUG:
-            import tempfile
-            fd, fname = tempfile.mkstemp(suffix=".sld")
-            os.close(fd)
-            with open(fname, 'w') as f:
-                f.write(sld)
-            os.system('tidy -xml -i %s' % fname)
-        headers = {'content-type': 'application/vnd.ogc.sld+xml'}
-        resp = self.session.get(
-            self.hostname + '/gs/rest/styles/%s' % style_name,
-            data=sld, headers=headers)
-        print(resp)
+        import tempfile
+        fd, sld_file = tempfile.mkstemp(suffix=".sld")
+        os.close(fd)
+        with open(sld_file, 'w') as f:
+            f.write(sld)
+        # os.system('tidy -xml -i %s' % fname)
+        # headers = {'content-type': 'application/vnd.ogc.sld+xml'}
+        with open(sld_file, 'rb') as f:
+            print(f.read())
+        files = {'sld': open(sld_file, 'rb')}
+        data = {'name': style_name}
+        resp = self.session.post(
+            self.hostname + '/gs/%s/style/upload' % style_name,
+            # data=sld, headers=headers)
+            data=data, files=files)
+        print('resp: %s' % resp)
+        # import pdb; pdb.set_trace()
         if DEBUG:
             log_msg('Style upload response: %s' % resp)
         if not resp.ok:
