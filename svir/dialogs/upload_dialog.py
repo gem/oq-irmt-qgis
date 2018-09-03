@@ -121,8 +121,10 @@ class UploadDialog(QDialog, FORM_CLASS):
         # Since the style name is set by default substituting '-' with '_',
         # tp get the right style we need to do the same substitution
         style_name = layer_name.replace('-', '_')
+        print(style_name)
         try:
             sld = getGsCompatibleSld(self.iface.activeLayer(), style_name)
+            # print(sld)
         except Exception as e:
             error_msg = (
                 'Unable to export the styled layer descriptor: ' + e.message)
