@@ -170,7 +170,6 @@ class UploadDialog(QDialog, FORM_CLASS):
             if isinstance(self.iface.activeLayer().rendererV2(),
                           QgsRuleBasedRendererV2):
                 print('isinstance render v2')
-                import pdb; pdb.set_trace()
                 self._update_layer_style()
             else:
                 self.message_bar.pushMessage(
