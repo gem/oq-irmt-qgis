@@ -144,7 +144,7 @@ class UploadDialog(QDialog, FORM_CLASS):
             print(f.read())
         files = {'sld': open(sld_file, 'rb')}
         data = {'name': style_name}
-        resp = self.session.post(
+        resp = self.session.put(
             self.hostname + '/gs/%s/style/upload' % style_name,
             # data=sld, headers=headers)
             data=data, files=files)
@@ -169,6 +169,8 @@ class UploadDialog(QDialog, FORM_CLASS):
             # basic geonode style.
             if isinstance(self.iface.activeLayer().rendererV2(),
                           QgsRuleBasedRendererV2):
+                print('isinstance render v2')
+                import pdb; pdb.set_trace()
                 self._update_layer_style()
             else:
                 self.message_bar.pushMessage(
