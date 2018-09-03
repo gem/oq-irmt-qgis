@@ -112,6 +112,7 @@ class UploadWorker(AbstractWorker):
 
         # generate headers and data-generator an a requests-compatible format
         # and provide our progress-callback
+        data['metadata_uploaded_preserve'] = True
         data_generator, headers = multipart_encode_for_requests(
             data, cb=self.progress_cb)
 
