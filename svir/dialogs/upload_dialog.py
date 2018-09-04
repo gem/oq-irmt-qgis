@@ -158,6 +158,35 @@ class UploadDialog(QDialog, FORM_CLASS):
             self.message_bar.pushMessage(
                 'Style error', error_msg, duration=0,
                 level=QgsMessageBar.CRITICAL)
+        select_style_xml = """
+<layer>
+    <name>oqplatform:%s</name>
+    <type>type</type>
+    <defaultStyle>
+        <name>%s</name>
+        <atom:link xmlns:atom="http://www.w3.org/2005/Atom" rel="alternate"
+            href="http://127.0.0.1:8080/geoserver/rest/styles/%s.xml"
+            type="application/xml"/>
+    </defaultStyle>
+</layer>
+        """ % (style_name, style_name, style_name)
+        print('select_style_xml:\n%s' % select_style_xml)
+        headers = {'content-type': 'application/xml'}
+        resp = self.session.post(
+            self.hostname + '/gs/rest/layers/%s.xml' % style_name,
+            data=select_style_xml,
+            headers=headers)
+        print('resp: %s' % resp)
+        # import pdb; pdb.set_trace()
+        if DEBUG:
+            log_msg('Style selection response: %s' % resp)
+        if not resp.ok:
+            error_msg = (
+                'Error while selecting the style of the loaded layer: '
+                + resp.reason)
+            self.message_bar.pushMessage(
+                'Style error', error_msg, duration=0,
+                level=QgsMessageBar.CRITICAL)
 
     def upload_done(self, result):
         layer_url, success = result
