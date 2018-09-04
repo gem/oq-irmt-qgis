@@ -23,7 +23,6 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
-from StringIO import StringIO
 from qgis.core import QgsRuleBasedRendererV2
 from qgis.gui import QgsMessageBar
 
