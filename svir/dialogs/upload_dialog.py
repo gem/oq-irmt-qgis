@@ -162,7 +162,6 @@ class UploadDialog(QDialog, FORM_CLASS):
         select_style_xml = """
 <layer>
     <name>oqplatform:%s</name>
-    <type>VECTOR</type>
     <defaultStyle>
         <name>%s</name>
         <atom:link xmlns:atom="http://www.w3.org/2005/Atom" rel="alternate"
