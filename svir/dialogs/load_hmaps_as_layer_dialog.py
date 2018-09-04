@@ -105,17 +105,11 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
 
     def on_rlz_or_stat_changed(self):
         self.dataset = self.npz_file['all'][self.rlz_or_stat_cbx.currentText()]
-        self.imts = {}
-        imts_poes = self.dataset.dtype.names
-        for imt_poe in imts_poes:
-            imt, poe = imt_poe.split('-')
-            if imt not in self.imts:
-                self.imts[imt] = [poe]
-            else:
-                self.imts[imt].append(poe)
+        self.imts = {imt: self.dataset[imt].dtype.names
+                     for imt in self.dataset.dtype.names}
         self.imt_cbx.clear()
         self.imt_cbx.setEnabled(True)
-        self.imt_cbx.addItems(list(self.imts.keys()))
+        self.imt_cbx.addItems(list(self.imts))
         self.set_ok_button()
 
     def show_num_sites(self):
@@ -184,10 +178,12 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
                 # add a feature
                 feat = QgsFeature(self.layer.fields())
                 for field_name in field_names:
+                    # NB: example field_name == 'PGA-0.01'
                     # NOTE: without casting to float, it produces a
                     #       null because it does not recognize the
                     #       numpy type
-                    value = float(row[field_name])
+                    imt, poe = field_name.split('-')
+                    value = float(row[imt][poe])
                     feat.setAttribute(field_name, value)
                 feat.setGeometry(QgsGeometry.fromPointXY(
                     QgsPointXY(lons[row_idx], lats[row_idx])))
