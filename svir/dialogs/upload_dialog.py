@@ -23,6 +23,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+from StringIO import StringIO
 from qgis.core import QgsRuleBasedRendererV2
 from qgis.gui import QgsMessageBar
 
@@ -172,9 +173,10 @@ class UploadDialog(QDialog, FORM_CLASS):
         """ % (style_name, style_name, style_name)
         print('select_style_xml:\n%s' % select_style_xml)
         headers = {'content-type': 'application/xml'}
-        resp = self.session.post(
+        files = {'file': StringIO(select_style_xml)}
+        resp = self.session.put(
             self.hostname + '/gs/rest/layers/%s.xml' % style_name,
-            data=select_style_xml,
+            files=select_style_xml,
             headers=headers)
         print('resp: %s' % resp)
         # import pdb; pdb.set_trace()
