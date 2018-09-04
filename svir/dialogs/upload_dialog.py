@@ -167,11 +167,10 @@ class UploadDialog(QDialog, FORM_CLASS):
     </defaultStyle>
 </layer>""" % (style_name, style_name, style_name)
         print('select_style_xml:\n%s' % select_style_xml)
-        headers = {'content-type': 'application/xml'}
-        files = {'file': StringIO(select_style_xml)}
+        headers = {'content-type': 'text/xml'}
         resp = self.session.put(
             self.hostname + '/gs/rest/layers/%s.xml' % style_name,
-            files=files,
+            data=select_style_xml,
             headers=headers)
         print('resp: %s' % resp)
         # import pdb; pdb.set_trace()
