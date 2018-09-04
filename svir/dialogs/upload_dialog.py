@@ -164,9 +164,7 @@ class UploadDialog(QDialog, FORM_CLASS):
     <name>oqplatform:%s</name>
     <defaultStyle>
         <name>%s</name>
-        <atom:link xmlns:atom="http://www.w3.org/2005/Atom" rel="alternate"
-            href="http://127.0.0.1:8080/geoserver/rest/styles/%s.xml"
-            type="application/xml"/>
+        <atom:link xmlns:atom="http://www.w3.org/2005/Atom" rel="alternate" href="http://127.0.0.1:8080/geoserver/rest/styles/%s.xml" type="application/xml"/>
     </defaultStyle>
 </layer>
         """ % (style_name, style_name, style_name)
