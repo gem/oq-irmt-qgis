@@ -161,11 +161,16 @@ class UploadDialog(QDialog, FORM_CLASS):
             self.message_bar.pushMessage(
                 'Style error', error_msg, duration=0,
                 level=QgsMessageBar.CRITICAL)
-        select_style_xml = """<layer>
+
+        select_style_xml = """
+<layer>
     <name>oqplatform:%s</name>
     <defaultStyle>
         <name>%s</name>
-        <atom:link xmlns:atom="http://www.w3.org/2005/Atom" rel="alternate" href="http://127.0.0.1:8080/geoserver/rest/styles/%s.xml" type="application/xml"/>
+        <atom:link xmlns:atom="http://www.w3.org/2005/Atom"
+            rel="alternate"
+            href="http://127.0.0.1:8080/geoserver/rest/styles/%s.xml"
+            type="application/xml"/>
     </defaultStyle>
 </layer>""" % (style_name, style_name, style_name)
         print('select_style_xml:\n%s' % select_style_xml)
