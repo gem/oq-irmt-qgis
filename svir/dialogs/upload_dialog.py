@@ -143,14 +143,16 @@ class UploadDialog(QDialog, FORM_CLASS):
         with open(sld_file, 'rb') as f:
             sld_content = f.read()
             print(sld_content)
-        import time
-        time.sleep(5)
+        resp = self.session.post(
+                   self.hostname + '/gs/rest/styles/%s.sld' % style_name,
+                   data=sld_content, headers=headers)
         resp = self.session.put(
-            self.hostname + '/gs/styles/%s.sld' % style_name,
-            # data=sld, headers=headers)
-            data=sld_content, headers=headers)
+                   self.hostname + '/gs/rest/styles/%s.sld' % style_name,
+                   data=sld_content, headers=headers)
+
         print('resp: %s' % resp)
-        # import pdb; pdb.set_trace()
+        url_path = self.hostname + '/gs/rest/styles/%s.sld' % style_name
+        print(url_path)
         if DEBUG:
             log_msg('Style upload response: %s' % resp)
         if not resp.ok:
