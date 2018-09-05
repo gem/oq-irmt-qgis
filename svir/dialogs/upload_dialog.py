@@ -180,7 +180,6 @@ class UploadDialog(QDialog, FORM_CLASS):
             data=select_style_xml,
             headers=headers)
         print('resp: %s' % resp)
-        # import pdb; pdb.set_trace()
         if DEBUG:
             log_msg('Style selection response: %s' % resp)
         if not resp.ok:
