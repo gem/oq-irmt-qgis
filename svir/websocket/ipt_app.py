@@ -39,11 +39,11 @@ class IptApp(WebApp):
     def __init__(self, wss, message_bar):
         super(IptApp, self).__init__('ipt', wss, message_bar)
         ipt_allowed_meths = [
-            'select_file', 'select_files', 'ls_ipt_dir', 'on_same_fs',
+            'select_file', 'ls_ipt_dir', 'on_same_fs',
             'rm_file_from_ipt_dir', 'rename_file_in_ipt_dir',
             'read_file_in_ipt_dir', 'run_oq_engine_calc',
             'save_str_to_file', 'clear_ipt_dir',
-            'select_and_copy_files_to_ipt_dir',
+            'select_and_copy_file_to_ipt_dir',
             'delegate_download']
         self.allowed_meths.extend(ipt_allowed_meths)
 
@@ -76,32 +76,21 @@ class IptApp(WebApp):
             #    '    success': False, 'content': None, 'reason': str(exc)}
             #     return resp
 
-    def select_file(self, api_uuid=None):
-        """
-        Open a file browser to select a single file in the ipt_dir,
-        and return the name of the selected files
-        """
-        try:
-            ipt_dir = self.wss.irmt_thread.ipt_dir
-            file_name, _ = QFileDialog.getOpenFileName(
-                self.wss.irmt_thread.parent(), 'Select file', ipt_dir)
-            basename = os.path.basename(file_name)
-        except Exception as exc:
-            log_msg(traceback.format_exc(), level='C')
-            resp = {'success': False, 'content': None, 'reason': str(exc)}
-        else:
-            resp = {'success': True, 'content': basename, 'reason': 'ok'}
-        return resp
-
-    def select_files(self, api_uuid=None):
+    def select_file(self, is_multi, *args):
         """
         Open a file browser to select multiple files in the ipt_dir,
         and return the list of names of selected files
         """
         try:
             ipt_dir = self.wss.irmt_thread.ipt_dir
-            file_names, _ = QFileDialog.getOpenFileNames(
-                self.wss.irmt_thread.parent(), 'Select files', ipt_dir)
+            if is_multi:
+                file_names, _ = QFileDialog.getOpenFileNames(
+                    self.wss.irmt_thread.parent(), 'Select files', ipt_dir)
+            else:
+                file_name, _ = QFileDialog.getOpenFileName(
+                    self.wss.irmt_thread.parent(), 'Select file', ipt_dir)
+                file_names = [file_name]
+
             ls = [os.path.basename(file_name) for file_name in file_names]
         except Exception as exc:
             log_msg(traceback.format_exc(), level='C')
@@ -109,7 +98,7 @@ class IptApp(WebApp):
         else:
             return {'success': True, 'content': ls, 'reason': 'ok'}
 
-    def select_and_copy_files_to_ipt_dir(self, api_uuid=None):
+    def select_and_copy_file_to_ipt_dir(self, is_multi=False, api_uuid=None):
         """
         Open a file browser pointing to the most recently browsed directory,
         where multiple files can be selected. The selected files will be
@@ -118,21 +107,27 @@ class IptApp(WebApp):
         try:
             default_dir = QSettings().value('irmt/ipt_browsed_dir',
                                             QDir.homePath())
+            ipt_dir = self.wss.irmt_thread.ipt_dir
+
             text = 'The selected files will be copied to the ipt directory'
-            file_paths, _ = QFileDialog.getOpenFileNames(
-                self.wss.irmt_thread.parent(), text, default_dir)
-            if not file_paths:
+            if is_multi:
+                file_names, _ = QFileDialog.getOpenFileNames(
+                    self.wss.irmt_thread.parent(), text, default_dir)
+            else:
+                file_name, _ = QFileDialog.getOpenFileName(
+                    self.wss.irmt_thread.parent(), text, default_dir)
+                file_names = [file_name]
+            if not file_names:
                 return {'success': False,
                         'content': None,
                         'reason': 'No file was selected'}
-            selected_dir = QFileInfo(file_paths[0]).dir().path()
+            selected_dir = QFileInfo(file_names[0]).dir().path()
             QSettings().setValue('irmt/ipt_browsed_dir', selected_dir)
-            ipt_dir = self.wss.irmt_thread.ipt_dir
             basenames = []
-            for file_path in file_paths:
-                basename = os.path.basename(file_path)
+            for file_name in file_names:
+                basename = os.path.basename(file_name)
                 basenames.append(basename)
-                copyfile(file_path, os.path.join(ipt_dir, basename))
+                copyfile(file_name, os.path.join(ipt_dir, basename))
         except Exception as exc:
             log_msg(traceback.format_exc(), level='C')
             return {'success': False, 'content': basenames, 'reason': str(exc)}
