@@ -217,15 +217,6 @@ class Irmt(QObject):
                            enable=self.experimental_enabled(),
                            add_to_layer_actions=True,
                            submenu='OQ Platform')
-        # Action to change icon to apptest
-        self.add_menu_item("changeicon",
-                           ":/plugins/irmt/ipt_connected.svg",
-                           u"Change icon to AppTest",
-                           self.change_icon_to_apptest,
-                           enable=self.experimental_enabled(),
-                           submenu='OQ Engine',
-                           is_websocket_action=True,
-                           add_to_toolbar=True)
         # Action to drive apptest
         self.add_menu_item("apptest",
                            ":/plugins/irmt/ipt_connected.svg",
@@ -385,39 +376,41 @@ class Irmt(QObject):
         self._set_cells(self.taxtweb_app)
 
     def _set_cells(self, web_app):
-        resp = web_app.run_command('set_cells', args=['pippo', 'pluto'])
-        if resp is not None:
-            log_msg(resp, level='C', message_bar=self.iface.messageBar())
+        success, err_msg = web_app.run_command(
+            'set_cells', ('pippo', 'pluto'))
+        if not success:
+            log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
 
+    # FIXME: delete this
     def change_icon_to_apptest(self):
         action = self.registered_actions['apptest']
         icon = QIcon(":/plugins/irmt/drive_oqengine.svg")
         action.setIcon(icon)
 
     def ipt(self):
-        resp = self.ipt_app.run_command('window_open')
-        if resp is not None:
-            log_msg(resp, level='C', message_bar=self.iface.messageBar())
+        success, err_msg = self.ipt_app.run_command('window_open', ())
+        if not success:
+            log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
         # self.registered_actions['ipt'].setChecked(True)
         self.irmt_sig.emit({'msg': 'hello Matteo'})
 
     def apptest(self):
-        resp = self.apptest_app.run_command('window_open')
-        if resp is not None:
-            log_msg(resp, level='C', message_bar=self.iface.messageBar())
+        success, err_msg = self.apptest_app.run_command('window_open', ())
+        if not success:
+            log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
         # self.registered_actions['apptest'].setChecked(True)
         self.irmt_sig.emit({'msg': 'hello Test'})
 
     def taxtweb(self):
-        resp = self.taxtweb_app.run_command('window_open')
-        if resp is not None:
-            log_msg(resp, level='C', message_bar=self.iface.messageBar())
+        success, err_msg = self.taxtweb_app.run_command('window_open', ())
+        if not success:
+            log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
         # self.registered_actions['taxtweb'].setChecked(True)
 
     def taxonomy(self):
-        resp = self.taxonomy_app.run_command('window_open')
-        if resp is not None:
-            log_msg(resp, level='C', message_bar=self.iface.messageBar())
+        success, err_msg = self.taxonomy_app.run_command('window_open', ())
+        if not success:
+            log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
         # self.registered_actions['taxonomy'].setChecked(True)
 
     def on_drive_oq_engine_server_btn_clicked(self):
@@ -508,6 +501,8 @@ class Irmt(QObject):
             raise NameError("Action %s already registered" % action_name)
         action = QAction(QIcon(icon_path), label, self.iface.mainWindow())
         action.setEnabled(enable)
+        if is_websocket_action:
+            action.setEnabled(False)
         action.setCheckable(set_checkable)
         action.setChecked(set_checked)
         action.triggered.connect(corresponding_method)
@@ -1460,11 +1455,26 @@ class Irmt(QObject):
     def handle_from_socket_sent(self, data):
         log_msg("from_socket_sent: %s" % data)
 
-    @pyqtSlot(int)
-    def handle_num_open_connections_sig(self, num_connections):
+    @pyqtSlot()
+    def handle_open_connection_sig(self):
+        print('\nhandle_open_connection_sig')
         for action_name in self.websocket_action_names:
-            self.registered_actions[action_name].setDisabled(
-                    num_connections == 0)
+            self.registered_actions[action_name].setEnabled(True)
+
+        for web_app_name in self.web_apps:
+            web_app = self.web_apps[web_app_name]
+            web_app.apptrack_status()
+
+    @pyqtSlot()
+    def handle_close_connection_sig(self):
+        print('\nhandle_close_connection_sig')
+        for web_app_name in self.web_apps:
+            web_app = self.web_apps[web_app_name]
+            web_app.apptrack_status_cleanup()
+
+        for action_name in self.websocket_action_names:
+            # FIXME: set the icon without the green dot
+            self.registered_actions[action_name].setEnabled(False)
 
     def start_websocket(self):
         if self.websocket_thread is not None:
@@ -1481,8 +1491,10 @@ class Irmt(QObject):
             self.handle_from_socket_received)
         self.websocket_thread.from_socket_sent['QVariantMap'].connect(
             self.handle_from_socket_sent)
-        self.websocket_thread.num_open_connections_sig[int].connect(
-            self.handle_num_open_connections_sig)
+        self.websocket_thread.open_connection_sig.connect(
+            self.handle_open_connection_sig)
+        self.websocket_thread.close_connection_sig.connect(
+            self.handle_close_connection_sig)
         self.websocket_thread.start()
         log_msg("Web socket server started",
                 message_bar=self.iface.messageBar())

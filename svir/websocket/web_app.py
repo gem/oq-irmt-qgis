@@ -38,13 +38,16 @@ class WebApp(QObject):
         self.app_name = app_name
         self.allowed_meths = [
             'window_open', 'ext_app_open', 'set_cells',
-            'notify_click', 'info', 'warning', 'error']
+            'notify_click', 'info', 'warning', 'error',
+            'hybridge_apptrack_status']
         self.pending = {}
+        self.apptrack_status_pend = []
 
-    def run_command(self, command, args=()):
+    def run_command(self, command, args, cb=None, reg=None):
+        print('run_command on %s: %s(%s)' % (self.app_name, command, args))
         # called when IRMT wants to send a command to the websocket
         if command not in self.allowed_meths:
-            return 'Method "%s" not allowed' % command
+            return (False, 'Method "%s" not allowed' % command)
         uuid = uuid4().urn[9:]
         api_msg = {
             'uuid': uuid,
@@ -54,7 +57,11 @@ class WebApp(QObject):
             }
         }
         self.send(api_msg)
+        api_msg['cb'] = cb
         self.pending[uuid] = api_msg
+        if reg is not None:
+            reg(uuid)
+        return (True, uuid)
 
     def receive(self, api_msg):
         # it happens when the websocket receives a message
@@ -63,8 +70,10 @@ class WebApp(QObject):
             app_msg = api_msg['reply']
             uuid = api_msg['uuid']
             if uuid in self.pending:
+                pend = self.pending[uuid]
                 print("Command pending found [%s]" % uuid)
-                # FIXME: call CB
+                if pend['cb']:
+                    pend['cb'](uuid, pend['msg'], app_msg)
                 if ('complete' not in app_msg or
                         app_msg['complete'] is True):
                     print("Command pending deleted [%s]" % uuid)
@@ -97,6 +106,29 @@ class WebApp(QObject):
         # it sends a message to the websocket
         hyb_msg = {'app': self.app_name, 'msg': api_msg}
         self.wss.irmt_thread.send_to_wss_sig.emit(hyb_msg)
+
+    # apptrack_status
+
+    def apptrack_status_reg(self, uuid):
+        self.apptrack_status_pend.append(uuid)
+        print('Registering apptrack_status for %s' % uuid)
+
+    def apptrack_status_cb(self, uuid, pend_msg, reply):
+        print('%s: apptrack_status_cb: %s' % (self.app_name, reply['success']))
+
+    def apptrack_status(self):
+        success, err_msg = self.run_command(
+            'hybridge_apptrack_status', (), cb=self.apptrack_status_cb)
+        print(success, err_msg)
+
+    def apptrack_status_cleanup(self):
+        print('apptrack_status_cleanup')
+        for uuid in self.apptrack_status_pend:
+            print('Deleting %s' % uuid)
+            del self.pending[uuid]
+        self.apptrack_status_pend = []
+
+    # API
 
     # Deprecated
     def ext_app_open(self, api_uuid, content):
