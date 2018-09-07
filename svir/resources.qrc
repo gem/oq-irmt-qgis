@@ -17,7 +17,9 @@
     <file alias="recovery_settings.svg">resources/recovery_settings.svg</file>
     <file alias="plot.svg">resources/plot.svg</file>
     <file alias="ipt.svg">resources/ipt.svg</file>
+    <file alias="ipt_connected.svg">resources/ipt_connected.svg</file>
     <file alias="taxtweb.svg">resources/taxtweb.svg</file>
+    <file alias="taxtweb_connected.svg">resources/taxtweb_connected.svg</file>
     <file alias="taxonomy.svg">resources/taxonomy.svg</file>
     <file alias="oq_logo.svg">resources/oq_logo.svg</file>
     <file alias="oq_logo.svg.png">resources/oq_logo.svg.png</file>
