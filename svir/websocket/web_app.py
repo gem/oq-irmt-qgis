@@ -88,7 +88,7 @@ class WebApp(QObject):
             meth = getattr(self, command)
 
             # FIXME: manage command exception
-            ret = meth(*args, api_uuid=api_uuid)
+            ret = meth(api_uuid, *args)
 
             api_reply = {'uuid': api_uuid, 'reply': ret}
             self.send(api_reply)
@@ -99,7 +99,7 @@ class WebApp(QObject):
         self.wss.irmt_thread.send_to_wss_sig.emit(hyb_msg)
 
     # Deprecated
-    def ext_app_open(self, content, api_uuid=None):
+    def ext_app_open(self, api_uuid, content):
         # FIXME: the name is misleading. This method just prints in the message
         # bar a string specified in the first arg
         msg = "%s ext_app_open: %s" % (self.app_name, content)
@@ -122,19 +122,19 @@ class WebApp(QObject):
     # def json_decode(self, jsstr):
     #     return json.loads(jsstr)
 
-    def notify_click(self, api_uuid=None):
+    def notify_click(self, api_uuid):
         self.info("Clicked!")
         return {'ret': 0, 'content': None, 'reason': 'ok'}
 
-    def info(self, message, api_uuid=None):
+    def info(self, api_uuid, message):
         self.message_bar.pushMessage(message, level=Qgis.Info)
         return {'ret': 0, 'content': None, 'reason': 'ok'}
 
-    def warning(self, message, api_uuid=None):
+    def warning(self, api_uuid, message):
         self.message_bar.pushMessage(message, level=Qgis.Warning)
         return {'ret': 0, 'content': None, 'reason': 'ok'}
 
-    def error(self, message, api_uuid=None):
+    def error(self, api_uuid, message):
         self.message_bar.pushMessage(message, level=Qgis.Critical)
         return {'ret': 0, 'content': None, 'reason': 'ok'}
 

@@ -47,7 +47,7 @@ class IptApp(WebApp):
             'delegate_download']
         self.allowed_meths.extend(ipt_allowed_meths)
 
-    def on_same_fs(self, api_uuid=None):
+    def on_same_fs(self, api_uuid):
         """
         Check if the engine server has access to the ipt_dir
         """
@@ -76,19 +76,27 @@ class IptApp(WebApp):
             #    '    success': False, 'content': None, 'reason': str(exc)}
             #     return resp
 
-    def select_file(self, is_multi, *args):
+    def select_file(self, api_uuid, *args):
         """
         Open a file browser to select multiple files in the ipt_dir,
         and return the list of names of selected files
         """
+        is_multi = False
+        if len(args) > 0:
+            is_multi = args[0]
+
+        title = 'Select files' if is_multi else 'Select file'
+        if len(args) > 1:
+            title = args[1]
+
         try:
             ipt_dir = self.wss.irmt_thread.ipt_dir
             if is_multi:
                 file_names, _ = QFileDialog.getOpenFileNames(
-                    self.wss.irmt_thread.parent(), 'Select files', ipt_dir)
+                    self.wss.irmt_thread.parent(), title, ipt_dir)
             else:
                 file_name, _ = QFileDialog.getOpenFileName(
-                    self.wss.irmt_thread.parent(), 'Select file', ipt_dir)
+                    self.wss.irmt_thread.parent(), title, ipt_dir)
                 file_names = [file_name]
 
             ls = [os.path.basename(file_name) for file_name in file_names]
@@ -98,24 +106,34 @@ class IptApp(WebApp):
         else:
             return {'success': True, 'content': ls, 'reason': 'ok'}
 
-    def select_and_copy_file_to_ipt_dir(self, is_multi=False, api_uuid=None):
+    def select_and_copy_file_to_ipt_dir(self, api_uuid, *args):
         """
         Open a file browser pointing to the most recently browsed directory,
         where multiple files can be selected. The selected files will be
         copied inside the ipt_dir
         """
+        is_multi = False
+        if len(args) > 0:
+            is_multi = args[0]
+
+        title = (
+            'The selected files will be copied to the ipt directory'
+            if is_multi else 'The selected file will be copied to'
+            ' the ipt directory')
+        if len(args) > 1:
+            title = args[1]
+
         try:
             default_dir = QSettings().value('irmt/ipt_browsed_dir',
                                             QDir.homePath())
             ipt_dir = self.wss.irmt_thread.ipt_dir
 
-            text = 'The selected files will be copied to the ipt directory'
             if is_multi:
                 file_names, _ = QFileDialog.getOpenFileNames(
-                    self.wss.irmt_thread.parent(), text, default_dir)
+                    self.wss.irmt_thread.parent(), title, default_dir)
             else:
                 file_name, _ = QFileDialog.getOpenFileName(
-                    self.wss.irmt_thread.parent(), text, default_dir)
+                    self.wss.irmt_thread.parent(), title, default_dir)
                 file_names = [file_name]
             if not file_names:
                 return {'success': False,
@@ -134,7 +152,7 @@ class IptApp(WebApp):
         else:
             return {'success': True, 'content': basenames, 'reason': 'ok'}
 
-    def save_str_to_file(self, content, file_name, api_uuid=None):
+    def save_str_to_file(self, api_uuid, content, file_name):
         """
         :param content: string to be saved in the file
         :param file_name: basename of the file to be saved into the ipt_dir
@@ -150,7 +168,7 @@ class IptApp(WebApp):
         else:
             return {'success': True, 'content': None, 'reason': 'ok'}
 
-    def read_file_in_ipt_dir(self, file_name, api_uuid=None):
+    def read_file_in_ipt_dir(self, api_uuid, file_name):
         """
         :param file_name: basename of the file to be read from the ipt_dir
         """
@@ -165,7 +183,7 @@ class IptApp(WebApp):
         else:
             return {'success': True, 'content': content, 'reason': 'ok'}
 
-    def ls_ipt_dir(self, api_uuid=None):
+    def ls_ipt_dir(self, api_uuid):
         ipt_dir = self.wss.irmt_thread.ipt_dir
         try:
             ls = os.listdir(ipt_dir)
@@ -175,7 +193,7 @@ class IptApp(WebApp):
             resp = {'success': True, 'content': ls, 'reason': 'ok'}
         return resp
 
-    def clear_ipt_dir(self, api_uuid=None):
+    def clear_ipt_dir(self, api_uuid):
         try:
             ipt_dir = self.wss.irmt_thread.ipt_dir
             rmtree(ipt_dir)
@@ -187,7 +205,7 @@ class IptApp(WebApp):
             resp = {'success': True, 'content': None, 'reason': 'ok'}
         return resp
 
-    def rm_file_from_ipt_dir(self, file_name, api_uuid=None):
+    def rm_file_from_ipt_dir(self, api_uuid, file_name):
         """
         :param file_name: name of the file to be removed from the ipt_dir
         """
@@ -201,7 +219,7 @@ class IptApp(WebApp):
         else:
             return {'success': True, 'content': None, 'reason': 'ok'}
 
-    def rename_file_in_ipt_dir(self, old_name, new_name, api_uuid=None):
+    def rename_file_in_ipt_dir(self, api_uuid, old_name, new_name):
         """
         :param old_name: name of the file to be renamed
         :param new_name: new name to be assigned to the file
@@ -218,7 +236,7 @@ class IptApp(WebApp):
         else:
             return {'success': True, 'content': None, 'reason': 'ok'}
 
-    def run_oq_engine_calc(self, file_names, api_uuid=None):
+    def run_oq_engine_calc(self, api_uuid, file_names):
         """
         It opens the dialog showing the list of calculations on the engine
         server, and automatically runs an oq-engine calculation, given a list
@@ -286,14 +304,14 @@ class IptApp(WebApp):
     #     return True
 
     def delegate_download(
-            self, action_url, method, headers, data, api_uuid=None):
+            self, api_uuid, action_url, method, headers, data):
         """
+        :param api_uuid: id of the request coming from the websocket, to be
+            used to keep track of pending requests
         :param action_url: url to call on ipt api
         :param method: string like 'POST'
         :param headers: list of strings
         :param data: list of dictionaries {name (string) value(string)}
-        :param api_uuid: id of the request coming from the websocket, to be
-            used to keep track of pending requests
         """
         try:
             # TODO: Accept also methods other than POST
