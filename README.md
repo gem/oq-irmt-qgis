@@ -26,8 +26,8 @@ and above.
 
 On Microsoft Windows, QGIS includes all the software dependencies needed by the plugin.
 
-On macOs and Linux, please make sure that [Scipy](https://www.scipy.org/install.html) and
-[Matplotlib](https://matplotlib.org/users/installing.html) with Qt4 backend are installed.
+On macOS and Linux, please make sure that [Scipy](https://www.scipy.org/install.html) and
+[Matplotlib](https://matplotlib.org/users/installing.html) with Qt5 backend are installed.
 
 On macOS:
 
