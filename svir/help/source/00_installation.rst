@@ -7,11 +7,17 @@ Installation and troubleshooting
 This plugin runs with `QGIS 3.0 <http://qgis.org/it/site/forusers/alldownloads.html>`_
 and above.
 
-On Microsoft Windows and Mac OS X, QGIS includes all the software dependencies needed by the plugin.
+On Microsoft Windows, QGIS includes all the software dependencies needed by the plugin.
 
-On Linux, please make sure that `Scipy <https://www.scipy.org/install.html>`_
+On macOS and Linux, please make sure that `Scipy <https://www.scipy.org/install.html>`_
 and `Matplotlib <https://matplotlib.org/users/installing.html>`_ with Qt5 backend
 are installed.
+
+On macOS:
+
+.. code-block:: bash
+
+    $ sudo pip3.6 install matplotlib scipy
 
 On Ubuntu (Debian and similar):
 
