@@ -580,6 +580,7 @@ class SimpleWebSocketServer(QThread):
     wss_error_sig = pyqtSignal('QVariantMap')
     from_socket_received = pyqtSignal('QVariantMap')
     from_socket_sent = pyqtSignal('QVariantMap')
+    num_open_connections_sig = pyqtSignal(int)
 
     def __init__(self, host, port, irmt_thread, selectInterval=0.1):
         self.websocketclass = WebSocket
@@ -599,6 +600,7 @@ class SimpleWebSocketServer(QThread):
         self.irmt_thread.irmt_sig['QVariantMap'].connect(self.handle_irmt_sig)
         self.irmt_thread.send_to_wss_sig['QVariantMap'].connect(
             self.send_to_wss)
+        self.num_open_connections_sig.emit(len(self.connections))
 
     @pyqtSlot('QVariantMap')
     def handle_irmt_sig(self, data):
@@ -702,6 +704,7 @@ class SimpleWebSocketServer(QThread):
                 self.wss_error_sig.emit({'msg': str(n)})
                 self._handleClose(client)
                 del self.connections[ready]
+                self.num_open_connections_sig.emit(len(self.connections))
                 self.listeners.remove(ready)
 
         for ready in rList:
@@ -719,6 +722,7 @@ class SimpleWebSocketServer(QThread):
                     fileno = newsock.fileno()
                     self.connections[fileno] = self._constructWebSocket(
                         newsock, address)
+                    self.num_open_connections_sig.emit(len(self.connections))
                     self.listeners.append(fileno)
                 except Exception as n:
                     self.wss_error_sig.emit({'msg': str(n)})
@@ -739,6 +743,7 @@ class SimpleWebSocketServer(QThread):
                     self.wss_error_sig.emit({'msg': str(n)})
                     self._handleClose(client)
                     del self.connections[ready]
+                    self.num_open_connections_sig.emit(len(self.connections))
                     self.listeners.remove(ready)
 
         for failed in xList:
@@ -751,6 +756,7 @@ class SimpleWebSocketServer(QThread):
                 client = self.connections[failed]
                 self._handleClose(client)
                 del self.connections[failed]
+                self.num_open_connections_sig.emit(len(self.connections))
                 self.listeners.remove(failed)
 
     def serveforever(self):

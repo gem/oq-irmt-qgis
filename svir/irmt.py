@@ -1450,6 +1450,11 @@ class Irmt(QObject):
     def handle_from_socket_sent(self, data):
         log_msg("from_socket_sent: %s" % data)
 
+    @pyqtSlot(int)
+    def handle_num_open_connections_sig(self, num_connections):
+        log_msg("Number of open connections: %d" % num_connections,
+                level='I', message_bar=self.iface.messageBar())
+
     def start_websocket(self):
         if self.websocket_thread is not None:
             log_msg("Server loop already running in thread: %s"
@@ -1465,6 +1470,8 @@ class Irmt(QObject):
             self.handle_from_socket_received)
         self.websocket_thread.from_socket_sent['QVariantMap'].connect(
             self.handle_from_socket_sent)
+        self.websocket_thread.num_open_connections_sig[int].connect(
+            self.handle_num_open_connections_sig)
         self.websocket_thread.start()
         log_msg("Web socket server started",
                 message_bar=self.iface.messageBar())
