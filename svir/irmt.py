@@ -146,6 +146,7 @@ class Irmt(QObject):
 
         # keep a list of the menu items, in order to easily unload them later
         self.registered_actions = dict()
+        self.websocket_action_names = []
 
         # avoid dialog to be deleted right after showing it
         self.drive_oq_engine_server_dlg = None
@@ -223,6 +224,7 @@ class Irmt(QObject):
                            self.change_icon_to_apptest,
                            enable=self.experimental_enabled(),
                            submenu='OQ Engine',
+                           is_websocket_action=True,
                            add_to_toolbar=True)
         # Action to drive apptest
         self.add_menu_item("apptest",
@@ -233,6 +235,7 @@ class Irmt(QObject):
                            submenu='OQ Engine',
                            # set_checkable=True,
                            # set_checked=False,
+                           is_websocket_action=True,
                            add_to_toolbar=True)
         # Action to drive ipt
         self.add_menu_item("ipt_set_cells",
@@ -241,6 +244,7 @@ class Irmt(QObject):
                            self.ipt_set_cells,
                            enable=self.experimental_enabled(),
                            submenu='OQ Engine',
+                           is_websocket_action=True,
                            add_to_toolbar=True)
         # Action to drive ipt
         self.add_menu_item("taxtweb_set_cells",
@@ -249,6 +253,7 @@ class Irmt(QObject):
                            self.taxtweb_set_cells,
                            enable=self.experimental_enabled(),
                            submenu='OQ Engine',
+                           is_websocket_action=True,
                            add_to_toolbar=True)
         # Action to drive ipt
         self.add_menu_item("ipt",
@@ -259,6 +264,7 @@ class Irmt(QObject):
                            submenu='OQ Engine',
                            # set_checkable=True,
                            # set_checked=False,
+                           is_websocket_action=True,
                            add_to_toolbar=True)
         # Action to drive taxtweb
         self.add_menu_item("taxtweb",
@@ -269,6 +275,7 @@ class Irmt(QObject):
                            submenu='OQ Engine',
                            # set_checkable=True,
                            # set_checked=False,
+                           is_websocket_action=True,
                            add_to_toolbar=True)
         # Action to drive the oq-engine server
         self.add_menu_item("drive_engine_server",
@@ -487,6 +494,7 @@ class Irmt(QObject):
                       set_checkable=False,
                       set_checked=False,
                       submenu=None,
+                      is_websocket_action=False,
                       add_to_toolbar=False,
                       ):
         """
@@ -505,6 +513,8 @@ class Irmt(QObject):
         action.triggered.connect(corresponding_method)
 
         self.registered_actions[action_name] = action
+        if is_websocket_action:
+            self.websocket_action_names.append(action_name)
 
         if add_to_layer_actions:
             self.iface.addCustomActionForLayerType(
@@ -1452,8 +1462,9 @@ class Irmt(QObject):
 
     @pyqtSlot(int)
     def handle_num_open_connections_sig(self, num_connections):
-        log_msg("Number of open connections: %d" % num_connections,
-                level='I', message_bar=self.iface.messageBar())
+        for action_name in self.websocket_action_names:
+            self.registered_actions[action_name].setDisabled(
+                    num_connections == 0)
 
     def start_websocket(self):
         if self.websocket_thread is not None:
