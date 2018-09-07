@@ -123,7 +123,7 @@ class WebApp(QObject):
     #     return json.loads(jsstr)
 
     def notify_click(self, api_uuid):
-        self.info("Clicked!")
+        self.info(api_uuid, "Clicked!")
         return {'ret': 0, 'content': None, 'reason': 'ok'}
 
     def info(self, api_uuid, message):
