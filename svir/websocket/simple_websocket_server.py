@@ -167,7 +167,7 @@ class WebSocket(QObject):
                 if len(reason) > 0:
                     try:
                         reason = reason.decode('utf8', errors='strict')
-                    except:
+                    except Exception:
                         status = 1002
             else:
                 status = 1002
@@ -661,7 +661,7 @@ class SimpleWebSocketServer(QThread):
         if client.handshaked:
             try:
                 client.handleClose()
-            except:
+            except Exception:
                 pass
 
     def serveonce(self):
