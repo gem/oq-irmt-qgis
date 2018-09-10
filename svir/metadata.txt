@@ -13,7 +13,7 @@ name=OpenQuake Integrated Risk Modelling Toolkit
 qgisMinimumVersion=2.14
 description=Tools to drive the OpenQuake Engine, to develop composite indicators and integrate them with physical risk estimations, and to predict building recovery times following an earthquake
 about=This plugin allows users to drive OpenQuake Engine calculations (https://github.com/gem/oq-engine) of physical hazard and risk, and to load the corresponding outputs as QGIS layers. For those outputs, data visualization tools are provided. The toolkit also enables users to develop composite indicators to measure and quantify social characteristics, and combine them with estimates of human or infrastructure loss. The plugin can interact with the OpenQuake Platform (https://platform.openquake.org), to browse and download socio-economic data or existing projects, edit projects locally in QGIS and upload and share them with the scientific community. A post-earthquake recovery modeling framework is incorporated into the toolkit, to produce building level and/or community level recovery functions.
-version=3.1.1
+version=3.1.4
 author=GEM Foundation
 email=staff.it@globalquakemodel.org
 
@@ -23,12 +23,24 @@ email=staff.it@globalquakemodel.org
 
 # Uncomment the following line and add your changelog entries:
 changelog=
+    3.1.4
+    When combining indices, the "custom operator" is enabled only if the active layer has at least one numeric field that is not already
+    included in the project definition tree
+    3.1.3
+    * Fixed loading matplotlib on Windows 64bit
+    * Fixed third party imports and certifi
+    3.1.2
+    * When loading OQ-Engine outputs that can be aggregated by zone, if the option to run the aggregation is checked, the ok button is
+      disabled until a valid zonal layer is loaded
+    * Fixed a bug in the workflow loading outputs from the OQ-Engine (npz files were unnecessarily downloaded, before extracting the
+      same data through the "extract API")
     3.1.1
     * When loading Ground Motion Fields for scenario calculations, the names of the GMPEs are displayed instead of the realization names
     * When loading a OQ-Engine output as layer, the engine version is saved as a custom property of the layer
     * When exporting data with the Data Viewer, the versions of the OQ-Engine and of the plugin are saved on top of the output file
     * While driving the OQ-Engine, the engine version and the url of the connected engine server are displayed on top of the window
     * Layers loaded from OQ-Engine outputs store as custom properties the versions of the OQ-Engine and of the IRMT plugin
+    * The dependency from SAGA was removed (aggregation of points by zone is performed by the plugin, internally)
     3.1.0
     * Ruptures imported from the OQ-Engine can be styled automatically by tectonic region type or by magnitude
     * Improved visualization of aggregate outputs in the Data Viewer
@@ -95,7 +107,7 @@ tracker=https://github.com/gem/oq-irmt-qgis/issues
 repository=https://github.com/gem/oq-irmt-qgis
 icon=resources/icon.svg
 # experimental flag
-experimental=True
+experimental=False
 
 # deprecated flag (applies to the whole plugin, not just a single version
 deprecated=False

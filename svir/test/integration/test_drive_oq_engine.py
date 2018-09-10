@@ -34,7 +34,7 @@ import csv
 from mock import Mock
 
 from qgis.PyQt.QtGui import QAction
-from svir.third_party.requests import Session
+from svir.third_party import requests
 from svir.utilities.shared import (
                                    OQ_CSV_TO_LAYER_TYPES,
                                    OQ_EXTRACT_TO_LAYER_TYPES,
@@ -53,7 +53,6 @@ QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 class LoadOqEngineOutputsTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.session = Session()
         self.hostname = os.environ.get('OQ_ENGINE_HOST',
                                        'http://localhost:8800')
         self.engine_version = self.get_engine_version().split('-')[0]
@@ -67,7 +66,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
     def get_engine_version(self):
         engine_version_url = "%s/v1/engine_version" % self.hostname
         # FIXME: enable the user to set verify=True
-        resp = self.session.get(
+        resp = requests.get(
             engine_version_url, timeout=10, verify=False,
             allow_redirects=False)
         if resp.status_code == 302:
@@ -82,14 +81,14 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
 
     def get_calc_list(self):
         calc_list_url = "%s/v1/calc/list?relevant=true" % self.hostname
-        resp = self.session.get(
+        resp = requests.get(
             calc_list_url, timeout=10, verify=False)
         calc_list = json.loads(resp.text)
         return calc_list
 
     def get_output_list(self, calc_id):
         output_list_url = "%s/v1/calc/%s/results" % (self.hostname, calc_id)
-        resp = self.session.get(output_list_url, timeout=10, verify=False)
+        resp = requests.get(output_list_url, timeout=10, verify=False)
         if not resp.ok:
             raise Exception(resp.text)
         output_list = json.loads(resp.text)
@@ -102,7 +101,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                                                                 output_id,
                                                                 outtype))
         # FIXME: enable the user to set verify=True
-        resp = self.session.get(output_download_url, verify=False)
+        resp = requests.get(output_download_url, verify=False)
         if not resp.ok:
             raise Exception(resp.text)
         filename = resp.headers['content-disposition'].split(
@@ -173,7 +172,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 print('\t\tok')
                 return
             dlg = OUTPUT_TYPE_LOADERS[output_type](
-                IFACE, Mock(), self.session, self.hostname, calc_id,
+                IFACE, Mock(), requests, self.hostname, calc_id,
                 output_type, filepath)
             if dlg.ok_button.isEnabled():
                 dlg.accept()
@@ -195,7 +194,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 print('\t\tSKIPPED')
                 return
             dlg = OUTPUT_TYPE_LOADERS[output_type](
-                IFACE, Mock(), self.session, self.hostname, calc_id,
+                IFACE, Mock(), requests, self.hostname, calc_id,
                 output_type)
             if dlg.ok_button.isEnabled():
                 if output_type == 'uhs':
@@ -359,7 +358,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         elif output_type in OQ_EXTRACT_TO_VIEW_TYPES:
             print('\tLoading output type %s...' % output_type)
             self.viewer_dock.load_no_map_output(
-                calc_id, self.session, self.hostname, output_type,
+                calc_id, requests, self.hostname, output_type,
                 self.engine_version)
             tmpfile_handler, tmpfile_name = tempfile.mkstemp()
             self.viewer_dock.write_export_file(tmpfile_name)

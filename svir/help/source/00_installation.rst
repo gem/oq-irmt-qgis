@@ -8,8 +8,6 @@ This plugin runs with `QGIS 2.14LTR <http://qgis.org/it/site/forusers/alldownloa
 and above.
 
 On Microsoft Windows and Mac OS X, QGIS includes all the software dependencies needed by the plugin.
-On Microsoft Windows, we recommend to use the 32 bit version of QGIS, because some library issues are
-still open in the 64 bit version.
 
 On Linux, please make sure that `Scipy <https://www.scipy.org/install.html>`_
 and `Matplotlib <https://matplotlib.org/users/installing.html>`_ with Qt4 backend
@@ -26,17 +24,6 @@ On Fedora and similar:
 .. code-block:: bash
 
     $ sudo dnf install python2-scipy python2-matplotlib python2-matplotlib-qt4
-
-For geospatial analysis, the plugin leverages SAGA `Clip points with polygons` algorithm.
-In case SAGA is not installed or its version is too outdated, the plugin is able to perform
-the same analysis using a fallback (slower) algorithm. For best performance, we recommend to
-install SAGA or to update it at least to version 2.3. On Ubuntu, this can be done as follows:
-
-.. code-block:: bash
-
-    $ sudo add-apt-repository ppa:openquake/saga
-    $ sudo apt-get update
-    $ sudo apt-get install saga python-saga
 
 On Fedora, please follow these `instructions <https://copr.fedorainfracloud.org/coprs/dani/QGIS-latest-stable/>`_.
 
