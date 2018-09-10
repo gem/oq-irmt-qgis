@@ -192,7 +192,6 @@ class UploadDialog(QDialog, FORM_CLASS):
             # basic geonode style.
             if isinstance(self.iface.activeLayer().rendererV2(),
                           QgsRuleBasedRendererV2):
-                print('isinstance render v2')
                 self._update_layer_style()
             else:
                 self.message_bar.pushMessage(
