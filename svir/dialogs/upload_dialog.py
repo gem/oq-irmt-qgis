@@ -139,22 +139,53 @@ class UploadDialog(QDialog, FORM_CLASS):
         with open(sld_file, 'w') as f:
             f.write(sld)
         # os.system('tidy -xml -i %s' % fname)
-        # headers = {'content-type': 'application/vnd.ogc.sld+xml'}
+        headers = {'content-type': 'application/vnd.ogc.sld+xml'}
         with open(sld_file, 'rb') as f:
-            print(f.read())
-        files = {'sld': open(sld_file, 'rb')}
-        data = {'name': style_name}
+            sld_content = f.read()
+            print(sld_content)
+        resp = self.session.post(
+                   self.hostname + '/gs/rest/styles/%s.sld' % style_name,
+                   data=sld_content, headers=headers)
         resp = self.session.put(
-            self.hostname + '/gs/%s/style/upload' % style_name,
-            # data=sld, headers=headers)
-            data=data, files=files)
+                   self.hostname + '/gs/rest/styles/%s.sld' % style_name,
+                   data=sld_content, headers=headers)
+
         print('resp: %s' % resp)
-        # import pdb; pdb.set_trace()
+        url_path = self.hostname + '/gs/rest/styles/%s.sld' % style_name
+        print(url_path)
         if DEBUG:
             log_msg('Style upload response: %s' % resp)
         if not resp.ok:
             error_msg = (
                 'Error while styling the uploaded layer: ' + resp.reason)
+            self.message_bar.pushMessage(
+                'Style error', error_msg, duration=0,
+                level=QgsMessageBar.CRITICAL)
+
+        select_style_xml = """
+<layer>
+    <name>oqplatform:%s</name>
+    <defaultStyle>
+        <name>%s</name>
+        <atom:link xmlns:atom="http://www.w3.org/2005/Atom"
+            rel="alternate"
+            href="http://127.0.0.1:8080/geoserver/rest/styles/%s.xml"
+            type="application/xml"/>
+    </defaultStyle>
+</layer>""" % (style_name, style_name, style_name)
+        print('select_style_xml:\n%s' % select_style_xml)
+        headers = {'content-type': 'text/xml'}
+        resp = self.session.put(
+            self.hostname + '/gs/rest/layers/%s.xml' % style_name,
+            data=select_style_xml,
+            headers=headers)
+        print('resp: %s' % resp)
+        if DEBUG:
+            log_msg('Style selection response: %s' % resp)
+        if not resp.ok:
+            error_msg = (
+                'Error while selecting the style of the loaded layer: '
+                + resp.reason)
             self.message_bar.pushMessage(
                 'Style error', error_msg, duration=0,
                 level=QgsMessageBar.CRITICAL)

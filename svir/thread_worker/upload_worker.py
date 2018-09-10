@@ -85,6 +85,20 @@ class UploadWorker(AbstractWorker):
         self.upload_size_msg = tr('Uploading ~%s MB...' % file_size_mb)
         self.set_message.emit(self.upload_size_msg)
         permissions = {
+                       "admin": {
+                                 self.username: [
+                                     'change_layer_data',
+                                     'change_layer_style', 'add_layer',
+                                     'change_layer', 'delete_layer',
+                                     'view_resourcebase',
+                                     'download_resourcebase',
+                                     'change_resourcebase_metadata',
+                                     'change_resourcebase',
+                                     'delete_resourcebase',
+                                     'change_resourcebase_permissions',
+                                     'publish_resourcebase',
+                                  ]
+                                 },
                        "users": {
                                  self.username: [
                                      'change_layer_data',
