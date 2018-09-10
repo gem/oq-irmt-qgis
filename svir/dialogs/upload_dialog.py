@@ -121,10 +121,8 @@ class UploadDialog(QDialog, FORM_CLASS):
         # Since the style name is set by default substituting '-' with '_',
         # tp get the right style we need to do the same substitution
         style_name = layer_name.replace('-', '_')
-        print(style_name)
         try:
             sld = getGsCompatibleSld(self.iface.activeLayer(), style_name)
-            # print(sld)
         except Exception as e:
             error_msg = (
                 'Unable to export the styled layer descriptor: ' + e.message)
@@ -142,7 +140,6 @@ class UploadDialog(QDialog, FORM_CLASS):
         headers = {'content-type': 'application/vnd.ogc.sld+xml'}
         with open(sld_file, 'rb') as f:
             sld_content = f.read()
-            print(sld_content)
         resp = self.session.post(
                    self.hostname + '/gs/rest/styles/%s.sld' % style_name,
                    data=sld_content, headers=headers)
@@ -150,9 +147,6 @@ class UploadDialog(QDialog, FORM_CLASS):
                    self.hostname + '/gs/rest/styles/%s.sld' % style_name,
                    data=sld_content, headers=headers)
 
-        print('resp: %s' % resp)
-        url_path = self.hostname + '/gs/rest/styles/%s.sld' % style_name
-        print(url_path)
         if DEBUG:
             log_msg('Style upload response: %s' % resp)
         if not resp.ok:
@@ -173,13 +167,11 @@ class UploadDialog(QDialog, FORM_CLASS):
             type="application/xml"/>
     </defaultStyle>
 </layer>""" % (style_name, style_name, style_name)
-        print('select_style_xml:\n%s' % select_style_xml)
         headers = {'content-type': 'text/xml'}
         resp = self.session.put(
             self.hostname + '/gs/rest/layers/%s.xml' % style_name,
             data=select_style_xml,
             headers=headers)
-        print('resp: %s' % resp)
         if DEBUG:
             log_msg('Style selection response: %s' % resp)
         if not resp.ok:
