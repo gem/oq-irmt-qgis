@@ -608,12 +608,12 @@ class SimpleWebSocketServer(QThread):
 
     @pyqtSlot('QVariantMap')
     def send_to_wss(self, hyb_msg):
-        hyb_msg = json.dumps(hyb_msg)
+        hyb_msg_str = json.dumps(hyb_msg)
         ret = False
         for fileno, conn in self.connections.items():
             if conn == self.serversocket:
                 continue
-            conn.sendMessage(hyb_msg)
+            conn.sendMessage(hyb_msg_str)
             ret = True
         if ret is False:
             app = hyb_msg['app']
