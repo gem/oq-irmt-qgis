@@ -174,7 +174,6 @@ class Irmt(QObject):
         self.taxtweb_app = None
         self.taxonomy_app = None
         self.web_apps = {}
-        self.instantiate_web_apps()
 
     def initGui(self):
         # create our own toolbar
@@ -219,7 +218,7 @@ class Irmt(QObject):
                            submenu='OQ Platform')
         # Action to drive apptest
         self.add_menu_item("apptest",
-                           ":/plugins/irmt/ipt_connected.svg",
+                           ":/plugins/irmt/aggregate.svg",
                            u"AppTest",
                            self.apptest,
                            enable=self.experimental_enabled(),
@@ -343,6 +342,7 @@ class Irmt(QObject):
                            add_to_toolbar=True)
 
         self.update_actions_status()
+        self.instantiate_web_apps()
 
     @staticmethod
     def get_menu(parent, title):
@@ -380,12 +380,6 @@ class Irmt(QObject):
             'set_cells', ('pippo', 'pluto'))
         if not success:
             log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
-
-    # FIXME: delete this
-    def change_icon_to_apptest(self):
-        action = self.registered_actions['apptest']
-        icon = QIcon(":/plugins/irmt/drive_oqengine.svg")
-        action.setIcon(icon)
 
     def ipt(self):
         success, err_msg = self.ipt_app.run_command('window_open', ())
@@ -1513,13 +1507,18 @@ class Irmt(QObject):
             self.websocket_thread = None
 
     def instantiate_web_apps(self):
-        self.ipt_app = IptApp(self.websocket_thread, self.iface.messageBar())
-        self.taxtweb_app = TaxtwebApp(
-            self.websocket_thread, self.iface.messageBar())
-        self.taxonomy_app = TaxonomyApp(
-            self.websocket_thread, self.iface.messageBar())
-        self.apptest_app = AppTestApp(
-            self.websocket_thread, self.iface.messageBar())
+        self.ipt_app = IptApp(self.registered_actions['ipt'],
+                              self.websocket_thread,
+                              self.iface.messageBar())
+        self.taxtweb_app = TaxtwebApp(self.registered_actions['taxtweb'],
+                                      self.websocket_thread,
+                                      self.iface.messageBar())
+        self.taxonomy_app = TaxonomyApp(None,  # no button associated
+                                        self.websocket_thread,
+                                        self.iface.messageBar())
+        self.apptest_app = AppTestApp(self.registered_actions['apptest'],
+                                      self.websocket_thread,
+                                      self.iface.messageBar())
         self.web_apps = {'ipt': self.ipt_app,
                          'taxtweb': self.taxtweb_app,
                          'taxonomy': self.taxonomy_app,

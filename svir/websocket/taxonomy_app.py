@@ -22,9 +22,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
+from qgis.PyQt.QtGui import QIcon
 from svir.websocket.web_app import WebApp
 
 
 class TaxonomyApp(WebApp):
-    def __init__(self, wss, message_bar):
-        super(TaxonomyApp, self).__init__('taxonomy', wss, message_bar)
+    def __init__(self, action, wss, message_bar):
+        super().__init__('taxonomy', action, wss, message_bar)
+        self.icon_standard = QIcon(":/plugins/irmt/taxonomy.svg")
+        self.icon_connected = QIcon(":/plugins/irmt/taxonomy_connected.svg")

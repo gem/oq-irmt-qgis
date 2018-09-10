@@ -29,6 +29,7 @@ from qgis.PyQt.QtWidgets import QFileDialog
 from qgis.PyQt.QtCore import QSettings, QDir, QFileInfo, QUrl
 from qgis.PyQt.QtNetwork import (
     QNetworkRequest, QHttpMultiPart, QHttpPart, QNetworkAccessManager)
+from qgis.PyQt.QtGui import QIcon
 from svir.websocket.web_app import WebApp
 from svir.utilities.utils import log_msg
 from svir.utilities.shared import REQUEST_ATTRS
@@ -36,8 +37,10 @@ from svir.utilities.shared import REQUEST_ATTRS
 
 class IptApp(WebApp):
 
-    def __init__(self, wss, message_bar):
-        super(IptApp, self).__init__('ipt', wss, message_bar)
+    def __init__(self, action, wss, message_bar):
+        super().__init__('ipt', action, wss, message_bar)
+        self.icon_standard = QIcon(":/plugins/irmt/ipt.svg")
+        self.icon_connected = QIcon(":/plugins/irmt/ipt_connected.svg")
         ipt_allowed_meths = [
             'select_file', 'ls_ipt_dir', 'on_same_fs',
             'rm_file_from_ipt_dir', 'rename_file_in_ipt_dir',

@@ -30,9 +30,10 @@ from svir.utilities.utils import log_msg
 
 class WebApp(QObject):
 
-    def __init__(self, app_name, wss, message_bar, parent=None):
+    def __init__(self, app_name, action, wss, message_bar, parent=None):
         assert app_name is not None
         super().__init__(parent)
+        self.action = action
         self.wss = wss  # thread running the websocket server
         self.message_bar = message_bar
         self.app_name = app_name
@@ -115,6 +116,15 @@ class WebApp(QObject):
 
     def apptrack_status_cb(self, uuid, pend_msg, reply):
         print('%s: apptrack_status_cb: %s' % (self.app_name, reply['success']))
+        self.set_app_icon(reply['success'])
+
+    def set_app_icon(self, connected):
+        if self.action is None:  # e.g. taxonomy has no toolbar button
+            return
+        if connected:
+            self.action.setIcon(self.icon_connected)
+        else:
+            self.action.setIcon(self.icon_standard)
 
     def apptrack_status(self):
         success, err_msg = self.run_command(

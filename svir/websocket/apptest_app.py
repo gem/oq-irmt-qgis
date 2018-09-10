@@ -23,9 +23,13 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
+from qgis.PyQt.QtGui import QIcon
 from svir.websocket.web_app import WebApp
 
 
 class AppTestApp(WebApp):
-    def __init__(self, wss, message_bar):
-        super().__init__('apptest', wss, message_bar)
+    def __init__(self, action, wss, message_bar):
+        super().__init__('apptest', action, wss, message_bar)
+        # FIXME
+        self.icon_standard = QIcon(":/plugins/irmt/ipt.svg")
+        self.icon_connected = QIcon(":/plugins/irmt/ipt_connected.svg")

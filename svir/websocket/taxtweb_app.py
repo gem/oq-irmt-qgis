@@ -24,12 +24,15 @@
 
 
 from qgis.PyQt.QtCore import QUrl
+from qgis.PyQt.QtGui import QIcon
 from svir.websocket.web_app import WebApp
 
 
 class TaxtwebApp(WebApp):
-    def __init__(self, wss, message_bar):
-        super(TaxtwebApp, self).__init__('taxtweb', wss, message_bar)
+    def __init__(self, action, wss, message_bar):
+        super().__init__('taxtweb', action, wss, message_bar)
+        self.icon_standard = QIcon(":/plugins/irmt/taxtweb.svg")
+        self.icon_connected = QIcon(":/plugins/irmt/taxtweb_connected.svg")
         # FIXME
         # self.taxonomy_dlg = taxonomy_dlg
 
