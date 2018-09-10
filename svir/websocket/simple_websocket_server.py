@@ -610,7 +610,7 @@ class SimpleWebSocketServer(QThread):
     def send_to_wss(self, hyb_msg):
         hyb_msg_str = json.dumps(hyb_msg)
         ret = False
-        for fileno, conn in self.connections.items():
+        for fileno, conn in list(self.connections.items()):
             if conn == self.serversocket:
                 continue
             conn.sendMessage(hyb_msg_str)
@@ -653,7 +653,7 @@ class SimpleWebSocketServer(QThread):
     def close(self):
         self.serversocket.close()
 
-        for desc, conn in self.connections.items():
+        for desc, conn in list(self.connections.items()):
             conn.close()
             self._handleClose(conn)
 
@@ -668,7 +668,7 @@ class SimpleWebSocketServer(QThread):
 
     def serveonce(self):
         writers = []
-        for fileno in self.listeners:
+        for fileno in list(self.listeners):
             if fileno == self.serversocket:
                 continue
             client = self.connections[fileno]
