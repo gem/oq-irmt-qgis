@@ -84,29 +84,26 @@ class UploadWorker(AbstractWorker):
         file_size_mb = file_size_mb / 1024 / 1024
         self.upload_size_msg = tr('Uploading ~%s MB...' % file_size_mb)
         self.set_message.emit(self.upload_size_msg)
+        user_permissions = [
+                            'change_layer_style', 'add_layer',
+                            'change_layer', 'delete_layer',
+                            'view_resourcebase',
+                            'download_resourcebase',
+                            'publish_resourcebase'
+                            ]
+        admin_permissions = [
+                             'change_layer_data',
+                             'change_resourcebase_metadata',
+                             'change_resourcebase',
+                             'delete_resourcebase',
+                             'change_resourcebase_permissions',
+                             ].extend(user_permissions)
         permissions = {
                        "admin": {
-                                 self.username: [
-                                     'change_layer_data',
-                                     'change_layer_style', 'add_layer',
-                                     'change_layer', 'delete_layer',
-                                     'view_resourcebase',
-                                     'download_resourcebase',
-                                     'change_resourcebase_metadata',
-                                     'change_resourcebase',
-                                     'delete_resourcebase',
-                                     'change_resourcebase_permissions',
-                                     'publish_resourcebase',
-                                  ]
+                                 self.username: admin_permissions
                                  },
                        "users": {
-                                 self.username: [
-                                     'change_layer_style', 'add_layer',
-                                     'change_layer', 'delete_layer',
-                                     'view_resourcebase',
-                                     'download_resourcebase',
-                                     'publish_resourcebase',
-                                  ]
+                                 self.username: user_permissions
                                  }
                        }
         data = {'layer_title': os.path.basename(self.file_stem),

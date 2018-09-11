@@ -139,6 +139,10 @@ class UploadDialog(QDialog, FORM_CLASS):
                 f.write(sld)
             os.system('tidy -xml -i %s' % fname)
         headers = {'content-type': 'application/vnd.ogc.sld+xml'}
+
+        # NOTE: to save the style, we actually need to do both the post and the
+        # put in this sequence, otherwise it doesn't work.  We still haven't
+        # found any better way to obtain the same correct behavior
         resp = self.session.post(
                    self.hostname + '/gs/rest/styles/%s.sld' % style_name,
                    data=sld, headers=headers)
