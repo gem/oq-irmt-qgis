@@ -101,15 +101,10 @@ class UploadWorker(AbstractWorker):
                                  },
                        "users": {
                                  self.username: [
-                                     'change_layer_data',
                                      'change_layer_style', 'add_layer',
                                      'change_layer', 'delete_layer',
                                      'view_resourcebase',
                                      'download_resourcebase',
-                                     'change_resourcebase_metadata',
-                                     'change_resourcebase',
-                                     'delete_resourcebase',
-                                     'change_resourcebase_permissions',
                                      'publish_resourcebase',
                                   ]
                                  }
