@@ -76,7 +76,7 @@ def get_loggedin_downloader(message_bar):
 
 class SvDownloader(object):
     """
-    Utility to use the OpenQuake Platform's API to download socioecioeconomic
+    Utility to use the OpenQuake Platform's API to download socioecoeconomic
     data.
 
     :param host: url of the OpenQuake Platform instance to use
