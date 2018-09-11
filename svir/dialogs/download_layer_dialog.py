@@ -126,8 +126,6 @@ class DownloadLayerDialog(QDialog, FORM_CLASS):
         for layer in layers:
             try:
                 keywords = layer.find('%sKeywords' % NS_NET_OPENGIS_WFS).text
-                title = layer.find('%sTitle' % NS_NET_OPENGIS_WFS).text
-                print("%s: %s" % (title, keywords))
                 if keywords is not None and (
                         'IRMT_QGIS_Plugin' in keywords or
                         # this is for backward compatibility
