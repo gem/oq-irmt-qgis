@@ -131,12 +131,13 @@ class UploadDialog(QDialog, FORM_CLASS):
                 level=QgsMessageBar.CRITICAL)
             return
 
-        import tempfile
-        fd, fname = tempfile.mkstemp(suffix=".sld")
-        os.close(fd)
-        with open(fname, 'w') as f:
-            f.write(sld)
-        # os.system('tidy -xml -i %s' % fname)
+        if DEBUG:
+            import tempfile
+            fd, fname = tempfile.mkstemp(suffix=".sld")
+            os.close(fd)
+            with open(fname, 'w') as f:
+                f.write(sld)
+            # os.system('tidy -xml -i %s' % fname)
         headers = {'content-type': 'application/vnd.ogc.sld+xml'}
         resp = self.session.post(
                    self.hostname + '/gs/rest/styles/%s.sld' % style_name,
