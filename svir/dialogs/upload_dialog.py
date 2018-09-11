@@ -138,14 +138,12 @@ class UploadDialog(QDialog, FORM_CLASS):
             f.write(sld)
         # os.system('tidy -xml -i %s' % fname)
         headers = {'content-type': 'application/vnd.ogc.sld+xml'}
-        with open(sld_file, 'rb') as f:
-            sld_content = f.read()
         resp = self.session.post(
                    self.hostname + '/gs/rest/styles/%s.sld' % style_name,
-                   data=sld_content, headers=headers)
+                   data=sld, headers=headers)
         resp = self.session.put(
                    self.hostname + '/gs/rest/styles/%s.sld' % style_name,
-                   data=sld_content, headers=headers)
+                   data=sld, headers=headers)
 
         if DEBUG:
             log_msg('Style upload response: %s' % resp)
