@@ -24,6 +24,7 @@
 
 import os
 import traceback
+import shutil
 from shutil import copyfile, rmtree
 from qgis.PyQt.QtWidgets import QFileDialog
 from qgis.PyQt.QtCore import QSettings, QDir, QFileInfo, QUrl
@@ -47,6 +48,7 @@ class IptApp(WebApp):
             'read_file_in_ipt_dir', 'run_oq_engine_calc',
             'save_str_to_file', 'clear_ipt_dir',
             'select_and_copy_file_to_ipt_dir',
+            'mkdir_in_ipt_dir', 'rmdir_from_ipt_dir',
             'delegate_download']
         self.allowed_meths.extend(ipt_allowed_meths)
 
@@ -235,6 +237,42 @@ class IptApp(WebApp):
         try:
             os.rename(old_path, new_path)
         except OSError as exc:
+            return {'success': False, 'content': None, 'reason': str(exc)}
+        else:
+            return {'success': True, 'content': None, 'reason': 'ok'}
+
+    def mkdir_in_ipt_dir(self, api_uuid, dir_name):
+        """
+        :param dirname: name of the directory to be created under the ipt dir
+        """
+        ipt_dir = self.wss.irmt_thread.ipt_dir
+        try:
+            full_path = os.path.join(ipt_dir, dir_name)
+            if not os.path.abspath(full_path).startswith(ipt_dir + '/'):
+                msg = 'Unable to create the directory %s' % dir_name
+                return {'success': False, 'content': None, 'reason': msg}
+            os.makedirs(full_path)
+            print(os.listdir(ipt_dir))
+        except Exception as exc:
+            log_msg(traceback.format_exc(), level='C')
+            return {'success': False, 'content': None, 'reason': str(exc)}
+        else:
+            return {'success': True, 'content': None, 'reason': 'ok'}
+
+    def rmdir_from_ipt_dir(self, api_uuid, dir_name):
+        """
+        :param dirname: name of the directory to be deleted from the ipt dir
+        """
+        ipt_dir = self.wss.irmt_thread.ipt_dir
+        try:
+            full_path = os.path.join(ipt_dir, dir_name)
+            if not os.path.abspath(full_path).startswith(ipt_dir + '/'):
+                msg = 'Unable to delete the directory %s' % dir_name
+                return {'success': False, 'content': None, 'reason': msg}
+            shutil.rmtree(full_path)
+            print(os.listdir(ipt_dir))
+        except Exception as exc:
+            log_msg(traceback.format_exc(), level='C')
             return {'success': False, 'content': None, 'reason': str(exc)}
         else:
             return {'success': True, 'content': None, 'reason': 'ok'}
