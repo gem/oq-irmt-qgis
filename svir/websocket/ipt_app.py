@@ -137,7 +137,7 @@ class IptApp(WebApp):
             else:
                 file_name, _ = QFileDialog.getOpenFileName(
                     self.wss.irmt_thread.parent(), title, default_dir)
-                file_names = [file_name]
+                file_names = [file_name] if file_name else []
             if not file_names:
                 return {'success': False,
                         'content': None,
