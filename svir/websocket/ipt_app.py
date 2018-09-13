@@ -343,7 +343,7 @@ class IptApp(WebApp):
             manager.finished.connect(self.manager_finished_cb)
             request = QNetworkRequest(qurl)
             request.setAttribute(REQUEST_ATTRS['instance_finished_cb'],
-                                self.manager_finished_cb)
+                                 self.manager_finished_cb)
             # request.setAttribute(REQUEST_ATTRS['js_cb_object_id'],
             #                      js_cb_object_id)
             request.setAttribute(REQUEST_ATTRS['uuid'], api_uuid)
@@ -358,7 +358,7 @@ class IptApp(WebApp):
             for d in data:
                 part = QHttpPart()
                 part.setHeader(QNetworkRequest.ContentDispositionHeader,
-                            "form-data; name=\"%s\"" % d['name'])
+                               "form-data; name=\"%s\"" % d['name'])
                 part.setBody(d['value'].encode('utf-8'))
                 multipart.append(part)
             reply = manager.post(request, multipart)
