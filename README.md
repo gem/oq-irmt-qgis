@@ -24,10 +24,16 @@ This plugin has been created by the [GEM Foundation](http://www.globalquakemodel
 This plugin runs with [QGIS 3.0 and above](http://qgis.org/en/site/forusers/alldownloads.html)
 and above.
 
-On Microsoft Windows and Mac OS X, QGIS includes all the software dependencies needed by the plugin.
+On Microsoft Windows, QGIS includes all the software dependencies needed by the plugin.
 
-On Linux, please make sure that [Scipy](https://www.scipy.org/install.html) and
-[Matplotlib](https://matplotlib.org/users/installing.html) with Qt4 backend are installed.
+On macOS and Linux, please make sure that [Scipy](https://www.scipy.org/install.html) and
+[Matplotlib](https://matplotlib.org/users/installing.html) with Qt5 backend are installed.
+
+On macOS:
+
+```bash
+$ sudo pip3.6 install matplotlib scipy
+```
 
 On Ubuntu (Debian and similar):
 
