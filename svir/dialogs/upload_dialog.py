@@ -141,9 +141,15 @@ class UploadDialog(QDialog, FORM_CLASS):
                 f.write(sld)
             os.system('tidy -xml -i %s' % fname)
         headers = {'content-type': 'application/vnd.ogc.sld+xml'}
+        # NOTE: to save the style, we actually need to do both the post and the
+        # put in this sequence, otherwise it doesn't work.  We still haven't
+        # found any better way to obtain the same correct behavior
+        resp = self.session.post(
+                self.hostname + '/gs/rest/styles/%s.sld' % style_name,
+                data=sld, headers=headers)
         resp = self.session.put(
-            self.hostname + '/gs/rest/styles/%s' % style_name,
-            data=sld, headers=headers)
+                self.hostname + '/gs/rest/styles/%s.sld' % style_name,
+                data=sld, headers=headers)
         if DEBUG:
             log_msg('Style upload response: %s' % resp)
         if not resp.ok:
@@ -152,6 +158,31 @@ class UploadDialog(QDialog, FORM_CLASS):
             self.message_bar.pushMessage(
                 'Style error', error_msg, duration=0,
                 level=Qgis.Critical)
+        select_style_xml = """
+<layer>
+    <name>oqplatform:%s</name>
+    <defaultStyle>
+        <name>%s</name>
+        <atom:link xmlns:atom="http://www.w3.org/2005/Atom"
+            rel="alternate"
+            href="http://127.0.0.1:8080/geoserver/rest/styles/%s.xml"
+            type="application/xml"/>
+    </defaultStyle>
+</layer>""" % (style_name, style_name, style_name)
+        headers = {'content-type': 'text/xml'}
+        resp = self.session.put(
+            self.hostname + '/gs/rest/layers/%s.xml' % style_name,
+            data=select_style_xml,
+            headers=headers)
+        if DEBUG:
+            log_msg('Style selection response: %s' % resp)
+        if not resp.ok:
+            error_msg = (
+                'Error while selecting the style of the loaded layer: '
+                + resp.reason)
+            self.message_bar.pushMessage(
+                'Style error', error_msg, duration=0,
+                level=QgsMessageBar.CRITICAL)
 
     def upload_done(self, result):
         layer_url, success = result

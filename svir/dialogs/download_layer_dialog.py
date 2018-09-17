@@ -124,7 +124,8 @@ class DownloadLayerDialog(QDialog, FORM_CLASS):
     def parse_get_capabilities(self, xml):
         # this raises a IOError if the file doesn't exist
         root = ElementTree.fromstring(xml)
-        layers = root.find('%sFeatureTypeList' % NS_NET_OPENGIS_WFS)
+        featuretypelist = root.find('%sFeatureTypeList' % NS_NET_OPENGIS_WFS)
+        layers = featuretypelist.findall('%sFeatureType' % NS_NET_OPENGIS_WFS)
 
         for layer in layers:
             try:
