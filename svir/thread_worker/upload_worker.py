@@ -117,12 +117,12 @@ class UploadWorker(AbstractWorker):
                 'prj_file': open('%s.prj' % self.file_stem, 'rb'),
                 'xml_file': open('%s.xml' % self.file_stem, 'rb'),
                 'charset': 'UTF-8',
-                'permissions': json.dumps(permissions)
+                'permissions': json.dumps(permissions),
+                'metadata_uploaded_preserve': True,
                 }
 
         # generate headers and data-generator an a requests-compatible format
         # and provide our progress-callback
-        data['metadata_uploaded_preserve'] = True
         data_generator, headers = multipart_encode_for_requests(
             data, cb=self.progress_cb)
 
