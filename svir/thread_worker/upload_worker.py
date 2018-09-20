@@ -29,9 +29,7 @@ import json
 from qgis.core import QgsCoordinateReferenceSystem
 
 from svir.thread_worker.abstract_worker import AbstractWorker
-from svir.utilities.shared import DEBUG
-from svir.utilities.utils import (multipart_encode_for_requests,
-                                  UserAbortedNotification,
+from svir.utilities.utils import (
                                   tr,
                                   save_layer_as_shapefile,
                                   )
@@ -110,28 +108,25 @@ class UploadWorker(AbstractWorker):
                                  }
                        }
 
+        files = {'base_file': open('%s.shp' % self.file_stem, 'rb'),
+                 'dbf_file': open('%s.dbf' % self.file_stem, 'rb'),
+                 'shx_file': open('%s.shx' % self.file_stem, 'rb'),
+                 'prj_file': open('%s.prj' % self.file_stem, 'rb'),
+                 'xml_file': open('%s.xml' % self.file_stem, 'rb')}
         data = {'layer_title': os.path.basename(self.file_stem),
-                'base_file': open('%s.shp' % self.file_stem, 'rb'),
-                'dbf_file': open('%s.dbf' % self.file_stem, 'rb'),
-                'shx_file': open('%s.shx' % self.file_stem, 'rb'),
-                'prj_file': open('%s.prj' % self.file_stem, 'rb'),
-                'xml_file': open('%s.xml' % self.file_stem, 'rb'),
                 'charset': 'UTF-8',
                 'permissions': json.dumps(permissions),
-                'metadata_uploaded_preserve': True,
-                }
+                'metadata_uploaded_preserve': True}
 
-        # generate headers and data-generator an a requests-compatible format
-        # and provide our progress-callback
-        data_generator, headers = multipart_encode_for_requests(
-            data, cb=self.progress_cb)
+        self.progress.emit(-1)
 
-        # use the requests-lib to issue a post-request with out data attached
         r = self.session.post(
-            self.hostname + '/layers/upload',
-            data=data_generator,
-            headers=headers
-        )
+            self.hostname + '/layers/upload', data=data, files=files)
+
+        self.toggle_show_progress.emit(False)
+        self.toggle_show_cancel.emit(False)
+        self.set_message.emit(
+            self.upload_size_msg + ' ' + tr('(processing on Platform)'))
 
         try:
             response = json.loads(r.text)
@@ -143,27 +138,3 @@ class UploadWorker(AbstractWorker):
                 raise KeyError("The server did not provide error messages")
         except ValueError:
             raise RuntimeError(r.text)
-
-    # this is your progress callback
-    def progress_cb(self, param, current, total):
-        if self.is_killed:
-            raise UserAbortedNotification('Upload aborted by user')
-        if not param:
-            return
-        # check out
-        # http://tcd.netinf.eu/doc/classnilib_1_1encode_1_1MultipartParam.html
-        # for a complete list of the properties param provides to you
-        progress = float(current) / float(total) * 100
-        self.progress.emit(progress)
-        # here we remove the progress bar and the cancel button since the
-        # server side processing kicks in at 100% but we allow for some
-        # rounding.
-        if progress > 99:
-            self.toggle_show_progress.emit(False)
-            self.toggle_show_cancel.emit(False)
-            self.set_message.emit(
-                self.upload_size_msg + ' ' + tr('(processing on Platform)'))
-        if DEBUG:
-            # fix_print_with_import
-            print(("PROGRESS: {0} ({1}) - {2:d}/{3:d} - {4:.2f}%").format(
-                param.name, param.filename, current, total, progress))
