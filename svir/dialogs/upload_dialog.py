@@ -23,6 +23,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import traceback
 from qgis.core import QgsRuleBasedRenderer, Qgis
 from qgis.gui import QgsMessageBar
 
@@ -127,7 +128,8 @@ class UploadDialog(QDialog, FORM_CLASS):
             sld = getGsCompatibleSld(self.iface.activeLayer(), style_name)
         except Exception as e:
             error_msg = (
-                'Unable to export the styled layer descriptor: ' + e.message)
+                'Unable to export the styled layer descriptor: ' + str(e))
+            log_msg(traceback.format_exc(), level='C')
             self.message_bar.pushMessage(
                 'Style error', error_msg, duration=0,
                 level=Qgis.Critical)
