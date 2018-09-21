@@ -236,10 +236,14 @@ class IptApp(WebApp):
                 return {'success': False, 'content': None, 'reason': msg}
         try:
             ls = os.listdir(full_path)
+            ls_out = ls[:]
+            for i, f in ls:
+                if os.path.isdir(os.path.join(full_path, f)):
+                    ls_out[i] = ls_out[i] + '/'
         except OSError as exc:
             resp = {'success': False, 'content': None, 'reason': str(exc)}
         else:
-            resp = {'success': True, 'content': ls, 'reason': 'ok'}
+            resp = {'success': True, 'content': ls_out, 'reason': 'ok'}
         return resp
 
     def clear_ipt_dir(self, api_uuid, *args):
