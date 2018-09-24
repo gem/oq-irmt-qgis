@@ -43,12 +43,12 @@ class IptApp(WebApp):
         self.icon_standard = QIcon(":/plugins/irmt/ipt.svg")
         self.icon_connected = QIcon(":/plugins/irmt/ipt_connected.svg")
         ipt_allowed_meths = [
-            'select_file', 'ls_ipt_dir', 'on_same_fs',
-            'rm_file_from_ipt_dir', 'rename_file_in_ipt_dir',
-            'read_file_in_ipt_dir', 'run_oq_engine_calc',
-            'save_str_to_file', 'clear_ipt_dir',
-            'select_and_copy_file_to_ipt_dir',
-            'mkdir_in_ipt_dir', 'rmdir_from_ipt_dir',
+            'select_file', 'ls', 'on_same_fs',
+            'delete_file', 'rename_file',
+            'read_file', 'run_oq_engine_calc',
+            'save_str_to_file', 'clear_dir',
+            'select_and_copy_file_to_dir',
+            'create_dir', 'delete_dir',
             'delegate_download']
         self.allowed_meths.extend(ipt_allowed_meths)
 
@@ -120,7 +120,7 @@ class IptApp(WebApp):
         else:
             return {'success': True, 'content': ls, 'reason': 'ok'}
 
-    def select_and_copy_file_to_ipt_dir(self, api_uuid, *args):
+    def select_and_copy_file_to_dir(self, api_uuid, *args):
         """
         Open a file browser pointing to the most recently browsed directory, or
         from a given path, where multiple files can be selected. The selected
@@ -203,7 +203,7 @@ class IptApp(WebApp):
         else:
             return {'success': True, 'content': None, 'reason': 'ok'}
 
-    def read_file_in_ipt_dir(self, api_uuid, file_name, *args):
+    def read_file(self, api_uuid, file_name, *args):
         """
         :param file_name: basename of the file to be read from the ipt_dir
         """
@@ -225,7 +225,7 @@ class IptApp(WebApp):
         else:
             return {'success': True, 'content': content, 'reason': 'ok'}
 
-    def ls_ipt_dir(self, api_uuid, *args):
+    def ls(self, api_uuid, *args):
         ipt_dir = self.wss.irmt_thread.ipt_dir
         full_path = ipt_dir
         if len(args) > 0:
@@ -245,7 +245,7 @@ class IptApp(WebApp):
             resp = {'success': True, 'content': ls, 'reason': 'ok'}
         return resp
 
-    def clear_ipt_dir(self, api_uuid, *args):
+    def clear_dir(self, api_uuid, *args):
         ipt_dir = self.wss.irmt_thread.ipt_dir
         full_path = ipt_dir
         if len(args) > 0:
@@ -264,7 +264,7 @@ class IptApp(WebApp):
             resp = {'success': True, 'content': None, 'reason': 'ok'}
         return resp
 
-    def rm_file_from_ipt_dir(self, api_uuid, file_name, *args):
+    def delete_file(self, api_uuid, file_name, *args):
         """
         :param file_name: name of the file to be removed from the ipt_dir
         """
@@ -285,7 +285,7 @@ class IptApp(WebApp):
         else:
             return {'success': True, 'content': None, 'reason': 'ok'}
 
-    def rename_file_in_ipt_dir(self, api_uuid, old_name, new_name, *args):
+    def rename_file(self, api_uuid, old_name, new_name, *args):
         """
         :param old_name: name of the file to be renamed
         :param new_name: new name to be assigned to the file
@@ -309,7 +309,7 @@ class IptApp(WebApp):
         else:
             return {'success': True, 'content': None, 'reason': 'ok'}
 
-    def mkdir_in_ipt_dir(self, api_uuid, dir_name):
+    def create_dir(self, api_uuid, dir_name):
         """
         :param dirname: name of the directory to be created under the ipt dir
         """
@@ -327,7 +327,7 @@ class IptApp(WebApp):
         else:
             return {'success': True, 'content': None, 'reason': 'ok'}
 
-    def rmdir_from_ipt_dir(self, api_uuid, dir_name):
+    def delete_dir(self, api_uuid, dir_name):
         """
         :param dirname: name of the directory to be deleted from the ipt dir
         """
