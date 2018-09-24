@@ -54,7 +54,7 @@ class IptApp(WebApp):
 
     def on_same_fs(self, api_uuid):
         """
-        Check if the engine server has access to the ipt_dir
+        Check if the engine server has access to the app_dir
         """
         checksum_file_path = None
         try:
@@ -83,7 +83,7 @@ class IptApp(WebApp):
 
     def select_file(self, api_uuid, *args):
         """
-        Open a file browser to select one or multiple files in the ipt_dir,
+        Open a file browser to select one or multiple files in the app_dir,
         and return the list of names of selected files
         """
         is_multi = False
@@ -94,13 +94,13 @@ class IptApp(WebApp):
         if len(args) > 1:
             title = args[1]
 
-        ipt_dir = self.wss.irmt_thread.ipt_dir
-        full_path = ipt_dir
+        app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
+        full_path = app_dir
 
         if len(args) > 2:
             path = args[2]
             full_path = os.path.join(full_path, path)
-            if not os.path.abspath(full_path).startswith(ipt_dir + '/'):
+            if not os.path.abspath(full_path).startswith(app_dir + '/'):
                 msg = 'Unable to access the directory %s' % path
                 return {'success': False, 'content': None, 'reason': msg}
 
@@ -124,7 +124,7 @@ class IptApp(WebApp):
         """
         Open a file browser pointing to the most recently browsed directory, or
         from a given path, where multiple files can be selected. The selected
-        files will be copied inside the ipt_dir
+        files will be copied inside the app_dir
         """
         is_multi = False
         if len(args) > 0:
@@ -137,14 +137,14 @@ class IptApp(WebApp):
         if len(args) > 1:
             title = args[1]
 
-        ipt_dir = self.wss.irmt_thread.ipt_dir
+        app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
         path = None
-        full_path = ipt_dir
+        full_path = app_dir
 
         if len(args) > 2:
             path = args[2]
             full_path = os.path.join(full_path, path)
-            if not os.path.abspath(full_path).startswith(ipt_dir + '/'):
+            if not os.path.abspath(full_path).startswith(app_dir + '/'):
                 msg = 'Unable to access the directory %s' % path
                 return {'success': False, 'content': None, 'reason': msg}
 
@@ -154,7 +154,7 @@ class IptApp(WebApp):
             else:
                 default_dir = QSettings().value('irmt/ipt_browsed_dir',
                                                 QDir.homePath())
-            ipt_dir = self.wss.irmt_thread.ipt_dir
+            app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
 
             if is_multi:
                 file_names, _ = QFileDialog.getOpenFileNames(
@@ -173,7 +173,7 @@ class IptApp(WebApp):
             for file_name in file_names:
                 basename = os.path.basename(file_name)
                 basenames.append(basename)
-                copyfile(file_name, os.path.join(ipt_dir, basename))
+                copyfile(file_name, os.path.join(app_dir, basename))
         except Exception as exc:
             log_msg(traceback.format_exc(), level='C')
             return {'success': False, 'content': basenames, 'reason': str(exc)}
@@ -183,14 +183,14 @@ class IptApp(WebApp):
     def save_str_to_file(self, api_uuid, content, file_name, *args):
         """
         :param content: string to be saved in the file
-        :param file_name: basename of the file to be saved into the ipt_dir
+        :param file_name: basename of the file to be saved into the app_dir
         """
-        ipt_dir = self.wss.irmt_thread.ipt_dir
-        full_path = ipt_dir
+        app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
+        full_path = app_dir
         if len(args) > 0:
             path = args[0]
             full_path = os.path.join(full_path, path)
-            if not os.path.abspath(full_path).startswith(ipt_dir + '/'):
+            if not os.path.abspath(full_path).startswith(app_dir + '/'):
                 msg = 'Unable to access the directory %s' % path
                 return {'success': False, 'content': None, 'reason': msg}
         try:
@@ -205,14 +205,14 @@ class IptApp(WebApp):
 
     def read_file(self, api_uuid, file_name, *args):
         """
-        :param file_name: basename of the file to be read from the ipt_dir
+        :param file_name: basename of the file to be read from the app_dir
         """
-        ipt_dir = self.wss.irmt_thread.ipt_dir
-        full_path = ipt_dir
+        app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
+        full_path = app_dir
         if len(args) > 0:
             path = args[0]
             full_path = os.path.join(full_path, path)
-            if not os.path.abspath(full_path).startswith(ipt_dir + '/'):
+            if not os.path.abspath(full_path).startswith(app_dir + '/'):
                 msg = 'Unable to access the directory %s' % path
                 return {'success': False, 'content': None, 'reason': msg}
         try:
@@ -226,12 +226,12 @@ class IptApp(WebApp):
             return {'success': True, 'content': content, 'reason': 'ok'}
 
     def ls(self, api_uuid, *args):
-        ipt_dir = self.wss.irmt_thread.ipt_dir
-        full_path = ipt_dir
+        app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
+        full_path = app_dir
         if len(args) > 0:
             path = args[0]
             full_path = os.path.join(full_path, path)
-            if not os.path.abspath(full_path).startswith(ipt_dir + '/'):
+            if not os.path.abspath(full_path).startswith(app_dir + '/'):
                 msg = 'Unable to access the directory %s' % path
                 return {'success': False, 'content': None, 'reason': msg}
         try:
@@ -246,17 +246,18 @@ class IptApp(WebApp):
         return resp
 
     def clear_dir(self, api_uuid, *args):
-        ipt_dir = self.wss.irmt_thread.ipt_dir
-        full_path = ipt_dir
+        app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
+        full_path = app_dir
         if len(args) > 0:
             path = args[0]
             full_path = os.path.join(full_path, path)
-            if not os.path.abspath(full_path).startswith(ipt_dir + '/'):
+            if not os.path.abspath(full_path).startswith(app_dir + '/'):
                 msg = 'Unable to access the directory %s' % path
                 return {'success': False, 'content': None, 'reason': msg}
         try:
             rmtree(full_path)
-            self.wss.irmt_thread.get_ipt_dir() # recreates ipt_dir if needed
+            # recreates any missing app_dir
+            self.wss.irmt_thread.get_webapp_dirs()
         except Exception as exc:
             log_msg(traceback.format_exc(), level='C')
             resp = {'success': False, 'content': None, 'reason': str(exc)}
@@ -266,14 +267,14 @@ class IptApp(WebApp):
 
     def delete_file(self, api_uuid, file_name, *args):
         """
-        :param file_name: name of the file to be removed from the ipt_dir
+        :param file_name: name of the file to be removed from the app_dir
         """
-        ipt_dir = self.wss.irmt_thread.ipt_dir
-        full_path = ipt_dir
+        app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
+        full_path = app_dir
         if len(args) > 0:
             path = args[0]
             full_path = os.path.join(full_path, path)
-            if not os.path.abspath(full_path).startswith(ipt_dir + '/'):
+            if not os.path.abspath(full_path).startswith(app_dir + '/'):
                 msg = 'Unable to access the directory %s' % path
                 return {'success': False, 'content': None, 'reason': msg}
         basename = os.path.basename(file_name)
@@ -290,12 +291,12 @@ class IptApp(WebApp):
         :param old_name: name of the file to be renamed
         :param new_name: new name to be assigned to the file
         """
-        ipt_dir = self.wss.irmt_thread.ipt_dir
-        full_path = ipt_dir
+        app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
+        full_path = app_dir
         if len(args) > 0:
             path = args[0]
             full_path = os.path.join(full_path, path)
-            if not os.path.abspath(full_path).startswith(ipt_dir + '/'):
+            if not os.path.abspath(full_path).startswith(app_dir + '/'):
                 msg = 'Unable to access the directory %s' % path
                 return {'success': False, 'content': None, 'reason': msg}
         old_basename = os.path.basename(old_name)
@@ -313,14 +314,14 @@ class IptApp(WebApp):
         """
         :param dirname: name of the directory to be created under the ipt dir
         """
-        ipt_dir = self.wss.irmt_thread.ipt_dir
+        app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
         try:
-            full_path = os.path.join(ipt_dir, dir_name)
-            if not os.path.abspath(full_path).startswith(ipt_dir + '/'):
+            full_path = os.path.join(app_dir, dir_name)
+            if not os.path.abspath(full_path).startswith(app_dir + '/'):
                 msg = 'Unable to create the directory %s' % dir_name
                 return {'success': False, 'content': None, 'reason': msg}
             os.makedirs(full_path)
-            print(os.listdir(ipt_dir))
+            print(os.listdir(app_dir))
         except Exception as exc:
             log_msg(traceback.format_exc(), level='C')
             return {'success': False, 'content': None, 'reason': str(exc)}
@@ -331,14 +332,14 @@ class IptApp(WebApp):
         """
         :param dirname: name of the directory to be deleted from the ipt dir
         """
-        ipt_dir = self.wss.irmt_thread.ipt_dir
+        app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
         try:
-            full_path = os.path.join(ipt_dir, dir_name)
-            if not os.path.abspath(full_path).startswith(ipt_dir + '/'):
+            full_path = os.path.join(app_dir, dir_name)
+            if not os.path.abspath(full_path).startswith(app_dir + '/'):
                 msg = 'Unable to delete the directory %s' % dir_name
                 return {'success': False, 'content': None, 'reason': msg}
             shutil.rmtree(full_path)
-            print(os.listdir(ipt_dir))
+            print(os.listdir(app_dir))
         except Exception as exc:
             log_msg(traceback.format_exc(), level='C')
             return {'success': False, 'content': None, 'reason': str(exc)}
@@ -349,7 +350,7 @@ class IptApp(WebApp):
         """
         It opens the dialog showing the list of calculations on the engine
         server, and automatically runs an oq-engine calculation, given a list
-        of input files to be collected from the ipt_dir
+        of input files to be collected from the app_dir
         :param file_names: list of names of the input files
         :returns: a dict with a return value and a possible reason of failure
         """
@@ -359,7 +360,7 @@ class IptApp(WebApp):
             drive_engine_dlg = \
                 self.wss.irmt_thread.drive_oq_engine_server_dlg
             drive_engine_dlg.run_calc(file_names=file_names,
-                                      directory=self.wss.irmt_thread.ipt_dir)
+                                      directory=self.wss.irmt_thread.webapp_dirs[self.app_name])
         except Exception as exc:
             log_msg(traceback.format_exc(), level='C')
             return {'success': False, 'content': None, 'reason': str(exc)}
@@ -513,8 +514,8 @@ class IptApp(WebApp):
             print(file_name)
             file_content = str(reply.readAll(), 'utf-8')
             print(file_content)
-            ipt_dir = self.wss.irmt_thread.ipt_dir
-            with open(os.path.join(ipt_dir, file_name), "w") as f:
+            app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
+            with open(os.path.join(app_dir, file_name), "w") as f:
                 f.write(file_content)
             # self.call_js_cb(js_cb_func, file_name, 0)
             result = {'success': True, 'content': file_name, 'reason': 'ok'}
@@ -525,36 +526,6 @@ class IptApp(WebApp):
             app_msg = {'result': result, 'complete': True}
         api_msg = {'reply': app_msg, 'uuid': uuid}
         self.send(api_msg)
-    # def manager_finished_cb_old(self, reply):
-    #     file_name = None
-    #     js_cb_object_id = reply.request().attribute(
-    #         REQUEST_ATTRS['js_cb_object_id'], None)
-    #     js_cb_func = reply.request().attribute(
-    #         REQUEST_ATTRS['js_cb_func'], None)
-    #     if js_cb_object_id is None or js_cb_object_id is None:
-    #         self.call_js_cb(js_cb_func, js_cb_object_id, file_name, 2,
-    #                         'Unable to extract attributes from request')
-    #         return
-    #     content_disposition = reply.rawHeader('Content-Disposition')
-    #     # expected format: 'attachment; filename="exposure_model.xml"'
-    #     # sanity check
-    #     if 'filename' not in content_disposition:
-    #         self.call_js_cb(js_cb_func, js_cb_object_id, file_name, 4,
-    #                         'File name not found')
-    #         return
-    #     file_name = str(content_disposition.split('"')[1])
-    #     file_content = str(reply.readAll())
-    #     ipt_dir = self.parent().ipt_dir
-    #     with open(os.path.join(ipt_dir, file_name), "w") as f:
-    #         f.write(file_content)
-    #     self.call_js_cb(js_cb_func, js_cb_object_id, file_name, 0)
-
-    # def call_js_cb_old(self, js_cb_func, js_cb_object_id, file_name,
-    #                success=1, reason='ok'):
-    #     js_to_call = '%s("%s", "%s", %d, "%s");' % (
-    #         js_cb_func, js_cb_object_id, file_name, success, reason)
-    #     frame = self.parent().web_view.page().mainFrame()
-    #     frame.evaluateJavaScript(js_to_call)
 
 
 class GemQNetworkAccessManager(QNetworkAccessManager):

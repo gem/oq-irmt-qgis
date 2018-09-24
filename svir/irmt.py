@@ -164,9 +164,6 @@ class Irmt(QObject):
         QgsProject.instance().layersRemoved.connect(
             self.layers_removed)
 
-        # get or create directory to store input files for the OQ-Engine
-        self.ipt_dir = self.get_ipt_dir()
-
         self.websocket_thread = None
         self.start_websocket()
         self.apptest_app = None
@@ -343,6 +340,8 @@ class Irmt(QObject):
 
         self.update_actions_status()
         self.instantiate_web_apps()
+        # get or create directories to store input files for the OQ-Engine
+        self.webapp_dirs = self.get_webapp_dirs()
 
     @staticmethod
     def get_menu(parent, title):
@@ -1416,16 +1415,20 @@ class Irmt(QObject):
                 legend_tab, self.viewer_dock)
             self.viewer_dock.raise_()
 
-    def get_ipt_dir(self):
+    def get_webapp_dirs(self):
+        webapp_dirs = {}
         home_dir = os.path.expanduser("~")
-        ipt_dir = os.path.join(home_dir, ".gem", "irmt", "ipt")
-        if not os.path.exists(ipt_dir):
-            os.makedirs(ipt_dir)
-        return ipt_dir
+        for webapp_name in self.web_apps:
+            webapp_dir = os.path.join(home_dir, ".gem", "irmt", webapp_name)
+            if not os.path.exists(webapp_dir):
+                os.makedirs(webapp_dir)
+            webapp_dirs[webapp_name] = webapp_dir
+        return webapp_dirs
 
     def get_ipt_checksum(self):
         unique_filename = ".%s" % uuid4().hex
-        checksum_file_path = os.path.join(self.ipt_dir, unique_filename)
+        checksum_file_path = os.path.join(
+            self.webapp_dirs['ipt'], unique_filename)
         with open(checksum_file_path, "wb") as f:
             f.write(os.urandom(32))
         return checksum_file_path, get_checksum(checksum_file_path)
