@@ -36,6 +36,11 @@ from svir.utilities.utils import log_msg
 from svir.utilities.shared import REQUEST_ATTRS
 
 
+def dir_is_legal(app_dir, full_abs_path):
+    return (full_abs_path.startswith(app_dir + '/') or
+            full_abs_path == app_dir)
+
+
 class IptApp(WebApp):
 
     def __init__(self, action, wss, message_bar):
@@ -99,8 +104,8 @@ class IptApp(WebApp):
 
         if len(args) > 2:
             path = args[2]
-            full_path = os.path.join(full_path, path)
-            if not os.path.abspath(full_path).startswith(app_dir + '/'):
+            full_path = os.path.abspath(os.path.join(app_dir, path))
+            if not dir_is_legal(app_dir, full_path):
                 msg = 'Unable to access the directory %s' % path
                 return {'success': False, 'content': None, 'reason': msg}
 
@@ -143,8 +148,8 @@ class IptApp(WebApp):
 
         if len(args) > 2:
             path = args[2]
-            full_path = os.path.join(full_path, path)
-            if not os.path.abspath(full_path).startswith(app_dir + '/'):
+            full_path = os.path.abspath(os.path.join(app_dir, path))
+            if not dir_is_legal(app_dir, full_path):
                 msg = 'Unable to access the directory %s' % path
                 return {'success': False, 'content': None, 'reason': msg}
 
@@ -189,8 +194,8 @@ class IptApp(WebApp):
         full_path = app_dir
         if len(args) > 0:
             path = args[0]
-            full_path = os.path.join(full_path, path)
-            if not os.path.abspath(full_path).startswith(app_dir + '/'):
+            full_path = os.path.abspath(os.path.join(app_dir, path))
+            if not dir_is_legal(app_dir, full_path):
                 msg = 'Unable to access the directory %s' % path
                 return {'success': False, 'content': None, 'reason': msg}
         try:
@@ -211,8 +216,8 @@ class IptApp(WebApp):
         full_path = app_dir
         if len(args) > 0:
             path = args[0]
-            full_path = os.path.join(full_path, path)
-            if not os.path.abspath(full_path).startswith(app_dir + '/'):
+            full_path = os.path.abspath(os.path.join(app_dir, path))
+            if not dir_is_legal(app_dir, full_path):
                 msg = 'Unable to access the directory %s' % path
                 return {'success': False, 'content': None, 'reason': msg}
         try:
@@ -228,12 +233,14 @@ class IptApp(WebApp):
     def ls(self, api_uuid, *args):
         app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
         full_path = app_dir
+
         if len(args) > 0:
             path = args[0]
-            full_path = os.path.join(full_path, path)
-            if not os.path.abspath(full_path).startswith(app_dir + '/'):
+            full_path = os.path.abspath(os.path.join(app_dir, path))
+            if not dir_is_legal(app_dir, full_path):
                 msg = 'Unable to access the directory %s' % path
                 return {'success': False, 'content': None, 'reason': msg}
+
         try:
             ls = os.listdir(full_path)
             for i, f in enumerate(ls):
@@ -250,8 +257,8 @@ class IptApp(WebApp):
         full_path = app_dir
         if len(args) > 0:
             path = args[0]
-            full_path = os.path.join(full_path, path)
-            if not os.path.abspath(full_path).startswith(app_dir + '/'):
+            full_path = os.path.abspath(os.path.join(app_dir, path))
+            if not dir_is_legal(app_dir, full_path):
                 msg = 'Unable to access the directory %s' % path
                 return {'success': False, 'content': None, 'reason': msg}
         try:
@@ -273,8 +280,8 @@ class IptApp(WebApp):
         full_path = app_dir
         if len(args) > 0:
             path = args[0]
-            full_path = os.path.join(full_path, path)
-            if not os.path.abspath(full_path).startswith(app_dir + '/'):
+            full_path = os.path.abspath(os.path.join(app_dir, path))
+            if not dir_is_legal(app_dir, full_path):
                 msg = 'Unable to access the directory %s' % path
                 return {'success': False, 'content': None, 'reason': msg}
         basename = os.path.basename(file_name)
@@ -295,8 +302,8 @@ class IptApp(WebApp):
         full_path = app_dir
         if len(args) > 0:
             path = args[0]
-            full_path = os.path.join(full_path, path)
-            if not os.path.abspath(full_path).startswith(app_dir + '/'):
+            full_path = os.path.abspath(os.path.join(app_dir, path))
+            if not dir_is_legal(app_dir, full_path):
                 msg = 'Unable to access the directory %s' % path
                 return {'success': False, 'content': None, 'reason': msg}
         old_basename = os.path.basename(old_name)
@@ -316,8 +323,8 @@ class IptApp(WebApp):
         """
         app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
         try:
-            full_path = os.path.join(app_dir, dir_name)
-            if not os.path.abspath(full_path).startswith(app_dir + '/'):
+            full_path = os.path.abspath(os.path.join(app_dir, dir_name))
+            if not dir_is_legal(app_dir, full_path):
                 msg = 'Unable to create the directory %s' % dir_name
                 return {'success': False, 'content': None, 'reason': msg}
             os.makedirs(full_path)
