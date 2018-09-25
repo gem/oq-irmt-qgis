@@ -153,7 +153,11 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
 
     def get_field_names(self, **kwargs):
         if self.load_multicol_ckb.isChecked():
-            field_names = self.dataset.dtype.names
+            field_names = []
+            for imt in self.imts:
+                for poe in self.imts[imt]:
+                    field_name = "%s-%s" % (imt, poe)
+                    field_names.append(field_name)
         else:
             imt = kwargs['imt']
             poe = kwargs['poe']

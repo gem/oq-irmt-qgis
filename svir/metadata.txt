@@ -25,6 +25,7 @@ email=staff.it@globalquakemodel.org
 changelog=
     3.2.8
     * Ported to qgis3 the conversion of layer style to the format accepted by Geoserver
+    * Fixed a bug loading hazard maps loading one layer per realization or statistic
     3.2.7
     * Updated installation instructions
     3.2.6
