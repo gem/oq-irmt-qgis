@@ -156,12 +156,14 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.layout().insertWidget(0, self.message_bar)
 
         self.engine_version = None
+        self.num_login_attempts = 0
         self.attempt_login()
 
         self.download_tasks = {}
         self.open_output_dlgs = {}
 
     def attempt_login(self):
+        self.num_login_attempts += 1
         try:
             self.login()
         except HANDLED_EXCEPTIONS as exc:
@@ -173,6 +175,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 self.setWindowTitle(
                     'Drive the OpenQuake Engine v%s (%s)' % (
                         self.engine_version, self.hostname))
+                self.num_login_attempts = 0
 
     def check_engine_compatibility(self):
         engine_version = self.get_engine_version()
@@ -883,6 +886,12 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.run_calc()
 
     def _handle_exception(self, exc):
+        # in case of disconnection, try 3 times to reconnect, before displaying
+        # an error
+        if isinstance(exc, ConnectionError):
+            if self.num_login_attempts < 3:
+                self.attempt_login()
+                return
         if isinstance(exc, SSLError):
             err_msg = '; '.join(exc.message.message.strerror.message[0])
             err_msg += ' (you could try prepending http:// or https://)'
