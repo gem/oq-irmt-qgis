@@ -367,7 +367,7 @@ class Irmt(object):
         return self.drive_oq_engine_server_dlg.on_same_fs(
             checksum_file_path, local_checksum)
 
-    def reset_engine_login(self):
+    def reset_drive_oq_engine_server_dlg(self):
         if self.drive_oq_engine_server_dlg is not None:
             was_dlg_visible = self.drive_oq_engine_server_dlg.isVisible()
             self.drive_oq_engine_server_dlg.reject()
