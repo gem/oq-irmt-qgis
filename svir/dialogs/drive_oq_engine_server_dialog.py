@@ -934,4 +934,12 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
     def reject(self):
         self.stop_polling()
-        super(DriveOqEngineServerDialog, self).reject()
+        if self.params_dlg is not None:
+            self.params_dlg.reject()
+        if self.console_dlg is not None:
+            self.console_dlg.reject()
+        if self.full_report_dlg is not None:
+            self.full_report_dlg.reject()
+        for dlg in self.open_output_dlgs:
+            dlg.reject()
+        super().reject()
