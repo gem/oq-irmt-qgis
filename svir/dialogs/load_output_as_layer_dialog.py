@@ -470,6 +470,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         irmt_version = get_irmt_version()
         self.layer.setCustomProperty('irmt_version', irmt_version)
         self.layer.setCustomProperty('calc_id', self.calc_id)
+        if poe is not None:
+            self.layer.setCustomProperty('poe', poe)
         QgsProject.instance().addMapLayer(self.layer)
         self.iface.setActiveLayer(self.layer)
         self.iface.zoomToActiveLayer()
