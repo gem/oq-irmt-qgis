@@ -25,7 +25,7 @@
 import os
 import traceback
 import shutil
-from shutil import copyfile, rmtree
+from shutil import copy, rmtree
 from qgis.PyQt.QtWidgets import QFileDialog
 from qgis.PyQt.QtCore import QSettings, QDir, QFileInfo, QUrl
 from qgis.PyQt.QtNetwork import (
@@ -155,11 +155,8 @@ class IptApp(WebApp):
             title = args[2]
 
         try:
-            if path:
-                default_dir = full_path
-            else:
-                default_dir = QSettings().value('irmt/ipt_browsed_dir',
-                                                QDir.homePath())
+            default_dir = QSettings().value('irmt/ipt_browsed_dir',
+                                            QDir.homePath())
             app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
 
             if is_multi:
@@ -179,7 +176,7 @@ class IptApp(WebApp):
             for file_name in file_names:
                 basename = os.path.basename(file_name)
                 basenames.append(basename)
-                copyfile(file_name, os.path.join(app_dir, basename))
+                copy(file_name, full_path)
         except Exception as exc:
             log_msg(traceback.format_exc(), level='C')
             return {'success': False, 'content': basenames, 'reason': str(exc)}
