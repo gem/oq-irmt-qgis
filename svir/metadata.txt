@@ -26,6 +26,7 @@ changelog=
     3.2.9
     * When saving plugin settings, any dialog driving the oq-engine is reset
     * When the connection with the oq-engine server is lost, the plugin attempts to reconnect 3 times before displaying an error
+    * For uniform hazard spectra layers, poe and return_period are saved as customProperties, and they are displayed in UHS plots
     3.2.8
     * Ported to qgis3 the conversion of layer style to the format accepted by Geoserver
     * Fixed a bug loading hazard maps loading one layer per realization or statistic
