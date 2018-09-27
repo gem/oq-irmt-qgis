@@ -426,7 +426,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                        ' Server.') % self.output_type
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
             else:
-                return investigation_time
+                # We must cast to 'str' to keep numerical padding
+                # after saving the project
+                return str(investigation_time)
         else:
             # some outputs do not need the investigation time
             return None
