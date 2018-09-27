@@ -91,23 +91,23 @@ class IptApp(WebApp):
         Open a file browser to select one or multiple files in the app_dir,
         and return the list of names of selected files
         """
-        is_multi = False
-        if len(args) > 0:
-            is_multi = args[0]
-
-        title = 'Select files' if is_multi else 'Select file'
-        if len(args) > 1:
-            title = args[1]
-
         app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
         full_path = app_dir
 
-        if len(args) > 2:
-            path = args[2]
+        if len(args) > 0:
+            path = args[0]
             full_path = os.path.abspath(os.path.join(app_dir, path))
             if not dir_is_legal(app_dir, full_path):
                 msg = 'Unable to access the directory %s' % path
                 return {'success': False, 'content': None, 'reason': msg}
+
+        is_multi = False
+        if len(args) > 1:
+            is_multi = args[1]
+
+        title = 'Select files' if is_multi else 'Select file'
+        if len(args) > 2:
+            title = args[2]
 
         try:
             if is_multi:
@@ -131,27 +131,28 @@ class IptApp(WebApp):
         from a given path, where multiple files can be selected. The selected
         files will be copied inside the app_dir
         """
-        is_multi = False
-        if len(args) > 0:
-            is_multi = args[0]
-
-        title = (
-            'The selected files will be copied to the ipt directory'
-            if is_multi else 'The selected file will be copied to'
-            ' the ipt directory')
-        if len(args) > 1:
-            title = args[1]
-
         app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
         path = None
         full_path = app_dir
 
-        if len(args) > 2:
-            path = args[2]
+        if len(args) > 0:
+            path = args[0]
             full_path = os.path.abspath(os.path.join(app_dir, path))
             if not dir_is_legal(app_dir, full_path):
                 msg = 'Unable to access the directory %s' % path
                 return {'success': False, 'content': None, 'reason': msg}
+
+        is_multi = False
+        if len(args) > 1:
+            is_multi = args[1]
+
+        title = (
+            ('The selected files will be copied to the %s directory' %
+             self.app_name)
+            if is_multi else 'The selected file will be copied to'
+            ' the %s directory' % self.app_name)
+        if len(args) > 2:
+            title = args[2]
 
         try:
             if path:
