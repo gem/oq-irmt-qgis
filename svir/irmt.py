@@ -367,12 +367,14 @@ class Irmt(object):
         return self.drive_oq_engine_server_dlg.on_same_fs(
             checksum_file_path, local_checksum)
 
-    def reset_engine_login(self):
+    def reset_drive_oq_engine_server_dlg(self):
         if self.drive_oq_engine_server_dlg is not None:
-            self.drive_oq_engine_server_dlg.current_calc_id = None
-            self.drive_oq_engine_server_dlg.pointed_calc_id = None
-            self.drive_oq_engine_server_dlg.is_logged_in = False
-            self.drive_oq_engine_server_dlg.clear_output_list()
+            was_dlg_visible = self.drive_oq_engine_server_dlg.isVisible()
+            self.drive_oq_engine_server_dlg.reject()
+            self.drive_oq_engine_server_dlg = DriveOqEngineServerDialog(
+                self.iface, self.viewer_dock)
+            if was_dlg_visible:
+                self.drive_oq_engine_server_dlg.show()
 
     def show_manual(self):
         base_url = os.path.abspath(os.path.join(
