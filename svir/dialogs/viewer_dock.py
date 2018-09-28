@@ -1003,8 +1003,17 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
         investigation_time = self.iface.activeLayer().customProperty(
             'investigation_time', None)
+        poe = self.iface.activeLayer().customProperty('poe', None)
+
         if investigation_time is not None:
-            title += ' (%s years)' % investigation_time
+            investigation_time = float(investigation_time)
+            if poe is not None:
+                poe = float(poe)
+                return_period = investigation_time / poe
+                title += ' (PoE = %.5f, RP = %.0f years)' % (poe,
+                                                             return_period)
+            else:
+                title += ' (%s years)' % investigation_time
         self.plot.set_title(title)
         self.plot.grid(which='both')
         if self.output_type != 'recovery_curves' and 1 <= count_lines <= 20:
@@ -1490,6 +1499,17 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     if rlz_or_stat not in selected_rlzs_or_stats:
                         continue
                     field_names.append(field.name())
+                investigation_time = float(
+                    self.iface.activeLayer().customProperty(
+                        'investigation_time'))
+                if self.output_type == 'hcurves':
+                    csv_file.write(
+                        '# investigation_time = %s\n' % investigation_time)
+                elif self.output_type == 'uhs':
+                    poe = float(self.iface.activeLayer().customProperty('poe'))
+                    return_period = investigation_time / poe
+                    csv_file.write('# poe = %.5f\n' % poe)
+                    csv_file.write('# return_period = %.0f\n' % return_period)
                 headers = ['lon', 'lat']
                 headers.extend(field_names)
                 writer.writerow(headers)
