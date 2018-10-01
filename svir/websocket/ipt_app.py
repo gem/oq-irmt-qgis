@@ -364,13 +364,26 @@ class IptApp(WebApp):
             self.wss.irmt_thread.drive_oq_engine_server()
             drive_engine_dlg = \
                 self.wss.irmt_thread.drive_oq_engine_server_dlg
-            drive_engine_dlg.run_calc(file_names=file_names,
-                                      directory=self.wss.irmt_thread.webapp_dirs[self.app_name])
+            drive_engine_dlg.run_calc(
+                file_names=file_names,
+                directory=self.wss.irmt_thread.webapp_dirs[self.app_name])
         except Exception as exc:
             log_msg(traceback.format_exc(), level='C')
             return {'success': False, 'content': None, 'reason': str(exc)}
         else:
             return {'success': True, 'content': None, 'reason': 'ok'}
+
+    def build_zip(self, api_uuid, content, zipname):
+        """
+        content = [[<"file"|"string">, <dest-name>,
+                    <src-file-path|src-file-content>][, ...]]
+        zipname = <file-name>
+
+        Return: {'success': True, 'content': <dest-file-fullname>,
+                 'reason': 'ok'}
+        """
+        return {'success': True, 'content': '<dest-file-fullname>',
+                'reason': 'ok'}
 
     # def delegate_download_old(self, action_url, method, headers, data,
     #                           js_cb_func, js_cb_object_id, api_uuid=None):
