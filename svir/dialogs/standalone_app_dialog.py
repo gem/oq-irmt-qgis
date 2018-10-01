@@ -24,7 +24,8 @@
 
 import json
 from qgis.PyQt.QtCore import QUrl, QObject, pyqtSlot, QSettings, Qt
-from qgis.PyQt.QtWidgets import QDialog, QVBoxLayout, QPushButton, QHBoxLayout, QMessageBox
+from qgis.PyQt.QtWidgets import (
+    QDialog, QVBoxLayout, QPushButton, QHBoxLayout, QMessageBox)
 from qgis.PyQt.QtGui import QIcon
 from qgis.core import Qgis
 from qgis.gui import QgsMessageBar

@@ -30,7 +30,7 @@ from qgis.gui import QgsMessageBar
 from qgis.PyQt.QtCore import Qt, QUrl, QSettings, pyqtSignal
 from qgis.PyQt.QtWidgets import QDialog, QSizePolicy, QDialogButtonBox
 from qgis.PyQt.QtNetwork import QNetworkCookieJar, QNetworkCookie
-from qgis.PyQt.QtWebKit import QWebSettings
+from qgis.PyQt.QtWebEngineWidgets import QWebEngineSettings
 
 from svir.thread_worker.abstract_worker import start_worker
 from svir.thread_worker.upload_worker import UploadWorker
@@ -207,7 +207,7 @@ class UploadDialog(QDialog, FORM_CLASS):
             '/irmt/developer_mode', True, type=bool)
         if developer_mode is True:
             self.web_view.page().settings().setAttribute(
-                QWebSettings.DeveloperExtrasEnabled, True)
+                QWebEngineSettings.DeveloperExtrasEnabled, True)
         else:
             self.web_view.setContextMenuPolicy(Qt.NoContextMenu)
 

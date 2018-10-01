@@ -38,7 +38,7 @@
     <widget class="QComboBox" name="style_by_field_cbx"/>
    </item>
    <item row="0" column="0">
-    <widget class="QWebView" name="web_view">
+    <widget class="QWebEngineView" name="web_view">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
        <horstretch>0</horstretch>
@@ -122,9 +122,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>QWebView</class>
+   <class>QWebEngineView</class>
    <extends>QWidget</extends>
-   <header>QtWebKitWidgets/QWebView</header>
+   <header>QtWebEngineWidgets/QWebEngineView</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

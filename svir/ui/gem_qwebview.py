@@ -25,8 +25,7 @@
 """
 
 import os
-from qgis.PyQt.QtWebKitWidgets import QWebView
-from qgis.PyQt.QtWebKit import QWebSettings
+from qgis.PyQt.QtWebEngineWidgets import QWebEngineView, QWebEngineSettings
 from qgis.PyQt.QtNetwork import (QNetworkAccessManager,
                                  QNetworkCookieJar,
                                  QNetworkCookie,
@@ -51,13 +50,13 @@ if DEBUG:
     # turn on developer tools in webkit so we can get at the
     # javascript console for debugging (it causes segfaults in tests, so it has
     # to be kept disabled while it is not used for debugging).
-    QWebSettings.globalSettings().setAttribute(
-        QWebSettings.DeveloperExtrasEnabled, True)
+    QWebEngineSettings.globalSettings().setAttribute(
+        QWebEngineSettings.DeveloperExtrasEnabled, True)
 
 
-class GemQWebView(QWebView):
+class GemQWebView(QWebEngineView):
     """
-    A modified version of QWebView, that adds to the embedded web pages a
+    A modified version of QWebEngineView, that adds to the embedded web pages a
     header that contains information about the version of the interface between
     the plugin and the standalone gem application that is embedded.
     Whenever the global window object of the Javascript environment is cleared,
@@ -77,16 +76,17 @@ class GemQWebView(QWebView):
         self.gem_header_value = gem_header_value
         self.gem_api = gem_api
 
-        super(GemQWebView, self).__init__(parent=parent)
+        super().__init__(parent=parent)
 
         self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,
                                        QSizePolicy.MinimumExpanding))
         manager = GemQNetworkAccessManager(self)
         self.page().setNetworkAccessManager(manager)
         manager.finished.connect(self.manager_finished_cb)
-        self.settings().setAttribute(QWebSettings.JavascriptEnabled, True)
         self.settings().setAttribute(
-            QWebSettings.JavascriptCanOpenWindows, True)
+            QWebEngineSettings.JavascriptEnabled, True)
+        self.settings().setAttribute(
+            QWebEngineSettings.JavascriptCanOpenWindows, True)
 
         self.frame = self.page().mainFrame()
         # javaScriptWindowObjectCleared is emitted whenever the global window

@@ -27,7 +27,7 @@ import json
 
 from qgis.PyQt.QtCore import (
     Qt, QUrl, QSettings, pyqtProperty, pyqtSignal, pyqtSlot)
-from qgis.PyQt.QtWebKit import QWebSettings
+from qgis.PyQt.QtWebEngineWidgets import QWebEngineSettings
 from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox
 from qgis.PyQt.QtPrintSupport import QPrinter
 
@@ -50,8 +50,8 @@ if DEBUG:
     # turn on developer tools in webkit so we can get at the
     # javascript console for debugging (it causes segfaults in tests, so it has
     # to be kept disabled while it is not used for debugging).
-    QWebSettings.globalSettings().setAttribute(
-        QWebSettings.DeveloperExtrasEnabled, True)
+    QWebEngineSettings.globalSettings().setAttribute(
+        QWebEngineSettings.DeveloperExtrasEnabled, True)
 
 
 class WeightDataDialog(QDialog, FORM_CLASS):
@@ -127,7 +127,7 @@ class WeightDataDialog(QDialog, FORM_CLASS):
             self.web_view.setContextMenuPolicy(Qt.NoContextMenu)
 
         self.web_view.settings().setAttribute(
-            QWebSettings.JavascriptEnabled, True)
+            QWebEngineSettings.JavascriptEnabled, True)
 
     def closeEvent(self, event):
         confirmation_on_close(self, event)
