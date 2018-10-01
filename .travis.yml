@@ -9,7 +9,7 @@ services: docker
 language: python
 
 python:
-    - "3.5"
+    - "3.6"
 
 before_install:
     - if [ "$TRAVIS_PULL_REQUEST_BRANCH" != "" ]; then BRANCH=$TRAVIS_PULL_REQUEST_BRANCH; else BRANCH=$TRAVIS_BRANCH; fi
@@ -21,7 +21,7 @@ before_install:
 
 install:
     - pip -q install -U pip
-    - pip -q install -r oq-engine/requirements-py35-linux64.txt
+    - pip -q install -r oq-engine/requirements-py36-linux64.txt
     - pip -q install -e oq-engine
     - docker pull openquake/qgis-builder:3
     - docker build --build-arg uid=$(id -u) -t openquake/qgis-builder:3 -f docker/Dockerfile docker/
