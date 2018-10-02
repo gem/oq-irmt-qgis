@@ -175,6 +175,16 @@ It will remove the calculation from the list, from the database and
 from the datastore.
 
 
+Abort a calculation
+===================
+
+To abort a calculation while it is still running, press the :guilabel:`Abort` button.
+The aborted calculation will still be visible in the list, and it will be possible
+to visualize the corresponding console log. Afterwards, it will be possible to
+completely remove the calculation from the list, from the database and from the
+datastore, by pressing the button :guilabel:`Remove`.
+
+
 Calculation status
 ==================
 

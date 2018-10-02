@@ -51,7 +51,7 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         self.create_rlz_or_stat_selector(all_ckb=True)
         self.create_imt_selector(all_ckb=True)
         self.create_poe_selector(all_ckb=True)
-        self.create_show_return_time_ckb()
+        self.create_show_return_period_ckb()
 
         self.load_multicol_ckb.stateChanged[int].connect(
             self.on_load_multicol_ckb_stateChanged)
@@ -64,8 +64,8 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
 
     def on_load_multicol_ckb_stateChanged(self, state):
         if state == Qt.Checked:
-            self.show_return_time_chk.setChecked(False)
-            self.show_return_time_chk.setEnabled(False)
+            self.show_return_period_chk.setChecked(False)
+            self.show_return_period_chk.setEnabled(False)
             self.load_all_poes_chk.setChecked(True)
             self.load_all_poes_chk.setEnabled(False)
             self.poe_cbx.setEnabled(True)
@@ -77,7 +77,7 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
             self.imt_lbl.setText(
                 'Intensity Measure Type (used for styling)')
         else:
-            self.show_return_time_chk.setEnabled(True)
+            self.show_return_period_chk.setEnabled(True)
             self.load_all_poes_chk.setChecked(False)
             self.load_all_poes_chk.setEnabled(True)
             self.poe_cbx.setEnabled(True)
@@ -142,10 +142,10 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         if self.load_multicol_ckb.isChecked():
             layer_name = "hazard_map_%s_%sy" % (
                 rlz_or_stat, investigation_time)
-        elif self.show_return_time_chk.isChecked():
-            return_time = int(float(investigation_time) / float(poe))
+        elif self.show_return_period_chk.isChecked():
+            return_period = int(float(investigation_time) / float(poe))
             layer_name = "hmap_%s_%s_%syr" % (
-                rlz_or_stat, imt, return_time)
+                rlz_or_stat, imt, return_period)
         else:
             layer_name = "hmap_%s_%s_poe-%s_%sy" % (
                 rlz_or_stat, imt, poe, investigation_time)
@@ -153,7 +153,11 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
 
     def get_field_names(self, **kwargs):
         if self.load_multicol_ckb.isChecked():
-            field_names = self.dataset.dtype.names
+            field_names = []
+            for imt in self.imts:
+                for poe in self.imts[imt]:
+                    field_name = "%s-%s" % (imt, poe)
+                    field_names.append(field_name)
         else:
             imt = kwargs['imt']
             poe = kwargs['poe']
