@@ -427,7 +427,8 @@ class IptApp(WebApp):
         try:
             with zipfile.ZipFile(abs_zip_name, 'w') as zipped_file:
                 for dest_file in dest_files:
-                    zipped_file.write(dest_file['path'], arcname=dest_file['name'])
+                    zipped_file.write(dest_file['path'],
+                                      arcname=dest_file['name'])
         except Exception as exc:
             log_msg(traceback.format_exc(), level='C')
             return {'success': False, 'content': None, 'reason': str(exc)}
