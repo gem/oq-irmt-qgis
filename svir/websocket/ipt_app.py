@@ -349,7 +349,7 @@ class IptApp(WebApp):
         else:
             return {'success': True, 'content': None, 'reason': 'ok'}
 
-    def run_oq_engine_calc(self, api_uuid, file_names):
+    def run_oq_engine_calc(self, api_uuid, file_names=None):
         """
         It opens the dialog showing the list of calculations on the engine
         server, and automatically runs an oq-engine calculation, given a list
@@ -357,7 +357,6 @@ class IptApp(WebApp):
         :param file_names: list of names of the input files
         :returns: a dict with a return value and a possible reason of failure
         """
-        file_names = file_names if file_names else None
         try:
             self.wss.irmt_thread.drive_oq_engine_server()
             drive_engine_dlg = \
