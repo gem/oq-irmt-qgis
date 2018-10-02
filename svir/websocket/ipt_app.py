@@ -381,7 +381,7 @@ class IptApp(WebApp):
                  'reason': 'ok'}
         """
         app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
-        abs_dest_names = []
+        dest_files = []
 
         for item in content:
             item_type, dest_name, src_file_smth = item
@@ -400,13 +400,15 @@ class IptApp(WebApp):
                 if not dir_is_legal(app_dir, abs_src_file_dir):
                     msg = 'Unable to write %s' % src_file_path
                     return {'success': False, 'content': None, 'reason': msg}
-                abs_dest_names.append(abs_src_file_path)
+                dest_files.append(
+                    {'path': abs_src_file_path, 'name': dest_name})
 
             elif item_type == 'string':
                 src_file_content = src_file_smth
                 with open(abs_dest_name, 'w') as f:
                     f.write(src_file_content)
-                abs_dest_names.append(abs_dest_name)
+                dest_files.append(
+                    {'path': abs_dest_name, 'name': dest_name})
 
             else:
                 msg = ('Content type must be "string" or "file".'
@@ -422,9 +424,11 @@ class IptApp(WebApp):
         if not dir_is_legal(app_dir, abs_zip_dir):
             msg = 'Unable to write %s' % zip_name
             return {'success': False, 'content': None, 'reason': msg}
+
         with zipfile.ZipFile(abs_zip_name, 'w') as zipped_file:
-            for abs_dest_name in abs_dest_names:
-                zipped_file.write(abs_dest_name)
+            for dest_file in dest_files:
+                zipped_file.write(dest_file['path'], arcname=dest_file['name'])
+
         return {'success': True,
                 'content': os.path.join('temp', zip_name),
                 'reason': 'ok'}
