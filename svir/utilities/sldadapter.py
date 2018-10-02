@@ -180,21 +180,21 @@ def getGsCompatibleSld(layer, style_name):
  #  312   if ( mScaleMinDenom != 0 )
  #  313   {
  #  314     bool ok;
- #  315     int parentScaleMinDenom = props.value( "scaleMinDenom", "0" ).toInt( &ok );
+ #  315     int parentScaleMinDenom = props.value( "minimumScale", "0" ).toInt( &ok );
  #  316     if ( !ok || parentScaleMinDenom <= 0 )
- #  317       props[ "scaleMinDenom" ] = QString::number( mScaleMinDenom );
+ #  317       props[ "minimumScale" ] = QString::number( mScaleMinDenom );
  #  318     else
- #  319       props[ "scaleMinDenom" ] = QString::number( qMax( parentScaleMinDenom, mScaleMinDenom ) );
+ #  319       props[ "minimumScale" ] = QString::number( qMax( parentScaleMinDenom, mScaleMinDenom ) );
  #  320   }
  #  321
  #  322   if ( mScaleMaxDenom != 0 )
  #  323   {
  #  324     bool ok;
- #  325     int parentScaleMaxDenom = props.value( "scaleMaxDenom", "0" ).toInt( &ok );
+ #  325     int parentScaleMaxDenom = props.value( "maximumScale", "0" ).toInt( &ok );
  #  326     if ( !ok || parentScaleMaxDenom <= 0 )
- #  327       props[ "scaleMaxDenom" ] = QString::number( mScaleMaxDenom );
+ #  327       props[ "maximumScale" ] = QString::number( mScaleMaxDenom );
  #  328     else
- #  329       props[ "scaleMaxDenom" ] = QString::number( qMin( parentScaleMaxDenom, mScaleMaxDenom ) );
+ #  329       props[ "maximumScale" ] = QString::number( qMin( parentScaleMaxDenom, mScaleMaxDenom ) );
  #  330   }
  #  331
  #  332   if ( mSymbol )
@@ -231,18 +231,18 @@ def getGsCompatibleSld(layer, style_name):
  #  363       QgsSymbolLayerUtils::createFunctionElement( doc, ruleElem, props.value( "filter", "" ) );
  #  364     }
  #  365
- #  366     if ( !props.value( "scaleMinDenom", "" ).isEmpty() )
+ #  366     if ( !props.value( "minimumScale", "" ).isEmpty() )
  #  367     {
- #  368       QDomElement scaleMinDenomElem = doc.createElement( "se:MinScaleDenominator" );
- #  369       scaleMinDenomElem.appendChild( doc.createTextNode( props.value( "scaleMinDenom", "" ) ) );
- #  370       ruleElem.appendChild( scaleMinDenomElem );
+ #  368       QDomElement minimumScaleElem = doc.createElement( "se:MinScaleDenominator" );
+ #  369       minimumScaleElem.appendChild( doc.createTextNode( props.value( "minimumScale", "" ) ) );
+ #  370       ruleElem.appendChild( minimumScaleElem );
  #  371     }
  #  372
- #  373     if ( !props.value( "scaleMaxDenom", "" ).isEmpty() )
+ #  373     if ( !props.value( "maximumScale", "" ).isEmpty() )
  #  374     {
- #  375       QDomElement scaleMaxDenomElem = doc.createElement( "se:MaxScaleDenominator" );
- #  376       scaleMaxDenomElem.appendChild( doc.createTextNode( props.value( "scaleMaxDenom", "" ) ) );
- #  377       ruleElem.appendChild( scaleMaxDenomElem );
+ #  375       QDomElement maximumScaleElem = doc.createElement( "se:MaxScaleDenominator" );
+ #  376       maximumScaleElem.appendChild( doc.createTextNode( props.value( "maximumScale", "" ) ) );
+ #  377       ruleElem.appendChild( maximumScaleElem );
  #  378     }
  #  379
  #  380     mSymbol->toSld( doc, ruleElem, props );
@@ -340,7 +340,6 @@ def getStyleAsSld(layer, styleName):
         return None
 
 
-# TODO FIX for QGIS3
 def rule_to_sld(rule, document, element, props):
     if (hasattr(rule, 'symbols') and rule.symbols()  # working before QGIS 2.12
             or hasattr(rule, 'symbols2') and rule.symbols2()):  # working after
@@ -351,30 +350,30 @@ def rule_to_sld(rule, document, element, props):
             else:
                 props['filter'] = ""
             props['filter'] += rule.filterExpression()
-        scaleMinDenom = rule.scaleMinDenom()
-        if scaleMinDenom != 0:
+        minimumScale = rule.minimumScale()
+        if minimumScale != 0:
             ok = True
             try:
-                parentScaleMinDenom = int(props.get('scaleMinDenom', '0'))
+                parentScaleMinDenom = int(props.get('minimumScale', '0'))
             except ValueError:
                 ok = False
             if not ok or parentScaleMinDenom <= 0:
-                props['scaleMinDenom'] = str(scaleMinDenom)
+                props['minimumScale'] = str(minimumScale)
             else:
-                props['scaleMinDenom'] = str(
-                    max(parentScaleMinDenom, scaleMinDenom))
-        scaleMaxDenom = rule.scaleMaxDenom()
-        if scaleMaxDenom != 0:
+                props['minimumScale'] = str(
+                    max(parentScaleMinDenom, minimumScale))
+        maximumScale = rule.maximumScale()
+        if maximumScale != 0:
             ok = True
             try:
-                parentScaleMaxDenom = int(props.get('scaleMaxDenom', '0'))
+                parentScaleMaxDenom = int(props.get('maximumScale', '0'))
             except ValueError:
                 ok = False
             if not ok or parentScaleMaxDenom <= 0:
-                props['scaleMaxDenom'] = str(scaleMaxDenom)
+                props['maximumScale'] = str(maximumScale)
             else:
-                props['scaleMaxDenom'] = str(
-                    min(parentScaleMaxDenom, scaleMaxDenom))
+                props['maximumScale'] = str(
+                    min(parentScaleMaxDenom, maximumScale))
 
         if rule.symbol():
             ruleNode = document.createElement("sld:Rule")
@@ -402,15 +401,15 @@ def rule_to_sld(rule, document, element, props):
             if 'filter' in props:
                 createFunctionElement(
                     document, ruleNode, props.get('filter', ''))
-            if props.get('scaleMinDenom', ''):
+            if props.get('minimumScale', ''):
                 sminNode = document.createElement("sld:MinScaleDenominator")
                 sminNode.appendChild(
-                    document.createTextNode(props['scaleMinDenom']))
+                    document.createTextNode(props['minimumScale']))
                 descrNode.appendChild(sminNode)
-            if props.get('scaleMaxDenom', ''):
+            if props.get('maximumScale', ''):
                 smaxNode = document.createElement("sld:MaxScaleDenominator")
                 smaxNode.appendChild(
-                    document.createTextNode(props['scaleMaxDenom']))
+                    document.createTextNode(props['maximumScale']))
                 descrNode.appendChild(smaxNode)
             symbolv2_to_sld(rule.symbol(), document, ruleNode, props)
 #  379
@@ -455,7 +454,7 @@ def encodeSldUom(outputUnit, scaleFactor):
 def symbolLayer_to_sld(symbolLayer, document, element, props):
     if (not hasattr(symbolLayer, 'brushStyle')
             or symbolLayer.brushStyle() == Qt.NoBrush
-            and symbolLayer.borderStyle() == Qt.NoPen):
+            and symbolLayer.strokeStyle() == Qt.NoPen):
         return
     symbolizerElem = document.createElement('sld:PolygonSymbolizer')
     if 'uom' in props:
@@ -469,13 +468,13 @@ def symbolLayer_to_sld(symbolLayer, document, element, props):
         symbolizerElem.appendChild(fillElem)
         fill_to_sld(symbolLayer, document, fillElem,
                     symbolLayer.brushStyle(), symbolLayer.color())
-    if symbolLayer.borderStyle() != Qt.NoPen:
+    if symbolLayer.strokeStyle() != Qt.NoPen:
         # stroke
         strokeElem = document.createElement('sld:Stroke')
         symbolizerElem.appendChild(strokeElem)
         # TODO: Add dash style and other parameters
         line_to_sld(document, strokeElem, symbolLayer.dxfPenStyle(),
-                    symbolLayer.borderColor(), symbolLayer.borderWidth(),
+                    symbolLayer.strokeColor(), symbolLayer.strokeWidth(),
                     symbolLayer.penJoinStyle(),  # penCapStyle,
                     symbolLayer.dxfCustomDashPattern()[0],
                     symbolLayer.offset())
@@ -700,12 +699,12 @@ def fill_to_sld(symbolLayer, document, element, brushStyle, color):
     graphicElem = document.createElement('sld:Graphic')
     element.appendChild(graphicElem)
     fillColor = color if patternName.startswith('brush://') else Qt.QColor()
-    borderColor = \
+    strokeColor = \
         color if not patternName.startswith('brush://') else Qt.QColor()
     # Use WellKnownName tag to handle QT brush styles.
     QgsSymbolLayerUtils.wellKnownMarkerToSld(
         document, graphicElem, patternName, fillColor,
-        borderColor, Qt.SolidLine, -1, -1)
+        strokeColor, Qt.SolidLine, -1, -1)
 
 
 def createGeometryElement(document, element, geomFunc):
@@ -756,7 +755,7 @@ def createFunctionElement(document, element, function):
         return False
     filterElem = QgsOgcUtils.expressionToOgcFilter(expr, document)
     if filterElem:
-        element.appendChild(filterElem[0])  # TODO: check filterElem tuple
+        element.appendChild(filterElem)  # NOTE: in qgis2 filterElem was tuple
     return True
 
 # bool QgsSymbolLayerUtils::createFunctionElement( QDomDocument &doc, QDomElement &element, QString function )

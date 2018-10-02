@@ -252,11 +252,11 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.load_selected_only_ckb.setChecked(True)
         self.vlayout.addWidget(self.load_selected_only_ckb)
 
-    def create_show_return_time_ckb(self):
-        self.show_return_time_chk = QCheckBox(
+    def create_show_return_period_ckb(self):
+        self.show_return_period_chk = QCheckBox(
             "Show the return time in layer names")
-        self.show_return_time_chk.setChecked(False)
-        self.vlayout.addWidget(self.show_return_time_chk)
+        self.show_return_period_chk.setChecked(False)
+        self.vlayout.addWidget(self.show_return_period_chk)
 
     def create_save_as_shp_ckb(self):
         self.save_as_shp_ckb = QCheckBox("Save the loaded layer as shapefile")
@@ -426,7 +426,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                        ' Server.') % self.output_type
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
             else:
-                return investigation_time
+                # We must cast to 'str' to keep numerical padding
+                # after saving the project
+                return str(investigation_time)
         else:
             # some outputs do not need the investigation time
             return None
@@ -468,6 +470,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         irmt_version = get_irmt_version()
         self.layer.setCustomProperty('irmt_version', irmt_version)
         self.layer.setCustomProperty('calc_id', self.calc_id)
+        if poe is not None:
+            self.layer.setCustomProperty('poe', poe)
         QgsProject.instance().addMapLayer(self.layer)
         self.iface.setActiveLayer(self.layer)
         self.iface.zoomToActiveLayer()
