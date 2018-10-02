@@ -25,6 +25,7 @@
 import os
 import traceback
 import shutil
+import zipfile
 from shutil import copy, rmtree
 from qgis.PyQt.QtWidgets import QFileDialog
 from qgis.PyQt.QtCore import QSettings, QDir, QFileInfo, QUrl
@@ -370,7 +371,7 @@ class IptApp(WebApp):
         else:
             return {'success': True, 'content': None, 'reason': 'ok'}
 
-    def build_zip(self, api_uuid, content, zipname):
+    def build_zip(self, api_uuid, content, zip_name):
         """
         content = [[<"file"|"string">, <dest-name>,
                     <src-file-path|src-file-content>][, ...]]
@@ -379,7 +380,53 @@ class IptApp(WebApp):
         Return: {'success': True, 'content': <dest-file-fullname>,
                  'reason': 'ok'}
         """
-        return {'success': True, 'content': '<dest-file-fullname>',
+        app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
+        abs_dest_names = []
+
+        for item in content:
+            item_type, dest_name, src_file_smth = item
+            abs_dest_name = os.path.abspath(
+                os.path.join(app_dir, dest_name))
+            dest_file_dir = os.path.dirname(abs_dest_name)
+            if not dir_is_legal(app_dir, dest_file_dir):
+                msg = 'Unable to write %s' % dest_name
+                return {'success': False, 'content': None, 'reason': msg}
+
+            if item_type == 'file':
+                src_file_path = src_file_smth
+                abs_src_file_path = os.path.abspath(
+                    os.path.join(app_dir, src_file_path))
+                abs_src_file_dir = os.path.dirname(abs_src_file_path)
+                if not dir_is_legal(app_dir, abs_src_file_dir):
+                    msg = 'Unable to write %s' % src_file_path
+                    return {'success': False, 'content': None, 'reason': msg}
+                abs_dest_names.append(abs_src_file_path)
+
+            elif item_type == 'string':
+                src_file_content = src_file_smth
+                with open(abs_dest_name, 'w') as f:
+                    f.write(src_file_content)
+                abs_dest_names.append(abs_dest_name)
+
+            else:
+                msg = ('Content type must be "string" or "file".'
+                       ' "%s" is invalid.' % item_type)
+                return {'success': False, 'content': None, 'reason': msg}
+
+        abs_temp_path = os.path.abspath(os.path.join(app_dir, 'temp'))
+        if not os.path.exists(abs_temp_path):
+            os.makedirs(abs_temp_path)
+
+        abs_zip_name = os.path.abspath(os.path.join(app_dir, 'temp', zip_name))
+        abs_zip_dir = os.path.dirname(abs_zip_name)
+        if not dir_is_legal(app_dir, abs_zip_dir):
+            msg = 'Unable to write %s' % zip_name
+            return {'success': False, 'content': None, 'reason': msg}
+        with zipfile.ZipFile(abs_zip_name, 'w') as zipped_file:
+            for abs_dest_name in abs_dest_names:
+                zipped_file.write(abs_dest_name)
+        return {'success': True,
+                'content': os.path.join('temp', zip_name),
                 'reason': 'ok'}
 
     # def delegate_download_old(self, action_url, method, headers, data,
