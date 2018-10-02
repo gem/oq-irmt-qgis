@@ -277,12 +277,14 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             {'label': 'Console', 'bg_color': '#3cb3c5', 'txt_color': 'white'},
             {'label': 'Remove', 'bg_color': '#d9534f', 'txt_color': 'white'},
             {'label': 'Outputs', 'bg_color': '#3cb3c5', 'txt_color': 'white'},
-            {'label': 'Continue', 'bg_color': 'white', 'txt_color': 'black'}
+            {'label': 'Continue', 'bg_color': 'white', 'txt_color': 'black'},
+            {'label': 'Abort', 'bg_color': '#d9534f', 'txt_color': 'white'},
         ]
         self.calc_list_tbl.clearContents()
         self.calc_list_tbl.setRowCount(len(self.calc_list))
         self.calc_list_tbl.setColumnCount(len(selected_keys) + len(actions))
         for row, calc in enumerate(self.calc_list):
+            calc_status = calc['status']
             for col, key in enumerate(selected_keys):
                 item = QTableWidgetItem()
                 try:
@@ -301,25 +303,37 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 # set default colors
                 row_bg_color = Qt.white
                 row_txt_color = Qt.black
-                if calc['status'] == 'failed':
+                if calc_status == 'failed':
                     row_bg_color = QColor('#f2dede')
-                elif calc['status'] == 'complete':
+                elif calc_status == 'complete':
                     row_bg_color = QColor('#dff0d8')
                 item.setBackground(row_bg_color)
                 item.setForeground(QBrush(row_txt_color))
                 self.calc_list_tbl.setItem(row, col, item)
             for col, action in enumerate(actions, len(selected_keys)):
-                # display the Continue and Output buttons only if the
-                # computation is completed
-                if (calc['status'] != 'complete' and
-                        action['label'] in ('Continue', 'Outputs')):
+                btn_lbl = action['label']
+
+                # Do not display the Abort button unless the calc is running
+                if btn_lbl == 'Abort' and not calc['is_running']:
                     continue
+
+                # Display the Remove button only if calc is failed or complete
+                if btn_lbl == 'Remove' and calc_status not in ('failed',
+                                                               'complete'):
+                    continue
+
+                # Display the Outputs and Continue buttons
+                # only if the calc is complete
+                if (btn_lbl in ('Outputs', 'Continue') and
+                        calc_status != 'complete'):
+                    continue
+
                 button = QPushButton()
-                button.setText(action['label'])
+                button.setText(btn_lbl)
                 style = 'background-color: %s; color: %s' % (
                     action['bg_color'], action['txt_color'])
                 button.setStyleSheet(style)
-                button.clicked.connect(lambda checked=False, calc_id=calc['id'], action=action['label']: (  # NOQA
+                button.clicked.connect(lambda checked=False, calc_id=calc['id'], action=btn_lbl: (  # NOQA
                     self.on_calc_action_btn_clicked(calc_id, action)))
                 self.calc_list_tbl.setCellWidget(row, col, button)
                 self.calc_list_tbl.setColumnWidth(col, BUTTON_WIDTH)
@@ -421,6 +435,16 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             self.console_dlg.setWindowTitle(
                 'Console log of calculation %s' % calc_id)
             self.console_dlg.show()
+        elif action == 'Abort':
+            confirmed = QMessageBox.question(
+                self,
+                'Abort calculation?',
+                'The calculation will be aborted. Are you sure?',
+                QMessageBox.Yes | QMessageBox.No)
+            if confirmed == QMessageBox.Yes:
+                self.remove_calc(calc_id, abort=True)
+                if self.current_calc_id == calc_id:
+                    self.clear_output_list()
         elif action == 'Remove':
             confirmed = QMessageBox.question(
                 self,
@@ -470,16 +494,19 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             calc_status = json.loads(resp.text)
         return calc_status
 
-    def remove_calc(self, calc_id):
-        calc_remove_url = "%s/v1/calc/%s/remove" % (self.hostname, calc_id)
-        with WaitCursorManager('Removing calculation...', self.message_bar):
+    def remove_calc(self, calc_id, abort=False):
+        method = 'abort' if abort else 'remove'
+        url = "%s/v1/calc/%s/%s" % (self.hostname, calc_id, method)
+        msg = 'Aborting calculation...' if abort else 'Removing calculation...'
+        with WaitCursorManager(msg, self.message_bar):
             try:
-                resp = self.session.post(calc_remove_url, timeout=10)
+                resp = self.session.post(url, timeout=10)
             except HANDLED_EXCEPTIONS as exc:
                 self._handle_exception(exc)
                 return
         if resp.ok:
-            msg = 'Calculation %s successfully removed' % calc_id
+            verb = 'aborted' if abort else 'removed'
+            msg = 'Calculation %s successfully %s' % (calc_id, verb)
             log_msg(msg, level='S', message_bar=self.message_bar)
             if self.current_calc_id == calc_id:
                 self.current_calc_id = None
@@ -489,7 +516,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 self.clear_output_list()
             self.refresh_calc_list()
         else:
-            msg = 'Unable to remove calculation %s' % calc_id
+            msg = 'Unable to %s calculation %s' % (method, calc_id)
             log_msg(msg, level='C', message_bar=self.message_bar)
         return
 
