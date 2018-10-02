@@ -424,13 +424,17 @@ class IptApp(WebApp):
             msg = 'Unable to write %s' % zip_name
             return {'success': False, 'content': None, 'reason': msg}
 
-        with zipfile.ZipFile(abs_zip_name, 'w') as zipped_file:
-            for dest_file in dest_files:
-                zipped_file.write(dest_file['path'], arcname=dest_file['name'])
-
-        return {'success': True,
-                'content': os.path.join('temp', zip_name),
-                'reason': 'ok'}
+        try:
+            with zipfile.ZipFile(abs_zip_name, 'w') as zipped_file:
+                for dest_file in dest_files:
+                    zipped_file.write(dest_file['path'], arcname=dest_file['name'])
+        except Exception as exc:
+            log_msg(traceback.format_exc(), level='C')
+            return {'success': False, 'content': None, 'reason': str(exc)}
+        else:
+            return {'success': True,
+                    'content': os.path.join('temp', zip_name),
+                    'reason': 'ok'}
 
     # def delegate_download_old(self, action_url, method, headers, data,
     #                           js_cb_func, js_cb_object_id, api_uuid=None):
