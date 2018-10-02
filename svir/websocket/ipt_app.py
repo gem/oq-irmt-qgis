@@ -351,11 +351,11 @@ class IptApp(WebApp):
 
     def run_oq_engine_calc(self, api_uuid, rel_paths=None):
         """
-        It opens the dialog showing the list of calculations on the engine
-        server, and automatically runs an oq-engine calculation, given a list
-        of input files to be collected from the app_dir
-        :param file_names: list of names of the input files
-        :returns: a dict with a return value and a possible reason of failure
+        :param rel_paths:
+            list of paths of the input files to be used to run a oq-engine
+            calculation (paths are relative to the app_dir)
+        :returns:
+            a dict with a return value and a possible reason of failure
         """
         abs_paths = None
         if rel_paths is not None:
@@ -363,7 +363,8 @@ class IptApp(WebApp):
             app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
             for rel_path in rel_paths:
                 abs_path = os.path.abspath(os.path.join(app_dir, rel_path))
-                if not dir_is_legal(app_dir, abs_path):
+                if (not dir_is_legal(app_dir, abs_path) or
+                        not os.path.isfile(abs_path)):
                     msg = 'Unable to access the file %s' % rel_path
                     return {'success': False, 'content': None, 'reason': msg}
                 abs_paths.append(abs_path)
@@ -371,9 +372,7 @@ class IptApp(WebApp):
             self.wss.irmt_thread.drive_oq_engine_server()
             drive_engine_dlg = \
                 self.wss.irmt_thread.drive_oq_engine_server_dlg
-            drive_engine_dlg.run_calc(
-                file_names=abs_paths,
-                directory=self.wss.irmt_thread.webapp_dirs[self.app_name])
+            drive_engine_dlg.run_calc(file_names=abs_paths)
         except Exception as exc:
             log_msg(traceback.format_exc(), level='C')
             return {'success': False, 'content': None, 'reason': str(exc)}
