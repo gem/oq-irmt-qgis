@@ -364,7 +364,7 @@ class IptApp(WebApp):
             for rel_path in rel_paths:
                 abs_path = os.path.abspath(os.path.join(app_dir, rel_path))
                 if not dir_is_legal(app_dir, abs_path):
-                    msg = 'Unable to access the directory %s' % rel_path
+                    msg = 'Unable to access the file %s' % rel_path
                     return {'success': False, 'content': None, 'reason': msg}
                 abs_paths.append(abs_path)
         try:
