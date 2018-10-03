@@ -326,7 +326,8 @@ class IptApp(WebApp):
             os.makedirs(full_path)
         except Exception as exc:
             log_msg(traceback.format_exc(), level='C')
-            return {'success': False, 'content': None, 'reason': str(exc)}
+            return {'success': False, 'content': None,
+                    'reason': "Unable to create the directory '%s'" % dir_name}
         else:
             return {'success': True, 'content': None, 'reason': 'ok'}
 
