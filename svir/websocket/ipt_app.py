@@ -406,15 +406,15 @@ class IptApp(WebApp):
                 if not dir_is_legal(app_dir, abs_src_file_dir):
                     msg = 'Unable to write %s' % src_file_path
                     return {'success': False, 'content': None, 'reason': msg}
-                dest_files.append(
-                    {'path': abs_src_file_path, 'name': dest_name})
+                dest_files.append({'type': 'file',
+                                   'path': abs_src_file_path,
+                                   'name': dest_name})
 
             elif item_type == 'string':
                 src_file_content = src_file_smth
-                with open(abs_dest_name, 'w') as f:
-                    f.write(src_file_content)
-                dest_files.append(
-                    {'path': abs_dest_name, 'name': dest_name})
+                dest_files.append({'type': 'string',
+                                   'content': src_file_content,
+                                   'name': dest_name})
 
             else:
                 msg = ('Content type must be "string" or "file".'
@@ -434,8 +434,16 @@ class IptApp(WebApp):
         try:
             with zipfile.ZipFile(abs_zip_name, 'w') as zipped_file:
                 for dest_file in dest_files:
-                    zipped_file.write(dest_file['path'],
-                                      arcname=dest_file['name'])
+                    if dest_file['type'] == 'file':
+                        zipped_file.write(dest_file['path'],
+                                          arcname=dest_file['name'])
+                    elif dest_file['type'] == 'string':
+                        zipped_file.writestr(
+                            dest_file['name'], dest_file['content'])
+                    else:
+                        raise TypeError(
+                            'Content type must be either "file" or "string".'
+                            ' %s found.' % dest_file['type'])
         except Exception as exc:
             log_msg(traceback.format_exc(), level='C')
             return {'success': False, 'content': None, 'reason': str(exc)}
