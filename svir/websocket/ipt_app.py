@@ -70,7 +70,8 @@ class IptApp(WebApp):
                 checksum_file_path, local_checksum)
         except Exception as exc:
             log_msg(traceback.format_exc(), level='C')
-            return {'success': False, 'content': None, 'reason': str(exc)}
+            msg = 'An error occurred. Please see the IRMT log for details.'
+            return {'success': False, 'content': None, 'reason': msg}
         else:
             return {'success': True, 'content': on_same_fs, 'reason': 'ok'}
         finally:
@@ -122,7 +123,8 @@ class IptApp(WebApp):
             ls = [os.path.basename(file_name) for file_name in file_names]
         except Exception as exc:
             log_msg(traceback.format_exc(), level='C')
-            return {'success': False, 'content': None, 'reason': str(exc)}
+            msg = 'An error occurred. Please see the IRMT log for details.'
+            return {'success': False, 'content': None, 'reason': msg}
         else:
             return {'success': True, 'content': ls, 'reason': 'ok'}
 
@@ -180,7 +182,8 @@ class IptApp(WebApp):
                 copy(file_name, full_path)
         except Exception as exc:
             log_msg(traceback.format_exc(), level='C')
-            return {'success': False, 'content': basenames, 'reason': str(exc)}
+            msg = 'An error occurred. Please see the IRMT log for details.'
+            return {'success': False, 'content': basenames, 'reason': msg}
         else:
             return {'success': True, 'content': basenames, 'reason': 'ok'}
 
@@ -201,7 +204,8 @@ class IptApp(WebApp):
                 f.write(content)
         except Exception as exc:
             log_msg(traceback.format_exc(), level='C')
-            return {'success': False, 'content': None, 'reason': str(exc)}
+            msg = 'An error occurred. Please see the IRMT log for details.'
+            return {'success': False, 'content': None, 'reason': msg}
         else:
             return {'success': True, 'content': None, 'reason': 'ok'}
 
@@ -221,7 +225,8 @@ class IptApp(WebApp):
                 content = f.read()
         except Exception as exc:
             log_msg(traceback.format_exc(), level='C')
-            return {'success': False, 'content': None, 'reason': str(exc)}
+            msg = 'An error occurred. Please see the IRMT log for details.'
+            return {'success': False, 'content': None, 'reason': msg}
         else:
             return {'success': True, 'content': content, 'reason': 'ok'}
 
@@ -262,7 +267,8 @@ class IptApp(WebApp):
             self.wss.irmt_thread.get_webapp_dirs()
         except Exception as exc:
             log_msg(traceback.format_exc(), level='C')
-            resp = {'success': False, 'content': None, 'reason': str(exc)}
+            msg = 'An error occurred. Please see the IRMT log for details.'
+            resp = {'success': False, 'content': None, 'reason': msg}
         else:
             resp = {'success': True, 'content': None, 'reason': 'ok'}
         return resp
@@ -326,8 +332,8 @@ class IptApp(WebApp):
             os.makedirs(full_path)
         except Exception as exc:
             log_msg(traceback.format_exc(), level='C')
-            return {'success': False, 'content': None,
-                    'reason': "Unable to create the directory '%s'" % dir_name}
+            msg = 'An error occurred. Please see the IRMT log for details.'
+            return {'success': False, 'content': None, 'reason': msg}
         else:
             return {'success': True, 'content': None, 'reason': 'ok'}
 
@@ -344,7 +350,8 @@ class IptApp(WebApp):
             shutil.rmtree(full_path)
         except Exception as exc:
             log_msg(traceback.format_exc(), level='C')
-            return {'success': False, 'content': None, 'reason': str(exc)}
+            msg = 'An error occurred. Please see the IRMT log for details.'
+            return {'success': False, 'content': None, 'reason': msg}
         else:
             return {'success': True, 'content': None, 'reason': 'ok'}
 
@@ -374,7 +381,8 @@ class IptApp(WebApp):
             drive_engine_dlg.run_calc(file_names=abs_paths)
         except Exception as exc:
             log_msg(traceback.format_exc(), level='C')
-            return {'success': False, 'content': None, 'reason': str(exc)}
+            msg = 'An error occurred. Please see the IRMT log for details.'
+            return {'success': False, 'content': None, 'reason': msg}
         else:
             return {'success': True, 'content': None, 'reason': 'ok'}
 
@@ -446,7 +454,8 @@ class IptApp(WebApp):
                             ' %s found.' % dest_file['type'])
         except Exception as exc:
             log_msg(traceback.format_exc(), level='C')
-            return {'success': False, 'content': None, 'reason': str(exc)}
+            msg = 'An error occurred. Please see the IRMT log for details.'
+            return {'success': False, 'content': None, 'reason': msg}
         else:
             return {'success': True,
                     'content': os.path.join('temp', zip_name),
@@ -556,7 +565,8 @@ class IptApp(WebApp):
             result = {'success': True, 'content': None, 'reason': 'started'}
         except Exception as exc:
             log_msg(traceback.format_exc(), level='C')
-            result = {'success': False, 'content': None, 'reason': str(exc)}
+            msg = 'An error occurred. Please see the IRMT log for details.'
+            result = {'success': False, 'content': None, 'reason': msg}
         return {'result': result, 'complete': False}
 # // hyb_msg = {'app':<app_name> , 'msg':<api_msg>}
 # // api_msg = {'msg'|'reply': <app_msg>, 'uuid':<uuid> }
@@ -595,7 +605,8 @@ class IptApp(WebApp):
             app_msg = {'result': result, 'complete': True}
         except Exception as exc:
             log_msg(traceback.format_exc(), level='C')
-            result = {'success': False, 'content': None, 'reason': str(exc)}
+            msg = 'An error occurred. Please see the IRMT log for details.'
+            result = {'success': False, 'content': None, 'reason': msg}
             app_msg = {'result': result, 'complete': True}
         api_msg = {'reply': app_msg, 'uuid': uuid}
         self.send(api_msg)
