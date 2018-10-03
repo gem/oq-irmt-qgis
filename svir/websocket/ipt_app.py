@@ -324,7 +324,6 @@ class IptApp(WebApp):
                 msg = 'Unable to create the directory %s' % dir_name
                 return {'success': False, 'content': None, 'reason': msg}
             os.makedirs(full_path)
-            print(os.listdir(app_dir))
         except Exception as exc:
             log_msg(traceback.format_exc(), level='C')
             return {'success': False, 'content': None, 'reason': str(exc)}
@@ -342,7 +341,6 @@ class IptApp(WebApp):
                 msg = 'Unable to delete the directory %s' % dir_name
                 return {'success': False, 'content': None, 'reason': msg}
             shutil.rmtree(full_path)
-            print(os.listdir(app_dir))
         except Exception as exc:
             log_msg(traceback.format_exc(), level='C')
             return {'success': False, 'content': None, 'reason': str(exc)}
@@ -519,7 +517,6 @@ class IptApp(WebApp):
             #                  ).toEncoded().split('/')[:-1]]), action_url)
             #     qurl = QUrl(url)
             qurl = QUrl(action_url)
-            print('qurl: %s' % qurl)
             # manager = self.wss.irmt_thread.web_view.page().networkAccessManager()
             gem_header_name = b"Gem--Qgis-Oq-Irmt--Ipt"
             gem_header_value = b"0.1.0"
@@ -537,9 +534,6 @@ class IptApp(WebApp):
                 name = header['name'].encode('utf-8')
                 value = header['value'].encode('utf-8')
                 request.setRawHeader(name, value)
-                print(name)
-                print(value)
-            print(headers)
             multipart = QHttpMultiPart(QHttpMultiPart.FormDataType)
             for d in data:
                 part = QHttpPart()
@@ -551,8 +545,6 @@ class IptApp(WebApp):
             # reply = manager.post(request)
             # # NOTE: needed to avoid segfault!
             multipart.setParent(reply)  # delete the multiPart with the reply
-            print('Right after POST')
-            print(reply)
             result = {'success': True, 'content': None, 'reason': 'started'}
         except Exception as exc:
             log_msg(traceback.format_exc(), level='C')
@@ -564,9 +556,6 @@ class IptApp(WebApp):
 
     def manager_finished_cb(self, reply):
         try:
-            print('*' * 20)
-            print('manager_finished_cb')
-            print(reply)
             file_name = None
             uuid = reply.request().attribute(
                 REQUEST_ATTRS['uuid'], None)
@@ -582,7 +571,6 @@ class IptApp(WebApp):
                 'Content-Disposition'.encode('utf-8'))
             # expected format: 'attachment; filename="exposure_model.xml"'
             # sanity check
-            print(content_disposition)
             if 'filename'.encode('utf-8') not in content_disposition:
                 # resp = {
                 #    'success': True, 'content': file_name, 'reason': 'ok'}
@@ -590,9 +578,7 @@ class IptApp(WebApp):
                 #                 'File name not found')
                 return
             file_name = str(content_disposition.split('"')[1], 'utf-8')
-            print(file_name)
             file_content = str(reply.readAll(), 'utf-8')
-            print(file_content)
             app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
             with open(os.path.join(app_dir, file_name), "w") as f:
                 f.write(file_content)
