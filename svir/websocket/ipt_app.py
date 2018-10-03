@@ -392,12 +392,6 @@ class IptApp(WebApp):
 
         for item in content:
             item_type, dest_name, src_file_smth = item
-            abs_dest_name = os.path.abspath(
-                os.path.join(app_dir, dest_name))
-            dest_file_dir = os.path.dirname(abs_dest_name)
-            if not dir_is_legal(app_dir, dest_file_dir):
-                msg = 'Unable to write %s' % dest_name
-                return {'success': False, 'content': None, 'reason': msg}
 
             if item_type == 'file':
                 src_file_path = src_file_smth
