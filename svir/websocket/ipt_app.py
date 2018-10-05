@@ -396,38 +396,6 @@ class IptApp(WebApp):
                  'reason': 'ok'}
         """
         app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
-        dest_files = []
-
-        for item in content:
-            item_type, dest_name, src_file_smth = item
-
-            norm_dest_name = os.path.normpath(dest_name)
-            if norm_dest_name.startswith(os.pardir):
-                msg = 'Illegal path %s' % dest_name
-                return {'success': False, 'content': None, 'reason': msg}
-
-            if item_type == 'file':
-                src_file_path = src_file_smth
-                abs_src_file_path = os.path.abspath(
-                    os.path.join(app_dir, src_file_path))
-                abs_src_file_dir = os.path.dirname(abs_src_file_path)
-                if not dir_is_legal(app_dir, abs_src_file_dir):
-                    msg = 'Unable to write %s' % src_file_path
-                    return {'success': False, 'content': None, 'reason': msg}
-                dest_files.append({'type': 'file',
-                                   'path': abs_src_file_path,
-                                   'name': norm_dest_name})
-
-            elif item_type == 'string':
-                src_file_content = src_file_smth
-                dest_files.append({'type': 'string',
-                                   'content': src_file_content,
-                                   'name': norm_dest_name})
-
-            else:
-                msg = ('Content type must be "string" or "file".'
-                       ' "%s" is invalid.' % item_type)
-                return {'success': False, 'content': None, 'reason': msg}
 
         abs_temp_path = os.path.abspath(os.path.join(app_dir, 'temp'))
         if not os.path.exists(abs_temp_path):
@@ -441,17 +409,39 @@ class IptApp(WebApp):
 
         try:
             with zipfile.ZipFile(abs_zip_name, 'w') as zipped_file:
-                for dest_file in dest_files:
-                    if dest_file['type'] == 'file':
-                        zipped_file.write(dest_file['path'],
-                                          arcname=dest_file['name'])
-                    elif dest_file['type'] == 'string':
-                        zipped_file.writestr(
-                            dest_file['name'], dest_file['content'])
+                for item in content:
+                    item_type, dest_name, src_file_smth = item
+
+                    norm_dest_name = os.path.normpath(dest_name)
+                    if norm_dest_name.startswith(os.pardir):
+                        msg = 'Illegal path %s' % dest_name
+                        return {'success': False,
+                                'content': None,
+                                'reason': msg}
+
+                    if item_type == 'file':
+                        src_file_path = src_file_smth
+                        abs_src_file_path = os.path.abspath(
+                            os.path.join(app_dir, src_file_path))
+                        abs_src_file_dir = os.path.dirname(abs_src_file_path)
+                        if not dir_is_legal(app_dir, abs_src_file_dir):
+                            msg = 'Unable to write %s' % src_file_path
+                            return {'success': False,
+                                    'content': None,
+                                    'reason': msg}
+                        zipped_file.write(abs_src_file_path,
+                                          arcname=norm_dest_name)
+
+                    elif item_type == 'string':
+                        src_file_content = src_file_smth
+                        zipped_file.writestr(norm_dest_name, src_file_content)
+
                     else:
-                        raise TypeError(
-                            'Content type must be either "file" or "string".'
-                            ' %s found.' % dest_file['type'])
+                        msg = ('Content type must be "string" or "file".'
+                               ' "%s" is invalid.' % item_type)
+                        return {'success': False,
+                                'content': None,
+                                'reason': msg}
         except Exception as exc:
             log_msg(traceback.format_exc(), level='C')
             msg = 'An error occurred. Please see the IRMT log for details.'
