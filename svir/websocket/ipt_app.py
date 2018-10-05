@@ -28,7 +28,7 @@ import shutil
 import zipfile
 from shutil import copy, rmtree
 from qgis.PyQt.QtWidgets import QFileDialog
-from qgis.PyQt.QtCore import QSettings, QDir, QFileInfo, QUrl
+from qgis.PyQt.QtCore import QSettings, QDir, QFileInfo, QUrl, QStandardPaths
 from qgis.PyQt.QtNetwork import (
     QNetworkRequest, QHttpMultiPart, QHttpPart, QNetworkAccessManager)
 from qgis.PyQt.QtGui import QIcon
@@ -59,7 +59,7 @@ class IptApp(WebApp):
             'save_str_to_file', 'clear_dir',
             'select_and_copy_file_to_dir',
             'create_dir', 'delete_dir',
-            'delegate_download', 'build_zip']
+            'delegate_download', 'build_zip', 'save_as']
         self.allowed_meths.extend(ipt_allowed_meths)
 
     def on_same_fs(self, api_uuid):
@@ -392,12 +392,12 @@ class IptApp(WebApp):
 
     def build_zip(self, api_uuid, content, zip_name):
         """
-        content = [[<"file"|"string">, <dest-name>,
-                    <src-file-path|src-file-content>][, ...]]
-        zipname = <file-name>
-
-        Return: {'success': True, 'content': <dest-file-fullname>,
-                 'reason': 'ok'}
+        :param content:
+            [[<"file"|"string">, <dest-name>, <src-file-path|src-file-content>]
+             , [...]]
+        :param zip_name: <file-name>
+        :returns:
+            {'success': True, 'content': <dest-file-fullname>, 'reason': 'ok'}
         """
         app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
 
@@ -454,6 +454,48 @@ class IptApp(WebApp):
             return {'success': True,
                     'content': os.path.join('temp', zip_name),
                     'reason': 'ok'}
+
+    def save_as(self, api_uuid, file_src, suggested_name):
+        """
+        Opens a file browser to save the file-src, setting as default name
+        the suggested-name. By default, the directory to save the file into
+        is the system Downloads directory. In case the Downloads directory is
+        not found, the user home directory is used instead, as fallback.
+        :param file_src: path of the source file to be copied
+        :param suggested_name: suggested name for the file to be created
+        :returns:
+            {'success': True, 'content': None, 'reason': 'ok'}
+        """
+        app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
+        rel_dir_src = os.path.dirname(file_src)
+        full_dir_src = os.path.abspath(os.path.join(app_dir, rel_dir_src))
+        if not dir_is_legal(app_dir, full_dir_src):
+            msg = 'Unable to access the directory %s' % rel_dir_src
+            return {'success': False, 'content': None, 'reason': msg}
+        full_path_src = os.path.join(full_dir_src, os.path.basename(file_src))
+        if not os.path.isfile(full_path_src):
+            msg = '%s is not a file' % file_src
+            return {'success': False, 'content': None, 'reason': msg}
+        try:
+            dest_dir = QStandardPaths.standardLocations(
+                QStandardPaths.DownloadLocation)[0]
+        except Exception:
+            dest_dir = os.path.expanduser("~")
+        default_dest_name = os.path.join(
+            dest_dir, os.path.basename(suggested_name))
+        dest_file, _ = QFileDialog.getSaveFileName(
+            self.wss.irmt_thread.parent(), 'Save as...', default_dest_name)
+        if not dest_file:
+            msg = 'Canceled'
+            return {'success': False, 'content': None, 'reason': msg}
+        try:
+            copy(full_path_src, dest_file)
+        except Exception as exc:
+            log_msg(traceback.format_exc(), level='C')
+            msg = 'An error occurred. Please see the IRMT log for details.'
+            return {'success': False, 'content': None, 'reason': msg}
+        else:
+            return {'success': True, 'content': None, 'reason': 'ok'}
 
     # def delegate_download_old(self, action_url, method, headers, data,
     #                           js_cb_func, js_cb_object_id, api_uuid=None):
