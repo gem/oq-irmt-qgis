@@ -37,6 +37,10 @@ from svir.utilities.utils import log_msg
 from svir.utilities.shared import REQUEST_ATTRS
 
 
+class IllegalPathException(Exception):
+    pass
+
+
 def dir_is_legal(app_dir, full_abs_path):
     return (full_abs_path.startswith(app_dir + '/') or
             full_abs_path == app_dir)
@@ -415,9 +419,7 @@ class IptApp(WebApp):
                     norm_dest_name = os.path.normpath(dest_name)
                     if norm_dest_name.startswith(os.pardir):
                         msg = 'Illegal path %s' % dest_name
-                        return {'success': False,
-                                'content': None,
-                                'reason': msg}
+                        raise IllegalPathException(msg)
 
                     if item_type == 'file':
                         src_file_path = src_file_smth
@@ -426,9 +428,7 @@ class IptApp(WebApp):
                         abs_src_file_dir = os.path.dirname(abs_src_file_path)
                         if not dir_is_legal(app_dir, abs_src_file_dir):
                             msg = 'Unable to write %s' % src_file_path
-                            return {'success': False,
-                                    'content': None,
-                                    'reason': msg}
+                            raise IllegalPathException(msg)
                         zipped_file.write(abs_src_file_path,
                                           arcname=norm_dest_name)
 
@@ -439,10 +439,14 @@ class IptApp(WebApp):
                     else:
                         msg = ('Content type must be "string" or "file".'
                                ' "%s" is invalid.' % item_type)
-                        return {'success': False,
-                                'content': None,
-                                'reason': msg}
+                        raise TypeError(msg)
+        except (IllegalPathException, TypeError) as exc:
+            if os.path.exists(abs_zip_name):
+                os.remove(abs_zip_name)
+            return {'success': False, 'content': None, 'reason': str(msg)}
         except Exception as exc:
+            if os.path.exists(abs_zip_name):
+                os.remove(abs_zip_name)
             log_msg(traceback.format_exc(), level='C')
             msg = 'An error occurred. Please see the IRMT log for details.'
             return {'success': False, 'content': None, 'reason': msg}
