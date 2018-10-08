@@ -487,15 +487,22 @@ class IptApp(WebApp):
             self.wss.irmt_thread.parent(), 'Save as...', default_dest_name)
         if not dest_file:
             msg = 'Canceled'
-            return {'success': False, 'content': None, 'reason': msg}
+            return ({'complete': True,
+                     'result': {'success': False,
+                                'content': None, 'reason': msg}})
         try:
             copy(full_path_src, dest_file)
-        except Exception as exc:
+        except Exception:
             log_msg(traceback.format_exc(), level='C')
             msg = 'An error occurred. Please see the IRMT log for details.'
-            return {'success': False, 'content': None, 'reason': msg}
+            return ({'complete': True,
+                     'result': {
+                         'success': False,
+                         'content': None, 'reason': msg}})
         else:
-            return {'success': True, 'content': None, 'reason': 'ok'}
+            return ({'complete': True,
+                     'result': {
+                         'success': True, 'content': None, 'reason': 'ok'}})
 
     # def delegate_download_old(self, action_url, method, headers, data,
     #                           js_cb_func, js_cb_object_id, api_uuid=None):
