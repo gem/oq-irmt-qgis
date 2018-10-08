@@ -307,11 +307,15 @@ class IptApp(WebApp):
         full_old_path = os.path.abspath(os.path.join(app_dir, rel_old_path))
         if not dir_is_legal(app_dir, full_old_path):
             msg = 'Unable to access the directory %s' % rel_old_path
-            return {'success': False, 'content': None, 'reason': msg}
+            return ({'complete': True,
+                     'result': {'success': False,
+                                'content': None, 'reason': msg}})
         full_new_path = os.path.abspath(os.path.join(app_dir, rel_new_path))
         if not dir_is_legal(app_dir, full_new_path):
             msg = 'Unable to access the directory %s' % rel_new_path
-            return {'success': False, 'content': None, 'reason': msg}
+            return ({'complete': True,
+                     'result': {'success': False,
+                                'content': None, 'reason': msg}})
         old_basename = os.path.basename(old_path)
         new_basename = os.path.basename(new_path)
         old_path = os.path.join(full_old_path, old_basename)
@@ -319,9 +323,13 @@ class IptApp(WebApp):
         try:
             os.rename(old_path, new_path)
         except OSError as exc:
-            return {'success': False, 'content': None, 'reason': str(exc)}
+            return ({'complete': True,
+                     'result': {'success': False,
+                                'content': None, 'reason': str(exc)}})
         else:
-            return {'success': True, 'content': None, 'reason': 'ok'}
+            return ({'complete': True,
+                     'result': {'success': True,
+                                'content': None, 'reason': 'ok'}})
 
     def create_dir(self, api_uuid, dir_name):
         """
