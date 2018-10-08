@@ -27,6 +27,7 @@ import traceback
 import shutil
 import zipfile
 from shutil import copy, rmtree
+from uuid import uuid4
 from qgis.PyQt.QtWidgets import QFileDialog
 from qgis.PyQt.QtCore import QSettings, QDir, QFileInfo, QUrl, QStandardPaths
 from qgis.PyQt.QtNetwork import (
@@ -560,6 +561,8 @@ class IptApp(WebApp):
         :param headers: list of strings
         :param data: list of dictionaries {name (string) value(string)}
         """
+
+        tmp_file = None
         try:
             # TODO: Accept also methods other than POST
             if method != 'POST':
@@ -617,7 +620,7 @@ class IptApp(WebApp):
 
     def manager_finished_cb(self, reply):
         try:
-            file_name = None
+            temp_absfile = None
             uuid = reply.request().attribute(
                 REQUEST_ATTRS['uuid'], None)
             # js_cb_object_id = reply.request().attribute(
@@ -641,15 +644,24 @@ class IptApp(WebApp):
             file_name = str(content_disposition.split('"')[1], 'utf-8')
             file_content = str(reply.readAll(), 'utf-8')
             app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
-            with open(os.path.join(app_dir, file_name), "w") as f:
+            temp_name = os.path.join('Downloads', uuid + '.tmp')
+            temp_absfile = os.path.join(app_dir, temp_name)
+            if not os.path.exists(os.path.dirname(temp_absfile)):
+                os.makedirs(os.path.dirname(temp_absfile))
+
+            with open(temp_absfile, "w") as f:
                 f.write(file_content)
             # self.call_js_cb(js_cb_func, file_name, 0)
-            result = {'success': True, 'content': file_name, 'reason': 'ok'}
-            app_msg = {'result': result, 'complete': True}
+            result = {'success': True, 'realpath': temp_name,
+                      'content': file_name, 'reason': 'ok'}
+            app_msg = {'complete': True, 'result': result}
         except Exception as exc:
+            if temp_absfile is not None and os.path.exists(temp_absfile):
+                os.remove(temp_absfile)
             log_msg(traceback.format_exc(), level='C')
             msg = 'An error occurred. Please see the IRMT log for details.'
-            result = {'success': False, 'content': None, 'reason': msg}
+            result = {'success': False, 'realpath': None,
+                      'content': None, 'reason': msg}
             app_msg = {'result': result, 'complete': True}
         api_msg = {'reply': app_msg, 'uuid': uuid}
         self.send(api_msg)
