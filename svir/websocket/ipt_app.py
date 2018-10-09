@@ -72,7 +72,7 @@ class IptApp(WebApp):
                 self.wss.irmt_thread.get_ipt_checksum()
             on_same_fs = self.wss.irmt_thread.on_same_fs(
                 checksum_file_path, local_checksum)
-        except Exception as exc:
+        except Exception:
             log_msg(traceback.format_exc(), level='C')
             msg = 'An error occurred. Please see the IRMT log for details.'
             return {'success': False, 'content': None, 'reason': msg}
@@ -599,7 +599,7 @@ class IptApp(WebApp):
             # # NOTE: needed to avoid segfault!
             multipart.setParent(reply)  # delete the multiPart with the reply
             result = {'success': True, 'content': None, 'reason': 'started'}
-        except Exception as exc:
+        except Exception:
             log_msg(traceback.format_exc(), level='C')
             msg = 'An error occurred. Please see the IRMT log for details.'
             result = {'success': False, 'content': None, 'reason': msg}
@@ -639,7 +639,7 @@ class IptApp(WebApp):
             # self.call_js_cb(js_cb_func, file_name, 0)
             result = {'success': True, 'content': file_name, 'reason': 'ok'}
             app_msg = {'result': result, 'complete': True}
-        except Exception as exc:
+        except Exception:
             log_msg(traceback.format_exc(), level='C')
             msg = 'An error occurred. Please see the IRMT log for details.'
             result = {'success': False, 'content': None, 'reason': msg}
