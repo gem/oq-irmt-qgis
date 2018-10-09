@@ -99,8 +99,12 @@ class WebApp(QObject):
 
             # FIXME: manage command exception
             ret = meth(api_uuid, *args)
+            if isinstance(ret, tuple):
+                app_msg = {'result': ret[0], 'complete': ret[1]}
+            else:
+                app_msg = {'result': ret, 'complete': True}
 
-            api_reply = {'uuid': api_uuid, 'reply': ret}
+            api_reply = {'uuid': api_uuid, 'reply': app_msg}
             self.send(api_reply)
 
     def send(self, api_msg):

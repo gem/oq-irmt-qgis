@@ -603,7 +603,7 @@ class IptApp(WebApp):
             log_msg(traceback.format_exc(), level='C')
             msg = 'An error occurred. Please see the IRMT log for details.'
             result = {'success': False, 'content': None, 'reason': msg}
-        return {'result': result, 'complete': False}
+        return (result, False)
 # // hyb_msg = {'app':<app_name> , 'msg':<api_msg>}
 # // api_msg = {'msg'|'reply': <app_msg>, 'uuid':<uuid> }
 # // app_msg = {<('command', 'args':[])|('result': <obj|bool>, complete: <True|False>)>}
