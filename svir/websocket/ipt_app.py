@@ -620,8 +620,9 @@ class IptApp(WebApp):
         return (result, False)
 # // hyb_msg = {'app':<app_name> , 'msg':<api_msg>}
 # // api_msg = {'msg'|'reply': <app_msg>, 'uuid':<uuid> }
-# // app_msg = {<('command', 'args':[])|('result': <obj|bool>, complete: <True|False>)>}
-
+# // app_msg = {<('command', 'args':[]) |
+#                ('result': <cmd_msg>, complete: <True|False>)>}
+# // cmd_msg = <obj|bool>
     def manager_finished_cb(self, reply):
         try:
             temp_absfile = None
