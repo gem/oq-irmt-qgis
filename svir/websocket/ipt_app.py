@@ -74,7 +74,8 @@ class IptApp(WebApp):
                 checksum_file_path, local_checksum)
         except Exception:
             log_msg(traceback.format_exc(), level='C')
-            msg = 'An error occurred. Please see the IRMT log for details.'
+            msg = ('on_same_fs: an error occurred.'
+                   ' Please see the IRMT log for details.')
             return {'success': False, 'content': None, 'reason': msg}
         else:
             return {'success': True, 'content': on_same_fs, 'reason': 'ok'}
@@ -127,7 +128,8 @@ class IptApp(WebApp):
             ls = [os.path.basename(file_name) for file_name in file_names]
         except Exception:
             log_msg(traceback.format_exc(), level='C')
-            msg = 'An error occurred. Please see the IRMT log for details.'
+            msg = ('select_file: an error occurred.'
+                   ' Please see the IRMT log for details.')
             return {'success': False, 'content': None, 'reason': msg}
         else:
             return {'success': True, 'content': ls, 'reason': 'ok'}
@@ -186,7 +188,8 @@ class IptApp(WebApp):
                 copy(file_name, full_path)
         except Exception:
             log_msg(traceback.format_exc(), level='C')
-            msg = 'An error occurred. Please see the IRMT log for details.'
+            msg = ('select_and_copy_file_to_dir: an error occurred.'
+                   ' Please see the IRMT log for details.')
             return {'success': False, 'content': basenames, 'reason': msg}
         else:
             return {'success': True, 'content': basenames, 'reason': 'ok'}
@@ -208,7 +211,8 @@ class IptApp(WebApp):
                 f.write(content)
         except Exception:
             log_msg(traceback.format_exc(), level='C')
-            msg = 'An error occurred. Please see the IRMT log for details.'
+            msg = ('save_str_to_file: an error occurred. '
+                   ' Please see the IRMT log for details.')
             return {'success': False, 'content': None, 'reason': msg}
         else:
             return {'success': True, 'content': None, 'reason': 'ok'}
@@ -229,7 +233,8 @@ class IptApp(WebApp):
                 content = f.read()
         except Exception:
             log_msg(traceback.format_exc(), level='C')
-            msg = 'An error occurred. Please see the IRMT log for details.'
+            msg = ('read_file: an error occurred.'
+                   ' Please see the IRMT log for details.')
             return {'success': False, 'content': None, 'reason': msg}
         else:
             return {'success': True, 'content': content, 'reason': 'ok'}
@@ -271,7 +276,8 @@ class IptApp(WebApp):
             self.wss.irmt_thread.get_webapp_dirs()
         except Exception:
             log_msg(traceback.format_exc(), level='C')
-            msg = 'An error occurred. Please see the IRMT log for details.'
+            msg = ('clean_dir: an error occurred.'
+                   ' Please see the IRMT log for details.')
             resp = {'success': False, 'content': None, 'reason': msg}
         else:
             resp = {'success': True, 'content': None, 'reason': 'ok'}
@@ -319,6 +325,7 @@ class IptApp(WebApp):
         try:
             os.rename(old_path, new_path)
         except OSError as exc:
+            # FIXME: don't use exc value as API result
             return {'success': False, 'content': None, 'reason': str(exc)}
         else:
             return {'success': True, 'content': None, 'reason': 'ok'}
@@ -336,7 +343,8 @@ class IptApp(WebApp):
             os.makedirs(full_path)
         except Exception:
             log_msg(traceback.format_exc(), level='C')
-            msg = 'An error occurred. Please see the IRMT log for details.'
+            msg = ('create_dir: an error occurred.'
+                   ' Please see the IRMT log for details.')
             return {'success': False, 'content': None, 'reason': msg}
         else:
             return {'success': True, 'content': None, 'reason': 'ok'}
@@ -347,14 +355,16 @@ class IptApp(WebApp):
         """
         app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
         try:
-            full_path = os.path.join(app_dir, dir_name)
+            loc_dir_name = os.path.join(*dir_name.split('/'))
+            full_path = os.path.join(app_dir, loc_dir_name)
             if not os.path.abspath(full_path).startswith(app_dir + '/'):
                 msg = 'Unable to delete the directory %s' % dir_name
                 return {'success': False, 'content': None, 'reason': msg}
             shutil.rmtree(full_path)
         except Exception:
             log_msg(traceback.format_exc(), level='C')
-            msg = 'An error occurred. Please see the IRMT log for details.'
+            msg = ('delete_dir: an error occurred.'
+                   ' Please see the IRMT log for details.')
             return {'success': False, 'content': None, 'reason': msg}
         else:
             return {'success': True, 'content': None, 'reason': 'ok'}
@@ -385,7 +395,8 @@ class IptApp(WebApp):
             drive_engine_dlg.run_calc(file_names=abs_paths)
         except Exception:
             log_msg(traceback.format_exc(), level='C')
-            msg = 'An error occurred. Please see the IRMT log for details.'
+            msg = ('run_oq_engine_calc: an error occurred.'
+                   ' Please see the IRMT log for details.')
             return {'success': False, 'content': None, 'reason': msg}
         else:
             return {'success': True, 'content': None, 'reason': 'ok'}
@@ -448,7 +459,8 @@ class IptApp(WebApp):
             if os.path.exists(abs_zip_name):
                 os.remove(abs_zip_name)
             log_msg(traceback.format_exc(), level='C')
-            msg = 'An error occurred. Please see the IRMT log for details.'
+            msg = ('build_zip: an error occurred.'
+                   ' Please see the IRMT log for details.')
             return {'success': False, 'content': None, 'reason': msg}
         else:
             return {'success': True,
@@ -492,7 +504,8 @@ class IptApp(WebApp):
             copy(full_path_src, dest_file)
         except Exception:
             log_msg(traceback.format_exc(), level='C')
-            msg = 'An error occurred. Please see the IRMT log for details.'
+            msg = ('save_as: an error occurred.'
+                   ' Please see the IRMT log for details.')
             return {'success': False, 'content': None, 'reason': msg}
         else:
             return {'success': True, 'content': None, 'reason': 'ok'}
