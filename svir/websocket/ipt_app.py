@@ -27,7 +27,6 @@ import traceback
 import shutil
 import zipfile
 from shutil import copy, rmtree
-from uuid import uuid4
 from qgis.PyQt.QtWidgets import QFileDialog
 from qgis.PyQt.QtCore import QSettings, QDir, QFileInfo, QUrl, QStandardPaths
 from qgis.PyQt.QtNetwork import (
@@ -126,7 +125,7 @@ class IptApp(WebApp):
                 file_names = [file_name]
 
             ls = [os.path.basename(file_name) for file_name in file_names]
-        except Exception as exc:
+        except Exception:
             log_msg(traceback.format_exc(), level='C')
             msg = 'An error occurred. Please see the IRMT log for details.'
             return {'success': False, 'content': None, 'reason': msg}
@@ -185,7 +184,7 @@ class IptApp(WebApp):
                 basename = os.path.basename(file_name)
                 basenames.append(basename)
                 copy(file_name, full_path)
-        except Exception as exc:
+        except Exception:
             log_msg(traceback.format_exc(), level='C')
             msg = 'An error occurred. Please see the IRMT log for details.'
             return {'success': False, 'content': basenames, 'reason': msg}
@@ -207,7 +206,7 @@ class IptApp(WebApp):
             basename = os.path.basename(file_path)
             with open(os.path.join(full_path, basename), "w") as f:
                 f.write(content)
-        except Exception as exc:
+        except Exception:
             log_msg(traceback.format_exc(), level='C')
             msg = 'An error occurred. Please see the IRMT log for details.'
             return {'success': False, 'content': None, 'reason': msg}
@@ -228,7 +227,7 @@ class IptApp(WebApp):
             basename = os.path.basename(file_path)
             with open(os.path.join(full_path, basename), "r") as f:
                 content = f.read()
-        except Exception as exc:
+        except Exception:
             log_msg(traceback.format_exc(), level='C')
             msg = 'An error occurred. Please see the IRMT log for details.'
             return {'success': False, 'content': None, 'reason': msg}
@@ -270,7 +269,7 @@ class IptApp(WebApp):
             rmtree(full_path)
             # recreates any missing app_dir
             self.wss.irmt_thread.get_webapp_dirs()
-        except Exception as exc:
+        except Exception:
             log_msg(traceback.format_exc(), level='C')
             msg = 'An error occurred. Please see the IRMT log for details.'
             resp = {'success': False, 'content': None, 'reason': msg}
@@ -335,7 +334,7 @@ class IptApp(WebApp):
                 msg = 'Unable to create the directory %s' % dir_name
                 return {'success': False, 'content': None, 'reason': msg}
             os.makedirs(full_path)
-        except Exception as exc:
+        except Exception:
             log_msg(traceback.format_exc(), level='C')
             msg = 'An error occurred. Please see the IRMT log for details.'
             return {'success': False, 'content': None, 'reason': msg}
@@ -353,7 +352,7 @@ class IptApp(WebApp):
                 msg = 'Unable to delete the directory %s' % dir_name
                 return {'success': False, 'content': None, 'reason': msg}
             shutil.rmtree(full_path)
-        except Exception as exc:
+        except Exception:
             log_msg(traceback.format_exc(), level='C')
             msg = 'An error occurred. Please see the IRMT log for details.'
             return {'success': False, 'content': None, 'reason': msg}
@@ -384,7 +383,7 @@ class IptApp(WebApp):
             drive_engine_dlg = \
                 self.wss.irmt_thread.drive_oq_engine_server_dlg
             drive_engine_dlg.run_calc(file_names=abs_paths)
-        except Exception as exc:
+        except Exception:
             log_msg(traceback.format_exc(), level='C')
             msg = 'An error occurred. Please see the IRMT log for details.'
             return {'success': False, 'content': None, 'reason': msg}
@@ -441,11 +440,11 @@ class IptApp(WebApp):
                         msg = ('Content type must be "string" or "file".'
                                ' "%s" is invalid.' % item_type)
                         raise TypeError(msg)
-        except (IllegalPathException, TypeError) as exc:
+        except (IllegalPathException, TypeError):
             if os.path.exists(abs_zip_name):
                 os.remove(abs_zip_name)
             return {'success': False, 'content': None, 'reason': str(msg)}
-        except Exception as exc:
+        except Exception:
             if os.path.exists(abs_zip_name):
                 os.remove(abs_zip_name)
             log_msg(traceback.format_exc(), level='C')
@@ -491,7 +490,7 @@ class IptApp(WebApp):
             return {'success': False, 'content': None, 'reason': msg}
         try:
             copy(full_path_src, dest_file)
-        except Exception as exc:
+        except Exception:
             log_msg(traceback.format_exc(), level='C')
             msg = 'An error occurred. Please see the IRMT log for details.'
             return {'success': False, 'content': None, 'reason': msg}
@@ -555,7 +554,6 @@ class IptApp(WebApp):
         :param data: list of dictionaries {name (string) value(string)}
         """
 
-        tmp_file = None
         try:
             # TODO: Accept also methods other than POST
             if method != 'POST':
