@@ -418,6 +418,7 @@ class IptApp(WebApp):
 
         abs_zip_name = os.path.abspath(os.path.join(app_dir, 'temp', zip_name))
         abs_zip_dir = os.path.dirname(abs_zip_name)
+        msg = "Unknown error"
         if not dir_is_legal(app_dir, abs_zip_dir):
             msg = 'Unable to write %s' % zip_name
             return {'success': False, 'content': None, 'reason': msg}
