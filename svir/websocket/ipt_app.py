@@ -103,7 +103,8 @@ class IptApp(WebApp):
 
         if len(args) > 0:
             path = args[0]
-            full_path = os.path.abspath(os.path.join(app_dir, path))
+            loc_path = os.path.join(*path.split('/'))
+            full_path = os.path.abspath(os.path.join(app_dir, loc_path))
             if not dir_is_legal(app_dir, full_path):
                 msg = 'Unable to access the directory %s' % path
                 return {'success': False, 'content': None, 'reason': msg}
@@ -287,13 +288,14 @@ class IptApp(WebApp):
         """
         :param file_path: name of the file to be removed from the app_dir
         """
-        rel_path = os.path.dirname(file_path)
+        loc_file_path = os.path.join(*file_path.split('/'))
+        rel_path = os.path.dirname(loc_file_path)
         app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
         full_path = os.path.abspath(os.path.join(app_dir, rel_path))
         if not dir_is_legal(app_dir, full_path):
             msg = 'Unable to access the directory %s' % rel_path
             return {'success': False, 'content': None, 'reason': msg}
-        basename = os.path.basename(file_path)
+        basename = os.path.basename(loc_file_path)
         file_path = os.path.join(full_path, basename)
         try:
             os.remove(file_path)
@@ -307,23 +309,25 @@ class IptApp(WebApp):
         :param old_path: path of the file to be renamed
         :param new_path: new path to be assigned to the file
         """
-        rel_old_path = os.path.dirname(old_path)
-        rel_new_path = os.path.dirname(new_path)
+        loc_old_path = os.path.join(*old_path.split('/'))
+        loc_new_path = os.path.join(*new_path.split('/'))
+        rel_old_path = os.path.dirname(loc_old_path)
+        rel_new_path = os.path.dirname(loc_new_path)
         app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
         full_old_path = os.path.abspath(os.path.join(app_dir, rel_old_path))
         if not dir_is_legal(app_dir, full_old_path):
-            msg = 'Unable to access the directory %s' % rel_old_path
+            msg = 'Unable to access the directory %s' % old_path
             return {'success': False, 'content': None, 'reason': msg}
         full_new_path = os.path.abspath(os.path.join(app_dir, rel_new_path))
         if not dir_is_legal(app_dir, full_new_path):
-            msg = 'Unable to access the directory %s' % rel_new_path
+            msg = 'Unable to access the directory %s' % new_path
             return {'success': False, 'content': None, 'reason': msg}
-        old_basename = os.path.basename(old_path)
-        new_basename = os.path.basename(new_path)
-        old_path = os.path.join(full_old_path, old_basename)
-        new_path = os.path.join(full_new_path, new_basename)
+        old_basename = os.path.basename(loc_old_path)
+        new_basename = os.path.basename(loc_new_path)
+        old_filepath = os.path.join(full_old_path, old_basename)
+        new_filepath = os.path.join(full_new_path, new_basename)
         try:
-            os.rename(old_path, new_path)
+            os.rename(old_filepath, new_filepath)
         except OSError as exc:
             # FIXME: don't use exc value as API result
             return {'success': False, 'content': None, 'reason': str(exc)}
@@ -335,8 +339,9 @@ class IptApp(WebApp):
         :param dirname: name of the directory to be created under the ipt dir
         """
         app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
+        loc_dir_name = os.path.join(*dir_name.split('/'))
         try:
-            full_path = os.path.abspath(os.path.join(app_dir, dir_name))
+            full_path = os.path.abspath(os.path.join(app_dir, loc_dir_name))
             if not dir_is_legal(app_dir, full_path):
                 msg = 'Unable to create the directory %s' % dir_name
                 return {'success': False, 'content': None, 'reason': msg}
@@ -382,7 +387,8 @@ class IptApp(WebApp):
             abs_paths = []
             app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
             for rel_path in rel_paths:
-                abs_path = os.path.abspath(os.path.join(app_dir, rel_path))
+                loc_rel_path = os.path.join(*rel_path.split('/'))
+                abs_path = os.path.abspath(os.path.join(app_dir, loc_rel_path))
                 if (not dir_is_legal(app_dir, abs_path) or
                         not os.path.isfile(abs_path)):
                     msg = 'Unable to access the file %s' % rel_path
@@ -412,11 +418,13 @@ class IptApp(WebApp):
         """
         app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
 
-        abs_temp_path = os.path.abspath(os.path.join(app_dir, 'temp'))
+        abs_temp_path = os.path.abspath(os.path.join(app_dir, 'Temp'))
         if not os.path.exists(abs_temp_path):
             os.makedirs(abs_temp_path)
 
-        abs_zip_name = os.path.abspath(os.path.join(app_dir, 'temp', zip_name))
+        loc_zip_name = os.path.join(*zip_name.split('/'))
+        abs_zip_name = os.path.abspath(os.path.join(app_dir, 'Temp',
+                                                    loc_zip_name))
         abs_zip_dir = os.path.dirname(abs_zip_name)
         msg = "Unknown error"
         if not dir_is_legal(app_dir, abs_zip_dir):
@@ -465,7 +473,8 @@ class IptApp(WebApp):
             return {'success': False, 'content': None, 'reason': msg}
         else:
             return {'success': True,
-                    'content': os.path.join('temp', zip_name),
+                    'content': 'Temp' + '/' + '/'.join(
+                        loc_zip_name.split(os.path.sep)),
                     'reason': 'ok'}
 
     def save_as(self, api_uuid, file_src, suggested_name):
@@ -480,7 +489,8 @@ class IptApp(WebApp):
             {'success': True, 'content': None, 'reason': 'ok'}
         """
         app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
-        rel_dir_src = os.path.dirname(file_src)
+        loc_file_src = os.path.join(*file_src.split('/'))
+        rel_dir_src = os.path.dirname(loc_file_src)
         full_dir_src = os.path.abspath(os.path.join(app_dir, rel_dir_src))
         if not dir_is_legal(app_dir, full_dir_src):
             msg = 'Unable to access the directory %s' % rel_dir_src
@@ -650,15 +660,16 @@ class IptApp(WebApp):
             file_name = str(content_disposition.split('"')[1], 'utf-8')
             file_content = str(reply.readAll(), 'utf-8')
             app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
-            temp_name = os.path.join('Downloads', uuid + '.tmp')
-            temp_absfile = os.path.join(app_dir, temp_name)
+            loc_temp_name = os.path.join('Downloads', uuid + '.tmp')
+            temp_absfile = os.path.join(app_dir, loc_temp_name)
             if not os.path.exists(os.path.dirname(temp_absfile)):
                 os.makedirs(os.path.dirname(temp_absfile))
 
             with open(temp_absfile, "w") as f:
                 f.write(file_content)
             # self.call_js_cb(js_cb_func, file_name, 0)
-            result = {'success': True, 'realpath': temp_name,
+            result = {'success': True, 'realpath':
+                      '/'.join(loc_temp_name.split(os.path.sep)),
                       'content': file_name, 'reason': 'ok'}
             app_msg = {'complete': True, 'result': result}
         except Exception:
