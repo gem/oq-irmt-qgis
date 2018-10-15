@@ -428,7 +428,6 @@ class IptApp(WebApp):
         abs_zip_name = os.path.abspath(os.path.join(app_dir, 'Temp',
                                                     loc_zip_name))
         abs_zip_dir = os.path.dirname(abs_zip_name)
-        msg = "Unknown error"
         if not dir_is_legal(app_dir, abs_zip_dir):
             msg = 'Unable to write %s' % zip_name
             return {'success': False, 'content': None, 'reason': msg}
@@ -465,7 +464,10 @@ class IptApp(WebApp):
         except (IllegalPathException, TypeError):
             if os.path.exists(abs_zip_name):
                 os.remove(abs_zip_name)
-            return {'success': False, 'content': None, 'reason': str(msg)}
+            log_msg(traceback.format_exc(), level='C')
+            msg = ('build_zip: an error occurred.'
+                   ' Please see the IRMT log for details.')
+            return {'success': False, 'content': None, 'reason': msg}
         except Exception:
             if os.path.exists(abs_zip_name):
                 os.remove(abs_zip_name)
