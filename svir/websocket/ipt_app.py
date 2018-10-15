@@ -328,9 +328,11 @@ class IptApp(WebApp):
         new_filepath = os.path.join(full_new_path, new_basename)
         try:
             os.rename(old_filepath, new_filepath)
-        except OSError as exc:
-            # FIXME: don't use exc value as API result
-            return {'success': False, 'content': None, 'reason': str(exc)}
+        except OSError:
+            log_msg(traceback.format_exc(), level='C')
+            msg = ('move_file: an error occurred.'
+                   ' Please see the IRMT log for details.')
+            return {'success': False, 'content': None, 'reason': msg}
         else:
             return {'success': True, 'content': None, 'reason': 'ok'}
 
@@ -629,6 +631,7 @@ class IptApp(WebApp):
             msg = 'An error occurred. Please see the IRMT log for details.'
             result = {'success': False, 'content': None, 'reason': msg}
         return (result, False)
+
 # // hyb_msg = {'app':<app_name> , 'msg':<api_msg>}
 # // api_msg = {'msg'|'reply': <app_msg>, 'uuid':<uuid> }
 # // app_msg = {<('command', 'args':[]) |
