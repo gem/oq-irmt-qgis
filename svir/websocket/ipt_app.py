@@ -72,9 +72,10 @@ class IptApp(WebApp):
                 self.wss.irmt_thread.get_ipt_checksum()
             on_same_fs = self.wss.irmt_thread.on_same_fs(
                 checksum_file_path, local_checksum)
-        except Exception as exc:
+        except Exception:
             log_msg(traceback.format_exc(), level='C')
-            msg = 'An error occurred. Please see the IRMT log for details.'
+            msg = ('on_same_fs: an error occurred.'
+                   ' Please see the IRMT log for details.')
             return {'success': False, 'content': None, 'reason': msg}
         else:
             return {'success': True, 'content': on_same_fs, 'reason': 'ok'}
@@ -102,7 +103,8 @@ class IptApp(WebApp):
 
         if len(args) > 0:
             path = args[0]
-            full_path = os.path.abspath(os.path.join(app_dir, path))
+            loc_path = os.path.join(*path.split('/'))
+            full_path = os.path.abspath(os.path.join(app_dir, loc_path))
             if not dir_is_legal(app_dir, full_path):
                 msg = 'Unable to access the directory %s' % path
                 return {'success': False, 'content': None, 'reason': msg}
@@ -125,9 +127,10 @@ class IptApp(WebApp):
                 file_names = [file_name]
 
             ls = [os.path.basename(file_name) for file_name in file_names]
-        except Exception as exc:
+        except Exception:
             log_msg(traceback.format_exc(), level='C')
-            msg = 'An error occurred. Please see the IRMT log for details.'
+            msg = ('select_file: an error occurred.'
+                   ' Please see the IRMT log for details.')
             return {'success': False, 'content': None, 'reason': msg}
         else:
             return {'success': True, 'content': ls, 'reason': 'ok'}
@@ -184,9 +187,10 @@ class IptApp(WebApp):
                 basename = os.path.basename(file_name)
                 basenames.append(basename)
                 copy(file_name, full_path)
-        except Exception as exc:
+        except Exception:
             log_msg(traceback.format_exc(), level='C')
-            msg = 'An error occurred. Please see the IRMT log for details.'
+            msg = ('select_and_copy_file_to_dir: an error occurred.'
+                   ' Please see the IRMT log for details.')
             return {'success': False, 'content': basenames, 'reason': msg}
         else:
             return {'success': True, 'content': basenames, 'reason': 'ok'}
@@ -206,9 +210,10 @@ class IptApp(WebApp):
             basename = os.path.basename(file_path)
             with open(os.path.join(full_path, basename), "w") as f:
                 f.write(content)
-        except Exception as exc:
+        except Exception:
             log_msg(traceback.format_exc(), level='C')
-            msg = 'An error occurred. Please see the IRMT log for details.'
+            msg = ('save_str_to_file: an error occurred. '
+                   ' Please see the IRMT log for details.')
             return {'success': False, 'content': None, 'reason': msg}
         else:
             return {'success': True, 'content': None, 'reason': 'ok'}
@@ -227,9 +232,10 @@ class IptApp(WebApp):
             basename = os.path.basename(file_path)
             with open(os.path.join(full_path, basename), "r") as f:
                 content = f.read()
-        except Exception as exc:
+        except Exception:
             log_msg(traceback.format_exc(), level='C')
-            msg = 'An error occurred. Please see the IRMT log for details.'
+            msg = ('read_file: an error occurred.'
+                   ' Please see the IRMT log for details.')
             return {'success': False, 'content': None, 'reason': msg}
         else:
             return {'success': True, 'content': content, 'reason': 'ok'}
@@ -269,9 +275,10 @@ class IptApp(WebApp):
             rmtree(full_path)
             # recreates any missing app_dir
             self.wss.irmt_thread.get_webapp_dirs()
-        except Exception as exc:
+        except Exception:
             log_msg(traceback.format_exc(), level='C')
-            msg = 'An error occurred. Please see the IRMT log for details.'
+            msg = ('clean_dir: an error occurred.'
+                   ' Please see the IRMT log for details.')
             resp = {'success': False, 'content': None, 'reason': msg}
         else:
             resp = {'success': True, 'content': None, 'reason': 'ok'}
@@ -281,13 +288,14 @@ class IptApp(WebApp):
         """
         :param file_path: name of the file to be removed from the app_dir
         """
-        rel_path = os.path.dirname(file_path)
+        loc_file_path = os.path.join(*file_path.split('/'))
+        rel_path = os.path.dirname(loc_file_path)
         app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
         full_path = os.path.abspath(os.path.join(app_dir, rel_path))
         if not dir_is_legal(app_dir, full_path):
             msg = 'Unable to access the directory %s' % rel_path
             return {'success': False, 'content': None, 'reason': msg}
-        basename = os.path.basename(file_path)
+        basename = os.path.basename(loc_file_path)
         file_path = os.path.join(full_path, basename)
         try:
             os.remove(file_path)
@@ -301,25 +309,30 @@ class IptApp(WebApp):
         :param old_path: path of the file to be renamed
         :param new_path: new path to be assigned to the file
         """
-        rel_old_path = os.path.dirname(old_path)
-        rel_new_path = os.path.dirname(new_path)
+        loc_old_path = os.path.join(*old_path.split('/'))
+        loc_new_path = os.path.join(*new_path.split('/'))
+        rel_old_path = os.path.dirname(loc_old_path)
+        rel_new_path = os.path.dirname(loc_new_path)
         app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
         full_old_path = os.path.abspath(os.path.join(app_dir, rel_old_path))
         if not dir_is_legal(app_dir, full_old_path):
-            msg = 'Unable to access the directory %s' % rel_old_path
+            msg = 'Unable to access the directory %s' % old_path
             return {'success': False, 'content': None, 'reason': msg}
         full_new_path = os.path.abspath(os.path.join(app_dir, rel_new_path))
         if not dir_is_legal(app_dir, full_new_path):
-            msg = 'Unable to access the directory %s' % rel_new_path
+            msg = 'Unable to access the directory %s' % new_path
             return {'success': False, 'content': None, 'reason': msg}
-        old_basename = os.path.basename(old_path)
-        new_basename = os.path.basename(new_path)
-        old_path = os.path.join(full_old_path, old_basename)
-        new_path = os.path.join(full_new_path, new_basename)
+        old_basename = os.path.basename(loc_old_path)
+        new_basename = os.path.basename(loc_new_path)
+        old_filepath = os.path.join(full_old_path, old_basename)
+        new_filepath = os.path.join(full_new_path, new_basename)
         try:
-            os.rename(old_path, new_path)
-        except OSError as exc:
-            return {'success': False, 'content': None, 'reason': str(exc)}
+            os.rename(old_filepath, new_filepath)
+        except OSError:
+            log_msg(traceback.format_exc(), level='C')
+            msg = ('move_file: an error occurred.'
+                   ' Please see the IRMT log for details.')
+            return {'success': False, 'content': None, 'reason': msg}
         else:
             return {'success': True, 'content': None, 'reason': 'ok'}
 
@@ -328,15 +341,17 @@ class IptApp(WebApp):
         :param dirname: name of the directory to be created under the ipt dir
         """
         app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
+        loc_dir_name = os.path.join(*dir_name.split('/'))
         try:
-            full_path = os.path.abspath(os.path.join(app_dir, dir_name))
+            full_path = os.path.abspath(os.path.join(app_dir, loc_dir_name))
             if not dir_is_legal(app_dir, full_path):
                 msg = 'Unable to create the directory %s' % dir_name
                 return {'success': False, 'content': None, 'reason': msg}
             os.makedirs(full_path)
-        except Exception as exc:
+        except Exception:
             log_msg(traceback.format_exc(), level='C')
-            msg = 'An error occurred. Please see the IRMT log for details.'
+            msg = ('create_dir: an error occurred.'
+                   ' Please see the IRMT log for details.')
             return {'success': False, 'content': None, 'reason': msg}
         else:
             return {'success': True, 'content': None, 'reason': 'ok'}
@@ -347,14 +362,16 @@ class IptApp(WebApp):
         """
         app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
         try:
-            full_path = os.path.join(app_dir, dir_name)
+            loc_dir_name = os.path.join(*dir_name.split('/'))
+            full_path = os.path.join(app_dir, loc_dir_name)
             if not os.path.abspath(full_path).startswith(app_dir + '/'):
                 msg = 'Unable to delete the directory %s' % dir_name
                 return {'success': False, 'content': None, 'reason': msg}
             shutil.rmtree(full_path)
-        except Exception as exc:
+        except Exception:
             log_msg(traceback.format_exc(), level='C')
-            msg = 'An error occurred. Please see the IRMT log for details.'
+            msg = ('delete_dir: an error occurred.'
+                   ' Please see the IRMT log for details.')
             return {'success': False, 'content': None, 'reason': msg}
         else:
             return {'success': True, 'content': None, 'reason': 'ok'}
@@ -372,7 +389,8 @@ class IptApp(WebApp):
             abs_paths = []
             app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
             for rel_path in rel_paths:
-                abs_path = os.path.abspath(os.path.join(app_dir, rel_path))
+                loc_rel_path = os.path.join(*rel_path.split('/'))
+                abs_path = os.path.abspath(os.path.join(app_dir, loc_rel_path))
                 if (not dir_is_legal(app_dir, abs_path) or
                         not os.path.isfile(abs_path)):
                     msg = 'Unable to access the file %s' % rel_path
@@ -383,9 +401,10 @@ class IptApp(WebApp):
             drive_engine_dlg = \
                 self.wss.irmt_thread.drive_oq_engine_server_dlg
             drive_engine_dlg.run_calc(file_names=abs_paths)
-        except Exception as exc:
+        except Exception:
             log_msg(traceback.format_exc(), level='C')
-            msg = 'An error occurred. Please see the IRMT log for details.'
+            msg = ('run_oq_engine_calc: an error occurred.'
+                   ' Please see the IRMT log for details.')
             return {'success': False, 'content': None, 'reason': msg}
         else:
             return {'success': True, 'content': None, 'reason': 'ok'}
@@ -401,11 +420,13 @@ class IptApp(WebApp):
         """
         app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
 
-        abs_temp_path = os.path.abspath(os.path.join(app_dir, 'temp'))
+        abs_temp_path = os.path.abspath(os.path.join(app_dir, 'Temp'))
         if not os.path.exists(abs_temp_path):
             os.makedirs(abs_temp_path)
 
-        abs_zip_name = os.path.abspath(os.path.join(app_dir, 'temp', zip_name))
+        loc_zip_name = os.path.join(*zip_name.split('/'))
+        abs_zip_name = os.path.abspath(os.path.join(app_dir, 'Temp',
+                                                    loc_zip_name))
         abs_zip_dir = os.path.dirname(abs_zip_name)
         if not dir_is_legal(app_dir, abs_zip_dir):
             msg = 'Unable to write %s' % zip_name
@@ -440,19 +461,24 @@ class IptApp(WebApp):
                         msg = ('Content type must be "string" or "file".'
                                ' "%s" is invalid.' % item_type)
                         raise TypeError(msg)
-        except (IllegalPathException, TypeError) as exc:
-            if os.path.exists(abs_zip_name):
-                os.remove(abs_zip_name)
-            return {'success': False, 'content': None, 'reason': str(msg)}
-        except Exception as exc:
+        except (IllegalPathException, TypeError):
             if os.path.exists(abs_zip_name):
                 os.remove(abs_zip_name)
             log_msg(traceback.format_exc(), level='C')
-            msg = 'An error occurred. Please see the IRMT log for details.'
+            msg = ('build_zip: an error occurred.'
+                   ' Please see the IRMT log for details.')
+            return {'success': False, 'content': None, 'reason': msg}
+        except Exception:
+            if os.path.exists(abs_zip_name):
+                os.remove(abs_zip_name)
+            log_msg(traceback.format_exc(), level='C')
+            msg = ('build_zip: an error occurred.'
+                   ' Please see the IRMT log for details.')
             return {'success': False, 'content': None, 'reason': msg}
         else:
             return {'success': True,
-                    'content': os.path.join('temp', zip_name),
+                    'content': 'Temp' + '/' + '/'.join(
+                        loc_zip_name.split(os.path.sep)),
                     'reason': 'ok'}
 
     def save_as(self, api_uuid, file_src, suggested_name):
@@ -467,7 +493,8 @@ class IptApp(WebApp):
             {'success': True, 'content': None, 'reason': 'ok'}
         """
         app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
-        rel_dir_src = os.path.dirname(file_src)
+        loc_file_src = os.path.join(*file_src.split('/'))
+        rel_dir_src = os.path.dirname(loc_file_src)
         full_dir_src = os.path.abspath(os.path.join(app_dir, rel_dir_src))
         if not dir_is_legal(app_dir, full_dir_src):
             msg = 'Unable to access the directory %s' % rel_dir_src
@@ -490,9 +517,10 @@ class IptApp(WebApp):
             return {'success': False, 'content': None, 'reason': msg}
         try:
             copy(full_path_src, dest_file)
-        except Exception as exc:
+        except Exception:
             log_msg(traceback.format_exc(), level='C')
-            msg = 'An error occurred. Please see the IRMT log for details.'
+            msg = ('save_as: an error occurred.'
+                   ' Please see the IRMT log for details.')
             return {'success': False, 'content': None, 'reason': msg}
         else:
             return {'success': True, 'content': None, 'reason': 'ok'}
@@ -553,6 +581,7 @@ class IptApp(WebApp):
         :param headers: list of strings
         :param data: list of dictionaries {name (string) value(string)}
         """
+
         try:
             # TODO: Accept also methods other than POST
             if method != 'POST':
@@ -599,18 +628,20 @@ class IptApp(WebApp):
             # # NOTE: needed to avoid segfault!
             multipart.setParent(reply)  # delete the multiPart with the reply
             result = {'success': True, 'content': None, 'reason': 'started'}
-        except Exception as exc:
+        except Exception:
             log_msg(traceback.format_exc(), level='C')
             msg = 'An error occurred. Please see the IRMT log for details.'
             result = {'success': False, 'content': None, 'reason': msg}
-        return {'result': result, 'complete': False}
+        return (result, False)
+
 # // hyb_msg = {'app':<app_name> , 'msg':<api_msg>}
 # // api_msg = {'msg'|'reply': <app_msg>, 'uuid':<uuid> }
-# // app_msg = {<('command', 'args':[])|('result': <obj|bool>, complete: <True|False>)>}
-
+# // app_msg = {<('command', 'args':[]) |
+#                ('result': <cmd_msg>, complete: <True|False>)>}
+# // cmd_msg = <obj|bool>
     def manager_finished_cb(self, reply):
         try:
-            file_name = None
+            temp_absfile = None
             uuid = reply.request().attribute(
                 REQUEST_ATTRS['uuid'], None)
             # js_cb_object_id = reply.request().attribute(
@@ -634,15 +665,25 @@ class IptApp(WebApp):
             file_name = str(content_disposition.split('"')[1], 'utf-8')
             file_content = str(reply.readAll(), 'utf-8')
             app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
-            with open(os.path.join(app_dir, file_name), "w") as f:
+            loc_temp_name = os.path.join('Downloads', uuid + '.tmp')
+            temp_absfile = os.path.join(app_dir, loc_temp_name)
+            if not os.path.exists(os.path.dirname(temp_absfile)):
+                os.makedirs(os.path.dirname(temp_absfile))
+
+            with open(temp_absfile, "w") as f:
                 f.write(file_content)
             # self.call_js_cb(js_cb_func, file_name, 0)
-            result = {'success': True, 'content': file_name, 'reason': 'ok'}
-            app_msg = {'result': result, 'complete': True}
-        except Exception as exc:
+            result = {'success': True, 'realpath':
+                      '/'.join(loc_temp_name.split(os.path.sep)),
+                      'content': file_name, 'reason': 'ok'}
+            app_msg = {'complete': True, 'result': result}
+        except Exception:
+            if temp_absfile is not None and os.path.exists(temp_absfile):
+                os.remove(temp_absfile)
             log_msg(traceback.format_exc(), level='C')
             msg = 'An error occurred. Please see the IRMT log for details.'
-            result = {'success': False, 'content': None, 'reason': msg}
+            result = {'success': False, 'realpath': None,
+                      'content': None, 'reason': msg}
             app_msg = {'result': result, 'complete': True}
         api_msg = {'reply': app_msg, 'uuid': uuid}
         self.send(api_msg)
