@@ -24,6 +24,7 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     3.2.11
+    * Added instructions about how to workaround a bug that occurs on macOS while importing matplotlib.pyplot on matplotlib v3.0.0
     * Fixed updating the status of the toolbar button that shows/hides the IRTM Data Viewer
     3.2.10
     * Added the possibility to 'Abort' an OQ-Engine calculation

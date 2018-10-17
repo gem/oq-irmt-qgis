@@ -19,6 +19,11 @@ On macOS:
 
     $ sudo pip3.6 install matplotlib scipy
 
+.. warning::
+    matplotlib v3.0.0 on macOS and on Microsoft Windows has a known bug importing pyplot.
+    In order to fix that issue, an earlier version of matplotlib can be installed:
+    $ sudo pip3.6 install matplotlib==2.2.3
+
 On Ubuntu (Debian and similar):
 
 .. code-block:: bash
