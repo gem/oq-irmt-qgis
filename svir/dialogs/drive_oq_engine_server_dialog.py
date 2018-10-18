@@ -222,7 +222,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 # FIXME: enable the user to set verify=True
                 resp = self.session.get(
                     engine_version_url, timeout=10, verify=False,
-                    allow_redirects=False)
+                    allow_redirects=False, stream=True)
                 if resp.status_code == 302:
                     raise RedirectionError(
                         "Error %s loading %s: please check the url" % (
@@ -243,7 +243,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             # FIXME: enable the user to set verify=True
             resp = self.session.get(
                 calc_list_url, timeout=10, verify=False,
-                allow_redirects=False)
+                allow_redirects=False, stream=True)
             if resp.status_code == 302:
                 raise RedirectionError(
                     "Error %s loading %s: please check the url" % (
@@ -473,7 +473,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         with WaitCursorManager():
             try:
                 # FIXME: enable the user to set verify=True
-                resp = self.session.get(calc_log_url, timeout=10, verify=False)
+                resp = self.session.get(
+                    calc_log_url, timeout=10, verify=False, stream=True)
             except HANDLED_EXCEPTIONS as exc:
                 self._handle_exception(exc)
                 return
@@ -487,7 +488,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             try:
                 # FIXME: enable the user to set verify=True
                 resp = self.session.get(
-                    calc_status_url, timeout=10, verify=False)
+                    calc_status_url, timeout=10, verify=False, stream=True)
             except HANDLED_EXCEPTIONS as exc:
                 self._handle_exception(exc)
                 return
@@ -500,7 +501,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         msg = 'Aborting calculation...' if abort else 'Removing calculation...'
         with WaitCursorManager(msg, self.message_bar):
             try:
-                resp = self.session.post(url, timeout=10)
+                resp = self.session.post(url, timeout=10, stream=True)
             except HANDLED_EXCEPTIONS as exc:
                 self._handle_exception(exc)
                 return
@@ -572,7 +573,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             files = {'archive': open(zipped_file_name, 'rb')}
             try:
                 resp = self.session.post(
-                    run_calc_url, files=files, data=data, timeout=20)
+                    run_calc_url, files=files, data=data, timeout=20,
+                    stream=True)
             except HANDLED_EXCEPTIONS as exc:
                 self._handle_exception(exc)
                 return
@@ -586,7 +588,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         on_same_fs_url = "%s/v1/on_same_fs" % self.hostname
         data = {'filename': checksum_file_path, 'checksum': str(ipt_checksum)}
         try:
-            resp = self.session.post(on_same_fs_url, data=data, timeout=20)
+            resp = self.session.post(
+                on_same_fs_url, data=data, timeout=20, stream=True)
         except HANDLED_EXCEPTIONS as exc:
             self._handle_exception(exc)
             return False
@@ -653,7 +656,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             try:
                 # FIXME: enable the user to set verify=True
                 resp = self.session.get(get_calc_params_url, timeout=10,
-                                        verify=False)
+                                        verify=False, stream=True)
             except HANDLED_EXCEPTIONS as exc:
                 self._handle_exception(exc)
                 return
@@ -668,7 +671,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             try:
                 # FIXME: enable the user to set verify=True
                 resp = self.session.get(output_list_url, timeout=10,
-                                        verify=False)
+                                        verify=False, stream=True)
             except HANDLED_EXCEPTIONS as exc:
                 self._handle_exception(exc)
                 return
