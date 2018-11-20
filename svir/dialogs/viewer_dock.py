@@ -713,8 +713,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.loss_type_cbx.addItems(loss_types)
         self.loss_type_cbx.blockSignals(False)
         if output_type == 'agg_curves-stats':
-            self.stats = [stat.decode('utf8')
-                          for stat in self.agg_curves['stats']]
+            self.stats = self.agg_curves['stats']
             self.stats_multiselect.set_selected_items(self.stats)
             self._get_tags(session, hostname, calc_id, self.iface.messageBar(),
                            with_star=False)
