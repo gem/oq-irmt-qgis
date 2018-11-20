@@ -685,13 +685,13 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 npz = extract_npz(session, hostname, calc_id, to_extract,
                                   message_bar=self.iface.messageBar())
             # stats might be unavailable in case of a single realization
-            if npz['stats'] == numpy.array(None):
+            if 'stats' not in npz:
                 # NOTE: writing 'mean' instead of 'rlz-0' would be equivalent
                 self.stats = ['rlz-0']
             else:
-                self.stats = str(npz['stats'], 'utf8').split()
+                self.stats = npz['stats']
 
-        self.tag_names_multiselect.set_unselected_items(list(self.tags.keys()))
+        self.tag_names_multiselect.set_unselected_items(list(self.tags))
         self.tag_names_multiselect.set_selected_items([])
         self.tag_values_multiselect.set_unselected_items([])
         self.tag_values_multiselect.set_selected_items([])
