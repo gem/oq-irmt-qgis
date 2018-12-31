@@ -1416,6 +1416,13 @@ class Irmt(QObject):
             self.iface.mainWindow().tabifyDockWidget(
                 legend_tab, self.viewer_dock)
             self.viewer_dock.raise_()
+        self.registered_actions['toggle_viewer_dock'].setChecked(
+            self.viewer_dock.isVisible())
+        self.viewer_dock.visibilityChanged[bool].connect(
+            self.on_viewer_dock_visibility_changed)
+
+    def on_viewer_dock_visibility_changed(self, visible):
+        self.registered_actions['toggle_viewer_dock'].setChecked(visible)
 
     def get_webapp_dirs(self):
         webapp_dirs = {}

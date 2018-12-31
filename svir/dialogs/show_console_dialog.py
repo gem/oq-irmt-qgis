@@ -45,7 +45,7 @@ class ShowConsoleDialog(QDialog, FORM_CLASS):
         self.driver_dialog.calc_log_line[calc_id] = 0
         self.timer = QTimer()
         self.timer.timeout.connect(self.refresh_calc_log)
-        self.timer.start(4000)  # refresh time in milliseconds
+        self.timer.start(3000)  # refresh time in milliseconds
         # show the log before the first iteration of the timer
         self.refresh_calc_log()
 
