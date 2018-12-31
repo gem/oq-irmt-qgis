@@ -25,6 +25,8 @@ email=staff.it@globalquakemodel.org
 changelog=
     3.3.0
     * Fixed loader for aggregated Average Asset Losses Statistics OQ-Engine output
+    * All calls to the OQ-Engine "extract" API are logged
+    * Fixed a bug that caused the log verbosity to be always set to "warning", instead of reading it correctly from user settings 
     3.2.12
     * More stable connection with the OQ-Engine server, preventing issues while reading the console log of a calculation
     3.2.11
