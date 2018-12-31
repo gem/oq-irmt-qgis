@@ -82,8 +82,8 @@ def get_irmt_version():
     return _IRMT_VERSION
 
 
-def log_msg(message, tag='GEM OpenQuake plugin', level='I', message_bar=None,
-            duration=None, exception=None):
+def log_msg(message, tag='GEM OpenQuake IRMT plugin', level='I',
+            message_bar=None, duration=None, exception=None):
     """
     Add a message to the QGIS message log. If a messageBar is provided,
     the same message will be displayed also in the messageBar. In the latter
@@ -123,14 +123,17 @@ def log_msg(message, tag='GEM OpenQuake plugin', level='I', message_bar=None,
     if 'nose' in sys.modules and level == 'C':
         raise RuntimeError(message)
     else:
-        log_verbosity = QSettings().value('oq_utils/log_verbosity', 'W')
+        log_verbosity = QSettings().value('irmt/log_level', 'W')
         if (level == 'C'
                 or level == 'W' and log_verbosity in ('S', 'I', 'W')
                 or level in ('I', 'S') and log_verbosity in ('I', 'S')):
             QgsMessageLog.logMessage(
                 tr(message) + tb_text, tr(tag), levels[level])
         if message_bar is not None:
-            if level == 'I':
+            if level == 'S':
+                title = 'Success'
+                duration = duration if duration is not None else 8
+            elif level == 'I':
                 title = 'Info'
                 duration = duration if duration is not None else 8
             elif level == 'W':
@@ -139,9 +142,6 @@ def log_msg(message, tag='GEM OpenQuake plugin', level='I', message_bar=None,
             elif level == 'C':
                 title = 'Error'
                 duration = duration if duration is not None else 0
-            elif level == 'S':
-                title = 'Success'
-                duration = duration if duration is not None else 8
             max_msg_len = 200
             if len(message) > max_msg_len:
                 message = ("%s[...] (Please open the Log Messages Panel to"
@@ -1084,6 +1084,7 @@ def get_checksum(file_path):
 def extract_npz(
         session, hostname, calc_id, output_type, message_bar, params=None):
     url = '%s/v1/calc/%s/extract/%s' % (hostname, calc_id, output_type)
+    log_msg('GET: %s, with parameters: %s' % (url, params), level='I')
     resp = session.get(url, params=params)
     if not resp.ok:
         msg = "Unable to extract %s with parameters %s: %s" % (
