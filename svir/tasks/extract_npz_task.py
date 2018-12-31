@@ -29,6 +29,7 @@ from time import sleep
 from qgis.core import QgsTask
 from qgis.PyQt.QtCore import QThread, pyqtSignal, pyqtSlot
 from numpy.lib.npyio import NpzFile
+from svir.utilities.utils import log_msg
 
 
 class TaskCanceled(Exception):
@@ -53,14 +54,17 @@ class ExtractNpzTask(QgsTask):
         self.output_type = output_type
         self.on_success = on_success
         self.on_error = on_error
-        self.params = params
         self.dest_folder = tempfile.gettempdir()
+        self.extract_url = '%s/v1/calc/%s/extract/%s' % (
+            self.hostname, self.calc_id, self.output_type)
+        self.extract_params = params
+        log_msg('GET: %s, with parameters: %s'
+                % (self.extract_url, self.extract_params), level='I')
 
     def run(self):
-        extract_url = '%s/v1/calc/%s/extract/%s' % (
-            self.hostname, self.calc_id, self.output_type)
         try:
-            self.extract_npz(self.session, extract_url)
+            self.extract_npz(
+                self.session, self.extract_url, self.extract_params)
         except Exception as exc:
             self.exception = exc
             return False
@@ -73,13 +77,13 @@ class ExtractNpzTask(QgsTask):
         else:
             self.on_error(self.exception)
 
-    def extract_npz(self, session, extract_url):
+    def extract_npz(self, session, extract_url, extract_params):
         self.setProgress(-1)
         if self.isCanceled():
             self.is_canceled_sig.emit()
             raise TaskCanceled
         self.extract_thread = ExtractThread(
-            session, extract_url, self.dest_folder)
+            session, extract_url, extract_params, self.dest_folder)
         self.extract_thread.progress_sig[float].connect(self.set_progress)
         self.extract_thread.extracted_npz_sig[NpzFile].connect(
             self.set_extracted_npz)
@@ -111,9 +115,10 @@ class ExtractThread(QThread):
     progress_sig = pyqtSignal(float)
     extracted_npz_sig = pyqtSignal(NpzFile)
 
-    def __init__(self, session, url, dest_folder):
+    def __init__(self, session, url, params, dest_folder):
         self.session = session
         self.url = url
+        self.params = params
         self.dest_folder = dest_folder
         self.is_canceled = False
         super().__init__()
@@ -122,7 +127,8 @@ class ExtractThread(QThread):
         # FIXME: enable the user to set verify=True
         # FIXME: stream = True breaks things unexpectedly in some cases
         #        (content-length differs from len(resp.content)
-        resp = self.session.get(self.url, verify=False)  # , stream=True)
+        resp = self.session.get(self.url, params=self.params, verify=False)
+        # , stream=True)
         if not resp.ok:
             err_msg = "Unable to extract %s with parameters %s: %s" % (
                 self.url, self.params, resp.reason)
@@ -150,7 +156,8 @@ class ExtractThread(QThread):
         # extracted_npz = numpy.load(filepath)
         resp_content = resp.content
         if not resp_content:
-            err_msg = 'GET %s returned an empty content!' % self.url
+            err_msg = ('GET %s with parameters %s returned an empty content!'
+                       % (self.url, self.params))
             raise ExtractFailed(err_msg)
         extracted_npz = numpy.load(io.BytesIO(resp_content))
 
