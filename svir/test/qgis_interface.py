@@ -4,6 +4,7 @@
 """Fake QGIS Interface."""
 
 import logging
+from unittest import mock
 
 from qgis.PyQt.QtCore import QObject, pyqtSlot, pyqtSignal
 from qgis.core import QgsMapLayer, QgsProject
@@ -285,4 +286,10 @@ class QgisInterface(QObject):
         :returns: A QGIS message bar instance
         :rtype: QgsMessageBar
         """
-        return self.message_bar
+        # NOTE: if we show an actual message bar instead of using a mock, it
+        #       spams the log with:
+        #           "qt.svg: Cannot open file
+        #           ':/images/themes/default/mIconTimerPause.svg',
+        #           because: No such file or directory"
+        # return self.message_bar
+        return mock.Mock()
