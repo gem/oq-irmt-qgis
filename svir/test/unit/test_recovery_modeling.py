@@ -34,9 +34,11 @@ from svir.recovery_modeling.recovery_modeling import RecoveryModeling
 from svir.dialogs.viewer_dock import ViewerDock
 from svir.utilities.shared import DEFAULT_SETTINGS
 
-from svir.test.utilities import get_qgis_app
+from qgis.testing import start_app
+from qgis.testing.mocked import get_iface
 
-QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
+QGIS_APP = start_app()
+IFACE = get_iface()
 
 
 def calculate_and_check_recovery_curve(

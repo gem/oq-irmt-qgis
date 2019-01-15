@@ -44,12 +44,17 @@ from svir.utilities.shared import (
                                    OQ_EXTRACT_TO_VIEW_TYPES,
                                    OQ_ALL_TYPES,
                                    )
-from svir.test.utilities import get_qgis_app, assert_and_emit
+from svir.test.utilities import assert_and_emit
 from svir.dialogs.drive_oq_engine_server_dialog import OUTPUT_TYPE_LOADERS
 from svir.dialogs.show_full_report_dialog import ShowFullReportDialog
 from svir.dialogs.viewer_dock import ViewerDock
 
-QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
+from qgis.testing import start_app
+from qgis.testing.mocked import get_iface
+
+QGIS_APP = start_app()
+IFACE = get_iface()
+
 LONG_LOADING_TIME = 10  # seconds
 
 
