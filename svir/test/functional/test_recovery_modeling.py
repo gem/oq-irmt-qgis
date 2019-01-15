@@ -24,21 +24,29 @@
 
 # import qgis libs so that we set the correct sip api version
 import os
-import unittest
+import sys
 import json
-from nose.plugins.attrib import attr
 from qgis.PyQt.QtWidgets import QAction
 from qgis.PyQt.QtCore import QSettings
-from qgis.core import QgsVectorLayer
+from qgis.core import QgsVectorLayer, QgsApplication, QgsProject
+from qgis.utils import iface
+from qgis.testing import unittest
 from svir.recovery_modeling.recovery_modeling import RecoveryModeling
 from svir.dialogs.viewer_dock import ViewerDock
 from svir.utilities.shared import DEFAULT_SETTINGS
 
-from qgis.testing import start_app
-from qgis.testing.mocked import get_iface
 
-QGIS_APP = start_app()
-IFACE = get_iface()
+QGIS_APP = QgsApplication([], True)
+IFACE = iface
+
+
+def run_all():
+    suite = unittest.TestSuite()
+    suite.addTest(unittest.makeSuite(
+        DeterministicTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(
+        StochasticTestCase, 'test'))
+    unittest.TextTestRunner(verbosity=3, stream=sys.stdout).run(suite)
 
 
 def calculate_and_check_recovery_curve(
@@ -68,6 +76,7 @@ def calculate_and_check_recovery_curve(
 
 
 class DeterministicTestCase(unittest.TestCase):
+
     def setUp(self):
         curr_dir_name = os.path.dirname(__file__)
         self.data_dir_name = os.path.join(
@@ -76,6 +85,7 @@ class DeterministicTestCase(unittest.TestCase):
                                                     'dmg_by_asset.shp')
         self.dmg_by_asset_layer = QgsVectorLayer(dmg_by_asset_layer_file_path,
                                                  'dmg_by_asset', 'ogr')
+        QgsProject.instance().addMapLayer(self.dmg_by_asset_layer)
         self.regenerate_expected_values = False
         self.initial_experimental_enabled = QSettings().value(
             '/irmt/experimental_enabled',
@@ -90,7 +100,7 @@ class DeterministicTestCase(unittest.TestCase):
     def test_gui_building_aggregate(self):
         mock_action = QAction(IFACE.mainWindow())
         self.viewer_dock = ViewerDock(IFACE, mock_action)
-        IFACE.setActiveLayer(self.dmg_by_asset_layer)
+        self.assertTrue(IFACE.setActiveLayer(self.dmg_by_asset_layer))
         output_type = 'Recovery Curves'
         idx = self.viewer_dock.output_type_cbx.findText(output_type)
         self.assertNotEqual(idx, -1, 'Output type %s not found' % output_type)
@@ -142,7 +152,6 @@ class DeterministicTestCase(unittest.TestCase):
             self.regenerate_expected_values, seed=42, n_simulations=1)
 
 
-@attr('slow')
 class StochasticTestCase(unittest.TestCase):
 
     def setUp(self):
