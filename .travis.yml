@@ -24,8 +24,9 @@ before_script:
     - oq webui start 0.0.0.0:8800 --skip-browser &> webui.log &
 
 script:
-#    - scripts/run_unit_tests.sh
     - cd scripts
+    - ./run_unit_tests.sh
+    - docker rm -f qgis
     - ./run_functional_tests.sh
     - docker rm -f qgis
     - ./run_integration_tests.sh
