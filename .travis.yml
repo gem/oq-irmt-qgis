@@ -25,8 +25,10 @@ before_script:
 
 script:
 #    - scripts/run_unit_tests.sh
-    - scripts/run_functional_tests.sh
-    - scripts/run_integration_tests.sh    
+    - cd scripts
+    - run_functional_tests.sh
+    - docker rm -f qgis
+    - run_integration_tests.sh
 
 #after_success:
 #    - docker run -ti --rm -v $TRAVIS_BUILD_DIR:/io openquake/qgis-builder:3 build_apidoc
