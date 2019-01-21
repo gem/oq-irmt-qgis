@@ -26,17 +26,18 @@
 import os
 import sys
 import traceback
-import unittest
 import tempfile
 import json
 import copy
 import csv
 import time
 import operator
-from mock import Mock
-
-from qgis.PyQt.QtWidgets import QAction
 import requests
+from mock import Mock
+from qgis.core import QgsApplication
+from qgis.PyQt.QtWidgets import QAction
+from qgis.utils import iface
+from qgis.testing import unittest
 from svir.utilities.shared import (
                                    OQ_CSV_TO_LAYER_TYPES,
                                    OQ_EXTRACT_TO_LAYER_TYPES,
@@ -44,13 +45,23 @@ from svir.utilities.shared import (
                                    OQ_EXTRACT_TO_VIEW_TYPES,
                                    OQ_ALL_TYPES,
                                    )
-from svir.test.utilities import get_qgis_app, assert_and_emit
+from svir.test.utilities import assert_and_emit
 from svir.dialogs.drive_oq_engine_server_dialog import OUTPUT_TYPE_LOADERS
 from svir.dialogs.show_full_report_dialog import ShowFullReportDialog
 from svir.dialogs.viewer_dock import ViewerDock
 
-QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
+
+QGIS_APP = QgsApplication([], True)
+IFACE = iface
+
 LONG_LOADING_TIME = 10  # seconds
+
+
+def run_all():
+    suite = unittest.TestSuite()
+    suite.addTest(unittest.makeSuite(
+        LoadOqEngineOutputsTestCase, 'test'))
+    unittest.TextTestRunner(verbosity=3, stream=sys.stdout).run(suite)
 
 
 class LoadOqEngineOutputsTestCase(unittest.TestCase):

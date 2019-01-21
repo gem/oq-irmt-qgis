@@ -32,9 +32,13 @@ from qgis.PyQt.QtCore import QVariant
 from svir.calculations.process_layer import ProcessLayer
 from svir.utilities.shared import (INT_FIELD_TYPE_NAME,
                                    STRING_FIELD_TYPE_NAME)
-from svir.test.utilities import get_qgis_app
 
-QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
+
+from qgis.testing import start_app
+from qgis.testing.mocked import get_iface
+
+QGIS_APP = start_app()
+IFACE = get_iface()
 
 
 class CheckProjectionsTestCase(unittest.TestCase):

@@ -31,8 +31,12 @@ import time
 from qgis.core import QgsVectorLayer
 from svir.calculations.process_layer import ProcessLayer
 from svir.calculations.aggregate_loss_by_zone import calculate_zonal_stats
-from svir.test.utilities import get_qgis_app
-QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
+
+from qgis.testing import start_app
+from qgis.testing.mocked import get_iface
+
+QGIS_APP = start_app()
+IFACE = get_iface()
 
 
 class AggregateLossByZoneTestCase(unittest.TestCase):

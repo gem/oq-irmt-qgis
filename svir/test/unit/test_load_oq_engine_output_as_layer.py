@@ -35,9 +35,13 @@ from svir.dialogs.load_ruptures_as_layer_dialog import (
     LoadRupturesAsLayerDialog)
 from svir.dialogs.viewer_dock import ViewerDock
 from svir.calculations.process_layer import ProcessLayer
-from svir.test.utilities import get_qgis_app
 
-QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
+
+from qgis.testing import start_app
+from qgis.testing.mocked import get_iface
+
+QGIS_APP = start_app()
+IFACE = get_iface()
 
 
 class LoadOQEngineOutputAsLayerTestCase(unittest.TestCase):

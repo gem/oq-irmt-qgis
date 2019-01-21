@@ -25,6 +25,8 @@ email=staff.it@globalquakemodel.org
 changelog=
     3.4.0
     * Fixed loader for Aggregate Loss Curves in event based risk OQ-Engine output
+    * Tests have been split into: unit tests (using the qgis.testing module); functional tests (running on the official QGIS docker
+      without external services); integration tests (running on the official QGIS docker and interacting with a running OQ-Engine
     3.3.0
     * Fixed loader for aggregated Average Asset Losses Statistics OQ-Engine output
     * All calls to the OQ-Engine "extract" API are logged
