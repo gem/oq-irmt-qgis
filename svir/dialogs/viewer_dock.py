@@ -1529,10 +1529,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 headers = ['return_period']
                 headers.extend(['rlz-%s' % rlz for rlz in range(num_rlzs)])
                 writer.writerow(headers)
-                loss_type = self.loss_type_cbx.currentText()
+                loss_type_idx = self.loss_type_cbx.currentIndex()
                 for i, return_period in enumerate(
                         self.agg_curves['return_periods']):
-                    values = self.agg_curves['array'][loss_type]
+                    values = self.agg_curves['array'][:, loss_type_idx]
                     row = [return_period]
                     row.extend([value for value in values[i]])
                     writer.writerow(row)
