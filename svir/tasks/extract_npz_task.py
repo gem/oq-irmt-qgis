@@ -58,6 +58,7 @@ class ExtractNpzTask(QgsTask):
         self.extract_url = '%s/v1/calc/%s/extract/%s' % (
             self.hostname, self.calc_id, self.output_type)
         self.extract_params = params
+        self.exception = None
         log_msg('GET: %s, with parameters: %s'
                 % (self.extract_url, self.extract_params), level='I')
 
@@ -69,7 +70,10 @@ class ExtractNpzTask(QgsTask):
             self.exception = exc
             return False
         else:
-            return True
+            if self.exception is not None:
+                return False
+            else:
+                return True
 
     def finished(self, success):
         if success:
@@ -87,6 +91,8 @@ class ExtractNpzTask(QgsTask):
         self.extract_thread.progress_sig[float].connect(self.set_progress)
         self.extract_thread.extracted_npz_sig[NpzFile].connect(
             self.set_extracted_npz)
+        self.extract_thread.exception_sig[Exception].connect(
+            self.on_exception)
         self.is_canceled_sig.connect(self.extract_thread.set_canceled)
         self.extract_thread.start()
         while True:
@@ -109,11 +115,16 @@ class ExtractNpzTask(QgsTask):
     def set_extracted_npz(self, extracted_npz):
         self.extracted_npz = extracted_npz
 
+    @pyqtSlot(Exception)
+    def on_exception(self, exc):
+        self.exception = exc
+
 
 class ExtractThread(QThread):
 
     progress_sig = pyqtSignal(float)
     extracted_npz_sig = pyqtSignal(NpzFile)
+    exception_sig = pyqtSignal(Exception)
 
     def __init__(self, session, url, params, dest_folder):
         self.session = session
@@ -129,10 +140,13 @@ class ExtractThread(QThread):
         #        (content-length differs from len(resp.content)
         resp = self.session.get(self.url, params=self.params, verify=False)
         # , stream=True)
+        err_msg = "Unable to extract %s with parameters %s" % (
+            self.url, self.params)
+
         if not resp.ok:
-            err_msg = "Unable to extract %s with parameters %s: %s" % (
-                self.url, self.params, resp.reason)
-            raise ExtractFailed(err_msg)
+            self.exception_sig.emit(ExtractFailed(
+                "%s (%s): %s" % (err_msg, resp.reason, resp.content)))
+            return
 
         # FIXME: use stream=True
         # filename = resp.headers['content-disposition'].split(
@@ -154,12 +168,20 @@ class ExtractThread(QThread):
         #             progress = dl / tot_len * 100
         #             self.progress_sig.emit(progress)
         # extracted_npz = numpy.load(filepath)
-        resp_content = resp.content
-        if not resp_content:
-            err_msg = ('GET %s with parameters %s returned an empty content!'
-                       % (self.url, self.params))
-            raise ExtractFailed(err_msg)
-        extracted_npz = numpy.load(io.BytesIO(resp_content))
+        if not resp.content:
+            self.exception_sig.emit(ExtractFailed(
+                "%s: returned an empty content" % err_msg))
+            return
+        try:
+            extracted_npz = numpy.load(io.BytesIO(resp.content))
+        except Exception as exc:
+            self.exception_sig.emit(exc)
+            return
+        if not isinstance(extracted_npz, NpzFile):
+            self.exception_sig.emit(
+                ExtractFailed("%s: not a valid NPZ. Response: (%s) %s" % (
+                    err_msg, resp.reason, resp.content)))
+            return
 
         self.extracted_npz_sig.emit(extracted_npz)
 

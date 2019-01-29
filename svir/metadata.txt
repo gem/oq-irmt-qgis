@@ -27,6 +27,7 @@ changelog=
     * Fixed loader for Aggregate Loss Curves in event based risk OQ-Engine output
     * Tests have been split into: unit tests (using the qgis.testing module); functional tests (running on the official QGIS docker
       without external services); integration tests (running on the official QGIS docker and interacting with a running OQ-Engine
+    * When an OQ-Engine output can't be extracted, the error is handled and the full response message is logged
     3.3.0
     * Fixed loader for aggregated Average Asset Losses Statistics OQ-Engine output
     * All calls to the OQ-Engine "extract" API are logged
