@@ -21,7 +21,7 @@ This plugin has been created by the [GEM Foundation](http://www.globalquakemodel
 
 ## Installation and troubleshooting
 
-This plugin runs with [QGIS 3.0 and above](http://qgis.org/en/site/forusers/alldownloads.html)
+This plugin runs with [QGIS 3.0](http://qgis.org/en/site/forusers/alldownloads.html)
 and above.
 
 On Microsoft Windows, QGIS includes all the software dependencies needed by the plugin.
