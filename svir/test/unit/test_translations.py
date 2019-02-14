@@ -11,7 +11,6 @@
 # This file was generated from the QGIS Plugin builder plugin
 # See https://github.com/g-sherman/Qgis-Plugin-Builder/
 
-from svir.test.utilities import get_qgis_app
 
 __author__ = 'ismailsunni@yahoo.co.id'
 __date__ = '12/10/2011'
@@ -22,7 +21,11 @@ import os
 
 from qgis.PyQt.QtCore import QCoreApplication, QTranslator
 
-QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
+from qgis.testing import start_app
+from qgis.testing.mocked import get_iface
+
+QGIS_APP = start_app()
+IFACE = get_iface()
 
 
 class SafeTranslationsTest(unittest.TestCase):

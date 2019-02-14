@@ -28,8 +28,11 @@ import unittest
 
 from qgis.PyQt.QtGui import QIcon
 
-from svir.test.utilities import get_qgis_app
-QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
+from qgis.testing import start_app
+from qgis.testing.mocked import get_iface
+
+QGIS_APP = start_app()
+IFACE = get_iface()
 
 # import irmt
 # IRMT = irmt.classFactory(IFACE)

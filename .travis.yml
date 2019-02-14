@@ -1,8 +1,3 @@
-env:
-    # Let's avoid testing on QGIS2
-    # - QGIS_VERSION=debian-ltr
-    - QGIS_VERSION=debian
-
 dist: trusty
 services: docker
 
@@ -23,19 +18,24 @@ install:
     - pip -q install -U pip
     - pip -q install -r oq-engine/requirements-py36-linux64.txt
     - pip -q install -e oq-engine
-    - docker pull openquake/qgis-builder:3
-    - docker build --build-arg uid=$(id -u) -t openquake/qgis-builder:3 -f docker/Dockerfile docker/
 
 before_script:
     - oq restore oqdata-${BRANCH}.zip ~/oqdata
     - oq webui start 0.0.0.0:8800 --skip-browser &> webui.log &
 
+#FIXME Run the tests using a multi-stage job
 script:
-    - docker run -ti -e OQ_ENGINE_HOST='http://172.17.0.1:8800' --rm -v $TRAVIS_BUILD_DIR:/io openquake/qgis-builder:3 test
+    - cd scripts
+    - ./run_unit_tests.sh
+    - docker rm -f qgis
+    - ./run_functional_tests.sh
+    - docker rm -f qgis
+    - ./run_integration_tests.sh
 
-after_success:
-    - docker run -ti --rm -v $TRAVIS_BUILD_DIR:/io openquake/qgis-builder:3 build_apidoc
-    - docker run -ti --rm -v $TRAVIS_BUILD_DIR:/io openquake/qgis-builder:3 build_manual_html
+#FIXME Restore the tests based on the official QGIS container
+#after_success:
+#    - docker run -ti --rm -v $TRAVIS_BUILD_DIR:/io openquake/qgis-builder:3 build_apidoc
+#    - docker run -ti --rm -v $TRAVIS_BUILD_DIR:/io openquake/qgis-builder:3 build_manual_html
 
 after_script:
     - cat $TRAVIS_BUILD_DIR/webui.log
