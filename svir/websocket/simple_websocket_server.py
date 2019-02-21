@@ -82,6 +82,7 @@ class WebSocket(QObject):
         self.address = address
 
         self.handshaked = False
+        print("__init__(%s) handshaked False" % self)
         self.headerbuffer = bytearray()
         self.headertoread = 2048
 
@@ -132,7 +133,8 @@ class WebSocket(QObject):
         """
             Called when a websocket server gets a Close frame from a client.
         """
-        pass
+        self.handshaked = False
+        print("handleClose(%s) handshaked False" % self)
 
     def _handlePacket(self):
         if self.opcode == CLOSE:
@@ -270,6 +272,7 @@ class WebSocket(QObject):
                         hStr = HANDSHAKE_STR % {'acceptstr': k_s}
                         self.sendq.append((BINARY, hStr.encode('ascii')))
                         self.handshaked = True
+                        print("_handleData(%s) handshaked True" % self)
                         self.handleConnected()
                     except Exception as e:
                         raise Exception('handshake failed: %s', str(e))
@@ -278,7 +281,8 @@ class WebSocket(QObject):
         else:
             data = self.client.recv(16384)
             if not data:
-                raise Exception("remote socket closed")
+                print("_handleData(%s) remote socket closed 2" % self)
+                raise Exception("remote socket closed 2")
 
             if VER >= 3:
                 for d in data:

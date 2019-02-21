@@ -213,35 +213,35 @@ class Irmt(QObject):
                            enable=self.experimental_enabled(),
                            add_to_layer_actions=True,
                            submenu='OQ Platform')
-        # Action to drive apptest
-        self.add_menu_item("apptest",
-                           ":/plugins/irmt/aggregate.svg",
-                           u"AppTest",
-                           self.apptest,
-                           enable=self.experimental_enabled(),
-                           submenu='OQ Engine',
-                           # set_checkable=True,
-                           # set_checked=False,
-                           is_websocket_action=True,
-                           add_to_toolbar=True)
-        # Action to drive ipt
-        self.add_menu_item("ipt_set_cells",
-                           ":/plugins/irmt/ipt.svg",
-                           u"IPT set cells",
-                           self.ipt_set_cells,
-                           enable=self.experimental_enabled(),
-                           submenu='OQ Engine',
-                           is_websocket_action=True,
-                           add_to_toolbar=True)
-        # Action to drive ipt
-        self.add_menu_item("taxtweb_set_cells",
-                           ":/plugins/irmt/taxtweb.svg",
-                           u"Taxtweb set cells",
-                           self.taxtweb_set_cells,
-                           enable=self.experimental_enabled(),
-                           submenu='OQ Engine',
-                           is_websocket_action=True,
-                           add_to_toolbar=True)
+        # # Action to drive apptest
+        # self.add_menu_item("apptest",
+        #                    ":/plugins/irmt/aggregate.svg",
+        #                    u"AppTest",
+        #                    self.apptest,
+        #                    enable=self.experimental_enabled(),
+        #                    submenu='OQ Engine',
+        #                    # set_checkable=True,
+        #                    # set_checked=False,
+        #                    is_websocket_action=True,
+        #                    add_to_toolbar=True)
+        # # Action to drive ipt
+        # self.add_menu_item("ipt_set_cells",
+        #                    ":/plugins/irmt/ipt.svg",
+        #                    u"IPT set cells",
+        #                    self.ipt_set_cells,
+        #                    enable=self.experimental_enabled(),
+        #                    submenu='OQ Engine',
+        #                    is_websocket_action=True,
+        #                    add_to_toolbar=True)
+        # # Action to drive ipt
+        # self.add_menu_item("taxtweb_set_cells",
+        #                    ":/plugins/irmt/taxtweb.svg",
+        #                    u"Taxtweb set cells",
+        #                    self.taxtweb_set_cells,
+        #                    enable=self.experimental_enabled(),
+        #                    submenu='OQ Engine',
+        #                    is_websocket_action=True,
+        #                    add_to_toolbar=True)
         # Action to drive ipt
         self.add_menu_item("ipt",
                            ":/plugins/irmt/ipt.svg",
@@ -1444,8 +1444,9 @@ class Irmt(QObject):
 
     @pyqtSlot('QVariantMap')
     def handle_wss_error_sig(self, data):
-        log_msg("wss_error_sig: %s" % data, level='C',
-                message_bar=self.iface.messageBar())
+        # FIXME: Display also in the messageBar
+        log_msg("wss_error_sig: %s" % data, level='C')
+                # message_bar=self.iface.messageBar())
 
     @pyqtSlot('QVariantMap')
     def handle_from_socket_received(self, hyb_msg):
@@ -1522,16 +1523,16 @@ class Irmt(QObject):
         self.ipt_app = IptApp(self.registered_actions['ipt'],
                               self.websocket_thread,
                               self.iface.messageBar())
-        self.taxtweb_app = TaxtwebApp(self.registered_actions['taxtweb'],
-                                      self.websocket_thread,
-                                      self.iface.messageBar())
-        self.taxonomy_app = TaxonomyApp(None,  # no button associated
-                                        self.websocket_thread,
-                                        self.iface.messageBar())
-        self.apptest_app = AppTestApp(self.registered_actions['apptest'],
-                                      self.websocket_thread,
-                                      self.iface.messageBar())
-        self.web_apps = {'ipt': self.ipt_app,
-                         'taxtweb': self.taxtweb_app,
-                         'taxonomy': self.taxonomy_app,
-                         'apptest': self.apptest_app}
+        # self.taxtweb_app = TaxtwebApp(self.registered_actions['taxtweb'],
+        #                               self.websocket_thread,
+        #                               self.iface.messageBar())
+        # self.taxonomy_app = TaxonomyApp(None,  # no button associated
+        #                                 self.websocket_thread,
+        #                                 self.iface.messageBar())
+        # self.apptest_app = AppTestApp(self.registered_actions['apptest'],
+        #                               self.websocket_thread,
+        #                               self.iface.messageBar())
+        self.web_apps = {'ipt': self.ipt_app}
+                         # 'taxtweb': self.taxtweb_app,
+                         # 'taxonomy': self.taxonomy_app,
+                         # 'apptest': self.apptest_app}
