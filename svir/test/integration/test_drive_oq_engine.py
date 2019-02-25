@@ -76,7 +76,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         self.viewer_dock = ViewerDock(IFACE, mock_action)
         IFACE.newProject()
         self.drive_oq_engine_server_dlg = DriveOqEngineServerDialog(
-            IFACE, self.viewer_dock)
+            IFACE, self.viewer_dock, hostname=self.hostname)
 
     def download_output(self, output_id, outtype):
         dest_folder = tempfile.gettempdir()

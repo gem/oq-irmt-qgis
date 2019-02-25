@@ -128,7 +128,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     it is possible to run calculations, delete them, list them, visualize
     their outputs and loading them as vector layers.
     """
-    def __init__(self, iface, viewer_dock):
+    def __init__(self, iface, viewer_dock, hostname=None):
         self.iface = iface
         self.viewer_dock = viewer_dock  # needed to change the output_type
         QDialog.__init__(self)
@@ -140,7 +140,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         # keep track of the log lines acquired for each calculation
         self.calc_log_line = {}
         self.session = None
-        self.hostname = None
+        self.hostname = hostname
+        if hostname is not None:
+            self.forced_hostname = True
+        else:
+            self.forced_hostname = False
         self.calc_list = None
         self.current_calc_id = None  # list of outputs refers to this calc_id
         self.pointed_calc_id = None  # we will scroll to it
@@ -198,7 +202,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
     def login(self):
         self.session = Session()
-        self.hostname, username, password = get_credentials('engine')
+        if not self.forced_hostname:
+            self.hostname, username, password = get_credentials('engine')
         # try without authentication (if authentication is disabled server
         # side)
         # NOTE: check_is_lockdown() can raise exceptions,
