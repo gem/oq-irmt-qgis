@@ -26,6 +26,7 @@ import os
 from time import sleep
 from qgis.core import QgsTask
 from qgis.PyQt.QtCore import QThread, pyqtSignal, pyqtSlot
+from svir.utilities.utils import log_msg
 
 
 class TaskCanceled(Exception):
@@ -58,16 +59,18 @@ class DownloadOqOutputTask(QgsTask):
         self.current_calc_id = current_calc_id
         self.exception = None
 
-    def run(self):
         if self.current_calc_id:
-            download_url = "%s/v1/calc/%s/datastore" % (
+            self.download_url = "%s/v1/calc/%s/datastore" % (
                 self.hostname, self.current_calc_id)
         else:
-            download_url = (
+            self.download_url = (
                 "%s/v1/calc/result/%s?export_type=%s&dload=true" % (
                     self.hostname, self.output_id, self.outtype))
+        log_msg('GET: %s' % self.download_url, level='I', print_to_stderr=True)
+
+    def run(self):
         try:
-            self.download_output(self.session, download_url)
+            self.download_output(self.session, self.download_url)
         except Exception as exc:
             self.exception = exc
             return False
