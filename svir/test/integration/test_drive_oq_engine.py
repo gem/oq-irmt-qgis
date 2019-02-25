@@ -382,7 +382,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             print('\tLoading output type %s...' % output_type)
             self.viewer_dock.load_no_map_output(
                 calc_id, requests, self.hostname, output_type,
-                self.engine_version)
+                self.drive_oq_engine_server_dlg.engine_version)
             tmpfile_handler, tmpfile_name = tempfile.mkstemp()
             self.viewer_dock.write_export_file(tmpfile_name)
             os.close(tmpfile_handler)
