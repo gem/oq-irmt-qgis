@@ -23,6 +23,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import io
+import sys
 import numpy
 import tempfile
 from time import sleep
@@ -57,6 +58,7 @@ class ExtractNpzTask(QgsTask):
         self.dest_folder = tempfile.gettempdir()
         self.extract_url = '%s/v1/calc/%s/extract/%s' % (
             self.hostname, self.calc_id, self.output_type)
+        print('Extracting', self.extract_url, file=sys.stderr)
         self.extract_params = params
         self.exception = None
         log_msg('GET: %s, with parameters: %s'
