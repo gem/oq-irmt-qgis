@@ -68,7 +68,7 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         #       both in case of losses_by_asset and in case of avg_losses-stats
         self.extract_npz_task = ExtractNpzTask(
             'Extract losses by asset', QgsTask.CanCancel, self.session,
-            self.hostname, self.calc_id, self.output_type, self.finalize_init,
+            self.hostname, self.calc_id, 'losses_by_asset', self.finalize_init,
             self.on_extract_error)
         QgsApplication.taskManager().addTask(self.extract_npz_task)
 
