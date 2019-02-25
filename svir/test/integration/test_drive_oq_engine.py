@@ -405,7 +405,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         self.time_consuming_outputs = []
         self.not_implemented_loaders = set()
         self.untested_otypes = copy.copy(OQ_ALL_TYPES)  # it's a set
-        calc_list = self.get_calc_list()
+        calc_list = self.drive_oq_engine_server_dlg.calc_list
         try:
             selected_calc_id = int(os.environ.get('SELECTED_CALC_ID'))
         except (ValueError, TypeError):
