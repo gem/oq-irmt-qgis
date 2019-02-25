@@ -152,7 +152,7 @@ def log_msg(message, tag='GEM OpenQuake IRMT plugin', level='I',
                                     levels[level],
                                     duration)
         if print_to_stderr:
-            print(message, file=sys.stderr)
+            print('\t\t%s' % message, file=sys.stderr)
 
 
 def tr(message):
@@ -1087,17 +1087,18 @@ def get_checksum(file_path):
 def extract_npz(
         session, hostname, calc_id, output_type, message_bar, params=None):
     url = '%s/v1/calc/%s/extract/%s' % (hostname, calc_id, output_type)
-    log_msg('GET: %s, with parameters: %s' % (url, params), level='I')
+    log_msg('GET: %s, with parameters: %s' % (url, params), level='I',
+            print_to_stderr=True)
     resp = session.get(url, params=params)
     if not resp.ok:
         msg = "Unable to extract %s with parameters %s: %s" % (
             url, params, resp.reason)
-        log_msg(msg, level='C', message_bar=message_bar)
+        log_msg(msg, level='C', message_bar=message_bar, print_to_stderr=True)
         return
     resp_content = resp.content
     if not resp_content:
         msg = 'GET %s returned an empty content!' % url
-        log_msg(msg, level='C', message_bar=message_bar)
+        log_msg(msg, level='C', message_bar=message_bar, print_to_stderr=True)
         return
     return numpy.load(io.BytesIO(resp_content))
 
