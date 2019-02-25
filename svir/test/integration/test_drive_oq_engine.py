@@ -325,25 +325,14 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                            OQ_RST_TYPES):
             if output_type in OQ_CSV_TO_LAYER_TYPES:
                 print('\tLoading output type %s...' % output_type)
-                filepath = self.download_output(output['id'], 'csv')
+                self.drive_oq_engine_server_dlg.on_output_action_btn_clicked(
+                    output, 'Load_as_layer', 'csv')
             elif output_type in OQ_RST_TYPES:
                 print('\tLoading output type %s...' % output_type)
-                filepath = self.download_output(output['id'], 'rst')
-            assert filepath is not None
-            if output_type == 'fullreport':
-                dlg = ShowFullReportDialog(filepath)
-                dlg.accept()
+                self.drive_oq_engine_server_dlg.on_output_action_btn_clicked(
+                    output, 'Load_as_layer', 'rst')
                 print('\t\tok')
                 return
-            dlg = OUTPUT_TYPE_LOADERS[output_type](
-                IFACE, Mock(), requests, self.hostname, calc_id,
-                output_type, filepath)
-            if dlg.ok_button.isEnabled():
-                dlg.accept()
-                print('\t\tok')
-                return
-            else:
-                raise RuntimeError('The ok button is disabled')
         elif output_type in OQ_EXTRACT_TO_LAYER_TYPES:
             print('\tLoading output type %s...' % output_type)
             # TODO: when gmf_data for event_based becomes loadable,
@@ -357,6 +346,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 self.skipped_attempts.append(skipped_attempt)
                 print('\t\tSKIPPED')
                 return
+
             dlg = OUTPUT_TYPE_LOADERS[output_type](
                 IFACE, Mock(), requests, self.hostname, calc_id,
                 output_type)
