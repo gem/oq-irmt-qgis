@@ -326,11 +326,11 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             if output_type in OQ_CSV_TO_LAYER_TYPES:
                 print('\tLoading output type %s...' % output_type)
                 self.drive_oq_engine_server_dlg.on_output_action_btn_clicked(
-                    output, 'Load_as_layer', 'csv')
+                    output, 'Load as layer', 'csv')
             elif output_type in OQ_RST_TYPES:
                 print('\tLoading output type %s...' % output_type)
                 self.drive_oq_engine_server_dlg.on_output_action_btn_clicked(
-                    output, 'Load_as_layer', 'rst')
+                    output, 'Load as layer', 'rst')
                 print('\t\tok')
                 return
         elif output_type in OQ_EXTRACT_TO_LAYER_TYPES:
