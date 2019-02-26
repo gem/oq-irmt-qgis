@@ -84,6 +84,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             "%s/v1/calc/result/%s?export_type=%s&dload=true" % (self.hostname,
                                                                 output_id,
                                                                 outtype))
+        print('\t\tGET: %s' % output_download_url, file=sys.stderr)
         # FIXME: enable the user to set verify=True
         resp = requests.get(output_download_url, verify=False)
         if not resp.ok:
