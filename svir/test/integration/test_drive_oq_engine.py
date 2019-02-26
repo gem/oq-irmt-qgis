@@ -326,9 +326,11 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                            OQ_RST_TYPES):
             if output_type in OQ_CSV_TO_LAYER_TYPES:
                 print('\tLoading output type %s...' % output_type)
+                # TODO: we should test the actual downloader, asynchronously
                 filepath = self.download_output(output['id'], 'csv')
             elif output_type in OQ_RST_TYPES:
                 print('\tLoading output type %s...' % output_type)
+                # TODO: we should test the actual downloader, asynchronously
                 filepath = self.download_output(output['id'], 'rst')
             assert filepath is not None
             if output_type == 'fullreport':
