@@ -330,7 +330,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             elif output_type in OQ_RST_TYPES:
                 print('\tLoading output type %s...' % output_type)
                 self.drive_oq_engine_server_dlg.on_output_action_btn_clicked(
-                    output, 'Load as layer', 'rst')
+                    output, 'Show', 'rst')
                 print('\t\tok')
                 return
         elif output_type in OQ_EXTRACT_TO_LAYER_TYPES:
