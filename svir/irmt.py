@@ -157,6 +157,7 @@ class Irmt(object):
         QgsProject.instance().layersAdded.connect(self.layers_added)
         QgsProject.instance().layersRemoved.connect(
             self.layers_removed)
+        # FIXME: connect a button in the messageBar instead 
         QgsApplication.messageLog().messageReceived.connect(
             self.on_message_log_received)
 
@@ -305,6 +306,7 @@ class Irmt(object):
                 return action.menu()
         return None
 
+    # FIXME: connect from a button in the messageBar instead
     def on_message_log_received(self, message, tag, level):
         if level == Qgis.Critical:
             dock = self.iface.mainWindow().findChild(QDockWidget, 'MessageLog')
@@ -547,6 +549,7 @@ class Irmt(object):
             self.layers_added)
         QgsProject.instance().layersRemoved.disconnect(
             self.layers_removed)
+        # FIXME: disconnect from a button in the messageBar instead
         QgsApplication.messageLog().messageReceived.disconnect(
             self.on_message_log_received)
 

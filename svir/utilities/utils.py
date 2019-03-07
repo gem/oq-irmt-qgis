@@ -51,6 +51,9 @@ from qgis.PyQt.QtWidgets import (
                                  QToolButton,
                                  QFileDialog,
                                  QMessageBox,
+                                 QDialog,
+                                 QLabel,
+                                 QVBoxLayout,
                                  )
 from qgis.PyQt.QtGui import QColor
 
@@ -129,6 +132,11 @@ def log_msg(message, tag='GEM OpenQuake IRMT plugin', level='I',
                 or level in ('I', 'S') and log_verbosity in ('I', 'S')):
             QgsMessageLog.logMessage(
                 tr(message) + tb_text, tr(tag), levels[level])
+            if exception is not None:
+                button = QToolButton(message_bar)
+                button.setText('Show Traceback')
+                button.clicked.connect(lambda: on_tb_btn_clicked(tb_text))
+                message_bar.layout().addWidget(button)
         if message_bar is not None:
             if level == 'S':
                 title = 'Success'
@@ -150,6 +158,16 @@ def log_msg(message, tag='GEM OpenQuake IRMT plugin', level='I',
                                     tr(message),
                                     levels[level],
                                     duration)
+
+
+def on_tb_btn_clicked(message):
+    vbox = QVBoxLayout()
+    dlg = QDialog()
+    dlg.setWindowTitle('Traceback')
+    label = QLabel(message)
+    vbox.addWidget(label)
+    dlg.setLayout(vbox)
+    dlg.exec_()
 
 
 def tr(message):
