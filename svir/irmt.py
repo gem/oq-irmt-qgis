@@ -42,6 +42,7 @@ from qgis.core import (
                        QgsProject,
                        QgsExpression,
                        Qgis,
+                       QgsApplication,
                        )
 
 from qgis.PyQt.QtCore import (
@@ -53,7 +54,8 @@ from qgis.PyQt.QtCore import (
                               Qt,
                               QUrlQuery,
                               )
-from qgis.PyQt.QtWidgets import QAction, QFileDialog, QApplication, QMenu
+from qgis.PyQt.QtWidgets import (
+    QAction, QFileDialog, QApplication, QMenu, QDockWidget, QTabWidget)
 from qgis.PyQt.QtGui import QIcon, QDesktopServices
 
 from svir.dialogs.viewer_dock import ViewerDock
@@ -155,6 +157,8 @@ class Irmt(object):
         QgsProject.instance().layersAdded.connect(self.layers_added)
         QgsProject.instance().layersRemoved.connect(
             self.layers_removed)
+        QgsApplication.messageLog().messageReceived.connect(
+            self.on_message_log_received)
 
         # get or create directory to store input files for the OQ-Engine
         self.ipt_dir = self.get_ipt_dir()
@@ -300,6 +304,18 @@ class Irmt(object):
             if action.text() == title:
                 return action.menu()
         return None
+
+    def on_message_log_received(self, message, tag, level):
+        if level == Qgis.Critical:
+            dock = self.iface.mainWindow().findChild(QDockWidget, 'MessageLog')
+            dock.show()
+            tabs = dock.findChild(QTabWidget, 'tabWidget')
+            for tab in range(tabs.count()):
+                text = tabs.tabText(tab)
+                if text == tag:
+                    tabs.setCurrentIndex(tab)
+                    break
+            self.iface.mainWindow().findChild(QDockWidget, 'MessageLog').show()
 
     def experimental_enabled(self):
         experimental_enabled = QSettings().value(
@@ -531,6 +547,8 @@ class Irmt(object):
             self.layers_added)
         QgsProject.instance().layersRemoved.disconnect(
             self.layers_removed)
+        QgsApplication.messageLog().messageReceived.disconnect(
+            self.on_message_log_received)
 
     def import_sv_variables(self):
         """
