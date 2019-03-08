@@ -157,10 +157,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
         self.engine_version = None
         self.num_login_attempts = 0
-        self.attempt_login()
 
         self.download_tasks = {}
         self.open_output_dlgs = {}
+
+        self.attempt_login()
 
     def attempt_login(self):
         self.num_login_attempts += 1
