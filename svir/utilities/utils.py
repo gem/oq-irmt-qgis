@@ -31,7 +31,6 @@ import traceback
 import locale
 import zlib
 import io
-import sip
 from copy import deepcopy
 from time import time
 from pprint import pformat
@@ -137,9 +136,7 @@ def log_msg(message, tag='GEM OpenQuake IRMT plugin', level='I',
             if exception is not None:
                 tb_btn = QToolButton(message_bar)
                 tb_btn.setText('Show Traceback')
-                print('Created: %s' % tb_btn)
                 tb_btn.clicked.connect(lambda: on_tb_btn_clicked(tb_text))
-                tb_btn.destroyed.connect(on_tb_btn_destroyed)
         if message_bar is not None:
             if level == 'S':
                 title = 'Success'
@@ -179,10 +176,6 @@ def on_tb_btn_clicked(message):
     dlg.setLayout(vbox)
     dlg.setMinimumSize(700, 500)
     dlg.exec_()
-
-
-def on_tb_btn_destroyed(tb_btn):
-    print('Destroyed: %s' % sip.cast(tb_btn, QToolButton))
 
 
 def tr(message):
