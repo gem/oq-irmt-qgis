@@ -31,6 +31,7 @@ import traceback
 import locale
 import zlib
 import io
+import sip
 from copy import deepcopy
 from time import time
 from pprint import pformat
@@ -41,7 +42,7 @@ from qgis.core import (
                        QgsVectorFileWriter,
                        )
 from qgis.core import Qgis
-from qgis.gui import QgsMessageBar
+from qgis.gui import QgsMessageBar, QgsMessageBarItem
 
 from qgis.PyQt import uic
 from qgis.PyQt.QtCore import Qt, QSettings, QUrl, QUrlQuery
@@ -134,10 +135,11 @@ def log_msg(message, tag='GEM OpenQuake IRMT plugin', level='I',
             QgsMessageLog.logMessage(
                 tr(message) + tb_text, tr(tag), levels[level])
             if exception is not None:
-                button = QToolButton(message_bar)
-                button.setText('Show Traceback')
-                button.clicked.connect(lambda: on_tb_btn_clicked(tb_text))
-                message_bar.layout().addWidget(button)
+                tb_btn = QToolButton(message_bar)
+                tb_btn.setText('Show Traceback')
+                print('Created: %s' % tb_btn)
+                tb_btn.clicked.connect(lambda: on_tb_btn_clicked(tb_text))
+                tb_btn.destroyed.connect(on_tb_btn_destroyed)
         if message_bar is not None:
             if level == 'S':
                 title = 'Success'
@@ -153,12 +155,16 @@ def log_msg(message, tag='GEM OpenQuake IRMT plugin', level='I',
                 duration = duration if duration is not None else 0
             max_msg_len = 200
             if len(message) > max_msg_len:
-                message = ("%s[...] (Please open the Log Messages Panel to"
-                           " read the full message)" % message[:max_msg_len])
-            message_bar.pushMessage(tr(title),
-                                    tr(message),
-                                    levels[level],
-                                    duration)
+                message = ("%s[...]" % message[:max_msg_len])
+            if exception is None:
+                message_bar.pushMessage(tr(title),
+                                        tr(message),
+                                        levels[level],
+                                        duration)
+            else:
+                mb_item = QgsMessageBarItem(
+                    tr(title), tr(message), tb_btn, levels[level], duration)
+                message_bar.pushItem(mb_item)
         if print_to_stderr:
             print('\t\t%s' % message, file=sys.stderr)
 
@@ -173,6 +179,10 @@ def on_tb_btn_clicked(message):
     dlg.setLayout(vbox)
     dlg.setMinimumSize(700, 500)
     dlg.exec_()
+
+
+def on_tb_btn_destroyed(tb_btn):
+    print('Destroyed: %s' % sip.cast(tb_btn, QToolButton))
 
 
 def tr(message):
