@@ -53,7 +53,7 @@ from qgis.PyQt.QtWidgets import (
                                  QMessageBox,
                                  QDialog,
                                  QTextBrowser,
-                                 QHBoxLayout,
+                                 QVBoxLayout,
                                  )
 from qgis.PyQt.QtGui import QColor
 
@@ -164,13 +164,14 @@ def log_msg(message, tag='GEM OpenQuake IRMT plugin', level='I',
 
 
 def on_tb_btn_clicked(message):
-    hbox = QHBoxLayout()
+    vbox = QVBoxLayout()
     dlg = QDialog()
     dlg.setWindowTitle('Traceback')
     text_browser = QTextBrowser()
     text_browser.setText(message)
-    hbox.addWidget(text_browser)
-    dlg.setLayout(hbox)
+    vbox.addWidget(text_browser)
+    dlg.setLayout(vbox)
+    dlg.setMinimumSize(700, 500)
     dlg.exec_()
 
 
