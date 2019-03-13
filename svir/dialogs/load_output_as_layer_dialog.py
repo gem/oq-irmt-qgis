@@ -419,12 +419,13 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         if self.output_type in ('hcurves', 'uhs', 'hmaps'):
             try:
                 investigation_time = self.npz_file['investigation_time']
-            except KeyError:
+            except KeyError as exc:
                 msg = ('investigation_time not found. It is mandatory for %s.'
                        ' Please check if the ouptut was produced by an'
                        ' obsolete version of the OpenQuake Engine'
                        ' Server.') % self.output_type
-                log_msg(msg, level='C', message_bar=self.iface.messageBar())
+                log_msg(msg, level='C', message_bar=self.iface.messageBar(),
+                        exception=exc)
             else:
                 # We must cast to 'str' to keep numerical padding
                 # after saving the project
@@ -738,7 +739,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                         zonal_layer_plus_sum_name)
                 except Exception as exc:
                     log_msg(str(exc), level='C',
-                            message_bar=self.iface.messageBar())
+                            message_bar=self.iface.messageBar(),
+                            exception=exc)
                     super().accept()
                     return
             else:

@@ -31,6 +31,9 @@ import traceback
 import locale
 import zlib
 import io
+from pygments import highlight
+from pygments.lexers import PythonLexer
+from pygments.formatters import HtmlFormatter
 from copy import deepcopy
 from time import time
 from pprint import pformat
@@ -41,7 +44,7 @@ from qgis.core import (
                        QgsVectorFileWriter,
                        )
 from qgis.core import Qgis
-from qgis.gui import QgsMessageBar
+from qgis.gui import QgsMessageBar, QgsMessageBarItem
 
 from qgis.PyQt import uic
 from qgis.PyQt.QtCore import Qt, QSettings, QUrl, QUrlQuery
@@ -51,6 +54,9 @@ from qgis.PyQt.QtWidgets import (
                                  QToolButton,
                                  QFileDialog,
                                  QMessageBox,
+                                 QDialog,
+                                 QTextBrowser,
+                                 QVBoxLayout,
                                  )
 from qgis.PyQt.QtGui import QColor
 
@@ -104,7 +110,10 @@ def log_msg(message, tag='GEM OpenQuake IRMT plugin', level='I',
         to keep the message visible indefinitely, or None to use
         the default duration of the chosen level
     :param exception: an optional exception, from which the traceback will be
-        extracted and written only in the log
+        extracted and written in the log. When the exception is provided,
+        an additional button in the `QgsMessageBar` allows to visualize the
+        traceback in a separate window.
+    :print_to_stderr: if True, the error message will be printed also to stderr
     """
     levels = {
               'I': Qgis.Info,
@@ -130,6 +139,10 @@ def log_msg(message, tag='GEM OpenQuake IRMT plugin', level='I',
                 or level in ('I', 'S') and log_verbosity in ('I', 'S')):
             QgsMessageLog.logMessage(
                 tr(message) + tb_text, tr(tag), levels[level])
+            if exception is not None:
+                tb_btn = QToolButton(message_bar)
+                tb_btn.setText('Show Traceback')
+                tb_btn.clicked.connect(lambda: _on_tb_btn_clicked(tb_text))
         if message_bar is not None:
             if level == 'S':
                 title = 'Success'
@@ -145,14 +158,31 @@ def log_msg(message, tag='GEM OpenQuake IRMT plugin', level='I',
                 duration = duration if duration is not None else 0
             max_msg_len = 200
             if len(message) > max_msg_len:
-                message = ("%s[...] (Please open the Log Messages Panel to"
-                           " read the full message)" % message[:max_msg_len])
-            message_bar.pushMessage(tr(title),
-                                    tr(message),
-                                    levels[level],
-                                    duration)
+                message = ("%s[...]" % message[:max_msg_len])
+            if exception is None:
+                message_bar.pushMessage(tr(title),
+                                        tr(message),
+                                        levels[level],
+                                        duration)
+            else:
+                mb_item = QgsMessageBarItem(
+                    tr(title), tr(message), tb_btn, levels[level], duration)
+                message_bar.pushItem(mb_item)
         if print_to_stderr:
             print('\t\t%s' % message, file=sys.stderr)
+
+
+def _on_tb_btn_clicked(message):
+    vbox = QVBoxLayout()
+    dlg = QDialog()
+    dlg.setWindowTitle('Traceback')
+    text_browser = QTextBrowser()
+    formatted_msg = highlight(message, PythonLexer(), HtmlFormatter(full=True))
+    text_browser.setHtml(formatted_msg)
+    vbox.addWidget(text_browser)
+    dlg.setLayout(vbox)
+    dlg.setMinimumSize(700, 500)
+    dlg.exec_()
 
 
 def tr(message):
