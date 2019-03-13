@@ -107,7 +107,9 @@ def log_msg(message, tag='GEM OpenQuake IRMT plugin', level='I',
         to keep the message visible indefinitely, or None to use
         the default duration of the chosen level
     :param exception: an optional exception, from which the traceback will be
-        extracted and written only in the log
+        extracted and written in the log. When the exception is provided,
+        an additional button in the `QgsMessageBar` allows to visualize the
+        traceback in a separate window.
     """
     levels = {
               'I': Qgis.Info,
@@ -136,7 +138,7 @@ def log_msg(message, tag='GEM OpenQuake IRMT plugin', level='I',
             if exception is not None:
                 tb_btn = QToolButton(message_bar)
                 tb_btn.setText('Show Traceback')
-                tb_btn.clicked.connect(lambda: on_tb_btn_clicked(tb_text))
+                tb_btn.clicked.connect(lambda: _on_tb_btn_clicked(tb_text))
         if message_bar is not None:
             if level == 'S':
                 title = 'Success'
@@ -166,7 +168,7 @@ def log_msg(message, tag='GEM OpenQuake IRMT plugin', level='I',
             print('\t\t%s' % message, file=sys.stderr)
 
 
-def on_tb_btn_clicked(message):
+def _on_tb_btn_clicked(message):
     vbox = QVBoxLayout()
     dlg = QDialog()
     dlg.setWindowTitle('Traceback')

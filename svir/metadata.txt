@@ -24,6 +24,7 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     3.4.0
+    * Whenever an error message is shown to the user, a button in the QGIS message bar allows to display the traceback in a separate window
     * Fixed loader for Aggregate Loss Curves in event based risk OQ-Engine output
     * Tests have been split into: unit tests (using the qgis.testing module); functional tests (running on the official QGIS docker
       without external services); integration tests (running on the official QGIS docker and interacting with a running OQ-Engine
