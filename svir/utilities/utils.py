@@ -31,6 +31,9 @@ import traceback
 import locale
 import zlib
 import io
+from pygments import highlight
+from pygments.lexers import PythonLexer
+from pygments.formatters import HtmlFormatter
 from copy import deepcopy
 from time import time
 from pprint import pformat
@@ -110,6 +113,7 @@ def log_msg(message, tag='GEM OpenQuake IRMT plugin', level='I',
         extracted and written in the log. When the exception is provided,
         an additional button in the `QgsMessageBar` allows to visualize the
         traceback in a separate window.
+    :print_to_stderr: if True, the error message will be printed also to stderr
     """
     levels = {
               'I': Qgis.Info,
@@ -173,7 +177,8 @@ def _on_tb_btn_clicked(message):
     dlg = QDialog()
     dlg.setWindowTitle('Traceback')
     text_browser = QTextBrowser()
-    text_browser.setText(message)
+    formatted_msg = highlight(message, PythonLexer(), HtmlFormatter(full=True))
+    text_browser.setHtml(formatted_msg)
     vbox.addWidget(text_browser)
     dlg.setLayout(vbox)
     dlg.setMinimumSize(700, 500)
