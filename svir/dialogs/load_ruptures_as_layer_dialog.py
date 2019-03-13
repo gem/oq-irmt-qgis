@@ -87,13 +87,14 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
                 params_dict = get_params_from_comment_line(comment_line)
             except LookupError as exc:
                 log_msg(exc.message, level='C',
-                        message_bar=self.iface.messageBar())
+                        message_bar=self.iface.messageBar(),
+                        exception=exc)
                 return
             try:
                 investigation_time = params_dict['investigation_time']
-            except KeyError:
+            except KeyError as exc:
                 log_msg('Investigation time not found', level='C',
-                        message_bar=self.iface.messageBar())
+                        message_bar=self.iface.messageBar(), exception=exc)
                 return
         # extract the name of the csv file and remove the extension
         layer_name = os.path.splitext(os.path.basename(csv_path))[0]
@@ -106,7 +107,8 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
                 save_as_shp=self.save_as_shp_ckb.isChecked(),
                 dest_shp=dest_shp)
         except RuntimeError as exc:
-            log_msg(str(exc), level='C', message_bar=self.iface.messageBar())
+            log_msg(str(exc), level='C', message_bar=self.iface.messageBar(),
+                    exception=exc)
             return
         self.layer.setCustomProperty('investigation_time', investigation_time)
         style_by = self.style_by_cbx.itemData(self.style_by_cbx.currentIndex())

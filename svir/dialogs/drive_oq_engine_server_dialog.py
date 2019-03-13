@@ -597,7 +597,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         try:
             result = json.loads(resp.text)['success']
         except Exception as exc:
-            log_msg(str(exc), level='C', message_bar=self.iface.messageBar())
+            log_msg(str(exc), level='C', message_bar=self.iface.messageBar(),
+                    exception=exc)
             return False
         else:
             return result

@@ -73,7 +73,8 @@ class LoadBasicCsvAsLayerDialog(LoadOutputAsLayerDialog):
                 save_as_shp=False, dest_shp=dest_shp,
                 zoom_to_layer=False, has_geom=False)
         except RuntimeError as exc:
-            log_msg(str(exc), level='C', message_bar=self.iface.messageBar())
+            log_msg(str(exc), level='C', message_bar=self.iface.messageBar(),
+                    exception=exc)
             return
         log_msg('Layer %s was loaded successfully' % layer_name,
                 level='S', message_bar=self.iface.messageBar())

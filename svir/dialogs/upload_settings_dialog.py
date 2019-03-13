@@ -218,7 +218,8 @@ class UploadSettingsDialog(QDialog, FORM_CLASS):
                     error_msg = (
                         'Unable to login to the platform: ' + e.message)
                     log_msg(error_msg, level='C',
-                            message_bar=self.iface.messageBar())
+                            message_bar=self.iface.messageBar(),
+                            exception=e)
                     return
                 if 'platform_layer_id' not in self.suppl_info:
                     error_msg = ('Unable to retrieve the id of'

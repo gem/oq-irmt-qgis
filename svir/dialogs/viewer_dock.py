@@ -1125,9 +1125,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     for period in periods:
                         if period not in unique_periods:
                             unique_periods.append(period)
-                except ValueError:
+                except ValueError as exc:
                     log_msg(err_msg, level='C',
-                            message_bar=self.iface.messageBar())
+                            message_bar=self.iface.messageBar(),
+                            exception=exc)
                     self.output_type_cbx.setCurrentIndex(-1)
                     return
                 self.current_abscissa = unique_periods
