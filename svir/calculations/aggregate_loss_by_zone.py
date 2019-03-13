@@ -89,6 +89,7 @@ def calculate_zonal_stats(callback, zonal_layer, points_layer, join_fields,
         parameter, or None in case of failure
     """
 
+    processing.Processing.initialize()
     alg = QgsApplication.processingRegistry().algorithmById(
         'qgis:joinbylocationsummary')
     # make sure to use the actual lists of predicates and summaries as defined

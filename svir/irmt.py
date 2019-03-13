@@ -617,7 +617,9 @@ class Irmt(object):
                     start_worker(worker, self.iface.messageBar(),
                                  'Downloading data from platform')
         except SvNetworkError as e:
-            log_msg(str(e), level='C', message_bar=self.iface.messageBar())
+            log_msg('An error occurred. See the traceback for details.',
+                    level='C', message_bar=self.iface.messageBar(),
+                    exception=e)
 
     def _data_download_successful(
             self, result, load_geometries, dest_filename, project_definition,
@@ -1257,7 +1259,8 @@ class Irmt(object):
                             message_bar=self.iface.messageBar())
                 except (ValueError, NotImplementedError, TypeError) as e:
                     log_msg(e.message, level='C',
-                            message_bar=self.iface.messageBar())
+                            message_bar=self.iface.messageBar(),
+                            exception=e)
                 else:  # only if the transformation was performed successfully
                     active_layer_id = self.iface.activeLayer().id()
                     read_layer_suppl_info_from_qgs(

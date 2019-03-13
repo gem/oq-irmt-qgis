@@ -157,10 +157,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
         self.engine_version = None
         self.num_login_attempts = 0
-        self.attempt_login()
 
         self.download_tasks = {}
         self.open_output_dlgs = {}
+
+        self.attempt_login()
 
     def attempt_login(self):
         self.num_login_attempts += 1
@@ -596,7 +597,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         try:
             result = json.loads(resp.text)['success']
         except Exception as exc:
-            log_msg(str(exc), level='C', message_bar=self.iface.messageBar())
+            log_msg(str(exc), level='C', message_bar=self.iface.messageBar(),
+                    exception=exc)
             return False
         else:
             return result

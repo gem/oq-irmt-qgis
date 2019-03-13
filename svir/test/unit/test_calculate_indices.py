@@ -28,7 +28,7 @@ import sys
 import tempfile
 from copy import deepcopy
 from qgis.core import QgsVectorLayer
-from svir.test.utilities import get_qgis_app
+
 from svir.calculations.calculate_utils import (calculate_node,
                                                get_node_attr_id_and_name,
                                                calculate_composite_variable,
@@ -39,7 +39,11 @@ from svir.utilities.utils import (set_operator,
                                   save_layer_as_shapefile,
                                   )
 from svir.utilities.shared import OPERATORS_DICT, DiscardedFeature
-QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
+from qgis.testing import start_app
+from qgis.testing.mocked import get_iface
+
+QGIS_APP = start_app()
+IFACE = get_iface()
 
 
 PROJ_DEF_STD_OPERATORS = {

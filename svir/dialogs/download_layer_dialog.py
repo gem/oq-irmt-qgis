@@ -275,7 +275,8 @@ class DownloadLayerDialog(QDialog, FORM_CLASS):
         except Exception as e:
             error_msg = ('Unable to download and apply the'
                          ' style layer descriptor: %s' % e)
-            log_msg(error_msg, level='C', message_bar=self.iface.messageBar())
+            log_msg(error_msg, level='C', message_bar=self.iface.messageBar(),
+                    exception=e)
         self.iface.setActiveLayer(layer)
         project_definitions = supplemental_information['project_definitions']
         # ensure backwards compatibility with projects with a single

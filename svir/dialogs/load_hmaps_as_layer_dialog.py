@@ -169,7 +169,8 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
             # NOTE: add_numeric_attribute uses the native qgis editing manager
             added_field_name = add_numeric_attribute(field_name, self.layer)
         except TypeError as exc:
-            log_msg(str(exc), level='C', message_bar=self.iface.messageBar())
+            log_msg(str(exc), level='C', message_bar=self.iface.messageBar(),
+                    exception=exc)
             return
         return added_field_name
 

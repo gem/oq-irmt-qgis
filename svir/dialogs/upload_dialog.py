@@ -129,10 +129,8 @@ class UploadDialog(QDialog, FORM_CLASS):
         except Exception as e:
             error_msg = (
                 'Unable to export the styled layer descriptor: ' + str(e))
-            log_msg(traceback.format_exc(), level='C')
-            self.message_bar.pushMessage(
-                'Style error', error_msg, duration=0,
-                level=Qgis.Critical)
+            log_msg(error_msg, level='C', message_bar=self.message_bar,
+                    exception=e)
             return
 
         if DEBUG:
