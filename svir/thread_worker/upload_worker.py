@@ -90,7 +90,7 @@ class UploadWorker(AbstractWorker):
                             'change_layer', 'delete_layer',
                             'view_resourcebase',
                             'download_resourcebase',
-                            'publish_resourcebase'
+                            'publish_resourcebase',
                             ]
         admin_permissions = [
                              'change_layer_data',
@@ -98,7 +98,8 @@ class UploadWorker(AbstractWorker):
                              'change_resourcebase',
                              'delete_resourcebase',
                              'change_resourcebase_permissions',
-                             ].extend(user_permissions)
+                             ]
+        admin_permissions.extend(user_permissions)
         permissions = {
                        "admin": {
                                  self.username: admin_permissions
