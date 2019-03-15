@@ -179,31 +179,21 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         # set dialog options and accept
         if dlg.output_type == 'uhs':
             dlg.load_selected_only_ckb.setChecked(True)
-            poe_guessed_values = ['0.1', '0.02']
-            poe_was_found = False
-            for poe in poe_guessed_values:
-                idx = dlg.poe_cbx.findText(poe)
-                if idx != -1:
-                    dlg.poe_cbx.setCurrentIndex(idx)
-                    poe_was_found = True
-                    break
             assert_and_emit(
-                dlg.loading_exception, self.assertEqual, poe_was_found, True,
-                'POE was not found in the guessed list %s' %
-                poe_guessed_values)
+                dlg.loading_exception, self.assertGreater,
+                dlg.poe_cbx.count(), 0, 'No PoE was found')
+            dlg.poe_cbx.setCurrentIndex(0)
         elif dlg.output_type == 'losses_by_asset':
-            # FIXME: testing only for a selected taxonomy
+            # FIXME: testing only for the first taxonomy that is found
             dlg.load_selected_only_ckb.setChecked(True)
-            taxonomy_idx = dlg.taxonomy_cbx.findText('"Concrete"')
-            assert_and_emit(dlg.loading_exception, self.assertNotEqual,
-                            taxonomy_idx, -1,
-                            'Taxonomy "Concrete" was not found')
-            dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
-            loss_type_idx = dlg.loss_type_cbx.findText('structural')
-            assert_and_emit(dlg.loading_exception, self.assertNotEqual,
-                            loss_type_idx, -1,
-                            'Loss type structural was not found')
-            dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
+            assert_and_emit(
+                dlg.loading_exception, self.assertGreater,
+                dlg.taxonomy_cbx.count(), 0, 'No taxonomy was found')
+            dlg.taxonomy_cbx.setCurrentIndex(0)
+            assert_and_emit(
+                dlg.loading_exception, self.assertGreater,
+                dlg.loss_type_cbx.count(), 0, 'No loss type was found')
+            dlg.loss_type_cbx.setCurrentIndex(0)
 
             # # FIXME: we need to do dlg.accept() also for the case
             #          loading all taxonomies, and performing the
@@ -263,21 +253,18 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         elif dlg.output_type == 'dmg_by_asset':
             # FIXME: testing only for selected taxonomy
             dlg.load_selected_only_ckb.setChecked(True)
-            taxonomy_idx = dlg.taxonomy_cbx.findText('"Concrete"')
-            assert_and_emit(dlg.loading_exception, self.assertNotEqual,
-                            taxonomy_idx, -1,
-                            'Taxonomy "Concrete" was not found')
-            dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
-            loss_type_idx = dlg.loss_type_cbx.findText('structural')
-            assert_and_emit(dlg.loading_exception, self.assertNotEqual,
-                            loss_type_idx, -1,
-                            'Loss type structural was not found')
-            dlg.loss_type_cbx.setCurrentIndex(loss_type_idx)
-            dmg_state_idx = dlg.dmg_state_cbx.findText('moderate')
-            assert_and_emit(dlg.loading_exception, self.assertNotEqual,
-                            dmg_state_idx, -1,
-                            'Damage state moderate was not found')
-            dlg.dmg_state_cbx.setCurrentIndex(dmg_state_idx)
+            assert_and_emit(
+                dlg.loading_exception, self.assertGreater,
+                dlg.taxonomy_cbx.count(), 0, 'No taxonomy was found')
+            dlg.taxonomy_cbx.setCurrentIndex(0)
+            assert_and_emit(
+                dlg.loading_exception, self.assertGreater,
+                dlg.loss_type_cbx.count(), 0, 'No loss_type was found')
+            dlg.loss_type_cbx.setCurrentIndex(0)
+            assert_and_emit(
+                dlg.loading_exception, self.assertGreater,
+                dlg.dmg_state_cbx.count(), 0, 'No damage state was found')
+            dlg.dmg_state_cbx.setCurrentIndex(0)
 
             # # FIXME: we need to do dlg.accept() also for the case
             #          loading all taxonomies, and performing the
