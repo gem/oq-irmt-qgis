@@ -179,10 +179,18 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         # set dialog options and accept
         if dlg.output_type == 'uhs':
             dlg.load_selected_only_ckb.setChecked(True)
-            idx = dlg.poe_cbx.findText('0.1')
-            assert_and_emit(dlg.loading_exception, self.assertEqual,
-                            idx, 0, 'POE 0.1 was not found')
-            dlg.poe_cbx.setCurrentIndex(idx)
+            poe_guessed_values = ['0.1', '0.02']
+            poe_was_found = False
+            for poe in poe_guessed_values:
+                idx = dlg.poe_cbx.findText(poe)
+                if idx != -1:
+                    dlg.poe_cbx.setCurrentIndex(idx)
+                    poe_was_found = True
+                    break
+            assert_and_emit(
+                dlg.loading_exception, self.assertEqual, poe_was_found, True,
+                'POE was not found in the guessed list %s' %
+                poe_guessed_values)
         elif dlg.output_type == 'losses_by_asset':
             # FIXME: testing only for a selected taxonomy
             dlg.load_selected_only_ckb.setChecked(True)
