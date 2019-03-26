@@ -606,7 +606,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 message_bar=self.iface.messageBar())
         if rlzs_npz is None:
             return
-        rlzs = [rlz.decode('utf8') for rlz in rlzs_npz['array']['gsims']]
+        rlzs = [rlz.decode('utf8') for rlz in rlzs_npz['array']['branch_path']]
         self.rlz_cbx.blockSignals(True)
         self.rlz_cbx.clear()
         self.rlz_cbx.addItems(rlzs)
@@ -666,7 +666,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             if rlzs_npz is None:
                 return
             self.rlzs = [rlz.decode('utf8')
-                         for rlz in rlzs_npz['array']['gsims']]
+                         for rlz in rlzs_npz['array']['branch_path']]
         self._get_tags(session, hostname, calc_id, self.iface.messageBar(),
                        with_star=True)
         self.update_list_selected_edt()
