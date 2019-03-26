@@ -479,10 +479,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             layer.select([1, 2])
         else:
             layer.select([1])
-        imt = 'PGA'
-        idx = self.viewer_dock.imt_cbx.findText(imt)
-        self.assertNotEqual(idx, -1, 'IMT %s not found' % imt)
-        self.viewer_dock.imt_cbx.setCurrentIndex(idx)
+        self.assertGreater(
+            self.viewer_dock.imt_cbx.count(), 0, 'No IMT was found!')
+        self.viewer_dock.imt_cbx.setCurrentIndex(0)
         # test exporting the current selection to csv
         _, exported_file_path = tempfile.mkstemp(suffix=".csv")
         self._test_export()
