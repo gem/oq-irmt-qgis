@@ -175,6 +175,29 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     def on_load_all_rlzs_or_stats_chk_stateChanged(self, state):
         self.rlz_or_stat_cbx.setEnabled(state == Qt.Unchecked)
 
+    def create_selector(
+            self, name, label_text, filter_ckb=False, on_cbx_changed=None):
+        setattr(self, "%s_lbl" % name, QLabel(label_text))
+        setattr(self, "%s_cbx" % name, QComboBox())
+        lbl = getattr(self, "%s_lbl" % name)
+        cbx = getattr(self, "%s_cbx" % name)
+        cbx.setDisabled(filter_ckb)
+        if on_cbx_changed is not None:
+            cbx.currentIndexChanged['QString'].connect(on_cbx_changed)
+        if filter_ckb:
+            setattr(self, "filter_by_%s_ckb" % name,
+                    QCheckBox('Filter by %s' % name))
+            filter_ckb = getattr(self, "filter_by_%s_ckb" % name)
+
+            def on_load_all_ckb_changed():
+                cbx.setEnabled(filter_ckb.isChecked())
+
+            filter_ckb.stateChanged[int].connect(on_load_all_ckb_changed)
+            filter_ckb.setChecked(False)
+            self.vlayout.addWidget(filter_ckb)
+        self.vlayout.addWidget(lbl)
+        self.vlayout.addWidget(cbx)
+
     def create_imt_selector(self, all_ckb=False):
         self.imt_lbl = QLabel('Intensity Measure Type')
         self.imt_cbx = QComboBox()
@@ -300,12 +323,14 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                     self.zonal_layer_cbx.count()-1, layer.id())
 
     def on_zonal_layer_cbx_currentIndexChanged(self, new_index):
+        # FIXME: perhaps self.zonal_layer?
         zonal_layer = None
         if not self.zonal_layer_cbx.currentText():
             if self.zonal_layer_gbx.isChecked():
                 self.ok_button.setEnabled(False)
             return
         zonal_layer_id = self.zonal_layer_cbx.itemData(new_index)
+        # FIXME: perhaps self.zonal_layer?
         zonal_layer = QgsProject.instance().mapLayer(zonal_layer_id)
         self.set_ok_button()
 
@@ -707,7 +732,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             self.load_from_npz()
             if self.output_type in ('losses_by_asset',
                                     'dmg_by_asset',
-                                    'avg_losses-stats'):
+                                    'avg_losses-stats',
+                                    ):
                 # check if also aggregating by zone or not
                 if (not self.zonal_layer_cbx.currentText() or
                         not self.zonal_layer_gbx.isChecked()):

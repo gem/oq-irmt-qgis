@@ -226,13 +226,13 @@ OQ_CSV_TO_LAYER_TYPES = (
     OQ_BASIC_CSV_TO_LAYER_TYPES | OQ_COMPLEX_CSV_TO_LAYER_TYPES)
 OQ_EXTRACT_TO_LAYER_TYPES = set([
     'hmaps', 'hcurves', 'uhs', 'losses_by_asset', 'gmf_data',
-    'dmg_by_asset', 'avg_losses-stats'])
+    'dmg_by_asset', 'avg_losses-stats', 'assets'])
 OQ_TO_LAYER_TYPES = (OQ_CSV_TO_LAYER_TYPES |
                      OQ_EXTRACT_TO_LAYER_TYPES)
 OQ_RST_TYPES = set(['fullreport'])
 OQ_EXTRACT_TO_VIEW_TYPES = set(
     ['agg_curves-rlzs', 'agg_curves-stats', 'dmg_by_asset_aggr',
-     'losses_by_asset_aggr', 'avg_losses-stats_aggr'])
+     'losses_by_asset_aggr', 'avg_losses-stats_aggr', 'assets_aggr'])
 OQ_ALL_TYPES = OQ_TO_LAYER_TYPES | OQ_RST_TYPES | OQ_EXTRACT_TO_VIEW_TYPES
 
 LOG_LEVELS = {'I': 'Info (high verbosity)',

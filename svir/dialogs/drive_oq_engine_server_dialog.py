@@ -80,6 +80,8 @@ from svir.dialogs.load_dmg_by_asset_as_layer_dialog import (
     LoadDmgByAssetAsLayerDialog)
 from svir.dialogs.load_gmf_data_as_layer_dialog import (
     LoadGmfDataAsLayerDialog)
+from svir.dialogs.load_assets_as_layer_dialog import (
+    LoadAssetsAsLayerDialog)
 from svir.dialogs.load_hmaps_as_layer_dialog import (
     LoadHazardMapsAsLayerDialog)
 from svir.dialogs.load_hcurves_as_layer_dialog import (
@@ -117,6 +119,7 @@ OUTPUT_TYPE_LOADERS = {
     'uhs': LoadUhsAsLayerDialog,
     'losses_by_asset': LoadLossesByAssetAsLayerDialog,
     'avg_losses-stats': LoadLossesByAssetAsLayerDialog,
+    'assets': LoadAssetsAsLayerDialog,
 }
 assert set(OUTPUT_TYPE_LOADERS) == OQ_TO_LAYER_TYPES, (
     OUTPUT_TYPE_LOADERS, OQ_TO_LAYER_TYPES)
@@ -410,6 +413,12 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         output_list = self.get_output_list(calc_id)
         self.list_of_outputs_lbl.setText(
             'List of outputs for calculation %s' % calc_id)
+        # FIXME: remove this hack as soon as the output is actually provided
+        output_list.append(
+            {'id': 500, 'name': 'Assets', 'type': 'assets',
+             'outtypes': ['npz'],
+             'url': 'http://localhost:8800/v1/calc/result/500',
+             'size_mb': None})
         # from engine2.5 to engine2.6, job_type was changed into
         # calculation_mode. This check prevents the plugin to break wnen
         # using an old version of the engine.
