@@ -75,12 +75,12 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
         self.ok_button.setEnabled(True)
 
     def build_layer_name(self, rlz_or_stat=None, **kwargs):
-        self.default_field_name = 'value-structural'
+        self.default_field_name = 'number'  # FIXME
         layer_name = "assets"
         return layer_name
 
     def get_field_names(self, **kwargs):
-        field_names = [name for name in self.npz_file['array'].dtype.names
+        field_names = [name for name in self.dataset.dtype.names
                        if name not in self.tag_names and
                        name not in ['lon', 'lat']]
         return field_names
@@ -96,7 +96,6 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
         return added_field_name
 
     def read_npz_into_layer(self, field_names, **kwargs):
-        self.dataset = self.npz_file['array']
         with edit(self.layer):
             lons = self.dataset['lon']
             lats = self.dataset['lat']
@@ -139,11 +138,16 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
 
     def on_assets_downloaded(self, extracted_npz):
         self.npz_file = extracted_npz
-        self.load_from_npz()
+        self.dataset = self.npz_file['array']
+        with WaitCursorManager('Creating layer...', self.iface.messageBar()):
+            self.build_layer()
+            self.style_maps()
         if (self.zonal_layer_cbx.currentText()
                 and self.zonal_layer_gbx.isChecked()):
             self.aggregate_by_zone()
-        super().accept()
+        # if self.npz_file is not None:
+        #     self.npz_file.close()
+        # super().accept()
 
     def aggregate_by_zone(self):
         loss_layer = self.layer
@@ -162,8 +166,9 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
         if not have_same_projection:
             log_msg(check_projection_msg, level='W',
                     message_bar=self.iface.messageBar())
-        [self.loss_attr_name] = [
-            field.name() for field in loss_layer.fields()]
+        # [self.loss_attr_name] = [
+        #     field.name() for field in loss_layer.fields()]
+        self.loss_attr_name = self.default_field_name
         zonal_layer_plus_sum_name = "%s_sum" % zonal_layer.name()
         try:
             calculate_zonal_stats(
@@ -175,32 +180,3 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
                     message_bar=self.iface.messageBar(),
                     exception=exc)
 
-    def load_from_npz(self):
-        self.build_layer()
-        # for rlz_or_stat in self.rlzs_or_stats:
-        #     if (not self.load_all_rlzs_or_stats_chk.isChecked()
-        #             and rlz_or_stat != self.rlz_or_stat_cbx.currentText()):
-        #         continue
-        #     if self.load_multicol_ckb.isChecked():
-        #         with WaitCursorManager(
-        #                 'Creating layer for "%s"...' % rlz_or_stat,
-        #                 self.iface.messageBar()):
-        #             self.build_layer(rlz_or_stat)
-        #             self.style_maps()
-        #     else:
-        #         for imt in self.imts:
-        #             if (not self.load_all_imts_chk.isChecked()
-        #                     and imt != self.imt_cbx.currentText()):
-        #                 continue
-        #             for poe in self.imts[imt]:
-        #                 if (not self.load_all_poes_chk.isChecked()
-        #                         and poe != self.poe_cbx.currentText()):
-        #                     continue
-        #                 with WaitCursorManager(
-        #                         'Creating layer for "%s, %s, %s"...' % (
-        #                             rlz_or_stat, imt, poe),
-        #                         self.iface.messageBar()):
-        #                     self.build_layer(rlz_or_stat, imt=imt, poe=poe)
-        #                     self.style_maps()
-        if self.npz_file is not None:
-            self.npz_file.close()

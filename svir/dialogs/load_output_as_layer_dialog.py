@@ -550,7 +550,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             default_color_ramp_names = default_qgs_style.colorRampNames()
             if self.output_type in ('dmg_by_asset',
                                     'losses_by_asset',
-                                    'avg_losses-stats'):
+                                    'avg_losses-stats',
+                                    'assets'):  # FIXME
                 # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
                 # jenks = natural breaks
                 mode = QgsGraduatedSymbolRenderer.Jenks
