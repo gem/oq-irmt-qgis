@@ -738,7 +738,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 # check if also aggregating by zone or not
                 if (not self.zonal_layer_cbx.currentText() or
                         not self.zonal_layer_gbx.isChecked()):
-                    super().accept()
+                    QDialog.accept(self)
                     return
                 loss_layer = self.layer
                 QgsProject.instance().layerTreeRoot().findLayer(
@@ -768,13 +768,13 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                     log_msg(str(exc), level='C',
                             message_bar=self.iface.messageBar(),
                             exception=exc)
-                    super().accept()
+                    QDialog.accept(self)
                     return
             else:
-                super().accept()
+                QDialog.accept(self)
         elif self.output_type in OQ_CSV_TO_LAYER_TYPES:
             self.load_from_csv()
-            super().accept()
+            QDialog.accept(self)
 
     def on_calculate_zonal_stats_completed(self, zonal_layer_plus_sum):
         if zonal_layer_plus_sum is None:
@@ -798,7 +798,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.style_maps(
             layer=zonal_layer_plus_sum, style_by=style_by,
             add_null_class=True)
-        super().accept()
+        QDialog.accept(self)
 
     def reject(self):
         if (hasattr(self, 'npz_file') and self.npz_file is not None

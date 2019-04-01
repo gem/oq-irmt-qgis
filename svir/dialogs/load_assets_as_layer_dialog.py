@@ -119,7 +119,6 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
         self.hide()
         extract_params = self.get_extract_params()
         self.download_assets(extract_params)
-        QDialog.accept(self)
 
     def get_extract_params(self):
         params = {}
@@ -147,6 +146,8 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
         if (self.zonal_layer_cbx.currentText()
                 and self.zonal_layer_gbx.isChecked()):
             self.aggregate_by_zone()
+        else:
+            QDialog.accept(self)
 
     def aggregate_by_zone(self):
         loss_layer = self.layer
