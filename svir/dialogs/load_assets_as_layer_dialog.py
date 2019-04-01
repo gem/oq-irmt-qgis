@@ -54,13 +54,17 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
         with WaitCursorManager(
                 "Reading tag collection...", self.iface.messageBar()):
             tag_collection = extract_npz(
-                session, hostname, calc_id, output_type,
+                session, hostname, calc_id, 'tagcollection',
                 self.iface.messageBar())
             self.tag_names = sorted(tag_collection['tagnames'])
             for tag_name in self.tag_names:
                 self.create_selector(tag_name, tag_name, filter_ckb=True)
                 cbx = getattr(self, "%s_cbx" % tag_name)
                 cbx.addItems(sorted(tag_collection[tag_name]))
+        self.create_selector(
+            "category", "category", filter_ckb=False)
+        categories = sorted(tag_collection['array'])
+        self.category_cbx.addItems(sorted(categories))
         self.create_zonal_layer_selector()
         if self.zonal_layer_path:
             zonal_layer = self.load_zonal_layer(self.zonal_layer_path)
@@ -76,7 +80,7 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
         self.ok_button.setEnabled(True)
 
     def build_layer_name(self, rlz_or_stat=None, **kwargs):
-        self.default_field_name = 'number'  # FIXME: let the user choose one
+        self.default_field_name = self.category_cbx.currentText()
         layer_name = "assets"
         return layer_name
 
