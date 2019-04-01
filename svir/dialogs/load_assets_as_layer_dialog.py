@@ -75,7 +75,7 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
         self.ok_button.setEnabled(True)
 
     def build_layer_name(self, rlz_or_stat=None, **kwargs):
-        self.default_field_name = 'number'  # FIXME
+        self.default_field_name = 'number'  # FIXME: let the user choose one
         layer_name = "assets"
         return layer_name
 
@@ -145,9 +145,6 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
         if (self.zonal_layer_cbx.currentText()
                 and self.zonal_layer_gbx.isChecked()):
             self.aggregate_by_zone()
-        # if self.npz_file is not None:
-        #     self.npz_file.close()
-        # super().accept()
 
     def aggregate_by_zone(self):
         loss_layer = self.layer
