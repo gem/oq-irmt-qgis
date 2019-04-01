@@ -22,6 +22,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
+from qgis.PyQt.QtWidgets import QDialog
 from qgis.core import (
     QgsFeature, QgsGeometry, QgsPointXY, edit, QgsTask, QgsApplication,
     QgsProject,)
@@ -118,6 +119,7 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
         self.hide()
         extract_params = self.get_extract_params()
         self.download_assets(extract_params)
+        QDialog.accept(self)
 
     def get_extract_params(self):
         params = {}
