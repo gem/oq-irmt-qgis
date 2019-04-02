@@ -22,7 +22,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-from qgis.PyQt.QtWidgets import QDialog
+from qgis.PyQt.QtWidgets import QDialog, QGroupBox, QVBoxLayout
 from qgis.core import (
     QgsFeature, QgsGeometry, QgsPointXY, edit, QgsTask, QgsApplication,
     QgsProject,)
@@ -33,6 +33,7 @@ from svir.calculations.aggregate_loss_by_zone import (
     calculate_zonal_stats)
 from svir.calculations.process_layer import ProcessLayer
 from svir.utilities.utils import WaitCursorManager, log_msg, extract_npz
+from svir.ui.list_multiselect_widget import ListMultiSelectWidget
 from svir.tasks.extract_npz_task import ExtractNpzTask
 
 
@@ -53,17 +54,33 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
             'Load assets as layer')
         with WaitCursorManager(
                 "Reading tag collection...", self.iface.messageBar()):
-            tag_collection = extract_npz(
-                session, hostname, calc_id, 'tagcollection',
+            self.exposure_metadata = extract_npz(
+                session, hostname, calc_id, 'exposure_metadata',
                 self.iface.messageBar())
-            self.tag_names = sorted(tag_collection['tagnames'])
-            for tag_name in self.tag_names:
-                self.create_selector(tag_name, tag_name, filter_ckb=True)
-                cbx = getattr(self, "%s_cbx" % tag_name)
-                cbx.addItems(sorted(tag_collection[tag_name]))
+            self.tag_names = sorted(self.exposure_metadata['tagnames'])
+        self.tag_gbx = QGroupBox()
+        self.tag_gbx.setTitle('Filter by tag')
+        self.tag_gbx.setCheckable(True)
+        self.tag_gbx.setChecked(False)
+        self.tag_gbx_v_layout = QVBoxLayout()
+        self.tag_gbx.setLayout(self.tag_gbx_v_layout)
+        self.tag_values_multisel = ListMultiSelectWidget(
+            title='Tag values')
         self.create_selector(
-            "category", "category", filter_ckb=False)
-        categories = sorted(tag_collection['array'])
+            "tag", "Tag", add_to_layout=self.tag_gbx_v_layout,
+            on_text_changed=self.on_tag_changed)
+        self.tag_cbx.addItems([
+            tag_name for tag_name in self.tag_names if tag_name != 'taxonomy'])
+        self.tag_gbx_v_layout.addWidget(self.tag_values_multisel)
+        self.vlayout.addWidget(self.tag_gbx)
+        self.taxonomies_multisel = ListMultiSelectWidget(
+            title='Taxonomies')
+        self.taxonomies_multisel.add_unselected_items(
+            sorted(self.exposure_metadata['taxonomy']))
+        self.vlayout.addWidget(self.taxonomies_multisel)
+        self.create_selector(
+            "category", "Category", filter_ckb=False)
+        categories = sorted(self.exposure_metadata['array'])
         self.category_cbx.addItems(sorted(categories))
         self.create_zonal_layer_selector()
         if self.zonal_layer_path:
@@ -75,6 +92,11 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
         self.set_ok_button()
         self.show()
         self.init_done.emit()
+
+    def on_tag_changed(self, tag_name):
+        tag_values = sorted(self.exposure_metadata[tag_name])
+        self.tag_values_multisel.set_selected_items([])
+        self.tag_values_multisel.set_unselected_items(tag_values)
 
     def set_ok_button(self):
         self.ok_button.setEnabled(True)
@@ -126,11 +148,12 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
 
     def get_extract_params(self):
         params = {}
-        for tag_name in self.tag_names:
-            filter_ckb = getattr(self, "filter_by_%s_ckb" % tag_name)
-            if filter_ckb.isChecked():
-                cbx = getattr(self, "%s_cbx" % tag_name)
-                params[tag_name] = cbx.currentText()
+        if self.tag_gbx.isChecked():
+            tag_name = self.tag_cbx.currentText()
+            params[tag_name] = list(
+                self.tag_values_multisel.get_selected_items())
+        params['taxonomy'] = list(
+            self.taxonomies_multisel.get_selected_items())
         return params
 
     def download_assets(self, extract_params):

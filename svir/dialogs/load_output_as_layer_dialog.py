@@ -176,14 +176,19 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.rlz_or_stat_cbx.setEnabled(state == Qt.Unchecked)
 
     def create_selector(
-            self, name, label_text, filter_ckb=False, on_cbx_changed=None):
+            self, name, label_text, filter_ckb=False, add_to_layout=None,
+            on_text_changed=None):
+        if add_to_layout is not None:
+            layout = add_to_layout
+        else:
+            layout = self.vlayout
         setattr(self, "%s_lbl" % name, QLabel(label_text))
         setattr(self, "%s_cbx" % name, QComboBox())
         lbl = getattr(self, "%s_lbl" % name)
         cbx = getattr(self, "%s_cbx" % name)
         cbx.setDisabled(filter_ckb)
-        if on_cbx_changed is not None:
-            cbx.currentIndexChanged['QString'].connect(on_cbx_changed)
+        if on_text_changed is not None:
+            cbx.currentTextChanged['QString'].connect(on_text_changed)
         if filter_ckb:
             setattr(self, "filter_by_%s_ckb" % name,
                     QCheckBox('Filter by %s' % name))
@@ -194,9 +199,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
 
             filter_ckb.stateChanged[int].connect(on_load_all_ckb_changed)
             filter_ckb.setChecked(False)
-            self.vlayout.addWidget(filter_ckb)
-        self.vlayout.addWidget(lbl)
-        self.vlayout.addWidget(cbx)
+            layout.addWidget(filter_ckb)
+        layout.addWidget(lbl)
+        layout.addWidget(cbx)
 
     def create_imt_selector(self, all_ckb=False):
         self.imt_lbl = QLabel('Intensity Measure Type')
@@ -288,7 +293,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
 
     def create_zonal_layer_selector(self):
         self.zonal_layer_gbx = QGroupBox()
-        self.zonal_layer_gbx.setTitle('Aggregate by zone (optional)')
+        self.zonal_layer_gbx.setTitle('Aggregate by zone')
         self.zonal_layer_gbx.setCheckable(True)
         self.zonal_layer_gbx.setChecked(False)
         self.zonal_layer_gbx_v_layout = QVBoxLayout()
