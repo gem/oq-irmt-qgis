@@ -328,15 +328,13 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                     self.zonal_layer_cbx.count()-1, layer.id())
 
     def on_zonal_layer_cbx_currentIndexChanged(self, new_index):
-        # FIXME: perhaps self.zonal_layer?
-        zonal_layer = None
+        self.zonal_layer = None
         if not self.zonal_layer_cbx.currentText():
             if self.zonal_layer_gbx.isChecked():
                 self.ok_button.setEnabled(False)
             return
         zonal_layer_id = self.zonal_layer_cbx.itemData(new_index)
-        # FIXME: perhaps self.zonal_layer?
-        zonal_layer = QgsProject.instance().mapLayer(zonal_layer_id)
+        self.zonal_layer = QgsProject.instance().mapLayer(zonal_layer_id)
         self.set_ok_button()
 
     def on_zonal_layer_gbx_toggled(self, on):
