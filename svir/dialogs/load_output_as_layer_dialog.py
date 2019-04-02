@@ -317,9 +317,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             self.on_zonal_layer_gbx_toggled)
 
     def pre_populate_zonal_layer_cbx(self):
-        for key, layer in \
-                QgsProject.instance().mapLayers().items():
-            # populate loss cbx only with layers containing points
+        # populate cbx only with vector layers containing polygons
+        self.zonal_layer_cbx.clear()
+        for key, layer in QgsProject.instance().mapLayers().items():
             if layer.type() != QgsMapLayer.VectorLayer:
                 continue
             if layer.geometryType() == QgsWkbTypes.PolygonGeometry:
