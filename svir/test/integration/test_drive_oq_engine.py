@@ -365,6 +365,15 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 self.skipped_attempts.append(skipped_attempt)
                 print('\t\tSKIPPED')
                 return
+            # TODO: when ebrisk becomes loadable, let's not skip this
+            if calc['calculation_mode'] == 'ebrisk':
+                skipped_attempt = {
+                    'calc_id': calc_id,
+                    'calc_description': calc['description'],
+                    'output_type': output_type}
+                self.skipped_attempts.append(skipped_attempt)
+                print('\t\tSKIPPED')
+                return
             dlg = OUTPUT_TYPE_LOADERS[output_type](
                 IFACE, Mock(), requests, self.hostname, calc_id,
                 output_type)
