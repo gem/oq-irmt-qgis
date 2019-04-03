@@ -119,7 +119,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         else:
             log_msg('Unable to complete data extraction', level='C',
                     message_bar=self.iface.messageBar(), exception=exception)
-        self.reject()
+        QDialog.reject(self)
 
     def finalize_init(self, extracted_npz):
         self.npz_file = extracted_npz
@@ -785,7 +785,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                     log_msg(str(exc), level='C',
                             message_bar=self.iface.messageBar(),
                             exception=exc)
-                    QDialog.accept(self)
+                    QDialog.reject(self)
                     return
             else:
                 QDialog.accept(self)
@@ -821,4 +821,4 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         if (hasattr(self, 'npz_file') and self.npz_file is not None
                 and self.output_type in OQ_TO_LAYER_TYPES):
             self.npz_file.close()
-        super().reject()
+        QDialog.reject(self)
