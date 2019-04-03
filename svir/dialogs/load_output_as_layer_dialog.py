@@ -554,13 +554,16 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             if self.output_type in ('dmg_by_asset',
                                     'losses_by_asset',
                                     'avg_losses-stats',
-                                    'assets'):  # FIXME
+                                    ):
                 # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
                 # jenks = natural breaks
                 mode = QgsGraduatedSymbolRenderer.Jenks
                 ramp_type_idx = default_color_ramp_names.index('Reds')
                 inverted = False
-            elif self.output_type in ('hmaps', 'gmf_data', 'ruptures'):
+            elif self.output_type in ('hmaps',
+                                      'gmf_data',
+                                      'ruptures',
+                                      ):
                 # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
                 if self.output_type == 'ruptures':
                     mode = QgsGraduatedSymbolRenderer.Pretty
@@ -568,6 +571,12 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                     mode = QgsGraduatedSymbolRenderer.EqualInterval
                 ramp_type_idx = default_color_ramp_names.index('Spectral')
                 inverted = True
+            elif self.output_type == 'assets':
+                # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
+                # jenks = natural breaks
+                mode = QgsGraduatedSymbolRenderer.Jenks
+                ramp_type_idx = default_color_ramp_names.index('Blues')
+                inverted = False
             ramp = default_qgs_style.colorRamp(
                 default_color_ramp_names[ramp_type_idx])
             if inverted:
@@ -595,7 +604,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             root_rule.appendChild(not_null_rule)
             null_rule = root_rule.children()[0].clone()
             null_rule.setSymbol(QgsFillSymbol.createSimple(
-                {'color': '240,240,240'}))  # very light grey
+                {'color': '200,200,200', 'style': 'diagonal_x'}))
             null_rule.setFilterExpression('%s IS NULL' % style_by)
             null_rule.setLabel(tr('No points'))
             root_rule.appendChild(null_rule)
