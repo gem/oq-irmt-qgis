@@ -571,20 +571,22 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                     mode = QgsGraduatedSymbolRenderer.EqualInterval
                 ramp_type_idx = default_color_ramp_names.index('Spectral')
                 inverted = True
-            elif self.output_type == 'assets':
+            elif self.output_type == 'asset_risk':
                 # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
                 # jenks = natural breaks
-                mode = QgsGraduatedSymbolRenderer.Jenks
+                mode = QgsGraduatedSymbolRenderer.EqualInterval
                 ramp_type_idx = default_color_ramp_names.index('Blues')
                 inverted = False
             ramp = default_qgs_style.colorRamp(
                 default_color_ramp_names[ramp_type_idx])
             if inverted:
                 ramp.invert()
+        num_distinct_values = len(set(
+            [feat[style_by] for feat in layer.getFeatures()]))
         graduated_renderer = QgsGraduatedSymbolRenderer.createRenderer(
             layer,
             style_by,
-            style['classes'],
+            min(num_distinct_values, style['classes']),
             mode,
             symbol,
             ramp)

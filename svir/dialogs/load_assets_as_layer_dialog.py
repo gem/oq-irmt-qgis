@@ -42,9 +42,9 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
     Dialog to load assets from an oq-engine output, as layer
     """
     def __init__(self, iface, viewer_dock, session, hostname, calc_id,
-                 output_type='assets', path=None, mode=None,
+                 output_type='asset_risk', path=None, mode=None,
                  engine_version=None):
-        assert output_type == 'assets'
+        assert output_type == 'asset_risk'
         LoadOutputAsLayerDialog.__init__(
             self, iface, viewer_dock, session, hostname, calc_id,
             output_type=output_type, path=path, mode=mode,
@@ -103,7 +103,7 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
 
     def build_layer_name(self, rlz_or_stat=None, **kwargs):
         self.default_field_name = self.category_cbx.currentText()
-        layer_name = "assets"
+        layer_name = "Exposure + Risk"
         return layer_name
 
     def get_field_names(self, **kwargs):
@@ -159,7 +159,7 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
     def download_assets(self, extract_params):
         self.extract_npz_task = ExtractNpzTask(
             'Extract assets', QgsTask.CanCancel, self.session,
-            self.hostname, self.calc_id, 'assets',
+            self.hostname, self.calc_id, 'asset_risk',
             self.on_assets_downloaded, self.on_extract_error,
             params=extract_params)
         QgsApplication.taskManager().addTask(self.extract_npz_task)
