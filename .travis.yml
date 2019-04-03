@@ -11,7 +11,7 @@ before_install:
     - if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${BRANCH})" == "" ]; then
         BRANCH='master';
       fi;
-    - curl -sfLO https://artifacts.openquake.org/travis/oqdata-${BRANCH}.zip || ( echo "Dump for ${BRANCH} unavailable"; exit 1 )
+    - oq restore https://artifacts.openquake.org/travis/oqdata-${BRANCH}.zip ~/oqdata || ( echo "Dump for ${BRANCH} unavailable"; exit 1 )
     - git clone -q -b ${BRANCH} --depth=1 https://github.com/gem/oq-engine.git && echo "Running against oq-engine/${BRANCH}"
 
 install:
@@ -20,7 +20,6 @@ install:
     - pip -q install -e oq-engine
 
 before_script:
-    - oq restore oqdata-${BRANCH}.zip ~/oqdata
     - oq webui start 0.0.0.0:8800 --skip-browser &> webui.log &
 
 #FIXME Run the tests using a multi-stage job
