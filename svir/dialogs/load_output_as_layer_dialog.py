@@ -583,17 +583,20 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 ramp.invert()
         num_distinct_values = len(set(
             [feat[style_by] for feat in layer.getFeatures()]))
-        graduated_renderer = QgsGraduatedSymbolRenderer.createRenderer(
-            layer,
-            style_by,
-            min(num_distinct_values, style['classes']),
-            mode,
-            symbol,
-            ramp)
-        label_format = graduated_renderer.labelFormat()
-        # label_format.setTrimTrailingZeroes(True)  # it might be useful
-        label_format.setPrecision(2)
-        graduated_renderer.setLabelFormat(label_format, updateRanges=True)
+        if num_distinct_values > 1:
+            renderer = QgsGraduatedSymbolRenderer.createRenderer(
+                layer,
+                style_by,
+                min(num_distinct_values, style['classes']),
+                mode,
+                symbol,
+                ramp)
+            label_format = renderer.labelFormat()
+            # label_format.setTrimTrailingZeroes(True)  # it might be useful
+            label_format.setPrecision(2)
+            renderer.setLabelFormat(label_format, updateRanges=True)
+        else:
+            renderer = QgsSingleSymbolRenderer(symbol)
         if add_null_class:
             # add a class for NULL values
             rule_renderer = QgsRuleBasedRenderer(
@@ -611,12 +614,12 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             null_rule.setLabel(tr('No points'))
             root_rule.appendChild(null_rule)
             # create value ranges
-            rule_renderer.refineRuleRanges(not_null_rule, graduated_renderer)
+            rule_renderer.refineRuleRanges(not_null_rule, renderer)
             # remove default rule
             root_rule.removeChildAt(0)
             layer.setRenderer(rule_renderer)
         else:
-            layer.setRenderer(graduated_renderer)
+            layer.setRenderer(renderer)
         layer.setOpacity(0.7)
         layer.triggerRepaint()
         self.iface.setActiveLayer(layer)
