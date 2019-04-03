@@ -295,6 +295,16 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             # assert_almost_equal(
             #     zonal_layer_plus_stats_first_feat.attributes(),
             #     expected_zonal_layer_first_feat.attributes())
+        elif dlg.output_type == 'asset_risk':
+            assert_and_emit(
+                dlg.loading_exception, self.assertGreater,
+                (len(dlg.taxonomies_multisel.get_selected_items()) == 0 and
+                 len(dlg.taxonomies.multisel.get_unselected_items()) == 0),
+                True, 'No taxonomy was found')
+            assert_and_emit(
+                dlg.loading_exception, self.assertGreater,
+                dlg.category_cbx.count(), 0, 'No category was found')
+            dlg.category_cbx.setCurrentIndex(0)
         if dlg.ok_button.isEnabled():
             dlg.accept()
         else:
