@@ -296,11 +296,15 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             #     zonal_layer_plus_stats_first_feat.attributes(),
             #     expected_zonal_layer_first_feat.attributes())
         elif dlg.output_type == 'asset_risk':
+            num_selected_taxonomies = len(
+                list(dlg.taxonomies_multisel.get_selected_items()))
+            num_unselected_taxonomies = len(
+                list(dlg.taxonomies_multisel.get_unselected_items()))
+            num_taxonomies = (
+                num_selected_taxonomies + num_unselected_taxonomies)
             assert_and_emit(
                 dlg.loading_exception, self.assertGreater,
-                (len(list(dlg.taxonomies_multisel.get_selected_items())) +
-                 len(list(dlg.taxonomies_multisel.get_unselected_items())),
-                0, 'No taxonomy was found'))
+                num_taxonomies, 0, 'No taxonomy was found')
             assert_and_emit(
                 dlg.loading_exception, self.assertGreater,
                 dlg.category_cbx.count(), 0, 'No category was found')
