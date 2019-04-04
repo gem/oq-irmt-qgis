@@ -305,7 +305,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 dlg.loading_exception, self.assertGreater,
                 dlg.category_cbx.count(), 0, 'No category was found')
             dlg.category_cbx.setCurrentIndex(0)
-        else:
         if dlg.ok_button.isEnabled():
             dlg.accept()
         else:
