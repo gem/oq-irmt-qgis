@@ -147,7 +147,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                     self.untested_otypes.discard(output_type_aggr)
 
     def on_init_done(self, dlg):
-        print("MANAGING init_done for dialog %s" % dlg.windowTitle())
         # set dialog options and accept
         if dlg.output_type == 'uhs':
             dlg.load_selected_only_ckb.setChecked(True)
@@ -299,16 +298,15 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         elif dlg.output_type == 'asset_risk':
             assert_and_emit(
                 dlg.loading_exception, self.assertGreater,
-                (len(dlg.taxonomies_multisel.get_selected_items()) == 0 and
-                 len(dlg.taxonomies.multisel.get_unselected_items()) == 0),
-                True, 'No taxonomy was found')
+                (len(list(dlg.taxonomies_multisel.get_selected_items()))
+                 +
+                 len(list(dlg.taxonomies.multisel.get_unselected_items())),
+                0, 'No taxonomy was found')
             assert_and_emit(
                 dlg.loading_exception, self.assertGreater,
                 dlg.category_cbx.count(), 0, 'No category was found')
             dlg.category_cbx.setCurrentIndex(0)
-            print('\t\tasset_risk on_init_done')
         else:
-            print('\t\t%s on_init_done' % dlg.output_type)
         if dlg.ok_button.isEnabled():
             dlg.accept()
         else:

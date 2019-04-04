@@ -50,7 +50,6 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
             output_type=output_type, path=path, mode=mode,
             engine_version=engine_version)
 
-        print("INIT FIXME")
         self.setWindowTitle(
             'Load assets as layer')
         self.extract_npz_task = ExtractNpzTask(
@@ -69,7 +68,6 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
         self.set_ok_button()
         self.show()
         self.init_done.emit()
-        print("init_done emitted FIXME")
 
     def populate_out_dep_widgets(self):
         self.tag_gbx = QGroupBox()
