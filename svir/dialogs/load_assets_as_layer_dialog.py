@@ -50,10 +50,11 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
             output_type=output_type, path=path, mode=mode,
             engine_version=engine_version)
 
+        print("INIT FIXME")
         self.setWindowTitle(
             'Load assets as layer')
         with WaitCursorManager(
-                "Reading tag collection...", self.iface.messageBar()):
+                "Reading exposure metadata...", self.iface.messageBar()):
             self.exposure_metadata = extract_npz(
                 session, hostname, calc_id, 'exposure_metadata',
                 self.iface.messageBar())
@@ -92,6 +93,7 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
         self.set_ok_button()
         self.show()
         self.init_done.emit()
+        print("init_done emitted FIXME")
 
     def on_tag_changed(self, tag_name):
         tag_values = sorted(self.exposure_metadata[tag_name])

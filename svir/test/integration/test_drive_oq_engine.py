@@ -332,6 +332,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         output_type = output['type']
         # TODO: when ebrisk becomes loadable, let's not skip this
         if calc['calculation_mode'] == 'ebrisk':
+            print('\tLoading output type %s...' % output_type)
             skipped_attempt = {
                 'calc_id': calc_id,
                 'calc_description': calc['description'],
@@ -386,7 +387,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             dlg.loading_exception[Exception].connect(self.on_loading_exception)
             dlg.init_done.connect(
                 lambda: self.on_init_done(dlg))
-            timeout = 50
+            timeout = 10
             start_time = time.time()
             while time.time() - start_time < timeout:
                 QGIS_APP.processEvents()
