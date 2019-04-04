@@ -147,6 +147,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                     self.untested_otypes.discard(output_type_aggr)
 
     def on_init_done(self, dlg):
+        print("MANAGING init_done for dialog %s" % dlg.windowTitle())
         # set dialog options and accept
         if dlg.output_type == 'uhs':
             dlg.load_selected_only_ckb.setChecked(True)
