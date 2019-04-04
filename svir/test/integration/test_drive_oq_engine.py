@@ -306,6 +306,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 dlg.category_cbx.count(), 0, 'No category was found')
             dlg.category_cbx.setCurrentIndex(0)
             print('\t\tasset_risk on_init_done')
+        else:
+            print('\t\t%s on_init_done' % dlg.output_type)
         if dlg.ok_button.isEnabled():
             dlg.accept()
         else:
