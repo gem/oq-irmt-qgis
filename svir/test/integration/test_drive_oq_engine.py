@@ -299,7 +299,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             assert_and_emit(
                 dlg.loading_exception, self.assertGreater,
                 (len(list(dlg.taxonomies_multisel.get_selected_items())) +
-                 len(list(dlg.taxonomies.multisel.get_unselected_items())),
+                 len(list(dlg.taxonomies_multisel.get_unselected_items())),
                 0, 'No taxonomy was found'))
             assert_and_emit(
                 dlg.loading_exception, self.assertGreater,
