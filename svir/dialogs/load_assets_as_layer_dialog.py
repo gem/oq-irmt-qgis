@@ -36,6 +36,8 @@ from svir.utilities.utils import WaitCursorManager, log_msg, extract_npz
 from svir.ui.list_multiselect_widget import ListMultiSelectWidget
 from svir.tasks.extract_npz_task import ExtractNpzTask
 
+QGIS_APP = QgsApplication([], True)
+
 
 class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
     """
@@ -94,6 +96,7 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
         self.show()
         self.init_done.emit()
         print("init_done emitted FIXME")
+        QGIS_APP.processEvents()
 
     def on_tag_changed(self, tag_name):
         tag_values = sorted(self.exposure_metadata[tag_name])
