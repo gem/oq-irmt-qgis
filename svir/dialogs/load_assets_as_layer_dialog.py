@@ -53,12 +53,25 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
         print("INIT FIXME")
         self.setWindowTitle(
             'Load assets as layer')
-        with WaitCursorManager(
-                "Reading exposure metadata...", self.iface.messageBar()):
-            self.exposure_metadata = extract_npz(
-                session, hostname, calc_id, 'exposure_metadata',
-                self.iface.messageBar())
-            self.tag_names = sorted(self.exposure_metadata['tagnames'])
+        self.extract_npz_task = ExtractNpzTask(
+            'Extract exposure metadata', QgsTask.CanCancel, self.session,
+            self.hostname, self.calc_id, 'exposure_metadata',
+            self.finalize_init, self.on_extract_error)
+        QgsApplication.taskManager().addTask(self.extract_npz_task)
+
+    def finalize_init(self, extracted_npz):
+        self.exposure_metadata = extracted_npz
+        self.tag_names = sorted(self.exposure_metadata['tagnames'])
+
+        self.populate_out_dep_widgets()
+
+        self.adjustSize()
+        self.set_ok_button()
+        self.show()
+        self.init_done.emit()
+        print("init_done emitted FIXME")
+
+    def populate_out_dep_widgets(self):
         self.tag_gbx = QGroupBox()
         self.tag_gbx.setTitle('Filter by tag')
         self.tag_gbx.setCheckable(True)
@@ -89,11 +102,6 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
             self.populate_zonal_layer_cbx(zonal_layer)
         else:
             self.pre_populate_zonal_layer_cbx()
-        self.adjustSize()
-        self.set_ok_button()
-        self.show()
-        self.init_done.emit()
-        print("init_done emitted FIXME")
 
     def on_tag_changed(self, tag_name):
         tag_values = sorted(self.exposure_metadata[tag_name])
