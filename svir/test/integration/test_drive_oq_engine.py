@@ -307,6 +307,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             dlg.category_cbx.setCurrentIndex(0)
         if dlg.ok_button.isEnabled():
             dlg.accept()
+            return
         else:
             raise RuntimeError('The ok button is disabled')
         if dlg.output_type == 'hcurves':
