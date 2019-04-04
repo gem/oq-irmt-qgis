@@ -305,6 +305,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 dlg.loading_exception, self.assertGreater,
                 dlg.category_cbx.count(), 0, 'No category was found')
             dlg.category_cbx.setCurrentIndex(0)
+            print('\t\tasset_risk on_init_done')
         if dlg.ok_button.isEnabled():
             dlg.accept()
             return
@@ -384,7 +385,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             dlg.loading_exception[Exception].connect(self.on_loading_exception)
             dlg.init_done.connect(
                 lambda: self.on_init_done(dlg))
-            timeout = 10
+            timeout = 50
             start_time = time.time()
             while time.time() - start_time < timeout:
                 QGIS_APP.processEvents()
