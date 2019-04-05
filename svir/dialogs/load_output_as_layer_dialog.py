@@ -560,6 +560,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 # jenks = natural breaks
                 mode = QgsGraduatedSymbolRenderer.Jenks
                 ramp_type_idx = default_color_ramp_names.index('Reds')
+                symbol.setColor(QColor('red'))
                 inverted = False
             elif self.output_type in ('hmaps',
                                       'gmf_data',
@@ -572,12 +573,14 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                     mode = QgsGraduatedSymbolRenderer.EqualInterval
                 ramp_type_idx = default_color_ramp_names.index('Spectral')
                 inverted = True
+                symbol.setColor(QColor('red'))
             elif self.output_type == 'asset_risk':
                 # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
                 # jenks = natural breaks
                 mode = QgsGraduatedSymbolRenderer.EqualInterval
                 ramp_type_idx = default_color_ramp_names.index('Blues')
                 inverted = False
+                symbol.setColor(QColor('blue'))
             ramp = default_qgs_style.colorRamp(
                 default_color_ramp_names[ramp_type_idx])
             if inverted:
@@ -602,8 +605,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             renderer = QgsSingleSymbolRenderer(symbol)
         if add_null_class:
             # add a class for NULL values
-            rule_renderer = QgsRuleBasedRenderer(
-                QgsSymbol.defaultSymbol(layer.geometryType()))
+            rule_renderer = QgsRuleBasedRenderer(symbol)
             root_rule = rule_renderer.rootRule()
             not_null_rule = root_rule.children()[0].clone()
             # strip parentheses from stringified color HSL
@@ -634,7 +636,11 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
 
         self.iface.mapCanvas().refresh()
 
-    def style_categorized(self, layer, style_by):
+    def style_categorized(self, layer=None, style_by=None):
+        if layer is None:
+            layer = self.layer
+        if style_by is None:
+            style_by = self.default_field_name
         # get unique values
         fni = layer.fields().indexOf(style_by)
         unique_values = layer.dataProvider().uniqueValues(fni)
