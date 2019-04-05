@@ -185,10 +185,6 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
         self.dataset = self.npz_file['array']
         with WaitCursorManager('Creating layer...', self.iface.messageBar()):
             self.build_layer()
-            # get unique values
-            fni = self.layer.fields().indexOf(self.default_field_name)
-            num_unique_values = len(
-                self.layer.dataProvider().uniqueValues(fni))
             self.style_maps()
         if (self.zonal_layer_cbx.currentText()
                 and self.zonal_layer_gbx.isChecked()):

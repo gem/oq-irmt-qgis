@@ -42,6 +42,7 @@ from qgis.core import (QgsVectorLayer,
                        QgsCategorizedSymbolRenderer,
                        QgsApplication,
                        QgsUnitTypes,
+                       NULL,
                        )
 from qgis.PyQt.QtCore import (
     pyqtSlot, pyqtSignal, QDir, QSettings, QFileInfo, Qt)
@@ -588,24 +589,24 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         # get unique values
         fni = layer.fields().indexOf(style_by)
         unique_values = layer.dataProvider().uniqueValues(fni)
-        num_unique_values = len(unique_values)
+        num_unique_values = len(unique_values - {NULL})
         if num_unique_values > 1:
             renderer = QgsGraduatedSymbolRenderer.createRenderer(
                 layer,
                 style_by,
                 min(num_unique_values, style['classes']),
                 mode,
-                symbol,
+                symbol.clone(),
                 ramp)
             label_format = renderer.labelFormat()
             # label_format.setTrimTrailingZeroes(True)  # it might be useful
             label_format.setPrecision(2)
             renderer.setLabelFormat(label_format, updateRanges=True)
         else:
-            renderer = QgsSingleSymbolRenderer(symbol)
-        if num_unique_values > 1 and add_null_class:
+            renderer = QgsSingleSymbolRenderer(symbol.clone())
+        if add_null_class and NULL in unique_values:
             # add a class for NULL values
-            rule_renderer = QgsRuleBasedRenderer(symbol)
+            rule_renderer = QgsRuleBasedRenderer(symbol.clone())
             root_rule = rule_renderer.rootRule()
             not_null_rule = root_rule.children()[0].clone()
             # strip parentheses from stringified color HSL
@@ -618,13 +619,13 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             null_rule.setFilterExpression('%s IS NULL' % style_by)
             null_rule.setLabel(tr('No points'))
             root_rule.appendChild(null_rule)
-            # create value ranges
-            rule_renderer.refineRuleRanges(not_null_rule, renderer)
-            # remove default rule
+            if isinstance(renderer, QgsGraduatedSymbolRenderer):
+                # create value ranges
+                rule_renderer.refineRuleRanges(not_null_rule, renderer)
+                # remove default rule
             root_rule.removeChildAt(0)
-            layer.setRenderer(rule_renderer)
-        else:
-            layer.setRenderer(renderer)
+            renderer = rule_renderer
+        layer.setRenderer(renderer)
         layer.setOpacity(0.7)
         layer.triggerRepaint()
         self.iface.setActiveLayer(layer)
