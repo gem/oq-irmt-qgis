@@ -111,6 +111,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         # Disable ok_button until all user options are set
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         self.ok_button.setDisabled(True)
+        self.loading_completed.connect(self.on_loading_completed)
 
     def on_extract_error(self, exception):
         if isinstance(exception, TaskCanceled):
@@ -119,7 +120,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         else:
             log_msg('Unable to complete data extraction', level='C',
                     message_bar=self.iface.messageBar(), exception=exception)
-        QDialog.reject(self)
+        super().reject()
 
     def finalize_init(self, extracted_npz):
         self.npz_file = extracted_npz
@@ -755,7 +756,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 # check if also aggregating by zone or not
                 if (not self.zonal_layer_cbx.currentText() or
                         not self.zonal_layer_gbx.isChecked()):
-                    QDialog.accept(self)
+                    super().accept()
                     return
                 loss_layer = self.layer
                 QgsProject.instance().layerTreeRoot().findLayer(
@@ -785,13 +786,13 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                     log_msg(str(exc), level='C',
                             message_bar=self.iface.messageBar(),
                             exception=exc)
-                    QDialog.reject(self)
+                    super().reject()
                     return
             else:
-                QDialog.accept(self)
+                super().accept()
         elif self.output_type in OQ_CSV_TO_LAYER_TYPES:
             self.load_from_csv()
-            QDialog.accept(self)
+            super().accept()
 
     def on_calculate_zonal_stats_completed(self, zonal_layer_plus_sum):
         if zonal_layer_plus_sum is None:
@@ -815,10 +816,13 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.style_maps(
             layer=zonal_layer_plus_sum, style_by=style_by,
             add_null_class=True)
-        QDialog.accept(self)
+        super().accept()
+
+    def on_loading_completed(self):
+        super().accept()
 
     def reject(self):
         if (hasattr(self, 'npz_file') and self.npz_file is not None
                 and self.output_type in OQ_TO_LAYER_TYPES):
             self.npz_file.close()
-        QDialog.reject(self)
+        super().reject()

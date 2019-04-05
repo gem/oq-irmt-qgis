@@ -183,7 +183,6 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
             self.aggregate_by_zone()
         else:
             self.loading_completed.emit()
-            QDialog.accept(self)
 
     def aggregate_by_zone(self):
         loss_layer = self.layer
