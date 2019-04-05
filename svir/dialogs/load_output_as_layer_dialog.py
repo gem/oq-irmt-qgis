@@ -603,7 +603,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             renderer.setLabelFormat(label_format, updateRanges=True)
         else:
             renderer = QgsSingleSymbolRenderer(symbol)
-        if add_null_class:
+        if num_unique_values > 1 and add_null_class:
             # add a class for NULL values
             rule_renderer = QgsRuleBasedRenderer(symbol)
             root_rule = rule_renderer.rootRule()
