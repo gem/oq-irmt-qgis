@@ -70,6 +70,18 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
         self.init_done.emit()
 
     def populate_out_dep_widgets(self):
+        self.taxonomies_gbx = QGroupBox()
+        self.taxonomies_gbx.setTitle('Filter by taxonomy')
+        self.taxonomies_gbx.setCheckable(True)
+        self.taxonomies_gbx.setChecked(False)
+        self.taxonomies_gbx_v_layout = QVBoxLayout()
+        self.taxonomies_gbx.setLayout(self.taxonomies_gbx_v_layout)
+        self.taxonomies_multisel = ListMultiSelectWidget(
+            title='Taxonomies')
+        self.taxonomies_multisel.add_unselected_items(
+            sorted(self.exposure_metadata['taxonomy']))
+        self.taxonomies_gbx_v_layout.addWidget(self.taxonomies_multisel)
+        self.vlayout.addWidget(self.taxonomies_gbx)
         self.tag_gbx = QGroupBox()
         self.tag_gbx.setTitle('Filter by tag')
         self.tag_gbx.setCheckable(True)
@@ -85,11 +97,6 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
             tag_name for tag_name in self.tag_names if tag_name != 'taxonomy'])
         self.tag_gbx_v_layout.addWidget(self.tag_values_multisel)
         self.vlayout.addWidget(self.tag_gbx)
-        self.taxonomies_multisel = ListMultiSelectWidget(
-            title='Taxonomies')
-        self.taxonomies_multisel.add_unselected_items(
-            sorted(self.exposure_metadata['taxonomy']))
-        self.vlayout.addWidget(self.taxonomies_multisel)
         self.create_selector(
             "category", "Category", filter_ckb=False)
         categories = sorted(self.exposure_metadata['array'])
@@ -160,8 +167,9 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
             tag_name = self.tag_cbx.currentText()
             params[tag_name] = list(
                 self.tag_values_multisel.get_selected_items())
-        params['taxonomy'] = list(
-            self.taxonomies_multisel.get_selected_items())
+        if self.taxonomies_gbx.isChecked():
+            params['taxonomy'] = list(
+                self.taxonomies_multisel.get_selected_items())
         return params
 
     def download_assets(self, extract_params):
