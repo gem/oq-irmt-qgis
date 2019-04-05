@@ -582,13 +582,15 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 default_color_ramp_names[ramp_type_idx])
             if inverted:
                 ramp.invert()
-        num_distinct_values = len(set(
-            [feat[style_by] for feat in layer.getFeatures()]))
-        if num_distinct_values > 1:
+        # get unique values
+        fni = layer.fields().indexOf(style_by)
+        unique_values = layer.dataProvider().uniqueValues(fni)
+        num_unique_values = len(unique_values)
+        if num_unique_values > 1:
             renderer = QgsGraduatedSymbolRenderer.createRenderer(
                 layer,
                 style_by,
-                min(num_distinct_values, style['classes']),
+                min(num_unique_values, style['classes']),
                 mode,
                 symbol,
                 ramp)
