@@ -42,6 +42,7 @@ from qgis.core import (QgsVectorLayer,
                        QgsCategorizedSymbolRenderer,
                        QgsApplication,
                        QgsUnitTypes,
+                       QgsExpression,
                        NULL,
                        )
 from qgis.PyQt.QtCore import (
@@ -592,7 +593,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         if num_unique_values > 1:
             renderer = QgsGraduatedSymbolRenderer.createRenderer(
                 layer,
-                style_by,
+                QgsExpression.quotedColumnRef(style_by),
                 min(num_unique_values, style['classes']),
                 mode,
                 symbol.clone(),
@@ -609,13 +610,15 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             root_rule = rule_renderer.rootRule()
             not_null_rule = root_rule.children()[0].clone()
             # strip parentheses from stringified color HSL
-            not_null_rule.setFilterExpression('%s IS NOT NULL' % style_by)
+            not_null_rule.setFilterExpression(
+                '%s IS NOT NULL' % QgsExpression.quotedColumnRef(style_by))
             not_null_rule.setLabel('%s:' % style_by)
             root_rule.appendChild(not_null_rule)
             null_rule = root_rule.children()[0].clone()
             null_rule.setSymbol(QgsFillSymbol.createSimple(
                 {'color': '200,200,200', 'style': 'diagonal_x'}))
-            null_rule.setFilterExpression('%s IS NULL' % style_by)
+            null_rule.setFilterExpression(
+                '%s IS NULL' % QgsExpression.quotedColumnRef(style_by))
             null_rule.setLabel(tr('No points'))
             root_rule.appendChild(null_rule)
             if isinstance(renderer, QgsGraduatedSymbolRenderer):
@@ -664,7 +667,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             # entry for the list of category items
             categories.append(category)
         # create renderer object
-        renderer = QgsCategorizedSymbolRenderer(style_by, categories)
+        renderer = QgsCategorizedSymbolRenderer(
+            QgsExpression.quotedColumnRef(style_by), categories)
         # assign the created renderer to the layer
         if renderer is not None:
             layer.setRenderer(renderer)
@@ -788,8 +792,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 try:
                     calculate_zonal_stats(
                         self.on_calculate_zonal_stats_completed,
-                        zonal_layer, loss_layer, (self.loss_attr_name,),
-                        zonal_layer_plus_sum_name)
+                        zonal_layer, loss_layer, [self.loss_attr_name],
+                        zonal_layer_plus_sum_name, discard_nonmatching=False,
+                        predicates=('intersects',), summaries=('sum',))
                 except Exception as exc:
                     log_msg(str(exc), level='C',
                             message_bar=self.iface.messageBar(),

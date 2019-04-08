@@ -218,8 +218,9 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
         try:
             calculate_zonal_stats(
                 self.on_calculate_zonal_stats_completed,
-                zonal_layer, loss_layer, (self.loss_attr_name,),
-                zonal_layer_plus_sum_name)
+                zonal_layer, loss_layer, [self.loss_attr_name],
+                zonal_layer_plus_sum_name, discard_nonmatching=False,
+                predicates=('intersects',), summaries=('sum',))
         except Exception as exc:
             log_msg(str(exc), level='C',
                     message_bar=self.iface.messageBar(),
