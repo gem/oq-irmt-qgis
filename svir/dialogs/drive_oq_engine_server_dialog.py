@@ -980,6 +980,6 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             self.console_dlg.reject()
         if self.full_report_dlg is not None:
             self.full_report_dlg.reject()
-        for dlg in self.open_output_dlgs:
+        for dlg in self.open_output_dlgs.values():
             dlg.reject()
         super().reject()
