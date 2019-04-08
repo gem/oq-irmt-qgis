@@ -112,7 +112,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         # Disable ok_button until all user options are set
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         self.ok_button.setDisabled(True)
-        self.loading_completed.connect(self.on_loading_completed)
 
     def on_extract_error(self, exception):
         if isinstance(exception, TaskCanceled):
@@ -825,9 +824,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.style_maps(
             layer=zonal_layer_plus_sum, style_by=style_by,
             add_null_class=True)
-        super().accept()
-
-    def on_loading_completed(self):
+        # self.loading_completed.emit()
         super().accept()
 
     def reject(self):
