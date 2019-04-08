@@ -61,6 +61,7 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
     def finalize_init(self, extracted_npz):
         self.exposure_metadata = extracted_npz
         self.tag_names = sorted(self.exposure_metadata['tagnames'])
+        self.multi_risk = sorted(self.exposure_metadata['multi_risk'])
 
         self.populate_out_dep_widgets()
 
@@ -100,7 +101,8 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
         self.create_selector(
             "category", "Category", filter_ckb=False)
         categories = sorted(self.exposure_metadata['array'])
-        self.category_cbx.addItems(sorted(categories))
+        categories.extend(self.multi_risk)
+        self.category_cbx.addItems(categories)
         self.create_zonal_layer_selector()
         if self.zonal_layer_path:
             zonal_layer = self.load_zonal_layer(self.zonal_layer_path)
