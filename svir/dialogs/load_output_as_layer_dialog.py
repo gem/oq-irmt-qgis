@@ -579,9 +579,12 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
                 # jenks = natural breaks
                 mode = QgsGraduatedSymbolRenderer.EqualInterval
-                ramp_type_idx = default_color_ramp_names.index('Blues')
+                colors = self.get_colors(style_by)
+                single_color = colors['single']
+                ramp_name = colors['ramp_name']
+                ramp_type_idx = default_color_ramp_names.index(ramp_name)
                 inverted = False
-                symbol.setColor(QColor('blue'))
+                symbol.setColor(QColor(single_color))
             ramp = default_qgs_style.colorRamp(
                 default_color_ramp_names[ramp_type_idx])
             if inverted:
@@ -616,7 +619,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             root_rule.appendChild(not_null_rule)
             null_rule = root_rule.children()[0].clone()
             null_rule.setSymbol(QgsFillSymbol.createSimple(
-                {'color': '200,200,200', 'style': 'diagonal_x'}))
+                {'color': '160,160,160', 'style': 'diagonal_x'}))
             null_rule.setFilterExpression(
                 '%s IS NULL' % QgsExpression.quotedColumnRef(style_by))
             null_rule.setLabel(tr('No points'))
@@ -638,6 +641,17 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         # self.iface.layerTreeView().refreshLayerSymbology(layer.id())
 
         self.iface.mapCanvas().refresh()
+
+    def get_colors(self, style_by):
+        # exposure_strings = ['number', 'occupants', 'value']
+        # setting exposure colors by default
+        color_dict = {'single': 'blue', 'ramp_name': 'Blues'}
+        damage_strings = ['LAHAR', 'LAVA', 'PYRO', 'ASH']
+        for damage_string in damage_strings:
+            if damage_string in style_by:
+                color_dict = {'single': 'red', 'ramp_name': 'Reds'}
+                break
+        return color_dict
 
     def style_categorized(self, layer=None, style_by=None):
         if layer is None:
