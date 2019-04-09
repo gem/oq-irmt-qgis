@@ -69,6 +69,7 @@ from svir.utilities.shared import (OQ_CSV_TO_LAYER_TYPES,
                                    OQ_COMPLEX_CSV_TO_LAYER_TYPES,
                                    OQ_TO_LAYER_TYPES,
                                    OQ_EXTRACT_TO_LAYER_TYPES,
+                                   RAMP_TOP_COLORS,
                                    )
 from svir.utilities.utils import (get_ui_class,
                                   get_style,
@@ -561,7 +562,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 # jenks = natural breaks
                 mode = QgsGraduatedSymbolRenderer.Jenks
                 ramp_type_idx = default_color_ramp_names.index('Reds')
-                symbol.setColor(QColor('red'))
+                symbol.setColor(QColor(RAMP_TOP_COLORS['Reds']))
                 inverted = False
             elif self.output_type in ('hmaps',
                                       'gmf_data',
@@ -574,7 +575,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                     mode = QgsGraduatedSymbolRenderer.EqualInterval
                 ramp_type_idx = default_color_ramp_names.index('Spectral')
                 inverted = True
-                symbol.setColor(QColor('red'))
+                symbol.setColor(QColor(RAMP_TOP_COLORS['Reds']))
             elif self.output_type == 'asset_risk':
                 # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
                 # jenks = natural breaks
@@ -645,11 +646,13 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     def get_colors(self, style_by):
         # exposure_strings = ['number', 'occupants', 'value']
         # setting exposure colors by default
-        color_dict = {'single': '#08306b', 'ramp_name': 'Blues'}
+        color_dict = {'single': RAMP_TOP_COLORS['Blues'],
+                      'ramp_name': 'Blues'}
         damage_strings = ['LAHAR', 'LAVA', 'PYRO', 'ASH']
         for damage_string in damage_strings:
             if damage_string in style_by:
-                color_dict = {'single': '#67000d', 'ramp_name': 'Reds'}
+                color_dict = {'single': RAMP_TOP_COLORS['Reds'],
+                              'ramp_name': 'Reds'}
                 break
         return color_dict
 

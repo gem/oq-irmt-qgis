@@ -273,3 +273,5 @@ REQUEST_ATTRS = {
                  # name of the javascript callback function
                  'js_cb_func': 1003,
                  }
+
+RAMP_TOP_COLORS = {'Reds': '#67000d', 'Blues': '#08306b'}
