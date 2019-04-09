@@ -312,7 +312,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         if dlg.ok_button.isEnabled():
             dlg.accept()
             if dlg.output_type == 'asset_risk':
-                # avoid emitting loading_completed
+                # NOTE: avoiding to emit loading_completed for asset_risk,
+                # because in this case there's a second asynchronous call to
+                # the extract api, and the signal is emitted by the callback 
                 return
         else:
             raise RuntimeError('The ok button is disabled')
