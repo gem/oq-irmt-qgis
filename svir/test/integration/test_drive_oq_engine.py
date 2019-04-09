@@ -311,6 +311,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             dlg.category_cbx.setCurrentIndex(0)
         if dlg.ok_button.isEnabled():
             dlg.accept()
+            if dlg.output_type == 'asset_risk':
+                # avoid emitting loading_completed
+                return
         else:
             raise RuntimeError('The ok button is disabled')
         if dlg.output_type == 'hcurves':
