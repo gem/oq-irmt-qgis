@@ -645,11 +645,11 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     def get_colors(self, style_by):
         # exposure_strings = ['number', 'occupants', 'value']
         # setting exposure colors by default
-        color_dict = {'single': 'blue', 'ramp_name': 'Blues'}
+        color_dict = {'single': '#08306b', 'ramp_name': 'Blues'}
         damage_strings = ['LAHAR', 'LAVA', 'PYRO', 'ASH']
         for damage_string in damage_strings:
             if damage_string in style_by:
-                color_dict = {'single': 'red', 'ramp_name': 'Reds'}
+                color_dict = {'single': '#67000d', 'ramp_name': 'Reds'}
                 break
         return color_dict
 
