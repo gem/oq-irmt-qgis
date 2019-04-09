@@ -317,6 +317,15 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         self.reset_gui()
         calc_id = calc['id']
         output_type = output['type']
+        # TODO: when ebrisk becomes loadable, let's not skip this
+        if calc['calculation_mode'] == 'ebrisk':
+            skipped_attempt = {
+                'calc_id': calc_id,
+                'calc_description': calc['description'],
+                'output_type': output_type}
+            self.skipped_attempts.append(skipped_attempt)
+            print('\t\tSKIPPED')
+            return
         if output_type in (OQ_CSV_TO_LAYER_TYPES |
                            OQ_RST_TYPES):
             if output_type in OQ_CSV_TO_LAYER_TYPES:
