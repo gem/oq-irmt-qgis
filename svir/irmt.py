@@ -330,10 +330,10 @@ class Irmt(object):
         dlg.exec_()
 
     def aggregate(self):
-        alg = QgsApplication.processingRegistry().algorithmById(
-            'qgis:joinbylocationsummary')
-        self.aggregate_dlg = processing.AlgorithmDialog(alg)
-        self.aggregate_dlg.show()
+        initial_params={}
+        alg_id = 'qgis:joinbylocationsummary'
+        results = processing.execAlgorithmDialog(alg_id, initial_params)
+
 
     def ipt(self):
         if self.ipt_dlg is None:
