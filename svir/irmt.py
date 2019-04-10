@@ -268,6 +268,16 @@ class Irmt(object):
                            add_to_toolbar=True,
                            add_to_layer_actions=True,
                            submenu='Utilities')
+        # Action to open the Processing algorithm
+        # "Join attributes by location (summary)"
+        self.add_menu_item("aggregate",
+                           ":/plugins/irmt/aggregate.svg",
+                           u"&Aggregate points by zone",
+                           self.aggregate,
+                           enable=True,
+                           add_to_toolbar=False,
+                           add_to_layer_actions=False,
+                           submenu='Utilities')
 
         self.menu.addSeparator()
 
@@ -316,6 +326,13 @@ class Irmt(object):
     def recovery_settings(self):
         dlg = RecoverySettingsDialog(self.iface)
         dlg.exec_()
+
+    def aggregate(self):
+        # FIXME: open the Processing toolbox to the algorithm
+        # "Join attributes by location (summary)"
+        raise NotImplementedError(
+            "Please open the Processing Toolbox and load the "
+            "'Join attributes by location (summary)' algorithm")
 
     def ipt(self):
         if self.ipt_dlg is None:
