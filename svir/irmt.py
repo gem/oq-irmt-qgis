@@ -29,6 +29,7 @@ import tempfile
 import uuid
 import fileinput
 import re
+import processing
 
 from copy import deepcopy
 from math import floor, ceil
@@ -42,6 +43,7 @@ from qgis.core import (
                        QgsProject,
                        QgsExpression,
                        Qgis,
+                       QgsApplication,
                        )
 
 from qgis.PyQt.QtCore import (
@@ -328,11 +330,10 @@ class Irmt(object):
         dlg.exec_()
 
     def aggregate(self):
-        # FIXME: open the Processing toolbox to the algorithm
-        # "Join attributes by location (summary)"
-        raise NotImplementedError(
-            "Please open the Processing Toolbox and load the "
-            "'Join attributes by location (summary)' algorithm")
+        alg = QgsApplication.processingRegistry().algorithmById(
+            'qgis:joinbylocationsummary')
+        self.aggregate_dlg = processing.AlgorithmDialog(alg)
+        self.aggregate_dlg.show()
 
     def ipt(self):
         if self.ipt_dlg is None:
