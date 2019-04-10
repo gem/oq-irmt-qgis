@@ -980,6 +980,12 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             self.console_dlg.reject()
         if self.full_report_dlg is not None:
             self.full_report_dlg.reject()
-        for dlg in self.open_output_dlgs.values():
-            dlg.reject()
+        # NOTE: avoiding to change the keys while in the loop
+        open_output_dlgs_keys = self.open_output_dlgs.keys()
+        for dlg in open_output_dlgs_keys:
+            try:
+                self.open_output_dlgs[dlg].reject()
+            except Exception as exc:
+                log_msg('An error occurred while cleaning up', level='W',
+                        message_bar=self.iface.messageBar(), exception=exc)
         super().reject()
