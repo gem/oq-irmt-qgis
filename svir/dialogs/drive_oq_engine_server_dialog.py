@@ -737,6 +737,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                                       OQ_EXTRACT_TO_VIEW_TYPES):
                     if output['type'] in (OQ_RST_TYPES |
                                           OQ_EXTRACT_TO_VIEW_TYPES):
+                        # FIXME: enable button for ebrisk as soon as the output
+                        # will be loadable
+                        if calculation_mode == 'ebrisk':
+                            continue
                         action = 'Show'
                     else:
                         action = 'Load as layer'
