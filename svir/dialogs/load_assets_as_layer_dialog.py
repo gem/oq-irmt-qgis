@@ -63,7 +63,8 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
         self.tag_names = sorted(self.exposure_metadata['tagnames'])
         self.exposure_categories = sorted(self.exposure_metadata['array'])
         self.risk_categories = sorted(self.exposure_metadata['multi_risk'])
-        self.perils = set([cat.split('-')[-1] for cat in self.risk_categories])
+        self.perils = set(
+            [cat.rsplit('-', 1)[-1] for cat in self.risk_categories])
 
         self.populate_out_dep_widgets()
 
