@@ -782,8 +782,12 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.file_size_lbl.setText(self.file_size_msg % file_size)
 
     def accept(self):
-        self.iface.layerTreeView().currentLayerChanged.disconnect(
-            self.on_currentLayerChanged)
+        try:
+            self.iface.layerTreeView().currentLayerChanged.disconnect(
+                self.on_currentLayerChanged)
+        except Exception:
+            # it's connected only for some loaders
+            pass
         self.hide()
         if self.output_type in OQ_EXTRACT_TO_LAYER_TYPES:
             self.load_from_npz()
@@ -859,8 +863,12 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         super().accept()
 
     def reject(self):
-        self.iface.layerTreeView().currentLayerChanged.disconnect(
-            self.on_currentLayerChanged)
+        try:
+            self.iface.layerTreeView().currentLayerChanged.disconnect(
+                self.on_currentLayerChanged)
+        except Exception:
+            # it's connected only for some loaders
+            pass
         if (hasattr(self, 'npz_file') and self.npz_file is not None
                 and self.output_type in OQ_TO_LAYER_TYPES):
             self.npz_file.close()
