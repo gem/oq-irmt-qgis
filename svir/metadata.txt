@@ -24,6 +24,9 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     3.5.0
+    * Added loaders for OQ-Engine outputs 'assets' and 'agg_risk'
+    * The option to aggregate points by polygons is automatically enabled whenever at least one layer containing polygons becomes available
+    * Improved legends and classification criteria, depending on the unique values present in the field used for styling
     3.4.0
     * Whenever an error message is shown to the user, a button in the QGIS message bar allows to display the traceback in a separate window
     * Fixed loader for Aggregate Loss Curves in event based risk OQ-Engine output
