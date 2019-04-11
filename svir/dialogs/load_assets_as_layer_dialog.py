@@ -143,7 +143,9 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
         self.category_cbx.addItems(sorted(categories))
 
     def on_tag_changed(self, tag_name):
-        tag_values = sorted(self.exposure_metadata[tag_name])
+        tag_values = sorted([
+            value for value in self.exposure_metadata[tag_name]
+            if value != '?'])
         self.tag_values_multisel.set_selected_items([])
         self.tag_values_multisel.set_unselected_items(tag_values)
 
