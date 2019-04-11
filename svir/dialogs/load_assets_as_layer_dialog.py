@@ -61,7 +61,9 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
     def finalize_init(self, extracted_npz):
         self.exposure_metadata = extracted_npz
         self.tag_names = sorted(self.exposure_metadata['tagnames'])
-        self.multi_risk = sorted(self.exposure_metadata['multi_risk'])
+        self.exposure_categories = sorted(self.exposure_metadata['array'])
+        self.risk_categories = sorted(self.exposure_metadata['multi_risk'])
+        self.perils = set([cat.split('-')[-1] for cat in self.risk_categories])
 
         self.populate_out_dep_widgets()
 
@@ -71,6 +73,19 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
         self.init_done.emit()
 
     def populate_out_dep_widgets(self):
+        self.create_selector(
+            "visualize", "Visualize", filter_ckb=False,
+            on_text_changed=self.on_visualize_changed)
+        self.create_selector(
+            "peril", "Peril", filter_ckb=False,
+            on_text_changed=self.on_peril_changed)
+        self.peril_cbx.setDisabled(True)
+        self.peril_lbl.setVisible(False)
+        self.peril_cbx.setVisible(False)
+        self.create_selector(
+            "category", "Category", filter_ckb=False)
+        self.peril_cbx.addItems(sorted(self.perils))
+        self.visualize_cbx.addItems(['Exposure', 'Risk'])
         self.taxonomies_gbx = QGroupBox()
         self.taxonomies_gbx.setTitle('Filter by taxonomy')
         self.taxonomies_gbx.setCheckable(True)
@@ -98,17 +113,31 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
             tag_name for tag_name in self.tag_names if tag_name != 'taxonomy'])
         self.tag_gbx_v_layout.addWidget(self.tag_values_multisel)
         self.vlayout.addWidget(self.tag_gbx)
-        self.create_selector(
-            "category", "Category", filter_ckb=False)
-        categories = sorted(self.exposure_metadata['array'])
-        categories.extend(self.multi_risk)
-        self.category_cbx.addItems(categories)
         self.create_zonal_layer_selector()
         if self.zonal_layer_path:
             zonal_layer = self.load_zonal_layer(self.zonal_layer_path)
             self.populate_zonal_layer_cbx(zonal_layer)
         else:
             self.pre_populate_zonal_layer_cbx()
+
+    def on_visualize_changed(self, visualize):
+        self.peril_cbx.setEnabled(visualize=='Risk')
+        self.peril_lbl.setVisible(visualize=='Risk')
+        self.peril_cbx.setVisible(visualize=='Risk')
+        if visualize == 'Exposure':
+            self.category_cbx.clear()
+            self.category_cbx.addItems(self.exposure_categories)
+        else:  # 'Risk'
+            self.peril_cbx.setCurrentIndex(0)
+            self.peril_cbx.currentTextChanged.emit(
+                self.peril_cbx.currentText())
+
+    def on_peril_changed(self, peril):
+        categories = [category.rsplit('-', 1)[0]
+                      for category in self.risk_categories
+                      if peril in category]
+        self.category_cbx.clear()
+        self.category_cbx.addItems(sorted(categories))
 
     def on_tag_changed(self, tag_name):
         tag_values = sorted(self.exposure_metadata[tag_name])
@@ -119,7 +148,11 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
         self.ok_button.setEnabled(True)
 
     def build_layer_name(self, rlz_or_stat=None, **kwargs):
-        self.default_field_name = self.category_cbx.currentText()
+        if self.visualize_cbx.currentText() == 'Exposure':
+            self.default_field_name = self.category_cbx.currentText()
+        else:  # 'Risk'
+            self.default_field_name = (
+                self.peril_cbx.currentText() + self.category_cbx.currentText())
         layer_name = "Exposure + Risk"
         return layer_name
 
