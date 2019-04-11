@@ -120,6 +120,8 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
             self.populate_zonal_layer_cbx(zonal_layer)
         else:
             self.pre_populate_zonal_layer_cbx()
+        self.zonal_layer_gbx.setChecked(
+            self.zonal_layer_cbx.currentIndex() != -1)
 
     def on_visualize_changed(self, visualize):
         self.peril_cbx.setEnabled(visualize=='Risk')
