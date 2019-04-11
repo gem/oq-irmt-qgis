@@ -156,8 +156,8 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
         if self.visualize_cbx.currentText() == 'Exposure':
             self.default_field_name = self.category_cbx.currentText()
         else:  # 'Risk'
-            self.default_field_name = (
-                self.peril_cbx.currentText() + self.category_cbx.currentText())
+            self.default_field_name = "%s-%s" % (
+                self.category_cbx.currentText(), self.peril_cbx.currentText())
         layer_name = "Exposure + Risk"
         return layer_name
 
