@@ -318,6 +318,11 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             self.on_zonal_layer_cbx_currentIndexChanged)
         self.zonal_layer_gbx.toggled[bool].connect(
             self.on_zonal_layer_gbx_toggled)
+        self.iface.layerTreeView().currentLayerChanged.connect(
+            self.on_currentLayerChanged)
+
+    def on_currentLayerChanged(self):
+        self.pre_populate_zonal_layer_cbx()
 
     def pre_populate_zonal_layer_cbx(self):
         # populate cbx only with vector layers containing polygons
@@ -329,6 +334,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 self.zonal_layer_cbx.addItem(layer.name())
                 self.zonal_layer_cbx.setItemData(
                     self.zonal_layer_cbx.count()-1, layer.id())
+        self.zonal_layer_gbx.setChecked(
+            self.zonal_layer_cbx.currentIndex() != -1)
 
     def on_zonal_layer_cbx_currentIndexChanged(self, new_index):
         self.zonal_layer = None
@@ -775,6 +782,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.file_size_lbl.setText(self.file_size_msg % file_size)
 
     def accept(self):
+        self.iface.layerTreeView().currentLayerChanged.disconnect(
+            self.on_currentLayerChanged)
         self.hide()
         if self.output_type in OQ_EXTRACT_TO_LAYER_TYPES:
             self.load_from_npz()
@@ -850,6 +859,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         super().accept()
 
     def reject(self):
+        self.iface.layerTreeView().currentLayerChanged.disconnect(
+            self.on_currentLayerChanged)
         if (hasattr(self, 'npz_file') and self.npz_file is not None
                 and self.output_type in OQ_TO_LAYER_TYPES):
             self.npz_file.close()
