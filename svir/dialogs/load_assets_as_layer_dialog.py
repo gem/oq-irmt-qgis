@@ -234,8 +234,6 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
 
     def aggregate_by_zone(self):
         loss_layer = self.layer
-        QgsProject.instance().layerTreeRoot().findLayer(
-            loss_layer.id()).setItemVisibilityChecked(False)
         zonal_layer_id = self.zonal_layer_cbx.itemData(
             self.zonal_layer_cbx.currentIndex())
         zonal_layer = QgsProject.instance().mapLayer(

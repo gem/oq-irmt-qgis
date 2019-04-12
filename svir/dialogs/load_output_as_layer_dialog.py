@@ -511,6 +511,13 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.layer.setCustomProperty('calc_id', self.calc_id)
         if poe is not None:
             self.layer.setCustomProperty('poe', poe)
+        try:
+            if (self.zonal_layer_cbx.currentText()
+                    and self.zonal_layer_gbx.isChecked()):
+                return
+        except Exception:
+            # the aggregation stuff might not exist for some loaders
+            pass
         QgsProject.instance().addMapLayer(self.layer)
         self.iface.setActiveLayer(self.layer)
         self.iface.zoomToActiveLayer()
@@ -830,8 +837,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                     super().accept()
                     return
                 loss_layer = self.layer
-                QgsProject.instance().layerTreeRoot().findLayer(
-                    loss_layer.id()).setItemVisibilityChecked(False)
                 zonal_layer_id = self.zonal_layer_cbx.itemData(
                     self.zonal_layer_cbx.currentIndex())
                 zonal_layer = QgsProject.instance().mapLayer(
