@@ -195,6 +195,12 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
 
     def accept(self):
+        try:
+            self.iface.layerTreeView().currentLayerChanged.disconnect(
+                self.on_currentLayerChanged)
+        except Exception:
+            # it's connected only for some loaders
+            pass
         self.hide()
         extract_params = self.get_extract_params()
         self.download_assets(extract_params)
