@@ -636,16 +636,13 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 # create value ranges
                 rule_renderer.refineRuleRanges(not_null_rule, renderer)
                 # remove default rule
-            labels = [item.label()
-                      for item in rule_renderer.legendSymbolItems()]
-            rules = rule_renderer.rootRule().children()[1].children()
-            for idx, label in enumerate(labels):
-                if idx < 2 or idx == len(labels) - 1:
-                    continue
-                bottom = label.split("AND")[0].split(" ")[-2]
-                top = label.split("AND")[1].split(" ")[-1]
+            for rule in rule_renderer.rootRule().children()[1].children():
+                label = rule.label()
+                first, second = label.split("AND")
+                bottom = first.split(" ")[-2]
+                top = second.split(" ")[-1]
                 simplified = "%s - %s" % (bottom, top)
-                rules[idx - 2].setLabel(simplified)
+                rule.setLabel(simplified)
             root_rule.removeChildAt(0)
             renderer = rule_renderer
         layer.setRenderer(renderer)
