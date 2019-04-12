@@ -69,7 +69,7 @@ from svir.utilities.shared import (OQ_CSV_TO_LAYER_TYPES,
                                    OQ_COMPLEX_CSV_TO_LAYER_TYPES,
                                    OQ_TO_LAYER_TYPES,
                                    OQ_EXTRACT_TO_LAYER_TYPES,
-                                   RAMP_TOP_COLORS,
+                                   RAMP_EXTREME_COLORS,
                                    )
 from svir.utilities.utils import (get_ui_class,
                                   get_style,
@@ -569,7 +569,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 # jenks = natural breaks
                 mode = QgsGraduatedSymbolRenderer.Jenks
                 ramp_type_idx = default_color_ramp_names.index('Reds')
-                symbol.setColor(QColor(RAMP_TOP_COLORS['Reds']))
+                symbol.setColor(QColor(RAMP_EXTREME_COLORS['Reds']['top']))
                 inverted = False
             elif self.output_type in ('hmaps',
                                       'gmf_data',
@@ -582,7 +582,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                     mode = QgsGraduatedSymbolRenderer.EqualInterval
                 ramp_type_idx = default_color_ramp_names.index('Spectral')
                 inverted = True
-                symbol.setColor(QColor(RAMP_TOP_COLORS['Reds']))
+                symbol.setColor(QColor(RAMP_EXTREME_COLORS['Reds']['top']))
             elif self.output_type == 'asset_risk':
                 # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
                 # jenks = natural breaks
@@ -601,7 +601,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         fni = layer.fields().indexOf(style_by)
         unique_values = layer.dataProvider().uniqueValues(fni)
         num_unique_values = len(unique_values - {NULL})
-        if num_unique_values > 1:
+        if num_unique_values > 2:
             renderer = QgsGraduatedSymbolRenderer.createRenderer(
                 layer,
                 QgsExpression.quotedColumnRef(style_by),
@@ -613,6 +613,23 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             # label_format.setTrimTrailingZeroes(True)  # it might be useful
             label_format.setPrecision(2)
             renderer.setLabelFormat(label_format, updateRanges=True)
+        elif num_unique_values == 2:
+            categories = []
+            for idx, unique_value in enumerate(unique_values):
+                symbol = symbol.clone()
+                try:
+                    symbol.setColor(QColor(RAMP_EXTREME_COLORS[ramp_name][
+                        'bottom' if idx == 0 else 'top']))
+                except Exception:
+                    symbol.setColor(QColor(
+                        style['color_from'] if idx == 0
+                        else style['color_to']))
+                category = QgsRendererCategory(
+                    unique_value, symbol, str(unique_value))
+                # entry for the list of category items
+                categories.append(category)
+            renderer = QgsCategorizedSymbolRenderer(
+                QgsExpression.quotedColumnRef(style_by), categories)
         else:
             renderer = QgsSingleSymbolRenderer(symbol.clone())
         if add_null_class and NULL in unique_values:
@@ -636,6 +653,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 # create value ranges
                 rule_renderer.refineRuleRanges(not_null_rule, renderer)
                 # remove default rule
+            elif isinstance(renderer, QgsCategorizedSymbolRenderer):
+                rule_renderer.refineRuleCategoris(not_null_rule, renderer)
             for rule in rule_renderer.rootRule().children()[1].children():
                 label = rule.label()
                 # by default, labels are like:
@@ -663,12 +682,12 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     def get_colors(self, style_by):
         # exposure_strings = ['number', 'occupants', 'value']
         # setting exposure colors by default
-        color_dict = {'single': RAMP_TOP_COLORS['Blues'],
+        color_dict = {'single': RAMP_EXTREME_COLORS['Blues']['top'],
                       'ramp_name': 'Blues'}
         damage_strings = ['LAHAR', 'LAVA', 'PYRO', 'ASH']
         for damage_string in damage_strings:
             if damage_string in style_by:
-                color_dict = {'single': RAMP_TOP_COLORS['Reds'],
+                color_dict = {'single': RAMP_EXTREME_COLORS['Reds']['top'],
                               'ramp_name': 'Reds'}
                 break
         return color_dict

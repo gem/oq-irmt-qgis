@@ -275,4 +275,10 @@ REQUEST_ATTRS = {
                  'js_cb_func': 1003,
                  }
 
-RAMP_TOP_COLORS = {'Reds': '#67000d', 'Blues': '#08306b'}
+RAMP_EXTREME_COLORS = {
+    'Reds':
+        {'top': '#67000d',
+         'bottom': '#fff5f0'},
+    'Blues':
+        {'top': '#08306b',
+         'bottom': '#f7fbff'}}
