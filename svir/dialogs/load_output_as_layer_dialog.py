@@ -638,9 +638,12 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 # remove default rule
             for rule in rule_renderer.rootRule().children()[1].children():
                 label = rule.label()
-                first, second = label.split("AND")
-                bottom = first.split(" ")[-2]
-                top = second.split(" ")[-1]
+                # by default, labels are like:
+                # ('"collapse-structural-ASH_DRY_sum" >= 0.0000 AND
+                # "collapse-structural-ASH_DRY_sum" <= 2.3949')
+                first, second = label.split(" AND ")
+                bottom = first.rsplit(" ", 1)[1]
+                top = second.rsplit(" ", 1)[1]
                 simplified = "%s - %s" % (bottom, top)
                 rule.setLabel(simplified)
             root_rule.removeChildAt(0)
