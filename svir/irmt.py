@@ -44,6 +44,7 @@ from qgis.core import (
                        QgsExpression,
                        Qgis,
                        QgsApplication,
+                       QgsWkbTypes,
                        )
 
 from qgis.PyQt.QtCore import (
@@ -330,10 +331,37 @@ class Irmt(object):
         dlg.exec_()
 
     def aggregate(self):
-        initial_params={}
+        processing.Processing.initialize()
         alg_id = 'qgis:joinbylocationsummary'
-        results = processing.execAlgorithmDialog(alg_id, initial_params)
-
+        alg = QgsApplication.processingRegistry().algorithmById(alg_id)
+        # make sure to use the actual lists of predicates and summaries as
+        # defined in the algorithm when it is instantiated
+        predicate_keys = [predicate[0] for predicate in alg.predicates]
+        PREDICATES = dict(zip(predicate_keys, range(len(predicate_keys))))
+        default_predicates = ['intersects']
+        summary_keys = [statistic[0] for statistic in alg.statistics]
+        SUMMARIES = dict(zip(summary_keys, range(len(summary_keys))))
+        default_summaries = ['sum', 'mean']
+        zonal_layer = None
+        points_layer = None
+        for layer in QgsProject.instance().mapLayers().values():
+            if layer.type() != QgsMapLayer.VectorLayer:
+                continue
+            if layer.geometryType() == QgsWkbTypes.PolygonGeometry:
+                zonal_layer = layer
+                continue
+            elif layer.geometryType() == QgsWkbTypes.PointGeometry:
+                points_layer = layer
+                continue
+        initial_params = {
+            'INPUT': zonal_layer,
+            'JOIN': points_layer,
+            'PREDICATE': [PREDICATES[predicate]
+                          for predicate in default_predicates],
+            'SUMMARIES': [SUMMARIES[summary]
+                          for summary in default_summaries],
+            }
+        processing.execAlgorithmDialog(alg_id, initial_params)
 
     def ipt(self):
         if self.ipt_dlg is None:
