@@ -23,6 +23,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 from random import randrange
+from osgeo import ogr
 from qgis.core import (QgsVectorLayer,
                        QgsProject,
                        QgsStyle,
@@ -45,6 +46,7 @@ from qgis.core import (QgsVectorLayer,
                        QgsExpression,
                        NULL,
                        )
+from qgis.gui import QgsSublayersDialog
 from qgis.PyQt.QtCore import (
     pyqtSlot, pyqtSignal, QDir, QSettings, QFileInfo, Qt)
 from qgis.PyQt.QtWidgets import (
@@ -771,22 +773,48 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         :returns: the zonal layer
         """
         text = self.tr('Select zonal layer to import')
-        filters = self.tr('Vector shapefiles (*.shp);;SQLite (*.sqlite);;'
+        filters = self.tr('GeoPackages (*.gpkg);;'
+                          'Vector shapefiles (*.shp);;'
+                          'SQLite (*.sqlite);;'
                           'All files (*.*)')
         default_dir = QSettings().value('irmt/select_layer_dir',
                                         QDir.homePath())
-        file_name, _ = QFileDialog.getOpenFileName(
+        file_name, file_type = QFileDialog.getOpenFileName(
             self, text, default_dir, filters)
         if not file_name:
             return None
         selected_dir = QFileInfo(file_name).dir().path()
         QSettings().setValue('irmt/select_layer_dir', selected_dir)
-        zonal_layer = self.load_zonal_layer(file_name)
+        zonal_layer = self.load_zonal_layer(file_name, file_type)
         return zonal_layer
 
-    def load_zonal_layer(self, zonal_layer_path):
-        # Load zonal layer
-        zonal_layer = QgsVectorLayer(zonal_layer_path, tr('Zonal data'), 'ogr')
+    def load_zonal_layer(self, zonal_layer_path, zonal_layer_type):
+        if '.gpkg' in zonal_layer_type:
+            dlg = QgsSublayersDialog(
+                QgsSublayersDialog.Ogr, 'Select zonal layer')
+            conn = ogr.Open(zonal_layer_path)
+            layer_defs = []
+            for idx, c in enumerate(conn):
+                ld = QgsSublayersDialog.LayerDefinition()
+                ld.layerId = idx
+                ld.layerName = c.GetDescription()
+                ld.count = c.GetFeatureCount()
+                ld.type = ogr.GeometryTypeToName(c.GetGeomType())
+                layer_defs.append(ld)
+            dlg.populateLayerTable(layer_defs)
+            dlg.exec_()
+            if not dlg.selection():
+                return None
+            for sel in dlg.selection():
+                # NOTE: the last one will be chosen as zonal layer
+                zonal_layer = QgsVectorLayer(
+                    zonal_layer_path + "|layername=" + sel.layerName,
+                    sel.layerName, 'ogr')
+                if zonal_layer.isValid():
+                    QgsProject.instance().addMapLayer(zonal_layer)
+        else:
+            zonal_layer = QgsVectorLayer(
+                zonal_layer_path, tr('Zonal data'), 'ogr')
         if not zonal_layer.geometryType() == QgsWkbTypes.PolygonGeometry:
             msg = 'Zonal layer must contain zone polygons'
             log_msg(msg, level='C', message_bar=self.iface.messageBar())
