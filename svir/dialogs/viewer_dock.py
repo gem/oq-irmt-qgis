@@ -606,7 +606,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 message_bar=self.iface.messageBar())
         if rlzs_npz is None:
             return
-        rlzs = [rlz.decode('utf8') for rlz in rlzs_npz['array']['gsims']]
+        # rlz[-1] is the branch-path field
+        rlzs = [rlz[-1].decode('utf8') for rlz in rlzs_npz['array']]
         self.rlz_cbx.blockSignals(True)
         self.rlz_cbx.clear()
         self.rlz_cbx.addItems(rlzs)
@@ -665,8 +666,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     message_bar=self.iface.messageBar())
             if rlzs_npz is None:
                 return
-            self.rlzs = [rlz.decode('utf8')
-                         for rlz in rlzs_npz['array']['gsims']]
+            self.rlzs = [rlz[-1].decode('utf-8')  # branch_path
+                         for rlz in rlzs_npz['array']]
         self._get_tags(session, hostname, calc_id, self.iface.messageBar(),
                        with_star=True)
         self.update_list_selected_edt()

@@ -317,6 +317,16 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         self.reset_gui()
         calc_id = calc['id']
         output_type = output['type']
+        # TODO: when ebrisk becomes loadable, let's not skip this
+        if calc['calculation_mode'] == 'ebrisk':
+            print('\tLoading output type %s...' % output_type)
+            skipped_attempt = {
+                'calc_id': calc_id,
+                'calc_description': calc['description'],
+                'output_type': output_type}
+            self.skipped_attempts.append(skipped_attempt)
+            print('\t\tSKIPPED')
+            return
         if output_type in (OQ_CSV_TO_LAYER_TYPES |
                            OQ_RST_TYPES):
             if output_type in OQ_CSV_TO_LAYER_TYPES:
@@ -479,10 +489,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             layer.select([1, 2])
         else:
             layer.select([1])
-        imt = 'PGA'
-        idx = self.viewer_dock.imt_cbx.findText(imt)
-        self.assertNotEqual(idx, -1, 'IMT %s not found' % imt)
-        self.viewer_dock.imt_cbx.setCurrentIndex(idx)
+        self.assertGreater(
+            self.viewer_dock.imt_cbx.count(), 0, 'No IMT was found!')
+        self.viewer_dock.imt_cbx.setCurrentIndex(0)
         # test exporting the current selection to csv
         _, exported_file_path = tempfile.mkstemp(suffix=".csv")
         self._test_export()
