@@ -516,8 +516,7 @@ class Irmt(object):
             self.iface.removeToolBarIcon(action)
         clear_progress_message_bar(self.iface.messageBar())
 
-        # remove menu
-        self.menu.deleteLater()
+        self.menu.clear()
 
         # remove the dock
         self.viewer_dock.remove_connects()
