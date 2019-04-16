@@ -22,7 +22,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-from qgis.PyQt.QtWidgets import QDialog, QGroupBox, QVBoxLayout
+from qgis.PyQt.QtWidgets import (
+    QGroupBox, QVBoxLayout, QHBoxLayout, QRadioButton,)
 from qgis.core import (
     QgsFeature, QgsGeometry, QgsPointXY, edit, QgsTask, QgsApplication,
     QgsProject,)
@@ -32,7 +33,7 @@ from svir.calculations.calculate_utils import add_numeric_attribute
 from svir.calculations.aggregate_loss_by_zone import (
     calculate_zonal_stats)
 from svir.calculations.process_layer import ProcessLayer
-from svir.utilities.utils import WaitCursorManager, log_msg, extract_npz
+from svir.utilities.utils import WaitCursorManager, log_msg
 from svir.ui.list_multiselect_widget import ListMultiSelectWidget
 from svir.tasks.extract_npz_task import ExtractNpzTask
 
@@ -74,9 +75,16 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
         self.init_done.emit()
 
     def populate_out_dep_widgets(self):
-        self.create_selector(
-            "visualize", "Visualize", filter_ckb=False,
-            on_text_changed=self.on_visualize_changed)
+        self.visualize_gbx = QGroupBox('Visualize')
+        self.visualize_gbx_h_layout = QHBoxLayout()
+        self.exposure_rbn = QRadioButton('Exposure')
+        self.risk_rbn = QRadioButton('Risk')
+        self.exposure_rbn.toggled.connect(self.on_visualize_changed)
+        self.risk_rbn.toggled.connect(self.on_visualize_changed)
+        self.visualize_gbx_h_layout.addWidget(self.exposure_rbn)
+        self.visualize_gbx_h_layout.addWidget(self.risk_rbn)
+        self.visualize_gbx.setLayout(self.visualize_gbx_h_layout)
+        self.vlayout.addWidget(self.visualize_gbx)
         self.create_selector(
             "peril", "Peril", filter_ckb=False,
             on_text_changed=self.on_peril_changed)
@@ -86,7 +94,6 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
         self.create_selector(
             "category", "Category", filter_ckb=False)
         self.peril_cbx.addItems(sorted(self.perils))
-        self.visualize_cbx.addItems(['Exposure', 'Risk'])
         self.taxonomies_gbx = QGroupBox()
         self.taxonomies_gbx.setTitle('Filter by taxonomy')
         self.taxonomies_gbx.setCheckable(True)
@@ -121,12 +128,13 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
             self.populate_zonal_layer_cbx(zonal_layer)
         else:
             self.pre_populate_zonal_layer_cbx()
+        self.exposure_rbn.setChecked(True)
 
-    def on_visualize_changed(self, visualize):
-        self.peril_cbx.setEnabled(visualize=='Risk')
-        self.peril_lbl.setVisible(visualize=='Risk')
-        self.peril_cbx.setVisible(visualize=='Risk')
-        if visualize == 'Exposure':
+    def on_visualize_changed(self):
+        self.peril_cbx.setEnabled(self.risk_rbn.isChecked())
+        self.peril_lbl.setVisible(self.risk_rbn.isChecked())
+        self.peril_cbx.setVisible(self.risk_rbn.isChecked())
+        if self.exposure_rbn.isChecked():
             self.category_cbx.clear()
             self.category_cbx.addItems(self.exposure_categories)
         else:  # 'Risk'
@@ -152,7 +160,7 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
         self.ok_button.setEnabled(True)
 
     def build_layer_name(self, rlz_or_stat=None, **kwargs):
-        if self.visualize_cbx.currentText() == 'Exposure':
+        if self.exposure_rbn.isChecked():
             self.default_field_name = self.category_cbx.currentText()
         else:  # 'Risk'
             self.default_field_name = "%s-%s" % (
@@ -262,4 +270,3 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
             log_msg(str(exc), level='C',
                     message_bar=self.iface.messageBar(),
                     exception=exc)
-
