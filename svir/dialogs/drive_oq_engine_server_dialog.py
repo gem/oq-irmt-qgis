@@ -80,8 +80,8 @@ from svir.dialogs.load_dmg_by_asset_as_layer_dialog import (
     LoadDmgByAssetAsLayerDialog)
 from svir.dialogs.load_gmf_data_as_layer_dialog import (
     LoadGmfDataAsLayerDialog)
-from svir.dialogs.load_assets_as_layer_dialog import (
-    LoadAssetsAsLayerDialog)
+from svir.dialogs.load_asset_risk_as_layer_dialog import (
+    LoadAssetRiskAsLayerDialog)
 from svir.dialogs.load_hmaps_as_layer_dialog import (
     LoadHazardMapsAsLayerDialog)
 from svir.dialogs.load_hcurves_as_layer_dialog import (
@@ -120,7 +120,7 @@ OUTPUT_TYPE_LOADERS = {
     'uhs': LoadUhsAsLayerDialog,
     'losses_by_asset': LoadLossesByAssetAsLayerDialog,
     'avg_losses-stats': LoadLossesByAssetAsLayerDialog,
-    'asset_risk': LoadAssetsAsLayerDialog,
+    'asset_risk': LoadAssetRiskAsLayerDialog,
 }
 assert set(OUTPUT_TYPE_LOADERS) == OQ_TO_LAYER_TYPES, (
     OUTPUT_TYPE_LOADERS, OQ_TO_LAYER_TYPES)

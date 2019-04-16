@@ -37,9 +37,9 @@ from svir.ui.list_multiselect_widget import ListMultiSelectWidget
 from svir.tasks.extract_npz_task import ExtractNpzTask
 
 
-class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
+class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
     """
-    Dialog to load assets from an oq-engine output, as layer
+    Dialog to load asset_risk from an oq-engine output, as layer
     """
     def __init__(self, iface, viewer_dock, session, hostname, calc_id,
                  output_type='asset_risk', path=None, mode=None,
@@ -51,7 +51,7 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
             engine_version=engine_version)
 
         self.setWindowTitle(
-            'Load assets as layer')
+            'Load Exposure/Risk as layer')
         self.extract_npz_task = ExtractNpzTask(
             'Extract exposure metadata', QgsTask.CanCancel, self.session,
             self.hostname, self.calc_id, 'exposure_metadata',
@@ -199,7 +199,7 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
             self.on_currentLayerChanged)
         self.hide()
         extract_params = self.get_extract_params()
-        self.download_assets(extract_params)
+        self.download_asset_risk(extract_params)
 
     def get_extract_params(self):
         params = {}
@@ -212,15 +212,15 @@ class LoadAssetsAsLayerDialog(LoadOutputAsLayerDialog):
                 self.taxonomies_multisel.get_selected_items())
         return params
 
-    def download_assets(self, extract_params):
+    def download_asset_risk(self, extract_params):
         self.extract_npz_task = ExtractNpzTask(
-            'Extract assets', QgsTask.CanCancel, self.session,
+            'Extract asset_risk', QgsTask.CanCancel, self.session,
             self.hostname, self.calc_id, 'asset_risk',
-            self.on_assets_downloaded, self.on_extract_error,
+            self.on_asset_risk_downloaded, self.on_extract_error,
             params=extract_params)
         QgsApplication.taskManager().addTask(self.extract_npz_task)
 
-    def on_assets_downloaded(self, extracted_npz):
+    def on_asset_risk_downloaded(self, extracted_npz):
         self.npz_file = extracted_npz
         self.dataset = self.npz_file['array']
         with WaitCursorManager('Creating layer...', self.iface.messageBar()):

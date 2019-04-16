@@ -24,7 +24,7 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     3.5.0
-    * Added loaders for OQ-Engine outputs 'assets' and 'agg_risk'
+    * Added loaders for OQ-Engine outputs 'asset_risk' and 'agg_risk'
     * The option to aggregate points by polygons is automatically enabled whenever at least one layer containing polygons becomes available
     * Improved legends and classification criteria, depending on the unique values present in the field used for styling
     3.4.0
