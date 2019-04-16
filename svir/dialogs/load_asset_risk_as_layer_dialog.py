@@ -96,7 +96,8 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
         self.taxonomies_multisel = ListMultiSelectWidget(
             title='Taxonomies')
         self.taxonomies_multisel.add_unselected_items(
-            sorted(self.exposure_metadata['taxonomy']))
+            sorted([taxonomy for taxonomy in self.exposure_metadata['taxonomy']
+                    if taxonomy != '?']))
         self.taxonomies_gbx_v_layout.addWidget(self.taxonomies_multisel)
         self.vlayout.addWidget(self.taxonomies_gbx)
         self.tag_gbx = QGroupBox()
