@@ -789,6 +789,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         return zonal_layer
 
     def load_zonal_layer(self, zonal_layer_path, zonal_layer_type):
+        zonal_layer = None
         if '.gpkg' in zonal_layer_type:
             dlg = QgsSublayersDialog(
                 QgsSublayersDialog.Ogr, 'Select zonal layer')
@@ -812,27 +813,30 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                     sel.layerName, 'ogr')
                 if zonal_layer.isValid():
                     QgsProject.instance().addMapLayer(zonal_layer)
+                else:
+                    msg = 'Invalid layer'
+                    log_msg(msg, level='C',
+                            message_bar=self.iface.messageBar())
+                    return None
         else:
             zonal_layer = QgsVectorLayer(
                 zonal_layer_path, tr('Zonal data'), 'ogr')
         if not zonal_layer.geometryType() == QgsWkbTypes.PolygonGeometry:
             msg = 'Zonal layer must contain zone polygons'
             log_msg(msg, level='C', message_bar=self.iface.messageBar())
-            return False
-        # Add zonal layer to registry
-        if zonal_layer.isValid():
-            QgsProject.instance().addMapLayer(zonal_layer)
-        else:
-            msg = 'Invalid zonal layer'
-            log_msg(msg, level='C', message_bar=self.iface.messageBar())
             return None
+        if '.gpkg' not in zonal_layer_type:
+            # Add zonal layer to registry
+            if zonal_layer.isValid():
+                QgsProject.instance().addMapLayer(zonal_layer)
+            else:
+                msg = 'Invalid zonal layer'
+                log_msg(msg, level='C', message_bar=self.iface.messageBar())
+                return None
         return zonal_layer
 
     def on_zonal_layer_tbn_clicked(self):
-        zonal_layer = self.open_zonal_layer_dialog()
-        if (zonal_layer and
-                zonal_layer.geometryType() == QgsWkbTypes.PolygonGeometry):
-            self.populate_zonal_layer_cbx(zonal_layer)
+        self.open_zonal_layer_dialog()
 
     def populate_zonal_layer_cbx(self, zonal_layer):
         cbx = self.zonal_layer_cbx
