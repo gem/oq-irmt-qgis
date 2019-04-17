@@ -166,9 +166,9 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
             self.default_field_name = "%s-%s" % (
                 self.category_cbx.currentText(), self.peril_cbx.currentText())
         if self.exposure_rbn.isChecked():
-            layer_name = 'Exposure %s' % self.category_cbx.currentText()
+            layer_name = 'Exposure: %s' % self.category_cbx.currentText()
         else:  # Risk
-            layer_name = 'Risk %s %s' % (
+            layer_name = 'Risk: %s %s' % (
                 self.peril_cbx.currentText(),
                 self.category_cbx.currentText())
         return layer_name
