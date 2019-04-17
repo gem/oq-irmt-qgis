@@ -34,7 +34,6 @@ from qgis.core import (QgsVectorLayer,
                        QgsGraduatedSymbolRenderer,
                        QgsRuleBasedRenderer,
                        QgsFillSymbol,
-                       QgsMapUnitScale,
                        QgsWkbTypes,
                        QgsMapLayer,
                        QgsMarkerSymbol,
@@ -42,7 +41,6 @@ from qgis.core import (QgsVectorLayer,
                        QgsRendererCategory,
                        QgsCategorizedSymbolRenderer,
                        QgsApplication,
-                       QgsUnitTypes,
                        QgsExpression,
                        NULL,
                        )
@@ -526,24 +524,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         log_msg('Layer %s was created successfully' % layer_name, level='S',
                 message_bar=self.iface.messageBar())
 
-    def _set_symbol_size(self, symbol):
-        if self.iface.mapCanvas().mapUnits() == QgsUnitTypes.DistanceDegrees:
-            point_size = 0.05
-        elif self.iface.mapCanvas().mapUnits() == QgsUnitTypes.DistanceMeters:
-            point_size = 4000
-        else:
-            # it is not obvious how to choose the point size in the other
-            # cases, so we conservatively keep the default sizing
-            return
-        symbol.symbolLayer(0).setSizeUnit(QgsUnitTypes.RenderMapUnits)
-        symbol.symbolLayer(0).setSize(point_size)
-        map_unit_scale = QgsMapUnitScale()
-        map_unit_scale.maxSizeMMEnabled = True
-        map_unit_scale.minSizeMMEnabled = True
-        map_unit_scale.minSizeMM = 0.5
-        map_unit_scale.maxSizeMM = 2
-        symbol.symbolLayer(0).setSizeMapUnitScale(map_unit_scale)
-
     def style_maps(self, layer=None, style_by=None, add_null_class=False):
         if layer is None:
             layer = self.layer
@@ -555,7 +535,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         symbol.setOpacity(1)
         if isinstance(symbol, QgsMarkerSymbol):
             # do it only for the layer with points
-            self._set_symbol_size(symbol)
             symbol.symbolLayer(0).setStrokeStyle(Qt.PenStyle(Qt.NoPen))
 
         style = get_style(layer, self.iface.messageBar())
@@ -749,7 +728,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         symbol = QgsSymbol.defaultSymbol(self.layer.geometryType())
         symbol.deleteSymbolLayer(0)
         symbol.appendSymbolLayer(cross)
-        self._set_symbol_size(symbol)
         renderer = QgsSingleSymbolRenderer(symbol)
         effect = QgsOuterGlowEffect()
         effect.setSpread(0.5)
