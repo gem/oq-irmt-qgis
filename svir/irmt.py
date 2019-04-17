@@ -170,8 +170,8 @@ class Irmt(object):
         if get_menu is not None:
             self.menu = get_menu
 
-        menu_bar.insertMenu(self.iface.firstRightStandardMenu().menuAction(),
-                            self.menu)
+        self.menu_action = menu_bar.insertMenu(
+            self.iface.firstRightStandardMenu().menuAction(), self.menu)
 
         # Action to activate the modal dialog to import socioeconomic
         # data from the platform
@@ -516,8 +516,8 @@ class Irmt(object):
             self.iface.removeToolBarIcon(action)
         clear_progress_message_bar(self.iface.messageBar())
 
-        # remove menu
-        self.menu.deleteLater()
+        self.menu.clear()
+        self.iface.mainWindow().menuBar().removeAction(self.menu_action)
 
         # remove the dock
         self.viewer_dock.remove_connects()
