@@ -541,7 +541,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         map_unit_scale.maxSizeMMEnabled = True
         map_unit_scale.minSizeMMEnabled = True
         map_unit_scale.minSizeMM = 0.5
-        map_unit_scale.maxSizeMM = 10
+        map_unit_scale.maxSizeMM = 2
         symbol.symbolLayer(0).setSizeMapUnitScale(map_unit_scale)
 
     def style_maps(self, layer=None, style_by=None, add_null_class=False):
