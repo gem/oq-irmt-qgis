@@ -294,7 +294,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.save_as_shp_ckb.setChecked(False)
         self.vlayout.addWidget(self.save_as_shp_ckb)
 
-    def create_zonal_layer_selector(self):
+    def create_zonal_layer_selector(self, discard_nonmatching=True):
         self.zonal_layer_gbx = QGroupBox()
         self.zonal_layer_gbx.setTitle('Aggregate by zone')
         self.zonal_layer_gbx.setCheckable(True)
@@ -306,11 +306,15 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.zonal_layer_lbl = QLabel('Zonal layer')
         self.zonal_layer_tbn = QToolButton()
         self.zonal_layer_tbn.setText('...')
+        self.discard_nonmatching_chk = QCheckBox(
+            'Discard zones with no points')
+        self.discard_nonmatching_chk.setChecked(discard_nonmatching)
         self.zonal_layer_h_layout = QHBoxLayout()
         self.zonal_layer_h_layout.addWidget(self.zonal_layer_cbx)
         self.zonal_layer_h_layout.addWidget(self.zonal_layer_tbn)
         self.zonal_layer_gbx_v_layout.addWidget(self.zonal_layer_lbl)
         self.zonal_layer_gbx_v_layout.addLayout(self.zonal_layer_h_layout)
+        self.zonal_layer_gbx_v_layout.addWidget(self.discard_nonmatching_chk)
         self.vlayout.addWidget(self.zonal_layer_gbx)
         self.zonal_layer_tbn.clicked.connect(
             self.on_zonal_layer_tbn_clicked)
@@ -846,6 +850,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                         not self.zonal_layer_gbx.isChecked()):
                     super().accept()
                     return
+
+                # TODO: the following should be extracted as method, as in the
+                # loader for assets_risk
                 loss_layer = self.layer
                 zonal_layer_id = self.zonal_layer_cbx.itemData(
                     self.zonal_layer_cbx.currentIndex())
@@ -863,11 +870,13 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 [self.loss_attr_name] = [
                     field.name() for field in loss_layer.fields()]
                 zonal_layer_plus_sum_name = "%s_sum" % zonal_layer.name()
+                discard_nonmatching = self.discard_nonmatching_chk.isChecked()
                 try:
                     calculate_zonal_stats(
                         self.on_calculate_zonal_stats_completed,
                         zonal_layer, loss_layer, [self.loss_attr_name],
-                        zonal_layer_plus_sum_name, discard_nonmatching=False,
+                        zonal_layer_plus_sum_name,
+                        discard_nonmatching=discard_nonmatching,
                         predicates=('intersects',), summaries=('sum',))
                 except Exception as exc:
                     log_msg(str(exc), level='C',

@@ -265,11 +265,13 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
         #     field.name() for field in loss_layer.fields()]
         self.loss_attr_name = self.default_field_name
         zonal_layer_plus_sum_name = "%s_sum" % zonal_layer.name()
+        discard_nonmatching = self.discard_nonmatching_chk.isChecked()
         try:
             calculate_zonal_stats(
                 self.on_calculate_zonal_stats_completed,
                 zonal_layer, loss_layer, [self.loss_attr_name],
-                zonal_layer_plus_sum_name, discard_nonmatching=False,
+                zonal_layer_plus_sum_name,
+                discard_nonmatching=discard_nonmatching,
                 predicates=('intersects',), summaries=('sum',))
         except Exception as exc:
             log_msg(str(exc), level='C',
