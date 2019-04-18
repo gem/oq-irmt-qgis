@@ -22,6 +22,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
 from random import randrange
 from osgeo import ogr
 from qgis.core import (QgsVectorLayer,
@@ -316,8 +317,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.zonal_layer_gbx_v_layout.addLayout(self.zonal_layer_h_layout)
         self.zonal_layer_gbx_v_layout.addWidget(self.discard_nonmatching_chk)
         self.vlayout.addWidget(self.zonal_layer_gbx)
-        self.zonal_layer_tbn.clicked.connect(
-            self.on_zonal_layer_tbn_clicked)
+        self.zonal_layer_tbn.clicked.connect(self.open_load_zonal_layer_dialog)
         self.zonal_layer_cbx.currentIndexChanged[int].connect(
             self.on_zonal_layer_cbx_currentIndexChanged)
         self.zonal_layer_gbx.toggled[bool].connect(
@@ -749,16 +749,17 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
 
         self.iface.mapCanvas().refresh()
 
-    def open_zonal_layer_dialog(self):
+    def open_load_zonal_layer_dialog(self):
         """
         Open a file dialog to select the zonal layer to be loaded
         :returns: the zonal layer
         """
         text = self.tr('Select zonal layer to import')
-        filters = self.tr('GeoPackages (*.gpkg);;'
+        filters = self.tr('All files (*.*);;'
+                          'GeoPackages (*.gpkg);;'
                           'Vector shapefiles (*.shp);;'
                           'SQLite (*.sqlite);;'
-                          'All files (*.*)')
+                          )
         default_dir = QSettings().value('irmt/select_layer_dir',
                                         QDir.homePath())
         file_name, file_type = QFileDialog.getOpenFileName(
@@ -767,12 +768,14 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             return None
         selected_dir = QFileInfo(file_name).dir().path()
         QSettings().setValue('irmt/select_layer_dir', selected_dir)
-        zonal_layer = self.load_zonal_layer(file_name, file_type)
+        zonal_layer = self.load_zonal_layer(file_name)
         return zonal_layer
 
-    def load_zonal_layer(self, zonal_layer_path, zonal_layer_type):
+    def load_zonal_layer(self, zonal_layer_path):
         zonal_layer = None
-        if '.gpkg' in zonal_layer_type:
+        zonal_layer_basename, zonal_layer_ext = os.path.splitext(
+            os.path.basename(zonal_layer_path))
+        if zonal_layer_ext == '.gpkg':
             dlg = QgsSublayersDialog(
                 QgsSublayersDialog.Ogr, 'Select zonal layer')
             conn = ogr.Open(zonal_layer_path)
@@ -802,12 +805,12 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                     return None
         else:
             zonal_layer = QgsVectorLayer(
-                zonal_layer_path, tr('Zonal data'), 'ogr')
+                zonal_layer_path, zonal_layer_basename, 'ogr')
         if not zonal_layer.geometryType() == QgsWkbTypes.PolygonGeometry:
             msg = 'Zonal layer must contain zone polygons'
             log_msg(msg, level='C', message_bar=self.iface.messageBar())
             return None
-        if '.gpkg' not in zonal_layer_type:
+        if zonal_layer_ext != '.gpkg':
             # Add zonal layer to registry
             if zonal_layer.isValid():
                 QgsProject.instance().addMapLayer(zonal_layer)
@@ -816,9 +819,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
                 return None
         return zonal_layer
-
-    def on_zonal_layer_tbn_clicked(self):
-        self.open_zonal_layer_dialog()
 
     def populate_zonal_layer_cbx(self, zonal_layer):
         cbx = self.zonal_layer_cbx
