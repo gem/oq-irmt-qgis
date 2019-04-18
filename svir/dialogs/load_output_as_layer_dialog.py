@@ -850,45 +850,47 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                         not self.zonal_layer_gbx.isChecked()):
                     super().accept()
                     return
-
-                # TODO: the following should be extracted as method, as in the
-                # loader for assets_risk
-                loss_layer = self.layer
-                zonal_layer_id = self.zonal_layer_cbx.itemData(
-                    self.zonal_layer_cbx.currentIndex())
-                zonal_layer = QgsProject.instance().mapLayer(
-                    zonal_layer_id)
-                QgsProject.instance().layerTreeRoot().findLayer(
-                    zonal_layer.id()).setItemVisibilityChecked(False)
-                # if the two layers have different projections, display a
-                # warning, but try proceeding anyway
-                have_same_projection, check_projection_msg = ProcessLayer(
-                    loss_layer).has_same_projection_as(zonal_layer)
-                if not have_same_projection:
-                    log_msg(check_projection_msg, level='W',
-                            message_bar=self.iface.messageBar())
-                [self.loss_attr_name] = [
-                    field.name() for field in loss_layer.fields()]
-                zonal_layer_plus_sum_name = "%s_sum" % zonal_layer.name()
-                discard_nonmatching = self.discard_nonmatching_chk.isChecked()
-                try:
-                    calculate_zonal_stats(
-                        self.on_calculate_zonal_stats_completed,
-                        zonal_layer, loss_layer, [self.loss_attr_name],
-                        zonal_layer_plus_sum_name,
-                        discard_nonmatching=discard_nonmatching,
-                        predicates=('intersects',), summaries=('sum',))
-                except Exception as exc:
-                    log_msg(str(exc), level='C',
-                            message_bar=self.iface.messageBar(),
-                            exception=exc)
-                    super().reject()
-                    return
+                self.aggregate_by_zone()
             else:
                 super().accept()
         elif self.output_type in OQ_CSV_TO_LAYER_TYPES:
             self.load_from_csv()
             super().accept()
+
+    def aggregate_by_zone(self):
+        loss_layer = self.layer
+        zonal_layer_id = self.zonal_layer_cbx.itemData(
+            self.zonal_layer_cbx.currentIndex())
+        zonal_layer = QgsProject.instance().mapLayer(
+            zonal_layer_id)
+        QgsProject.instance().layerTreeRoot().findLayer(
+            zonal_layer.id()).setItemVisibilityChecked(False)
+        # if the two layers have different projections, display a
+        # warning, but try proceeding anyway
+        have_same_projection, check_projection_msg = ProcessLayer(
+            loss_layer).has_same_projection_as(zonal_layer)
+        if not have_same_projection:
+            log_msg(check_projection_msg, level='W',
+                    message_bar=self.iface.messageBar())
+        try:
+            [self.loss_attr_name] = [
+                field.name() for field in loss_layer.fields()]
+        except ValueError:
+            self.loss_attr_name = self.default_field_name
+        zonal_layer_plus_sum_name = "%s: %s_sum" % (
+            zonal_layer.name(), self.loss_attr_name)
+        discard_nonmatching = self.discard_nonmatching_chk.isChecked()
+        try:
+            calculate_zonal_stats(
+                self.on_calculate_zonal_stats_completed,
+                zonal_layer, loss_layer, [self.loss_attr_name],
+                zonal_layer_plus_sum_name,
+                discard_nonmatching=discard_nonmatching,
+                predicates=('intersects',), summaries=('sum',))
+        except Exception as exc:
+            log_msg(str(exc), level='C',
+                    message_bar=self.iface.messageBar(),
+                    exception=exc)
 
     def on_calculate_zonal_stats_completed(self, zonal_layer_plus_sum):
         if zonal_layer_plus_sum is None:
@@ -912,7 +914,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.style_maps(
             layer=zonal_layer_plus_sum, style_by=style_by,
             add_null_class=True)
-        # self.loading_completed.emit()
         super().accept()
 
     def reject(self):

@@ -25,14 +25,9 @@
 from qgis.PyQt.QtWidgets import (
     QGroupBox, QVBoxLayout, QHBoxLayout, QRadioButton,)
 from qgis.core import (
-    QgsFeature, QgsGeometry, QgsPointXY, edit, QgsTask, QgsApplication,
-    QgsProject,)
-# from qgis.PyQt.QtCore import Qt
+    QgsFeature, QgsGeometry, QgsPointXY, edit, QgsTask, QgsApplication,)
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 from svir.calculations.calculate_utils import add_numeric_attribute
-from svir.calculations.aggregate_loss_by_zone import (
-    calculate_zonal_stats)
-from svir.calculations.process_layer import ProcessLayer
 from svir.utilities.utils import WaitCursorManager, log_msg
 from svir.ui.list_multiselect_widget import ListMultiSelectWidget
 from svir.tasks.extract_npz_task import ExtractNpzTask
@@ -245,35 +240,3 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
             self.aggregate_by_zone()
         else:
             self.loading_completed.emit()
-
-    def aggregate_by_zone(self):
-        loss_layer = self.layer
-        zonal_layer_id = self.zonal_layer_cbx.itemData(
-            self.zonal_layer_cbx.currentIndex())
-        zonal_layer = QgsProject.instance().mapLayer(
-            zonal_layer_id)
-        QgsProject.instance().layerTreeRoot().findLayer(
-            zonal_layer.id()).setItemVisibilityChecked(False)
-        # if the two layers have different projections, display a
-        # warning, but try proceeding anyway
-        have_same_projection, check_projection_msg = ProcessLayer(
-            loss_layer).has_same_projection_as(zonal_layer)
-        if not have_same_projection:
-            log_msg(check_projection_msg, level='W',
-                    message_bar=self.iface.messageBar())
-        # [self.loss_attr_name] = [
-        #     field.name() for field in loss_layer.fields()]
-        self.loss_attr_name = self.default_field_name
-        zonal_layer_plus_sum_name = "%s_sum" % zonal_layer.name()
-        discard_nonmatching = self.discard_nonmatching_chk.isChecked()
-        try:
-            calculate_zonal_stats(
-                self.on_calculate_zonal_stats_completed,
-                zonal_layer, loss_layer, [self.loss_attr_name],
-                zonal_layer_plus_sum_name,
-                discard_nonmatching=discard_nonmatching,
-                predicates=('intersects',), summaries=('sum',))
-        except Exception as exc:
-            log_msg(str(exc), level='C',
-                    message_bar=self.iface.messageBar(),
-                    exception=exc)
