@@ -296,6 +296,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.vlayout.addWidget(self.save_as_shp_ckb)
 
     def create_zonal_layer_selector(self, discard_nonmatching=True):
+        self.added_zonal_layer = None
         self.zonal_layer_gbx = QGroupBox()
         self.zonal_layer_gbx.setTitle('Aggregate by zone')
         self.zonal_layer_gbx.setCheckable(True)
@@ -338,6 +339,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 self.zonal_layer_cbx.addItem(layer.name())
                 self.zonal_layer_cbx.setItemData(
                     self.zonal_layer_cbx.count()-1, layer.id())
+        if self.added_zonal_layer is not None:
+            self.zonal_layer_cbx.setCurrentIndex(
+                self.zonal_layer_cbx.findData(self.added_zonal_layer.id()))
         self.zonal_layer_gbx.setChecked(
             self.zonal_layer_cbx.currentIndex() != -1)
 
@@ -772,7 +776,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         return zonal_layer
 
     def load_zonal_layer(self, zonal_layer_path):
-        zonal_layer = None
+        self.added_zonal_layer = zonal_layer = None
         zonal_layer_basename, zonal_layer_ext = os.path.splitext(
             os.path.basename(zonal_layer_path))
         if zonal_layer_ext == '.gpkg':
@@ -818,6 +822,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 msg = 'Invalid zonal layer'
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
                 return None
+        self.added_zonal_layer = zonal_layer
         return zonal_layer
 
     def populate_zonal_layer_cbx(self, zonal_layer):
