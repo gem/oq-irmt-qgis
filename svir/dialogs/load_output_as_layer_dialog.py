@@ -607,7 +607,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             renderer.setLabelFormat(label_format, updateRanges=True)
         elif num_unique_values == 2:
             categories = []
-            for idx, unique_value in enumerate(unique_values):
+            for idx, unique_value in enumerate(sorted(unique_values)):
                 symbol = symbol.clone()
                 try:
                     symbol.setColor(QColor(RAMP_EXTREME_COLORS[ramp_name][
