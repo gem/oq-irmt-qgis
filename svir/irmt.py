@@ -651,8 +651,8 @@ class Irmt(object):
         # We remove those spaces from the csv file before importing it.
         # TODO: Remove this as soon as QGIS solves that issue
         for line in fileinput.input(fname, inplace=True):
-            line = re.sub('\)\),\s\(\(', ')),((', line.rstrip())
-            line = re.sub('\),\s\(', '),(', line.rstrip())
+            line = re.sub('\)\),\s\(\(', ')),((', line.rstrip())  # NOQA
+            line = re.sub('\),\s\(', '),(', line.rstrip())  # NOQA
             # thanks to inplace=True, 'print line' writes the line into the
             # input file, overwriting the original line
             print(line)
