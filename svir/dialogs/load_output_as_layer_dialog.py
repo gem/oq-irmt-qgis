@@ -608,14 +608,16 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             renderer.setLabelFormat(label_format, updateRanges=True)
         elif num_unique_values == 2:
             categories = []
-            for idx, unique_value in enumerate(sorted(unique_values)):
+            for unique_value in unique_values:
                 symbol = symbol.clone()
                 try:
                     symbol.setColor(QColor(RAMP_EXTREME_COLORS[ramp_name][
-                        'bottom' if idx == 0 else 'top']))
+                        'bottom' if unique_value == min(unique_values)
+                        else 'top']))
                 except Exception:
                     symbol.setColor(QColor(
-                        style['color_from'] if idx == 0
+                        style['color_from']
+                        if unique_value == min(unique_values)
                         else style['color_to']))
                 category = QgsRendererCategory(
                     unique_value, symbol, str(unique_value))
