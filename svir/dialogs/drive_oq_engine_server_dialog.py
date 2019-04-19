@@ -915,7 +915,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.notify_downloaded(output_id, output_type, filepath)
         load_inputs_dlg = LoadInputsDialog(
             filepath, self.iface, self.iface.mainWindow())
-        load_inputs_dlg.show()
+        # FIXME: if I use show here, ok and cancel btns do not work
+        load_inputs_dlg.exec_()
 
     def notify_error(self, exc):
         if isinstance(exc, TaskCanceled):
