@@ -523,7 +523,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             if (self.zonal_layer_cbx.currentText()
                     and self.zonal_layer_gbx.isChecked()):
                 return
-        except Exception:
+        except AttributeError:
             # the aggregation stuff might not exist for some loaders
             pass
         QgsProject.instance().addMapLayer(self.layer)
