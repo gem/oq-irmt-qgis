@@ -986,5 +986,5 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             self.console_dlg.reject()
         if self.full_report_dlg is not None:
             self.full_report_dlg.reject()
-        # NOTE: it should be safe to can keep other dialogs open
+        # NOTE: it should be safe to keep other dialogs open
         super().reject()

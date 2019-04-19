@@ -567,10 +567,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 ramp_type_idx = default_color_ramp_names.index('Reds')
                 symbol.setColor(QColor(RAMP_EXTREME_COLORS['Reds']['top']))
                 inverted = False
-            elif self.output_type in ('hmaps',
-                                      'gmf_data',
-                                      'ruptures',
-                                      ):
+            elif self.output_type in ('hmaps', 'gmf_data', 'ruptures'):
                 # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
                 if self.output_type == 'ruptures':
                     mode = QgsGraduatedSymbolRenderer.Pretty
@@ -766,7 +763,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                           )
         default_dir = QSettings().value('irmt/select_layer_dir',
                                         QDir.homePath())
-        file_name, file_type = QFileDialog.getOpenFileName(
+        file_name, _ = QFileDialog.getOpenFileName(
             self, text, default_dir, filters)
         if not file_name:
             return None
@@ -848,8 +845,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             self.load_from_npz()
             if self.output_type in ('losses_by_asset',
                                     'dmg_by_asset',
-                                    'avg_losses-stats',
-                                    ):
+                                    'avg_losses-stats'):
                 # check if also aggregating by zone or not
                 if (not self.zonal_layer_cbx.currentText() or
                         not self.zonal_layer_gbx.isChecked()):
