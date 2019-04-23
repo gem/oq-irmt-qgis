@@ -42,6 +42,7 @@ from svir.utilities.shared import (
                                    OQ_EXTRACT_TO_LAYER_TYPES,
                                    OQ_RST_TYPES,
                                    OQ_EXTRACT_TO_VIEW_TYPES,
+                                   OQ_ZIPPED_TYPES,
                                    OQ_ALL_TYPES,
                                    )
 from svir.test.utilities import assert_and_emit
@@ -372,7 +373,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 return
             else:
                 raise RuntimeError('The ok button is disabled')
-        elif output_type in OQ_EXTRACT_TO_LAYER_TYPES:
+        elif output_type in (OQ_EXTRACT_TO_LAYER_TYPES | OQ_ZIPPED_TYPES):
             print('\tLoading output type %s...' % output_type)
             # TODO: when gmf_data for event_based becomes loadable,
             #       let's not skip this
@@ -385,7 +386,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 self.skipped_attempts.append(skipped_attempt)
                 print('\t\tSKIPPED')
                 return
-            if output_type == 'input':
+            if output_type in OQ_ZIPPED_TYPES:
                 dlg = LoadInputsDialog(filepath, IFACE)
             else:
                 dlg = OUTPUT_TYPE_LOADERS[output_type](
