@@ -751,6 +751,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                             continue
                         action = 'Show'
                     elif output['type'] in OQ_ZIPPED_TYPES:
+                        if calculation_mode != 'multi_risk':
+                            continue
                         action = 'Load from zip'
                     else:
                         action = 'Load as layer'
