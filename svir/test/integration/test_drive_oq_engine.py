@@ -48,6 +48,7 @@ from svir.test.utilities import assert_and_emit
 from svir.dialogs.drive_oq_engine_server_dialog import (
     OUTPUT_TYPE_LOADERS, DriveOqEngineServerDialog)
 from svir.dialogs.show_full_report_dialog import ShowFullReportDialog
+from svir.dialogs.load_inputs_dialog import LoadInputsDialog
 from svir.dialogs.viewer_dock import ViewerDock
 
 
@@ -346,16 +347,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             self.skipped_attempts.append(skipped_attempt)
             print('\t\tSKIPPED')
             return
-        # TODO: add integration test loading 'input' from zip
-        if calc['calculation_mode'] == 'multi_risk' and output_type == 'input':
-            print('\tLoading output type %s...' % output_type)
-            skipped_attempt = {
-                'calc_id': calc_id,
-                'calc_description': calc['description'],
-                'output_type': output_type}
-            self.skipped_attempts.append(skipped_attempt)
-            print('\t\tSKIPPED')
-            return
         if output_type in (OQ_CSV_TO_LAYER_TYPES |
                            OQ_RST_TYPES):
             if output_type in OQ_CSV_TO_LAYER_TYPES:
@@ -394,9 +385,12 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 self.skipped_attempts.append(skipped_attempt)
                 print('\t\tSKIPPED')
                 return
-            dlg = OUTPUT_TYPE_LOADERS[output_type](
-                IFACE, Mock(), requests, self.hostname, calc_id,
-                output_type)
+            if output_type == 'input':
+                dlg = LoadInputsDialog(filepath, IFACE)
+            else:
+                dlg = OUTPUT_TYPE_LOADERS[output_type](
+                    IFACE, Mock(), requests, self.hostname, calc_id,
+                    output_type)
             self.loading_completed = False
             self.loading_exception = None
             dlg.loading_completed.connect(self.on_loading_completed)
