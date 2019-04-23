@@ -35,7 +35,7 @@ from qgis.core import (
 from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtWidgets import (
-    QDialog, QLabel, QComboBox, QVBoxLayout, QDialogButtonBox)
+    QDialog, QVBoxLayout, QDialogButtonBox, QGroupBox, QCheckBox)
 from svir.utilities.utils import import_layer_from_csv, log_msg, get_style
 from svir.utilities.shared import (RAMP_EXTREME_COLORS,)
 
@@ -51,16 +51,20 @@ class LoadInputsDialog(QDialog):
         ini_str = self.get_ini_str(self.zip_filepath)
         self.multi_peril_csv_dict = self.get_multi_peril_csv_dict(ini_str)
         self.setWindowTitle('Load peril data from csv')
-        peril_lbl = QLabel('Peril')
-        self.peril_cbx = QComboBox()
-        self.peril_cbx.addItems(self.multi_peril_csv_dict.keys())
+        self.peril_gbx = QGroupBox('Peril')
+        self.peril_vlayout = QVBoxLayout()
+        self.peril_gbx.setLayout(self.peril_vlayout)
+        for peril in self.multi_peril_csv_dict.keys():
+            chk = QCheckBox(peril)
+            chk.setChecked(True)
+            self.peril_vlayout.addWidget(chk)
         self.button_box = QDialogButtonBox(
             QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.ok_button = self.button_box.button(QDialogButtonBox.Ok)
         self.button_box.accepted.connect(self.accept)
         self.button_box.rejected.connect(self.reject)
         vlayout = QVBoxLayout()
-        vlayout.addWidget(peril_lbl)
-        vlayout.addWidget(self.peril_cbx)
+        vlayout.addWidget(self.peril_gbx)
         vlayout.addWidget(self.button_box)
         self.setLayout(vlayout)
 
@@ -180,11 +184,26 @@ class LoadInputsDialog(QDialog):
 
         self.iface.mapCanvas().refresh()
 
+    def get_colors(self, style_by):
+        # exposure_strings = ['number', 'occupants', 'value']
+        # setting exposure colors by default
+        color_dict = {'single': RAMP_EXTREME_COLORS['Blues']['top'],
+                      'ramp_name': 'Blues'}
+        damage_strings = ['LAHAR', 'LAVA', 'PYRO', 'ASH']
+        for damage_string in damage_strings:
+            if damage_string in style_by:
+                color_dict = {'single': RAMP_EXTREME_COLORS['Reds']['top'],
+                              'ramp_name': 'Reds'}
+                break
+        return color_dict
+
     def accept(self):
-        chosen_peril = self.peril_cbx.currentText()
-        zfile = zipfile.ZipFile(self.zip_filepath)
-        extracted_csv_path = zfile.extract(
-            self.multi_peril_csv_dict[chosen_peril],
-            path=os.path.dirname(self.zip_filepath))
-        self.load_from_csv(extracted_csv_path)
         super().accept()
+        for chk in self.peril_gbx.findChildren(QCheckBox):
+            if chk.isChecked():
+                chosen_peril = chk.text()
+                zfile = zipfile.ZipFile(self.zip_filepath)
+                extracted_csv_path = zfile.extract(
+                    self.multi_peril_csv_dict[chosen_peril],
+                    path=os.path.dirname(self.zip_filepath))
+                self.load_from_csv(extracted_csv_path)
