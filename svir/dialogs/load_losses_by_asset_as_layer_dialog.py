@@ -185,7 +185,9 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                             self.iface.messageBar()):
                         self.build_layer(rlz_or_stat, taxonomy=taxonomy,
                                          loss_type=loss_type)
-                        self.style_maps()
+                        self.style_maps(self.layer,
+                                        self.default_field_name,
+                                        self.iface, self.output_type)
         if self.npz_file is not None:
             self.npz_file.close()
 

@@ -28,16 +28,12 @@ import zipfile
 import json
 import os
 import configparser
-from qgis.core import (
-    QgsProject, QgsSymbol, QgsMarkerSymbol, QgsGradientColorRamp, QgsStyle,
-    QgsGraduatedSymbolRenderer, NULL, QgsExpression, QgsRendererCategory,
-    QgsCategorizedSymbolRenderer, QgsSingleSymbolRenderer)
-from qgis.PyQt.QtGui import QColor
-from qgis.PyQt.QtCore import Qt, pyqtSignal
+from qgis.core import QgsProject
+from qgis.PyQt.QtCore import pyqtSignal
 from qgis.PyQt.QtWidgets import (
     QDialog, QVBoxLayout, QDialogButtonBox, QGroupBox, QCheckBox)
-from svir.utilities.utils import import_layer_from_csv, log_msg, get_style
-from svir.utilities.shared import (RAMP_EXTREME_COLORS,)
+from svir.utilities.utils import import_layer_from_csv, log_msg
+from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 
 
 class LoadInputsDialog(QDialog):
@@ -57,8 +53,9 @@ class LoadInputsDialog(QDialog):
         self.setWindowTitle('Load peril data from csv')
         self.peril_gbx = QGroupBox('Peril')
         self.peril_vlayout = QVBoxLayout()
+        self.perils = self.multi_peril_csv_dict.keys()
         self.peril_gbx.setLayout(self.peril_vlayout)
-        for peril in self.multi_peril_csv_dict.keys():
+        for peril in self.perils:
             chk = QCheckBox(peril)
             chk.setChecked(True)
             self.peril_vlayout.addWidget(chk)
@@ -101,105 +98,13 @@ class LoadInputsDialog(QDialog):
             log_msg(str(exc), level='C', message_bar=self.iface.messageBar(),
                     exception=exc)
             return
-        self.style_maps(layer=self.layer, style_by='intensity')
+        LoadOutputAsLayerDialog.style_maps(self.layer, 'intensity',
+                                           self.iface, 'input')
         QgsProject.instance().addMapLayer(self.layer)
         self.iface.setActiveLayer(self.layer)
         self.iface.zoomToActiveLayer()
-        # log_msg('Layer %s was loaded successfully' % layer_name,
-        #         level='S', message_bar=self.iface.messageBar())
-
-    def style_maps(self, layer=None, style_by=None):
-        symbol = QgsSymbol.defaultSymbol(layer.geometryType())
-        # see properties at:
-        # https://qgis.org/api/qgsmarkersymbollayerv2_8cpp_source.html#l01073
-        symbol.setOpacity(1)
-        if isinstance(symbol, QgsMarkerSymbol):
-            # do it only for the layer with points
-            symbol.symbolLayer(0).setStrokeStyle(Qt.PenStyle(Qt.NoPen))
-
-        style = get_style(layer, self.iface.messageBar())
-
-        # this is the default, as specified in the user settings
-        ramp = QgsGradientColorRamp(
-            style['color_from'], style['color_to'])
-        mode = style['mode']
-
-        default_qgs_style = QgsStyle().defaultStyle()
-        default_color_ramp_names = default_qgs_style.colorRampNames()
-        # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
-        # jenks = natural breaks
-        mode = QgsGraduatedSymbolRenderer.EqualInterval
-        colors = self.get_colors(style_by)
-        single_color = colors['single']
-        ramp_name = colors['ramp_name']
-        ramp_type_idx = default_color_ramp_names.index(ramp_name)
-        inverted = False
-        symbol.setColor(QColor(single_color))
-        ramp = default_qgs_style.colorRamp(
-            default_color_ramp_names[ramp_type_idx])
-        if inverted:
-            ramp.invert()
-        # get unique values
-        fni = layer.fields().indexOf(style_by)
-        unique_values = layer.dataProvider().uniqueValues(fni)
-        num_unique_values = len(unique_values - {NULL})
-        if num_unique_values > 2:
-            renderer = QgsGraduatedSymbolRenderer.createRenderer(
-                layer,
-                QgsExpression.quotedColumnRef(style_by),
-                min(num_unique_values, style['classes']),
-                mode,
-                symbol.clone(),
-                ramp)
-            label_format = renderer.labelFormat()
-            # label_format.setTrimTrailingZeroes(True)  # it might be useful
-            label_format.setPrecision(2)
-            renderer.setLabelFormat(label_format, updateRanges=True)
-        elif num_unique_values == 2:
-            categories = []
-            for unique_value in unique_values:
-                symbol = symbol.clone()
-                try:
-                    symbol.setColor(QColor(RAMP_EXTREME_COLORS[ramp_name][
-                        'bottom' if unique_value == min(unique_values)
-                        else 'top']))
-                except Exception:
-                    symbol.setColor(QColor(
-                        style['color_from']
-                        if unique_value == min(unique_values)
-                        else style['color_to']))
-                category = QgsRendererCategory(
-                    unique_value, symbol, str(unique_value))
-                # entry for the list of category items
-                categories.append(category)
-            renderer = QgsCategorizedSymbolRenderer(
-                QgsExpression.quotedColumnRef(style_by), categories)
-        else:
-            renderer = QgsSingleSymbolRenderer(symbol.clone())
-        layer.setRenderer(renderer)
-        layer.setOpacity(0.7)
-        layer.triggerRepaint()
-        self.iface.setActiveLayer(layer)
-        self.iface.zoomToActiveLayer()
-        log_msg('Layer %s was created successfully' % layer.name(), level='S',
-                message_bar=self.iface.messageBar())
-        # NOTE QGIS3: probably not needed
-        # self.iface.layerTreeView().refreshLayerSymbology(layer.id())
-
-        self.iface.mapCanvas().refresh()
-
-    def get_colors(self, style_by):
-        # exposure_strings = ['number', 'occupants', 'value']
-        # setting exposure colors by default
-        color_dict = {'single': RAMP_EXTREME_COLORS['Blues']['top'],
-                      'ramp_name': 'Blues'}
-        damage_strings = ['LAHAR', 'LAVA', 'PYRO', 'ASH']
-        for damage_string in damage_strings:
-            if damage_string in style_by:
-                color_dict = {'single': RAMP_EXTREME_COLORS['Reds']['top'],
-                              'ramp_name': 'Reds'}
-                break
-        return color_dict
+        log_msg('Layer %s was loaded successfully' % layer_name,
+                level='S', message_bar=self.iface.messageBar())
 
     def accept(self):
         super().accept()

@@ -916,7 +916,6 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         dlg_id = uuid4()
         load_inputs_dlg = LoadInputsDialog(
             filepath, self.iface, self.iface.mainWindow())
-        # FIXME: if I use show here, ok and cancel btns do not work
         self.open_output_dlgs[dlg_id] = load_inputs_dlg
         load_inputs_dlg.loading_completed.connect(lambda: self.del_dlg(dlg_id))
         load_inputs_dlg.loading_canceled.connect(lambda: self.del_dlg(dlg_id))

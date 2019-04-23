@@ -532,11 +532,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         log_msg('Layer %s was created successfully' % layer_name, level='S',
                 message_bar=self.iface.messageBar())
 
-    def style_maps(self, layer=None, style_by=None, add_null_class=False):
-        if layer is None:
-            layer = self.layer
-        if style_by is None:
-            style_by = self.default_field_name
+    @staticmethod
+    def style_maps(layer, style_by, iface, output_type, perils=None,
+                   add_null_class=False):
         symbol = QgsSymbol.defaultSymbol(layer.geometryType())
         # see properties at:
         # https://qgis.org/api/qgsmarkersymbollayerv2_8cpp_source.html#l01073
@@ -545,7 +543,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             # do it only for the layer with points
             symbol.symbolLayer(0).setStrokeStyle(Qt.PenStyle(Qt.NoPen))
 
-        style = get_style(layer, self.iface.messageBar())
+        style = get_style(layer, iface.messageBar())
 
         # this is the default, as specified in the user settings
         ramp = QgsGradientColorRamp(
@@ -554,38 +552,55 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
 
         # in most cases, we override the user-specified setting, and use
         # instead a setting that was required by scientists
-        if self.output_type in OQ_TO_LAYER_TYPES:
+        if output_type in OQ_TO_LAYER_TYPES:
             default_qgs_style = QgsStyle().defaultStyle()
             default_color_ramp_names = default_qgs_style.colorRampNames()
-            if self.output_type in ('dmg_by_asset',
-                                    'losses_by_asset',
-                                    'avg_losses-stats',
-                                    ):
+            if output_type in ('dmg_by_asset',
+                               'losses_by_asset',
+                               'avg_losses-stats',):
                 # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
                 # jenks = natural breaks
                 mode = QgsGraduatedSymbolRenderer.Jenks
                 ramp_type_idx = default_color_ramp_names.index('Reds')
                 symbol.setColor(QColor(RAMP_EXTREME_COLORS['Reds']['top']))
                 inverted = False
-            elif self.output_type in ('hmaps', 'gmf_data', 'ruptures'):
+            elif output_type in ('hmaps', 'gmf_data', 'ruptures'):
                 # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
-                if self.output_type == 'ruptures':
+                # jenks = natural breaks
+                if output_type == 'ruptures':
                     mode = QgsGraduatedSymbolRenderer.Pretty
                 else:
                     mode = QgsGraduatedSymbolRenderer.EqualInterval
                 ramp_type_idx = default_color_ramp_names.index('Spectral')
                 inverted = True
                 symbol.setColor(QColor(RAMP_EXTREME_COLORS['Reds']['top']))
-            elif self.output_type == 'asset_risk':
+            elif output_type in ['asset_risk', 'input']:
                 # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
                 # jenks = natural breaks
                 mode = QgsGraduatedSymbolRenderer.EqualInterval
-                colors = self.get_colors(style_by)
+                # exposure_strings = ['number', 'occupants', 'value']
+                # setting exposure colors by default
+                colors = {'single': RAMP_EXTREME_COLORS['Blues']['top'],
+                          'ramp_name': 'Blues'}
+                if output_type == 'asset_risk':
+                    damage_strings = perils
+                    for damage_string in damage_strings:
+                        if damage_string in style_by:
+                            colors = {'single': RAMP_EXTREME_COLORS[
+                                          'Reds']['top'],
+                                      'ramp_name': 'Reds'}
+                            break
+                else:  # 'input'
+                    colors = {'single': RAMP_EXTREME_COLORS['Reds']['top'],
+                              'ramp_name': 'Reds'}
                 single_color = colors['single']
                 ramp_name = colors['ramp_name']
                 ramp_type_idx = default_color_ramp_names.index(ramp_name)
                 inverted = False
                 symbol.setColor(QColor(single_color))
+            else:
+                raise NotImplementedError(
+                    'Undefined color ramp for output type %s' % output_type)
             ramp = default_qgs_style.colorRamp(
                 default_color_ramp_names[ramp_type_idx])
             if inverted:
@@ -665,27 +680,14 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         layer.setRenderer(renderer)
         layer.setOpacity(0.7)
         layer.triggerRepaint()
-        self.iface.setActiveLayer(layer)
-        self.iface.zoomToActiveLayer()
+        iface.setActiveLayer(layer)
+        iface.zoomToActiveLayer()
         log_msg('Layer %s was created successfully' % layer.name(), level='S',
-                message_bar=self.iface.messageBar())
+                message_bar=iface.messageBar())
         # NOTE QGIS3: probably not needed
-        # self.iface.layerTreeView().refreshLayerSymbology(layer.id())
+        # iface.layerTreeView().refreshLayerSymbology(layer.id())
 
-        self.iface.mapCanvas().refresh()
-
-    def get_colors(self, style_by):
-        # exposure_strings = ['number', 'occupants', 'value']
-        # setting exposure colors by default
-        color_dict = {'single': RAMP_EXTREME_COLORS['Blues']['top'],
-                      'ramp_name': 'Blues'}
-        damage_strings = ['LAHAR', 'LAVA', 'PYRO', 'ASH']
-        for damage_string in damage_strings:
-            if damage_string in style_by:
-                color_dict = {'single': RAMP_EXTREME_COLORS['Reds']['top'],
-                              'ramp_name': 'Reds'}
-                break
-        return color_dict
+        iface.mapCanvas().refresh()
 
     def style_categorized(self, layer=None, style_by=None):
         if layer is None:
@@ -914,9 +916,14 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         #       dict
         added_loss_attr = "%s_sum" % self.loss_attr_name
         style_by = added_loss_attr
-        self.style_maps(
-            layer=zonal_layer_plus_sum, style_by=style_by,
-            add_null_class=True)
+        try:
+            perils = self.perils
+        except AttributeError:
+            perils = None
+        self.style_maps(zonal_layer_plus_sum, style_by,
+                        self.iface, self.output_type,
+                        perils=perils,
+                        add_null_class=True)
         super().accept()
 
     def reject(self):

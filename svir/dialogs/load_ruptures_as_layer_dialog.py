@@ -113,7 +113,8 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
         self.layer.setCustomProperty('investigation_time', investigation_time)
         style_by = self.style_by_cbx.itemData(self.style_by_cbx.currentIndex())
         if style_by == 'mag':
-            self.style_maps(layer=self.layer, style_by=style_by)
+            self.style_maps(self.layer, style_by,
+                            self.iface, self.output_type)
         else:  # 'trt'
             self.style_categorized(layer=self.layer, style_by=style_by)
         log_msg('Layer %s was loaded successfully' % layer_name,
