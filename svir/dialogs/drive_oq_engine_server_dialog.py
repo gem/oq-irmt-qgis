@@ -913,10 +913,14 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     def on_zip_downloaded(
             self, output_id=None, output_type=None, filepath=None):
         self.notify_downloaded(output_id, output_type, filepath)
+        dlg_id = uuid4()
         load_inputs_dlg = LoadInputsDialog(
             filepath, self.iface, self.iface.mainWindow())
         # FIXME: if I use show here, ok and cancel btns do not work
-        load_inputs_dlg.exec_()
+        self.open_output_dlgs[dlg_id] = load_inputs_dlg
+        load_inputs_dlg.loading_completed.connect(lambda: self.del_dlg(dlg_id))
+        load_inputs_dlg.loading_canceled.connect(lambda: self.del_dlg(dlg_id))
+        load_inputs_dlg.show()
 
     def notify_error(self, exc):
         if isinstance(exc, TaskCanceled):

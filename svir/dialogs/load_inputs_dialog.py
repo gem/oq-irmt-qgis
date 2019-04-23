@@ -33,7 +33,7 @@ from qgis.core import (
     QgsGraduatedSymbolRenderer, NULL, QgsExpression, QgsRendererCategory,
     QgsCategorizedSymbolRenderer, QgsSingleSymbolRenderer)
 from qgis.PyQt.QtGui import QColor
-from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtCore import Qt, pyqtSignal
 from qgis.PyQt.QtWidgets import (
     QDialog, QVBoxLayout, QDialogButtonBox, QGroupBox, QCheckBox)
 from svir.utilities.utils import import_layer_from_csv, log_msg, get_style
@@ -44,6 +44,10 @@ class LoadInputsDialog(QDialog):
     """
     Dialog to browse zipped input files
     """
+
+    loading_canceled = pyqtSignal()
+    loading_completed = pyqtSignal()
+
     def __init__(self, zip_filepath, iface, parent=None):
         super().__init__(parent)
         self.zip_filepath = zip_filepath
@@ -207,3 +211,8 @@ class LoadInputsDialog(QDialog):
                     self.multi_peril_csv_dict[chosen_peril],
                     path=os.path.dirname(self.zip_filepath))
                 self.load_from_csv(extracted_csv_path)
+        self.loading_completed.emit()
+
+    def reject(self):
+        super().reject()
+        self.loading_canceled.emit()
