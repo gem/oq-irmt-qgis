@@ -348,6 +348,16 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             self.skipped_attempts.append(skipped_attempt)
             print('\t\tSKIPPED')
             return
+        # NOTE: loading zipped output only for multi_risk
+        if output_type == 'input' and calc['calculation_mode'] != 'multi_risk':
+            print('\tLoading output type %s...' % output_type)
+            skipped_attempt = {
+                'calc_id': calc_id,
+                'calc_description': calc['description'],
+                'output_type': output_type}
+            self.skipped_attempts.append(skipped_attempt)
+            print('\t\tSKIPPED')
+            return
         if output_type in (OQ_CSV_TO_LAYER_TYPES |
                            OQ_RST_TYPES):
             if output_type in OQ_CSV_TO_LAYER_TYPES:
