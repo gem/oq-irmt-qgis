@@ -314,7 +314,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             if dlg.output_type == 'asset_risk':
                 # NOTE: avoiding to emit loading_completed for asset_risk,
                 # because in this case there's a second asynchronous call to
-                # the extract api, and the signal is emitted by the callback 
+                # the extract api, and the signal is emitted by the callback
                 return
         else:
             raise RuntimeError('The ok button is disabled')
@@ -338,6 +338,16 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         output_type = output['type']
         # TODO: when ebrisk becomes loadable, let's not skip this
         if calc['calculation_mode'] == 'ebrisk':
+            print('\tLoading output type %s...' % output_type)
+            skipped_attempt = {
+                'calc_id': calc_id,
+                'calc_description': calc['description'],
+                'output_type': output_type}
+            self.skipped_attempts.append(skipped_attempt)
+            print('\t\tSKIPPED')
+            return
+        # TODO: add integration test loading 'input' from zip
+        if calc['calculation_mode'] == 'multi_risk' and output_type == 'input':
             print('\tLoading output type %s...' % output_type)
             skipped_attempt = {
                 'calc_id': calc_id,
