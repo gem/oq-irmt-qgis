@@ -387,6 +387,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 print('\t\tSKIPPED')
                 return
             if output_type in OQ_ZIPPED_TYPES:
+                filepath = self.download_output(output['id'], 'input')
                 dlg = LoadInputsDialog(filepath, IFACE)
             else:
                 dlg = OUTPUT_TYPE_LOADERS[output_type](
