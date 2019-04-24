@@ -59,6 +59,7 @@ from requests.packages.urllib3.exceptions import (
 from svir.utilities.shared import (OQ_TO_LAYER_TYPES,
                                    OQ_RST_TYPES,
                                    OQ_EXTRACT_TO_VIEW_TYPES,
+                                   OQ_BASIC_CSV_TO_LAYER_TYPES,
                                    )
 from svir.utilities.utils import (WaitCursorManager,
                                   engine_login,
@@ -743,8 +744,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                                 and output['type'] not in OQ_RST_TYPES):
                             continue
                         action = 'Show'
+                    elif output['type'] in OQ_BASIC_CSV_TO_LAYER_TYPES:
+                        action = 'Load table'
                     else:
-                        action = 'Load as layer'
+                        action = 'Load layer'
                     # TODO: remove check when gmf_data, dmg_by_event and
                     # losses_by_event will be loadable also for event_based
                     if (output['type'] in ['gmf_data',
@@ -773,10 +776,12 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.output_list_tbl.resizeRowsToContents()
 
     def connect_button_to_action(self, button, action, output, outtype):
-        if action in ('Load as layer', 'Show', 'Aggregate'):
+        if action in ('Load layer', 'Load table', 'Show', 'Aggregate'):
             style = 'background-color: blue; color: white;'
-            if action == 'Load as layer':
+            if action == 'Load layer':
                 button.setText("Load layer")
+            elif action == 'Load table':
+                button.setText("Load table")
             elif action == 'Aggregate':
                 button.setText("Aggregate")
             else:
@@ -815,7 +820,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     self.download_tasks[task_id])
             else:
                 raise NotImplementedError("%s %s" % (action, outtype))
-        elif action == 'Load as layer':
+        elif action in ['Load layer', 'Load table']:
             if outtype == 'npz':
                 self.open_output(output_id, output_type)
             elif outtype == 'csv':

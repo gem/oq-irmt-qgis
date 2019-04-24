@@ -28,6 +28,9 @@ changelog=
       same kind of analysis (i.e. "Join attributes by location (summary)"). The section of the user manual that was previously removed is
       partially restored, and there is an explanation on how to use the Processing algorithm to obtain the same results that were obtained
       by the plugin tool before.
+    * Fixed removal of plugin menu while the plugin is unloaded/uninstalled/disabled
+    * Buttons to load layers that have no geometries are renamed from "Load layer" to "Load table"
+    * Upgraded compatibility to the OQ Platform 2019
     3.4.0
     * Whenever an error message is shown to the user, a button in the QGIS message bar allows to display the traceback in a separate window
     * Fixed loader for Aggregate Loss Curves in event based risk OQ-Engine output
