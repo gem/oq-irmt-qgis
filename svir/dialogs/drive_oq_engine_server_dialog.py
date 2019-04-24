@@ -848,7 +848,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             else:
                 raise NotImplementedError("%s %s" % (action, outtype))
         elif action in ['Download', 'Load from zip']:
-            dest_folder = ask_for_download_destination_folder(self)
+            if action == 'Load from zip':
+                dest_folder = tempfile.gettempdir()
+            else:
+                dest_folder = ask_for_download_destination_folder(self)
             if not dest_folder:
                 return
             descr = 'Download %s for calculation %s' % (
