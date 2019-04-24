@@ -123,7 +123,6 @@ class LoadInputsDialog(QDialog):
                 except Exception as exc:
                     self.loading_exception.emit(exc)
                     return
-        self.loading_completed.emit()
 
     def reject(self):
         super().reject()
