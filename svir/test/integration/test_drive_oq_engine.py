@@ -149,7 +149,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                     self.untested_otypes.discard(output_type_aggr)
 
     def on_init_done(self, dlg):
-        print('\t\tINIT DONE')
         # set dialog options and accept
         if dlg.output_type == 'uhs':
             dlg.load_selected_only_ckb.setChecked(True)
@@ -314,7 +313,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             dlg.category_cbx.setCurrentIndex(0)
         if dlg.ok_button.isEnabled():
             dlg.accept()
-            print('\t\tDLG ACCEPTED')
             if dlg.output_type == 'asset_risk':
                 # NOTE: avoiding to emit loading_completed for asset_risk,
                 # because in this case there's a second asynchronous call to
@@ -330,7 +328,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             # test exporting the current selection to csv
             self._test_export()
         dlg.loading_completed.emit()
-        print('\t\tLOADING COMPLETED EMITTED')
 
     def load_output(self, calc, output):
         # NOTE: resetting the Data Viewer before loading each output, prevents
@@ -371,9 +368,16 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 print('\tLoading output type %s...' % output_type)
                 # TODO: we should test the actual downloader, asynchronously
                 filepath = self.download_output(output['id'], 'rst')
+            elif output_type in OQ_ZIPPED_TYPES:
+                filepath = self.download_output(output['id'], 'zip')
             assert filepath is not None
             if output_type == 'fullreport':
                 dlg = ShowFullReportDialog(filepath)
+                dlg.accept()
+                print('\t\tok')
+                return
+            if output_type in OQ_ZIPPED_TYPES:
+                dlg = LoadInputsDialog(filepath, IFACE)
                 dlg.accept()
                 print('\t\tok')
                 return
@@ -386,7 +390,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 return
             else:
                 raise RuntimeError('The ok button is disabled')
-        elif output_type in (OQ_EXTRACT_TO_LAYER_TYPES | OQ_ZIPPED_TYPES):
+        elif output_type in OQ_EXTRACT_TO_LAYER_TYPES:
             print('\tLoading output type %s...' % output_type)
             # TODO: when gmf_data for event_based becomes loadable,
             #       let's not skip this
@@ -399,13 +403,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 self.skipped_attempts.append(skipped_attempt)
                 print('\t\tSKIPPED')
                 return
-            if output_type in OQ_ZIPPED_TYPES:
-                filepath = self.download_output(output['id'], 'zip')
-                dlg = LoadInputsDialog(filepath, IFACE)
-            else:
-                dlg = OUTPUT_TYPE_LOADERS[output_type](
-                    IFACE, Mock(), requests, self.hostname, calc_id,
-                    output_type)
+            dlg = OUTPUT_TYPE_LOADERS[output_type](
+                IFACE, Mock(), requests, self.hostname, calc_id,
+                output_type)
             self.loading_completed = False
             self.loading_exception = None
             dlg.loading_completed.connect(self.on_loading_completed)

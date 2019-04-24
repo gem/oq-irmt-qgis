@@ -28,7 +28,7 @@ import zipfile
 import json
 import os
 import configparser
-from qgis.core import QgsProject, QgsApplication
+from qgis.core import QgsProject
 from qgis.PyQt.QtCore import pyqtSignal
 from qgis.PyQt.QtWidgets import (
     QDialog, QVBoxLayout, QDialogButtonBox, QGroupBox, QCheckBox)
@@ -41,10 +41,8 @@ class LoadInputsDialog(QDialog):
     Dialog to browse zipped input files
     """
 
-    init_done = pyqtSignal()
     loading_canceled = pyqtSignal()
     loading_completed = pyqtSignal()
-    loading_exception = pyqtSignal(Exception)
 
     def __init__(self, zip_filepath, iface, parent=None):
         super().__init__(parent)
@@ -70,8 +68,6 @@ class LoadInputsDialog(QDialog):
         vlayout.addWidget(self.peril_gbx)
         vlayout.addWidget(self.button_box)
         self.setLayout(vlayout)
-        self.init_done.emit()
-        QgsApplication.processEvents()
 
     @staticmethod
     def get_ini_str(filepath):
@@ -114,16 +110,13 @@ class LoadInputsDialog(QDialog):
         super().accept()
         for chk in self.peril_gbx.findChildren(QCheckBox):
             if chk.isChecked():
-                try:
-                    chosen_peril = chk.text()
-                    zfile = zipfile.ZipFile(self.zip_filepath)
-                    extracted_csv_path = zfile.extract(
-                        self.multi_peril_csv_dict[chosen_peril],
-                        path=os.path.dirname(self.zip_filepath))
-                    self.load_from_csv(extracted_csv_path)
-                except Exception as exc:
-                    self.loading_exception.emit(exc)
-                    return
+                peril = chk.text()
+                zfile = zipfile.ZipFile(self.zip_filepath)
+                extracted_csv_path = zfile.extract(
+                    self.multi_peril_csv_dict[peril],
+                    path=os.path.dirname(self.zip_filepath))
+                self.load_from_csv(extracted_csv_path)
+        self.loading_completed.emit()
 
     def reject(self):
         super().reject()
