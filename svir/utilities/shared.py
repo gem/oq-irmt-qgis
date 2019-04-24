@@ -284,4 +284,11 @@ RAMP_EXTREME_COLORS = {
          'bottom': '#fff5f0'},
     'Blues':
         {'top': '#08306b',
-         'bottom': '#f7fbff'}}
+         'bottom': '#f7fbff'},
+    'Greens':
+        {'top': '#00441b',
+         'bottom': '#f7fcf5'},
+    'Spectral':
+        {'top': '#d7191c',
+         'bottom': '#2b83ba'}
+}

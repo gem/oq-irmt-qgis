@@ -583,23 +583,24 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 # setting exposure colors by default
                 colors = {'single': RAMP_EXTREME_COLORS['Blues']['top'],
                           'ramp_name': 'Blues'}
+                inverted = False
                 if output_type == 'asset_risk':
                     damage_strings = perils
                     for damage_string in damage_strings:
                         if damage_string in style_by:
                             colors = {'single': RAMP_EXTREME_COLORS[
-                                          'Reds']['top'],
-                                      'ramp_name': 'Reds'}
+                                          'Spectral']['top'],
+                                      'ramp_name': 'Spectral'}
+                            inverted = True
                             break
                 else:  # 'input'
-                    colors = {'single': RAMP_EXTREME_COLORS['Reds']['top'],
-                              'ramp_name': 'Reds'}
+                    colors = {'single': RAMP_EXTREME_COLORS['Greens']['top'],
+                              'ramp_name': 'Greens'}
                     symbol.symbolLayer(0).setShape(
                         QgsSimpleMarkerSymbolLayerBase.Square)
                 single_color = colors['single']
                 ramp_name = colors['ramp_name']
                 ramp_type_idx = default_color_ramp_names.index(ramp_name)
-                inverted = False
                 symbol.setColor(QColor(single_color))
             else:
                 raise NotImplementedError(
