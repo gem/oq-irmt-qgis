@@ -972,7 +972,8 @@ def import_layer_from_csv(parent,
                           save_as_shp=False,
                           dest_shp=None,
                           zoom_to_layer=True,
-                          has_geom=True):
+                          has_geom=True,
+                          subset=None):
     url = QUrl.fromLocalFile(csv_path)
     url_query = QUrlQuery()
     url_query.addQueryItem('type', 'csv')
@@ -990,6 +991,9 @@ def import_layer_from_csv(parent,
     url_query.addQueryItem('quote', quote)
     url_query.addQueryItem('skipLines', str(lines_to_skip_count))
     url_query.addQueryItem('trimFields', 'yes')
+    if subset is not None:
+        # NOTE: it loads all features and applies a filter in visualization
+        url_query.addQueryItem('subset', subset)  # i.e. '"fieldname" != 0'
     url.setQuery(url_query)
     layer_uri = url.toString()
     layer = QgsVectorLayer(layer_uri, layer_name, "delimitedtext")
