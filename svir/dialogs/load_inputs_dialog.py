@@ -28,7 +28,7 @@ import zipfile
 import json
 import os
 import configparser
-from qgis.core import QgsProject
+from qgis.core import QgsProject, QgsApplication
 from qgis.PyQt.QtCore import pyqtSignal
 from qgis.PyQt.QtWidgets import (
     QDialog, QVBoxLayout, QDialogButtonBox, QGroupBox, QCheckBox)
@@ -71,6 +71,7 @@ class LoadInputsDialog(QDialog):
         vlayout.addWidget(self.button_box)
         self.setLayout(vlayout)
         self.init_done.emit()
+        QgsApplication.processEvents()
 
     @staticmethod
     def get_ini_str(filepath):
