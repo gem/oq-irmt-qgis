@@ -359,7 +359,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             print('\t\tSKIPPED')
             return
         if output_type in (OQ_CSV_TO_LAYER_TYPES |
-                           OQ_RST_TYPES):
+                           OQ_RST_TYPES | OQ_ZIPPED_TYPES):
             if output_type in OQ_CSV_TO_LAYER_TYPES:
                 print('\tLoading output type %s...' % output_type)
                 # TODO: we should test the actual downloader, asynchronously
