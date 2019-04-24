@@ -149,6 +149,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                     self.untested_otypes.discard(output_type_aggr)
 
     def on_init_done(self, dlg):
+        print('\t\tINIT DONE')
         # set dialog options and accept
         if dlg.output_type == 'uhs':
             dlg.load_selected_only_ckb.setChecked(True)
@@ -313,6 +314,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             dlg.category_cbx.setCurrentIndex(0)
         if dlg.ok_button.isEnabled():
             dlg.accept()
+            print('\t\tDLG ACCEPTED')
             if dlg.output_type == 'asset_risk':
                 # NOTE: avoiding to emit loading_completed for asset_risk,
                 # because in this case there's a second asynchronous call to
@@ -328,6 +330,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             # test exporting the current selection to csv
             self._test_export()
         dlg.loading_completed.emit()
+        print('\t\tLOADING COMPLETED EMITTED')
 
     def load_output(self, calc, output):
         # NOTE: resetting the Data Viewer before loading each output, prevents
