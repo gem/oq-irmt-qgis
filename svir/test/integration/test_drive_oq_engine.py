@@ -42,12 +42,14 @@ from svir.utilities.shared import (
                                    OQ_EXTRACT_TO_LAYER_TYPES,
                                    OQ_RST_TYPES,
                                    OQ_EXTRACT_TO_VIEW_TYPES,
+                                   OQ_ZIPPED_TYPES,
                                    OQ_ALL_TYPES,
                                    )
 from svir.test.utilities import assert_and_emit
 from svir.dialogs.drive_oq_engine_server_dialog import (
     OUTPUT_TYPE_LOADERS, DriveOqEngineServerDialog)
 from svir.dialogs.show_full_report_dialog import ShowFullReportDialog
+from svir.dialogs.load_inputs_dialog import LoadInputsDialog
 from svir.dialogs.viewer_dock import ViewerDock
 
 
@@ -314,7 +316,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             if dlg.output_type == 'asset_risk':
                 # NOTE: avoiding to emit loading_completed for asset_risk,
                 # because in this case there's a second asynchronous call to
-                # the extract api, and the signal is emitted by the callback 
+                # the extract api, and the signal is emitted by the callback
                 return
         else:
             raise RuntimeError('The ok button is disabled')
@@ -346,8 +348,18 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             self.skipped_attempts.append(skipped_attempt)
             print('\t\tSKIPPED')
             return
+        # NOTE: loading zipped output only for multi_risk
+        if output_type == 'input' and calc['calculation_mode'] != 'multi_risk':
+            print('\tLoading output type %s...' % output_type)
+            skipped_attempt = {
+                'calc_id': calc_id,
+                'calc_description': calc['description'],
+                'output_type': output_type}
+            self.skipped_attempts.append(skipped_attempt)
+            print('\t\tSKIPPED')
+            return
         if output_type in (OQ_CSV_TO_LAYER_TYPES |
-                           OQ_RST_TYPES):
+                           OQ_RST_TYPES | OQ_ZIPPED_TYPES):
             if output_type in OQ_CSV_TO_LAYER_TYPES:
                 print('\tLoading output type %s...' % output_type)
                 # TODO: we should test the actual downloader, asynchronously
@@ -356,9 +368,16 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 print('\tLoading output type %s...' % output_type)
                 # TODO: we should test the actual downloader, asynchronously
                 filepath = self.download_output(output['id'], 'rst')
+            elif output_type in OQ_ZIPPED_TYPES:
+                filepath = self.download_output(output['id'], 'zip')
             assert filepath is not None
             if output_type == 'fullreport':
                 dlg = ShowFullReportDialog(filepath)
+                dlg.accept()
+                print('\t\tok')
+                return
+            if output_type in OQ_ZIPPED_TYPES:
+                dlg = LoadInputsDialog(filepath, IFACE)
                 dlg.accept()
                 print('\t\tok')
                 return

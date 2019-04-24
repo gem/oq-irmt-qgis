@@ -234,7 +234,8 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
         self.dataset = self.npz_file['array']
         with WaitCursorManager('Creating layer...', self.iface.messageBar()):
             self.build_layer()
-            self.style_maps()
+            self.style_maps(self.layer, self.default_field_name,
+                            self.iface, self.output_type, perils=self.perils)
         if (self.zonal_layer_cbx.currentText()
                 and self.zonal_layer_gbx.isChecked()):
             self.aggregate_by_zone()
