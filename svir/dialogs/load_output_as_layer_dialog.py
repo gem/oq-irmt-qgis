@@ -44,6 +44,7 @@ from qgis.core import (QgsVectorLayer,
                        QgsApplication,
                        QgsExpression,
                        NULL,
+                       QgsSimpleMarkerSymbolLayerBase,
                        )
 from qgis.gui import QgsSublayersDialog
 from qgis.PyQt.QtCore import (
@@ -593,6 +594,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 else:  # 'input'
                     colors = {'single': RAMP_EXTREME_COLORS['Reds']['top'],
                               'ramp_name': 'Reds'}
+                    symbol.symbolLayer(0).setShape(
+                        QgsSimpleMarkerSymbolLayerBase.Square)
                 single_color = colors['single']
                 ramp_name = colors['ramp_name']
                 ramp_type_idx = default_color_ramp_names.index(ramp_name)
