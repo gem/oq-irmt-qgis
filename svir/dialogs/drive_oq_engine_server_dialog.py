@@ -166,6 +166,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.download_tasks = {}
         self.open_output_dlgs = {}
 
+        self.is_gui_enabled = False
         self.attempt_login()
 
     def on_reconnect_btn_clicked(self):
@@ -178,6 +179,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         except HANDLED_EXCEPTIONS as exc:
             # in case of disconnection, try 3 times to reconnect, before
             # displaying an error
+            self.set_gui_enabled(False)
             if isinstance(exc, ConnectionError):
                 if self.num_login_attempts < 3:
                     # it attempts to login after the timeout is triggered
@@ -275,6 +277,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             else:
                 self._handle_exception(exc)
             return False
+        if not self.is_gui_enabled:
+            self.set_gui_enabled(True)
         self.calc_list = json.loads(resp.text)
         selected_keys = [
             'description', 'id', 'calculation_mode', 'owner', 'status']
@@ -991,6 +995,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.output_list_tbl.setEnabled(enabled)
         self.download_datastore_btn.setEnabled(enabled)
         self.show_calc_params_btn.setEnabled(enabled)
+        self.is_gui_enabled = enabled
 
     def reject(self):
         self.stop_polling()
