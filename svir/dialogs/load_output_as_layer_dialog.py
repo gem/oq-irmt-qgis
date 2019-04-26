@@ -681,6 +681,12 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 rule.setLabel(simplified)
             root_rule.removeChildAt(0)
             renderer = rule_renderer
+        renderer.setUsingSymbolLevels(True)
+        symbol_items = [item for item in renderer.legendSymbolItems()]
+        for i in range(len(symbol_items)):
+            sym = symbol_items[i].symbol()
+            for lay in range(sym.symbolLayerCount()):
+                sym.symbolLayer(lay).setRenderingPass(i)
         layer.setRenderer(renderer)
         layer.setOpacity(0.7)
         layer.triggerRepaint()
