@@ -92,7 +92,6 @@ from svir.dialogs.load_losses_by_asset_as_layer_dialog import (
 from svir.dialogs.show_full_report_dialog import ShowFullReportDialog
 from svir.dialogs.show_console_dialog import ShowConsoleDialog
 from svir.dialogs.show_params_dialog import ShowParamsDialog
-from svir.dialogs.settings_dialog import SettingsDialog
 from svir.tasks.download_oq_output_task import (
     DownloadOqOutputTask, TaskCanceled)
 
@@ -156,6 +155,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         # NOTE: start_polling() is called from outside, in order to reset
         #       the timer whenever the button to open the dialog is pressed
         self.finished.connect(self.stop_polling)
+        self.reconnect_btn.clicked.connect(self.on_reconnect_btn_clicked)
 
         self.message_bar = QgsMessageBar(self)
         self.layout().insertWidget(0, self.message_bar)
@@ -168,14 +168,24 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
         self.attempt_login()
 
+    def on_reconnect_btn_clicked(self):
+        self.attempt_login()
+
     def attempt_login(self):
         self.num_login_attempts += 1
         try:
             self.login()
         except HANDLED_EXCEPTIONS as exc:
+            # in case of disconnection, try 3 times to reconnect, before
+            # displaying an error
+            if isinstance(exc, ConnectionError):
+                if self.num_login_attempts < 3:
+                    # it attempts to login after the timeout is triggered
+                    return
             self._handle_exception(exc)
         else:
             if self.is_logged_in:
+                self.set_gui_enabled(True)
                 self.refresh_calc_list()
                 self.check_engine_compatibility()
                 self.setWindowTitle(
@@ -260,7 +270,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     "Error %s loading %s: %s" % (
                         resp.status_code, resp.url, resp.reason))
         except HANDLED_EXCEPTIONS as exc:
-            self._handle_exception(exc)
+            if self.num_login_attempts < 3:
+                self.attempt_login()
+            else:
+                self._handle_exception(exc)
             return False
         self.calc_list = json.loads(resp.text)
         selected_keys = [
@@ -933,16 +946,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.run_calc()
 
     def _handle_exception(self, exc):
-        # in case of disconnection, try 3 times to reconnect, before displaying
-        # an error
-        if isinstance(exc, ConnectionError):
-            if self.num_login_attempts < 3:
-                self.attempt_login()
-                return
         if isinstance(exc, SSLError):
             err_msg = '; '.join(exc.message.message.strerror.message[0])
             err_msg += ' (you could try prepending http:// or https://)'
-            log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
+            log_msg(err_msg, level='C', message_bar=self.message_bar)
         elif isinstance(exc, (ConnectionError,
                               InvalidSchema,
                               MissingSchema,
@@ -969,15 +976,21 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     ' (please make sure the username and password are'
                     ' spelled correctly and that you are using the right'
                     ' url and port in the host setting)')
-            log_msg(err_msg, level='C', message_bar=self.iface.messageBar(),
+            log_msg(err_msg, level='C', message_bar=self.message_bar,
                     exception=exc)
         else:
             # sanity check (it should never occur)
             raise TypeError(
                 'Unable to handle exception of type %s' % type(exc))
         self.is_logged_in = False
-        self.reject()
-        SettingsDialog(self.iface).exec_()
+        self.set_gui_enabled(False)
+
+    def set_gui_enabled(self, enabled):
+        self.run_calc_btn.setEnabled(enabled)
+        self.calc_list_tbl.setEnabled(enabled)
+        self.output_list_tbl.setEnabled(enabled)
+        self.download_datastore_btn.setEnabled(enabled)
+        self.show_calc_params_btn.setEnabled(enabled)
 
     def reject(self):
         self.stop_polling()
