@@ -29,6 +29,7 @@ import tempfile
 import uuid
 import fileinput
 import re
+import processing
 
 from copy import deepcopy
 from math import floor, ceil
@@ -42,6 +43,8 @@ from qgis.core import (
                        QgsProject,
                        QgsExpression,
                        Qgis,
+                       QgsApplication,
+                       QgsWkbTypes,
                        )
 
 from qgis.PyQt.QtCore import (
@@ -268,6 +271,16 @@ class Irmt(object):
                            add_to_toolbar=True,
                            add_to_layer_actions=True,
                            submenu='Utilities')
+        # Action to open the Processing algorithm
+        # "Join attributes by location (summary)"
+        self.add_menu_item("aggregate",
+                           ":/plugins/irmt/aggregate.svg",
+                           u"&Aggregate points by zone",
+                           self.aggregate,
+                           enable=True,
+                           add_to_toolbar=False,
+                           add_to_layer_actions=False,
+                           submenu='Utilities')
 
         self.menu.addSeparator()
 
@@ -316,6 +329,39 @@ class Irmt(object):
     def recovery_settings(self):
         dlg = RecoverySettingsDialog(self.iface)
         dlg.exec_()
+
+    def aggregate(self):
+        processing.Processing.initialize()
+        alg_id = 'qgis:joinbylocationsummary'
+        alg = QgsApplication.processingRegistry().algorithmById(alg_id)
+        # make sure to use the actual lists of predicates and summaries as
+        # defined in the algorithm when it is instantiated
+        predicate_keys = [predicate[0] for predicate in alg.predicates]
+        PREDICATES = dict(zip(predicate_keys, range(len(predicate_keys))))
+        default_predicates = ['intersects']
+        summary_keys = [statistic[0] for statistic in alg.statistics]
+        SUMMARIES = dict(zip(summary_keys, range(len(summary_keys))))
+        default_summaries = ['sum', 'mean']
+        zonal_layer = None
+        points_layer = None
+        for layer in QgsProject.instance().mapLayers().values():
+            if layer.type() != QgsMapLayer.VectorLayer:
+                continue
+            if layer.geometryType() == QgsWkbTypes.PolygonGeometry:
+                zonal_layer = layer
+                continue
+            elif layer.geometryType() == QgsWkbTypes.PointGeometry:
+                points_layer = layer
+                continue
+        initial_params = {
+            'INPUT': zonal_layer,
+            'JOIN': points_layer,
+            'PREDICATE': [PREDICATES[predicate]
+                          for predicate in default_predicates],
+            'SUMMARIES': [SUMMARIES[summary]
+                          for summary in default_summaries],
+            }
+        processing.execAlgorithmDialog(alg_id, initial_params)
 
     def ipt(self):
         if self.ipt_dlg is None:
