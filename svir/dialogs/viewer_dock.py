@@ -1463,7 +1463,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 "OpenQuake Engine v%s and " % self.engine_version)
         irmt_version = get_irmt_version()  # irmt version is like 'x.y.z'
         csv_headline += (
-            "OpenQuake Integrated Risk Modelling Toolkit v%s\n" % irmt_version)
+            "OpenQuake Integrated Risk Modelling Toolkit v%s\r\n"
+            % irmt_version)
         with open(filename, 'w') as csv_file:
             csv_file.write(csv_headline)
             writer = csv.writer(csv_file)
@@ -1506,12 +1507,13 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                         'investigation_time'))
                 if self.output_type == 'hcurves':
                     csv_file.write(
-                        '# investigation_time = %s\n' % investigation_time)
+                        '# investigation_time = %s\r\n' % investigation_time)
                 elif self.output_type == 'uhs':
                     poe = float(self.iface.activeLayer().customProperty('poe'))
                     return_period = investigation_time / poe
-                    csv_file.write('# poe = %.5f\n' % poe)
-                    csv_file.write('# return_period = %.0f\n' % return_period)
+                    csv_file.write('# poe = %.5f\r\n' % poe)
+                    csv_file.write(
+                        '# return_period = %.0f\r\n' % return_period)
                 headers = ['lon', 'lat']
                 headers.extend(field_names)
                 writer.writerow(headers)
@@ -1544,9 +1546,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 stats = [stat.decode('utf8')
                          for stat in self.agg_curves['stats']]
                 csv_file.write(
-                    "# Loss type: %s\n" % self.loss_type_cbx.currentText())
+                    "# Loss type: %s\r\n" % self.loss_type_cbx.currentText())
                 csv_file.write(
-                    "# Tags: %s\n" % (
+                    "# Tags: %s\r\n" % (
                         self.list_selected_edt.toPlainText() or 'None'))
                 headers = ['return_period']
                 headers.extend(stats)
@@ -1560,11 +1562,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     writer.writerow(row)
             elif self.output_type == 'dmg_by_asset_aggr':
                 csv_file.write(
-                    "# Realization: %s\n" % self.rlz_cbx.currentText())
+                    "# Realization: %s\r\n" % self.rlz_cbx.currentText())
                 csv_file.write(
-                    "# Loss type: %s\n" % self.loss_type_cbx.currentText())
+                    "# Loss type: %s\r\n" % self.loss_type_cbx.currentText())
                 csv_file.write(
-                    "# Tags: %s\n" % (
+                    "# Tags: %s\r\n" % (
                         self.list_selected_edt.toPlainText() or 'None'))
                 headers = self.dmg_states
                 writer.writerow(headers)
@@ -1574,9 +1576,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             elif self.output_type in ('losses_by_asset_aggr',
                                       'avg_losses-stats_aggr'):
                 csv_file.write(
-                    "# Loss type: %s\n" % self.loss_type_cbx.currentText())
+                    "# Loss type: %s\r\n" % self.loss_type_cbx.currentText())
                 csv_file.write(
-                    "# Tags: %s\n" % (
+                    "# Tags: %s\r\n" % (
                         self.list_selected_edt.toPlainText() or 'None'))
                 try:
                     tags = [tag.decode('utf8')
