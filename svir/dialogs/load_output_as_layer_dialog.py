@@ -685,8 +685,10 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         symbol_items = [item for item in renderer.legendSymbolItems()]
         for i in range(len(symbol_items)):
             sym = symbol_items[i].symbol()
+            key = symbol_items[i].ruleKey()
             for lay in range(sym.symbolLayerCount()):
                 sym.symbolLayer(lay).setRenderingPass(i)
+            renderer.setLegendSymbolItem(key, sym.clone())
         layer.setRenderer(renderer)
         layer.setOpacity(0.7)
         layer.triggerRepaint()
