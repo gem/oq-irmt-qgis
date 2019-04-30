@@ -31,6 +31,7 @@ changelog=
     * Fixed removal of plugin menu while the plugin is unloaded/uninstalled/disabled
     * Buttons to load layers that have no geometries are renamed from "Load layer" to "Load table"
     * Upgraded compatibility to the OQ Platform 2019
+    * Fixed newline separators in csv files exported by the Data Viewer
     3.4.0
     * Whenever an error message is shown to the user, a button in the QGIS message bar allows to display the traceback in a separate window
     * Fixed loader for Aggregate Loss Curves in event based risk OQ-Engine output
