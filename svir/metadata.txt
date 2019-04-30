@@ -24,6 +24,10 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     3.5.0
+    * The menu action to aggregate loss by zone was re-added, pointing to the Processing Toolkit algorithm that we use now to perform the 
+      same kind of analysis (i.e. "Join attributes by location (summary)"). The section of the user manual that was previously removed is
+      partially restored, and there is an explanation on how to use the Processing algorithm to obtain the same results that were obtained
+      by the plugin tool before.
     * Fixed removal of plugin menu while the plugin is unloaded/uninstalled/disabled
     * Buttons to load layers that have no geometries are renamed from "Load layer" to "Load table"
     * Upgraded compatibility to the OQ Platform 2019
