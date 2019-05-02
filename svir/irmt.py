@@ -361,7 +361,18 @@ class Irmt(object):
             'SUMMARIES': [SUMMARIES[summary]
                           for summary in default_summaries],
             }
-        processing.execAlgorithmDialog(alg_id, initial_params)
+        dlg = processing.createAlgorithmDialog(alg_id, initial_params)
+        dlg.show()
+        dlg.exec_()
+        results = dlg.results()
+        layer_id = results['OUTPUT']
+        from qgis.PyQt.QtCore import pyqtRemoveInputHook;
+        pyqtRemoveInputHook(); import pdb; pdb.set_trace()
+        QgsProject.instance().addMapLayer(layer_id)
+        dlg.close()
+        # style_maps(layer, style_by, iface, output_type, perils=None,
+        #            add_null_class=False):
+
 
     def ipt(self):
         if self.ipt_dlg is None:
