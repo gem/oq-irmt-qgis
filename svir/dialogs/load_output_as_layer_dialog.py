@@ -816,7 +816,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                     zonal_layer_path + "|layername=" + sel.layerName,
                     sel.layerName, 'ogr')
                 if zonal_layer.isValid():
-                    QgsProject.instance().addMapLayer(zonal_layer)
+                    root = QgsProject.instance().layerTreeRoot()
+                    QgsProject.instance().addMapLayer(zonal_layer, False)
+                    root.insertLayer(0, zonal_layer)
                 else:
                     msg = 'Invalid layer'
                     log_msg(msg, level='C',
@@ -832,7 +834,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         if zonal_layer_ext != '.gpkg':
             # Add zonal layer to registry
             if zonal_layer.isValid():
-                QgsProject.instance().addMapLayer(zonal_layer)
+                root = QgsProject.instance().layerTreeRoot()
+                QgsProject.instance().addMapLayer(zonal_layer, False)
+                root.insertLayer(0, zonal_layer)
             else:
                 msg = 'Invalid zonal layer'
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
