@@ -98,7 +98,9 @@ class LoadInputsDialog(QDialog):
             raise exc
         LoadOutputAsLayerDialog.style_maps(self.layer, 'intensity',
                                            self.iface, 'input')
-        QgsProject.instance().addMapLayer(self.layer)
+        root = QgsProject.instance().layerTreeRoot()
+        QgsProject.instance().addMapLayer(self.layer, False)
+        root.insertLayer(0, self.layer)
         self.iface.setActiveLayer(self.layer)
         self.iface.zoomToActiveLayer()
         log_msg('Layer %s was loaded successfully' % layer_name,
