@@ -59,6 +59,7 @@ from requests.packages.urllib3.exceptions import (
 from svir.utilities.shared import (OQ_TO_LAYER_TYPES,
                                    OQ_RST_TYPES,
                                    OQ_EXTRACT_TO_VIEW_TYPES,
+                                   OQ_ZIPPED_TYPES,
                                    OQ_BASIC_CSV_TO_LAYER_TYPES,
                                    )
 from svir.utilities.utils import (WaitCursorManager,
@@ -81,6 +82,8 @@ from svir.dialogs.load_dmg_by_asset_as_layer_dialog import (
     LoadDmgByAssetAsLayerDialog)
 from svir.dialogs.load_gmf_data_as_layer_dialog import (
     LoadGmfDataAsLayerDialog)
+from svir.dialogs.load_asset_risk_as_layer_dialog import (
+    LoadAssetRiskAsLayerDialog)
 from svir.dialogs.load_hmaps_as_layer_dialog import (
     LoadHazardMapsAsLayerDialog)
 from svir.dialogs.load_hcurves_as_layer_dialog import (
@@ -89,6 +92,7 @@ from svir.dialogs.load_uhs_as_layer_dialog import (
     LoadUhsAsLayerDialog)
 from svir.dialogs.load_losses_by_asset_as_layer_dialog import (
     LoadLossesByAssetAsLayerDialog)
+from svir.dialogs.load_inputs_dialog import LoadInputsDialog
 from svir.dialogs.show_full_report_dialog import ShowFullReportDialog
 from svir.dialogs.show_console_dialog import ShowConsoleDialog
 from svir.dialogs.show_params_dialog import ShowParamsDialog
@@ -110,6 +114,7 @@ OUTPUT_TYPE_LOADERS = {
     'sourcegroups': LoadBasicCsvAsLayerDialog,
     'dmg_by_event': LoadBasicCsvAsLayerDialog,
     'losses_by_event': LoadBasicCsvAsLayerDialog,
+    'agg_risk': LoadBasicCsvAsLayerDialog,
     'dmg_by_asset': LoadDmgByAssetAsLayerDialog,
     'gmf_data': LoadGmfDataAsLayerDialog,
     'hmaps': LoadHazardMapsAsLayerDialog,
@@ -117,6 +122,8 @@ OUTPUT_TYPE_LOADERS = {
     'uhs': LoadUhsAsLayerDialog,
     'losses_by_asset': LoadLossesByAssetAsLayerDialog,
     'avg_losses-stats': LoadLossesByAssetAsLayerDialog,
+    'asset_risk': LoadAssetRiskAsLayerDialog,
+    'input': LoadInputsDialog,
 }
 assert set(OUTPUT_TYPE_LOADERS) == OQ_TO_LAYER_TYPES, (
     OUTPUT_TYPE_LOADERS, OQ_TO_LAYER_TYPES)
@@ -761,6 +768,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                                 and output['type'] not in OQ_RST_TYPES):
                             continue
                         action = 'Show'
+                    elif output['type'] in OQ_ZIPPED_TYPES:
+                        if calculation_mode != 'multi_risk':
+                            continue
+                        action = 'Load from zip'
                     elif output['type'] in OQ_BASIC_CSV_TO_LAYER_TYPES:
                         action = 'Load table'
                     else:
@@ -793,10 +804,13 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.output_list_tbl.resizeRowsToContents()
 
     def connect_button_to_action(self, button, action, output, outtype):
-        if action in ('Load layer', 'Load table', 'Show', 'Aggregate'):
+        if action in ('Load layer', 'Load from zip', 'Load table',
+                      'Show', 'Aggregate'):
             style = 'background-color: blue; color: white;'
             if action == 'Load layer':
                 button.setText("Load layer")
+            elif action == 'Load from zip':
+                button.setText("Load from zip")
             elif action == 'Load table':
                 button.setText("Load table")
             elif action == 'Aggregate':
@@ -856,17 +870,24 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     self.download_tasks[task_id])
             else:
                 raise NotImplementedError("%s %s" % (action, outtype))
-        elif action == 'Download':
-            dest_folder = ask_for_download_destination_folder(self)
+        elif action in ['Download', 'Load from zip']:
+            if action == 'Load from zip':
+                dest_folder = tempfile.gettempdir()
+            else:
+                dest_folder = ask_for_download_destination_folder(self)
             if not dest_folder:
                 return
             descr = 'Download %s for calculation %s' % (
                 output_type, self.current_calc_id)
             task_id = uuid4()
+            if action == 'Download':
+                success_callback = self.notify_downloaded
+            else:  # 'Load from zip'
+                success_callback = self.on_zip_downloaded
             self.download_tasks[task_id] = DownloadOqOutputTask(
                 descr, QgsTask.CanCancel, output_id, outtype,
                 output_type, dest_folder, self.session, self.hostname,
-                self.notify_downloaded, self.notify_error, self.del_task,
+                success_callback, self.notify_error, self.del_task,
                 task_id)
             log_msg('%s starting. Watch progress in QGIS task bar' % descr,
                     level='I', message_bar=self.message_bar)
@@ -916,6 +937,16 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         else:
             msg = 'HDF5 datastore saved as %s' % filepath
         log_msg(msg, level='S', message_bar=self.message_bar)
+
+    def on_zip_downloaded(
+            self, output_id=None, output_type=None, filepath=None):
+        self.notify_downloaded(output_id, output_type, filepath)
+        dlg_id = uuid4()
+        load_inputs_dlg = LoadInputsDialog(filepath, self.iface)
+        self.open_output_dlgs[dlg_id] = load_inputs_dlg
+        load_inputs_dlg.loading_completed.connect(lambda: self.del_dlg(dlg_id))
+        load_inputs_dlg.loading_canceled.connect(lambda: self.del_dlg(dlg_id))
+        load_inputs_dlg.show()
 
     def notify_error(self, exc):
         if isinstance(exc, TaskCanceled):
@@ -1005,6 +1036,5 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             self.console_dlg.reject()
         if self.full_report_dlg is not None:
             self.full_report_dlg.reject()
-        for dlg in self.open_output_dlgs:
-            dlg.reject()
+        # NOTE: it should be safe to keep other dialogs open
         super().reject()

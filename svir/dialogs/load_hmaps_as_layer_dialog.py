@@ -208,7 +208,8 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
                         'Creating layer for "%s"...' % rlz_or_stat,
                         self.iface.messageBar()):
                     self.build_layer(rlz_or_stat)
-                    self.style_maps()
+                    self.style_maps(self.layer, self.default_field_name,
+                                    self.iface, self.output_type)
             else:
                 for imt in self.imts:
                     if (not self.load_all_imts_chk.isChecked()
@@ -223,6 +224,9 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
                                     rlz_or_stat, imt, poe),
                                 self.iface.messageBar()):
                             self.build_layer(rlz_or_stat, imt=imt, poe=poe)
-                            self.style_maps()
+                            self.style_maps(self.layer,
+                                            self.default_field_name,
+                                            self.iface,
+                                            self.output_type)
         if self.npz_file is not None:
             self.npz_file.close()

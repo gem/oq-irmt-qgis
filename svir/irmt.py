@@ -697,8 +697,8 @@ class Irmt(object):
         # We remove those spaces from the csv file before importing it.
         # TODO: Remove this as soon as QGIS solves that issue
         for line in fileinput.input(fname, inplace=True):
-            line = re.sub('\)\),\s\(\(', ')),((', line.rstrip())
-            line = re.sub('\),\s\(', '),(', line.rstrip())
+            line = re.sub('\)\),\s\(\(', ')),((', line.rstrip())  # NOQA
+            line = re.sub('\),\s\(', '),(', line.rstrip())  # NOQA
             # thanks to inplace=True, 'print line' writes the line into the
             # input file, overwriting the original line
             print(line)
@@ -1182,7 +1182,8 @@ class Irmt(object):
         not_null_rule.setSymbol(QgsFillSymbol.createSimple(
             {'color': col_str,
              'color_border': '0,0,0,255'}))
-        not_null_rule.setFilterExpression('%s IS NOT NULL' % target_field)
+        not_null_rule.setFilterExpression(
+            '%s IS NOT NULL' % QgsExpression.quotedColumnRef(target_field))
         not_null_rule.setLabel('%s:' % target_field)
         root_rule.appendChild(not_null_rule)
 
@@ -1191,7 +1192,8 @@ class Irmt(object):
             {'style': 'no',
              'color_border': '255,255,0,255',
              'width_border': '0.5'}))
-        null_rule.setFilterExpression('%s IS NULL' % target_field)
+        null_rule.setFilterExpression(
+            '%s IS NULL' % QgsExpression.quotedColumnRef(target_field))
         null_rule.setLabel(tr('Invalid value'))
         root_rule.appendChild(null_rule)
 
@@ -1199,7 +1201,7 @@ class Irmt(object):
             style['color_from'], style['color_to'])
         graduated_renderer = QgsGraduatedSymbolRenderer.createRenderer(
             self.iface.activeLayer(),
-            target_field,
+            QgsExpression.quotedColumnRef(target_field),
             style['classes'],
             style['mode'],
             QgsSymbol.defaultSymbol(self.iface.activeLayer().geometryType()),
