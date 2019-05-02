@@ -152,7 +152,8 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
         self.tag_values_multisel.set_unselected_items(tag_values)
 
     def set_ok_button(self):
-        self.ok_button.setEnabled(True)
+        self.ok_button.setEnabled(
+            self.category_cbx.currentIndex() != -1)
 
     def build_layer_name(self, rlz_or_stat=None, **kwargs):
         if self.exposure_rbn.isChecked():
