@@ -404,8 +404,10 @@ class Irmt(object):
         if self.drive_oq_engine_server_dlg.is_logged_in:
             self.drive_oq_engine_server_dlg.start_polling()
         else:
-            self.drive_oq_engine_server_dlg.reject()
-            self.drive_oq_engine_server_dlg = None
+            log_msg('Unable to connect to the OpenQuake Engine server. '
+                    'Please check that the server is running and the '
+                    'plugin connection settings are correct.', level='C',
+                    message_bar=self.drive_oq_engine_server_dlg.message_bar)
 
     def on_same_fs(self, checksum_file_path, local_checksum):
         # initialize drive_oq_engine_server_dlg dialog without displaying it

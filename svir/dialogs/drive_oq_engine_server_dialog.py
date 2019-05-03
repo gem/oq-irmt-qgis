@@ -156,6 +156,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.current_calc_id = None  # list of outputs refers to this calc_id
         self.pointed_calc_id = None  # we will scroll to it
         self.is_logged_in = False
+        self.is_polling = False
+        self.reconnect_btn.setEnabled(True)
         self.timer = None
         # Keep retrieving the list of calculations (especially important to
         # update the status of the calculation)
@@ -201,6 +203,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     'Drive the OpenQuake Engine v%s (%s)' % (
                         self.engine_version, self.hostname))
                 self.num_login_attempts = 0
+                if not self.is_polling:
+                    self.start_polling()
 
     def check_engine_compatibility(self):
         engine_version = self.get_engine_version()
@@ -969,12 +973,16 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.timer = QTimer()
         self.timer.timeout.connect(self.refresh_calc_list)
         self.timer.start(5000)  # refresh calc list time in milliseconds
+        self.is_polling = True
+        self.reconnect_btn.setEnabled(False)
 
     def stop_polling(self):
         # NOTE: perhaps we should disconnect the timeout signal here?
         if hasattr(self, 'timer') and self.timer is not None:
             self.timer.stop()
         # QObject.disconnect(self.timer, SIGNAL('timeout()'))
+        self.is_polling = False
+        self.reconnect_btn.setEnabled(True)
 
     @pyqtSlot()
     def on_run_calc_btn_clicked(self):
@@ -1019,6 +1027,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 'Unable to handle exception of type %s' % type(exc))
         self.is_logged_in = False
         self.set_gui_enabled(False)
+        self.stop_polling()
 
     def set_gui_enabled(self, enabled):
         self.run_calc_btn.setEnabled(enabled)

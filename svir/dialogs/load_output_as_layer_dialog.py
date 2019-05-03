@@ -527,7 +527,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         except AttributeError:
             # the aggregation stuff might not exist for some loaders
             pass
-        QgsProject.instance().addMapLayer(self.layer)
+        root = QgsProject.instance().layerTreeRoot()
+        QgsProject.instance().addMapLayer(self.layer, False)
+        root.insertLayer(0, self.layer)
         self.iface.setActiveLayer(self.layer)
         self.iface.zoomToActiveLayer()
         log_msg('Layer %s was created successfully' % layer_name, level='S',
@@ -814,7 +816,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                     zonal_layer_path + "|layername=" + sel.layerName,
                     sel.layerName, 'ogr')
                 if zonal_layer.isValid():
-                    QgsProject.instance().addMapLayer(zonal_layer)
+                    root = QgsProject.instance().layerTreeRoot()
+                    QgsProject.instance().addMapLayer(zonal_layer, False)
+                    root.insertLayer(0, zonal_layer)
                 else:
                     msg = 'Invalid layer'
                     log_msg(msg, level='C',
@@ -830,7 +834,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         if zonal_layer_ext != '.gpkg':
             # Add zonal layer to registry
             if zonal_layer.isValid():
-                QgsProject.instance().addMapLayer(zonal_layer)
+                root = QgsProject.instance().layerTreeRoot()
+                QgsProject.instance().addMapLayer(zonal_layer, False)
+                root.insertLayer(0, zonal_layer)
             else:
                 msg = 'Invalid zonal layer'
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
@@ -916,7 +922,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             return None
         # Add zonal layer to registry
         if zonal_layer_plus_sum.isValid():
-            QgsProject.instance().addMapLayer(zonal_layer_plus_sum)
+            root = QgsProject.instance().layerTreeRoot()
+            QgsProject.instance().addMapLayer(zonal_layer_plus_sum, False)
+            root.insertLayer(0, zonal_layer_plus_sum)
         else:
             msg = 'The layer aggregating data by zone is invalid.'
             log_msg(msg, level='C', message_bar=self.iface.messageBar())

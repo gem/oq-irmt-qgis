@@ -24,6 +24,7 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     3.5.0
+    * Layers imported from the OQ-Engine are inserted on top of the QGIS layer tree
     * Added loaders for OQ-Engine outputs 'asset_risk' and 'agg_risk'
     * The option to aggregate points by polygons is automatically enabled whenever at least one layer containing polygons becomes available
     * Geopackages containing polygons for the aggregation of points by zone can be pre-loaded, selecting the desired layers from the package
