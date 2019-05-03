@@ -555,7 +555,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         # shapely/libgeos/numpy/etc the numbers could be slightly different.
         # The parameters of the demos could change in the future and the
         # numbers (even the number of rows and columns) could change.
-        with open(exported_file_path, 'r') as got:
+        with open(exported_file_path, 'r', newline='') as got:
             got_reader = csv.reader(got)
             n_rows = 0
             for got_line in got_reader:

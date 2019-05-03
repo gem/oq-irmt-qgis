@@ -93,9 +93,9 @@ class DownloadPlatformDataWorker(AbstractWorker):
             types_string = '"String","String"' + ',"Real"' * sv_variables_count
             if self.load_geometries:
                 types_string += ',"String"'
-            with open(fname_types, 'w') as csvt:
+            with open(fname_types, 'w', newline='') as csvt:
                 csvt.write(types_string)
-            with open(fname, 'w') as csv_file:
+            with open(fname, 'w', newline='') as csv_file:
                 n_countries_to_download = len(self.country_iso_codes)
                 n_downloaded_countries = 0
                 for line in result.iter_lines():
