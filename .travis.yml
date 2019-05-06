@@ -18,6 +18,7 @@ install:
     - pip -q install -U pip
     - pip -q install -r oq-engine/requirements-py36-linux64.txt
     - pip -q install -e oq-engine
+    - sudo apt update
     - sudo apt install latexmk texlive-latex-extra python3-sphinx
     - pip -q install sphinx_rtd_theme
 
