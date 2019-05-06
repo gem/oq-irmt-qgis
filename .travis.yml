@@ -28,8 +28,9 @@ before_script:
 
 #FIXME Run the tests using a multi-stage job
 script:
+    - cd svir
     - make doc
-    - cd scripts
+    - cd ../scripts
     - ./run_unit_tests.sh
     - docker rm -f qgis
     - ./run_functional_tests.sh
