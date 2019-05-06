@@ -18,7 +18,7 @@ install:
     - pip -q install -U pip
     - pip -q install -r oq-engine/requirements-py36-linux64.txt
     - pip -q install -e oq-engine
-    - apt install latexmk texlive-latex-extra python3-sphinx
+    - sudo apt install latexmk texlive-latex-extra python3-sphinx
     - pip -q install sphinx_rtd_theme
 
 before_script:
@@ -27,6 +27,7 @@ before_script:
 
 #FIXME Run the tests using a multi-stage job
 script:
+    - make doc
     - cd scripts
     - ./run_unit_tests.sh
     - docker rm -f qgis
@@ -39,8 +40,8 @@ script:
 #    - docker run -ti --rm -v $TRAVIS_BUILD_DIR:/io openquake/qgis-builder:3 build_apidoc
 #    - docker run -ti --rm -v $TRAVIS_BUILD_DIR:/io openquake/qgis-builder:3 build_manual_html
 
-after_success:
-    - make doc
+# after_success:
+#     - make doc
 
 after_script:
     - cat $TRAVIS_BUILD_DIR/webui.log
