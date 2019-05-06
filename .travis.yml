@@ -6,41 +6,34 @@ language: python
 python:
     - "3.6"
 
-# before_install:
-#     - if [ "$TRAVIS_PULL_REQUEST_BRANCH" != "" ]; then BRANCH=$TRAVIS_PULL_REQUEST_BRANCH; else BRANCH=$TRAVIS_BRANCH; fi
-#     - if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${BRANCH})" == "" ]; then
-#         BRANCH='master';
-#       fi;
-#     - curl -sfLO https://artifacts.openquake.org/travis/oqdata-${BRANCH}.zip || ( echo "Dump for ${BRANCH} unavailable"; exit 1 )
-#     - git clone -q -b ${BRANCH} --depth=1 https://github.com/gem/oq-engine.git && echo "Running against oq-engine/${BRANCH}"
+before_install:
+    - if [ "$TRAVIS_PULL_REQUEST_BRANCH" != "" ]; then BRANCH=$TRAVIS_PULL_REQUEST_BRANCH; else BRANCH=$TRAVIS_BRANCH; fi
+    - if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${BRANCH})" == "" ]; then
+        BRANCH='master';
+      fi;
+    - curl -sfLO https://artifacts.openquake.org/travis/oqdata-${BRANCH}.zip || ( echo "Dump for ${BRANCH} unavailable"; exit 1 )
+    - git clone -q -b ${BRANCH} --depth=1 https://github.com/gem/oq-engine.git && echo "Running against oq-engine/${BRANCH}"
 
-# install:
-    # - pip -q install -U pip
-    # - pip -q install -r oq-engine/requirements-py36-linux64.txt
-    # - pip -q install -e oq-engine
-    # - sudo apt update
+install:
+    - pip -q install -U pip
+    - pip -q install -r oq-engine/requirements-py36-linux64.txt
+    - pip -q install -e oq-engine
+    - sudo apt update
 
-# before_script:
-#     - oq restore oqdata-${BRANCH}.zip ~/oqdata
-#     - oq webui start 0.0.0.0:8800 --skip-browser &> webui.log &
+before_script:
+    - oq restore oqdata-${BRANCH}.zip ~/oqdata
+    - oq webui start 0.0.0.0:8800 --skip-browser &> webui.log &
 
 #FIXME Run the tests using a multi-stage job
 script:
     - cd scripts
     - ./make_doc.sh 
-    # - ./run_unit_tests.sh
-    # - docker rm -f qgis
-    # - ./run_functional_tests.sh
-    # - docker rm -f qgis
-    # - ./run_integration_tests.sh
+    - docker rm -f qgis
+    - ./run_unit_tests.sh
+    - docker rm -f qgis
+    - ./run_functional_tests.sh
+    - docker rm -f qgis
+    - ./run_integration_tests.sh
 
-#FIXME Restore the tests based on the official QGIS container
-#after_success:
-#    - docker run -ti --rm -v $TRAVIS_BUILD_DIR:/io openquake/qgis-builder:3 build_apidoc
-#    - docker run -ti --rm -v $TRAVIS_BUILD_DIR:/io openquake/qgis-builder:3 build_manual_html
-
-# after_success:
-#     - make doc
-
-# after_script:
-#     - cat $TRAVIS_BUILD_DIR/webui.log
+after_script:
+    - cat $TRAVIS_BUILD_DIR/webui.log
