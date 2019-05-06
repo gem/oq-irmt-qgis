@@ -28,6 +28,7 @@ before_script:
 
 #FIXME Run the tests using a multi-stage job
 script:
+    - export PYTHONPATH=./:$PYTHONPATH
     - cd svir
     - make doc
     - cd ../scripts
