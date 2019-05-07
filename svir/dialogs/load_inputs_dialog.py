@@ -56,6 +56,8 @@ class LoadInputsDialog(QDialog):
             chk = QCheckBox(peril)
             chk.setChecked(True)
             self.peril_vlayout.addWidget(chk)
+        self.higher_on_top_chk = QCheckBox('Render higher values on top')
+        self.higher_on_top_chk.setChecked(False)
         self.button_box = QDialogButtonBox(
             QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         self.ok_button = self.button_box.button(QDialogButtonBox.Ok)
@@ -63,6 +65,7 @@ class LoadInputsDialog(QDialog):
         self.button_box.rejected.connect(self.reject)
         vlayout = QVBoxLayout()
         vlayout.addWidget(self.peril_gbx)
+        vlayout.addWidget(self.higher_on_top_chk)
         vlayout.addWidget(self.button_box)
         self.setLayout(vlayout)
 
@@ -96,8 +99,9 @@ class LoadInputsDialog(QDialog):
             log_msg(str(exc), level='C', message_bar=self.iface.messageBar(),
                     exception=exc)
             raise exc
-        LoadOutputAsLayerDialog.style_maps(self.layer, 'intensity',
-                                           self.iface, 'input')
+        LoadOutputAsLayerDialog.style_maps(
+            self.layer, 'intensity', self.iface, 'input',
+            render_higher_on_top=self.higher_on_top_chk.isChecked())
         log_msg('Layer %s was loaded successfully' % layer_name,
                 level='S', message_bar=self.iface.messageBar())
 
