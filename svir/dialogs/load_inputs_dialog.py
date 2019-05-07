@@ -26,7 +26,6 @@ import zipfile
 import json
 import os
 import configparser
-from qgis.core import QgsProject
 from qgis.PyQt.QtCore import pyqtSignal
 from qgis.PyQt.QtWidgets import (
     QDialog, QVBoxLayout, QDialogButtonBox, QGroupBox, QCheckBox)
@@ -91,18 +90,14 @@ class LoadInputsDialog(QDialog):
         layer_name = os.path.splitext(os.path.basename(csv_path))[0]
         try:
             self.layer = import_layer_from_csv(
-                self, csv_path, layer_name, self.iface)
+                self, csv_path, layer_name, self.iface, add_to_legend=True,
+                add_on_top=True, zoom_to_layer=True)
         except RuntimeError as exc:
             log_msg(str(exc), level='C', message_bar=self.iface.messageBar(),
                     exception=exc)
             raise exc
         LoadOutputAsLayerDialog.style_maps(self.layer, 'intensity',
                                            self.iface, 'input')
-        root = QgsProject.instance().layerTreeRoot()
-        QgsProject.instance().addMapLayer(self.layer, False)
-        root.insertLayer(0, self.layer)
-        self.iface.setActiveLayer(self.layer)
-        self.iface.zoomToActiveLayer()
         log_msg('Layer %s was loaded successfully' % layer_name,
                 level='S', message_bar=self.iface.messageBar())
 
