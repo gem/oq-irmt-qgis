@@ -23,7 +23,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 from qgis.PyQt.QtWidgets import (
-    QGroupBox, QVBoxLayout, QHBoxLayout, QRadioButton,)
+    QGroupBox, QVBoxLayout, QHBoxLayout, QRadioButton, QCheckBox)
 from qgis.core import (
     QgsFeature, QgsGeometry, QgsPointXY, edit, QgsTask, QgsApplication,)
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
@@ -117,6 +117,9 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
             tag_name for tag_name in self.tag_names if tag_name != 'taxonomy'])
         self.tag_gbx_v_layout.addWidget(self.tag_values_multisel)
         self.vlayout.addWidget(self.tag_gbx)
+        self.higher_on_top_chk = QCheckBox('Render higher values on top')
+        self.higher_on_top_chk.setChecked(True)
+        self.vlayout.addWidget(self.higher_on_top_chk)
         self.create_zonal_layer_selector()
         if self.zonal_layer_path:
             zonal_layer = self.load_zonal_layer(self.zonal_layer_path)
@@ -235,8 +238,10 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
         self.dataset = self.npz_file['array']
         with WaitCursorManager('Creating layer...', self.iface.messageBar()):
             self.build_layer()
-            self.style_maps(self.layer, self.default_field_name,
-                            self.iface, self.output_type, perils=self.perils)
+            self.style_maps(
+                self.layer, self.default_field_name,
+                self.iface, self.output_type, perils=self.perils,
+                render_higher_on_top=self.higher_on_top_chk.isChecked())
         if (self.zonal_layer_cbx.currentText()
                 and self.zonal_layer_gbx.isChecked()):
             self.aggregate_by_zone()
