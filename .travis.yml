@@ -26,25 +26,25 @@ before_script:
 jobs:
     include:
         - stage: test
-          name: "Make user manual and apidoc"
-          script:
-            - cd $TRAVIS_BUILD_DIR/scripts
-            - ./make_doc.sh 
-        - stage: test
-          name: "Run unit tests"
+          name: "℧ Run unit tests"
           script:
             - cd $TRAVIS_BUILD_DIR/scripts
             - ./run_unit_tests.sh
         - stage: test
-          name: "Run functional tests"
+          name: "ƒ Run functional tests"
           script:
             - cd $TRAVIS_BUILD_DIR/scripts
             - ./run_functional_tests.sh
         - stage: test
-          name: "Run integration tests"
+          name: "⨕ Run integration tests"
           script:
             - cd $TRAVIS_BUILD_DIR/scripts
             - ./run_integration_tests.sh
+        - stage: deploy
+          name: "📖 Make user manual and apidoc"
+          script:
+            - cd $TRAVIS_BUILD_DIR/scripts
+            - ./make_doc.sh 
 
 after_script:
     - cat $TRAVIS_BUILD_DIR/webui.log
