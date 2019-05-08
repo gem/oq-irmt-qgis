@@ -1,6 +1,7 @@
 *.py[cod]
 *~
 .idea/*
+*/.idea/*
 svir/.coverage
 svir/.noseids
 svir/.ropeproject/*
