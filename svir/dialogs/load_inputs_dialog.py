@@ -83,7 +83,12 @@ class LoadInputsDialog(QDialog):
     def get_multi_peril_csv_dict(ini_str):
         config = configparser.ConfigParser(allow_no_value=True)
         config.read_string(ini_str)
-        multi_peril_csv_str = config['volcano_hazard']['multi_peril_csv']
+        multi_peril_csv_str = None
+        for key in config:
+            if 'multi_peril_csv' in config[key]:
+                multi_peril_csv_str = config[key]['multi_peril_csv']
+        if multi_peril_csv_str is None:
+            raise KeyError('multi_peril_csv not found in .ini file')
         multi_peril_csv_dict = json.loads(
             multi_peril_csv_str.replace('\'', '"'))
         return multi_peril_csv_dict
