@@ -143,7 +143,8 @@ def calculate_composite_variable(iface, layer, node):
         node_attr_id, node_attr_name, field_was_added = \
             get_node_attr_id_and_name(edited_node, layer)
     except InvalidNode as e:
-        log_msg(str(e), level='C', message_bar=iface.messageBar())
+        log_msg(str(e), level='C', message_bar=iface.messageBar(),
+                exception=e)
         if added_attrs_ids:
             ProcessLayer(layer).delete_attributes(added_attrs_ids)
         return set(), set(), node, False
@@ -156,14 +157,16 @@ def calculate_composite_variable(iface, layer, node):
                                               layer,
                                               discarded_feats)
     except (InvalidOperator, InvalidChild, InvalidFormula) as e:
-        log_msg(str(e), level='C', message_bar=iface.messageBar())
+        log_msg(str(e), level='C', message_bar=iface.messageBar(),
+                exception=e)
         if added_attrs_ids:
             ProcessLayer(layer).delete_attributes(added_attrs_ids)
         return set(), set(), node, False
     except TypeError as e:
         msg = ('Could not calculate the composite variable due'
                ' to data problems: %s' % e)
-        log_msg(msg, level='C', message_bar=iface.messageBar())
+        log_msg(msg, level='C', message_bar=iface.messageBar(),
+                exception=e)
         if added_attrs_ids:
             ProcessLayer(layer).delete_attributes(
                 added_attrs_ids)

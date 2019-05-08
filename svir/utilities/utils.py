@@ -31,6 +31,9 @@ import traceback
 import locale
 import zlib
 import io
+from pygments import highlight
+from pygments.lexers import PythonLexer
+from pygments.formatters import HtmlFormatter
 from copy import deepcopy
 from time import time
 from pprint import pformat
@@ -41,7 +44,7 @@ from qgis.core import (
                        QgsVectorFileWriter,
                        )
 from qgis.core import Qgis
-from qgis.gui import QgsMessageBar
+from qgis.gui import QgsMessageBar, QgsMessageBarItem
 
 from qgis.PyQt import uic
 from qgis.PyQt.QtCore import Qt, QSettings, QUrl, QUrlQuery
@@ -51,10 +54,12 @@ from qgis.PyQt.QtWidgets import (
                                  QToolButton,
                                  QFileDialog,
                                  QMessageBox,
+                                 QDialog,
+                                 QTextBrowser,
+                                 QVBoxLayout,
                                  )
 from qgis.PyQt.QtGui import QColor
 
-from svir.third_party.poster.encode import multipart_encode
 from svir.utilities.shared import (
                                    DEBUG,
                                    DEFAULT_SETTINGS,
@@ -83,7 +88,8 @@ def get_irmt_version():
 
 
 def log_msg(message, tag='GEM OpenQuake IRMT plugin', level='I',
-            message_bar=None, duration=None, exception=None):
+            message_bar=None, duration=None, exception=None,
+            print_to_stderr=False):
     """
     Add a message to the QGIS message log. If a messageBar is provided,
     the same message will be displayed also in the messageBar. In the latter
@@ -103,7 +109,10 @@ def log_msg(message, tag='GEM OpenQuake IRMT plugin', level='I',
         to keep the message visible indefinitely, or None to use
         the default duration of the chosen level
     :param exception: an optional exception, from which the traceback will be
-        extracted and written only in the log
+        extracted and written in the log. When the exception is provided,
+        an additional button in the `QgsMessageBar` allows to visualize the
+        traceback in a separate window.
+    :print_to_stderr: if True, the error message will be printed also to stderr
     """
     levels = {
               'I': Qgis.Info,
@@ -129,6 +138,10 @@ def log_msg(message, tag='GEM OpenQuake IRMT plugin', level='I',
                 or level in ('I', 'S') and log_verbosity in ('I', 'S')):
             QgsMessageLog.logMessage(
                 tr(message) + tb_text, tr(tag), levels[level])
+            if exception is not None:
+                tb_btn = QToolButton(message_bar)
+                tb_btn.setText('Show Traceback')
+                tb_btn.clicked.connect(lambda: _on_tb_btn_clicked(tb_text))
         if message_bar is not None:
             if level == 'S':
                 title = 'Success'
@@ -144,12 +157,31 @@ def log_msg(message, tag='GEM OpenQuake IRMT plugin', level='I',
                 duration = duration if duration is not None else 0
             max_msg_len = 200
             if len(message) > max_msg_len:
-                message = ("%s[...] (Please open the Log Messages Panel to"
-                           " read the full message)" % message[:max_msg_len])
-            message_bar.pushMessage(tr(title),
-                                    tr(message),
-                                    levels[level],
-                                    duration)
+                message = ("%s[...]" % message[:max_msg_len])
+            if exception is None:
+                message_bar.pushMessage(tr(title),
+                                        tr(message),
+                                        levels[level],
+                                        duration)
+            else:
+                mb_item = QgsMessageBarItem(
+                    tr(title), tr(message), tb_btn, levels[level], duration)
+                message_bar.pushItem(mb_item)
+        if print_to_stderr:
+            print('\t\t%s' % message, file=sys.stderr)
+
+
+def _on_tb_btn_clicked(message):
+    vbox = QVBoxLayout()
+    dlg = QDialog()
+    dlg.setWindowTitle('Traceback')
+    text_browser = QTextBrowser()
+    formatted_msg = highlight(message, PythonLexer(), HtmlFormatter(full=True))
+    text_browser.setHtml(formatted_msg)
+    vbox.addWidget(text_browser)
+    dlg.setLayout(vbox)
+    dlg.setMinimumSize(700, 500)
+    dlg.exec_()
 
 
 def tr(message):
@@ -676,32 +708,6 @@ class ReadMetadataError(Exception):
         'Check that the file is correct')
 
 
-class IterableToFileAdapter(object):
-    """ an adapter which makes the multipart-generator issued by poster
-        accessible to requests. Based upon code from
-        http://stackoverflow.com/a/13911048/1659732
-        https://goo.gl/zgLx0T
-    """
-    def __init__(self, iterable):
-        self.iterator = iter(iterable)
-        self.length = iterable.total
-
-    def read(self, size=-1):
-        return next(self.iterator, b'')
-
-    def __len__(self):
-        return self.length
-
-
-def multipart_encode_for_requests(params, boundary=None, cb=None):
-    """"helper function simulating the interface of posters
-        multipart_encode()-function
-        but wrapping its generator with the file-like adapter
-    """
-    data_generator, headers = multipart_encode(params, boundary, cb)
-    return IterableToFileAdapter(data_generator), headers
-
-
 def write_layer_suppl_info_to_qgs(layer_id, suppl_info):
     """
     Write into the QgsProject the given supplemental information, associating
@@ -939,7 +945,10 @@ def import_layer_from_csv(parent,
                           save_as_shp=False,
                           dest_shp=None,
                           zoom_to_layer=True,
-                          has_geom=True):
+                          has_geom=True,
+                          subset=None,
+                          add_to_legend=True,
+                          add_on_top=False):
     url = QUrl.fromLocalFile(csv_path)
     url_query = QUrlQuery()
     url_query.addQueryItem('type', 'csv')
@@ -957,6 +966,9 @@ def import_layer_from_csv(parent,
     url_query.addQueryItem('quote', quote)
     url_query.addQueryItem('skipLines', str(lines_to_skip_count))
     url_query.addQueryItem('trimFields', 'yes')
+    if subset is not None:
+        # NOTE: it loads all features and applies a filter in visualization
+        url_query.addQueryItem('subset', subset)  # i.e. '"fieldname" != 0'
     url.setQuery(url_query)
     layer_uri = url.toString()
     layer = QgsVectorLayer(layer_uri, layer_name, "delimitedtext")
@@ -980,10 +992,16 @@ def import_layer_from_csv(parent,
                                                       error_msg))
         layer = QgsVectorLayer(dest_filename, layer_name, 'ogr')
     if layer.isValid():
-        QgsProject.instance().addMapLayer(layer)
-        iface.setActiveLayer(layer)
-        if zoom_to_layer:
-            iface.zoomToActiveLayer()
+        if add_to_legend:
+            if add_on_top:
+                root = QgsProject.instance().layerTreeRoot()
+                QgsProject.instance().addMapLayer(layer, False)
+                root.insertLayer(0, layer)
+            else:
+                QgsProject.instance().addMapLayer(layer, True)
+            iface.setActiveLayer(layer)
+            if zoom_to_layer:
+                iface.zoomToActiveLayer()
     else:
         raise RuntimeError('Unable to load layer')
     return layer
@@ -1084,17 +1102,18 @@ def get_checksum(file_path):
 def extract_npz(
         session, hostname, calc_id, output_type, message_bar, params=None):
     url = '%s/v1/calc/%s/extract/%s' % (hostname, calc_id, output_type)
-    log_msg('GET: %s, with parameters: %s' % (url, params), level='I')
+    log_msg('GET: %s, with parameters: %s' % (url, params), level='I',
+            print_to_stderr=True)
     resp = session.get(url, params=params)
     if not resp.ok:
         msg = "Unable to extract %s with parameters %s: %s" % (
             url, params, resp.reason)
-        log_msg(msg, level='C', message_bar=message_bar)
+        log_msg(msg, level='C', message_bar=message_bar, print_to_stderr=True)
         return
     resp_content = resp.content
     if not resp_content:
         msg = 'GET %s returned an empty content!' % url
-        log_msg(msg, level='C', message_bar=message_bar)
+        log_msg(msg, level='C', message_bar=message_bar, print_to_stderr=True)
         return
     return numpy.load(io.BytesIO(resp_content))
 

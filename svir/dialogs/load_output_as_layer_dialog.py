@@ -22,7 +22,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
 from random import randrange
+from osgeo import ogr
 from qgis.core import (QgsVectorLayer,
                        QgsProject,
                        QgsStyle,
@@ -33,7 +35,6 @@ from qgis.core import (QgsVectorLayer,
                        QgsGraduatedSymbolRenderer,
                        QgsRuleBasedRenderer,
                        QgsFillSymbol,
-                       QgsMapUnitScale,
                        QgsWkbTypes,
                        QgsMapLayer,
                        QgsMarkerSymbol,
@@ -41,8 +42,11 @@ from qgis.core import (QgsVectorLayer,
                        QgsRendererCategory,
                        QgsCategorizedSymbolRenderer,
                        QgsApplication,
-                       QgsUnitTypes,
+                       QgsExpression,
+                       NULL,
+                       QgsSimpleMarkerSymbolLayerBase,
                        )
+from qgis.gui import QgsSublayersDialog
 from qgis.PyQt.QtCore import (
     pyqtSlot, pyqtSignal, QDir, QSettings, QFileInfo, Qt)
 from qgis.PyQt.QtWidgets import (
@@ -67,6 +71,7 @@ from svir.utilities.shared import (OQ_CSV_TO_LAYER_TYPES,
                                    OQ_COMPLEX_CSV_TO_LAYER_TYPES,
                                    OQ_TO_LAYER_TYPES,
                                    OQ_EXTRACT_TO_LAYER_TYPES,
+                                   RAMP_EXTREME_COLORS,
                                    )
 from svir.utilities.utils import (get_ui_class,
                                   get_style,
@@ -175,6 +180,34 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     def on_load_all_rlzs_or_stats_chk_stateChanged(self, state):
         self.rlz_or_stat_cbx.setEnabled(state == Qt.Unchecked)
 
+    def create_selector(
+            self, name, label_text, filter_ckb=False, add_to_layout=None,
+            on_text_changed=None):
+        if add_to_layout is not None:
+            layout = add_to_layout
+        else:
+            layout = self.vlayout
+        setattr(self, "%s_lbl" % name, QLabel(label_text))
+        setattr(self, "%s_cbx" % name, QComboBox())
+        lbl = getattr(self, "%s_lbl" % name)
+        cbx = getattr(self, "%s_cbx" % name)
+        cbx.setDisabled(filter_ckb)
+        if on_text_changed is not None:
+            cbx.currentTextChanged['QString'].connect(on_text_changed)
+        if filter_ckb:
+            setattr(self, "filter_by_%s_ckb" % name,
+                    QCheckBox('Filter by %s' % name))
+            filter_ckb = getattr(self, "filter_by_%s_ckb" % name)
+
+            def on_load_all_ckb_changed():
+                cbx.setEnabled(filter_ckb.isChecked())
+
+            filter_ckb.stateChanged[int].connect(on_load_all_ckb_changed)
+            filter_ckb.setChecked(False)
+            layout.addWidget(filter_ckb)
+        layout.addWidget(lbl)
+        layout.addWidget(cbx)
+
     def create_imt_selector(self, all_ckb=False):
         self.imt_lbl = QLabel('Intensity Measure Type')
         self.imt_cbx = QComboBox()
@@ -263,9 +296,10 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.save_as_shp_ckb.setChecked(False)
         self.vlayout.addWidget(self.save_as_shp_ckb)
 
-    def create_zonal_layer_selector(self):
+    def create_zonal_layer_selector(self, discard_nonmatching=True):
+        self.added_zonal_layer = None
         self.zonal_layer_gbx = QGroupBox()
-        self.zonal_layer_gbx.setTitle('Aggregate by zone (optional)')
+        self.zonal_layer_gbx.setTitle('Aggregate by zone')
         self.zonal_layer_gbx.setCheckable(True)
         self.zonal_layer_gbx.setChecked(False)
         self.zonal_layer_gbx_v_layout = QVBoxLayout()
@@ -275,38 +309,51 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.zonal_layer_lbl = QLabel('Zonal layer')
         self.zonal_layer_tbn = QToolButton()
         self.zonal_layer_tbn.setText('...')
+        self.discard_nonmatching_chk = QCheckBox(
+            'Discard zones with no points')
+        self.discard_nonmatching_chk.setChecked(discard_nonmatching)
         self.zonal_layer_h_layout = QHBoxLayout()
         self.zonal_layer_h_layout.addWidget(self.zonal_layer_cbx)
         self.zonal_layer_h_layout.addWidget(self.zonal_layer_tbn)
         self.zonal_layer_gbx_v_layout.addWidget(self.zonal_layer_lbl)
         self.zonal_layer_gbx_v_layout.addLayout(self.zonal_layer_h_layout)
+        self.zonal_layer_gbx_v_layout.addWidget(self.discard_nonmatching_chk)
         self.vlayout.addWidget(self.zonal_layer_gbx)
-        self.zonal_layer_tbn.clicked.connect(
-            self.on_zonal_layer_tbn_clicked)
+        self.zonal_layer_tbn.clicked.connect(self.open_load_zonal_layer_dialog)
         self.zonal_layer_cbx.currentIndexChanged[int].connect(
             self.on_zonal_layer_cbx_currentIndexChanged)
         self.zonal_layer_gbx.toggled[bool].connect(
             self.on_zonal_layer_gbx_toggled)
+        self.iface.layerTreeView().currentLayerChanged.connect(
+            self.on_currentLayerChanged)
+
+    def on_currentLayerChanged(self):
+        self.pre_populate_zonal_layer_cbx()
 
     def pre_populate_zonal_layer_cbx(self):
-        for key, layer in \
-                QgsProject.instance().mapLayers().items():
-            # populate loss cbx only with layers containing points
+        # populate cbx only with vector layers containing polygons
+        self.zonal_layer_cbx.clear()
+        for key, layer in QgsProject.instance().mapLayers().items():
             if layer.type() != QgsMapLayer.VectorLayer:
                 continue
             if layer.geometryType() == QgsWkbTypes.PolygonGeometry:
                 self.zonal_layer_cbx.addItem(layer.name())
                 self.zonal_layer_cbx.setItemData(
                     self.zonal_layer_cbx.count()-1, layer.id())
+        if self.added_zonal_layer is not None:
+            self.zonal_layer_cbx.setCurrentIndex(
+                self.zonal_layer_cbx.findData(self.added_zonal_layer.id()))
+        self.zonal_layer_gbx.setChecked(
+            self.zonal_layer_cbx.currentIndex() != -1)
 
     def on_zonal_layer_cbx_currentIndexChanged(self, new_index):
-        zonal_layer = None
+        self.zonal_layer = None
         if not self.zonal_layer_cbx.currentText():
             if self.zonal_layer_gbx.isChecked():
                 self.ok_button.setEnabled(False)
             return
         zonal_layer_id = self.zonal_layer_cbx.itemData(new_index)
-        zonal_layer = QgsProject.instance().mapLayer(zonal_layer_id)
+        self.zonal_layer = QgsProject.instance().mapLayer(zonal_layer_id)
         self.set_ok_button()
 
     def on_zonal_layer_gbx_toggled(self, on):
@@ -419,12 +466,13 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         if self.output_type in ('hcurves', 'uhs', 'hmaps'):
             try:
                 investigation_time = self.npz_file['investigation_time']
-            except KeyError:
+            except KeyError as exc:
                 msg = ('investigation_time not found. It is mandatory for %s.'
                        ' Please check if the ouptut was produced by an'
                        ' obsolete version of the OpenQuake Engine'
                        ' Server.') % self.output_type
-                log_msg(msg, level='C', message_bar=self.iface.messageBar())
+                log_msg(msg, level='C', message_bar=self.iface.messageBar(),
+                        exception=exc)
             else:
                 # We must cast to 'str' to keep numerical padding
                 # after saving the project
@@ -472,45 +520,33 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.layer.setCustomProperty('calc_id', self.calc_id)
         if poe is not None:
             self.layer.setCustomProperty('poe', poe)
-        QgsProject.instance().addMapLayer(self.layer)
+        try:
+            if (self.zonal_layer_cbx.currentText()
+                    and self.zonal_layer_gbx.isChecked()):
+                return
+        except AttributeError:
+            # the aggregation stuff might not exist for some loaders
+            pass
+        root = QgsProject.instance().layerTreeRoot()
+        QgsProject.instance().addMapLayer(self.layer, False)
+        root.insertLayer(0, self.layer)
         self.iface.setActiveLayer(self.layer)
         self.iface.zoomToActiveLayer()
         log_msg('Layer %s was created successfully' % layer_name, level='S',
                 message_bar=self.iface.messageBar())
 
-    def _set_symbol_size(self, symbol):
-        if self.iface.mapCanvas().mapUnits() == QgsUnitTypes.DistanceDegrees:
-            point_size = 0.05
-        elif self.iface.mapCanvas().mapUnits() == QgsUnitTypes.DistanceMeters:
-            point_size = 4000
-        else:
-            # it is not obvious how to choose the point size in the other
-            # cases, so we conservatively keep the default sizing
-            return
-        symbol.symbolLayer(0).setSizeUnit(QgsUnitTypes.RenderMapUnits)
-        symbol.symbolLayer(0).setSize(point_size)
-        map_unit_scale = QgsMapUnitScale()
-        map_unit_scale.maxSizeMMEnabled = True
-        map_unit_scale.minSizeMMEnabled = True
-        map_unit_scale.minSizeMM = 0.5
-        map_unit_scale.maxSizeMM = 10
-        symbol.symbolLayer(0).setSizeMapUnitScale(map_unit_scale)
-
-    def style_maps(self, layer=None, style_by=None, add_null_class=False):
-        if layer is None:
-            layer = self.layer
-        if style_by is None:
-            style_by = self.default_field_name
+    @staticmethod
+    def style_maps(layer, style_by, iface, output_type, perils=None,
+                   add_null_class=False, render_higher_on_top=False):
         symbol = QgsSymbol.defaultSymbol(layer.geometryType())
         # see properties at:
         # https://qgis.org/api/qgsmarkersymbollayerv2_8cpp_source.html#l01073
         symbol.setOpacity(1)
         if isinstance(symbol, QgsMarkerSymbol):
             # do it only for the layer with points
-            self._set_symbol_size(symbol)
             symbol.symbolLayer(0).setStrokeStyle(Qt.PenStyle(Qt.NoPen))
 
-        style = get_style(layer, self.iface.messageBar())
+        style = get_style(layer, iface.messageBar())
 
         # this is the default, as specified in the user settings
         ramp = QgsGradientColorRamp(
@@ -519,75 +555,160 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
 
         # in most cases, we override the user-specified setting, and use
         # instead a setting that was required by scientists
-        if self.output_type in OQ_TO_LAYER_TYPES:
+        if output_type in OQ_TO_LAYER_TYPES:
             default_qgs_style = QgsStyle().defaultStyle()
             default_color_ramp_names = default_qgs_style.colorRampNames()
-            if self.output_type in ('dmg_by_asset',
-                                    'losses_by_asset',
-                                    'avg_losses-stats'):
+            if output_type in ('dmg_by_asset',
+                               'losses_by_asset',
+                               'avg_losses-stats',):
                 # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
                 # jenks = natural breaks
                 mode = QgsGraduatedSymbolRenderer.Jenks
                 ramp_type_idx = default_color_ramp_names.index('Reds')
+                symbol.setColor(QColor(RAMP_EXTREME_COLORS['Reds']['top']))
                 inverted = False
-            elif self.output_type in ('hmaps', 'gmf_data', 'ruptures'):
+            elif output_type in ('hmaps', 'gmf_data', 'ruptures'):
                 # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
-                if self.output_type == 'ruptures':
+                # jenks = natural breaks
+                if output_type == 'ruptures':
                     mode = QgsGraduatedSymbolRenderer.Pretty
                 else:
                     mode = QgsGraduatedSymbolRenderer.EqualInterval
                 ramp_type_idx = default_color_ramp_names.index('Spectral')
                 inverted = True
+                symbol.setColor(QColor(RAMP_EXTREME_COLORS['Reds']['top']))
+            elif output_type in ['asset_risk', 'input']:
+                # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
+                # jenks = natural breaks
+                mode = QgsGraduatedSymbolRenderer.EqualInterval
+                # exposure_strings = ['number', 'occupants', 'value']
+                # setting exposure colors by default
+                colors = {'single': RAMP_EXTREME_COLORS['Blues']['top'],
+                          'ramp_name': 'Blues'}
+                inverted = False
+                if output_type == 'asset_risk':
+                    damage_strings = perils
+                    for damage_string in damage_strings:
+                        if damage_string in style_by:
+                            colors = {'single': RAMP_EXTREME_COLORS[
+                                          'Spectral']['top'],
+                                      'ramp_name': 'Spectral'}
+                            inverted = True
+                            break
+                else:  # 'input'
+                    colors = {'single': RAMP_EXTREME_COLORS['Greens']['top'],
+                              'ramp_name': 'Greens'}
+                    symbol.symbolLayer(0).setShape(
+                        QgsSimpleMarkerSymbolLayerBase.Square)
+                single_color = colors['single']
+                ramp_name = colors['ramp_name']
+                ramp_type_idx = default_color_ramp_names.index(ramp_name)
+                symbol.setColor(QColor(single_color))
+            else:
+                raise NotImplementedError(
+                    'Undefined color ramp for output type %s' % output_type)
             ramp = default_qgs_style.colorRamp(
                 default_color_ramp_names[ramp_type_idx])
             if inverted:
                 ramp.invert()
-        graduated_renderer = QgsGraduatedSymbolRenderer.createRenderer(
-            layer,
-            style_by,
-            style['classes'],
-            mode,
-            symbol,
-            ramp)
-        label_format = graduated_renderer.labelFormat()
-        # label_format.setTrimTrailingZeroes(True)  # it might be useful
-        label_format.setPrecision(2)
-        graduated_renderer.setLabelFormat(label_format, updateRanges=True)
-        if add_null_class:
+        # get unique values
+        fni = layer.fields().indexOf(style_by)
+        unique_values = layer.dataProvider().uniqueValues(fni)
+        num_unique_values = len(unique_values - {NULL})
+        if num_unique_values > 2:
+            renderer = QgsGraduatedSymbolRenderer.createRenderer(
+                layer,
+                QgsExpression.quotedColumnRef(style_by),
+                min(num_unique_values, style['classes']),
+                mode,
+                symbol.clone(),
+                ramp)
+            label_format = renderer.labelFormat()
+            # label_format.setTrimTrailingZeroes(True)  # it might be useful
+            label_format.setPrecision(2)
+            renderer.setLabelFormat(label_format, updateRanges=True)
+        elif num_unique_values == 2:
+            categories = []
+            for unique_value in unique_values:
+                symbol = symbol.clone()
+                try:
+                    symbol.setColor(QColor(RAMP_EXTREME_COLORS[ramp_name][
+                        'bottom' if unique_value == min(unique_values)
+                        else 'top']))
+                except Exception:
+                    symbol.setColor(QColor(
+                        style['color_from']
+                        if unique_value == min(unique_values)
+                        else style['color_to']))
+                category = QgsRendererCategory(
+                    unique_value, symbol, str(unique_value))
+                # entry for the list of category items
+                categories.append(category)
+            renderer = QgsCategorizedSymbolRenderer(
+                QgsExpression.quotedColumnRef(style_by), categories)
+        else:
+            renderer = QgsSingleSymbolRenderer(symbol.clone())
+        if add_null_class and NULL in unique_values:
             # add a class for NULL values
-            rule_renderer = QgsRuleBasedRenderer(
-                QgsSymbol.defaultSymbol(layer.geometryType()))
+            rule_renderer = QgsRuleBasedRenderer(symbol.clone())
             root_rule = rule_renderer.rootRule()
             not_null_rule = root_rule.children()[0].clone()
             # strip parentheses from stringified color HSL
-            not_null_rule.setFilterExpression('%s IS NOT NULL' % style_by)
+            not_null_rule.setFilterExpression(
+                '%s IS NOT NULL' % QgsExpression.quotedColumnRef(style_by))
             not_null_rule.setLabel('%s:' % style_by)
             root_rule.appendChild(not_null_rule)
             null_rule = root_rule.children()[0].clone()
             null_rule.setSymbol(QgsFillSymbol.createSimple(
-                {'color': '240,240,240'}))  # very light grey
-            null_rule.setFilterExpression('%s IS NULL' % style_by)
+                {'color': '160,160,160', 'style': 'diagonal_x'}))
+            null_rule.setFilterExpression(
+                '%s IS NULL' % QgsExpression.quotedColumnRef(style_by))
             null_rule.setLabel(tr('No points'))
             root_rule.appendChild(null_rule)
-            # create value ranges
-            rule_renderer.refineRuleRanges(not_null_rule, graduated_renderer)
-            # remove default rule
+            if isinstance(renderer, QgsGraduatedSymbolRenderer):
+                # create value ranges
+                rule_renderer.refineRuleRanges(not_null_rule, renderer)
+                # remove default rule
+            elif isinstance(renderer, QgsCategorizedSymbolRenderer):
+                rule_renderer.refineRuleCategoris(not_null_rule, renderer)
+            for rule in rule_renderer.rootRule().children()[1].children():
+                label = rule.label()
+                # by default, labels are like:
+                # ('"collapse-structural-ASH_DRY_sum" >= 0.0000 AND
+                # "collapse-structural-ASH_DRY_sum" <= 2.3949')
+                first, second = label.split(" AND ")
+                bottom = first.rsplit(" ", 1)[1]
+                top = second.rsplit(" ", 1)[1]
+                simplified = "%s - %s" % (bottom, top)
+                rule.setLabel(simplified)
             root_rule.removeChildAt(0)
-            layer.setRenderer(rule_renderer)
-        else:
-            layer.setRenderer(graduated_renderer)
+            renderer = rule_renderer
+        if render_higher_on_top:
+            renderer.setUsingSymbolLevels(True)
+            symbol_items = [item for item in renderer.legendSymbolItems()]
+            for i in range(len(symbol_items)):
+                sym = symbol_items[i].symbol().clone()
+                key = symbol_items[i].ruleKey()
+                for lay in range(sym.symbolLayerCount()):
+                    sym.symbolLayer(lay).setRenderingPass(i)
+                renderer.setLegendSymbolItem(key, sym)
+        layer.setRenderer(renderer)
         layer.setOpacity(0.7)
         layer.triggerRepaint()
-        self.iface.setActiveLayer(layer)
-        self.iface.zoomToActiveLayer()
+        iface.setActiveLayer(layer)
+        iface.zoomToActiveLayer()
         log_msg('Layer %s was created successfully' % layer.name(), level='S',
-                message_bar=self.iface.messageBar())
+                message_bar=iface.messageBar())
         # NOTE QGIS3: probably not needed
-        # self.iface.layerTreeView().refreshLayerSymbology(layer.id())
+        # iface.layerTreeView().refreshLayerSymbology(layer.id())
 
-        self.iface.mapCanvas().refresh()
+        iface.mapCanvas().refresh()
 
-    def style_categorized(self, layer, style_by):
+    def style_categorized(self, layer=None, style_by=None):
+        if layer is None:
+            layer = self.layer
+        if style_by is None:
+            style_by = self.default_field_name
         # get unique values
         fni = layer.fields().indexOf(style_by)
         unique_values = layer.dataProvider().uniqueValues(fni)
@@ -611,7 +732,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             # entry for the list of category items
             categories.append(category)
         # create renderer object
-        renderer = QgsCategorizedSymbolRenderer(style_by, categories)
+        renderer = QgsCategorizedSymbolRenderer(
+            QgsExpression.quotedColumnRef(style_by), categories)
         # assign the created renderer to the layer
         if renderer is not None:
             layer.setRenderer(renderer)
@@ -630,7 +752,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         symbol = QgsSymbol.defaultSymbol(self.layer.geometryType())
         symbol.deleteSymbolLayer(0)
         symbol.appendSymbolLayer(cross)
-        self._set_symbol_size(symbol)
         renderer = QgsSingleSymbolRenderer(symbol)
         effect = QgsOuterGlowEffect()
         effect.setSpread(0.5)
@@ -648,14 +769,17 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
 
         self.iface.mapCanvas().refresh()
 
-    def open_zonal_layer_dialog(self):
+    def open_load_zonal_layer_dialog(self):
         """
         Open a file dialog to select the zonal layer to be loaded
         :returns: the zonal layer
         """
         text = self.tr('Select zonal layer to import')
-        filters = self.tr('Vector shapefiles (*.shp);;SQLite (*.sqlite);;'
-                          'All files (*.*)')
+        filters = self.tr('All files (*.*);;'
+                          'GeoPackages (*.gpkg);;'
+                          'Vector shapefiles (*.shp);;'
+                          'SQLite (*.sqlite);;'
+                          )
         default_dir = QSettings().value('irmt/select_layer_dir',
                                         QDir.homePath())
         file_name, _ = QFileDialog.getOpenFileName(
@@ -668,26 +792,58 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         return zonal_layer
 
     def load_zonal_layer(self, zonal_layer_path):
-        # Load zonal layer
-        zonal_layer = QgsVectorLayer(zonal_layer_path, tr('Zonal data'), 'ogr')
+        self.added_zonal_layer = zonal_layer = None
+        zonal_layer_basename, zonal_layer_ext = os.path.splitext(
+            os.path.basename(zonal_layer_path))
+        if zonal_layer_ext == '.gpkg':
+            dlg = QgsSublayersDialog(
+                QgsSublayersDialog.Ogr, 'Select zonal layer')
+            conn = ogr.Open(zonal_layer_path)
+            layer_defs = []
+            for idx, c in enumerate(conn):
+                ld = QgsSublayersDialog.LayerDefinition()
+                ld.layerId = idx
+                ld.layerName = c.GetDescription()
+                ld.count = c.GetFeatureCount()
+                ld.type = ogr.GeometryTypeToName(c.GetGeomType())
+                layer_defs.append(ld)
+            dlg.populateLayerTable(layer_defs)
+            dlg.exec_()
+            if not dlg.selection():
+                return None
+            for sel in dlg.selection():
+                # NOTE: the last one will be chosen as zonal layer
+                zonal_layer = QgsVectorLayer(
+                    zonal_layer_path + "|layername=" + sel.layerName,
+                    sel.layerName, 'ogr')
+                if zonal_layer.isValid():
+                    root = QgsProject.instance().layerTreeRoot()
+                    QgsProject.instance().addMapLayer(zonal_layer, False)
+                    root.insertLayer(0, zonal_layer)
+                else:
+                    msg = 'Invalid layer'
+                    log_msg(msg, level='C',
+                            message_bar=self.iface.messageBar())
+                    return None
+        else:
+            zonal_layer = QgsVectorLayer(
+                zonal_layer_path, zonal_layer_basename, 'ogr')
         if not zonal_layer.geometryType() == QgsWkbTypes.PolygonGeometry:
             msg = 'Zonal layer must contain zone polygons'
             log_msg(msg, level='C', message_bar=self.iface.messageBar())
-            return False
-        # Add zonal layer to registry
-        if zonal_layer.isValid():
-            QgsProject.instance().addMapLayer(zonal_layer)
-        else:
-            msg = 'Invalid zonal layer'
-            log_msg(msg, level='C', message_bar=self.iface.messageBar())
             return None
+        if zonal_layer_ext != '.gpkg':
+            # Add zonal layer to registry
+            if zonal_layer.isValid():
+                root = QgsProject.instance().layerTreeRoot()
+                QgsProject.instance().addMapLayer(zonal_layer, False)
+                root.insertLayer(0, zonal_layer)
+            else:
+                msg = 'Invalid zonal layer'
+                log_msg(msg, level='C', message_bar=self.iface.messageBar())
+                return None
+        self.added_zonal_layer = zonal_layer
         return zonal_layer
-
-    def on_zonal_layer_tbn_clicked(self):
-        zonal_layer = self.open_zonal_layer_dialog()
-        if (zonal_layer and
-                zonal_layer.geometryType() == QgsWkbTypes.PolygonGeometry):
-            self.populate_zonal_layer_cbx(zonal_layer)
 
     def populate_zonal_layer_cbx(self, zonal_layer):
         cbx = self.zonal_layer_cbx
@@ -701,6 +857,12 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.file_size_lbl.setText(self.file_size_msg % file_size)
 
     def accept(self):
+        try:
+            self.iface.layerTreeView().currentLayerChanged.disconnect(
+                self.on_currentLayerChanged)
+        except Exception:
+            # it's connected only for some loaders
+            pass
         self.hide()
         if self.output_type in OQ_EXTRACT_TO_LAYER_TYPES:
             self.load_from_npz()
@@ -712,40 +874,47 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                         not self.zonal_layer_gbx.isChecked()):
                     super().accept()
                     return
-                loss_layer = self.layer
-                QgsProject.instance().layerTreeRoot().findLayer(
-                    loss_layer.id()).setItemVisibilityChecked(False)
-                zonal_layer_id = self.zonal_layer_cbx.itemData(
-                    self.zonal_layer_cbx.currentIndex())
-                zonal_layer = QgsProject.instance().mapLayer(
-                    zonal_layer_id)
-                QgsProject.instance().layerTreeRoot().findLayer(
-                    zonal_layer.id()).setItemVisibilityChecked(False)
-                # if the two layers have different projections, display a
-                # warning, but try proceeding anyway
-                have_same_projection, check_projection_msg = ProcessLayer(
-                    loss_layer).has_same_projection_as(zonal_layer)
-                if not have_same_projection:
-                    log_msg(check_projection_msg, level='W',
-                            message_bar=self.iface.messageBar())
-                [self.loss_attr_name] = [
-                    field.name() for field in loss_layer.fields()]
-                zonal_layer_plus_sum_name = "%s_sum" % zonal_layer.name()
-                try:
-                    calculate_zonal_stats(
-                        self.on_calculate_zonal_stats_completed,
-                        zonal_layer, loss_layer, (self.loss_attr_name,),
-                        zonal_layer_plus_sum_name)
-                except Exception as exc:
-                    log_msg(str(exc), level='C',
-                            message_bar=self.iface.messageBar())
-                    super().accept()
-                    return
+                self.aggregate_by_zone()
             else:
                 super().accept()
         elif self.output_type in OQ_CSV_TO_LAYER_TYPES:
             self.load_from_csv()
             super().accept()
+
+    def aggregate_by_zone(self):
+        loss_layer = self.layer
+        zonal_layer_id = self.zonal_layer_cbx.itemData(
+            self.zonal_layer_cbx.currentIndex())
+        zonal_layer = QgsProject.instance().mapLayer(
+            zonal_layer_id)
+        QgsProject.instance().layerTreeRoot().findLayer(
+            zonal_layer.id()).setItemVisibilityChecked(False)
+        # if the two layers have different projections, display a
+        # warning, but try proceeding anyway
+        have_same_projection, check_projection_msg = ProcessLayer(
+            loss_layer).has_same_projection_as(zonal_layer)
+        if not have_same_projection:
+            log_msg(check_projection_msg, level='W',
+                    message_bar=self.iface.messageBar())
+        try:
+            [self.loss_attr_name] = [
+                field.name() for field in loss_layer.fields()]
+        except ValueError:
+            self.loss_attr_name = self.default_field_name
+        zonal_layer_plus_sum_name = "%s: %s_sum" % (
+            zonal_layer.name(), self.loss_attr_name)
+        discard_nonmatching = self.discard_nonmatching_chk.isChecked()
+        try:
+            calculate_zonal_stats(
+                self.on_calculate_zonal_stats_completed,
+                zonal_layer, loss_layer, [self.loss_attr_name],
+                zonal_layer_plus_sum_name,
+                discard_nonmatching=discard_nonmatching,
+                predicates=('intersects',), summaries=('sum',))
+        except Exception as exc:
+            log_msg(str(exc), level='C',
+                    message_bar=self.iface.messageBar(),
+                    exception=exc)
 
     def on_calculate_zonal_stats_completed(self, zonal_layer_plus_sum):
         if zonal_layer_plus_sum is None:
@@ -754,7 +923,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             return None
         # Add zonal layer to registry
         if zonal_layer_plus_sum.isValid():
-            QgsProject.instance().addMapLayer(zonal_layer_plus_sum)
+            root = QgsProject.instance().layerTreeRoot()
+            QgsProject.instance().addMapLayer(zonal_layer_plus_sum, False)
+            root.insertLayer(0, zonal_layer_plus_sum)
         else:
             msg = 'The layer aggregating data by zone is invalid.'
             log_msg(msg, level='C', message_bar=self.iface.messageBar())
@@ -766,12 +937,23 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         #       dict
         added_loss_attr = "%s_sum" % self.loss_attr_name
         style_by = added_loss_attr
-        self.style_maps(
-            layer=zonal_layer_plus_sum, style_by=style_by,
-            add_null_class=True)
+        try:
+            perils = self.perils
+        except AttributeError:
+            perils = None
+        self.style_maps(zonal_layer_plus_sum, style_by,
+                        self.iface, self.output_type,
+                        perils=perils,
+                        add_null_class=True)
         super().accept()
 
     def reject(self):
+        try:
+            self.iface.layerTreeView().currentLayerChanged.disconnect(
+                self.on_currentLayerChanged)
+        except Exception:
+            # it's connected only for some loaders
+            pass
         if (hasattr(self, 'npz_file') and self.npz_file is not None
                 and self.output_type in OQ_TO_LAYER_TYPES):
             self.npz_file.close()

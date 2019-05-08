@@ -348,8 +348,7 @@ class SettingsDialog(QDialog, FORM_CLASS):
             try:
                 is_lockdown = check_is_lockdown(hostname, session)
             except Exception as exc:
-                err_msg = ("Unable to connect"
-                           " (see Log Message Panel for details)")
+                err_msg = ("Unable to connect")
                 log_msg(err_msg, level='C', message_bar=self.message_bar,
                         exception=exc)
                 return

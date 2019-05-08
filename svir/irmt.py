@@ -29,6 +29,7 @@ import tempfile
 from uuid import uuid4
 import fileinput
 import re
+import processing
 
 from copy import deepcopy
 from math import floor, ceil
@@ -42,6 +43,8 @@ from qgis.core import (
                        QgsProject,
                        QgsExpression,
                        Qgis,
+                       QgsApplication,
+                       QgsWkbTypes,
                        )
 
 from qgis.PyQt.QtCore import (
@@ -183,8 +186,8 @@ class Irmt(QObject):
         if get_menu is not None:
             self.menu = get_menu
 
-        menu_bar.insertMenu(self.iface.firstRightStandardMenu().menuAction(),
-                            self.menu)
+        self.menu_action = menu_bar.insertMenu(
+            self.iface.firstRightStandardMenu().menuAction(), self.menu)
 
         # Action to activate the modal dialog to import socioeconomic
         # data from the platform
@@ -316,6 +319,16 @@ class Irmt(QObject):
                            add_to_toolbar=True,
                            add_to_layer_actions=True,
                            submenu='Utilities')
+        # Action to open the Processing algorithm
+        # "Join attributes by location (summary)"
+        self.add_menu_item("aggregate",
+                           ":/plugins/irmt/aggregate.svg",
+                           u"&Aggregate points by zone",
+                           self.aggregate,
+                           enable=True,
+                           add_to_toolbar=False,
+                           add_to_layer_actions=False,
+                           submenu='Utilities')
 
         self.menu.addSeparator()
 
@@ -380,6 +393,39 @@ class Irmt(QObject):
         if not success:
             log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
 
+    def aggregate(self):
+        processing.Processing.initialize()
+        alg_id = 'qgis:joinbylocationsummary'
+        alg = QgsApplication.processingRegistry().algorithmById(alg_id)
+        # make sure to use the actual lists of predicates and summaries as
+        # defined in the algorithm when it is instantiated
+        predicate_keys = [predicate[0] for predicate in alg.predicates]
+        PREDICATES = dict(zip(predicate_keys, range(len(predicate_keys))))
+        default_predicates = ['intersects']
+        summary_keys = [statistic[0] for statistic in alg.statistics]
+        SUMMARIES = dict(zip(summary_keys, range(len(summary_keys))))
+        default_summaries = ['sum', 'mean']
+        zonal_layer = None
+        points_layer = None
+        for layer in QgsProject.instance().mapLayers().values():
+            if layer.type() != QgsMapLayer.VectorLayer:
+                continue
+            if layer.geometryType() == QgsWkbTypes.PolygonGeometry:
+                zonal_layer = layer
+                continue
+            elif layer.geometryType() == QgsWkbTypes.PointGeometry:
+                points_layer = layer
+                continue
+        initial_params = {
+            'INPUT': zonal_layer,
+            'JOIN': points_layer,
+            'PREDICATE': [PREDICATES[predicate]
+                          for predicate in default_predicates],
+            'SUMMARIES': [SUMMARIES[summary]
+                          for summary in default_summaries],
+            }
+        processing.execAlgorithmDialog(alg_id, initial_params)
+
     def ipt(self):
         success, err_msg = self.ipt_app.run_command('window_open', ())
         if not success:
@@ -424,8 +470,10 @@ class Irmt(QObject):
         if self.drive_oq_engine_server_dlg.is_logged_in:
             self.drive_oq_engine_server_dlg.start_polling()
         else:
-            self.drive_oq_engine_server_dlg.reject()
-            self.drive_oq_engine_server_dlg = None
+            log_msg('Unable to connect to the OpenQuake Engine server. '
+                    'Please check that the server is running and the '
+                    'plugin connection settings are correct.', level='C',
+                    message_bar=self.drive_oq_engine_server_dlg.message_bar)
 
     def on_same_fs(self, checksum_file_path, local_checksum):
         # initialize drive_oq_engine_server_dlg dialog without displaying it
@@ -587,8 +635,8 @@ class Irmt(QObject):
             self.iface.removeToolBarIcon(action)
         clear_progress_message_bar(self.iface.messageBar())
 
-        # remove menu
-        self.menu.deleteLater()
+        self.menu.clear()
+        self.iface.mainWindow().menuBar().removeAction(self.menu_action)
 
         # remove the dock
         self.viewer_dock.remove_connects()
@@ -691,7 +739,9 @@ class Irmt(QObject):
                     start_worker(worker, self.iface.messageBar(),
                                  'Downloading data from platform')
         except SvNetworkError as e:
-            log_msg(str(e), level='C', message_bar=self.iface.messageBar())
+            log_msg('An error occurred. See the traceback for details.',
+                    level='C', message_bar=self.iface.messageBar(),
+                    exception=e)
 
     def _data_download_successful(
             self, result, load_geometries, dest_filename, project_definition,
@@ -723,8 +773,8 @@ class Irmt(QObject):
         # We remove those spaces from the csv file before importing it.
         # TODO: Remove this as soon as QGIS solves that issue
         for line in fileinput.input(fname, inplace=True):
-            line = re.sub('\)\),\s\(\(', ')),((', line.rstrip())
-            line = re.sub('\),\s\(', '),(', line.rstrip())
+            line = re.sub('\)\),\s\(\(', ')),((', line.rstrip())  # NOQA
+            line = re.sub('\),\s\(', '),(', line.rstrip())  # NOQA
             # thanks to inplace=True, 'print line' writes the line into the
             # input file, overwriting the original line
             print(line)
@@ -1208,7 +1258,8 @@ class Irmt(QObject):
         not_null_rule.setSymbol(QgsFillSymbol.createSimple(
             {'color': col_str,
              'color_border': '0,0,0,255'}))
-        not_null_rule.setFilterExpression('%s IS NOT NULL' % target_field)
+        not_null_rule.setFilterExpression(
+            '%s IS NOT NULL' % QgsExpression.quotedColumnRef(target_field))
         not_null_rule.setLabel('%s:' % target_field)
         root_rule.appendChild(not_null_rule)
 
@@ -1217,7 +1268,8 @@ class Irmt(QObject):
             {'style': 'no',
              'color_border': '255,255,0,255',
              'width_border': '0.5'}))
-        null_rule.setFilterExpression('%s IS NULL' % target_field)
+        null_rule.setFilterExpression(
+            '%s IS NULL' % QgsExpression.quotedColumnRef(target_field))
         null_rule.setLabel(tr('Invalid value'))
         root_rule.appendChild(null_rule)
 
@@ -1225,7 +1277,7 @@ class Irmt(QObject):
             style['color_from'], style['color_to'])
         graduated_renderer = QgsGraduatedSymbolRenderer.createRenderer(
             self.iface.activeLayer(),
-            target_field,
+            QgsExpression.quotedColumnRef(target_field),
             style['classes'],
             style['mode'],
             QgsSymbol.defaultSymbol(self.iface.activeLayer().geometryType()),
@@ -1331,7 +1383,8 @@ class Irmt(QObject):
                             message_bar=self.iface.messageBar())
                 except (ValueError, NotImplementedError, TypeError) as e:
                     log_msg(e.message, level='C',
-                            message_bar=self.iface.messageBar())
+                            message_bar=self.iface.messageBar(),
+                            exception=e)
                 else:  # only if the transformation was performed successfully
                     active_layer_id = self.iface.activeLayer().id()
                     read_layer_suppl_info_from_qgs(

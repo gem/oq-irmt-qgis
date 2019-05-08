@@ -59,6 +59,8 @@ from requests.packages.urllib3.exceptions import (
 from svir.utilities.shared import (OQ_TO_LAYER_TYPES,
                                    OQ_RST_TYPES,
                                    OQ_EXTRACT_TO_VIEW_TYPES,
+                                   OQ_ZIPPED_TYPES,
+                                   OQ_BASIC_CSV_TO_LAYER_TYPES,
                                    )
 from svir.utilities.utils import (WaitCursorManager,
                                   engine_login,
@@ -80,6 +82,8 @@ from svir.dialogs.load_dmg_by_asset_as_layer_dialog import (
     LoadDmgByAssetAsLayerDialog)
 from svir.dialogs.load_gmf_data_as_layer_dialog import (
     LoadGmfDataAsLayerDialog)
+from svir.dialogs.load_asset_risk_as_layer_dialog import (
+    LoadAssetRiskAsLayerDialog)
 from svir.dialogs.load_hmaps_as_layer_dialog import (
     LoadHazardMapsAsLayerDialog)
 from svir.dialogs.load_hcurves_as_layer_dialog import (
@@ -88,10 +92,10 @@ from svir.dialogs.load_uhs_as_layer_dialog import (
     LoadUhsAsLayerDialog)
 from svir.dialogs.load_losses_by_asset_as_layer_dialog import (
     LoadLossesByAssetAsLayerDialog)
+from svir.dialogs.load_inputs_dialog import LoadInputsDialog
 from svir.dialogs.show_full_report_dialog import ShowFullReportDialog
 from svir.dialogs.show_console_dialog import ShowConsoleDialog
 from svir.dialogs.show_params_dialog import ShowParamsDialog
-from svir.dialogs.settings_dialog import SettingsDialog
 from svir.tasks.download_oq_output_task import (
     DownloadOqOutputTask, TaskCanceled)
 
@@ -110,6 +114,7 @@ OUTPUT_TYPE_LOADERS = {
     'sourcegroups': LoadBasicCsvAsLayerDialog,
     'dmg_by_event': LoadBasicCsvAsLayerDialog,
     'losses_by_event': LoadBasicCsvAsLayerDialog,
+    'agg_risk': LoadBasicCsvAsLayerDialog,
     'dmg_by_asset': LoadDmgByAssetAsLayerDialog,
     'gmf_data': LoadGmfDataAsLayerDialog,
     'hmaps': LoadHazardMapsAsLayerDialog,
@@ -117,6 +122,8 @@ OUTPUT_TYPE_LOADERS = {
     'uhs': LoadUhsAsLayerDialog,
     'losses_by_asset': LoadLossesByAssetAsLayerDialog,
     'avg_losses-stats': LoadLossesByAssetAsLayerDialog,
+    'asset_risk': LoadAssetRiskAsLayerDialog,
+    'input': LoadInputsDialog,
 }
 assert set(OUTPUT_TYPE_LOADERS) == OQ_TO_LAYER_TYPES, (
     OUTPUT_TYPE_LOADERS, OQ_TO_LAYER_TYPES)
@@ -128,7 +135,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     it is possible to run calculations, delete them, list them, visualize
     their outputs and loading them as vector layers.
     """
-    def __init__(self, iface, viewer_dock):
+    def __init__(self, iface, viewer_dock, hostname=None):
         self.iface = iface
         self.viewer_dock = viewer_dock  # needed to change the output_type
         QDialog.__init__(self)
@@ -140,42 +147,64 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         # keep track of the log lines acquired for each calculation
         self.calc_log_line = {}
         self.session = None
-        self.hostname = None
+        self.hostname = hostname
+        if hostname is not None:
+            self.forced_hostname = True
+        else:
+            self.forced_hostname = False
         self.calc_list = None
         self.current_calc_id = None  # list of outputs refers to this calc_id
         self.pointed_calc_id = None  # we will scroll to it
         self.is_logged_in = False
+        self.is_polling = False
+        self.reconnect_btn.setEnabled(True)
         self.timer = None
         # Keep retrieving the list of calculations (especially important to
         # update the status of the calculation)
         # NOTE: start_polling() is called from outside, in order to reset
         #       the timer whenever the button to open the dialog is pressed
         self.finished.connect(self.stop_polling)
+        self.reconnect_btn.clicked.connect(self.on_reconnect_btn_clicked)
 
         self.message_bar = QgsMessageBar(self)
         self.layout().insertWidget(0, self.message_bar)
 
         self.engine_version = None
         self.num_login_attempts = 0
-        self.attempt_login()
 
         self.download_tasks = {}
         self.open_output_dlgs = {}
+
+        self.is_gui_enabled = False
+        self.attempt_login()
+
+    def on_reconnect_btn_clicked(self):
+        self.attempt_login()
 
     def attempt_login(self):
         self.num_login_attempts += 1
         try:
             self.login()
         except HANDLED_EXCEPTIONS as exc:
+            # in case of disconnection, try 3 times to reconnect, before
+            # displaying an error
+            self.set_gui_enabled(False)
+            if isinstance(exc, ConnectionError):
+                if self.num_login_attempts < 3:
+                    # it attempts to login after the timeout is triggered
+                    return
             self._handle_exception(exc)
         else:
             if self.is_logged_in:
+                self.set_gui_enabled(True)
                 self.refresh_calc_list()
                 self.check_engine_compatibility()
                 self.setWindowTitle(
                     'Drive the OpenQuake Engine v%s (%s)' % (
                         self.engine_version, self.hostname))
                 self.num_login_attempts = 0
+                if not self.is_polling:
+                    self.start_polling()
 
     def check_engine_compatibility(self):
         engine_version = self.get_engine_version()
@@ -198,7 +227,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
     def login(self):
         self.session = Session()
-        self.hostname, username, password = get_credentials('engine')
+        if not self.forced_hostname:
+            self.hostname, username, password = get_credentials('engine')
         # try without authentication (if authentication is disabled server
         # side)
         # NOTE: check_is_lockdown() can raise exceptions,
@@ -253,8 +283,13 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     "Error %s loading %s: %s" % (
                         resp.status_code, resp.url, resp.reason))
         except HANDLED_EXCEPTIONS as exc:
-            self._handle_exception(exc)
+            if self.num_login_attempts < 3:
+                self.attempt_login()
+            else:
+                self._handle_exception(exc)
             return False
+        if not self.is_gui_enabled:
+            self.set_gui_enabled(True)
         self.calc_list = json.loads(resp.text)
         selected_keys = [
             'description', 'id', 'calculation_mode', 'owner', 'status']
@@ -596,7 +631,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         try:
             result = json.loads(resp.text)['success']
         except Exception as exc:
-            log_msg(str(exc), level='C', message_bar=self.iface.messageBar())
+            log_msg(str(exc), level='C', message_bar=self.iface.messageBar(),
+                    exception=exc)
             return False
         else:
             return result
@@ -730,9 +766,20 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                                       OQ_EXTRACT_TO_VIEW_TYPES):
                     if output['type'] in (OQ_RST_TYPES |
                                           OQ_EXTRACT_TO_VIEW_TYPES):
+                        # FIXME: enable button for ebrisk as soon as the output
+                        # will be loadable
+                        if (calculation_mode == 'ebrisk'
+                                and output['type'] not in OQ_RST_TYPES):
+                            continue
                         action = 'Show'
+                    elif output['type'] in OQ_ZIPPED_TYPES:
+                        if calculation_mode != 'multi_risk':
+                            continue
+                        action = 'Load from zip'
+                    elif output['type'] in OQ_BASIC_CSV_TO_LAYER_TYPES:
+                        action = 'Load table'
                     else:
-                        action = 'Load as layer'
+                        action = 'Load layer'
                     # TODO: remove check when gmf_data, dmg_by_event and
                     # losses_by_event will be loadable also for event_based
                     if (output['type'] in ['gmf_data',
@@ -761,10 +808,15 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.output_list_tbl.resizeRowsToContents()
 
     def connect_button_to_action(self, button, action, output, outtype):
-        if action in ('Load as layer', 'Show', 'Aggregate'):
+        if action in ('Load layer', 'Load from zip', 'Load table',
+                      'Show', 'Aggregate'):
             style = 'background-color: blue; color: white;'
-            if action == 'Load as layer':
+            if action == 'Load layer':
                 button.setText("Load layer")
+            elif action == 'Load from zip':
+                button.setText("Load from zip")
+            elif action == 'Load table':
+                button.setText("Load table")
             elif action == 'Aggregate':
                 button.setText("Aggregate")
             else:
@@ -803,7 +855,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     self.download_tasks[task_id])
             else:
                 raise NotImplementedError("%s %s" % (action, outtype))
-        elif action == 'Load as layer':
+        elif action in ['Load layer', 'Load table']:
             if outtype == 'npz':
                 self.open_output(output_id, output_type)
             elif outtype == 'csv':
@@ -822,17 +874,24 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     self.download_tasks[task_id])
             else:
                 raise NotImplementedError("%s %s" % (action, outtype))
-        elif action == 'Download':
-            dest_folder = ask_for_download_destination_folder(self)
+        elif action in ['Download', 'Load from zip']:
+            if action == 'Load from zip':
+                dest_folder = tempfile.gettempdir()
+            else:
+                dest_folder = ask_for_download_destination_folder(self)
             if not dest_folder:
                 return
             descr = 'Download %s for calculation %s' % (
                 output_type, self.current_calc_id)
             task_id = uuid4()
+            if action == 'Download':
+                success_callback = self.notify_downloaded
+            else:  # 'Load from zip'
+                success_callback = self.on_zip_downloaded
             self.download_tasks[task_id] = DownloadOqOutputTask(
                 descr, QgsTask.CanCancel, output_id, outtype,
                 output_type, dest_folder, self.session, self.hostname,
-                self.notify_downloaded, self.notify_error, self.del_task,
+                success_callback, self.notify_error, self.del_task,
                 task_id)
             log_msg('%s starting. Watch progress in QGIS task bar' % descr,
                     level='I', message_bar=self.message_bar)
@@ -883,6 +942,16 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             msg = 'HDF5 datastore saved as %s' % filepath
         log_msg(msg, level='S', message_bar=self.message_bar)
 
+    def on_zip_downloaded(
+            self, output_id=None, output_type=None, filepath=None):
+        self.notify_downloaded(output_id, output_type, filepath)
+        dlg_id = uuid4()
+        load_inputs_dlg = LoadInputsDialog(filepath, self.iface)
+        self.open_output_dlgs[dlg_id] = load_inputs_dlg
+        load_inputs_dlg.loading_completed.connect(lambda: self.del_dlg(dlg_id))
+        load_inputs_dlg.loading_canceled.connect(lambda: self.del_dlg(dlg_id))
+        load_inputs_dlg.show()
+
     def notify_error(self, exc):
         if isinstance(exc, TaskCanceled):
             msg = 'Download canceled'
@@ -904,28 +973,26 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.timer = QTimer()
         self.timer.timeout.connect(self.refresh_calc_list)
         self.timer.start(5000)  # refresh calc list time in milliseconds
+        self.is_polling = True
+        self.reconnect_btn.setEnabled(False)
 
     def stop_polling(self):
         # NOTE: perhaps we should disconnect the timeout signal here?
         if hasattr(self, 'timer') and self.timer is not None:
             self.timer.stop()
         # QObject.disconnect(self.timer, SIGNAL('timeout()'))
+        self.is_polling = False
+        self.reconnect_btn.setEnabled(True)
 
     @pyqtSlot()
     def on_run_calc_btn_clicked(self):
         self.run_calc()
 
     def _handle_exception(self, exc):
-        # in case of disconnection, try 3 times to reconnect, before displaying
-        # an error
-        if isinstance(exc, ConnectionError):
-            if self.num_login_attempts < 3:
-                self.attempt_login()
-                return
         if isinstance(exc, SSLError):
             err_msg = '; '.join(exc.message.message.strerror.message[0])
             err_msg += ' (you could try prepending http:// or https://)'
-            log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
+            log_msg(err_msg, level='C', message_bar=self.message_bar)
         elif isinstance(exc, (ConnectionError,
                               InvalidSchema,
                               MissingSchema,
@@ -952,15 +1019,23 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     ' (please make sure the username and password are'
                     ' spelled correctly and that you are using the right'
                     ' url and port in the host setting)')
-            log_msg(err_msg, level='C', message_bar=self.iface.messageBar(),
+            log_msg(err_msg, level='C', message_bar=self.message_bar,
                     exception=exc)
         else:
             # sanity check (it should never occur)
             raise TypeError(
                 'Unable to handle exception of type %s' % type(exc))
         self.is_logged_in = False
-        self.reject()
-        SettingsDialog(self.iface).exec_()
+        self.set_gui_enabled(False)
+        self.stop_polling()
+
+    def set_gui_enabled(self, enabled):
+        self.run_calc_btn.setEnabled(enabled)
+        self.calc_list_tbl.setEnabled(enabled)
+        self.output_list_tbl.setEnabled(enabled)
+        self.download_datastore_btn.setEnabled(enabled)
+        self.show_calc_params_btn.setEnabled(enabled)
+        self.is_gui_enabled = enabled
 
     def reject(self):
         self.stop_polling()
@@ -970,6 +1045,5 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             self.console_dlg.reject()
         if self.full_report_dlg is not None:
             self.full_report_dlg.reject()
-        for dlg in self.open_output_dlgs:
-            dlg.reject()
+        # NOTE: it should be safe to keep other dialogs open
         super().reject()

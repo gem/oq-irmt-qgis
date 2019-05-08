@@ -124,7 +124,8 @@ class DownloadLayerDialog(QDialog, FORM_CLASS):
     def parse_get_capabilities(self, xml):
         # this raises a IOError if the file doesn't exist
         root = ElementTree.fromstring(xml)
-        layers = root.find('%sFeatureTypeList' % NS_NET_OPENGIS_WFS)
+        featuretypelist = root.find('%sFeatureTypeList' % NS_NET_OPENGIS_WFS)
+        layers = featuretypelist.findall('%sFeatureType' % NS_NET_OPENGIS_WFS)
 
         for layer in layers:
             try:
@@ -274,7 +275,8 @@ class DownloadLayerDialog(QDialog, FORM_CLASS):
         except Exception as e:
             error_msg = ('Unable to download and apply the'
                          ' style layer descriptor: %s' % e)
-            log_msg(error_msg, level='C', message_bar=self.iface.messageBar())
+            log_msg(error_msg, level='C', message_bar=self.iface.messageBar(),
+                    exception=e)
         self.iface.setActiveLayer(layer)
         project_definitions = supplemental_information['project_definitions']
         # ensure backwards compatibility with projects with a single

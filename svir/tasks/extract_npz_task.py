@@ -59,8 +59,9 @@ class ExtractNpzTask(QgsTask):
             self.hostname, self.calc_id, self.output_type)
         self.extract_params = params
         self.exception = None
-        log_msg('GET: %s, with parameters: %s'
-                % (self.extract_url, self.extract_params), level='I')
+        log_msg('GET: %s, with parameters: %s' % (
+                    self.extract_url, self.extract_params),
+                level='I', print_to_stderr=True)
 
     def run(self):
         try:

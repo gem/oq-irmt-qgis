@@ -182,7 +182,8 @@ class TransformationDialog(QDialog, FORM_CLASS):
                             inverse, simulate=True)
                 except TypeError as exc:
                     log_msg(str(exc), level='C',
-                            message_bar=self.iface.messageBar())
+                            message_bar=self.iface.messageBar(),
+                            exception=exc)
                     return
             self.new_field_name_txt.setText(new_attr_name)
             self.attr_name_user_def = False
