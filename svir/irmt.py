@@ -22,8 +22,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-import qgis  # NOQA: it loads the environment
-
 import os.path
 import tempfile
 from uuid import uuid4
@@ -79,11 +77,11 @@ from svir.dialogs.drive_oq_engine_server_dialog import (
 from svir.thread_worker.abstract_worker import start_worker
 from svir.thread_worker.download_platform_data_worker import (
     DownloadPlatformDataWorker)
-from svir.websocket.simple_websocket_server import SimpleWebSocketServer
+from hybridge.websocket.simple_websocket_server import SimpleWebSocketServer
 from svir.websocket.ipt_app import IptApp
 from svir.websocket.taxonomy_app import TaxonomyApp
 from svir.websocket.taxtweb_app import TaxtwebApp
-from svir.websocket.apptest_app import AppTestApp
+from hybridge.websocket.apptest_app import AppTestApp
 from svir.calculations.calculate_utils import calculate_composite_variable
 from svir.calculations.process_layer import ProcessLayer
 from svir.utilities.utils import (tr,

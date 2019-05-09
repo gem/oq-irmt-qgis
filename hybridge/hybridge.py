@@ -30,7 +30,7 @@ from qgis.PyQt.QtCore import (
 
 # DO NOT REMOVE THIS
 # noinspection PyUnresolvedReferences
-import svir.resources_rc  # pylint: disable=unused-import  # NOQA
+import hybridge.resources_rc  # pylint: disable=unused-import  # NOQA
 
 
 class HyBridge(QObject):
@@ -55,7 +55,7 @@ class HyBridge(QObject):
                 QCoreApplication.installTranslator(self.translator)
 
     def initGui(self):
-        raise RuntimeError("HY-Bridge, HY-Bridge")
+        print("HY-Bridge, HY-Bridge,")
 
     def unload(self):
         pass

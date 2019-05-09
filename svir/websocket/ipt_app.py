@@ -32,7 +32,7 @@ from qgis.PyQt.QtCore import QSettings, QDir, QFileInfo, QUrl, QStandardPaths
 from qgis.PyQt.QtNetwork import (
     QNetworkRequest, QHttpMultiPart, QHttpPart, QNetworkAccessManager)
 from qgis.PyQt.QtGui import QIcon
-from svir.websocket.web_app import WebApp
+from hybridge.websocket.web_app import WebApp
 from svir.utilities.utils import log_msg
 from svir.utilities.shared import REQUEST_ATTRS
 

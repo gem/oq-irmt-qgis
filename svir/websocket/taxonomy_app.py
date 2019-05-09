@@ -23,7 +23,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 from qgis.PyQt.QtGui import QIcon
-from svir.websocket.web_app import WebApp
+from hybridge.websocket.web_app import WebApp
 
 
 class TaxonomyApp(WebApp):

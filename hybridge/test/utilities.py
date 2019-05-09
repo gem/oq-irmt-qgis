@@ -29,28 +29,6 @@ __email__ = "info@inasafe.org"
 __revision__ = '$Format:%H$'
 
 
-def get_dock():
-    """Get a dock for testing.
-
-    If you call this function from a QGIS Desktop, you will get the real dock,
-    however, you use a fake QGIS interface, it will create a fake dock for you.
-
-    :returns: A dock.
-    :rtype: QDockWidget
-    """
-    # Don't move this import.
-    from svir.dialogs.viewer_dock import ViewerDock as DockObject
-    if iface:
-        docks = iface.mainWindow().findChildren(QtWidgets.QDockWidget)
-        for dock in docks:
-            if isinstance(dock, DockObject):
-                return dock
-        else:
-            return DockObject(iface)
-    else:
-        return DockObject(IFACE)
-
-
 def assert_hash_for_file(hash_string, filename):
     """Assert that a files hash matches its expected hash.
     :param filename:

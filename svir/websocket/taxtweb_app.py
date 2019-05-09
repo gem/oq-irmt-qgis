@@ -25,7 +25,7 @@
 
 from qgis.PyQt.QtCore import QUrl
 from qgis.PyQt.QtGui import QIcon
-from svir.websocket.web_app import WebApp
+from hybridge.websocket.web_app import WebApp
 
 
 class TaxtwebApp(WebApp):
