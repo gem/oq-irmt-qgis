@@ -5,7 +5,7 @@
 
 [general]
 name=HyBridge
-qgisMinimumVersion=3.8
+qgisMinimumVersion=3.7
 description=Tool to drive the OpenQuake Engine from the platform
 version=0.1
 author=GEM Foundation
