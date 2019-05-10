@@ -639,7 +639,7 @@ class SimpleWebSocketServer(QThread):
     def _loads(self, data):
         hyb_msg = json.loads(data)
         if ('app' not in hyb_msg
-                or hyb_msg['app'] not in self.irmt_thread.web_apps
+                or hyb_msg['app'] not in self.irmt_thread.web_apis
                 or 'msg' not in hyb_msg):
             raise ValueError
         return hyb_msg

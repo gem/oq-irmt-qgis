@@ -78,10 +78,10 @@ from svir.thread_worker.abstract_worker import start_worker
 from svir.thread_worker.download_platform_data_worker import (
     DownloadPlatformDataWorker)
 from hybridge.websocket.simple_websocket_server import SimpleWebSocketServer
-from svir.websocket.ipt_app import IptApp
-from svir.websocket.taxonomy_app import TaxonomyApp
-from svir.websocket.taxtweb_app import TaxtwebApp
-from hybridge.websocket.apptest_app import AppTestApp
+from svir.web_apis.ipt_api import IptApi
+from svir.web_apis.taxonomy_api import TaxonomyApi
+from svir.web_apis.taxtweb_api import TaxtwebApi
+from hybridge.websocket.apptest_api import AppTestApi
 from svir.calculations.calculate_utils import calculate_composite_variable
 from svir.calculations.process_layer import ProcessLayer
 from svir.utilities.utils import (tr,
@@ -167,11 +167,11 @@ class Irmt(QObject):
 
         self.websocket_thread = None
         self.start_websocket()
-        self.apptest_app = None
-        self.ipt_app = None
-        self.taxtweb_app = None
-        self.taxonomy_app = None
-        self.web_apps = {}
+        self.apptest_api = None
+        self.ipt_api = None
+        self.taxtweb_api = None
+        self.taxonomy_api = None
+        self.web_apis = {}
 
     def initGui(self):
         # create our own toolbar
@@ -350,7 +350,7 @@ class Irmt(QObject):
                            add_to_toolbar=True)
 
         self.update_actions_status()
-        self.instantiate_web_apps()
+        self.instantiate_web_apis()
         # get or create directories to store input files for the OQ-Engine
         self.webapp_dirs = self.get_webapp_dirs()
 
@@ -380,13 +380,13 @@ class Irmt(QObject):
         dlg.exec_()
 
     def ipt_set_cells(self):
-        self._set_cells(self.ipt_app)
+        self._set_cells(self.ipt_api)
 
     def taxtweb_set_cells(self):
-        self._set_cells(self.taxtweb_app)
+        self._set_cells(self.taxtweb_api)
 
-    def _set_cells(self, web_app):
-        success, err_msg = web_app.run_command(
+    def _set_cells(self, web_api):
+        success, err_msg = web_api.run_command(
             'set_cells', ('pippo', 'pluto'))
         if not success:
             log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
@@ -425,27 +425,27 @@ class Irmt(QObject):
         processing.execAlgorithmDialog(alg_id, initial_params)
 
     def ipt(self):
-        success, err_msg = self.ipt_app.run_command('window_open', ())
+        success, err_msg = self.ipt_api.run_command('window_open', ())
         if not success:
             log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
         # self.registered_actions['ipt'].setChecked(True)
         self.irmt_sig.emit({'msg': 'hello Matteo'})
 
     def apptest(self):
-        success, err_msg = self.apptest_app.run_command('window_open', ())
+        success, err_msg = self.apptest_api.run_command('window_open', ())
         if not success:
             log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
         # self.registered_actions['apptest'].setChecked(True)
         self.irmt_sig.emit({'msg': 'hello Test'})
 
     def taxtweb(self):
-        success, err_msg = self.taxtweb_app.run_command('window_open', ())
+        success, err_msg = self.taxtweb_api.run_command('window_open', ())
         if not success:
             log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
         # self.registered_actions['taxtweb'].setChecked(True)
 
     def taxonomy(self):
-        success, err_msg = self.taxonomy_app.run_command('window_open', ())
+        success, err_msg = self.taxonomy_api.run_command('window_open', ())
         if not success:
             log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
         # self.registered_actions['taxonomy'].setChecked(True)
@@ -1478,7 +1478,7 @@ class Irmt(QObject):
     def get_webapp_dirs(self):
         webapp_dirs = {}
         home_dir = os.path.expanduser("~")
-        for webapp_name in self.web_apps:
+        for webapp_name in self.web_apis:
             webapp_dir = os.path.join(home_dir, ".gem", "irmt", webapp_name)
             if not os.path.exists(webapp_dir):
                 os.makedirs(webapp_dir)
@@ -1504,7 +1504,7 @@ class Irmt(QObject):
 
         app_name = hyb_msg['app']
         api_msg = hyb_msg['msg']
-        app = self.web_apps[app_name]
+        app = self.web_apis[app_name]
 
         app.receive(api_msg)
 
@@ -1518,16 +1518,16 @@ class Irmt(QObject):
         for action_name in self.websocket_action_names:
             self.registered_actions[action_name].setEnabled(True)
 
-        for web_app_name in self.web_apps:
-            web_app = self.web_apps[web_app_name]
-            web_app.apptrack_status()
+        for web_api_name in self.web_apis:
+            web_api = self.web_apis[web_api_name]
+            web_api.apptrack_status()
 
     @pyqtSlot()
     def handle_close_connection_sig(self):
         print('\nhandle_close_connection_sig')
-        for web_app_name in self.web_apps:
-            web_app = self.web_apps[web_app_name]
-            web_app.apptrack_status_cleanup()
+        for web_api_name in self.web_apis:
+            web_api = self.web_apis[web_api_name]
+            web_api.apptrack_status_cleanup()
 
         for action_name in self.websocket_action_names:
             # FIXME: set the icon without the green dot
@@ -1569,20 +1569,20 @@ class Irmt(QObject):
             self.websocket_thread.exit()
             self.websocket_thread = None
 
-    def instantiate_web_apps(self):
-        self.ipt_app = IptApp(self.registered_actions['ipt'],
+    def instantiate_web_apis(self):
+        self.ipt_api = IptApi(self.registered_actions['ipt'],
                               self.websocket_thread,
                               self.iface.messageBar())
-        self.taxtweb_app = TaxtwebApp(self.registered_actions['taxtweb'],
+        self.taxtweb_api = TaxtwebApi(self.registered_actions['taxtweb'],
                                       self.websocket_thread,
                                       self.iface.messageBar())
-        self.taxonomy_app = TaxonomyApp(None,  # no button associated
+        self.taxonomy_api = TaxonomyApi(None,  # no button associated
                                         self.websocket_thread,
                                         self.iface.messageBar())
-        self.apptest_app = AppTestApp(self.registered_actions['apptest'],
+        self.apptest_api = AppTestApi(self.registered_actions['apptest'],
                                       self.websocket_thread,
                                       self.iface.messageBar())
-        self.web_apps = {'ipt': self.ipt_app,
-                         'taxtweb': self.taxtweb_app,
-                         'taxonomy': self.taxonomy_app,
-                         'apptest': self.apptest_app}
+        self.web_apis = {'ipt': self.ipt_api,
+                         'taxtweb': self.taxtweb_api,
+                         'taxonomy': self.taxonomy_api,
+                         'apptest': self.apptest_api}

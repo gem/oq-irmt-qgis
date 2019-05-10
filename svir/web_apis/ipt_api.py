@@ -32,7 +32,7 @@ from qgis.PyQt.QtCore import QSettings, QDir, QFileInfo, QUrl, QStandardPaths
 from qgis.PyQt.QtNetwork import (
     QNetworkRequest, QHttpMultiPart, QHttpPart, QNetworkAccessManager)
 from qgis.PyQt.QtGui import QIcon
-from hybridge.websocket.web_app import WebApp
+from hybridge.websocket.web_api import WebApi
 from svir.utilities.utils import log_msg
 from svir.utilities.shared import REQUEST_ATTRS
 
@@ -46,7 +46,7 @@ def dir_is_legal(app_dir, full_abs_path):
             full_abs_path == app_dir)
 
 
-class IptApp(WebApp):
+class IptApi(WebApi):
 
     def __init__(self, action, wss, message_bar):
         super().__init__('ipt', action, wss, message_bar)

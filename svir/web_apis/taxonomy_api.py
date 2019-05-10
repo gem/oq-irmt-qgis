@@ -22,23 +22,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-
-from qgis.PyQt.QtCore import QUrl
 from qgis.PyQt.QtGui import QIcon
-from hybridge.websocket.web_app import WebApp
+from hybridge.websocket.web_api import WebApi
 
 
-class TaxtwebApp(WebApp):
+class TaxonomyApi(WebApi):
     def __init__(self, action, wss, message_bar):
-        super().__init__('taxtweb', action, wss, message_bar)
-        self.icon_standard = QIcon(":/plugins/irmt/taxtweb.svg")
-        self.icon_connected = QIcon(":/plugins/irmt/taxtweb_connected.svg")
-        # FIXME
-        # self.taxonomy_dlg = taxonomy_dlg
-
-    # FIXME
-    def point_to_taxonomy(self, url):
-        qurl = QUrl("%s%s" % (self.parent().host, url))
-        self.taxonomy_dlg.web_view.load(qurl)
-        self.taxonomy_dlg.show()
-        self.taxonomy_dlg.raise_()
+        super().__init__('taxonomy', action, wss, message_bar)
+        self.icon_standard = QIcon(":/plugins/irmt/taxonomy.svg")
+        self.icon_connected = QIcon(":/plugins/irmt/taxonomy_connected.svg")

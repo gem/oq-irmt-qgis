@@ -24,10 +24,10 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 from qgis.PyQt.QtGui import QIcon
-from hybridge.websocket.web_app import WebApp
+from hybridge.websocket.web_api import WebApi
 
 
-class AppTestApp(WebApp):
+class AppTestApi(WebApi):
     def __init__(self, action, wss, message_bar):
         super().__init__('apptest', action, wss, message_bar)
         # FIXME

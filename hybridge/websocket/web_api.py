@@ -28,7 +28,7 @@ from qgis.core import Qgis
 from svir.utilities.utils import log_msg
 
 
-class WebApp(QObject):
+class WebApi(QObject):
 
     def __init__(self, app_name, action, wss, message_bar, parent=None):
         assert app_name is not None
