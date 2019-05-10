@@ -38,12 +38,12 @@ from copy import deepcopy
 from time import time
 from pprint import pformat
 from qgis.core import (
+                       Qgis,
                        QgsProject,
                        QgsMessageLog,
                        QgsVectorLayer,
                        QgsVectorFileWriter,
                        )
-from qgis.core import Qgis
 from qgis.gui import QgsMessageBar, QgsMessageBarItem
 
 from qgis.PyQt import uic

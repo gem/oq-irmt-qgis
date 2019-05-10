@@ -53,7 +53,6 @@ from qgis.PyQt.QtCore import (
                               QUrl,
                               Qt,
                               QUrlQuery,
-                              pyqtSlot,
                               pyqtSignal,
                               QObject,
                               )
@@ -77,11 +76,11 @@ from svir.dialogs.drive_oq_engine_server_dialog import (
 from svir.thread_worker.abstract_worker import start_worker
 from svir.thread_worker.download_platform_data_worker import (
     DownloadPlatformDataWorker)
-from hybridge.websocket.simple_websocket_server import SimpleWebSocketServer
 from svir.web_apis.ipt_api import IptApi
 from svir.web_apis.taxonomy_api import TaxonomyApi
 from svir.web_apis.taxtweb_api import TaxtwebApi
-from hybridge.websocket.apptest_api import AppTestApi
+# from hybridge.websocket.apptest_api import AppTestApi
+from hybridge.hybridge import HyBridge
 from svir.calculations.calculate_utils import calculate_composite_variable
 from svir.calculations.process_layer import ProcessLayer
 from svir.utilities.utils import (tr,
@@ -116,7 +115,7 @@ from svir import IS_SCIPY_INSTALLED
 
 class Irmt(QObject):
 
-    irmt_sig = pyqtSignal('QVariantMap')
+    caller_sig = pyqtSignal('QVariantMap')
     send_to_wss_sig = pyqtSignal('QVariantMap')
 
     def __init__(self, iface):
@@ -147,7 +146,7 @@ class Irmt(QObject):
 
         # keep a list of the menu items, in order to easily unload them later
         self.registered_actions = dict()
-        self.websocket_action_names = []
+        self.webapi_action_names = []
 
         # avoid dialog to be deleted right after showing it
         self.drive_oq_engine_server_dlg = None
@@ -165,8 +164,6 @@ class Irmt(QObject):
         QgsProject.instance().layersRemoved.connect(
             self.layers_removed)
 
-        self.websocket_thread = None
-        self.start_websocket()
         self.apptest_api = None
         self.ipt_api = None
         self.taxtweb_api = None
@@ -223,7 +220,7 @@ class Irmt(QObject):
                            submenu='OQ Engine',
                            # set_checkable=True,
                            # set_checked=False,
-                           is_websocket_action=True,
+                           is_webapi_action=True,
                            add_to_toolbar=True)
         # Action to drive ipt
         self.add_menu_item("ipt_set_cells",
@@ -232,7 +229,7 @@ class Irmt(QObject):
                            self.ipt_set_cells,
                            enable=self.experimental_enabled(),
                            submenu='OQ Engine',
-                           is_websocket_action=True,
+                           is_webapi_action=True,
                            add_to_toolbar=True)
         # Action to drive ipt
         self.add_menu_item("taxtweb_set_cells",
@@ -241,7 +238,7 @@ class Irmt(QObject):
                            self.taxtweb_set_cells,
                            enable=self.experimental_enabled(),
                            submenu='OQ Engine',
-                           is_websocket_action=True,
+                           is_webapi_action=True,
                            add_to_toolbar=True)
         # Action to drive ipt
         self.add_menu_item("ipt",
@@ -252,7 +249,7 @@ class Irmt(QObject):
                            submenu='OQ Engine',
                            # set_checkable=True,
                            # set_checked=False,
-                           is_websocket_action=True,
+                           is_webapi_action=True,
                            add_to_toolbar=True)
         # Action to drive taxtweb
         self.add_menu_item("taxtweb",
@@ -263,7 +260,7 @@ class Irmt(QObject):
                            submenu='OQ Engine',
                            # set_checkable=True,
                            # set_checked=False,
-                           is_websocket_action=True,
+                           is_webapi_action=True,
                            add_to_toolbar=True)
         # Action to drive the oq-engine server
         self.add_menu_item("drive_engine_server",
@@ -429,14 +426,14 @@ class Irmt(QObject):
         if not success:
             log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
         # self.registered_actions['ipt'].setChecked(True)
-        self.irmt_sig.emit({'msg': 'hello Matteo'})
+        self.caller_sig.emit({'msg': 'hello Matteo'})
 
     def apptest(self):
         success, err_msg = self.apptest_api.run_command('window_open', ())
         if not success:
             log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
         # self.registered_actions['apptest'].setChecked(True)
-        self.irmt_sig.emit({'msg': 'hello Test'})
+        self.caller_sig.emit({'msg': 'hello Test'})
 
     def taxtweb(self):
         success, err_msg = self.taxtweb_api.run_command('window_open', ())
@@ -528,7 +525,7 @@ class Irmt(QObject):
                       set_checkable=False,
                       set_checked=False,
                       submenu=None,
-                      is_websocket_action=False,
+                      is_webapi_action=False,
                       add_to_toolbar=False,
                       ):
         """
@@ -542,15 +539,15 @@ class Irmt(QObject):
             raise NameError("Action %s already registered" % action_name)
         action = QAction(QIcon(icon_path), label, self.iface.mainWindow())
         action.setEnabled(enable)
-        if is_websocket_action:
+        if is_webapi_action:
             action.setEnabled(False)
         action.setCheckable(set_checkable)
         action.setChecked(set_checked)
         action.triggered.connect(corresponding_method)
 
         self.registered_actions[action_name] = action
-        if is_websocket_action:
-            self.websocket_action_names.append(action_name)
+        if is_webapi_action:
+            self.webapi_action_names.append(action_name)
 
         if add_to_layer_actions:
             self.iface.addCustomActionForLayerType(
@@ -648,9 +645,6 @@ class Irmt(QObject):
             self.layers_added)
         QgsProject.instance().layersRemoved.disconnect(
             self.layers_removed)
-
-        # shutdown websocket server
-        self.stop_websocket()
 
     def import_sv_variables(self):
         """
@@ -1493,96 +1487,23 @@ class Irmt(QObject):
             f.write(os.urandom(32))
         return checksum_file_path, get_checksum(checksum_file_path)
 
-    @pyqtSlot('QVariantMap')
-    def handle_wss_error_sig(self, data):
-        log_msg("wss_error_sig: %s" % data, level='C',
-                message_bar=self.iface.messageBar())
-
-    @pyqtSlot('QVariantMap')
-    def handle_from_socket_received(self, hyb_msg):
-        log_msg("handle_from_socket_received: %s" % hyb_msg)
-
-        app_name = hyb_msg['app']
-        api_msg = hyb_msg['msg']
-        app = self.web_apis[app_name]
-
-        app.receive(api_msg)
-
-    @pyqtSlot('QVariantMap')
-    def handle_from_socket_sent(self, data):
-        log_msg("from_socket_sent: %s" % data)
-
-    @pyqtSlot()
-    def handle_open_connection_sig(self):
-        print('\nhandle_open_connection_sig')
-        for action_name in self.websocket_action_names:
-            self.registered_actions[action_name].setEnabled(True)
-
-        for web_api_name in self.web_apis:
-            web_api = self.web_apis[web_api_name]
-            web_api.apptrack_status()
-
-    @pyqtSlot()
-    def handle_close_connection_sig(self):
-        print('\nhandle_close_connection_sig')
-        for web_api_name in self.web_apis:
-            web_api = self.web_apis[web_api_name]
-            web_api.apptrack_status_cleanup()
-
-        for action_name in self.websocket_action_names:
-            # FIXME: set the icon without the green dot
-            self.registered_actions[action_name].setEnabled(False)
-
-    def start_websocket(self):
-        if self.websocket_thread is not None:
-            log_msg("Server loop already running in thread: %s"
-                    % self.websocket_thread.name,
-                    message_bar=self.iface.messageBar())
-            return
-        host = 'localhost'
-        port = 8040
-        self.websocket_thread = SimpleWebSocketServer(host, port, self)
-        self.websocket_thread.wss_error_sig['QVariantMap'].connect(
-            self.handle_wss_error_sig)
-        self.websocket_thread.from_socket_received['QVariantMap'].connect(
-            self.handle_from_socket_received)
-        self.websocket_thread.from_socket_sent['QVariantMap'].connect(
-            self.handle_from_socket_sent)
-        self.websocket_thread.open_connection_sig.connect(
-            self.handle_open_connection_sig)
-        self.websocket_thread.close_connection_sig.connect(
-            self.handle_close_connection_sig)
-        self.websocket_thread.start()
-        log_msg("Web socket server started",
-                message_bar=self.iface.messageBar())
-
-    def stop_websocket(self):
-        if self.websocket_thread is not None:
-            self.websocket_thread.stop_running()
-            if self.websocket_thread.wait(5000):
-                log_msg("Web socket server stopped",
-                        message_bar=self.iface.messageBar())
-            else:  # timed out before finishing execution
-                self.websocket_thread.terminate()
-                log_msg("Web socket server stopped with force",
-                        level='W', message_bar=self.iface.messageBar())
-            self.websocket_thread.exit()
-            self.websocket_thread = None
-
     def instantiate_web_apis(self):
+        ipt_thread = HyBridge.register_api('ipt', self)
+        taxtweb_thread = HyBridge.register_api('taxtweb', self)
+        taxonomy_thread = HyBridge.register_api('taxonomy', self)
         self.ipt_api = IptApi(self.registered_actions['ipt'],
-                              self.websocket_thread,
+                              ipt_thread,
                               self.iface.messageBar())
         self.taxtweb_api = TaxtwebApi(self.registered_actions['taxtweb'],
-                                      self.websocket_thread,
+                                      taxtweb_thread,
                                       self.iface.messageBar())
         self.taxonomy_api = TaxonomyApi(None,  # no button associated
-                                        self.websocket_thread,
+                                        taxonomy_thread,
                                         self.iface.messageBar())
-        self.apptest_api = AppTestApi(self.registered_actions['apptest'],
-                                      self.websocket_thread,
-                                      self.iface.messageBar())
+        # self.apptest_api = AppTestApi(self.registered_actions['apptest'],
+        #                               self.websocket_thread,
+        #                               self.iface.messageBar())
         self.web_apis = {'ipt': self.ipt_api,
                          'taxtweb': self.taxtweb_api,
                          'taxonomy': self.taxonomy_api,
-                         'apptest': self.apptest_api}
+                         }  # 'apptest': self.apptest_api}

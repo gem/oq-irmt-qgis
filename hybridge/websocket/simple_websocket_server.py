@@ -583,9 +583,9 @@ class SimpleWebSocketServer(QThread):
     open_connection_sig = pyqtSignal()
     close_connection_sig = pyqtSignal()
 
-    def __init__(self, host, port, irmt_thread, selectInterval=0.1):
+    def __init__(self, host, port, caller, selectInterval=0.1):
         self.websocketclass = WebSocket
-        self.irmt_thread = irmt_thread
+        self.caller = caller
         self.serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.serversocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.serversocket.bind((host, port))
@@ -598,13 +598,13 @@ class SimpleWebSocketServer(QThread):
 
         super(SimpleWebSocketServer, self).__init__()
 
-        self.irmt_thread.irmt_sig['QVariantMap'].connect(self.handle_irmt_sig)
-        self.irmt_thread.send_to_wss_sig['QVariantMap'].connect(
+        self.caller.caller_sig['QVariantMap'].connect(self.handle_caller_sig)
+        self.caller.send_to_wss_sig['QVariantMap'].connect(
             self.send_to_wss)
 
     @pyqtSlot('QVariantMap')
-    def handle_irmt_sig(self, data):
-        print('From irmt_sig: %s' % data)
+    def handle_caller_sig(self, data):
+        print('From caller_sig: %s' % data)
 
     @pyqtSlot('QVariantMap')
     def send_to_wss(self, hyb_msg):
@@ -639,7 +639,7 @@ class SimpleWebSocketServer(QThread):
     def _loads(self, data):
         hyb_msg = json.loads(data)
         if ('app' not in hyb_msg
-                or hyb_msg['app'] not in self.irmt_thread.web_apis
+                or hyb_msg['app'] not in self.caller.web_apis
                 or 'msg' not in hyb_msg):
             raise ValueError
         return hyb_msg

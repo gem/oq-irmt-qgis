@@ -69,8 +69,8 @@ class IptApi(WebApi):
         checksum_file_path = None
         try:
             checksum_file_path, local_checksum = \
-                self.wss.irmt_thread.get_ipt_checksum()
-            on_same_fs = self.wss.irmt_thread.on_same_fs(
+                self.wss.caller.get_ipt_checksum()
+            on_same_fs = self.wss.caller.on_same_fs(
                 checksum_file_path, local_checksum)
         except Exception:
             log_msg(traceback.format_exc(), level='C')
@@ -98,7 +98,7 @@ class IptApi(WebApi):
         Open a file browser to select one or multiple files in the app_dir,
         and return the list of names of selected files
         """
-        app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
+        app_dir = self.wss.caller.webapp_dirs[self.app_name]
         full_path = app_dir
 
         if len(args) > 0:
@@ -120,10 +120,10 @@ class IptApi(WebApi):
         try:
             if is_multi:
                 file_names, _ = QFileDialog.getOpenFileNames(
-                    self.wss.irmt_thread.parent(), title, full_path)
+                    self.wss.caller.parent(), title, full_path)
             else:
                 file_name, _ = QFileDialog.getOpenFileName(
-                    self.wss.irmt_thread.parent(), title, full_path)
+                    self.wss.caller.parent(), title, full_path)
                 file_names = [file_name]
 
             ls = [os.path.basename(file_name) for file_name in file_names]
@@ -141,7 +141,7 @@ class IptApi(WebApi):
         from a given path, where multiple files can be selected. The selected
         files will be copied inside the app_dir
         """
-        app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
+        app_dir = self.wss.caller.webapp_dirs[self.app_name]
         path = None
         full_path = app_dir
 
@@ -167,14 +167,14 @@ class IptApi(WebApi):
         try:
             default_dir = QSettings().value('irmt/ipt_browsed_dir',
                                             QDir.homePath())
-            app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
+            app_dir = self.wss.caller.webapp_dirs[self.app_name]
 
             if is_multi:
                 file_names, _ = QFileDialog.getOpenFileNames(
-                    self.wss.irmt_thread.parent(), title, default_dir)
+                    self.wss.caller.parent(), title, default_dir)
             else:
                 file_name, _ = QFileDialog.getOpenFileName(
-                    self.wss.irmt_thread.parent(), title, default_dir)
+                    self.wss.caller.parent(), title, default_dir)
                 file_names = [file_name] if file_name else []
             if not file_names:
                 return {'success': False,
@@ -201,7 +201,7 @@ class IptApi(WebApi):
         :param file_path: path of the file to be saved into the app_dir
         """
         rel_path = os.path.dirname(file_path)
-        app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
+        app_dir = self.wss.caller.webapp_dirs[self.app_name]
         full_path = os.path.abspath(os.path.join(app_dir, rel_path))
         if not dir_is_legal(app_dir, full_path):
             msg = 'Unable to access the directory %s' % rel_path
@@ -223,7 +223,7 @@ class IptApi(WebApi):
         :param file_path: basename of the file to be read from the app_dir
         """
         rel_path = os.path.dirname(file_path)
-        app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
+        app_dir = self.wss.caller.webapp_dirs[self.app_name]
         full_path = os.path.abspath(os.path.join(app_dir, rel_path))
         if not dir_is_legal(app_dir, full_path):
             msg = 'Unable to access the directory %s' % rel_path
@@ -241,7 +241,7 @@ class IptApi(WebApi):
             return {'success': True, 'content': content, 'reason': 'ok'}
 
     def ls(self, api_uuid, *args):
-        app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
+        app_dir = self.wss.caller.webapp_dirs[self.app_name]
         full_path = app_dir
 
         if len(args) > 0:
@@ -263,7 +263,7 @@ class IptApi(WebApi):
         return resp
 
     def clear_dir(self, api_uuid, *args):
-        app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
+        app_dir = self.wss.caller.webapp_dirs[self.app_name]
         full_path = app_dir
         if len(args) > 0:
             path = args[0]
@@ -274,7 +274,7 @@ class IptApi(WebApi):
         try:
             rmtree(full_path)
             # recreates any missing app_dir
-            self.wss.irmt_thread.get_webapp_dirs()
+            self.wss.caller.get_webapp_dirs()
         except Exception:
             log_msg(traceback.format_exc(), level='C')
             msg = ('clean_dir: an error occurred.'
@@ -290,7 +290,7 @@ class IptApi(WebApi):
         """
         loc_file_path = os.path.join(*file_path.split('/'))
         rel_path = os.path.dirname(loc_file_path)
-        app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
+        app_dir = self.wss.caller.webapp_dirs[self.app_name]
         full_path = os.path.abspath(os.path.join(app_dir, rel_path))
         if not dir_is_legal(app_dir, full_path):
             msg = 'Unable to access the directory %s' % rel_path
@@ -313,7 +313,7 @@ class IptApi(WebApi):
         loc_new_path = os.path.join(*new_path.split('/'))
         rel_old_path = os.path.dirname(loc_old_path)
         rel_new_path = os.path.dirname(loc_new_path)
-        app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
+        app_dir = self.wss.caller.webapp_dirs[self.app_name]
         full_old_path = os.path.abspath(os.path.join(app_dir, rel_old_path))
         if not dir_is_legal(app_dir, full_old_path):
             msg = 'Unable to access the directory %s' % old_path
@@ -340,7 +340,7 @@ class IptApi(WebApi):
         """
         :param dirname: name of the directory to be created under the ipt dir
         """
-        app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
+        app_dir = self.wss.caller.webapp_dirs[self.app_name]
         loc_dir_name = os.path.join(*dir_name.split('/'))
         try:
             full_path = os.path.abspath(os.path.join(app_dir, loc_dir_name))
@@ -360,7 +360,7 @@ class IptApi(WebApi):
         """
         :param dirname: name of the directory to be deleted from the ipt dir
         """
-        app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
+        app_dir = self.wss.caller.webapp_dirs[self.app_name]
         try:
             loc_dir_name = os.path.join(*dir_name.split('/'))
             full_path = os.path.join(app_dir, loc_dir_name)
@@ -387,7 +387,7 @@ class IptApi(WebApi):
         abs_paths = None
         if rel_paths is not None:
             abs_paths = []
-            app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
+            app_dir = self.wss.caller.webapp_dirs[self.app_name]
             for rel_path in rel_paths:
                 loc_rel_path = os.path.join(*rel_path.split('/'))
                 abs_path = os.path.abspath(os.path.join(app_dir, loc_rel_path))
@@ -397,9 +397,9 @@ class IptApi(WebApi):
                     return {'success': False, 'content': None, 'reason': msg}
                 abs_paths.append(abs_path)
         try:
-            self.wss.irmt_thread.drive_oq_engine_server()
+            self.wss.caller.drive_oq_engine_server()
             drive_engine_dlg = \
-                self.wss.irmt_thread.drive_oq_engine_server_dlg
+                self.wss.caller.drive_oq_engine_server_dlg
             drive_engine_dlg.run_calc(file_names=abs_paths)
         except Exception:
             log_msg(traceback.format_exc(), level='C')
@@ -418,7 +418,7 @@ class IptApi(WebApi):
         :returns:
             {'success': True, 'content': <dest-file-fullname>, 'reason': 'ok'}
         """
-        app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
+        app_dir = self.wss.caller.webapp_dirs[self.app_name]
 
         abs_temp_path = os.path.abspath(os.path.join(app_dir, 'Temp'))
         if not os.path.exists(abs_temp_path):
@@ -492,7 +492,7 @@ class IptApi(WebApi):
         :returns:
             {'success': True, 'content': None, 'reason': 'ok'}
         """
-        app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
+        app_dir = self.wss.caller.webapp_dirs[self.app_name]
         loc_file_src = os.path.join(*file_src.split('/'))
         rel_dir_src = os.path.dirname(loc_file_src)
         full_dir_src = os.path.abspath(os.path.join(app_dir, rel_dir_src))
@@ -511,7 +511,7 @@ class IptApi(WebApi):
         default_dest_name = os.path.join(
             dest_dir, os.path.basename(suggested_name))
         dest_file, _ = QFileDialog.getSaveFileName(
-            self.wss.irmt_thread.parent(), 'Save as...', default_dest_name)
+            self.wss.caller.parent(), 'Save as...', default_dest_name)
         if not dest_file:
             msg = 'Canceled'
             return {'success': False, 'content': None, 'reason': msg}
@@ -520,7 +520,7 @@ class IptApi(WebApi):
         except Exception:
             log_msg(traceback.format_exc(), level='C')
             msg = ('save_as: an error occurred.'
-                   ' Please see the IRMT log for details.')
+                   ' Please see the caller log for details.')
             return {'success': False, 'content': None, 'reason': msg}
         else:
             return {'success': True, 'content': None, 'reason': 'ok'}
@@ -543,13 +543,13 @@ class IptApi(WebApi):
     #     if ':' in action_url:
     #         qurl = QUrl(action_url)
     #     elif action_url.startswith('/'):
-    #         qurl = QUrl("%s%s" % (self.wss.irmt_thread.host, action_url))
+    #         qurl = QUrl("%s%s" % (self.wss.caller.host, action_url))
     #     else:
     #         url = "%s/%s" % (
-    #             '/'.join([str(x) for x in self.wss.irmt_thread.web_view.url(
+    #             '/'.join([str(x) for x in self.wss.caller.web_view.url(
     #                      ).toEncoded().split('/')[:-1]]), action_url)
     #         qurl = QUrl(url)
-    #     manager = self.wss.irmt_thread.web_view.page().networkAccessManager()
+    #     manager = self.wss.caller.web_view.page().networkAccessManager()
     #     request = QNetworkRequest(qurl)
     #     request.setAttribute(REQUEST_ATTRS['instance_finished_cb'],
     #                          self.manager_finished_cb)
@@ -591,15 +591,15 @@ class IptApi(WebApi):
             # if ':' in action_url:
             #     qurl = QUrl(action_url)
             # elif action_url.startswith('/'):
-            #     qurl = QUrl("%s%s" % (self.wss.irmt_thread.host, action_url))
+            #     qurl = QUrl("%s%s" % (self.wss.caller.host, action_url))
             # else:
             #     # FIXME: build the full url, if needed
             #     url = "%s/%s" % (
-            #         '/'.join([str(x) for x in self.wss.irmt_thread.web_view.url(
+            #         '/'.join([str(x) for x in self.wss.caller.web_view.url(
             #                  ).toEncoded().split('/')[:-1]]), action_url)
             #     qurl = QUrl(url)
             qurl = QUrl(action_url)
-            # manager = self.wss.irmt_thread.web_view.page().networkAccessManager()
+            # manager = self.wss.caller.web_view.page().networkAccessManager()
             gem_header_name = b"Gem--Qgis-Oq-Irmt--Ipt"
             gem_header_value = b"0.1.0"
             manager = GemQNetworkAccessManager(
@@ -664,7 +664,7 @@ class IptApi(WebApi):
                 return
             file_name = str(content_disposition.split('"')[1], 'utf-8')
             file_content = str(reply.readAll(), 'utf-8')
-            app_dir = self.wss.irmt_thread.webapp_dirs[self.app_name]
+            app_dir = self.wss.caller.webapp_dirs[self.app_name]
             loc_temp_name = os.path.join('Downloads', uuid + '.tmp')
             temp_absfile = os.path.join(app_dir, loc_temp_name)
             if not os.path.exists(os.path.dirname(temp_absfile)):

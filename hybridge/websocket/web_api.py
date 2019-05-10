@@ -46,7 +46,7 @@ class WebApi(QObject):
 
     def run_command(self, command, args, cb=None, reg=None):
         print('run_command on %s: %s(%s)' % (self.app_name, command, args))
-        # called when IRMT wants to send a command to the websocket
+        # called when caller plugin wants to send a command to the websocket
         if command not in self.allowed_meths:
             return (False, 'Method "%s" not allowed' % command)
         uuid = uuid4().urn[9:]
@@ -110,7 +110,7 @@ class WebApi(QObject):
     def send(self, api_msg):
         # it sends a message to the websocket
         hyb_msg = {'app': self.app_name, 'msg': api_msg}
-        self.wss.irmt_thread.send_to_wss_sig.emit(hyb_msg)
+        self.wss.caller.send_to_wss_sig.emit(hyb_msg)
 
     # apptrack_status
 

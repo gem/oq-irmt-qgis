@@ -24,9 +24,12 @@
 
 import os.path
 
+from qgis.utils import iface as qgis_iface
 from qgis.PyQt.QtCore import (
-    QCoreApplication, QObject, QSettings, QTranslator, qVersion,
+    QCoreApplication, QObject, QSettings, QTranslator, qVersion, pyqtSlot,
     )
+from hybridge.websocket.simple_websocket_server import SimpleWebSocketServer
+from hybridge.utilities.utils import log_msg
 
 # DO NOT REMOVE THIS
 # noinspection PyUnresolvedReferences
@@ -35,10 +38,24 @@ import hybridge.resources_rc  # pylint: disable=unused-import  # NOQA
 
 class HyBridge(QObject):
 
-    def __init__(self, iface):
+    __instance = None
+    __skip_init = False
+
+    def __new__(cls, iface=None):
+        # when QGIS instantiates this, it passes iface as argument,
+        # but when you get the instance afterwards you don't need to pass it
+        if HyBridge.__instance is None:
+            HyBridge.__instance = QObject.__new__(cls)
+        else:
+            HyBridge.__skip_init = True
+        return HyBridge.__instance
+
+    def __init__(self, iface=None):
+        if self.__skip_init:
+            return
         super(HyBridge, self).__init__()
         # Save reference to the QGIS interface
-        self.iface = iface
+        self.iface = qgis_iface
         self.canvas = self.iface.mapCanvas()
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
@@ -54,8 +71,95 @@ class HyBridge(QObject):
             if qVersion() > '4.3.3':
                 QCoreApplication.installTranslator(self.translator)
 
+        self.websocket_thread = None
+
     def initGui(self):
         print("HY-Bridge, HY-Bridge,")
 
     def unload(self):
-        pass
+        # shutdown websocket server
+        self.stop_websocket()
+
+    @staticmethod
+    def register_api(api_name, caller):
+        instance = HyBridge()
+        instance.caller = caller
+        instance.start_websocket(instance)
+        return instance.websocket_thread
+
+    @pyqtSlot('QVariantMap')
+    def handle_wss_error_sig(self, data):
+        log_msg("wss_error_sig: %s" % data, level='C',
+                message_bar=self.iface.messageBar())
+
+    @pyqtSlot('QVariantMap')
+    def handle_from_socket_received(self, hyb_msg):
+        log_msg("handle_from_socket_received: %s" % hyb_msg)
+
+        app_name = hyb_msg['app']
+        api_msg = hyb_msg['msg']
+        app = self.caller.web_apis[app_name]
+
+        app.receive(api_msg)
+
+    @pyqtSlot('QVariantMap')
+    def handle_from_socket_sent(self, data):
+        log_msg("from_socket_sent: %s" % data)
+
+    @pyqtSlot()
+    def handle_open_connection_sig(self):
+        print('\nhandle_open_connection_sig')
+        for action_name in self.caller.webapi_action_names:
+            self.caller.registered_actions[action_name].setEnabled(True)
+
+        for web_api_name in self.caller.web_apis:
+            web_api = self.caller.web_apis[web_api_name]
+            web_api.apptrack_status()
+
+    @pyqtSlot()
+    def handle_close_connection_sig(self):
+        print('\nhandle_close_connection_sig')
+        for web_api_name in self.caller.web_apis:
+            web_api = self.caller.web_apis[web_api_name]
+            web_api.apptrack_status_cleanup()
+
+        for action_name in self.caller.webapi_action_names:
+            # FIXME: set the icon without the green dot
+            self.caller.registered_actions[action_name].setEnabled(False)
+
+    def start_websocket(self, instance):
+        print(instance == self)
+        if self.websocket_thread is not None:
+            log_msg("Server loop already running in thread: %s"
+                    % self.websocket_thread,
+                    message_bar=self.iface.messageBar())
+            return
+        host = 'localhost'
+        port = 8040
+        self.websocket_thread = SimpleWebSocketServer(host, port, self.caller)
+        self.websocket_thread.wss_error_sig['QVariantMap'].connect(
+            self.handle_wss_error_sig)
+        self.websocket_thread.from_socket_received['QVariantMap'].connect(
+            self.handle_from_socket_received)
+        self.websocket_thread.from_socket_sent['QVariantMap'].connect(
+            self.handle_from_socket_sent)
+        self.websocket_thread.open_connection_sig.connect(
+            self.handle_open_connection_sig)
+        self.websocket_thread.close_connection_sig.connect(
+            self.handle_close_connection_sig)
+        self.websocket_thread.start()
+        log_msg("Web socket server started",
+                message_bar=self.iface.messageBar())
+
+    def stop_websocket(self):
+        if self.websocket_thread is not None:
+            self.websocket_thread.stop_running()
+            if self.websocket_thread.wait(5000):
+                log_msg("Web socket server stopped",
+                        message_bar=self.iface.messageBar())
+            else:  # timed out before finishing execution
+                self.websocket_thread.terminate()
+                log_msg("Web socket server stopped with force",
+                        level='W', message_bar=self.iface.messageBar())
+            self.websocket_thread.exit()
+            self.websocket_thread = None
