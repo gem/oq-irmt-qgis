@@ -63,9 +63,9 @@ def calculate_and_check_recovery_curve(
         zone_id, zonal_dmg_by_asset_probs, zonal_asset_refs, seed=seed,
         n_simulations=n_simulations, usage='testing')
     if regenerate_expected_values:
-        with open(expected_curve_path, 'w') as f:
+        with open(expected_curve_path, 'w', newline='') as f:
             f.write(json.dumps(recovery_curve))
-    with open(expected_curve_path, 'r') as f:
+    with open(expected_curve_path, 'r', newline='') as f:
         expected_recovery_curve = json.loads(f.read())
     testcase.assertEqual(len(recovery_curve), len(expected_recovery_curve))
     for actual, expected in zip(recovery_curve, expected_recovery_curve):

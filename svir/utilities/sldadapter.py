@@ -333,7 +333,7 @@ def getStyleAsSld(layer, styleName):
                 sldfile = os.path.join(sldpath, "grayscale.sld")
             else:
                 sldfile = os.path.join(sldpath, "rgb.sld")
-            with open(sldfile, 'r') as f:
+            with open(sldfile, 'r', newline='') as f:
                 sld = f.read()
             return sld
     else:

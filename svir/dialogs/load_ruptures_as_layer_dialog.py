@@ -81,7 +81,7 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
             dest_shp = None  # the destination file will be selected via GUI
         csv_path = self.path_le.text()
         # extract the investigation_time from the heading commented line
-        with open(csv_path, 'r') as f:
+        with open(csv_path, 'r', newline='') as f:
             comment_line = f.readline()
             try:
                 params_dict = get_params_from_comment_line(comment_line)

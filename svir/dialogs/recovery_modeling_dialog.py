@@ -187,7 +187,7 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         # Incorporate Napa Data to community recovery model
         summary_filename = os.path.join(
             self.output_data_dir, 'summary.csv')
-        summary = open(summary_filename, 'w')
+        summary = open(summary_filename, 'w', newline='')
         writer = csv.writer(summary)
         header = ['zone_id', 'days_to_recover_95_perc', 'event_time',
                   'after_6_months', 'after_12_months', 'after_18_months']

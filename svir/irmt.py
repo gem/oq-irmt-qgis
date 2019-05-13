@@ -1413,6 +1413,6 @@ class Irmt(object):
     def get_ipt_checksum(self):
         unique_filename = ".%s" % uuid.uuid4().hex
         checksum_file_path = os.path.join(self.ipt_dir, unique_filename)
-        with open(checksum_file_path, "w") as f:
+        with open(checksum_file_path, "w", newline='') as f:
             f.write(os.urandom(32))
         return checksum_file_path, get_checksum(checksum_file_path)

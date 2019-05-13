@@ -171,7 +171,7 @@ class GemQWebView(QWebView):
                 if not os.path.exists(file_fullpath):
                     break
                 i += 1
-        with open(file_fullpath, "w") as f:
+        with open(file_fullpath, "w", newline='') as f:
             f.write(file_content)
         self.gem_api.common.info('File downloaded as: %s' % file_fullpath)
 

@@ -165,7 +165,7 @@ class IptPythonApi(GemApi):
         ipt_dir = self.parent().ipt_dir
         try:
             basename = os.path.basename(file_name)
-            with open(os.path.join(ipt_dir, basename), "w") as f:
+            with open(os.path.join(ipt_dir, basename), "w", newline='') as f:
                 f.write(content)
         except Exception as exc:
             return {'ret': 1, 'reason': str(exc)}
@@ -303,7 +303,7 @@ class IptPythonApi(GemApi):
         file_name = str(content_disposition.split('"')[1])
         file_content = str(reply.readAll())
         ipt_dir = self.parent().ipt_dir
-        with open(os.path.join(ipt_dir, file_name), "w") as f:
+        with open(os.path.join(ipt_dir, file_name), "w", newline='') as f:
             f.write(file_content)
         self.call_js_cb(js_cb_func, js_cb_object_id, file_name, 0)
 
