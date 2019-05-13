@@ -87,6 +87,7 @@ class LoadInputsDialog(QDialog):
         for key in config:
             if 'multi_peril_csv' in config[key]:
                 multi_peril_csv_str = config[key]['multi_peril_csv']
+                break
         if multi_peril_csv_str is None:
             raise KeyError('multi_peril_csv not found in .ini file')
         multi_peril_csv_dict = json.loads(
