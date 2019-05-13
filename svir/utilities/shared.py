@@ -36,7 +36,7 @@ metadata_file_path = os.path.join(
     os.path.dirname(os.path.realpath(__file__)),
     os.pardir,
     'metadata.txt')
-with open(metadata_file_path, 'r') as f:
+with open(metadata_file_path, 'r', newline='') as f:
     cp.read_file(f)
 IRMT_PLUGIN_VERSION = cp.get('general', 'version')
 PLATFORM_REGISTRATION_URL = 'https://platform.openquake.org/account/signup/'

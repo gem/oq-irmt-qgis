@@ -162,7 +162,7 @@ def write_iso_metadata_file(xml_filename, supplemental_information=None):
     :return:
     """
     xml = generate_iso_metadata(supplemental_information)
-    with open(xml_filename, 'w') as f:
+    with open(xml_filename, 'w', newline='') as f:
         f.write(xml)
     return xml
 

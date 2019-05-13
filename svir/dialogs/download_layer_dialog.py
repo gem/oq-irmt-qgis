@@ -269,7 +269,7 @@ class DownloadLayerDialog(QDialog, FORM_CLASS):
                 raise SvNetworkError(get_style_resp.reason)
             fd, sld_file = tempfile.mkstemp(suffix=".sld")
             os.close(fd)
-            with open(sld_file, 'w') as f:
+            with open(sld_file, 'w', newline='') as f:
                 f.write(get_style_resp.text)
             layer.loadSldStyle(sld_file)
         except Exception as e:

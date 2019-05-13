@@ -16,3 +16,9 @@ SELECTED_CALC_ID=5 make integrationtest
 
 # to run all tests:
 make test
+
+
+# 
+
+apt install latexmk texlive-latex-extra python3-sphinx
+pip3 install sphinx_rtd_theme

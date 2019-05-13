@@ -1465,7 +1465,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         csv_headline += (
             "OpenQuake Integrated Risk Modelling Toolkit v%s\r\n"
             % irmt_version)
-        with open(filename, 'w') as csv_file:
+        with open(filename, 'w', newline='') as csv_file:
             csv_file.write(csv_headline)
             writer = csv.writer(csv_file)
             if self.output_type == 'recovery_curves':

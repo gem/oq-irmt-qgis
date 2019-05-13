@@ -38,6 +38,6 @@ class ShowFullReportDialog(QDialog, FORM_CLASS):
         QDialog.__init__(self)
         # Set up the user interface from Designer.
         self.setupUi(self)
-        with open(filepath, 'r') as rst_file:
+        with open(filepath, 'r', newline='') as rst_file:
             text = rst_file.read()
         self.text_browser.setText(text)

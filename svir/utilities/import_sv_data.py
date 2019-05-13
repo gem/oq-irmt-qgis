@@ -228,9 +228,9 @@ class SvDownloader(object):
             types_string = '"String","String"' + ',"Real"' * sv_variables_count
             if load_geometries:
                 types_string += ',"String"'
-            with open(fname_types, 'w') as csvt:
+            with open(fname_types, 'w', newline='') as csvt:
                 csvt.write(types_string)
-            with open(fname, 'w') as csv_file:
+            with open(fname, 'w', newline='') as csv_file:
                 n_countries_to_download = len(country_iso_codes)
                 n_downloaded_countries = 0
                 msg_bar_item, progress = create_progress_message_bar(
