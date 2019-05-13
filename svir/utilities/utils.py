@@ -80,7 +80,7 @@ def get_irmt_version():
     if _IRMT_VERSION is None:
         metadata_path = os.path.join(
             os.path.dirname(os.path.abspath(__file__)), '..', 'metadata.txt')
-        with open(metadata_path, 'r') as f:
+        with open(metadata_path, 'r', newline='') as f:
             for line in f:
                 if line.startswith('version='):
                     _IRMT_VERSION = line.split('=')[1].strip()
@@ -241,7 +241,7 @@ def count_heading_commented_lines(fname):
     """
     count top lines in the file starting with '#'
     """
-    with open(fname) as f:
+    with open(fname, 'r', newline='') as f:
         lines_to_skip_count = 0
         for line in f:
             li = line.strip()

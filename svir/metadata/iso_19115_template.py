@@ -24,7 +24,7 @@ import os
 from string import Template  # pylint: disable=W0402
 
 _xml_file = os.path.join(os.path.dirname(__file__), 'iso_19115_template.xml')
-with open(_xml_file, 'r') as f:
+with open(_xml_file, 'r', newline='') as f:
     _template = f.read()
 
 # This template uses python strings.Template module to allow replacing values

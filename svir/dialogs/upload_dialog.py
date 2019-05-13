@@ -137,7 +137,7 @@ class UploadDialog(QDialog, FORM_CLASS):
             import tempfile
             fd, fname = tempfile.mkstemp(suffix=".sld")
             os.close(fd)
-            with open(fname, 'w') as f:
+            with open(fname, 'w', newline='') as f:
                 f.write(sld)
             os.system('tidy -xml -i %s' % fname)
         headers = {'content-type': 'application/vnd.ogc.sld+xml'}

@@ -325,7 +325,7 @@ class RecoveryModeling(object):
                 output_filename = os.path.join(
                     output_by_building_dir,
                     "zone_%s_bldg_%s.txt" % (zone_id, asset_ref))
-                with open(output_filename, 'w') as f:
+                with open(output_filename, 'w', newline='') as f:
                     f.write(str(building_level_recovery_function))
             # The following lines plot building level curves
             # fig = plt.figure()
