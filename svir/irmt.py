@@ -76,11 +76,6 @@ from svir.dialogs.drive_oq_engine_server_dialog import (
 from svir.thread_worker.abstract_worker import start_worker
 from svir.thread_worker.download_platform_data_worker import (
     DownloadPlatformDataWorker)
-from svir.web_apis.ipt_api import IptApi
-from svir.web_apis.taxonomy_api import TaxonomyApi
-from svir.web_apis.taxtweb_api import TaxtwebApi
-# from hybridge.websocket.apptest_api import AppTestApi
-from hybridge.hybridge import HyBridge
 from svir.calculations.calculate_utils import calculate_composite_variable
 from svir.calculations.process_layer import ProcessLayer
 from svir.utilities.utils import (tr,
@@ -105,6 +100,16 @@ from svir.utilities.shared import (DEBUG,
                                    INDICATOR_TEMPLATE,
                                    OPERATORS_DICT)
 from svir.ui.tool_button_with_help_link import QToolButtonWithHelpLink
+
+try:
+    from hybridge.hybridge import HyBridge
+    # from hybridge.websocket.apptest_api import AppTestApi
+    from svir.web_apis.ipt_api import IptApi
+    from svir.web_apis.taxonomy_api import TaxonomyApi
+    from svir.web_apis.taxtweb_api import TaxtwebApi
+    is_hybridge_installed = True
+except (ModuleNotFoundError, ImportError):
+    is_hybridge_installed = False
 
 # DO NOT REMOVE THIS
 # noinspection PyUnresolvedReferences
@@ -164,11 +169,12 @@ class Irmt(QObject):
         QgsProject.instance().layersRemoved.connect(
             self.layers_removed)
 
-        # self.apptest_api = None
-        self.ipt_api = None
-        self.taxtweb_api = None
-        self.taxonomy_api = None
-        self.web_apis = {}
+        if is_hybridge_installed:
+            # self.apptest_api = None
+            self.ipt_api = None
+            self.taxtweb_api = None
+            self.taxonomy_api = None
+            self.web_apis = {}
 
     def initGui(self):
         # create our own toolbar
@@ -211,57 +217,58 @@ class Irmt(QObject):
                            enable=self.experimental_enabled(),
                            add_to_layer_actions=True,
                            submenu='OQ Platform')
-        # Action to drive apptest
-        self.add_menu_item("apptest",
-                           ":/plugins/irmt/aggregate.svg",
-                           u"AppTest",
-                           self.apptest,
-                           enable=self.experimental_enabled(),
-                           submenu='OQ Engine',
-                           # set_checkable=True,
-                           # set_checked=False,
-                           is_webapi_action=True,
-                           add_to_toolbar=True)
-        # Action to drive ipt
-        self.add_menu_item("ipt_set_cells",
-                           ":/plugins/irmt/ipt.svg",
-                           u"IPT set cells",
-                           self.ipt_set_cells,
-                           enable=self.experimental_enabled(),
-                           submenu='OQ Engine',
-                           is_webapi_action=True,
-                           add_to_toolbar=True)
-        # Action to drive ipt
-        self.add_menu_item("taxtweb_set_cells",
-                           ":/plugins/irmt/taxtweb.svg",
-                           u"Taxtweb set cells",
-                           self.taxtweb_set_cells,
-                           enable=self.experimental_enabled(),
-                           submenu='OQ Engine',
-                           is_webapi_action=True,
-                           add_to_toolbar=True)
-        # Action to drive ipt
-        self.add_menu_item("ipt",
-                           ":/plugins/irmt/ipt.svg",
-                           u"OpenQuake Input Preparation Toolkit",
-                           self.ipt,
-                           enable=self.experimental_enabled(),
-                           submenu='OQ Engine',
-                           # set_checkable=True,
-                           # set_checked=False,
-                           is_webapi_action=True,
-                           add_to_toolbar=True)
-        # Action to drive taxtweb
-        self.add_menu_item("taxtweb",
-                           ":/plugins/irmt/taxtweb.svg",
-                           u"OpenQuake TaxtWEB",
-                           self.taxtweb,
-                           enable=self.experimental_enabled(),
-                           submenu='OQ Engine',
-                           # set_checkable=True,
-                           # set_checked=False,
-                           is_webapi_action=True,
-                           add_to_toolbar=True)
+        if is_hybridge_installed:
+            # # Action to drive apptest
+            # self.add_menu_item("apptest",
+            #                    ":/plugins/irmt/aggregate.svg",
+            #                    u"AppTest",
+            #                    self.apptest,
+            #                    enable=self.experimental_enabled(),
+            #                    submenu='OQ Engine',
+            #                    # set_checkable=True,
+            #                    # set_checked=False,
+            #                    is_webapi_action=True,
+            #                    add_to_toolbar=True)
+            # Action to set cells in ipt
+            self.add_menu_item("ipt_set_cells",
+                               ":/plugins/irmt/ipt.svg",
+                               u"IPT set cells",
+                               self.ipt_set_cells,
+                               enable=self.experimental_enabled(),
+                               submenu='OQ Engine',
+                               is_webapi_action=True,
+                               add_to_toolbar=True)
+            # Action to set cells in taxtweb
+            self.add_menu_item("taxtweb_set_cells",
+                               ":/plugins/irmt/taxtweb.svg",
+                               u"Taxtweb set cells",
+                               self.taxtweb_set_cells,
+                               enable=self.experimental_enabled(),
+                               submenu='OQ Engine',
+                               is_webapi_action=True,
+                               add_to_toolbar=True)
+            # Action to drive ipt
+            self.add_menu_item("ipt",
+                               ":/plugins/irmt/ipt.svg",
+                               u"OpenQuake Input Preparation Toolkit",
+                               self.ipt,
+                               enable=self.experimental_enabled(),
+                               submenu='OQ Engine',
+                               # set_checkable=True,
+                               # set_checked=False,
+                               is_webapi_action=True,
+                               add_to_toolbar=True)
+            # Action to drive taxtweb
+            self.add_menu_item("taxtweb",
+                               ":/plugins/irmt/taxtweb.svg",
+                               u"OpenQuake TaxtWEB",
+                               self.taxtweb,
+                               enable=self.experimental_enabled(),
+                               submenu='OQ Engine',
+                               # set_checkable=True,
+                               # set_checked=False,
+                               is_webapi_action=True,
+                               add_to_toolbar=True)
         # Action to drive the oq-engine server
         self.add_menu_item("drive_engine_server",
                            ":/plugins/irmt/drive_oqengine.svg",
@@ -347,9 +354,10 @@ class Irmt(QObject):
                            add_to_toolbar=True)
 
         self.update_actions_status()
-        self.instantiate_web_apis()
-        # get or create directories to store input files for the OQ-Engine
-        self.webapp_dirs = self.get_webapp_dirs()
+        if is_hybridge_installed:
+            self.instantiate_web_apis()
+            # get or create directories to store input files for the OQ-Engine
+            self.webapp_dirs = self.get_webapp_dirs()
 
     @staticmethod
     def get_menu(parent, title):
