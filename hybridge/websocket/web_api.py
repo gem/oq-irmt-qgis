@@ -25,7 +25,7 @@
 from uuid import uuid4
 from qgis.PyQt.QtCore import QObject
 from qgis.core import Qgis
-from svir.utilities.utils import log_msg
+from hybridge.utilities.utils import log_msg
 
 
 class WebApi(QObject):
@@ -170,6 +170,10 @@ class WebApi(QObject):
 
     def notify_click(self, api_uuid):
         self.info(api_uuid, "Clicked!")
+        return {'ret': 0, 'content': None, 'reason': 'ok'}
+
+    def success(self, api_uuid, message):
+        self.message_bar.pushMessage(message, level=Qgis.Success)
         return {'ret': 0, 'content': None, 'reason': 'ok'}
 
     def info(self, api_uuid, message):

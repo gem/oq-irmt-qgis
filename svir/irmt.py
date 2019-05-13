@@ -164,7 +164,7 @@ class Irmt(QObject):
         QgsProject.instance().layersRemoved.connect(
             self.layers_removed)
 
-        self.apptest_api = None
+        # self.apptest_api = None
         self.ipt_api = None
         self.taxtweb_api = None
         self.taxonomy_api = None
@@ -428,12 +428,12 @@ class Irmt(QObject):
         # self.registered_actions['ipt'].setChecked(True)
         self.caller_sig.emit({'msg': 'hello Matteo'})
 
-    def apptest(self):
-        success, err_msg = self.apptest_api.run_command('window_open', ())
-        if not success:
-            log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
-        # self.registered_actions['apptest'].setChecked(True)
-        self.caller_sig.emit({'msg': 'hello Test'})
+    # def apptest(self):
+    #     success, err_msg = self.apptest_api.run_command('window_open', ())
+    #     if not success:
+    #         log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
+    #     # self.registered_actions['apptest'].setChecked(True)
+    #     self.caller_sig.emit({'msg': 'hello Test'})
 
     def taxtweb(self):
         success, err_msg = self.taxtweb_api.run_command('window_open', ())
