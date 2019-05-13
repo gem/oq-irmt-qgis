@@ -23,19 +23,28 @@ before_script:
     - oq restore oqdata-${BRANCH}.zip ~/oqdata
     - oq webui start 0.0.0.0:8800 --skip-browser &> webui.log &
 
-#FIXME Run the tests using a multi-stage job
-script:
-    - cd scripts
-    - ./run_unit_tests.sh
-    - docker rm -f qgis
-    - ./run_functional_tests.sh
-    - docker rm -f qgis
-    - ./run_integration_tests.sh
-
-#FIXME Restore the tests based on the official QGIS container
-#after_success:
-#    - docker run -ti --rm -v $TRAVIS_BUILD_DIR:/io openquake/qgis-builder:3 build_apidoc
-#    - docker run -ti --rm -v $TRAVIS_BUILD_DIR:/io openquake/qgis-builder:3 build_manual_html
+jobs:
+    include:
+        - stage: test
+          name: "℧ Run unit tests"
+          script:
+            - cd $TRAVIS_BUILD_DIR/scripts
+            - ./run_unit_tests.sh
+        - stage: test
+          name: "ƒ Run functional tests"
+          script:
+            - cd $TRAVIS_BUILD_DIR/scripts
+            - ./run_functional_tests.sh
+        - stage: test
+          name: "⨕ Run integration tests"
+          script:
+            - cd $TRAVIS_BUILD_DIR/scripts
+            - ./run_integration_tests.sh
+        - stage: deploy
+          name: "📖 Make user manual and apidoc"
+          script:
+            - cd $TRAVIS_BUILD_DIR/scripts
+            - ./make_doc.sh 
 
 after_script:
     - cat $TRAVIS_BUILD_DIR/webui.log

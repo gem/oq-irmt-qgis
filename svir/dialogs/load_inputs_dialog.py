@@ -26,7 +26,6 @@ import zipfile
 import json
 import os
 import configparser
-from qgis.core import QgsProject
 from qgis.PyQt.QtCore import pyqtSignal
 from qgis.PyQt.QtWidgets import (
     QDialog, QVBoxLayout, QDialogButtonBox, QGroupBox, QCheckBox)
@@ -57,6 +56,8 @@ class LoadInputsDialog(QDialog):
             chk = QCheckBox(peril)
             chk.setChecked(True)
             self.peril_vlayout.addWidget(chk)
+        self.higher_on_top_chk = QCheckBox('Render higher values on top')
+        self.higher_on_top_chk.setChecked(False)
         self.button_box = QDialogButtonBox(
             QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         self.ok_button = self.button_box.button(QDialogButtonBox.Ok)
@@ -64,6 +65,7 @@ class LoadInputsDialog(QDialog):
         self.button_box.rejected.connect(self.reject)
         vlayout = QVBoxLayout()
         vlayout.addWidget(self.peril_gbx)
+        vlayout.addWidget(self.higher_on_top_chk)
         vlayout.addWidget(self.button_box)
         self.setLayout(vlayout)
 
@@ -81,7 +83,12 @@ class LoadInputsDialog(QDialog):
     def get_multi_peril_csv_dict(ini_str):
         config = configparser.ConfigParser(allow_no_value=True)
         config.read_string(ini_str)
-        multi_peril_csv_str = config['volcano_hazard']['multi_peril_csv']
+        multi_peril_csv_str = None
+        for key in config:
+            if 'multi_peril_csv' in config[key]:
+                multi_peril_csv_str = config[key]['multi_peril_csv']
+        if multi_peril_csv_str is None:
+            raise KeyError('multi_peril_csv not found in .ini file')
         multi_peril_csv_dict = json.loads(
             multi_peril_csv_str.replace('\'', '"'))
         return multi_peril_csv_dict
@@ -91,18 +98,15 @@ class LoadInputsDialog(QDialog):
         layer_name = os.path.splitext(os.path.basename(csv_path))[0]
         try:
             self.layer = import_layer_from_csv(
-                self, csv_path, layer_name, self.iface)
+                self, csv_path, layer_name, self.iface, add_to_legend=True,
+                add_on_top=True, zoom_to_layer=True)
         except RuntimeError as exc:
             log_msg(str(exc), level='C', message_bar=self.iface.messageBar(),
                     exception=exc)
             raise exc
-        LoadOutputAsLayerDialog.style_maps(self.layer, 'intensity',
-                                           self.iface, 'input')
-        root = QgsProject.instance().layerTreeRoot()
-        QgsProject.instance().addMapLayer(self.layer, False)
-        root.insertLayer(0, self.layer)
-        self.iface.setActiveLayer(self.layer)
-        self.iface.zoomToActiveLayer()
+        LoadOutputAsLayerDialog.style_maps(
+            self.layer, 'intensity', self.iface, 'input',
+            render_higher_on_top=self.higher_on_top_chk.isChecked())
         log_msg('Layer %s was loaded successfully' % layer_name,
                 level='S', message_bar=self.iface.messageBar())
 

@@ -537,7 +537,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
 
     @staticmethod
     def style_maps(layer, style_by, iface, output_type, perils=None,
-                   add_null_class=False):
+                   add_null_class=False, render_higher_on_top=False):
         symbol = QgsSymbol.defaultSymbol(layer.geometryType())
         # see properties at:
         # https://qgis.org/api/qgsmarkersymbollayerv2_8cpp_source.html#l01073
@@ -683,14 +683,15 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 rule.setLabel(simplified)
             root_rule.removeChildAt(0)
             renderer = rule_renderer
-        renderer.setUsingSymbolLevels(True)
-        symbol_items = [item for item in renderer.legendSymbolItems()]
-        for i in range(len(symbol_items)):
-            sym = symbol_items[i].symbol().clone()
-            key = symbol_items[i].ruleKey()
-            for lay in range(sym.symbolLayerCount()):
-                sym.symbolLayer(lay).setRenderingPass(i)
-            renderer.setLegendSymbolItem(key, sym)
+        if render_higher_on_top:
+            renderer.setUsingSymbolLevels(True)
+            symbol_items = [item for item in renderer.legendSymbolItems()]
+            for i in range(len(symbol_items)):
+                sym = symbol_items[i].symbol().clone()
+                key = symbol_items[i].ruleKey()
+                for lay in range(sym.symbolLayerCount()):
+                    sym.symbolLayer(lay).setRenderingPass(i)
+                renderer.setLegendSymbolItem(key, sym)
         layer.setRenderer(renderer)
         layer.setOpacity(0.7)
         layer.triggerRepaint()

@@ -946,7 +946,9 @@ def import_layer_from_csv(parent,
                           dest_shp=None,
                           zoom_to_layer=True,
                           has_geom=True,
-                          subset=None):
+                          subset=None,
+                          add_to_legend=True,
+                          add_on_top=False):
     url = QUrl.fromLocalFile(csv_path)
     url_query = QUrlQuery()
     url_query.addQueryItem('type', 'csv')
@@ -990,10 +992,16 @@ def import_layer_from_csv(parent,
                                                       error_msg))
         layer = QgsVectorLayer(dest_filename, layer_name, 'ogr')
     if layer.isValid():
-        QgsProject.instance().addMapLayer(layer)
-        iface.setActiveLayer(layer)
-        if zoom_to_layer:
-            iface.zoomToActiveLayer()
+        if add_to_legend:
+            if add_on_top:
+                root = QgsProject.instance().layerTreeRoot()
+                QgsProject.instance().addMapLayer(layer, False)
+                root.insertLayer(0, layer)
+            else:
+                QgsProject.instance().addMapLayer(layer, True)
+            iface.setActiveLayer(layer)
+            if zoom_to_layer:
+                iface.zoomToActiveLayer()
     else:
         raise RuntimeError('Unable to load layer')
     return layer
