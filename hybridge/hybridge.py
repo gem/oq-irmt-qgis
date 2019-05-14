@@ -24,7 +24,6 @@
 
 import os.path
 
-from qgis.utils import iface as qgis_iface
 from qgis.PyQt.QtCore import (
     QCoreApplication, QObject, QSettings, QTranslator, qVersion, pyqtSlot,
     )
@@ -45,7 +44,7 @@ class HyBridge(QObject):
         # when QGIS instantiates this, it passes iface as argument,
         # but when you get the instance afterwards you don't need to pass it
         if cls.__instance is None:
-            cls.__instance = super().__new__(cls)
+            cls.__instance = super().__new__(cls, iface)
         else:
             cls.__skip_init = True
         return cls.__instance
@@ -53,9 +52,9 @@ class HyBridge(QObject):
     def __init__(self, iface=None):
         if self.__skip_init:
             return
-        super(HyBridge, self).__init__()
+        super().__init__()
         # Save reference to the QGIS interface
-        self.iface = qgis_iface
+        self.iface = iface
         self.canvas = self.iface.mapCanvas()
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
