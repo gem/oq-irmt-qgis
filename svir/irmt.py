@@ -1496,17 +1496,15 @@ class Irmt(QObject):
         return checksum_file_path, get_checksum(checksum_file_path)
 
     def instantiate_web_apis(self):
-        ipt_thread = HyBridge.register_api('ipt', self)
-        taxtweb_thread = HyBridge.register_api('taxtweb', self)
-        taxonomy_thread = HyBridge.register_api('taxonomy', self)
+        websocket_thread = HyBridge.get_websocket_thread(self)
         self.ipt_api = IptApi(self.registered_actions['ipt'],
-                              ipt_thread,
+                              websocket_thread,
                               self.iface.messageBar())
         self.taxtweb_api = TaxtwebApi(self.registered_actions['taxtweb'],
-                                      taxtweb_thread,
+                                      websocket_thread,
                                       self.iface.messageBar())
         self.taxonomy_api = TaxonomyApi(None,  # no button associated
-                                        taxonomy_thread,
+                                        websocket_thread,
                                         self.iface.messageBar())
         # self.apptest_api = AppTestApi(self.registered_actions['apptest'],
         #                               self.websocket_thread,

@@ -74,17 +74,19 @@ class HyBridge(QObject):
         self.websocket_thread = None
 
     def initGui(self):
-        print("HY-Bridge, HY-Bridge,")
+        print("Initializing HyBridge")
 
     def unload(self):
         # shutdown websocket server
         self.stop_websocket()
 
     @staticmethod
-    def register_api(api_name, caller):
+    def get_websocket_thread(caller):
         instance = HyBridge()
+        # FIXME: this works if only one plugin is using hybridge!
+        #        We should allow N callers
         instance.caller = caller
-        instance.start_websocket(instance)
+        instance.start_websocket()
         return instance.websocket_thread
 
     @pyqtSlot('QVariantMap')
@@ -98,6 +100,7 @@ class HyBridge(QObject):
 
         app_name = hyb_msg['app']
         api_msg = hyb_msg['msg']
+        # NOTE: this assumes the caller plugin has a defined list of web_apis
         app = self.caller.web_apis[app_name]
 
         app.receive(api_msg)
@@ -109,6 +112,8 @@ class HyBridge(QObject):
     @pyqtSlot()
     def handle_open_connection_sig(self):
         print('\nhandle_open_connection_sig')
+        # NOTE: this assumes the caller plugin has lists of webapi_action_names
+        # and registered_actions
         for action_name in self.caller.webapi_action_names:
             self.caller.registered_actions[action_name].setEnabled(True)
 
@@ -127,12 +132,8 @@ class HyBridge(QObject):
             # FIXME: set the icon without the green dot
             self.caller.registered_actions[action_name].setEnabled(False)
 
-    def start_websocket(self, instance):
-        print(instance == self)
+    def start_websocket(self):
         if self.websocket_thread is not None:
-            log_msg("Server loop already running in thread: %s"
-                    % self.websocket_thread,
-                    message_bar=self.iface.messageBar())
             return
         host = 'localhost'
         port = 8040
