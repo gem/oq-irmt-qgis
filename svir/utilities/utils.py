@@ -142,7 +142,7 @@ def log_msg(message, tag='GEM OpenQuake IRMT plugin', level='I',
                 tb_btn = QToolButton(message_bar)
                 tb_btn.setText('Show Traceback')
                 tb_btn.clicked.connect(
-                    lambda: _on_tb_btn_clicked(tr(message) + tb_text))
+                    lambda: _on_tb_btn_clicked(tr(message), tb_text))
         if message_bar is not None:
             if level == 'S':
                 title = 'Success'
@@ -184,13 +184,14 @@ def log_msg(message, tag='GEM OpenQuake IRMT plugin', level='I',
             print('\t\t%s' % message + tb_text, file=sys.stderr)
 
 
-def _on_tb_btn_clicked(message):
+def _on_tb_btn_clicked(message, tb_text):
     vbox = QVBoxLayout()
     dlg = QDialog()
     dlg.setWindowTitle('Traceback')
     text_browser = QTextBrowser()
-    formatted_msg = highlight(message, PythonLexer(), HtmlFormatter(full=True))
-    text_browser.setHtml(formatted_msg)
+    unformatted_msg = message
+    formatted_msg = highlight(tb_text, PythonLexer(), HtmlFormatter(full=True))
+    text_browser.setHtml(unformatted_msg + formatted_msg)
     vbox.addWidget(text_browser)
     dlg.setLayout(vbox)
     dlg.setMinimumSize(700, 500)
