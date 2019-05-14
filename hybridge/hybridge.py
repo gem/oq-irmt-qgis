@@ -44,11 +44,11 @@ class HyBridge(QObject):
     def __new__(cls, iface=None):
         # when QGIS instantiates this, it passes iface as argument,
         # but when you get the instance afterwards you don't need to pass it
-        if HyBridge.__instance is None:
-            HyBridge.__instance = QObject.__new__(cls)
+        if cls.__instance is None:
+            cls.__instance = super().__new__(cls)
         else:
-            HyBridge.__skip_init = True
-        return HyBridge.__instance
+            cls.__skip_init = True
+        return cls.__instance
 
     def __init__(self, iface=None):
         if self.__skip_init:
@@ -124,6 +124,8 @@ class HyBridge(QObject):
     @pyqtSlot()
     def handle_close_connection_sig(self):
         print('\nhandle_close_connection_sig')
+        # NOTE: this assumes the caller plugin has lists of webapi_action_names
+        # and registered_actions
         for web_api_name in self.caller.web_apis:
             web_api = self.caller.web_apis[web_api_name]
             web_api.apptrack_status_cleanup()
