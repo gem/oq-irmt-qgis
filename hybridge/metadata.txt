@@ -6,7 +6,7 @@
 [general]
 name=HyBridge
 qgisMinimumVersion=3.0
-description=Tool to drive the OpenQuake Engine from the platform
+description=Websocket server for bi-directional communication between QGIS and web applications
 version=0.1
 author=GEM Foundation
 email=staff.it@globalquakemodel.org
@@ -20,8 +20,7 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
 # tags are comma separated with spaces allowed
-tags=GEM, IRMT, SVIR, OpenQuake, Social Vulnerability, Integrated Risk, Recovery, Resilience, Risk, Hazard, Earthquake
-
+tags=GEM, OpenQuake 
 homepage=https://plugins.qgis.org/plugins/hybridge/
 tracker=https://github.com/gem/oq-irmt-qgis/issues
 repository=https://github.com/gem/oq-irmt-qgis
