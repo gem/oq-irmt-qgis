@@ -856,7 +856,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             else:
                 raise NotImplementedError("%s %s" % (action, outtype))
         elif action in ['Load layer', 'Load table']:
-            if outtype == 'npz':
+            if outtype == 'npz' or output_type == 'asset_risk':
                 self.open_output(output_id, output_type)
             elif outtype == 'csv':
                 dest_folder = tempfile.gettempdir()
