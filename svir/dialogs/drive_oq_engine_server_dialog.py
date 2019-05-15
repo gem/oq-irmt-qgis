@@ -746,8 +746,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             max_actions = max(max_actions, num_actions)
 
         self.output_list_tbl.setRowCount(len(output_list))
-        self.output_list_tbl.setColumnCount(
-            len(selected_keys) + max_actions)
+        self.output_list_tbl.setColumnCount(len(selected_keys) + max_actions)
         for row, output in enumerate(output_list):
             for col, key in enumerate(selected_keys):
                 item = QTableWidgetItem()
@@ -756,11 +755,14 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 self.output_list_tbl.setItem(row, col, item)
             outtypes = output_list[row]['outtypes']
             for col, outtype in enumerate(outtypes, len(selected_keys)):
+                # For each output id, add a Download btn per each output type
+                # (like in the webui)
                 action = 'Download'
                 button = QPushButton()
                 self.connect_button_to_action(button, action, output, outtype)
                 self.output_list_tbl.setCellWidget(row, col, button)
                 self.calc_list_tbl.setColumnWidth(col, BUTTON_WIDTH)
+                # Additional buttons with respect to the webui
                 if output['type'] in (OQ_TO_LAYER_TYPES |
                                       OQ_RST_TYPES |
                                       OQ_EXTRACT_TO_VIEW_TYPES):
@@ -856,7 +858,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             else:
                 raise NotImplementedError("%s %s" % (action, outtype))
         elif action in ['Load layer', 'Load table']:
-            if outtype == 'npz':
+            # NOTE: even when only a csv output is available, we might have to
+            # ignore the csv and use the extract api instead, as in the case of
+            # the asset_risk output type
+            if outtype == 'npz' or output_type == 'asset_risk':
                 self.open_output(output_id, output_type)
             elif outtype == 'csv':
                 dest_folder = tempfile.gettempdir()
