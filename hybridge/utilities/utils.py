@@ -22,20 +22,21 @@ def tr(message):
     return QApplication.translate('HyBridge', message)
 
 
-def _on_tb_btn_clicked(message):
+def _on_tb_btn_clicked(message, tb_text):
     vbox = QVBoxLayout()
     dlg = QDialog()
     dlg.setWindowTitle('Traceback')
     text_browser = QTextBrowser()
-    formatted_msg = highlight(message, PythonLexer(), HtmlFormatter(full=True))
-    text_browser.setHtml(formatted_msg)
+    unformatted_msg = message
+    formatted_msg = highlight(tb_text, PythonLexer(), HtmlFormatter(full=True))
+    text_browser.setHtml(unformatted_msg + formatted_msg)
     vbox.addWidget(text_browser)
     dlg.setLayout(vbox)
     dlg.setMinimumSize(700, 500)
     dlg.exec_()
 
 
-def log_msg(message, tag='HyBridge plugin', level='I',
+def log_msg(message, tag='GEM OpenQuake IRMT plugin', level='I',
             message_bar=None, duration=None, exception=None,
             print_to_stderr=False):
     """
@@ -78,9 +79,9 @@ def log_msg(message, tag='HyBridge plugin', level='I',
 
     # if we are running nosetests, exit on critical errors
     if 'nose' in sys.modules and level == 'C':
-        raise RuntimeError(message)
+        raise RuntimeError(message + tb_text)
     else:
-        log_verbosity = QSettings().value('hybridge/log_level', 'W')
+        log_verbosity = QSettings().value('irmt/log_level', 'W')
         if (level == 'C'
                 or level == 'W' and log_verbosity in ('S', 'I', 'W')
                 or level in ('I', 'S') and log_verbosity in ('I', 'S')):
@@ -89,7 +90,8 @@ def log_msg(message, tag='HyBridge plugin', level='I',
             if exception is not None:
                 tb_btn = QToolButton(message_bar)
                 tb_btn.setText('Show Traceback')
-                tb_btn.clicked.connect(lambda: _on_tb_btn_clicked(tb_text))
+                tb_btn.clicked.connect(
+                    lambda: _on_tb_btn_clicked(tr(message), tb_text))
         if message_bar is not None:
             if level == 'S':
                 title = 'Success'
@@ -105,15 +107,27 @@ def log_msg(message, tag='HyBridge plugin', level='I',
                 duration = duration if duration is not None else 0
             max_msg_len = 200
             if len(message) > max_msg_len:
-                message = ("%s[...]" % message[:max_msg_len])
+                display_text = ("%s[...]" % message[:max_msg_len])
+                show_more = "[...]%s" % message[max_msg_len:]
+            else:
+                display_text = message
+                show_more = None
             if exception is None:
-                message_bar.pushMessage(tr(title),
-                                        tr(message),
-                                        levels[level],
-                                        duration)
+                if show_more is not None:
+                    message_bar.pushMessage(tr(title),
+                                            tr(display_text),
+                                            tr(show_more),
+                                            levels[level],
+                                            duration)
+                else:
+                    message_bar.pushMessage(tr(title),
+                                            tr(display_text),
+                                            levels[level],
+                                            duration)
             else:
                 mb_item = QgsMessageBarItem(
-                    tr(title), tr(message), tb_btn, levels[level], duration)
+                    tr(title), tr(display_text), tb_btn, levels[level],
+                    duration)
                 message_bar.pushItem(mb_item)
         if print_to_stderr:
-            print('\t\t%s' % message, file=sys.stderr)
+            print('\t\t%s' % message + tb_text, file=sys.stderr)
