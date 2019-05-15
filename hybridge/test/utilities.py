@@ -3,15 +3,10 @@
 """Helper module for gui test suite."""
 
 
-import codecs
 import hashlib
 import logging
-import os
 import re
-import sys
 
-from qgis.PyQt import QtWidgets
-from qgis.utils import iface
 
 QGIS_APP = None  # Static variable used to hold hand to running QGIS app
 CANVAS = None
