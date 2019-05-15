@@ -68,6 +68,7 @@ from svir.dialogs.settings_dialog import SettingsDialog
 from svir.dialogs.transformation_dialog import TransformationDialog
 from svir.dialogs.upload_settings_dialog import UploadSettingsDialog
 from svir.dialogs.weight_data_dialog import WeightDataDialog
+from svir.dialogs.logic_tree_dialog import LogicTreeDialog
 from svir.dialogs.recovery_modeling_dialog import RecoveryModelingDialog
 from svir.dialogs.recovery_settings_dialog import RecoverySettingsDialog
 from svir.dialogs.ipt_dialog import IptDialog
@@ -224,6 +225,13 @@ class Irmt(object):
                            ":/plugins/irmt/drive_oqengine.svg",
                            u"Drive the OpenQuake Engine",
                            self.on_drive_oq_engine_server_btn_clicked,
+                           enable=True,
+                           submenu='OQ Engine',
+                           add_to_toolbar=True)
+        self.add_menu_item("logic_tree",
+                           ":/plugins/irmt/weights.svg",
+                           u"&Logic tree",
+                           self.logic_tree,
                            enable=True,
                            submenu='OQ Engine',
                            add_to_toolbar=True)
@@ -869,6 +877,45 @@ class Irmt(object):
                     discarded_feats_ids_invalid,
                     self.iface.activeLayer().selectedFeatureIds())
                 self.iface.messageBar().pushWidget(widget, Qgis.Warning)
+
+    def logic_tree(self):
+        """
+        Open a dialog to edit a logic tree
+        """
+        logic_tree = {
+            "name": "Root",
+            "children": [
+                {
+                 "name": "Tom",
+                 "children": [
+                     {
+                      "name": "Dick",
+                      "children": [
+                          {
+                           "name": "Harry"
+                           }
+                      ]
+                      },
+                     {
+                      "name": "Larry"
+                      }
+                 ]
+                 },
+                {
+                 "name": "Bob",
+                 "children": [
+                     {
+                      "name": "Leroy"
+                     },
+                     {
+                      "name": "Earl"
+                     }
+                 ]
+                 }
+            ]
+        }
+        self.logic_tree_dlg = LogicTreeDialog(self.iface, logic_tree)
+        self.logic_tree_dlg.show()
 
     def weight_data(self):
         """
