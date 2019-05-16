@@ -65,8 +65,8 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
         self.populate_out_dep_widgets()
 
         self.adjustSize()
-        self.on_taxonomies_gbx_toggled(False)
-        self.on_tag_gbx_toggled(False)
+        self.taxonomies_gbx.toggled.emit(False)
+        self.tag_gbx.toggled.emit(False)
         self.set_ok_button()
         self.show()
         self.init_done.emit()
