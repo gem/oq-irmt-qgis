@@ -22,12 +22,15 @@
     <file alias="oq_logo.svg">resources/oq_logo.svg</file>
     <file alias="oq_logo.svg.png">resources/oq_logo.svg.png</file>
     <file alias="weight_data.html">resources/weight_data.html</file>
+    <file alias="tree_example.html">resources/tree_example.html</file>
     <file alias="js/d3.js">resources/js/d3.min.js</file>
     <file alias="js/irmt_viewer_d3_tree.js">resources/js/irmt_viewer_d3_tree.js</file>
+    <file alias="js/logic_tree.js">resources/js/logic_tree.js</file>
     <file alias="js/jquery.js">resources/js/jquery-1.9.1.min.js</file>
     <file alias="js/jquery-ui.js">resources/js/jquery-ui.min.js</file>
     <file alias="css/jquery-ui.css">resources/css/jquery-ui.min.css</file>
     <file alias="css/irmt_viewer_sub.css">resources/css/irmt_viewer_sub.css</file>
+    <file alias="css/logic_tree.css">resources/css/logic_tree.css</file>
     <file alias="css/images/ui-bg_diagonals-thick_18_b81900_40x40.png">resources/css/images/ui-bg_diagonals-thick_18_b81900_40x40.png</file>
     <file alias="css/images/ui-bg_diagonals-thick_20_666666_40x40.png">resources/css/images/ui-bg_diagonals-thick_20_666666_40x40.png</file>
     <file alias="css/images/ui-bg_flat_10_000000_40x100.png">resources/css/images/ui-bg_flat_10_000000_40x100.png</file>

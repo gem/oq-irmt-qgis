@@ -70,7 +70,8 @@ class LogicTreeDialog(QDialog, FORM_CLASS):
             Qt.Vertical, Qt.ScrollBarAlwaysOff)
         self.web_view.page().mainFrame().setScrollBarPolicy(
             Qt.Horizontal, Qt.ScrollBarAlwaysOff)
-        self.web_view.load(QUrl('qrc:/plugins/irmt/logic_tree.html'))
+        # self.web_view.load(QUrl('qrc:/plugins/irmt/logic_tree.html'))
+        self.web_view.load(QUrl('qrc:/plugins/irmt/tree_example.html'))
 
         self.printer = QPrinter(QPrinter.HighResolution)
         self.printer.setPageSize(QPrinter.A4)

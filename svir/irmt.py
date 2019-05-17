@@ -882,6 +882,7 @@ class Irmt(object):
         """
         Open a dialog to edit a logic tree
         """
+        # logic_tree = { "name": "Root", "children": [ { "name": "Tom", "children": [ { "name": "Dick", "children": [ { "name": "Harry" } ] }, { "name": "Larry" } ] }, { "name": "Bob", "children": [ { "name": "Leroy" }, { "name": "Earl" } ] } ] }
         logic_tree = {
             "name": "Root",
             "children": [
