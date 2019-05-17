@@ -1129,7 +1129,7 @@ def extract_npz(
         msg = 'GET %s returned an empty content!' % url
         log_msg(msg, level='C', message_bar=message_bar, print_to_stderr=True)
         return
-    return numpy.load(io.BytesIO(resp_content))
+    return numpy.load(io.BytesIO(resp_content), allow_pickle=True)
 
 
 def convert_bytes(num):

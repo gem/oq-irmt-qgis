@@ -193,7 +193,7 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
 
     def group_by_site(self, npz, rlz_or_stat, loss_type, taxonomy='All'):
         # example:
-        # npz = numpy.load(npzfname)
+        # npz = numpy.load(npzfname, allow_pickle=True)
         # print(group_by_site(npz, 'rlz-000', 'structural_ins', '"tax1"'))
         F32 = numpy.float32
         loss_by_site = collections.defaultdict(float)  # lon, lat -> loss
