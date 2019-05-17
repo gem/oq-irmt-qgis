@@ -23,7 +23,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 from qgis.PyQt.QtWidgets import (
-    QGroupBox, QVBoxLayout, QHBoxLayout, QRadioButton, QCheckBox)
+    QGroupBox, QVBoxLayout, QHBoxLayout, QRadioButton, QCheckBox, QWidget,)
 from qgis.core import (
     QgsFeature, QgsGeometry, QgsPointXY, edit, QgsTask, QgsApplication,)
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
@@ -65,6 +65,8 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
         self.populate_out_dep_widgets()
 
         self.adjustSize()
+        self.taxonomies_gbx.toggled.emit(False)
+        self.tag_gbx.toggled.emit(False)
         self.set_ok_button()
         self.show()
         self.init_done.emit()
@@ -101,6 +103,8 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
             sorted([taxonomy for taxonomy in self.exposure_metadata['taxonomy']
                     if taxonomy != '?']))
         self.taxonomies_gbx_v_layout.addWidget(self.taxonomies_multisel)
+        self.taxonomies_gbx.toggled[bool].connect(
+            self.on_taxonomies_gbx_toggled)
         self.vlayout.addWidget(self.taxonomies_gbx)
         self.tag_gbx = QGroupBox()
         self.tag_gbx.setTitle('Filter by tag')
@@ -116,6 +120,7 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
         self.tag_cbx.addItems([
             tag_name for tag_name in self.tag_names if tag_name != 'taxonomy'])
         self.tag_gbx_v_layout.addWidget(self.tag_values_multisel)
+        self.tag_gbx.toggled[bool].connect(self.on_tag_gbx_toggled)
         self.vlayout.addWidget(self.tag_gbx)
         self.higher_on_top_chk = QCheckBox('Render higher values on top')
         self.higher_on_top_chk.setChecked(True)
@@ -127,6 +132,14 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
         else:
             self.pre_populate_zonal_layer_cbx()
         self.exposure_rbn.setChecked(True)
+
+    def on_taxonomies_gbx_toggled(self, is_checked):
+        for widget in self.taxonomies_gbx.findChildren(QWidget):
+            widget.setVisible(is_checked)
+
+    def on_tag_gbx_toggled(self, is_checked):
+        for widget in self.tag_gbx.findChildren(QWidget):
+            widget.setVisible(is_checked)
 
     def on_visualize_changed(self):
         self.peril_cbx.setEnabled(self.risk_rbn.isChecked())
