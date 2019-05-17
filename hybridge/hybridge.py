@@ -22,8 +22,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
+import inspect
 import os.path
 
+import qgis
 from qgis.PyQt.QtCore import (
     QCoreApplication, QObject, QSettings, QTranslator, qVersion, pyqtSlot,
     )
@@ -38,24 +40,26 @@ import hybridge.resources_rc  # pylint: disable=unused-import  # NOQA
 class HyBridge(QObject):
 
     __instance = None
-    __skip_init = False
+    __is_initialized = False
 
     def __new__(cls, iface=None):
         # when QGIS instantiates this, it passes iface as argument,
         # but when you get the instance afterwards you don't need to pass it
         if cls.__instance is None:
-            cls.__instance = super().__new__(cls, iface)
-        else:
-            cls.__skip_init = True
+            cls.__instance = super().__new__(cls)
+            cls.__instance.iface = None
+            cls.__instance.canvas = None
         return cls.__instance
 
     def __init__(self, iface=None):
-        if self.__skip_init:
+        if iface is not None:
+            # Save reference to the QGIS interface
+            self.iface = iface
+            self.canvas = self.iface.mapCanvas()
+        if self.__is_initialized:
             return
         super().__init__()
-        # Save reference to the QGIS interface
-        self.iface = iface
-        self.canvas = self.iface.mapCanvas()
+        self.caller = None
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
         # initialize locale
@@ -71,6 +75,8 @@ class HyBridge(QObject):
                 QCoreApplication.installTranslator(self.translator)
 
         self.websocket_thread = None
+        self.start_websocket()
+        self.__class__.__is_initialized = True
 
     def initGui(self):
         print("Initializing HyBridge")
@@ -85,7 +91,6 @@ class HyBridge(QObject):
         # FIXME: this works if only one plugin is using hybridge!
         #        We should allow N callers
         instance.caller = caller
-        instance.start_websocket()
         return instance.websocket_thread
 
     @pyqtSlot('QVariantMap')
@@ -138,7 +143,7 @@ class HyBridge(QObject):
             return
         host = 'localhost'
         port = 8040
-        self.websocket_thread = SimpleWebSocketServer(host, port, self.caller)
+        self.websocket_thread = SimpleWebSocketServer(host, port, [])
         self.websocket_thread.wss_error_sig['QVariantMap'].connect(
             self.handle_wss_error_sig)
         self.websocket_thread.from_socket_received['QVariantMap'].connect(
@@ -165,3 +170,13 @@ class HyBridge(QObject):
                         level='W', message_bar=self.iface.messageBar())
             self.websocket_thread.exit()
             self.websocket_thread = None
+
+    def register_plugin(self, plugin):
+        caller_filepath = inspect.stack()[1].filename
+        for ppath in qgis.utils.plugin_paths:
+            print("ppath: %s" % ppath)
+            if caller_filepath.startswith(ppath):
+                caller_prefix = caller_filepath[len(ppath):]
+                print("caller_prefix1: %s" % caller_prefix)
+                caller_prefix = caller_prefix.split(os.sep)[1]
+                print("caller_prefix2: %s" % caller_prefix)

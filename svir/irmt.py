@@ -229,6 +229,15 @@ class Irmt(QObject):
             #                    # set_checked=False,
             #                    is_webapi_action=True,
             #                    add_to_toolbar=True)
+            # Dummy action
+            self.add_menu_item("dummy",
+                               ":/plugins/irmt/ipt.svg",
+                               u"Dummy",
+                               self.dummy,
+                               enable=True,
+                               submenu='OQ Engine',
+                               is_webapi_action=True,
+                               add_to_toolbar=True)
             # Action to set cells in ipt
             self.add_menu_item("ipt_set_cells",
                                ":/plugins/irmt/ipt.svg",
@@ -358,6 +367,9 @@ class Irmt(QObject):
             self.instantiate_web_apis()
             # get or create directories to store input files for the OQ-Engine
             self.webapp_dirs = self.get_webapp_dirs()
+
+    def dummy(self):
+        g()
 
     @staticmethod
     def get_menu(parent, title):
@@ -1496,6 +1508,8 @@ class Irmt(QObject):
         return checksum_file_path, get_checksum(checksum_file_path)
 
     def instantiate_web_apis(self):
+        hybridge = HyBridge()
+        hybridge.register_plugin(self)
         websocket_thread = HyBridge.get_websocket_thread(self)
         self.ipt_api = IptApi(self.registered_actions['ipt'],
                               websocket_thread,
