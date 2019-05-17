@@ -25,6 +25,7 @@ email=staff.it@globalquakemodel.org
 changelog=
     3.5.3
     * The GUI elements for loading OQ-Engine outputs are in a scrollable area, usable also on low resolution screens
+    * Some GUI sections can be expanded/collapsed
     3.5.2
     * Fixed a bug in the loader for asset_risk outputs, that was downloading a not used csv output
     3.5.1
