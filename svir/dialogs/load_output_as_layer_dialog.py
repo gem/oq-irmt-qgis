@@ -356,8 +356,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.zonal_layer = QgsProject.instance().mapLayer(zonal_layer_id)
         self.set_ok_button()
 
-    def on_zonal_layer_gbx_toggled(self, on):
-        if on and not self.zonal_layer_cbx.currentText():
+    def on_zonal_layer_gbx_toggled(self, is_checked):
+        if is_checked and not self.zonal_layer_cbx.currentText():
             self.ok_button.setEnabled(False)
         else:
             self.set_ok_button()
