@@ -332,7 +332,7 @@ class Irmt(object):
 
     def aggregate(self):
         processing.Processing.initialize()
-        alg_id = 'qgis:joinbylocationsummary'
+        alg_id = 'irmt:joinbylocationsummarystyle'
         alg = QgsApplication.processingRegistry().algorithmById(alg_id)
         # make sure to use the actual lists of predicates and summaries as
         # defined in the algorithm when it is instantiated
