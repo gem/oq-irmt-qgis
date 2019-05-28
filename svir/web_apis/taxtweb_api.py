@@ -29,8 +29,8 @@ from hybridge.websocket.web_api import WebApi
 
 
 class TaxtwebApi(WebApi):
-    def __init__(self, action, wss, message_bar):
-        super().__init__('taxtweb', action, wss, message_bar)
+    def __init__(self, plugin, action, wss, message_bar):
+        super().__init__(plugin, 'taxtweb', action, wss, message_bar)
         self.icon_standard = QIcon(":/plugins/irmt/taxtweb.svg")
         self.icon_connected = QIcon(":/plugins/irmt/taxtweb_connected.svg")
         # FIXME

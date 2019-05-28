@@ -30,6 +30,7 @@ from qgis.PyQt.QtCore import (
     QCoreApplication, QObject, QSettings, QTranslator, qVersion, pyqtSlot,
     )
 from hybridge.websocket.simple_websocket_server import SimpleWebSocketServer
+from hybridge.websocket.web_api import WebApi
 from hybridge.utilities.utils import log_msg
 
 # DO NOT REMOVE THIS
@@ -75,6 +76,9 @@ class HyBridge(QObject):
                 QCoreApplication.installTranslator(self.translator)
 
         self.websocket_thread = None
+
+        self.plugins = {}
+
         self.start_websocket()
         self.__class__.__is_initialized = True
 
@@ -109,21 +113,19 @@ class HyBridge(QObject):
 
         app.receive(api_msg)
 
-    @pyqtSlot('QVariantMap')
-    def handle_from_socket_sent(self, data):
-        log_msg("from_socket_sent: %s" % data)
+    @pyqtSlot('QVariantMap', WebApi)
+    def handle_from_socket_sent(self, data, web_api):
+        log_msg("from_socket_sent: %s app: %s" % (data, web_api.app_name))
 
-    @pyqtSlot()
-    def handle_open_connection_sig(self):
-        print('\nhandle_open_connection_sig')
+    @pyqtSlot(WebApi)
+    def handle_open_connection_sig(self, web_api):
+        print('\nhandle_open_connection_sig %s' % web_api)
         # NOTE: this assumes the caller plugin has lists of webapi_action_names
         # and registered_actions
-        for action_name in self.caller.webapi_action_names:
-            self.caller.registered_actions[action_name].setEnabled(True)
-
-        for web_api_name in self.caller.web_apis:
-            web_api = self.caller.web_apis[web_api_name]
-            web_api.apptrack_status()
+        # for action_name in self.caller.webapi_action_names:
+        #     # NOTE: always enabled in the new architecture
+        #     self.caller.registered_actions[action_name].setEnabled(True)
+        web_api.apptrack_status()
 
     @pyqtSlot()
     def handle_close_connection_sig(self):
@@ -143,12 +145,13 @@ class HyBridge(QObject):
             return
         host = 'localhost'
         port = 8040
-        self.websocket_thread = SimpleWebSocketServer(host, port, [])
+        self.websocket_thread = SimpleWebSocketServer(
+            host, port, self.plugins)
         self.websocket_thread.wss_error_sig['QVariantMap'].connect(
             self.handle_wss_error_sig)
         self.websocket_thread.from_socket_received['QVariantMap'].connect(
             self.handle_from_socket_received)
-        self.websocket_thread.from_socket_sent['QVariantMap'].connect(
+        self.websocket_thread.from_socket_sent['QVariantMap', WebApi].connect(
             self.handle_from_socket_sent)
         self.websocket_thread.open_connection_sig.connect(
             self.handle_open_connection_sig)
@@ -171,12 +174,20 @@ class HyBridge(QObject):
             self.websocket_thread.exit()
             self.websocket_thread = None
 
-    def register_plugin(self, plugin):
-        caller_filepath = inspect.stack()[1].filename
+    def register_plugin(self, plugin, web_apis):
+        plugin_prefix = None
+        plugin_filepath = inspect.stack()[1].filename
         for ppath in qgis.utils.plugin_paths:
             print("ppath: %s" % ppath)
-            if caller_filepath.startswith(ppath):
-                caller_prefix = caller_filepath[len(ppath):]
-                print("caller_prefix1: %s" % caller_prefix)
-                caller_prefix = caller_prefix.split(os.sep)[1]
-                print("caller_prefix2: %s" % caller_prefix)
+            if plugin_filepath.startswith(ppath):
+                plugin_prefix = plugin_filepath[len(ppath):]
+                print("plugin_prefix1: %s" % plugin_prefix)
+                plugin_prefix = plugin_prefix.split(os.sep)[1]
+                print("plugin_prefix2: %s" % plugin_prefix)
+                break
+        else:
+            raise ValueError('%s not found' % plugin_filepath)
+        self.plugins[plugin_prefix] = {
+            'name': plugin_prefix, 'plugin': plugin, 'web_apis': web_apis}
+        for web_api in web_apis.values():
+            self.websocket_thread.register_caller(web_api)

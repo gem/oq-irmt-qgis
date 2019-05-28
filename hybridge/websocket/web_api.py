@@ -23,26 +23,38 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 from uuid import uuid4
-from qgis.PyQt.QtCore import QObject
+from qgis.PyQt.QtCore import QObject, pyqtSignal
 from qgis.core import Qgis
 from hybridge.utilities.utils import log_msg
 
 
 class WebApi(QObject):
 
-    def __init__(self, app_name, action, wss, message_bar, parent=None):
+    caller_sig = pyqtSignal('QVariantMap')
+    send_to_wss_sig = pyqtSignal('QVariantMap', QObject)
+
+    # FIXME: do introspection to get plugin name instead of passing it
+    def __init__(self, plugin, app_name, action, wss,
+                 message_bar, parent=None):
         assert app_name is not None
         super().__init__(parent)
+
+        self.plugin = plugin
+        self.app_name = app_name
         self.action = action
+        self.ws = None
+        self.ws_new = None
         self.wss = wss  # thread running the websocket server
         self.message_bar = message_bar
-        self.app_name = app_name
         self.allowed_meths = [
             'window_open', 'ext_app_open', 'set_cells',
             'notify_click', 'info', 'warning', 'error',
             'hybridge_apptrack_status']
         self.pending = {}
         self.apptrack_status_pend = []
+
+    def ws_set(self, ws):
+        self.ws = ws
 
     def run_command(self, command, args, cb=None, reg=None):
         print('run_command on %s: %s(%s)' % (self.app_name, command, args))
@@ -110,7 +122,7 @@ class WebApi(QObject):
     def send(self, api_msg):
         # it sends a message to the websocket
         hyb_msg = {'app': self.app_name, 'msg': api_msg}
-        self.wss.caller.send_to_wss_sig.emit(hyb_msg)
+        self.send_to_wss_sig.emit(hyb_msg, self)
 
     # apptrack_status
 
@@ -131,9 +143,10 @@ class WebApi(QObject):
             self.action.setIcon(self.icon_standard)
 
     def apptrack_status(self):
-        success, err_msg = self.run_command(
-            'hybridge_apptrack_status', (), cb=self.apptrack_status_cb)
-        print(success, err_msg)
+        # success, err_msg = self.run_command(
+        #     'hybridge_apptrack_status', (), cb=self.apptrack_status_cb)
+        # print(success, err_msg)
+        self.set_app_icon(True)
 
     def apptrack_status_cleanup(self):
         print('apptrack_status_cleanup')

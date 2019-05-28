@@ -48,8 +48,8 @@ def dir_is_legal(app_dir, full_abs_path):
 
 class IptApi(WebApi):
 
-    def __init__(self, action, wss, message_bar):
-        super().__init__('ipt', action, wss, message_bar)
+    def __init__(self, plugin, action, wss, message_bar):
+        super().__init__(plugin, 'ipt', action, wss, message_bar)
         self.icon_standard = QIcon(":/plugins/irmt/ipt.svg")
         self.icon_connected = QIcon(":/plugins/irmt/ipt_connected.svg")
         ipt_allowed_meths = [
@@ -98,7 +98,7 @@ class IptApi(WebApi):
         Open a file browser to select one or multiple files in the app_dir,
         and return the list of names of selected files
         """
-        app_dir = self.wss.caller.webapp_dirs[self.app_name]
+        app_dir = self.plugin.webapp_dirs[self.app_name]
         full_path = app_dir
 
         if len(args) > 0:
@@ -141,7 +141,7 @@ class IptApi(WebApi):
         from a given path, where multiple files can be selected. The selected
         files will be copied inside the app_dir
         """
-        app_dir = self.wss.caller.webapp_dirs[self.app_name]
+        app_dir = self.plugin.webapp_dirs[self.app_name]
         path = None
         full_path = app_dir
 
@@ -167,7 +167,7 @@ class IptApi(WebApi):
         try:
             default_dir = QSettings().value('irmt/ipt_browsed_dir',
                                             QDir.homePath())
-            app_dir = self.wss.caller.webapp_dirs[self.app_name]
+            app_dir = self.plugin.webapp_dirs[self.app_name]
 
             if is_multi:
                 file_names, _ = QFileDialog.getOpenFileNames(
@@ -201,7 +201,7 @@ class IptApi(WebApi):
         :param file_path: path of the file to be saved into the app_dir
         """
         rel_path = os.path.dirname(file_path)
-        app_dir = self.wss.caller.webapp_dirs[self.app_name]
+        app_dir = self.plugin.webapp_dirs[self.app_name]
         full_path = os.path.abspath(os.path.join(app_dir, rel_path))
         if not dir_is_legal(app_dir, full_path):
             msg = 'Unable to access the directory %s' % rel_path
@@ -223,7 +223,7 @@ class IptApi(WebApi):
         :param file_path: basename of the file to be read from the app_dir
         """
         rel_path = os.path.dirname(file_path)
-        app_dir = self.wss.caller.webapp_dirs[self.app_name]
+        app_dir = self.plugin.webapp_dirs[self.app_name]
         full_path = os.path.abspath(os.path.join(app_dir, rel_path))
         if not dir_is_legal(app_dir, full_path):
             msg = 'Unable to access the directory %s' % rel_path
@@ -241,7 +241,7 @@ class IptApi(WebApi):
             return {'success': True, 'content': content, 'reason': 'ok'}
 
     def ls(self, api_uuid, *args):
-        app_dir = self.wss.caller.webapp_dirs[self.app_name]
+        app_dir = self.plugin.webapp_dirs[self.app_name]
         full_path = app_dir
 
         if len(args) > 0:
@@ -263,7 +263,7 @@ class IptApi(WebApi):
         return resp
 
     def clear_dir(self, api_uuid, *args):
-        app_dir = self.wss.caller.webapp_dirs[self.app_name]
+        app_dir = self.plugin.webapp_dirs[self.app_name]
         full_path = app_dir
         if len(args) > 0:
             path = args[0]
@@ -290,7 +290,7 @@ class IptApi(WebApi):
         """
         loc_file_path = os.path.join(*file_path.split('/'))
         rel_path = os.path.dirname(loc_file_path)
-        app_dir = self.wss.caller.webapp_dirs[self.app_name]
+        app_dir = self.plugin.webapp_dirs[self.app_name]
         full_path = os.path.abspath(os.path.join(app_dir, rel_path))
         if not dir_is_legal(app_dir, full_path):
             msg = 'Unable to access the directory %s' % rel_path
@@ -313,7 +313,7 @@ class IptApi(WebApi):
         loc_new_path = os.path.join(*new_path.split('/'))
         rel_old_path = os.path.dirname(loc_old_path)
         rel_new_path = os.path.dirname(loc_new_path)
-        app_dir = self.wss.caller.webapp_dirs[self.app_name]
+        app_dir = self.plugin.webapp_dirs[self.app_name]
         full_old_path = os.path.abspath(os.path.join(app_dir, rel_old_path))
         if not dir_is_legal(app_dir, full_old_path):
             msg = 'Unable to access the directory %s' % old_path
@@ -340,7 +340,7 @@ class IptApi(WebApi):
         """
         :param dirname: name of the directory to be created under the ipt dir
         """
-        app_dir = self.wss.caller.webapp_dirs[self.app_name]
+        app_dir = self.plugin.webapp_dirs[self.app_name]
         loc_dir_name = os.path.join(*dir_name.split('/'))
         try:
             full_path = os.path.abspath(os.path.join(app_dir, loc_dir_name))
@@ -360,7 +360,7 @@ class IptApi(WebApi):
         """
         :param dirname: name of the directory to be deleted from the ipt dir
         """
-        app_dir = self.wss.caller.webapp_dirs[self.app_name]
+        app_dir = self.plugin.webapp_dirs[self.app_name]
         try:
             loc_dir_name = os.path.join(*dir_name.split('/'))
             full_path = os.path.join(app_dir, loc_dir_name)
@@ -387,7 +387,7 @@ class IptApi(WebApi):
         abs_paths = None
         if rel_paths is not None:
             abs_paths = []
-            app_dir = self.wss.caller.webapp_dirs[self.app_name]
+            app_dir = self.plugin.webapp_dirs[self.app_name]
             for rel_path in rel_paths:
                 loc_rel_path = os.path.join(*rel_path.split('/'))
                 abs_path = os.path.abspath(os.path.join(app_dir, loc_rel_path))
@@ -418,7 +418,7 @@ class IptApi(WebApi):
         :returns:
             {'success': True, 'content': <dest-file-fullname>, 'reason': 'ok'}
         """
-        app_dir = self.wss.caller.webapp_dirs[self.app_name]
+        app_dir = self.plugin.webapp_dirs[self.app_name]
 
         abs_temp_path = os.path.abspath(os.path.join(app_dir, 'Temp'))
         if not os.path.exists(abs_temp_path):
@@ -492,7 +492,7 @@ class IptApi(WebApi):
         :returns:
             {'success': True, 'content': None, 'reason': 'ok'}
         """
-        app_dir = self.wss.caller.webapp_dirs[self.app_name]
+        app_dir = self.plugin.webapp_dirs[self.app_name]
         loc_file_src = os.path.join(*file_src.split('/'))
         rel_dir_src = os.path.dirname(loc_file_src)
         full_dir_src = os.path.abspath(os.path.join(app_dir, rel_dir_src))
@@ -664,7 +664,7 @@ class IptApi(WebApi):
                 return
             file_name = str(content_disposition.split('"')[1], 'utf-8')
             file_content = str(reply.readAll(), 'utf-8')
-            app_dir = self.wss.caller.webapp_dirs[self.app_name]
+            app_dir = self.plugin.webapp_dirs[self.app_name]
             loc_temp_name = os.path.join('Downloads', uuid + '.tmp')
             temp_absfile = os.path.join(app_dir, loc_temp_name)
             if not os.path.exists(os.path.dirname(temp_absfile)):

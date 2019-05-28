@@ -53,7 +53,7 @@ from qgis.PyQt.QtCore import (
                               QUrl,
                               Qt,
                               QUrlQuery,
-                              pyqtSignal,
+                              # pyqtSignal,
                               QObject,
                               )
 from qgis.PyQt.QtWidgets import QAction, QFileDialog, QApplication, QMenu
@@ -120,8 +120,8 @@ from svir import IS_SCIPY_INSTALLED
 
 class Irmt(QObject):
 
-    caller_sig = pyqtSignal('QVariantMap')
-    send_to_wss_sig = pyqtSignal('QVariantMap')
+    # caller_sig = pyqtSignal('QVariantMap')
+    # send_to_wss_sig = pyqtSignal('QVariantMap')
 
     def __init__(self, iface):
         super(Irmt, self).__init__()
@@ -365,11 +365,13 @@ class Irmt(QObject):
         self.update_actions_status()
         if is_hybridge_installed:
             self.instantiate_web_apis()
+            # FIXME: it should be done by each webapi
             # get or create directories to store input files for the OQ-Engine
             self.webapp_dirs = self.get_webapp_dirs()
 
     def dummy(self):
-        g()
+        # FIXME
+        pass
 
     @staticmethod
     def get_menu(parent, title):
@@ -403,8 +405,7 @@ class Irmt(QObject):
         self._set_cells(self.taxtweb_api)
 
     def _set_cells(self, web_api):
-        success, err_msg = web_api.run_command(
-            'set_cells', ('pippo', 'pluto'))
+        success, err_msg = web_api.run_command('set_cells', ('pippo', 'pluto'))
         if not success:
             log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
 
@@ -559,8 +560,8 @@ class Irmt(QObject):
             raise NameError("Action %s already registered" % action_name)
         action = QAction(QIcon(icon_path), label, self.iface.mainWindow())
         action.setEnabled(enable)
-        if is_webapi_action:
-            action.setEnabled(False)
+        # if is_webapi_action:
+        #     action.setEnabled(False)
         action.setCheckable(set_checkable)
         action.setChecked(set_checked)
         action.triggered.connect(corresponding_method)
@@ -1509,17 +1510,22 @@ class Irmt(QObject):
 
     def instantiate_web_apis(self):
         hybridge = HyBridge()
-        hybridge.register_plugin(self)
         websocket_thread = HyBridge.get_websocket_thread(self)
-        self.ipt_api = IptApi(self.registered_actions['ipt'],
-                              websocket_thread,
-                              self.iface.messageBar())
-        self.taxtweb_api = TaxtwebApi(self.registered_actions['taxtweb'],
-                                      websocket_thread,
-                                      self.iface.messageBar())
-        self.taxonomy_api = TaxonomyApi(None,  # no button associated
-                                        websocket_thread,
-                                        self.iface.messageBar())
+        ipt_api = IptApi(self,
+                         self.registered_actions['ipt'],
+                         websocket_thread,
+                         self.iface.messageBar())
+        taxtweb_api = TaxtwebApi(self,
+                                 self.registered_actions['taxtweb'],
+                                 websocket_thread,
+                                 self.iface.messageBar())
+        taxonomy_api = TaxonomyApi(self,
+                                   None,  # no button associated
+                                   websocket_thread,
+                                   self.iface.messageBar())
+        self.ipt_api = ipt_api
+        self.taxtweb_api = taxtweb_api
+        self.taxonomy_api = taxonomy_api
         # self.apptest_api = AppTestApi(self.registered_actions['apptest'],
         #                               self.websocket_thread,
         #                               self.iface.messageBar())
@@ -1527,3 +1533,8 @@ class Irmt(QObject):
                          'taxtweb': self.taxtweb_api,
                          'taxonomy': self.taxonomy_api,
                          }  # 'apptest': self.apptest_api}
+        hybridge.register_plugin(self,
+                                 {'ipt': ipt_api,
+                                  'taxtweb': taxtweb_api,
+                                  'taxonomy': taxonomy_api,
+                                  })
