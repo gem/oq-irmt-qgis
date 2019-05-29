@@ -3,6 +3,7 @@ The MIT License (MIT)
 Copyright (c) 2013 Dave P.
 '''
 import sys
+import random
 from qgis.PyQt.QtCore import QObject
 import hashlib
 import base64
@@ -20,7 +21,7 @@ else:
     from StringIO import StringIO
 
 
-__all__ = ['WebSocket']
+__all__ = ['WebSocket', 'CLOSE']
 
 
 def _check_unicode(val):
@@ -107,7 +108,16 @@ class WebSocket(QObject):
         self.maxheader = MAXHEADER
         self.maxpayload = MAXPAYLOAD
 
+        self.info = {'uuid': random.randrange(0, sys.maxsize),
+                     'pin_name': None,
+                     'api_name': None,
+                     }
+
         super(WebSocket, self).__init__()
+
+    def infoSet(self, pin_name, api_name):
+        self.info['pin_name'] = pin_name
+        self.info['api_name'] = api_name
 
     def handleMessage(self):
         """
@@ -117,7 +127,7 @@ class WebSocket(QObject):
             If the frame is Text then self.data is a unicode object.
             If the frame is Binary then self.data is a bytearray object.
         """
-        self.server.handle_socket_received(self.data)
+        self.server.handle_socket_received(self.data, self.info)
 
     def handleConnected(self):
         """
@@ -260,6 +270,10 @@ class WebSocket(QObject):
 
                     # handshake rfc 6455
                     try:
+                        # MN FIXME: check plugin and app
+                        #           names with what is registered
+                        plugin, api = self.request.path.strip('/').split('/')
+                        self.infoSet(plugin, api)
                         key = self.request.headers['Sec-WebSocket-Key']
                         k = key.encode('ascii') + GUID_STR.encode('ascii')
                         k_s = base64.b64encode(
@@ -268,8 +282,10 @@ class WebSocket(QObject):
                         self.sendq.append((BINARY, hStr.encode('ascii')))
                         self.handshaked = True
                         self.handleConnected()
+                        self.server.open_connection_sig.emit(self.info)
                     except Exception as e:
                         raise Exception('handshake failed: %s', str(e))
+
 
         # else do normal data
         else:

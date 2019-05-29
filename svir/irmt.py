@@ -547,8 +547,8 @@ class Irmt(QObject):
             raise NameError("Action %s already registered" % action_name)
         action = QAction(QIcon(icon_path), label, self.iface.mainWindow())
         action.setEnabled(enable)
-        if is_webapi_action:
-            action.setEnabled(False)
+#        if is_webapi_action:
+#            action.setEnabled(False)
         action.setCheckable(set_checkable)
         action.setChecked(set_checked)
         action.triggered.connect(corresponding_method)
@@ -1496,20 +1496,29 @@ class Irmt(QObject):
         return checksum_file_path, get_checksum(checksum_file_path)
 
     def instantiate_web_apis(self):
+        hybridge = HyBridge(self.iface)
         websocket_thread = HyBridge.get_websocket_thread(self, self.iface)
-        self.ipt_api = IptApi(self.registered_actions['ipt'],
-                              websocket_thread,
-                              self.iface.messageBar())
-        self.taxtweb_api = TaxtwebApi(self.registered_actions['taxtweb'],
-                                      websocket_thread,
-                                      self.iface.messageBar())
-        self.taxonomy_api = TaxonomyApi(None,  # no button associated
-                                        websocket_thread,
-                                        self.iface.messageBar())
+        ipt_api = IptApi(self.registered_actions['ipt'],
+                         websocket_thread,
+                         self.iface.messageBar())
+        self.ipt_api = ipt_api
+        taxtweb_api = TaxtwebApi(self.registered_actions['taxtweb'],
+                                 websocket_thread,
+                                 self.iface.messageBar())
+        self.taxtweb_api = self.taxtweb_api
+        taxonomy_api = TaxonomyApi(None,  # no button associated
+                                   websocket_thread,
+                                   self.iface.messageBar())
+        self.taxonomy_api = taxonomy_api
         # self.apptest_api = AppTestApi(self.registered_actions['apptest'],
         #                               self.websocket_thread,
         #                               self.iface.messageBar())
-        self.web_apis = {'ipt': self.ipt_api,
-                         'taxtweb': self.taxtweb_api,
-                         'taxonomy': self.taxonomy_api,
-                         }  # 'apptest': self.apptest_api}
+        apis = {
+            'ipt': ipt_api,
+            'taxtweb': taxtweb_api,
+            'taxonomy': taxonomy_api,
+            #  'apptest': self.apptest_api
+        }
+        self.web_apis = apis
+
+        hybridge.plugin_register(self, apis)

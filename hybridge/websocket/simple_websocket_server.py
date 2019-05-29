@@ -8,14 +8,14 @@ import json
 from qgis.PyQt.QtCore import pyqtSignal, pyqtSlot, QThread, QMutex
 import socket
 from select import select
-from hybridge.websocket.web_socket import WebSocket
+from hybridge.websocket.web_socket import WebSocket, CLOSE
 
 
 class SimpleWebSocketServer(QThread):
     wss_error_sig = pyqtSignal('QVariantMap')
-    from_socket_received = pyqtSignal('QVariantMap')
+    from_socket_received = pyqtSignal('QVariantMap', 'QVariantMap')
     from_socket_sent = pyqtSignal('QVariantMap')
-    open_connection_sig = pyqtSignal()
+    open_connection_sig = pyqtSignal('QVariantMap')
     close_connection_sig = pyqtSignal()
 
     def __init__(self, host, port, caller, selectInterval=0.1):
@@ -55,13 +55,13 @@ class SimpleWebSocketServer(QThread):
             self.wss_error_sig.emit(
                 {'app': app, 'msg': 'Send failed! No connections'})
 
-    def handle_socket_received(self, data):
+    def handle_socket_received(self, data, ws_info):
         try:
             hyb_msg = self._loads(data)
         except ValueError:
             print('Malformed msg: [%s]' % data)
             return
-        self.from_socket_received.emit(hyb_msg)
+        self.from_socket_received.emit(hyb_msg, ws_info)
 
     def handle_socket_sent(self, data):
         try:
@@ -157,7 +157,8 @@ class SimpleWebSocketServer(QThread):
                     fileno = newsock.fileno()
                     self.connections[fileno] = self._constructWebSocket(
                         newsock, address)
-                    self.open_connection_sig.emit()
+                    # MN: moved to web_socket where the pin/api couple is clear
+                    # self.open_connection_sig.emit()
                     self.listeners.append(fileno)
                 except Exception as n:
                     self.wss_error_sig.emit({'msg': str(n)})
