@@ -400,6 +400,7 @@ class SpatialJoinSummaryStyle(QgsProcessingAlgorithm):
         style_by = processed_layer.fields()[-1].name()
         LoadOutputAsLayerDialog.style_maps(
             processed_layer, style_by, iface)
-        iface.setActiveLayer(processed_layer)
-        iface.zoomToActiveLayer()
+        # FIXME: The following 2 lines don't have any effect
+        # iface.setActiveLayer(processed_layer)
+        # iface.zoomToActiveLayer()
         return {self.OUTPUT: processed_layer}
