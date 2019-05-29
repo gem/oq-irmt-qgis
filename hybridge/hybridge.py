@@ -120,7 +120,7 @@ class HyBridge(QObject):
         # NOTE: this assumes the caller plugin has a defined list of web_apis
         apis = self.plugins[ws_info['pin_name']]['apis']
         api = apis[ws_info['api_name']]
-        api.receive(api_msg)
+        api.receive(api_msg, ws_info)
 
     @pyqtSlot('QVariantMap')
     def handle_from_socket_sent(self, data):
@@ -206,5 +206,8 @@ class HyBridge(QObject):
             raise ValueError('%s not found' % plugin_filepath)
         self.plugins[plugin_prefix] = {
             'name': plugin_prefix, 'plugin': plugin, 'apis': apis}
-        # for api in apis.values():
+
+        for api in apis.values():
+            self.websocket_thread.api_register(api)
+
         #     self.websocket_thread.register_caller(api)

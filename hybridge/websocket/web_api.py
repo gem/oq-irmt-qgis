@@ -25,10 +25,13 @@
 from uuid import uuid4
 from qgis.PyQt.QtCore import QObject
 from qgis.core import Qgis
+from qgis.PyQt.QtCore import pyqtSignal
 from hybridge.utilities.utils import log_msg
 
 
 class WebApi(QObject):
+    caller_sig = pyqtSignal('QVariantMap')
+    send_to_wss_sig = pyqtSignal('QVariantMap', 'QVariantMap')
 
     def __init__(self, app_name, action, wss, message_bar, parent=None):
         assert app_name is not None
@@ -57,14 +60,15 @@ class WebApi(QObject):
                 'args': args
             }
         }
-        self.send(api_msg)
+        # MN: FIXME ws_info is missing
+        self.send(api_msg, None)
         api_msg['cb'] = cb
         self.pending[uuid] = api_msg
         if reg is not None:
             reg(uuid)
         return (True, uuid)
 
-    def receive(self, api_msg):
+    def receive(self, api_msg, ws_info):
         # it happens when the websocket receives a message
         api_uuid = api_msg['uuid']
         if 'reply' in api_msg:
@@ -91,7 +95,7 @@ class WebApi(QObject):
                         'msg': 'Method "%s" not allowed' % command
                     }
                 }
-                self.send(api_reply)
+                self.send(api_reply, ws_info)
                 return
 
             args = app_msg['args']
@@ -105,12 +109,13 @@ class WebApi(QObject):
                 app_msg = {'result': ret, 'complete': True}
 
             api_reply = {'uuid': api_uuid, 'reply': app_msg}
-            self.send(api_reply)
+            self.send(api_reply, ws_info)
 
-    def send(self, api_msg):
+    def send(self, api_msg, ws_info):
         # it sends a message to the websocket
         hyb_msg = {'app': self.app_name, 'msg': api_msg}
-        self.wss.caller.send_to_wss_sig.emit(hyb_msg)
+        # self.wss.caller.send_to_wss_sig.emit(hyb_msg)
+        self.send_to_wss_sig.emit(hyb_msg, ws_info)
 
     # apptrack_status
 

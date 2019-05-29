@@ -33,23 +33,22 @@ class SimpleWebSocketServer(QThread):
 
         super(SimpleWebSocketServer, self).__init__()
 
-        self.caller.caller_sig['QVariantMap'].connect(self.handle_caller_sig)
-        self.caller.send_to_wss_sig['QVariantMap'].connect(
-            self.send_to_wss)
-
     @pyqtSlot('QVariantMap')
     def handle_caller_sig(self, data):
         print('From caller_sig: %s' % data)
 
-    @pyqtSlot('QVariantMap')
-    def send_to_wss(self, hyb_msg):
+    @pyqtSlot('QVariantMap', 'QVariantMap')
+    def send_to_wss(self, hyb_msg, ws_info):
         hyb_msg_str = json.dumps(hyb_msg)
         ret = False
         for fileno, conn in list(self.connections.items()):
             if conn == self.serversocket:
                 continue
+            if conn.info['uuid'] != ws_info['uuid']:
+                continue
             conn.sendMessage(hyb_msg_str)
             ret = True
+            break
         if ret is False:
             app = hyb_msg['app']
             self.wss_error_sig.emit(
@@ -213,6 +212,11 @@ class SimpleWebSocketServer(QThread):
 
     def run(self):
         self.serveforever()
+
+    def api_register(self, api):
+        api.caller_sig['QVariantMap'].connect(self.handle_caller_sig)
+        api.send_to_wss_sig['QVariantMap',
+                            'QVariantMap'].connect(self.send_to_wss)
 
 
 class SimpleSSLWebSocketServer(SimpleWebSocketServer):

@@ -241,6 +241,7 @@ class IptApi(WebApi):
             return {'success': True, 'content': content, 'reason': 'ok'}
 
     def ls(self, api_uuid, *args):
+        print("LS begin")
         app_dir = self.wss.caller.webapp_dirs[self.app_name]
         full_path = app_dir
 
@@ -252,6 +253,7 @@ class IptApi(WebApi):
                 return {'success': False, 'content': None, 'reason': msg}
 
         try:
+            print('full_path %s' % full_path)
             ls = os.listdir(full_path)
             for i, f in enumerate(ls):
                 if os.path.isdir(os.path.join(full_path, f)):
