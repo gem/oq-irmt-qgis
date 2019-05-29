@@ -1496,7 +1496,7 @@ class Irmt(QObject):
         return checksum_file_path, get_checksum(checksum_file_path)
 
     def instantiate_web_apis(self):
-        websocket_thread = HyBridge.get_websocket_thread(self)
+        websocket_thread = HyBridge.get_websocket_thread(self, self.iface)
         self.ipt_api = IptApi(self.registered_actions['ipt'],
                               websocket_thread,
                               self.iface.messageBar())
