@@ -65,14 +65,15 @@ class NormalizeFieldAlgorithm(QgsProcessingAlgorithm):
         Returns the translated algorithm name, which should be used for any
         user-visible display of the algorithm name.
         """
-        return self.tr('Normalize field values in the range 0-1')
+        return self.tr(
+            "Min-max normalization (range 0-1) of a vector layer field")
 
     def group(self):
         """
         Returns the name of the group this algorithm belongs to. This string
         should be localised.
         """
-        return self.tr('OpenQuake IRMT plugin')
+        return self.tr('Data Transformation')
 
     def groupId(self):
         """
@@ -82,7 +83,7 @@ class NormalizeFieldAlgorithm(QgsProcessingAlgorithm):
         contain lowercase alphanumeric characters only and no spaces or other
         formatting characters.
         """
-        return 'irmt'
+        return 'transform'
 
     def shortHelpString(self):
         """
@@ -90,7 +91,8 @@ class NormalizeFieldAlgorithm(QgsProcessingAlgorithm):
         should provide a basic description about what the algorithm does and
         the parameters and outputs associated with it..
         """
-        return self.tr("Normalize one of the fields of a vector layer")
+        return self.tr(
+            "Min-max normalization (range 0-1) of a vector layer field")
 
     def initAlgorithm(self, config=None):
         """

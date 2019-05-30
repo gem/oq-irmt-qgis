@@ -34,10 +34,34 @@ class SpatialJoinSummaryStyle(QgsProcessingAlgorithm):
     OUTPUT = "OUTPUT"
 
     def group(self):
-        return self.tr('OpenQuake IRMT plugin')
+        return self.tr('Zonal aggregation')
 
     def groupId(self):
-        return 'irmt'
+        return 'aggregate'
+
+    def name(self):
+        return 'joinbylocationsummarystyle'
+
+    def displayName(self):
+        return self.tr(
+            'Join attributes by location (summary) and style output')
+
+    def shortHelpString(self):
+        """
+        Returns a localised short helper string for the algorithm. This string
+        should provide a basic description about what the algorithm does and
+        the parameters and outputs associated with it..
+        """
+        return self.tr("Run joinbylocationsummary and style the output layer")
+
+    def tags(self):
+        return self.tr(
+            "summary,aggregate,join,intersects,intersecting,touching,within,"
+            "contains,overlaps,relation,spatial,"
+            "stats,statistics,sum,maximum,minimum,mean,average,"
+            "standard,deviation,style,"
+            "count,distinct,unique,variance,median,quartile,range,"
+            "majority,minority,histogram,distinct").split(',')
 
     def __init__(self):
         super().__init__()
@@ -58,14 +82,6 @@ class SpatialJoinSummaryStyle(QgsProcessingAlgorithm):
         Returns a translatable string with the self.tr() function.
         """
         return QCoreApplication.translate('Processing', string)
-
-    def shortHelpString(self):
-        """
-        Returns a localised short helper string for the algorithm. This string
-        should provide a basic description about what the algorithm does and
-        the parameters and outputs associated with it..
-        """
-        return self.tr("Run joinbylocationsummary and style the output layer")
 
     def initAlgorithm(self, config=None):
         self.predicates = (
@@ -135,22 +151,6 @@ class SpatialJoinSummaryStyle(QgsProcessingAlgorithm):
         self.addParameter(QgsProcessingParameterFeatureSink(
             self.OUTPUT,
             self.tr('Joined layer')))
-
-    def name(self):
-        return 'joinbylocationsummarystyle'
-
-    def displayName(self):
-        return self.tr(
-            'Join attributes by location (summary) and style output')
-
-    def tags(self):
-        return self.tr(
-            "summary,aggregate,join,intersects,intersecting,touching,within,"
-            "contains,overlaps,relation,spatial,"
-            "stats,statistics,sum,maximum,minimum,mean,average,"
-            "standard,deviation,style,"
-            "count,distinct,unique,variance,median,quartile,range,"
-            "majority,minority,histogram,distinct").split(',')
 
     def processAlgorithm(self, parameters, context, feedback):
         source = self.parameterAsSource(parameters, self.INPUT, context)

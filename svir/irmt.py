@@ -103,6 +103,7 @@ from svir.utilities.shared import (DEBUG,
                                    INDICATOR_TEMPLATE,
                                    OPERATORS_DICT)
 from svir.ui.tool_button_with_help_link import QToolButtonWithHelpLink
+from svir.processing_provider.provider import Provider
 
 # DO NOT REMOVE THIS
 # noinspection PyUnresolvedReferences
@@ -162,7 +163,15 @@ class Irmt(object):
         # get or create directory to store input files for the OQ-Engine
         self.ipt_dir = self.get_ipt_dir()
 
+        self.provider = None
+
+    def initProcessing(self):
+        self.provider = Provider()
+        QgsApplication.processingRegistry().addProvider(self.provider)
+
     def initGui(self):
+        self.initProcessing()
+
         # create our own toolbar
         self.toolbar = self.iface.addToolBar('OpenQuake IRMT')
         self.toolbar.setObjectName('IRMTToolBar')
@@ -556,6 +565,8 @@ class Irmt(object):
         """
         Remove all plugin's actions and corresponding buttons and connects
         """
+        QgsApplication.processingRegistry().removeProvider(self.provider)
+
         # Remove the plugin menu items and toolbar icons
         for action_name in self.registered_actions:
             action = self.registered_actions[action_name]
