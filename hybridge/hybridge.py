@@ -131,31 +131,17 @@ class HyBridge(QObject):
         print('handle_open_connection_sig')
         apis = self.plugins[ws_info['pin_name']]['apis']
         api = apis[ws_info['api_name']]
-        print(api)
+        # api tracking is simpler with 1 o 1 between api and web-client conn
+        api.set_app_icon(True)
 
-        # MN FIXME: turn api button to "connected"
-
-        # NOTE: this assumes the caller plugin has lists of webapi_action_names
-        # and registered_actions
-        # for action_name in self.caller.webapi_action_names:
-        #     self.caller.registered_actions[action_name].setEnabled(True)
-
-        # for web_api_name in self.caller.web_apis:
-        #     web_api = self.caller.web_apis[web_api_name]
-        #     web_api.apptrack_status()
-
-    @pyqtSlot()
-    def handle_close_connection_sig(self):
+    @pyqtSlot('QVariantMap')
+    def handle_close_connection_sig(self, ws_info):
         print('\nhandle_close_connection_sig')
-        # NOTE: this assumes the caller plugin has lists of webapi_action_names
-        # and registered_actions
-        for web_api_name in self.caller.web_apis:
-            web_api = self.caller.web_apis[web_api_name]
-            web_api.apptrack_status_cleanup()
-
-        for action_name in self.caller.webapi_action_names:
-            # FIXME: set the icon without the green dot
-            self.caller.registered_actions[action_name].setEnabled(False)
+        apis = self.plugins[ws_info['pin_name']]['apis']
+        api = apis[ws_info['api_name']]
+        # api tracking is simpler with 1 o 1 between api and web-client conn
+        api.set_app_icon(False)
+        print(api)
 
     def start_websocket(self):
         if self.websocket_thread is not None:
@@ -172,7 +158,7 @@ class HyBridge(QObject):
             self.handle_from_socket_sent)
         self.websocket_thread.open_connection_sig['QVariantMap'].connect(
             self.handle_open_connection_sig)
-        self.websocket_thread.close_connection_sig.connect(
+        self.websocket_thread.close_connection_sig['QVariantMap'].connect(
             self.handle_close_connection_sig)
         self.websocket_thread.start()
         log_msg("Web socket server started",

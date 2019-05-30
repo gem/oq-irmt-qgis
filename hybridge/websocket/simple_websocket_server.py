@@ -11,12 +11,16 @@ from select import select
 from hybridge.websocket.web_socket import WebSocket, CLOSE
 
 
+class CloseSocketException(Exception):
+    pass
+
+
 class SimpleWebSocketServer(QThread):
     wss_error_sig = pyqtSignal('QVariantMap')
     from_socket_received = pyqtSignal('QVariantMap', 'QVariantMap')
     from_socket_sent = pyqtSignal('QVariantMap')
     open_connection_sig = pyqtSignal('QVariantMap')
-    close_connection_sig = pyqtSignal()
+    close_connection_sig = pyqtSignal('QVariantMap')
 
     def __init__(self, host, port, caller, selectInterval=0.1):
         self.websocketclass = WebSocket
@@ -132,13 +136,15 @@ class SimpleWebSocketServer(QThread):
                         break
                     else:
                         if opcode == CLOSE:
-                            raise Exception('received client close')
+                            raise CloseSocketException('received client close')
 
             except Exception as n:
-                self.wss_error_sig.emit({'msg': str(n)})
+                if not isinstance(n, CloseSocketException):
+                    self.wss_error_sig.emit({'msg': str(n)})
                 self._handleClose(client)
                 del self.connections[ready]
-                self.close_connection_sig.emit()
+                # already done in web_socket.handleClose
+                # self.close_connection_sig.emit()
                 self.listeners.remove(ready)
 
         for ready in rList:
@@ -178,7 +184,8 @@ class SimpleWebSocketServer(QThread):
                     self.wss_error_sig.emit({'msg': str(n)})
                     self._handleClose(client)
                     del self.connections[ready]
-                    self.close_connection_sig.emit()
+                    # aleady done in socket.handleClose
+                    # self.close_connection_sig.emit()
                     self.listeners.remove(ready)
 
         for failed in xList:
@@ -191,7 +198,8 @@ class SimpleWebSocketServer(QThread):
                 client = self.connections[failed]
                 self._handleClose(client)
                 del self.connections[failed]
-                self.close_connection_sig.emit()
+                # aleady done in socket.handleClose
+                # self.close_connection_sig.emit()
                 self.listeners.remove(failed)
 
     def serveforever(self):

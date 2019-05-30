@@ -133,13 +133,13 @@ class WebSocket(QObject):
         """
             Called when a websocket client connects to the server.
         """
-        pass
+        self.server.open_connection_sig.emit(self.info)
 
     def handleClose(self):
         """
             Called when a websocket server gets a Close frame from a client.
         """
-        pass
+        self.server.close_connection_sig.emit(self.info)
 
     def _handlePacket(self):
         if self.opcode == CLOSE:
@@ -282,7 +282,6 @@ class WebSocket(QObject):
                         self.sendq.append((BINARY, hStr.encode('ascii')))
                         self.handshaked = True
                         self.handleConnected()
-                        self.server.open_connection_sig.emit(self.info)
                     except Exception as e:
                         raise Exception('handshake failed: %s', str(e))
 
