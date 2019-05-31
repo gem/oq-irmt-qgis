@@ -18,7 +18,9 @@ submitting new jobs, watching calculation
 progress, retrieving and visualizing results, seamlessly within the QGIS
 interface. This is made possible by leveraging the OpenQuake Engine
 Server `HTTP RESTful API <https://github.com/gem/oq-engine/blob/master/doc/web-api.md>`_.
-The connection with a running OQ-Engine Server (WebUI) has to be properly set up as described
+The connection with a running
+`OQ-Engine Server (WebUI) <https://github.com/gem/oq-engine/blob/master/doc/running/server.md>`_
+has to be properly set up as described
 in :ref:`chap-irmt-settings`. The server can run locally in the same computer where
 QGIS is running, or remotely. For instance, it is possible to connect to a remote
 cluster, to perform jobs that are highly demanding in terms of computational resources.
