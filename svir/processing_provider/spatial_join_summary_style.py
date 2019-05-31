@@ -1,5 +1,6 @@
 import math
 
+from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtCore import QVariant, QCoreApplication
 from qgis.utils import iface
 from qgis.core import (NULL,
@@ -67,12 +68,10 @@ class SpatialJoinSummaryStyle(QgsProcessingAlgorithm):
         super().__init__()
 
     def icon(self):
-        return QgsApplication.getThemeIcon(
-            "/algorithms/mAlgorithmBasicStatistics.svg")
+        return QIcon(":/plugins/irmt/aggregate.svg")
 
     def svgIconPath(self):
-        return QgsApplication.iconPath(
-            "/algorithms/mAlgorithmBasicStatistics.svg")
+        return QIcon(":/plugins/irmt/aggregate.svg")
 
     def createInstance(self):
         return SpatialJoinSummaryStyle()

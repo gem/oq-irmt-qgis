@@ -11,7 +11,8 @@
 ***************************************************************************
 """
 
-from PyQt5.QtCore import QCoreApplication
+from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtCore import QCoreApplication
 from qgis.core import (QgsProcessing,
                        QgsFeatureSink,
                        QgsFeature,
@@ -93,6 +94,12 @@ class NormalizeFieldAlgorithm(QgsProcessingAlgorithm):
         """
         return self.tr(
             "Min-max normalization (range 0-1) of a vector layer field")
+
+    def icon(self):
+        return QIcon(":/plugins/irmt/transform.svg")
+
+    def svgIconPath(self):
+        return QIcon(":/plugins/irmt/transform.svg")
 
     def initAlgorithm(self, config=None):
         """
