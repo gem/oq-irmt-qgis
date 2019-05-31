@@ -2,9 +2,11 @@ import math
 
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtCore import QVariant, QCoreApplication
+from qgis.PyQt.QtWidgets import QInputDialog, QWidget
 from qgis.utils import iface
 from qgis.core import (NULL,
                        QgsApplication,
+                       QgsProject,
                        QgsField,
                        QgsFields,
                        QgsFeatureSink,
@@ -33,6 +35,7 @@ class SpatialJoinSummaryStyle(QgsProcessingAlgorithm):
     SUMMARIES = "SUMMARIES"
     DISCARD_NONMATCHING = "DISCARD_NONMATCHING"
     OUTPUT = "OUTPUT"
+    ADDED_FIELDS = "ADDED_FIELDS"
 
     def group(self):
         return self.tr('Zonal aggregation')
@@ -134,14 +137,14 @@ class SpatialJoinSummaryStyle(QgsProcessingAlgorithm):
             self.tr('Fields to summarise (leave empty to use all fields)'),
             parentLayerParameterName=self.JOIN,
             allowMultiple=True, optional=True))
-        sum_idx = [idx for idx, stat in enumerate(self.statistics)
-                   if stat[0] == 'sum'][0]
+        stat_idxs = [idx for idx, stat in enumerate(self.statistics)
+                     if stat[0] in ('mean', 'sum')]
         self.addParameter(QgsProcessingParameterEnum(
             self.SUMMARIES,
             self.tr(
                 'Summaries to calculate (leave empty to use all available)'),
             options=[p[1] for p in self.statistics],
-            defaultValue=[sum_idx],
+            defaultValue=stat_idxs,
             allowMultiple=True, optional=True))
         self.addParameter(QgsProcessingParameterBoolean(
             self.DISCARD_NONMATCHING,
@@ -175,7 +178,7 @@ class SpatialJoinSummaryStyle(QgsProcessingAlgorithm):
             summaries = [s[0] for s in self.statistics]
 
         source_fields = source.fields()
-        fields_to_join = QgsFields()
+        self.fields_to_join = QgsFields()
         join_field_indexes = []
         if not join_fields:
             # no fields selected, use all
@@ -189,7 +192,7 @@ class SpatialJoinSummaryStyle(QgsProcessingAlgorithm):
             """
             field = QgsField(original)
             field.setName(field.name() + '_' + stat)
-            fields_to_join.append(field)
+            self.fields_to_join.append(field)
 
         def addField(original, stat, type):
             """
@@ -201,7 +204,7 @@ class SpatialJoinSummaryStyle(QgsProcessingAlgorithm):
             if type == QVariant.Double:
                 field.setLength(20)
                 field.setPrecision(6)
-            fields_to_join.append(field)
+            self.fields_to_join.append(field)
 
         numeric_fields = (
             ('count', QVariant.Int, 'count'),
@@ -267,7 +270,7 @@ class SpatialJoinSummaryStyle(QgsProcessingAlgorithm):
                             addFieldKeepType(join_field, f[0])
 
         out_fields = QgsProcessingUtils.combineFields(
-            source_fields, fields_to_join)
+            source_fields, self.fields_to_join)
 
         (sink, self.dest_id) = self.parameterAsSink(
             parameters, self.OUTPUT, context, out_fields, source.wkbType(),
@@ -391,15 +394,24 @@ class SpatialJoinSummaryStyle(QgsProcessingAlgorithm):
                 f.setAttributes(attrs)
                 sink.addFeature(f, QgsFeatureSink.FastInsert)
 
-        return {self.OUTPUT: self.dest_id}
+        return {self.OUTPUT: self.dest_id,
+                self.ADDED_FIELDS: self.fields_to_join}
 
     def postProcessAlgorithm(self, context, feedback):
         processed_layer = QgsProcessingUtils.mapLayerFromString(
             self.dest_id, context)
-        style_by = processed_layer.fields()[-1].name()
+        added_fieldnames = [field.name() for field in self.fields_to_join]
+        if len(added_fieldnames) > 1:
+            style_by = QInputDialog.getItem(
+                QWidget(), "Style output by", "Field", added_fieldnames,
+                editable=False)[0]
+        else:
+            style_by = added_fieldnames[0]
         LoadOutputAsLayerDialog.style_maps(
             processed_layer, style_by, iface)
-        # FIXME: The following 2 lines don't have any effect
+        # NOTE: the user might use the following lines after calling the
+        #       algorithm from python:
+        # QgsProject.instance().addMapLayer(processed_layer)
         # iface.setActiveLayer(processed_layer)
         # iface.zoomToActiveLayer()
         return {self.OUTPUT: processed_layer}
