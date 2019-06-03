@@ -1499,15 +1499,16 @@ class Irmt(QObject):
     def instantiate_web_apis(self):
         hybridge = HyBridge(self.iface)
         websocket_thread = HyBridge.get_websocket_thread(self, self.iface)
-        ipt_api = IptApi('svir', self.registered_actions['ipt'],
+        ipt_api = IptApi(self, 'svir', self.registered_actions['ipt'],
                          websocket_thread,
                          self.iface.messageBar())
         self.ipt_api = ipt_api
-        taxtweb_api = TaxtwebApi('svir', self.registered_actions['taxtweb'],
+        taxtweb_api = TaxtwebApi(self, 'svir',
+                                 self.registered_actions['taxtweb'],
                                  websocket_thread,
                                  self.iface.messageBar())
-        self.taxtweb_api = self.taxtweb_api
-        taxonomy_api = TaxonomyApi('svir', None,  # no button associated
+        self.taxtweb_api = taxtweb_api
+        taxonomy_api = TaxonomyApi(self, 'svir', None,
                                    websocket_thread,
                                    self.iface.messageBar())
         self.taxonomy_api = taxonomy_api
