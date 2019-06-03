@@ -120,8 +120,8 @@ from svir import IS_SCIPY_INSTALLED
 
 class Irmt(QObject):
 
-    caller_sig = pyqtSignal('QVariantMap')
-    send_to_wss_sig = pyqtSignal('QVariantMap')
+    # caller_sig = pyqtSignal('QVariantMap')
+    # send_to_wss_sig = pyqtSignal('QVariantMap')
 
     def __init__(self, iface):
         super(Irmt, self).__init__()
@@ -357,7 +357,7 @@ class Irmt(QObject):
         if is_hybridge_installed:
             self.instantiate_web_apis()
             # get or create directories to store input files for the OQ-Engine
-            self.webapp_dirs = self.get_webapp_dirs()
+            # self.webapp_dirs = self.get_webapp_dirs()
 
     @staticmethod
     def get_menu(parent, title):
@@ -434,7 +434,7 @@ class Irmt(QObject):
         if not success:
             log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
         # self.registered_actions['ipt'].setChecked(True)
-        self.caller_sig.emit({'msg': 'hello Matteo'})
+        # self.caller_sig.emit({'msg': 'hello Matteo'})
 
     # def apptest(self):
     #     success, err_msg = self.apptest_api.run_command('window_open', ())
@@ -1477,36 +1477,37 @@ class Irmt(QObject):
     def on_viewer_dock_visibility_changed(self, visible):
         self.registered_actions['toggle_viewer_dock'].setChecked(visible)
 
-    def get_webapp_dirs(self):
-        webapp_dirs = {}
-        home_dir = os.path.expanduser("~")
-        for webapp_name in self.web_apis:
-            webapp_dir = os.path.join(home_dir, ".gem", "irmt", webapp_name)
-            if not os.path.exists(webapp_dir):
-                os.makedirs(webapp_dir)
-            webapp_dirs[webapp_name] = webapp_dir
-        return webapp_dirs
+    # def get_webapp_dirs(self):
+    #     webapp_dirs = {}
+    #     home_dir = os.path.expanduser("~")
+    #     for webapp_name in self.web_apis:
+    #         webapp_dir = os.path.join(home_dir, ".gem", "irmt", webapp_name)
+    #         if not os.path.exists(webapp_dir):
+    #             os.makedirs(webapp_dir)
+    #         webapp_dirs[webapp_name] = webapp_dir
+    #     return webapp_dirs
 
-    def get_ipt_checksum(self):
-        unique_filename = ".%s" % uuid4().hex
-        checksum_file_path = os.path.join(
-            self.webapp_dirs['ipt'], unique_filename)
-        with open(checksum_file_path, "wb") as f:
-            f.write(os.urandom(32))
-        return checksum_file_path, get_checksum(checksum_file_path)
+    # FIXME: move to ipt web api
+    # def get_ipt_checksum(self):
+    #     unique_filename = ".%s" % uuid4().hex
+    #     checksum_file_path = os.path.join(
+    #         self.webapp_dirs['ipt'], unique_filename)
+    #     with open(checksum_file_path, "wb") as f:
+    #         f.write(os.urandom(32))
+    #     return checksum_file_path, get_checksum(checksum_file_path)
 
     def instantiate_web_apis(self):
         hybridge = HyBridge(self.iface)
         websocket_thread = HyBridge.get_websocket_thread(self, self.iface)
-        ipt_api = IptApi(self.registered_actions['ipt'],
+        ipt_api = IptApi('svir', self.registered_actions['ipt'],
                          websocket_thread,
                          self.iface.messageBar())
         self.ipt_api = ipt_api
-        taxtweb_api = TaxtwebApi(self.registered_actions['taxtweb'],
+        taxtweb_api = TaxtwebApi('svir', self.registered_actions['taxtweb'],
                                  websocket_thread,
                                  self.iface.messageBar())
         self.taxtweb_api = self.taxtweb_api
-        taxonomy_api = TaxonomyApi(None,  # no button associated
+        taxonomy_api = TaxonomyApi('svir', None,  # no button associated
                                    websocket_thread,
                                    self.iface.messageBar())
         self.taxonomy_api = taxonomy_api
