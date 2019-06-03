@@ -125,8 +125,10 @@ class NormalizeFieldAlgorithm(TransformFieldAlgorithm):
         original_values = vector.values(
             source, fieldname_to_normalize)[fieldname_to_normalize]
 
-        min_value = min(original_values)
-        max_value = max(original_values)
+        min_value = min((value for value in original_values
+                         if value is not None))
+        max_value = max((value for value in original_values
+                         if value is not None))
         min_max_range = float(max_value - min_value)
         if min_max_range == 0:
             raise ValueError(
@@ -139,9 +141,11 @@ class NormalizeFieldAlgorithm(TransformFieldAlgorithm):
         # Transform
         if inverted:
             normalized_values = [1.0 - ((x - min_value) / min_max_range)
+                                 if x is not None else None
                                  for x in original_values]
         else:
             normalized_values = [(x - min_value) / min_max_range
+                                 if x is not None else None
                                  for x in original_values]
 
         for current, source_feature in enumerate(source.getFeatures()):
