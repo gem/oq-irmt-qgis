@@ -81,7 +81,7 @@ class HyBridge(QObject):
 
     @staticmethod
     def get_websocket_thread(caller):
-        instance = HyBridge()
+        instance = HyBridge(iface=caller.iface)
         # FIXME: this works if only one plugin is using hybridge!
         #        We should allow N callers
         instance.caller = caller
