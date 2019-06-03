@@ -120,10 +120,10 @@ class IptApi(WebApi):
         try:
             if is_multi:
                 file_names, _ = QFileDialog.getOpenFileNames(
-                    self.wss.caller.parent(), title, full_path)
+                    None, title, full_path)
             else:
                 file_name, _ = QFileDialog.getOpenFileName(
-                    self.wss.caller.parent(), title, full_path)
+                    None, title, full_path)
                 file_names = [file_name]
 
             ls = [os.path.basename(file_name) for file_name in file_names]
@@ -171,10 +171,10 @@ class IptApi(WebApi):
 
             if is_multi:
                 file_names, _ = QFileDialog.getOpenFileNames(
-                    self.wss.caller.parent(), title, default_dir)
+                    None, title, default_dir)
             else:
                 file_name, _ = QFileDialog.getOpenFileName(
-                    self.wss.caller.parent(), title, default_dir)
+                    None, title, default_dir)
                 file_names = [file_name] if file_name else []
             if not file_names:
                 return {'success': False,
@@ -513,7 +513,7 @@ class IptApi(WebApi):
         default_dest_name = os.path.join(
             dest_dir, os.path.basename(suggested_name))
         dest_file, _ = QFileDialog.getSaveFileName(
-            self.wss.caller.parent(), 'Save as...', default_dest_name)
+            None, 'Save as...', default_dest_name)
         if not dest_file:
             msg = 'Canceled'
             return {'success': False, 'content': None, 'reason': msg}
