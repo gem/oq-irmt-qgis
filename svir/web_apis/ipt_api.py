@@ -26,6 +26,7 @@ import os
 import traceback
 import shutil
 import zipfile
+from uuid import uuid4
 from shutil import copy, rmtree
 from qgis.PyQt.QtWidgets import QFileDialog
 from qgis.PyQt.QtCore import QSettings, QDir, QFileInfo, QUrl, QStandardPaths
@@ -33,7 +34,7 @@ from qgis.PyQt.QtNetwork import (
     QNetworkRequest, QHttpMultiPart, QHttpPart, QNetworkAccessManager)
 from qgis.PyQt.QtGui import QIcon
 from hybridge.websocket.web_api import WebApi
-from svir.utilities.utils import log_msg
+from svir.utilities.utils import log_msg, get_checksum
 from svir.utilities.shared import REQUEST_ATTRS
 
 
@@ -69,23 +70,37 @@ class IptApi(WebApi):
             os.makedirs(webapp_dir)
         self.webapp_dir = webapp_dir
 
+    def get_ipt_checksum(self):
+        unique_filename = ".%s" % uuid4().hex
+        checksum_file_path = os.path.join(
+            self.webapp_dir, unique_filename)
+        with open(checksum_file_path, "wb") as f:
+            f.write(os.urandom(32))
+        return checksum_file_path, get_checksum(checksum_file_path)
+
+    def on_same_fs_anc(self, checksum_file_path, local_checksum):
+        # initialize drive_oq_engine_server_dlg dialog without displaying it
+        self.plugin.drive_oq_engine_server(show=False)
+        return self.plugin.drive_oq_engine_server_dlg.on_same_fs(
+            checksum_file_path, local_checksum)
+
     def on_same_fs(self, api_uuid):
         """
         Check if the engine server has access to the app_dir
         """
         checksum_file_path = None
         try:
-            checksum_file_path, local_checksum = \
-                self.wss.caller.get_ipt_checksum()
-            on_same_fs = self.wss.caller.on_same_fs(
+            checksum_file_path, local_checksum = self.get_ipt_checksum()
+            same_fs = self.on_same_fs_anc(
                 checksum_file_path, local_checksum)
+            print('same_fs: %s %s' % (checksum_file_path, local_checksum))
         except Exception:
             log_msg(traceback.format_exc(), level='C')
             msg = ('on_same_fs: an error occurred.'
                    ' Please see the IRMT log for details.')
             return {'success': False, 'content': None, 'reason': msg}
         else:
-            return {'success': True, 'content': on_same_fs, 'reason': 'ok'}
+            return {'success': True, 'content': same_fs, 'reason': 'ok'}
         finally:
             os.remove(checksum_file_path)
             # FIXME
@@ -408,9 +423,9 @@ class IptApi(WebApi):
                     return {'success': False, 'content': None, 'reason': msg}
                 abs_paths.append(abs_path)
         try:
-            self.wss.caller.drive_oq_engine_server()
+            self.plugin.drive_oq_engine_server()
             drive_engine_dlg = \
-                self.wss.caller.drive_oq_engine_server_dlg
+                self.plugin.drive_oq_engine_server_dlg
             drive_engine_dlg.run_calc(file_names=abs_paths)
         except Exception:
             log_msg(traceback.format_exc(), level='C')

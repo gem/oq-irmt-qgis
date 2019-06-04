@@ -53,7 +53,6 @@ from qgis.PyQt.QtCore import (
                               QUrl,
                               Qt,
                               QUrlQuery,
-                              pyqtSignal,
                               QObject,
                               )
 from qgis.PyQt.QtWidgets import QAction, QFileDialog, QApplication, QMenu
@@ -91,7 +90,6 @@ from svir.utilities.utils import (tr,
                                   log_msg,
                                   save_layer_as_shapefile,
                                   get_style,
-                                  get_checksum,
                                   warn_scipy_missing,
                                   )
 from svir.utilities.shared import (DEBUG,
@@ -1486,15 +1484,6 @@ class Irmt(QObject):
     #             os.makedirs(webapp_dir)
     #         webapp_dirs[webapp_name] = webapp_dir
     #     return webapp_dirs
-
-    # FIXME: move to ipt web api
-    # def get_ipt_checksum(self):
-    #     unique_filename = ".%s" % uuid4().hex
-    #     checksum_file_path = os.path.join(
-    #         self.webapp_dirs['ipt'], unique_filename)
-    #     with open(checksum_file_path, "wb") as f:
-    #         f.write(os.urandom(32))
-    #     return checksum_file_path, get_checksum(checksum_file_path)
 
     def instantiate_web_apis(self):
         hybridge = HyBridge(self.iface)
