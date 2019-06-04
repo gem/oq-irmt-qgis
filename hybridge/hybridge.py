@@ -87,11 +87,10 @@ class HyBridge(QObject):
         self.stop_websocket()
 
     @staticmethod
-    def get_websocket_thread(caller, iface=None):
+    def get_websocket_thread(iface=None):
         instance = HyBridge(iface=iface)
         # FIXME: this works if only one plugin is using hybridge!
         #        We should allow N callers
-        instance.caller = caller
         instance.start_websocket()
         return instance.websocket_thread
 
@@ -99,17 +98,6 @@ class HyBridge(QObject):
     def handle_wss_error_sig(self, data):
         log_msg("wss_error_sig: %s" % data, level='C',
                 message_bar=self.iface.messageBar())
-
-    @pyqtSlot('QVariantMap', int)
-    def handle_from_socket_received_old(self, hyb_msg, ws_uuid):
-        log_msg("handle_from_socket_received: %s" % hyb_msg)
-
-        app_name = hyb_msg['app']
-        api_msg = hyb_msg['msg']
-        # NOTE: this assumes the caller plugin has a defined list of web_apis
-        app = self.caller.web_apis[app_name]
-
-        app.receive(api_msg)
 
     @pyqtSlot('QVariantMap', 'QVariantMap')
     def handle_from_socket_received(self, hyb_msg, ws_info):
@@ -148,7 +136,7 @@ class HyBridge(QObject):
             return
         host = 'localhost'
         port = 8040
-        self.websocket_thread = SimpleWebSocketServer(host, port, self.caller)
+        self.websocket_thread = SimpleWebSocketServer(host, port)
         self.websocket_thread.wss_error_sig['QVariantMap'].connect(
             self.handle_wss_error_sig)
         self.websocket_thread.from_socket_received[

@@ -476,12 +476,6 @@ class Irmt(QObject):
                     'plugin connection settings are correct.', level='C',
                     message_bar=self.drive_oq_engine_server_dlg.message_bar)
 
-    def on_same_fs(self, checksum_file_path, local_checksum):
-        # initialize drive_oq_engine_server_dlg dialog without displaying it
-        self.drive_oq_engine_server(show=False)
-        return self.drive_oq_engine_server_dlg.on_same_fs(
-            checksum_file_path, local_checksum)
-
     def reset_drive_oq_engine_server_dlg(self):
         if self.drive_oq_engine_server_dlg is not None:
             was_dlg_visible = self.drive_oq_engine_server_dlg.isVisible()
@@ -1487,7 +1481,7 @@ class Irmt(QObject):
 
     def instantiate_web_apis(self):
         hybridge = HyBridge(self.iface)
-        websocket_thread = HyBridge.get_websocket_thread(self, self.iface)
+        websocket_thread = HyBridge.get_websocket_thread(self.iface)
         ipt_api = IptApi(self, 'svir', self.registered_actions['ipt'],
                          websocket_thread,
                          self.iface.messageBar())
