@@ -1,7 +1,7 @@
 from qgis.core import QgsProcessingProvider
 from qgis.PyQt.QtGui import QIcon
 
-from svir.processing_provider.normalize_field import NormalizeFieldAlgorithm
+from svir.processing_provider.min_max_alg import MinMaxAlgorithm
 from svir.processing_provider.spatial_join_summary_style import (
     SpatialJoinSummaryStyle)
 
@@ -9,7 +9,7 @@ from svir.processing_provider.spatial_join_summary_style import (
 class Provider(QgsProcessingProvider):
 
     def loadAlgorithms(self, *args, **kwargs):
-        self.addAlgorithm(NormalizeFieldAlgorithm())
+        self.addAlgorithm(MinMaxAlgorithm())
         self.addAlgorithm(SpatialJoinSummaryStyle())
 
     def id(self, *args, **kwargs):

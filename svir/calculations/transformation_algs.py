@@ -72,10 +72,10 @@ def transform(features_dict, algorithm, variant_name="", inverse=False):
 
 
 @TRANSFORMATION_ALGS.add('RANK')
-def rank(input_list, variant_name="AVERAGE", inverse=False):
+def rank(input_values, variant_name="AVERAGE", inverse=False):
     """Assign ranks to data, dealing with ties appropriately.
 
-    :param input_list: the list of numbers to rank
+    :param input_values: the list of numbers to rank
     :param variant_name: available variants are
                          [AVERAGE, MIN, MAX, DENSE, ORDINAL]
                          and they correspond to
@@ -87,16 +87,16 @@ def rank(input_list, variant_name="AVERAGE", inverse=False):
     :returns: list of ranks corresponding to the input data
     :raises: NotImplementedError if variant_name is not implemented
     """
-    input_copy = input_list[:]
-    len_input_list = len(input_list)
-    rank_list = [0] * len_input_list
+    input_copy = input_values[:]
+    len_input_values = len(input_values)
+    rank_list = [0] * len_input_values
     previous_ties = 0
     if not inverse:  # high values get high ranks
-        # obtain a value above the maximum value contained in input_list,
+        # obtain a value above the maximum value contained in input_values,
         # so it will never be picked as the minimum element of the list
-        above_max_input = max(input_list) + 1
+        above_max_input = max(input_values) + 1
         curr_idx = 1
-        while curr_idx <= len_input_list:
+        while curr_idx <= len_input_values:
             # get the list of indices of the min elements of input_copy.
             # note that we might have ties.
             bottom_indices = argwhere(
@@ -145,8 +145,8 @@ def rank(input_list, variant_name="AVERAGE", inverse=False):
 
     else:  # inverse, i.e., small inputs get high ranks
         # same as the direct methods, but proceeding top->down
-        below_min_input = min(input_list) - 1
-        curr_idx = len_input_list
+        below_min_input = min(input_values) - 1
+        curr_idx = len_input_values
         while curr_idx > 0:
             top_indices = argwhere(
                 input_copy == amax(input_copy)).flatten().tolist()
@@ -154,16 +154,16 @@ def rank(input_list, variant_name="AVERAGE", inverse=False):
             for top_idx in top_indices:
                 if variant_name == "AVERAGE":
                     rank_list[top_idx] = \
-                        len_input_list - (2 * curr_idx - top_amount - 1) / 2.0
+                        len_input_values - (2 * curr_idx - top_amount - 1) / 2.0
                 elif variant_name == "MIN":
-                    rank_list[top_idx] = len_input_list - curr_idx + 1
+                    rank_list[top_idx] = len_input_values - curr_idx + 1
                 elif variant_name == "MAX":
-                    rank_list[top_idx] = len_input_list - curr_idx + top_amount
+                    rank_list[top_idx] = len_input_values - curr_idx + top_amount
                 elif variant_name == "DENSE":
                     rank_list[top_idx] = \
-                        len_input_list - curr_idx - previous_ties + 1
+                        len_input_values - curr_idx - previous_ties + 1
                 elif variant_name == "ORDINAL":
-                    rank_list[top_idx] = len_input_list - curr_idx + 1
+                    rank_list[top_idx] = len_input_values - curr_idx + 1
                     curr_idx -= 1
                 else:
                     raise NotImplementedError(
@@ -176,7 +176,7 @@ def rank(input_list, variant_name="AVERAGE", inverse=False):
 
 
 @TRANSFORMATION_ALGS.add('Z_SCORE')
-def z_score(input_list, variant_name=None, inverse=False):
+def z_score(input_values, variant_name=None, inverse=False):
     r"""
     Direct:
         :math:`f(x_i) = \frac{x_i - \mu_x}{\sigma_x}`
@@ -185,19 +185,19 @@ def z_score(input_list, variant_name=None, inverse=False):
     """
     if variant_name:
         raise NotImplementedError("%s variant not implemented" % variant_name)
-    mean_val = mean(input_list)
-    stddev_val = std(input_list)
-    input_copy = input_list[:]
+    mean_val = mean(input_values)
+    stddev_val = std(input_values)
+    input_copy = input_values[:]
     if inverse:
-        # multiply each input_list element by -1
-        input_copy[:] = [-x for x in input_list]
+        # multiply each input_values element by -1
+        input_copy[:] = [-x for x in input_values]
     output_list = [
         1.0 * (num - mean_val) / stddev_val for num in input_copy]
     return output_list, None
 
 
 @TRANSFORMATION_ALGS.add('MIN_MAX')
-def min_max(input_list, variant_name=None, inverse=False):
+def min_max(input_values, variant_name=None, inverse=False):
     r"""
     Direct:
         :math:`f(x_i) = \frac{x_i - \min(x)}{\max(x) - \min(x)}`
@@ -207,27 +207,31 @@ def min_max(input_list, variant_name=None, inverse=False):
     """
     if variant_name:
         raise NotImplementedError("%s variant not implemented" % variant_name)
-    list_min = min(input_list)
-    list_max = max(input_list)
+    min_value = min((value for value in input_values if value is not None))
+    max_value = max((value for value in input_values if value is not None))
     # Get the range of the list
-    list_range = float(list_max - list_min)
-    if list_range == 0:
+    min_max_range = float(max_value - min_value)
+    if min_max_range == 0:
         raise ValueError("The min_max transformation can not be performed"
                          " if the range of valid values (max-min) is zero.")
     # Transform
     if inverse:
-        output_list = [1.0 - ((x - list_min) / list_range) for x in input_list]
+        output_values = [1.0 - ((x - min_value) / min_max_range)
+                         if x is not None else None
+                         for x in input_values]
     else:
-        output_list = [(x - list_min) / list_range for x in input_list]
-    return output_list, None
+        output_values = [(x - min_value) / min_max_range
+                         if x is not None else None
+                         for x in input_values]
+    return output_values, None
 
 
 @TRANSFORMATION_ALGS.add('LOG10')
-def log10_(input_list,
+def log10_(input_values,
            variant_name='IGNORE ZEROS',
            inverse=False):
     """
-    Accept only input_list containing positive (or zero) values
+    Accept only input_values containing positive (or zero) values
     In case of zeros:
 
     * the variant IGNORE ZEROS produces NULL as output when any input is
@@ -244,29 +248,29 @@ def log10_(input_list,
     if variant_name not in LOG10_VARIANTS:
         raise NotImplementedError(
             "%s variant not implemented" % variant_name)
-    if any(n < 0 for n in input_list):
+    if any(n < 0 for n in input_values):
         raise ValueError("log10 transformation can not be performed if "
                          "the field contains negative values")
-    if any(n == 0 for n in input_list):
+    if any(n == 0 for n in input_values):
         if variant_name == 'INCREMENT BY ONE IF ZEROS ARE FOUND':
-            corrected_input = [input_value + 1 for input_value in input_list]
+            corrected_input = [input_value + 1 for input_value in input_values]
             output_list = list(log10(corrected_input))
             return output_list, None
         elif variant_name == 'IGNORE ZEROS':
             output_list = []
-            for input_value in input_list:
+            for input_value in input_values:
                 if input_value == 0:
                     output_value = NULL
                     output_list.append(output_value)
                 else:
                     output_list.append(log10(input_value))
             return output_list, None
-    output_list = list(log10(input_list))
+    output_list = list(log10(input_values))
     return output_list, None
 
 
 @TRANSFORMATION_ALGS.add('QUADRATIC')
-def simple_quadratic(input_list, variant_name="INCREASING", inverse=False):
+def simple_quadratic(input_values, variant_name="INCREASING", inverse=False):
     r"""
     Simple quadratic transformation :math:`(bottom = 0)`
 
@@ -278,17 +282,17 @@ def simple_quadratic(input_list, variant_name="INCREASING", inverse=False):
         For each output x, the final output will be 1 - x
     """
     bottom = 0.0
-    max_input = max(input_list)
+    max_input = max(input_values)
     if max_input - bottom == 0:
         raise ZeroDivisionError("It is impossible to perform the "
                                 "transformation if the maximum "
                                 "input value is 0")
     squared_range = (max_input - bottom) ** 2
     if variant_name == "INCREASING":
-        output_list = [(x - bottom) ** 2 / squared_range for x in input_list]
+        output_list = [(x - bottom) ** 2 / squared_range for x in input_values]
     elif variant_name == "DECREASING":
         output_list = [(max_input - (x - bottom)) ** 2 / squared_range
-                       for x in input_list]
+                       for x in input_values]
 
     else:
         raise NotImplementedError("%s variant not implemented" % variant_name)
@@ -298,7 +302,7 @@ def simple_quadratic(input_list, variant_name="INCREASING", inverse=False):
 
 
 @TRANSFORMATION_ALGS.add('SIGMOID')
-def sigmoid(input_list, variant_name="", inverse=False):
+def sigmoid(input_values, variant_name="", inverse=False):
     r"""
     Logistic sigmoid function:
         :math:`f(x) = \frac{1}{1 + e^{-x}}`
@@ -311,7 +315,7 @@ def sigmoid(input_list, variant_name="", inverse=False):
     output_list = []
     invalid_input_values = []
     if inverse:
-        for y in input_list:
+        for y in input_values:
             try:
                 output = log(y / (1 - y))
             except Exception:
@@ -319,7 +323,7 @@ def sigmoid(input_list, variant_name="", inverse=False):
                 invalid_input_values.append(y)
             output_list.append(output)
     else:  # direct
-        for x in input_list:
+        for x in input_values:
             try:
                 output = 1 / (1 + math.exp(-x))
             except Exception:
