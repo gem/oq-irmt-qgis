@@ -60,7 +60,13 @@ class MinMaxAlgorithm(TransformFieldAlgorithm):
         the parameters and outputs associated with it..
         """
         return self.tr(
-            "Min-max normalization (range 0-1) of a vector layer field")
+            r"""
+            Min-max normalization (range 0-1) of a vector layer field")
+            Direct:
+                :math:`f(x_i) = \frac{x_i - \min(x)}{\max(x) - \min(x)}`
+            Inverse:
+                :math:`f(x_i) = 1 - \frac{x_i - \min(x)}{\max(x) - \min(x)}`
+            """)
 
     def initAlgorithm(self, config=None):
         self.addParameter(

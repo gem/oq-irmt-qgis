@@ -185,14 +185,19 @@ def z_score(input_values, variant_name=None, inverse=False):
     """
     if variant_name:
         raise NotImplementedError("%s variant not implemented" % variant_name)
-    mean_val = mean(input_values)
-    stddev_val = std(input_values)
+    mean_val = mean([value for value in input_values if value is not None])
+    stddev_val = std([value for value in input_values if value is not None])
+    if stddev_val == 0:
+        raise ValueError("The Z-Score transformation can not be performed "
+                         "if the standard deviation of the input values is 0")
     input_copy = input_values[:]
     if inverse:
         # multiply each input_values element by -1
-        input_copy[:] = [-x for x in input_values]
+        input_copy[:] = [-x if x is not None else None for x in input_values]
     output_list = [
-        1.0 * (num - mean_val) / stddev_val for num in input_copy]
+        1.0 * (x - mean_val) / stddev_val
+        if x is not None else None
+        for x in input_copy]
     return output_list, None
 
 
@@ -203,7 +208,6 @@ def min_max(input_values, variant_name=None, inverse=False):
         :math:`f(x_i) = \frac{x_i - \min(x)}{\max(x) - \min(x)}`
     Inverse:
         :math:`f(x_i) = 1 - \frac{x_i - \min(x)}{\max(x) - \min(x)}`
-
     """
     if variant_name:
         raise NotImplementedError("%s variant not implemented" % variant_name)
