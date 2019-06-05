@@ -194,11 +194,11 @@ def z_score(input_values, variant_name=None, inverse=False):
     if inverse:
         # multiply each input_values element by -1
         input_copy[:] = [-x if x is not None else None for x in input_values]
-    output_list = [
-        1.0 * (x - mean_val) / stddev_val
+    output_values = [
+        float((x - mean_val) / stddev_val)
         if x is not None else None
         for x in input_copy]
-    return output_list, None
+    return output_values, None
 
 
 @TRANSFORMATION_ALGS.add('MIN_MAX')
@@ -258,19 +258,19 @@ def log10_(input_values,
     if any(n == 0 for n in input_values):
         if variant_name == 'INCREMENT BY ONE IF ZEROS ARE FOUND':
             corrected_input = [input_value + 1 for input_value in input_values]
-            output_list = list(log10(corrected_input))
-            return output_list, None
+            output_values = list(log10(corrected_input))
+            return output_values, None
         elif variant_name == 'IGNORE ZEROS':
-            output_list = []
+            output_values = []
             for input_value in input_values:
                 if input_value == 0:
                     output_value = NULL
-                    output_list.append(output_value)
+                    output_values.append(output_value)
                 else:
-                    output_list.append(log10(input_value))
-            return output_list, None
-    output_list = list(log10(input_values))
-    return output_list, None
+                    output_values.append(log10(input_value))
+            return output_values, None
+    output_values = list(log10(input_values))
+    return output_values, None
 
 
 @TRANSFORMATION_ALGS.add('QUADRATIC')
@@ -293,16 +293,16 @@ def simple_quadratic(input_values, variant_name="INCREASING", inverse=False):
                                 "input value is 0")
     squared_range = (max_input - bottom) ** 2
     if variant_name == "INCREASING":
-        output_list = [(x - bottom) ** 2 / squared_range for x in input_values]
+        output_values = [(x - bottom) ** 2 / squared_range for x in input_values]
     elif variant_name == "DECREASING":
-        output_list = [(max_input - (x - bottom)) ** 2 / squared_range
+        output_values = [(max_input - (x - bottom)) ** 2 / squared_range
                        for x in input_values]
 
     else:
         raise NotImplementedError("%s variant not implemented" % variant_name)
     if inverse:
-        output_list[:] = [1.0 - x for x in output_list]
-    return output_list, None
+        output_values[:] = [1.0 - x for x in output_values]
+    return output_values, None
 
 
 @TRANSFORMATION_ALGS.add('SIGMOID')
@@ -316,7 +316,7 @@ def sigmoid(input_values, variant_name="", inverse=False):
     """
     if variant_name:
         raise NotImplementedError("%s variant not implemented" % variant_name)
-    output_list = []
+    output_values = []
     invalid_input_values = []
     if inverse:
         for y in input_values:
@@ -325,7 +325,7 @@ def sigmoid(input_values, variant_name="", inverse=False):
             except Exception:
                 output = NULL
                 invalid_input_values.append(y)
-            output_list.append(output)
+            output_values.append(output)
     else:  # direct
         for x in input_values:
             try:
@@ -333,5 +333,5 @@ def sigmoid(input_values, variant_name="", inverse=False):
             except Exception:
                 output = NULL
                 invalid_input_values.append(x)
-            output_list.append(output)
-    return output_list, invalid_input_values
+            output_values.append(output)
+    return output_values, invalid_input_values

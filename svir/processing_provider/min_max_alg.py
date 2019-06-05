@@ -69,6 +69,7 @@ class MinMaxAlgorithm(TransformFieldAlgorithm):
             """)
 
     def initAlgorithm(self, config=None):
+        super().initAlgorithm(config)
         self.addParameter(
             QgsProcessingParameterBoolean(
                 self.INVERSE,
@@ -76,7 +77,6 @@ class MinMaxAlgorithm(TransformFieldAlgorithm):
                 defaultValue=False,
             )
         )
-        super().initAlgorithm(config)
 
     def transform_values(self, original_values, parameters, context):
         inverse = self.parameterAsBool(parameters, self.INVERSE, context)
