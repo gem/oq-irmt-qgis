@@ -225,6 +225,11 @@ class SimpleWebSocketServer(QThread):
         api.send_to_wss_sig['QVariantMap',
                             'QVariantMap'].connect(self.send_to_wss)
 
+    def api_unregister(self, api):
+        api.caller_sig['QVariantMap'].disconnect(self.handle_caller_sig)
+        api.send_to_wss_sig['QVariantMap',
+                            'QVariantMap'].disconnect(self.send_to_wss)
+
 
 class SimpleSSLWebSocketServer(SimpleWebSocketServer):
 

@@ -26,6 +26,7 @@ import os.path
 import random
 import inspect
 import qgis
+import qgis.utils
 
 from qgis.PyQt.QtCore import (
     QCoreApplication, QObject, QSettings, QTranslator, qVersion, pyqtSlot,
@@ -76,23 +77,42 @@ class HyBridge(QObject):
                 QCoreApplication.installTranslator(self.translator)
 
         self.websocket_thread = None
-        self.plugins = {}
         self.__class__.__is_initialized = True
+        self.start_websocket()
+        for plu_name, plugin in self.plugins.items():
+            for api in plugin['apis'].values():
+                self.websocket_thread.api_register(api)
+
+    #  NOTE: to be 'reload plugin' compliant we need to store references
+    #  of plugins that use hybridge outside the hybridge module itself
+    #  otherwise an unload/reload flush any reference to this registrations
+    #  PROPOSAL: a signal system to inform that a specific plugin is
+    #  unload or load again.
+    @property
+    def plugins(self):
+        if 'hybridge_reg_plugins' not in qgis.utils.__dict__:
+            qgis.utils.__hybridge_reg_plugins = {}
+        return qgis.utils.__hybridge_reg_plugins
+
+    # INFO: magic method __del__ is called when the instance is del-eted
+    #       add code if needed, super() __del__() doesn't exist
+    # def __del__(self):
+    #     print('HyBridge __del__() fired')
 
     def initGui(self):
         print("Initializing HyBridge")
 
     def unload(self):
         # shutdown websocket server
+
+        for plu_name, plugin in self.plugins.items():
+            for api in plugin['apis'].values():
+                self.websocket_thread.api_unregister(api)
+
         self.stop_websocket()
 
-    @staticmethod
-    def get_websocket_thread(iface=None):
-        instance = HyBridge(iface=iface)
-        # FIXME: this works if only one plugin is using hybridge!
-        #        We should allow N callers
-        instance.start_websocket()
-        return instance.websocket_thread
+        if self.__class__.__instance is not None:
+            del self.__class__.__instance
 
     @pyqtSlot('QVariantMap')
     def handle_wss_error_sig(self, data):
