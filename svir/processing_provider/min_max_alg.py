@@ -51,7 +51,7 @@ class MinMaxAlgorithm(TransformFieldAlgorithm):
         user-visible display of the algorithm name.
         """
         return self.tr(
-            "Min-max normalization (range 0-1) of a vector layer field")
+            "Min-max normalization (to range 0-1) of a vector layer field")
 
     def shortHelpString(self):
         """
@@ -61,7 +61,7 @@ class MinMaxAlgorithm(TransformFieldAlgorithm):
         """
         return self.tr(
             r"""
-            Min-max normalization (range 0-1) of a vector layer field")
+            Min-max normalization (to range 0-1) of a vector layer field")
             Direct:
                 :math:`f(x_i) = \frac{x_i - \min(x)}{\max(x) - \min(x)}`
             Inverse:

@@ -63,7 +63,7 @@ class TransformFieldAlgorithm(QgsProcessingAlgorithm):
         Returns the name of the group this algorithm belongs to. This string
         should be localised.
         """
-        return self.tr('Data Transformation')
+        return self.tr('Field Transformation')
 
     def groupId(self):
         """
