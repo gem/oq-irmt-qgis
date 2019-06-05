@@ -28,8 +28,8 @@ from hybridge.websocket.web_api import WebApi
 
 class TaxonomyApi(WebApi):
     def __init__(self, plugin, plugin_name,
-                 action, wss, message_bar, parent=None):
-        super().__init__(plugin, plugin_name, 'taxonomy', action, wss,
+                 action, message_bar, parent=None):
+        super().__init__(plugin, plugin_name, 'taxonomy', action,
                          message_bar)
         self.icon_standard = QIcon(":/plugins/irmt/taxonomy.svg")
         self.icon_connected = QIcon(":/plugins/irmt/taxonomy_connected.svg")

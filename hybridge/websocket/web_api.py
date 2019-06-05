@@ -34,14 +34,13 @@ class WebApi(QObject):
     send_to_wss_sig = pyqtSignal('QVariantMap', 'QVariantMap')
 
     def __init__(self, plugin, plugin_name, app_name,
-                 action, wss, message_bar, parent=None):
+                 action, message_bar, parent=None):
         assert app_name is not None
         super().__init__(parent)
         self.plugin = plugin
         self.plugin_name = plugin_name
         self.app_name = app_name
         self.action = action
-        self.wss = wss  # thread running the websocket server
         self.message_bar = message_bar
         self.allowed_meths = [
             'window_open', 'ext_app_open', 'set_cells',

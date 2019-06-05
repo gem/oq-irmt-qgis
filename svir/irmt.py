@@ -1480,23 +1480,17 @@ class Irmt(QObject):
     #     return webapp_dirs
 
     def instantiate_web_apis(self):
-        hybridge = HyBridge(self.iface)
-        websocket_thread = HyBridge.get_websocket_thread(self.iface)
         ipt_api = IptApi(self, 'svir', self.registered_actions['ipt'],
-                         websocket_thread,
                          self.iface.messageBar())
         self.ipt_api = ipt_api
         taxtweb_api = TaxtwebApi(self, 'svir',
                                  self.registered_actions['taxtweb'],
-                                 websocket_thread,
                                  self.iface.messageBar())
         self.taxtweb_api = taxtweb_api
         taxonomy_api = TaxonomyApi(self, 'svir', None,
-                                   websocket_thread,
                                    self.iface.messageBar())
         self.taxonomy_api = taxonomy_api
         # self.apptest_api = AppTestApi(self.registered_actions['apptest'],
-        #                               self.websocket_thread,
         #                               self.iface.messageBar())
         apis = {
             'ipt': ipt_api,
@@ -1506,4 +1500,5 @@ class Irmt(QObject):
         }
         self.web_apis = apis
 
+        hybridge = HyBridge(self.iface)
         hybridge.plugin_register(self, apis)

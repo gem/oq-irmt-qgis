@@ -183,5 +183,3 @@ class HyBridge(QObject):
 
         for api in apis.values():
             self.websocket_thread.api_register(api)
-
-        #     self.websocket_thread.register_caller(api)

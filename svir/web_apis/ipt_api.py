@@ -49,8 +49,8 @@ def dir_is_legal(app_dir, full_abs_path):
 
 class IptApi(WebApi):
 
-    def __init__(self, plugin, plugin_name, action, wss, message_bar):
-        super().__init__(plugin, plugin_name, 'ipt', action, wss, message_bar)
+    def __init__(self, plugin, plugin_name, action, message_bar):
+        super().__init__(plugin, plugin_name, 'ipt', action, message_bar)
         self.icon_standard = QIcon(":/plugins/irmt/ipt.svg")
         self.icon_connected = QIcon(":/plugins/irmt/ipt_connected.svg")
         ipt_allowed_meths = [
