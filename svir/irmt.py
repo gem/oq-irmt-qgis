@@ -228,23 +228,23 @@ class Irmt(QObject):
             #                    is_webapi_action=True,
             #                    add_to_toolbar=True)
             # Action to set cells in ipt
-            self.add_menu_item("ipt_set_cells",
-                               ":/plugins/irmt/ipt.svg",
-                               u"IPT set cells",
-                               self.ipt_set_cells,
-                               enable=self.experimental_enabled(),
-                               submenu='OQ Engine',
-                               is_webapi_action=True,
-                               add_to_toolbar=True)
-            # Action to set cells in taxtweb
-            self.add_menu_item("taxtweb_set_cells",
-                               ":/plugins/irmt/taxtweb.svg",
-                               u"Taxtweb set cells",
-                               self.taxtweb_set_cells,
-                               enable=self.experimental_enabled(),
-                               submenu='OQ Engine',
-                               is_webapi_action=True,
-                               add_to_toolbar=True)
+            # self.add_menu_item("ipt_set_cells",
+            #                    ":/plugins/irmt/ipt.svg",
+            #                    u"IPT set cells",
+            #                    self.ipt_set_cells,
+            #                    enable=self.experimental_enabled(),
+            #                    submenu='OQ Engine',
+            #                    is_webapi_action=True,
+            #                    add_to_toolbar=True)
+            # # Action to set cells in taxtweb
+            # self.add_menu_item("taxtweb_set_cells",
+            #                    ":/plugins/irmt/taxtweb.svg",
+            #                    u"Taxtweb set cells",
+            #                    self.taxtweb_set_cells,
+            #                    enable=self.experimental_enabled(),
+            #                    submenu='OQ Engine',
+            #                    is_webapi_action=True,
+            #                    add_to_toolbar=True)
             # Action to drive ipt
             self.add_menu_item("ipt",
                                ":/plugins/irmt/ipt.svg",
@@ -382,17 +382,17 @@ class Irmt(QObject):
         dlg = RecoverySettingsDialog(self.iface)
         dlg.exec_()
 
-    def ipt_set_cells(self):
-        self._set_cells(self.ipt_api)
+    # def ipt_set_cells(self):
+    #     self._set_cells(self.ipt_api)
 
-    def taxtweb_set_cells(self):
-        self._set_cells(self.taxtweb_api)
+    # def taxtweb_set_cells(self):
+    #     self._set_cells(self.taxtweb_api)
 
-    def _set_cells(self, web_api):
-        success, err_msg = web_api.run_command(
-            'set_cells', ('pippo', 'pluto'))
-        if not success:
-            log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
+    # def _set_cells(self, web_api):
+    #     success, err_msg = web_api.run_command(
+    #         'set_cells', ('pippo', 'pluto'))
+    #     if not success:
+    #         log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
 
     def aggregate(self):
         processing.Processing.initialize()
@@ -428,11 +428,13 @@ class Irmt(QObject):
         processing.execAlgorithmDialog(alg_id, initial_params)
 
     def ipt(self):
-        success, err_msg = self.ipt_api.run_command('window_open', ())
-        if not success:
-            log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
-        # self.registered_actions['ipt'].setChecked(True)
-        # self.caller_sig.emit({'msg': 'hello Matteo'})
+        # FIXME: open a new browser instance
+        pass
+        # success, err_msg = self.ipt_api.run_command('window_open', ())
+        # if not success:
+        #     log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
+        # # self.registered_actions['ipt'].setChecked(True)
+        # # self.caller_sig.emit({'msg': 'hello Matteo'})
 
     # def apptest(self):
     #     success, err_msg = self.apptest_api.run_command('window_open', ())
@@ -442,16 +444,20 @@ class Irmt(QObject):
     #     self.caller_sig.emit({'msg': 'hello Test'})
 
     def taxtweb(self):
-        success, err_msg = self.taxtweb_api.run_command('window_open', ())
-        if not success:
-            log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
-        # self.registered_actions['taxtweb'].setChecked(True)
+        # FIXME: open a new browser instance
+        pass
+        # success, err_msg = self.taxtweb_api.run_command('window_open', ())
+        # if not success:
+        #     log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
+        # # self.registered_actions['taxtweb'].setChecked(True)
 
     def taxonomy(self):
-        success, err_msg = self.taxonomy_api.run_command('window_open', ())
-        if not success:
-            log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
-        # self.registered_actions['taxonomy'].setChecked(True)
+        # FIXME: open a new browser instance
+        pass
+        # success, err_msg = self.taxonomy_api.run_command('window_open', ())
+        # if not success:
+        #     log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
+        # # self.registered_actions['taxonomy'].setChecked(True)
 
     def on_drive_oq_engine_server_btn_clicked(self):
         # we can't call drive_oq_engine_server directly, otherwise the signal
@@ -1480,22 +1486,19 @@ class Irmt(QObject):
     #     return webapp_dirs
 
     def instantiate_web_apis(self):
-        ipt_api = IptApi(self, 'svir', self.registered_actions['ipt'],
-                         self.iface.messageBar())
-        self.ipt_api = ipt_api
-        taxtweb_api = TaxtwebApi(self, 'svir',
-                                 self.registered_actions['taxtweb'],
-                                 self.iface.messageBar())
-        self.taxtweb_api = taxtweb_api
-        taxonomy_api = TaxonomyApi(self, 'svir', None,
-                                   self.iface.messageBar())
-        self.taxonomy_api = taxonomy_api
+        self.ipt_api = IptApi(self, 'svir', self.registered_actions['ipt'],
+                              self.iface.messageBar())
+        self.taxtweb_api = TaxtwebApi(self, 'svir',
+                                      self.registered_actions['taxtweb'],
+                                      self.iface.messageBar())
+        self.taxonomy_api = TaxonomyApi(self, 'svir', None,
+                                        self.iface.messageBar())
         # self.apptest_api = AppTestApi(self.registered_actions['apptest'],
         #                               self.iface.messageBar())
         apis = {
-            'ipt': ipt_api,
-            'taxtweb': taxtweb_api,
-            'taxonomy': taxonomy_api,
+            'ipt': self.ipt_api,
+            'taxtweb': self.taxtweb_api,
+            'taxonomy': self.taxonomy_api,
             #  'apptest': self.apptest_api
         }
         self.web_apis = apis
