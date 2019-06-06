@@ -91,8 +91,8 @@ class HyBridge(QObject):
     @property
     def plugins(self):
         if 'hybridge_reg_plugins' not in qgis.utils.__dict__:
-            qgis.utils.__hybridge_reg_plugins = {}
-        return qgis.utils.__hybridge_reg_plugins
+            qgis.utils.hybridge_reg_plugins = {}
+        return qgis.utils.hybridge_reg_plugins
 
     # INFO: magic method __del__ is called when the instance is del-eted
     #       add code if needed, super() __del__() doesn't exist
@@ -185,21 +185,44 @@ class HyBridge(QObject):
             self.websocket_thread.exit()
             self.websocket_thread = None
 
+    # plugin_[un]register() methods MUST be called from plugin code ONLY
+    # because the plugin id is discovered introspecting the running code
     def plugin_register(self, plugin, apis):
         plugin_prefix = None
         plugin_filepath = inspect.stack()[1].filename
         for ppath in qgis.utils.plugin_paths:
-            print("ppath: %s" % ppath)
             if plugin_filepath.startswith(ppath):
                 plugin_prefix = plugin_filepath[len(ppath):]
-                print("plugin_prefix1: %s" % plugin_prefix)
                 plugin_prefix = plugin_prefix.split(os.sep)[1]
-                print("plugin_prefix2: %s" % plugin_prefix)
                 break
         else:
             raise ValueError('%s not found' % plugin_filepath)
-        self.plugins[plugin_prefix] = {
+        plugins = self.plugins
+        plugins[plugin_prefix] = {
             'name': plugin_prefix, 'plugin': plugin, 'apis': apis}
 
         for api in apis.values():
             self.websocket_thread.api_register(api)
+
+    # plugin_[un]register() methods MUST be called from plugin code ONLY
+    # because the plugin id is discovered introspecting the running code
+    def plugin_unregister(self):
+        plugin_prefix = None
+        plugin_filepath = inspect.stack()[1].filename
+        for ppath in qgis.utils.plugin_paths:
+            if plugin_filepath.startswith(ppath):
+                plugin_prefix = plugin_filepath[len(ppath):]
+                plugin_prefix = plugin_prefix.split(os.sep)[1]
+                break
+        else:
+            raise ValueError('%s not found' % plugin_filepath)
+
+        plugin_reg_item = self.plugins[plugin_prefix]
+        apis = plugin_reg_item['apis']
+        for api_name, api in apis.items():
+            self.websocket_thread.api_unregister(api)
+            ws_info = {'pin_name': plugin_reg_item['name'],
+                       'api_name': api_name}
+            api.unload_sig.emit(ws_info)
+
+        del self.plugins[plugin_prefix]

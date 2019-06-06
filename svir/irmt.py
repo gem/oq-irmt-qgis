@@ -54,6 +54,7 @@ from qgis.PyQt.QtCore import (
                               Qt,
                               QUrlQuery,
                               QObject,
+                              QThread,
                               )
 from qgis.PyQt.QtWidgets import QAction, QFileDialog, QApplication, QMenu
 from qgis.PyQt.QtGui import QIcon, QDesktopServices
@@ -124,6 +125,7 @@ class Irmt(QObject):
     def __init__(self, iface):
         super(Irmt, self).__init__()
         # Save reference to the QGIS interface
+        self.pin_name = 'svir'
         self.iface = iface
         self.canvas = self.iface.mapCanvas()
         # initialize plugin directory
@@ -356,6 +358,7 @@ class Irmt(QObject):
             self.instantiate_web_apis()
             # get or create directories to store input files for the OQ-Engine
             # self.webapp_dirs = self.get_webapp_dirs()
+
 
     @staticmethod
     def get_menu(parent, title):
@@ -628,6 +631,9 @@ class Irmt(QObject):
         """
         Remove all plugin's actions and corresponding buttons and connects
         """
+        print('IRMT unload: %s' % QThread.currentThreadId())
+        self.unregister_web_apis()
+
         # Remove the plugin menu items and toolbar icons
         for action_name in self.registered_actions:
             action = self.registered_actions[action_name]
@@ -651,6 +657,7 @@ class Irmt(QObject):
             self.layers_added)
         QgsProject.instance().layersRemoved.disconnect(
             self.layers_removed)
+        print('this is the end')
 
     def import_sv_variables(self):
         """
@@ -1485,23 +1492,36 @@ class Irmt(QObject):
     #         webapp_dirs[webapp_name] = webapp_dir
     #     return webapp_dirs
 
+    def register_web_apis(self):
+        # retrieve the current instance of HyBridge,
+        # we use it until plugin reload signals are implemented
+        hybridge = HyBridge(self.iface)
+        print('register_web_apis: [%s]' % self.web_apis)
+        hybridge.plugin_register(self, self.web_apis)
+
+    def unregister_web_apis(self):
+        # retrieve the current instance of HyBridge,
+        # we use it until plugin reload signals are implemented
+        hybridge = HyBridge(self.iface)
+        hybridge.plugin_unregister()
+
     def instantiate_web_apis(self):
-        self.ipt_api = IptApi(self, 'svir', self.registered_actions['ipt'],
+        self.ipt_api = IptApi(self, self.pin_name,
+                              self.registered_actions['ipt'],
                               self.iface.messageBar())
-        self.taxtweb_api = TaxtwebApi(self, 'svir',
+        self.taxtweb_api = TaxtwebApi(self, self.pin_name,
                                       self.registered_actions['taxtweb'],
                                       self.iface.messageBar())
-        self.taxonomy_api = TaxonomyApi(self, 'svir', None,
+        self.taxonomy_api = TaxonomyApi(self, self.pin_name, None,
                                         self.iface.messageBar())
-        # self.apptest_api = AppTestApi(self.registered_actions['apptest'],
+        # self.apptest_api = AppTestApi(self, self.pin_name,
+        #                               self.registered_actions['apptest'],
         #                               self.iface.messageBar())
-        apis = {
+        self.web_apis = {
             'ipt': self.ipt_api,
             'taxtweb': self.taxtweb_api,
             'taxonomy': self.taxonomy_api,
             #  'apptest': self.apptest_api
         }
-        self.web_apis = apis
 
-        hybridge = HyBridge(self.iface)
-        hybridge.plugin_register(self, apis)
+        self.register_web_apis()

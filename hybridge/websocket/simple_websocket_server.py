@@ -2,7 +2,6 @@
 The MIT License (MIT)
 Copyright (c) 2013 Dave P.
 '''
-import sys
 import ssl
 import json
 from qgis.PyQt.QtCore import pyqtSignal, pyqtSlot, QThread, QMutex
@@ -73,11 +72,24 @@ class SimpleWebSocketServer(QThread):
             return
         self.from_socket_sent.emit(hyb_msg)
 
+    @pyqtSlot('QVariantMap')
+    def handle_api_unload_sig(self, ws_info):
+        print('handled_unload: %s' % QThread.currentThreadId())
+        for fileno, conn in list(self.connections.items()):
+            if conn.scope_cmp(ws_info) == 0:
+                conn.close()
+                self._handleClose(conn)
+                del self.connections[fileno]
+                self.listeners.remove(fileno)
+
     def _loads(self, data):
         hyb_msg = json.loads(data)
-        if ('app' not in hyb_msg
-                or hyb_msg['app'] not in self.caller.web_apis
-                or 'msg' not in hyb_msg):
+
+
+        # FIXME: check web_apis of plugin assoc. with socket
+        #  or hyb_msg['app'] not in self.caller.web_apis
+
+        if ('app' not in hyb_msg or 'msg' not in hyb_msg):
             raise ValueError
         return hyb_msg
 
@@ -205,6 +217,8 @@ class SimpleWebSocketServer(QThread):
         self.mutex.lock()
         do_run = self.do_run
         self.mutex.unlock()
+        print('serveforever: %s' % QThread.currentThreadId())
+        
         while do_run is True:
             self.serveonce()
             self.mutex.lock()
@@ -224,6 +238,7 @@ class SimpleWebSocketServer(QThread):
         api.caller_sig['QVariantMap'].connect(self.handle_caller_sig)
         api.send_to_wss_sig['QVariantMap',
                             'QVariantMap'].connect(self.send_to_wss)
+        api.unload_sig['QVariantMap'].connect(self.handle_api_unload_sig)
 
     def api_unregister(self, api):
         api.caller_sig['QVariantMap'].disconnect(self.handle_caller_sig)

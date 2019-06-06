@@ -32,6 +32,7 @@ from hybridge.utilities.utils import log_msg
 class WebApi(QObject):
     caller_sig = pyqtSignal('QVariantMap')
     send_to_wss_sig = pyqtSignal('QVariantMap', 'QVariantMap')
+    unload_sig = pyqtSignal('QVariantMap')
 
     def __init__(self, plugin, plugin_name, app_name,
                  action, message_bar, parent=None):
