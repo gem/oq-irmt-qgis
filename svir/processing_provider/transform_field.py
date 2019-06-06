@@ -46,6 +46,7 @@ class TransformFieldAlgorithm(QgsProcessingAlgorithm):
     # calling from the QGIS console.
 
     INPUT = 'INPUT'
+    # FIXME: use multiselect to transform multiple fields
     FIELD_TO_TRANSFORM = 'FIELD_TO_TRANSFORM'
     OUTPUT = 'OUTPUT'
 

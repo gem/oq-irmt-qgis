@@ -94,7 +94,7 @@ def rank(input_values, variant_name="AVERAGE", inverse=False):
     if not inverse:  # high values get high ranks
         # obtain a value above the maximum value contained in input_values,
         # so it will never be picked as the minimum element of the list
-        above_max_input = max(input_values) + 1
+        above_max_input = max([value for value in input_values]) + 1
         curr_idx = 1
         while curr_idx <= len_input_values:
             # get the list of indices of the min elements of input_copy.
@@ -145,7 +145,8 @@ def rank(input_values, variant_name="AVERAGE", inverse=False):
 
     else:  # inverse, i.e., small inputs get high ranks
         # same as the direct methods, but proceeding top->down
-        below_min_input = min(input_values) - 1
+        below_min_input = min([value if value is not None else None
+                              for value in input_values]) - 1
         curr_idx = len_input_values
         while curr_idx > 0:
             top_indices = argwhere(
@@ -153,12 +154,14 @@ def rank(input_values, variant_name="AVERAGE", inverse=False):
             top_amount = len(top_indices)
             for top_idx in top_indices:
                 if variant_name == "AVERAGE":
-                    rank_list[top_idx] = \
-                        len_input_values - (2 * curr_idx - top_amount - 1) / 2.0
+                    rank_list[top_idx] = (
+                        len_input_values - (2 * curr_idx - top_amount - 1) /
+                        2.0)
                 elif variant_name == "MIN":
                     rank_list[top_idx] = len_input_values - curr_idx + 1
                 elif variant_name == "MAX":
-                    rank_list[top_idx] = len_input_values - curr_idx + top_amount
+                    rank_list[top_idx] = (
+                        len_input_values - curr_idx + top_amount)
                 elif variant_name == "DENSE":
                     rank_list[top_idx] = \
                         len_input_values - curr_idx - previous_ties + 1
@@ -293,10 +296,11 @@ def simple_quadratic(input_values, variant_name="INCREASING", inverse=False):
                                 "input value is 0")
     squared_range = (max_input - bottom) ** 2
     if variant_name == "INCREASING":
-        output_values = [(x - bottom) ** 2 / squared_range for x in input_values]
+        output_values = [
+            (x - bottom) ** 2 / squared_range for x in input_values]
     elif variant_name == "DECREASING":
         output_values = [(max_input - (x - bottom)) ** 2 / squared_range
-                       for x in input_values]
+                         for x in input_values]
 
     else:
         raise NotImplementedError("%s variant not implemented" % variant_name)
