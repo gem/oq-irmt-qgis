@@ -83,7 +83,7 @@ class RankAlgorithm(TransformFieldAlgorithm):
             ('MAX', self.tr('Maximum')),
             ('DENSE', self.tr('Dense')),
             ('ORDINAL', self.tr('Ordinal')))
-
+        # FIXME: the combobox does not pre-select the default value
         variant = QgsProcessingParameterEnum(
             self.VARIANT,
             self.tr('Tie strategy'),
