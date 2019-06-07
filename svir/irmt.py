@@ -32,29 +32,29 @@ import processing
 from copy import deepcopy
 from math import floor, ceil
 from qgis.core import (
-                       QgsVectorLayer,
-                       QgsMapLayer,
-                       QgsGraduatedSymbolRenderer,
-                       QgsSymbol, QgsGradientColorRamp,
-                       QgsRuleBasedRenderer,
-                       QgsFillSymbol,
-                       QgsProject,
-                       QgsExpression,
-                       Qgis,
-                       QgsApplication,
-                       QgsWkbTypes,
-                       )
+    QgsVectorLayer,
+    QgsMapLayer,
+    QgsGraduatedSymbolRenderer,
+    QgsSymbol, QgsGradientColorRamp,
+    QgsRuleBasedRenderer,
+    QgsFillSymbol,
+    QgsProject,
+    QgsExpression,
+    Qgis,
+    QgsApplication,
+    QgsWkbTypes,
+)
 
 from qgis.PyQt.QtCore import (
-                              QSettings,
-                              QTranslator,
-                              QCoreApplication,
-                              qVersion,
-                              QUrl,
-                              Qt,
-                              QUrlQuery,
-                              QObject,
-                              )
+    QSettings,
+    QTranslator,
+    QCoreApplication,
+    qVersion,
+    QUrl,
+    Qt,
+    QUrlQuery,
+    QObject,
+)
 from qgis.PyQt.QtWidgets import QAction, QFileDialog, QApplication, QMenu
 from qgis.PyQt.QtGui import QIcon, QDesktopServices
 
@@ -628,6 +628,8 @@ class Irmt(QObject):
         """
         Remove all plugin's actions and corresponding buttons and connects
         """
+        self.unregister_web_apis()
+
         # Remove the plugin menu items and toolbar icons
         for action_name in self.registered_actions:
             action = self.registered_actions[action_name]
@@ -1485,23 +1487,37 @@ class Irmt(QObject):
     #         webapp_dirs[webapp_name] = webapp_dir
     #     return webapp_dirs
 
+    def register_web_apis(self):
+        # retrieve the current instance of HyBridge,
+        # we use it until plugin reload signals are implemented
+        # FIXME: make an hybridge class-method that register apis
+        hybridge = HyBridge(self.iface)
+        hybridge.plugin_register(self, self.web_apis)
+
+    def unregister_web_apis(self):
+        # retrieve the current instance of HyBridge,
+        # we use it until plugin reload signals are implemented
+        # FIXME: make an hybridge class-method that unregister apis
+        hybridge = HyBridge(self.iface)
+        hybridge.plugin_unregister()
+
     def instantiate_web_apis(self):
-        self.ipt_api = IptApi(self, 'svir', self.registered_actions['ipt'],
+        self.ipt_api = IptApi(self, 'svir',
+                              self.registered_actions['ipt'],
                               self.iface.messageBar())
         self.taxtweb_api = TaxtwebApi(self, 'svir',
                                       self.registered_actions['taxtweb'],
                                       self.iface.messageBar())
         self.taxonomy_api = TaxonomyApi(self, 'svir', None,
                                         self.iface.messageBar())
-        # self.apptest_api = AppTestApi(self.registered_actions['apptest'],
+        # self.apptest_api = AppTestApi(self, 'svir',
+        #                               self.registered_actions['apptest'],
         #                               self.iface.messageBar())
-        apis = {
+        self.web_apis = {
             'ipt': self.ipt_api,
             'taxtweb': self.taxtweb_api,
             'taxonomy': self.taxonomy_api,
             #  'apptest': self.apptest_api
         }
-        self.web_apis = apis
 
-        hybridge = HyBridge(self.iface)
-        hybridge.plugin_register(self, apis)
+        self.register_web_apis()

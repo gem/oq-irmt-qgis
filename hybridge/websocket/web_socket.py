@@ -115,6 +115,13 @@ class WebSocket(QObject):
 
         super(WebSocket, self).__init__()
 
+    def scope_cmp(self, ws_info):
+        if (self.info['pin_name'] == ws_info['pin_name'] and
+                self.info['api_name'] == ws_info['api_name']):
+            return 0
+        else:
+            return -1
+
     def infoSet(self, pin_name, api_name):
         self.info['pin_name'] = pin_name
         self.info['api_name'] = api_name

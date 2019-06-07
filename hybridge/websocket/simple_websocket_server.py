@@ -2,13 +2,14 @@
 The MIT License (MIT)
 Copyright (c) 2013 Dave P.
 '''
-import sys
 import ssl
 import json
 from qgis.PyQt.QtCore import pyqtSignal, pyqtSlot, QThread, QMutex
+from qgis.PyQt.QtCore import QMutexLocker
 import socket
 from select import select
 from hybridge.websocket.web_socket import WebSocket, CLOSE
+from hybridge.websocket.web_api import WebApi
 
 
 class CloseSocketException(Exception):
@@ -22,6 +23,8 @@ class SimpleWebSocketServer(QThread):
     open_connection_sig = pyqtSignal('QVariantMap')
     close_connection_sig = pyqtSignal('QVariantMap')
 
+    register_sig = pyqtSignal(WebApi)
+
     def __init__(self, host, port, selectInterval=0.1):
         self.websocketclass = WebSocket
         self.serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -32,6 +35,7 @@ class SimpleWebSocketServer(QThread):
         self.connections = {}
         self.listeners = [self.serversocket]
         self.mutex = QMutex()
+        self.once_mutex = QMutex()
         self.do_run = True
 
         super(SimpleWebSocketServer, self).__init__()
@@ -73,11 +77,30 @@ class SimpleWebSocketServer(QThread):
             return
         self.from_socket_sent.emit(hyb_msg)
 
+    @pyqtSlot(WebApi)
+    def handle_register_sig(self, api):
+        api.unload_sig['QVariantMap'].connect(self.handle_api_unload_sig)
+
+    @pyqtSlot('QVariantMap')
+    def handle_api_unload_sig(self, ws_info):
+        # FIXME: creating a command_socket where inject data to
+        #        trigger 'select' to avoid delays on serve signal (unlock)
+        with QMutexLocker(self.once_mutex):
+            for fileno, conn in list(self.connections.items()):
+                if conn.scope_cmp(ws_info) == 0:
+                    conn.close()
+                    self._handleClose(conn)
+                    del self.connections[fileno]
+                    self.listeners.remove(fileno)
+
     def _loads(self, data):
         hyb_msg = json.loads(data)
-        if ('app' not in hyb_msg
-                or hyb_msg['app'] not in self.caller.web_apis
-                or 'msg' not in hyb_msg):
+
+
+        # FIXME: check web_apis of plugin assoc. with socket
+        #  or hyb_msg['app'] not in self.caller.web_apis
+
+        if ('app' not in hyb_msg or 'msg' not in hyb_msg):
             raise ValueError
         return hyb_msg
 
@@ -205,12 +228,16 @@ class SimpleWebSocketServer(QThread):
         self.mutex.lock()
         do_run = self.do_run
         self.mutex.unlock()
+
+        self.register_sig[WebApi].connect(self.handle_register_sig)
         while do_run is True:
-            self.serveonce()
+            with QMutexLocker(self.once_mutex):
+                self.serveonce()
             self.mutex.lock()
             do_run = self.do_run
             self.mutex.unlock()
         self.close()
+        self.register_sig['QVariantMap'].disconnect(self.handle_register_sig)
 
     def stop_running(self):
         self.mutex.lock()
@@ -224,6 +251,7 @@ class SimpleWebSocketServer(QThread):
         api.caller_sig['QVariantMap'].connect(self.handle_caller_sig)
         api.send_to_wss_sig['QVariantMap',
                             'QVariantMap'].connect(self.send_to_wss)
+        self.register_sig.emit(api)
 
     def api_unregister(self, api):
         api.caller_sig['QVariantMap'].disconnect(self.handle_caller_sig)
