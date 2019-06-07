@@ -91,8 +91,8 @@ class HyBridge(QObject):
     @property
     def plugins(self):
         if 'hybridge_reg_plugins' not in qgis.utils.__dict__:
-            qgis.utils.__hybridge_reg_plugins = {}
-        return qgis.utils.__hybridge_reg_plugins
+            qgis.utils.hybridge_reg_plugins = {}
+        return qgis.utils.hybridge_reg_plugins
 
     # INFO: magic method __del__ is called when the instance is del-eted
     #       add code if needed, super() __del__() doesn't exist
