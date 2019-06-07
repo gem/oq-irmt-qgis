@@ -5,6 +5,7 @@ from svir.processing_provider.rank_alg import RankAlgorithm
 from svir.processing_provider.sigmoid_alg import SigmoidAlgorithm
 from svir.processing_provider.min_max_alg import MinMaxAlgorithm
 from svir.processing_provider.z_score_alg import ZScoreAlgorithm
+from svir.processing_provider.log10_alg import Log10Algorithm
 from svir.processing_provider.simple_quadratic_alg import (
     SimpleQuadraticAlgorithm)
 from svir.processing_provider.spatial_join_summary_style import (
@@ -19,6 +20,7 @@ class Provider(QgsProcessingProvider):
         self.addAlgorithm(SigmoidAlgorithm())
         self.addAlgorithm(SimpleQuadraticAlgorithm())
         self.addAlgorithm(ZScoreAlgorithm())
+        self.addAlgorithm(Log10Algorithm())
         self.addAlgorithm(SpatialJoinSummaryStyle())
 
     def id(self, *args, **kwargs):

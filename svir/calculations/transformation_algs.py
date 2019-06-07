@@ -261,7 +261,9 @@ def log10_(input_values,
     if any(n == 0 for n in input_values):
         if variant_name == 'INCREMENT BY ONE IF ZEROS ARE FOUND':
             corrected_input = [input_value + 1 for input_value in input_values]
-            output_values = list(log10(corrected_input))
+            output_values = [
+                float(value) if value is not None else None
+                for value in list(log10(corrected_input))]
             return output_values, None
         elif variant_name == 'IGNORE ZEROS':
             output_values = []
@@ -271,8 +273,12 @@ def log10_(input_values,
                     output_values.append(output_value)
                 else:
                     output_values.append(log10(input_value))
+            for i, value in enumerate(output_values):
+                if value in (NULL, None):
+                    continue
+                output_values[i] = float(value)
             return output_values, None
-    output_values = list(log10(input_values))
+    output_values = [float(value) for value in list(log10(input_values))]
     return output_values, None
 
 

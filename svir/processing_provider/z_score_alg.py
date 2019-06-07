@@ -62,8 +62,10 @@ class ZScoreAlgorithm(TransformFieldAlgorithm):
         return self.tr(
             r"""
             Z-Score standardization of a vector layer field
+
             Direct:
-                :math:`f(x_i) = \frac{x_i - \mu_x}{\sigma_x}`
+                f(x_i) = x_i - μ_x / σ_x
+
             Inverse:
                 Multiply each input by -1, before doing exactly the same
             """)

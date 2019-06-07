@@ -22,18 +22,20 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-from qgis.core import QgsProcessingParameterBoolean
+from numpy import nan
+from qgis.core import (
+                       NULL,
+                       QgsProcessingParameterEnum,
+                       )
 from svir.processing_provider.transform_field import TransformFieldAlgorithm
-from svir.calculations.transformation_algs import min_max
+from svir.calculations.transformation_algs import log10_
 
 
-class MinMaxAlgorithm(TransformFieldAlgorithm):
+class Log10Algorithm(TransformFieldAlgorithm):
     """
-    This algorithm takes a vector layer and normalizes the values of one of
-    its fields in the interval 0-1 (or 1-0 if 'inverse' is checked).
     """
 
-    INVERSE = 'INVERSE'
+    VARIANT = 'VARIANT'
 
     def name(self):
         """
@@ -43,7 +45,7 @@ class MinMaxAlgorithm(TransformFieldAlgorithm):
         lowercase alphanumeric characters only and no spaces or other
         formatting characters.
         """
-        return 'minmax'
+        return 'log10_'
 
     def displayName(self):
         """
@@ -51,7 +53,7 @@ class MinMaxAlgorithm(TransformFieldAlgorithm):
         user-visible display of the algorithm name.
         """
         return self.tr(
-            "Min-max normalization (to range 0-1) of a vector layer field")
+            "Modified Log10 transformation coping with zeros")
 
     def shortHelpString(self):
         """
@@ -61,26 +63,43 @@ class MinMaxAlgorithm(TransformFieldAlgorithm):
         """
         return self.tr(
             r"""
-            Min-max normalization (to range 0-1) of a vector layer field
-
-            Direct:
-                f(x_i) = (x_i - min(x)) / (max(x) - min(x))
-
-            Inverse:
-                f(x_i) = 1 - (x_i - min(x)) / (max(x) - min(x))
+            Modified Log10 transformation, accepting positive or zero values.
+            In case of zeros:
+            * the variant "Ignore zeros" produces nan as output when any input is zero
+            * the variant "Increment by one if any zero is found" increments all input data by 1 before running the transformation
+            The algorithm uses the numpy.log10 function to transform the (possibly modified) list of values
             """)
 
     def initAlgorithm(self, config=None):
         super().initAlgorithm(config)
-        self.addParameter(
-            QgsProcessingParameterBoolean(
-                self.INVERSE,
-                description=self.tr("Invert min and max (range 1-0)"),
-                defaultValue=False,
-            )
-        )
+        self.variants = (
+            ('INCREMENT BY ONE IF ZEROS ARE FOUND',
+             self.tr('Increment by one if any zero is found')),
+            ('IGNORE ZEROS', self.tr('Ignore zeros')))
+        # FIXME: the combobox does not pre-select the default value
+        variant = QgsProcessingParameterEnum(
+            self.VARIANT,
+            self.tr('Variant'),
+            options=[p[1] for p in self.variants],
+            allowMultiple=False, defaultValue=[1], optional=False)
+        self.addParameter(variant)
 
     def transform_values(self, original_values, parameters, context):
-        inverse = self.parameterAsBool(parameters, self.INVERSE, context)
-        transformed_values, _ = min_max(original_values, inverse=inverse)
+        variant = [self.variants[i][0]
+                   for i in self.parameterAsEnums(
+                       parameters, self.VARIANT, context)][0]
+        # TODO: to avoid this, slightly change the called function
+        original_non_missing = [value for value in original_values
+                                if value is not None]
+        transformed_non_missing, _ = log10_(
+            original_non_missing, variant_name=variant)
+        transformed_values = [None] * len(original_values)
+        j = 0
+        for i in range(len(original_values)):
+            if original_values[i] is None:
+                continue
+            transformed_values[i] = transformed_non_missing[j]
+            if transformed_values[i] == NULL:
+                transformed_values[i] = nan
+            j += 1
         return transformed_values

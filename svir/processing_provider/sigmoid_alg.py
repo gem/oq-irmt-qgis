@@ -61,11 +61,13 @@ class SigmoidAlgorithm(TransformFieldAlgorithm):
         """
         return self.tr(
             r"""
+            Logistic sigmoid of values of a vector layer field.
+
             Logistic sigmoid function:
-                :math:`f(x) = \frac{1}{1 + e^{-x}}`
+            f(x) = 1 / 1 + e^(-x)
 
             Inverse function:
-                :math:`f(x) = \ln(\frac{x}{1-x})`
+            f(x) = ln(x / (1-x))
             """)
 
     def initAlgorithm(self, config=None):

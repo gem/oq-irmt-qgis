@@ -64,8 +64,8 @@ class RankAlgorithm(TransformFieldAlgorithm):
         the parameters and outputs associated with it..
         """
         return self.tr(
-            r"""Assign ranks to data, dealing with ties using the chosen
-            strategy.
+            r"""
+            Assign ranks to data, dealing with ties using the chosen strategy.
             """)
 
     def initAlgorithm(self, config=None):

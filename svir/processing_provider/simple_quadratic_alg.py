@@ -64,11 +64,9 @@ class SimpleQuadraticAlgorithm(TransformFieldAlgorithm):
         the parameters and outputs associated with it..
         """
         return self.tr(
-            r"""
-            This algorithm takes a vector layer and performs the simple
-            quadratic transformation (increasing or decreasing,
-            with bottom = 0) of the values of one of one of its fields.
-            """)
+            "This algorithm takes a vector layer and performs the "
+            "simple quadratic transformation (increasing or decreasing, "
+            "with bottom = 0) of the values of one of one of its fields.")
 
     def initAlgorithm(self, config=None):
         super().initAlgorithm(config)
