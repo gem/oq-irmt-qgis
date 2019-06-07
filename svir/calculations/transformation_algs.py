@@ -325,7 +325,7 @@ def sigmoid(input_values, variant_name="", inverse=False):
     if inverse:
         for y in input_values:
             try:
-                output = log(y / (1 - y))
+                output = float(log(y / (1 - y)))
             except Exception:
                 output = NULL
                 invalid_input_values.append(y)
@@ -333,7 +333,7 @@ def sigmoid(input_values, variant_name="", inverse=False):
     else:  # direct
         for x in input_values:
             try:
-                output = 1 / (1 + math.exp(-x))
+                output = float(1 / (1 + math.exp(-x)))
             except Exception:
                 output = NULL
                 invalid_input_values.append(x)

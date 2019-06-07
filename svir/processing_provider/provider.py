@@ -2,6 +2,7 @@ from qgis.core import QgsProcessingProvider
 from qgis.PyQt.QtGui import QIcon
 
 from svir.processing_provider.rank_alg import RankAlgorithm
+from svir.processing_provider.sigmoid_alg import SigmoidAlgorithm
 from svir.processing_provider.min_max_alg import MinMaxAlgorithm
 from svir.processing_provider.z_score_alg import ZScoreAlgorithm
 from svir.processing_provider.spatial_join_summary_style import (
@@ -13,6 +14,7 @@ class Provider(QgsProcessingProvider):
     def loadAlgorithms(self, *args, **kwargs):
         self.addAlgorithm(RankAlgorithm())
         self.addAlgorithm(MinMaxAlgorithm())
+        self.addAlgorithm(SigmoidAlgorithm())
         self.addAlgorithm(ZScoreAlgorithm())
         self.addAlgorithm(SpatialJoinSummaryStyle())
 
