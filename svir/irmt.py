@@ -124,6 +124,7 @@ class Irmt(QObject):
     def __init__(self, iface):
         super(Irmt, self).__init__()
         # Save reference to the QGIS interface
+        self.pin_name = 'svir'
         self.iface = iface
         self.canvas = self.iface.mapCanvas()
         # initialize plugin directory
@@ -1502,15 +1503,15 @@ class Irmt(QObject):
         hybridge.plugin_unregister()
 
     def instantiate_web_apis(self):
-        self.ipt_api = IptApi(self, 'svir',
+        self.ipt_api = IptApi(self, self.pin_name,
                               self.registered_actions['ipt'],
                               self.iface.messageBar())
-        self.taxtweb_api = TaxtwebApi(self, 'svir',
+        self.taxtweb_api = TaxtwebApi(self, self.pin_name,
                                       self.registered_actions['taxtweb'],
                                       self.iface.messageBar())
-        self.taxonomy_api = TaxonomyApi(self, 'svir', None,
+        self.taxonomy_api = TaxonomyApi(self, self.pin_name, None,
                                         self.iface.messageBar())
-        # self.apptest_api = AppTestApi(self, 'svir',
+        # self.apptest_api = AppTestApi(self, self.pin_name,
         #                               self.registered_actions['apptest'],
         #                               self.iface.messageBar())
         self.web_apis = {
