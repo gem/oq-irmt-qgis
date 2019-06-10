@@ -38,6 +38,7 @@ class WebApi(QObject):
                  action, message_bar, parent=None):
         assert app_name is not None
         super().__init__(parent)
+        self.ws_uuid = None
         self.plugin = plugin
         self.plugin_name = plugin_name
         self.app_name = app_name
@@ -64,7 +65,9 @@ class WebApi(QObject):
             }
         }
         # MN: FIXME ws_info is missing
-        self.send(api_msg, None)
+        self.send(api_msg, {'pin_name': self.plugin_name,
+                            'api_name': self.app_name,
+                            'uuid': self.ws_uuid})
         api_msg['cb'] = cb
         self.pending[uuid] = api_msg
         if reg is not None:
@@ -175,6 +178,15 @@ class WebApi(QObject):
     # @pyqtSlot(str, result='QVariantMap')
     # def json_decode(self, jsstr):
     #     return json.loads(jsstr)
+
+    def ws_uuid_set(self, ws_uuid):
+        self.ws_uuid = ws_uuid
+
+    def set_cells(self):
+        success, err_msg = self.run_command(
+            'set_cells', ('pippo', 'pluto'))
+        if not success:
+            log_msg(err_msg, level='C', message_bar=self.message_bar)
 
     def notify_click(self, api_uuid):
         self.info(api_uuid, "Clicked!")

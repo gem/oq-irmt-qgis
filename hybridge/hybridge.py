@@ -122,7 +122,6 @@ class HyBridge(QObject):
     @pyqtSlot('QVariantMap', 'QVariantMap')
     def handle_from_socket_received(self, hyb_msg, ws_info):
         log_msg("handle_from_socket_received: %s" % hyb_msg)
-
         app_name = hyb_msg['app']
         api_msg = hyb_msg['msg']
         # NOTE: this assumes the caller plugin has a defined list of web_apis
@@ -139,6 +138,9 @@ class HyBridge(QObject):
         apis = self.plugins[ws_info['pin_name']]['apis']
         api = apis[ws_info['api_name']]
         # api tracking is simpler with 1 o 1 between api and web-client conn
+
+        # MN FIXME: manage already opened socket
+        api.ws_uuid_set(ws_info['uuid'])
         api.set_app_icon(True)
 
     @pyqtSlot('QVariantMap')

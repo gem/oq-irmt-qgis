@@ -229,14 +229,14 @@ class Irmt(QObject):
             #                    is_webapi_action=True,
             #                    add_to_toolbar=True)
             # Action to set cells in ipt
-            # self.add_menu_item("ipt_set_cells",
-            #                    ":/plugins/irmt/ipt.svg",
-            #                    u"IPT set cells",
-            #                    self.ipt_set_cells,
-            #                    enable=self.experimental_enabled(),
-            #                    submenu='OQ Engine',
-            #                    is_webapi_action=True,
-            #                    add_to_toolbar=True)
+            self.add_menu_item("ipt_set_cells",
+                               ":/plugins/irmt/ipt.svg",
+                               u"IPT set cells",
+                               self.ipt_set_cells,
+                               enable=self.experimental_enabled(),
+                               submenu='OQ Engine',
+                               is_webapi_action=True,
+                               add_to_toolbar=True)
             # # Action to set cells in taxtweb
             # self.add_menu_item("taxtweb_set_cells",
             #                    ":/plugins/irmt/taxtweb.svg",
@@ -383,17 +383,11 @@ class Irmt(QObject):
         dlg = RecoverySettingsDialog(self.iface)
         dlg.exec_()
 
-    # def ipt_set_cells(self):
-    #     self._set_cells(self.ipt_api)
+    def ipt_set_cells(self):
+        self.ipt_api.set_cells()
 
     # def taxtweb_set_cells(self):
     #     self._set_cells(self.taxtweb_api)
-
-    # def _set_cells(self, web_api):
-    #     success, err_msg = web_api.run_command(
-    #         'set_cells', ('pippo', 'pluto'))
-    #     if not success:
-    #         log_msg(err_msg, level='C', message_bar=self.iface.messageBar())
 
     def aggregate(self):
         processing.Processing.initialize()

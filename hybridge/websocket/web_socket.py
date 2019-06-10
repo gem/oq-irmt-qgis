@@ -122,7 +122,7 @@ class WebSocket(QObject):
         else:
             return -1
 
-    def infoSet(self, pin_name, api_name):
+    def info_set(self, pin_name, api_name):
         self.info['pin_name'] = pin_name
         self.info['api_name'] = api_name
 
@@ -280,7 +280,7 @@ class WebSocket(QObject):
                         # MN FIXME: check plugin and app
                         #           names with what is registered
                         plugin, api = self.request.path.strip('/').split('/')
-                        self.infoSet(plugin, api)
+                        self.info_set(plugin, api)
                         key = self.request.headers['Sec-WebSocket-Key']
                         k = key.encode('ascii') + GUID_STR.encode('ascii')
                         k_s = base64.b64encode(
