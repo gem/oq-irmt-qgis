@@ -15,12 +15,14 @@ from svir.processing_provider.spatial_join_summary_style import (
 class Provider(QgsProcessingProvider):
 
     def loadAlgorithms(self, *args, **kwargs):
+        # Field Transformation
         self.addAlgorithm(RankAlgorithm())
         self.addAlgorithm(MinMaxAlgorithm())
         self.addAlgorithm(SigmoidAlgorithm())
         self.addAlgorithm(SimpleQuadraticAlgorithm())
         self.addAlgorithm(ZScoreAlgorithm())
         self.addAlgorithm(Log10Algorithm())
+        # Zonal aggregation
         self.addAlgorithm(SpatialJoinSummaryStyle())
 
     def id(self, *args, **kwargs):

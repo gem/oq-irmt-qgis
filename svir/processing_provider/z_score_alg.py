@@ -67,7 +67,7 @@ class ZScoreAlgorithm(TransformFieldAlgorithm):
                 f(x_i) = x_i - μ_x / σ_x
 
             Inverse:
-                Multiply each input by -1, before doing exactly the same
+                Multiply each input by -1, before doing the same
             """)
 
     def initAlgorithm(self, config=None):
