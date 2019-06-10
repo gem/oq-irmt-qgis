@@ -474,7 +474,7 @@ class Irmt(QObject):
             self.drive_oq_engine_server_dlg.start_polling()
         else:
             log_msg('Unable to connect to the OpenQuake Engine server. '
-                    'Please check that the server is running and the '
+                    'Please check that the server (WebUI) is running and the '
                     'plugin connection settings are correct.', level='C',
                     message_bar=self.drive_oq_engine_server_dlg.message_bar)
 
