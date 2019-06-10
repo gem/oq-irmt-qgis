@@ -23,7 +23,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtCore import QCoreApplication
+from qgis.PyQt.QtCore import QCoreApplication, QVariant
 from qgis.core import (QgsProcessing,
                        QgsProcessingUtils,
                        QgsProcessingAlgorithm,
@@ -168,6 +168,9 @@ class TransformFieldAlgorithm(QgsProcessingAlgorithm):
                     transformed_field.setName(
                         "%s_%s" % (field_to_transform.name(),
                                    transformation_name))
+                    transformed_field.setType(QVariant.Double)
+                    transformed_field.setLength(20)
+                    transformed_field.setPrecision(6)
                     self.transformed_fields.append(transformed_field)
 
         out_fields = QgsProcessingUtils.combineFields(
@@ -199,7 +202,6 @@ class TransformFieldAlgorithm(QgsProcessingAlgorithm):
         for current, fieldname_to_transform in enumerate(fields_to_transform):
             original_values = vector.values(
                 source, fieldname_to_transform)[fieldname_to_transform]
-            # FIXME: we might need to cast to float
             transformed_values[fieldname_to_transform] = self.transform_values(
                 original_values, parameters, context)
             feedback.setProgress(int(current * total))
