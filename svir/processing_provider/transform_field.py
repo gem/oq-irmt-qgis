@@ -25,12 +25,14 @@
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtCore import QCoreApplication
 from qgis.core import (QgsProcessing,
+                       QgsProcessingUtils,
                        QgsProcessingAlgorithm,
                        QgsProcessingParameterFeatureSource,
                        QgsProcessingParameterField,
                        QgsFeatureSink,
                        QgsFeature,
                        QgsField,
+                       QgsFields,
                        QgsProcessingException,
                        QgsProcessingParameterFeatureSink)
 from processing.tools import vector
@@ -46,8 +48,7 @@ class TransformFieldAlgorithm(QgsProcessingAlgorithm):
     # calling from the QGIS console.
 
     INPUT = 'INPUT'
-    # FIXME: use multiselect to transform multiple fields
-    FIELD_TO_TRANSFORM = 'FIELD_TO_TRANSFORM'
+    FIELDS_TO_TRANSFORM = 'FIELDS_TO_TRANSFORM'
     OUTPUT = 'OUTPUT'
 
     def tr(self, string):
@@ -99,13 +100,15 @@ class TransformFieldAlgorithm(QgsProcessingAlgorithm):
 
         self.addParameter(
             QgsProcessingParameterField(
-                self.FIELD_TO_TRANSFORM,
-                description=self.tr("Field to transform"),
-                defaultValue=None,
+                self.FIELDS_TO_TRANSFORM,
+                description=self.tr(
+                    "Fields to transform"
+                    " (leave empty to transform all numeric fields)"),
+                # defaultValue=None,
                 parentLayerParameterName=self.INPUT,
                 type=QgsProcessingParameterField.Numeric,
-                allowMultiple=False,  # FIXME
-                optional=False,
+                allowMultiple=True,
+                optional=True,
             )
         )
 
@@ -142,22 +145,39 @@ class TransformFieldAlgorithm(QgsProcessingAlgorithm):
             raise QgsProcessingException(
                 self.invalidSourceError(parameters, self.INPUT))
 
-        fieldname_to_transform = self.parameterAsString(
-            parameters, self.FIELD_TO_TRANSFORM, context)
-        field_to_transform = [field for field in source.fields()
-                              if field.name() == fieldname_to_transform][0]
-        transformed_field = QgsField(field_to_transform)
-        transformed_field_name = '%s_%s' % (
-            fieldname_to_transform, self.name())
-        transformed_field.setName(transformed_field_name)
-        sink_fields = source.fields()
-        sink_fields.append(transformed_field)
+        fields_to_transform = self.parameterAsFields(
+            parameters, self.FIELDS_TO_TRANSFORM, context)
+        source_fields = source.fields()
+        if not fields_to_transform:
+            # no fields selected, use all numeric ones
+            fields_to_transform = [source_fields.at(i).name()
+                                   for i in range(len(source_fields))
+                                   if source_fields.at(i).isNumeric()]
+        self.transformed_fields = QgsFields()
+
+        transformation_name = self.name()
+
+        fields_to_transform_idxs = []
+        for f in fields_to_transform:
+            idx = source.fields().lookupField(f)
+            if idx >= 0:
+                fields_to_transform_idxs.append(idx)
+                field_to_transform = source.fields().at(idx)
+                if field_to_transform.isNumeric():
+                    transformed_field = QgsField(field_to_transform)
+                    transformed_field.setName(
+                        "%s_%s" % (field_to_transform.name(),
+                                   transformation_name))
+                    self.transformed_fields.append(transformed_field)
+
+        out_fields = QgsProcessingUtils.combineFields(
+            source_fields, self.transformed_fields)
 
         (sink, self.dest_id) = self.parameterAsSink(
             parameters,
             self.OUTPUT,
             context,
-            sink_fields,
+            out_fields,
             source.wkbType(),
             source.sourceCrs()
         )
@@ -173,25 +193,38 @@ class TransformFieldAlgorithm(QgsProcessingAlgorithm):
             raise QgsProcessingException(
                 self.invalidSinkError(parameters, self.OUTPUT))
 
+        total = 100.0 / len(fields_to_transform)
+        transformed_values = {}
+
+        for current, fieldname_to_transform in enumerate(fields_to_transform):
+            original_values = vector.values(
+                source, fieldname_to_transform)[fieldname_to_transform]
+            # FIXME: we might need to cast to float
+            transformed_values[fieldname_to_transform] = self.transform_values(
+                original_values, parameters, context)
+            feedback.setProgress(int(current * total))
+
+        feedback.setProgress(0)
+
         # Compute the number of steps to display within the progress bar and
         # get features from source
         total = 100.0 / source.featureCount() if source.featureCount() else 0
-
-        original_values = vector.values(
-            source, fieldname_to_transform)[fieldname_to_transform]
-
-        transformed_values = self.transform_values(
-            original_values, parameters, context)
 
         for current, source_feature in enumerate(source.getFeatures()):
             # Stop the algorithm if cancel button has been clicked
             if feedback.isCanceled():
                 break
 
-            sink_feature = QgsFeature(sink_fields)
+            sink_feature = QgsFeature(out_fields)
+
+            # copy original fields
             for field in source.fields():
                 sink_feature[field.name()] = source_feature[field.name()]
-            sink_feature[transformed_field_name] = transformed_values[current]
+
+            for original_fieldname, transformed_field in zip(
+                    fields_to_transform, self.transformed_fields):
+                sink_feature[transformed_field.name()] = \
+                    transformed_values[original_fieldname][current]
             sink_feature.setGeometry(source_feature.geometry())
 
             # Add a feature in the sink
