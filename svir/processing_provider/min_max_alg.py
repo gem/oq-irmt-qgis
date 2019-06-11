@@ -23,51 +23,31 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 from qgis.core import QgsProcessingParameterBoolean
-from svir.processing_provider.transform_field import TransformFieldAlgorithm
+from svir.processing_provider.transform_fields import TransformFieldsAlgorithm
 from svir.calculations.transformation_algs import min_max
 
 
-class MinMaxAlgorithm(TransformFieldAlgorithm):
-    """
-    This algorithm takes a vector layer and normalizes the values of one of
-    its fields in the interval 0-1 (or 1-0 if 'inverse' is checked).
-    """
+class MinMaxAlgorithm(TransformFieldsAlgorithm):
 
     INVERSE = 'INVERSE'
 
     def name(self):
-        """
-        Returns the algorithm name, used for identifying the algorithm. This
-        string should be fixed for the algorithm, and must not be localised.
-        The name should be unique within each provider. Names should contain
-        lowercase alphanumeric characters only and no spaces or other
-        formatting characters.
-        """
-        return 'minmax'
+        return 'min_max'
 
     def displayName(self):
-        """
-        Returns the translated algorithm name, which should be used for any
-        user-visible display of the algorithm name.
-        """
         return self.tr(
-            "Min-max normalization (to range 0-1) of a vector layer field")
+            "Min-max normalization (to range 0-1)")
 
     def shortHelpString(self):
-        """
-        Returns a localised short helper string for the algorithm. This string
-        should provide a basic description about what the algorithm does and
-        the parameters and outputs associated with it..
-        """
         return self.tr(
             r"""
-            Min-max normalization (to range 0-1) of a vector layer field
+            Min-max normalization (to range 0-1) of vector layer fields
 
             Direct:
-                f(x_i) = (x_i - min(x)) / (max(x) - min(x))
+            f(x_i) = (x_i - min(x)) / (max(x) - min(x))
 
             Inverse:
-                f(x_i) = 1 - (x_i - min(x)) / (max(x) - min(x))
+            f(x_i) = 1 - (x_i - min(x)) / (max(x) - min(x))
             """)
 
     def initAlgorithm(self, config=None):

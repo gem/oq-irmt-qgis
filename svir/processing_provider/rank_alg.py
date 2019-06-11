@@ -26,47 +26,31 @@ from qgis.core import (
                        QgsProcessingParameterBoolean,
                        QgsProcessingParameterEnum,
                        )
-from svir.processing_provider.transform_field import TransformFieldAlgorithm
+from svir.processing_provider.transform_fields import TransformFieldsAlgorithm
 from svir.calculations.transformation_algs import rank
 
 
-class RankAlgorithm(TransformFieldAlgorithm):
-    """
-    This algorithm takes a vector layer and ranks the values of one of
-    its fields
-    """
+class RankAlgorithm(TransformFieldsAlgorithm):
 
     INVERSE = 'INVERSE'
     VARIANT = 'VARIANT'
 
     def name(self):
-        """
-        Returns the algorithm name, used for identifying the algorithm. This
-        string should be fixed for the algorithm, and must not be localised.
-        The name should be unique within each provider. Names should contain
-        lowercase alphanumeric characters only and no spaces or other
-        formatting characters.
-        """
         return 'rank'
 
     def displayName(self):
-        """
-        Returns the translated algorithm name, which should be used for any
-        user-visible display of the algorithm name.
-        """
         return self.tr(
-            "Rank values of a vector layer field")
+            "Data ranking")
 
     def shortHelpString(self):
-        """
-        Returns a localised short helper string for the algorithm. This string
-        should provide a basic description about what the algorithm does and
-        the parameters and outputs associated with it..
-        """
         return self.tr(
-            r"""
-            Assign ranks to data, dealing with ties using the chosen strategy.
-            """)
+            "Data ranking is a simple standardization technique. It is not"
+            " affected by outliers and it allows the performance of"
+            " enumeration units to be benchmarked over time in terms of their"
+            " relative positions (rankings).\n"
+            "This algorithm ranks values of vector layer fields, dealing with"
+            " ties using the chosen strategy (see"
+            " https://en.wikipedia.org/wiki/Ranking#Strategies_for_assigning_rankings)") # NOQA
 
     def initAlgorithm(self, config=None):
         super().initAlgorithm(config)
@@ -78,11 +62,11 @@ class RankAlgorithm(TransformFieldAlgorithm):
             )
         )
         self.variants = (
-            ('AVERAGE', self.tr('Average')),
-            ('MIN', self.tr('Minimum')),
-            ('MAX', self.tr('Maximum')),
-            ('DENSE', self.tr('Dense')),
-            ('ORDINAL', self.tr('Ordinal')))
+            ('AVERAGE', self.tr('Average - Fractional (1 2.5 2.5 4)')),
+            ('MIN', self.tr('Standard competition - Minimum (1224)')),
+            ('MAX', self.tr('Modified competition - Maximum (1334)')),
+            ('DENSE', self.tr('Dense (1223)')),
+            ('ORDINAL', self.tr('Ordinal (1234)')))
         variant = QgsProcessingParameterEnum(
             self.VARIANT,
             self.tr('Tie strategy'),

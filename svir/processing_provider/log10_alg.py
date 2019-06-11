@@ -27,58 +27,43 @@ from qgis.core import (
                        NULL,
                        QgsProcessingParameterEnum,
                        )
-from svir.processing_provider.transform_field import TransformFieldAlgorithm
+from svir.processing_provider.transform_fields import TransformFieldsAlgorithm
 from svir.calculations.transformation_algs import log10_
 
 
-class Log10Algorithm(TransformFieldAlgorithm):
-    """
-    """
+class Log10Algorithm(TransformFieldsAlgorithm):
 
     VARIANT = 'VARIANT'
 
     def name(self):
-        """
-        Returns the algorithm name, used for identifying the algorithm. This
-        string should be fixed for the algorithm, and must not be localised.
-        The name should be unique within each provider. Names should contain
-        lowercase alphanumeric characters only and no spaces or other
-        formatting characters.
-        """
         return 'log10_'
 
     def displayName(self):
-        """
-        Returns the translated algorithm name, which should be used for any
-        user-visible display of the algorithm name.
-        """
         return self.tr(
             "Modified Log10 transformation coping with zeros")
 
     def shortHelpString(self):
-        """
-        Returns a localised short helper string for the algorithm. This string
-        should provide a basic description about what the algorithm does and
-        the parameters and outputs associated with it..
-        """
         return self.tr(
-            r"""
-            Modified Log10 transformation, accepting positive or zero values.
-            In case of zeros:
-            * the variant "Ignore zeros" produces nan as output when any input is zero
-            * the variant "Increment by one if any zero is found" increments all input data by 1 before running the transformation
-            The algorithm uses the numpy.log10 function to transform the (possibly modified) list of values
-            """)
+            "Modified Log10 transformation, accepting positive or zero"
+            " values.\n"
+            " In case of zeros:\n"
+            " * the variant 'Ignore zeros' produces nan as output when any"
+            " input is zero;\n"
+            " * the variant 'Increment all values by one'"
+            " increments all input data by 1 before running the"
+            " transformation.\n"
+            " The algorithm uses the numpy.log10 function to transform the"
+            " (possibly modified) list of values")
 
     def initAlgorithm(self, config=None):
         super().initAlgorithm(config)
         self.variants = (
             ('INCREMENT BY ONE IF ZEROS ARE FOUND',
-             self.tr('Increment by one if any zero is found')),
+             self.tr('Increment all input values by one')),
             ('IGNORE ZEROS', self.tr('Ignore zeros')))
         variant = QgsProcessingParameterEnum(
             self.VARIANT,
-            self.tr('Variant'),
+            self.tr('In case any zero is found in the input values'),
             options=[p[1] for p in self.variants],
             allowMultiple=False, defaultValue=1, optional=False)
         self.addParameter(variant)

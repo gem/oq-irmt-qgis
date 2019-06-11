@@ -23,11 +23,11 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 from qgis.core import QgsProcessingParameterBoolean
-from svir.processing_provider.transform_field import TransformFieldAlgorithm
+from svir.processing_provider.transform_fields import TransformFieldsAlgorithm
 from svir.calculations.transformation_algs import sigmoid
 
 
-class SigmoidAlgorithm(TransformFieldAlgorithm):
+class SigmoidAlgorithm(TransformFieldsAlgorithm):
     """
     This algorithm takes a vector layer and calculates the logistic
     sigmoid of the values of one of its fields
@@ -36,39 +36,27 @@ class SigmoidAlgorithm(TransformFieldAlgorithm):
     INVERSE = 'INVERSE'
 
     def name(self):
-        """
-        Returns the algorithm name, used for identifying the algorithm. This
-        string should be fixed for the algorithm, and must not be localised.
-        The name should be unique within each provider. Names should contain
-        lowercase alphanumeric characters only and no spaces or other
-        formatting characters.
-        """
-        return 'sigmoid'
+        return 'logistic_sigmoid'
 
     def displayName(self):
-        """
-        Returns the translated algorithm name, which should be used for any
-        user-visible display of the algorithm name.
-        """
         return self.tr(
-            "Logistic sigmoid of values of a vector layer field")
+            "Logistic sigmoid")
 
     def shortHelpString(self):
-        """
-        Returns a localised short helper string for the algorithm. This string
-        should provide a basic description about what the algorithm does and
-        the parameters and outputs associated with it..
-        """
         return self.tr(
-            r"""
-            Logistic sigmoid of values of a vector layer field.
-
-            Logistic sigmoid function:
-            f(x) = 1 / 1 + e^(-x)
-
-            Inverse function:
-            f(x) = ln(x / (1-x))
-            """)
+            "The Sigmoid function is a transformation having an 'S' shape"
+            " (sigmoid curve). It is used to transform values on (-∞, ∞)"
+            " into numbers on (0, 1). The Sigmoid function is often utilized"
+            " because the transformation is relative to a convergence upon an"
+            " upper limit as defined by the S-curve.\n"
+            "This algorithm utilizes"
+            " a 'simple sigmoid function' as well as its inverse. The inverse"
+            " of the Sigmoid function is a logit function which transfers"
+            " variables on (0, 1) into a new variable on (-∞, ∞).\n\n"
+            "Logistic sigmoid function:\n"
+            "f(x) = 1 / 1 + e^(-x)\n\n"
+            "Inverse function:\n"
+            "f(x) = ln(x / (1-x))")
 
     def initAlgorithm(self, config=None):
         super().initAlgorithm(config)

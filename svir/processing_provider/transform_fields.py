@@ -29,6 +29,7 @@ from qgis.core import (QgsProcessing,
                        QgsProcessingAlgorithm,
                        QgsProcessingParameterFeatureSource,
                        QgsProcessingParameterField,
+                       QgsProcessingParameterBoolean,
                        QgsFeatureSink,
                        QgsFeature,
                        QgsField,
@@ -38,7 +39,7 @@ from qgis.core import (QgsProcessing,
 from processing.tools import vector
 
 
-class TransformFieldAlgorithm(QgsProcessingAlgorithm):
+class TransformFieldsAlgorithm(QgsProcessingAlgorithm):
     """
     Parent class for algorithms that perform field transformations
     """
@@ -49,6 +50,7 @@ class TransformFieldAlgorithm(QgsProcessingAlgorithm):
 
     INPUT = 'INPUT'
     FIELDS_TO_TRANSFORM = 'FIELDS_TO_TRANSFORM'
+    # OVERWRITE = 'OVERWRITE'
     OUTPUT = 'OUTPUT'
 
     def tr(self, string):
@@ -59,6 +61,31 @@ class TransformFieldAlgorithm(QgsProcessingAlgorithm):
 
     def createInstance(self):
         return type(self)()
+
+    def name(self):
+        """
+        Returns the algorithm name, used for identifying the algorithm. This
+        string should be fixed for the algorithm, and must not be localised.
+        The name should be unique within each provider. Names should contain
+        lowercase alphanumeric characters only and no spaces or other
+        formatting characters.
+        """
+        raise NotImplementedError
+
+    def displayName(self):
+        """
+        Returns the translated algorithm name, which should be used for any
+        user-visible display of the algorithm name.
+        """
+        raise NotImplementedError
+
+    def shortHelpString(self):
+        """
+        Returns a localised short helper string for the algorithm. This string
+        should provide a basic description about what the algorithm does and
+        the parameters and outputs associated with it..
+        """
+        raise NotImplementedError
 
     def group(self):
         """
@@ -118,6 +145,14 @@ class TransformFieldAlgorithm(QgsProcessingAlgorithm):
                 optional=True,
             )
         )
+
+        # self.addParameter(
+        #     QgsProcessingParameterBoolean(
+        #         self.OVERWRITE,
+        #         description=self.tr("Overwrite original field(s)"),
+        #         defaultValue=False,
+        #     )
+        # )
 
         # We add a feature sink in which to store our processed features (this
         # usually takes the form of a newly created vector layer when the

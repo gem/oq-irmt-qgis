@@ -153,5 +153,8 @@ is opened. Please refer to the `code documentation
 for the detailed description of all the agorithms and variants provided by
 the OpenQuake IRMT.
 
+The plugin is also an algorithm provider (the :guilabel:`OpenQuake IRMT` provider)
+for the Processing Toolbox. The transformation functions described above
+are available under the :guilabel:`Field transformation` group.
 
 .. |icon-transform-attributes| image:: images/iconTransformAttribute.png

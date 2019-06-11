@@ -26,47 +26,33 @@ from qgis.core import (
                        QgsProcessingParameterBoolean,
                        QgsProcessingParameterEnum,
                        )
-from svir.processing_provider.transform_field import TransformFieldAlgorithm
+from svir.processing_provider.transform_fields import TransformFieldsAlgorithm
 from svir.calculations.transformation_algs import simple_quadratic
 
 
-class SimpleQuadraticAlgorithm(TransformFieldAlgorithm):
-    """
-    This algorithm takes a vector layer and performs the simple quadratic
-    transformation (with bottom = 0) of the values of one of one of its fields
-    """
+class SimpleQuadraticAlgorithm(TransformFieldsAlgorithm):
 
     INVERSE = 'INVERSE'
     VARIANT = 'VARIANT'
 
     def name(self):
-        """
-        Returns the algorithm name, used for identifying the algorithm. This
-        string should be fixed for the algorithm, and must not be localised.
-        The name should be unique within each provider. Names should contain
-        lowercase alphanumeric characters only and no spaces or other
-        formatting characters.
-        """
         return 'simple_quadratic'
 
     def displayName(self):
-        """
-        Returns the translated algorithm name, which should be used for any
-        user-visible display of the algorithm name.
-        """
         return self.tr(
-            "Simple quadratic of values of a vector layer field")
+            "Simple quadratic (U-shaped) function")
 
     def shortHelpString(self):
-        """
-        Returns a localised short helper string for the algorithm. This string
-        should provide a basic description about what the algorithm does and
-        the parameters and outputs associated with it..
-        """
         return self.tr(
-            "This algorithm takes a vector layer and performs the "
-            "simple quadratic transformation (increasing or decreasing, "
-            "with bottom = 0) of the values of one of one of its fields.")
+            "Quadratic or U-shaped functions are the product of a polynomial"
+            " equation of degree 2. In a quadratic function, the variable is"
+            " always squared resulting in a parabola or U-shaped curve. This"
+            " algorithm offers an increasing or decreasing variant of the"
+            " quadratic equation for horizontal translations and the"
+            " respective inverses of the two for vertical translations.\n"
+            "This algorithm performs the simple quadratic transformation"
+            " (increasing or decreasing, with bottom = 0) of the values of"
+            " vector layer fields.")
 
     def initAlgorithm(self, config=None):
         super().initAlgorithm(config)

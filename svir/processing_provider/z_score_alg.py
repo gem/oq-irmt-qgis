@@ -23,52 +23,36 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 from qgis.core import QgsProcessingParameterBoolean
-from svir.processing_provider.transform_field import TransformFieldAlgorithm
+from svir.processing_provider.transform_fields import TransformFieldsAlgorithm
 from svir.calculations.transformation_algs import z_score
 
 
-class ZScoreAlgorithm(TransformFieldAlgorithm):
-    """
-    This algorithm takes a vector layer and performs a Z-Score standardization
-    of the values of one of its fields
-    """
+class ZScoreAlgorithm(TransformFieldsAlgorithm):
 
     INVERSE = 'INVERSE'
 
     def name(self):
-        """
-        Returns the algorithm name, used for identifying the algorithm. This
-        string should be fixed for the algorithm, and must not be localised.
-        The name should be unique within each provider. Names should contain
-        lowercase alphanumeric characters only and no spaces or other
-        formatting characters.
-        """
         return 'zscore'
 
     def displayName(self):
-        """
-        Returns the translated algorithm name, which should be used for any
-        user-visible display of the algorithm name.
-        """
-        return self.tr(
-            "Z-Score standardization of a vector layer field")
+        return self.tr("Z-Score standardization")
 
     def shortHelpString(self):
-        """
-        Returns a localised short helper string for the algorithm. This string
-        should provide a basic description about what the algorithm does and
-        the parameters and outputs associated with it..
-        """
         return self.tr(
-            r"""
-            Z-Score standardization of a vector layer field
-
-            Direct:
-                f(x_i) = x_i - μ_x / σ_x
-
-            Inverse:
-                Multiply each input by -1, before doing the same
-            """)
+            "Z-Score standardization of vector layer numeric fields\n"
+            "This is a widely used normalization/standardization technique,"
+            " that converts variables to a common scale with a mean of zero"
+            " and standard deviation of one.\n"
+            "Variables with outliers that are extreme values may have a"
+            " greater effect while combining them with other variables into"
+            " composite indicators. The latter may not be desirable if the"
+            " intention is to support compensability where a deficit in one"
+            " variable can be offset (or compensated) by a surplus in"
+            " another.\n\n"
+            "Direct:\n"
+            "f(x_i) = x_i - μ_x / σ_x\n\n"
+            "Inverse:\n"
+            "Multiply each input by -1, before doing the same")
 
     def initAlgorithm(self, config=None):
         super().initAlgorithm(config)
