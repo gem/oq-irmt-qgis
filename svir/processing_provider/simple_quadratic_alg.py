@@ -80,12 +80,11 @@ class SimpleQuadraticAlgorithm(TransformFieldAlgorithm):
         self.variants = (
             ('INCREASING', self.tr('Increasing')),
             ('DECREASING', self.tr('Decreasing')))
-        # FIXME: the combobox does not pre-select the default value
         variant = QgsProcessingParameterEnum(
             self.VARIANT,
             self.tr('Variant'),
             options=[p[1] for p in self.variants],
-            allowMultiple=False, defaultValue=[1], optional=False)
+            allowMultiple=False, defaultValue=0, optional=False)
         self.addParameter(variant)
 
     def transform_values(self, original_values, parameters, context):

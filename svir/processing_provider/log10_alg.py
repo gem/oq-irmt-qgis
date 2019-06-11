@@ -76,12 +76,11 @@ class Log10Algorithm(TransformFieldAlgorithm):
             ('INCREMENT BY ONE IF ZEROS ARE FOUND',
              self.tr('Increment by one if any zero is found')),
             ('IGNORE ZEROS', self.tr('Ignore zeros')))
-        # FIXME: the combobox does not pre-select the default value
         variant = QgsProcessingParameterEnum(
             self.VARIANT,
             self.tr('Variant'),
             options=[p[1] for p in self.variants],
-            allowMultiple=False, defaultValue=[1], optional=False)
+            allowMultiple=False, defaultValue=1, optional=False)
         self.addParameter(variant)
 
     def transform_values(self, original_values, parameters, context):
