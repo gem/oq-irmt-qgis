@@ -77,6 +77,13 @@ class TransformFieldAlgorithm(QgsProcessingAlgorithm):
         """
         return 'transform'
 
+    def tags(self):
+        return self.tr(
+            "transformation,normalization,standardization,minmax,zscore,log,"
+            "sigmoid,ranking,quadratic,inverse,multi-feature,"
+            "stats,statistics,sum,maximum,minimum,mean,average,"
+            "standard,deviation,range").split(',')
+
     def icon(self):
         return QIcon(":/plugins/irmt/transform.svg")
 
