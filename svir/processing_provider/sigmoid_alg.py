@@ -40,7 +40,7 @@ class SigmoidAlgorithm(TransformFieldsAlgorithm):
 
     def displayName(self):
         return self.tr(
-            "Logistic sigmoid")
+            "Logistic sigmoid (S-shaped) function")
 
     def shortHelpString(self):
         return self.tr(
