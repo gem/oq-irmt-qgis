@@ -47,7 +47,15 @@ These include:
 1. **Data Ranking** is the simplest standardization technique.
    Ranking is not affected by outliers and allows the performance of
    enumeration units to be benchmarked over time in terms of their relative
-   positions (rankings).
+   positions (rankings). The ranking algorithm deals with
+   ties using a chosen strategy between those listed below (see
+   `<https://en.wikipedia.org/wiki/Ranking#Strategies_for_assigning_rankings>_`):
+
+   * Average - Fractional (1 2.5 2.5 4)
+   * Standard competition - Minimum (1 2 2 4)
+   * Modified competition - Maximum (1 3 3 4)
+   * Dense (1 2 2 3)
+   * Ordinal (1 2 3 4)
  
 2. **Z-scores (or normalization)** is the most common standardization
    technique. A Z-score converts indicators to a common scale with a mean of
