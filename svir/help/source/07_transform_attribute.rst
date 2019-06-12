@@ -86,13 +86,8 @@ These include:
    * Ignore zeros: each zero in input is transformed into nan
    * Increment all values by one: each input value is incremented by 1 before running the transformation.
 
-   The algorithm uses the numpy.log10 function to transform the
-    (possibly modified) list of values.
-
-   It is not possible to log transform values within the
-   plugin if the data contains negative values or a zero. For values of zero,
-   the tool will warn users and suggest that a :math:`1.0` constant be added to move
-   the minimum value of the distribution.
+   The algorithm uses the numpy.log10 function to transform the (possibly
+   modified) list of values.
  
 5. **Sigmoid function** is a transformation function having an *S*
    shape (sigmoid curve). A Sigmoid function is used to transform values on
