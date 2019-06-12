@@ -403,8 +403,8 @@ class SpatialJoinSummaryStyle(QgsProcessingAlgorithm):
         added_fieldnames = [field.name() for field in self.fields_to_join]
         if len(added_fieldnames) > 1:
             style_by = QInputDialog.getItem(
-                QWidget(), "Style output by", "Field", added_fieldnames,
-                editable=False)[0]
+                iface.mainWindow(), "Style output by", "Field",
+                added_fieldnames, editable=False)[0]
         else:
             style_by = added_fieldnames[0]
         LoadOutputAsLayerDialog.style_maps(
