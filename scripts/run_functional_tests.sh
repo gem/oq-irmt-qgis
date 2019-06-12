@@ -2,6 +2,7 @@
 
 set -e
 
+docker rm -f qgis || true
 docker run -d --name qgis -v /tmp/.X11-unix:/tmp/.X11-unix \
  -v `pwd`/../.:/tests_directory \
  -e DISPLAY=:99 \
