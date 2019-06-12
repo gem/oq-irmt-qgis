@@ -371,10 +371,11 @@ class Irmt(object):
                           for summary in default_summaries],
             }
         res = processing.execAlgorithmDialog(alg_id, initial_params)
-        processed_layer = res['OUTPUT']
-        QgsProject.instance().addMapLayer(processed_layer)
-        self.iface.setActiveLayer(processed_layer)
-        self.iface.zoomToActiveLayer()
+        if 'OUTPUT' in res:
+            processed_layer = res['OUTPUT']
+            QgsProject.instance().addMapLayer(processed_layer)
+            self.iface.setActiveLayer(processed_layer)
+            self.iface.zoomToActiveLayer()
 
     def ipt(self):
         if self.ipt_dlg is None:
