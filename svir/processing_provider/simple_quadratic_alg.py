@@ -40,7 +40,8 @@ class SimpleQuadraticAlgorithm(TransformFieldsAlgorithm):
 
     def displayName(self):
         return self.tr(
-            "Simple quadratic (U-shaped) function")
+            "Simple quadratic (U-shaped) transformation"
+            " of vector layer fields")
 
     def shortHelpString(self):
         return self.tr(

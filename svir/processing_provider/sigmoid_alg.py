@@ -40,7 +40,8 @@ class SigmoidAlgorithm(TransformFieldsAlgorithm):
 
     def displayName(self):
         return self.tr(
-            "Logistic sigmoid (S-shaped) function")
+            "Logistic sigmoid (S-shaped) transformation"
+            " of vector layer fields")
 
     def shortHelpString(self):
         return self.tr(
@@ -53,9 +54,9 @@ class SigmoidAlgorithm(TransformFieldsAlgorithm):
             " a 'simple sigmoid function' as well as its inverse. The inverse"
             " of the Sigmoid function is a logit function which transfers"
             " variables on (0, 1) into a new variable on (-∞, ∞).\n\n"
-            "Logistic sigmoid function:\n"
+            "Direct transformation:\n"
             "f(x) = 1 / 1 + e^(-x)\n\n"
-            "Inverse function:\n"
+            "Inverse transformation:\n"
             "f(x) = ln(x / (1-x))")
 
     def initAlgorithm(self, config=None):

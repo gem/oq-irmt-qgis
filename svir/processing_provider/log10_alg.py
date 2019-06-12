@@ -40,19 +40,20 @@ class Log10Algorithm(TransformFieldsAlgorithm):
 
     def displayName(self):
         return self.tr(
-            "Modified Log10 transformation coping with zeros")
+            "Modified log10 transformation (coping with zeros) of"
+            " vector layer fields")
 
     def shortHelpString(self):
         return self.tr(
-            "Modified Log10 transformation, accepting positive or zero"
-            " values.\n"
-            " In case of zeros:\n"
-            " * the variant 'Ignore zeros' produces nan as output when any"
-            " input is zero;\n"
-            " * the variant 'Increment all values by one'"
-            " increments all input data by 1 before running the"
-            " transformation.\n"
-            " The algorithm uses the numpy.log10 function to transform the"
+            "The log10 function is valid only for real positive values.\n"
+            "This algorithm copes with the case in which any zeros are"
+            "present in the input data, offering two strategies:\n\n"
+            "Ignore zeros:\n"
+            "each zero in input is transformed into nan\n\n"
+            "Increment all values by one:\n"
+            "each input value is incremented by 1 before running the"
+            " transformation.\n\n"
+            "The algorithm uses the numpy.log10 function to transform the"
             " (possibly modified) list of values")
 
     def initAlgorithm(self, config=None):

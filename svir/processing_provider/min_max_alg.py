@@ -36,19 +36,19 @@ class MinMaxAlgorithm(TransformFieldsAlgorithm):
 
     def displayName(self):
         return self.tr(
-            "Min-max normalization (to range 0-1)")
+            "Min-max normalization (to range 0-1) of vector layer fields")
 
     def shortHelpString(self):
         return self.tr(
-            r"""
-            Min-max normalization (to range 0-1) of vector layer fields
-
-            Direct:
-            f(x_i) = (x_i - min(x)) / (max(x) - min(x))
-
-            Inverse:
-            f(x_i) = 1 - (x_i - min(x)) / (max(x) - min(x))
-            """)
+            "For each field, the minimum value of that field gets transformed"
+            " into a 0, the maximum value gets transformed into a 1, and"
+            " every other value gets transformed into a decimal between"
+            " 0 and 1. It guarantees that all transformed fields will have the"
+            " exact same scale, but does not handle outliers well.\n\n"
+            "Direct transformation:\n"
+            "f(x_i) = (x_i - min(x)) / (max(x) - min(x))\n\n"
+            "Inverse transformation:\n"
+            "f(x_i) = 1 - (x_i - min(x)) / (max(x) - min(x))")
 
     def initAlgorithm(self, config=None):
         super().initAlgorithm(config)

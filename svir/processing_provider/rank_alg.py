@@ -40,7 +40,7 @@ class RankAlgorithm(TransformFieldsAlgorithm):
 
     def displayName(self):
         return self.tr(
-            "Data ranking")
+            "Data ranking of vector layer fields")
 
     def shortHelpString(self):
         return self.tr(

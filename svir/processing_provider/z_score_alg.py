@@ -35,11 +35,10 @@ class ZScoreAlgorithm(TransformFieldsAlgorithm):
         return 'zscore'
 
     def displayName(self):
-        return self.tr("Z-Score standardization")
+        return self.tr("Z-score normalization of vector layer fields")
 
     def shortHelpString(self):
         return self.tr(
-            "Z-Score standardization of vector layer numeric fields\n"
             "This is a widely used normalization/standardization technique,"
             " that converts variables to a common scale with a mean of zero"
             " and standard deviation of one.\n"
@@ -48,10 +47,12 @@ class ZScoreAlgorithm(TransformFieldsAlgorithm):
             " composite indicators. The latter may not be desirable if the"
             " intention is to support compensability where a deficit in one"
             " variable can be offset (or compensated) by a surplus in"
-            " another.\n\n"
-            "Direct:\n"
+            " another.\n"
+            "Z-score handles outliers, but does not produce normalized data"
+            " with the exact same scale.\n\n"
+            "Direct transformation:\n"
             "f(x_i) = x_i - μ_x / σ_x\n\n"
-            "Inverse:\n"
+            "Inverse transformation:\n"
             "Multiply each input by -1, before doing the same")
 
     def initAlgorithm(self, config=None):
