@@ -29,7 +29,6 @@ from qgis.core import (QgsProcessing,
                        QgsProcessingAlgorithm,
                        QgsProcessingParameterFeatureSource,
                        QgsProcessingParameterField,
-                       QgsProcessingParameterBoolean,
                        QgsFeatureSink,
                        QgsFeature,
                        QgsField,
@@ -50,7 +49,6 @@ class TransformFieldsAlgorithm(QgsProcessingAlgorithm):
 
     INPUT = 'INPUT'
     FIELDS_TO_TRANSFORM = 'FIELDS_TO_TRANSFORM'
-    # OVERWRITE = 'OVERWRITE'
     OUTPUT = 'OUTPUT'
 
     def tr(self, string):
@@ -145,14 +143,6 @@ class TransformFieldsAlgorithm(QgsProcessingAlgorithm):
                 optional=True,
             )
         )
-
-        # self.addParameter(
-        #     QgsProcessingParameterBoolean(
-        #         self.OVERWRITE,
-        #         description=self.tr("Overwrite original field(s)"),
-        #         defaultValue=False,
-        #     )
-        # )
 
         # We add a feature sink in which to store our processed features (this
         # usually takes the form of a newly created vector layer when the
