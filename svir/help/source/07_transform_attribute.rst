@@ -49,7 +49,7 @@ These include:
    enumeration units to be benchmarked over time in terms of their relative
    positions (rankings). The ranking algorithm deals with
    ties using a chosen strategy between those listed below (see
-   `<https://en.wikipedia.org/wiki/Ranking#Strategies_for_assigning_rankings>_`):
+   `<https://en.wikipedia.org/wiki/Ranking#Strategies_for_assigning_rankings>`_):
 
    * Average - Fractional (1 2.5 2.5 4)
    * Standard competition - Minimum (1 2 2 4)
