@@ -1391,7 +1391,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.redraw_current_selection()
 
     def on_recalculate_curve_btn_clicked(self):
-        self.layer_changed()
+        self.redraw_current_selection()
 
     def on_n_simulations_changed(self):
         QSettings().setValue('irmt/n_simulations_per_building',
