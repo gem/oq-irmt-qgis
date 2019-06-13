@@ -2,11 +2,9 @@ import math
 
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtCore import QVariant, QCoreApplication
-from qgis.PyQt.QtWidgets import QInputDialog, QWidget
+from qgis.PyQt.QtWidgets import QInputDialog
 from qgis.utils import iface
 from qgis.core import (NULL,
-                       QgsApplication,
-                       QgsProject,
                        QgsField,
                        QgsFields,
                        QgsFeatureSink,
