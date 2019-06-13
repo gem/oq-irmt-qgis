@@ -1,3 +1,33 @@
+# -*- coding: utf-8 -*-
+# /***************************************************************************
+# Irmt
+#                                 A QGIS plugin
+# OpenQuake Integrated Risk Modelling Toolkit
+#                              -------------------
+#        begin                : 2013-10-24
+#        copyright            : (C) 2013-2019 by GEM Foundation
+#        email                : devops@openquake.org
+# ***************************************************************************/
+#
+# OpenQuake is free software: you can redistribute it and/or modify it
+# under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# OpenQuake is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
+
+# NOTE: this is an extension of
+# https://github.com/qgis/QGIS/blob/8a3c7b14c367771d096b4a6d006aa3c4b1017dd5/python/plugins/processing/algs/qgis/SpatialJoinSummary.py  # NOQA
+# I tried to sublcass SpatialJoinSummary, but it did not work, therefore I was
+# forced to copy and re-adapt the whole class, saving self.dest_id and
+# implementing the postProcessing method
+
 import math
 
 from qgis.PyQt.QtGui import QIcon
