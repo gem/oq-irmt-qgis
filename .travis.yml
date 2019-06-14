@@ -6,9 +6,6 @@ language: python
 python:
     - "3.6"
 
-env:
-  - DEBIAN_FRONTEND=noninteractive
-
 before_install:
     - if [ "$TRAVIS_PULL_REQUEST_BRANCH" != "" ]; then BRANCH=$TRAVIS_PULL_REQUEST_BRANCH; else BRANCH=$TRAVIS_BRANCH; fi
     - if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${BRANCH})" == "" ]; then
