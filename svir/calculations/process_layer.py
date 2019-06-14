@@ -368,8 +368,10 @@ class ProcessLayer(object):
             for feat in self.layer.getFeatures():
                 feat_id = feat.id()
                 value = transformed_dict[feat_id]
-                if type(value) not in (NULL, type(None)):
+                try:
                     value = float(value)
+                except Exception:
+                    pass
                 self.layer.changeAttributeValue(feat_id, new_attr_id, value)
         return actual_new_attr_name, invalid_input_values
 

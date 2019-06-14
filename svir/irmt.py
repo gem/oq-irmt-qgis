@@ -1274,10 +1274,14 @@ class Irmt(object):
             layer = self.iface.activeLayer()
             input_attr_names = [
                 field_name_plus_alias.split('(')[0].strip()
+                if '(' in field_name_plus_alias
+                else field_name_plus_alias
                 for field_name_plus_alias in
                 dlg.fields_multiselect.get_selected_items()]
             input_attr_aliases = [
                 field_name_plus_alias.split('(')[1].split(')')[0].strip()
+                if '(' in field_name_plus_alias
+                else ''
                 for field_name_plus_alias in
                 dlg.fields_multiselect.get_selected_items()]
             algorithm_name = dlg.algorithm_cbx.currentText()
@@ -1324,7 +1328,7 @@ class Irmt(object):
                     log_msg(msg, level=level,
                             message_bar=self.iface.messageBar())
                 except (ValueError, NotImplementedError, TypeError) as e:
-                    log_msg(e.message, level='C',
+                    log_msg(str(e), level='C',
                             message_bar=self.iface.messageBar(),
                             exception=e)
                 else:  # only if the transformation was performed successfully

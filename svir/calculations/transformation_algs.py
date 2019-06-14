@@ -255,9 +255,6 @@ def log10_(input_values,
     if variant_name not in LOG10_VARIANTS:
         raise NotImplementedError(
             "%s variant not implemented" % variant_name)
-    if any(n < 0 for n in input_values):
-        raise ValueError("log10 transformation can not be performed if "
-                         "the field contains negative values")
     if any(n == 0 for n in input_values):
         if variant_name == 'INCREMENT BY ONE IF ZEROS ARE FOUND':
             corrected_input = [input_value + 1 for input_value in input_values]
@@ -268,7 +265,7 @@ def log10_(input_values,
         elif variant_name == 'IGNORE ZEROS':
             output_values = []
             for input_value in input_values:
-                if input_value == 0:
+                if input_value in (0, NULL):
                     output_value = NULL
                     output_values.append(output_value)
                 else:
