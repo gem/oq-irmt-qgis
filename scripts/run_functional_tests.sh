@@ -8,8 +8,8 @@ docker run -d --name qgis -v /tmp/.X11-unix:/tmp/.X11-unix \
  -e DISPLAY=:99 \
  qgis/qgis:latest
 
-docker exec -it qgis sh -c "DEBIAN_FRONTEND=noninteractive; apt update; apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit"
+docker exec -it qgis sh -c "apt update; DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit"
 
 docker exec -it qgis sh -c "qgis_setup.sh svir"
 
-docker exec -it qgis sh -c "DEBIAN_FRONTEND=noninteractive; cd /tests_directory && qgis_testrunner.sh svir.test.functional.test_recovery_modeling"
+docker exec -it qgis sh -c "cd /tests_directory && qgis_testrunner.sh svir.test.functional.test_recovery_modeling"
