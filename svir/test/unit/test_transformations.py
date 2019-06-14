@@ -23,7 +23,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-from numpy import nan
+import numpy as np
 
 from svir.calculations.transformation_algs import (
     transform,
@@ -205,12 +205,12 @@ class Log10TestCase(unittest.TestCase):
         log10_list, _ = self.alg(input_list)
         expected_list = [5.005390742537307,
                          4.973506541084651,
-                         nan,
-                         nan,
+                         np.nan,
+                         np.nan,
                          5.241964636293325]
         for i in range(len(input_list)):
-            if expected_list[i] == nan:
-                if log10_list != nan:
+            if np.isnan(expected_list[i]):
+                if not np.isnan(log10_list[i]):
                     raise ValueError(
                         "Expected:\n%s\nGot:\n%s" % (expected_list,
                                                      log10_list))
