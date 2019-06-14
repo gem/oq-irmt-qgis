@@ -209,7 +209,14 @@ class Log10TestCase(unittest.TestCase):
                          nan,
                          5.241964636293325]
         for i in range(len(input_list)):
-            self.assertAlmostEqual(log10_list[i], expected_list[i], places=6)
+            if expected_list[i] == nan:
+                if log10_list != nan:
+                    raise ValueError(
+                        "Expected:\n%s\nGot:\n%s" % (expected_list,
+                                                     log10_list))
+            else:
+                self.assertAlmostEqual(
+                    log10_list[i], expected_list[i], places=6)
 
     def test_log10_incrementing_by_one_case_no_zeros_found(self):
         input_list = [101249,
