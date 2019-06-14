@@ -12,4 +12,4 @@ docker exec -it qgis sh -c "DEBIAN_FRONTEND=noninteractive; apt update; apt inst
 
 docker exec -it qgis sh -c "qgis_setup.sh svir"
 
-docker exec -it qgis sh -c "cd /tests_directory && qgis_testrunner.sh svir.test.functional.test_recovery_modeling"
+docker exec -it qgis sh -c "DEBIAN_FRONTEND=noninteractive; cd /tests_directory && qgis_testrunner.sh svir.test.functional.test_recovery_modeling"

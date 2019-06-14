@@ -13,4 +13,4 @@ docker exec -it qgis sh -c "DEBIAN_FRONTEND=noninteractive; apt update; apt inst
 
 docker exec -it qgis sh -c "qgis_setup.sh svir"
 
-docker exec -it qgis sh -c "cd /tests_directory && qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
+docker exec -it qgis sh -c "DEBIAN_FRONTEND=noninteractive; cd /tests_directory && qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
