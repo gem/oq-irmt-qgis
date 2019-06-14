@@ -145,7 +145,7 @@ def rank(input_values, variant_name="AVERAGE", inverse=False):
 
     else:  # inverse, i.e., small inputs get high ranks
         # same as the direct methods, but proceeding top->down
-        below_min_input = min([value if value is not None else None
+        below_min_input = min([value if value not in (None, NULL) else None
                               for value in input_values]) - 1
         curr_idx = len_input_values
         while curr_idx > 0:
@@ -188,18 +188,23 @@ def z_score(input_values, variant_name=None, inverse=False):
     """
     if variant_name:
         raise NotImplementedError("%s variant not implemented" % variant_name)
-    mean_val = mean([value for value in input_values if value is not None])
-    stddev_val = std([value for value in input_values if value is not None])
+    mean_val = mean([value for value in input_values
+                     if value not in (None, NULL)])
+    stddev_val = std([value for value in input_values
+                      if value not in (None, NULL)])
     if stddev_val == 0:
         raise ValueError("The Z-Score transformation can not be performed "
                          "if the standard deviation of the input values is 0")
     input_copy = input_values[:]
     if inverse:
         # multiply each input_values element by -1
-        input_copy[:] = [-x if x is not None else None for x in input_values]
+        input_copy[:] = [-x
+                         if x not in (None, NULL)
+                         else None
+                         for x in input_values]
     output_values = [
         float((x - mean_val) / stddev_val)
-        if x is not None else None
+        if x not in (None, NULL) else None
         for x in input_copy]
     return output_values, None
 
@@ -214,8 +219,10 @@ def min_max(input_values, variant_name=None, inverse=False):
     """
     if variant_name:
         raise NotImplementedError("%s variant not implemented" % variant_name)
-    min_value = min((value for value in input_values if value is not None))
-    max_value = max((value for value in input_values if value is not None))
+    min_value = min((value for value in input_values
+                    if value not in (None, NULL)))
+    max_value = max((value for value in input_values
+                    if value not in (None, NULL)))
     # Get the range of the list
     min_max_range = float(max_value - min_value)
     if min_max_range == 0:
@@ -224,11 +231,11 @@ def min_max(input_values, variant_name=None, inverse=False):
     # Transform
     if inverse:
         output_values = [1.0 - ((x - min_value) / min_max_range)
-                         if x is not None else None
+                         if x not in (None, NULL) else None
                          for x in input_values]
     else:
         output_values = [(x - min_value) / min_max_range
-                         if x is not None else None
+                         if x not in (None, NULL) else None
                          for x in input_values]
     return output_values, None
 
@@ -259,7 +266,7 @@ def log10_(input_values,
         if variant_name == 'INCREMENT BY ONE IF ZEROS ARE FOUND':
             corrected_input = [input_value + 1 for input_value in input_values]
             output_values = [
-                float(value) if value is not None else None
+                float(value) if value not in (None, NULL) else None
                 for value in list(log10(corrected_input))]
             return output_values, None
         elif variant_name == 'IGNORE ZEROS':
