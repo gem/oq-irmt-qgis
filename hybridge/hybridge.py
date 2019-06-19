@@ -175,7 +175,7 @@ class HyBridge(QObject):
 
     def stop_websocket(self):
         if self.websocket_thread is not None:
-            self.websocket_thread.stop_running()
+            self.websocket_thread.stop()
             if self.websocket_thread.wait(5000):
                 log_msg("Web socket server stopped",
                         message_bar=self.iface.messageBar())

@@ -2,10 +2,11 @@
 The MIT License (MIT)
 Copyright (c) 2013 Dave P.
 '''
+import os
 import ssl
 import json
 from qgis.PyQt.QtCore import pyqtSignal, pyqtSlot, QThread, QMutex
-from qgis.PyQt.QtCore import QMutexLocker
+from qgis.PyQt.QtCore import QWaitCondition
 import socket
 from select import select
 from hybridge.websocket.web_socket import WebSocket, CLOSE
@@ -33,10 +34,19 @@ class SimpleWebSocketServer(QThread):
         self.serversocket.listen(5)
         self.selectInterval = selectInterval
         self.connections = {}
-        self.listeners = [self.serversocket]
         self.mutex = QMutex()
-        self.once_mutex = QMutex()
+
         self.do_run = True
+
+        self.do_pause = False
+
+        self.cond_mutex = QMutex()
+        self.cond = QWaitCondition()
+        self.cond_resume = QWaitCondition()
+
+        self.cmd_rd, self.cmd_wr = os.pipe()
+
+        self.listeners = [self.serversocket, self.cmd_rd]
 
         super(SimpleWebSocketServer, self).__init__()
 
@@ -83,15 +93,16 @@ class SimpleWebSocketServer(QThread):
 
     @pyqtSlot('QVariantMap')
     def handle_api_unload_sig(self, ws_info):
-        # FIXME: creating a command_socket where inject data to
-        #        trigger 'select' to avoid delays on serve signal (unlock)
-        with QMutexLocker(self.once_mutex):
+        self.pause()
+        try:
             for fileno, conn in list(self.connections.items()):
                 if conn.scope_cmp(ws_info) == 0:
                     conn.close()
                     self._handleClose(conn)
                     del self.connections[fileno]
                     self.listeners.remove(fileno)
+        finally:
+            self.resume()
 
     def _loads(self, data):
         hyb_msg = json.loads(data)
@@ -110,9 +121,57 @@ class SimpleWebSocketServer(QThread):
     def _constructWebSocket(self, sock, address):
         return self.websocketclass(self, sock, address)
 
+    def pause(self):
+        # print("Pause: begin")
+        self.cond_mutex.lock()
+        self.mutex.lock()
+        if self.do_pause:
+            self.mutex.unlock()
+            self.cond_mutex.unlock()
+            return
+
+        self.do_pause = True
+        self.mutex.unlock()
+        os.write(self.cmd_wr, b"w")
+        self.cond.wait(self.cond_mutex)
+        self.cond_mutex.unlock()
+        # print("Pause: end")
+
+    def _resume(self):
+        self.mutex.lock()
+        if not self.do_pause:
+            self.mutex.unlock()
+            return
+
+        self.do_pause = False
+        self.mutex.unlock()
+        self.cond_resume.wakeAll()
+
+    def resume(self):
+        # print("Resume: begin")
+        self.cond_mutex.lock()
+        self._resume()
+        self.cond_mutex.unlock()
+        # print("Resume: end")
+
+    def stop(self):
+        # print("Stop: begin")
+        self.cond_mutex.lock()
+        self._resume()
+        self.mutex.lock()
+        self.do_run = False
+        self.mutex.unlock()
+
+        os.write(self.cmd_wr, b"w")
+        self.cond.wait(self.cond_mutex)
+
+        self.cond_mutex.unlock()
+        # print("Stop: end")
+
     def close(self):
         self.serversocket.close()
-
+        os.close(self.cmd_rd)
+        os.close(self.cmd_wr)
         for desc, conn in list(self.connections.items()):
             conn.close()
             self._handleClose(conn)
@@ -129,7 +188,7 @@ class SimpleWebSocketServer(QThread):
     def serveonce(self):
         writers = []
         for fileno in list(self.listeners):
-            if fileno == self.serversocket:
+            if fileno == self.serversocket or fileno == self.cmd_rd:
                 continue
             client = self.connections[fileno]
             if client.sendq:
@@ -191,6 +250,9 @@ class SimpleWebSocketServer(QThread):
                     self.wss_error_sig.emit({'msg': str(n)})
                     if sock is not None:
                         sock.close()
+            elif ready == self.cmd_rd:
+                os.read(self.cmd_rd, 1)
+                return
             else:
                 if ready not in self.connections:
                     continue
@@ -227,22 +289,30 @@ class SimpleWebSocketServer(QThread):
     def serveforever(self):
         self.mutex.lock()
         do_run = self.do_run
+        do_pause = self.do_pause
         self.mutex.unlock()
 
         self.register_sig[WebApi].connect(self.handle_register_sig)
         while do_run is True:
-            with QMutexLocker(self.once_mutex):
-                self.serveonce()
+            if do_pause:
+                self.cond_mutex.lock()
+                self.cond.wakeAll()
+                self.cond_resume.wait(self.cond_mutex)
+                self.cond_mutex.unlock()
+
+            self.serveonce()
             self.mutex.lock()
             do_run = self.do_run
+            do_pause = self.do_pause
             self.mutex.unlock()
-        self.close()
+
+        self.cond_mutex.lock()
+        self.cond.wakeAll()
+        self.cond_mutex.unlock()
+
         self.register_sig['QVariantMap'].disconnect(self.handle_register_sig)
 
-    def stop_running(self):
-        self.mutex.lock()
-        self.do_run = False
-        self.mutex.unlock()
+        self.close()
 
     def run(self):
         self.serveforever()
