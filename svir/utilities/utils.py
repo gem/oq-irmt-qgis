@@ -1080,7 +1080,7 @@ def warn_missing_package(package_name, message_bar=None):
     msg = ("This functionality requires %s (for Python3)."
            " Please follow the instructions in the user manual of the plugin"
            " (see https://docs.openquake.org/oq-irmt-qgis/)"
-           " to install %s, then restart QGIS.", (package_name, package_name))
+           " to install %s, then restart QGIS." % (package_name, package_name))
     log_msg(msg, level='C', message_bar=message_bar)
 
 
