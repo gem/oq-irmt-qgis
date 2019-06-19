@@ -310,7 +310,7 @@ class SimpleWebSocketServer(QThread):
         self.cond.wakeAll()
         self.cond_mutex.unlock()
 
-        self.register_sig['QVariantMap'].disconnect(self.handle_register_sig)
+        self.register_sig[WebApi].disconnect(self.handle_register_sig)
 
         self.close()
 
