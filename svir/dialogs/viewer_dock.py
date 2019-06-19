@@ -56,8 +56,7 @@ from svir.utilities.shared import (
 from svir.utilities.utils import (get_ui_class,
                                   log_msg,
                                   clear_widgets_from_layout,
-                                  warn_scipy_missing,
-                                  warn_matplotlib_missing,
+                                  warn_missing_package,
                                   extract_npz,
                                   get_loss_types,
                                   get_irmt_version,
@@ -73,7 +72,7 @@ from svir import IS_SCIPY_INSTALLED
 try:
     import matplotlib
 except ImportError:
-    warn_matplotlib_missing()
+    warn_missing_package('matplotlib')
 matplotlib.use('Qt5Agg')  # NOQA
 from matplotlib.backends.qt_compat import QtCore, QtWidgets  # NOQA
 from matplotlib.backends.backend_qt5agg import (
@@ -553,7 +552,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 self.refresh_feature_selection)
         elif new_output_type == 'recovery_curves':
             if not IS_SCIPY_INSTALLED:
-                warn_scipy_missing(self.iface.messageBar())
+                warn_missing_package('scipy', self.iface.messageBar())
                 self.output_type = None
                 return
             self.create_approach_selector()

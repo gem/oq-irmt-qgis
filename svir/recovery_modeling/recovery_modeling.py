@@ -33,14 +33,14 @@ from svir.utilities.utils import (
                                   clear_progress_message_bar,
                                   get_layer_setting,
                                   WaitCursorManager,
-                                  warn_matplotlib_missing,
+                                  warn_missing_package,
                                   )
 from svir.utilities.shared import NUMERIC_FIELD_TYPES, RECOVERY_DEFAULTS
 
 try:
     import matplotlib
 except ImportError:
-    warn_matplotlib_missing()
+    warn_missing_package('matplotlib')
 matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt  # NOQA
 

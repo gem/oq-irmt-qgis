@@ -95,7 +95,7 @@ from svir.utilities.utils import (tr,
                                   save_layer_as_shapefile,
                                   get_style,
                                   get_checksum,
-                                  warn_scipy_missing,
+                                  warn_missing_package,
                                   )
 from svir.utilities.shared import (DEBUG,
                                    PROJECT_TEMPLATE,
@@ -324,7 +324,7 @@ class Irmt(object):
             dlg = RecoveryModelingDialog(self.iface)
             dlg.exec_()
         else:
-            warn_scipy_missing(self.iface.messageBar())
+            warn_missing_package('scipy', self.iface.messageBar())
 
     def recovery_settings(self):
         dlg = RecoverySettingsDialog(self.iface)

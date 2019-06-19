@@ -1074,18 +1074,14 @@ def get_params_from_comment_line(comment_line):
     return params_dict
 
 
-def warn_scipy_missing(message_bar):
-    msg = ("This functionality requires scipy (for Python3)."
-           " Please install it and restart QGIS to enable it.")
-    log_msg(msg, level='C', message_bar=message_bar)
-
-
-def warn_matplotlib_missing():
-    msg = ("The QpenQuake IRMT plugin requires matplotlib (for Python3)."
+def warn_missing_package(package_name, message_bar=None):
+    if message_bar is None:
+        message_bar = iface.messageBar()
+    msg = ("This functionality requires %s (for Python3)."
            " Please follow the instructions in the user manual of the plugin"
            " (see https://docs.openquake.org/oq-irmt-qgis/)"
-           " to install matplotlib, then restart QGIS.")
-    log_msg(msg, level='C', message_bar=iface.messageBar())
+           " to install %s, then restart QGIS.", (package_name, package_name))
+    log_msg(msg, level='C', message_bar=message_bar)
 
 
 def get_credentials(server):
