@@ -30,7 +30,19 @@ class SimpleWebSocketServer(QThread):
         self.websocketclass = WebSocket
         self.serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.serversocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.serversocket.bind((host, port))
+        for retry in range(1, 20):
+            try:
+                self.serversocket.bind((host, port))
+            except OSError:
+                QThread.msleep(100)
+            else:
+                if retry > 1:
+                    print('SimpleWebSocketServer: bind after %d retries'
+                          % retry)
+                break
+        else:
+            raise ImportError
+
         self.serversocket.listen(5)
         self.selectInterval = selectInterval
         self.connections = {}

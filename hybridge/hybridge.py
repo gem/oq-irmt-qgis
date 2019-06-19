@@ -100,11 +100,10 @@ class HyBridge(QObject):
     #     print('HyBridge __del__() fired')
 
     def initGui(self):
-        print("Initializing HyBridge")
+        pass
 
     def unload(self):
         # shutdown websocket server
-
         for plu_name, plugin in self.plugins.items():
             for api in plugin['apis'].values():
                 self.websocket_thread.api_unregister(api)
