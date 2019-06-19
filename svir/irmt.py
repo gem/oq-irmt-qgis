@@ -1483,6 +1483,12 @@ class Irmt(QObject):
     #     return webapp_dirs
 
     def register_web_apis(self):
+        # Dynamic local import of HyBridge is mandatory to load the current
+        # singleton (if HyBridge plugin is reloaded the old import is desync)
+        try:
+            from hybridge.hybridge import HyBridge
+        except ImportError:
+            return
         # retrieve the current instance of HyBridge,
         # we use it until plugin reload signals are implemented
         # FIXME: make an hybridge class-method that register apis
@@ -1490,6 +1496,12 @@ class Irmt(QObject):
         hybridge.plugin_register(self, self.web_apis)
 
     def unregister_web_apis(self):
+        # Dynamic local import of HyBridge is mandatory to load the current
+        # singleton (if HyBridge plugin is reloaded the old import is desync)
+        try:
+            from hybridge.hybridge import HyBridge
+        except ImportError:
+            return
         # retrieve the current instance of HyBridge,
         # we use it until plugin reload signals are implemented
         # FIXME: make an hybridge class-method that unregister apis
