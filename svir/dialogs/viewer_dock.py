@@ -57,6 +57,7 @@ from svir.utilities.utils import (get_ui_class,
                                   log_msg,
                                   clear_widgets_from_layout,
                                   warn_scipy_missing,
+                                  warn_matplotlib_missing,
                                   extract_npz,
                                   get_loss_types,
                                   get_irmt_version,
@@ -69,7 +70,10 @@ from svir.ui.list_multiselect_mono_widget import ListMultiSelectMonoWidget
 
 from svir import IS_SCIPY_INSTALLED
 
-import matplotlib
+try:
+    import matplotlib
+except ImportError:
+    warn_matplotlib_missing()
 matplotlib.use('Qt5Agg')  # NOQA
 from matplotlib.backends.qt_compat import QtCore, QtWidgets  # NOQA
 from matplotlib.backends.backend_qt5agg import (

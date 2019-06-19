@@ -42,9 +42,10 @@ from qgis.core import (
                        QgsMessageLog,
                        QgsVectorLayer,
                        QgsVectorFileWriter,
+                       Qgis,
                        )
-from qgis.core import Qgis
 from qgis.gui import QgsMessageBar, QgsMessageBarItem
+from qgis.utils import iface
 
 from qgis.PyQt import uic
 from qgis.PyQt.QtCore import Qt, QSettings, QUrl, QUrlQuery
@@ -1074,9 +1075,17 @@ def get_params_from_comment_line(comment_line):
 
 
 def warn_scipy_missing(message_bar):
-    msg = ("This functionality requires scipy. Please install it"
-           " and restart QGIS to enable it.")
+    msg = ("This functionality requires scipy (for Python3)."
+           " Please install it and restart QGIS to enable it.")
     log_msg(msg, level='C', message_bar=message_bar)
+
+
+def warn_matplotlib_missing():
+    msg = ("The QpenQuake IRMT plugin requires matplotlib (for Python3)."
+           " Please follow the instructions in the user manual of the plugin"
+           " (see https://docs.openquake.org/oq-irmt-qgis/)"
+           " to install matplotlib, then restart QGIS.")
+    log_msg(msg, level='C', message_bar=iface.messageBar())
 
 
 def get_credentials(server):
