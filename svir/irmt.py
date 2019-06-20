@@ -570,6 +570,10 @@ class Irmt(object):
         """
         Remove all plugin's actions and corresponding buttons and connects
         """
+        # stop any running timers
+        if self.drive_oq_engine_server_dlg is not None:
+            self.drive_oq_engine_server_dlg.reject()
+
         QgsApplication.processingRegistry().removeProvider(self.provider)
 
         # Remove the plugin menu items and toolbar icons
