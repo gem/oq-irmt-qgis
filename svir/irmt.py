@@ -630,6 +630,11 @@ class Irmt(QObject):
         """
         Remove all plugin's actions and corresponding buttons and connects
         """
+
+        # stop any running timers
+        if self.drive_oq_engine_server_dlg is not None:
+            self.drive_oq_engine_server_dlg.reject()
+
         # Remove the plugin menu items and toolbar icons
         for action_name in self.registered_actions:
             action = self.registered_actions[action_name]
