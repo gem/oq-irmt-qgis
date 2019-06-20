@@ -635,6 +635,7 @@ class Irmt(QObject):
             # Remove the actions in the layer legend
             self.iface.removeCustomActionForLayerType(action)
             self.iface.removeToolBarIcon(action)
+        self.toolbar.setParent(None)
         clear_progress_message_bar(self.iface.messageBar())
 
         self.menu.clear()
