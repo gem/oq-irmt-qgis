@@ -474,7 +474,7 @@ class Irmt(QObject):
             self.drive_oq_engine_server_dlg.start_polling()
         else:
             log_msg('Unable to connect to the OpenQuake Engine server. '
-                    'Please check that the server is running and the '
+                    'Please check that the server (WebUI) is running and the '
                     'plugin connection settings are correct.', level='C',
                     message_bar=self.drive_oq_engine_server_dlg.message_bar)
 
@@ -630,12 +630,18 @@ class Irmt(QObject):
         """
         Remove all plugin's actions and corresponding buttons and connects
         """
+
+        # stop any running timers
+        if self.drive_oq_engine_server_dlg is not None:
+            self.drive_oq_engine_server_dlg.reject()
+
         # Remove the plugin menu items and toolbar icons
         for action_name in self.registered_actions:
             action = self.registered_actions[action_name]
             # Remove the actions in the layer legend
             self.iface.removeCustomActionForLayerType(action)
             self.iface.removeToolBarIcon(action)
+        self.toolbar.setParent(None)
         clear_progress_message_bar(self.iface.messageBar())
 
         self.menu.clear()
