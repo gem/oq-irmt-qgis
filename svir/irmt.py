@@ -566,6 +566,11 @@ class Irmt(object):
         """
         if not IS_MATPLOTLIB_INSTALLED:
             return
+
+        # stop any running timers
+        if self.drive_oq_engine_server_dlg is not None:
+            self.drive_oq_engine_server_dlg.reject()
+
         # Remove the plugin menu items and toolbar icons
         for action_name in self.registered_actions:
             action = self.registered_actions[action_name]
