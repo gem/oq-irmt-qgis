@@ -25,6 +25,7 @@ email=staff.it@globalquakemodel.org
 changelog=
     3.6.0
     * Changed the realizations output for OQ-Engine scenario calculations, displaying the GSIM names instead of the branch path
+    * All possibly running timers are stopped before the plugin is unloaded
     3.5.3
     * The GUI elements for loading OQ-Engine outputs are in a scrollable area, usable also on low resolution screens
     * Some GUI sections can be expanded/collapsed
