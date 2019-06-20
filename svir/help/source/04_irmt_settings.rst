@@ -42,11 +42,11 @@ a remote workstation or cluster. The `OQ Engine Server
 <https://github.com/gem/oq-engine/blob/master/doc/running/server.md>`_ provides
 an HTTP RESTful API. The OpenQuake IRMT plugin leverages this API to enable the user to
 drive the OQ-Engine directly from within QGIS. In order to interface the plugin
-with a running OQ Engine Server, it is necessary to insert in this dialog the
+with a running OQ Engine Server (WebUI), it is necessary to insert in this dialog the
 user credentials (if they are required by the server) and the web URL where the
 service is hosted (see :numref:`fig-connection-profile`). By default, the host
 is set to `http://localhost:8800`, meaning that the plugin will attempt to
-connect to a OQ Engine Server running locally, on port `8800`.
+connect to a OQ Engine Server (WebUI) running locally, on port `8800`.
 
 It is possible to create multiple connection profiles, and to edit or
 remove existing ones. For instance, you might want to use alternatively an OpenQuake
