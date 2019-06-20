@@ -67,19 +67,17 @@ from svir.recovery_modeling.recovery_modeling import (
 from svir.ui.list_multiselect_widget import ListMultiSelectWidget
 from svir.ui.list_multiselect_mono_widget import ListMultiSelectMonoWidget
 
-from svir import IS_SCIPY_INSTALLED
+from svir import IS_SCIPY_INSTALLED, IS_MATPLOTLIB_INSTALLED
 
-try:
+if IS_MATPLOTLIB_INSTALLED:
     import matplotlib
-except ImportError:
-    warn_missing_package('matplotlib')
-matplotlib.use('Qt5Agg')  # NOQA
-from matplotlib.backends.qt_compat import QtCore, QtWidgets  # NOQA
-from matplotlib.backends.backend_qt5agg import (
-    FigureCanvas,
-    NavigationToolbar2QT as NavigationToolbar)
-from matplotlib.figure import Figure
-from matplotlib.lines import Line2D
+    matplotlib.use('Qt5Agg')  # NOQA
+    from matplotlib.backends.qt_compat import QtCore, QtWidgets  # NOQA
+    from matplotlib.backends.backend_qt5agg import (
+        FigureCanvas,
+        NavigationToolbar2QT as NavigationToolbar)
+    from matplotlib.figure import Figure
+    from matplotlib.lines import Line2D
 
 
 FORM_CLASS = get_ui_class('ui_viewer_dock.ui')
@@ -98,6 +96,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         """
         QDockWidget.__init__(self, None)
         self.setupUi(self)
+
+        if not IS_MATPLOTLIB_INSTALLED:
+            # the warning should be called by irmt.py
+            return
+
         self.iface = iface
 
         # this is the action in the plugin (i.e. the button in the toolbar)
