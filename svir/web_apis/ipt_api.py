@@ -22,6 +22,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
+# import pdb
+# from qgis.PyQt.QtCore import (pyqtRemoveInputHook, pyqtRestoreInputHook)
+# pyqtRemoveInputHook(); pdb.set_trace()
+
+
 import os
 import traceback
 import shutil
@@ -175,6 +180,10 @@ class IptApi(WebApi):
             if not dir_is_legal(app_dir, full_path):
                 msg = 'Unable to access the directory %s' % path
                 return {'success': False, 'content': None, 'reason': msg}
+            else:
+                if os.path.exists(full_path) and not os.path.isdir(full_path):
+                    raise IOError('cannot create folder %s' % full_path)
+                os.makedirs(full_path, exist_ok=True)
 
         is_multi = False
         if len(args) > 1:
