@@ -146,7 +146,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         added_field_name = add_numeric_attribute(field_name, self.layer)
         return added_field_name
 
-    def read_npz_into_layer(self, field_names, **kwargs):
+    def read_npz_into_layer(self, field_names, rlz_or_stat, **kwargs):
         with edit(self.layer):
             feats = []
             fields = self.layer.fields()
@@ -154,7 +154,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
             dataset_field_names = self.get_field_names()
             d2l_field_names = dict(
                 list(zip(dataset_field_names[2:], layer_field_names)))
-            for row in self.dataset:
+            for row in self.npz_file[rlz_or_stat]:
                 # add a feature
                 feat = QgsFeature(fields)
                 for field_name in dataset_field_names:
