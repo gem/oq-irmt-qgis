@@ -46,7 +46,6 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
 
         self.setWindowTitle(
             'Load ground motion fields as layer')
-        self.create_load_selected_only_ckb()
         self.create_num_sites_indicator()
         # NOTE: gmpe and gsim are synonyms
         self.create_rlz_or_stat_selector('Ground Motion Prediction Equation')
@@ -114,7 +113,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
 
     def load_from_npz(self):
         for rlz, gsim in zip(self.rlzs_or_stats, self.gsims):
-            if (self.load_selected_only_ckb.isChecked()
+            if (not self.load_all_rlzs_or_stats_chk.isChecked()
                     and gsim != self.rlz_or_stat_cbx.currentText()):
                 continue
             with WaitCursorManager('Creating layer for "%s"...'
