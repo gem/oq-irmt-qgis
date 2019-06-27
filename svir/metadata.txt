@@ -31,6 +31,7 @@ changelog=
     * Re-added and updated the user manual chapter about aggregating points by zone
     * Scripts running tests and building the user manual have been fixed
     * All possibly running timers are stopped before the plugin is unloaded
+    * Fixed a bug occurring while loading ground motion fields, that caused only one realization to be visualized
     3.5.3
     * The GUI elements for loading OQ-Engine outputs are in a scrollable area, usable also on low resolution screens
     * Some GUI sections can be expanded/collapsed

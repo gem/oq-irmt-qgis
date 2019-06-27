@@ -95,7 +95,7 @@ from svir.utilities.utils import (tr,
                                   save_layer_as_shapefile,
                                   get_style,
                                   get_checksum,
-                                  warn_scipy_missing,
+                                  warn_missing_package,
                                   )
 from svir.utilities.shared import (DEBUG,
                                    PROJECT_TEMPLATE,
@@ -109,11 +109,15 @@ from svir.processing_provider.provider import Provider
 # noinspection PyUnresolvedReferences
 import svir.resources_rc  # pylint: disable=unused-import  # NOQA
 
-from svir import IS_SCIPY_INSTALLED
+from svir import IS_SCIPY_INSTALLED, IS_MATPLOTLIB_INSTALLED
 
 
 class Irmt(object):
     def __init__(self, iface):
+        if not IS_MATPLOTLIB_INSTALLED:
+            warn_missing_package('matplotlib')
+            return
+
         # Save reference to the QGIS interface
         self.iface = iface
         self.canvas = self.iface.mapCanvas()
@@ -170,8 +174,10 @@ class Irmt(object):
         QgsApplication.processingRegistry().addProvider(self.provider)
 
     def initGui(self):
+        if not IS_MATPLOTLIB_INSTALLED:
+            # the warning should have already been displayed by the __init__
+            return
         self.initProcessing()
-
         # create our own toolbar
         self.toolbar = self.iface.addToolBar('OpenQuake IRMT')
         self.toolbar.setObjectName('IRMTToolBar')
@@ -333,7 +339,7 @@ class Irmt(object):
             dlg = RecoveryModelingDialog(self.iface)
             dlg.exec_()
         else:
-            warn_scipy_missing(self.iface.messageBar())
+            warn_missing_package('scipy', self.iface.messageBar())
 
     def recovery_settings(self):
         dlg = RecoverySettingsDialog(self.iface)
@@ -570,6 +576,8 @@ class Irmt(object):
         """
         Remove all plugin's actions and corresponding buttons and connects
         """
+        if not IS_MATPLOTLIB_INSTALLED:
+            return
         # stop any running timers
         if self.drive_oq_engine_server_dlg is not None:
             self.drive_oq_engine_server_dlg.reject()

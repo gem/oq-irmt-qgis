@@ -43,3 +43,11 @@ except ImportError:
     IS_SCIPY_INSTALLED = False
 else:
     IS_SCIPY_INSTALLED = True
+
+IS_MATPLOTLIB_INSTALLED = None
+try:
+    import matplotlib  # NOQA
+except ImportError:
+    IS_MATPLOTLIB_INSTALLED = False
+else:
+    IS_MATPLOTLIB_INSTALLED = True
