@@ -245,8 +245,7 @@ def calculate_node(
             context.appendScope(QgsExpressionContextUtils.layerScope(layer))
             expression.prepare(context)
             request = QgsFeatureRequest().setFlags(
-                QgsFeatureRequest.NoGeometry).setSubsetOfAttributes(
-                    [node['field']], layer.fields())
+                QgsFeatureRequest.NoGeometry)
             with edit(layer):
                 for feat in layer.getFeatures(request):
                     context.setFeature(feat)
