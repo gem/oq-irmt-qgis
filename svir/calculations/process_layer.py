@@ -338,7 +338,7 @@ class ProcessLayer(object):
         initial_dict = dict()
         request = QgsFeatureRequest().setFlags(
             QgsFeatureRequest.NoGeometry).setSubsetOfAttributes(
-                [input_attr_id], self.layer.fields())
+                [input_attr_name], self.layer.fields())
         for feat in self.layer.getFeatures(request):
             initial_dict[feat.id()] = feat[input_attr_id]
 
