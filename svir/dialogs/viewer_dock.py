@@ -1095,8 +1095,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         if not selected_rlzs_or_stats or not self.current_selection:
             return
         self.current_abscissa = []
-        for feature in self.iface.activeLayer().getFeatures(
-                QgsFeatureRequest().setFilterFids(selected)):
+        request = QgsFeatureRequest().setFlags(
+            QgsFeatureRequest.NoGeometry).setFilterFids(selected)
+        for feature in self.iface.activeLayer().getFeatures(request):
             if self.output_type == 'hcurves':
                 imt = self.imt_cbx.currentText()
                 imls = [field_name.split('_')[2]
@@ -1143,8 +1144,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             else:
                 raise NotImplementedError(self.output_type)
 
-        for i, feature in enumerate(self.iface.activeLayer().getFeatures(
-                QgsFeatureRequest().setFilterFids(selected))):
+        for i, feature in enumerate(
+                self.iface.activeLayer().getFeatures(request)):
             if (self.was_imt_switched
                     or self.was_loss_type_switched
                     or (feature.id() not in
@@ -1211,8 +1212,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.draw()
 
     def redraw_recovery_curve(self, selected):
-        features = list(self.iface.activeLayer().getFeatures(
-            QgsFeatureRequest().setFilterFids(selected)))
+        request = QgsFeatureRequest().setFlags(
+            QgsFeatureRequest.NoGeometry).setFilterFids(selected)
+        features = list(self.iface.activeLayer().getFeatures(request))
         approach = self.approach_cbx.currentText()
         recovery = RecoveryModeling(features, approach, self.iface)
         integrate_svi = False
