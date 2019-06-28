@@ -1323,7 +1323,7 @@ class Irmt(object):
                     log_msg(msg, level=level,
                             message_bar=self.iface.messageBar())
                 except (ValueError, NotImplementedError, TypeError) as e:
-                    log_msg(e.message, level='C',
+                    log_msg(str(e), level='C',
                             message_bar=self.iface.messageBar(),
                             exception=e)
                 else:  # only if the transformation was performed successfully
