@@ -927,9 +927,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 self.stats_multiselect.get_selected_items())
         else:
             selected_rlzs_or_stats = [None]
-        selected_features_ids = [
-            feature.id()
-            for feature in self.iface.activeLayer().selectedFeatures()]
+        selected_features_ids = self.iface.activeLayer().selectedFeatureIds()
         for rlz_or_stat in selected_rlzs_or_stats:
             gids[rlz_or_stat] = selected_features_ids
         count_selected_feats = len(selected_features_ids)
