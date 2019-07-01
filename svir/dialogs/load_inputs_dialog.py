@@ -83,15 +83,15 @@ class LoadInputsDialog(QDialog):
     def get_multi_peril_csv_dict(ini_str):
         config = configparser.ConfigParser(allow_no_value=True)
         config.read_string(ini_str)
-        multi_peril_file_str = None
+        multi_peril_csv_str = None
         for key in config:
-            if 'multi_peril_file' in config[key]:
-                multi_peril_file_str = config[key]['multi_peril_file']
+            if 'multi_peril_csv' in config[key]:
+                multi_peril_csv_str = config[key]['multi_peril_csv']
                 break
-        if multi_peril_file_str is None:
-            raise KeyError('multi_peril_file not found in .ini file')
+        if multi_peril_csv_str is None:
+            raise KeyError('multi_peril_csv not found in .ini file')
         multi_peril_csv_dict = json.loads(
-            multi_peril_file_str.replace('\'', '"'))
+            multi_peril_csv_str.replace('\'', '"'))
         return multi_peril_csv_dict
 
     def load_from_csv(self, csv_path):
