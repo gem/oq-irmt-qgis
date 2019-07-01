@@ -96,11 +96,16 @@ class LoadInputsDialog(QDialog):
 
     def load_from_csv(self, csv_path):
         # extract the name of the csv file and remove the extension
-        layer_name = os.path.splitext(os.path.basename(csv_path))[0]
+        layer_name, ext = os.path.splitext(os.path.basename(csv_path))
+        # FIXME: what if the format is not wkt?
+        if ext == 'wkt':
+            wkt_field = 'WKT'
+        else:
+            wkt_field = None
         try:
             self.layer = import_layer_from_csv(
-                self, csv_path, layer_name, self.iface, add_to_legend=True,
-                add_on_top=True, zoom_to_layer=True)
+                self, csv_path, layer_name, self.iface, wkt_field=wkt_field,
+                add_to_legend=True, add_on_top=True, zoom_to_layer=True)
         except RuntimeError as exc:
             log_msg(str(exc), level='C', message_bar=self.iface.messageBar(),
                     exception=exc)
