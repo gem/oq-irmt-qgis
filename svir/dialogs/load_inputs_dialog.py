@@ -29,7 +29,8 @@ import configparser
 from qgis.PyQt.QtCore import pyqtSignal
 from qgis.PyQt.QtWidgets import (
     QDialog, QVBoxLayout, QDialogButtonBox, QGroupBox, QCheckBox)
-from svir.utilities.utils import import_layer_from_csv, log_msg
+from svir.utilities.utils import import_layer_from_csv, log_msg, get_headers
+from svir.utilities.shared import GEOM_FIELDNAMES
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 
 
@@ -97,11 +98,12 @@ class LoadInputsDialog(QDialog):
     def load_from_csv(self, csv_path):
         # extract the name of the csv file and remove the extension
         layer_name, ext = os.path.splitext(os.path.basename(csv_path))
-        # FIXME: what if the format is not wkt?
-        if ext == 'wkt':
-            wkt_field = 'WKT'
-        else:
-            wkt_field = None
+        wkt_field = None
+        headers = get_headers(csv_path)
+        for header in headers:
+            if header.lower() in GEOM_FIELDNAMES:
+                wkt_field = header
+                break
         try:
             self.layer = import_layer_from_csv(
                 self, csv_path, layer_name, self.iface, wkt_field=wkt_field,
