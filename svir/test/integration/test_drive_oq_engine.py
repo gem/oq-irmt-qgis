@@ -360,12 +360,11 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             return
         if output_type in (OQ_CSV_TO_LAYER_TYPES |
                            OQ_RST_TYPES | OQ_ZIPPED_TYPES):
+            print('\tLoading output type %s...' % output_type)
             if output_type in OQ_CSV_TO_LAYER_TYPES:
-                print('\tLoading output type %s...' % output_type)
                 # TODO: we should test the actual downloader, asynchronously
                 filepath = self.download_output(output['id'], 'csv')
             elif output_type in OQ_RST_TYPES:
-                print('\tLoading output type %s...' % output_type)
                 # TODO: we should test the actual downloader, asynchronously
                 filepath = self.download_output(output['id'], 'rst')
             elif output_type in OQ_ZIPPED_TYPES:
