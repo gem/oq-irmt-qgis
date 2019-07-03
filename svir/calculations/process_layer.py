@@ -368,6 +368,9 @@ class ProcessLayer(object):
             with edit(self.layer):
                 self.layer.setFieldAlias(new_attr_id, new_attr_alias)
 
+        # TODO: perhaps there is a better way to get a list of feature ids.
+        #       Here we are retrieving no geometries and no fields, which
+        #       sounds the closest way to obtain it.
         request = QgsFeatureRequest().setFlags(
             QgsFeatureRequest.NoGeometry).setSubsetOfAttributes(
                 [], self.layer.fields())
