@@ -29,7 +29,8 @@ import configparser
 from qgis.PyQt.QtCore import pyqtSignal
 from qgis.PyQt.QtWidgets import (
     QDialog, QVBoxLayout, QDialogButtonBox, QGroupBox, QCheckBox)
-from svir.utilities.utils import import_layer_from_csv, log_msg
+from svir.utilities.utils import import_layer_from_csv, log_msg, get_headers
+from svir.utilities.shared import GEOM_FIELDNAMES
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 
 
@@ -83,31 +84,38 @@ class LoadInputsDialog(QDialog):
     def get_multi_peril_csv_dict(ini_str):
         config = configparser.ConfigParser(allow_no_value=True)
         config.read_string(ini_str)
-        multi_peril_file_str = None
+        multi_peril_csv_str = None
         for key in config:
-            if 'multi_peril_file' in config[key]:
-                multi_peril_file_str = config[key]['multi_peril_file']
+            if 'multi_peril_csv' in config[key]:
+                multi_peril_csv_str = config[key]['multi_peril_csv']
                 break
-        if multi_peril_file_str is None:
-            raise KeyError('multi_peril_file not found in .ini file')
+        if multi_peril_csv_str is None:
+            raise KeyError('multi_peril_csv not found in .ini file')
         multi_peril_csv_dict = json.loads(
-            multi_peril_file_str.replace('\'', '"'))
+            multi_peril_csv_str.replace('\'', '"'))
         return multi_peril_csv_dict
 
     def load_from_csv(self, csv_path):
         # extract the name of the csv file and remove the extension
-        layer_name = os.path.splitext(os.path.basename(csv_path))[0]
+        layer_name, ext = os.path.splitext(os.path.basename(csv_path))
+        wkt_field = None
+        headers = get_headers(csv_path)
+        for header in headers:
+            if header.lower() in GEOM_FIELDNAMES:
+                wkt_field = header
+                break
         try:
             self.layer = import_layer_from_csv(
-                self, csv_path, layer_name, self.iface, add_to_legend=True,
-                add_on_top=True, zoom_to_layer=True)
+                self, csv_path, layer_name, self.iface, wkt_field=wkt_field,
+                add_to_legend=True, add_on_top=True, zoom_to_layer=True)
         except RuntimeError as exc:
             log_msg(str(exc), level='C', message_bar=self.iface.messageBar(),
                     exception=exc)
             raise exc
-        LoadOutputAsLayerDialog.style_maps(
-            self.layer, 'intensity', self.iface, 'input',
-            render_higher_on_top=self.higher_on_top_chk.isChecked())
+        if 'intensity' in [field.name() for field in self.layer.fields()]:
+            LoadOutputAsLayerDialog.style_maps(
+                self.layer, 'intensity', self.iface, 'input',
+                render_higher_on_top=self.higher_on_top_chk.isChecked())
         log_msg('Layer %s was loaded successfully' % layer_name,
                 level='S', message_bar=self.iface.messageBar())
 

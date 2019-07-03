@@ -27,6 +27,7 @@ import tempfile
 from collections import OrderedDict
 from svir.utilities.utils import (import_layer_from_csv,
                                   get_params_from_comment_line,
+                                  count_heading_commented_lines,
                                   log_msg,
                                   )
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
@@ -99,11 +100,12 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
         # extract the name of the csv file and remove the extension
         layer_name = os.path.splitext(os.path.basename(csv_path))[0]
         layer_name += '_%sy' % investigation_time
+        n_lines_to_skip = count_heading_commented_lines(csv_path)
         try:
             self.layer = import_layer_from_csv(
                 self, csv_path, layer_name, self.iface,
                 wkt_field='boundary', delimiter='\\t',
-                lines_to_skip_count=1,
+                lines_to_skip_count=n_lines_to_skip,
                 save_as_shp=self.save_as_shp_ckb.isChecked(),
                 dest_shp=dest_shp)
         except RuntimeError as exc:
