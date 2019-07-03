@@ -27,6 +27,7 @@ changelog=
     * Changed the realizations output for OQ-Engine scenario calculations, displaying the GSIM names instead of the branch path
     * All possibly running timers are stopped before the plugin is unloaded
     * Fixed a bug occurring while loading ground motion fields, that caused only one realization to be visualized
+    * Integration tests use an instance of Irmt instead of instantiating Irmt sub-dialogs
     3.5.3
     * The GUI elements for loading OQ-Engine outputs are in a scrollable area, usable also on low resolution screens
     * Some GUI sections can be expanded/collapsed
