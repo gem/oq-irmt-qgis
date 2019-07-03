@@ -378,7 +378,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 print('\t\tok')
                 return
             dlg = OUTPUT_TYPE_LOADERS[output_type](
-                self.irmt.iface, self.irmt.viewer_dock(), requests,
+                self.irmt.iface, self.irmt.viewer_dock, requests,
                 self.hostname, calc_id, output_type, filepath)
             if dlg.ok_button.isEnabled():
                 dlg.accept()
@@ -400,7 +400,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 print('\t\tSKIPPED')
                 return
             dlg = OUTPUT_TYPE_LOADERS[output_type](
-                self.irmt.iface, self.irmt.viewer_dock(), requests,
+                self.irmt.iface, self.irmt.viewer_dock, requests,
                 self.hostname, calc_id, output_type)
             self.loading_completed = False
             self.loading_exception = None
