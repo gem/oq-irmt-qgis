@@ -202,7 +202,7 @@ class RecoverySettingsDialog(QDialog, FORM_CLASS):
         try:
             self.save_state()
         except ValueError as exc:
-            log_msg(exc.message, level='C',
+            log_msg(str(exc), level='C',
                     message_bar=self.iface.messageBar(),
                     duration=5, exception=exc)
         else:
