@@ -33,6 +33,7 @@ import time
 import operator
 import requests
 from mock import Mock
+from qgis.core import QgsApplication
 from qgis.utils import iface
 from qgis.testing import unittest
 from svir.irmt import Irmt
@@ -49,6 +50,8 @@ from svir.dialogs.drive_oq_engine_server_dialog import OUTPUT_TYPE_LOADERS
 from svir.dialogs.show_full_report_dialog import ShowFullReportDialog
 from svir.dialogs.load_inputs_dialog import LoadInputsDialog
 
+
+QGIS_APP = QgsApplication([], True)
 
 LONG_LOADING_TIME = 10  # seconds
 
@@ -409,6 +412,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             timeout = 10
             start_time = time.time()
             while time.time() - start_time < timeout:
+                QGIS_APP.processEvents()
                 if self.loading_completed:
                     print('\t\tok')
                     return
