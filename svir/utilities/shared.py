@@ -292,3 +292,5 @@ RAMP_EXTREME_COLORS = {
         {'top': '#d7191c',
          'bottom': '#2b83ba'}
 }
+
+GEOM_FIELDNAMES = ('geom', 'the_geom', 'geometry', 'wkt')
