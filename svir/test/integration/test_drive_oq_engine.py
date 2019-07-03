@@ -575,9 +575,11 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         num_feats = layer.featureCount()
         self.assertGreater(
             num_feats, 0, 'The layer does not contain any feature!')
+        # select first feature only
         layer.select(1)
         layer.removeSelection()
-        if num_feats > 1:
-            layer.select(2)
-        layer.selectAll()
+        # select first and last features (just one if there is only one)
+        layer.select([1, num_feats])
         layer.removeSelection()
+        # NOTE: in the past, we were also selecting all features, but it was
+        # not necessary ant it made tests much slower in case of many features
