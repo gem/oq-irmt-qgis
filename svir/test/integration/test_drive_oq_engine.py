@@ -32,7 +32,6 @@ import csv
 import time
 import operator
 import requests
-from mock import Mock
 from qgis.core import QgsApplication
 from qgis.utils import iface
 from qgis.testing import unittest
@@ -379,8 +378,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 print('\t\tok')
                 return
             dlg = OUTPUT_TYPE_LOADERS[output_type](
-                self.irmt.iface, Mock(), requests, self.hostname, calc_id,
-                output_type, filepath)
+                self.irmt.iface, self.irmt.viewer_dock(), requests,
+                self.hostname, calc_id, output_type, filepath)
             if dlg.ok_button.isEnabled():
                 dlg.accept()
                 print('\t\tok')
@@ -401,8 +400,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 print('\t\tSKIPPED')
                 return
             dlg = OUTPUT_TYPE_LOADERS[output_type](
-                self.irmt.iface, Mock(), requests, self.hostname, calc_id,
-                output_type)
+                self.irmt.iface, self.irmt.viewer_dock(), requests,
+                self.hostname, calc_id, output_type)
             self.loading_completed = False
             self.loading_exception = None
             dlg.loading_completed.connect(self.on_loading_completed)
