@@ -26,7 +26,7 @@ import os
 import csv
 from qgis.PyQt.QtCore import pyqtSlot, QSettings, QDir
 from qgis.PyQt.QtWidgets import QDialog, QFileDialog, QDialogButtonBox
-from qgis.core import QgsMapLayer, QgsProject, QgsWkbTypes
+from qgis.core import QgsMapLayer, QgsProject, QgsWkbTypes, QgsFeatureRequest
 from svir.calculations.aggregate_loss_by_zone import add_zone_id_to_points
 from svir.utilities.utils import (get_ui_class,
                                   reload_attrib_cbx,
@@ -172,7 +172,9 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
             zone_field_name = self.zone_field_name_cbx.currentText()
 
         approach = self.approach_cbx.currentText()
-        dmg_by_asset_features = list(self.dmg_by_asset_layer.getFeatures())
+        request = QgsFeatureRequest().setFlags(QgsFeatureRequest.NoGeometry)
+        dmg_by_asset_features = list(
+            self.dmg_by_asset_layer.getFeatures(request))
         recovery = RecoveryModeling(
             dmg_by_asset_features, approach, self.iface, self.svi_layer,
             self.output_data_dir, self.save_bldg_curves_check.isChecked())
