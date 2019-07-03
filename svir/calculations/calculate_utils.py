@@ -30,6 +30,7 @@ from qgis.core import (
                        NULL,
                        QgsExpressionContext,
                        QgsExpressionContextUtils,
+                       QgsFeatureRequest,
                        )
 
 from qgis.PyQt.QtCore import QVariant
@@ -227,7 +228,10 @@ def calculate_node(
                 'Invalid formula "%s": %s' % (customFormula, err_msg))
         if customFormula == '':
             # use the custom field values instead of recalculating them
-            for feat in layer.getFeatures():
+            request = QgsFeatureRequest().setFlags(
+                QgsFeatureRequest.NoGeometry).setSubsetOfAttributes(
+                    [node['field']], layer.fields())
+            for feat in layer.getFeatures(request):
                 if feat[node['field']] == NULL:
                     discard_feat = True
                     discarded_feat = DiscardedFeature(
@@ -240,8 +244,10 @@ def calculate_node(
             context = QgsExpressionContext()
             context.appendScope(QgsExpressionContextUtils.layerScope(layer))
             expression.prepare(context)
+            request = QgsFeatureRequest().setFlags(
+                QgsFeatureRequest.NoGeometry)
             with edit(layer):
-                for feat in layer.getFeatures():
+                for feat in layer.getFeatures(request):
                     context.setFeature(feat)
                     value = expression.evaluate(context)
                     if expression.hasEvalError():
@@ -256,7 +262,8 @@ def calculate_node(
     # the existance of children should already be checked
     children = node['children']
     with edit(layer):
-        for feat in layer.getFeatures():
+        request = QgsFeatureRequest().setFlags(QgsFeatureRequest.NoGeometry)
+        for feat in layer.getFeatures(request):
             # If a feature contains any NULL value, discard_feat will
             # be set to True and the corresponding node value will be
             # set to NULL

@@ -412,10 +412,10 @@ class Irmt(object):
         # additional parameter)
         self.drive_oq_engine_server(show=True)
 
-    def drive_oq_engine_server(self, show=True):
+    def drive_oq_engine_server(self, show=True, hostname=None):
         if self.drive_oq_engine_server_dlg is None:
             self.drive_oq_engine_server_dlg = DriveOqEngineServerDialog(
-                self.iface, self.viewer_dock)
+                self.iface, self.viewer_dock, hostname=hostname)
         else:
             self.drive_oq_engine_server_dlg.attempt_login()
         if show:
@@ -435,12 +435,12 @@ class Irmt(object):
         return self.drive_oq_engine_server_dlg.on_same_fs(
             checksum_file_path, local_checksum)
 
-    def reset_drive_oq_engine_server_dlg(self):
+    def reset_drive_oq_engine_server_dlg(self, hostname=None):
         if self.drive_oq_engine_server_dlg is not None:
             was_dlg_visible = self.drive_oq_engine_server_dlg.isVisible()
             self.drive_oq_engine_server_dlg.reject()
             self.drive_oq_engine_server_dlg = DriveOqEngineServerDialog(
-                self.iface, self.viewer_dock)
+                self.iface, self.viewer_dock, hostname=hostname)
             if was_dlg_visible:
                 self.drive_oq_engine_server_dlg.show()
 
