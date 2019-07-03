@@ -270,6 +270,16 @@ def count_heading_commented_lines(fname):
     return lines_to_skip_count
 
 
+def get_headers(fname, sep=','):
+    n_lines_to_skip = count_heading_commented_lines(fname)
+    with open(fname) as f:
+        for i in range(n_lines_to_skip):
+            next(f)
+        line = next(f)
+    headers = [header.strip() for header in line.split(sep)]
+    return headers
+
+
 def set_operator(sub_tree, operator):
     """
     if the root of the sub_tree has children, set the operator to be used to
