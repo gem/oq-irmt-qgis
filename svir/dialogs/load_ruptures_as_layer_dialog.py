@@ -87,7 +87,7 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
             try:
                 params_dict = get_params_from_comment_line(comment_line)
             except LookupError as exc:
-                log_msg(exc.message, level='C',
+                log_msg(str(exc), level='C',
                         message_bar=self.iface.messageBar(),
                         exception=exc)
                 return

@@ -28,6 +28,7 @@ import uuid
 from numpy.testing import assert_almost_equal
 from pprint import pformat
 from qgis.core import (
+                       QgsFeatureRequest,
                        QgsMapLayer,
                        QgsWkbTypes,
                        QgsVectorLayer,
@@ -84,9 +85,10 @@ class ProcessLayer(object):
         logger_func(spacer + 'Layer: %s' % self.layer.name())
         logger_func(spacer + str(
             [field.name() for field in self.layer.fields()]))
+        request = QgsFeatureRequest().setFlags(QgsFeatureRequest.NoGeometry)
         ppdata = pformat(
             [feature.attributes()
-             for feature in self.layer.getFeatures()])
+             for feature in self.layer.getFeatures(request)])
         logger_func(spacer + ppdata + spacer)
 
     def has_same_projection_as(self, other_layer):
@@ -334,7 +336,10 @@ class ProcessLayer(object):
         # a dict will contain all the values for the chosen input attribute,
         # keeping as key, for each value, the id of the corresponding feature
         initial_dict = dict()
-        for feat in self.layer.getFeatures():
+        request = QgsFeatureRequest().setFlags(
+            QgsFeatureRequest.NoGeometry).setSubsetOfAttributes(
+                [input_attr_name], self.layer.fields())
+        for feat in self.layer.getFeatures(request):
             initial_dict[feat.id()] = feat[input_attr_id]
 
         # get the transformation algorithm from the register
@@ -363,9 +368,15 @@ class ProcessLayer(object):
             with edit(self.layer):
                 self.layer.setFieldAlias(new_attr_id, new_attr_alias)
 
+        # TODO: perhaps there is a better way to get a list of feature ids.
+        #       Here we are retrieving no geometries and no fields, which
+        #       sounds the closest way to obtain it.
+        request = QgsFeatureRequest().setFlags(
+            QgsFeatureRequest.NoGeometry).setSubsetOfAttributes(
+                [], self.layer.fields())
         with edit(self.layer):
             # write transformed values
-            for feat in self.layer.getFeatures():
+            for feat in self.layer.getFeatures(request):
                 feat_id = feat.id()
                 value = transformed_dict[feat_id]
                 if type(value) not in (NULL, type(None)):
@@ -403,7 +414,7 @@ class ProcessLayer(object):
         :rtype: QgsMapLayer
 
         """
-        if new_name is '':
+        if new_name == '':
             new_name = self.layer.name() + ' (copy)'
 
         if self.layer.type() == QgsMapLayer.VectorLayer:

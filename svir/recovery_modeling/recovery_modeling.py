@@ -27,6 +27,7 @@ import json
 import bisect
 from collections import defaultdict
 from qgis.PyQt.QtCore import QSettings
+from qgis.core import QgsFeatureRequest
 from svir.recovery_modeling.building import Building
 from svir.utilities.utils import (
                                   create_progress_message_bar,
@@ -91,7 +92,9 @@ class RecoveryModeling(object):
         if integrate_svi and self.svi_layer is not None:
             # FIXME self.svi_field_name is temporarily ignored
             # svi_by_zone = dict()
-            for zone_feat in self.svi_layer.getFeatures():
+            request = QgsFeatureRequest().setFlags(
+                QgsFeatureRequest.NoGeometry)
+            for zone_feat in self.svi_layer.getFeatures(request):
                 zone_id = str(zone_feat[zone_field_name])
                 # FIXME self.svi_field_name is temporarily ignored
                 # svi_value = zone_feat[self.svi_field_name]
@@ -388,8 +391,9 @@ class RecoveryModeling(object):
     def calculate_times(
             self, fractionCollapsedAndIrreparableBuildings,
             inspectionTimes, assessmentTimes, mobilizationTimes,
-            repairTimes):  # FIXME self.svi_field_name is temporarily ignored
-            # repairTimes, svi_value):
+            repairTimes):
+        # FIXME self.svi_field_name is temporarily ignored
+        # repairTimes, svi_value):
         # PAOLO and VENETIA: the paper refers to a metodology by Comerio
         # (2006): "a performance index can be developed to relate the
         # fraction of collapsed buildings within a particular region, and

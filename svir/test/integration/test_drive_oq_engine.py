@@ -34,9 +34,9 @@ import operator
 import requests
 from mock import Mock
 from qgis.core import QgsApplication
-from qgis.PyQt.QtWidgets import QAction
 from qgis.utils import iface
 from qgis.testing import unittest
+from svir.irmt import Irmt
 from svir.utilities.shared import (
                                    OQ_CSV_TO_LAYER_TYPES,
                                    OQ_EXTRACT_TO_LAYER_TYPES,
@@ -46,15 +46,12 @@ from svir.utilities.shared import (
                                    OQ_ALL_TYPES,
                                    )
 from svir.test.utilities import assert_and_emit
-from svir.dialogs.drive_oq_engine_server_dialog import (
-    OUTPUT_TYPE_LOADERS, DriveOqEngineServerDialog)
+from svir.dialogs.drive_oq_engine_server_dialog import OUTPUT_TYPE_LOADERS
 from svir.dialogs.show_full_report_dialog import ShowFullReportDialog
 from svir.dialogs.load_inputs_dialog import LoadInputsDialog
-from svir.dialogs.viewer_dock import ViewerDock
 
 
 QGIS_APP = QgsApplication([], True)
-IFACE = iface
 
 LONG_LOADING_TIME = 10  # seconds
 
@@ -69,16 +66,15 @@ def run_all():
 class LoadOqEngineOutputsTestCase(unittest.TestCase):
 
     def setUp(self):
+        self.irmt = Irmt(iface)
+        self.irmt.initGui()
         self.hostname = os.environ.get('OQ_ENGINE_HOST',
                                        'http://localhost:8800')
+        self.irmt.drive_oq_engine_server(show=False, hostname=self.hostname)
         self.reset_gui()
 
     def reset_gui(self):
-        mock_action = QAction(IFACE.mainWindow())
-        self.viewer_dock = ViewerDock(IFACE, mock_action)
-        IFACE.newProject()
-        self.drive_oq_engine_server_dlg = DriveOqEngineServerDialog(
-            IFACE, self.viewer_dock, hostname=self.hostname)
+        self.irmt.iface.newProject()
 
     def download_output(self, output_id, outtype):
         dest_folder = tempfile.gettempdir()
@@ -100,7 +96,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
 
     def load_calc_outputs(self, calc):
         calc_id = calc['id']
-        output_list = self.drive_oq_engine_server_dlg.get_output_list(calc_id)
+        output_list = self.irmt.drive_oq_engine_server_dlg.get_output_list(
+            calc_id)
         for output in output_list:
             output_dict = {'calc_id': calc_id,
                            'calc_description': calc['description'],
@@ -192,7 +189,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             # zonal_layer_path = os.path.join(
             #     self.data_dir_name, 'risk', 'zonal_layer.shp')
             # dlg = LoadLossesByAssetAsLayerDialog(
-            #     IFACE, self.viewer_dock, Mock(), Mock(), Mock(),
+            #     self.irmt.iface, self.irmt.viewer_dock,
+            #     Mock(), Mock(), Mock(),
             #     'losses_by_asset', loss_layer_path,
             #     zonal_layer_path=zonal_layer_path)
             # dlg.load_selected_only_ckb.setChecked(True)
@@ -209,7 +207,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             #                 'The zonal layer was not loaded')
             # dlg.accept()
             # zonal_layer_plus_stats = [
-            #     layer for layer in IFACE.layers()
+            #     layer for layer in self.irmt.iface.layers()
             #     if layer.name() == 'Zonal data (copy)'][0]
             # zonal_layer_plus_stats_first_feat = \
             #     zonal_layer_plus_stats.getFeatures().next()
@@ -283,7 +281,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             # dlg.dmg_state_cbx.setCurrentIndex(dmg_state_idx)
             # dlg.accept()
             # zonal_layer_plus_stats = [
-            #     layer for layer in IFACE.layers()
+            #     layer for layer in self.irmt.iface.layers()
             #     if layer.name() == 'Zonal data (copy)'][0]
             # zonal_layer_plus_stats_first_feat = \
             #     zonal_layer_plus_stats.getFeatures().next()
@@ -376,12 +374,12 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 print('\t\tok')
                 return
             if output_type in OQ_ZIPPED_TYPES:
-                dlg = LoadInputsDialog(filepath, IFACE)
+                dlg = LoadInputsDialog(filepath, self.irmt.iface)
                 dlg.accept()
                 print('\t\tok')
                 return
             dlg = OUTPUT_TYPE_LOADERS[output_type](
-                IFACE, Mock(), requests, self.hostname, calc_id,
+                self.irmt.iface, Mock(), requests, self.hostname, calc_id,
                 output_type, filepath)
             if dlg.ok_button.isEnabled():
                 dlg.accept()
@@ -403,7 +401,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 print('\t\tSKIPPED')
                 return
             dlg = OUTPUT_TYPE_LOADERS[output_type](
-                IFACE, Mock(), requests, self.hostname, calc_id,
+                self.irmt.iface, Mock(), requests, self.hostname, calc_id,
                 output_type)
             self.loading_completed = False
             self.loading_exception = None
@@ -425,11 +423,11 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 'Loading time exceeded %s seconds' % timeout)
         elif output_type in OQ_EXTRACT_TO_VIEW_TYPES:
             print('\tLoading output type %s...' % output_type)
-            self.viewer_dock.load_no_map_output(
+            self.irmt.viewer_dock.load_no_map_output(
                 calc_id, requests, self.hostname, output_type,
-                self.drive_oq_engine_server_dlg.engine_version)
+                self.irmt.drive_oq_engine_server_dlg.engine_version)
             tmpfile_handler, tmpfile_name = tempfile.mkstemp()
-            self.viewer_dock.write_export_file(tmpfile_name)
+            self.irmt.viewer_dock.write_export_file(tmpfile_name)
             os.close(tmpfile_handler)
             print('\t\tok')
             return
@@ -450,7 +448,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         self.time_consuming_outputs = []
         self.not_implemented_loaders = set()
         self.untested_otypes = copy.copy(OQ_ALL_TYPES)  # it's a set
-        calc_list = self.drive_oq_engine_server_dlg.calc_list
+        calc_list = self.irmt.drive_oq_engine_server_dlg.calc_list
         try:
             selected_calc_id = int(os.environ.get('SELECTED_CALC_ID'))
         except (ValueError, TypeError):
@@ -516,7 +514,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         self._set_output_type('Hazard Curves')
         self._change_selection()
         # test changing intensity measure type
-        layer = IFACE.activeLayer()
+        layer = self.irmt.iface.activeLayer()
         # select the first 2 features (the same used to produce the reference
         # csv)
         num_feats = layer.featureCount()
@@ -527,15 +525,15 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         else:
             layer.select([1])
         self.assertGreater(
-            self.viewer_dock.imt_cbx.count(), 0, 'No IMT was found!')
-        self.viewer_dock.imt_cbx.setCurrentIndex(0)
+            self.irmt.viewer_dock.imt_cbx.count(), 0, 'No IMT was found!')
+        self.irmt.viewer_dock.imt_cbx.setCurrentIndex(0)
         # test exporting the current selection to csv
         _, exported_file_path = tempfile.mkstemp(suffix=".csv")
         self._test_export()
 
     def _test_export(self):
         _, exported_file_path = tempfile.mkstemp(suffix=".csv")
-        layer = IFACE.activeLayer()
+        layer = self.irmt.iface.activeLayer()
         # select the first 2 features (the same used to produce the reference
         # csv)
         num_feats = layer.featureCount()
@@ -546,7 +544,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         else:
             layer.select([1])
         # probably we have the wrong layer selected (uhs produce many layers)
-        self.viewer_dock.write_export_file(exported_file_path)
+        self.irmt.viewer_dock.write_export_file(exported_file_path)
         # NOTE: we are only checking that the exported CSV has at least 2 rows
         # and 3 columns per row. We are avoiding more precise checks, because
         # CSV tests are very fragile. On different platforms the numbers could
@@ -575,12 +573,12 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                     exported_file_path, n_rows))
 
     def _set_output_type(self, output_type):
-        idx = self.viewer_dock.output_type_cbx.findText(output_type)
+        idx = self.irmt.viewer_dock.output_type_cbx.findText(output_type)
         self.assertNotEqual(idx, -1, 'Output type %s not found' % output_type)
-        self.viewer_dock.output_type_cbx.setCurrentIndex(idx)
+        self.irmt.viewer_dock.output_type_cbx.setCurrentIndex(idx)
 
     def _change_selection(self):
-        layer = IFACE.activeLayer()
+        layer = self.irmt.iface.activeLayer()
         # the behavior should be slightly different (pluralizing labels, etc)
         # depending on the amount of features selected
         num_feats = layer.featureCount()
