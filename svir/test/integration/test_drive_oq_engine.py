@@ -70,9 +70,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         self.hostname = os.environ.get('OQ_ENGINE_HOST',
                                        'http://localhost:8800')
         self.irmt.drive_oq_engine_server(show=False, hostname=self.hostname)
-        self.reset_gui()
-
-    def reset_gui(self):
         self.irmt.iface.newProject()
 
     def download_output(self, output_id, outtype):
@@ -327,12 +324,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         dlg.loading_completed.emit()
 
     def load_output(self, calc, output):
-        # NOTE: resetting the Data Viewer before loading each output, prevents
-        #       a segfault. For some reason, while running the actual
-        #       application, the GUI is properly re-designed while opening a
-        #       new output, but not in the testing environment (so widgets
-        #       corresponding to previous outputs are not removed from the GUI)
-        self.reset_gui()
+        self.irmt.iface.newProject()
         calc_id = calc['id']
         output_type = output['type']
         # TODO: when ebrisk becomes loadable, let's not skip this
