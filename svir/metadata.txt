@@ -25,6 +25,7 @@ email=staff.it@globalquakemodel.org
 changelog=
     3.6.1
     * Calls to QgsVectorLayer.getFeatures() are optimized, reading only the necessary fields and ignoring geometries if unneeded
+    * Integration tests use an instance of Irmt instead of instantiating Irmt sub-dialogs
     3.6.0
     * Changed the realizations output for OQ-Engine scenario calculations, displaying the GSIM names instead of the branch path
     * The plugin is also a Processing Toolbox algorithm provider, offering an extensible set of field transformation functions
@@ -34,7 +35,6 @@ changelog=
     * Scripts running tests and building the user manual have been fixed
     * All possibly running timers are stopped before the plugin is unloaded
     * Fixed a bug occurring while loading ground motion fields, that caused only one realization to be visualized
-    * Integration tests use an instance of Irmt instead of instantiating Irmt sub-dialogs
     3.5.3
     * The GUI elements for loading OQ-Engine outputs are in a scrollable area, usable also on low resolution screens
     * Some GUI sections can be expanded/collapsed
