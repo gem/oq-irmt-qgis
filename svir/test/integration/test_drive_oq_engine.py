@@ -382,12 +382,12 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             if output_type == 'fullreport':
                 dlg = ShowFullReportDialog(filepath)
                 dlg.accept()
-                print('\t\tok')
+                print('\t\tok\n')
                 return
             if output_type in OQ_ZIPPED_TYPES:
                 dlg = LoadInputsDialog(filepath, self.irmt.iface)
                 dlg.accept()
-                print('\t\tok')
+                print('\t\tok\n')
                 return
             dlg = OUTPUT_TYPE_LOADERS[output_type](
                 self.irmt.iface, self.irmt.viewer_dock,
@@ -395,7 +395,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 self.hostname, calc_id, output_type, filepath)
             if dlg.ok_button.isEnabled():
                 dlg.accept()
-                print('\t\tok')
+                print('\t\tok\n')
                 return
             else:
                 raise RuntimeError('The ok button is disabled')
@@ -423,7 +423,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             while time.time() - start_time < timeout:
                 QGIS_APP.processEvents()
                 if self.loading_completed:
-                    print('\t\tok')
+                    print('\t\tok\n')
                     return
                 if self.loading_exception:
                     raise self.loading_exception
@@ -438,7 +438,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             tmpfile_handler, tmpfile_name = tempfile.mkstemp()
             self.irmt.viewer_dock.write_export_file(tmpfile_name)
             os.close(tmpfile_handler)
-            print('\t\tok')
+            print('\t\tok\n')
             return
         else:
             self.not_implemented_loaders.add(output_type)
@@ -483,10 +483,10 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                          skipped_attempt['calc_description']))
                 print('\t\tOutput type: %s' % skipped_attempt['output_type'])
         if not self.failed_attempts:
-            print('\n\n%s successfully loaded for all calculations' %
+            print('\n%s successfully loaded for all calculations' %
                   selected_output_type)
         else:
-            print('\n\nFailed attempts:')
+            print('\nFailed attempts:')
             for failed_attempt in self.failed_attempts:
                 print('\tCalculation %s: %s'
                       % (failed_attempt['calc_id'],
