@@ -97,7 +97,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         traceback.print_tb(failed_attempt['traceback'])
         print(ex)
 
-    def _on_loading_ok(self, start_time, output_dict, output_type):
+    def _on_loading_ok(self, start_time, output_dict):
         loading_time = time.time() - start_time
         print('\t\t(loading time: %.4f sec)' % loading_time)
         if loading_time > LONG_LOADING_TIME:
@@ -120,9 +120,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             try:
                 self.load_output(calc, output)
             except Exception:
-                self._on_loading_ok(output_dict)
+                self._on_loading_ko(output_dict)
             else:
-                self._on_loading_ko(start_time, output_dict)
+                self._on_loading_ok(start_time, output_dict)
             output_type_aggr = "%s_aggr" % output['type']
             if output_type_aggr in OQ_EXTRACT_TO_VIEW_TYPES:
                 aggr_output = copy.deepcopy(output)
@@ -133,9 +133,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 try:
                     self.load_output(calc, aggr_output)
                 except Exception:
-                    self._on_loading_ok(aggr_output_dict)
+                    self._on_loading_ko(aggr_output_dict)
                 else:
-                    self._on_loading_ko(start_time, aggr_output_dict)
+                    self._on_loading_ok(start_time, aggr_output_dict)
 
     def on_init_done(self, dlg):
         # set dialog options and accept
