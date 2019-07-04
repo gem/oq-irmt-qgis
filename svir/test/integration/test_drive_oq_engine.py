@@ -72,6 +72,28 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         self.irmt.drive_oq_engine_server(show=False, hostname=self.hostname)
         self.irmt.iface.newProject()
 
+    def test_all_output_types_found_in_demos(self):
+        calc_list = self.irmt.drive_oq_engine_server_dlg.calc_list
+        for output_type in OQ_ALL_TYPES:
+            output_found = False
+            for calc in calc_list:
+                output_list = \
+                    self.irmt.drive_oq_engine_server_dlg.get_output_list(
+                        calc['id'])
+                for output in output_list:
+                    if output_type == output['type']:
+                        output_found = True
+                        print("%s found" % output_type)
+                        break
+                if output_found:
+                    break
+            if not output_found:
+                if output_type.endswith('_aggr'):
+                    print("%s not found, tested in test_load_outputs" %
+                          output_type)
+                else:
+                    raise RuntimeError("%s not found" % output_type)
+
     def download_output(self, output_id, outtype):
         dest_folder = tempfile.gettempdir()
         output_download_url = (
