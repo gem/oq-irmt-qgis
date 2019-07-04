@@ -83,12 +83,27 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         resp = requests.get(output_download_url, verify=False)
         if not resp.ok:
             raise Exception(resp.text)
-        filename = resp.headers['content-disposition'].split(
-            'filename=')[1]
+        filename = resp.headers['content-disposition'].split('filename=')[1]
         filepath = os.path.join(dest_folder, filename)
         with open(filepath, "wb") as f:
             f.write(resp.content)
         return filepath
+
+    def _on_loading_ko(self, output_dict):
+        ex_type, ex, tb = sys.exc_info()
+        failed_attempt = copy.deepcopy(output_dict)
+        failed_attempt['traceback'] = tb
+        self.failed_attempts.append(failed_attempt)
+        traceback.print_tb(failed_attempt['traceback'])
+        print(ex)
+
+    def _on_loading_ok(self, start_time, output_dict, output_type):
+        loading_time = time.time() - start_time
+        print('\t\t(loading time: %.4f sec)' % loading_time)
+        if loading_time > LONG_LOADING_TIME:
+            output_dict['loading_time'] = loading_time
+            self.time_consuming_outputs.append(output_dict)
+        self.untested_otypes.discard(output_dict['output_type'])
 
     def load_calc_outputs(self, calc):
         calc_id = calc['id']
@@ -105,41 +120,22 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             try:
                 self.load_output(calc, output)
             except Exception:
-                ex_type, ex, tb = sys.exc_info()
-                failed_attempt = copy.deepcopy(output_dict)
-                failed_attempt['traceback'] = tb
-                self.failed_attempts.append(failed_attempt)
-                traceback.print_tb(failed_attempt['traceback'])
-                print(ex)
+                self._on_loading_ok(output_dict)
             else:
-                loading_time = time.time() - start_time
-                print('\t\t(loading time: %.4f sec)' % loading_time)
-                if loading_time > LONG_LOADING_TIME:
-                    output_dict['loading_time'] = loading_time
-                    self.time_consuming_outputs.append(output_dict)
-                self.untested_otypes.discard(output['type'])
+                self._on_loading_ko(start_time, output_dict)
             output_type_aggr = "%s_aggr" % output['type']
             if output_type_aggr in OQ_EXTRACT_TO_VIEW_TYPES:
                 aggr_output = copy.deepcopy(output)
                 aggr_output['type'] = output_type_aggr
                 aggr_output_dict = copy.deepcopy(output_dict)
                 aggr_output_dict['output_type'] = aggr_output['type']
+                start_time = time.time()
                 try:
                     self.load_output(calc, aggr_output)
                 except Exception:
-                    ex_type, ex, tb = sys.exc_info()
-                    failed_attempt = copy.deepcopy(output_dict)
-                    failed_attempt['traceback'] = tb
-                    self.failed_attempts.append(failed_attempt)
-                    traceback.print_tb(failed_attempt['traceback'])
-                    print(ex)
+                    self._on_loading_ok(aggr_output_dict)
                 else:
-                    loading_time = time.time() - start_time
-                    print('\t\t(loading time: %.4f sec)' % loading_time)
-                    if loading_time > LONG_LOADING_TIME:
-                        aggr_output_dict['loading_time'] = loading_time
-                        self.time_consuming_outputs.append(aggr_output_dict)
-                    self.untested_otypes.discard(output_type_aggr)
+                    self._on_loading_ko(start_time, aggr_output_dict)
 
     def on_init_done(self, dlg):
         # set dialog options and accept
