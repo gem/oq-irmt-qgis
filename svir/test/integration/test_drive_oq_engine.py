@@ -382,12 +382,12 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             if output_type == 'fullreport':
                 dlg = ShowFullReportDialog(filepath)
                 dlg.accept()
-                print('\t\tok\n')
+                print('\t\tok')
                 return
             if output_type in OQ_ZIPPED_TYPES:
                 dlg = LoadInputsDialog(filepath, self.irmt.iface)
                 dlg.accept()
-                print('\t\tok\n')
+                print('\t\tok')
                 return
             dlg = OUTPUT_TYPE_LOADERS[output_type](
                 self.irmt.iface, self.irmt.viewer_dock,
@@ -395,7 +395,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 self.hostname, calc_id, output_type, filepath)
             if dlg.ok_button.isEnabled():
                 dlg.accept()
-                print('\t\tok\n')
+                print('\t\tok')
                 return
             else:
                 raise RuntimeError('The ok button is disabled')
@@ -423,7 +423,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             while time.time() - start_time < timeout:
                 QGIS_APP.processEvents()
                 if self.loading_completed:
-                    print('\t\tok\n')
+                    print('\t\tok')
                     return
                 if self.loading_exception:
                     raise self.loading_exception
@@ -438,7 +438,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             tmpfile_handler, tmpfile_name = tempfile.mkstemp()
             self.irmt.viewer_dock.write_export_file(tmpfile_name)
             os.close(tmpfile_handler)
-            print('\t\tok\n')
+            print('\t\tok')
             return
         else:
             self.not_implemented_loaders.add(output_type)
