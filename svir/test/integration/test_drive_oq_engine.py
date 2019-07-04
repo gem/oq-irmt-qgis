@@ -87,13 +87,13 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 for output in output_list:
                     if output_type == output['type']:
                         output_found = True
-                        print("%s found" % output_type)
+                        print("\t%s found" % output_type)
                         break
                 if output_found:
                     break
             if not output_found:
                 if output_type.endswith('_aggr'):
-                    print("%s not found, tested in test_load_output" %
+                    print("\t%s not found, tested in test_load_output" %
                           output_type)
                 else:
                     raise RuntimeError("%s not found" % output_type)
